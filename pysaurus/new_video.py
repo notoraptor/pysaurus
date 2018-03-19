@@ -1,30 +1,14 @@
 import os
-import subprocess
-import ujson as json
 
-import ffmpy
-import whirlpool
-
-from pysaurus.utils import timestamp_microseconds
+from pysaurus.utils import ffmpeg_backend
 from pysaurus.video import Video
 
 
 class NewVideo(Video):
 
-    @staticmethod
-    def _get_ffprobe_json_infos(video_absolute_file_path):
-        ffprobe = ffmpy.FFprobe(
-            global_options='-v quiet -print_format json -show_error -show_format -show_streams',
-            inputs={video_absolute_file_path: None}
-        )
-        std_out, std_err = ffprobe.run(stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        if std_err:
-            raise Exception(std_err)
-        return json.loads(std_out)
-
     def __init__(self, file_path):
         absolute_file_path = os.path.abspath(file_path)
-        info = self._get_ffprobe_json_infos(absolute_file_path)
+        info = ffmpeg_backend.get_json_info(absolute_file_path)
         first_audio_stream = None
         first_video_stream = None
         assert isinstance(info['streams'], list)
@@ -39,7 +23,7 @@ class NewVideo(Video):
                 first_video_stream = stream
         assert first_video_stream is not None
         info_format = info['format']
-        format = info_format['format_long_name']
+        container_format = info_format['format_long_name']
         size = int(info_format['size'])
         duration = float(info_format['duration'])
         width = int(first_video_stream['width'])
@@ -66,11 +50,10 @@ class NewVideo(Video):
             else:
                 num, den = float(sample_rate_pieces[0]), float(sample_rate_pieces[1])
                 sample_rate = num / den if den != 0 else None
-        wp = whirlpool.new(absolute_file_path.encode())
 
         super(NewVideo, self).__init__(
-            absolute_path=absolute_file_path, absolute_path_hash=wp.hexdigest(),
-            format=format, size=size, duration=duration, width=width, height=height, video_codec=video_codec,
+            absolute_path=absolute_file_path, container_format=container_format,
+            size=size, duration=duration, width=width, height=height, video_codec=video_codec,
             frame_rate=frame_rate, audio_codec=audio_codec, sample_rate=sample_rate,
-            date_added_microseconds=timestamp_microseconds()
+            updated=True,
         )

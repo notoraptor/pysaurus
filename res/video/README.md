@@ -13,7 +13,7 @@ Videos downloaded:
    - https://videos.pexels.com/videos/footage-of-an-elephant-2300
 
 [1] https://videos.pexels.com/
-License infos:
+License info:
  - CC0 License
  - ✓ Free for personal and commercial use
  - ✓ No attribution required
