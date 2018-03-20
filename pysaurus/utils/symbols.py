@@ -40,3 +40,10 @@ def is_valid_video_filename(filename):
 def hash_with_whirlpool(string: str):
     wp = whirlpool.new(string.encode())
     return wp.hexdigest().upper()
+
+
+def default(dct, key, fn):
+    value = dct.get(key, None)
+    if value is None:
+        value = fn()
+    return value

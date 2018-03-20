@@ -1,19 +1,12 @@
 from pysaurus.property import PropertyDict
 from pysaurus.utils import strings
-from pysaurus.utils.json_compatible import JSONCompatible
-from pysaurus.utils.symbols import timestamp_microseconds, hash_with_whirlpool
 from pysaurus.utils.absolute_path import AbsolutePath
-
-
-def _default(dct, key, fn):
-    value = dct.get(key, None)
-    if value is None:
-        value = fn()
-    return value
+from pysaurus.utils.json_compatible import JSONCompatible
+from pysaurus.utils.symbols import timestamp_microseconds, default
 
 
 class Video(JSONCompatible):
-    __FILE_PROPS = [strings.ABSOLUTE_PATH, strings.ABSOLUTE_PATH_HASH, strings.DATE_ADDED_MICROSECONDS,
+    __FILE_PROPS = [strings.ABSOLUTE_PATH, strings.VIDEO_ID, strings.DATE_ADDED_MICROSECONDS,
                     strings.THUMBNAIL, strings.DATE_MODIFIED]
     __PROPS = list(sorted([
         strings.CONTAINER_FORMAT, strings.SIZE, strings.DURATION, strings.WIDTH, strings.HEIGHT, strings.VIDEO_CODEC,
@@ -34,9 +27,9 @@ class Video(JSONCompatible):
         self.audio_codec = kwargs[strings.AUDIO_CODEC]
         self.frame_rate = kwargs[strings.FRAME_RATE]
         self.sample_rate = kwargs[strings.SAMPLE_RATE]
-        self.absolute_path_hash = _default(kwargs, strings.ABSOLUTE_PATH_HASH, self.__generate_absolute_path_hash)
-        self.date_added_microseconds = _default(kwargs, strings.DATE_ADDED_MICROSECONDS, timestamp_microseconds)
-        self.date_modified = _default(kwargs, strings.DATE_MODIFIED, self.__get_date_modified)
+        self.video_id = kwargs.get(strings.VIDEO_ID, None)
+        self.date_added_microseconds = default(kwargs, strings.DATE_ADDED_MICROSECONDS, timestamp_microseconds)
+        self.date_modified = default(kwargs, strings.DATE_MODIFIED, self.__get_date_modified)
         self.thumbnail = kwargs.get(strings.THUMBNAIL, None)
         self.properties = properties
         self.updated = bool(updated)
@@ -50,7 +43,7 @@ class Video(JSONCompatible):
         assert isinstance(self.audio_codec, str) or self.audio_codec is None
         assert isinstance(self.frame_rate, float) or self.frame_rate is None
         assert isinstance(self.sample_rate, float) or self.sample_rate is None
-        assert isinstance(self.absolute_path_hash, str)
+        assert isinstance(self.video_id, int)
         assert isinstance(self.date_added_microseconds, int)
         assert isinstance(self.date_modified, float)
         # TODO Check thumbnail.
@@ -59,9 +52,6 @@ class Video(JSONCompatible):
     title = property(lambda self: self.absolute_path.title)
     characteristics = property(lambda self: tuple(getattr(self, prop_name) for prop_name in self.__PROPS))
     path = property(lambda self: str(self.absolute_path))
-
-    def __generate_absolute_path_hash(self):
-        return hash_with_whirlpool(str(self.absolute_path))
 
     def __get_date_modified(self):
         return self.absolute_path.get_date_modified()
@@ -79,7 +69,6 @@ class Video(JSONCompatible):
 
     @classmethod
     def from_json_data(cls, json_data, property_type_set=None):
-        assert isinstance(json_data, dict)
         json_properties = json_data.pop(strings.PROPERTIES, None)
         if json_properties is not None:
             json_data[strings.PROPERTIES] = PropertyDict.from_json_data(json_properties, property_type_set)

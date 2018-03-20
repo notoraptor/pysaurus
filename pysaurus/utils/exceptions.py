@@ -14,3 +14,12 @@ class TypeException(PysaurusException):
 class SequenceTypeException(PysaurusException):
     def __init__(self, given_type):
         super(SequenceTypeException, self).__init__('Expected an iterable, got %s' % given_type)
+
+
+class FFmpegException(PysaurusException):
+    def __init__(self, msg=''):
+        super(FFmpegException, self).__init__(msg)
+
+
+class FFprobeException(FFmpegException):
+    pass

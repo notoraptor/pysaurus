@@ -1,20 +1,39 @@
 import ujson as json
-from datetime import datetime
 from collections import namedtuple
+from datetime import datetime
 
 from pysaurus.new_video import NewVideo
 from pysaurus.property import PropertyTypeDict, PropertyDict
 from pysaurus.utils import strings
-from pysaurus.utils.symbols import is_valid_video_filename
 from pysaurus.utils.absolute_path import AbsolutePath
-from pysaurus.video import Video
 from pysaurus.utils.profiling import Profiling
+from pysaurus.utils.symbols import is_valid_video_filename
+from pysaurus.video import Video
 
 DB_FILE_EXTENSION = 'json'
 DB_FILE_DOT_EXTENSION = '.%s' % DB_FILE_EXTENSION
 
 DatabaseLoadingResults = namedtuple('DatabaseLoadingResults', ('skipped', 'errors', 'not_found', 'n_loaded'))
 VideoLoadingResults = namedtuple('VideoLoadingResults', ('skipped', 'errors', 'updated', 'n_loaded'))
+
+
+class LoadReport(object):
+    __slots__ = {'skipped', 'errors', 'updated', 'n_loaded', '__origin', '__update'}
+
+    def __init__(self, origin_name='', update_name='updated'):
+        if origin_name:
+            origin_name = 'from %s' % origin_name
+        self.__origin = origin_name
+        self.__update = update_name
+        self.skipped = []
+        self.errors = []
+        self.updated = []
+        self.n_loaded = 0
+
+    def __str__(self):
+        return ('Load report%s (skipped = %d, errors = %d, %s = %d, loaded = %d)'
+                % (self.__origin, len(self.skipped), len(self.errors),
+                   self.__update, len(self.updated), self.n_loaded))
 
 
 class Database(object):
@@ -36,19 +55,19 @@ class Database(object):
         self.video_folder_paths = video_folder_paths
         self.property_types = property_types  # type: PropertyTypeDict
         self.videos = {}  # type: dict{str, Video}
+        self.__max_id = 0
         self.__load()
 
     name = property(lambda self: self.folder_path.title)
 
     def __load_videos_from_database(self):
-        db_file_names_skipped = []
-        db_video_paths_with_errors = []
-        videos_not_found = []
-        nb_videos_loaded = 0
+        report = LoadReport(update_name='not_found')
         print('Loading videos from database.')
         for file_name_from_db_folder in self.folder_path.listdir():
             if file_name_from_db_folder != self.file_path.basename:
-                if file_name_from_db_folder.endswith(DB_FILE_DOT_EXTENSION):
+                if not file_name_from_db_folder.endswith(DB_FILE_DOT_EXTENSION):
+                    report.skipped.append(file_name_from_db_folder)
+                else:
                     db_video_path = AbsolutePath.join(self.folder_path, file_name_from_db_folder)
                     try:
                         with open(db_video_path.path, 'rb') as db_video_file:
@@ -59,33 +78,21 @@ class Database(object):
                         else:
                             json_info[strings.PROPERTIES] = PropertyDict(self.property_types)
                         video = Video(**json_info)
-                        assert video.absolute_path_hash == db_video_path.title, "Invalid hash."
+                        assert video.video_id is not None, 'Invalid video ID.'
+                        self.__max_id = max(self.__max_id, video.video_id)
                         if video.absolute_path.exists() and video.absolute_path.isfile():
                             self.videos[video.path] = video
-                            nb_videos_loaded += 1
+                            report.n_loaded += 1
                         else:
-                            videos_not_found.append(video)
+                            report.updated.append(video)
                     except Exception as e:
-                        db_video_paths_with_errors.append((db_video_path, e))
+                        report.errors.append((db_video_path, e))
                         print(db_video_path, type(e), e)
-                else:
-                    db_file_names_skipped.append(file_name_from_db_folder)
-        print('Loaded', nb_videos_loaded, 'videos from database.')
-        print('Skipped', len(db_file_names_skipped), 'invalid video file names from database.')
-        print('Skipped', len(videos_not_found), 'videos not found on disk.')
-        print('Skipped', len(db_video_paths_with_errors), 'videos with loading errors from database.')
-        return DatabaseLoadingResults(
-            skipped=db_file_names_skipped,
-            errors=db_video_paths_with_errors,
-            not_found=videos_not_found,
-            n_loaded=nb_videos_loaded
-        )
+        print(report)
+        return report
 
     def __load_videos_from_disk(self):
-        file_names_skipped = []
-        video_paths_updated = []
-        video_paths_with_errors = []
-        nb_videos_added = 0
+        report = LoadReport()
         print('Loading videos from disk.')
         nb_files_checked = 0
         time_start = datetime.now()
@@ -96,36 +103,28 @@ class Database(object):
                     if video_path.path not in self.videos or (
                             video_path.get_date_modified() > self.videos[video_path.path].date_modified):
                         try:
-                            new_video = NewVideo(video_path.path)
+                            self.__max_id += 1
+                            new_video = NewVideo(video_path.path, video_id=self.__max_id)
                             if video_path.path in self.videos:
                                 new_video.set_properties(self.videos[video_path.path].properties)
-                                video_paths_updated.append(video_path)
+                                report.updated.append(video_path)
                             else:
                                 new_video.set_properties(PropertyDict(self.property_types))
-                                nb_videos_added += 1
+                                report.n_loaded += 1
                             self.videos[new_video.path] = new_video
                         except Exception as e:
-                            video_paths_with_errors.append((video_path, e))
+                            report.errors.append((video_path, e))
                             print(e)
                 else:
-                    print('here', video_file_name)
-                    file_names_skipped.append(video_file_name)
+                    report.skipped.append(video_file_name)
                 nb_files_checked += 1
                 if nb_files_checked % 25 == 0:
                     print(nb_files_checked, 'files read.')
         time_end = datetime.now()
-        print('Read', nb_files_checked, 'files.')
-        print('Loaded', nb_videos_added, 'videos from disk.')
-        print('Skipped', len(file_names_skipped), 'invalid video file names from disk.')
-        print('Updated', len(video_paths_updated), 'videos from disk.')
-        print('Skipped', len(video_paths_with_errors), 'videos with loading errors from disk.')
+        print('Checked', nb_files_checked, 'files.')
+        print(report)
         print('Took', Profiling(time_start, time_end))
-        return VideoLoadingResults(
-            skipped=file_names_skipped,
-            errors=video_paths_with_errors,
-            updated=video_paths_updated,
-            n_loaded=nb_videos_added
-        )
+        return report
 
     def __load(self):
         self.__load_videos_from_database()
@@ -147,8 +146,7 @@ class Database(object):
             json.dump(json_info, file, indent=2)
         for video in self.videos.values():
             if video.updated:
-                db_video_path = AbsolutePath.new_file_path(self.folder_path, video.absolute_path_hash,
-                                                           DB_FILE_EXTENSION)
+                db_video_path = AbsolutePath.new_file_path(self.folder_path, video.video_id, DB_FILE_EXTENSION)
                 with open(db_video_path.path, 'w') as file:
                     json.dump(video.to_json_data(), file, indent=2)
         time_end = datetime.now()

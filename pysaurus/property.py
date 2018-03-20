@@ -76,8 +76,7 @@ class PropertyType(JSONCompatible):
 
     @classmethod
     def from_json_data(cls, json_dict, **kwargs):
-        return cls(json_dict['name'],
-                   _type_name_to_type[json_dict['type']],
+        return cls(json_dict['name'], _type_name_to_type[json_dict['type']],
                    None if json_dict['sequence'] is None else _sequence_type_name_to_type[json_dict['sequence']],
                    json_dict['default'])
 
@@ -133,7 +132,7 @@ class PropertyTypeDict(JSONCompatible):
         return len(self.__property_types)
 
     def to_json_data(self):
-        return list(pt.to_json_data() for pt in self.__property_types.values())
+        return [pt.to_json_data() for pt in self.__property_types.values()]
 
     @classmethod
     def from_json_data(cls, json_data, **kwargs):

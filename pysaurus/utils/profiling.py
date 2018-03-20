@@ -1,3 +1,6 @@
+from datetime import datetime
+
+
 class Profiling(object):
 
     def __init__(self, time_start, time_end):
@@ -9,3 +12,26 @@ class Profiling(object):
         str_second = 'seconds' if self.seconds else 'second'
         str_microseconds = 'microseconds' if self.microseconds else 'microsecond'
         return '%d %s %d %s' % (self.seconds, str_second, self.microseconds, str_microseconds)
+
+
+class Profiler(object):
+    __slots__ = {'__message_format', '__placeholder', '__time_start', '__time_end'}
+
+    def __init__(self, message_format='', placeholder='__time__'):
+        self.__message_format = message_format
+        self.__placeholder = placeholder
+        self.__time_start = None
+        self.__time_end = None
+
+    def __enter__(self):
+        self.__time_start = datetime.now()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.__time_end = datetime.now()
+        profiling = Profiling(self.__time_start, self.__time_end)
+        if self.__message_format == '':
+            print(profiling)
+        elif self.__placeholder not in self.__message_format:
+            print(self.__message_format, profiling)
+        else:
+            print(self.__message_format.replace(self.__placeholder, str(profiling)))

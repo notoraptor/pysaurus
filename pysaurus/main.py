@@ -2,8 +2,8 @@ import os
 from datetime import datetime
 
 from pysaurus.new_video import NewVideo
-from pysaurus.utils.symbols import PACKAGE_DIR, is_valid_video_filename
 from pysaurus.utils.profiling import Profiling
+from pysaurus.utils.symbols import PACKAGE_DIR, is_valid_video_filename
 from pysaurus.video import Video
 
 
@@ -39,7 +39,7 @@ def test_one_video():
     parsed = Video.parse(str(video))
     assert parsed.absolute_path == video.absolute_path
     assert parsed.characteristics == video.characteristics
-    print(video.absolute_path_hash)
+    print(video.video_id)
     print(video.thumbnail)
     print(Profiling(t1, t2))
     from pysaurus.utils.ffmpeg_backend import create_thumbnail
@@ -51,7 +51,6 @@ def test_database():
     from pysaurus.database import Database
     database = Database(db_folder_name='C:\\Users\\notoraptor\\Downloads\\pdb',
                         video_folder_names=[
-                            # 'C:\\donnees\\autres\\p',
                             'C:\\donnees\\programmation\\git\\pysaurus\\res\\video'
                         ])
     database.save()

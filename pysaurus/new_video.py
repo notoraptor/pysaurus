@@ -6,7 +6,7 @@ from pysaurus.video import Video
 
 class NewVideo(Video):
 
-    def __init__(self, file_path):
+    def __init__(self, file_path: str, video_id=None):
         absolute_file_path = os.path.abspath(file_path)
         info = ffmpeg_backend.get_json_info(absolute_file_path)
         first_audio_stream = None
@@ -55,5 +55,5 @@ class NewVideo(Video):
             absolute_path=absolute_file_path, container_format=container_format,
             size=size, duration=duration, width=width, height=height, video_codec=video_codec,
             frame_rate=frame_rate, audio_codec=audio_codec, sample_rate=sample_rate,
-            updated=True,
+            updated=True, video_id=video_id
         )
