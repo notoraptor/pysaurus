@@ -1,4 +1,5 @@
 import os
+import shutil
 
 
 class AbsolutePath(object):
@@ -52,6 +53,18 @@ class AbsolutePath(object):
     def mkdir(self):
         os.mkdir(self.path)
         assert os.path.exists(self.path) and os.path.isdir(self.path)
+
+    def delete(self):
+        if self.isfile():
+            os.unlink(self.path)
+        else:
+            shutil.rmtree(self.path)
+
+    @classmethod
+    def ensure(cls, path):
+        if not isinstance(path, cls):
+            path = cls(str(path))
+        return path
 
     @classmethod
     def new_file_path(cls, folder_path, file_title, file_extension):

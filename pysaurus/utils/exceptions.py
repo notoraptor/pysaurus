@@ -1,8 +1,6 @@
 class PysaurusException(Exception):
     def __init__(self, message=''):
-        if not message:
-            message = self.__doc__
-        self.message = message
+        self.message = (message or self.__doc__).strip()
         super(PysaurusException, self).__init__(self.message)
 
 
@@ -23,3 +21,11 @@ class FFmpegException(PysaurusException):
 
 class FFprobeException(FFmpegException):
     pass
+
+
+class VideoIdException(PysaurusException):
+    """ Invalid video ID. """
+
+
+class DuplicateEntryException(PysaurusException):
+    """ Duplicate video entry in database. """

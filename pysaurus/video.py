@@ -69,7 +69,12 @@ class Video(JSONCompatible):
 
     @classmethod
     def from_json_data(cls, json_data, property_type_set=None):
+        """
+        :rtype: Video
+        """
         json_properties = json_data.pop(strings.PROPERTIES, None)
         if json_properties is not None:
             json_data[strings.PROPERTIES] = PropertyDict.from_json_data(json_properties, property_type_set)
+        elif property_type_set is not None:
+            json_data[strings.PROPERTIES] = PropertyDict(property_type_set)
         return cls(**json_data)

@@ -15,15 +15,18 @@ class Profiling(object):
 
 
 class Profiler(object):
-    __slots__ = {'__message_format', '__placeholder', '__time_start', '__time_end'}
+    __slots__ = {'__message_format', '__placeholder', '__time_start', '__time_end', '__enter_message'}
 
-    def __init__(self, message_format='', placeholder='__time__'):
+    def __init__(self, enter_message='', message_format='', placeholder='__time__'):
         self.__message_format = message_format
         self.__placeholder = placeholder
+        self.__enter_message = enter_message
         self.__time_start = None
         self.__time_end = None
 
     def __enter__(self):
+        if self.__enter_message:
+            print(self.__enter_message)
         self.__time_start = datetime.now()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
