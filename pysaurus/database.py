@@ -1,8 +1,9 @@
 import ujson as json
+from io import StringIO
 
 from pysaurus.new_video import NewVideo
 from pysaurus.property import PropertyTypeDict, PropertyDict
-from pysaurus.utils import exceptions
+from pysaurus.utils import exceptions, ffmpeg_backend
 from pysaurus.utils.absolute_path import AbsolutePath
 from pysaurus.utils.profiling import Profiler
 from pysaurus.utils.symbols import is_valid_video_filename
@@ -12,28 +13,87 @@ DB_FILE_EXTENSION = 'json'
 DB_FILE_DOT_EXTENSION = '.%s' % DB_FILE_EXTENSION
 
 
-class LoadReport(object):
-    __slots__ = {'skipped', 'errors', 'updated', 'n_loaded', 'n_checked', '__origin', '__update'}
+class Report(object):
+    __slots__ = ('db_n_files_checked', 'db_files_skipped', 'db_errors', 'db_not_found', 'db_n_loaded', 'db_n_saved',
+                 'disk_n_files_checked', 'disk_files_skipped', 'disk_errors', 'disk_updated', 'disk_n_loaded')
 
-    def __init__(self, origin_name='', update_name='updated'):
-        self.__origin = ('from %s' % origin_name) if origin_name else ''
-        self.__update = update_name
-        self.skipped = []
-        self.errors = []
-        self.updated = []
-        self.n_loaded = 0
-        self.n_checked = 0
+    def __init__(self):
+        self.db_files_skipped = []
+        self.db_errors = []
+        self.db_not_found = []
+        self.db_n_files_checked = 0
+        self.db_n_loaded = 0
+        self.db_n_saved = 0
+        self.disk_files_skipped = []
+        self.disk_errors = []
+        self.disk_updated = []
+        self.disk_n_files_checked = 0
+        self.disk_n_loaded = 0
 
     def __str__(self):
-        return ('Load report%s (checked = %d, loaded = %d, skipped = %d, errors = %d, %s = %d)'
-                % (self.__origin, self.n_checked, self.n_loaded, len(self.skipped), len(self.errors),
-                   self.__update, len(self.updated)))
+        string_pieces = []
+        longest_printed_name_length = 0
+        string_version = StringIO()
+        for name in self.__slots__:
+            value = getattr(self, name)
+            value_length = value if isinstance(value, int) else len(value)
+            if value_length:
+                string_pieces.append((name, value_length))
+                longest_printed_name_length = max(longest_printed_name_length, len(name))
+        print(self.__class__.__name__, file=string_version, end='')
+        if longest_printed_name_length:
+            string_format = '\t{:<%d}:\t{}' % (longest_printed_name_length + 1)
+            print(' {', file=string_version)
+            for name, value_length in string_pieces:
+                print(string_format.format(name, value_length), file=string_version)
+            print('}', file=string_version)
+        else:
+            print('{}', file=string_version)
+        output_string = string_version.getvalue()
+        string_version.close()
+        return output_string
 
 
-class Database(object):
-    __slots__ = {'folder_path', 'file_path', 'video_folder_paths', 'property_types', 'videos', '__max_id'}
+class VideoSet(object):
+    __slots__ = '__videos',
+
+    def __init__(self):
+        self.__videos = {}  # type: dict{AbsolutePath, Video}
+
+    def add(self, video: Video):
+        assert video.absolute_path not in self.__videos
+        self.__videos[video.absolute_path] = video
+
+    def remove_from_absolute_path(self, absolute_path: AbsolutePath):
+        self.__videos.pop(absolute_path)
+
+    def remove_from_path_string(self, path_string: str):
+        self.__videos.pop(AbsolutePath(path_string))
+
+    def contains(self, video: Video):
+        return video.absolute_path in self.__videos
+
+    def contains_absolute_path(self, absolute_path: AbsolutePath):
+        return absolute_path in self.__videos
+
+    def contains_path_string(self, path_string: str):
+        return AbsolutePath(path_string) in self.__videos
+
+    def get_from_absolute_path(self, absolute_path: AbsolutePath):
+        return self.__videos[absolute_path]
+
+    def get_from_path_string(self, path_string: str):
+        return self.__videos[AbsolutePath(path_string)]
+
+    def videos(self):
+        return self.__videos.values()
+
+
+class Database(VideoSet):
+    __slots__ = {'folder_path', 'file_path', 'video_folder_paths', 'property_types', '__max_id'}
 
     def __init__(self, db_folder_name=None, video_folder_names=()):
+        super(Database, self).__init__()
         db_folder_path = AbsolutePath(db_folder_name)
         db_file_path = AbsolutePath.new_file_path(db_folder_path, db_folder_path.title, DB_FILE_EXTENSION)
         if db_file_path.exists():
@@ -50,19 +110,20 @@ class Database(object):
         self.file_path = db_file_path
         self.video_folder_paths = video_folder_paths
         self.property_types = property_types  # type: PropertyTypeDict
-        self.videos = {}  # type: dict{str, Video}
         self.__max_id = 0
         self.__load()
+        self.check_thumbnails()
 
     name = property(lambda self: self.folder_path.title)
 
-    def __load_videos_from_database(self):
-        report = LoadReport(update_name='not_found')
+    def __load_videos_from_database(self, report: Report = None):
+        if report is None:
+            report = Report()
         for file_name_from_db_folder in self.folder_path.listdir():
-            report.n_checked += 1
             if file_name_from_db_folder != self.file_path.basename:
+                report.db_n_files_checked += 1
                 if not file_name_from_db_folder.endswith(DB_FILE_DOT_EXTENSION):
-                    report.skipped.append(file_name_from_db_folder)
+                    report.db_files_skipped.append(file_name_from_db_folder)
                     continue
                 db_video_path = AbsolutePath.join(self.folder_path, file_name_from_db_folder)
                 try:
@@ -71,72 +132,79 @@ class Database(object):
                     video = Video.from_json_data(json_info, self.property_types)
                     if video.video_id is None:
                         raise exceptions.VideoIdException()
-                    if video.path in self.videos:
+                    if self.contains(video):
                         raise exceptions.DuplicateEntryException()
                     if not video.absolute_path.exists() or not video.absolute_path.isfile():
-                        report.updated.append(video)
+                        report.db_not_found.append(video)
                         db_video_path.delete()
                         continue
                     self.__max_id = max(self.__max_id, video.video_id)
-                    self.videos[video.path] = video
+                    self.add(video)
                     video.updated = False
-                    report.n_loaded += 1
+                    report.db_n_loaded += 1
                 except Exception as e:
                     db_video_path.delete()
-                    report.errors.append((db_video_path, e))
+                    report.db_errors.append((db_video_path, e))
         return report
 
-    def __load_video_from_folder(self, video_folder_path, report=None, show_progression=True):
+    def __load_video_from_folder(self, video_folder_path, report: Report = None, show_progression=True):
         """
         :type report: LoadReport
         """
         video_folder_path = AbsolutePath.ensure(video_folder_path)
         if report is None:
-            report = LoadReport()
+            report = Report()
         if show_progression:
             print('Loading videos from folder', video_folder_path)
         for video_file_name in video_folder_path.listdir():
-            report.n_checked += 1
-            if show_progression and report.n_checked % 25 == 0:
-                print(report.n_checked, 'files checked.')
+            report.disk_n_files_checked += 1
+            if show_progression and report.disk_n_files_checked % 25 == 0:
+                print(report.disk_n_files_checked, 'files checked.')
             if not is_valid_video_filename(video_file_name):
-                report.skipped.append(video_file_name)
+                report.disk_files_skipped.append(video_file_name)
                 continue
             video_path = AbsolutePath.join(video_folder_path, video_file_name)
-            if video_path.path in self.videos and (
-                    video_path.get_date_modified() == self.videos[video_path.path].date_modified):
+            if self.contains_absolute_path(video_path) and (
+                    video_path.get_date_modified() == self.get_from_absolute_path(video_path).date_modified):
                 continue
             try:
                 new_id = self.__max_id + 1
                 new_video = NewVideo(video_path.path, video_id=new_id)
-                if video_path.path in self.videos:
-                    new_video.set_properties(self.videos[video_path.path].properties)
-                    report.updated.append(video_path)
+                if self.contains_absolute_path(video_path):
+                    new_video.set_properties(self.get_from_absolute_path(video_path).properties)
+                    report.disk_updated.append(video_path)
                 else:
                     new_video.set_properties(PropertyDict(self.property_types))
-                    report.n_loaded += 1
-                self.videos[new_video.path] = new_video
+                    report.disk_n_loaded += 1
+                self.add(new_video)
                 self.__max_id = new_id
             except Exception as e:
-                report.errors.append((video_path, e))
+                report.disk_errors.append((video_path, e))
         return report
 
-    def __load_videos_from_disk(self, show_progression=True):
-        report = LoadReport()
+    def __load_videos_from_disk(self, report: Report = None, show_progression=True):
+        if report is None:
+            report = Report()
         for video_folder_path in self.video_folder_paths:
             self.__load_video_from_folder(video_folder_path, report, show_progression)
         return report
 
     def __load(self):
+        report = Report()
         with Profiler('Loading videos from database.', 'Videos loaded from database:'):
-            report = self.__load_videos_from_database()
-        print(report)
+            self.__load_videos_from_database(report=report)
         with Profiler('Loading videos from disk.', 'Videos loaded from disk:'):
-            report = self.__load_videos_from_disk()
+            self.__load_videos_from_disk(report=report)
         print(report)
 
+    def check_thumbnails(self):
+        for video in self.videos():  # type: Video
+            if not video.has_valid_thumbnail():
+                print('Generating video for', video.absolute_path)
+                video.set_thumbnail(ffmpeg_backend.create_thumbnail(video, self.folder_path))
+
     def save(self):
-        report = LoadReport()
+        report = Report()
         with Profiler('Saving database.', 'Database saved:'):
             if not self.folder_path.exists():
                 self.folder_path.mkdir()
@@ -149,10 +217,10 @@ class Database(object):
             }
             with open(self.file_path.path, 'w') as file:
                 json.dump(json_info, file, indent=2)
-            for video in self.videos.values():
+            for video in self.videos():
                 if video.updated:
-                    report.n_checked += 1
                     db_video_path = AbsolutePath.new_file_path(self.folder_path, video.video_id, DB_FILE_EXTENSION)
                     with open(db_video_path.path, 'w') as file:
                         json.dump(video.to_json_data(), file, indent=2)
+                    report.db_n_saved += 1
         print(report)

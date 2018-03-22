@@ -30,9 +30,12 @@ class Video(JSONCompatible):
         self.video_id = kwargs.get(strings.VIDEO_ID, None)
         self.date_added_microseconds = default(kwargs, strings.DATE_ADDED_MICROSECONDS, timestamp_microseconds)
         self.date_modified = default(kwargs, strings.DATE_MODIFIED, self.__get_date_modified)
-        self.thumbnail = kwargs.get(strings.THUMBNAIL, None)
+        self.thumbnail = kwargs.get(strings.THUMBNAIL, None)  # type: AbsolutePath
         self.properties = properties
         self.updated = bool(updated)
+
+        if self.thumbnail is not None:
+            self.thumbnail = AbsolutePath.ensure(self.thumbnail)
 
         assert isinstance(self.container_format, str)
         assert isinstance(self.size, int)
@@ -46,12 +49,11 @@ class Video(JSONCompatible):
         assert isinstance(self.video_id, int)
         assert isinstance(self.date_added_microseconds, int)
         assert isinstance(self.date_modified, float)
-        # TODO Check thumbnail.
+        assert isinstance(self.thumbnail, (AbsolutePath, type(None)))
         assert isinstance(self.properties, PropertyDict) or self.properties is None
 
     title = property(lambda self: self.absolute_path.title)
     characteristics = property(lambda self: tuple(getattr(self, prop_name) for prop_name in self.__PROPS))
-    path = property(lambda self: str(self.absolute_path))
 
     def __get_date_modified(self):
         return self.absolute_path.get_date_modified()
@@ -59,10 +61,19 @@ class Video(JSONCompatible):
     def set_properties(self, properties):
         assert isinstance(properties, (PropertyDict, type(None)))
         self.properties = properties
+        self.updated = True
+
+    def has_valid_thumbnail(self):
+        return self.thumbnail is not None and self.thumbnail.exists() and self.thumbnail.isfile()
+
+    def set_thumbnail(self, thumbnail: str):
+        self.thumbnail = AbsolutePath(thumbnail)
+        self.updated = True
 
     def to_json_data(self):
         json_dict = {key: getattr(self, key) for key in self.__slots__}
         json_dict[strings.ABSOLUTE_PATH] = str(self.absolute_path)
+        json_dict[strings.THUMBNAIL] = str(self.thumbnail) if self.thumbnail else None
         if self.properties is not None:
             json_dict[strings.PROPERTIES] = self.properties.to_json_data()
         return json_dict
