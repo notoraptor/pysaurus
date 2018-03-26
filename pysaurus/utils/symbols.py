@@ -13,7 +13,7 @@ def __load_extensions():
         for line in extension_file.readlines():
             line = line.strip()
             if line and not line.startswith('#'):
-                extensions.append(line)
+                extensions.append(line.lower())
     return frozenset(extensions)
 
 
@@ -34,7 +34,7 @@ VIDEO_SUPPORTED_EXTENSIONS = __load_extensions()
 
 def is_valid_video_filename(filename):
     _, extension = os.path.splitext(filename)
-    return extension and extension[1:] in VIDEO_SUPPORTED_EXTENSIONS
+    return extension and extension[1:].lower() in VIDEO_SUPPORTED_EXTENSIONS
 
 
 def hash_with_whirlpool(string: str):

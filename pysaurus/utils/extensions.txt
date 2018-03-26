@@ -1,6 +1,8 @@
 3g2
 3gp
-asfavidrc
+asf
+avi
+drc
 f4a
 f4b
 f4p

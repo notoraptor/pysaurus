@@ -27,13 +27,13 @@ class AbsolutePath(object):
         return self.__path
 
     def __hash__(self):
-        return hash(self.path)
+        return hash(self.__path)
 
     def __eq__(self, other):
-        return self.path == other.path
+        return self.__path == other.path
 
     def __lt__(self, other):
-        return self.path < other.path
+        return self.__path < other.path
 
     def exists(self):
         return os.path.exists(self.__path)
@@ -45,20 +45,26 @@ class AbsolutePath(object):
         return os.path.isdir(self.__path)
 
     def get_date_modified(self):
-        return os.path.getmtime(self.path)
+        return os.path.getmtime(self.__path)
+
+    def get_size(self):
+        return os.path.getsize(self.__path)
+
+    def get_dirname(self):
+        return AbsolutePath(os.path.dirname(self.__path))
 
     def listdir(self):
-        return os.listdir(self.path)
+        return os.listdir(self.__path)
 
     def mkdir(self):
-        os.mkdir(self.path)
-        assert os.path.exists(self.path) and os.path.isdir(self.path)
+        os.mkdir(self.__path)
+        assert os.path.exists(self.__path) and os.path.isdir(self.__path)
 
     def delete(self):
         if self.isfile():
-            os.unlink(self.path)
+            os.unlink(self.__path)
         else:
-            shutil.rmtree(self.path)
+            shutil.rmtree(self.__path)
 
     @classmethod
     def ensure(cls, path):

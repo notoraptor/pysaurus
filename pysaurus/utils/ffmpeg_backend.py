@@ -1,4 +1,3 @@
-import os
 import subprocess
 import ujson as json
 
@@ -17,11 +16,16 @@ def get_json_info(video_path):
     return json.loads(std_out)
 
 
-def create_thumbnail(video: Video, output_folder: AbsolutePath, output_format: str = 'jpg'):
-    output_file_path = os.path.abspath(os.path.join(output_folder.path, '%s.%s' % (video.title, output_format)))
+def create_thumbnail(video: Video, output_folder: AbsolutePath, output_title: str, output_extension: str = 'jpg'):
+    output_file_path = AbsolutePath.new_file_path(output_folder, output_title, output_extension)
     std_out, std_err = subprocess.Popen(
         ['ffmpeg', '-y', '-ss', str(int(video.duration / 2)), '-i', video.absolute_path.path,
-         '-vframes', '1', output_file_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
-    if not os.path.exists(output_file_path):
+         '-vframes', '1', output_file_path.path], stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+    if not output_file_path.exists():
         raise FFmpegException('\r\n%s\r\n%s' % (output_file_path, std_err.decode('utf-8')))
     return output_file_path
+
+
+def get_ffprobe_command(video_path: AbsolutePath, output_name):
+    return ('ffprobe -v quiet -print_format json -show_error -show_format -show_streams "%s" >> %s.json'
+            % (video_path, output_name))

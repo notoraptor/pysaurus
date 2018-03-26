@@ -17,8 +17,8 @@ class Profiling(object):
 class Profiler(object):
     __slots__ = {'__message_format', '__placeholder', '__time_start', '__time_end', '__enter_message'}
 
-    def __init__(self, enter_message='', message_format='', placeholder='__time__'):
-        self.__message_format = message_format
+    def __init__(self, enter_message='', exit_message='', placeholder='__time__'):
+        self.__message_format = exit_message
         self.__placeholder = placeholder
         self.__enter_message = enter_message
         self.__time_start = None

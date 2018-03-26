@@ -66,12 +66,20 @@ class Video(JSONCompatible):
     def has_valid_thumbnail(self):
         return self.thumbnail is not None and self.thumbnail.exists() and self.thumbnail.isfile()
 
-    def set_thumbnail(self, thumbnail: str):
-        self.thumbnail = AbsolutePath(thumbnail)
+    def delete_thumbnail(self):
+        if self.has_valid_thumbnail():
+            self.thumbnail.delete()
+            assert not self.thumbnail.exists()
+            self.thumbnail = None
+            self.updated = True
+
+    def set_thumbnail(self, thumbnail: AbsolutePath):
+        self.thumbnail = thumbnail
         self.updated = True
 
     def to_json_data(self):
-        json_dict = {key: getattr(self, key) for key in self.__slots__}
+        # Don't save attribute 'updated'.
+        json_dict = {key: getattr(self, key) for key in self.__slots__[:-1]}
         json_dict[strings.ABSOLUTE_PATH] = str(self.absolute_path)
         json_dict[strings.THUMBNAIL] = str(self.thumbnail) if self.thumbnail else None
         if self.properties is not None:
