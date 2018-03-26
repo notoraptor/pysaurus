@@ -1,10 +1,10 @@
-import traceback
+import sys
 import textwrap
+import traceback
 import ujson as json
 from enum import IntEnum, auto
 from io import StringIO
 from typing import Optional, IO
-import pymediainfo
 
 from pysaurus.new_video import NewVideo
 from pysaurus.property import PropertyTypeDict, PropertyDict
@@ -174,14 +174,16 @@ class Database(VideoSet):
     FILE_EXTENSION = 'json'
     FILE_DOT_EXTENSION = '.%s' % FILE_EXTENSION
 
-    def __init__(self, db_folder_path: AbsolutePath, video_folder_names=()):
+    def __init__(self, db_folder_path: AbsolutePath, video_folder_names=(), reset_paths=False):
         super(Database, self).__init__()
         db_file_path = AbsolutePath.new_file_path(db_folder_path, db_folder_path.title, self.FILE_EXTENSION)
         if db_file_path.exists():
             with open(db_file_path.path, 'rb') as db_file:
                 json_info = json.load(db_file)
             assert json_info['name'] == db_folder_path.title
-            video_folder_paths = {AbsolutePath(path) for path in json_info['video_folders']}
+            video_folder_paths = set()
+            if not reset_paths:
+                video_folder_paths.update(AbsolutePath(path) for path in json_info['video_folders'])
             property_types = PropertyTypeDict.from_json_data(json_info['property_types'])
             video_folder_paths.update(AbsolutePath.ensure(path) for path in video_folder_names)
         else:
@@ -192,14 +194,24 @@ class Database(VideoSet):
         self.video_folder_paths = video_folder_paths
         self.property_types = property_types  # type: PropertyTypeDict
         self.__max_id = 0
-        self.save_database_file()
-
-        report = DatabaseReport()
-        self.__load_videos_from_database(report)
-        self.__collect_videos_from_disk()
-        # self.check_thumbnails()
+        self.__load()
 
     name = property(lambda self: self.folder_path.title)
+
+    def __load(self):
+        report = DatabaseReport()
+        self.ensure_database_folder()
+        try:
+            self.__load_videos_from_database(report)
+            self.__collect_videos_from_disk()
+        finally:
+            self.save()
+        # self.check_thumbnails()
+
+    def reset_paths(self, video_folder_names=()):
+        self.video_folder_paths.clear()
+        self.video_folder_paths.update(AbsolutePath.ensure(path) for path in video_folder_names)
+        self.__load()
 
     def __delete_entry(self, video: Video, remove_video_definitively=False):
         entry_path = AbsolutePath.new_file_path(self.folder_path, video.video_id, self.FILE_EXTENSION)
@@ -266,7 +278,6 @@ class Database(VideoSet):
                 new_video.set_properties(PropertyDict(self.property_types))
                 load_status = LoadStatus.LOADED
             self.add(new_video)
-            self.save_video(new_video)
             self.__max_id = new_id
         return load_status
 
@@ -298,13 +309,6 @@ class Database(VideoSet):
             for ignored_path in ignored_list:
                 print('\t%s' % ignored_path)
         if collection_list:
-            with Profiler('MEDIA INFO'):
-                for index, video_path in enumerate(collection_list):
-                    media_info = pymediainfo.MediaInfo.parse(video_path.path)
-                    if (index + 1) % 25 == 0:
-                        print(index + 1, 'videos loaded.')
-                print(len(collection_list))
-        if collection_list:
             print('Loading videos.')
             load_statuses = {status: 0 for status in LoadStatus}
             errors = []
@@ -319,11 +323,11 @@ class Database(VideoSet):
             for status, count in load_statuses.items():
                 print(status.name, count)
             if errors:
-                print('Errors occurred while loading videos.')
+                print(len(errors), 'error(s) occurred while loading videos.')
                 for video_path, exception in errors:
                     print('=' * len(video_path.path))
                     print(video_path)
-                    traceback.print_tb(exception.__traceback__)
+                    traceback.print_tb(exception.__traceback__, file=sys.stdout)
                     print(exception.__class__.__name__, exception)
 
     def check_thumbnails(self):
@@ -332,10 +336,13 @@ class Database(VideoSet):
                 print('(%d) Creating thumbnail:' % (index + 1), video.absolute_path)
                 video.set_thumbnail(ffmpeg_backend.create_thumbnail(video, self.folder_path, video.video_id))
 
-    def save_database_file(self):
+    def ensure_database_folder(self):
         if not self.folder_path.exists():
             self.folder_path.mkdir()
         assert self.folder_path.isdir()
+
+    def save_database_file(self):
+        self.ensure_database_folder()
         json_info = {
             'name': self.name,
             'video_folders': [str(path) for path in self.video_folder_paths],
@@ -370,10 +377,13 @@ class Databases(object):
     __databases__ = {}  # type: dict{AbsolutePath, Database}
 
     @staticmethod
-    def get(db_folder_name, video_folder_names=()):
+    def get(db_folder_name, video_folder_names=(), reset_paths=False):
         db_folder_path = AbsolutePath.ensure(db_folder_name)
         if db_folder_path in Databases.__databases__:
-            return Databases.__databases__[db_folder_path]
-        new_database = Database(db_folder_name, video_folder_names)
+            database = Databases.__databases__[db_folder_path]
+            if reset_path:
+                database.reset_path(video_folder_names)
+            return database
+        new_database = Database(db_folder_name, video_folder_names, reset_paths=reset_paths)
         Databases.__databases__[new_database.folder_path] = new_database
         return new_database

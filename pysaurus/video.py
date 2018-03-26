@@ -6,18 +6,24 @@ from pysaurus.utils.symbols import timestamp_microseconds, default
 
 
 class Video(JSONCompatible):
-    __FILE_PROPS = [strings.ABSOLUTE_PATH, strings.VIDEO_ID, strings.DATE_ADDED_MICROSECONDS,
-                    strings.THUMBNAIL, strings.DATE_MODIFIED]
-    __PROPS = list(sorted([
+    __FILE_PROPS = (strings.ABSOLUTE_PATH, strings.VIDEO_ID, strings.DATE_ADDED_MICROSECONDS,
+                    strings.THUMBNAIL, strings.DATE_MODIFIED, strings.MOVIE_NAME, strings.MOVIE_TITLE)
+    __PROPS = tuple(sorted((
         strings.CONTAINER_FORMAT, strings.SIZE, strings.DURATION, strings.WIDTH, strings.HEIGHT, strings.VIDEO_CODEC,
         strings.AUDIO_CODEC, strings.FRAME_RATE, strings.SAMPLE_RATE
-    ]))
-    __slots__ = __FILE_PROPS + __PROPS + [strings.PROPERTIES, 'updated']
+    )))
+    __slots__ = __FILE_PROPS + __PROPS + (strings.PROPERTIES, 'updated')
 
     def __init__(self, properties=None, updated=False, **kwargs):
         assert isinstance(kwargs[strings.ABSOLUTE_PATH], str)
 
         self.absolute_path = AbsolutePath(kwargs[strings.ABSOLUTE_PATH])
+        self.video_id = kwargs[strings.VIDEO_ID]
+        self.date_added_microseconds = default(kwargs, strings.DATE_ADDED_MICROSECONDS, timestamp_microseconds)
+        self.thumbnail = kwargs.get(strings.THUMBNAIL, None)  # type: AbsolutePath
+        self.date_modified = default(kwargs, strings.DATE_MODIFIED, self.absolute_path.get_date_modified)
+        self.movie_name = kwargs[strings.MOVIE_NAME]
+        self.movie_title = kwargs[strings.MOVIE_TITLE]
         self.container_format = kwargs[strings.CONTAINER_FORMAT]
         self.size = kwargs[strings.SIZE]
         self.duration = kwargs[strings.DURATION]
@@ -27,36 +33,30 @@ class Video(JSONCompatible):
         self.audio_codec = kwargs[strings.AUDIO_CODEC]
         self.frame_rate = kwargs[strings.FRAME_RATE]
         self.sample_rate = kwargs[strings.SAMPLE_RATE]
-        self.video_id = kwargs.get(strings.VIDEO_ID, None)
-        self.date_added_microseconds = default(kwargs, strings.DATE_ADDED_MICROSECONDS, timestamp_microseconds)
-        self.date_modified = default(kwargs, strings.DATE_MODIFIED, self.__get_date_modified)
-        self.thumbnail = kwargs.get(strings.THUMBNAIL, None)  # type: AbsolutePath
         self.properties = properties
         self.updated = bool(updated)
 
         if self.thumbnail is not None:
             self.thumbnail = AbsolutePath.ensure(self.thumbnail)
 
-        assert isinstance(self.container_format, str)
-        assert isinstance(self.size, int)
-        assert isinstance(self.duration, float)
-        assert isinstance(self.width, int)
-        assert isinstance(self.height, int)
-        assert isinstance(self.video_codec, str)
-        assert isinstance(self.audio_codec, str) or self.audio_codec is None
-        assert isinstance(self.frame_rate, float) or self.frame_rate is None
-        assert isinstance(self.sample_rate, float) or self.sample_rate is None
         assert isinstance(self.video_id, int)
         assert isinstance(self.date_added_microseconds, int)
         assert isinstance(self.date_modified, float)
-        assert isinstance(self.thumbnail, (AbsolutePath, type(None)))
-        assert isinstance(self.properties, PropertyDict) or self.properties is None
+        assert isinstance(self.movie_name, (str, type(None)))
+        assert isinstance(self.movie_title, (str, type(None)))
+        assert isinstance(self.container_format, str)
+        assert isinstance(self.size, int)
+        assert isinstance(self.duration, int)
+        assert isinstance(self.width, int)
+        assert isinstance(self.height, int)
+        assert isinstance(self.video_codec, str)
+        assert isinstance(self.frame_rate, float)
+        assert isinstance(self.audio_codec, (str, type(None)))
+        assert isinstance(self.sample_rate, (int, float, type(None)))
+        assert isinstance(self.properties, (PropertyDict, type(None)))
 
-    title = property(lambda self: self.absolute_path.title)
+    title = property(lambda self: self.movie_name or self.movie_title or self.absolute_path.title)
     characteristics = property(lambda self: tuple(getattr(self, prop_name) for prop_name in self.__PROPS))
-
-    def __get_date_modified(self):
-        return self.absolute_path.get_date_modified()
 
     def set_properties(self, properties):
         assert isinstance(properties, (PropertyDict, type(None)))
@@ -66,16 +66,16 @@ class Video(JSONCompatible):
     def has_valid_thumbnail(self):
         return self.thumbnail is not None and self.thumbnail.exists() and self.thumbnail.isfile()
 
+    def set_thumbnail(self, thumbnail: AbsolutePath):
+        self.thumbnail = thumbnail
+        self.updated = True
+
     def delete_thumbnail(self):
         if self.has_valid_thumbnail():
             self.thumbnail.delete()
             assert not self.thumbnail.exists()
             self.thumbnail = None
             self.updated = True
-
-    def set_thumbnail(self, thumbnail: AbsolutePath):
-        self.thumbnail = thumbnail
-        self.updated = True
 
     def to_json_data(self):
         # Don't save attribute 'updated'.

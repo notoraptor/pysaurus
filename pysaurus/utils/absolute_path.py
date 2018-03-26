@@ -68,6 +68,11 @@ class AbsolutePath(object):
 
     @classmethod
     def ensure(cls, path):
+        """ Return path if it's already an AbsolutePath object, else convert it to an AbsolutePath object.
+        :param path: path to check.
+        :return: an AbsolutePath object.
+        :rtype: AbsolutePath
+        """
         if not isinstance(path, cls):
             path = cls(str(path))
         return path

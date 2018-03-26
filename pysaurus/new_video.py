@@ -1,6 +1,7 @@
 import os
 
-from pysaurus.utils import ffmpeg_backend
+import pymediainfo
+
 from pysaurus.video import Video
 
 
@@ -8,51 +9,43 @@ class NewVideo(Video):
 
     def __init__(self, file_path: str, video_id=None):
         absolute_file_path = os.path.abspath(file_path)
-        info = ffmpeg_backend.get_json_info(absolute_file_path)
+        media_info = pymediainfo.MediaInfo.parse(absolute_file_path)
+        general_stream = None
         first_audio_stream = None
         first_video_stream = None
-        assert isinstance(info['streams'], list)
-        for stream in info['streams']:
-            if first_audio_stream is not None and first_video_stream is not None:
+        for track in media_info.tracks:
+            if all(stream is not None for stream in (general_stream, first_video_stream, first_audio_stream)):
                 break
-            codec_type = stream['codec_type']
-            if codec_type == 'audio' and first_audio_stream is None:
-                first_audio_stream = stream
-                continue
-            if codec_type == 'video' and first_video_stream is None:
-                first_video_stream = stream
+            if track.track_type == 'General':
+                if general_stream is None:
+                    general_stream = track
+            elif track.track_type == 'Video':
+                if first_video_stream is None:
+                    first_video_stream = track
+            elif track.track_type == 'Audio':
+                if first_audio_stream is None:
+                    first_audio_stream = track
+        assert general_stream is not None
         assert first_video_stream is not None
-        info_format = info['format']
-        container_format = info_format['format_long_name']
-        size = int(info_format['size'])
-        duration = float(info_format['duration'])
-        width = int(first_video_stream['width'])
-        height = int(first_video_stream['height'])
-        video_codec = first_video_stream['codec_name']
+        movie_name = general_stream.movie_name
+        movie_title = general_stream.title
+        container_format = general_stream.format
+        size = int(general_stream.file_size)
+        duration = int(general_stream.duration)  # milliseconds
+        width = int(first_video_stream.width)
+        height = int(first_video_stream.height)
+        video_codec = first_video_stream.format
+        frame_rate = float(first_video_stream.frame_rate)
         audio_codec, sample_rate = None, None
-        str_frame_rate = first_video_stream['avg_frame_rate']
-        if str_frame_rate in ('0', '0/0'):
-            str_frame_rate = first_video_stream['r_frame_rate']
-        frame_rate_pieces = str_frame_rate.split('/')
-        assert len(frame_rate_pieces) in (1, 2)
-        if len(frame_rate_pieces) == 1:
-            frame_rate = float(frame_rate_pieces[0])
-        else:
-            num, den = float(frame_rate_pieces[0]), float(frame_rate_pieces[1])
-            frame_rate = num / den if den != 0 else None
         if first_audio_stream is not None:
-            audio_codec = first_audio_stream['codec_name']
-            str_sample_rate = first_audio_stream['sample_rate']
-            sample_rate_pieces = str_sample_rate.split('/')
-            assert len(sample_rate_pieces) in (1, 2)
-            if len(sample_rate_pieces) == 1:
-                sample_rate = float(sample_rate_pieces[0])
-            else:
-                num, den = float(sample_rate_pieces[0]), float(sample_rate_pieces[1])
-                sample_rate = num / den if den != 0 else None
+            sample_rate = first_audio_stream.sampling_rate
+            if isinstance(sample_rate, str) and '/' in sample_rate:
+                sample_rate = max(float(piece.strip()) for piece in sample_rate.split('/'))
+            audio_codec = first_audio_stream.format
 
         super(NewVideo, self).__init__(
             absolute_path=absolute_file_path, container_format=container_format,
+            movie_name=movie_name, movie_title=movie_title,
             size=size, duration=duration, width=width, height=height, video_codec=video_codec,
             frame_rate=frame_rate, audio_codec=audio_codec, sample_rate=sample_rate,
             updated=True, video_id=video_id
