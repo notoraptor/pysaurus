@@ -19,6 +19,11 @@ class FFmpegException(PysaurusException):
         super(FFmpegException, self).__init__(msg)
 
 
+class PyavThumbnailException(PysaurusException):
+    def __init__(self, msg=''):
+        super(PyavThumbnailException, self).__init__(msg)
+
+
 class FFprobeException(FFmpegException):
     pass
 

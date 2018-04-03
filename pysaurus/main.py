@@ -1,6 +1,6 @@
 import sys
 
-from pysaurus.database import Databases
+from pysaurus.database.database import Database
 from pysaurus.utils.absolute_path import AbsolutePath
 
 if len(sys.argv) == 2:
@@ -19,5 +19,6 @@ if len(sys.argv) == 2:
                     folder_paths.append(folder_path)
                 else:
                     print('Ignored', folder_path)
-    database = Databases.get(database_folder_path, folder_paths, reset_paths=True)
+    database = Database(database_folder_path, folder_paths, reset_paths=True)
+    d2 = Database(database_folder_path)
     database.save()

@@ -32,6 +32,7 @@ class Profiler(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.__time_end = datetime.now()
         profiling = Profiling(self.__time_start, self.__time_end)
+        print('[PROFILE] ', end='')
         if self.__message_format == '':
             print(profiling)
         elif self.__placeholder not in self.__message_format:

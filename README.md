@@ -1,1 +1,1 @@
-Video file manager written in Python (WIP)/.
+Video file manager written in Python (WIP).

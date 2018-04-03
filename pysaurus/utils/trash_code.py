@@ -1,10 +1,13 @@
+from pysaurus.utils.absolute_path import AbsolutePath
+
+
 def _print_duplicates(collection_list):
     basename_to_paths = {}
     for path in collection_list:  # type: AbsolutePath
-        if path.basename not in basename_to_paths:
-            basename_to_paths[path.basename] = {path}
+        if path.get_basename() not in basename_to_paths:
+            basename_to_paths[path.get_basename()] = {path}
         else:
-            basename_to_paths[path.basename].add(path)
+            basename_to_paths[path.get_basename()].add(path)
     print(len(basename_to_paths), 'titles. Possible duplicates:')
     for basename, path_set in basename_to_paths.items():
         if len(path_set) > 1:

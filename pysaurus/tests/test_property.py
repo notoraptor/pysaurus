@@ -1,4 +1,4 @@
-from pysaurus.property import PropertyType, Property, PropertyTypeDict, PropertyDict
+from pysaurus.database.property import PropertyType, Property, PropertyTypeDict, PropertyDict
 from pysaurus.utils import exceptions
 
 

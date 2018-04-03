@@ -17,4 +17,10 @@ class JSONCompatible(ABC):
 
     @classmethod
     def parse(cls, string_repr, **kwargs):
+        """ Parse a string representation of this class and return a class instance.
+        :param string_repr: expected string representation of this class.
+        :param kwargs: optional parameters necessary to build the class instance.
+        :return: a class instance.
+        :rtype: cls
+        """
         return cls.from_json_data(json.loads(string_repr), **kwargs)
