@@ -32,7 +32,8 @@ def get_short_path_name(long_name):
 
 
 def get_basic_props(video_path):
-    container = av.open(get_short_path_name(video_path))
+    # container = av.open(get_short_path_name(video_path))
+    container = av.open(video_path)
     assert container.streams.video
     video_stream = container.streams.video[0]
 

@@ -1,3 +1,7 @@
+""" We should better use latest pyav version:
+    https://github.com/mikeboers/PyAV
+    https://github.com/mikeboers/PyAV/releases/tag/v0.4.0
+"""
 import sys
 
 from pysaurus.database.database import Database

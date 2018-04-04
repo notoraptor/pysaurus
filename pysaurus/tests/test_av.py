@@ -118,3 +118,4 @@ if container.streams.video:
 if container.streams.audio:
     first_audio_stream = container.streams.audio[0]
     debug_object(first_audio_stream)
+print('AV version:', av.__version__)
