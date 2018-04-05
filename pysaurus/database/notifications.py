@@ -46,6 +46,18 @@ class ListedVideosFromDisk(AbstractNotification):
         return '(%d collected, %d ignored)' % (count.collected, count.ignored)
 
 
+class VideosAlreadyLoadedFromDisk(AbstractNotification):
+    __slots__ = 'database_report',
+
+    def __init__(self, database_report: DatabaseReport):
+        self.database_report = database_report
+
+    def __str__(self):
+        count_collected = self.database_report.count_from_disk()
+        count_loaded = self.database_report.count_loaded_from_disk()
+        return '(%d/%d already loaded)' % (count_loaded.unloaded, count_collected.collected)
+
+
 class StartedVideosLoading(AbstractNotification):
     def __str__(self):
         return '(loading videos from disk)'

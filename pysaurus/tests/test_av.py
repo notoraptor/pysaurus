@@ -79,7 +79,12 @@ AudioStream
     layout <av.AudioLayout 'stereo'>
     long_name Vorbis
     max_bit_rate None
-    metadata {'ENCODER': 'Lavc52.79.1', 'TITLE': 'Wildlife video media', 'LICENSE': 'http://creativecommons.org/licenses/by-sa/3.0/', 'LOCATION': 'http://www.archive.org/details/WildlifeVideoMedia'}
+    metadata {
+        'ENCODER': 'Lavc52.79.1',
+        'TITLE': 'Wildlife video media',
+        'LICENSE': 'http://creativecommons.org/licenses/by-sa/3.0/',
+        'LOCATION': 'http://www.archive.org/details/WildlifeVideoMedia'
+    }
     name vorbis
     profile None
     rate 44100

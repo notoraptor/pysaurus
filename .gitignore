@@ -2,4 +2,4 @@
 *.jpg
 *.pyc
 *.log
-*test_folder*
+.local

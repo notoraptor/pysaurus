@@ -8,8 +8,9 @@ class VideoSet(object):
     def __init__(self):
         self.__videos = {}  # type: dict{AbsolutePath, Video}
 
-    def add(self, video: Video):
-        assert video.absolute_path not in self.__videos
+    def add(self, video: Video, update=False):
+        if not update:
+            assert video.absolute_path not in self.__videos
         self.__videos[video.absolute_path] = video
 
     def remove_from_absolute_path(self, absolute_path: AbsolutePath):
@@ -32,3 +33,6 @@ class VideoSet(object):
 
     def videos(self):
         return self.__videos.values()
+
+    def video_paths(self):
+        return self.__videos.keys()

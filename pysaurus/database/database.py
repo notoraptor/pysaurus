@@ -1,3 +1,4 @@
+import os
 import ujson as json
 
 from pysaurus.backend import pyav
@@ -12,6 +13,25 @@ from pysaurus.utils.absolute_path import AbsolutePath
 from pysaurus.utils.profiling import Profiler
 from pysaurus.video.new_video import NewVideo
 from pysaurus.video.video import Video
+
+
+def loader(job):
+    video_paths, initial_index = job
+    loaded, errors = [], []
+    count = 0
+    next_index = initial_index
+    for video_path in video_paths:
+        count += 1
+        try:
+            new_video = NewVideo(video_path.path, video_id=next_index)
+            loaded.append(new_video)
+            next_index += 1
+        except Exception as exception:
+            errors.append((video_path, exception))
+        if count % 25 == 0:
+            print('[', initial_index, ']', count, '/', len(video_paths))
+    print('[', initial_index, '] Finished:', count, '/', len(video_paths))
+    return loaded, errors
 
 
 class Database(VideoSet):
@@ -107,39 +127,53 @@ class Database(VideoSet):
         self.NOTIFIER.notify(notifications.ListedVideosFromDisk(report))
         count = report.count_from_disk()
         if count.collected:
-            n_read = 0
-            self.NOTIFIER.notify(notifications.StartedVideosLoading())
-            with Profiler(exit_message='Finished to load %d videos:' % count.collected):
-                for disk_report in report.disk.values():  # type: DiskReport
-                    for video_path in disk_report.collected:
-                        n_read += 1
-                        try:
-                            self.__load_video(video_path, disk_report)
-                        except Exception as exception:
-                            disk_report.errors.append((video_path, exception))
-                        if n_read % 25 == 0:
-                            self.NOTIFIER.notify(notifications.SteppingVideosLoading(n_read, count.collected))
+            # Filter videos already loaded.
+            video_paths_to_load = []
+            for disk_report in report.disk.values():
+                for video_path in disk_report.collected:
+                    if self.contains_absolute_path(video_path) and (
+                            video_path.get_date_modified() == self.get_from_absolute_path(video_path).date_modified):
+                        disk_report.unloaded.append(video_path)
+                    else:
+                        video_paths_to_load.append(video_path)
+            count_to_load = len(video_paths_to_load)
+            if count.collected > count_to_load:
+                self.NOTIFIER.notify(notifications.VideosAlreadyLoadedFromDisk(report))
+            if count_to_load:
+                cpu_count = os.cpu_count()
+                if cpu_count > count_to_load:
+                    job_lengths = [1] * count_to_load
+                else:
+                    job_lengths = [count_to_load // cpu_count] * cpu_count
+                    job_lengths[-1] += count_to_load % cpu_count
+                assert sum(job_lengths) == count_to_load, (sum(job_lengths), count_to_load)
+                next_id = self.__max_id + 1
+                cursor = 0
+                jobs = []
+                for job_len in job_lengths:
+                    jobs.append((video_paths_to_load[cursor:(cursor + job_len)], next_id))
+                    cursor += job_len
+                    next_id += job_len
+                self.__max_id = next_id
+                import concurrent.futures
+                self.NOTIFIER.notify(notifications.StartedVideosLoading())
+                with Profiler(exit_message='Finished to load %d videos:' % count.collected):
+                    with concurrent.futures.ProcessPoolExecutor(max_workers=cpu_count) as executor:
+                        results = list(executor.map(loader, jobs))
+                for loaded, errors in results:
+                    for new_video in loaded:  # type: NewVideo
+                        disk_report = report.disk[new_video.absolute_path.get_dirname()]
+                        if self.contains_absolute_path(new_video.absolute_path):
+                            new_video.set_properties(self.get_from_absolute_path(new_video.absolute_path).properties)
+                            disk_report.updated.append(new_video.absolute_path)
+                        else:
+                            new_video.set_properties(PropertyDict(self.property_types))
+                            disk_report.loaded.append(new_video.absolute_path)
+                        self.add(new_video, update=True)
+                    for path, exception in errors:
+                        disk_report = report.disk[path.get_dirname()]
+                        disk_report.errors.append((path, exception))
         self.NOTIFIER.notify(notifications.FinishedVideosLoading(report))
-
-    def __load_video(self, video_path: AbsolutePath, disk_report: DiskReport):
-        """ Load one video from disk to the database.
-        :param video_path: path to video to load.
-        :return: a LoadStatus value.
-        """
-        if self.contains_absolute_path(video_path) and (
-                video_path.get_date_modified() == self.get_from_absolute_path(video_path).date_modified):
-            disk_report.unloaded.append(video_path)
-        else:
-            new_id = self.__max_id + 1
-            new_video = NewVideo(video_path.path, video_id=new_id)
-            if self.contains_absolute_path(video_path):
-                new_video.set_properties(self.get_from_absolute_path(video_path).properties)
-                disk_report.updated.append(video_path)
-            else:
-                new_video.set_properties(PropertyDict(self.property_types))
-                disk_report.loaded.append(video_path)
-            self.add(new_video)
-            self.__max_id = new_id
 
     def __collect_videos_from_folder(self, video_folder_path: AbsolutePath, report: DatabaseReport):
         disk_report = DiskReport(video_folder_path)

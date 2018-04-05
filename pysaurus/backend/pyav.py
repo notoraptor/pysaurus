@@ -9,10 +9,13 @@ from pysaurus.utils.exceptions import PyavThumbnailException
 from pysaurus.video.video import Video
 
 
-def get_short_path_name(long_name):
+def get_convenient_os_path(long_name):
     """
+    (windows)
     Gets the short path name of a given long path.
     http://stackoverflow.com/a/23598461/200291
+    (unix)
+    Return given name.
     """
     if not sys.platform.startswith('win'):
         return long_name
@@ -32,8 +35,8 @@ def get_short_path_name(long_name):
 
 
 def get_basic_props(video_path):
-    # container = av.open(get_short_path_name(video_path))
-    container = av.open(video_path)
+    # container = av.open(video_path)
+    container = av.open(get_convenient_os_path(video_path))
     assert container.streams.video
     video_stream = container.streams.video[0]
 
@@ -45,7 +48,7 @@ def get_basic_props(video_path):
     video_basic_props.width = int(video_stream.width)
     video_basic_props.height = int(video_stream.height)
     video_basic_props.video_codec = video_stream.long_name
-    video_basic_props.frame_rate = float(video_stream.average_rate)
+    video_basic_props.frame_rate = float(video_stream.average_rate or 1 / video_stream.time_base)
     if container.streams.audio:
         audio_stream = container.streams.audio[0]
         video_basic_props.audio_codec = audio_stream.long_name
