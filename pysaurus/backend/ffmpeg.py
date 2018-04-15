@@ -1,7 +1,6 @@
 import subprocess
 import ujson as json
 
-from pysaurus.backend.video_basic_props import VideoBasicProps
 from pysaurus.utils import duration
 from pysaurus.utils.absolute_path import AbsolutePath
 from pysaurus.utils.exceptions import FFmpegException, FFprobeException
@@ -18,9 +17,8 @@ def __get_json_info(video_path):
     return json.loads(std_out)
 
 
-def get_basic_props(video_path):
+def get_basic_props(video_path, video_basic_props):
     info = __get_json_info(video_path)
-    video_basic_props = VideoBasicProps()
     first_audio_stream = None
     first_video_stream = None
     assert isinstance(info['streams'], list)
@@ -35,6 +33,7 @@ def get_basic_props(video_path):
             first_video_stream = stream
     assert first_video_stream is not None
     info_format = info['format']
+    video_basic_props.absolute_path = AbsolutePath.ensure(video_path)
     video_basic_props.container_format = info_format['format_long_name']
     video_basic_props.size = int(info_format['size'])
     video_basic_props.duration = float(info_format['duration'])

@@ -5,6 +5,7 @@
 import sys
 
 from pysaurus.database.database import Database
+from pysaurus.utils import trash_code
 from pysaurus.utils.absolute_path import AbsolutePath
 
 if __name__ == '__main__':
@@ -25,8 +26,5 @@ if __name__ == '__main__':
                     else:
                         print('Ignored', folder_path)
         database = Database(database_folder_path, folder_paths, reset_paths=True)
-        d2 = Database(database_folder_path)
-        from pysaurus.utils import trash_code
-
         trash_code._print_duplicates(database.video_paths())
         database.save()

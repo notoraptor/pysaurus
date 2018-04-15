@@ -50,7 +50,7 @@ class Notifier(object):
         :param value: int in (-1, 0, 1).
             If -1, default handler is called on notification before user-defined handlers (if default handler is set).
             If  0, default handler is never called (not even if there are no user-defined handlers).
-            If -1, default handler is called on notification after user-defined handlers (if default handler is set).
+            If +1, default handler is called on notification after user-defined handlers (if default handler is set).
             Default policy: 1.
         :return: None
         """

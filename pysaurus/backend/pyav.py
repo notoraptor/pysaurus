@@ -2,7 +2,6 @@ import sys
 
 import av
 
-from pysaurus.backend.video_basic_props import VideoBasicProps
 from pysaurus.utils import duration
 from pysaurus.utils.absolute_path import AbsolutePath
 from pysaurus.utils.exceptions import PyavThumbnailException
@@ -34,30 +33,32 @@ def get_convenient_os_path(long_name):
             output_buf_size = needed
 
 
-def get_basic_props(video_path):
-    # container = av.open(video_path)
+def get_basic_props(video_path, video):
+    """
+    :param video_path:
+    :param video:
+    :type video: Video
+    """
     container = av.open(get_convenient_os_path(video_path))
     assert container.streams.video
     video_stream = container.streams.video[0]
 
-    video_basic_props = VideoBasicProps()
-    video_basic_props.duration = int(container.duration)
-    video_basic_props.duration_unit = duration.MICROSECONDS
-    video_basic_props.size = int(container.size)  # number of bytes
-    video_basic_props.container_format = container.format.long_name
-    video_basic_props.width = int(video_stream.width)
-    video_basic_props.height = int(video_stream.height)
-    video_basic_props.video_codec = video_stream.long_name
-    video_basic_props.frame_rate = float(video_stream.average_rate or 1 / video_stream.time_base)
+    video.absolute_path = video_path
+    video.duration = container.duration
+    video.duration_unit = duration.MICROSECONDS
+    video.size = container.size  # number of bytes
+    video.container_format = container.format.long_name
+    video.width = video_stream.width
+    video.height = video_stream.height
+    video.video_codec = video_stream.long_name
+    video.frame_rate = float(video_stream.average_rate or 1 / video_stream.time_base)
     if container.streams.audio:
         audio_stream = container.streams.audio[0]
-        video_basic_props.audio_codec = audio_stream.long_name
-        video_basic_props.sample_rate = audio_stream.rate
-
-    return video_basic_props
+        video.audio_codec = audio_stream.long_name
+        video.sample_rate = audio_stream.rate
 
 
-def create_thumbnail(video: Video, output_folder: AbsolutePath, output_title: str, output_extension: str = 'jpg'):
+def create_thumbnail(video: Video, output_folder: AbsolutePath, output_title, output_extension='jpg'):
     output_file_path = AbsolutePath.new_file_path(output_folder, output_title, output_extension)
     container = av.open(str(video.absolute_path))
     assert container.streams.video

@@ -1,4 +1,7 @@
+import concurrent.futures
+import functools
 import os
+import traceback
 import ujson as json
 
 from pysaurus.backend import pyav
@@ -8,14 +11,20 @@ from pysaurus.database.property import PropertyTypeDict, PropertyDict
 from pysaurus.database.report import DatabaseReport, DiskReport
 from pysaurus.database.video_set import VideoSet
 from pysaurus.utils import common
-from pysaurus.utils import exceptions
 from pysaurus.utils.absolute_path import AbsolutePath
 from pysaurus.utils.profiling import Profiler
 from pysaurus.video.new_video import NewVideo
 from pysaurus.video.video import Video
 
 
-def loader(job):
+def load_videos_from_disk(notifier, job):
+    """
+    :param job:
+    :return:
+    :type notifier: Notifier
+    :type job: (list[AbsolutePath], int)
+    :rtype: (list[Video], list[(AbsolutePath, str)])
+    """
     video_paths, initial_index = job
     loaded, errors = [], []
     count = 0
@@ -26,57 +35,53 @@ def loader(job):
             new_video = NewVideo(video_path.path, video_id=next_index)
             loaded.append(new_video)
             next_index += 1
-        except Exception as exception:
-            errors.append((video_path, exception))
+        except Exception:
+            errors.append((video_path, traceback.format_exc()))
         if count % 25 == 0:
-            print('[', initial_index, ']', count, '/', len(video_paths))
-    print('[', initial_index, '] Finished:', count, '/', len(video_paths))
+            notifier.notify(notifications.SteppingVideosLoading(count, len(video_paths), initial_index))
+    if count % 25 != 0:
+        notifier.notify(notifications.SteppingVideosLoading(count, len(video_paths), initial_index))
     return loaded, errors
 
 
 class Database(VideoSet):
-    __cache__ = {}  # type: dict{AbsolutePath, Database}
-    __slots__ = {'folder_path', 'file_path', 'video_folder_paths', 'property_types', 'NOTIFIER', '__max_id'}
+    __slots__ = ('__folder_path', '__file_path', '__video_folder_paths', '__property_types', '__notifier', '__max_id')
     VIDEO_ENTRY_EXTENSION = 'video.json'
     DB_FILE_EXTENSION = 'db.json'
 
-    def __new__(cls, db_folder_path: AbsolutePath, video_folder_names=(), reset_paths=False):
-        if db_folder_path in cls.__cache__:
-            database = cls.__cache__[db_folder_path]
-            if reset_paths:
-                database.reset_paths(video_folder_names)
-            return database
-        return object.__new__(cls)
-
-    def __init__(self, db_folder_path: AbsolutePath, video_folder_names=(), reset_paths=False):
-        if db_folder_path in self.__cache__:
-            return
+    def __init__(self, db_folder_path: AbsolutePath, video_folder_names=(), reset_paths=False, load=True):
         super(Database, self).__init__()
         db_file_path = AbsolutePath.new_file_path(db_folder_path, db_folder_path.title, self.DB_FILE_EXTENSION)
+        video_folder_paths = set()
         if db_file_path.exists():
             with open(db_file_path.path, 'rb') as db_file:
                 json_info = json.load(db_file)
             assert json_info['name'] == db_folder_path.title
-            video_folder_paths = set()
             if not reset_paths:
                 video_folder_paths.update(AbsolutePath(path) for path in json_info['video_folders'])
             property_types = PropertyTypeDict.from_json_data(json_info['property_types'])
-            video_folder_paths.update(AbsolutePath.ensure(path) for path in video_folder_names)
         else:
-            video_folder_paths = {AbsolutePath.ensure(path) for path in video_folder_names}
             property_types = PropertyTypeDict()
-        self.folder_path = db_folder_path
-        self.file_path = db_file_path
-        self.video_folder_paths = video_folder_paths
-        self.property_types = property_types  # type: PropertyTypeDict
+        video_folder_paths.update(AbsolutePath.ensure(path) for path in video_folder_names)
+        self.__folder_path = db_folder_path
+        self.__file_path = db_file_path
+        self.__video_folder_paths = video_folder_paths
+        self.__property_types = property_types  # type: PropertyTypeDict
         self.__max_id = 0
-        self.NOTIFIER = Notifier()
-        self.__load()
-        self.__cache__[self.folder_path] = self
+        self.__notifier = Notifier()
+        if load:
+            # If you need to configure something (e.g. notifier) before loading, create database with load == False,
+            # configure what you want and load it later by calling database.load().
+            self.load()
 
     name = property(lambda self: self.folder_path.title)
+    folder_path = property(lambda self: self.__folder_path)
+    file_path = property(lambda self: self.__file_path)
+    video_folder_paths = property(lambda self: self.__video_folder_paths)
+    property_types = property(lambda self: self.__property_types)
+    notifier = property(lambda self: self.__notifier)
 
-    def __load(self):
+    def load(self):
         report = DatabaseReport()
         self.__ensure_database_folder()
         try:
@@ -88,43 +93,46 @@ class Database(VideoSet):
         return report
 
     def __ensure_database_folder(self):
-        if self.folder_path.exists():
-            assert self.folder_path.isdir()
+        if self.__folder_path.exists():
+            assert self.__folder_path.isdir()
         else:
-            self.folder_path.mkdir()
+            self.__folder_path.mkdir()
 
     def __load_videos_from_database(self, report: DatabaseReport):
-        for file_name_from_db_folder in self.folder_path.listdir():
-            if common.has_extension(file_name_from_db_folder, self.VIDEO_ENTRY_EXTENSION):
-                report.n_files_checked += 1
-                db_video_path = AbsolutePath.join(self.folder_path, file_name_from_db_folder)
-                try:
-                    with open(db_video_path.path, 'rb') as db_video_file:
-                        json_info = json.load(db_video_file)
-                    video = Video.from_json_data(json_info, self.property_types)
-                    if self.contains(video):
-                        raise exceptions.DuplicateEntryException()
-                    if not video.absolute_path.exists() or not video.absolute_path.isfile():
-                        report.not_found.append(video)
-                        self.__delete_entry(video)
-                        continue
-                    if video.absolute_path.get_dirname() not in self.video_folder_paths:
-                        report.removed.append(video)
-                        self.__delete_entry(video)
-                        continue
-                    self.__max_id = max(self.__max_id, video.video_id)
-                    self.add(video)
-                    report.n_loaded += 1
-                except Exception as e:
-                    db_video_path.delete()
-                    report.errors.append((db_video_path, e))
-        self.NOTIFIER.notify(notifications.LoadedDatabase(report))
+        with Profiler(exit_message='Videos loaded from database:'):
+            for file_name_from_db_folder in self.__folder_path.listdir():
+                if common.has_extension(file_name_from_db_folder, self.VIDEO_ENTRY_EXTENSION):
+                    report.n_files_checked += 1
+                    db_video_path = AbsolutePath.join(self.__folder_path, file_name_from_db_folder)
+                    try:
+                        with open(db_video_path.path, 'rb') as db_video_file:
+                            video = Video.from_json_data(json.load(db_video_file), self.__property_types)
+                        if self.contains(video) and (
+                                self.get_from_absolute_path(video.absolute_path).video_id != video.video_id):
+                            report.removed.append(video)
+                            self.__delete_entry(video)
+                            continue
+                        if not video.absolute_path.exists() or not video.absolute_path.isfile():
+                            report.not_found.append(video)
+                            self.__delete_entry(video)
+                            continue
+                        if video.absolute_path.get_dirname() not in self.__video_folder_paths:
+                            report.removed.append(video)
+                            self.__delete_entry(video)
+                            continue
+                        self.__max_id = max(self.__max_id, video.video_id)
+                        self.add(video)
+                        report.n_loaded += 1
+                    except Exception:
+                        db_video_path.delete()
+                        report.errors.append((db_video_path, traceback.format_exc()))
+        self.__notifier.notify(notifications.LoadedDatabase(report))
 
     def __load_videos_from_disk(self, report: DatabaseReport):
         with Profiler(exit_message='Videos collected from disk:'):
-            for video_folder_path in sorted(self.video_folder_paths):
+            for video_folder_path in sorted(self.__video_folder_paths):
                 self.__collect_videos_from_folder(video_folder_path, report)
-        self.NOTIFIER.notify(notifications.ListedVideosFromDisk(report))
+        self.__notifier.notify(notifications.ListedVideosFromDisk(report))
         count = report.count_from_disk()
         if count.collected:
             # Filter videos already loaded.
@@ -138,7 +146,7 @@ class Database(VideoSet):
                         video_paths_to_load.append(video_path)
             count_to_load = len(video_paths_to_load)
             if count.collected > count_to_load:
-                self.NOTIFIER.notify(notifications.VideosAlreadyLoadedFromDisk(report))
+                self.__notifier.notify(notifications.VideosAlreadyLoadedFromDisk(report))
             if count_to_load:
                 cpu_count = os.cpu_count()
                 if cpu_count > count_to_load:
@@ -155,11 +163,11 @@ class Database(VideoSet):
                     cursor += job_len
                     next_id += job_len
                 self.__max_id = next_id
-                import concurrent.futures
-                self.NOTIFIER.notify(notifications.StartedVideosLoading())
+                self.__notifier.notify(notifications.StartedVideosLoading())
+                job_function = functools.partial(load_videos_from_disk, self.__notifier)
                 with Profiler(exit_message='Finished to load %d videos:' % count.collected):
                     with concurrent.futures.ProcessPoolExecutor(max_workers=cpu_count) as executor:
-                        results = list(executor.map(loader, jobs))
+                        results = list(executor.map(job_function, jobs))
                 for loaded, errors in results:
                     for new_video in loaded:  # type: NewVideo
                         disk_report = report.disk[new_video.absolute_path.get_dirname()]
@@ -167,13 +175,13 @@ class Database(VideoSet):
                             new_video.set_properties(self.get_from_absolute_path(new_video.absolute_path).properties)
                             disk_report.updated.append(new_video.absolute_path)
                         else:
-                            new_video.set_properties(PropertyDict(self.property_types))
+                            new_video.set_properties(PropertyDict(self.__property_types))
                             disk_report.loaded.append(new_video.absolute_path)
                         self.add(new_video, update=True)
-                    for path, exception in errors:
+                    for path, traceback_string in errors:
                         disk_report = report.disk[path.get_dirname()]
-                        disk_report.errors.append((path, exception))
-        self.NOTIFIER.notify(notifications.FinishedVideosLoading(report))
+                        disk_report.errors.append((path, traceback_string))
+        self.__notifier.notify(notifications.FinishedVideosLoading(report))
 
     def __collect_videos_from_folder(self, video_folder_path: AbsolutePath, report: DatabaseReport):
         disk_report = DiskReport(video_folder_path)
@@ -186,10 +194,10 @@ class Database(VideoSet):
             else:
                 disk_report.ignored.append(file_path)
         report.disk[disk_report.folder_path] = disk_report
-        self.NOTIFIER.notify(notifications.ListedVideosFromFolder(disk_report))
+        self.__notifier.notify(notifications.ListedVideosFromFolder(disk_report))
 
     def __delete_entry(self, video: Video, remove_video_definitively=False):
-        entry_path = AbsolutePath.new_file_path(self.folder_path, video.video_id, self.VIDEO_ENTRY_EXTENSION)
+        entry_path = AbsolutePath.new_file_path(self.__folder_path, video.video_id, self.VIDEO_ENTRY_EXTENSION)
         assert entry_path.exists() and entry_path.isfile()
         entry_path.delete()
         video.delete_thumbnail()
@@ -202,14 +210,14 @@ class Database(VideoSet):
 
     def clean_database(self):
         for video_to_remove in [video for video in self.videos()
-                                if (video.absolute_path.get_dirname() not in self.video_folder_paths
+                                if (video.absolute_path.get_dirname() not in self.__video_folder_paths
                                     or not video.absolute_path.exists() or not video.absolute_path.isfile())]:
             self.__delete_entry(video_to_remove)
 
     def reset_paths(self, video_folder_names=()):
         database_report = DatabaseReport()
-        self.video_folder_paths.clear()
-        self.video_folder_paths.update(AbsolutePath.ensure(path) for path in video_folder_names)
+        self.__video_folder_paths.clear()
+        self.__video_folder_paths.update(AbsolutePath.ensure(path) for path in video_folder_names)
         try:
             self.clean_database()
             self.__load_videos_from_disk(database_report)
@@ -223,16 +231,16 @@ class Database(VideoSet):
             for index, video in enumerate(self.videos()):  # type: (int, Video)
                 if not video.has_valid_thumbnail():
                     print('(%d) Creating thumbnail:' % (index + 1), video.absolute_path)
-                    video.set_thumbnail(pyav.create_thumbnail(video, self.folder_path, video.video_id))
+                    video.set_thumbnail(pyav.create_thumbnail(video, self.__folder_path, video.video_id))
 
     def save_database_file(self):
         self.__ensure_database_folder()
         json_info = {
             'name': self.name,
-            'video_folders': [str(path) for path in self.video_folder_paths],
-            'property_types': self.property_types.to_json_data(),
+            'video_folders': [str(path) for path in self.__video_folder_paths],
+            'property_types': self.__property_types.to_json_data(),
         }
-        with open(self.file_path.path, 'w') as file:
+        with open(self.__file_path.path, 'w') as file:
             json.dump(json_info, file, indent=2)
 
     def save_video(self, video: Video):
@@ -241,7 +249,7 @@ class Database(VideoSet):
         :return: 1 if effectively saved, else 0.
         """
         if video.updated:
-            db_video_path = AbsolutePath.new_file_path(self.folder_path, video.video_id, self.VIDEO_ENTRY_EXTENSION)
+            db_video_path = AbsolutePath.new_file_path(self.__folder_path, video.video_id, self.VIDEO_ENTRY_EXTENSION)
             with open(db_video_path.path, 'w') as file:
                 json.dump(video.to_json_data(), file, indent=2)
             video.updated = False

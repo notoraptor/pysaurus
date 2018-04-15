@@ -36,3 +36,6 @@ class VideoSet(object):
 
     def video_paths(self):
         return self.__videos.keys()
+
+    def clear(self):
+        self.__videos.clear()

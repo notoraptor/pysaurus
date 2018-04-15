@@ -1,5 +1,3 @@
-import traceback
-
 from pysaurus.database.notifier import AbstractNotification
 from pysaurus.database.report import DatabaseReport, DiskReport
 from pysaurus.utils import common
@@ -17,9 +15,9 @@ class LoadedDatabase(AbstractNotification):
         if self.database_report.errors:
             len_title = string_printer.title('%d ERROR(S) WHILE LOADING DATABASE' % len(self.database_report.errors))
             line = '=' * len_title
-            for path, exception in self.database_report.errors:
+            for path, traceback_string in self.database_report.errors:
                 string_printer.write(path)
-                traceback.print_tb(exception.__traceback__, file=string_printer.string_buffer)
+                string_printer.write(traceback_string)
                 string_printer.write(line)
         return str(string_printer)
 
@@ -64,14 +62,15 @@ class StartedVideosLoading(AbstractNotification):
 
 
 class SteppingVideosLoading(AbstractNotification):
-    __slots__ = 'count', 'total'
+    __slots__ = 'count', 'total', 'job'
 
-    def __init__(self, count: int, total: int):
+    def __init__(self, count: int, total: int, job=None):
         self.count = count
         self.total = total
+        self.job = job
 
     def __str__(self):
-        return '(loaded %d/%d videos)' % (self.count, self.total)
+        return '(%sloaded %d/%d videos)' % ('' if self.job is None else '[job %s] ' % self.job, self.count, self.total)
 
 
 class FinishedVideosLoading(AbstractNotification):
@@ -90,10 +89,8 @@ class FinishedVideosLoading(AbstractNotification):
             len_title = string_printer.title('%d ERROR(S) WHILE LOADING VIDEOS FROM DISK' % count.errors)
             line = '=' * len_title
             for disk_report in self.database_report.disk.values():
-                for path, exception in disk_report.errors:
+                for path, traceback_string in disk_report.errors:
                     string_printer.write(path)
-                    traceback.print_tb(exception.__traceback__, file=string_printer.string_buffer)
-                    string_printer.write(type(exception).__name__)
-                    string_printer.write(exception)
+                    string_printer.write(traceback_string)
                     string_printer.write(line)
         return str(string_printer)
