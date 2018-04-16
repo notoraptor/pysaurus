@@ -3,7 +3,10 @@ import functools
 import os
 import traceback
 import ujson as json
+import textwrap
 
+from pysaurus.backend import videoraptor
+from pysaurus.backend.pyav import get_convenient_os_path
 from pysaurus.backend import pyav
 from pysaurus.database import notifications
 from pysaurus.database.notifier import Notifier
@@ -17,30 +20,69 @@ from pysaurus.video.new_video import NewVideo
 from pysaurus.video.video import Video
 
 
-def load_videos_from_disk(notifier, job):
+def load_videos_from_disk(database, job):
     """
     :param job:
     :return:
-    :type notifier: Notifier
+    :type database: Database
     :type job: (list[AbsolutePath], int)
     :rtype: (list[Video], list[(AbsolutePath, str)])
     """
     video_paths, initial_index = job
     loaded, errors = [], []
-    count = 0
-    next_index = initial_index
-    for video_path in video_paths:
-        count += 1
-        try:
-            new_video = NewVideo(video_path.path, video_id=next_index)
-            loaded.append(new_video)
-            next_index += 1
-        except Exception:
-            errors.append((video_path, traceback.format_exc()))
-        if count % 25 == 0:
-            notifier.notify(notifications.SteppingVideosLoading(count, len(video_paths), initial_index))
-    if count % 25 != 0:
-        notifier.notify(notifications.SteppingVideosLoading(count, len(video_paths), initial_index))
+
+    short_to_long = {}
+    list_file_path = AbsolutePath.new_file_path(
+        database.folder_path, '%s_%s' % (database.name, initial_index), database.LIST_EXTENSION)
+    with open(list_file_path.path, 'w') as list_file:
+        for path in video_paths:
+            short_path = get_convenient_os_path(path.path)
+            short_to_long[short_path] = path
+            print(short_path, file=list_file)
+    text_result = videoraptor.videoraptor(list_file_path).decode()
+    try:
+        json_dicts = json.loads(text_result)
+    except Exception:
+        result_file_path = AbsolutePath.new_file_path(
+            database.folder_path, '%s_%s' % (database.name, initial_index), database.RESULT_EXTENSION)
+        with open(result_file_path.path, 'w') as result_file:
+            print('# ERROR running videoraptor on %s_%s' % (database.name, initial_index), file=result_file)
+            print(textwrap.indent(traceback.format_exc(), '# '), file=result_file)
+            # print(text_result.decode(), file=result_file)
+            print(text_result, file=result_file)
+    else:
+        count = 0
+        next_index = initial_index
+        for video_dict in json_dicts:
+            if video_dict['filename'] in short_to_long:
+                frame_rate_pieces = video_dict['frame_rate'].split('/')
+                assert len(frame_rate_pieces) == 2
+                video_absolute_path =  short_to_long.pop(video_dict.pop('filename'))
+                video_dict['absolute_path'] = video_absolute_path
+                video_dict['video_id'] = next_index
+                video_dict['movie_title'] = video_dict.pop('movie_title', None)
+                video_dict['duration'] = video_dict['duration'] * 1000000 / video_dict['duration_time_base']
+                video_dict['duration_unit'] = 'MICROSECONDS'
+                video_dict['frame_rate'] = int(frame_rate_pieces[0]) / int(frame_rate_pieces[1])
+                video_dict['updated'] = True
+                try:
+                    new_video = Video()
+                    new_video.update(video_dict)
+                    new_video.validate()
+                    loaded.append(new_video)
+                    next_index += 1
+                    count += 1
+                    if count % 25 == 0:
+                        database.notifier.notify(
+                            notifications.SteppingVideosLoading(count, len(video_paths), initial_index))
+                except Exception:
+                    errors.append((video_absolute_path, traceback.format_exc()))
+        if short_to_long:
+            for video_path in short_to_long.values():
+                errors.append((video_path, 'Not loaded'))
+        if count % 25 != 0:
+            database.notifier.notify(notifications.SteppingVideosLoading(count, len(video_paths), initial_index))
+
     return loaded, errors
 
 
@@ -48,6 +90,8 @@ class Database(VideoSet):
     __slots__ = ('__folder_path', '__file_path', '__video_folder_paths', '__property_types', '__notifier', '__max_id')
     VIDEO_ENTRY_EXTENSION = 'video.json'
     DB_FILE_EXTENSION = 'db.json'
+    LIST_EXTENSION = 'list.txt'
+    RESULT_EXTENSION = 'list.json'
 
     def __init__(self, db_folder_path: AbsolutePath, video_folder_names=(), reset_paths=False, load=True):
         super(Database, self).__init__()
@@ -164,7 +208,7 @@ class Database(VideoSet):
                     next_id += job_len
                 self.__max_id = next_id
                 self.__notifier.notify(notifications.StartedVideosLoading())
-                job_function = functools.partial(load_videos_from_disk, self.__notifier)
+                job_function = functools.partial(load_videos_from_disk, self)
                 with Profiler(exit_message='Finished to load %d videos:' % count.collected):
                     with concurrent.futures.ProcessPoolExecutor(max_workers=cpu_count) as executor:
                         results = list(executor.map(job_function, jobs))
@@ -178,9 +222,9 @@ class Database(VideoSet):
                             new_video.set_properties(PropertyDict(self.__property_types))
                             disk_report.loaded.append(new_video.absolute_path)
                         self.add(new_video, update=True)
-                    for path, traceback_string in errors:
-                        disk_report = report.disk[path.get_dirname()]
-                        disk_report.errors.append((path, traceback_string))
+                    for video_path, traceback_string in errors:
+                        disk_report = report.disk[video_path.get_dirname()]
+                        disk_report.errors.append((video_path, traceback_string))
         self.__notifier.notify(notifications.FinishedVideosLoading(report))
 
     def __collect_videos_from_folder(self, video_folder_path: AbsolutePath, report: DatabaseReport):

@@ -9,9 +9,23 @@ class Profiling(object):
         self.microseconds = difference.microseconds
 
     def __str__(self):
-        str_second = 'seconds' if self.seconds else 'second'
-        str_microseconds = 'microseconds' if self.microseconds else 'microsecond'
-        return '%d %s %d %s' % (self.seconds, str_second, self.microseconds, str_microseconds)
+        # str_second = 'seconds' if self.seconds else 'second'
+        # str_microseconds = 'microseconds' if self.microseconds else 'microsecond'
+        # return '%d %s %d %s' % (self.seconds, str_second, self.microseconds, str_microseconds)
+
+        hours = self.seconds // 3600
+        minutes = (self.seconds - 3600 * hours) // 60
+        seconds = (self.seconds - 3600 * hours - 60 * minutes)
+        pieces = []
+        if hours:
+            pieces.append('%d h' % hours)
+        if minutes:
+            pieces.append('%d min' % minutes)
+        if seconds:
+            pieces.append('%d sec' % seconds)
+        if self.microseconds:
+            pieces.append('%d microsec' % self.microseconds)
+        return ' '.join(pieces) if pieces else '0 sec'
 
 
 class Profiler(object):
