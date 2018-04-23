@@ -1,7 +1,7 @@
 from pysaurus.utils.absolute_path import AbsolutePath
 
 
-def _print_duplicates(collection_list):
+def print_duplicates(collection_list):
     basename_to_paths = {}
     for path in collection_list:  # type: AbsolutePath
         if path.get_basename() not in basename_to_paths:

@@ -9,7 +9,7 @@ from pysaurus.utils.json_compatible import JSONCompatible
 class Video(JSONCompatible):
     __FILE_PROPS = (strings.ABSOLUTE_PATH, strings.VIDEO_ID, strings.DATE_ADDED_MICROSECONDS,
                     strings.THUMBNAIL, strings.DATE_MODIFIED, strings.MOVIE_NAME, strings.MOVIE_TITLE,
-                    strings.PROPERTIES, 'updated')
+                    strings.PROPERTIES, strings.UPDATED, 'suspect')
     __VIDEO_PROPS = tuple(sorted((
         strings.CONTAINER_FORMAT, strings.SIZE, strings.DURATION, strings.DURATION_UNIT, strings.WIDTH, strings.HEIGHT,
         strings.VIDEO_CODEC, strings.AUDIO_CODEC, strings.FRAME_RATE, strings.SAMPLE_RATE
@@ -36,6 +36,7 @@ class Video(JSONCompatible):
         self.sample_rate = None  # type: int | float
         self.properties = None  # type: PropertyDict
         self.updated = False
+        self.suspect = None
 
     title = property(lambda self: self.movie_name or self.movie_title or self.absolute_path.title)
     characteristics = property(lambda self: tuple(getattr(self, prop_name) for prop_name in self.__PROPS))
@@ -74,6 +75,7 @@ class Video(JSONCompatible):
         assert isinstance(self.audio_codec, (str, type(None)))
         assert isinstance(self.sample_rate, (int, float, type(None)))
         assert isinstance(self.properties, (PropertyDict, type(None)))
+        assert self.suspect is None or isinstance(self.suspect, list)
 
     def set_properties(self, properties):
         assert isinstance(properties, (PropertyDict, type(None)))

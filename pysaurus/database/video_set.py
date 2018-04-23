@@ -34,6 +34,9 @@ class VideoSet(object):
     def videos(self):
         return self.__videos.values()
 
+    def size(self):
+        return len(self.__videos)
+
     def video_paths(self):
         return self.__videos.keys()
 

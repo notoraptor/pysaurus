@@ -94,3 +94,36 @@ class FinishedVideosLoading(AbstractNotification):
                     string_printer.write(traceback_string)
                     string_printer.write(line)
         return str(string_printer)
+
+
+class StartedDatabaseSaving(AbstractNotification):
+    def __str__(self):
+        return '(saving database)'
+
+
+class SavedDatabaseFile(AbstractNotification):
+    def __str__(self):
+        return '(saved database file)'
+
+
+class SteppingDatabaseSaving(AbstractNotification):
+    __slots__ = 'count', 'total', 'job'
+
+    def __init__(self, count: int, total: int, job=None):
+        self.count = count
+        self.total = total
+        self.job = job
+
+    def __str__(self):
+        return '(%ssaved %d/%d database video entries)' % (
+            '' if self.job is None else '[job %s] ' % self.job, self.count, self.total)
+
+
+class FinishedDatabaseSaving(AbstractNotification):
+    __slots__ = 'count',
+
+    def __init__(self, count: int):
+        self.count = count
+
+    def __str__(self):
+        return '(Finished saving %d database video entries)' % self.count

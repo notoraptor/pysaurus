@@ -1,36 +1,10 @@
-import sys
-
 import av
 
 from pysaurus.utils import duration
 from pysaurus.utils.absolute_path import AbsolutePath
+from pysaurus.utils.common import get_convenient_os_path
 from pysaurus.utils.exceptions import PyavThumbnailException
 from pysaurus.video.video import Video
-
-
-def get_convenient_os_path(long_name):
-    """
-    (windows)
-    Gets the short path name of a given long path.
-    http://stackoverflow.com/a/23598461/200291
-    (unix)
-    Return given name.
-    """
-    if not sys.platform.startswith('win'):
-        return long_name
-    import ctypes
-    from ctypes import wintypes
-    _GetShortPathNameW = ctypes.windll.kernel32.GetShortPathNameW
-    _GetShortPathNameW.argtypes = [wintypes.LPCWSTR, wintypes.LPWSTR, wintypes.DWORD]
-    _GetShortPathNameW.restype = wintypes.DWORD
-    output_buf_size = 0
-    while True:
-        output_buf = ctypes.create_unicode_buffer(output_buf_size)
-        needed = _GetShortPathNameW(long_name, output_buf, output_buf_size)
-        if output_buf_size >= needed:
-            return output_buf.value
-        else:
-            output_buf_size = needed
 
 
 def get_basic_props(video_path, video):

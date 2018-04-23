@@ -1,12 +1,13 @@
+import codecs
 import concurrent.futures
 import functools
 import os
+import sys
+import textwrap
 import traceback
 import ujson as json
-import textwrap
+import subprocess
 
-from pysaurus.backend import videoraptor
-from pysaurus.backend.pyav import get_convenient_os_path
 from pysaurus.backend import pyav
 from pysaurus.database import notifications
 from pysaurus.database.notifier import Notifier
@@ -14,75 +15,138 @@ from pysaurus.database.property import PropertyTypeDict, PropertyDict
 from pysaurus.database.report import DatabaseReport, DiskReport
 from pysaurus.database.video_set import VideoSet
 from pysaurus.utils import common
+from pysaurus.utils import duration
+from pysaurus.utils import strings
 from pysaurus.utils.absolute_path import AbsolutePath
 from pysaurus.utils.profiling import Profiler
 from pysaurus.video.new_video import NewVideo
 from pysaurus.video.video import Video
 
 
-def load_videos_from_disk(database, job):
+def load_videos_from_disk(folder_path, notifier, job):
     """
     :param job:
     :return:
-    :type database: Database
+    :type folder_path: AbsolutePath
+    :type notifier: Notifier
     :type job: (list[AbsolutePath], int)
     :rtype: (list[Video], list[(AbsolutePath, str)])
     """
     video_paths, initial_index = job
-    loaded, errors = [], []
+    next_index = initial_index
+    loaded, errors, json_errors = [], [], []
+    errors_dict, warning_dict, short_to_long = {}, {}, {}
+    ignored_set = set()
+    json_lines = []
 
-    short_to_long = {}
-    list_file_path = AbsolutePath.new_file_path(
-        database.folder_path, '%s_%s' % (database.name, initial_index), database.LIST_EXTENSION)
+    list_file_path = AbsolutePath.new_file_path(folder_path, initial_index, 'list.txt')
     with open(list_file_path.path, 'w') as list_file:
         for path in video_paths:
-            short_path = get_convenient_os_path(path.path)
+            short_path = common.get_convenient_os_path(path.path)
             short_to_long[short_path] = path
             print(short_path, file=list_file)
-    text_result = videoraptor.videoraptor(list_file_path).decode()
-    try:
-        json_dicts = json.loads(text_result)
-    except Exception:
-        result_file_path = AbsolutePath.new_file_path(
-            database.folder_path, '%s_%s' % (database.name, initial_index), database.RESULT_EXTENSION)
-        with open(result_file_path.path, 'w') as result_file:
-            print('# ERROR running videoraptor on %s_%s' % (database.name, initial_index), file=result_file)
-            print(textwrap.indent(traceback.format_exc(), '# '), file=result_file)
-            # print(text_result.decode(), file=result_file)
-            print(text_result, file=result_file)
-    else:
-        count = 0
-        next_index = initial_index
-        for video_dict in json_dicts:
-            if video_dict['filename'] in short_to_long:
-                frame_rate_pieces = video_dict['frame_rate'].split('/')
-                assert len(frame_rate_pieces) == 2
-                video_absolute_path =  short_to_long.pop(video_dict.pop('filename'))
-                video_dict['absolute_path'] = video_absolute_path
-                video_dict['video_id'] = next_index
-                video_dict['movie_title'] = video_dict.pop('movie_title', None)
-                video_dict['duration'] = video_dict['duration'] * 1000000 / video_dict['duration_time_base']
-                video_dict['duration_unit'] = 'MICROSECONDS'
-                video_dict['frame_rate'] = int(frame_rate_pieces[0]) / int(frame_rate_pieces[1])
-                video_dict['updated'] = True
+
+    ##
+    videoraptor_path = 'C:\\donnees\\programmation\\git\\videoraptor\\.local\\videoraptor.exe'
+    command = [videoraptor_path, list_file_path.path]
+    p = subprocess.Popen(command, stdout=subprocess.PIPE, universal_newlines=True, bufsize=1)
+    while True:
+        # Thanks to (2018/04/22): https://www.endpoint.com/blog/2015/01/28/getting-realtime-output-using-python
+        line = p.stdout.readline().strip()
+        if line:
+            if line.startswith('#FINISHED'):
+                count = int(line[len('#FINISHED '):])
+                notifier.notify(notifications.SteppingVideosLoading(count, len(video_paths), initial_index))
+            elif line.startswith('#IGNORED'):
+                ignored_set.add(line[len('#IGNORED '):])
+            elif line.startswith('#LOADED'):
+                count = int(line[len('#LOADED '):])
+                notifier.notify(notifications.SteppingVideosLoading(count, len(video_paths), initial_index))
+            elif line.startswith('#VIDEO_ERROR'):
+                split_pos = line.index(']')
+                video_filename = line[len('#VIDEO_ERROR['):split_pos]
+                error_message = line[(split_pos + 1):]
+                errors_dict.setdefault(video_filename, []).append(error_message)
+            elif line.startswith('#VIDEO_WARNING'):
+                split_pos = line.index(']')
+                video_filename = line[len('#VIDEO_WARNING['):split_pos]
+                warning_message = line[(split_pos + 1):]
+                warning_dict.setdefault(video_filename, []).append(warning_message)
+            elif line[0] != '#':
+                json_lines.append(line)
+        if p.poll() is not None:
+            break
+
+    std_out, std_err = p.communicate()
+    list_file_path.delete()
+    assert not std_out, std_out
+    assert not std_err, std_err
+
+    for line in json_lines:
+        try:
+            vdict = json.loads(line)
+        except ValueError as exception:
+            json_errors.append((line, exception))
+        else:
+            if vdict[strings.FILENAME] in short_to_long:
+                short_name = vdict[strings.FILENAME]
+                video_absolute_path = short_to_long.pop(short_name)
+                movie_title = vdict.get(strings.TITLE, None)
+                if movie_title:
+                    movie_title = codecs.decode(movie_title, 'hex').decode()
+                numerator, denominator = None, None
+                frame_rate_pieces = vdict[strings.FRAME_RATE].split('/')
+                if len(frame_rate_pieces) == 2:
+                    numerator, denominator = int(frame_rate_pieces[0]), int(frame_rate_pieces[1])
+                vdict[strings.FRAME_RATE] = numerator / denominator if numerator and denominator else None
+                vdict[strings.DURATION] = vdict[strings.DURATION] * 1000000 / vdict[strings.DURATION_TIME_BASE]
                 try:
                     new_video = Video()
-                    new_video.update(video_dict)
+                    new_video.update(vdict)
+                    new_video.absolute_path = video_absolute_path
+                    new_video.video_id = next_index
+                    new_video.movie_title = movie_title
+                    new_video.duration_unit = duration.MICROSECONDS
+                    new_video.updated = True
+                    if short_name in warning_dict:
+                        new_video.suspect = warning_dict.pop(short_name)
                     new_video.validate()
                     loaded.append(new_video)
                     next_index += 1
-                    count += 1
-                    if count % 25 == 0:
-                        database.notifier.notify(
-                            notifications.SteppingVideosLoading(count, len(video_paths), initial_index))
-                except Exception:
+                except AssertionError:
                     errors.append((video_absolute_path, traceback.format_exc()))
-        if short_to_long:
-            for video_path in short_to_long.values():
-                errors.append((video_path, 'Not loaded'))
-        if count % 25 != 0:
-            database.notifier.notify(notifications.SteppingVideosLoading(count, len(video_paths), initial_index))
 
+    json_errors_to_remove = set()
+    if short_to_long:
+        for short_name, video_path in short_to_long.items():
+            messages = []
+            if short_name in ignored_set:
+                messages.append('Ignored')
+                ignored_set.remove(short_name)
+            if short_name in warning_dict:
+                messages += warning_dict.pop(short_name)
+            if short_name in errors_dict:
+                messages += errors_dict.pop(short_name)
+            for index, (line, exception) in enumerate(json_errors):
+                if short_name in line:
+                    messages.append('JSON Error ' + line)
+                    messages.append(traceback.format_tb(exception.__traceback__))
+                    json_errors_to_remove.add(index)
+            if not messages:
+                messages.append('Not loaded')
+                print('NOT LOADED', video_path)
+            errors.append((video_path, '\r\n'.join(messages)))
+    assert not ignored_set, len(ignored_set)
+    assert not errors_dict, len(errors_dict)
+    assert not warning_dict, len(warning_dict)
+    if len(json_errors_to_remove) != len(json_errors):
+        for line, exception in json_errors:
+            print('ERROR', line, file=sys.stderr)
+            print('ERROR', traceback.format_tb(exception.__traceback__), file=sys.stderr)
+            print('ERROR', exception, file=sys.stderr)
+        raise AssertionError((len(json_errors_to_remove), len(json_errors)))
+
+    notifier.notify(notifications.SteppingVideosLoading(len(video_paths), len(video_paths), initial_index))
     return loaded, errors
 
 
@@ -208,7 +272,7 @@ class Database(VideoSet):
                     next_id += job_len
                 self.__max_id = next_id
                 self.__notifier.notify(notifications.StartedVideosLoading())
-                job_function = functools.partial(load_videos_from_disk, self)
+                job_function = functools.partial(load_videos_from_disk, self.folder_path, self.notifier)
                 with Profiler(exit_message='Finished to load %d videos:' % count.collected):
                     with concurrent.futures.ProcessPoolExecutor(max_workers=cpu_count) as executor:
                         results = list(executor.map(job_function, jobs))
@@ -302,8 +366,12 @@ class Database(VideoSet):
 
     def save(self):
         n_saved = 0
+        self.notifier.notify(notifications.StartedDatabaseSaving())
         with Profiler(exit_message='Database saved:'):
             self.save_database_file()
+            self.notifier.notify(notifications.SavedDatabaseFile())
             for video in self.videos():
                 n_saved += self.save_video(video)
-        print(n_saved, 'videos saved.')
+                if n_saved and n_saved % 200 == 0:
+                    self.notifier.notify(notifications.SteppingDatabaseSaving(n_saved, self.size()))
+        self.notifier.notify(notifications.FinishedDatabaseSaving(self.size()))
