@@ -8,7 +8,7 @@ from pysaurus.utils.json_compatible import JSONCompatible
 
 class Video(JSONCompatible):
     __FILE_PROPS = (strings.ABSOLUTE_PATH, strings.VIDEO_ID, strings.DATE_ADDED_MICROSECONDS,
-                    strings.THUMBNAIL, strings.DATE_MODIFIED, strings.MOVIE_NAME, strings.MOVIE_TITLE,
+                    strings.THUMBNAIL, strings.DATE_MODIFIED, strings.MOVIE_TITLE,
                     strings.PROPERTIES, strings.UPDATED, 'suspect')
     __VIDEO_PROPS = tuple(sorted((
         strings.CONTAINER_FORMAT, strings.SIZE, strings.DURATION, strings.DURATION_UNIT, strings.WIDTH, strings.HEIGHT,
@@ -21,7 +21,6 @@ class Video(JSONCompatible):
         self.date_added_microseconds = None  # type: int
         self.date_modified = None  # type: float
         self.thumbnail = None  # type: AbsolutePath
-        self.movie_name = None  # type: str
         self.movie_title = None  # type: str
         self.video_id = None  # type: int
         self.container_format = None  # type: str
@@ -38,7 +37,7 @@ class Video(JSONCompatible):
         self.updated = False
         self.suspect = None
 
-    title = property(lambda self: self.movie_name or self.movie_title or self.absolute_path.title)
+    title = property(lambda self: self.movie_title or self.absolute_path.title)
     characteristics = property(lambda self: tuple(getattr(self, prop_name) for prop_name in self.__PROPS))
     duration_microseconds = property(
         lambda self: duration.Duration(self.duration, self.duration_unit).to_microseconds())
@@ -62,7 +61,6 @@ class Video(JSONCompatible):
         assert isinstance(self.video_id, int)
         assert isinstance(self.date_added_microseconds, int)
         assert isinstance(self.date_modified, float)
-        assert isinstance(self.movie_name, (str, type(None)))
         assert isinstance(self.movie_title, (str, type(None)))
         assert isinstance(self.container_format, str)
         assert isinstance(self.size, int)
@@ -92,7 +90,6 @@ class Video(JSONCompatible):
     def delete_thumbnail(self):
         if self.has_valid_thumbnail():
             self.thumbnail.delete()
-            assert not self.thumbnail.exists()
             self.thumbnail = None
             self.updated = True
 
@@ -109,8 +106,9 @@ class Video(JSONCompatible):
     @classmethod
     def from_json_data(cls, json_data, property_type_set=None):
         """ Load a Video object from given JSON dictionary and optional property set.
-        :type json_data: dict
-        :rtype: Video
+            :type json_data: dict
+            :type property_type_set: pysaurus.database.property.PropertyTypeDict
+            :rtype: Video
         """
         json_properties = json_data.get(strings.PROPERTIES, None)
         if json_properties is not None:

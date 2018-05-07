@@ -1,6 +1,4 @@
-from abc import ABC
-from io import StringIO
-
+from pysaurus.database.notifications import Message
 from pysaurus.utils.common import camel_case_to_snake_case
 
 
@@ -8,25 +6,10 @@ def _print(notification):
     print('[%s]' % camel_case_to_snake_case(notification.__class__.__name__), notification)
 
 
-class AbstractNotification(ABC):
-    pass
-
-
-class Message(AbstractNotification):
-    __slots__ = '__message',
-
-    def __init__(self, *args, **kwargs):
-        string_buffer = StringIO()
-        kwargs['file'] = string_buffer
-        print(*args, **kwargs)
-        self.__message = string_buffer.getvalue()
-        string_buffer.close()
-
-    def __str__(self):
-        return self.__message
-
-
 class Notifier(object):
+    DEFAULT_BEFORE = -1
+    DEFAULT_NEVER = 0
+    DEFAULT_AFTER = 1
     __slots__ = '__handlers', '__default_handler', '__call_default', '__next_priority'
 
     def __init__(self):
@@ -54,7 +37,7 @@ class Notifier(object):
             Default policy: 1.
         :return: None
         """
-        assert value in (-1, 0, 1)
+        assert value in (self.DEFAULT_BEFORE, self.DEFAULT_NEVER, self.DEFAULT_AFTER)
         self.__call_default = value
 
     def add_handler(self, notification_class, callback):

@@ -1,9 +1,29 @@
-from pysaurus.database.notifier import AbstractNotification
+from abc import ABC
+from io import StringIO
+
 from pysaurus.database.report import DatabaseReport, DiskReport
 from pysaurus.utils import common
 
 
-class LoadedDatabase(AbstractNotification):
+class AbstractNotification(ABC):
+    pass
+
+
+class Message(AbstractNotification):
+    __slots__ = '__message',
+
+    def __init__(self, *args, **kwargs):
+        string_buffer = StringIO()
+        kwargs['file'] = string_buffer
+        print(*args, **kwargs)
+        self.__message = string_buffer.getvalue()
+        string_buffer.close()
+
+    def __str__(self):
+        return self.__message
+
+
+class DatabaseLoaded(AbstractNotification):
     __slots__ = 'database_report',
 
     def __init__(self, database_report: DatabaseReport):
@@ -22,7 +42,7 @@ class LoadedDatabase(AbstractNotification):
         return str(string_printer)
 
 
-class ListedVideosFromFolder(AbstractNotification):
+class VideosCollectedFromFolder(AbstractNotification):
     __slots__ = 'disk_report',
 
     def __init__(self, disk_report: DiskReport):
@@ -33,7 +53,7 @@ class ListedVideosFromFolder(AbstractNotification):
             len(self.disk_report.collected), len(self.disk_report.ignored), self.disk_report.folder_path)
 
 
-class ListedVideosFromDisk(AbstractNotification):
+class VideosCollectedFromDisk(AbstractNotification):
     __slots__ = 'database_report',
 
     def __init__(self, database_report: DatabaseReport):
@@ -99,6 +119,35 @@ class FinishedVideosLoading(AbstractNotification):
 class StartedDatabaseSaving(AbstractNotification):
     def __str__(self):
         return '(saving database)'
+
+
+class StartedThumbnailsGenerator(AbstractNotification):
+    def __str__(self):
+        return '(generating thumbnails)'
+
+
+class SteppingThumbnailsGenerator(AbstractNotification):
+    __slots__ = 'count', 'total', 'job_name'
+
+    def __init__(self, count: int, total: int, job_name=None):
+        self.count = count
+        self.total = total
+        self.job_name = job_name
+
+    def __str__(self):
+        return '(%sgenerated %d/%d thumbnails)' % (
+            '' if self.job_name is None else '[job %s] ' % self.job_name, self.count, self.total)
+
+
+class FinishedThumbnailsGenerator(AbstractNotification):
+    __slots__ = ('n_generated', 'n_total')
+
+    def __init__(self, n_generated, n_total):
+        self.n_generated = n_generated
+        self.n_total = n_total
+
+    def __str__(self):
+        return '(finished generating %d/%d thumbnails)' % (self.n_generated, self.n_total)
 
 
 class SavedDatabaseFile(AbstractNotification):

@@ -29,14 +29,20 @@ class Profiling(object):
 
 
 class Profiler(object):
-    __slots__ = {'__message_format', '__placeholder', '__time_start', '__time_end', '__enter_message'}
+    __slots__ = {'__exit_message', '__placeholder', '__time_start', '__time_end', '__enter_message'}
+    DEFAULT_PLACE_HOLDER = '__time__'
 
-    def __init__(self, enter_message='', exit_message='', placeholder='__time__'):
-        self.__message_format = exit_message
-        self.__placeholder = placeholder
+    def __init__(self, enter_message='', exit_message='', placeholder=DEFAULT_PLACE_HOLDER):
         self.__enter_message = enter_message
+        self.__exit_message = exit_message
+        self.__placeholder = placeholder or self.DEFAULT_PLACE_HOLDER
         self.__time_start = None
         self.__time_end = None
+
+        if not self.__exit_message:
+            self.__exit_message = self.__placeholder
+        elif self.__placeholder not in self.__exit_message:
+            self.__exit_message += ' ' + self.__placeholder
 
     def __enter__(self):
         if self.__enter_message:
@@ -46,10 +52,4 @@ class Profiler(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.__time_end = datetime.now()
         profiling = Profiling(self.__time_start, self.__time_end)
-        print('[PROFILE] ', end='')
-        if self.__message_format == '':
-            print(profiling)
-        elif self.__placeholder not in self.__message_format:
-            print(self.__message_format, profiling)
-        else:
-            print(self.__message_format.replace(self.__placeholder, str(profiling)))
+        print('[PROFILE]', self.__exit_message.replace(self.__placeholder, str(profiling)))

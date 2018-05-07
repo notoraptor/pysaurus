@@ -63,7 +63,8 @@ class AbsolutePath(object):
     # not tested.
     def mkdir(self):
         os.mkdir(self.__path)
-        assert os.path.exists(self.__path) and os.path.isdir(self.__path)
+        if not os.path.isdir(self.__path):
+            raise OSError("Unable to create a folder at path %s" % self.__path)
 
     # not tested.
     def delete(self):
@@ -71,6 +72,8 @@ class AbsolutePath(object):
             os.unlink(self.__path)
         else:
             shutil.rmtree(self.__path)
+        if self.exists():
+            raise OSError('Unable to delete path %s' % self.__path)
 
     @classmethod
     def ensure(cls, path):

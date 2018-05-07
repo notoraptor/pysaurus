@@ -1,10 +1,10 @@
 import subprocess
 import ujson as json
 
+from pysaurus.database.video import Video
 from pysaurus.utils import duration
 from pysaurus.utils.absolute_path import AbsolutePath
 from pysaurus.utils.exceptions import FFmpegException, FFprobeException
-from pysaurus.video.video import Video
 
 
 def __get_json_info(video_path):
@@ -64,7 +64,7 @@ def get_basic_props(video_path, video_basic_props):
     return video_basic_props
 
 
-def create_thumbnail(video: Video, output_folder: AbsolutePath, output_title: str, output_extension: str = 'jpg'):
+def create_thumbnail(video: Video, output_folder: AbsolutePath, output_title: str, output_extension: str = 'png'):
     output_file_path = AbsolutePath.new_file_path(output_folder, output_title, output_extension)
     std_out, std_err = subprocess.Popen(
         ['ffmpeg', '-y', '-ss', str(int(video.duration / 2000000)), '-i', video.absolute_path.path,

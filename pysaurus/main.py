@@ -21,10 +21,10 @@ if __name__ == '__main__':
                 line = line.strip()
                 if line and not line.startswith('#'):
                     folder_path = AbsolutePath(line)
-                    if folder_path.exists() and folder_path.isdir():
+                    if folder_path.isdir():
                         folder_paths.append(folder_path)
                     else:
                         print('Ignored', folder_path)
-        database = Database(database_folder_path, folder_paths, reset_paths=True)
+        database = Database(database_folder_path, folder_paths, keep_old_paths=False)
         trash_code.print_duplicates(database.video_paths())
         database.save()

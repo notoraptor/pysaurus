@@ -149,3 +149,32 @@ def get_convenient_os_path(long_name):
             return output_buf.value
         else:
             output_buf_size = needed
+
+
+def dispatch_tasks(tasks, job_count, next_job_id):
+    """ Split <tasks> into <job_count> jobs and associate each one
+        with an unique job ID starting from <next_job_id>, so that
+        each job could assign an unique ID to each of his task by
+        incrementing his job ID when managing his tasks.
+    :param tasks: tasks to split
+    :param job_count: number of jobs
+    :param next_job_id: first job ID to use.
+    :return: a list of couples (job, job ID).
+    """
+    task_count = len(tasks)
+    if job_count > task_count:
+        job_lengths = [1] * task_count
+    else:
+        job_lengths = [task_count // job_count] * job_count
+        for i in range(task_count % job_count):
+            job_lengths[i] += 1
+    if sum(job_lengths) != task_count:
+        raise ValueError('Programming error when dispatching tasks: total expected %d, got %d'
+                         % (task_count, sum(job_lengths)))
+    cursor = 0
+    jobs = []
+    for job_len in job_lengths:
+        jobs.append([tasks[cursor:(cursor + job_len)], next_job_id + cursor])
+        cursor += job_len
+    # NB: next_job_id is now next_job_id + len(tasks).
+    return jobs

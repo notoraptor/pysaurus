@@ -136,6 +136,9 @@ class PropertyTypeDict(JSONCompatible):
 
     @classmethod
     def from_json_data(cls, json_data, **kwargs):
+        """
+        :rtype: PropertyTypeDict
+        """
         return cls(PropertyType.from_json_data(json_dict) for json_dict in json_data)
 
     def names(self):

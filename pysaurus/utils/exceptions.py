@@ -19,18 +19,5 @@ class FFmpegException(PysaurusException):
         super(FFmpegException, self).__init__(msg)
 
 
-class PyavThumbnailException(PysaurusException):
-    def __init__(self, msg=''):
-        super(PyavThumbnailException, self).__init__(msg)
-
-
 class FFprobeException(FFmpegException):
     pass
-
-
-class VideoIdException(PysaurusException):
-    """ Invalid video ID. """
-
-
-class DuplicateEntryException(PysaurusException):
-    """ Duplicate video entry in database. """

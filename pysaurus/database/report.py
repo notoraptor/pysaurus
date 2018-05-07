@@ -19,14 +19,15 @@ class CountLoadedFromDisk(object):
 
 
 class DiskReport(object):
-    __slots__ = ('folder_path', 'ignored', 'collected', 'errors', 'unloaded', 'updated', 'loaded')
+    __slots__ = ('folder_path', 'ignored', 'collected', 'errors', 'already_loaded', 'updated', 'loaded')
 
     def __init__(self, folder_path):
         self.folder_path = AbsolutePath.ensure(folder_path)
-        self.ignored = []
         self.collected = []
+        self.ignored = []
+
+        self.already_loaded = []
         self.errors = []
-        self.unloaded = []
         self.updated = []
         self.loaded = []
 
@@ -56,15 +57,14 @@ class DiskReport(object):
 
 
 class DatabaseReport(object):
-    __slots__ = ('disk', 'n_files_checked', 'files_skipped', 'errors', 'removed', 'not_found', 'n_loaded', 'n_saved')
+    __slots__ = ('disk', 'n_checked', 'errors', 'removed', 'not_found', 'n_loaded', 'n_saved')
 
     def __init__(self):
-        self.files_skipped = []
-        self.errors = []
-        self.removed = []
-        self.not_found = []
-        self.n_files_checked = 0
+        self.n_checked = 0
         self.n_loaded = 0
+        self.errors = []
+        self.not_found = []
+        self.removed = []
         self.n_saved = 0
         self.disk = {}  # type: dict{AbsolutePath, DiskReport}
 
@@ -108,7 +108,7 @@ class DatabaseReport(object):
         counter = CountLoadedFromDisk()
         for disk_report in self.disk.values():  # type: DiskReport
             counter.errors += len(disk_report.errors)
-            counter.unloaded += len(disk_report.unloaded)
+            counter.unloaded += len(disk_report.already_loaded)
             counter.updated += len(disk_report.updated)
             counter.loaded += len(disk_report.loaded)
         return counter

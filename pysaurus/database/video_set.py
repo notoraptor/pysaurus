@@ -1,5 +1,5 @@
+from pysaurus.database.video import Video
 from pysaurus.utils.absolute_path import AbsolutePath
-from pysaurus.video.video import Video
 
 
 class VideoSet(object):
@@ -8,9 +8,9 @@ class VideoSet(object):
     def __init__(self):
         self.__videos = {}  # type: dict{AbsolutePath, Video}
 
-    def add(self, video: Video, update=False):
-        if not update:
-            assert video.absolute_path not in self.__videos
+    def add(self, video: Video):
+        if not video.updated and video.absolute_path in self.__videos:
+            raise ValueError('Duplicate database entry for video %s' % video.absolute_path)
         self.__videos[video.absolute_path] = video
 
     def remove_from_absolute_path(self, absolute_path: AbsolutePath):
@@ -22,7 +22,7 @@ class VideoSet(object):
     def contains_absolute_path(self, absolute_path: AbsolutePath):
         return absolute_path in self.__videos
 
-    def get_from_absolute_path(self, absolute_path: AbsolutePath):
+    def get(self, absolute_path: AbsolutePath):
         """ Return Video associated to given absolute path.
             Raise an error if this path is not associated to any video object in database,
         :param absolute_path: absolute path for video to get Video object.

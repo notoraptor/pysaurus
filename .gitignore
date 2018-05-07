@@ -1,5 +1,5 @@
-.idea
 *.jpg
-*.pyc
 *.log
+*.pyc
+.idea
 .local
