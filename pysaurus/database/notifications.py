@@ -94,10 +94,11 @@ class SteppingVideosLoading(AbstractNotification):
 
 
 class FinishedVideosLoading(AbstractNotification):
-    __slots__ = 'database_report'
+    __slots__ = ('database_report', 'global_errors')
 
-    def __init__(self, database_report: DatabaseReport):
+    def __init__(self, database_report: DatabaseReport, global_errors=()):
         self.database_report = database_report
+        self.global_errors = global_errors
 
     def __str__(self):
         count = self.database_report.count_loaded_from_disk()
@@ -113,6 +114,10 @@ class FinishedVideosLoading(AbstractNotification):
                     string_printer.write(path)
                     string_printer.write(traceback_string)
                     string_printer.write(line)
+        if self.global_errors:
+            string_printer.title('%d GLOBAL ERROR(S) WHILE LOADING VIDEOS FROM DISK' % len(self.global_errors))
+            for global_error in self.global_errors:
+                string_printer.write(global_error)
         return str(string_printer)
 
 
@@ -140,14 +145,21 @@ class SteppingThumbnailsGenerator(AbstractNotification):
 
 
 class FinishedThumbnailsGenerator(AbstractNotification):
-    __slots__ = ('n_generated', 'n_total')
+    __slots__ = ('n_generated', 'n_total', 'errors')
 
-    def __init__(self, n_generated, n_total):
+    def __init__(self, n_generated, n_total, errors=()):
         self.n_generated = n_generated
         self.n_total = n_total
+        self.errors = errors
 
     def __str__(self):
-        return '(finished generating %d/%d thumbnails)' % (self.n_generated, self.n_total)
+        string_printer = common.StringPrinter()
+        string_printer.write('(finished generating %d/%d thumbnails)' % (self.n_generated, self.n_total))
+        if self.errors:
+            string_printer.title('%d ERROR(S) WHILE GENERATING THUMBNAILS' % len(self.errors))
+            for error in self.errors:
+                string_printer.write(error)
+        return str(string_printer)
 
 
 class SavedDatabaseFile(AbstractNotification):

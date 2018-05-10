@@ -29,13 +29,14 @@ THUMBNAIL_EXTENSION = 'png'
 
 
 class Job(object):
-    __slots__ = ('tasks', 'identifier', 'errors', 'success')
+    __slots__ = ('tasks', 'identifier', 'errors', 'success', 'global_errors')
 
     def __init__(self, tasks, identifier):
         self.identifier = identifier
         self.tasks = tasks
         self.errors = []
         self.success = []
+        self.global_errors = []
 
 
 class Videoraptor(object):
@@ -75,7 +76,6 @@ def load_videos_from_disk(folder_path, notifier, job_details):
     errors_dict, warning_dict, short_to_long = {}, {}, {}
     ignored_set = set()
     json_lines = []
-    global_errors = []
 
     list_file_path = AbsolutePath.new_file_path(folder_path, job.identifier, LIST_EXTENSION)
     with open(list_file_path.path, 'w') as list_file:
@@ -92,7 +92,7 @@ def load_videos_from_disk(folder_path, notifier, job_details):
         if line:
             prefix = Videoraptor.get_prefix(line)
             if prefix == Videoraptor.ERROR:
-                global_errors.append(line[len(prefix + ' '):])
+                job.global_errors.append(line[len(prefix + ' '):])
             elif prefix in (Videoraptor.FINISHED, Videoraptor.LOADED):
                 count = int(line[len(prefix + ' '):])
                 notifier.notify(notifications.SteppingVideosLoading(count, len(job.tasks), job.identifier))
@@ -192,7 +192,7 @@ def generate_thumbnails(folder_path, notifier, job_details):
         :rtype: (list[Video], list[(AbsolutePath, str)])
     """
     tasks, job_id = job_details
-    global_errors = []  # TODO In load_videos_from_disk
+    global_errors = []
 
     list_file_path = AbsolutePath.new_file_path(folder_path, job_id, LIST_EXTENSION)
     with open(list_file_path.path, 'w') as list_file:
@@ -219,26 +219,27 @@ def generate_thumbnails(folder_path, notifier, job_details):
     assert not std_out, std_out
     assert not std_err, std_err
 
-    if global_errors:
-        raise RuntimeError('\r\n'.join(global_errors))
-
     notifier.notify(notifications.SteppingThumbnailsGenerator(len(tasks), len(tasks), job_id))
+    return global_errors
 
 
 class Database(VideoSet):
-    __slots__ = ('__folder_path', '__file_path', '__video_folder_paths', '__property_types', '__notifier', '__max_id')
+    __slots__ = ('__folder_path', '__file_path', '__video_folder_paths', '__property_types', '__notifier', '__max_id',
+                 '__not_found')
 
     def __init__(self, db_folder, video_folders=(), keep_old_paths=True, load=True):
         super(Database, self).__init__()
         db_folder = AbsolutePath.ensure(db_folder)
         db_file_path = AbsolutePath.new_file_path(db_folder, DB_FILE_TITLE, DB_FILE_EXTENSION)
         video_folder_paths = set()
+        not_found = set()
         if db_file_path.exists():
             with open(db_file_path.path, 'rb') as db_file:
                 json_info = json.load(db_file)
             if keep_old_paths:
                 video_folder_paths.update(AbsolutePath(path) for path in json_info['video_folders'])
             property_types = PropertyTypeDict.from_json_data(json_info['property_types'])
+            not_found.update(json_info.get('not_found', ()))
         else:
             property_types = PropertyTypeDict()
         video_folder_paths.update(AbsolutePath.ensure(path) for path in video_folders)
@@ -248,6 +249,7 @@ class Database(VideoSet):
         self.__property_types = property_types
         self.__max_id = 0
         self.__notifier = Notifier()
+        self.__not_found = not_found
         if load:
             # If you need to configure something (e.g. notifier) before loading, create database with load == False,
             # configure what you want and load it later by calling database.load().
@@ -288,6 +290,7 @@ class Database(VideoSet):
                             video = Video.from_json_data(json.load(db_video_file), self.__property_types)
                         if not video.absolute_path.exists() or not video.absolute_path.isfile():
                             report.not_found.append(video)
+                            self.__not_found.add(video.absolute_path.path)
                             self.__delete_entry(video)
                             continue
                         if video.absolute_path.get_dirname() not in self.__video_folder_paths or self.contains(video):
@@ -309,6 +312,7 @@ class Database(VideoSet):
         self.__notifier.notify(notifications.VideosCollectedFromDisk(report))
         self.__notifier.notify(notifications.StartedVideosLoading())
         count = report.count_from_disk()
+        global_errors = []
         if count.collected:
             # Filter videos already loaded.
             video_paths_to_load = []
@@ -343,7 +347,8 @@ class Database(VideoSet):
                     for video_path, traceback_string in job_object.errors:
                         disk_report = report.disk[video_path.get_dirname()]
                         disk_report.errors.append((video_path, traceback_string))
-        self.__notifier.notify(notifications.FinishedVideosLoading(report))
+                    global_errors += job_object.global_errors
+        self.__notifier.notify(notifications.FinishedVideosLoading(report, global_errors))
 
     def __collect_videos_from_folder(self, video_folder_path: AbsolutePath, report: DatabaseReport):
         disk_report = DiskReport(video_folder_path)
@@ -376,6 +381,7 @@ class Database(VideoSet):
             if not video.has_valid_thumbnail():
                 videos_missing_thumbnail.append((video.absolute_path, video.video_id))
 
+        errors = []
         self.notifier.notify(notifications.StartedThumbnailsGenerator())
         if videos_missing_thumbnail:
             cpu_count = os.cpu_count()
@@ -383,9 +389,12 @@ class Database(VideoSet):
             job_function = functools.partial(generate_thumbnails, self.__folder_path, self.notifier)
             with Profiler(exit_message='Finished checking thumbnails:'):
                 with concurrent.futures.ProcessPoolExecutor(max_workers=cpu_count) as executor:
-                    list(executor.map(job_function, jobs))
+                    results = list(executor.map(job_function, jobs))
+            for result in results:
+                errors += result
         n_generated = sum(1 for path, _ in videos_missing_thumbnail if self.get(path).has_valid_thumbnail())
-        self.notifier.notify(notifications.FinishedThumbnailsGenerator(n_generated, len(videos_missing_thumbnail)))
+        self.notifier.notify(
+            notifications.FinishedThumbnailsGenerator(n_generated, len(videos_missing_thumbnail), errors))
 
     def clean_database(self):
         for video_to_remove in [video for video in self.videos()
@@ -411,6 +420,7 @@ class Database(VideoSet):
             'name': self.name,
             'video_folders': [str(path) for path in self.__video_folder_paths],
             'property_types': self.__property_types.to_json_data(),
+            'not_found': self.__not_found
         }
         with open(self.__file_path.path, 'w') as file:
             json.dump(json_info, file, indent=2)
