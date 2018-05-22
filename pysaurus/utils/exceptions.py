@@ -21,3 +21,8 @@ class FFmpegException(PysaurusException):
 
 class FFprobeException(FFmpegException):
     pass
+
+
+class EntryExistsException(PysaurusException):
+    def __init__(self, entry_type_name, entry_name):
+        super(EntryExistsException, self).__init__('%s/%s' % (entry_type_name, entry_name))
