@@ -7,7 +7,7 @@ import sys
 import traceback
 import ujson as json
 
-from pysaurus.database import notifications
+from pysaurus.database import notifications, videoraptor
 from pysaurus.database.notifier import Notifier
 from pysaurus.database.property import PropertyTypeDict, PropertyDict
 from pysaurus.database.report import DatabaseReport, DiskReport
@@ -59,10 +59,6 @@ class Videoraptor(object):
         return None
 
 
-# For real-time reading of subprocess output,
-# thanks to (2018/04/22): https://www.endpoint.com/blog/2015/01/28/getting-realtime-output-using-python
-
-
 def load_videos_from_disk(folder_path, notifier, job_details):
     """
         :type folder_path: AbsolutePath
@@ -70,53 +66,58 @@ def load_videos_from_disk(folder_path, notifier, job_details):
         :type job_details: list
         :rtype: (list[Video], list[(AbsolutePath, str)])
     """
+
+    # For real-time reading of subprocess output,
+    # thanks to (2018/04/22): https://www.endpoint.com/blog/2015/01/28/getting-realtime-output-using-python
+
+    print('Using videoraptor DLL')
+
     job = Job(job_details[0], job_details[1])
     next_index = job.identifier
     json_errors = []
     errors_dict, warning_dict, short_to_long = {}, {}, {}
     ignored_set = set()
-    json_lines = []
+    short_paths = []
 
-    list_file_path = AbsolutePath.new_file_path(folder_path, job.identifier, LIST_EXTENSION)
-    with open(list_file_path.path, 'w') as list_file:
-        for path in job.tasks:
-            short_path = common.get_convenient_os_path(path.path)
-            short_to_long[short_path] = path
-            print(short_path, file=list_file)
+    complete_output = ''
 
-    command = [VIDEO_RAPTOR, list_file_path.path]
-    p = subprocess.Popen(command, stdout=subprocess.PIPE, universal_newlines=True, bufsize=1)
+    for path in job.tasks:
+        short_path = common.get_convenient_os_path(path.path)
+        short_to_long[short_path] = path
+        short_paths.append(short_path)
+
+    cursor = 0
     while True:
-        # Thanks to (2018/04/22): https://www.endpoint.com/blog/2015/01/28/getting-realtime-output-using-python
-        line = p.stdout.readline().strip()
-        if line:
-            prefix = Videoraptor.get_prefix(line)
-            if prefix == Videoraptor.ERROR:
-                job.global_errors.append(line[len(prefix + ' '):])
-            elif prefix in (Videoraptor.FINISHED, Videoraptor.LOADED):
-                count = int(line[len(prefix + ' '):])
-                notifier.notify(notifications.SteppingVideosLoading(count, len(job.tasks), job.identifier))
-            elif prefix == Videoraptor.IGNORED:
-                ignored_set.add(line[len(prefix + ' '):])
-            elif prefix in (Videoraptor.VIDEO_ERROR, Videoraptor.VIDEO_WARNING):
-                split_pos = line.index(']')
-                video_filename = line[len(prefix + '['):split_pos]
-                parsed_message = line[(split_pos + 1):]
-                if prefix == Videoraptor.VIDEO_ERROR:
-                    errors_dict.setdefault(video_filename, []).append(parsed_message)
-                else:
-                    warning_dict.setdefault(video_filename, []).append(parsed_message)
-            elif line[0] != '#':
-                json_lines.append(line)
-        if p.poll() is not None:
+        result = videoraptor.run(short_paths, cursor)
+        if not result:
             break
+        output_string, len_consumed = result
+        cursor += len_consumed
+        complete_output += output_string
+        if (cursor + 1) % 25 == 0:
+            notifier.notify(notifications.SteppingVideosLoading(cursor + 1, len(job.tasks), job.identifier))
 
-    std_out, std_err = p.communicate()
-    list_file_path.delete()
-    assert not std_out, std_out
-    assert not std_err, std_err
+    for line in complete_output.splitlines():
+        line = line.strip()
+        if not line:
+            continue
 
-    for line in json_lines:
+        prefix = Videoraptor.get_prefix(line)
+        if prefix == Videoraptor.ERROR:
+            job.global_errors.append(line[len(prefix + ' '):])
+        elif prefix == Videoraptor.IGNORED:
+            ignored_set.add(line[len(prefix + ' '):])
+        elif prefix in (Videoraptor.VIDEO_ERROR, Videoraptor.VIDEO_WARNING):
+            split_pos = line.index(']')
+            video_filename = line[len(prefix + '['):split_pos]
+            parsed_message = line[(split_pos + 1):]
+            if prefix == Videoraptor.VIDEO_ERROR:
+                errors_dict.setdefault(video_filename, []).append(parsed_message)
+            else:
+                warning_dict.setdefault(video_filename, []).append(parsed_message)
+        elif line[0] == '#':
+            continue
+
         try:
             vdict = json.loads(line)
         except ValueError as exception:
@@ -225,9 +226,9 @@ def generate_thumbnails(folder_path, notifier, job_details):
 
 class Database(VideoSet):
     __slots__ = ('__folder_path', '__file_path', '__video_folder_paths', '__property_types', '__notifier', '__max_id',
-                 '__not_found')
+                 '__not_found', '__keep_invalid_entries')
 
-    def __init__(self, db_folder, video_folders=(), keep_old_paths=True, load=True):
+    def __init__(self, db_folder, *, video_folders=(), keep_old_paths=True, load=True, keep_invalid_entries=True):
         super(Database, self).__init__()
         db_folder = AbsolutePath.ensure(db_folder)
         db_file_path = AbsolutePath.new_file_path(db_folder, DB_FILE_TITLE, DB_FILE_EXTENSION)
@@ -250,6 +251,7 @@ class Database(VideoSet):
         self.__max_id = 0
         self.__notifier = Notifier()
         self.__not_found = not_found
+        self.__keep_invalid_entries = bool(keep_invalid_entries)
         if load:
             # If you need to configure something (e.g. notifier) before loading, create database with load == False,
             # configure what you want and load it later by calling database.load().
@@ -288,11 +290,12 @@ class Database(VideoSet):
                     try:
                         with open(db_video_path.path, 'rb') as db_video_file:
                             video = Video.from_json_data(json.load(db_video_file), self.__property_types)
-                        if not video.absolute_path.exists() or not video.absolute_path.isfile():
-                            report.not_found.append(video)
-                            self.__not_found.add(video.absolute_path.path)
-                            self.__delete_entry(video)
-                            continue
+                        if not self.__keep_invalid_entries:
+                            if not video.absolute_path.exists() or not video.absolute_path.isfile():
+                                report.not_found.append(video)
+                                self.__not_found.add(video.absolute_path.path)
+                                self.__delete_entry(video)
+                                continue
                         if video.absolute_path.get_dirname() not in self.__video_folder_paths or self.contains(video):
                             report.removed.append(video)
                             self.__delete_entry(video)
@@ -397,6 +400,8 @@ class Database(VideoSet):
             notifications.FinishedThumbnailsGenerator(n_generated, len(videos_missing_thumbnail), errors))
 
     def clean_database(self):
+        if self.__keep_invalid_entries:
+            return
         for video_to_remove in [video for video in self.videos()
                                 if (video.absolute_path.get_dirname() not in self.__video_folder_paths
                                     or not video.absolute_path.exists() or not video.absolute_path.isfile())]:

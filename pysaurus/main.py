@@ -25,6 +25,6 @@ if __name__ == '__main__':
                         folder_paths.append(folder_path)
                     else:
                         print('Ignored', folder_path)
-        database = Database(database_folder_path, folder_paths, keep_old_paths=False)
+        database = Database(database_folder_path, video_folders=folder_paths, keep_old_paths=False, keep_invalid_entries=False)
         trash_code.print_duplicates(database.video_paths())
         database.save()
