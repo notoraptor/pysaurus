@@ -165,7 +165,7 @@ def load_videos_from_disk(folder_path, notifier, job_details):
             for index, (line, exception) in enumerate(json_errors):
                 if short_name in line:
                     messages.append('JSON Error ' + line)
-                    messages.append(traceback.format_tb(exception.__traceback__))
+                    messages.extend(traceback.format_tb(exception.__traceback__))
                     nb_json_errors_handled += 1
             if not messages:
                 messages.append('Not loaded')
