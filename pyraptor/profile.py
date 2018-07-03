@@ -1,7 +1,7 @@
 from datetime import datetime
 
 
-class Profiling(object):
+class Profile(object):
 
     def __init__(self, time_start, time_end):
         difference = time_end - time_start
@@ -51,5 +51,5 @@ class Profiler(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.__time_end = datetime.now()
-        profiling = Profiling(self.__time_start, self.__time_end)
+        profiling = Profile(self.__time_start, self.__time_end)
         print('[PROFILE]', self.__exit_message.replace(self.__placeholder, str(profiling)))

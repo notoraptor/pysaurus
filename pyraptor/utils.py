@@ -48,7 +48,7 @@ def get_convenient_os_path(long_name):
             output_buf_size = needed
 
 
-def dispatch_tasks(tasks, job_count, next_job_id):
+def dispatch_tasks(tasks, job_count, next_job_id=0):
     """ Split <tasks> into <job_count> jobs and associate each one
         with an unique job ID starting from <next_job_id>, so that
         each job could assign an unique ID to each of his task by

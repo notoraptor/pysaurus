@@ -1,16 +1,19 @@
 from pyraptor.c_video import CVideo
 from pyraptor.utils import StringPrinter
+from pyraptor.absolute_path import AbsolutePath
+
+THUMBNAIL_EXTENSION = 'png'
 
 class Video(object):
     # Currently 14 fields.
     __slots__ = ('filename', 'title', 'container_format', 'audio_codec', 'video_codec', 'width', 'height',
                  'frame_rate_num', 'frame_rate_den', 'sample_rate', 'duration', 'duration_time_base', 'size',
-                 'bit_rate')
+                 'bit_rate', 'thumbnail', 'warnings')
 
     def __init__(self, c_video):
         if c_video:
             if isinstance(c_video, CVideo):
-                self.filename = c_video.filename.decode() if c_video.filename else None
+                self.filename = AbsolutePath(c_video.filename.decode()) if c_video.filename else None
                 self.title = c_video.title.decode() if c_video.title else None
                 self.container_format = c_video.container_format.decode() if c_video.container_format else None
                 self.audio_codec = c_video.audio_codec.decode() if c_video.audio_codec else None
@@ -24,9 +27,18 @@ class Video(object):
                 self.duration_time_base = c_video.duration_time_base
                 self.size = c_video.size
                 self.bit_rate = c_video.bit_rate
+                self.warnings = set()
+                self.thumbnail = None
+
             elif isinstance(c_video, dict):
                 for field_name in self.__slots__:
                     setattr(self, field_name, c_video[field_name])
+                self.filename = AbsolutePath.ensure(self.filename)
+                self.warnings = set(self.warnings)
+                if self.thumbnail:
+                    self.thumbnail = AbsolutePath.ensure(self.thumbnail)
+                    if not self.thumbnail_is_valid():
+                        self.thumbnail = None
             else:
                 raise Exception('Invalid given video initializer: %s' % c_video)
         else:
@@ -44,6 +56,8 @@ class Video(object):
             self.duration = 0
             self.size = 0
             self.bit_rate = 0
+            self.warnings = set()
+            self.thumbnail = None
 
     def __str__(self):
         printer = StringPrinter()
@@ -52,3 +66,19 @@ class Video(object):
             printer.write('\t%s: %s' % (field_name, getattr(self, field_name)))
         printer.write(')')
         return str(printer)
+
+    def to_dict(self):
+        dct = {key: getattr(self, key) for key in (
+            'title', 'container_format', 'audio_codec', 'video_codec', 'width', 'height', 'frame_rate_num',
+            'frame_rate_den', 'sample_rate', 'duration', 'duration_time_base', 'size', 'bit_rate', 'warnings')}
+        dct['filename'] = str(self.filename)
+        dct['thumbnail'] = str(self.thumbnail) if self.thumbnail else None
+        return dct
+
+    def thumbnail_is_valid(self):
+        return (
+            isinstance(self.thumbnail, AbsolutePath)
+            and self.thumbnail.exists()
+            and self.thumbnail.isfile()
+            and self.thumbnail.extension.lower() == THUMBNAIL_EXTENSION
+        )
