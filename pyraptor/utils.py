@@ -77,6 +77,15 @@ def dispatch_tasks(tasks, job_count, next_job_id=0):
     return jobs
 
 
+def print_title(message, wrapper='='):
+    message = str(message)
+    len_message = len(message)
+    line = wrapper * len_message
+    print(line)
+    print(message)
+    print(line)
+
+
 class StringPrinter(object):
     __slots__ = 'string_buffer', 'strip_right'
 

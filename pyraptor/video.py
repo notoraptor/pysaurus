@@ -8,9 +8,11 @@ class Video(object):
     # Currently 14 fields.
     __slots__ = ('filename', 'title', 'container_format', 'audio_codec', 'video_codec', 'width', 'height',
                  'frame_rate_num', 'frame_rate_den', 'sample_rate', 'duration', 'duration_time_base', 'size',
-                 'bit_rate', 'thumbnail', 'warnings')
+                 'bit_rate', 'thumbnail', 'warnings', 'file_exists')
 
     def __init__(self, c_video):
+        self.file_exists = True
+
         if c_video:
             if isinstance(c_video, CVideo):
                 self.filename = AbsolutePath(c_video.filename.decode()) if c_video.filename else None
@@ -31,7 +33,7 @@ class Video(object):
                 self.thumbnail = None
 
             elif isinstance(c_video, dict):
-                for field_name in self.__slots__:
+                for field_name in self.__slots__[:-1]:
                     setattr(self, field_name, c_video[field_name])
                 self.filename = AbsolutePath.ensure(self.filename)
                 self.warnings = set(self.warnings)
@@ -82,3 +84,6 @@ class Video(object):
             and self.thumbnail.isfile()
             and self.thumbnail.extension.lower() == THUMBNAIL_EXTENSION
         )
+
+    def get_title(self) -> str:
+        return self.title or self.filename.title
