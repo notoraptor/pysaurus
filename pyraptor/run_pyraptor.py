@@ -187,7 +187,10 @@ def main():
             split_pos = message.index(']')
             file_name = AbsolutePath(message[(len(prefix) + 1):split_pos])
             detail = message[(split_pos + 1):]
-            if file_name.path in short_to_long:
+            if file_name in videos and videos[file_name].filename:
+                # Video seems to have been extracted. Let's consider this error as a warning.
+                videos[file_name].warnings.add(detail)
+            elif file_name.path in short_to_long:
                 video_errors.setdefault(file_name, []).append(detail)
                 if file_name in videos:
                     videos.pop(file_name)
@@ -206,7 +209,7 @@ def main():
     video_errors = {short_to_long.pop(key.path, key): video_errors[key] for key in video_errors}
     for video in list(videos.values()):
         if video.filename.path in short_to_long:
-            video.filename = short_to_long[video.filename.path]
+            video.filename = short_to_long.pop(video.filename.path)
         else:
             videos.pop(video.filename)
             errors.append('Parsed video with unknown short name %s' % video.filename)
