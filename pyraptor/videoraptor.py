@@ -10,16 +10,17 @@ __dll_video_raptor = cdll.videoRaptorBatch
 __fn_create_output = __dll_video_raptor.createOutput
 __fn_output_to_string = __dll_video_raptor.outputToString
 __fn_delete_output = __dll_video_raptor.deleteOutput
-__fn_flush_logger = __dll_video_raptor.flushLogger
 __fn_video_raptor_details = __dll_video_raptor.videoRaptorDetails
+__fn_video_raptor_thumbnails = __dll_video_raptor.videoRaptorThumbnails
 
 __fn_create_output.restype = c_void_p
 __fn_output_to_string.argtypes = [c_void_p]
 __fn_output_to_string.restype = c_char_p
 __fn_delete_output.argtypes = [c_void_p]
-__fn_flush_logger.restype = c_char_p
 __fn_video_raptor_details.argtypes = [c_int, __StrArr, __CVideoPtrArr, c_void_p]
-__fn_video_raptor_details.restype = c_bool
+__fn_video_raptor_details.restype = c_int
+__fn_video_raptor_thumbnails.argtypes = [c_int, __StrArr, __StrArr, c_char_p, c_void_p]
+__fn_video_raptor_thumbnails.restype = c_int
 
 
 def get_n_reads():
@@ -41,5 +42,15 @@ def get_video_details(file_names):
     return res, messages.decode(), videos
 
 
-def pop_logger():
-    return __fn_flush_logger().decode()
+def generate_thumbnails(file_names, thumb_names, thumb_folder):
+    if len(file_names) > __NB_READS:
+        raise Exception('Expected at most %d file names, got %d.' % (__NB_READS, len(file_names)))
+    missing_n_reads = __NB_READS - len(file_names)
+    ascii_file_names = [file_name.encode() for file_name in file_names] + ([None] * missing_n_reads)
+    ascii_thumb_names = [thumb_name.encode() if thumb_name else None for thumb_name in thumb_names] + ([None] * missing_n_reads)
+    ascii_thumb_folder = thumb_folder.encode()
+    output = __fn_create_output()
+    res = __fn_video_raptor_thumbnails(__NB_READS, __StrArr(*ascii_file_names), __StrArr(*ascii_thumb_names), ascii_thumb_folder, output)
+    messages = __fn_output_to_string(output)
+    __fn_delete_output(output)
+    return res, messages.decode()

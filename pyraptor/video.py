@@ -4,15 +4,14 @@ from pyraptor.absolute_path import AbsolutePath
 
 THUMBNAIL_EXTENSION = 'png'
 
+
 class Video(object):
     # Currently 14 fields.
     __slots__ = ('filename', 'title', 'container_format', 'audio_codec', 'video_codec', 'width', 'height',
                  'frame_rate_num', 'frame_rate_den', 'sample_rate', 'duration', 'duration_time_base', 'size',
-                 'bit_rate', 'thumbnail', 'warnings', 'file_exists')
+                 'bit_rate', 'thumbnail', 'warnings')
 
     def __init__(self, c_video):
-        self.file_exists = True
-
         if c_video:
             if isinstance(c_video, CVideo):
                 self.filename = AbsolutePath(c_video.filename.decode()) if c_video.filename else None
@@ -31,9 +30,8 @@ class Video(object):
                 self.bit_rate = c_video.bit_rate
                 self.warnings = set()
                 self.thumbnail = None
-
             elif isinstance(c_video, dict):
-                for field_name in self.__slots__[:-1]:
+                for field_name in self.__slots__:
                     setattr(self, field_name, c_video[field_name])
                 self.filename = AbsolutePath.ensure(self.filename)
                 self.warnings = set(self.warnings)
@@ -69,10 +67,10 @@ class Video(object):
         printer.write(')')
         return str(printer)
 
+    file_exists = property(lambda self: self.filename.exists())
+
     def to_dict(self):
-        dct = {key: getattr(self, key) for key in (
-            'title', 'container_format', 'audio_codec', 'video_codec', 'width', 'height', 'frame_rate_num',
-            'frame_rate_den', 'sample_rate', 'duration', 'duration_time_base', 'size', 'bit_rate', 'warnings')}
+        dct = {key: getattr(self, key) for key in self.__slots__}
         dct['filename'] = str(self.filename)
         dct['thumbnail'] = str(self.thumbnail) if self.thumbnail else None
         return dct
