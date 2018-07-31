@@ -1,6 +1,7 @@
 import concurrent.futures
 import codecs
 import os
+import whirlpool
 import traceback
 import ujson as json
 
@@ -76,7 +77,7 @@ def generate_thumbnails(job):
     messages = []
     exceptions = []
     cursor = 0
-    count_tasks = file_names
+    count_tasks = len(file_names)
     while cursor < count_tasks:
         print('[JOB %s] Generated %d/%d thumbnail(s).' % (job_id, cursor, count_tasks))
         try:
@@ -89,10 +90,91 @@ def generate_thumbnails(job):
                 messages.append('#ERROR [JOB %s] Internal error after generated %d/%d thumbnail(s).' % (job_id, cursor, count_tasks))
             messages.append(local_messages)
         except Exception as exc:
-            exceptions.append(exc)
+            printer = utils.StringPrinter()
+            printer.write('Error while generating thumbnails.')
+            traceback.print_tb(exc.__traceback__, file=printer.string_buffer)
+            printer.write(type(exc).__name__)
+            printer.write(exc)
+            exceptions.append(str(printer))
         cursor += N_READS
     print('[JOB %s] Finished generating %d thumbnail(s).' % (job_id, count_tasks))
     return messages, exceptions
+
+
+def ensure_thumbnails(database: dict, output_folder: AbsolutePath, cpu_count: int):
+    vfnames_without_thumbs = [video.filename.path for video in database.values() if not video.thumbnail_is_valid()]
+    if vfnames_without_thumbs:
+        thumb_video_errors = {}
+        thumb_errors = []
+        thumb_jobs = []
+        thumb_name_to_file_name = {}
+        file_name_to_thumb_name = {}
+        wp = whirlpool.new()
+        for file_name in vfnames_without_thumbs:
+            wp.update(file_name.encode())
+            base_thumb_name = wp.hexdigest().lower()
+            thumb_name_index = 0
+            thumb_name = base_thumb_name
+            while True:
+                thumb_path = AbsolutePath.new_file_path(output_folder, thumb_name, utils.THUMBNAIL_EXTENSION)
+                if thumb_name in thumb_name_to_file_name or (thumb_path.exists() and thumb_path.isfile()):
+                    thumb_name_index += 1
+                    thumb_name = '%s_%d' % (base_thumb_name, thumb_name_index)
+                else:
+                    break
+            thumb_name_to_file_name[thumb_name] = file_name
+            file_name_to_thumb_name[file_name] = thumb_name
+        dispatched_thumb_jobs = utils.dispatch_tasks(vfnames_without_thumbs, cpu_count)
+        for job_file_names, job_id in dispatched_thumb_jobs:
+            job_thumb_names = [file_name_to_thumb_name[file_name] for file_name in job_file_names]
+            thumb_jobs.append((job_file_names, job_thumb_names, output_folder.path, job_id))
+        with Profiler(enter_message='Generating thumbnails through %d jobs.' % len(thumb_jobs),
+                      exit_message='Thumbnails generated:'):
+            with concurrent.futures.ProcessPoolExecutor(max_workers=cpu_count) as executor:
+                thumb_results = list(executor.map(generate_thumbnails, thumb_jobs))
+        for local_thumb_messages, local_thumb_exceptions in thumb_results:
+            thumb_errors.extend(local_thumb_exceptions)
+            for inline_messages in local_thumb_messages:
+                for message in inline_messages.splitlines():
+                    message = message.strip()
+                    if not message:
+                        continue
+                    prefix = MessageParser.get_prefix(message)
+                    if prefix == MessageParser.ERROR:
+                        thumb_errors.append(message[(len(prefix) + 1):])
+                    elif prefix in (MessageParser.VIDEO_ERROR, MessageParser.VIDEO_WARNING):
+                        split_pos = message.index(']')
+                        file_name = AbsolutePath(decode_hexadecimal(message[(len(prefix) + 1):split_pos]))
+                        detail = message[(split_pos + 1):]
+                        if file_name.path in file_name_to_thumb_name:
+                            thumb_video_errors.setdefault(file_name.path, []).append(
+                                detail if prefix == MessageParser.VIDEO_ERROR else '(warning) %s' % detail)
+                        else:
+                            thumb_errors.append('Thumbnail %s for unknown video (%s): %s'
+                                                % (prefix[len('VIDEO_'):].lower(), file_name, detail))
+
+        for thumb_name, file_name in thumb_name_to_file_name.items():
+            video = database.get(AbsolutePath(file_name))  # type: Video
+            video.thumbnail = AbsolutePath.new_file_path(output_folder, thumb_name, utils.THUMBNAIL_EXTENSION)
+        remaining_thumb_videos = [video.filename.path for video in database.values() if not video.thumbnail_is_valid()]
+        if remaining_thumb_videos:
+            printer = utils.StringPrinter()
+            printer.write(
+                'Internal errors: %d video(s) still without thumbnails.' % len(remaining_thumb_videos))
+            for remaining_file_name in remaining_thumb_videos:
+                printer.write('\t%s' % remaining_file_name)
+            thumb_errors.append(str(printer))
+        if thumb_errors:
+            print('%d\tTHUMBNAIL ERROR(S)' % len(thumb_errors))
+            for error in thumb_errors:
+                print('(error)', error)
+        if thumb_video_errors:
+            print('%d\tTHUMBNAIL VIDEO ERROR(S)' % len(thumb_video_errors))
+            for file_name in sorted(thumb_video_errors.keys()):
+                utils.print_title(file_name)
+                for error in thumb_video_errors[file_name]:
+                    print('\t%s' % error)
+    return len(vfnames_without_thumbs)
 
 
 def get_same_sizes(database: dict):
@@ -112,6 +194,12 @@ def get_same_sizes(database: dict):
                 print('\t"%s"' % video.filename)
 
 
+def save_database(database: dict, output_file_path: AbsolutePath):
+    with open(output_file_path.path, 'w') as output_file:
+        json.dump((video.to_dict() for video in database.values()), output_file, indent=1)
+        print(len(database), 'SAVED')
+
+
 def find(database: dict, term: str):
     term = term.lower()
     found = []
@@ -126,7 +214,8 @@ def find(database: dict, term: str):
 
 def main():
     list_file_path = AbsolutePath(os.path.join('..', '.local', 'test_folder.log'))
-    output_file_path = AbsolutePath.new_file_path(list_file_path.get_directory(), list_file_path.title, 'json')
+    output_folder = list_file_path.get_directory()
+    output_file_path = AbsolutePath.new_file_path(output_folder, list_file_path.title, 'json')
 
     # Loading database.
     database = {}
@@ -190,8 +279,7 @@ def main():
                         errors.append('Unknown parsed video short name %s' % video.filename.path)
                     else:
                         videos[video.filename] = video
-        for exc_message in local_exceptions:  # type: Exception
-            errors.append(exc_message)
+        errors.extend(local_exceptions)
         for message in local_messages:
             for inline_message in message.splitlines():
                 inline_message = inline_message.strip()
@@ -241,10 +329,10 @@ def main():
             printer.write('\t%s' % remaining_file_name)
         errors.append(str(printer))
     database.update({video.filename: video for video in videos.values()})
+
     if videos:
-        with open(output_file_path.path, 'w') as output_file:
-            json.dump((video.to_dict() for video in database.values()), output_file, indent=1)
-            print(len(database), 'SAVED')
+        save_database(database, output_file_path)
+
     if errors:
         print('%d\tERROR(S)' % len(errors))
         for error in errors:
@@ -255,6 +343,12 @@ def main():
             utils.print_title(file_name)
             for error in video_errors[file_name]:
                 print('\t%s' % error)
+
+    # Generating thumbnails.
+    had_work = ensure_thumbnails(database, output_folder, cpu_count)
+
+    if had_work:
+        save_database(database, output_file_path)
 
     get_same_sizes(database)
 

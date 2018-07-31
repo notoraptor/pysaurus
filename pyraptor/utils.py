@@ -22,6 +22,7 @@ def __load_extensions():
 
 
 VIDEO_SUPPORTED_EXTENSIONS = __load_extensions()
+THUMBNAIL_EXTENSION = 'png'
 
 
 def is_valid_video_filename(filename):

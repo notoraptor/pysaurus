@@ -1,8 +1,7 @@
+from pyraptor import utils
 from pyraptor.c_video import CVideo
 from pyraptor.utils import StringPrinter
 from pyraptor.absolute_path import AbsolutePath
-
-THUMBNAIL_EXTENSION = 'png'
 
 
 class Video(object):
@@ -80,7 +79,7 @@ class Video(object):
             isinstance(self.thumbnail, AbsolutePath)
             and self.thumbnail.exists()
             and self.thumbnail.isfile()
-            and self.thumbnail.extension.lower() == THUMBNAIL_EXTENSION
+            and self.thumbnail.extension.lower() == utils.THUMBNAIL_EXTENSION
         )
 
     def get_title(self) -> str:
