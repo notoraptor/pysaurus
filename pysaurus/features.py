@@ -22,7 +22,7 @@ def find(database: dict, term: str):
     term = term.lower()
     found = []
     for video in database.values():
-        if term in video.filename.title.lower() or (video.title and term in video.title.lower()):
+        if video.file_exists and term in video.filename.title.lower() or (video.title and term in video.title.lower()):
             found.append(video)
     print(len(found), 'FOUND', term)
     found.sort(key=lambda v: v.filename)

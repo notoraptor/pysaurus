@@ -285,7 +285,7 @@ def save_database(database: dict, output_file_path: AbsolutePath):
         notifier.notify(notifications.DatabaseSaved(len(database)))
 
 
-def main():
+def main(check_thumbnails=False):
     list_file_path = AbsolutePath(os.path.join('..', '.local', 'test_folder.log'))
     output_folder = list_file_path.get_directory()
     output_file_path = AbsolutePath.new_file_path(output_folder, list_file_path.title, 'json')
@@ -300,10 +300,11 @@ def main():
     if n_loaded:
         save_database(database, output_file_path)
 
-    # Generating thumbnails.
-    n_created = ensure_videos_thumbnails(database, output_folder, cpu_count)
-    if n_created:
-        save_database(database, output_file_path)
+    if check_thumbnails:
+        # Generating thumbnails.
+        n_created = ensure_videos_thumbnails(database, output_folder, cpu_count)
+        if n_created:
+            save_database(database, output_file_path)
 
     features.get_same_sizes(database)
 
