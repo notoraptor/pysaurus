@@ -1,2 +1,4 @@
 ujson
 whirlpool
+kivy
+ffpyplayer
