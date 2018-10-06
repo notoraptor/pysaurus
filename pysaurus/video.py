@@ -2,6 +2,9 @@ from pysaurus import utils
 from pysaurus.c_video import CVideo
 from pysaurus.utils import StringPrinter
 from pysaurus.absolute_path import AbsolutePath
+from pysaurus.duration import Duration
+from pysaurus.size import Size
+from pysaurus.html_stripper import HTMLStripper
 
 
 class Video(object):
@@ -66,7 +69,14 @@ class Video(object):
         printer.write(')')
         return str(printer)
 
-    file_exists = property(lambda self: self.filename.exists())
+    def file_exists(self):
+        return self.filename.exists()
+
+    def get_duration(self):
+        return Duration(self)
+
+    def get_size(self):
+        return Size(self)
 
     def to_dict(self):
         dct = {key: getattr(self, key) for key in self.__slots__}
@@ -83,4 +93,4 @@ class Video(object):
         )
 
     def get_title(self) -> str:
-        return self.title or self.filename.title
+        return HTMLStripper.strip(self.title) if self.title else self.filename.title

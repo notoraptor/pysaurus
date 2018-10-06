@@ -103,7 +103,7 @@ def load_database(output_file_path: AbsolutePath):
         with open(output_file_path.path, 'rb') as output_file:
             dictionaries = json.load(output_file)
         database = {video.filename: video for video in (Video(dct) for dct in dictionaries)}
-        nb_not_found = sum(not video.file_exists for video in database.values())
+        nb_not_found = sum(not video.file_exists() for video in database.values())
         notifier.notify(notifications.DatabaseLoaded(total=len(database), not_found=nb_not_found))
     return database
 
@@ -210,7 +210,7 @@ def update_database(database: dict, folder_to_files: dict, cpu_count: int):
 
 
 def ensure_videos_thumbnails(database: dict, output_folder: AbsolutePath, cpu_count: int):
-    file_names_no_thumbs = [video.filename.path for video in database.values() if not video.thumbnail_is_valid()]
+    file_names_no_thumbs = [video.filename.path for video in database.values() if video.file_exists() and not video.thumbnail_is_valid()]
     notifier.notify(notifications.ThumbnailsToLoad(len(file_names_no_thumbs)))
     if not file_names_no_thumbs:
         return 0
@@ -270,7 +270,7 @@ def ensure_videos_thumbnails(database: dict, output_folder: AbsolutePath, cpu_co
     for thumb_name, file_name in thumb_name_to_file_name.items():
         video = database.get(AbsolutePath(file_name))  # type: Video
         video.thumbnail = AbsolutePath.new_file_path(output_folder, thumb_name, utils.THUMBNAIL_EXTENSION)
-    remaining_thumb_videos = [video.filename.path for video in database.values() if not video.thumbnail_is_valid()]
+    remaining_thumb_videos = [video.filename.path for video in database.values() if video.file_exists() and not video.thumbnail_is_valid()]
     notifier.notify(notifications.MissingThumbnails(remaining_thumb_videos))
     if thumb_errors:
         notifier.notify(notifications.ThumbnailErrors(thumb_errors))
@@ -285,7 +285,7 @@ def save_database(database: dict, output_file_path: AbsolutePath):
         notifier.notify(notifications.DatabaseSaved(len(database)))
 
 
-def main(check_thumbnails=False):
+def main(check_thumbnails=True):
     list_file_path = AbsolutePath(os.path.join('..', '.local', 'test_folder.log'))
     output_folder = list_file_path.get_directory()
     output_file_path = AbsolutePath.new_file_path(output_folder, list_file_path.title, 'json')
@@ -307,6 +307,14 @@ def main(check_thumbnails=False):
             save_database(database, output_file_path)
 
     features.get_same_sizes(database)
+    html = features.get_same_lengths(database)
+    if not html:
+        print('No same lengths.')
+    else:
+        with open('same_lengths.html', 'wb') as file:
+            file.write(html.encode())
+        print(os.path.abspath('same_lengths.html'))
+    print('End.')
 
 
 if __name__ == '__main__':
