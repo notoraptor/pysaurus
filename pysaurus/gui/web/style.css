@@ -1,0 +1,83 @@
+body {
+    text-align: center;
+}
+
+.fancy-box {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    padding: 2rem;
+    background-color: rgba(100, 100, 110, 0.5);
+}
+
+.fancy-box .container {
+    border: 1px solid silver;
+    background-color: white;
+    height: 100%;
+}
+
+.fancy-box .fancy-header {
+    background-color: rgb(240, 240, 240);
+    border-bottom: 1px solid silver;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.fancy-box .fancy-content {
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.file-box .file-content {
+    font-family: "Courier New", Courier, monospace;
+}
+
+.file-box .file-list {
+    overflow: auto;
+    border: 1px solid silver;
+}
+
+.file-box .entry {
+    padding-top: 0.1rem;
+    padding-bottom: 0.1rem;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.file-box .entry:nth-child(odd) {
+    background-color: rgb(240, 240, 240);
+}
+
+.file-box .entry:hover {
+    cursor: pointer;
+    background-color: rgb(220, 220, 220);
+    font-weight: bold;
+}
+
+.file-box .entry.folder:hover .path {
+    text-decoration: underline;
+}
+
+.file-box .entry.folder:hover .icon {
+    background-color: black;
+}
+
+.file-box .entry .icon {
+    width: 1rem;
+    height: 1rem;
+    border: 1px solid transparent;
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+}
+
+.file-box .entry.folder .icon {
+    border-color: rgb(240, 240, 240);
+    background-color: rgb(225, 225, 225);
+}
+
+.file-box .entry .icon, .file-box .entry .path {
+    display: inline-block;
+    vertical-align: middle;
+}

@@ -4,3 +4,4 @@
 *.pyc
 .idea
 .local
+pysaurus/console/same_lengths.html

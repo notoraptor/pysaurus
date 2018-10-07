@@ -1,4 +1,5 @@
 ujson
 whirlpool
-kivy
 ffpyplayer
+cefpython3==66.0
+pyside2

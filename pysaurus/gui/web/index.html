@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Welcome to Pysaurus</title>
+    <link rel="stylesheet" href="lib/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<div class="container" id="page">
+    <h1>Welcome to Pysaurus</h1>
+    <p>
+        <input type="radio" name="action" value="open" id="input-radio-open" checked/>
+        <label for="input-radio-open">Ouvrir une base de données</label>
+        <input type="radio" name="action" value="create" id="input-radio-create"/>
+        <label for="input-radio-create">Créer une base de données</label>
+    </p>
+    <div>
+        <p id="section-open">
+            <label for="input-text-open">Choisir le fichier contenant la liste des dossiers à analyser (un dossier par
+                ligne)</label>
+            <br/>
+            <input type="text" id="input-text-open"/>
+            <button id="button-open">ouvrir</button>
+            <br/>
+            (le dossier de la liste sera utilisé pour sauvegarder la base de données et les miniatures des vidéos)
+        </p>
+        <p id="section-create">
+            <label for="input-text-create">Choisir le chemin d'enregistrement de la liste des dossiers</label>
+            <br/>
+            <input type="text" id="input-text-create"/>
+            <button id="button-create">choisir</button>
+            <br/>
+            (le dossier d'enregistrement sera utilisé pour sauvegarder la base de données et les miniatures des vidéos)
+        </p>
+    </div>
+    <div id="section-list">
+        <div>
+            <label for="input-text-list">Ajouter un dossier à la base de données:</label>
+            <input type="text" id="input-text-list"/>
+            <button id="button-add-to-list">ajouter</button>
+        </div>
+        <div id="list"></div>
+    </div>
+    <p>
+        <button id="button-load"></button>
+    </p>
+</div>
+<script src="lib/js/jquery-3.3.1.min.js"></script>
+<script src="lib/js/popper.min.js"></script>
+<script src="lib/js/bootstrap.min.js"></script>
+<script src="script.js"></script>
+<script type="text/javascript">
+    //<!--
+    function setAction(element) {
+        const buttonLoad = document.getElementById('button-load');
+        const sectionOpen = document.getElementById('section-open');
+        const sectionCreate = document.getElementById('section-create');
+        if (element.value === 'open') {
+            buttonLoad.textContent = 'ouvrir la base de données';
+            sectionOpen.style.display = 'block';
+            sectionCreate.style.display = 'none';
+        } else if (element.value === 'create') {
+            buttonLoad.textContent = 'créer la base de données';
+            sectionOpen.style.display = 'none';
+            sectionCreate.style.display = 'block';
+        }
+    }
+
+    function onActionClick(event) {
+        setAction(event.target);
+    }
+
+    function removeFolder(list, folder, entry) {
+        if (list.includes(folder)) {
+            list.splice(list.indexOf(folder), 1);
+            const domList = document.getElementById('list');
+            domList.removeChild(entry);
+        }
+    }
+
+    function addFolder(list, folder) {
+        if (!list.includes(folder)) {
+            list.push(folder);
+            const domList = document.getElementById('list');
+            const entry = document.createElement('div');
+            const folderSpan = document.createElement('span');
+            const buttonRemove = document.createElement('button');
+            entry.classList.add('item');
+            folderSpan.textContent = folder;
+            buttonRemove.textContent = 'remove';
+            buttonRemove.onclick = () => removeFolder(list, folder, entry);
+            entry.appendChild(folderSpan);
+            entry.appendChild(buttonRemove);
+            domList.appendChild(entry);
+        }
+    }
+
+    function openDialog() {
+        const onClose = () => console.log('open dialog');
+        Pysaurus.open_folder(null, (result) => {
+            if (result.error) {
+                alert(result.error);
+            } else {
+                const loader = (fnClose) => FileBox.load(result, fnClose);
+                FancyBox.load('Ouvrir un fichier', loader, onClose);
+            }
+        });
+    }
+
+    function createDialog() {
+        const element = document.createElement('div');
+        element.textContent = 'hello create';
+        FancyBox.load('Créer un fichier', element, () => console.log('create dialog'));
+    }
+
+    function onAddFolder(list) {
+        const input = document.getElementById('input-text-list');
+        const value = input.value.trim();
+        if (value.length) {
+            Pysaurus.is_valid_folder_path(value, (ok) => {
+                if (ok) {
+                    addFolder(list, value);
+                    input.value = '';
+                } else {
+                    alert(`Invalid folder path: ${value}`);
+                }
+            });
+        }
+    }
+
+    function main() {
+        const foldersList = [];
+        const elementActionOpen = document.getElementById('input-radio-open');
+        const elementActionCreate = document.getElementById('input-radio-create');
+        const buttonAddToList = document.getElementById('button-add-to-list');
+        const buttonOpen = document.getElementById('button-open');
+        const buttonCreate = document.getElementById('button-create');
+        elementActionOpen.onclick = onActionClick;
+        elementActionCreate.onclick = onActionClick;
+        buttonAddToList.onclick = () => onAddFolder(foldersList);
+        buttonOpen.onclick = openDialog;
+        buttonCreate.onclick = createDialog;
+        setAction(elementActionOpen);
+    }
+
+    window.onload = main;
+    //->
+</script>
+</body>
+</html>
