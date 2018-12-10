@@ -18,13 +18,17 @@ class Database(object):
 
     @staticmethod
     def collect_files(folder_path: AbsolutePath, folder_to_files: dict):
-        notifier.notify(notifications.CollectingFiles(folder_path))
+        nb_collected = 0
         for file_name in folder_path.listdir():
             path = AbsolutePath.join(folder_path, file_name)
             if path.isdir():
                 Database.collect_files(path, folder_to_files)
             elif utils.is_valid_video_filename(path.path):
                 folder_to_files.setdefault(folder_path, set()).add(path)
+                nb_collected += 1
+        if nb_collected:
+            notifier.notify(notifications.CollectingFiles(folder_path))
+        return nb_collected
 
     @staticmethod
     def get_folders_from_list_file(list_file_path: AbsolutePath):
@@ -104,6 +108,7 @@ class Database(object):
                     Database.collect_files(path, folder_to_files)
             elif utils.is_valid_video_filename(path.path):
                 folder_to_files.setdefault(path.get_directory(), set()).add(path)
+                notifier.notify(notifications.CollectingFiles(path))
             else:
                 notifier.notify(notifications.FolderIgnored(path))
         # Report collection.
@@ -120,7 +125,7 @@ class Database(object):
             with open(self.json_path.path, 'rb') as output_file:
                 dictionaries = json.load(output_file)
             self.videos = {video.filename: video for video in (Video(dct, self.database_path) for dct in dictionaries)
-                           if video.filename.get_directory() in self.__folders}
+                           if any(video.filename.get_directory().path.startswith(folder.path) for folder in self.__folders)}
 
     def add_folder(self, folder):
         self.__folders.add(AbsolutePath.ensure(folder))
@@ -311,8 +316,8 @@ class Database(object):
         with open(self.list_path.path, 'w') as list_file:
             for folder in sorted(self.__folders):
                 list_file.writelines(folder.path)
-                list_file.writelines('\r\n')
+                list_file.writelines('\n')
         # Save videos entries.
         with open(self.json_path.path, 'w') as output_file:
-            json.dump((video.to_dict() for video in self.videos.values()), output_file)
+            json.dump([video.to_dict() for video in self.videos.values()], output_file)
             notifier.notify(notifications.DatabaseSaved(len(self.videos)))

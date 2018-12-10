@@ -1,5 +1,3 @@
 ujson
 whirlpool
-ffpyplayer
-cefpython3==66.0
 pyside2

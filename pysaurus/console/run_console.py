@@ -27,6 +27,7 @@ def main(check_thumbnails=True):
             file.write(html.encode())
         print(os.path.abspath('same_lengths.html'))
     print('End.')
+    features.find(database.videos, 'rahyndee')
 
 
 if __name__ == '__main__':
