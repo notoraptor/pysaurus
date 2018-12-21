@@ -1,3 +1,8 @@
 ujson
 whirlpool
 pyside2
+Pillow
+opencv-contrib-python-headless
+scikit-image
+imutils
+scipy

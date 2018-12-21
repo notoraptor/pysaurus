@@ -85,9 +85,9 @@ def find(database: dict, term: str):
     term = term.lower()
     found = []
     for video in database.values():  # type: Video
-        if video.file_exists() and term in video.get_title().lower():
+        if video.file_exists() and (term in video.title.lower() or term in video.filename.path.lower()):
             found.append(video)
     print(len(found), 'FOUND', term)
-    found.sort(key=lambda v: v.filename)
+    found.sort(key=lambda v: v.get_duration())
     for video in found:
         print('\t"%s"\t%s' % (video.filename, VideoDuration(video)))

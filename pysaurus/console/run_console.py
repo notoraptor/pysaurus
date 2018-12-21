@@ -19,6 +19,7 @@ def main(check_thumbnails=True):
         database.ensure_thumbnails()
 
     features.get_same_sizes(database.videos)
+    features.find(database.videos, 'ashley_adams')
     html = features.get_same_lengths(database.videos)
     if not html:
         print('No same lengths.')
@@ -27,7 +28,6 @@ def main(check_thumbnails=True):
             file.write(html.encode())
         print(os.path.abspath('same_lengths.html'))
     print('End.')
-    features.find(database.videos, 'rahyndee')
 
 
 if __name__ == '__main__':

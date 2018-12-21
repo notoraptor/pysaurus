@@ -82,6 +82,10 @@ class Video(object):
                         self.thumbnail = None
             else:
                 raise Exception('Invalid video initialization data: %s' % data)
+        if self.title:
+            self.title = HTMLStripper.strip(self.title)
+        else:
+            self.title = ''
 
     def __str__(self):
         printer = StringPrinter()

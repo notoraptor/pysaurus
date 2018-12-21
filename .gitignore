@@ -1,5 +1,6 @@
 *.dll
 *.jpg
+*.png
 *.log
 *.pyc
 .idea

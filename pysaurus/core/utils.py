@@ -58,6 +58,19 @@ def hex_to_string(message):
     return codecs.decode(message, 'hex').decode()
 
 
+def permute(values, initial_permutation=()):
+    """ Generate a sequence of permutations from given values list. """
+    initial_permutation = list(initial_permutation)
+    if not values:
+        yield initial_permutation
+        return
+    for position in range(len(values)):
+        extended_permutation = initial_permutation + [values[position]]
+        remaining_values = values[:position] + values[(position + 1):]
+        for permutation in permute(remaining_values, extended_permutation):
+            yield permutation
+
+
 class StringPrinter(object):
     __slots__ = 'string_buffer', 'strip_right'
 
@@ -76,9 +89,12 @@ class StringPrinter(object):
         kwargs['file'] = self.string_buffer
         print(*args, **kwargs)
 
-    def title(self, message, character='='):
+    def title(self, message, character='=', up=True, down=False):
         if not isinstance(message, str):
             message = str(message)
         line = character * len(message)
-        self.write(line)
+        if up:
+            self.write(line)
         self.write(message)
+        if down:
+            self.write(line)
