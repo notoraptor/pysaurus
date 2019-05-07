@@ -2,11 +2,12 @@ import codecs
 import os
 from io import StringIO
 
+import whirlpool
+
 VIDEO_SUPPORTED_EXTENSIONS = frozenset(
     ('3g2', '3gp', 'asf', 'avi', 'drc', 'f4a', 'f4b', 'f4p', 'f4v', 'flv', 'gifv', 'm2v', 'm4p', 'm4v', 'mkv', 'mng',
      'mov', 'mp2', 'mp4', 'mpe', 'mpeg', 'mpg', 'mpv', 'mxf', 'nsv', 'ogg', 'ogv', 'qt', 'rm', 'rmvb', 'roq', 'svi',
      'vob', 'webm', 'wmv', 'yuv'))
-THUMBNAIL_EXTENSION = 'png'
 
 assert len(VIDEO_SUPPORTED_EXTENSIONS) == 36, (len(VIDEO_SUPPORTED_EXTENSIONS), VIDEO_SUPPORTED_EXTENSIONS)
 
@@ -71,6 +72,21 @@ def permute(values, initial_permutation=()):
             yield permutation
 
 
+def file_system_is_case_insensitive(folder='.'):
+    base_name = os.path.join(folder, 'tmp')
+    count = 0
+    while True:
+        test_name = '%s%d' % (base_name, count)
+        if os.path.exists(test_name):
+            count += 1
+        else:
+            break
+    with open(test_name, 'w+'):
+        is_insensitive = os.path.exists(test_name.upper())
+    os.unlink(test_name)
+    return is_insensitive
+
+
 class StringPrinter(object):
     __slots__ = 'string_buffer', 'strip_right'
 
@@ -98,3 +114,14 @@ class StringPrinter(object):
         self.write(message)
         if down:
             self.write(line)
+
+
+class Whirlpool:
+    wp = None
+
+    @staticmethod
+    def hash(string: str):
+        if not Whirlpool.wp:
+            Whirlpool.wp = whirlpool.new()
+        Whirlpool.wp.update(string.encode())
+        return Whirlpool.wp.hexdigest().lower()

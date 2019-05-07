@@ -21,11 +21,11 @@ class Notification(object):
             ', '.join('%s=%s' % (name, _wrap(getattr(self, name))) for name in valid_attribute_names))
 
 
-class LogMessage(Notification):
-    __slots__ = ['message']
+class UnusedThumbnails(Notification):
+    __slots__ = ['removed']
 
-    def __init__(self, message):
-        self.message = message
+    def __init__(self, removed):
+        self.removed = removed
 
 
 class CollectingFiles(Notification):
@@ -50,11 +50,18 @@ class CollectedFiles(Notification):
         self.folder_to_files = folder_to_files
 
     def __str__(self):
+        total_count = 0
+        folder_to_count = []
+        for folder, file_names in self.folder_to_files.items():
+            local_count = len(file_names)
+            total_count += local_count
+            folder_to_count.append((folder, local_count))
+        folder_to_count.sort(key=lambda couple: (-couple[1], couple[0]))
         printer = utils.StringPrinter()
         printer.write(
-            '%s: %d' % (type(self).__name__, sum(len(file_names) for file_names in self.folder_to_files.values())))
-        for path in sorted(self.folder_to_files.keys()):
-            printer.write('%d\t%s' % (len(self.folder_to_files[path]), path))
+            '%s: %d' % (type(self).__name__, total_count))
+        for folder, local_count in folder_to_count:
+            printer.write('%d\t%s' % (local_count, folder))
         return str(printer)
 
 
@@ -72,12 +79,13 @@ class ThumbnailJob(VideoJob):
 
 
 class DatabaseLoaded(Notification):
-    __slots__ = ['total', 'not_found', 'valid']
+    __slots__ = ['total', 'not_found', 'valid', 'unreadable']
 
-    def __init__(self, total, not_found):
+    def __init__(self, total, not_found, unreadable):
         self.total = total
         self.not_found = not_found
-        self.valid = total - not_found
+        self.unreadable = unreadable
+        self.valid = total - not_found - unreadable
 
 
 class DatabaseSaved(Notification):
@@ -117,21 +125,6 @@ class MissingThumbnails(MissingVideos):
     pass
 
 
-class InfoErrors(Notification):
-    __slots__ = ['errors']
-
-    def __init__(self, errors: list):
-        self.errors = errors
-
-    def __str__(self):
-        printer = utils.StringPrinter()
-        printer.write('%s: %d' % (type(self).__name__, len(self.errors)))
-        for error in self.errors:
-            printer.write('(error)')
-            printer.write(error)
-        return str(printer)
-
-
 class VideoInfoErrors(Notification):
     __slots__ = ['video_errors']
 
@@ -146,10 +139,6 @@ class VideoInfoErrors(Notification):
             for video_error in self.video_errors[file_name]:
                 printer.write('\t%s' % video_error)
         return str(printer)
-
-
-class ThumbnailErrors(InfoErrors):
-    pass
 
 
 class VideoThumbnailErrors(VideoInfoErrors):

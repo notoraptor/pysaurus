@@ -61,7 +61,8 @@ def get_same_lengths(database: dict):
         for duration in sorted(same_lengths.keys()):
             elements = same_lengths[duration]  # type: list
             elements.sort(key=lambda v: v.filename)
-            html.write('<tr><td colspan="7"><div class="group">%s, %d video(s)</div></td></tr>' % (duration, len(elements)))
+            html.write(
+                '<tr><td colspan="7"><div class="group">%s, %d video(s)</div></td></tr>' % (duration, len(elements)))
             for video in elements:  # type: Video
                 html.write('<tr>')
                 html.write('<td rowspan="2"><img src="file:///%s"/></td>' % video.thumbnail)

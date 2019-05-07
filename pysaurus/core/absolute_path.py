@@ -1,12 +1,17 @@
 import os
+import platform
 import shutil
+
+WINDOWS_PATH_PREFIX = '\\\\?\\'
 
 
 class AbsolutePath(object):
 
-    def __init__(self, path):
+    def __init__(self, path: str):
         if not os.path.isabs(path):
             path = os.path.abspath(path)
+        if len(path) >= 260 and platform.system() == 'Windows' and not path.startswith(WINDOWS_PATH_PREFIX):
+            path = '%s%s' % (WINDOWS_PATH_PREFIX, path)
         last_index_of_separator = path.rfind(os.path.sep)
         last_index_of_dot = -1 if last_index_of_separator < 0 else path.rfind('.', last_index_of_separator)
         index_title_start = 0 if last_index_of_separator < 0 else (last_index_of_separator + 1)
@@ -52,6 +57,20 @@ class AbsolutePath(object):
     def get_directory(self):
         return AbsolutePath(os.path.dirname(self.__path))
 
+    def in_directory(self, directory):
+        directory = AbsolutePath.ensure(directory)
+        if not directory.isdir():
+            return False
+        directory = directory.path
+        path = self.path
+        if directory.startswith(WINDOWS_PATH_PREFIX):
+            directory = directory[len(WINDOWS_PATH_PREFIX):]
+        if path.startswith(WINDOWS_PATH_PREFIX):
+            path = path[len(WINDOWS_PATH_PREFIX):]
+        if len(directory) >= len(path):
+            return False
+        return path.startswith('%s%s' % (directory, os.sep))
+
     # not tested.
     def get_date_modified(self):
         return os.path.getmtime(self.__path)
@@ -65,7 +84,6 @@ class AbsolutePath(object):
         os.makedirs(self.__path, exist_ok=True)
         if not os.path.isdir(self.__path):
             raise OSError("Unable to create a folder at path %s" % self.__path)
-        return self
 
     # not tested.
     def delete(self):

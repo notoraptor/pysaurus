@@ -1,9 +1,9 @@
-from pysaurus.core import utils
+from pysaurus.core import thumbnail_utils
 from pysaurus.core.absolute_path import AbsolutePath
-from pysaurus.core.c_video import CVideo
 from pysaurus.core.html_stripper import HTMLStripper
 from pysaurus.core.utils import StringPrinter
 from pysaurus.core.video_duration import VideoDuration
+from pysaurus.core.video_raptor.structures import VideoInfo
 from pysaurus.core.video_size import VideoSize
 
 
@@ -11,7 +11,7 @@ class Video(object):
     # Currently 14 fields.
     __slots__ = ('filename', 'title', 'container_format', 'audio_codec', 'video_codec', 'width', 'height',
                  'frame_rate_num', 'frame_rate_den', 'sample_rate', 'duration', 'duration_time_base', 'size',
-                 'bit_rate', 'thumbnail', 'warnings')
+                 'bit_rate', 'thumb_name', 'errors')
 
     MIN_TO_LONG = {
         'f': 'filename',
@@ -28,12 +28,13 @@ class Video(object):
         't': 'duration_time_base',
         's': 'size',
         'r': 'bit_rate',
-        'i': 'thumbnail',
-        'e': 'warnings'
+        'i': 'thumb_name',
+        'e': 'errors'
     }
+
     LONG_TO_MIN = {_long: _min for _min, _long in MIN_TO_LONG.items()}
 
-    def __init__(self, data, database_folder: AbsolutePath = None):
+    def __init__(self, data):
         self.filename = None  # type: AbsolutePath
         self.title = ''
         self.container_format = ''
@@ -48,10 +49,10 @@ class Video(object):
         self.duration_time_base = 0
         self.size = 0
         self.bit_rate = 0
-        self.thumbnail = None  # type: AbsolutePath
-        self.warnings = set()
+        self.thumb_name = ''
+        self.errors = set()
         if data:
-            if isinstance(data, CVideo):
+            if isinstance(data, VideoInfo):
                 self.filename = AbsolutePath(data.filename.decode()) if data.filename else None
                 self.title = data.title.decode() if data.title else None
                 self.container_format = data.container_format.decode() if data.container_format else None
@@ -67,25 +68,15 @@ class Video(object):
                 self.size = data.size
                 self.bit_rate = data.bit_rate
             elif isinstance(data, dict):
+                # Loading from a JSON.
                 for field_name in self.__slots__:
                     setattr(self, field_name, data[self.LONG_TO_MIN[field_name]])
                 self.filename = AbsolutePath.ensure(self.filename)
-                self.warnings = set(self.warnings)
-                if self.thumbnail:
-                    self.thumbnail = AbsolutePath.ensure(self.thumbnail)
-                    if not self.thumbnail_is_valid() and database_folder and self.thumbnail.extension.lower() == utils.THUMBNAIL_EXTENSION:
-                        alt_file_path = AbsolutePath.new_file_path(database_folder, self.thumbnail.title,
-                                                                   self.thumbnail.extension)
-                        if alt_file_path.exists() and alt_file_path.isfile():
-                            self.thumbnail = alt_file_path
-                    if not self.thumbnail_is_valid():
-                        self.thumbnail = None
+                self.errors = set(self.errors)
             else:
                 raise Exception('Invalid video initialization data: %s' % data)
         if self.title:
             self.title = HTMLStripper.strip(self.title)
-        else:
-            self.title = ''
 
     def __str__(self):
         printer = StringPrinter()
@@ -96,7 +87,7 @@ class Video(object):
         return str(printer)
 
     def file_exists(self):
-        return self.filename.exists()
+        return self.filename.isfile()
 
     def get_duration(self):
         return VideoDuration(self)
@@ -107,14 +98,16 @@ class Video(object):
     def to_dict(self):
         dct = {self.LONG_TO_MIN[key]: getattr(self, key) for key in self.__slots__}
         dct[self.LONG_TO_MIN['filename']] = str(self.filename)
-        dct[self.LONG_TO_MIN['thumbnail']] = str(self.thumbnail) if self.thumbnail else None
         return dct
 
-    def thumbnail_is_valid(self):
-        return (isinstance(self.thumbnail, AbsolutePath)
-                and self.thumbnail.exists()
-                and self.thumbnail.isfile()
-                and self.thumbnail.extension.lower() == utils.THUMBNAIL_EXTENSION)
+    def thumbnail_is_valid(self, folder: AbsolutePath):
+        thumbnail_path = self.get_thumbnail_path(folder)
+        return thumbnail_path.exists() and thumbnail_path.isfile()
+
+    def get_thumbnail_path(self, folder: AbsolutePath):
+        if not self.thumb_name:
+            self.thumb_name = thumbnail_utils.ThumbnailStrings.generate_name(self.filename)
+        return thumbnail_utils.ThumbnailStrings.generate_path_from_name(folder, self.thumb_name)
 
     def get_title(self):
-        return HTMLStripper.strip(self.title) if self.title else self.filename.title
+        return self.title if self.title else self.filename.title
