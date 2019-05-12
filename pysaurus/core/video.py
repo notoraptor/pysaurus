@@ -101,8 +101,7 @@ class Video(object):
         return dct
 
     def thumbnail_is_valid(self, folder: AbsolutePath):
-        thumbnail_path = self.get_thumbnail_path(folder)
-        return thumbnail_path.exists() and thumbnail_path.isfile()
+        return self.get_thumbnail_path(folder).isfile()
 
     def get_thumbnail_path(self, folder: AbsolutePath):
         if not self.thumb_name:

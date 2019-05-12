@@ -76,6 +76,8 @@ class Database(object):
         valid_thumb_names = set()
         videos_without_thumbs = []
         thumb_to_videos = {}
+        thumb_video_errors = {}
+        thumb_jobs = []
 
         # Collect videos with thumbnails and without thumbnails.
         for video in self.videos.values():
@@ -94,12 +96,11 @@ class Database(object):
 
         notifier.notify(notifications.ThumbnailsToLoad(len(videos_without_thumbs)))
         if not videos_without_thumbs:
+            self.notify_missing_thumbnails()
             return
 
-        thumb_video_errors = {}
-        thumb_jobs = []
         for video in videos_without_thumbs:
-            base_thumb_name = utils.Whirlpool.hash(video.filename.path)
+            base_thumb_name = thumbnail_utils.ThumbnailStrings.generate_name(video.filename)
             thumb_name_index = 0
             thumb_name = base_thumb_name
             while thumb_name in valid_thumb_names:
@@ -131,32 +132,36 @@ class Database(object):
                     self.videos[AbsolutePath(file_name)].errors.add(PYTHON_ERROR_THUMBNAIL)
         assert nb_results == len(videos_without_thumbs)
 
-        remaining_thumb_videos = [video.filename.path for video in self.videos.values()
-                                  if video.file_exists() and not video.thumbnail_is_valid(self.database_path)]
-        notifier.notify(notifications.MissingThumbnails(remaining_thumb_videos))
+        self.notify_missing_thumbnails()
         if thumb_video_errors:
             notifier.notify(notifications.VideoThumbnailErrors(thumb_video_errors))
         self.save()
+
+    def notify_missing_thumbnails(self):
+        remaining_thumb_videos = [video.filename.path for video in self.videos.values()
+                                  if video.file_exists()
+                                  and (PYTHON_ERROR_THUMBNAIL in video.errors
+                                       or not video.thumbnail_is_valid(self.database_path))]
+        notifier.notify(notifications.MissingThumbnails(remaining_thumb_videos))
 
     def clean_unused_thumbnails(self):
         fs_is_case_insensitive = utils.file_system_is_case_insensitive(self.database_path.path)
         all_images_paths = set()
         for path_string in self.database_path.listdir():
             if path_string.lower().endswith('.%s' % thumbnail_utils.THUMBNAIL_EXTENSION):
-                full_path_string = os.path.join(self.database_path.path, path_string)
                 if fs_is_case_insensitive:
-                    full_path_string = full_path_string.lower()
-                all_images_paths.add(full_path_string)
+                    path_string = path_string.lower()
+                all_images_paths.add(path_string)
         for video in self.videos.values():
             if video.file_exists() and PYTHON_ERROR_THUMBNAIL not in video.errors:
-                thumb_path_string = video.get_thumbnail_path(self.database_path).path
+                thumb_path_string = video.get_thumbnail_path(self.database_path).get_basename()
                 if fs_is_case_insensitive:
                     thumb_path_string = thumb_path_string.lower()
-                if os.path.exists(thumb_path_string) and os.path.isfile(thumb_path_string):
+                if thumb_path_string in all_images_paths:
                     all_images_paths.remove(thumb_path_string)
         notifier.notify(notifications.UnusedThumbnails(len(all_images_paths)))
         for unused_thumbnail in all_images_paths:
-            os.unlink(unused_thumbnail)
+            os.unlink(os.path.join(self.database_path.path, unused_thumbnail))
 
     def add_folder(self, folder):
         self.__folders.add(AbsolutePath.ensure(folder))
@@ -227,52 +232,65 @@ class Database(object):
         return paths
 
     @staticmethod
-    def get_videos_paths_from_disk(folders: set):
+    def get_videos_paths_from_disk(paths: set):
         folder_to_files = {}
-        for path in sorted(folders):  # type: AbsolutePath
-            if not path.exists():
-                notifier.notify(notifications.FolderNotFound(path))
-            elif path.isdir():
-                if path not in folder_to_files:
-                    Database.collect_files(path, folder_to_files)
-            elif utils.is_valid_video_filename(path.path):
-                folder_to_files.setdefault(path.get_directory(), set()).add(path)
-                notifier.notify(notifications.CollectingFiles(path))
-            else:
-                notifier.notify(notifications.FolderIgnored(path))
-        # Report collection.
+        cpu_count = os.cpu_count()
+        jobs = utils.dispatch_tasks(sorted(paths), cpu_count)
+        with Profiler(enter_message='Collecting videos (%d threads).' % len(jobs), exit_message='Videos collected:'):
+            with concurrent.futures.ProcessPoolExecutor(max_workers=cpu_count) as executor:
+                results = list(executor.map(Database.job_collect_videos, jobs))
+        for local_result in results:  # type: dict
+            for folder, files in local_result.items():
+                folder_to_files.setdefault(folder, set()).update(files)
         notifier.notify(notifications.CollectedFiles(folder_to_files))
         return folder_to_files
 
     @staticmethod
+    def job_collect_videos(job):
+        folder_to_files = {}
+        paths, _ = job
+        folders = set()
+        for path in paths:  # type: AbsolutePath
+            if not path.exists():
+                notifier.notify(notifications.FolderNotFound(path))
+            elif path.isdir():
+                folders.add(path)
+            elif utils.is_valid_video_filename(path.path):
+                folder_to_files.setdefault(path.get_directory(), set()).add(path)
+                notifier.notify(notifications.CollectingFiles(path))
+            else:
+                notifier.notify(notifications.PathIgnored(path))
+        for folder in folders:
+            Database.collect_files(folder, folder_to_files)
+        return folder_to_files
+
+    @staticmethod
     def job_videos_info(job):
-        output = {}
+        results = []
         file_names, job_id = job
         count_tasks = len(file_names)
         cursor = 0
         while cursor < count_tasks:
             notifier.notify(notifications.VideoJob(job_id, cursor, count_tasks))
-            file_name_dictionary = {file_name: None for file_name in file_names[cursor:(cursor + N_READS)]}
-            video_raptor.collect_video_info(file_name_dictionary)
-            output.update(file_name_dictionary)
+            results.extend(video_raptor.collect_video_info(file_names[cursor:(cursor + N_READS)]))
             cursor += N_READS
         notifier.notify(notifications.VideoJob(job_id, count_tasks, count_tasks))
-        return output
+        return {file_names[i]: results[i] for i in range(len(file_names))}
 
     @staticmethod
     def job_videos_thumbnails(job):
+        results = []
         output = {}
         file_names, thumb_names, thumb_folder, job_id = job
         cursor = 0
         count_tasks = len(file_names)
         while cursor < count_tasks:
             notifier.notify(notifications.ThumbnailJob(job_id, cursor, count_tasks))
-            fn_to_tn = {file_names[i]: thumb_names[i] for i in range(cursor, min(cursor + N_READS, count_tasks))}
-            video_raptor.generate_video_thumbnails(fn_to_tn, thumb_folder)
-            output.update(fn_to_tn)
+            results.extend(video_raptor.generate_video_thumbnails(
+                file_names[cursor:(cursor + N_READS)], thumb_names[cursor:(cursor + N_READS)], thumb_folder))
             cursor += N_READS
         notifier.notify(notifications.ThumbnailJob(job_id, count_tasks, count_tasks))
-        return output
+        return {file_names[i]: results[i] for i in range(len(file_names))}
 
     @staticmethod
     def collect_files(folder_path: AbsolutePath, folder_to_files: dict):

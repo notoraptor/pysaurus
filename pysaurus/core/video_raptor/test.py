@@ -1,10 +1,9 @@
 import sys
 
-from pysaurus.core.video_raptor.api import (get_hardware_device_names, collect_video_info, generate_video_thumbnails)
-
+from pysaurus.core.video_raptor import api as video_raptor
 
 def main():
-    print('Hardware device(s):', ', '.join(get_hardware_device_names()))
+    print('Hardware device(s):', ', '.join(video_raptor.get_hardware_device_names()))
 
     if len(sys.argv) != 2:
         return
@@ -17,15 +16,13 @@ def main():
     if not file_names:
         return
 
-    filename_dictionary = {file_name: None for file_name in file_names}
-    file_name_to_thumb_name = {file_name: str(file_index) for file_index, file_name in
-                               enumerate(filename_dictionary.keys())}
-    collect_video_info(filename_dictionary)
-    generate_video_thumbnails(file_name_to_thumb_name, '.')
-    for file_name, result in filename_dictionary.items():
-        print(file_name)
-        print(result)
-        print(file_name_to_thumb_name[file_name])
+    thumb_names = [str(file_index) for file_index in range(len(file_names))]
+    info_output = video_raptor.collect_video_info(file_names)
+    thumb_output = video_raptor.generate_video_thumbnails(file_names, thumb_names, '.')
+    for i in range(len(file_names)):
+        print(file_names[i])
+        print(info_output[i])
+        print(thumb_output[i])
         print()
 
 

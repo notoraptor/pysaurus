@@ -41,11 +41,11 @@ def get_video_info_errors(report):
     return error_strings
 
 
-def collect_video_info(filename_dictionary: dict):
-    if not filename_dictionary:
+def collect_video_info(file_names: list):
+    if not file_names:
         return
 
-    file_names = [os.path.abspath(file_name) for file_name in filename_dictionary.keys()]
+    output = [None] * len(file_names)  # type: list[Video | list]
     encoded_file_names = [file_name.encode() for file_name in file_names]
     video_info_objects = [VideoInfo() for _ in file_names]
     video_info_pointers = [pointer(v) for v in video_info_objects]
@@ -58,27 +58,24 @@ def collect_video_info(filename_dictionary: dict):
     __fn_videoRaptorDetails(len(file_names), __PtrPtrVideoInfo(array_object))
 
     for i in range(len(file_names)):
-        filename = file_names[i]
         video_info = video_info_objects[i]
         errors = get_video_info_errors(video_info.report)
         if __fn_VideoReport_isDone(pointer(video_info.report)):
             video = Video(video_info)
             video.errors = set(errors)
-            filename_dictionary[filename] = video
+            output[i] = video
         elif errors:
-            filename_dictionary[filename] = errors
+            output[i] = errors
         __fn_VideoInfo_clear(video_info_pointers[i])
 
+    return output
 
-def generate_video_thumbnails(file_name_to_thumb_name: dict, output_folder: str):
-    if not file_name_to_thumb_name:
+
+def generate_video_thumbnails(file_names: list, thumb_names: list, output_folder: str):
+    if not file_names:
         return
 
-    file_names = []
-    thumb_names = []
-    for (file_name, thumb_name) in file_name_to_thumb_name.items():
-        file_names.append(file_name)
-        thumb_names.append(thumb_name)
+    output = [None] * len(file_names)  # type: list[VideoThumbnailResult]
     encoded_file_names = [file_name.encode() for file_name in file_names]
     encoded_thumb_names = [thumb_name.encode() for thumb_name in thumb_names]
     encoded_output_folder = output_folder.encode()
@@ -100,7 +97,9 @@ def generate_video_thumbnails(file_name_to_thumb_name: dict, output_folder: str)
 
     for i in range(len(file_names)):
         video_thumb = video_thumb_objects[i]
-        file_name_to_thumb_name[file_names[i]] = VideoThumbnailResult(
+        output[i] = VideoThumbnailResult(
             done=__fn_VideoReport_isDone(pointer(video_thumb.report)),
             errors=get_video_info_errors(video_thumb.report),
         )
+
+    return output

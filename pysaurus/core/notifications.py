@@ -39,7 +39,7 @@ class FolderNotFound(CollectingFiles):
     pass
 
 
-class FolderIgnored(CollectingFiles):
+class PathIgnored(CollectingFiles):
     pass
 
 

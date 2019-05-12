@@ -2,6 +2,7 @@ import os
 
 from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.database import Database
+from pysaurus.core import features
 
 
 def main(check_thumbnails=True):
@@ -17,8 +18,7 @@ def main(check_thumbnails=True):
         database.clean_unused_thumbnails()
         database.ensure_thumbnails()
 
-    # features.get_same_sizes(database.videos)
-    # features.find(database.videos, 'ashley_adams')
+    features.get_same_sizes(database.videos)
     # html = features.get_same_lengths(database.videos)
     # if not html:
     #     print('No same lengths.')
