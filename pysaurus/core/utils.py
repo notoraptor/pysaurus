@@ -3,6 +3,7 @@ import os
 from io import StringIO
 
 import whirlpool
+from pysaurus.core.absolute_path import AbsolutePath
 
 VIDEO_SUPPORTED_EXTENSIONS = frozenset(
     ('3g2', '3gp', 'asf', 'avi', 'drc', 'f4a', 'f4b', 'f4p', 'f4v', 'flv', 'gifv', 'm2v', 'm4p', 'm4v', 'mkv', 'mng',
@@ -85,6 +86,17 @@ def file_system_is_case_insensitive(folder='.'):
         is_insensitive = os.path.exists(test_name.upper())
     os.unlink(test_name)
     return is_insensitive
+
+
+def load_path_list_file(list_file_path: AbsolutePath):
+    paths = set()
+    if list_file_path.isfile():
+        with open(list_file_path.path, 'r') as list_file:
+            for line in list_file:
+                line = line.strip()
+                if line and line[0] != '#':
+                    paths.add(AbsolutePath(line))
+    return paths
 
 
 class StringPrinter(object):

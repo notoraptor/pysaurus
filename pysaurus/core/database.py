@@ -16,20 +16,20 @@ PYTHON_ERROR_THUMBNAIL = 'PYTHON_ERROR_THUMBNAIL'
 
 
 class Database(object):
-    __slots__ = ['list_path', 'json_path', 'database_path', '__folders', 'videos', 'unreadable_videos']
+    __slots__ = ['list_path', 'json_path', 'database_path', '__folders', 'videos', 'unreadable']
 
     def __init__(self, list_file_path):
         self.list_path = AbsolutePath.ensure(list_file_path)
         self.database_path = self.list_path.get_directory()
         self.json_path = AbsolutePath.new_file_path(self.database_path, self.list_path.title, 'json')
-        self.__folders = Database.get_paths_from_list_file(self.list_path)
+        self.__folders = utils.load_path_list_file(self.list_path)
         self.videos = {}
-        self.unreadable_videos = {}
+        self.unreadable = {}  # unreadable videos.
         self.load()
 
     @property
     def nb_videos(self):
-        return len(self.videos) + len(self.unreadable_videos)
+        return len(self.videos) + len(self.unreadable)
 
     def update(self):
         folder_to_files = Database.get_videos_paths_from_disk(self.__folders)
@@ -39,7 +39,7 @@ class Database(object):
         all_file_names = [file_name.path
                           for file_names in folder_to_files.values()
                           for file_name in file_names
-                          if file_name not in self.videos and file_name not in self.unreadable_videos]
+                          if file_name not in self.videos and file_name not in self.unreadable]
         notifier.notify(notifications.VideosToLoad(len(all_file_names)))
         if not all_file_names:
             return
@@ -66,7 +66,7 @@ class Database(object):
         if videos:
             self.videos.update(videos)
         if video_errors:
-            self.unreadable_videos.update(video_errors)
+            self.unreadable.update(video_errors)
             notifier.notify(notifications.VideoInfoErrors(video_errors))
         if videos or video_errors:
             self.save()
@@ -191,16 +191,16 @@ class Database(object):
                 errors = d['e']
                 if file_path in self.videos:
                     # This should not happen. Anyway, remove this entry from database.
-                    # It may be recreated in database update.
+                    # It may be recreated if database is updated.
                     del self.videos[file_path]
-                elif file_path.exists() and file_path.isfile():
+                elif file_path.isfile():
                     # Keep errors only for existing files.
-                    self.unreadable_videos[file_path] = errors
+                    self.unreadable[file_path] = errors
         # Notify database loaded.
         notifier.notify(notifications.DatabaseLoaded(
             total=self.nb_videos,
             not_found=sum(not video.file_exists() for video in self.videos.values()),
-            unreadable=len(self.unreadable_videos)))
+            unreadable=len(self.unreadable)))
 
     def save(self):
         # Ensure database folder.
@@ -215,21 +215,10 @@ class Database(object):
             json_output = {
                 'videos': [video.to_dict() for video in self.videos.values()],
                 'unreadable': [{'f': str(file_name), 'e': errors}
-                               for file_name, errors in self.unreadable_videos.items()]
+                               for file_name, errors in self.unreadable.items()]
             }
             json.dump(json_output, output_file, indent=1)
             notifier.notify(notifications.DatabaseSaved(self.nb_videos))
-
-    @staticmethod
-    def get_paths_from_list_file(list_file_path: AbsolutePath):
-        paths = set()
-        if list_file_path.isfile():
-            with open(list_file_path.path, 'r') as list_file:
-                for line in list_file:
-                    line = line.strip()
-                    if line and line[0] != '#':
-                        paths.add(AbsolutePath(line))
-        return paths
 
     @staticmethod
     def get_videos_paths_from_disk(paths: set):
