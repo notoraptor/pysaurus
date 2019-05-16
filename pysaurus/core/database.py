@@ -294,3 +294,11 @@ class Database(object):
         if nb_collected:
             notifier.notify(notifications.CollectingFiles(folder_path))
         return nb_collected
+
+    @staticmethod
+    def load_from_list_file(list_file_path: AbsolutePath):
+        database = Database(list_file_path)
+        database.update()
+        database.clean_unused_thumbnails()
+        database.ensure_thumbnails()
+        return database
