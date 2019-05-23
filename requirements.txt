@@ -1,4 +1,3 @@
 ujson
 whirlpool
 Pillow
-PySimpleGUI
