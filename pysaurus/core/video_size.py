@@ -1,17 +1,17 @@
-O = 1
-KO = 1024
-MO = KO * KO
-GO = KO * KO * KO
+BYTES = 1
+KILO_BYTES = 1024
+MEGA_BYTES = KILO_BYTES * KILO_BYTES
+GIGA_BYTES = KILO_BYTES * KILO_BYTES * KILO_BYTES
 UNIT_TO_STRING = {
-    O: 'o',
-    KO: 'Ko',
-    MO: 'Mo',
-    GO: 'Go'
+    BYTES: 'b',
+    KILO_BYTES: 'Kb',
+    MEGA_BYTES: 'Mb',
+    GIGA_BYTES: 'Gb'
 }
 
 
 class VideoSize(object):
-    __slots__ = ('video', 'size', 'unit')
+    __slots__ = ('video', 'unit')
 
     def __init__(self, video):
         """
@@ -19,39 +19,43 @@ class VideoSize(object):
         :type video: pysaurus.video.Video
         """
         self.video = video
-        self.unit = O
-        if self.video.size // GO:
-            self.unit = GO
-        elif self.video.size // MO:
-            self.unit = MO
-        elif self.video.size // KO:
-            self.unit = KO
-        self.size = self.video.size / self.unit
+        if self.video.size // GIGA_BYTES:
+            self.unit = GIGA_BYTES
+        elif self.video.size // MEGA_BYTES:
+            self.unit = MEGA_BYTES
+        elif self.video.size // KILO_BYTES:
+            self.unit = KILO_BYTES
+        else:
+            self.unit = BYTES
 
     @property
-    def _comparable_duration(self):
+    def comparable_size(self):
         return self.video.size
 
+    @property
+    def size(self):
+        return self.video.size / self.unit
+
     def __hash__(self):
-        return hash(self._comparable_duration)
+        return hash(self.comparable_size)
 
     def __eq__(self, other):
-        return isinstance(other, VideoSize) and self._comparable_duration == other._comparable_duration
+        return isinstance(other, VideoSize) and self.comparable_size == other.comparable_size
 
     def __ne__(self, other):
-        return isinstance(other, VideoSize) and self._comparable_duration != other._comparable_duration
+        return isinstance(other, VideoSize) and self.comparable_size != other.comparable_size
 
     def __lt__(self, other):
-        return isinstance(other, VideoSize) and self._comparable_duration < other._comparable_duration
+        return isinstance(other, VideoSize) and self.comparable_size < other.comparable_size
 
     def __gt__(self, other):
-        return isinstance(other, VideoSize) and self._comparable_duration > other._comparable_duration
+        return isinstance(other, VideoSize) and self.comparable_size > other.comparable_size
 
     def __le__(self, other):
-        return isinstance(other, VideoSize) and self._comparable_duration <= other._comparable_duration
+        return isinstance(other, VideoSize) and self.comparable_size <= other.comparable_size
 
     def __ge__(self, other):
-        return isinstance(other, VideoSize) and self._comparable_duration >= other._comparable_duration
+        return isinstance(other, VideoSize) and self.comparable_size >= other.comparable_size
 
     def __str__(self):
         return '%s %s' % (round(self.size, 2), UNIT_TO_STRING[self.unit])

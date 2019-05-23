@@ -3,6 +3,7 @@ import os
 from io import StringIO
 
 import whirlpool
+
 from pysaurus.core.absolute_path import AbsolutePath
 
 VIDEO_SUPPORTED_EXTENSIONS = frozenset(

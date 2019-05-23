@@ -1,4 +1,3 @@
-import os
 from _ctypes import pointer
 from ctypes import c_char_p
 

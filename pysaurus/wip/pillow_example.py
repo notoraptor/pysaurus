@@ -10,6 +10,7 @@ PIXEL_DISTANCE_TRESHOLD = 1
 BLACK = (0, 0, 0)
 WORK_MODE = 'RGB'
 
+
 # image = Image.open(absolute_file_path)
 
 def open_image(file_name):

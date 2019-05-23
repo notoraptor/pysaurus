@@ -8,7 +8,7 @@ from pysaurus.core.video_duration import VideoDuration
 def get_same_sizes(database: dict):
     sizes = {}
     for video in database.values():
-        if video.file_exists():
+        if video.exists():
             sizes.setdefault(video.size, []).append(video)
     duplicated_sizes = {size: elements for (size, elements) in sizes.items() if len(elements) > 1}
     if duplicated_sizes:
@@ -25,7 +25,7 @@ def get_same_sizes(database: dict):
 def get_same_lengths(database: dict):
     durations = {}
     for video in database.values():
-        if video.file_exists():
+        if video.exists():
             durations.setdefault(video.get_duration(), []).append(video)
     same_lengths = {duration: elements for duration, elements in durations.items() if len(elements) > 1}
     if same_lengths:
@@ -86,7 +86,7 @@ def find(database: dict, term: str):
     term = term.lower()
     found = []
     for video in database.values():  # type: Video
-        if video.file_exists() and (term in video.title.lower() or term in video.filename.path.lower()):
+        if video.exists() and (term in video.title.lower() or term in video.filename.path.lower()):
             found.append(video)
     print(len(found), 'FOUND', term)
     found.sort(key=lambda v: v.get_duration())

@@ -81,7 +81,7 @@ class Database(object):
 
         # Collect videos with thumbnails and without thumbnails.
         for video in self.videos.values():
-            if video.file_exists() and PYTHON_ERROR_THUMBNAIL not in video.errors:
+            if video.exists() and PYTHON_ERROR_THUMBNAIL not in video.errors:
                 if video.thumbnail_is_valid(self.database_path):
                     thumb_to_videos.setdefault(video.thumb_name, []).append(video)
                 else:
@@ -139,7 +139,7 @@ class Database(object):
 
     def notify_missing_thumbnails(self):
         remaining_thumb_videos = [video.filename.path for video in self.videos.values()
-                                  if video.file_exists()
+                                  if video.exists()
                                   and (PYTHON_ERROR_THUMBNAIL in video.errors
                                        or not video.thumbnail_is_valid(self.database_path))]
         notifier.notify(notifications.MissingThumbnails(remaining_thumb_videos))
@@ -153,7 +153,7 @@ class Database(object):
                     path_string = path_string.lower()
                 all_images_paths.add(path_string)
         for video in self.videos.values():
-            if video.file_exists() and PYTHON_ERROR_THUMBNAIL not in video.errors:
+            if video.exists() and PYTHON_ERROR_THUMBNAIL not in video.errors:
                 thumb_path_string = video.get_thumbnail_path(self.database_path).get_basename()
                 if fs_is_case_insensitive:
                     thumb_path_string = thumb_path_string.lower()
@@ -199,7 +199,7 @@ class Database(object):
         # Notify database loaded.
         notifier.notify(notifications.DatabaseLoaded(
             total=self.nb_videos,
-            not_found=sum(not video.file_exists() for video in self.videos.values()),
+            not_found=sum(not video.exists() for video in self.videos.values()),
             unreadable=len(self.unreadable)))
 
     def save(self):

@@ -86,7 +86,7 @@ class Video(object):
         printer.write(')')
         return str(printer)
 
-    def file_exists(self):
+    def exists(self):
         return self.filename.isfile()
 
     def get_duration(self):

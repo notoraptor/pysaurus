@@ -1,8 +1,8 @@
 import os
 
+from pysaurus.core import features
 from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.database import Database
-from pysaurus.core import features
 
 
 def main(check_thumbnails=True):

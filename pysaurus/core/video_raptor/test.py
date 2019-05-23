@@ -2,6 +2,7 @@ import sys
 
 from pysaurus.core.video_raptor import api as video_raptor
 
+
 def main():
     print('Hardware device(s):', ', '.join(video_raptor.get_hardware_device_names()))
 
