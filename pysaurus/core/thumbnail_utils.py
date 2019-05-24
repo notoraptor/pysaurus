@@ -1,24 +1,7 @@
 from pysaurus.core import utils
 from pysaurus.core.absolute_path import AbsolutePath
-from pysaurus.core.utils import StringPrinter
 
 THUMBNAIL_EXTENSION = 'png'
-
-
-class VideoThumbnailResult:
-    __slots__ = ('done', 'errors')
-
-    def __init__(self, *, done, errors):
-        self.done = bool(done)
-        self.errors = set(errors)
-
-    def __str__(self):
-        printer = StringPrinter()
-        printer.write('Thumbnail(')
-        for field_name in sorted(self.__slots__):
-            printer.write('\t%s: %s' % (field_name, getattr(self, field_name)))
-        printer.write(')')
-        return str(printer)
 
 
 class ThumbnailStrings:

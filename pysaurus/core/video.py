@@ -34,49 +34,25 @@ class Video(object):
 
     LONG_TO_MIN = {_long: _min for _min, _long in MIN_TO_LONG.items()}
 
-    def __init__(self, data):
-        self.filename = None  # type: AbsolutePath
-        self.title = ''
-        self.container_format = ''
-        self.audio_codec = ''
-        self.video_codec = ''
-        self.width = 0
-        self.height = 0
-        self.frame_rate_num = 0
-        self.frame_rate_den = 0
-        self.sample_rate = 0
-        self.duration = 0
-        self.duration_time_base = 0
-        self.size = 0
-        self.bit_rate = 0
-        self.thumb_name = ''
-        self.errors = set()
-        if data:
-            if isinstance(data, VideoInfo):
-                self.filename = AbsolutePath(data.filename.decode()) if data.filename else None
-                self.title = data.title.decode() if data.title else None
-                self.container_format = data.container_format.decode() if data.container_format else None
-                self.audio_codec = data.audio_codec.decode() if data.audio_codec else None
-                self.video_codec = data.video_codec.decode() if data.video_codec else None
-                self.width = data.width
-                self.height = data.height
-                self.frame_rate_num = data.frame_rate_num
-                self.frame_rate_den = data.frame_rate_den
-                self.sample_rate = data.sample_rate
-                self.duration = data.duration
-                self.duration_time_base = data.duration_time_base
-                self.size = data.size
-                self.bit_rate = data.bit_rate
-            elif isinstance(data, dict):
-                # Loading from a JSON.
-                for field_name in self.__slots__:
-                    setattr(self, field_name, data[self.LONG_TO_MIN[field_name]])
-                self.filename = AbsolutePath.ensure(self.filename)
-                self.errors = set(self.errors)
-            else:
-                raise Exception('Invalid video initialization data: %s' % data)
-        if self.title:
-            self.title = HTMLStripper.strip(self.title)
+    def __init__(self, filename, title='', container_format='', audio_codec='', video_codec='', width=0, height=0,
+                 frame_rate_num=0, frame_rate_den=0, sample_rate=0, duration=0, duration_time_base=0, size=0,
+                 bit_rate=0, thumb_name='', errors=()):
+        self.filename = AbsolutePath.ensure(filename)
+        self.title = HTMLStripper.strip(title) if title else ''
+        self.container_format = container_format
+        self.audio_codec = audio_codec
+        self.video_codec = video_codec
+        self.width = width
+        self.height = height
+        self.frame_rate_num = frame_rate_num
+        self.frame_rate_den = frame_rate_den
+        self.sample_rate = sample_rate
+        self.duration = duration
+        self.duration_time_base = duration_time_base
+        self.size = size
+        self.bit_rate = bit_rate
+        self.thumb_name = thumb_name
+        self.errors = set(errors)
 
     def __str__(self):
         printer = StringPrinter()
@@ -95,11 +71,6 @@ class Video(object):
     def get_size(self):
         return VideoSize(self)
 
-    def to_dict(self):
-        dct = {self.LONG_TO_MIN[key]: getattr(self, key) for key in self.__slots__}
-        dct[self.LONG_TO_MIN['filename']] = str(self.filename)
-        return dct
-
     def thumbnail_is_valid(self, folder: AbsolutePath):
         return self.get_thumbnail_path(folder).isfile()
 
@@ -110,3 +81,31 @@ class Video(object):
 
     def get_title(self):
         return self.title if self.title else self.filename.title
+
+    def to_dict(self):
+        dct = {self.LONG_TO_MIN[key]: getattr(self, key) for key in self.__slots__}
+        dct[self.LONG_TO_MIN['filename']] = str(self.filename)
+        return dct
+
+    @classmethod
+    def from_dict(cls, dct: dict):
+        return cls(**{field: dct[cls.LONG_TO_MIN[field]] for field in cls.__slots__})
+
+    @classmethod
+    def from_video_info(cls, video_info: VideoInfo):
+        return cls(
+            filename=(AbsolutePath(video_info.filename.decode()) if video_info.filename else None),
+            title=(video_info.title.decode() if video_info.title else None),
+            container_format=(video_info.container_format.decode() if video_info.container_format else None),
+            audio_codec=(video_info.audio_codec.decode() if video_info.audio_codec else None),
+            video_codec=(video_info.video_codec.decode() if video_info.video_codec else None),
+            width=video_info.width,
+            height=video_info.height,
+            frame_rate_num=video_info.frame_rate_num,
+            frame_rate_den=video_info.frame_rate_den,
+            sample_rate=video_info.sample_rate,
+            duration=video_info.duration,
+            duration_time_base=video_info.duration_time_base,
+            size=video_info.size,
+            bit_rate=video_info.bit_rate
+        )

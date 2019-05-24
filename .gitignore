@@ -1,8 +1,7 @@
+/*.jpg
+/*.png
 *.dll
-*.jpg
-*.png
 *.log
 *.pyc
 .idea
 .local
-pysaurus/console/same_lengths.html

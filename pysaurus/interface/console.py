@@ -9,15 +9,8 @@ def main(check_thumbnails=True):
     list_file_path = AbsolutePath(os.path.join('..', '..', '..', '.local', 'test_folder.log'))
 
     # Loading database.
-    database = Database(list_file_path)
-
-    # Update database.
-    database.update()
-
-    if check_thumbnails:
-        database.clean_unused_thumbnails()
-        database.ensure_thumbnails()
-
+    database = Database.load_from_list_file(list_file_path)
+    # database.remove_videos_not_found(save=True)
     features.get_same_sizes(database.videos)
     # html = features.get_same_lengths(database.videos)
     # if not html:

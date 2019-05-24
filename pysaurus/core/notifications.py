@@ -28,6 +28,10 @@ class UnusedThumbnails(Notification):
         self.removed = removed
 
 
+class VideosNotFoundRemoved(UnusedThumbnails):
+    pass
+
+
 class CollectingFiles(Notification):
     __slots__ = ['folder']
 

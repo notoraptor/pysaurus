@@ -6,9 +6,9 @@ import ujson as json
 from pysaurus.core import notifications, notifier, utils, thumbnail_utils
 from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.profile import Profiler
-from pysaurus.core.thumbnail_utils import VideoThumbnailResult
 from pysaurus.core.video import Video
 from pysaurus.core.video_raptor import api as video_raptor
+from pysaurus.core.video_raptor.result import VideoRaptorResult
 
 N_READS = 200
 PYTHON_ERROR_NOTHING = 'PYTHON_ERROR_NOTHING'
@@ -49,14 +49,16 @@ class Database(object):
             with concurrent.futures.ProcessPoolExecutor(max_workers=cpu_count) as executor:
                 results = list(executor.map(Database.job_videos_info, jobs))
 
-        for file_name_to_result in results:  # type: dict
-            for file_name, result in file_name_to_result.items():
+        for (local_file_names, local_results) in results:  # type: dict
+            for file_name, result in zip(local_file_names, local_results):  # type: (str, VideoRaptorResult)
                 file_name = AbsolutePath.ensure(file_name)
-                if isinstance(result, Video):
-                    videos[file_name] = result
-                elif isinstance(result, list):
-                    video_errors[file_name] = result
-                elif result is None:
+                if result.done:  # type: Video
+                    if result.errors:
+                        result.done.errors.update(result.errors)
+                    videos[file_name] = result.done
+                elif result.errors:
+                    video_errors[file_name] = result.errors
+                else:
                     video_errors[file_name] = [PYTHON_ERROR_NOTHING]
 
         assert len(all_file_names) == len(videos) + len(video_errors)
@@ -124,11 +126,14 @@ class Database(object):
                 thumb_results = list(executor.map(Database.job_videos_thumbnails, thumb_jobs))
 
         nb_results = 0
-        for file_name_to_thumb_result in thumb_results:  # type: dict
-            nb_results += len(file_name_to_thumb_result)
-            for file_name, thumb_result in file_name_to_thumb_result.items():  # type: (str, VideoThumbnailResult)
-                if not thumb_result.done and thumb_result.errors:
-                    thumb_video_errors[file_name] = thumb_result.errors
+        for (local_file_names, local_thumb_results) in thumb_results:  # type: dict
+            nb_results += len(local_file_names)
+            for file_name, thumb_result in zip(local_file_names, local_thumb_results):  # type: (str, VideoRaptorResult)
+                if not thumb_result.done:
+                    if thumb_result.errors:
+                        thumb_video_errors[file_name] = thumb_result.errors
+                    else:
+                        thumb_video_errors[file_name] = [PYTHON_ERROR_NOTHING]
                     self.videos[AbsolutePath(file_name)].errors.add(PYTHON_ERROR_THUMBNAIL)
         assert nb_results == len(videos_without_thumbs)
 
@@ -163,6 +168,15 @@ class Database(object):
         for unused_thumbnail in all_images_paths:
             os.unlink(os.path.join(self.database_path.path, unused_thumbnail))
 
+    def remove_videos_not_found(self, save=False):
+        file_names_not_found = [video.filename for video in self.videos.values() if not video.exists()]
+        if file_names_not_found:
+            for file_name in file_names_not_found:
+                del self.videos[file_name]
+            notifier.notify(notifications.VideosNotFoundRemoved(len(file_names_not_found)))
+            if save:
+                self.save()
+
     def add_folder(self, folder):
         self.__folders.add(AbsolutePath.ensure(folder))
 
@@ -184,7 +198,7 @@ class Database(object):
                     'videos': json_dict,
                     'unreadable': []
                 }
-            self.videos = {video.filename: video for video in (Video(dct) for dct in json_dict['videos'])
+            self.videos = {video.filename: video for video in (Video.from_dict(dct) for dct in json_dict['videos'])
                            if any(video.filename.in_directory(folder) for folder in self.__folders)}
             for d in json_dict['unreadable']:
                 file_path = AbsolutePath(d['f'])
@@ -264,7 +278,7 @@ class Database(object):
             results.extend(video_raptor.collect_video_info(file_names[cursor:(cursor + N_READS)]))
             cursor += N_READS
         notifier.notify(notifications.VideoJob(job_id, count_tasks, count_tasks))
-        return {file_names[i]: results[i] for i in range(len(file_names))}
+        return file_names, results
 
     @staticmethod
     def job_videos_thumbnails(job):
@@ -279,7 +293,7 @@ class Database(object):
                 file_names[cursor:(cursor + N_READS)], thumb_names[cursor:(cursor + N_READS)], thumb_folder))
             cursor += N_READS
         notifier.notify(notifications.ThumbnailJob(job_id, count_tasks, count_tasks))
-        return {file_names[i]: results[i] for i in range(len(file_names))}
+        return file_names, results
 
     @staticmethod
     def collect_files(folder_path: AbsolutePath, folder_to_files: dict):
