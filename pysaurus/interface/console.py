@@ -5,7 +5,7 @@ from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.database import Database
 
 
-def main(check_thumbnails=True):
+def main():
     list_file_path = AbsolutePath(os.path.join('..', '..', '..', '.local', 'test_folder.log'))
 
     # Loading database.

@@ -13,12 +13,27 @@ class Notification(object):
     __slots__ = []
 
     def __str__(self):
-        valid_attribute_names = list(sorted(name for name in dir(self)
-                                            if not name.startswith('_')
-                                            and not callable(getattr(self, name))))
+        valid_attribute_names = sorted(name for name in dir(self)
+                                       if not name.startswith('_')
+                                       and not callable(getattr(self, name)))
         return '%s(%s)' % (
             type(self).__name__,
             ', '.join('%s=%s' % (name, _wrap(getattr(self, name))) for name in valid_attribute_names))
+
+
+class ProfilingStart(Notification):
+    __slots__ = ['name']
+
+    def __init__(self, title):
+        self.name = title
+
+
+class ProfilingEnd(Notification):
+    __slots__ = ('name', 'time')
+
+    def __init__(self, name, time):
+        self.name = name
+        self.time = time
 
 
 class UnusedThumbnails(Notification):

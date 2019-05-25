@@ -45,7 +45,7 @@ class Database(object):
             return
 
         jobs = utils.dispatch_tasks(all_file_names, cpu_count)
-        with Profiler(enter_message='Getting videos info through %d threads.' % len(jobs), exit_message='Got info:'):
+        with Profiler(title='Get videos info (%d threads)' % len(jobs)):
             with concurrent.futures.ProcessPoolExecutor(max_workers=cpu_count) as executor:
                 results = list(executor.map(Database.job_videos_info, jobs))
 
@@ -120,8 +120,7 @@ class Database(object):
                 job_file_names.append(video.filename.path)
                 job_thumb_names.append(video.thumb_name)
             thumb_jobs.append((job_file_names, job_thumb_names, self.database_path.path, job_id))
-        with Profiler(enter_message='Getting thumbnails through %d thread(s).' % len(thumb_jobs),
-                      exit_message='Got thumbnails:'):
+        with Profiler(title='Get thumbnails through %d thread(s)' % len(thumb_jobs)):
             with concurrent.futures.ProcessPoolExecutor(max_workers=cpu_count) as executor:
                 thumb_results = list(executor.map(Database.job_videos_thumbnails, thumb_jobs))
 
@@ -239,7 +238,7 @@ class Database(object):
         folder_to_files = {}
         cpu_count = os.cpu_count()
         jobs = utils.dispatch_tasks(sorted(paths), cpu_count)
-        with Profiler(enter_message='Collecting videos (%d threads).' % len(jobs), exit_message='Videos collected:'):
+        with Profiler(title='Collect videos (%d threads)' % len(jobs)):
             with concurrent.futures.ProcessPoolExecutor(max_workers=cpu_count) as executor:
                 results = list(executor.map(Database.job_collect_videos, jobs))
         for local_result in results:  # type: dict
