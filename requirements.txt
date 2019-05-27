@@ -1,3 +1,7 @@
 ujson
 whirlpool
 Pillow
+
+# Seems useful on Ubuntu to correctly use `videoRaptorBatch.so`.
+librsvg # conda install -c conda-forge librsvg
+libiconv # conda install -c conda-forge libiconv

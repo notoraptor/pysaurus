@@ -1,3 +1,4 @@
+import sys
 from ctypes import cdll, POINTER, c_char_p, c_int, c_uint, c_bool
 
 from pysaurus.core.video_raptor.structures import VideoRaptorInfo, ErrorReader, VideoReport, VideoInfo, VideoThumbnail
@@ -10,7 +11,10 @@ __PtrVideoThumbnail = POINTER(VideoThumbnail)
 __PtrPtrVideoInfo = POINTER(__PtrVideoInfo)
 __PtrPtrVideoThumbnail = POINTER(__PtrVideoThumbnail)
 
-__dll_video_raptor = cdll.videoRaptorBatch
+if sys.platform == 'linux':
+    __dll_video_raptor = cdll.LoadLibrary('videoRaptorBatch.so')
+else:
+    __dll_video_raptor = cdll.videoRaptorBatch
 __fn_VideoRaptorInfo_init = __dll_video_raptor.VideoRaptorInfo_init
 __fn_VideoRaptorInfo_clear = __dll_video_raptor.VideoRaptorInfo_clear
 __fn_ErrorReader_init = __dll_video_raptor.ErrorReader_init
