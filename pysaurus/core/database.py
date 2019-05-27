@@ -7,6 +7,8 @@ import pysaurus.core.constants
 from pysaurus.core import notifications, notifier, utils, thumbnail_utils
 from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.constants import VIDEO_BATCH_SIZE, PYTHON_ERROR_NOTHING, PYTHON_ERROR_THUMBNAIL
+from pysaurus.core.duration import Duration
+from pysaurus.core.file_size import FileSize
 from pysaurus.core.profiler import Profiler
 from pysaurus.core.video import Video
 from pysaurus.core.video_raptor import api as video_raptor
@@ -26,8 +28,38 @@ class Database(object):
         self.load()
 
     @property
-    def nb_videos(self):
-        return len(self.videos) + len(self.unreadable)
+    def nb_unreadable(self):
+        return len(self.unreadable)
+
+    @property
+    def nb_not_found(self):
+        return sum(not video.exists() for video in self.videos.values())
+
+    @property
+    def nb_valid(self):
+        return sum(video.exists() for video in self.videos.values())
+
+    @property
+    def nb_entries(self):
+        return len(self.videos) + self.nb_unreadable
+
+    @property
+    def nb_found(self):
+        return self.nb_unreadable + self.nb_valid
+
+    @property
+    def nb_thumbnails(self):
+        return sum((PYTHON_ERROR_THUMBNAIL not in video.errors and video.thumbnail_is_valid(self.database_path))
+                   for video in self.videos.values())
+
+    @property
+    def valid_size(self):
+        return FileSize(sum(video.size for video in self.videos.values() if video.exists()))
+
+    @property
+    def valid_length(self):
+        return Duration(sum(video.get_duration().total_microseconds
+                            for video in self.videos.values() if video.exists()))
 
     def update(self):
         folder_to_files = Database.get_videos_paths_from_disk(self.__folders)
@@ -209,9 +241,7 @@ class Database(object):
                     self.unreadable[file_path] = errors
         # Notify database loaded.
         notifier.notify(notifications.DatabaseLoaded(
-            total=self.nb_videos,
-            not_found=sum(not video.exists() for video in self.videos.values()),
-            unreadable=len(self.unreadable)))
+            total=self.nb_entries, not_found=self.nb_not_found, unreadable=self.nb_unreadable))
 
     def save(self):
         # Ensure database folder.
@@ -229,7 +259,7 @@ class Database(object):
                                for file_name, errors in self.unreadable.items()]
             }
             json.dump(json_output, output_file, indent=1)
-            notifier.notify(notifications.DatabaseSaved(self.nb_videos))
+            notifier.notify(notifications.DatabaseSaved(self.nb_entries))
 
     @staticmethod
     def get_videos_paths_from_disk(paths: set):

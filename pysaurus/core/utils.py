@@ -112,6 +112,10 @@ def to_printable(element):
     return element
 
 
+def package_dir():
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+
+
 class StringPrinter(object):
     __slots__ = 'string_buffer', 'strip_right'
 

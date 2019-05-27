@@ -1,10 +1,10 @@
 from pysaurus.core import thumbnail_utils
 from pysaurus.core.absolute_path import AbsolutePath
+from pysaurus.core.file_size import FileSize
 from pysaurus.core.html_stripper import HTMLStripper
 from pysaurus.core.utils import StringPrinter
 from pysaurus.core.video_duration import VideoDuration
 from pysaurus.core.video_raptor.structures import VideoInfo
-from pysaurus.core.video_size import VideoSize
 
 
 class Video(object):
@@ -69,7 +69,7 @@ class Video(object):
         return VideoDuration(self)
 
     def get_size(self):
-        return VideoSize(self)
+        return FileSize(self.size)
 
     def thumbnail_is_valid(self, folder: AbsolutePath):
         return self.get_thumbnail_path(folder).isfile()
