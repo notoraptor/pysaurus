@@ -2,7 +2,7 @@ import os
 import platform
 import shutil
 
-WINDOWS_PATH_PREFIX = '\\\\?\\'
+from pysaurus.core.constants import WINDOWS_PATH_PREFIX
 
 
 class AbsolutePath(object):
@@ -35,9 +35,6 @@ class AbsolutePath(object):
 
     def __lt__(self, other):
         return self.__path < other.path
-
-    def __le__(self, other):
-        return self.__path <= other.path
 
     def exists(self):
         return os.path.exists(self.__path)

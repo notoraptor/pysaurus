@@ -1,7 +1,6 @@
 from pysaurus.core import utils
 from pysaurus.core.absolute_path import AbsolutePath
-
-THUMBNAIL_EXTENSION = 'png'
+from pysaurus.core.constants import THUMBNAIL_EXTENSION
 
 
 class ThumbnailStrings:

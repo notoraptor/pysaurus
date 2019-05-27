@@ -5,13 +5,7 @@ from io import StringIO
 import whirlpool
 
 from pysaurus.core.absolute_path import AbsolutePath
-
-VIDEO_SUPPORTED_EXTENSIONS = frozenset(
-    ('3g2', '3gp', 'asf', 'avi', 'drc', 'f4a', 'f4b', 'f4p', 'f4v', 'flv', 'gifv', 'm2v', 'm4p', 'm4v', 'mkv', 'mng',
-     'mov', 'mp2', 'mp4', 'mpe', 'mpeg', 'mpg', 'mpv', 'mxf', 'nsv', 'ogg', 'ogv', 'qt', 'rm', 'rmvb', 'roq', 'svi',
-     'vob', 'webm', 'wmv', 'yuv'))
-
-assert len(VIDEO_SUPPORTED_EXTENSIONS) == 36, (len(VIDEO_SUPPORTED_EXTENSIONS), VIDEO_SUPPORTED_EXTENSIONS)
+from pysaurus.core.constants import VIDEO_SUPPORTED_EXTENSIONS
 
 
 def is_valid_video_filename(filename):
@@ -98,6 +92,24 @@ def load_path_list_file(list_file_path: AbsolutePath):
                 if line and line[0] != '#':
                     paths.add(AbsolutePath(line))
     return paths
+
+
+def is_iterable(element):
+    return isinstance(element, (list, tuple, set))
+
+
+def ensure_set(iterable):
+    if not isinstance(iterable, set):
+        iterable = set(iterable)
+    return iterable
+
+
+def to_printable(element):
+    if isinstance(element, str):
+        if '"' in element:
+            return "'%s'" % element
+        return '"%s"' % element
+    return element
 
 
 class StringPrinter(object):

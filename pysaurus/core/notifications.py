@@ -1,14 +1,6 @@
 from pysaurus.core import utils
 
 
-def _wrap(element):
-    if isinstance(element, str):
-        if '"' in element:
-            return "'%s'" % element
-        return '"%s"' % element
-    return element
-
-
 class Notification(object):
     __slots__ = []
 
@@ -18,7 +10,8 @@ class Notification(object):
                                        and not callable(getattr(self, name)))
         return '%s(%s)' % (
             type(self).__name__,
-            ', '.join('%s=%s' % (name, _wrap(getattr(self, name))) for name in valid_attribute_names))
+            ', '.join('%s=%s' % (
+                name, utils.to_printable(getattr(self, name))) for name in valid_attribute_names))
 
 
 class ProfilingStart(Notification):

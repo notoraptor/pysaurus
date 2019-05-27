@@ -1,13 +1,4 @@
-BYTES = 1
-KILO_BYTES = 1024
-MEGA_BYTES = KILO_BYTES * KILO_BYTES
-GIGA_BYTES = KILO_BYTES * KILO_BYTES * KILO_BYTES
-UNIT_TO_STRING = {
-    BYTES: 'b',
-    KILO_BYTES: 'Kb',
-    MEGA_BYTES: 'Mb',
-    GIGA_BYTES: 'Gb'
-}
+from pysaurus.core.constants import BYTES, KILO_BYTES, MEGA_BYTES, GIGA_BYTES, SIZE_UNIT_TO_STRING
 
 
 class VideoSize(object):
@@ -58,4 +49,4 @@ class VideoSize(object):
         return isinstance(other, VideoSize) and self.comparable_size >= other.comparable_size
 
     def __str__(self):
-        return '%s %s' % (round(self.size, 2), UNIT_TO_STRING[self.unit])
+        return '%s %s' % (round(self.size, 2), SIZE_UNIT_TO_STRING[self.unit])

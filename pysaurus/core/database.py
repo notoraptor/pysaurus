@@ -3,16 +3,14 @@ import os
 
 import ujson as json
 
+import pysaurus.core.constants
 from pysaurus.core import notifications, notifier, utils, thumbnail_utils
 from pysaurus.core.absolute_path import AbsolutePath
-from pysaurus.core.profile import Profiler
+from pysaurus.core.constants import VIDEO_BATCH_SIZE, PYTHON_ERROR_NOTHING, PYTHON_ERROR_THUMBNAIL
+from pysaurus.core.profiler import Profiler
 from pysaurus.core.video import Video
 from pysaurus.core.video_raptor import api as video_raptor
 from pysaurus.core.video_raptor.result import VideoRaptorResult
-
-N_READS = 200
-PYTHON_ERROR_NOTHING = 'PYTHON_ERROR_NOTHING'
-PYTHON_ERROR_THUMBNAIL = 'PYTHON_ERROR_THUMBNAIL'
 
 
 class Database(object):
@@ -152,7 +150,7 @@ class Database(object):
         fs_is_case_insensitive = utils.file_system_is_case_insensitive(self.database_path.path)
         all_images_paths = set()
         for path_string in self.database_path.listdir():
-            if path_string.lower().endswith('.%s' % thumbnail_utils.THUMBNAIL_EXTENSION):
+            if path_string.lower().endswith('.%s' % pysaurus.core.constants.THUMBNAIL_EXTENSION):
                 if fs_is_case_insensitive:
                     path_string = path_string.lower()
                 all_images_paths.add(path_string)
@@ -274,8 +272,8 @@ class Database(object):
         cursor = 0
         while cursor < count_tasks:
             notifier.notify(notifications.VideoJob(job_id, cursor, count_tasks))
-            results.extend(video_raptor.collect_video_info(file_names[cursor:(cursor + N_READS)]))
-            cursor += N_READS
+            results.extend(video_raptor.collect_video_info(file_names[cursor:(cursor + VIDEO_BATCH_SIZE)]))
+            cursor += VIDEO_BATCH_SIZE
         notifier.notify(notifications.VideoJob(job_id, count_tasks, count_tasks))
         return file_names, results
 
@@ -288,9 +286,12 @@ class Database(object):
         count_tasks = len(file_names)
         while cursor < count_tasks:
             notifier.notify(notifications.ThumbnailJob(job_id, cursor, count_tasks))
-            results.extend(video_raptor.generate_video_thumbnails(
-                file_names[cursor:(cursor + N_READS)], thumb_names[cursor:(cursor + N_READS)], thumb_folder))
-            cursor += N_READS
+            results.extend(
+                video_raptor.generate_video_thumbnails(
+                    file_names[cursor:(cursor + VIDEO_BATCH_SIZE)],
+                    thumb_names[cursor:(cursor + VIDEO_BATCH_SIZE)],
+                    thumb_folder))
+            cursor += VIDEO_BATCH_SIZE
         notifier.notify(notifications.ThumbnailJob(job_id, count_tasks, count_tasks))
         return file_names, results
 
