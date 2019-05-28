@@ -1,5 +1,8 @@
 import os
+import subprocess
+import sys
 
+from pysaurus.core import features
 from pysaurus.core import utils
 from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.database import Database
@@ -31,6 +34,28 @@ class Console(InputInterface):
     def valid_length(self):
         return self.database.valid_length
 
+    def same_sizes(self):
+        features.same_sizes(self.database)
+
+    def find(self, terms):
+        features.find(self.database, {term.strip() for term in terms.split()})
+
+    def open(self, video_id):
+        video = self.database.get_video_from_id(video_id)
+        if video:
+            platform_commands = {
+                'linux': 'xdg-open',
+                'darwin': 'open'
+            }
+            if sys.platform in platform_commands:
+                open_command = platform_commands[sys.platform]
+                subprocess.run([open_command, video.filename.path])
+            elif sys.platform == 'win32':
+                os.startfile(video.filename.path)
+            else:
+                print('Unknown system', sys.platform)
+                return
+
     # ------------------------------------------------------------------------------------------------------------------
 
     @staticmethod
@@ -49,6 +74,9 @@ class Console(InputInterface):
         self.add_function(self.nb_thumbnails, 'nb_thumbnails')
         self.add_function(self.valid_size, 'valid_size')
         self.add_function(self.valid_length, 'valid_length')
+        self.add_function(self.same_sizes, 'same_sizes')
+        self.add_function(self.find, 'find', {'terms': str})
+        self.add_function(self.open, 'open', {'video_id': int})
 
 
 def main():

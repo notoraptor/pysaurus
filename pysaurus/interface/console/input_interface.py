@@ -1,3 +1,7 @@
+import sys
+import traceback
+
+
 class InputInterface:
     def __init__(self):
         self.__definitions = {}
@@ -51,5 +55,6 @@ class InputInterface:
                     print('\n\\exit')
                     break
             except Exception as exc:
+                traceback.print_tb(exc.__traceback__, file=sys.stdout)
                 print(r'\exception', type(exc).__name__, exc)
             print()

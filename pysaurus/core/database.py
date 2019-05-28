@@ -15,8 +15,36 @@ from pysaurus.core.video_raptor import api as video_raptor
 from pysaurus.core.video_raptor.result import VideoRaptorResult
 
 
+class Id:
+    __slots__ = ('database', 'id')
+
+    def __init__(self, database, video_id):
+        # type: (Database, int) -> None
+        self.database = database
+        self.id = video_id
+
+    def __hash__(self):
+        return hash(self.id)
+
+    def __eq__(self, other):
+        return self.id == other.id
+
+    def __lt__(self, other):
+        return self.id < other.id
+
+    def __str__(self):
+        return str(self.id).rjust(len(str(self.database.nb_entries - 1)))
+
+    @staticmethod
+    def ensure(database, number):
+        if not isinstance(number, Id):
+            number = Id(database, number)
+        return number
+
+
 class Database(object):
-    __slots__ = ['list_path', 'json_path', 'database_path', '__folders', 'videos', 'unreadable']
+    __slots__ = ['list_path', 'json_path', 'database_path', '__folders', 'videos', 'unreadable', 'id_to_file_name',
+                 'file_name_to_id']
 
     def __init__(self, list_file_path):
         self.list_path = AbsolutePath.ensure(list_file_path)
@@ -24,6 +52,8 @@ class Database(object):
         self.json_path = AbsolutePath.new_file_path(self.database_path, self.list_path.title, 'json')
         self.__folders = utils.load_path_list_file(self.list_path)
         self.videos = {}
+        self.id_to_file_name = {}
+        self.file_name_to_id = {}
         self.unreadable = {}  # unreadable videos.
         self.load()
 
@@ -60,6 +90,17 @@ class Database(object):
     def valid_length(self):
         return Duration(sum(video.get_duration().total_microseconds
                             for video in self.videos.values() if video.exists()))
+
+    def get_video_from_id(self, video_id):
+        video_id = Id.ensure(self, video_id)
+        if video_id in self.id_to_file_name:
+            return self.videos[self.id_to_file_name[video_id]]
+        return None
+
+    def get_video_id(self, video):
+        if video.filename in self.file_name_to_id:
+            return self.file_name_to_id[video.filename]
+        return None
 
     def update(self):
         folder_to_files = Database.get_videos_paths_from_disk(self.__folders)
@@ -140,7 +181,7 @@ class Database(object):
                 thumb_name_index += 1
             video.thumb_name = thumb_name
             valid_thumb_names.add(thumb_name)
-        self.save()
+        self.save(update_identifiers=False)
 
         dispatched_thumb_jobs = utils.dispatch_tasks(videos_without_thumbs, cpu_count)
         for job_videos, job_id in dispatched_thumb_jobs:
@@ -169,7 +210,7 @@ class Database(object):
         self.notify_missing_thumbnails()
         if thumb_video_errors:
             notifier.notify(notifications.VideoThumbnailErrors(thumb_video_errors))
-        self.save()
+        self.save(update_identifiers=False)
 
     def notify_missing_thumbnails(self):
         remaining_thumb_videos = [video.filename.path for video in self.videos.values()
@@ -239,11 +280,16 @@ class Database(object):
                 elif file_path.isfile():
                     # Keep errors only for existing files.
                     self.unreadable[file_path] = errors
+        # Generate videos identifiers.
+        self.__generate_identifiers()
         # Notify database loaded.
         notifier.notify(notifications.DatabaseLoaded(
             total=self.nb_entries, not_found=self.nb_not_found, unreadable=self.nb_unreadable))
 
-    def save(self):
+    def save(self, update_identifiers=True):
+        if update_identifiers:
+            # Regenerate runtime ids.
+            self.__generate_identifiers()
         # Ensure database folder.
         self.database_path.mkdir()
         # Save list file.
@@ -260,6 +306,10 @@ class Database(object):
             }
             json.dump(json_output, output_file, indent=1)
             notifier.notify(notifications.DatabaseSaved(self.nb_entries))
+
+    def __generate_identifiers(self):
+        self.id_to_file_name = {Id(self, index): filename for index, filename in enumerate(sorted(self.videos))}
+        self.file_name_to_id = {filename: index for index, filename in self.id_to_file_name.items()}
 
     @staticmethod
     def get_videos_paths_from_disk(paths: set):

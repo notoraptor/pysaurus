@@ -3,6 +3,7 @@ import platform
 import shutil
 
 from pysaurus.core.constants import WINDOWS_PATH_PREFIX
+from pysaurus.core.date_modified import DateModified
 
 
 class AbsolutePath(object):
@@ -70,7 +71,7 @@ class AbsolutePath(object):
 
     # not tested.
     def get_date_modified(self):
-        return os.path.getmtime(self.__path)
+        return DateModified(os.path.getmtime(self.__path))
 
     # not tested.
     def get_size(self):

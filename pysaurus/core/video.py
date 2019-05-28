@@ -65,6 +65,9 @@ class Video(object):
     def exists(self):
         return self.filename.isfile()
 
+    def get_title(self):
+        return self.title if self.title else self.filename.title
+
     def get_duration(self):
         return VideoDuration(self)
 
@@ -78,9 +81,6 @@ class Video(object):
         if not self.thumb_name:
             self.thumb_name = thumbnail_utils.ThumbnailStrings.generate_name(self.filename)
         return thumbnail_utils.ThumbnailStrings.generate_path_from_name(folder, self.thumb_name)
-
-    def get_title(self):
-        return self.title if self.title else self.filename.title
 
     def to_dict(self):
         dct = {self.LONG_TO_MIN[key]: getattr(self, key) for key in self.__slots__}
