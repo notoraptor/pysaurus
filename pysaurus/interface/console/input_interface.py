@@ -3,6 +3,9 @@ import traceback
 
 
 class InputInterface:
+
+    __slots__ = '__definitions',
+
     def __init__(self):
         self.__definitions = {}
 
@@ -17,7 +20,7 @@ class InputInterface:
             assert callable(argument_parser)
         self.__definitions[name] = (function, arguments)
 
-    def _help(self):
+    def function_help(self):
         for fn_name in sorted(self.__definitions):
             fn_args = self.__definitions[fn_name][1]
             print('%s(%s)' % (fn_name, ', '.join('%s:%s' % (arg_name, arg_parser.__name__)
@@ -27,13 +30,14 @@ class InputInterface:
         if title:
             print()
             print(title)
+            return
         while True:
             calling_function = False
             try:
                 function_name = input('[function]: ').strip()
                 calling_function = True
                 if function_name == 'help':
-                    self._help()
+                    self.function_help()
                 elif function_name in ('exit', 'quit'):
                     break
                 else:

@@ -3,37 +3,6 @@ import urllib.parse
 from pysaurus.core import utils
 from pysaurus.core.video import Video
 
-
-def same_sizes(database):
-    # type: (dict) -> None
-    sizes = {}
-    for video in database.videos.values():  # type: Video
-        if video.exists():
-            sizes.setdefault(video.size, []).append(video)
-    duplicated_sizes = {size: elements for (size, elements) in sizes.items() if len(elements) > 1}
-    if duplicated_sizes:
-        utils.print_title('%d DUPLICATE CASE(S)' % len(duplicated_sizes))
-        for size in sorted(duplicated_sizes.keys()):
-            elements = duplicated_sizes[size]  # type: list
-            elements.sort(key=lambda v: v.filename)
-            print(size, 'bytes,', len(elements), 'video(s)')
-            for video in elements:
-                print('\t%s\t"%s"' % (database.get_video_id(video), video.filename))
-
-
-def find(database, terms):
-    # type: (dict, list | tuple | set) -> None
-    terms = {term.lower() for term in terms}
-    found = []
-    for video in database.videos.values():  # type: Video
-        if video.exists() and all(term in video.title.lower() or term in video.filename.path.lower() for term in terms):
-            found.append(video)
-    print(len(found), 'FOUND', ', '.join(terms))
-    found.sort(key=lambda v: v.filename.get_date_modified().time, reverse=True)
-    for video in found:
-        print('\t%s\t%s\t"%s"' % (video.filename.get_date_modified(), database.get_video_id(video), video.filename))
-
-
 def get_same_lengths(database: dict):
     durations = {}
     for video in database.values():

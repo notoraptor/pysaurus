@@ -8,22 +8,28 @@ from pysaurus.core.date_modified import DateModified
 
 class AbsolutePath(object):
 
-    def __init__(self, path: str):
-        if not os.path.isabs(path):
-            path = os.path.abspath(path)
+    __slots__ = '__path',
+
+    def __init__(self, path):
+        # type: (str) -> None
+        path = os.path.abspath(path)
         if len(path) >= 260 and platform.system() == 'Windows' and not path.startswith(WINDOWS_PATH_PREFIX):
             path = '%s%s' % (WINDOWS_PATH_PREFIX, path)
-        last_index_of_separator = path.rfind(os.path.sep)
-        last_index_of_dot = -1 if last_index_of_separator < 0 else path.rfind('.', last_index_of_separator)
-        index_title_start = 0 if last_index_of_separator < 0 else (last_index_of_separator + 1)
-        index_title_end = len(path) if last_index_of_dot < 0 else last_index_of_dot
         self.__path = path
-        self.__title = self.__path[index_title_start:index_title_end]
-        self.__extension = self.__path[(index_title_end + 1):]
 
-    path = property(lambda self: self.__path)
-    title = property(lambda self: self.__title)
-    extension = property(lambda self: self.__extension)
+    @property
+    def path(self):
+        return self.__path
+
+    @property
+    def title(self):
+        basename = os.path.basename(self.__path)
+        index_dot = basename.rfind('.')
+        return basename if index_dot < 0 else basename[:index_dot]
+
+    @property
+    def extension(self):
+        return os.path.splitext(self.__path)[1]
 
     def __str__(self):
         return self.__path
@@ -50,7 +56,7 @@ class AbsolutePath(object):
         return os.listdir(self.__path)
 
     def get_basename(self):
-        return '%s.%s' % (self.__title, self.__extension)
+        return os.path.basename(self.__path)
 
     def get_directory(self):
         return AbsolutePath(os.path.dirname(self.__path))
@@ -94,11 +100,7 @@ class AbsolutePath(object):
 
     @classmethod
     def ensure(cls, path):
-        """ Return path if it's already an AbsolutePath object, else convert it to an AbsolutePath object.
-        :param path: path to check.
-        :return: an AbsolutePath object.
-        :rtype: AbsolutePath
-        """
+        # type: (str | AbsolutePath) -> AbsolutePath
         if not isinstance(path, cls):
             path = cls(str(path))
         return path

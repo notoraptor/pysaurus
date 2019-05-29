@@ -3,10 +3,9 @@ import os
 
 import ujson as json
 
-import pysaurus.core.constants
 from pysaurus.core import notifications, notifier, utils, thumbnail_utils
 from pysaurus.core.absolute_path import AbsolutePath
-from pysaurus.core.constants import VIDEO_BATCH_SIZE, PYTHON_ERROR_NOTHING, PYTHON_ERROR_THUMBNAIL
+from pysaurus.core.constants import VIDEO_BATCH_SIZE, PYTHON_ERROR_NOTHING, THUMBNAIL_EXTENSION
 from pysaurus.core.duration import Duration
 from pysaurus.core.file_size import FileSize
 from pysaurus.core.profiler import Profiler
@@ -44,7 +43,7 @@ class Id:
 
 class Database(object):
     __slots__ = ['list_path', 'json_path', 'database_path', '__folders', 'videos', 'unreadable', 'id_to_file_name',
-                 'file_name_to_id']
+                 'file_name_to_id', 'system_is_case_insensitive']
 
     def __init__(self, list_file_path):
         self.list_path = AbsolutePath.ensure(list_file_path)
@@ -55,6 +54,7 @@ class Database(object):
         self.id_to_file_name = {}
         self.file_name_to_id = {}
         self.unreadable = {}  # unreadable videos.
+        self.system_is_case_insensitive = utils.file_system_is_case_insensitive(self.database_path.path)
         self.load()
 
     @property
@@ -79,7 +79,7 @@ class Database(object):
 
     @property
     def nb_thumbnails(self):
-        return sum((PYTHON_ERROR_THUMBNAIL not in video.errors and video.thumbnail_is_valid(self.database_path))
+        return sum((not video.error_thumbnail and video.thumbnail_is_valid(self.database_path))
                    for video in self.videos.values())
 
     @property
@@ -152,11 +152,15 @@ class Database(object):
         thumb_video_errors = {}
         thumb_jobs = []
 
-        # Collect videos with thumbnails and without thumbnails.
+        # Collect videos with and without thumbnails.
+        existing_thumb_names = self.__get_thumbnails_names_on_disk()
         for video in self.videos.values():
-            if video.exists() and PYTHON_ERROR_THUMBNAIL not in video.errors:
-                if video.thumbnail_is_valid(self.database_path):
-                    thumb_to_videos.setdefault(video.thumb_name, []).append(video)
+            if video.exists() and not video.error_thumbnail:
+                thumb_name = video.ensure_thumbnail_name()
+                if self.system_is_case_insensitive:
+                    thumb_name = thumb_name.lower()
+                if thumb_name in existing_thumb_names:
+                    thumb_to_videos.setdefault(thumb_name, []).append(video)
                 else:
                     videos_without_thumbs.append(video)
 
@@ -204,7 +208,7 @@ class Database(object):
                         thumb_video_errors[file_name] = thumb_result.errors
                     else:
                         thumb_video_errors[file_name] = [PYTHON_ERROR_NOTHING]
-                    self.videos[AbsolutePath(file_name)].errors.add(PYTHON_ERROR_THUMBNAIL)
+                    self.videos[AbsolutePath(file_name)].error_thumbnail = True
         assert nb_results == len(videos_without_thumbs)
 
         self.notify_missing_thumbnails()
@@ -213,30 +217,41 @@ class Database(object):
         self.save(update_identifiers=False)
 
     def notify_missing_thumbnails(self):
-        remaining_thumb_videos = [video.filename.path for video in self.videos.values()
-                                  if video.exists()
-                                  and (PYTHON_ERROR_THUMBNAIL in video.errors
-                                       or not video.thumbnail_is_valid(self.database_path))]
+        remaining_thumb_videos = []
+        existing_thumb_names = self.__get_thumbnails_names_on_disk()
+        for video in self.videos.values():
+            if video.exists():
+                missing = video.error_thumbnail
+                if not missing:
+                    thumb_name = video.ensure_thumbnail_name()
+                    if self.system_is_case_insensitive:
+                        thumb_name = thumb_name.lower()
+                    missing = thumb_name not in existing_thumb_names
+                if missing:
+                    remaining_thumb_videos.append(video.filename.path)
         notifier.notify(notifications.MissingThumbnails(remaining_thumb_videos))
 
-    def clean_unused_thumbnails(self):
-        fs_is_case_insensitive = utils.file_system_is_case_insensitive(self.database_path.path)
-        all_images_paths = set()
+    def __get_thumbnails_names_on_disk(self):
+        all_images_paths = []
         for path_string in self.database_path.listdir():
-            if path_string.lower().endswith('.%s' % pysaurus.core.constants.THUMBNAIL_EXTENSION):
-                if fs_is_case_insensitive:
+            if path_string.lower().endswith('.%s' % THUMBNAIL_EXTENSION):
+                if self.system_is_case_insensitive:
                     path_string = path_string.lower()
-                all_images_paths.add(path_string)
+                all_images_paths.append(path_string[:-(len(THUMBNAIL_EXTENSION) + 1)])
+        return set(all_images_paths)
+
+    def clean_unused_thumbnails(self):
+        existing_thumb_names = self.__get_thumbnails_names_on_disk()
         for video in self.videos.values():
-            if video.exists() and PYTHON_ERROR_THUMBNAIL not in video.errors:
-                thumb_path_string = video.get_thumbnail_path(self.database_path).get_basename()
-                if fs_is_case_insensitive:
-                    thumb_path_string = thumb_path_string.lower()
-                if thumb_path_string in all_images_paths:
-                    all_images_paths.remove(thumb_path_string)
-        notifier.notify(notifications.UnusedThumbnails(len(all_images_paths)))
-        for unused_thumbnail in all_images_paths:
-            os.unlink(os.path.join(self.database_path.path, unused_thumbnail))
+            if video.exists() and not video.error_thumbnail:
+                thumb_name = video.ensure_thumbnail_name()
+                if self.system_is_case_insensitive:
+                    thumb_name = thumb_name.lower()
+                if thumb_name in existing_thumb_names:
+                    existing_thumb_names.remove(thumb_name)
+        notifier.notify(notifications.UnusedThumbnails(len(existing_thumb_names)))
+        for unused_thumb_name in existing_thumb_names:
+            os.unlink(os.path.join(self.database_path.path, '%s.%s' % (unused_thumb_name, THUMBNAIL_EXTENSION)))
 
     def remove_videos_not_found(self, save=False):
         file_names_not_found = [video.filename for video in self.videos.values() if not video.exists()]

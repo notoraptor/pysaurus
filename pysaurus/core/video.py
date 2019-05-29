@@ -5,13 +5,16 @@ from pysaurus.core.html_stripper import HTMLStripper
 from pysaurus.core.utils import StringPrinter
 from pysaurus.core.video_duration import VideoDuration
 from pysaurus.core.video_raptor.structures import VideoInfo
+from pysaurus.core.constants import PYTHON_ERROR_THUMBNAIL
 
 
 class Video(object):
     # Currently 14 fields.
     __slots__ = ('filename', 'title', 'container_format', 'audio_codec', 'video_codec', 'width', 'height',
                  'frame_rate_num', 'frame_rate_den', 'sample_rate', 'duration', 'duration_time_base', 'size',
-                 'bit_rate', 'thumb_name', 'errors')
+                 'bit_rate', 'thumb_name', 'errors', 'error_thumbnail')
+
+    __fields__ = __slots__[:-1]
 
     MIN_TO_LONG = {
         'f': 'filename',
@@ -53,11 +56,14 @@ class Video(object):
         self.bit_rate = bit_rate
         self.thumb_name = thumb_name
         self.errors = set(errors)
+        self.error_thumbnail = PYTHON_ERROR_THUMBNAIL in self.errors
+        if self.error_thumbnail:
+            self.errors.remove(PYTHON_ERROR_THUMBNAIL)
 
     def __str__(self):
         printer = StringPrinter()
         printer.write('Video(')
-        for field_name in sorted(self.__slots__):
+        for field_name in sorted(self.__fields__):
             printer.write('\t%s: %s' % (field_name, getattr(self, field_name)))
         printer.write(')')
         return str(printer)
@@ -77,19 +83,25 @@ class Video(object):
     def thumbnail_is_valid(self, folder: AbsolutePath):
         return self.get_thumbnail_path(folder).isfile()
 
-    def get_thumbnail_path(self, folder: AbsolutePath):
+    def ensure_thumbnail_name(self):
         if not self.thumb_name:
             self.thumb_name = thumbnail_utils.ThumbnailStrings.generate_name(self.filename)
+        return self.thumb_name
+
+    def get_thumbnail_path(self, folder: AbsolutePath):
+        self.ensure_thumbnail_name()
         return thumbnail_utils.ThumbnailStrings.generate_path_from_name(folder, self.thumb_name)
 
     def to_dict(self):
-        dct = {self.LONG_TO_MIN[key]: getattr(self, key) for key in self.__slots__}
+        dct = {self.LONG_TO_MIN[key]: getattr(self, key) for key in self.__fields__}
         dct[self.LONG_TO_MIN['filename']] = str(self.filename)
+        if self.error_thumbnail:
+            dct[self.LONG_TO_MIN['errors']].add(PYTHON_ERROR_THUMBNAIL)
         return dct
 
     @classmethod
     def from_dict(cls, dct: dict):
-        return cls(**{field: dct[cls.LONG_TO_MIN[field]] for field in cls.__slots__})
+        return cls(**{field: dct[cls.LONG_TO_MIN[field]] for field in cls.__fields__})
 
     @classmethod
     def from_video_info(cls, video_info: VideoInfo):
