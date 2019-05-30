@@ -3,6 +3,7 @@ import urllib.parse
 from pysaurus.core import utils
 from pysaurus.core.video import Video
 
+
 def get_same_lengths(database: dict):
     durations = {}
     for video in database.values():

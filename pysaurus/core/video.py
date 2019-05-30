@@ -1,11 +1,11 @@
 from pysaurus.core import thumbnail_utils
 from pysaurus.core.absolute_path import AbsolutePath
+from pysaurus.core.constants import PYTHON_ERROR_THUMBNAIL
 from pysaurus.core.file_size import FileSize
 from pysaurus.core.html_stripper import HTMLStripper
 from pysaurus.core.utils import StringPrinter
 from pysaurus.core.video_duration import VideoDuration
 from pysaurus.core.video_raptor.structures import VideoInfo
-from pysaurus.core.constants import PYTHON_ERROR_THUMBNAIL
 
 
 class Video(object):

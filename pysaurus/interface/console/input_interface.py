@@ -3,7 +3,6 @@ import traceback
 
 
 class InputInterface:
-
     __slots__ = '__definitions',
 
     def __init__(self):
@@ -30,7 +29,7 @@ class InputInterface:
         if title:
             print()
             print(title)
-            return
+
         while True:
             calling_function = False
             try:
@@ -41,17 +40,33 @@ class InputInterface:
                 elif function_name in ('exit', 'quit'):
                     break
                 else:
-                    if function_name not in self.__definitions:
-                        print(r'\unknown')
-                        continue
-                    function, arguments = self.__definitions[function_name]
-                    kwargs = {}
-                    for argument_name, argument_parser in arguments.items():
-                        value_string = input('\t[%s]: ' % argument_name).strip()
-                        kwargs[argument_name] = argument_parser(value_string)
-                    result = function(**kwargs)
-                    if result is not None:
-                        print(result)
+                    index_space = function_name.find(' ')
+                    if index_space < 0:
+                        if function_name not in self.__definitions:
+                            print(r'\unknown')
+                            continue
+                        function, arguments = self.__definitions[function_name]
+                        kwargs = {}
+                        for argument_name, argument_parser in arguments.items():
+                            value_string = input('\t[%s]: ' % argument_name).strip()
+                            kwargs[argument_name] = argument_parser(value_string)
+                        result = function(**kwargs)
+                        if result is not None:
+                            print(result)
+                    else:
+                        real_function_name = function_name[:index_space]
+                        function_arg = function_name[index_space:].strip()
+                        if real_function_name not in self.__definitions:
+                            print(r'\unknown')
+                            continue
+                        function, arguments = self.__definitions[real_function_name]
+                        if len(arguments) != 1:
+                            print(r'\error %d arguments expected' % len(arguments))
+                            continue
+                        argument_name, argument_parser = next(iter(arguments.items()))
+                        result = function(**{argument_name: argument_parser(function_arg)})
+                        if result is not None:
+                            print(result)
             except KeyboardInterrupt:
                 if calling_function:
                     print('\n\\interrupted')

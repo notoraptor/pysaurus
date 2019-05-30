@@ -19,4 +19,6 @@ class ConsoleInterface(InputInterface):
         self.add_function(self.interface.same_sizes, 'same_sizes')
         self.add_function(self.interface.find, 'find', {'terms': str})
         self.add_function(self.interface.open, 'open', {'video_id': int})
-
+        self.add_function(self.interface.delete, 'delete', {'video_id': int})
+        self.add_function(self.interface.info, 'info', {'video_id': int})
+        self.add_function(self.interface.clear_not_found, 'clear_not_found')

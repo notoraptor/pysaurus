@@ -92,6 +92,7 @@ class Database(object):
                             for video in self.videos.values() if video.exists()))
 
     def get_video_from_id(self, video_id):
+        # type: (Id | int) -> Video | None
         video_id = Id.ensure(self, video_id)
         if video_id in self.id_to_file_name:
             return self.videos[self.id_to_file_name[video_id]]
@@ -254,13 +255,22 @@ class Database(object):
             os.unlink(os.path.join(self.database_path.path, '%s.%s' % (unused_thumb_name, THUMBNAIL_EXTENSION)))
 
     def remove_videos_not_found(self, save=False):
-        file_names_not_found = [video.filename for video in self.videos.values() if not video.exists()]
-        if file_names_not_found:
-            for file_name in file_names_not_found:
-                del self.videos[file_name]
-            notifier.notify(notifications.VideosNotFoundRemoved(len(file_names_not_found)))
+        videos_not_found = [video for video in self.videos.values() if not video.exists()]
+        if videos_not_found:
+            for video in videos_not_found:
+                self.delete_video(video)
+            notifier.notify(notifications.VideosNotFoundRemoved(len(videos_not_found)))
             if save:
                 self.save()
+
+    def delete_video(self, video):
+        # type: (Video) -> None
+        self.videos.pop(video.filename, None)
+        if video.filename.isfile():
+            video.filename.delete()
+        thumb_path = video.get_thumbnail_path(self.database_path)
+        if thumb_path.isfile():
+            thumb_path.delete()
 
     def add_folder(self, folder):
         self.__folders.add(AbsolutePath.ensure(folder))

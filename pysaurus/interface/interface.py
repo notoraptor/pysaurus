@@ -81,10 +81,30 @@ class Interface:
             if sys.platform in platform_commands:
                 open_command = platform_commands[sys.platform]
                 subprocess.run([open_command, video.filename.path])
+                print('Opened', video.filename)
             elif sys.platform == 'win32':
                 os.startfile(video.filename.path)
+                print('Opened', video.filename)
             else:
                 print('Unknown system', sys.platform)
                 return
         else:
-            print('Not found', video)
+            print('Not found', video_id)
+
+    def delete(self, video_id):
+        video = self.database.get_video_from_id(video_id)
+        if video:
+            self.database.delete_video(video)
+            print('Deleted', video.filename)
+        else:
+            print('Not found', video_id)
+
+    def clear_not_found(self):
+        self.database.remove_videos_not_found(save=True)
+
+    def info(self, video_id):
+        video = self.database.get_video_from_id(video_id)
+        if video:
+            print(video)
+        else:
+            print('Not found', video_id)

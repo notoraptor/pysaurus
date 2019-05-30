@@ -7,7 +7,6 @@ from pysaurus.core.date_modified import DateModified
 
 
 class AbsolutePath(object):
-
     __slots__ = '__path',
 
     def __init__(self, path):
