@@ -3,7 +3,7 @@ from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.constants import PYTHON_ERROR_THUMBNAIL
 from pysaurus.core.file_size import FileSize
 from pysaurus.core.html_stripper import HTMLStripper
-from pysaurus.core.utils import StringPrinter
+from pysaurus.core.utils.classes import StringPrinter
 from pysaurus.core.video_duration import VideoDuration
 from pysaurus.core.video_raptor.structures import VideoInfo
 
@@ -62,10 +62,18 @@ class Video(object):
 
     def __str__(self):
         printer = StringPrinter()
-        printer.write('Video(')
-        for field_name in sorted(self.__fields__):
+        printer.write('Video:')
+        for field_name in ('filename', 'title', 'container_format', 'audio_codec',
+                           'video_codec', 'width', 'height', 'sample_rate', 'bit_rate'):
             printer.write('\t%s: %s' % (field_name, getattr(self, field_name)))
-        printer.write(')')
+        printer.write('\tframe_rate: %s' % (self.frame_rate_num / self.frame_rate_den))
+        printer.write('\tduration: %s' % (self.get_duration()))
+        printer.write('\tsize: %s' % (self.get_size()))
+        errors = set(self.errors)
+        if self.error_thumbnail:
+            errors.add(PYTHON_ERROR_THUMBNAIL)
+        if errors:
+            printer.write('\terror(s): %s' % (', '.join(sorted(errors))))
         return str(printer)
 
     def exists(self):

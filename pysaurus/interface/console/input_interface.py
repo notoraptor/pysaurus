@@ -2,28 +2,51 @@ import sys
 import traceback
 
 
+class FunctionDefinition:
+    __slots__ = ('function', 'arguments', 'description', 'name')
+
+    def __init__(self, function, name=None, arguments=None, description=None):
+        assert callable(function)
+        if name is None:
+            name = function.__name__
+        if arguments is None:
+            arguments = dict()
+        if description is None:
+            description = ''
+        for argument_name, argument_parser in arguments.items():
+            assert isinstance(argument_name, str)
+            assert callable(argument_parser)
+        self.function = function
+        self.arguments = arguments
+        self.description = description
+        self.name = name
+
+    def __str__(self):
+        return '%s(%s)' % (self.name, ', '.join('%s:%s' % (arg_name, arg_parser.__name__)
+                                                for arg_name, arg_parser in sorted(self.arguments.items())))
+
+
 class InputInterface:
     __slots__ = '__definitions',
 
     def __init__(self):
         self.__definitions = {}
 
-    def add_function(self, function, name, arguments=None):
-        # type: (callable, str, dict) -> None
-        assert callable(function)
-        assert name not in self.__definitions
-        if arguments is None:
-            arguments = dict()
-        for argument_name, argument_parser in arguments.items():
-            assert isinstance(argument_name, str)
-            assert callable(argument_parser)
-        self.__definitions[name] = (function, arguments)
+    def add_function(self, function, name=None, arguments=None, description=None):
+        # type: (callable, str, dict, str) -> None
+        function_definition = FunctionDefinition(function, name, arguments, description)
+        assert function_definition.name not in self.__definitions
+        self.__definitions[function_definition.name] = function_definition
 
-    def function_help(self):
-        for fn_name in sorted(self.__definitions):
-            fn_args = self.__definitions[fn_name][1]
-            print('%s(%s)' % (fn_name, ', '.join('%s:%s' % (arg_name, arg_parser.__name__)
-                                                 for arg_name, arg_parser in sorted(fn_args.items()))))
+    def function_help(self, name=None):
+        if name is None:
+            for fn_name in sorted(self.__definitions):
+                print(self.__definitions[fn_name])
+        elif name in self.__definitions:
+            function_definition = self.__definitions[name]  # type: FunctionDefinition
+            print(function_definition)
+            if function_definition.description:
+                print(function_definition.description)
 
     def run(self, title=''):
         if title:
@@ -35,38 +58,40 @@ class InputInterface:
             try:
                 function_name = input('[function]: ').strip()
                 calling_function = True
-                if function_name == 'help':
-                    self.function_help()
-                elif function_name in ('exit', 'quit'):
+                if function_name in ('exit', 'quit'):
                     break
                 else:
                     index_space = function_name.find(' ')
                     if index_space < 0:
+                        if function_name == 'help':
+                            self.function_help()
+                            continue
                         if function_name not in self.__definitions:
                             print(r'\unknown')
                             continue
-                        function, arguments = self.__definitions[function_name]
+                        function_definition = self.__definitions[function_name]  # type: FunctionDefinition
                         kwargs = {}
-                        for argument_name, argument_parser in arguments.items():
+                        for argument_name, argument_parser in function_definition.arguments.items():
                             value_string = input('\t[%s]: ' % argument_name).strip()
                             kwargs[argument_name] = argument_parser(value_string)
-                        result = function(**kwargs)
-                        if result is not None:
-                            print(result)
                     else:
                         real_function_name = function_name[:index_space]
                         function_arg = function_name[index_space:].strip()
+                        if real_function_name == 'help':
+                            self.function_help(function_arg)
+                            continue
                         if real_function_name not in self.__definitions:
                             print(r'\unknown')
                             continue
-                        function, arguments = self.__definitions[real_function_name]
-                        if len(arguments) != 1:
-                            print(r'\error %d arguments expected' % len(arguments))
+                        function_definition = self.__definitions[real_function_name]  # type: FunctionDefinition
+                        if len(function_definition.arguments) != 1:
+                            print(r'\error %d arguments expected' % len(function_definition.arguments))
                             continue
-                        argument_name, argument_parser = next(iter(arguments.items()))
-                        result = function(**{argument_name: argument_parser(function_arg)})
-                        if result is not None:
-                            print(result)
+                        argument_name, argument_parser = next(iter(function_definition.arguments.items()))
+                        kwargs = {argument_name: argument_parser(function_arg)}
+                    result = function_definition.function(**kwargs)
+                    if result is not None:
+                        print(result)
             except KeyboardInterrupt:
                 if calling_function:
                     print('\n\\interrupted')

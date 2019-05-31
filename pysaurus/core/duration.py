@@ -19,22 +19,22 @@ class Duration(object):
         return hash(self.total_microseconds)
 
     def __eq__(self, other):
-        return self.total_microseconds == other.total_micrroseconds
+        return self.total_microseconds == other.total_microseconds
 
     def __ne__(self, other):
-        return self.total_microseconds != other.total_micrroseconds
+        return self.total_microseconds != other.total_microseconds
 
     def __lt__(self, other):
-        return self.total_microseconds < other.total_micrroseconds
+        return self.total_microseconds < other.total_microseconds
 
     def __gt__(self, other):
-        return self.total_microseconds > other.total_micrroseconds
+        return self.total_microseconds > other.total_microseconds
 
     def __le__(self, other):
-        return self.total_microseconds <= other.total_micrroseconds
+        return self.total_microseconds <= other.total_microseconds
 
     def __ge__(self, other):
-        return self.total_microseconds >= other.total_micrroseconds
+        return self.total_microseconds >= other.total_microseconds
 
     def __str__(self):
         view = []

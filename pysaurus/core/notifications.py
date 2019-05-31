@@ -1,4 +1,5 @@
-from pysaurus.core import utils
+from pysaurus.core.utils.classes import StringPrinter
+from pysaurus.core.utils.functions import to_printable
 
 
 class Notification(object):
@@ -11,7 +12,7 @@ class Notification(object):
         return '%s(%s)' % (
             type(self).__name__,
             ', '.join('%s=%s' % (
-                name, utils.to_printable(getattr(self, name))) for name in valid_attribute_names))
+                name, to_printable(getattr(self, name))) for name in valid_attribute_names))
 
 
 class ProfilingStart(Notification):
@@ -69,7 +70,7 @@ class CollectedFiles(Notification):
             total_count += local_count
             folder_to_count.append((folder, local_count))
         folder_to_count.sort(key=lambda couple: (-couple[1], couple[0]))
-        printer = utils.StringPrinter()
+        printer = StringPrinter()
         printer.write(
             '%s: %d' % (type(self).__name__, total_count))
         for folder, local_count in folder_to_count:
@@ -126,7 +127,7 @@ class MissingVideos(Notification):
         self.names = file_names
 
     def __str__(self):
-        printer = utils.StringPrinter()
+        printer = StringPrinter()
         printer.write('%s: %d' % (type(self).__name__, len(self.names)))
         for name in sorted(self.names):
             printer.write('\t%s' % name)
@@ -144,7 +145,7 @@ class VideoInfoErrors(Notification):
         self.video_errors = video_errors
 
     def __str__(self):
-        printer = utils.StringPrinter()
+        printer = StringPrinter()
         printer.write('%s: %d' % (type(self).__name__, len(self.video_errors)))
         for file_name in self.video_errors:
             printer.title(file_name)

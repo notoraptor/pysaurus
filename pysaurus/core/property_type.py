@@ -2,7 +2,7 @@ import re
 
 from pysaurus.core import errors
 from pysaurus.core.property_value import PropertyValue
-from pysaurus.core.utils import is_iterable, ensure_set, to_printable
+from pysaurus.core.utils.functions import is_iterable, ensure_set, to_printable
 
 
 class PropertyType:

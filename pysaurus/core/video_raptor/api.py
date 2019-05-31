@@ -1,5 +1,6 @@
 from _ctypes import pointer
 from ctypes import c_char_p
+from typing import List, Optional
 
 from pysaurus.core.video import Video
 from pysaurus.core.video_raptor.functions import (__fn_VideoRaptorInfo_init, __fn_VideoRaptorInfo_clear,
@@ -44,7 +45,7 @@ def collect_video_info(file_names: list):
     if not file_names:
         return
 
-    output = [None] * len(file_names)  # type: list[VideoRaptorResult]
+    output = [None] * len(file_names)  # type: List[Optional[VideoRaptorResult]]
     encoded_file_names = [file_name.encode() for file_name in file_names]
     video_info_objects = [VideoInfo() for _ in file_names]
     video_info_pointers = [pointer(v) for v in video_info_objects]
@@ -71,7 +72,7 @@ def generate_video_thumbnails(file_names: list, thumb_names: list, output_folder
     if not file_names:
         return
 
-    output = [None] * len(file_names)  # type: list[VideoRaptorResult]
+    output = [None] * len(file_names)  # type: List[Optional[VideoRaptorResult]]
     encoded_file_names = [file_name.encode() for file_name in file_names]
     encoded_thumb_names = [thumb_name.encode() for thumb_name in thumb_names]
     encoded_output_folder = output_folder.encode()

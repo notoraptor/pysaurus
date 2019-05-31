@@ -1,11 +1,12 @@
-from pysaurus.core import errors, utils
+from pysaurus.core import errors
 from pysaurus.core.property_type import PropertyType
+from pysaurus.core.utils.functions import is_iterable
 
 
 class AssertRaise:
 
     def __init__(self, exceptions):
-        exceptions = tuple(exceptions) if utils.is_iterable(exceptions) else (exceptions,)
+        exceptions = tuple(exceptions) if is_iterable(exceptions) else (exceptions,)
         assert exceptions
         self.exceptions = exceptions
 

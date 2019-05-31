@@ -58,14 +58,14 @@ def classify_pixel(pixel, l, k):
 
 
 def simplify(image, threshold):
-    l = 256
+    alphabet_size = 256
     k = threshold
     assert isinstance(k, int)
-    assert (l - 1) % k == 0
-    assert k <= l - 1
+    assert (alphabet_size - 1) % k == 0
+    assert k <= alphabet_size - 1
     output = []
     for pixel in image.getdata():
-        output.append(classify_pixel(pixel, l, k))
+        output.append(classify_pixel(pixel, alphabet_size, k))
     return output
 
 

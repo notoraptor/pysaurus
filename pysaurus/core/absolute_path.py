@@ -1,6 +1,7 @@
 import os
 import platform
 import shutil
+from typing import Union
 
 from pysaurus.core.constants import WINDOWS_PATH_PREFIX
 from pysaurus.core.date_modified import DateModified
@@ -24,11 +25,16 @@ class AbsolutePath(object):
     def title(self):
         basename = os.path.basename(self.__path)
         index_dot = basename.rfind('.')
+        if index_dot == 0:
+            return basename[1:]
         return basename if index_dot < 0 else basename[:index_dot]
 
     @property
     def extension(self):
-        return os.path.splitext(self.__path)[1]
+        extension = os.path.splitext(self.__path)[1]
+        if extension:
+            extension = extension[1:]
+        return extension
 
     def __str__(self):
         return self.__path
@@ -74,7 +80,6 @@ class AbsolutePath(object):
             return False
         return path.startswith('%s%s' % (directory, os.sep))
 
-    # not tested.
     def get_date_modified(self):
         return DateModified(os.path.getmtime(self.__path))
 
@@ -88,7 +93,6 @@ class AbsolutePath(object):
         if not os.path.isdir(self.__path):
             raise OSError("Unable to create a folder at path %s" % self.__path)
 
-    # not tested.
     def delete(self):
         if self.isfile():
             os.unlink(self.__path)
@@ -97,12 +101,21 @@ class AbsolutePath(object):
         if self.exists():
             raise OSError('Unable to delete path %s' % self.__path)
 
-    @classmethod
-    def ensure(cls, path):
-        # type: (str | AbsolutePath) -> AbsolutePath
-        if not isinstance(path, cls):
-            path = cls(str(path))
-        return path
+    def new_title(self, title):
+        new_path = AbsolutePath.new_file_path(self.get_directory(), title, self.extension)
+        if new_path.exists():
+            raise OSError('Unable to rename (destination already exists) to', new_path)
+        os.rename(self.__path, new_path.path)
+        if self.exists():
+            raise OSError('Unable to rename: source still exists:', self.__path)
+        if not new_path.exists():
+            raise OSError('Unable to rename to', new_path)
+        return new_path
+
+    @staticmethod
+    def ensure(path):
+        # type: (Union[str, AbsolutePath]) -> AbsolutePath
+        return path if isinstance(path, AbsolutePath) else AbsolutePath(str(path))
 
     @classmethod
     def new_file_path(cls, folder_path, file_title, file_extension):

@@ -1,11 +1,9 @@
 import codecs
 import os
-from io import StringIO
-
-import whirlpool
 
 from pysaurus.core.absolute_path import AbsolutePath
 from pysaurus.core.constants import VIDEO_SUPPORTED_EXTENSIONS
+from pysaurus.core.utils.classes import Enumeration
 
 
 def is_valid_video_filename(filename):
@@ -113,44 +111,14 @@ def to_printable(element):
 
 
 def package_dir():
-    return os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 
-class StringPrinter(object):
-    __slots__ = 'string_buffer', 'strip_right'
+def enumeration(values):
+    enum_instance = Enumeration(values)
 
-    def __init__(self, strip_right=True):
-        self.string_buffer = StringIO()
-        self.strip_right = bool(strip_right)
+    def enum_parser(value):
+        return enum_instance(value)
 
-    def __del__(self):
-        if not self.string_buffer.closed:
-            self.string_buffer.close()
-
-    def __str__(self):
-        return self.string_buffer.getvalue().rstrip() if self.strip_right else self.string_buffer.getvalue()
-
-    def write(self, *args, **kwargs):
-        kwargs['file'] = self.string_buffer
-        print(*args, **kwargs)
-
-    def title(self, message, character='=', up=True, down=False):
-        if not isinstance(message, str):
-            message = str(message)
-        line = character * len(message)
-        if up:
-            self.write(line)
-        self.write(message)
-        if down:
-            self.write(line)
-
-
-class Whirlpool:
-    wp = None
-
-    @staticmethod
-    def hash(string: str):
-        if not Whirlpool.wp:
-            Whirlpool.wp = whirlpool.new()
-        Whirlpool.wp.update(string.encode())
-        return Whirlpool.wp.hexdigest().lower()
+    enum_parser.__name__ = '{%s}' % (', '.join(enum_instance.values))
+    return enum_parser
