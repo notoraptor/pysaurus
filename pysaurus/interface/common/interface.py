@@ -40,11 +40,10 @@ class Interface:
         self.database = Interface.load_database()
 
     def __video(self, video_id):
-        # type: (int) -> Optional[Video]
+        # type: (int) -> Video
         video = self.database.get_video_from_id(video_id)
         if not video:
-            print('Not found', video_id)
-            return None
+            raise ValueError('Video not found (%d)' % video_id)
         return video
 
     @staticmethod
@@ -52,6 +51,8 @@ class Interface:
         # type: () -> Database
         list_file_path = AbsolutePath(os.path.join(utils.package_dir(), '..', '..', '.local', 'test_folder.log'))
         return Database.load_from_list_file(list_file_path)
+
+    # ------------------------------------------------------------------------------------------------------------------
 
     def nb(self, query):
         # type: (str) -> int
@@ -66,46 +67,48 @@ class Interface:
         return self.database.valid_length
 
     def clear_not_found(self):
+        # type: () -> None
         self.database.remove_videos_not_found(save=True)
 
     def open(self, video_id):
+        # type: (int) -> bool
         video = self.__video(video_id)
-        if video:
-            platform_commands = {
-                'linux': 'xdg-open',
-                'darwin': 'open'
-            }
-            if sys.platform in platform_commands:
-                open_command = platform_commands[sys.platform]
-                subprocess.run([open_command, video.filename.path])
-                print('Opened', video.filename)
-            elif sys.platform == 'win32':
-                os.startfile(video.filename.path)
-                print('Opened', video.filename)
-            else:
-                print('Unknown system', sys.platform)
+        ok = True
+        platform_commands = {
+            'linux': 'xdg-open',
+            'darwin': 'open'
+        }
+        if sys.platform in platform_commands:
+            open_command = platform_commands[sys.platform]
+            subprocess.run([open_command, video.filename.path])
+            print('Opened', video.filename)
+        elif sys.platform == 'win32':
+            os.startfile(video.filename.path)
+            print('Opened', video.filename)
+        else:
+            print('Unknown system', sys.platform)
+            ok = False
+        return ok
 
     def delete(self, video_id):
+        # type: (int) -> None
         video = self.__video(video_id)
-        if video:
-            self.database.delete_video(video)
-            print('Deleted', video.filename)
+        self.database.delete_video(video)
+        print('Deleted', video.filename)
 
     def info(self, video_id):
-        video = self.__video(video_id)
-        if video:
-            print(video)
+        # type: (int) -> Video
+        return self.__video(video_id)
 
     def rename(self, video_id, new_title):
+        # type: (int, str) -> None
         if new_title is None or not str(new_title):
-            print('No title given')
-            return
+            raise ValueError('No title given')
         new_title = str(new_title)
         video = self.__video(video_id)  # type: Video
-        if video:
-            self.database.change_video_file_title(video, new_title)
-            new_id = self.database.get_video_id(video)
-            print('Renamed', new_id, video.filename)
+        self.database.change_video_file_title(video, new_title)
+        new_id = self.database.get_video_id(video)
+        print('Renamed', new_id, video.filename)
 
     def same_sizes(self):
         # type: () -> Table
