@@ -1,46 +1,19 @@
 import concurrent.futures
 import os
-from typing import Dict, List, Union, Optional, Set
+from typing import Dict, List, Optional, Set
 
 import ujson as json
 
-from pysaurus.core import notifications, notifier, thumbnail_utils
-from pysaurus.core.absolute_path import AbsolutePath
-from pysaurus.core.constants import VIDEO_BATCH_SIZE, PYTHON_ERROR_NOTHING, THUMBNAIL_EXTENSION
-from pysaurus.core.duration import Duration
-from pysaurus.core.file_size import FileSize
-from pysaurus.core.profiler import Profiler
+from pysaurus.core import notifications, notifier, path_utils
+from pysaurus.core.components.absolute_path import AbsolutePath
+from pysaurus.core.components.duration import Duration
+from pysaurus.core.components.file_size import FileSize
+from pysaurus.core.profiling import Profiler
 from pysaurus.core.utils import functions as utils
+from pysaurus.core.utils.constants import VIDEO_BATCH_SIZE, PYTHON_ERROR_NOTHING, THUMBNAIL_EXTENSION
 from pysaurus.core.video import Video
 from pysaurus.core.video_raptor import api as video_raptor
 from pysaurus.core.video_raptor.result import VideoRaptorResult
-
-
-class Id:
-    __slots__ = ('database', 'id')
-
-    def __init__(self, database, video_id):
-        # type: (Database, int) -> None
-        self.database = database
-        self.id = video_id
-
-    def __hash__(self):
-        return hash(self.id)
-
-    def __eq__(self, other):
-        return self.id == other.id
-
-    def __lt__(self, other):
-        return self.id < other.id
-
-    def __str__(self):
-        return str(self.id).rjust(len(str(self.database.nb_entries - 1)))
-
-    @staticmethod
-    def ensure(database, number):
-        if not isinstance(number, Id):
-            number = Id(database, number)
-        return number
 
 
 class Database(object):
@@ -51,10 +24,10 @@ class Database(object):
         self.__list_path = AbsolutePath.ensure(list_file_path)
         self.__database_path = self.__list_path.get_directory()
         self.__json_path = AbsolutePath.new_file_path(self.__database_path, self.__list_path.title, 'json')
-        self.__folders = utils.load_path_list_file(self.__list_path)
+        self.__folders = path_utils.load_path_list_file(self.__list_path)
         self.__videos = {}  # type: Dict[AbsolutePath: Video]
-        self.__id_to_file_name = {}  # type: Dict[Id, AbsolutePath]
-        self.__file_name_to_id = {}  # type: Dict[AbsolutePath, Id]
+        self.__id_to_file_name = {}  # type: Dict[int, AbsolutePath]
+        self.__file_name_to_id = {}  # type: Dict[AbsolutePath, int]
         self.__unreadable = {}  # type: Dict[AbsolutePath, List[str]]
         self.__system_is_case_insensitive = utils.file_system_is_case_insensitive(self.__database_path.path)
         self.load()
@@ -97,9 +70,12 @@ class Database(object):
     def videos(self):
         return self.__videos.values()
 
+    @property
+    def valid_videos(self):
+        return (video for video in self.__videos.values() if video.exists())
+
     def get_video_from_id(self, video_id):
-        # type: (Union[Id, int]) -> Optional[Video]
-        video_id = Id.ensure(self, video_id)
+        # type: (int) -> Optional[Video]
         if video_id in self.__id_to_file_name:
             return self.__videos[self.__id_to_file_name[video_id]]
         return None
@@ -184,7 +160,7 @@ class Database(object):
             return
 
         for video in videos_without_thumbs:
-            base_thumb_name = thumbnail_utils.ThumbnailStrings.generate_name(video.filename)
+            base_thumb_name = path_utils.generate_thumb_name(video.filename)
             thumb_name_index = 0
             thumb_name = base_thumb_name
             while thumb_name in valid_thumb_names:
@@ -351,7 +327,7 @@ class Database(object):
             notifier.notify(notifications.DatabaseSaved(self.nb_entries))
 
     def __generate_identifiers(self):
-        self.__id_to_file_name = {Id(self, index): filename for index, filename in enumerate(sorted(self.__videos))}
+        self.__id_to_file_name = {index: filename for index, filename in enumerate(sorted(self.__videos))}
         self.__file_name_to_id = {filename: index for index, filename in self.__id_to_file_name.items()}
 
     @staticmethod

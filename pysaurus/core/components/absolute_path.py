@@ -3,8 +3,8 @@ import platform
 import shutil
 from typing import Union
 
-from pysaurus.core.constants import WINDOWS_PATH_PREFIX
-from pysaurus.core.date_modified import DateModified
+from pysaurus.core.components.date_modified import DateModified
+from pysaurus.core.utils.constants import WINDOWS_PATH_PREFIX
 
 
 class AbsolutePath(object):

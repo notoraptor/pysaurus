@@ -1,9 +1,8 @@
 import codecs
 import os
 
-from pysaurus.core.absolute_path import AbsolutePath
-from pysaurus.core.constants import VIDEO_SUPPORTED_EXTENSIONS
 from pysaurus.core.utils.classes import Enumeration
+from pysaurus.core.utils.constants import VIDEO_SUPPORTED_EXTENSIONS
 
 
 def is_valid_video_filename(filename):
@@ -79,17 +78,6 @@ def file_system_is_case_insensitive(folder='.'):
         is_insensitive = os.path.exists(test_name.upper())
     os.unlink(test_name)
     return is_insensitive
-
-
-def load_path_list_file(list_file_path: AbsolutePath):
-    paths = set()
-    if list_file_path.isfile():
-        with open(list_file_path.path, 'r') as list_file:
-            for line in list_file:
-                line = line.strip()
-                if line and line[0] != '#':
-                    paths.add(AbsolutePath(line))
-    return paths
 
 
 def is_iterable(element):

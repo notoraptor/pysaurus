@@ -1,5 +1,5 @@
 from pysaurus.core import errors
-from pysaurus.core.property_type import PropertyType
+from pysaurus.core.propertiees import PropertyType
 from pysaurus.core.utils.functions import is_iterable
 
 

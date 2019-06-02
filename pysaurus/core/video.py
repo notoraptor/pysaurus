@@ -1,10 +1,9 @@
-from pysaurus.core import thumbnail_utils
-from pysaurus.core.absolute_path import AbsolutePath
-from pysaurus.core.constants import PYTHON_ERROR_THUMBNAIL
-from pysaurus.core.file_size import FileSize
-from pysaurus.core.html_stripper import HTMLStripper
-from pysaurus.core.utils.classes import StringPrinter
-from pysaurus.core.video_duration import VideoDuration
+from pysaurus.core import path_utils
+from pysaurus.core.components.absolute_path import AbsolutePath
+from pysaurus.core.components.duration import Duration
+from pysaurus.core.components.file_size import FileSize
+from pysaurus.core.utils.classes import StringPrinter, HTMLStripper
+from pysaurus.core.utils.constants import PYTHON_ERROR_THUMBNAIL
 from pysaurus.core.video_raptor.structures import VideoInfo
 
 
@@ -16,26 +15,20 @@ class Video(object):
 
     __fields__ = __slots__[:-1]
 
-    MIN_TO_LONG = {
-        'f': 'filename',
-        'n': 'title',
-        'c': 'container_format',
-        'a': 'audio_codec',
-        'v': 'video_codec',
-        'w': 'width',
-        'h': 'height',
-        'x': 'frame_rate_num',
-        'y': 'frame_rate_den',
-        'u': 'sample_rate',
-        'd': 'duration',
-        't': 'duration_time_base',
-        's': 'size',
-        'r': 'bit_rate',
-        'i': 'thumb_name',
-        'e': 'errors'
-    }
+    MIN_TO_LONG = {'f': 'filename', 'n': 'title', 'c': 'container_format', 'a': 'audio_codec', 'v': 'video_codec',
+                   'w': 'width', 'h': 'height', 'x': 'frame_rate_num', 'y': 'frame_rate_den', 'u': 'sample_rate',
+                   'd': 'duration', 't': 'duration_time_base', 's': 'size', 'r': 'bit_rate',
+                   'i': 'thumb_name', 'e': 'errors'}
 
     LONG_TO_MIN = {_long: _min for _min, _long in MIN_TO_LONG.items()}
+
+    PUBLIC_INFO = (
+        # Video class fields
+        'filename', 'title', 'container_format', 'audio_codec',
+        'video_codec', 'width', 'height', 'sample_rate', 'bit_rate',
+        # special fields
+        'size', 'duration', 'frame_rate', 'name', 'date'
+    )
 
     def __init__(self, filename, title='', container_format='', audio_codec='', video_codec='', width=0, height=0,
                  frame_rate_num=0, frame_rate_den=0, sample_rate=0, duration=0, duration_time_base=0, size=0,
@@ -83,7 +76,13 @@ class Video(object):
         return self.title if self.title else self.filename.title
 
     def get_duration(self):
-        return VideoDuration(self)
+        """ Return a Duration object representing the video duration.
+            Based on raw duration fields `duration` and `duration_time_base`, we have:
+                duration = (number of seconds) * duration_time_base
+            So
+                (number of seconds) = duration / duration_time_base
+        """
+        return Duration(round(self.duration * 1000000 / self.duration_time_base))
 
     def get_size(self):
         return FileSize(self.size)
@@ -93,12 +92,27 @@ class Video(object):
 
     def ensure_thumbnail_name(self):
         if not self.thumb_name:
-            self.thumb_name = thumbnail_utils.ThumbnailStrings.generate_name(self.filename)
+            self.thumb_name = path_utils.generate_thumb_name(self.filename)
         return self.thumb_name
 
     def get_thumbnail_path(self, folder: AbsolutePath):
-        self.ensure_thumbnail_name()
-        return thumbnail_utils.ThumbnailStrings.generate_path_from_name(folder, self.thumb_name)
+        return path_utils.generate_thumb_path(folder, self.ensure_thumbnail_name())
+
+    def get(self, field):
+        if field == 'size':
+            return self.get_size()
+        if field == 'duration':
+            return self.get_duration()
+        if field == 'frame_rate':
+            return self.frame_rate_num / self.frame_rate_den
+        if field == 'name':
+            return self.get_title()
+        if field == 'date':
+            return self.filename.get_date_modified()
+        if field in {'filename', 'title', 'container_format', 'audio_codec',
+                     'video_codec', 'width', 'height', 'sample_rate', 'bit_rate'}:
+            return getattr(self, field)
+        return None
 
     def to_dict(self):
         dct = {self.LONG_TO_MIN[key]: getattr(self, key) for key in self.__fields__}
@@ -113,19 +127,17 @@ class Video(object):
 
     @classmethod
     def from_video_info(cls, video_info: VideoInfo):
-        return cls(
-            filename=(AbsolutePath(video_info.filename.decode()) if video_info.filename else None),
-            title=(video_info.title.decode() if video_info.title else None),
-            container_format=(video_info.container_format.decode() if video_info.container_format else None),
-            audio_codec=(video_info.audio_codec.decode() if video_info.audio_codec else None),
-            video_codec=(video_info.video_codec.decode() if video_info.video_codec else None),
-            width=video_info.width,
-            height=video_info.height,
-            frame_rate_num=video_info.frame_rate_num,
-            frame_rate_den=video_info.frame_rate_den,
-            sample_rate=video_info.sample_rate,
-            duration=video_info.duration,
-            duration_time_base=video_info.duration_time_base,
-            size=video_info.size,
-            bit_rate=video_info.bit_rate
-        )
+        return cls(filename=(AbsolutePath(video_info.filename.decode()) if video_info.filename else None),
+                   title=(video_info.title.decode() if video_info.title else None),
+                   container_format=(video_info.container_format.decode() if video_info.container_format else None),
+                   audio_codec=(video_info.audio_codec.decode() if video_info.audio_codec else None),
+                   video_codec=(video_info.video_codec.decode() if video_info.video_codec else None),
+                   width=video_info.width,
+                   height=video_info.height,
+                   frame_rate_num=video_info.frame_rate_num,
+                   frame_rate_den=video_info.frame_rate_den,
+                   sample_rate=video_info.sample_rate,
+                   duration=video_info.duration,
+                   duration_time_base=video_info.duration_time_base,
+                   size=video_info.size,
+                   bit_rate=video_info.bit_rate)

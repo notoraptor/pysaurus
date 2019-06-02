@@ -1,4 +1,4 @@
-from pysaurus.core import constants
+from pysaurus.core.utils import constants
 
 
 class FileSize(object):
@@ -27,20 +27,8 @@ class FileSize(object):
     def __eq__(self, other):
         return isinstance(other, FileSize) and self.value == other.value
 
-    def __ne__(self, other):
-        return isinstance(other, FileSize) and self.value != other.value
-
     def __lt__(self, other):
         return isinstance(other, FileSize) and self.value < other.value
-
-    def __gt__(self, other):
-        return isinstance(other, FileSize) and self.value > other.value
-
-    def __le__(self, other):
-        return isinstance(other, FileSize) and self.value <= other.value
-
-    def __ge__(self, other):
-        return isinstance(other, FileSize) and self.value >= other.value
 
     def __str__(self):
         return '%s %s' % (round(self.nb_units, 2), constants.SIZE_UNIT_TO_STRING[self.__unit])

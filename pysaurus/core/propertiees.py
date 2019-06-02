@@ -1,7 +1,6 @@
 import re
 
 from pysaurus.core import errors
-from pysaurus.core.property_value import PropertyValue
 from pysaurus.core.utils.functions import is_iterable, ensure_set, to_printable
 
 
@@ -221,3 +220,18 @@ class PropertyType:
                 raise errors.PropertyValueTypeError(property_type, value)
             if enumeration and value not in enumeration:
                 raise errors.PropertyAllowedError(enumeration, value)
+
+
+class PropertyValue:
+    __slots__ = ('__type', '__value')
+
+    def __init__(self, property_type, raw):
+        self.__type = property_type
+        self.__value = raw
+
+    @property
+    def value(self):
+        return set(self.__value) if self.__type.multiple else self.__value
+
+    def type_is(self, property_type):
+        return self.__type == property_type
