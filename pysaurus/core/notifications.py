@@ -5,14 +5,17 @@ from pysaurus.core.utils.functions import to_printable
 class Notification(object):
     __slots__ = []
 
+    @property
+    def valid_attribute_names(self):
+        return sorted(self.__slots__)
+
+    def to_dict(self):
+        return {name: getattr(self, name) for name in self.valid_attribute_names}
+
     def __str__(self):
-        valid_attribute_names = sorted(name for name in dir(self)
-                                       if not name.startswith('_')
-                                       and not callable(getattr(self, name)))
         return '%s(%s)' % (
             type(self).__name__,
-            ', '.join('%s=%s' % (
-                name, to_printable(getattr(self, name))) for name in valid_attribute_names))
+            ', '.join('%s=%s' % (name, to_printable(getattr(self, name))) for name in self.valid_attribute_names))
 
 
 class ProfilingStart(Notification):
