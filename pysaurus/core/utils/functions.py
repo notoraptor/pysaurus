@@ -110,3 +110,20 @@ def enumeration(values):
 
     enum_parser.__name__ = '{%s}' % (', '.join(enum_instance.values))
     return enum_parser
+
+
+def longest_prefix(a, b):
+    # type: (str, str) -> str
+    for i in range(min(len(a), len(b))):
+        if a[i] != b[i]:
+            return a[:i]
+    return a if len(a) < len(b) else b
+
+
+def longest_common_path(a, b):
+    pieces_a = a.split(os.sep)
+    pieces_b = b.split(os.sep)
+    for i in range(min(len(pieces_a), len(pieces_b))):
+        if pieces_a[i] != pieces_b[i]:
+            return os.sep.join(pieces_a[:i])
+    return a if len(a) < len(b) else b

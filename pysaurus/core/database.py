@@ -1,5 +1,6 @@
 import concurrent.futures
 import os
+from multiprocessing import Pool
 from typing import Dict, List, Optional, Set
 
 import ujson as json
@@ -32,17 +33,55 @@ class Database(object):
         self.__system_is_case_insensitive = utils.file_system_is_case_insensitive(self.__database_path.path)
         self.load()
 
+    def videos_by_folder(self):
+        common_path_to_videos = {}  # type: Dict[str, List[Video]]
+        for video in self.__videos.values():
+            if common_path_to_videos:
+                previous_path = ''
+                common_prefix = ''
+                for path_string in common_path_to_videos:
+                    common_prefix = utils.longest_common_path(path_string, video.filename.standard_path)
+                    if common_prefix:
+                        previous_path = path_string
+                        break
+                if common_prefix:
+                    videos = common_path_to_videos.pop(previous_path)
+                    videos.append(video)
+                    common_path_to_videos[common_prefix] = videos
+                    continue
+            common_path_to_videos[video.filename.standard_path] = [video]
+        folder_to_videos = {}
+        for common_path, videos in common_path_to_videos.items():
+            absolute_path = AbsolutePath(common_path)
+            assert absolute_path.isdir(), common_path
+            folder_to_videos[absolute_path] = videos
+        return folder_to_videos
+
     @property
     def nb_unreadable(self):
         return len(self.__unreadable)
 
+    @staticmethod
+    def count_not_found(videos):
+        # type: (List[Video]) -> bool
+        return sum(not v.exists() for v in videos)
+
+    @staticmethod
+    def count_found(videos):
+        # type: (List[Video]) -> bool
+        return sum(v.exists() for v in videos)
+
     @property
     def nb_not_found(self):
-        return sum(not video.exists() for video in self.__videos.values())
+        # return sum(not video.exists() for video in self.__videos.values())
+        with Pool(processes=os.cpu_count()) as pool:
+            return sum(pool.imap(Database.count_not_found, list(self.videos_by_folder().values())))
 
     @property
     def nb_valid(self):
-        return sum(video.exists() for video in self.__videos.values())
+        # return sum(video.exists() for video in self.__videos.values())
+        with Pool(processes=os.cpu_count()) as pool:
+            return sum(pool.imap(Database.count_found, list(self.videos_by_folder().values())))
 
     @property
     def nb_entries(self):

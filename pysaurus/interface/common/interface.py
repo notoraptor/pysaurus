@@ -1,7 +1,6 @@
 import os
 import subprocess
 import sys
-from typing import Optional
 
 from pysaurus.core.components.absolute_path import AbsolutePath
 from pysaurus.core.database import Database
@@ -13,7 +12,7 @@ NbType = utils.enumeration(('entries', 'unreadable', 'not_found', 'valid', 'foun
 FieldType = utils.enumeration(Video.PUBLIC_INFO)
 
 
-def parse_bool(mixed):
+def bool_type(mixed):
     if mixed is None:
         return False
     if isinstance(mixed, (bool, int, float)):
@@ -24,10 +23,10 @@ def parse_bool(mixed):
         if not mixed or mixed.lower() == 'false':
             return False
         try:
-            return int(mixed)
+            return bool(int(mixed))
         except ValueError:
             try:
-                return float(mixed)
+                return bool(float(mixed))
             except ValueError:
                 pass
     return bool(mixed)
@@ -39,18 +38,18 @@ class Interface:
     def __init__(self):
         self.database = Interface.load_database()
 
+    @staticmethod
+    def load_database():
+        # type: () -> Database
+        list_file_path = AbsolutePath(os.path.join(utils.package_dir(), '..', '..', '.local', 'test_folder.log'))
+        return Database.load_from_list_file(list_file_path)
+
     def __video(self, video_id):
         # type: (int) -> Video
         video = self.database.get_video_from_id(video_id)
         if not video:
             raise ValueError('Video not found (%d)' % video_id)
         return video
-
-    @staticmethod
-    def load_database():
-        # type: () -> Database
-        list_file_path = AbsolutePath(os.path.join(utils.package_dir(), '..', '..', '.local', 'test_folder.log'))
-        return Database.load_from_list_file(list_file_path)
 
     # ------------------------------------------------------------------------------------------------------------------
 
@@ -149,7 +148,7 @@ class Interface:
 
     def list(self, field, reverse, page_size, page_number):
         # type: (str, bool, int, int) -> Table
-        reverse = parse_bool(reverse)
+        reverse = bool_type(reverse)
         field = FieldType(field)  # type: str
         videos = list(self.database.valid_videos)
         videos.sort(key=lambda v: v.get(field), reverse=reverse)

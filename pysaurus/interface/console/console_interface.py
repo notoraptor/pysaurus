@@ -1,4 +1,4 @@
-from pysaurus.interface.common.interface import Interface, NbType, FieldType, parse_bool
+from pysaurus.interface.common.interface import Interface, NbType, FieldType, bool_type
 from pysaurus.interface.console.input_interface import InputInterface
 
 
@@ -20,7 +20,7 @@ class ConsoleInterface(InputInterface):
         self.add_function(self.interface.rename, arguments={'video_id': int, 'new_title': str})
         self.add_function(self.interface.list, arguments={
             'field': FieldType,
-            'reverse': parse_bool,
+            'reverse': bool_type,
             'page_size': int,
             'page_number': int
         })
