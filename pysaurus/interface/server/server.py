@@ -14,11 +14,10 @@
 
     You can also configure some server attributes when instantiating it:
         >>> from pysaurus.interface.server.server import Server
-        >>> server = Server(allow_user_registrations=False)
+        >>> server = Server(ping_seconds=10)
         >>> server.start()
 
     These are public configurable server attributes. They are saved on disk at each server backup:
-    - allow_user_registrations: (bool) indicate if server accepts users registrations
         (default True)
     - ping_seconds: (int) ping period used by server to check is connected sockets are alive.
 """
@@ -29,7 +28,6 @@ import signal
 
 import tornado
 import tornado.web
-import ujson as json
 from tornado import gen
 from tornado.ioloop import IOLoop
 from tornado.queues import Queue
@@ -37,12 +35,8 @@ from tornado.websocket import WebSocketClosedError
 
 from pysaurus.interface.server import common
 from pysaurus.interface.server.connection_handler import ConnectionHandler
-from pysaurus.interface.server.users import Users
 
 DEFAULT_PING_SECONDS = 30
-ALLOW_REGISTRATIONS = 'allow_registrations'
-PING_SECONDS = 'ping_seconds'
-USERS = 'users'
 LOGGER = logging.getLogger(__name__)
 
 
@@ -54,10 +48,8 @@ class Notification:
 
 class Server():
     """ Server class. """
-    __slots__ = ['notifications', 'users', 'data_path', 'previous_signal_handler',
-                 'allow_registrations', 'ping_seconds', 'port', 'application', 'http_server', 'io_loop']
-
-    users: Users
+    __slots__ = ['notifications', 'data_path', 'previous_signal_handler', 'ping_seconds', 'on_exit',
+                 'port', 'application', 'http_server', 'io_loop']
 
     # Servers cache.
     __cache__ = {}  # {absolute path of working folder => Server}
@@ -69,15 +61,13 @@ class Server():
             server = cls.__cache__[server_dir]
         else:
             server = object.__new__(cls)
+            cls.__cache__[server_dir] = server
         return server
 
-    def __init__(self, server_dir=None, **kwargs):
+    def __init__(self, server_dir=None, ping_seconds=None, on_exit=None):
         """ Initialize the server.
             :param server_dir: path of folder in (from) which server data will be saved (loaded).
                 If None, working directory (where script is executed) will be used.
-            :param kwargs: (optional) values for some public configurable server attributes.
-                Given values will overwrite values saved on disk.
-            Server data is stored in folder `<working directory>/data`.
         """
 
         # File paths and attributes related to database.
@@ -87,31 +77,15 @@ class Server():
         if not os.path.isdir(server_dir):
             raise Exception('Server path is not a directory: %s' % server_dir)
         self.data_path = os.path.join(server_dir, 'data')
-
-        # Data in memory (not stored on disk).
         self.notifications = Queue()
         self.previous_signal_handler = signal.getsignal(signal.SIGINT)
         self.port = None
         self.application = None
         self.http_server = None
         self.io_loop = None
-
-        # Database (stored on disk).
-        self.allow_registrations = True
-        self.ping_seconds = DEFAULT_PING_SECONDS
-        self.users = None
-
-        # Load data on memory.
-        self._load()
-
-        # If necessary, updated server configurable attributes from kwargs.
-        self.allow_registrations = bool(kwargs.pop(ALLOW_REGISTRATIONS, self.allow_registrations))
-        self.ping_seconds = int(kwargs.pop(PING_SECONDS, self.ping_seconds))
-        assert not kwargs
+        self.ping_seconds = ping_seconds or DEFAULT_PING_SECONDS
+        self.on_exit = on_exit if callable(on_exit) else None
         LOGGER.debug('Ping        : %s', self.ping_seconds)
-
-        # Add server on servers cache.
-        self.__class__.__cache__[server_dir] = self
 
     @staticmethod
     def _get_absolute_path(directory=None):
@@ -119,38 +93,6 @@ class Server():
             If given directory is None, return absolute path of current directory.
         """
         return os.path.abspath(directory or os.getcwd())
-
-    def _load(self):
-        """ Load database from disk. """
-        to_be_saved = False
-        LOGGER.info("Loading database.")
-        server_data_filename = self._get_server_data_filename()  # <server dir>/data/server.json
-        if os.path.exists(server_data_filename):
-            LOGGER.info("Loading server.json.")
-            with open(server_data_filename, 'rb') as file:
-                server_info = json.load(file)
-            self.allow_registrations = server_info[ALLOW_REGISTRATIONS]
-            self.ping_seconds = server_info[PING_SECONDS]
-            self.users = Users.from_dict(server_info[USERS])
-        else:
-            LOGGER.info("Creating server.json.")
-            self.users = Users()
-            to_be_saved = True
-        # Add default accounts.
-        if not self.users.has_admins():
-            self.users.add_user('admin', common.hash_password('password'))
-            # Set default admin account.
-            self.users.add_admin('admin')
-            to_be_saved = True
-        if to_be_saved:
-            self.backup_now()
-        LOGGER.info('Server loaded.')
-
-    def _get_server_data_filename(self):
-        """ Return path to server data file name (server.json, making sure that data folder exists.
-            Raises an exception if data folder does not exists and cannot be created.
-        """
-        return os.path.join(common.ensure_path(self.data_path), 'server.json')
 
     @gen.coroutine
     def _task_send_notifications(self):
@@ -171,7 +113,8 @@ class Server():
             :param frame: frame received
         """
         if signum == signal.SIGINT:
-            self.backup_now()
+            if self.on_exit:
+                self.on_exit()
             if self.previous_signal_handler:
                 self.previous_signal_handler(signum, frame)
 
@@ -180,7 +123,8 @@ class Server():
         io_loop.add_callback(self._task_send_notifications)
         # Set callback on KeyboardInterrupt.
         signal.signal(signal.SIGINT, self._handle_interruption)
-        atexit.register(self.backup_now)
+        if self.on_exit:
+            atexit.register(self.on_exit)
 
     def start(self, port=None, io_loop=None):
         """ Start server if not yet started. Raise an exception if server is already started.
@@ -212,41 +156,6 @@ class Server():
         self._set_tasks(io_loop)
         LOGGER.info('Running on port %d', self.port)
         io_loop.start()
-
-    def assert_token(self, token, connection_handler):
-        """ Check if given token is associated to an user, check if token is still valid, and link token to given
-            connection handler. If any step failed, raise an exception.
-            :param token: token to check
-            :param connection_handler: connection handler associated to this token
-        """
-        if not self.users.has_token(token):
-            raise Exception('Unknown token %s' % token)
-        if self.users.token_is_alive(token):
-            self.users.relaunch_token(token)
-            self.backup_now()
-        else:
-            # Logout on server side and raise exception (invalid token).
-            LOGGER.error('Token too old %s', token)
-            self.remove_token(token)
-            self.backup_now()
-            raise Exception('Token too old %s' % token)
-        self.users.attach_connection_handler(token, connection_handler)
-
-    def remove_token(self, token):
-        """ Disconnect given token from related user. """
-        self.users.disconnect_token(token)
-        self.backup_now()
-
-    def backup_now(self):
-        """ Save latest backed-up version of server data on disk. """
-        data_to_save = {
-            ALLOW_REGISTRATIONS: self.allow_registrations,
-            PING_SECONDS: self.ping_seconds,
-            USERS: self.users.to_dict(),
-        }
-        with open(self._get_server_data_filename(), 'w') as file:
-            json.dump(data_to_save, file)
-        LOGGER.info("Saved server.json.")
 
     def notify(self, connection_handler, notification):
         # todo
