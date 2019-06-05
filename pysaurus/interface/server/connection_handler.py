@@ -15,15 +15,15 @@ def response_error(exc, request_id):
     pass
 
 
+def response_ok(request_id):
+    pass
+
+
 def request_parse(json_request):
     pass
 
 
 def request_handle(server, request, self):
-    pass
-
-
-def response_ok(request_id):
     pass
 
 

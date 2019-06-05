@@ -53,6 +53,9 @@ class Users:
         """ Return True if given username is an administrator. """
         return username in self.administrators
 
+    def has_admins(self):
+        return bool(self.administrators)
+
     def has_token(self, token):
         """ Return True if users have given token. """
         return token in self.token_to_username
@@ -205,3 +208,10 @@ class Users:
             self.connection_handler_to_tokens[connection_handler].remove(token)
             if not self.connection_handler_to_tokens[connection_handler]:
                 self.connection_handler_to_tokens.pop(connection_handler)
+
+    def to_dict(self):
+        pass
+
+    @staticmethod
+    def from_dict(dct):
+        pass
