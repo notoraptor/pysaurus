@@ -6,15 +6,43 @@
 """
 import argparse
 
-from pysaurus.interface.server.server import Server
+from tornado import gen
 
-DEFAULT_PORT = 8432
+from pysaurus.interface.server import protocol
+from pysaurus.interface.server.server import Server, DEFAULT_PORT
+
 PARSER = argparse.ArgumentParser(description='Run server.')
-PARSER.add_argument('--port', '-p', type=int, default=DEFAULT_PORT,
-                    help='run on the given port (default: %s)' % DEFAULT_PORT)
+PARSER.add_argument('--port', '-p', type=int, default=DEFAULT_PORT, help='server port (default: %s)' % DEFAULT_PORT)
 ARGS = PARSER.parse_args()
 
+
+def on_request(server, request):
+    # type: (Server, protocol.Request) -> protocol.DataResponse
+    print('Received', request)
+    return protocol.DataResponse(
+        request.request_id, 'string', 'you are %s/%s' % (request.connection_id, request.request_id))
+
+
+@gen.coroutine
+def on_start(server):
+    # type: (Server) -> None
+    print('Start')
+    val = 0
+    while True:
+        yield gen.sleep(10)
+        server.notify('a notif', val)
+        val += 1
+
+
+def on_exit(server):
+    print('End')
+
+
 try:
-    Server().start(port=ARGS.port)
+    server = Server()
+    server.on_request = on_request
+    server.on_start = on_start
+    server.on_exit = on_exit
+    server.start(port=ARGS.port)
 except KeyboardInterrupt:
     print('Keyboard interruption.')

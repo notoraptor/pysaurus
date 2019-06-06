@@ -8,8 +8,6 @@ from datetime import datetime
 import bcrypt
 
 # Datetime since timestamp 0.
-from pysaurus.interface.server.server import LOGGER
-
 EPOCH = datetime.utcfromtimestamp(0)
 
 

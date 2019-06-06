@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>WebSocket demo</title>
+    </head>
+    <body>
+        <script>
+            var ws = new WebSocket("ws://127.0.0.1:8432/"),
+                messages = document.createElement('ul');
+            ws.onmessage = function (event) {
+                var messages = document.getElementsByTagName('ul')[0],
+                    message = document.createElement('li'),
+                    content = document.createTextNode(event.data);
+                message.appendChild(content);
+                messages.appendChild(message);
+            };
+			ws.onopen = function(event) {
+				ws.send(JSON.stringify({request_id: 1, name: 2, parameters: 3}));
+				ws.send(JSON.stringify({request_id: 10, name: 2, parameters: 4}));
+				ws.send(JSON.stringify({request_id: 100, name: 2, parameters: 5}));
+				ws.send(JSON.stringify({request_id: 1000, name: 2, parameters: 6}));
+			};
+            document.body.appendChild(messages);
+        </script>
+    </body>
+</html>

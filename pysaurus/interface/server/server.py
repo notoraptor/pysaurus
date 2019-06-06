@@ -11,81 +11,83 @@
         >>>     Server().start()
         >>> except KeyboardInterrupt:
         >>>     print('Server interrupted.')
-
-    You can also configure some server attributes when instantiating it:
-        >>> from pysaurus.interface.server.server import Server
-        >>> server = Server(ping_seconds=10)
-        >>> server.start()
-
-    These are public configurable server attributes. They are saved on disk at each server backup:
-        (default True)
-    - ping_seconds: (int) ping period used by server to check is connected sockets are alive.
 """
 import atexit
-import logging
 import os
 import signal
+from typing import Union
 
 import tornado
 import tornado.web
+import ujson as json
 from tornado import gen
 from tornado.ioloop import IOLoop
 from tornado.queues import Queue
 from tornado.websocket import WebSocketClosedError
 
 from pysaurus.interface.server import common
+from pysaurus.interface.server import protocol
 from pysaurus.interface.server.connection_handler import ConnectionHandler
+from pysaurus.interface.server.connection_manager import ConnectionManager
 
+DEFAULT_PORT = 8432
 DEFAULT_PING_SECONDS = 30
-LOGGER = logging.getLogger(__name__)
 
 
-class Notification:
-    def __init__(self, connection_handler, notification):
-        self.connection_handler = connection_handler
-        self.notification = notification
-
-
-class Server():
+class Server(ConnectionManager):
     """ Server class. """
-    __slots__ = ['notifications', 'data_path', 'previous_signal_handler', 'ping_seconds', 'on_exit',
-                 'port', 'application', 'http_server', 'io_loop']
+    __slots__ = [
+        # private fields
+        '__notifications', '__path', '__previous_signal_handler',
+        '__port', '__application', '__http_server', '__io_loop',
+        # public fields, to be directly set after creating server object, before calling start().
+        # callbacks.
+        'on_start', 'on_exit', 'on_connection_open', 'on_connection_close', 'on_request',
+        # options.
+        'ping_seconds'
+    ]
 
     # Servers cache.
     __cache__ = {}  # {absolute path of working folder => Server}
 
     def __new__(cls, server_dir=None, **kwargs):
-        # pylint: disable=unused-argument
         server_dir = Server._get_absolute_path(server_dir)
-        if server_dir in cls.__cache__:
-            server = cls.__cache__[server_dir]
-        else:
-            server = object.__new__(cls)
-            cls.__cache__[server_dir] = server
-        return server
+        if server_dir not in cls.__cache__:
+            cls.__cache__[server_dir] = object.__new__(cls)
+        return cls.__cache__[server_dir]
 
-    def __init__(self, server_dir=None, ping_seconds=None, on_exit=None):
+    def __init__(self, server_dir=None):
         """ Initialize the server.
             :param server_dir: path of folder in (from) which server data will be saved (loaded).
                 If None, working directory (where script is executed) will be used.
         """
-
         # File paths and attributes related to database.
         server_dir = Server._get_absolute_path(server_dir)
-        if server_dir in self.__class__.__cache__:
-            return
         if not os.path.isdir(server_dir):
             raise Exception('Server path is not a directory: %s' % server_dir)
-        self.data_path = os.path.join(server_dir, 'data')
-        self.notifications = Queue()
-        self.previous_signal_handler = signal.getsignal(signal.SIGINT)
-        self.port = None
-        self.application = None
-        self.http_server = None
-        self.io_loop = None
-        self.ping_seconds = ping_seconds or DEFAULT_PING_SECONDS
-        self.on_exit = on_exit if callable(on_exit) else None
-        LOGGER.debug('Ping        : %s', self.ping_seconds)
+        super(Server, self).__init__()
+        self.__path = os.path.join(server_dir, 'data')
+        self.__notifications = Queue()
+        self.__previous_signal_handler = signal.getsignal(signal.SIGINT)
+        self.__port = None
+        self.__application = None
+        self.__http_server = None
+        self.__io_loop = None
+
+        self.ping_seconds = DEFAULT_PING_SECONDS
+
+        # (server) -> None
+        self.on_start = None
+        # (server) -> None
+        self.on_exit = None
+        # (server, connection_id) -> None
+        self.on_connection_open = None
+        # (server, connection_id) -> None
+        self.on_connection_close = None
+        # (server, request) -> response | None
+        self.on_request = None
+
+        signal.signal(signal.SIGINT, signal.SIG_DFL)
 
     @staticmethod
     def _get_absolute_path(directory=None):
@@ -95,36 +97,78 @@ class Server():
         return os.path.abspath(directory or os.getcwd())
 
     @gen.coroutine
-    def _task_send_notifications(self):
+    def _send_notification(self, notification):
+        # type: (protocol.Notification) -> None
+        if notification.connection_id is not None:
+            connection_handler = self._get_connection_handler(notification.connection_id)
+            if not connection_handler:
+                print('Notification: unknown connection ID %d' % notification.connection_id)
+            else:
+                yield connection_handler.write_message(json.dumps(notification.to_dict()))
+                print('To %d: %s' % (notification.connection_id, notification))
+        else:
+            sending = []
+            for connection_id, connection_handler in self._connections():
+                notification_dict = notification.to_dict(connection_id=connection_id)
+                future_sending = connection_handler.write_message(json.dumps(notification_dict))
+                sending.append(future_sending)
+            yield sending
+            print('To everyone: %s' % notification)
+
+    @gen.coroutine
+    def _producer(self):
         """ IO loop callback: consume notifications and send it. """
-        LOGGER.info('Waiting for notifications to send.')
+        print('Waiting for notifications to send.')
         while True:
-            message = yield self.notifications.get()  # type: Notification
+            # todo
+            notification = yield self.__notifications.get()
             try:
-                yield message.connection_handler.write_message(message.notification.json())
+                yield self._send_notification(notification)
             except WebSocketClosedError:
-                LOGGER.error('Websocket was closed while sending a notification.')
+                print('Websocket was closed while sending a notification.')
             finally:
-                self.notifications.task_done()
+                self.__notifications.task_done()
+
+    @gen.coroutine
+    def _call_on_start(self):
+        if self.on_start:
+            if gen.is_coroutine_function(self.on_start):
+                yield self.on_start(self)
+            else:
+                self.on_start(self)
+
+    def _call_on_exit(self):
+        if self.on_exit:
+            self.on_exit(self)
+
+    def _call_on_connection_open(self, connection_id):
+        if self.on_connection_open:
+            self.on_connection_open(self, connection_id)
+
+    def _call_on_connection_close(self, connection_id):
+        if self.on_connection_close:
+            self.on_connection_close(self, connection_id)
 
     def _handle_interruption(self, signum, frame):
         """ Handler function.
             :param signum: system signal received
             :param frame: frame received
         """
+        print('here--')
         if signum == signal.SIGINT:
-            if self.on_exit:
-                self.on_exit()
-            if self.previous_signal_handler:
-                self.previous_signal_handler(signum, frame)
+            self._call_on_exit()
+            print('we are here')
+            if self.__previous_signal_handler:
+                print('we pass here')
+                self.__previous_signal_handler(signum, frame)
 
     def _set_tasks(self, io_loop: IOLoop):
         """ Set server callbacks on given IO loop. Must be called once per server before starting IO loop. """
-        io_loop.add_callback(self._task_send_notifications)
+        io_loop.add_callback(self._producer)
+        io_loop.add_callback(self._call_on_start)
         # Set callback on KeyboardInterrupt.
-        signal.signal(signal.SIGINT, self._handle_interruption)
-        if self.on_exit:
-            atexit.register(self.on_exit)
+        # signal.signal(signal.SIGINT, self._handle_interruption)
+        atexit.register(self._call_on_exit)
 
     def start(self, port=None, io_loop=None):
         """ Start server if not yet started. Raise an exception if server is already started.
@@ -133,10 +177,10 @@ class Server():
             :param io_loop: (optional) tornado IO lopp where server must run. If not provided, get
                 default IO loop instance (tornado.ioloop.IOLoop.instance()).
         """
-        if self.port is not None:
-            raise Exception('Server is already running on port %s.' % self.port)
+        if self.__port is not None:
+            raise Exception('Server is already running on port %s.' % self.__port)
         if port is None:
-            port = 8432
+            port = DEFAULT_PORT
         if io_loop is None:
             io_loop = tornado.ioloop.IOLoop.instance()
         handlers = [
@@ -149,14 +193,29 @@ class Server():
             'websocket_ping_timeout': 2 * self.ping_seconds,
             'websocket_max_message_size': 64 * 1024 * 1024
         }
-        self.application = tornado.web.Application(handlers, **settings)
-        self.http_server = self.application.listen(port)
-        self.io_loop = io_loop
-        self.port = port
+        self.__application = tornado.web.Application(handlers, **settings)
+        self.__http_server = self.__application.listen(port)
+        self.__io_loop = io_loop
+        self.__port = port
         self._set_tasks(io_loop)
-        LOGGER.info('Running on port %d', self.port)
+        print('Ping: %d' % self.ping_seconds)
+        print('Port: %d' % self.__port)
         io_loop.start()
 
-    def notify(self, connection_handler, notification):
-        # todo
-        self.notifications.put(Notification(connection_handler, notification))
+    def notify(self, name, parameters, connection_id=None):
+        self.__notifications.put(protocol.Notification(connection_id, name, parameters))
+
+    def open_connection(self, connection_handler):
+        self._add_connection(connection_handler)
+        connection_id = self.get_connection_id(connection_handler)
+        self._call_on_connection_open(connection_id)
+
+    def close_connection(self, connection_handler):
+        connection_id = self.get_connection_id(connection_handler)
+        self._remove_connection(connection_handler)
+        self._call_on_connection_close(connection_id)
+
+    def manage_request(self, request):
+        # type: (protocol.Request) -> Union[protocol.OkResponse, protocol.ErrorResponse, protocol.DataResponse, None]
+        if self.on_request:
+            return self.on_request(self, request)

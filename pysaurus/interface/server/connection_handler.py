@@ -1,30 +1,13 @@
 """ Tornado connection handler class, used internally to manage data received by server application. """
-import logging
 from urllib.parse import urlparse
 
 import ujson as json
 from tornado import gen
 from tornado.websocket import WebSocketHandler, WebSocketClosedError
 
+from pysaurus.interface.server import protocol
+
 REQUEST_ID = 'request_id'
-
-LOGGER = logging.getLogger(__name__)
-
-
-def response_error(exc, request_id):
-    pass
-
-
-def response_ok(request_id):
-    pass
-
-
-def request_parse(json_request):
-    pass
-
-
-def request_handle(server, request, self):
-    pass
 
 
 class ConnectionHandler(WebSocketHandler):
@@ -32,10 +15,9 @@ class ConnectionHandler(WebSocketHandler):
         - server: server object representing running server.
     """
 
-    # pylint: disable=abstract-method
-
     def __init__(self, *args, **kwargs):
-        self.server = None
+        from pysaurus.interface.server.server import Server
+        self.server = None  # type: Server
         super(ConnectionHandler, self).__init__(*args, **kwargs)
 
     def initialize(self, server=None):
@@ -43,9 +25,7 @@ class ConnectionHandler(WebSocketHandler):
             :param server: a Server object.
             :type server: diplomacy.Server
         """
-        # pylint: disable=arguments-differ
-        if self.server is None:
-            self.server = server
+        self.server = server
 
     def get_compression_options(self):
         """ Return compression options for the connection (see parent method).
@@ -70,12 +50,16 @@ class ConnectionHandler(WebSocketHandler):
         host = self.request.headers.get("Host").split(':')[0]
         return origin == host
 
+    def open(self, *args, **kwargs):
+        self.server.open_connection(self)
+        print('New web socket, now %d connection(s): %s %s' % (self.server.count_connections(), args, kwargs))
+
     def on_close(self):
         """ Invoked when the socket is closed (see parent method).
             Detach this connection handler from server users.
         """
-        self.server.users.remove_connection(self, remove_tokens=False)
-        LOGGER.info("Removed connection. Remaining %d connection(s).", self.server.users.count_connections())
+        self.server.close_connection(self)
+        print('Web socket closed, now %d connection(s).' % self.server.count_connections())
 
     @gen.coroutine
     def on_message(self, message):
@@ -86,19 +70,15 @@ class ConnectionHandler(WebSocketHandler):
                 raise ValueError("Unable to convert a JSON string to a dictionary.")
         except ValueError as exc:
             # Error occurred because either message is not a JSON string or parsed JSON object is not a dict.
-            response = response_error(exc, request_id=None)
-            pass
+            response = protocol.ErrorResponse.from_exception('', exc)
         else:
             try:
-                request = request_parse(json_request)
-                # Link request token to this connection handler.
-                self.server.users.attach_connection_handler(request.token, self)
-                response = request_handle(self.server, request, self)
-                if response is None:
-                    response = response_ok(request_id=request.request_id)
+                json_request['connection_id'] = self.server.get_connection_id(self)
+                request = protocol.Request.from_dict(json_request)
+                response = self.server.manage_request(request) or protocol.OkResponse(request.request_id)
             except Exception as exc:
-                response = response_error(exc, request_id=json_request.get(REQUEST_ID, None))
+                response = protocol.ErrorResponse.from_exception(json_request.get(REQUEST_ID, ''), exc)
         try:
-            yield self.write_message(response.json())
+            yield self.write_message(json.dumps(response.to_dict()))
         except WebSocketClosedError:
-            LOGGER.error('Websocket is closed.')
+            print('Web socket is closed.')
