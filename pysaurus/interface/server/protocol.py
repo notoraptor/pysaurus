@@ -1,7 +1,8 @@
+from pysaurus.core.utils.functions import to_printable
+
 OK = 'ok'
 ERROR = 'error'
 DATA = 'data'
-from pysaurus.core.utils.functions import to_printable
 
 
 class ToDict:
@@ -75,7 +76,7 @@ class DataResponse(ToDict):
 class Notification(ToDict):
     __slots__ = ('connection_id', 'name', 'parameters')
 
-    def __init__(self, connection_id, name, parameters):
+    def __init__(self, name, parameters, connection_id=None):
         self.connection_id = connection_id
         self.name = name
         self.parameters = parameters

@@ -1,3 +1,5 @@
+from typing import Dict
+
 from pysaurus.core.utils.classes import StringPrinter
 from pysaurus.core.utils.functions import to_printable
 
@@ -5,23 +7,20 @@ from pysaurus.core.utils.functions import to_printable
 class Notification(object):
     __slots__ = []
 
-    @property
-    def valid_attribute_names(self):
-        return sorted(self.__slots__)
-
     def to_dict(self):
-        return {name: getattr(self, name) for name in self.valid_attribute_names}
+        return {name: getattr(self, name) for name in sorted(self.__slots__)}
 
     def __str__(self):
         return '%s(%s)' % (
             type(self).__name__,
-            ', '.join('%s=%s' % (name, to_printable(getattr(self, name))) for name in self.valid_attribute_names))
+            ', '.join('%s=%s' % (name, to_printable(getattr(self, name))) for name in sorted(self.__slots__)))
 
 
 class ProfilingStart(Notification):
     __slots__ = ['name']
 
     def __init__(self, title):
+        # type: (str) -> None
         self.name = title
 
 
@@ -30,13 +29,14 @@ class ProfilingEnd(Notification):
 
     def __init__(self, name, time):
         self.name = name
-        self.time = time
+        self.time = str(time)
 
 
 class UnusedThumbnails(Notification):
     __slots__ = ['removed']
 
     def __init__(self, removed):
+        # type: (int) -> None
         self.removed = removed
 
 
@@ -48,7 +48,7 @@ class CollectingFiles(Notification):
     __slots__ = ['folder']
 
     def __init__(self, folder):
-        self.folder = folder
+        self.folder = str(folder)
 
 
 class FolderNotFound(CollectingFiles):
@@ -60,23 +60,22 @@ class PathIgnored(CollectingFiles):
 
 
 class CollectedFiles(Notification):
-    __slots__ = ['folder_to_files']
+    __slots__ = ['count', 'folder_to_count']
+    count: int
+    folder_to_count: Dict[str, int]
 
     def __init__(self, folder_to_files: dict):
-        self.folder_to_files = folder_to_files
+        self.count = 0
+        self.folder_to_count = {}
+        for folder, file_names in folder_to_files.items():
+            local_count = len(file_names)
+            self.count += local_count
+            self.folder_to_count[str(folder)] = local_count
 
     def __str__(self):
-        total_count = 0
-        folder_to_count = []
-        for folder, file_names in self.folder_to_files.items():
-            local_count = len(file_names)
-            total_count += local_count
-            folder_to_count.append((folder, local_count))
-        folder_to_count.sort(key=lambda couple: (-couple[1], couple[0]))
         printer = StringPrinter()
-        printer.write(
-            '%s: %d' % (type(self).__name__, total_count))
-        for folder, local_count in folder_to_count:
+        printer.write('%s: %d' % (type(self).__name__, self.count))
+        for folder, local_count in sorted(self.folder_to_count.items(), key=lambda couple: (-couple[1], couple[0])):
             printer.write('%d\t%s' % (local_count, folder))
         return str(printer)
 
@@ -85,6 +84,7 @@ class VideoJob(Notification):
     __slots__ = ['index', 'parsed', 'total']
 
     def __init__(self, job_id, step, total):
+        # type: (int, int, int) -> None
         self.index = job_id
         self.parsed = step
         self.total = total
@@ -95,24 +95,26 @@ class ThumbnailJob(VideoJob):
 
 
 class DatabaseLoaded(Notification):
-    __slots__ = ['total', 'not_found', 'valid', 'unreadable']
+    __slots__ = ['unreadable', 'not_found', 'valid', 'entries', 'found', 'thumbnails']
 
-    def __init__(self, total, not_found, unreadable):
-        self.total = total
-        self.not_found = not_found
-        self.unreadable = unreadable
-        self.valid = total - not_found - unreadable
+    def __init__(self, database):
+        self.not_found = database.nb_not_found
+        self.unreadable = database.nb_unreadable
+        self.valid = database.nb_valid
+        self.entries = database.nb_entries
+        self.found = database.nb_found
+        self.thumbnails = database.nb_thumbnails
 
 
-class DatabaseSaved(Notification):
+class DatabaseSaved(DatabaseLoaded):
+    pass
+
+
+class VideosToLoad(Notification):
     __slots__ = ['total']
 
     def __init__(self, total):
         self.total = total
-
-
-class VideosToLoad(DatabaseSaved):
-    pass
 
 
 class VideosLoaded(VideosToLoad):
@@ -127,7 +129,7 @@ class MissingVideos(Notification):
     __slots__ = ['names']
 
     def __init__(self, file_names):
-        self.names = file_names
+        self.names = [str(file_name) for file_name in file_names]
 
     def __str__(self):
         printer = StringPrinter()
@@ -145,14 +147,14 @@ class VideoInfoErrors(Notification):
     __slots__ = ['video_errors']
 
     def __init__(self, video_errors: dict):
-        self.video_errors = video_errors
+        self.video_errors = {str(file_name): errors for file_name, errors in video_errors.items()}
 
     def __str__(self):
         printer = StringPrinter()
         printer.write('%s: %d' % (type(self).__name__, len(self.video_errors)))
-        for file_name in self.video_errors:
+        for file_name, errors in self.video_errors.items():
             printer.title(file_name)
-            for video_error in self.video_errors[file_name]:
+            for video_error in errors:
                 printer.write('\t%s' % video_error)
         return str(printer)
 

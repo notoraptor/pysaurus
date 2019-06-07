@@ -63,8 +63,6 @@ class HTMLStripper(HTMLParser):
         Reference: (2018/09/24) https://stackoverflow.com/a/925630
     """
 
-    # pylint: disable=abstract-method
-
     def __init__(self):
         """ Constructor """
         super(HTMLStripper, self).__init__(convert_charrefs=True)

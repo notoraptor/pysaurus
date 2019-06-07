@@ -202,8 +202,9 @@ class Server(ConnectionManager):
         print('Port: %d' % self.__port)
         io_loop.start()
 
-    def notify(self, name, parameters, connection_id=None):
-        self.__notifications.put(protocol.Notification(connection_id, name, parameters))
+    def notify(self, notification):
+        # type: (protocol.Notification) -> None
+        self.__notifications.put(notification)
 
     def open_connection(self, connection_handler):
         self._add_connection(connection_handler)

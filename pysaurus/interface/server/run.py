@@ -30,19 +30,23 @@ def on_start(server):
     val = 0
     while True:
         yield gen.sleep(10)
-        server.notify('a notif', val)
+        server.notify(protocol.Notification('a notif', val))
         val += 1
 
 
 def on_exit(server):
     print('End')
 
+def main():
+    try:
+        server = Server()
+        server.on_request = on_request
+        server.on_start = on_start
+        server.on_exit = on_exit
+        server.start(port=ARGS.port)
+    except KeyboardInterrupt:
+        print('Keyboard interruption.')
 
-try:
-    server = Server()
-    server.on_request = on_request
-    server.on_start = on_start
-    server.on_exit = on_exit
-    server.start(port=ARGS.port)
-except KeyboardInterrupt:
-    print('Keyboard interruption.')
+
+if __name__ == '__main__':
+    main()

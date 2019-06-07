@@ -56,7 +56,6 @@ def ensure_path(folder_path):
         Raises an exception if path does not exists, cannot be created or is not a folder.
     """
     if not os.path.exists(folder_path):
-        LOGGER.info('Creating folder %s', folder_path)
         os.makedirs(folder_path, exist_ok=True)
     if not os.path.isdir(folder_path):
         raise OSError('Path is not a directory: %s' % folder_path)

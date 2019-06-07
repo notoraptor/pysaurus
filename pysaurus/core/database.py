@@ -1,6 +1,5 @@
 import concurrent.futures
 import os
-from multiprocessing import Pool
 from typing import Dict, List, Optional, Set
 
 import ujson as json
@@ -26,7 +25,7 @@ class Database(object):
         self.__database_path = self.__list_path.get_directory()
         self.__json_path = AbsolutePath.new_file_path(self.__database_path, self.__list_path.title, 'json')
         self.__folders = path_utils.load_path_list_file(self.__list_path)
-        self.__videos = {}  # type: Dict[AbsolutePath: Video]
+        self.__videos = {}  # type: Dict[AbsolutePath, Video]
         self.__id_to_file_name = {}  # type: Dict[int, AbsolutePath]
         self.__file_name_to_id = {}  # type: Dict[AbsolutePath, int]
         self.__unreadable = {}  # type: Dict[AbsolutePath, List[str]]
@@ -57,31 +56,36 @@ class Database(object):
             folder_to_videos[absolute_path] = videos
         return folder_to_videos
 
+    def count_existing_videos(self):
+        all_directories = {filename.get_directory() for filename in self.__videos}
+        all_existing = set()
+        for directory in all_directories:  # type: AbsolutePath
+            if directory.isdir():
+                for basename in directory.listdir():
+                    if utils.is_valid_video_filename(basename):
+                        all_existing.add(AbsolutePath.join(directory, basename))
+        nb_not_found = 0
+        nb_existing = 0
+        for filename in self.__videos:
+            if filename in all_existing:
+                nb_existing += 1
+            else:
+                nb_not_found += 1
+        return nb_not_found, nb_existing
+
     @property
     def nb_unreadable(self):
         return len(self.__unreadable)
 
-    @staticmethod
-    def count_not_found(videos):
-        # type: (List[Video]) -> bool
-        return sum(not v.exists() for v in videos)
-
-    @staticmethod
-    def count_found(videos):
-        # type: (List[Video]) -> bool
-        return sum(v.exists() for v in videos)
-
     @property
     def nb_not_found(self):
-        # return sum(not video.exists() for video in self.__videos.values())
-        with Pool(processes=os.cpu_count()) as pool:
-            return sum(pool.imap(Database.count_not_found, list(self.videos_by_folder().values())))
+        nb_not_found, _ = self.count_existing_videos()
+        return nb_not_found
 
     @property
     def nb_valid(self):
-        # return sum(video.exists() for video in self.__videos.values())
-        with Pool(processes=os.cpu_count()) as pool:
-            return sum(pool.imap(Database.count_found, list(self.videos_by_folder().values())))
+        _, nb_valid = self.count_existing_videos()
+        return nb_valid
 
     @property
     def nb_entries(self):
@@ -144,15 +148,15 @@ class Database(object):
 
         for (local_file_names, local_results) in results:  # type: dict
             for file_name, result in zip(local_file_names, local_results):  # type: (str, VideoRaptorResult)
-                file_name = AbsolutePath.ensure(file_name)
+                file_path = AbsolutePath.ensure(file_name)
                 if result.done:  # type: Video
                     if result.errors:
                         result.done.errors.update(result.errors)
-                    videos[file_name] = result.done
+                    videos[file_path] = result.done
                 elif result.errors:
-                    video_errors[file_name] = result.errors
+                    video_errors[file_path] = result.errors
                 else:
-                    video_errors[file_name] = [PYTHON_ERROR_NOTHING]
+                    video_errors[file_path] = [PYTHON_ERROR_NOTHING]
 
         assert len(all_file_names) == len(videos) + len(video_errors)
         notifier.notify(notifications.VideosLoaded(len(videos)))
@@ -341,8 +345,7 @@ class Database(object):
         # Generate videos identifiers.
         self.__generate_identifiers()
         # Notify database loaded.
-        notifier.notify(notifications.DatabaseLoaded(
-            total=self.nb_entries, not_found=self.nb_not_found, unreadable=self.nb_unreadable))
+        notifier.notify(notifications.DatabaseLoaded(self))
 
     def save(self, update_identifiers=True):
         if update_identifiers:
@@ -363,7 +366,7 @@ class Database(object):
                                for file_name, errors in self.__unreadable.items()]
             }
             json.dump(json_output, output_file, indent=1)
-            notifier.notify(notifications.DatabaseSaved(self.nb_entries))
+            notifier.notify(notifications.DatabaseSaved(self))
 
     def __generate_identifiers(self):
         self.__id_to_file_name = {index: filename for index, filename in enumerate(sorted(self.__videos))}
@@ -371,14 +374,14 @@ class Database(object):
 
     @staticmethod
     def get_videos_paths_from_disk(paths):
-        # type: (Set[AbsolutePath]) -> Dict[AbsolutePath: List[AbsolutePath]]
+        # type: (Set[AbsolutePath]) -> Dict[AbsolutePath, Set[AbsolutePath]]
         folder_to_files = {}
         cpu_count = os.cpu_count()
         jobs = utils.dispatch_tasks(sorted(paths), cpu_count)
         with Profiler(title='Collect videos (%d threads)' % len(jobs)):
             with concurrent.futures.ProcessPoolExecutor(max_workers=cpu_count) as executor:
                 results = list(executor.map(Database.job_collect_videos, jobs))
-        for local_result in results:  # type: dict
+        for local_result in results:  # type: Dict[AbsolutePath, Set[AbsolutePath]]
             for folder, files in local_result.items():
                 folder_to_files.setdefault(folder, set()).update(files)
         notifier.notify(notifications.CollectedFiles(folder_to_files))
