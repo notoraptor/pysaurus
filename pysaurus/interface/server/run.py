@@ -37,6 +37,7 @@ def on_start(server):
 def on_exit(server):
     print('End')
 
+
 def main():
     try:
         server = Server()
