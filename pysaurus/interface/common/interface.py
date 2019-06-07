@@ -4,10 +4,10 @@ import sys
 
 from pysaurus.core.components.absolute_path import AbsolutePath
 from pysaurus.core.database import Database
+from pysaurus.core.notifier import Notifier
 from pysaurus.core.utils import functions as utils
 from pysaurus.core.video import Video
 from pysaurus.interface.common.table import Table
-from pysaurus.core.notifier import Notifier
 
 NbType = utils.enumeration(('entries', 'unreadable', 'not_found', 'valid', 'found', 'thumbnails'))
 FieldType = utils.enumeration(Video.PUBLIC_INFO)
@@ -36,8 +36,8 @@ def bool_type(mixed):
 class Interface:
     __slots__ = 'database',
 
-    def __init__(self):
-        self.database = Interface.load_database()
+    def __init__(self, notifier=None):
+        self.database = Interface.load_database(notifier)
 
     @staticmethod
     def load_database(notifier=None):

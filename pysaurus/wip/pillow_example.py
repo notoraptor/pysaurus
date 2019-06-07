@@ -1,6 +1,6 @@
+import math
 import sys
 
-import math
 from PIL import Image
 
 R, G, B = 0, 1, 2

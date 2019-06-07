@@ -2,7 +2,6 @@
 from urllib.parse import urlparse
 
 import ujson as json
-from tornado import gen
 from tornado.websocket import WebSocketHandler, WebSocketClosedError
 
 from pysaurus.interface.server import protocol
@@ -50,9 +49,9 @@ class ConnectionHandler(WebSocketHandler):
         host = self.request.headers.get("Host").split(':')[0]
         return origin == host
 
-    def open(self, *args, **kwargs):
+    def open(self):
         self.server.open_connection(self)
-        print('New web socket, now %d connection(s): %s %s' % (self.server.count_connections(), args, kwargs))
+        print('New web socket, now %d connection(s).' % (self.server.count_connections()))
 
     def on_close(self):
         """ Invoked when the socket is closed (see parent method).
@@ -61,8 +60,7 @@ class ConnectionHandler(WebSocketHandler):
         self.server.close_connection(self)
         print('Web socket closed, now %d connection(s).' % self.server.count_connections())
 
-    @gen.coroutine
-    def on_message(self, message):
+    async def on_message(self, message):
         """ Parse given message and manage parsed data (expected a string representation of a request). """
         try:
             json_request = json.loads(message)
@@ -79,6 +77,6 @@ class ConnectionHandler(WebSocketHandler):
             except Exception as exc:
                 response = protocol.ErrorResponse.from_exception(json_request.get(REQUEST_ID, ''), exc)
         try:
-            yield self.write_message(json.dumps(response.to_dict()))
+            await self.write_message(json.dumps(response.to_dict()))
         except WebSocketClosedError:
             print('Web socket is closed.')

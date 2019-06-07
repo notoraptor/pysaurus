@@ -6,8 +6,6 @@
 """
 import argparse
 
-from tornado import gen
-
 from pysaurus.core import notifications
 from pysaurus.core.notifier import Notifier
 from pysaurus.interface.common.interface import Interface
@@ -18,57 +16,53 @@ PARSER = argparse.ArgumentParser(description='Run server.')
 PARSER.add_argument('--port', '-p', type=int, default=DEFAULT_PORT, help='server port (default: %s)' % DEFAULT_PORT)
 ARGS = PARSER.parse_args()
 
-_server = None
-_interface = None
+
+class ServerData:
+    server = None
+    interface = None
+    notifier = None
+    @staticmethod
+    def init(server):
+        ServerData.server = server
+        ServerData.notifier = Notifier()
 
 
 class ServerInterface:
     __slots__ = ('notifier',)
 
     def __init__(self):
-        self.notifier = None
-        self.notifier = Notifier()
-        self.notifier.set_default_manager(self.handle_core_notification)
+        ServerData.notifier.set_default_manager(self.handle_core_notification)
 
     def load_database(self):
-        global _interface
-        _interface = Interface.load_database(self.notifier)
+        ServerData.interface = Interface(ServerData.notifier)
 
     def handle_core_notification(self, notification):
         # type: (notifications.Notification) -> None
-        global _server
-        print('Got', type(notification).__name__)
-        if _server:
-            name = type(notification).__name__
-            parameters = notification.to_dict()
-            _server.notify(protocol.Notification(name=name, parameters=parameters))
+        print('Notified', type(notification).__name__)
+        name = type(notification).__name__
+        parameters = notification.to_dict()
+        ServerData.server.notify(protocol.Notification(name=name, parameters=parameters))
 
     def on_request(self, server, request):
         # type: (Server, protocol.Request) -> protocol.DataResponse
-        global _interface
         print('Received', request)
-        if _interface:
-            return protocol.DataResponse(
-                request.request_id, 'string', 'Database already loaded')
-        else:
-            server.launch(self.load_database)
-            return protocol.DataResponse(
-                request.request_id, 'string', 'Loading database')
+        if ServerData.interface:
+            return protocol.DataResponse(request.request_id, 'string', 'Database already loaded')
+        server.launch(self.load_database)
+        return protocol.DataResponse(request.request_id, 'string', 'Loading database')
 
-    @gen.coroutine
     def on_start(self, server):
         # type: (Server) -> None
-        global _server
-        print('Start')
-        _server = server
+        print('Starting server.')
 
     def on_exit(self, server):
-        print('End')
+        print('Server closed.')
 
 
 def main():
     try:
         server = Server()
+        ServerData.init(server)
         server_interface = ServerInterface()
         server.on_request = server_interface.on_request
         server.on_start = server_interface.on_start

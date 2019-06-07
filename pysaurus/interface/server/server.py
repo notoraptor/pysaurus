@@ -12,6 +12,7 @@
         >>> except KeyboardInterrupt:
         >>>     print('Server interrupted.')
 """
+import asyncio
 import atexit
 import os
 import signal
@@ -20,7 +21,7 @@ from typing import Union
 import tornado
 import tornado.web
 import ujson as json
-from tornado import gen
+from tornado.gen import multi
 from tornado.ioloop import IOLoop
 from tornado.queues import Queue
 from tornado.websocket import WebSocketClosedError
@@ -89,6 +90,10 @@ class Server(ConnectionManager):
 
         signal.signal(signal.SIGINT, signal.SIG_DFL)
 
+    @property
+    def io_loop(self):
+        return self.__io_loop
+
     @staticmethod
     def _get_absolute_path(directory=None):
         """ Return absolute path of given directory.
@@ -96,15 +101,14 @@ class Server(ConnectionManager):
         """
         return os.path.abspath(directory or os.getcwd())
 
-    @gen.coroutine
-    def _send_notification(self, notification):
+    async def _send_notification(self, notification):
         # type: (protocol.Notification) -> None
         if notification.connection_id is not None:
             connection_handler = self._get_connection_handler(notification.connection_id)
             if not connection_handler:
                 print('Notification: unknown connection ID %d' % notification.connection_id)
             else:
-                yield connection_handler.write_message(json.dumps(notification.to_dict()))
+                await connection_handler.write_message(json.dumps(notification.to_dict()))
                 print('To %d: %s' % (notification.connection_id, notification))
         else:
             sending = []
@@ -112,30 +116,25 @@ class Server(ConnectionManager):
                 notification_dict = notification.to_dict(connection_id=connection_id)
                 future_sending = connection_handler.write_message(json.dumps(notification_dict))
                 sending.append(future_sending)
-            yield sending
+            await multi(sending)
             print('To everyone: %s' % notification.name)
 
-    @gen.coroutine
-    def _producer(self):
+    async def _producer(self):
         """ IO loop callback: consume notifications and send it. """
         print('Waiting for notifications to send.')
         while True:
             # todo
-            notification = yield self.__notifications.get()
+            notification = await self.__notifications.get()
             try:
-                yield self._send_notification(notification)
+                await self._send_notification(notification)
             except WebSocketClosedError:
                 print('Websocket was closed while sending a notification.')
             finally:
                 self.__notifications.task_done()
 
-    @gen.coroutine
-    def _call_on_start(self):
+    async def _call_on_start(self):
         if self.on_start:
-            if gen.is_coroutine_function(self.on_start):
-                yield self.on_start(self)
-            else:
-                self.on_start(self)
+            await asyncio.coroutine(self.on_start)(self)
 
     def _call_on_exit(self):
         if self.on_exit:
