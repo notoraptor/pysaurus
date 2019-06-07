@@ -16,9 +16,6 @@
             };
 			ws.onopen = function(event) {
 				ws.send(JSON.stringify({request_id: 1, name: 2, parameters: 3}));
-				ws.send(JSON.stringify({request_id: 10, name: 2, parameters: 4}));
-				ws.send(JSON.stringify({request_id: 100, name: 2, parameters: 5}));
-				ws.send(JSON.stringify({request_id: 1000, name: 2, parameters: 6}));
 			};
             document.body.appendChild(messages);
 

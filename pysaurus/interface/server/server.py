@@ -113,7 +113,7 @@ class Server(ConnectionManager):
                 future_sending = connection_handler.write_message(json.dumps(notification_dict))
                 sending.append(future_sending)
             yield sending
-            print('To everyone: %s' % notification)
+            print('To everyone: %s' % notification.name)
 
     @gen.coroutine
     def _producer(self):
@@ -169,6 +169,10 @@ class Server(ConnectionManager):
         # Set callback on KeyboardInterrupt.
         # signal.signal(signal.SIGINT, self._handle_interruption)
         atexit.register(self._call_on_exit)
+
+    def launch(self, function):
+        if self.__io_loop:
+            self.__io_loop.add_callback(function)
 
     def start(self, port=None, io_loop=None):
         """ Start server if not yet started. Raise an exception if server is already started.

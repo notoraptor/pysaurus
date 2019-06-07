@@ -1,6 +1,6 @@
 import concurrent.futures
 import os
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Optional, Set, Union
 
 import ujson as json
 
@@ -8,7 +8,7 @@ from pysaurus.core import notifications, path_utils
 from pysaurus.core.components.absolute_path import AbsolutePath
 from pysaurus.core.components.duration import Duration
 from pysaurus.core.components.file_size import FileSize
-from pysaurus.core.notifier import DEFAULT_NOTIFIER
+from pysaurus.core.notifier import Notifier, DEFAULT_NOTIFIER
 from pysaurus.core.profiling import Profiler
 from pysaurus.core.utils import functions as utils
 from pysaurus.core.utils.constants import VIDEO_BATCH_SIZE, PYTHON_ERROR_NOTHING, THUMBNAIL_EXTENSION
@@ -22,6 +22,7 @@ class Database(object):
                  '__id_to_file_name', '__file_name_to_id', '__system_is_case_insensitive', '__notifier']
 
     def __init__(self, list_file_path, notifier=None):
+        # type: (Union[AbsolutePath, str], Optional[Notifier]) -> None
         self.__notifier = notifier or DEFAULT_NOTIFIER
         self.__list_path = AbsolutePath.ensure(list_file_path)
         self.__database_path = self.__list_path.get_directory()
@@ -452,9 +453,9 @@ class Database(object):
         return nb_collected
 
     @staticmethod
-    def load_from_list_file(list_file_path):
-        # type: (AbsolutePath) -> Database
-        database = Database(list_file_path)
+    def load_from_list_file(list_file_path, notifier=None):
+        # type: (AbsolutePath, Notifier) -> Database
+        database = Database(list_file_path, notifier)
         database.update()
         database.clean_unused_thumbnails()
         database.ensure_thumbnails()

@@ -46,7 +46,7 @@ class Notifier:
         self.__managers.clear()
 
     def get_default_manager(self):
-        return self.__default_manager_function or Notifier.__default_manager
+        return self.__default_manager or Notifier.__default_manager_function
 
     def notify(self, notification):
         # type: (Notification) -> None

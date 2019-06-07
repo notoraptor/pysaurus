@@ -7,6 +7,7 @@ from pysaurus.core.database import Database
 from pysaurus.core.utils import functions as utils
 from pysaurus.core.video import Video
 from pysaurus.interface.common.table import Table
+from pysaurus.core.notifier import Notifier
 
 NbType = utils.enumeration(('entries', 'unreadable', 'not_found', 'valid', 'found', 'thumbnails'))
 FieldType = utils.enumeration(Video.PUBLIC_INFO)
@@ -39,10 +40,10 @@ class Interface:
         self.database = Interface.load_database()
 
     @staticmethod
-    def load_database():
-        # type: () -> Database
+    def load_database(notifier=None):
+        # type: (Notifier) -> Database
         list_file_path = AbsolutePath(os.path.join(utils.package_dir(), '..', '..', '.local', 'test_folder.log'))
-        return Database.load_from_list_file(list_file_path)
+        return Database.load_from_list_file(list_file_path, notifier)
 
     def __video(self, video_id):
         # type: (int) -> Video
