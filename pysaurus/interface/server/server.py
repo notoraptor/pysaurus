@@ -54,7 +54,10 @@ class Server(ConnectionManager):
     def __new__(cls, server_dir=None, **kwargs):
         server_dir = Server._get_absolute_path(server_dir)
         if server_dir not in cls.__cache__:
+            print('creating new server.')
             cls.__cache__[server_dir] = object.__new__(cls)
+        else:
+            print('Using existing server.')
         return cls.__cache__[server_dir]
 
     def __init__(self, server_dir=None):
@@ -171,7 +174,7 @@ class Server(ConnectionManager):
 
     def launch(self, function):
         if self.__io_loop:
-            self.__io_loop.add_callback(function)
+            self.__io_loop.add_callback(function, self)
 
     def start(self, port=None, io_loop=None):
         """ Start server if not yet started. Raise an exception if server is already started.
@@ -207,7 +210,7 @@ class Server(ConnectionManager):
 
     def notify(self, notification):
         # type: (protocol.Notification) -> None
-        self.__notifications.put(notification)
+        return self.__notifications.put(notification)
 
     def open_connection(self, connection_handler):
         self._add_connection(connection_handler)
