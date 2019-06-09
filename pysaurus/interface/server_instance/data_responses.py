@@ -1,7 +1,7 @@
-from pysaurus.interface.server.protocol import DataResponse
+from pysaurus.interface.server.protocol import AutoDataResponse
 
 
-class _OkData(DataResponse):
+class _OkData(AutoDataResponse):
     def __init__(self, request_id):
         super(_OkData, self).__init__(request_id, None)
 

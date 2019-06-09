@@ -1,0 +1,2 @@
+class PysaurusError(Exception):
+    pass

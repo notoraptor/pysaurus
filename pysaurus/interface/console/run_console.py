@@ -2,15 +2,14 @@ import sys
 import traceback
 
 from pysaurus.core.function_parsing.function_definition import FunctionDefinition
-from pysaurus.interface.console.console_interface import ConsoleInterface
+from pysaurus.interface.console.console_parser import ConsoleParser
 
 
-def run(interface, title=''):
-    # type: (ConsoleInterface, str) -> None
+def main():
+    console_parser = ConsoleParser()
 
-    if title:
-        print()
-        print(title)
+    print()
+    print('[CONSOLE INTERFACE]')
 
     while True:
         calling_function = False
@@ -27,12 +26,12 @@ def run(interface, title=''):
             if function_name in ('exit', 'quit'):
                 break
             if function_name == 'help':
-                interface.help(name=function_arg)
+                console_parser.help(name=function_arg)
                 continue
-            if function_name not in interface.definitions:
+            if function_name not in console_parser.definitions:
                 print(r'\unknown')
                 continue
-            function_definition = interface.definitions[function_name]  # type: FunctionDefinition
+            function_definition = console_parser.definitions[function_name]  # type: FunctionDefinition
             kwargs = {}
             if function_arg:
                 if len(function_definition.arguments) != 1:
@@ -58,10 +57,6 @@ def run(interface, title=''):
             print(r'\exception', type(exc).__name__, exc)
         print()
 
-
-def main():
-    console_interface = ConsoleInterface()
-    run(console_interface, '[CONSOLE INTERFACE]')
     print('End.')
 
 

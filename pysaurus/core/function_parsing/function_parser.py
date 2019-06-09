@@ -16,6 +16,13 @@ class FunctionParser:
         assert function_definition.name not in self.definitions
         self.definitions[function_definition.name] = function_definition
 
+    def has_name(self, function_name):
+        return function_name in self.definitions
+
+    def get_definition(self, function):
+        # type: (callable) -> FunctionDefinition
+        return self.definitions.get(function.__name__, None)
+
     def help(self, name=None):
         if name is None:
             for fn_name in sorted(self.definitions):

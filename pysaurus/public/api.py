@@ -3,12 +3,14 @@ import subprocess
 import sys
 from typing import Dict, List
 
-import pysaurus.public.api_errors
 from pysaurus.core.components.absolute_path import AbsolutePath
 from pysaurus.core.database.database import Database
 from pysaurus.core.database.video import Video
+from pysaurus.core.function_parsing.function_parser import FunctionParser
 from pysaurus.core.notification import Notifier
 from pysaurus.core.utils import functions as utils
+from pysaurus.core.utils.functions import bool_type
+from pysaurus.public import api_errors
 
 NbType = utils.enumeration(('entries', 'unreadable', 'not_found', 'valid', 'found', 'thumbnails'))
 FieldType = utils.enumeration(Video.PUBLIC_INFO)
@@ -24,11 +26,6 @@ class API:
     def load_database(notifier=None):
         # type: (Notifier) -> Database
         list_file_path = AbsolutePath(os.path.join(utils.package_dir(), '..', '..', '.local', 'test_folder.log'))
-        return API.load_from_list_file(list_file_path, notifier)
-
-    @staticmethod
-    def load_from_list_file(list_file_path, notifier=None):
-        # type: (AbsolutePath, Notifier) -> Database
         database = Database(list_file_path, notifier)
         database.update()
         database.clean_unused_thumbnails()
@@ -39,8 +36,28 @@ class API:
         # type: (int) -> Video
         video = self.database.get_video_from_id(video_id)
         if not video:
-            raise pysaurus.public.api_errors.UnknownVideoID(video_id)
+            raise api_errors.UnknownVideoID(video_id)
         return video
+
+    def export_api(self, function_parser):
+        # type: (FunctionParser) -> None
+        function_parser.add(self.nb, arguments={'query': NbType})
+        function_parser.add(self.nb_pages, arguments={'query': NbType, 'page_size': int})
+        function_parser.add(self.valid_size)
+        function_parser.add(self.valid_length)
+        function_parser.add(self.clear_not_found)
+        function_parser.add(self.info, arguments={'video_id': int})
+        function_parser.add(self.open, arguments={'video_id': int})
+        function_parser.add(self.delete, arguments={'video_id': int})
+        function_parser.add(self.rename, arguments={'video_id': int, 'new_title': str})
+        function_parser.add(self.same_sizes)
+        function_parser.add(self.find, arguments={'terms': str})
+        function_parser.add(self.list, arguments={
+            'field': FieldType,
+            'reverse': bool_type,
+            'page_size': int,
+            'page_number': int
+        })
 
     # ------------------------------------------------------------------------------------------------------------------
 
@@ -49,8 +66,9 @@ class API:
         return getattr(self.database, 'nb_%s' % NbType(query))
 
     def nb_pages(self, query, page_size):
+        # type: (str, int) -> int
         if page_size <= 0:
-            raise pysaurus.public.api_errors.InvalidPageSize(page_size)
+            raise api_errors.InvalidPageSize(page_size)
         count = self.nb(query)
         return (count // page_size) + bool(count % page_size)
 
@@ -83,7 +101,7 @@ class API:
         elif sys.platform == 'win32':
             os.startfile(video.filename.path)
         else:
-            raise pysaurus.public.api_errors.UnsupportedOS(sys.platform)
+            raise api_errors.UnsupportedOS(sys.platform)
 
     def delete(self, video_id):
         # type: (int) -> None
@@ -93,7 +111,7 @@ class API:
     def rename(self, video_id, new_title):
         # type: (int, str) -> int
         if new_title is None or not str(new_title):
-            raise pysaurus.public.api_errors.MissingVideoNewTitle()
+            raise api_errors.MissingVideoNewTitle()
         new_title = str(new_title)
         video = self.__video(video_id)  # type: Video
         self.database.change_video_file_title(video, new_title)
@@ -115,7 +133,7 @@ class API:
     def list(self, field, reverse, page_size, page_number):
         # type: (str, bool, int, int) -> List[Video]
         if page_size <= 0:
-            raise pysaurus.public.api_errors.InvalidPageSize(page_size)
+            raise api_errors.InvalidPageSize(page_size)
         field = FieldType(field)  # type: str
         reverse = utils.bool_type(reverse)
         videos = sorted(self.database.valid_videos, key=lambda v: v.get(field), reverse=reverse)

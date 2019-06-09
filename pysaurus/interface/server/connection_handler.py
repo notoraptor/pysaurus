@@ -1,9 +1,11 @@
 """ Tornado connection handler class, used internally to manage data received by server application. """
+import traceback
 from urllib.parse import urlparse
 
 import ujson as json
 from tornado.websocket import WebSocketHandler, WebSocketClosedError
 
+from pysaurus.core.error import PysaurusError
 from pysaurus.interface.server import protocol
 
 REQUEST_ID = 'request_id'
@@ -74,8 +76,15 @@ class ConnectionHandler(WebSocketHandler):
                 json_request['connection_id'] = self.server.get_connection_id(self)
                 request = protocol.Request.from_dict(json_request)
                 response = await self.server.manage_request(request) or protocol.OkResponse(request.request_id)
-            except Exception as exc:
+            except PysaurusError as exc:
                 response = protocol.ErrorResponse.from_exception(json_request.get(REQUEST_ID, ''), exc)
+            except Exception as exc:
+                print('<INTERNAL_ERROR>')
+                response = protocol.ErrorResponse(json_request.get(REQUEST_ID, ''), 'Exception', 'Internal error.')
+                traceback.print_tb(exc.__traceback__)
+                print(type(exc).__name__)
+                print(exc)
+                print('</INTERNAL_ERROR>')
         try:
             await self.write_message(json.dumps(response.to_dict()))
         except WebSocketClosedError:

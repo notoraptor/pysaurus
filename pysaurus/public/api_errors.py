@@ -1,4 +1,7 @@
-class ApiError(Exception):
+from pysaurus.core.error import PysaurusError
+
+
+class ApiError(PysaurusError):
     pass
 
 
