@@ -10,16 +10,20 @@ def is_valid_video_filename(filename):
     return extension and extension[1:].lower() in VIDEO_SUPPORTED_EXTENSIONS
 
 
-def dispatch_tasks(tasks, job_count, next_job_id=0):
+def dispatch_tasks(tasks, job_count, extra_args=None, next_job_id=0):
+    # type: (list, int, list, int) -> list
     """ Split <tasks> into <job_count> jobs and associate each one
         with an unique job ID starting from <next_job_id>, so that
         each job could assign an unique ID to each of his task by
         incrementing his job ID when managing his tasks.
         :param tasks: a list of tasks to split.
         :param job_count: number of jobs.
+        :param extra_args: (optional) list
         :param next_job_id: first job ID to use.
-        :return: a list of couples (job, job ID).
+        :return: a list of lists each containing (job, job ID, and extra args if provided).
     """
+    if extra_args is None:
+        extra_args = []
     task_count = len(tasks)
     if job_count > task_count:
         job_lengths = [1] * task_count
@@ -33,7 +37,7 @@ def dispatch_tasks(tasks, job_count, next_job_id=0):
     cursor = 0
     jobs = []
     for job_len in job_lengths:
-        jobs.append([tasks[cursor:(cursor + job_len)], next_job_id + cursor])
+        jobs.append([tasks[cursor:(cursor + job_len)], next_job_id + cursor] + extra_args)
         cursor += job_len
     # NB: next_job_id is now next_job_id + len(tasks).
     return jobs
@@ -127,3 +131,34 @@ def longest_common_path(a, b):
         if pieces_a[i] != pieces_b[i]:
             return os.sep.join(pieces_a[:i])
     return a if len(a) < len(b) else b
+
+
+def bool_type(mixed):
+    """ Convert a value to a boolean, with following rules (in that order):
+        None => False
+        bool, int, float => False if 0, else True
+        "true" (case insensitive) => True
+        "false" (case insensitive) => False
+        "" (empty string) => False
+        integer or floating string => boolean value of converted number (False if 0, else True)
+        bool(mixed) otherwise.
+    :param mixed:
+    :return:
+    """
+    if mixed is None:
+        return False
+    if isinstance(mixed, (bool, int, float)):
+        return bool(mixed)
+    if isinstance(mixed, str):
+        if mixed.lower() == 'true':
+            return True
+        if not mixed or mixed.lower() == 'false':
+            return False
+        try:
+            return bool(int(mixed))
+        except ValueError:
+            try:
+                return bool(float(mixed))
+            except ValueError:
+                pass
+    return bool(mixed)

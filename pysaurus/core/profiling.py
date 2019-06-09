@@ -1,7 +1,22 @@
 from datetime import datetime
 
-from pysaurus.core import notifications
-from pysaurus.core.notifier import DEFAULT_NOTIFIER
+from pysaurus.core.notification import Notification, DEFAULT_NOTIFIER
+
+
+class ProfilingStart(Notification):
+    __slots__ = ['name']
+
+    def __init__(self, title):
+        # type: (str) -> None
+        self.name = title
+
+
+class ProfilingEnd(Notification):
+    __slots__ = ('name', 'time')
+
+    def __init__(self, name, time):
+        self.name = name
+        self.time = str(time)
 
 
 class Profile(object):
@@ -39,10 +54,10 @@ class Profiler(object):
         self.__time_end = None
 
     def __enter__(self):
-        self.__notifier.notify(notifications.ProfilingStart(self.__title))
+        self.__notifier.notify(ProfilingStart(self.__title))
         self.__time_start = datetime.now()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.__time_end = datetime.now()
         profiling = Profile(self.__time_start, self.__time_end)
-        self.__notifier.notify(notifications.ProfilingEnd(self.__title, profiling))
+        self.__notifier.notify(ProfilingEnd(self.__title, profiling))

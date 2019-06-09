@@ -73,7 +73,7 @@ class ConnectionHandler(WebSocketHandler):
             try:
                 json_request['connection_id'] = self.server.get_connection_id(self)
                 request = protocol.Request.from_dict(json_request)
-                response = self.server.manage_request(request) or protocol.OkResponse(request.request_id)
+                response = await self.server.manage_request(request) or protocol.OkResponse(request.request_id)
             except Exception as exc:
                 response = protocol.ErrorResponse.from_exception(json_request.get(REQUEST_ID, ''), exc)
         try:

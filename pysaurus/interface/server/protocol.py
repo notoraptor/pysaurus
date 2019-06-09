@@ -26,7 +26,7 @@ class Request(ToDict):
     def __init__(self, connection_id, request_id, name, parameters):
         self.connection_id = connection_id
         self.request_id = request_id
-        self.name = name
+        self.name = str(name)
         self.parameters = parameters
 
     @staticmethod
@@ -40,36 +40,42 @@ class Request(ToDict):
         return Request(**dct)
 
 
-class OkResponse(ToDict):
+class Response(ToDict):
     __slots__ = ('request_id', 'type')
 
+    def __init__(self, request_id, request_type):
+        self.request_id = request_id
+        self.type = request_type
+
+
+class OkResponse(Response):
+
     def __init__(self, request_id):
-        self.request_id = request_id
-        self.type = OK
+        super(OkResponse, self).__init__(request_id, OK)
 
 
-class ErrorResponse(ToDict):
-    __slots__ = ('request_id', 'type', 'error_type', 'message')
+class ErrorResponse(Response):
+    __slots__ = ('error_type', 'message')
 
-    def __init__(self, request_id, error_type, message):
-        self.request_id = request_id
-        self.type = ERROR
-        self.error_type = error_type
+    def __init__(self, request_id, message):
+        super(ErrorResponse, self).__init__(request_id, ERROR)
+        self.error_type = type(self).__name__
         self.message = message
 
     @staticmethod
     def from_exception(request_id, exception):
         # type: (str, Exception) -> ErrorResponse
-        return ErrorResponse(request_id, type(exception).__name__, str(exception))
+        response = ErrorResponse(request_id, str(exception))
+        response.error_type = type(exception).__name__
+        return response
 
 
-class DataResponse(ToDict):
-    __slots__ = ('request_id', 'type', 'data_type', 'data')
+class DataResponse(Response):
+    __slots__ = ('data_type', 'data')
 
-    def __init__(self, request_id, data_type, data):
-        self.request_id = request_id
-        self.type = DATA
-        self.data_type = data_type
+    def __init__(self, request_id, data):
+        super(DataResponse, self).__init__(request_id, DATA)
+        self.data_type = type(self).__name__
         self.data = data
 
 

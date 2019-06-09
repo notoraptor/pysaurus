@@ -1,6 +1,6 @@
-from pysaurus.core import errors
-from pysaurus.core.propertiees import PropertyType
 from pysaurus.core.utils.functions import is_iterable
+from pysaurus.wip.properties import property_errors
+from pysaurus.wip.properties.properties import PropertyType
 
 
 class AssertRaise:
@@ -21,7 +21,7 @@ class AssertRaise:
 
 
 def test_property():
-    with AssertRaise(errors.PropertyNameError):
+    with AssertRaise(property_errors.PropertyNameError):
         PropertyType(name='a b c', property_type=int)
     for name in ('a1_', '_a1', '1a_'):
         PropertyType(name, int)

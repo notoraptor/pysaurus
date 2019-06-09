@@ -45,7 +45,7 @@ class Server(ConnectionManager):
         # callbacks.
         'on_start', 'on_exit', 'on_connection_open', 'on_connection_close', 'on_request',
         # options.
-        'ping_seconds'
+        'ping_seconds', 'context'
     ]
 
     # Servers cache.
@@ -54,13 +54,13 @@ class Server(ConnectionManager):
     def __new__(cls, server_dir=None, **kwargs):
         server_dir = Server._get_absolute_path(server_dir)
         if server_dir not in cls.__cache__:
-            print('creating new server.')
+            print('[server] Creating new server.')
             cls.__cache__[server_dir] = object.__new__(cls)
         else:
-            print('Using existing server.')
+            print('[server] Using existing server.')
         return cls.__cache__[server_dir]
 
-    def __init__(self, server_dir=None):
+    def __init__(self, server_dir=None, context=None):
         """ Initialize the server.
             :param server_dir: path of folder in (from) which server data will be saved (loaded).
                 If None, working directory (where script is executed) will be used.
@@ -79,6 +79,7 @@ class Server(ConnectionManager):
         self.__io_loop = None
 
         self.ping_seconds = DEFAULT_PING_SECONDS
+        self.context = context
 
         # (server) -> None
         self.on_start = None
@@ -109,10 +110,10 @@ class Server(ConnectionManager):
         if notification.connection_id is not None:
             connection_handler = self._get_connection_handler(notification.connection_id)
             if not connection_handler:
-                print('Notification: unknown connection ID %d' % notification.connection_id)
+                print('[server] Notification: unknown connection ID %d' % notification.connection_id)
             else:
                 await connection_handler.write_message(json.dumps(notification.to_dict()))
-                print('To %d: %s' % (notification.connection_id, notification))
+                print('[server] To %d: %s' % (notification.connection_id, notification))
         else:
             sending = []
             for connection_id, connection_handler in self._connections():
@@ -120,18 +121,18 @@ class Server(ConnectionManager):
                 future_sending = connection_handler.write_message(json.dumps(notification_dict))
                 sending.append(future_sending)
             await multi(sending)
-            print('To everyone: %s' % notification.name)
+            print('[server] To everyone: %s' % notification.name)
 
     async def _producer(self):
         """ IO loop callback: consume notifications and send it. """
-        print('Waiting for notifications to send.')
+        print('[server] Waiting notifications.')
         while True:
             # todo
             notification = await self.__notifications.get()
             try:
                 await self._send_notification(notification)
             except WebSocketClosedError:
-                print('Websocket was closed while sending a notification.')
+                print('[server] Websocket was closed while sending a notification.')
             finally:
                 self.__notifications.task_done()
 
@@ -150,19 +151,6 @@ class Server(ConnectionManager):
     def _call_on_connection_close(self, connection_id):
         if self.on_connection_close:
             self.on_connection_close(self, connection_id)
-
-    def _handle_interruption(self, signum, frame):
-        """ Handler function.
-            :param signum: system signal received
-            :param frame: frame received
-        """
-        print('here--')
-        if signum == signal.SIGINT:
-            self._call_on_exit()
-            print('we are here')
-            if self.__previous_signal_handler:
-                print('we pass here')
-                self.__previous_signal_handler(signum, frame)
 
     def _set_tasks(self, io_loop: IOLoop):
         """ Set server callbacks on given IO loop. Must be called once per server before starting IO loop. """
@@ -204,8 +192,8 @@ class Server(ConnectionManager):
         self.__io_loop = io_loop
         self.__port = port
         self._set_tasks(io_loop)
-        print('Ping: %d' % self.ping_seconds)
-        print('Port: %d' % self.__port)
+        print('[server] Ping: %d' % self.ping_seconds)
+        print('[server] Port: %d' % self.__port)
         io_loop.start()
 
     def notify(self, notification):
@@ -222,7 +210,7 @@ class Server(ConnectionManager):
         self._remove_connection(connection_handler)
         self._call_on_connection_close(connection_id)
 
-    def manage_request(self, request):
+    async def manage_request(self, request):
         # type: (protocol.Request) -> Union[protocol.OkResponse, protocol.ErrorResponse, protocol.DataResponse, None]
         if self.on_request:
-            return self.on_request(self, request)
+            return await asyncio.coroutine(self.on_request)(self, request)

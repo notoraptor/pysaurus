@@ -2,7 +2,7 @@ from _ctypes import pointer
 from ctypes import c_char_p
 from typing import List, Optional
 
-from pysaurus.core.video import Video
+from pysaurus.core.database.video import Video
 from pysaurus.core.video_raptor.functions import (__fn_VideoRaptorInfo_init, __fn_VideoRaptorInfo_clear,
                                                   __fn_VideoReport_hasError, __fn_ErrorReader_init,
                                                   __fn_ErrorReader_next, __PtrVideoInfo, __fn_VideoInfo_init,
@@ -10,8 +10,20 @@ from pysaurus.core.video_raptor.functions import (__fn_VideoRaptorInfo_init, __f
                                                   __fn_VideoInfo_clear, __PtrVideoThumbnail,
                                                   __fn_VideoThumbnail_init, __fn_videoRaptorThumbnails,
                                                   __PtrPtrVideoThumbnail)
-from pysaurus.core.video_raptor.result import VideoRaptorResult
 from pysaurus.core.video_raptor.structures import VideoRaptorInfo, ErrorReader, VideoInfo, VideoThumbnail
+
+
+class VideoRaptorResult:
+    __slots__ = ('done', 'errors')
+
+    def __init__(self, *, done=None, errors=None):
+        self.done = done
+        self.errors = errors
+
+    def __str__(self):
+        if self.done:
+            return str(self.done)
+        return str(self.errors)
 
 
 def get_hardware_device_names():

@@ -1,7 +1,7 @@
 import re
 
-from pysaurus.core import errors
 from pysaurus.core.utils.functions import is_iterable, ensure_set, to_printable
+from pysaurus.wip.properties import property_errors
 
 
 class PropertyType:
@@ -115,7 +115,7 @@ class PropertyType:
         if new_enumeration and self.__default is not None:
             for value in (self.__default if self.multiple else [self.__default]):
                 if value not in new_enumeration:
-                    raise errors.PropertyAllowedError(new_enumeration, value)
+                    raise property_errors.PropertyAllowedError(new_enumeration, value)
         self.__enumeration = new_enumeration
 
     @default.setter
@@ -125,7 +125,7 @@ class PropertyType:
     def new(self, new_value):
         if new_value is not None and self.__multiple:
             if not is_iterable(new_value):
-                raise errors.PropertyIterableError(new_value)
+                raise property_errors.PropertyIterableError(new_value)
             new_value = ensure_set(new_value)
             if not new_value:
                 new_value = None
@@ -142,7 +142,7 @@ class PropertyType:
         if not previous_value.type_is(self):
             raise ValueError('Value does not belong to this property.')
         if not is_iterable(new_value):
-            raise errors.PropertyIterableError(new_value)
+            raise property_errors.PropertyIterableError(new_value)
         return self.new(previous_value.value | ensure_set(new_value))
 
     def remove(self, previous_value, new_value):
@@ -152,7 +152,7 @@ class PropertyType:
         if not previous_value.type_is(self):
             raise ValueError('Value does not belong to this property.')
         if not is_iterable(new_value):
-            raise errors.PropertyIterableError(new_value)
+            raise property_errors.PropertyIterableError(new_value)
         return self.new(previous_value.value - ensure_set(new_value))
 
     def to_json(self):
@@ -177,26 +177,26 @@ class PropertyType:
     @staticmethod
     def __assert_name(name):
         if not (isinstance(name, str) and re.match('^[A-Za-z0-9_]+$', name)):
-            raise errors.PropertyNameError(name)
+            raise property_errors.PropertyNameError(name)
         return name
 
     @staticmethod
     def __assert_type(property_type):
         if property_type not in PropertyType.TYPES:
-            raise errors.PropertyTypeError(property_type)
+            raise property_errors.PropertyTypeError(property_type)
         return property_type
 
     @staticmethod
     def __assert_enumeration(enumeration, property_type):
         if enumeration is not None:
             if not is_iterable(enumeration):
-                raise errors.PropertyIterableEnumError(enumeration)
+                raise property_errors.PropertyIterableEnumError(enumeration)
             enumeration = ensure_set(enumeration)
             if not enumeration:
                 return None
             for value in enumeration:
                 if not isinstance(value, property_type):
-                    raise errors.PropertyEnumTypeError(property_type, value)
+                    raise property_errors.PropertyEnumTypeError(property_type, value)
         return enumeration
 
     @staticmethod
@@ -204,7 +204,7 @@ class PropertyType:
         if default is not None:
             if multiple:
                 if not is_iterable(default):
-                    raise errors.PropertyIterableDefaultError(default)
+                    raise property_errors.PropertyIterableDefaultError(default)
                 default = ensure_set(default)
                 if not default:
                     return None
@@ -217,9 +217,9 @@ class PropertyType:
             element = [element]
         for value in element:
             if not isinstance(value, property_type):
-                raise errors.PropertyValueTypeError(property_type, value)
+                raise property_errors.PropertyValueTypeError(property_type, value)
             if enumeration and value not in enumeration:
-                raise errors.PropertyAllowedError(enumeration, value)
+                raise property_errors.PropertyAllowedError(enumeration, value)
 
 
 class PropertyValue:

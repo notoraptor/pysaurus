@@ -1,35 +1,7 @@
 from typing import Dict
 
+from pysaurus.core.notification import Notification
 from pysaurus.core.utils.classes import StringPrinter
-from pysaurus.core.utils.functions import to_printable
-
-
-class Notification(object):
-    __slots__ = []
-
-    def to_dict(self):
-        return {name: getattr(self, name) for name in sorted(self.__slots__)}
-
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % (name, to_printable(getattr(self, name))) for name in sorted(self.__slots__)))
-
-
-class ProfilingStart(Notification):
-    __slots__ = ['name']
-
-    def __init__(self, title):
-        # type: (str) -> None
-        self.name = title
-
-
-class ProfilingEnd(Notification):
-    __slots__ = ('name', 'time')
-
-    def __init__(self, name, time):
-        self.name = name
-        self.time = str(time)
 
 
 class UnusedThumbnails(Notification):

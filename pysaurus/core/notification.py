@@ -1,6 +1,19 @@
 from typing import Callable, Dict
 
-from pysaurus.core.notifications import Notification
+from pysaurus.core.utils.functions import to_printable
+
+
+class Notification(object):
+    __slots__ = []
+
+    def to_dict(self):
+        return {name: getattr(self, name) for name in sorted(self.__slots__)}
+
+    def __str__(self):
+        return '%s(%s)' % (
+            type(self).__name__,
+            ', '.join('%s=%s' % (name, to_printable(getattr(self, name))) for name in sorted(self.__slots__)))
+
 
 ManagerType = Callable[[Notification], None]
 
