@@ -1,5 +1,10 @@
 import {Future} from "./future";
 import {RequestContext} from "./requestContext";
+import {Exceptions} from "./exceptions";
+
+const NOT_CONNECTED = 0;
+const IS_CONNECTING = 1;
+const IS_CONNECTED = 2;
 
 export class Connection {
 	constructor(hostname, port, useSSL) {
@@ -10,9 +15,10 @@ export class Connection {
 		this.hostname = hostname;
 		this.port = port;
 		this.socket = null;
-		this.isOpen = false;
+		this.status = NOT_CONNECTED;
 		this.onError = null; // Callback onError(error)
 		this.onClose = null; // Callback onClose()
+		this.onNotification = null;
 
 		// Private attributes.
 		this.waitingRequests = {};
@@ -21,9 +27,14 @@ export class Connection {
 
 		// Methods.
 		this.getUrl = this.getUrl.bind(this);
+		this.reset = this.reset.bind(this);
+		this.notConnected = this.notConnected.bind(this);
+		this.isConnecting = this.isConnecting.bind(this);
+		this.isConnected = this.isConnected.bind(this);
 		this.connect = this.connect.bind(this);
 		this.onOpen = this.onOpen.bind(this);
 		this.onOpenError = this.onOpenError.bind(this);
+		this.onSocketClose = this.onSocketClose.bind(this);
 		this.onMessage = this.onMessage.bind(this);
 		this.manageResponse = this.manageResponse.bind(this);
 		this.manageNotification = this.manageNotification.bind(this);
@@ -35,7 +46,32 @@ export class Connection {
 		return this.protocol + '://' + this.hostname + ':' + this.port;
 	}
 
+	reset() {
+		this.socket = null;
+		this.status = NOT_CONNECTED;
+		for (let requestContext of Object.values(this.waitingRequests)) {
+			requestContext.future.setException(Exceptions.disconnected());
+		}
+		if (!this.futureConnection.done())
+			this.futureConnection.setException(Exceptions.disconnected());
+		this.waitingRequests = {};
+		this.futureConnection = new Future();
+	}
+
+	notConnected() {
+		return this.status === NOT_CONNECTED;
+	}
+
+	isConnecting() {
+		return this.status === IS_CONNECTING;
+	}
+
+	isConnected() {
+		return this.status === IS_CONNECTED;
+	}
+
 	connect() {
+		this.status = IS_CONNECTING;
 		this.socket = new WebSocket(this.getUrl());
 		this.socket.onopen = this.onOpen;
 		this.socket.onerror = this.onOpenError;
@@ -43,26 +79,33 @@ export class Connection {
 	}
 
 	onOpen() {
-		this.isOpen = true;
+		this.status = IS_CONNECTED;
 		this.socket.onmessage = this.onMessage;
 		if (this.onError)
 			this.socket.onerror = this.onError;
 		else
 			this.socket.onerror = null;
-		if (this.onClose)
-			this.socket.onclose = this.onClose;
+		this.socket.onclose = this.onSocketClose;
 		this.futureConnection.setResult(null);
 	}
 
 	onOpenError(error) {
-		this.futureConnection.setException(error);
+		this.status = NOT_CONNECTED;
+		this.futureConnection.setException(Exceptions.connectionFailed());
+	}
+
+	onSocketClose() {
+		this.status = NOT_CONNECTED;
+		if (this.onClose)
+			this.onClose();
 	}
 
 	onMessage(event) {
 		try {
 			const message = JSON.parse(event.data);
-			if (!message.hasOwnProperty('message_type'))
+			if (!message.hasOwnProperty('message_type')) {
 				return console.log('Unable to infer received message type.');
+			}
 			if (message.message_type === 'response') {
 				this.manageResponse(message);
 			} else if (message.message_type === 'notification') {
@@ -101,7 +144,7 @@ export class Connection {
 					throw new Error('Error response missing field error_type.');
 				if (!response.hasOwnProperty('message'))
 					throw new Error('Error response missing field message.');
-				requestContext.future.setException(response);
+				requestContext.future.setException(Exceptions.fromErrorResponse(response));
 				break;
 			default:
 				throw new Error(`Invalid response type: ${response.type}`);
@@ -116,11 +159,13 @@ export class Connection {
 		if (this.notificationManagers.hasOwnProperty(notification.name)) {
 			const callback = this.notificationManagers[notification.name];
 			callback(notification.parameters);
+		} else if (this.onNotification) {
+			this.onNotification(notification);
 		}
 	}
 
 	send(request) {
-		if (!this.isOpen)
+		if (!this.isConnected())
 			throw new Error('Socket not yet opened.');
 		if (this.waitingRequests.hasOwnProperty(request.request_id))
 			throw new Error(`Request ID already used: ${request.request_id}`);
