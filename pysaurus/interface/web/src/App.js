@@ -1,9 +1,9 @@
 import React from 'react';
-import './App.css';
 import {Connection, ConnectionStatus} from "./client/connection";
 import {Request} from "./client/requests";
 import {Helmet} from "react-helmet/es/Helmet";
 import {Exceptions} from "./client/exceptions";
+import {Notification} from "./components/notification";
 
 const HOSTNAME = 'localhost';
 const PORT = 8432;
@@ -14,15 +14,6 @@ const DatabaseStatus = {
 	DB_LOADED: 'DB_LOADED',
 	VIDEOS_LOADING: 'VIDEOS_LOADING',
 	VIDEOS_LOADED: 'VIDEOS_LOADED'
-};
-
-const StatusLevel = {
-	[ConnectionStatus.NOT_CONNECTED]: 0,
-	[ConnectionStatus.CONNECTING]: 1,
-	[ConnectionStatus.CONNECTED]: 2,
-	[DatabaseStatus.DB_NOT_LOADED]: 3,
-	[DatabaseStatus.DB_LOADING]: 4,
-	[DatabaseStatus.DB_LOADED]: 5,
 };
 
 const TABLE_FIELDS = [
@@ -40,7 +31,6 @@ const TABLE_FIELDS = [
 	// 'bit_rate',
 	'filename'
 ];
-
 
 export class App extends React.Component {
 	constructor(props) {
@@ -90,7 +80,6 @@ export class App extends React.Component {
 				this.state.currentPage
 			)))
 			.then(videos => {
-				console.log(videos[0]);
 				this.setState({videos: videos, status: DatabaseStatus.VIDEOS_LOADED})
 			});
 	}
@@ -275,27 +264,6 @@ export class App extends React.Component {
 		});
 	}
 
-	renderNotification() {
-		if (this.state.status !== DatabaseStatus.DB_LOADING)
-			return '';
-		return (
-			<div className="notification-wrapper row align-items-center">
-				<div className="col-md-3"/>
-				<div className="col-md-6 text-center">
-					<div className="notification">
-						<div className="notification-title">
-							<strong>{this.state.notificationTitle}</strong>
-						</div>
-						<div className="notification-content">
-							{this.state.notificationContent}&nbsp;
-						</div>
-					</div>
-				</div>
-				<div className="col-md-3"/>
-			</div>
-		);
-	}
-
 	loadVideoImage(video) {
 		if (this.state.status !== DatabaseStatus.VIDEOS_LOADED)
 			return;
@@ -341,7 +309,8 @@ export class App extends React.Component {
 						<form>
 							<div className="form-group row">
 								<label className="col-sm-3 col-form-label" htmlFor="pageSize">Page size</label>
-								<div className="col-sm"><input type="number" id="pageSize" name="pageSize" className="form-control" value={this.state.pageSize}/>
+								<div className="col-sm"><input type="number" id="pageSize" name="pageSize"
+															   className="form-control" value={this.state.pageSize}/>
 								</div>
 							</div>
 							<div className="form-group row">
@@ -349,7 +318,8 @@ export class App extends React.Component {
 								<div className="col-sm">
 									<div className="row">
 										<div className="col">
-											<input type="number" id="currentPage" name="currentPage" className="form-control" value={this.state.currentPage + 1}/>
+											<input type="number" id="currentPage" name="currentPage"
+												   className="form-control" value={this.state.currentPage + 1}/>
 										</div>
 										<div className="col">
 											/ {this.state.nbPages}
@@ -380,17 +350,22 @@ export class App extends React.Component {
 				</Helmet>
 				<div className="d-flex flex-column page">
 					<header className="row align-items-center p-2">
-						<div className="col-md"><strong>Pysaurus</strong></div>
-						<div className="col-md">
-							{this.state.message_type ?
-								<div className={`alert ${this.state.message_type}`}>{this.state.message}</div> : ''}
-						</div>
-						<div className="col-md text-md-right">
+						<div className="col-md-1"><strong>Pysaurus</strong></div>
+						<div className="col-md-2 text-md-right">
 							{this.mainButton()}
+						</div>
+						<div className="col-md-9">
+							{this.state.message_type ?
+								<div className={`alert ${this.state.message_type}`}>{this.state.message}</div> :
+								<div className="alert alert-secondary" style={{visibility: 'hidden'}}>&nbsp;</div>
+							}
 						</div>
 					</header>
 					<div className="loading row flex-grow-1">
-						{this.renderNotification()}
+						{this.state.status === DatabaseStatus.DB_LOADING ?
+							<Notification title={this.state.notificationTitle}
+										  content={this.state.notificationContent}/> :
+							''}
 						{this.renderVideos()}
 					</div>
 				</div>
