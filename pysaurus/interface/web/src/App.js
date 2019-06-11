@@ -4,6 +4,8 @@ import {Request} from "./client/requests";
 import {Helmet} from "react-helmet/es/Helmet";
 import {Exceptions} from "./client/exceptions";
 import {Notification} from "./components/notification";
+import ReactTable from 'react-table';
+import 'react-table/react-table.css';
 
 const HOSTNAME = 'localhost';
 const PORT = 8432;
@@ -15,6 +17,9 @@ const DatabaseStatus = {
 	VIDEOS_LOADING: 'VIDEOS_LOADING',
 	VIDEOS_LOADED: 'VIDEOS_LOADED'
 };
+
+const UNICODE_BOTTOM_ARROW = '\u25BC';
+const UNICODE_TOP_ARROW = '\u25B2';
 
 const TABLE_FIELDS = [
 	'name',
@@ -58,30 +63,78 @@ export class App extends React.Component {
 			pageSize: 100,
 			field: 'filename',
 			reverse: false,
-			videos: []
+			videos: [],
+			selected: -1,
 		};
 		this.connect = this.connect.bind(this);
 		this.onConnectionClosed = this.onConnectionClosed.bind(this);
 		this.loadDatabase = this.loadDatabase.bind(this);
+		this.loadDatabaseInfo = this.loadDatabaseInfo.bind(this);
 		this.loadVideos = this.loadVideos.bind(this);
 		this.onNotification = this.onNotification.bind(this);
+		this.previousPage = this.previousPage.bind(this);
+		this.nextPage = this.nextPage.bind(this);
+		this.onChangePageSize = this.onChangePageSize.bind(this);
+		this.onChangeCurrentPage = this.onChangeCurrentPage.bind(this);
+	}
+
+	loadDatabaseInfo() {
+		if (this.state.status !== DatabaseStatus.DB_LOADED)
+			return;
+		this.connection.send(Request.database_info(this.state.pageSize))
+			.then(databaseInfo => this.setState(databaseInfo))
+			.then(() => this.loadVideos());
 	}
 
 	loadVideos() {
-		if (this.state.status !== DatabaseStatus.DB_LOADED)
+		if (![DatabaseStatus.DB_LOADED, DatabaseStatus.VIDEOS_LOADED].includes(this.state.status))
 			return;
 		this.setState({status: DatabaseStatus.VIDEOS_LOADING});
-		this.connection.send(Request.database_info(this.state.pageSize))
-			.then(databaseInfo => this.setState(databaseInfo))
-			.then(() => this.connection.send(Request.list(
-				this.state.field,
-				this.state.reverse,
-				this.state.pageSize,
-				this.state.currentPage
-			)))
+		this.connection.send(Request.list(
+			this.state.field,
+			this.state.reverse,
+			this.state.pageSize,
+			this.state.currentPage
+		))
 			.then(videos => {
 				this.setState({videos: videos, status: DatabaseStatus.VIDEOS_LOADED})
 			});
+	}
+
+	previousPage() {
+		let currentPage = this.state.currentPage;
+		if (currentPage > 0) {
+			--currentPage;
+			this.setState({currentPage}, () => this.loadVideos());
+		}
+	}
+
+	nextPage() {
+		let currentPage = this.state.currentPage;
+		if (currentPage < this.state.nbPages - 1) {
+			++currentPage;
+			this.setState({currentPage}, () => this.loadVideos());
+		}
+	}
+
+	onChangePageSize(event) {
+		let value = event.target.value;
+		if (value < 1)
+			value = 1;
+		if (value > this.state.count)
+			value = this.state.count;
+		let nbPages = Math.floor(this.state.count / value) + (this.state.count % value ? 1 : 0);
+		this.setState({pageSize: value, nbPages: nbPages});
+	}
+
+	onChangeCurrentPage(event) {
+		let value = event.target.value - 1;
+		if (value < 0)
+			value = 0;
+		if (value >= this.state.nbPages) {
+			value = this.state.nbPages - 1;
+		}
+		this.setState({currentPage: value});
 	}
 
 	error(message) {
@@ -184,7 +237,7 @@ export class App extends React.Component {
 				break;
 			case DatabaseStatus.DB_LOADED:
 				title = 'load videos';
-				callback = this.loadVideos;
+				callback = this.loadDatabaseInfo;
 				break;
 			case DatabaseStatus.VIDEOS_LOADING:
 				title = 'loading videos ...';
@@ -285,34 +338,75 @@ export class App extends React.Component {
 	renderVideos() {
 		if (this.state.status !== DatabaseStatus.VIDEOS_LOADED)
 			return '';
+		const columns = TABLE_FIELDS.map((field, index) => {
+			return {
+				id: field,
+				Header: this.state.field === field ? (`${field} ${this.state.reverse ? UNICODE_BOTTOM_ARROW : UNICODE_TOP_ARROW}`) : (field),
+				accessor: field
+			}
+		});
 		return (
 			<div className="videos row">
 				<div className="col-md-9 table-container">
-					<table className="table table-sm">
-						<thead>
-						<tr>{TABLE_FIELDS.map((field, index) => <th key={index}>{field}</th>)}</tr>
-						</thead>
-						<tbody>
-						{this.state.videos.map((video, index) => (
-							<tr key={index}
-								onClick={() => this.loadVideoImage(video)}>
-								{TABLE_FIELDS.map((field, fieldIndex) => (
-									<td key={fieldIndex} className={field}>
-										<span>{video[field]}</span>
-									</td>
-								))}
-							</tr>
-						))}
-						</tbody>
-					</table>
+					<ReactTable columns={columns}
+								data={this.state.videos}
+								getTheadThProps={(state, rowInfo, column, instance) => {
+									return {
+										onClick: (event, callback) => {
+											const field = column.id;
+											let reverse = this.state.reverse;
+											if (this.state.field === field) {
+												reverse = !reverse;
+											} else {
+												reverse = false;
+											}
+											this.setState({field, reverse}, () => this.loadVideos());
+											if (callback)
+												callback();
+										}
+									};
+								}}
+								getTrProps={(state, rowInfo, column, instance) => {
+									let style = {};
+									if (rowInfo) {
+										if (this.state.selected === rowInfo.index) {
+											style = {
+												color: 'white',
+												backgroundColor: 'blue',
+												fontWeight: 'bold',
+											};
+										} else {
+											style = {
+												color: 'initial',
+												backgroundColor: 'initial',
+												fontWeight: 'initial',
+											};
+										}
+									}
+									return {
+										style: style,
+										onClick: (event, callback) => {
+											const index = rowInfo.index;
+											this.setState({selected: (this.state.selected === index ? -1 : index)});
+											this.loadVideoImage(this.state.videos[index]);
+											// console.log(column.id);
+										}
+									}
+								}}
+								sortable={false}
+								showPagination={false}
+								defaultPageSize={this.state.pageSize}/>
 				</div>
 				<div className="col-md-3 p-3">
 					<div>
 						<form>
 							<div className="form-group row">
 								<label className="col-sm-3 col-form-label" htmlFor="pageSize">Page size</label>
-								<div className="col-sm"><input type="number" id="pageSize" name="pageSize"
-															   className="form-control" value={this.state.pageSize}/>
+								<div className="col-sm">
+									<input type="number" id="pageSize"
+										   min={1} max={this.state.count}
+										   onChange={this.onChangePageSize}
+										   className="form-control" value={this.state.pageSize}/>
 								</div>
 							</div>
 							<div className="form-group row">
@@ -320,7 +414,9 @@ export class App extends React.Component {
 								<div className="col-sm">
 									<div className="row">
 										<div className="col">
-											<input type="number" id="currentPage" name="currentPage"
+											<input type="number" id="currentPage"
+												   min={0} max={this.state.nbPages}
+												   onChange={this.onChangeCurrentPage}
 												   className="form-control" value={this.state.currentPage + 1}/>
 										</div>
 										<div className="col">
@@ -331,9 +427,11 @@ export class App extends React.Component {
 							</div>
 							<div className="form-group row text-center">
 								<div className="col">
-									<button type="button" className="btn btn-primary mx-2">{'<'}</button>
+									<button type="button" disabled={this.state.currentPage === 0}
+											className="btn btn-primary mx-2" onClick={this.previousPage}>{'<'}</button>
 									<input type="submit" className="btn btn-primary mx-2" value="update"/>
-									<button type="button" className="btn btn-primary mx-2">{'>'}</button>
+									<button type="button" disabled={this.state.currentPage === this.state.nbPages - 1}
+											className="btn btn-primary mx-2" onClick={this.nextPage}>{'>'}</button>
 								</div>
 							</div>
 						</form>

@@ -63,6 +63,7 @@ header {
     width: 100%;
     height: 100%;
     overflow: auto;
+    padding:0;
 }
 
 .videos table {
@@ -73,6 +74,15 @@ header {
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+}
+
+.videos .rt-tr {
+    cursor: default;
+}
+
+.videos .rt-tr-group:hover {
+    cursor: default;
+    background-color: rgb(240, 240, 240);
 }
 
 
