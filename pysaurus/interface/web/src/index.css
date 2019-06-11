@@ -51,27 +51,30 @@ header {
     background-color: lightgray;
 }
 
-.table table td.name {
-    word-break: break-all;
-}
-
-.table table td.filename {
-    word-break: break-word;
-}
-
 .videos {
     position: absolute;
     width: 100%;
     height: 100%;
-    overflow: hidden;
     margin: 0;
     padding: 0;
 }
 
-.videos .table {
+.videos .table-container {
+    width: 100%;
     height: 100%;
     overflow: auto;
 }
+
+.videos table {
+    width: 100%;
+}
+
+.videos table td {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
 
 #video-image {
     max-width: 300px;

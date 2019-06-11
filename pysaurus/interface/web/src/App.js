@@ -55,7 +55,7 @@ export class App extends React.Component {
 			size: '',
 			duration: '',
 			currentPage: 0,
-			pageSize: 10,
+			pageSize: 100,
 			field: 'filename',
 			reverse: false,
 			videos: []
@@ -287,8 +287,8 @@ export class App extends React.Component {
 			return '';
 		return (
 			<div className="videos row">
-				<div className="col-md-9 table">
-					<table>
+				<div className="col-md-9 table-container">
+					<table className="table table-sm">
 						<thead>
 						<tr>{TABLE_FIELDS.map((field, index) => <th key={index}>{field}</th>)}</tr>
 						</thead>
@@ -297,7 +297,9 @@ export class App extends React.Component {
 							<tr key={index}
 								onClick={() => this.loadVideoImage(video)}>
 								{TABLE_FIELDS.map((field, fieldIndex) => (
-									<td key={fieldIndex} className={field}>{video[field]}</td>
+									<td key={fieldIndex} className={field}>
+										<span>{video[field]}</span>
+									</td>
 								))}
 							</tr>
 						))}
