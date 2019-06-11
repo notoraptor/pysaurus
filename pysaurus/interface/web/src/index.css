@@ -32,14 +32,48 @@ header {
 .alert {
 	margin: 0;
 }
-
 .loading {
 	position: relative;
 }
+.notification-wrapper {
+	width: 100%;
+	height: 100%;
+}
+.notification {
+	border: 1px solid gray;
+}
+.notification .notification-title {
+	border-bottom: 1px solid gray;
+	background-color: lightgray;
+}
 
-.loading .messages {
+table td.filename {
+	word-break: break-all;
+}
+
+.videos {
 	position: absolute;
 	width: 100%;
 	height: 100%;
+	overflow: hidden;
+	margin: 0;
+	padding: 0;
+}
+.videos .table {
+	height: 100%;
 	overflow: auto;
+}
+
+#video-image {
+	max-width: 300px;
+	margin: auto;
+	background-position: center center;
+	background-repeat: no-repeat;
+	background-color: rgb(220, 220, 220);
+	border: 12px solid gray;
+}
+#video-image:after {
+	padding-top: 100%;
+	display: block;
+	content: '';
 }

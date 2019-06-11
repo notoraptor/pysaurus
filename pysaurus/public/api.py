@@ -45,8 +45,10 @@ class API:
         function_parser.add(self.nb_pages, arguments={'query': NbType, 'page_size': int})
         function_parser.add(self.valid_size)
         function_parser.add(self.valid_length)
+        function_parser.add(self.database_info, arguments={'page_size': int})
         function_parser.add(self.clear_not_found)
         function_parser.add(self.info, arguments={'video_id': int})
+        function_parser.add(self.image, arguments={'video_id': int})
         function_parser.add(self.open, arguments={'video_id': int})
         function_parser.add(self.delete, arguments={'video_id': int})
         function_parser.add(self.rename, arguments={'video_id': int, 'new_title': str})
@@ -80,6 +82,14 @@ class API:
         # type: () -> int
         return self.database.valid_length
 
+    def database_info(self, page_size):
+        return {
+            'count': self.nb('valid'),
+            'nbPages': self.nb_pages('valid', page_size),
+            'size': self.database.valid_size,
+            'duration': self.database.valid_length
+        }
+
     def clear_not_found(self):
         # type: () -> None
         self.database.remove_videos_not_found(save=True)
@@ -87,6 +97,11 @@ class API:
     def info(self, video_id):
         # type: (int) -> Video
         return self.__video(video_id)
+
+    def image(self, video_id):
+        # type: (int) -> str
+        video = self.__video(video_id)
+        return video.thumbnail_to_html(self.database.folder)
 
     def open(self, video_id):
         # type: (int) -> None
@@ -131,10 +146,11 @@ class API:
                 if all(term in video.title.lower() or term in video.filename.path.lower() for term in terms)]
 
     def list(self, field, reverse, page_size, page_number):
-        # type: (str, bool, int, int) -> List[Video]
+        # type: (str, bool, int, int) -> List[dict]
         if page_size <= 0:
             raise api_errors.InvalidPageSize(page_size)
         field = FieldType(field)  # type: str
         reverse = utils.bool_type(reverse)
         videos = sorted(self.database.valid_videos, key=lambda v: v.get(field), reverse=reverse)
-        return videos[(page_size * page_number):(page_size * (page_number + 1))]
+        return [video.info(video_id=self.database.get_video_id(video))
+                for video in videos[(page_size * page_number):(page_size * (page_number + 1))]]

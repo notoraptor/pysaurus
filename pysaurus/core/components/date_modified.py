@@ -18,3 +18,6 @@ class DateModified:
 
     def __lt__(self, other):
         return self.time < other.time
+
+    def to_json(self):
+        return str(self)

@@ -119,6 +119,10 @@ class Database(object):
     def valid_videos(self):
         return (video for video in self.__videos.values() if video.exists())
 
+    @property
+    def folder(self):
+        return self.__database_path
+
     def get_video_from_id(self, video_id):
         # type: (int) -> Optional[Video]
         if video_id in self.__id_to_file_name:

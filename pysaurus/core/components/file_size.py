@@ -32,3 +32,6 @@ class FileSize(object):
 
     def __str__(self):
         return '%s %s' % (round(self.nb_units, 2), constants.SIZE_UNIT_TO_STRING[self.__unit])
+
+    def to_json(self):
+        return str(self)

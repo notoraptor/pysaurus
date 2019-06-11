@@ -12,4 +12,7 @@ export class Exceptions {
 	static connectionFailed() {
 		return createException('connectionFailed', 'Unable to connect.');
 	}
+	static databaseFailed(message) {
+		return createException('databaseFailed', message);
+	}
 }

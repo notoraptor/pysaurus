@@ -6,9 +6,9 @@ from pysaurus.interface.server_instance.core_notification_collector import CoreN
 
 class ServerContext:
     __slots__ = ('api', 'multiprocessing_manager', 'collector', '__loading_status', 'function_parser')
-    NOT_LOADED = 'NOT_LOADED'
-    LOADING = 'LOADING'
-    LOADED = 'LOADED'
+    NOT_LOADED = 'DB_NOT_LOADED'
+    LOADING = 'DB_LOADING'
+    LOADED = 'DB_LOADED'
 
     def __init__(self):
         self.api = None

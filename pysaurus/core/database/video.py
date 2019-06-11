@@ -5,7 +5,11 @@ from pysaurus.core.database import path_utils
 from pysaurus.core.utils.classes import StringPrinter, HTMLStripper
 from pysaurus.core.utils.constants import PYTHON_ERROR_THUMBNAIL
 from pysaurus.core.video_raptor.structures import VideoInfo
-
+from PIL import Image
+WORK_MODE = 'RGB'
+import base64
+from io import BytesIO
+from pysaurus.core.utils.constants import THUMBNAIL_EXTENSION
 
 class Video(object):
     # Currently 14 fields.
@@ -24,10 +28,9 @@ class Video(object):
 
     PUBLIC_INFO = (
         # Video class fields
-        'filename', 'title', 'container_format', 'audio_codec',
-        'video_codec', 'width', 'height', 'sample_rate', 'bit_rate',
+        'filename', 'container_format', 'audio_codec', 'video_codec', 'width', 'height', 'sample_rate', 'bit_rate',
         # special fields
-        'size', 'duration', 'frame_rate', 'name', 'date'
+        'size', 'duration', 'frame_rate', 'name', 'date', 'meta_title', 'file_title'
     )
 
     def __init__(self, filename, title='', container_format='', audio_codec='', video_codec='', width=0, height=0,
@@ -107,12 +110,32 @@ class Video(object):
             return self.frame_rate_num / self.frame_rate_den
         if field == 'name':
             return self.get_title()
+        if field == 'meta_title':
+            return self.title
+        if field == 'file_title':
+            return self.filename.title
         if field == 'date':
             return self.filename.get_date_modified()
-        if field in {'filename', 'title', 'container_format', 'audio_codec',
-                     'video_codec', 'width', 'height', 'sample_rate', 'bit_rate'}:
+        if field in self.PUBLIC_INFO:
             return getattr(self, field)
         return None
+
+    def info(self, **extra):
+        info = {public_field: self.get(public_field) for public_field in self.PUBLIC_INFO}
+        info.update(extra)
+        return info
+
+    def thumbnail_to_html(self, thumb_folder: AbsolutePath):
+        thumb_path = self.get_thumbnail_path(thumb_folder)
+        if not thumb_path.isfile():
+            return None
+        image = Image.open(thumb_path.path)
+        if image.mode != WORK_MODE:
+            image = image.convert(WORK_MODE)
+        buffered = BytesIO()
+        image.save(buffered, format=THUMBNAIL_EXTENSION)
+        image_string = base64.b64encode(buffered.getvalue())
+        return image_string
 
     def to_dict(self):
         dct = {self.LONG_TO_MIN[key]: getattr(self, key) for key in self.__fields__}

@@ -119,6 +119,9 @@ class AbsolutePath(object):
             raise OSError('Unable to rename to', new_path)
         return new_path
 
+    def to_json(self):
+        return str(self)
+
     @staticmethod
     def ensure(path):
         # type: (Union[str, AbsolutePath]) -> AbsolutePath

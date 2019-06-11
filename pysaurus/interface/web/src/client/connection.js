@@ -2,25 +2,28 @@ import {Future} from "./future";
 import {RequestContext} from "./requestContext";
 import {Exceptions} from "./exceptions";
 
-const NOT_CONNECTED = 0;
-const IS_CONNECTING = 1;
-const IS_CONNECTED = 2;
+export const ConnectionStatus = {
+	NOT_CONNECTED: 'not connected',
+	CONNECTING: 'connecting',
+	CONNECTED: 'connected'
+};
 
 export class Connection {
 	constructor(hostname, port, useSSL) {
 		if (useSSL)
 			console.log(`Using SSL.`);
-		// Public attributes.
+		// Public read-only attributes.
 		this.protocol = useSSL ? 'wss' : 'ws';
 		this.hostname = hostname;
 		this.port = port;
-		this.socket = null;
-		this.status = NOT_CONNECTED;
-		this.onError = null; // Callback onError(error)
+		// Public properties.
+		this.onError = null; // Callback onError(exception)
 		this.onClose = null; // Callback onClose()
+		this.onStatus = null; // Callback onStatus(status)
 		this.onNotification = null;
-
 		// Private attributes.
+		this.socket = null;
+		this.status = ConnectionStatus.NOT_CONNECTED;
 		this.waitingRequests = {};
 		this.notificationManagers = {};
 		this.futureConnection = new Future();
@@ -28,9 +31,6 @@ export class Connection {
 		// Methods.
 		this.getUrl = this.getUrl.bind(this);
 		this.reset = this.reset.bind(this);
-		this.notConnected = this.notConnected.bind(this);
-		this.isConnecting = this.isConnecting.bind(this);
-		this.isConnected = this.isConnected.bind(this);
 		this.connect = this.connect.bind(this);
 		this.onOpen = this.onOpen.bind(this);
 		this.onOpenError = this.onOpenError.bind(this);
@@ -46,9 +46,17 @@ export class Connection {
 		return this.protocol + '://' + this.hostname + ':' + this.port;
 	}
 
+	setStatus(status) {
+		this.status = status;
+		if (this.onStatus)
+			this.onStatus(status);
+	}
+
 	reset() {
+		if (this.socket)
+			this.socket.close();
 		this.socket = null;
-		this.status = NOT_CONNECTED;
+		this.status = ConnectionStatus.NOT_CONNECTED;
 		for (let requestContext of Object.values(this.waitingRequests)) {
 			requestContext.future.setException(Exceptions.disconnected());
 		}
@@ -56,22 +64,11 @@ export class Connection {
 			this.futureConnection.setException(Exceptions.disconnected());
 		this.waitingRequests = {};
 		this.futureConnection = new Future();
-	}
-
-	notConnected() {
-		return this.status === NOT_CONNECTED;
-	}
-
-	isConnecting() {
-		return this.status === IS_CONNECTING;
-	}
-
-	isConnected() {
-		return this.status === IS_CONNECTED;
+		// We don't reset notification managers, callbacks and address.
 	}
 
 	connect() {
-		this.status = IS_CONNECTING;
+		this.status = ConnectionStatus.CONNECTING;
 		this.socket = new WebSocket(this.getUrl());
 		this.socket.onopen = this.onOpen;
 		this.socket.onerror = this.onOpenError;
@@ -79,7 +76,7 @@ export class Connection {
 	}
 
 	onOpen() {
-		this.status = IS_CONNECTED;
+		this.status = ConnectionStatus.CONNECTED;
 		this.socket.onmessage = this.onMessage;
 		if (this.onError)
 			this.socket.onerror = this.onError;
@@ -90,12 +87,14 @@ export class Connection {
 	}
 
 	onOpenError(error) {
-		this.status = NOT_CONNECTED;
-		this.futureConnection.setException(Exceptions.connectionFailed());
+		console.log(error);
+		this.status = ConnectionStatus.NOT_CONNECTED;
+		const exception = Exceptions.connectionFailed();
+		this.futureConnection.setException(exception);
 	}
 
 	onSocketClose() {
-		this.status = NOT_CONNECTED;
+		this.status = ConnectionStatus.NOT_CONNECTED;
 		if (this.onClose)
 			this.onClose();
 	}
@@ -165,7 +164,7 @@ export class Connection {
 	}
 
 	send(request) {
-		if (!this.isConnected())
+		if (this.status !== ConnectionStatus.CONNECTED)
 			throw new Error('Socket not yet opened.');
 		if (this.waitingRequests.hasOwnProperty(request.request_id))
 			throw new Error(`Request ID already used: ${request.request_id}`);

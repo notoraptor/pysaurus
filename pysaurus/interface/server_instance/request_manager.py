@@ -19,6 +19,8 @@ def to_serializable(mixed):
         return {to_serializable(key): to_serializable(value) for (key, value) in mixed.items()}
     if hasattr(mixed, 'to_dict'):
         return mixed.to_dict()
+    if hasattr(mixed, 'to_json'):
+        return mixed.to_json()
     return mixed
 
 

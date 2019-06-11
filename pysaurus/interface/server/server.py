@@ -54,10 +54,10 @@ class Server(ConnectionManager):
     def __new__(cls, server_dir=None, **kwargs):
         server_dir = Server._get_absolute_path(server_dir)
         if server_dir not in cls.__cache__:
-            print('[server] Creating new server.')
+            Server.log('Creating new server.')
             cls.__cache__[server_dir] = object.__new__(cls)
         else:
-            print('[server] Using existing server.')
+            Server.log('Using existing server.')
         return cls.__cache__[server_dir]
 
     def __init__(self, server_dir=None, context=None):
@@ -99,6 +99,10 @@ class Server(ConnectionManager):
         return self.__io_loop
 
     @staticmethod
+    def log(*args, **kwargs):
+        print('[server]', *args, **kwargs)
+
+    @staticmethod
     def _get_absolute_path(directory=None):
         """ Return absolute path of given directory.
             If given directory is None, return absolute path of current directory.
@@ -110,10 +114,10 @@ class Server(ConnectionManager):
         if notification.connection_id is not None:
             connection_handler = self._get_connection_handler(notification.connection_id)
             if not connection_handler:
-                print('[server] Notification: unknown connection ID %d' % notification.connection_id)
+                Server.log('Notification: unknown connection ID %d' % notification.connection_id)
             else:
                 await connection_handler.write_message(json.dumps(notification.to_dict()))
-                print('[server] To %d: %s' % (notification.connection_id, notification))
+                Server.log('To %d: %s' % (notification.connection_id, notification))
         else:
             sending = []
             for connection_id, connection_handler in self._connections():
@@ -121,18 +125,18 @@ class Server(ConnectionManager):
                 future_sending = connection_handler.write_message(json.dumps(notification_dict))
                 sending.append(future_sending)
             await multi(sending)
-            print('[server] To everyone: %s' % notification.name)
+            Server.log('To everyone: %s' % notification.name)
 
     async def _producer(self):
         """ IO loop callback: consume notifications and send it. """
-        print('[server] Waiting notifications.')
+        Server.log('Waiting notifications.')
         while True:
             # todo
             notification = await self.__notifications.get()
             try:
                 await self._send_notification(notification)
             except WebSocketClosedError:
-                print('[server] Websocket was closed while sending a notification.')
+                Server.log('Websocket was closed while sending a notification.')
             finally:
                 self.__notifications.task_done()
 
@@ -192,8 +196,8 @@ class Server(ConnectionManager):
         self.__io_loop = io_loop
         self.__port = port
         self._set_tasks(io_loop)
-        print('[server] Ping: %d' % self.ping_seconds)
-        print('[server] Port: %d' % self.__port)
+        Server.log('Ping: %d' % self.ping_seconds)
+        Server.log('Port: %d' % self.__port)
         io_loop.start()
 
     def notify(self, notification):
