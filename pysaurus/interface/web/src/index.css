@@ -5,6 +5,8 @@ body {
     sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+	font-family: "Trebuchet MS", Helvetica, sans-serif;
+	font-size: 0.8em;
 }
 
 code {
@@ -85,9 +87,16 @@ header {
     background-color: rgb(240, 240, 240);
 }
 
+.page-forms button, .main-button {
+	font-weight: bold;
+}
+
+.page-forms .video-filename {
+	font-size: 1rem;
+	text-align: center;
+}
 
 #video-image {
-    max-width: 300px;
     margin: auto;
     background-position: center center;
     background-repeat: no-repeat;
@@ -100,3 +109,4 @@ header {
     display: block;
     content: '';
 }
+

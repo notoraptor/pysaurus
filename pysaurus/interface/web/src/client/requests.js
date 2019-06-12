@@ -42,4 +42,8 @@ export class Request {
 	static image(video_id) {
 		return createRequest('image', {video_id});
 	}
+
+	static open(video_id) {
+		return createRequest('open', {video_id});
+	}
 }

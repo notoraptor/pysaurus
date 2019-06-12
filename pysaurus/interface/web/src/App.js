@@ -20,6 +20,11 @@ const DatabaseStatus = {
 
 const UNICODE_BOTTOM_ARROW = '\u25BC';
 const UNICODE_TOP_ARROW = '\u25B2';
+const UNICODE_LEFT_ARROW = '\u25C0';
+const UNICODE_RIGHT_ARROW = '\u25B6';
+
+const PAGE_SIZES = [10, 20, 50, 100];
+const DEFAULT_PAGE_SIZE = 100;
 
 const TABLE_FIELDS = [
 	'name',
@@ -60,7 +65,8 @@ export class App extends React.Component {
 			size: '',
 			duration: '',
 			currentPage: 0,
-			pageSize: 100,
+			selectedPage: 0,
+			pageSize: DEFAULT_PAGE_SIZE,
 			field: 'filename',
 			reverse: false,
 			videos: [],
@@ -76,29 +82,34 @@ export class App extends React.Component {
 		this.nextPage = this.nextPage.bind(this);
 		this.onChangePageSize = this.onChangePageSize.bind(this);
 		this.onChangeCurrentPage = this.onChangeCurrentPage.bind(this);
+		this.changePage = this.changePage.bind(this);
+		this.openSelectedVideo = this.openSelectedVideo.bind(this);
 	}
 
 	loadDatabaseInfo() {
 		if (this.state.status !== DatabaseStatus.DB_LOADED)
 			return;
-		this.connection.send(Request.database_info(this.state.pageSize))
-			.then(databaseInfo => this.setState(databaseInfo))
-			.then(() => this.loadVideos());
+		this.setState({status: DatabaseStatus.VIDEOS_LOADING}, () => {
+			this.connection.send(Request.database_info(this.state.pageSize))
+				.then(databaseInfo => this.setState(databaseInfo))
+				.then(() => this.loadVideos(false));
+		});
 	}
 
-	loadVideos() {
-		if (![DatabaseStatus.DB_LOADED, DatabaseStatus.VIDEOS_LOADED].includes(this.state.status))
+	loadVideos(checkStatus) {
+		if (checkStatus && ![DatabaseStatus.DB_LOADED, DatabaseStatus.VIDEOS_LOADED].includes(this.state.status))
 			return;
-		this.setState({status: DatabaseStatus.VIDEOS_LOADING});
-		this.connection.send(Request.list(
-			this.state.field,
-			this.state.reverse,
-			this.state.pageSize,
-			this.state.currentPage
-		))
-			.then(videos => {
-				this.setState({videos: videos, status: DatabaseStatus.VIDEOS_LOADED})
-			});
+		this.setState({status: DatabaseStatus.VIDEOS_LOADING, selected: -1}, () => {
+			this.connection.send(Request.list(
+				this.state.field,
+				this.state.reverse,
+				this.state.pageSize,
+				this.state.currentPage
+			))
+				.then(videos => {
+					this.setState({videos: videos, status: DatabaseStatus.VIDEOS_LOADED})
+				});
+		});
 	}
 
 	previousPage() {
@@ -118,13 +129,14 @@ export class App extends React.Component {
 	}
 
 	onChangePageSize(event) {
-		let value = event.target.value;
+		let value = parseInt(event.target.value);
 		if (value < 1)
 			value = 1;
 		if (value > this.state.count)
 			value = this.state.count;
 		let nbPages = Math.floor(this.state.count / value) + (this.state.count % value ? 1 : 0);
-		this.setState({pageSize: value, nbPages: nbPages});
+		console.log(`Page size ${value}, ${nbPages} pages, ${this.state.count} video(s).`);
+		this.setState({pageSize: value, nbPages: nbPages}, () => this.loadVideos());
 	}
 
 	onChangeCurrentPage(event) {
@@ -134,7 +146,12 @@ export class App extends React.Component {
 		if (value >= this.state.nbPages) {
 			value = this.state.nbPages - 1;
 		}
-		this.setState({currentPage: value});
+		this.setState({selectedPage: value});
+	}
+
+	changePage(event) {
+		event.preventDefault();
+		this.setState({currentPage: this.state.selectedPage}, () => this.loadVideos());
 	}
 
 	error(message) {
@@ -252,7 +269,7 @@ export class App extends React.Component {
 		}
 		return (
 			<button type="button"
-					className="btn btn-primary"
+					className="btn btn-primary main-button"
 					disabled={disabled}
 					{...(callback ? {onClick: callback} : {})}>
 				{title}
@@ -335,6 +352,22 @@ export class App extends React.Component {
 		}
 	}
 
+	openSelectedVideo() {
+		if (this.state.status !== DatabaseStatus.VIDEOS_LOADED)
+			return;
+		if (this.state.selected < 0 || this.state.selected >= this.state.videos.length)
+			return;
+		const video = this.state.videos[this.state.selected];
+		if (!video)
+			return;
+		this.connection.send(Request.open(video.video_id))
+			.then(() => this.success(`Video opened! ${video.filename}`))
+			.catch(error => {
+				console.log(error);
+				this.error(`Unable to open video ${video.filename}`);
+			})
+	}
+
 	renderVideos() {
 		if (this.state.status !== DatabaseStatus.VIDEOS_LOADED)
 			return '';
@@ -397,46 +430,73 @@ export class App extends React.Component {
 								showPagination={false}
 								defaultPageSize={this.state.pageSize}/>
 				</div>
-				<div className="col-md-3 p-3">
-					<div>
-						<form>
-							<div className="form-group row">
-								<label className="col-sm-3 col-form-label" htmlFor="pageSize">Page size</label>
-								<div className="col-sm">
-									<input type="number" id="pageSize"
-										   min={1} max={this.state.count}
-										   onChange={this.onChangePageSize}
-										   className="form-control" value={this.state.pageSize}/>
-								</div>
+				<div className="col-md-3 p-3 page-forms">
+					<form>
+						<div className="form-group row align-items-center">
+							<label className="col-sm-4 col-form-label" htmlFor="pageSize">Page size</label>
+							<div className="col-sm-8">
+								<select className="custom-select custom-select-sm"
+										id="pageSize"
+										value={this.state.pageSize}
+										onChange={this.onChangePageSize}>
+									{PAGE_SIZES.map((value, index) => (
+										<option key={index} value={value}>{value}</option>
+									))}
+								</select>
 							</div>
-							<div className="form-group row">
-								<label className="col-sm-3 col-form-label" htmlFor="currentPage">Page</label>
-								<div className="col-sm">
-									<div className="row">
-										<div className="col">
-											<input type="number" id="currentPage"
-												   min={0} max={this.state.nbPages}
-												   onChange={this.onChangeCurrentPage}
-												   className="form-control" value={this.state.currentPage + 1}/>
-										</div>
-										<div className="col">
-											/ {this.state.nbPages}
-										</div>
-									</div>
-								</div>
+						</div>
+						<div className="form-group row text-center align-items-center">
+							<div className="col-sm-4">
+								<button type="button" disabled={this.state.currentPage === 0}
+										className="btn btn-primary btn-sm btn-block" onClick={this.previousPage}>
+									{UNICODE_LEFT_ARROW}
+								</button>
 							</div>
-							<div className="form-group row text-center">
-								<div className="col">
-									<button type="button" disabled={this.state.currentPage === 0}
-											className="btn btn-primary mx-2" onClick={this.previousPage}>{'<'}</button>
-									<input type="submit" className="btn btn-primary mx-2" value="update"/>
-									<button type="button" disabled={this.state.currentPage === this.state.nbPages - 1}
-											className="btn btn-primary mx-2" onClick={this.nextPage}>{'>'}</button>
-								</div>
+							<div className="col-sm-4">
+								Page {this.state.currentPage + 1} / {this.state.nbPages}
 							</div>
-						</form>
+							<div className="col-sm-4">
+								<button type="button" disabled={this.state.currentPage === this.state.nbPages - 1}
+										className="btn btn-primary btn-sm btn-block" onClick={this.nextPage}>
+									{UNICODE_RIGHT_ARROW}
+								</button>
+							</div>
+						</div>
+					</form>
+					<form onSubmit={this.changePage}>
+						<div className="form-group row align-items-center">
+							<label className="col-sm-4 col-form-label" htmlFor="currentPage">Go to page:</label>
+							<div className="col-sm-4">
+								<input type="number" id="currentPage"
+									   min={0} max={this.state.nbPages}
+									   onChange={this.onChangeCurrentPage}
+									   className="form-control form-control-sm"
+									   value={this.state.selectedPage + 1}/>
+							</div>
+							<div className="col-sm-4">
+								<button type="submit" className="btn btn-primary btn-sm btn-block">GO</button>
+							</div>
+						</div>
+					</form>
+					<div className="row align-items-center video-options mt-4">
+						<div className="col-sm-8">
+							<div id="video-image"/>
+						</div>
+						<div className="col-sm-4">
+							<button className="btn btn-primary btn-sm btn-block"
+									disabled={this.state.selected < 0 || this.state.selected >= this.state.videos.length}
+									onClick={this.openSelectedVideo}>
+								open
+							</button>
+						</div>
 					</div>
-					<div id="video-image"/>
+					<div className="mt-4">
+						<div className="video-filename">
+						{this.state.selected >= 0 && this.state.selected < this.state.videos.length ? (
+							<p><strong>{this.state.videos[this.state.selected].filename}</strong></p>
+						) : ''}
+						</div>
+					</div>
 				</div>
 			</div>
 		);
@@ -456,8 +516,8 @@ export class App extends React.Component {
 						</div>
 						<div className="col-md-9">
 							{this.state.message_type ?
-								<div className={`alert ${this.state.message_type}`}>{this.state.message}</div> :
-								<div className="alert alert-secondary" style={{visibility: 'hidden'}}>&nbsp;</div>
+								<div className={`app-status alert ${this.state.message_type}`}>{this.state.message}</div> :
+								<div className="app-status alert alert-secondary" style={{visibility: 'hidden'}}>&nbsp;</div>
 							}
 						</div>
 					</header>
