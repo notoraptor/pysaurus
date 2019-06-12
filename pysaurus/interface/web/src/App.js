@@ -44,6 +44,14 @@ const TABLE_FIELDS = [
 	'filename'
 ];
 
+class VideoClip {
+	constructor(index, length, url) {
+		this.index = index;
+		this.length = length;
+		this.url = url;
+	}
+}
+
 export class App extends React.Component {
 	constructor(props) {
 		super(props);
@@ -73,7 +81,7 @@ export class App extends React.Component {
 			reverse: false,
 			videos: [],
 			selected: -1,
-			videoURL: null
+			displayVideo: false
 		};
 		this.connect = this.connect.bind(this);
 		this.onConnectionClosed = this.onConnectionClosed.bind(this);
@@ -372,31 +380,91 @@ export class App extends React.Component {
 			})
 	}
 
+	videosAreLoaded() {
+		return this.state.status === DatabaseStatus.VIDEOS_LOADED;
+	}
+
+	hasSelectedVideo() {
+		return this.state.selected >= 0 && this.state.selected < this.state.videos.length;
+	}
+
+	getSelectedVideo() {
+		if (this.state.status === DatabaseStatus.VIDEOS_LOADED
+			&& this.state.selected >= 0
+			&& this.state.selected < this.state.videos.length)
+			return this.state.videos[this.state.selected];
+		return null;
+	}
+
 	openSelectedVideoHere() {
-		if (this.state.status !== DatabaseStatus.VIDEOS_LOADED)
-			return;
-		if (this.state.selected < 0 || this.state.selected >= this.state.videos.length)
-			return;
-		const video = this.state.videos[this.state.selected];
+		const video = this.getSelectedVideo();
 		if (!video)
 			return;
-		if (video.clip64)
-			this.setState({videoURL: video.clip64})
+		if (video.clips)
+			this.setState({displayVideo: true});
 		else {
 			this.connection.send(Request.clip(video.video_id, 0, 10))
 				.then((clipBase64) => {
 					const blob = base64ToBlob(clipBase64);
 					const url = URL.createObjectURL(blob);
-					console.log(url);
-					video.clip64 = url;
-					this.setState({videoURL: url});
-					this.success(`Video opened! ${video.filename}`)
+					console.log(`[${video.video_id}] clip 0: ${url}`);
+					video.clips = [new VideoClip(0, 10, url)];
+					this.success(`Video opened! ${video.filename}`);
+					this.setState({displayVideo: true});
 				})
 				.catch(error => {
 					console.log(error);
 					this.error(`Unable to open video ${video.filename}`);
 				})
 		}
+	}
+
+	renderClips() {
+		if (!this.state.displayVideo)
+			return;
+		const video = this.getSelectedVideo();
+		if (!video || !video.clips)
+			return;
+		const onPlay = (clip) => {
+			const nextIndex = video.clipIndex + 1;
+			this.connection.send(Request.clip(video.video_id, nextIndex, clip.length))
+				.then((clipBase64) => {
+					const blob = base64ToBlob(clipBase64);
+					const url = URL.createObjectURL(blob);
+					console.log(`[${video.video_id}] clip ${nextIndex}: ${url}`);
+					video.clips.push(new VideoClip(nextIndex, clip.length, url));
+				})
+				.catch(error => {
+					console.log(error);
+					this.error(`Unable to load video clip ${nextIndex}: ${video.filename}`);
+				})
+		};
+		const onEnd = (videoID) => {
+			console.log(`Ended clip ${video.clipIndex}`);
+			if (video.clipIndex + 1 >= video.clips.length)
+				return;
+			console.log(`Loading clip ${video.clipIndex + 1}`);
+			const currentVideo = document.getElementById(videoID);
+			if (!currentVideo) {
+				console.log(`No current video`);
+				return;
+			}
+			const nextClip = video.clips[video.clipIndex + 1];
+			++video.clipIndex;
+			currentVideo.src = nextClip.url;
+			currentVideo.load();
+			currentVideo.play();
+		};
+		const firstClip = video.clips[0];
+		console.log('we pass here.');
+		if (!video.hasOwnProperty('clipIndex'))
+			video.clipIndex = 0;
+		return (
+			<video id={`video`}
+				   onPlay={() => onPlay(firstClip)}
+				   onEnded={() => onEnd('video')}
+				   controls={true} src={firstClip.url}/>
+		);
 	}
 
 	renderVideos() {
@@ -482,9 +550,7 @@ export class App extends React.Component {
 						</div>
 					</div>
 					<div className="mt-4">
-						{this.state.videoURL && (
-							<video controls={true} src={this.state.videoURL}/>
-						)}
+						{this.renderClips()}
 					</div>
 				</div>
 			</div>
