@@ -1,15 +1,19 @@
+from PIL import Image
+
 from pysaurus.core.components.absolute_path import AbsolutePath
 from pysaurus.core.components.duration import Duration
 from pysaurus.core.components.file_size import FileSize
 from pysaurus.core.database import path_utils
 from pysaurus.core.utils.classes import StringPrinter, HTMLStripper
 from pysaurus.core.utils.constants import PYTHON_ERROR_THUMBNAIL
+from pysaurus.core.video_clipping import video_clip_to_base64
 from pysaurus.core.video_raptor.structures import VideoInfo
-from PIL import Image
+
 WORK_MODE = 'RGB'
 import base64
 from io import BytesIO
 from pysaurus.core.utils.constants import THUMBNAIL_EXTENSION
+
 
 class Video(object):
     # Currently 14 fields.
@@ -30,7 +34,7 @@ class Video(object):
         # Video class fields
         'filename', 'container_format', 'audio_codec', 'video_codec', 'width', 'height', 'sample_rate', 'bit_rate',
         # special fields
-        'size', 'duration', 'frame_rate', 'name', 'date', 'meta_title', 'file_title'
+        'size', 'duration', 'microseconds', 'frame_rate', 'name', 'date', 'meta_title', 'file_title'
     )
 
     def __init__(self, filename, title='', container_format='', audio_codec='', video_codec='', width=0, height=0,
@@ -106,6 +110,8 @@ class Video(object):
             return self.get_size()
         if field == 'duration':
             return self.get_duration()
+        if field == 'microseconds':
+            return self.get_duration().total_microseconds
         if field == 'frame_rate':
             return self.frame_rate_num / self.frame_rate_den
         if field == 'name':
@@ -125,7 +131,7 @@ class Video(object):
         info.update(extra)
         return info
 
-    def thumbnail_to_html(self, thumb_folder: AbsolutePath):
+    def thumbnail_to_base64(self, thumb_folder: AbsolutePath):
         thumb_path = self.get_thumbnail_path(thumb_folder)
         if not thumb_path.isfile():
             return None
@@ -136,6 +142,14 @@ class Video(object):
         image.save(buffered, format=THUMBNAIL_EXTENSION)
         image_string = base64.b64encode(buffered.getvalue())
         return image_string
+
+    def clip_to_base64(self, index, length):
+        return video_clip_to_base64(
+            path=self.filename.path,
+            clip_index=index,
+            clip_seconds=length,
+            unique_id=self.ensure_thumbnail_name()
+        )
 
     def to_dict(self):
         dct = {self.LONG_TO_MIN[key]: getattr(self, key) for key in self.__fields__}

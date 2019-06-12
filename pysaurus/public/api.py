@@ -49,6 +49,7 @@ class API:
         function_parser.add(self.clear_not_found)
         function_parser.add(self.info, arguments={'video_id': int})
         function_parser.add(self.image, arguments={'video_id': int})
+        function_parser.add(self.clip, arguments={'video_id': int, 'index': int, 'length': int})
         function_parser.add(self.open, arguments={'video_id': int})
         function_parser.add(self.delete, arguments={'video_id': int})
         function_parser.add(self.rename, arguments={'video_id': int, 'new_title': str})
@@ -101,7 +102,11 @@ class API:
     def image(self, video_id):
         # type: (int) -> str
         video = self.__video(video_id)
-        return video.thumbnail_to_html(self.database.folder)
+        return video.thumbnail_to_base64(self.database.folder)
+
+    def clip(self, video_id, index, length):
+        # type: (int, int, int) -> str
+        return self.__video(video_id).clip_to_base64(index, length)
 
     def open(self, video_id):
         # type: (int) -> None

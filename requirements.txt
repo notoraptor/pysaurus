@@ -4,7 +4,7 @@ Pillow
 bcrypt
 tornado>=5.0
 ujson
-
+moviepy
 
 # Seems useful on Ubuntu to correctly use `videoRaptorBatch.so`.
 # librsvg # conda install -c conda-forge librsvg

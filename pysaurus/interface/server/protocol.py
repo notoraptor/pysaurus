@@ -1,7 +1,7 @@
+from itertools import chain
 from typing import Any
 
 from pysaurus.core.utils.functions import to_printable
-from itertools import chain
 
 OK = 'ok'
 ERROR = 'error'

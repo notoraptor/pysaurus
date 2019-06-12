@@ -6,6 +6,7 @@ import {Exceptions} from "./client/exceptions";
 import {Notification} from "./components/notification";
 import ReactTable from 'react-table';
 import 'react-table/react-table.css';
+import {base64ToBlob} from "./utils/base64ToBlob";
 
 const HOSTNAME = 'localhost';
 const PORT = 8432;
@@ -39,6 +40,7 @@ const TABLE_FIELDS = [
 	'frame_rate',
 	'sample_rate',
 	// 'bit_rate',
+	// 'microseconds',
 	'filename'
 ];
 
@@ -71,6 +73,7 @@ export class App extends React.Component {
 			reverse: false,
 			videos: [],
 			selected: -1,
+			videoURL: null
 		};
 		this.connect = this.connect.bind(this);
 		this.onConnectionClosed = this.onConnectionClosed.bind(this);
@@ -84,6 +87,7 @@ export class App extends React.Component {
 		this.onChangeCurrentPage = this.onChangeCurrentPage.bind(this);
 		this.changePage = this.changePage.bind(this);
 		this.openSelectedVideo = this.openSelectedVideo.bind(this);
+		this.openSelectedVideoHere = this.openSelectedVideoHere.bind(this);
 	}
 
 	loadDatabaseInfo() {
@@ -368,6 +372,33 @@ export class App extends React.Component {
 			})
 	}
 
+	openSelectedVideoHere() {
+		if (this.state.status !== DatabaseStatus.VIDEOS_LOADED)
+			return;
+		if (this.state.selected < 0 || this.state.selected >= this.state.videos.length)
+			return;
+		const video = this.state.videos[this.state.selected];
+		if (!video)
+			return;
+		if (video.clip64)
+			this.setState({videoURL: video.clip64})
+		else {
+			this.connection.send(Request.clip(video.video_id, 0, 10))
+				.then((clipBase64) => {
+					const blob = base64ToBlob(clipBase64);
+					const url = URL.createObjectURL(blob);
+					console.log(url);
+					video.clip64 = url;
+					this.setState({videoURL: url});
+					this.success(`Video opened! ${video.filename}`)
+				})
+				.catch(error => {
+					console.log(error);
+					this.error(`Unable to open video ${video.filename}`);
+				})
+		}
+	}
+
 	renderVideos() {
 		if (this.state.status !== DatabaseStatus.VIDEOS_LOADED)
 			return '';
@@ -431,71 +462,29 @@ export class App extends React.Component {
 								defaultPageSize={this.state.pageSize}/>
 				</div>
 				<div className="col-md-3 p-3 page-forms">
-					<form>
-						<div className="form-group row align-items-center">
-							<label className="col-sm-4 col-form-label" htmlFor="pageSize">Page size</label>
-							<div className="col-sm-8">
-								<select className="custom-select custom-select-sm"
-										id="pageSize"
-										value={this.state.pageSize}
-										onChange={this.onChangePageSize}>
-									{PAGE_SIZES.map((value, index) => (
-										<option key={index} value={value}>{value}</option>
-									))}
-								</select>
-							</div>
-						</div>
-						<div className="form-group row text-center align-items-center">
-							<div className="col-sm-4">
-								<button type="button" disabled={this.state.currentPage === 0}
-										className="btn btn-primary btn-sm btn-block" onClick={this.previousPage}>
-									{UNICODE_LEFT_ARROW}
-								</button>
-							</div>
-							<div className="col-sm-4">
-								Page {this.state.currentPage + 1} / {this.state.nbPages}
-							</div>
-							<div className="col-sm-4">
-								<button type="button" disabled={this.state.currentPage === this.state.nbPages - 1}
-										className="btn btn-primary btn-sm btn-block" onClick={this.nextPage}>
-									{UNICODE_RIGHT_ARROW}
-								</button>
-							</div>
-						</div>
-					</form>
-					<form onSubmit={this.changePage}>
-						<div className="form-group row align-items-center">
-							<label className="col-sm-4 col-form-label" htmlFor="currentPage">Go to page:</label>
-							<div className="col-sm-4">
-								<input type="number" id="currentPage"
-									   min={0} max={this.state.nbPages}
-									   onChange={this.onChangeCurrentPage}
-									   className="form-control form-control-sm"
-									   value={this.state.selectedPage + 1}/>
-							</div>
-							<div className="col-sm-4">
-								<button type="submit" className="btn btn-primary btn-sm btn-block">GO</button>
-							</div>
-						</div>
-					</form>
-					<div className="row align-items-center video-options mt-4">
+					<div className="row align-items-center video-options">
 						<div className="col-sm-8">
 							<div id="video-image"/>
 						</div>
 						<div className="col-sm-4">
 							<button className="btn btn-primary btn-sm btn-block"
 									disabled={this.state.selected < 0 || this.state.selected >= this.state.videos.length}
-									onClick={this.openSelectedVideo}>
+									onClick={this.openSelectedVideoHere}>
 								open
 							</button>
 						</div>
 					</div>
 					<div className="mt-4">
 						<div className="video-filename">
-						{this.state.selected >= 0 && this.state.selected < this.state.videos.length ? (
-							<p><strong>{this.state.videos[this.state.selected].filename}</strong></p>
-						) : ''}
+							{this.state.selected >= 0 && this.state.selected < this.state.videos.length ? (
+								<p><strong>{this.state.videos[this.state.selected].filename}</strong></p>
+							) : ''}
 						</div>
+					</div>
+					<div className="mt-4">
+						{this.state.videoURL && (
+							<video controls={true} src={this.state.videoURL}/>
+						)}
 					</div>
 				</div>
 			</div>
@@ -514,11 +503,74 @@ export class App extends React.Component {
 						<div className="col-md-2 text-md-right">
 							{this.mainButton()}
 						</div>
-						<div className="col-md-9">
+						<div className="col-md-2">
 							{this.state.message_type ?
-								<div className={`app-status alert ${this.state.message_type}`}>{this.state.message}</div> :
-								<div className="app-status alert alert-secondary" style={{visibility: 'hidden'}}>&nbsp;</div>
+								(
+									<div className={`app-status alert ${this.state.message_type}`}
+										 title={this.state.message}>
+										{this.state.message}
+									</div>
+								) :
+								<div className="app-status alert alert-secondary"
+									 style={{visibility: 'hidden'}}>&nbsp;</div>
 							}
+						</div>
+						<div className="col-md-4 page-forms">
+							{this.state.status === DatabaseStatus.VIDEOS_LOADED ? (
+								<form>
+									<div className="row align-items-center">
+										<label className="col-sm-2 col-form-label" htmlFor="pageSize">
+											Page size:
+										</label>
+										<div className="col-sm-4">
+											<select className="custom-select custom-select-sm"
+													id="pageSize"
+													value={this.state.pageSize}
+													onChange={this.onChangePageSize}>
+												{PAGE_SIZES.map((value, index) => (
+													<option key={index} value={value}>{value}</option>
+												))}
+											</select>
+										</div>
+										<div className="col-sm-2">
+											<button type="button" disabled={this.state.currentPage === 0}
+													className="btn btn-primary btn-sm btn-block" onClick={this.previousPage}>
+												{UNICODE_LEFT_ARROW}
+											</button>
+										</div>
+										<div className="col-sm-2">
+											{this.state.currentPage + 1} / {this.state.nbPages}
+										</div>
+										<div className="col-sm-2">
+											<button type="button" disabled={this.state.currentPage === this.state.nbPages - 1}
+													className="btn btn-primary btn-sm btn-block" onClick={this.nextPage}>
+												{UNICODE_RIGHT_ARROW}
+											</button>
+										</div>
+									</div>
+								</form>
+							) : ''}
+						</div>
+						<div className="col-md-3 page-forms">
+							{this.state.status === DatabaseStatus.VIDEOS_LOADED ? (
+								<form onSubmit={this.changePage}>
+									<div className="row align-items-center">
+										<label className="col-sm-4 col-form-label" htmlFor="currentPage">
+											Go to page:
+										</label>
+										<div className="col-sm-4">
+											<input type="number" id="currentPage"
+												   min={0} max={this.state.nbPages}
+												   onChange={this.onChangeCurrentPage}
+												   className="form-control form-control-sm"
+												   value={this.state.selectedPage + 1}/>
+										</div>
+										<div className="col-sm-4">
+											<button type="submit" className="btn btn-primary btn-sm btn-block">GO</button>
+										</div>
+									</div>
+								</form>
+							) : ''}
 						</div>
 					</header>
 					<div className="loading row flex-grow-1">
