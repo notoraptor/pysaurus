@@ -143,10 +143,10 @@ class Video(object):
         image_string = base64.b64encode(buffered.getvalue())
         return image_string
 
-    def clip_to_base64(self, index, length):
+    def clip_to_base64(self, start, length):
         return video_clip_to_base64(
             path=self.filename.path,
-            clip_index=index,
+            time_start=start,
             clip_seconds=length,
             unique_id=self.ensure_thumbnail_name()
         )

@@ -47,7 +47,7 @@ export class Request {
 		return createRequest('open', {video_id});
 	}
 
-	static clip(video_id, index, length) {
-		return createRequest('clip', {video_id, index, length});
+	static clip(video_id, start, length) {
+		return createRequest('clip', {video_id, start, length});
 	}
 }

@@ -71,7 +71,6 @@ export class App extends React.Component {
 			thumbnailsToLoad: 0,
 			// videos
 			count: 0,
-			nbPages: 0,
 			size: '',
 			duration: '',
 			currentPage: 0,
@@ -80,8 +79,7 @@ export class App extends React.Component {
 			field: 'filename',
 			reverse: false,
 			videos: [],
-			selected: -1,
-			displayVideo: false
+			video: null,
 		};
 		this.connect = this.connect.bind(this);
 		this.onConnectionClosed = this.onConnectionClosed.bind(this);
@@ -95,7 +93,7 @@ export class App extends React.Component {
 		this.onChangeCurrentPage = this.onChangeCurrentPage.bind(this);
 		this.changePage = this.changePage.bind(this);
 		this.openSelectedVideo = this.openSelectedVideo.bind(this);
-		this.openSelectedVideoHere = this.openSelectedVideoHere.bind(this);
+		this.showSelectedVideoClip = this.showSelectedVideoClip.bind(this);
 	}
 
 	loadDatabaseInfo() {
@@ -111,7 +109,7 @@ export class App extends React.Component {
 	loadVideos(checkStatus) {
 		if (checkStatus && ![DatabaseStatus.DB_LOADED, DatabaseStatus.VIDEOS_LOADED].includes(this.state.status))
 			return;
-		this.setState({status: DatabaseStatus.VIDEOS_LOADING, selected: -1}, () => {
+		this.setState({status: DatabaseStatus.VIDEOS_LOADING, video: null}, () => {
 			this.connection.send(Request.list(
 				this.state.field,
 				this.state.reverse,
@@ -119,7 +117,11 @@ export class App extends React.Component {
 				this.state.currentPage
 			))
 				.then(videos => {
-					this.setState({videos: videos, status: DatabaseStatus.VIDEOS_LOADED})
+					const loadedVideos = videos.map((video, index) => {
+						video.index = index;
+						return video;
+					});
+					this.setState({videos: loadedVideos, status: DatabaseStatus.VIDEOS_LOADED})
 				});
 		});
 	}
@@ -134,10 +136,14 @@ export class App extends React.Component {
 
 	nextPage() {
 		let currentPage = this.state.currentPage;
-		if (currentPage < this.state.nbPages - 1) {
+		if (currentPage < this.getNbPages() - 1) {
 			++currentPage;
 			this.setState({currentPage}, () => this.loadVideos());
 		}
+	}
+
+	getNbPages() {
+		return Math.floor(this.state.count / this.state.pageSize) + (this.state.count % this.state.pageSize ? 1 : 0);
 	}
 
 	onChangePageSize(event) {
@@ -146,17 +152,15 @@ export class App extends React.Component {
 			value = 1;
 		if (value > this.state.count)
 			value = this.state.count;
-		let nbPages = Math.floor(this.state.count / value) + (this.state.count % value ? 1 : 0);
-		console.log(`Page size ${value}, ${nbPages} pages, ${this.state.count} video(s).`);
-		this.setState({pageSize: value, nbPages: nbPages}, () => this.loadVideos());
+		this.setState({pageSize: value}, () => this.loadVideos());
 	}
 
 	onChangeCurrentPage(event) {
 		let value = event.target.value - 1;
 		if (value < 0)
 			value = 0;
-		if (value >= this.state.nbPages) {
-			value = this.state.nbPages - 1;
+		if (value >= this.getNbPages()) {
+			value = this.getNbPages() - 1;
 		}
 		this.setState({selectedPage: value});
 	}
@@ -346,30 +350,21 @@ export class App extends React.Component {
 		});
 	}
 
-	loadVideoImage(video) {
-		if (this.state.status !== DatabaseStatus.VIDEOS_LOADED)
-			return;
-		const element = document.getElementById('video-image');
-		if (!element)
-			return;
-		if (video.image64)
-			element.style.backgroundImage = `url(data:image/png;base64,${video.image64})`;
-		else {
-			this.connection.send(Request.image(video.video_id))
-				.then(image64 => {
-					video.image64 = image64;
-					element.style.backgroundImage = `url(data:image/png;base64,${video.image64})`;
-				})
-				.catch(error => console.error(error));
-		}
+	getVideoKey(video) {
+		return `${video.video_id}-${video.image64 ? 1 : 0}-${video.clip ? 1 : 0}-${video.clipIsLoading ? 1 : 0}`;
+	}
+
+	clone(video) {
+		const copy = Object.assign({}, video);
+		const videos = this.state.videos;
+		videos[video.index] = copy;
+		return copy;
 	}
 
 	openSelectedVideo() {
-		if (this.state.status !== DatabaseStatus.VIDEOS_LOADED)
+		if (!this.state.video)
 			return;
-		if (this.state.selected < 0 || this.state.selected >= this.state.videos.length)
-			return;
-		const video = this.state.videos[this.state.selected];
+		const video = this.state.video;
 		if (!video)
 			return;
 		this.connection.send(Request.open(video.video_id))
@@ -380,91 +375,47 @@ export class App extends React.Component {
 			})
 	}
 
-	videosAreLoaded() {
-		return this.state.status === DatabaseStatus.VIDEOS_LOADED;
-	}
-
-	hasSelectedVideo() {
-		return this.state.selected >= 0 && this.state.selected < this.state.videos.length;
-	}
-
-	getSelectedVideo() {
-		if (this.state.status === DatabaseStatus.VIDEOS_LOADED
-			&& this.state.selected >= 0
-			&& this.state.selected < this.state.videos.length)
-			return this.state.videos[this.state.selected];
-		return null;
-	}
-
-	openSelectedVideoHere() {
-		const video = this.getSelectedVideo();
-		if (!video)
+	loadVideoImage() {
+		if (!this.state.video)
 			return;
-		if (video.clips)
-			this.setState({displayVideo: true});
-		else {
-			this.connection.send(Request.clip(video.video_id, 0, 10))
-				.then((clipBase64) => {
-					const blob = base64ToBlob(clipBase64);
-					const url = URL.createObjectURL(blob);
-					console.log(`[${video.video_id}] clip 0: ${url}`);
-					video.clips = [new VideoClip(0, 10, url)];
-					this.success(`Video opened! ${video.filename}`);
-					this.setState({displayVideo: true});
+		const video = this.state.video;
+		if (!video.image64) {
+			this.connection.send(Request.image(video.video_id))
+				.then(image64 => {
+					video.image64 = image64;
+					this.setState({video: this.clone(video)});
+					this.success(`Image loaded! ${video.filename}`);
 				})
-				.catch(error => {
-					console.log(error);
-					this.error(`Unable to open video ${video.filename}`);
-				})
+				.catch(error => console.error(error));
 		}
 	}
 
-	renderClips() {
-		if (!this.state.displayVideo)
+	showSelectedVideoClip() {
+		if (!this.state.video)
 			return;
-		const video = this.getSelectedVideo();
-		if (!video || !video.clips)
-			return;
-		const onPlay = (clip) => {
-			const nextIndex = video.clipIndex + 1;
-			this.connection.send(Request.clip(video.video_id, nextIndex, clip.length))
+		const video = this.state.video;
+		if (!video.clip) {
+			const clipStart = Math.floor((video.microseconds / 1000000) / 2);
+			const clipLength = 10;
+			video.clipIsLoading = true;
+			this.setState({video: this.clone(video)});
+			this.connection.send(Request.clip(video.video_id, clipStart, clipLength))
 				.then((clipBase64) => {
 					const blob = base64ToBlob(clipBase64);
 					const url = URL.createObjectURL(blob);
-					console.log(`[${video.video_id}] clip ${nextIndex}: ${url}`);
-					video.clips.push(new VideoClip(nextIndex, clip.length, url));
+					video.clip = new VideoClip(clipStart, clipLength, url);
+					this.setState({video: this.clone(video)});
+					this.success(`Clip loaded! ${video.filename}`);
 				})
 				.catch(error => {
 					console.log(error);
-					this.error(`Unable to load video clip ${nextIndex}: ${video.filename}`);
+					this.error(`Unable to load video clip for ${video.filename}`);
 				})
-		};
-		const onEnd = (videoID) => {
-			console.log(`Ended clip ${video.clipIndex}`);
-			if (video.clipIndex + 1 >= video.clips.length)
-				return;
-			console.log(`Loading clip ${video.clipIndex + 1}`);
-			const currentVideo = document.getElementById(videoID);
-			if (!currentVideo) {
-				console.log(`No current video`);
-				return;
-			}
-			const nextClip = video.clips[video.clipIndex + 1];
-			++video.clipIndex;
-			currentVideo.src = nextClip.url;
-			currentVideo.load();
-			currentVideo.play();
-		};
-		const firstClip = video.clips[0];
-		console.log('we pass here.');
-		if (!video.hasOwnProperty('clipIndex'))
-			video.clipIndex = 0;
-		return (
-			<video id={`video`}
-				   onPlay={() => onPlay(firstClip)}
-				   onEnded={() => onEnd('video')}
-				   controls={true} src={firstClip.url}/>
-		);
+				.finally(() => {
+					video.clipIsLoading = false;
+					this.setState({video: this.clone(video)});
+				})
+		}
 	}
 
 	renderVideos() {
@@ -501,7 +452,7 @@ export class App extends React.Component {
 								getTrProps={(state, rowInfo, column, instance) => {
 									let style = {};
 									if (rowInfo) {
-										if (this.state.selected === rowInfo.index) {
+										if (this.state.video && this.state.video.video_id === this.state.videos[rowInfo.index].video_id) {
 											style = {
 												color: 'white',
 												backgroundColor: 'blue',
@@ -519,9 +470,8 @@ export class App extends React.Component {
 										style: style,
 										onClick: (event, callback) => {
 											const index = rowInfo.index;
-											this.setState({selected: (this.state.selected === index ? -1 : index)});
-											this.loadVideoImage(this.state.videos[index]);
-											// console.log(column.id);
+											const video = this.state.videos[index];
+											this.setState({video}, () => this.loadVideoImage());
 										}
 									}
 								}}
@@ -529,30 +479,44 @@ export class App extends React.Component {
 								showPagination={false}
 								defaultPageSize={this.state.pageSize}/>
 				</div>
-				<div className="col-md-3 p-3 page-forms">
-					<div className="row align-items-center video-options">
-						<div className="col-sm-8">
-							<div id="video-image"/>
+				{this.state.video ? (
+					<div className="col-md-3 p-3 page-forms">
+						<div className="row align-items-center video-options">
+							<div className="col-sm-8">
+								<div id="video-image"
+									 {...(this.state.video.image64 ?
+										 {style: {backgroundImage: `url(data:image/png;base64,${this.state.video.image64})`}}
+										 : {})} />
+							</div>
+							<div className="col-sm-4">
+								<button className="btn btn-primary btn-sm btn-block"
+										onClick={this.openSelectedVideo}>
+									open
+								</button>
+								{this.state.video.clip ? ('') : (
+									<button className="btn btn-primary btn-sm btn-block"
+											disabled={this.state.video.clipIsLoading}
+											onClick={this.showSelectedVideoClip}>
+										{this.state.video.clipIsLoading ? 'loading clip ...' : 'show clip'}
+									</button>
+								)}
+							</div>
 						</div>
-						<div className="col-sm-4">
-							<button className="btn btn-primary btn-sm btn-block"
-									disabled={this.state.selected < 0 || this.state.selected >= this.state.videos.length}
-									onClick={this.openSelectedVideoHere}>
-								open
-							</button>
+						<div className="mt-4">
+							<div className="video-filename">
+								<p><strong>{this.state.video.filename}</strong></p>
+							</div>
+						</div>
+						<div className="mt-4">
+							<video id={`video-clip`} controls={true} key={this.state.video.video_id}
+								   {...(this.state.video.clip ? {src: this.state.video.clip.url} : {})} />
 						</div>
 					</div>
-					<div className="mt-4">
-						<div className="video-filename">
-							{this.state.selected >= 0 && this.state.selected < this.state.videos.length ? (
-								<p><strong>{this.state.videos[this.state.selected].filename}</strong></p>
-							) : ''}
-						</div>
+				) : (
+					<div className="col-md-3 p-3 page-forms align-items-center">
+						No video selected!
 					</div>
-					<div className="mt-4">
-						{this.renderClips()}
-					</div>
-				</div>
+				)}
 			</div>
 		);
 	}
@@ -605,10 +569,10 @@ export class App extends React.Component {
 											</button>
 										</div>
 										<div className="col-sm-2">
-											{this.state.currentPage + 1} / {this.state.nbPages}
+											{this.state.currentPage + 1} / {this.getNbPages()}
 										</div>
 										<div className="col-sm-2">
-											<button type="button" disabled={this.state.currentPage === this.state.nbPages - 1}
+											<button type="button" disabled={this.state.currentPage === this.getNbPages() - 1}
 													className="btn btn-primary btn-sm btn-block" onClick={this.nextPage}>
 												{UNICODE_RIGHT_ARROW}
 											</button>
@@ -626,7 +590,7 @@ export class App extends React.Component {
 										</label>
 										<div className="col-sm-4">
 											<input type="number" id="currentPage"
-												   min={0} max={this.state.nbPages}
+												   min={0} max={this.getNbPages()}
 												   onChange={this.onChangeCurrentPage}
 												   className="form-control form-control-sm"
 												   value={this.state.selectedPage + 1}/>
