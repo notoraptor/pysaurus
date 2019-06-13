@@ -114,3 +114,26 @@ video {
     content: '';
 }
 
+.video-list {
+}
+
+.video-list .video-list-row {
+    cursor: default;
+}
+
+.video-list .video-list-entry:nth-child(even) {
+    background-color: rgb(240, 240, 240);
+}
+
+.video-list .video-list-entry:hover {
+    background-color: royalblue;
+    color: white;
+    font-weight: bold;
+}
+
+.video-list .video-list-col {
+    width: 10%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}

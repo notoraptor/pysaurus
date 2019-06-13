@@ -7,6 +7,7 @@ import {Notification} from "./components/notification";
 import ReactTable from 'react-table';
 import 'react-table/react-table.css';
 import {base64ToBlob} from "./utils/base64ToBlob";
+import {VideoList} from "./components/videoList";
 
 const HOSTNAME = 'localhost';
 const PORT = 8432;
@@ -418,9 +419,11 @@ export class App extends React.Component {
 		}
 	}
 
-	renderVideos() {
-		if (this.state.status !== DatabaseStatus.VIDEOS_LOADED)
-			return '';
+	renderVideoList() {
+		return <VideoList videos={this.state.videos} headers={TABLE_FIELDS}/>;
+	}
+
+	renderVideoTable() {
 		const columns = TABLE_FIELDS.map((field, index) => {
 			return {
 				id: field,
@@ -429,55 +432,63 @@ export class App extends React.Component {
 			}
 		});
 		return (
+			<ReactTable columns={columns}
+						data={this.state.videos}
+						getTheadThProps={(state, rowInfo, column, instance) => {
+							return {
+								onClick: (event, callback) => {
+									const field = column.id;
+									let reverse = this.state.reverse;
+									if (this.state.field === field) {
+										reverse = !reverse;
+									} else {
+										reverse = false;
+									}
+									this.setState({field, reverse}, () => this.loadVideos());
+									if (callback)
+										callback();
+								}
+							};
+						}}
+						getTrProps={(state, rowInfo, column, instance) => {
+							let style = {};
+							if (rowInfo) {
+								if (this.state.video && this.state.video.video_id === this.state.videos[rowInfo.index].video_id) {
+									style = {
+										color: 'white',
+										backgroundColor: 'blue',
+										fontWeight: 'bold',
+									};
+								} else {
+									style = {
+										color: 'initial',
+										backgroundColor: 'initial',
+										fontWeight: 'initial',
+									};
+								}
+							}
+							return {
+								style: style,
+								onClick: (event, callback) => {
+									const index = rowInfo.index;
+									const video = this.state.videos[index];
+									this.setState({video}, () => this.loadVideoImage());
+								}
+							}
+						}}
+						sortable={false}
+						showPagination={false}
+						defaultPageSize={this.state.pageSize}/>
+		);
+	}
+
+	renderVideos() {
+		if (this.state.status !== DatabaseStatus.VIDEOS_LOADED)
+			return '';
+		return (
 			<div className="videos row">
 				<div className="col-md-9 table-container">
-					<ReactTable columns={columns}
-								data={this.state.videos}
-								getTheadThProps={(state, rowInfo, column, instance) => {
-									return {
-										onClick: (event, callback) => {
-											const field = column.id;
-											let reverse = this.state.reverse;
-											if (this.state.field === field) {
-												reverse = !reverse;
-											} else {
-												reverse = false;
-											}
-											this.setState({field, reverse}, () => this.loadVideos());
-											if (callback)
-												callback();
-										}
-									};
-								}}
-								getTrProps={(state, rowInfo, column, instance) => {
-									let style = {};
-									if (rowInfo) {
-										if (this.state.video && this.state.video.video_id === this.state.videos[rowInfo.index].video_id) {
-											style = {
-												color: 'white',
-												backgroundColor: 'blue',
-												fontWeight: 'bold',
-											};
-										} else {
-											style = {
-												color: 'initial',
-												backgroundColor: 'initial',
-												fontWeight: 'initial',
-											};
-										}
-									}
-									return {
-										style: style,
-										onClick: (event, callback) => {
-											const index = rowInfo.index;
-											const video = this.state.videos[index];
-											this.setState({video}, () => this.loadVideoImage());
-										}
-									}
-								}}
-								sortable={false}
-								showPagination={false}
-								defaultPageSize={this.state.pageSize}/>
+					{this.renderVideoList()}
 				</div>
 				{this.state.video ? (
 					<div className="col-md-3 p-3 page-forms">
