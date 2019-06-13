@@ -227,7 +227,7 @@ export class App extends React.Component {
 	loadDatabase() {
 		if (this.state.status !== DatabaseStatus.DB_NOT_LOADED)
 			return;
-		this.setState({status: DatabaseStatus.DB_LOADING});
+		this.setState({status: DatabaseStatus.DB_LOADING, notificationCount: 0});
 		this.connection.send(Request.load())
 			.then(databaseStatus => {
 				if (![DatabaseStatus.DB_LOADING, DatabaseStatus.DB_LOADED].includes(databaseStatus))
@@ -350,7 +350,7 @@ export class App extends React.Component {
 		});
 	}
 
-	getVideoKey(video) {
+	static getVideoKey(video) {
 		return `${video.video_id}-${video.image64 ? 1 : 0}-${video.clip ? 1 : 0}-${video.clipIsLoading ? 1 : 0}`;
 	}
 
