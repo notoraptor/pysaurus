@@ -3,8 +3,8 @@ import os
 
 from moviepy.video.io.VideoFileClip import VideoFileClip
 
-from pysaurus.core.utils.classes import Whirlpool
 from pysaurus.core.error import PysaurusError
+from pysaurus.core.utils.classes import Whirlpool
 
 
 class NoClip(PysaurusError):

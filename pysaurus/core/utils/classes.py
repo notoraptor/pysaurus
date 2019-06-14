@@ -1,19 +1,11 @@
 from html.parser import HTMLParser
 from io import StringIO
+from itertools import chain
+from typing import List
 
 import whirlpool
 
-
-class Enumeration:
-    __slots__ = 'values',
-
-    def __init__(self, values):
-        self.values = set(values)
-
-    def __call__(self, value):
-        if value not in self.values:
-            raise ValueError('Invalid value\n\tGot: %s\n\tExpected:%s\n' % (value, self.values))
-        return value
+from pysaurus.core.utils.functions import to_printable
 
 
 class StringPrinter(object):
@@ -105,3 +97,24 @@ class Table:
             else:
                 printer.write()
         return str(printer)
+
+
+class ToDict:
+    __slots__ = []
+
+    def get_name(self):
+        return type(self).__name__
+
+    def get_slots(self):
+        return chain.from_iterable(getattr(cls, '__slots__', []) for cls in type(self).__mro__)
+
+    def to_dict(self, **extra):
+        dct = {field: getattr(self, field) for field in self.get_slots()}
+        if extra:
+            dct.update(extra)
+        return dct
+
+    def __str__(self):
+        return '%s(%s)' % (
+            self.get_name(),
+            ', '.join('%s=%s' % (name, to_printable(getattr(self, name))) for name in sorted(self.__slots__)))

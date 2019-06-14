@@ -1,7 +1,7 @@
 import asyncio
-import threading
 from typing import Optional, Callable
 
+from pysaurus.interface.common.common_functions import launch_thread
 from pysaurus.interface.server.protocol import DataResponse
 from pysaurus.interface.server.protocol import Request, Response
 from pysaurus.interface.server.server import Server
@@ -30,12 +30,6 @@ def load_database(context):
     context.api.export_api(context.function_parser)
     context.set_is_loaded()
     context.collector.notify(core_notifications.ServerDatabaseLoaded())
-
-
-def launch_thread(function, *args, **kwargs):
-    thread = threading.Thread(target=function, args=args, kwargs=kwargs)
-    thread.start()
-    return thread
 
 
 class __RequestManager:

@@ -83,14 +83,6 @@ class API:
         # type: () -> int
         return self.database.valid_length
 
-    def database_info(self, page_size):
-        return {
-            'count': self.nb('valid'),
-            'nbPages': self.nb_pages('valid', page_size),
-            'size': self.database.valid_size,
-            'duration': self.database.valid_length
-        }
-
     def clear_not_found(self):
         # type: () -> None
         self.database.remove_videos_not_found(save=True)
@@ -160,3 +152,15 @@ class API:
         videos = sorted(self.database.valid_videos, key=lambda v: v.get(field), reverse=reverse)
         return [video.info(video_id=self.database.get_video_id(video))
                 for video in videos[(page_size * page_number):(page_size * (page_number + 1))]]
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # Unstable APIs.
+    # ------------------------------------------------------------------------------------------------------------------
+
+    def database_info(self, page_size):
+        return {
+            'count': self.nb('valid'),
+            'nbPages': self.nb_pages('valid', page_size),
+            'size': self.database.valid_size,
+            'duration': self.database.valid_length
+        }

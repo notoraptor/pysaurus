@@ -1,7 +1,6 @@
 import codecs
 import os
 
-from pysaurus.core.utils.classes import Enumeration
 from pysaurus.core.utils.constants import VIDEO_SUPPORTED_EXTENSIONS
 
 
@@ -107,6 +106,17 @@ def package_dir():
 
 
 def enumeration(values):
+    class Enumeration:
+        __slots__ = 'values',
+
+        def __init__(self, values):
+            self.values = set(values)
+
+        def __call__(self, value):
+            if value not in self.values:
+                raise ValueError('Invalid value\n\tGot: %s\n\tExpected:%s\n' % (value, self.values))
+            return value
+
     enum_instance = Enumeration(values)
 
     def enum_parser(value):

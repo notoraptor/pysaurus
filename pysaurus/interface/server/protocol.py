@@ -1,32 +1,12 @@
-from itertools import chain
 from typing import Any
 
-from pysaurus.core.utils.functions import to_printable
+from pysaurus.core.utils.classes import ToDict
 
 OK = 'ok'
 ERROR = 'error'
 DATA = 'data'
 RESPONSE = 'response'
 NOTIFICATION = 'notification'
-
-
-class ToDict:
-    __slots__ = []
-
-    @property
-    def slots(self):
-        return chain.from_iterable(getattr(cls, '__slots__', []) for cls in type(self).__mro__)
-
-    def to_dict(self, **extra):
-        dct = {field: getattr(self, field) for field in self.slots}
-        if extra:
-            dct.update(extra)
-        return dct
-
-    def __str__(self):
-        return '%s(%s)' % (
-            type(self).__name__,
-            ', '.join('%s=%s' % (name, to_printable(getattr(self, name))) for name in sorted(self.__slots__)))
 
 
 class Request(ToDict):
