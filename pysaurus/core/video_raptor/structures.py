@@ -32,6 +32,8 @@ class VideoInfo(Structure):
         ("container_format", c_char_p),
         ("audio_codec", c_char_p),
         ("video_codec", c_char_p),
+        ("audio_codec_description", c_char_p),
+        ("video_codec_description", c_char_p),
         ("width", c_int),
         ("height", c_int),
         ("frame_rate_num", c_int),
@@ -40,7 +42,7 @@ class VideoInfo(Structure):
         ("duration", c_int64),
         ("duration_time_base", c_int64),
         ("size", c_int64),
-        ("bit_rate", c_int64),
+        ("audio_bit_rate", c_int64),
         ("report", VideoReport)
     ]
 

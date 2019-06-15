@@ -133,6 +133,9 @@ class Database(object):
         # type: (Video) -> Optional[int]
         return self.__file_name_to_id.get(video.filename, None)
 
+    def get_video_from_filename(self, filename):
+        return self.__videos.get(AbsolutePath.ensure(filename), None)
+
     def update(self):
         folder_to_files = self.get_videos_paths_from_disk()
         cpu_count = os.cpu_count()
@@ -346,7 +349,7 @@ class Database(object):
                 'unreadable': [{'f': str(file_name), 'e': errors}
                                for file_name, errors in self.__unreadable.items()]
             }
-            json.dump(json_output, output_file, indent=1)
+            json.dump(json_output, output_file)
             self.__notify(notifications.DatabaseSaved(self))
 
     def __get_thumbnails_names_on_disk(self):

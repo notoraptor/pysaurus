@@ -1,7 +1,7 @@
 from html.parser import HTMLParser
 from io import StringIO
 from itertools import chain
-from typing import List
+from typing import List, Any
 
 import whirlpool
 
@@ -82,7 +82,7 @@ class Table:
     __slots__ = ('headers', 'lines')
 
     def __init__(self, headers, lines):
-        # type: (List[str], List[List[str]]) -> None
+        # type: (List[str], List[List[Any]]) -> None
         self.headers = headers
         self.lines = lines
 
@@ -97,6 +97,9 @@ class Table:
             else:
                 printer.write()
         return str(printer)
+
+    def to_json(self):
+        return [self.headers] + self.lines
 
 
 class ToDict:

@@ -17,34 +17,85 @@ from pysaurus.core.utils.constants import THUMBNAIL_EXTENSION
 
 class Video(object):
     # Currently 14 fields.
-    __slots__ = ('filename', 'title', 'container_format', 'audio_codec', 'video_codec', 'width', 'height',
+    __slots__ = ('filename', 'title', 'container_format', 'width', 'height',
+                 'audio_codec', 'video_codec', 'audio_codec_description', 'video_codec_description',
                  'frame_rate_num', 'frame_rate_den', 'sample_rate', 'duration', 'duration_time_base', 'size',
-                 'bit_rate', 'thumb_name', 'errors', 'error_thumbnail')
+                 'audio_bit_rate', 'errors', 'thumb_name', 'error_thumbnail')
 
     __fields__ = __slots__[:-1]
 
+    TABLE_FIELDS = (
+        # basic fields
+        'filename', 'container_format', 'width', 'height',
+        'audio_codec', 'video_codec', 'audio_codec_description', 'video_codec_description',
+        'sample_rate', 'audio_bit_rate', 'errors',
+        # special fields
+        'frame_rate', 'duration_string', 'duration_value', 'size_string', 'size_value', 'date_string', 'date_value',
+        'meta_title', 'file_title', 'extension')
+
+    def to_table_line(self):
+        duration = self.get_duration()
+        date_modified = self.filename.get_date_modified()
+        return [
+            self.filename.path,
+            self.container_format,
+            self.width,
+            self.height,
+            self.audio_codec,
+            self.video_codec,
+            self.audio_codec_description,
+            self.video_codec_description,
+            self.sample_rate,
+            self.audio_bit_rate,
+            self.errors,
+            self.frame_rate_num / self.frame_rate_den,
+            str(duration),
+            duration.total_microseconds,
+            str(self.get_size()),
+            self.size,
+            str(date_modified),
+            date_modified.time,
+            self.title,
+            self.filename.title,
+            self.filename.extension
+        ]
+
     MIN_TO_LONG = {'f': 'filename', 'n': 'title', 'c': 'container_format', 'a': 'audio_codec', 'v': 'video_codec',
+                   'A': 'audio_codec_description', 'V': 'video_codec_description',
                    'w': 'width', 'h': 'height', 'x': 'frame_rate_num', 'y': 'frame_rate_den', 'u': 'sample_rate',
-                   'd': 'duration', 't': 'duration_time_base', 's': 'size', 'r': 'bit_rate',
+                   'd': 'duration', 't': 'duration_time_base', 's': 'size', 'r': 'audio_bit_rate',
                    'i': 'thumb_name', 'e': 'errors'}
 
     LONG_TO_MIN = {_long: _min for _min, _long in MIN_TO_LONG.items()}
 
     PUBLIC_INFO = (
         # Video class fields
-        'filename', 'container_format', 'audio_codec', 'video_codec', 'width', 'height', 'sample_rate', 'bit_rate',
+        'filename', 'container_format', 'audio_codec', 'video_codec', 'width', 'height', 'sample_rate',
+        'audio_bit_rate', 'audio_codec_description', 'video_codec_description',
         # special fields
         'size', 'duration', 'microseconds', 'frame_rate', 'name', 'date', 'meta_title', 'file_title'
     )
 
-    def __init__(self, filename, title='', container_format='', audio_codec='', video_codec='', width=0, height=0,
+    def __init__(self, filename, title='', container_format='', audio_codec='', video_codec='',
+                 audio_codec_description='', video_codec_description='', width=0, height=0,
                  frame_rate_num=0, frame_rate_den=0, sample_rate=0, duration=0, duration_time_base=0, size=0,
-                 bit_rate=0, thumb_name='', errors=()):
+                 audio_bit_rate=0, thumb_name='', errors=()):
         self.filename = AbsolutePath.ensure(filename)
-        self.title = HTMLStripper.strip(title) if title else ''
+        self.title = ''
+        if title:
+            self.title = HTMLStripper.strip(title)
+            strip_again = True
+            while strip_again:
+                strip_again = False
+                for character in ('"', "'"):
+                    if self.title.startswith(character) and self.title.endswith(character):
+                        self.title = self.title.strip(character)
+                        strip_again = True
         self.container_format = container_format or ''
         self.audio_codec = audio_codec or ''
         self.video_codec = video_codec or ''
+        self.audio_codec_description = audio_codec_description or ''
+        self.video_codec_description = video_codec_description or ''
         self.width = width or 0
         self.height = height or 0
         self.frame_rate_num = frame_rate_num or 0
@@ -53,7 +104,7 @@ class Video(object):
         self.duration = duration or 0
         self.duration_time_base = duration_time_base or 1
         self.size = size or 0
-        self.bit_rate = bit_rate or 0
+        self.audio_bit_rate = audio_bit_rate or 0
         self.thumb_name = thumb_name
         self.errors = set(errors)
         self.error_thumbnail = PYTHON_ERROR_THUMBNAIL in self.errors
@@ -63,8 +114,9 @@ class Video(object):
     def __str__(self):
         printer = StringPrinter()
         printer.write('Video:')
-        for field_name in ('filename', 'title', 'container_format', 'audio_codec',
-                           'video_codec', 'width', 'height', 'sample_rate', 'bit_rate'):
+        for field_name in ('filename', 'title', 'container_format',
+                           'audio_codec', 'video_codec', 'audio_codec_description', 'video_codec_description',
+                           'width', 'height', 'sample_rate', 'audio_bit_rate'):
             printer.write('\t%s: %s' % (field_name, getattr(self, field_name)))
         printer.write('\tframe_rate: %s' % (self.frame_rate_num / self.frame_rate_den))
         printer.write('\tduration: %s' % (self.get_duration()))
@@ -169,6 +221,10 @@ class Video(object):
                    container_format=(video_info.container_format.decode() if video_info.container_format else None),
                    audio_codec=(video_info.audio_codec.decode() if video_info.audio_codec else None),
                    video_codec=(video_info.video_codec.decode() if video_info.video_codec else None),
+                   audio_codec_description=(video_info.audio_codec_description.decode()
+                                            if video_info.audio_codec_description else None),
+                   video_codec_description=(video_info.video_codec_description.decode()
+                                            if video_info.video_codec_description else None),
                    width=video_info.width,
                    height=video_info.height,
                    frame_rate_num=video_info.frame_rate_num,
@@ -177,4 +233,4 @@ class Video(object):
                    duration=video_info.duration,
                    duration_time_base=video_info.duration_time_base,
                    size=video_info.size,
-                   bit_rate=video_info.bit_rate)
+                   audio_bit_rate=video_info.audio_bit_rate)

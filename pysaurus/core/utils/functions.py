@@ -9,8 +9,8 @@ def is_valid_video_filename(filename):
     return extension and extension[1:].lower() in VIDEO_SUPPORTED_EXTENSIONS
 
 
-def dispatch_tasks(tasks, job_count, extra_args=None, next_job_id=0):
-    # type: (list, int, list, int) -> list
+def dispatch_tasks(tasks, job_count, extra_args=None):
+    # type: (list, int, list) -> list
     """ Split <tasks> into <job_count> jobs and associate each one
         with an unique job ID starting from <next_job_id>, so that
         each job could assign an unique ID to each of his task by
@@ -18,7 +18,6 @@ def dispatch_tasks(tasks, job_count, extra_args=None, next_job_id=0):
         :param tasks: a list of tasks to split.
         :param job_count: number of jobs.
         :param extra_args: (optional) list
-        :param next_job_id: first job ID to use.
         :return: a list of lists each containing (job, job ID, and extra args if provided).
     """
     if extra_args is None:
@@ -35,8 +34,11 @@ def dispatch_tasks(tasks, job_count, extra_args=None, next_job_id=0):
                          % (task_count, sum(job_lengths)))
     cursor = 0
     jobs = []
+    job_id = 0
+    job_count = len(job_lengths)
     for job_len in job_lengths:
-        jobs.append([tasks[cursor:(cursor + job_len)], next_job_id + cursor] + extra_args)
+        job_id += 1
+        jobs.append([tasks[cursor:(cursor + job_len)], '%d/%d' % (job_id, job_count)] + extra_args)
         cursor += job_len
     # NB: next_job_id is now next_job_id + len(tasks).
     return jobs

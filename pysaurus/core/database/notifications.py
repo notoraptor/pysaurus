@@ -56,7 +56,7 @@ class VideoJob(Notification):
     __slots__ = ['index', 'parsed', 'total']
 
     def __init__(self, job_id, step, total):
-        # type: (int, int, int) -> None
+        # type: (str, int, int) -> None
         self.index = job_id
         self.parsed = step
         self.total = total

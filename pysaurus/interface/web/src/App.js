@@ -4,54 +4,27 @@ import {Request} from "./client/requests";
 import {Helmet} from "react-helmet/es/Helmet";
 import {Exceptions} from "./client/exceptions";
 import {Notification} from "./components/notification";
-import ReactTable from 'react-table';
-import 'react-table/react-table.css';
-import {base64ToBlob} from "./utils/base64ToBlob";
-import {VideoList} from "./components/videoList";
+import {base64ToBlob} from "./core/base64ToBlob";
+import {Utils} from "./core/utils";
+import {Extra, Fields, VideoClip, Videos} from "./core/videos";
+import {VideoPage} from "./components/videoPage";
 
 const HOSTNAME = 'localhost';
 const PORT = 8432;
-
-const DatabaseStatus = {
-	DB_NOT_LOADED: 'DB_NOT_LOADED',
-	DB_LOADING: 'DB_LOADING',
-	DB_LOADED: 'DB_LOADED',
-	VIDEOS_LOADING: 'VIDEOS_LOADING',
-	VIDEOS_LOADED: 'VIDEOS_LOADED'
-};
-
-const UNICODE_BOTTOM_ARROW = '\u25BC';
-const UNICODE_TOP_ARROW = '\u25B2';
-const UNICODE_LEFT_ARROW = '\u25C0';
-const UNICODE_RIGHT_ARROW = '\u25B6';
-
 const PAGE_SIZES = [10, 20, 50, 100];
 const DEFAULT_PAGE_SIZE = 100;
+const DB_LOADING = 'DB_LOADING';
+const DB_LOADED = 'DB_LOADED';
 
-const TABLE_FIELDS = [
-	'name',
-	'date',
-	'width',
-	'height',
-	'size',
-	'duration',
-	'container_format',
-	'audio_codec',
-	'video_codec',
-	'frame_rate',
-	'sample_rate',
-	// 'bit_rate',
-	// 'microseconds',
-	'filename'
-];
-
-class VideoClip {
-	constructor(index, length, url) {
-		this.index = index;
-		this.length = length;
-		this.url = url;
-	}
-}
+const Status = {
+	SERVER_NOT_CONNECTED: 1,
+	SERVER_CONNECTING: 2,
+	DB_NOT_LOADED: 3,
+	DB_LOADING: 4,
+	VIDEO_NOT_LOADED: 5,
+	VIDEOS_LOADING: 6,
+	VIDEOS_LOADED: 7
+};
 
 export class App extends React.Component {
 	constructor(props) {
@@ -63,7 +36,7 @@ export class App extends React.Component {
 			message_type: null,
 			message: null,
 			// status
-			status: ConnectionStatus.NOT_CONNECTED,
+			status: Status.SERVER_NOT_CONNECTED,
 			// notification when loading database
 			notificationCount: 0,
 			notificationTitle: 'loading',
@@ -71,104 +44,28 @@ export class App extends React.Component {
 			videosToLoad: 0,
 			thumbnailsToLoad: 0,
 			// videos
-			count: 0,
-			size: '',
-			duration: '',
-			currentPage: 0,
-			selectedPage: 0,
 			pageSize: DEFAULT_PAGE_SIZE,
-			field: 'filename',
+			currentPage: 0,
+			field: 'name',
 			reverse: false,
-			videos: [],
-			video: null,
+			videos: null,
+			videoIndex: -1,
 		};
 		this.connect = this.connect.bind(this);
 		this.onConnectionClosed = this.onConnectionClosed.bind(this);
 		this.loadDatabase = this.loadDatabase.bind(this);
-		this.loadDatabaseInfo = this.loadDatabaseInfo.bind(this);
 		this.loadVideos = this.loadVideos.bind(this);
 		this.onNotification = this.onNotification.bind(this);
 		this.previousPage = this.previousPage.bind(this);
 		this.nextPage = this.nextPage.bind(this);
 		this.onChangePageSize = this.onChangePageSize.bind(this);
 		this.onChangeCurrentPage = this.onChangeCurrentPage.bind(this);
-		this.changePage = this.changePage.bind(this);
-		this.openSelectedVideo = this.openSelectedVideo.bind(this);
+		this.openFilename = this.openFilename.bind(this);
 		this.showSelectedVideoClip = this.showSelectedVideoClip.bind(this);
 	}
 
-	loadDatabaseInfo() {
-		if (this.state.status !== DatabaseStatus.DB_LOADED)
-			return;
-		this.setState({status: DatabaseStatus.VIDEOS_LOADING}, () => {
-			this.connection.send(Request.database_info(this.state.pageSize))
-				.then(databaseInfo => this.setState(databaseInfo))
-				.then(() => this.loadVideos(false));
-		});
-	}
-
-	loadVideos(checkStatus) {
-		if (checkStatus && ![DatabaseStatus.DB_LOADED, DatabaseStatus.VIDEOS_LOADED].includes(this.state.status))
-			return;
-		this.setState({status: DatabaseStatus.VIDEOS_LOADING, video: null}, () => {
-			this.connection.send(Request.list(
-				this.state.field,
-				this.state.reverse,
-				this.state.pageSize,
-				this.state.currentPage
-			))
-				.then(videos => {
-					const loadedVideos = videos.map((video, index) => {
-						video.index = index;
-						return video;
-					});
-					this.setState({videos: loadedVideos, status: DatabaseStatus.VIDEOS_LOADED})
-				});
-		});
-	}
-
-	previousPage() {
-		let currentPage = this.state.currentPage;
-		if (currentPage > 0) {
-			--currentPage;
-			this.setState({currentPage}, () => this.loadVideos());
-		}
-	}
-
-	nextPage() {
-		let currentPage = this.state.currentPage;
-		if (currentPage < this.getNbPages() - 1) {
-			++currentPage;
-			this.setState({currentPage}, () => this.loadVideos());
-		}
-	}
-
-	getNbPages() {
-		return Math.floor(this.state.count / this.state.pageSize) + (this.state.count % this.state.pageSize ? 1 : 0);
-	}
-
-	onChangePageSize(event) {
-		let value = parseInt(event.target.value);
-		if (value < 1)
-			value = 1;
-		if (value > this.state.count)
-			value = this.state.count;
-		this.setState({pageSize: value}, () => this.loadVideos());
-	}
-
-	onChangeCurrentPage(event) {
-		let value = event.target.value - 1;
-		if (value < 0)
-			value = 0;
-		if (value >= this.getNbPages()) {
-			value = this.getNbPages() - 1;
-		}
-		this.setState({selectedPage: value});
-	}
-
-	changePage(event) {
-		event.preventDefault();
-		this.setState({currentPage: this.state.selectedPage}, () => this.loadVideos());
+	static getVideoKey(video) {
+		return `${video.video_id}-${video.image64 ? 1 : 0}-${video.clip ? 1 : 0}-${video.clipIsLoading ? 1 : 0}`;
 	}
 
 	error(message) {
@@ -187,97 +84,36 @@ export class App extends React.Component {
 		this.setState({message_type: null, message: null});
 	}
 
-	connect() {
-		let toConnect = true;
-		if (this.connection) {
-			if (this.connection.status === ConnectionStatus.CONNECTING) {
-				toConnect = false;
-				this.info('We are connecting to server.')
-			} else if (this.connection.status === ConnectionStatus.CONNECTED) {
-				toConnect = false;
-				this.info('Already connected!')
-			}
-		}
-		if (!toConnect)
-			return;
-		this.setState({status: ConnectionStatus.CONNECTING});
-		if (this.connection)
-			this.connection.reset();
-		else {
-			this.connection = new Connection(HOSTNAME, PORT);
-			this.connection.onClose = this.onConnectionClosed;
-			this.connection.onNotification = this.onNotification;
-		}
-		this.connection.connect()
-			.then(() => {
-				this.setState({status: DatabaseStatus.DB_NOT_LOADED});
-				this.success('Connected!');
-			})
-			.catch((error) => {
-				console.log(error);
-				this.setState({status: ConnectionStatus.NOT_CONNECTED});
-				this.error(`Unable to connect to ${this.connection.getUrl()}`);
-			});
-	}
-
-	onConnectionClosed() {
-		this.setState({status: ConnectionStatus.NOT_CONNECTED});
-		this.error('Connection closed!');
-	}
-
-	loadDatabase() {
-		if (this.state.status !== DatabaseStatus.DB_NOT_LOADED)
-			return;
-		this.setState({status: DatabaseStatus.DB_LOADING, notificationCount: 0});
-		this.connection.send(Request.load())
-			.then(databaseStatus => {
-				if (![DatabaseStatus.DB_LOADING, DatabaseStatus.DB_LOADED].includes(databaseStatus))
-					throw Exceptions.databaseFailed(`Unknown database status ${databaseStatus}`);
-				this.setState({status: databaseStatus});
-				if (databaseStatus === DatabaseStatus.DB_LOADING)
-					this.info(databaseStatus);
-				else
-					this.success('Database loaded!');
-			})
-			.catch(error => {
-				console.log(error);
-				this.setState({status: DatabaseStatus.DB_NOT_LOADED});
-				this.error(`Error while trying to load database: ${error.type}: ${error.message}`);
-			})
-	}
-
 	mainButton() {
 		let title = '';
 		let callback = null;
 		let disabled = false;
 		switch (this.state.status) {
-			case ConnectionStatus.NOT_CONNECTED:
+			case Status.SERVER_NOT_CONNECTED:
 				title = 'connect';
 				callback = this.connect;
 				break;
-			case ConnectionStatus.CONNECTING:
+			case Status.SERVER_CONNECTING:
 				title = 'connecting ...';
 				disabled = true;
 				break;
-			case ConnectionStatus.CONNECTED:
-				throw new Error('Status CONNECTED should never be used.');
-			case DatabaseStatus.DB_NOT_LOADED:
+			case Status.DB_NOT_LOADED:
 				title = 'load database';
 				callback = this.loadDatabase;
 				break;
-			case DatabaseStatus.DB_LOADING:
+			case Status.DB_LOADING:
 				title = 'loading database ...';
 				disabled = true;
 				break;
-			case DatabaseStatus.DB_LOADED:
+			case Status.VIDEO_NOT_LOADED:
 				title = 'load videos';
-				callback = this.loadDatabaseInfo;
+				callback = this.loadVideos;
 				break;
-			case DatabaseStatus.VIDEOS_LOADING:
+			case Status.VIDEOS_LOADING:
 				title = 'loading videos ...';
 				disabled = true;
 				break;
-			case DatabaseStatus.VIDEOS_LOADED:
+			case Status.VIDEOS_LOADED:
 				title = 'Video(s) loaded!';
 				disabled = true;
 				break;
@@ -292,6 +128,72 @@ export class App extends React.Component {
 				{title}
 			</button>
 		);
+	}
+
+	connect() {
+		let toConnect = true;
+		if (this.connection) {
+			if (this.connection.status === ConnectionStatus.CONNECTING) {
+				toConnect = false;
+				this.info('We are connecting to server.')
+			} else if (this.connection.status === ConnectionStatus.CONNECTED) {
+				toConnect = false;
+				this.info('Already connected!')
+			}
+		}
+		if (!toConnect)
+			return;
+		this.setState({status: Status.SERVER_CONNECTING});
+		if (this.connection)
+			this.connection.reset();
+		else {
+			this.connection = new Connection(HOSTNAME, PORT);
+			this.connection.onClose = this.onConnectionClosed;
+			this.connection.onNotification = this.onNotification;
+		}
+		this.connection.connect()
+			.then(() => {
+				this.setState({status: Status.DB_NOT_LOADED});
+				this.success('Connected!');
+			})
+			.catch((error) => {
+				console.log(error);
+				this.setState({status: Status.SERVER_NOT_CONNECTED});
+				this.error(`Unable to connect to ${this.connection.getUrl()}`);
+			});
+	}
+
+	loadDatabase() {
+		this.setState({status: Status.DB_LOADING, notificationCount: 0});
+		this.connection.send(Request.load())
+			.then(databaseStatus => {
+				if (![DB_LOADING, DB_LOADED].includes(databaseStatus))
+					throw Exceptions.databaseFailed(`Unknown database status ${databaseStatus}`);
+				this.setState({
+					status: databaseStatus === DB_LOADING ? Status.DB_LOADING : Status.VIDEO_NOT_LOADED
+				});
+				if (databaseStatus === DB_LOADING)
+					this.info('Loading database ...');
+				else
+					this.success('Database loaded!');
+			})
+			.catch(error => {
+				console.log(error);
+				this.setState({status: Status.DB_NOT_LOADED});
+				this.error(`Error while trying to load database: ${error.type}: ${error.message}`);
+			})
+	}
+
+	//////////
+
+	loadVideos() {
+		this.setState({status: Status.VIDEOS_LOADING, videoIndex: -1}, () => {
+			this.connection.send(Request.videos())
+				.then(table => {
+					const videos = new Videos(table);
+					this.setState({videos: videos, status: Status.VIDEOS_LOADED})
+				});
+		});
 	}
 
 	onNotification(notification) {
@@ -336,7 +238,7 @@ export class App extends React.Component {
 			case 'ServerDatabaseLoaded':
 				title = 'Database loaded!';
 				this.success('Database is loaded!');
-				this.setState({status: DatabaseStatus.DB_LOADED});
+				this.setState({status: Status.VIDEO_NOT_LOADED});
 				break;
 			default:
 				console.log(notification);
@@ -351,8 +253,48 @@ export class App extends React.Component {
 		});
 	}
 
-	static getVideoKey(video) {
-		return `${video.video_id}-${video.image64 ? 1 : 0}-${video.clip ? 1 : 0}-${video.clipIsLoading ? 1 : 0}`;
+	onConnectionClosed() {
+		this.setState({status: Status.SERVER_NOT_CONNECTED});
+		this.error('Connection closed!');
+	}
+
+	onChangePageSize(event) {
+		let pageSize = parseInt(event.target.value);
+		if (pageSize < 1)
+			pageSize = 1;
+		if (pageSize > this.state.videos.size())
+			pageSize = this.state.videos.size();
+		this.setState({pageSize: pageSize, currentPage: 0});
+	}
+
+	previousPage() {
+		let currentPage = this.state.currentPage;
+		if (currentPage > 0) {
+			--currentPage;
+			this.setState({currentPage});
+		}
+	}
+
+	nextPage() {
+		let currentPage = this.state.currentPage;
+		if (currentPage < this.getNbPages() - 1) {
+			++currentPage;
+			this.setState({currentPage});
+		}
+	}
+
+	onChangeCurrentPage(event) {
+		let currentPage = parseInt(event.target.value);
+		if (currentPage < 0)
+			currentPage = 0;
+		if (currentPage >= this.getNbPages())
+			currentPage = this.getNbPages() - 1;
+		console.log(`Selected current page ${currentPage}`);
+		this.setState({currentPage});
+	}
+
+	getNbPages() {
+		return Math.floor(this.state.videos.size() / this.state.pageSize) + (this.state.videos.size() % this.state.pageSize ? 1 : 0);
 	}
 
 	clone(video) {
@@ -362,17 +304,12 @@ export class App extends React.Component {
 		return copy;
 	}
 
-	openSelectedVideo() {
-		if (!this.state.video)
-			return;
-		const video = this.state.video;
-		if (!video)
-			return;
-		this.connection.send(Request.open(video.video_id))
-			.then(() => this.success(`Video opened! ${video.filename}`))
+	openFilename(filename) {
+		this.connection.send(Request.open_filename(filename))
+			.then(() => this.success(`Video opened! ${filename}`))
 			.catch(error => {
 				console.log(error);
-				this.error(`Unable to open video ${video.filename}`);
+				this.error(`Unable to open video ${filename}`);
 			})
 	}
 
@@ -392,144 +329,119 @@ export class App extends React.Component {
 	}
 
 	showSelectedVideoClip() {
-		if (!this.state.video)
-			return;
-		const video = this.state.video;
-		if (!video.clip) {
-			const clipStart = Math.floor((video.microseconds / 1000000) / 2);
+		const index = this.state.videoIndex;
+		if (!this.state.videos.getExtra(index, Extra.clip)) {
+			const clipStart = Math.floor((this.state.videos.get(index, Fields.duration_value) / 1000000) / 2);
 			const clipLength = 10;
-			video.clipIsLoading = true;
-			this.setState({video: this.clone(video)});
-			this.connection.send(Request.clip(video.video_id, clipStart, clipLength))
+			const filename = this.state.videos.get(index, Fields.filename);
+			this.state.videos.setExtra(index, Extra.clipIsLoading, true);
+			this.connection.send(Request.clip_filename(filename, clipStart, clipLength))
 				.then((clipBase64) => {
 					const blob = base64ToBlob(clipBase64);
 					const url = URL.createObjectURL(blob);
-					video.clip = new VideoClip(clipStart, clipLength, url);
-					this.setState({video: this.clone(video)});
-					this.success(`Clip loaded! ${video.filename}`);
+					this.state.videos.setExtra(index, Extra.clip, new VideoClip(clipStart, clipLength, url));
+					this.success(`Clip loaded! ${filename}`);
 				})
 				.catch(error => {
 					console.log(error);
-					this.error(`Unable to load video clip for ${video.filename}`);
+					this.error(`Unable to load video clip for ${filename}`);
 				})
 				.finally(() => {
-					video.clipIsLoading = false;
-					this.setState({video: this.clone(video)});
+					this.state.videos.setExtra(index, Extra.clipIsLoading, false);
 				})
 		}
 	}
 
-	renderVideoList() {
-		return <VideoList videos={this.state.videos} headers={TABLE_FIELDS}/>;
-	}
-
-	renderVideoTable() {
-		const columns = TABLE_FIELDS.map((field, index) => {
-			return {
-				id: field,
-				Header: this.state.field === field ? (`${field} ${this.state.reverse ? UNICODE_BOTTOM_ARROW : UNICODE_TOP_ARROW}`) : (field),
-				accessor: field
-			}
-		});
-		return (
-			<ReactTable columns={columns}
-						data={this.state.videos}
-						getTheadThProps={(state, rowInfo, column, instance) => {
-							return {
-								onClick: (event, callback) => {
-									const field = column.id;
-									let reverse = this.state.reverse;
-									if (this.state.field === field) {
-										reverse = !reverse;
-									} else {
-										reverse = false;
-									}
-									this.setState({field, reverse}, () => this.loadVideos());
-									if (callback)
-										callback();
-								}
-							};
-						}}
-						getTrProps={(state, rowInfo, column, instance) => {
-							let style = {};
-							if (rowInfo) {
-								if (this.state.video && this.state.video.video_id === this.state.videos[rowInfo.index].video_id) {
-									style = {
-										color: 'white',
-										backgroundColor: 'blue',
-										fontWeight: 'bold',
-									};
-								} else {
-									style = {
-										color: 'initial',
-										backgroundColor: 'initial',
-										fontWeight: 'initial',
-									};
-								}
-							}
-							return {
-								style: style,
-								onClick: (event, callback) => {
-									const index = rowInfo.index;
-									const video = this.state.videos[index];
-									this.setState({video}, () => this.loadVideoImage());
-								}
-							}
-						}}
-						sortable={false}
-						showPagination={false}
-						defaultPageSize={this.state.pageSize}/>
-		);
-	}
-
 	renderVideos() {
-		if (this.state.status !== DatabaseStatus.VIDEOS_LOADED)
-			return '';
+		const index = this.state.videoIndex;
+		const hasIndex = index >= 0;
+		const filename = hasIndex ? this.state.videos.get(index, Fields.filename) : null;
+		const image64 = hasIndex ? this.state.videos.getExtra(index, Extra.image64) : null;
+		const clip = hasIndex ? this.state.videos.getExtra(index, Extra.clip) : null;
+		const clipIsLoading = hasIndex ? this.state.videos.getExtra(index, Extra.clipIsLoading) : null;
 		return (
 			<div className="videos row">
-				<div className="col-md-9 table-container">
-					{this.renderVideoList()}
+				<div className="col-md-9 videos-wrapper">
+					<VideoPage videos={this.state.videos}
+							   field={this.state.field}
+							   reverse={this.state.reverse}
+							   currentPage={this.state.currentPage}
+							   pageSize={this.state.pageSize}
+							   videoIndex={this.state.videoIndex}/>
 				</div>
-				{this.state.video ? (
-					<div className="col-md-3 p-3 page-forms">
+				{hasIndex ? (
+					<div className="col-md-3 p-3">
 						<div className="row align-items-center video-options">
 							<div className="col-sm-8">
 								<div id="video-image"
-									 {...(this.state.video.image64 ?
-										 {style: {backgroundImage: `url(data:image/png;base64,${this.state.video.image64})`}}
+									 {...(image64 ?
+										 {style: {backgroundImage: `url(data:image/png;base64,${image64})`}}
 										 : {})} />
 							</div>
 							<div className="col-sm-4">
 								<button className="btn btn-primary btn-sm btn-block"
-										onClick={this.openSelectedVideo}>
+										onClick={() => this.openFilename(filename)}>
 									open
 								</button>
-								{this.state.video.clip ? ('') : (
+								{clip ? ('') : (
 									<button className="btn btn-primary btn-sm btn-block"
-											disabled={this.state.video.clipIsLoading}
+											disabled={clipIsLoading}
 											onClick={this.showSelectedVideoClip}>
-										{this.state.video.clipIsLoading ? 'loading clip ...' : 'show clip'}
+										{clipIsLoading ? 'loading clip ...' : 'show clip'}
 									</button>
 								)}
 							</div>
 						</div>
 						<div className="mt-4">
-							<div className="video-filename">
-								<p><strong>{this.state.video.filename}</strong></p>
-							</div>
-						</div>
-						<div className="mt-4">
-							<video id={`video-clip`} controls={true} key={this.state.video.video_id}
-								   {...(this.state.video.clip ? {src: this.state.video.clip.url} : {})} />
+							<video id={`video-clip`} controls={true} {...(clip ? {src: clip.url} : {})} />
 						</div>
 					</div>
 				) : (
-					<div className="col-md-3 p-3 page-forms align-items-center">
+					<div className="col-md-3 p-3 text-center align-self-center">
 						No video selected!
 					</div>
 				)}
 			</div>
 		);
+	}
+
+	pageForm() {
+		return (
+			<div className="page-forms">
+				<form className="form-inline">
+					<label className="sr-only" htmlFor="pageSize">page size</label>
+					<select className="custom-select custom-select-sm mx-1"
+							id="pageSize"
+							value={this.state.pageSize}
+							onChange={this.onChangePageSize}>
+						{PAGE_SIZES.map((value, index) => (
+							<option key={index} value={value}>{value} per page</option>
+						))}
+					</select>
+					<button type="button" disabled={this.state.currentPage === 0}
+							className="btn btn-primary btn-sm mx-1" onClick={this.previousPage}>
+						{Utils.UNICODE_LEFT_ARROW}
+					</button>
+					<label className="sr-only" htmlFor="currentPage">current page</label>
+					<select className="custom-select custom-select-sm mx-1"
+							id="currentPage"
+							value={this.state.currentPage}
+							onChange={this.onChangeCurrentPage}>
+						{(() => {
+							const options = [];
+							const nbPages = this.getNbPages();
+							for (let i = 0; i < nbPages; ++i)
+								options.push(<option key={i} value={i}>{i + 1} / {nbPages}</option>);
+							return options;
+						})()}
+					</select>
+					<button type="button" disabled={this.state.currentPage === this.getNbPages() - 1}
+							className="btn btn-primary btn-sm mx-1" onClick={this.nextPage}>
+						{Utils.UNICODE_RIGHT_ARROW}
+					</button>
+				</form>
+			</div>
+		)
 	}
 
 	render() {
@@ -538,7 +450,7 @@ export class App extends React.Component {
 				<Helmet>
 					<title>Pysaurus!</title>
 				</Helmet>
-				<div className="d-flex flex-column page">
+				<main className="d-flex flex-column">
 					<header className="row align-items-center p-2">
 						<div className="col-md-1"><strong>Pysaurus</strong></div>
 						<div className="col-md-2 text-md-right">
@@ -556,72 +468,21 @@ export class App extends React.Component {
 									 style={{visibility: 'hidden'}}>&nbsp;</div>
 							}
 						</div>
-						<div className="col-md-4 page-forms">
-							{this.state.status === DatabaseStatus.VIDEOS_LOADED ? (
-								<form>
-									<div className="row align-items-center">
-										<label className="col-sm-2 col-form-label" htmlFor="pageSize">
-											Page size:
-										</label>
-										<div className="col-sm-4">
-											<select className="custom-select custom-select-sm"
-													id="pageSize"
-													value={this.state.pageSize}
-													onChange={this.onChangePageSize}>
-												{PAGE_SIZES.map((value, index) => (
-													<option key={index} value={value}>{value}</option>
-												))}
-											</select>
-										</div>
-										<div className="col-sm-2">
-											<button type="button" disabled={this.state.currentPage === 0}
-													className="btn btn-primary btn-sm btn-block" onClick={this.previousPage}>
-												{UNICODE_LEFT_ARROW}
-											</button>
-										</div>
-										<div className="col-sm-2">
-											{this.state.currentPage + 1} / {this.getNbPages()}
-										</div>
-										<div className="col-sm-2">
-											<button type="button" disabled={this.state.currentPage === this.getNbPages() - 1}
-													className="btn btn-primary btn-sm btn-block" onClick={this.nextPage}>
-												{UNICODE_RIGHT_ARROW}
-											</button>
-										</div>
-									</div>
-								</form>
-							) : ''}
-						</div>
-						<div className="col-md-3 page-forms">
-							{this.state.status === DatabaseStatus.VIDEOS_LOADED ? (
-								<form onSubmit={this.changePage}>
-									<div className="row align-items-center">
-										<label className="col-sm-4 col-form-label" htmlFor="currentPage">
-											Go to page:
-										</label>
-										<div className="col-sm-4">
-											<input type="number" id="currentPage"
-												   min={0} max={this.getNbPages()}
-												   onChange={this.onChangeCurrentPage}
-												   className="form-control form-control-sm"
-												   value={this.state.selectedPage + 1}/>
-										</div>
-										<div className="col-sm-4">
-											<button type="submit" className="btn btn-primary btn-sm btn-block">GO</button>
-										</div>
-									</div>
-								</form>
-							) : ''}
+						<div className="col-md-7">
+							{this.state.status === Status.VIDEOS_LOADED ? this.pageForm() : ''}
 						</div>
 					</header>
 					<div className="loading row flex-grow-1">
-						{this.state.status === DatabaseStatus.DB_LOADING ?
+						{this.state.status === Status.DB_LOADING ?
 							<Notification title={this.state.notificationTitle}
 										  content={this.state.notificationContent}/> :
 							''}
-						{this.renderVideos()}
+						{/*{this.state.status === Status.VIDEOS_LOADED ? `${this.state.videos.size()} videos!` : ''}*/}
+						{this.state.status === Status.VIDEOS_LOADED ? (
+							this.renderVideos()
+						) : ''}
 					</div>
-				</div>
+				</main>
 			</div>
 		);
 	}

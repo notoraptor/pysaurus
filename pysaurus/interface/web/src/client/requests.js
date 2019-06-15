@@ -50,4 +50,16 @@ export class Request {
 	static clip(video_id, start, length) {
 		return createRequest('clip', {video_id, start, length});
 	}
+
+	static open_filename(filename) {
+		return createRequest('open_filename', {filename});
+	}
+
+	static clip_filename(filename, start, length) {
+		return createRequest('clip_filename', {filename, start, length});
+	}
+
+	static videos() {
+		return createRequest('videos');
+	}
 }

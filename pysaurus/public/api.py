@@ -9,6 +9,7 @@ from pysaurus.core.database.video import Video
 from pysaurus.core.function_parsing.function_parser import FunctionParser
 from pysaurus.core.notification import Notifier
 from pysaurus.core.utils import functions as utils
+from pysaurus.core.utils.classes import Table
 from pysaurus.core.utils.functions import bool_type
 from pysaurus.public import api_errors
 
@@ -39,18 +40,25 @@ class API:
             raise api_errors.UnknownVideoID(video_id)
         return video
 
+    def __video_from_filename(self, filename):
+        video = self.database.get_video_from_filename(filename)
+        if not video:
+            raise api_errors.UnknownVideoFilename()
+        return video
+
     def export_api(self, function_parser):
         # type: (FunctionParser) -> None
         function_parser.add(self.nb, arguments={'query': NbType})
         function_parser.add(self.nb_pages, arguments={'query': NbType, 'page_size': int})
         function_parser.add(self.valid_size)
         function_parser.add(self.valid_length)
-        function_parser.add(self.database_info, arguments={'page_size': int})
         function_parser.add(self.clear_not_found)
         function_parser.add(self.info, arguments={'video_id': int})
         function_parser.add(self.image, arguments={'video_id': int})
         function_parser.add(self.clip, arguments={'video_id': int, 'start': int, 'length': int})
+        function_parser.add(self.clip_filename, arguments={'filename': str, 'start': int, 'length': int})
         function_parser.add(self.open, arguments={'video_id': int})
+        function_parser.add(self.open_filename, arguments={'filename': str})
         function_parser.add(self.delete, arguments={'video_id': int})
         function_parser.add(self.rename, arguments={'video_id': int, 'new_title': str})
         function_parser.add(self.same_sizes)
@@ -61,6 +69,22 @@ class API:
             'page_size': int,
             'page_number': int
         })
+        function_parser.add(self.videos)
+        function_parser.add(self.database_info, arguments={'page_size': int})
+
+    def __open(self, video):
+        # type: (Video) -> None
+        platform_commands = {
+            'linux': 'xdg-open',
+            'darwin': 'open'
+        }
+        if sys.platform in platform_commands:
+            open_command = platform_commands[sys.platform]
+            subprocess.run([open_command, video.filename.path])
+        elif sys.platform == 'win32':
+            os.startfile(video.filename.path)
+        else:
+            raise api_errors.UnsupportedOS(sys.platform)
 
     # ------------------------------------------------------------------------------------------------------------------
 
@@ -102,18 +126,15 @@ class API:
 
     def open(self, video_id):
         # type: (int) -> None
-        video = self.__video(video_id)
-        platform_commands = {
-            'linux': 'xdg-open',
-            'darwin': 'open'
-        }
-        if sys.platform in platform_commands:
-            open_command = platform_commands[sys.platform]
-            subprocess.run([open_command, video.filename.path])
-        elif sys.platform == 'win32':
-            os.startfile(video.filename.path)
-        else:
-            raise api_errors.UnsupportedOS(sys.platform)
+        return self.__open(self.__video(video_id))
+
+    def clip_filename(self, filename, start, length):
+        # type: (str, int, int) -> str
+        return self.__video_from_filename(filename).clip_to_base64(start, length)
+
+    def open_filename(self, filename):
+        # type: (str) -> None
+        return self.__open(self.__video_from_filename(filename))
 
     def delete(self, video_id):
         # type: (int) -> int
@@ -152,6 +173,10 @@ class API:
         videos = sorted(self.database.valid_videos, key=lambda v: v.get(field), reverse=reverse)
         return [video.info(video_id=self.database.get_video_id(video))
                 for video in videos[(page_size * page_number):(page_size * (page_number + 1))]]
+
+    def videos(self):
+        # type: () -> Table
+        return Table(headers=Video.TABLE_FIELDS, lines=[video.to_table_line() for video in self.database.valid_videos])
 
     # ------------------------------------------------------------------------------------------------------------------
     # Unstable APIs.

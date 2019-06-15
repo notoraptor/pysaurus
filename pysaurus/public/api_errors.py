@@ -13,6 +13,10 @@ class UnknownVideoID(ApiError):
     pass
 
 
+class UnknownVideoFilename(ApiError):
+    pass
+
+
 class MissingVideoNewTitle(ApiError):
     pass
 
