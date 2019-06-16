@@ -43,6 +43,10 @@ export class Request {
 		return createRequest('image', {video_id});
 	}
 
+	static image_filename(filename) {
+		return createRequest('image_filename', {filename});
+	}
+
 	static open(video_id) {
 		return createRequest('open', {video_id});
 	}
@@ -53,6 +57,14 @@ export class Request {
 
 	static open_filename(filename) {
 		return createRequest('open_filename', {filename});
+	}
+
+	static rename_filename(filename, new_title) {
+		return createRequest('rename_filename', {filename, new_title});
+	}
+
+	static delete_filename(filename) {
+		return createRequest('delete_filename', {filename});
 	}
 
 	static clip_filename(filename, start, length) {

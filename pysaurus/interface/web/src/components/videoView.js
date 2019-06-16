@@ -3,14 +3,29 @@ import PropTypes from "prop-types";
 
 export class VideoView extends React.Component {
 	render() {
-		const {video, isSelected} = this.props;
+		const {video, isSelected, onSelect} = this.props;
 		return (
-			<div className="video-view">
-				<div><strong>{video.name}</strong></div>
-				<div>{video.filename}</div>
-				<div>Fichier {video.extension}. Format: {video.container_format}. Video: {video.video_codec}. Audio: {video.audio_codec} ({video.sample_rate} Hz
-					@ {Math.round(video.audio_bit_rate / 1000)} Kb/s)</div>
-				<div>{video.date_string}, {video.width} X {video.height} pixels @ {video.frame_rate} images/sec, {video.duration_string}, {video.size_string}</div>
+			<div className={`video-view ${isSelected ? 'video-selected' : ''}`}
+				 {...(onSelect ? {onClick: () => onSelect(video.index)} : {})}>
+				<div className="line video-line-name d-flex flex-row">
+					<code className="video-extension">{video.extension.toUpperCase()}</code>
+					<div className="video-name flex-grow-1">{video.name}</div>
+				</div>
+				<div className="line video-line-file d-flex flex-row">
+					<code className="video-date">{video.date_string}</code>
+					<code className="video-filename flex-grow-1">{video.filename}</code>
+				</div>
+				<div className="line video-line-info d-flex flex-row">
+					<code className="value video-dimensions" title="dimensions">{video.width}&middot;{video.height}</code>
+					<code className="value video-frame-rate" title="frame rate">{video.frame_rate} img/s</code>
+					<code className="value video-duration" title="duration">{video.duration_string}</code>
+					<code className="value video-size" title="size">{video.size_string}</code>
+					<code className="value video-format" title="format">{video.container_format}</code>
+					<code className="value video-codec" title="video codec">{video.video_codec}</code>
+					<code className="value audio-codec" title="audio codec">
+						{video.audio_codec || '(none)'}, {video.sample_rate} Hz @ {Math.round(video.audio_bit_rate / 1000)} Kb/s
+					</code>
+				</div>
 			</div>
 		);
 	}
@@ -18,5 +33,6 @@ export class VideoView extends React.Component {
 
 VideoView.propTypes = {
 	video: PropTypes.object.isRequired,
-	isSelected: PropTypes.bool.isRequired
+	isSelected: PropTypes.bool.isRequired,
+	onSelect: PropTypes.func
 };

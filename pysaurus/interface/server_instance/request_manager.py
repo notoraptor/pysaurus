@@ -1,6 +1,8 @@
 import asyncio
 from typing import Optional, Callable
 
+import tornado.concurrent
+
 from pysaurus.interface.common.common_functions import launch_thread
 from pysaurus.interface.server.protocol import DataResponse
 from pysaurus.interface.server.protocol import Request, Response
@@ -32,6 +34,12 @@ def load_database(context):
     context.collector.notify(core_notifications.ServerDatabaseLoaded())
 
 
+def load_clip(future, context, parameters):
+    # type: (tornado.concurrent.Future, ServerContext, dict) -> None
+    result = context.function_parser.call('clip_filename', parameters)
+    future.set_result(result)
+
+
 class __RequestManager:
 
     def load(self, server, request):
@@ -42,17 +50,25 @@ class __RequestManager:
             launch_thread(load_database, context)
         return DataResponse.from_request(request, context.get_loading_status())
 
+    async def clip_filename(self, server, request):
+        # type: (Server, Request) -> Response
+        context = server.context  # type: ServerContext
+        future = tornado.concurrent.Future()
+        launch_thread(load_clip, future, context, request.parameters)
+        result = await future
+        return DataResponse.from_request(request, to_serializable(result))
+
     async def manage_request(self, server, request):
         # type: (Server, Request) -> Optional[Response]
         print('Received', request)
         context = server.context  # type: ServerContext
+        if hasattr(self, request.name) and callable(getattr(self, request.name)):
+            manager = getattr(self, request.name)  # type: ManagerFunction
+            return await asyncio.coroutine(manager)(server, request)
         if context.is_loaded() and context.function_parser.has_name(request.name):
             result = context.function_parser.call(request.name, request.parameters)
             return DataResponse.from_request(request, to_serializable(result))
-        if not hasattr(self, request.name) or not callable(getattr(self, request.name)):
-            return error_responses.ErrroUnknownRequest(request)
-        manager = getattr(self, request.name)  # type: ManagerFunction
-        return await asyncio.coroutine(manager)(server, request)
+        return error_responses.ErrroUnknownRequest(request)
 
 
 REQUEST_MANAGER = __RequestManager()

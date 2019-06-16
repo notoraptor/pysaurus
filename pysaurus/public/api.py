@@ -55,12 +55,15 @@ class API:
         function_parser.add(self.clear_not_found)
         function_parser.add(self.info, arguments={'video_id': int})
         function_parser.add(self.image, arguments={'video_id': int})
+        function_parser.add(self.image_filename, arguments={'filename': str})
         function_parser.add(self.clip, arguments={'video_id': int, 'start': int, 'length': int})
         function_parser.add(self.clip_filename, arguments={'filename': str, 'start': int, 'length': int})
         function_parser.add(self.open, arguments={'video_id': int})
         function_parser.add(self.open_filename, arguments={'filename': str})
         function_parser.add(self.delete, arguments={'video_id': int})
+        function_parser.add(self.delete_filename, arguments={'filename': str})
         function_parser.add(self.rename, arguments={'video_id': int, 'new_title': str})
+        function_parser.add(self.rename_filename, arguments={'filename': str, 'new_title': str})
         function_parser.add(self.same_sizes)
         function_parser.add(self.find, arguments={'terms': str})
         function_parser.add(self.list, arguments={
@@ -120,6 +123,10 @@ class API:
         video = self.__video(video_id)
         return video.thumbnail_to_base64(self.database.folder)
 
+    def image_filename(self, filename):
+        # type: (str) -> str
+        return self.__video_from_filename(filename).thumbnail_to_base64(self.database.folder)
+
     def clip(self, video_id, start, length):
         # type: (int, int, int) -> str
         return self.__video(video_id).clip_to_base64(start, length)
@@ -140,7 +147,13 @@ class API:
         # type: (int) -> int
         video = self.__video(video_id)
         self.database.delete_video(video)
-        return self.database.valid_size
+        return self.database.nb_valid
+
+    def delete_filename(self, filename):
+        # type: (str) -> int
+        video = self.__video_from_filename(filename)
+        self.database.delete_video(video)
+        return self.database.nb_valid
 
     def rename(self, video_id, new_title):
         # type: (int, str) -> int
@@ -150,6 +163,15 @@ class API:
         video = self.__video(video_id)  # type: Video
         self.database.change_video_file_title(video, new_title)
         return self.database.get_video_id(video)
+
+    def rename_filename(self, filename, new_title):
+        # type: (str, str) -> (str, str)
+        if new_title is None or not str(new_title):
+            raise api_errors.MissingVideoNewTitle()
+        new_title = str(new_title)
+        video = self.__video_from_filename(filename)  # type: Video
+        self.database.change_video_file_title(video, new_title)
+        return video.filename.path, video.filename.title
 
     def same_sizes(self):
         # type: () -> Dict[int, List[Video]]

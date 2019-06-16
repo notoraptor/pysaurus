@@ -6,7 +6,6 @@ body {
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 	font-family: "Trebuchet MS", Helvetica, sans-serif;
-	font-size: 0.8em;
 }
 
 code {
@@ -28,15 +27,60 @@ main {
 }
 
 header {
-	background-color: lightblue;
+	background-color: rgb(170, 170, 180);
+	border-bottom: 1px solid rgb(130, 130, 140);
 }
 
-.alert {
-	margin: 0;
+.custom-checkbox .custom-control-input:checked ~ .custom-control-label::before {
+	background-color: black!important;
 }
 
-.loading {
-	position: relative;
+.logo {
+	background-color: chartreuse;
+	border: 4px solid green;
+	width: 2.2rem;
+	height: 2.2rem;
+	border-radius: 1.1rem;
+	font-weight: bold;
+	margin-right: 0.5rem;
+	text-align: center;
+}
+
+.container-fluid button, .container-fluid label {
+	font-weight: bold;
+}
+
+.message {
+	padding: 0.2rem 1rem;
+	font-size: 0.9rem;
+	line-height: 0.9rem;
+	font-weight: bold;
+	border: 1px solid;
+	display: none;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.message.error {
+	display: block;
+	border-color: rgb(150, 100, 100);
+	background-color: rgb(255, 240, 240);
+	color: rgb(150, 100, 100);
+}
+
+.message.info {
+	display: block;
+	border-color: rgb(150, 150, 100);
+	background-color: rgb(255, 255, 240);
+	color: rgb(150, 150, 100);
+}
+
+.message.success {
+	display: block;
+	border-color: rgb(100, 150, 100);
+	background-color: rgb(240, 255, 240);
+	color: rgb(100, 150, 100);
 }
 
 .notification-wrapper {
@@ -61,15 +105,14 @@ header {
 	padding: 0;
 }
 
+.loading {
+	position: relative;
+}
+
 .videos .videos-wrapper {
-	width: 100%;
 	height: 100%;
 	overflow: auto;
 	padding: 0;
-}
-
-.page-forms button, .main-button {
-	font-weight: bold;
 }
 
 #video-image {
@@ -78,14 +121,151 @@ header {
 	background-repeat: no-repeat;
 	background-color: rgb(220, 220, 220);
 	border: 12px solid gray;
-}
-
-video {
-	width: 100%;
+	max-width: 300px;
 }
 
 #video-image:after {
 	padding-top: 100%;
 	display: block;
 	content: '';
+}
+
+.video-view {
+	padding: 0.5rem 1rem;
+	cursor: pointer;
+}
+
+.video-view:nth-child(odd) {
+	background-color: rgb(252, 252, 252);
+}
+
+.video-view:hover {
+	background-color: rgb(220, 220, 225);
+}
+
+.video-view:hover code {
+	background-color: rgb(240, 240, 245);
+}
+
+.video-view.video-selected {
+	background-color: rgb(80, 80, 85);
+	color: white;
+}
+
+.video-view + .video-view {
+	border-top: 1px solid rgb(240, 240, 240);
+}
+
+.video-view.video-selected code {
+	background-color: rgb(220, 220, 220);
+}
+
+.video-view .video-name {
+	font-weight: bold;
+	padding: 0.2rem 1ch;
+}
+
+.video-view code {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	padding: 0.2rem 1ch;
+	border: 1px solid rgb(210, 210, 210);
+	background-color: rgb(250, 250, 250);
+	word-break: keep-all;
+	font-weight: bold;
+	color: black;
+}
+
+.video-view .video-line-name {
+	clear: both;
+}
+
+.video-view code + code {
+	border-left-color: transparent;
+}
+
+.video-view .video-line-info code {
+	border-top-color: transparent;
+}
+
+.video-view .video-date {
+	white-space: nowrap;
+}
+
+.video-view .video-line-name .video-extension {
+	white-space: nowrap;
+	background-color: rgb(50, 50, 50);
+	color: white;
+	width: 6ch;
+	text-align: center;
+}
+
+.video-view .video-line-name .video-extension {
+	border-bottom-color: transparent;
+}
+
+.video-view .video-line-info .label {
+	white-space: nowrap;
+	background-color: rgb(150, 150, 155);
+	color: white;
+	text-align: center;
+	width: 4ch;
+}
+
+.video-view .video-line-info .value {
+	flex-basis: 0;
+	flex-grow: 1;
+	text-align: center;
+}
+
+.video-view .video-line-info .value.video-dimensions {
+	width: 12ch;
+	flex-basis: auto;
+	flex-grow: 0;
+}
+
+.video-view .video-line-info .value.video-frame-rate {
+	width: 11ch;
+	flex-basis: auto;
+	flex-grow: 0;
+}
+
+.video-view .video-line-info .value.video-size {
+	width: 13ch;
+	flex-basis: auto;
+	flex-grow: 0;
+}
+
+.video-view .video-line-info .value.video-codec {
+	width: 12ch;
+	flex-basis: auto;
+	flex-grow: 0;
+}
+
+.react-confirm-alert .confirm {
+	width: 100%;
+	background-color: white;
+	padding: 2rem;
+	border: 1px solid black;
+}
+
+.react-confirm-alert h1 {
+	text-align: center;
+}
+
+.react-confirm-alert .alert-box {
+	text-align: center;
+}
+
+.react-confirm-alert .alert-attention {
+	color: red;
+}
+
+.react-confirm-alert .alert-filename {
+	border: 1px solid gray;
+}
+
+.react-confirm-alert .alert-filename code {
+	color: black;
 }

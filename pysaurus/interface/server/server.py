@@ -32,7 +32,7 @@ from pysaurus.interface.server.connection_handler import ConnectionHandler
 from pysaurus.interface.server.connection_manager import ConnectionManager
 
 DEFAULT_PORT = 8432
-DEFAULT_PING_SECONDS = 30
+DEFAULT_PING_SECONDS = 60
 
 
 class Server(ConnectionManager):

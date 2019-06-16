@@ -20,10 +20,29 @@ export const Fields = {
 	extension: 'extension'
 };
 
+export const Sort = {
+	filename: 'path',
+	container_format: 'format',
+	audio_codec: 'audio codec',
+	video_codec: 'video codec',
+	width: 'width',
+	height: 'height',
+	sample_rate: 'sample rate',
+	audio_bit_rate: 'audio bit rate',
+	frame_rate: 'frame rate',
+	duration_value: 'duration',
+	size_value: 'size',
+	date_value: 'date',
+	meta_title: 'title (meta tag)',
+	file_title: 'title (file name)',
+	extension: 'extension',
+	name: 'title',
+};
+
 export const Extra = {
 	image64: 'image64',
 	clip: 'clip',
-	clipIsLoading: 'clipIsLoading',
+	newName: 'newName'
 };
 
 export class VideoClip {
@@ -56,23 +75,57 @@ export class Videos {
 		reverse = !!reverse;
 		if (this.sortField === field && this.sortReverse === reverse)
 			return;
+
 		this.lines.sort((a, b) => {
 			const valueA = this.getFromLine(a, field);
 			const valueB = this.getFromLine(b, field);
+			let ret = 0;
 			if (valueA < valueB)
-				return -1;
-			if (valueA > valueB)
-				return 1;
-			return 0;
+				ret = -1;
+			else if (valueA > valueB)
+				ret = 1;
+			return reverse ? -ret : ret;
 		});
 		this.sortField = field;
 		this.sortReverse = reverse;
+	}
+
+	remove(index) {
+		if (index >= 0 && index < this.lines.length) {
+			const filename = this.get(index, Fields.filename);
+			if (this.extras.hasOwnProperty(filename))
+				delete this.extras[filename];
+			this.lines.splice(index, 1);
+		}
+	}
+
+	changeFilename(index, newFilename, newFileTitle) {
+		if (index >= 0 && index < this.lines.length) {
+			const filename = this.get(index, Fields.filename);
+			let extra = null;
+			if (this.extras.hasOwnProperty(filename)) {
+				extra = this.extras[filename];
+				delete this.extras[filename];
+				if (extra.hasOwnProperty(Extra.newName))
+					delete extra.newName;
+			}
+			this.lines[index][this.fieldIndex[Fields.filename]] = newFilename;
+			this.lines[index][this.fieldIndex[Fields.file_title]] = newFileTitle;
+			if (extra)
+				this.extras[newFilename] = extra;
+		}
 	}
 
 	get(index, field) {
 		if (field === 'name')
 			return this.getName(index);
 		return this.lines[index][this.fieldIndex[field]];
+	}
+
+	getFromLine(line, field) {
+		if (field === 'name')
+			return this.getNameFromLine(line);
+		return line[this.fieldIndex[field]];
 	}
 
 	getName(index) {
@@ -83,12 +136,6 @@ export class Videos {
 	getNameFromLine(line) {
 		const metaTitle = line[this.fieldIndex[Fields.meta_title]];
 		return metaTitle ? metaTitle : line[this.fieldIndex[Fields.file_title]];
-	}
-
-	getFromLine(line, field) {
-		if (field === 'name')
-			return this.getNameFromLine(line);
-		return line[this.fieldIndex[field]];
 	}
 
 	setExtra(index, field, value) {

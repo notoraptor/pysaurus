@@ -87,7 +87,7 @@ export class Connection {
 	}
 
 	onOpenError(error) {
-		console.log(error);
+		console.error(error);
 		this.status = ConnectionStatus.NOT_CONNECTED;
 		const exception = Exceptions.connectionFailed();
 		this.futureConnection.setException(exception);
@@ -103,14 +103,14 @@ export class Connection {
 		try {
 			const message = JSON.parse(event.data);
 			if (!message.hasOwnProperty('message_type')) {
-				return console.log('Unable to infer received message type.');
+				return console.error('Unable to infer received message type.');
 			}
 			if (message.message_type === 'response') {
 				this.manageResponse(message);
 			} else if (message.message_type === 'notification') {
 				this.manageNotification(message);
 			} else {
-				return console.log(`Unknown message type ${message.message_type}`);
+				return console.error(`Unknown message type ${message.message_type}`);
 			}
 		} catch (error) {
 			console.error(error);

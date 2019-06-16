@@ -18,6 +18,7 @@ export class VideoPage extends React.Component {
 				for (let i = start; i < end; ++i) {
 					views.push(<VideoView key={i - start}
 										  video={videos.getPrintableVideo(i)}
+										  onSelect={this.props.onSelect}
 										  isSelected={i === this.props.videoIndex}/>);
 				}
 				return views;
@@ -33,4 +34,5 @@ VideoPage.propTypes = {
 	currentPage: PropTypes.number.isRequired,
 	pageSize: PropTypes.number.isRequired,
 	videoIndex: PropTypes.number.isRequired,
+	onSelect: PropTypes.func,
 };

@@ -4,10 +4,11 @@ import {Request} from "./client/requests";
 import {Helmet} from "react-helmet/es/Helmet";
 import {Exceptions} from "./client/exceptions";
 import {Notification} from "./components/notification";
-import {base64ToBlob} from "./core/base64ToBlob";
 import {Utils} from "./core/utils";
-import {Extra, Fields, VideoClip, Videos} from "./core/videos";
+import {Extra, Fields, Sort, Videos} from "./core/videos";
 import {VideoPage} from "./components/videoPage";
+import { confirmAlert } from 'react-confirm-alert'; // Import
+import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
 
 const HOSTNAME = 'localhost';
 const PORT = 8432;
@@ -49,7 +50,8 @@ export class App extends React.Component {
 			field: 'name',
 			reverse: false,
 			videos: null,
-			videoIndex: -1,
+			videoIndex: null,
+			newName: ''
 		};
 		this.connect = this.connect.bind(this);
 		this.onConnectionClosed = this.onConnectionClosed.bind(this);
@@ -61,23 +63,45 @@ export class App extends React.Component {
 		this.onChangePageSize = this.onChangePageSize.bind(this);
 		this.onChangeCurrentPage = this.onChangeCurrentPage.bind(this);
 		this.openFilename = this.openFilename.bind(this);
-		this.showSelectedVideoClip = this.showSelectedVideoClip.bind(this);
+		this.onSelectVideo = this.onSelectVideo.bind(this);
+		this.loadVideoImage = this.loadVideoImage.bind(this);
+		this.onChangeSort = this.onChangeSort.bind(this);
+		this.onChangeReverse = this.onChangeReverse.bind(this);
+		this.onChangeNewName = this.onChangeNewName.bind(this);
+		this.changeNewName = this.changeNewName.bind(this);
 	}
 
-	static getVideoKey(video) {
-		return `${video.video_id}-${video.image64 ? 1 : 0}-${video.clip ? 1 : 0}-${video.clipIsLoading ? 1 : 0}`;
+	static getStateNoVideoSelected(otherState) {
+		const state = {
+			videoIndex: null,
+			newName: ''
+		};
+		return otherState ? Object.assign({}, otherState, state) : state;
+	}
+
+	updateSelectedVideo() {
+		if (this.state.videoIndex !== null) {
+			this.setState({videoIndex: -this.state.videoIndex});
+		}
+	}
+
+	getVideoIndex() {
+		let index = this.state.videoIndex;
+		if (index !== null && index < 0)
+			index = -index;
+		return index;
 	}
 
 	error(message) {
-		this.setState({message_type: 'alert-danger', message: message});
+		this.setState({message_type: 'error', message: message});
 	}
 
 	info(message) {
-		this.setState({message_type: 'alert-warning', message: message});
+		this.setState({message_type: 'info', message: message});
 	}
 
 	success(message) {
-		this.setState({message_type: 'alert-success', message: message});
+		this.setState({message_type: 'success', message: message});
 	}
 
 	clearMessage() {
@@ -122,7 +146,7 @@ export class App extends React.Component {
 		}
 		return (
 			<button type="button"
-					className="btn btn-primary main-button"
+					className="btn btn-dark main-button btn-sm"
 					disabled={disabled}
 					{...(callback ? {onClick: callback} : {})}>
 				{title}
@@ -157,7 +181,7 @@ export class App extends React.Component {
 				this.success('Connected!');
 			})
 			.catch((error) => {
-				console.log(error);
+				console.error(error);
 				this.setState({status: Status.SERVER_NOT_CONNECTED});
 				this.error(`Unable to connect to ${this.connection.getUrl()}`);
 			});
@@ -178,7 +202,7 @@ export class App extends React.Component {
 					this.success('Database loaded!');
 			})
 			.catch(error => {
-				console.log(error);
+				console.error(error);
 				this.setState({status: Status.DB_NOT_LOADED});
 				this.error(`Error while trying to load database: ${error.type}: ${error.message}`);
 			})
@@ -187,11 +211,14 @@ export class App extends React.Component {
 	//////////
 
 	loadVideos() {
-		this.setState({status: Status.VIDEOS_LOADING, videoIndex: -1}, () => {
+		this.setState(App.getStateNoVideoSelected({status: Status.VIDEOS_LOADING}), () => {
 			this.connection.send(Request.videos())
 				.then(table => {
 					const videos = new Videos(table);
-					this.setState({videos: videos, status: Status.VIDEOS_LOADED})
+					this.setState({
+						videos: videos, status: Status.VIDEOS_LOADED,
+						message_type: 'success', message: 'Videos loaded!'
+					})
 				});
 		});
 	}
@@ -237,7 +264,7 @@ export class App extends React.Component {
 				break;
 			case 'ServerDatabaseLoaded':
 				title = 'Database loaded!';
-				this.success('Database is loaded!');
+				this.success('Database loaded!');
 				this.setState({status: Status.VIDEO_NOT_LOADED});
 				break;
 			default:
@@ -264,14 +291,15 @@ export class App extends React.Component {
 			pageSize = 1;
 		if (pageSize > this.state.videos.size())
 			pageSize = this.state.videos.size();
-		this.setState({pageSize: pageSize, currentPage: 0});
+		if (pageSize !== this.state.pageSize)
+			this.setState(App.getStateNoVideoSelected({pageSize: pageSize, currentPage: 0}));
 	}
 
 	previousPage() {
 		let currentPage = this.state.currentPage;
 		if (currentPage > 0) {
 			--currentPage;
-			this.setState({currentPage});
+			this.setState(App.getStateNoVideoSelected({currentPage}));
 		}
 	}
 
@@ -279,7 +307,7 @@ export class App extends React.Component {
 		let currentPage = this.state.currentPage;
 		if (currentPage < this.getNbPages() - 1) {
 			++currentPage;
-			this.setState({currentPage});
+			this.setState(App.getStateNoVideoSelected({currentPage}));
 		}
 	}
 
@@ -290,110 +318,193 @@ export class App extends React.Component {
 		if (currentPage >= this.getNbPages())
 			currentPage = this.getNbPages() - 1;
 		console.log(`Selected current page ${currentPage}`);
-		this.setState({currentPage});
+		this.setState(App.getStateNoVideoSelected({currentPage}));
+	}
+
+	onChangeNewName(event) {
+		this.setState({newName: event.target.value});
+	}
+
+	changeNewName() {
+		const index = this.getVideoIndex();
+		const filename = this.state.videos.get(index, Fields.filename);
+		const new_title = this.state.newName;
+		if (new_title !== null && new_title.length) {
+			this.connection.send(Request.rename_filename(filename, new_title))
+				.then(newString => {
+					const newFilename = newString[0];
+					const newFileTitle = newString[1];
+					if (filename !== newFilename) {
+						this.state.videos.changeFilename(index, newFilename, newFileTitle);
+						this.setState(App.getStateNoVideoSelected({
+							message_type: 'success',
+							message: `File renamed to ${newFilename}`
+						}));
+					}
+				})
+				.catch(error => {
+					console.error(error);
+					this.error(`Unable to rename file! ${filename}`);
+				})
+		}
+	}
+
+	onChangeSort(event) {
+		this.setState(App.getStateNoVideoSelected({field: event.target.value, reverse: false}));
+	}
+
+	onChangeReverse(event) {
+		let reverse = event.target.checked;
+		this.setState(App.getStateNoVideoSelected({reverse: reverse}));
+	}
+
+	onSelectVideo(index) {
+		if (index === this.getVideoIndex())
+			this.setState(App.getStateNoVideoSelected());
+		else if (index >= 0 && index < this.state.videos.size()) {
+			this.setState({
+				videoIndex: index,
+				newName: this.state.videos.get(index, Fields.file_title)
+			}, () => {
+				this.loadVideoImage();
+			});
+		}
 	}
 
 	getNbPages() {
 		return Math.floor(this.state.videos.size() / this.state.pageSize) + (this.state.videos.size() % this.state.pageSize ? 1 : 0);
 	}
 
-	clone(video) {
-		const copy = Object.assign({}, video);
-		const videos = this.state.videos;
-		videos[video.index] = copy;
-		return copy;
-	}
-
 	openFilename(filename) {
 		this.connection.send(Request.open_filename(filename))
 			.then(() => this.success(`Video opened! ${filename}`))
 			.catch(error => {
-				console.log(error);
+				console.error(error);
 				this.error(`Unable to open video ${filename}`);
 			})
 	}
 
-	loadVideoImage() {
-		if (!this.state.video)
-			return;
-		const video = this.state.video;
-		if (!video.image64) {
-			this.connection.send(Request.image(video.video_id))
-				.then(image64 => {
-					video.image64 = image64;
-					this.setState({video: this.clone(video)});
-					this.success(`Image loaded! ${video.filename}`);
-				})
-				.catch(error => console.error(error));
-		}
-	}
-
-	showSelectedVideoClip() {
-		const index = this.state.videoIndex;
-		if (!this.state.videos.getExtra(index, Extra.clip)) {
-			const clipStart = Math.floor((this.state.videos.get(index, Fields.duration_value) / 1000000) / 2);
-			const clipLength = 10;
-			const filename = this.state.videos.get(index, Fields.filename);
-			this.state.videos.setExtra(index, Extra.clipIsLoading, true);
-			this.connection.send(Request.clip_filename(filename, clipStart, clipLength))
-				.then((clipBase64) => {
-					const blob = base64ToBlob(clipBase64);
-					const url = URL.createObjectURL(blob);
-					this.state.videos.setExtra(index, Extra.clip, new VideoClip(clipStart, clipLength, url));
-					this.success(`Clip loaded! ${filename}`);
+	deleteVideoFromIndex(index) {
+		const filename = this.state.videos.get(index, Fields.filename);
+		const deleteFn = (onClose) => {
+			this.connection.send(Request.delete_filename(filename))
+				.then(newSize => {
+					if (newSize === this.state.videos.size() - 1) {
+						this.state.videos.remove(index);
+						this.setState(App.getStateNoVideoSelected(
+							{message_type: 'success', message: `Video deleted! ${filename}`}
+						));
+					} else {
+						this.error(`Files does not seem to have been deleted 
+						(${newSize} vs ${this.state.videos.size()}). ${filename}`);
+					}
 				})
 				.catch(error => {
-					console.log(error);
-					this.error(`Unable to load video clip for ${filename}`);
+					console.error(error);
+					this.error(`Error while deleting file ${filename}`);
 				})
-				.finally(() => {
-					this.state.videos.setExtra(index, Extra.clipIsLoading, false);
+				.finally(() => onClose())
+		};
+		confirmAlert({
+			customUI: ({onClose}) => (
+				<div className="confirm">
+					<h1><strong>Deleting a file</strong></h1>
+					<div className="alert-box">
+						<p>Do you really want to delete this file?</p>
+						<p className="alert-attention"><strong>NB: This operation is irreversible!</strong></p>
+						<p className="p-2 alert-filename">
+							<code>{filename}</code>
+						</p>
+					</div>
+					<div className="row">
+						<div className="col-md">
+							<button className="btn btn-danger btn-block" onClick={() => deleteFn(onClose)}>
+								<strong>YES</strong>
+							</button>
+						</div>
+						<div className="col-md">
+							<button className="btn btn-dark btn-block" onClick={onClose}>
+								<strong>NO</strong>
+							</button>
+						</div>
+					</div>
+				</div>
+			)
+		});
+	}
+
+	loadVideoImage() {
+		const index = this.getVideoIndex();
+		if (!this.state.videos.getExtra(index, Extra.image64)) {
+			const filename = this.state.videos.get(index, Fields.filename);
+			this.connection.send(Request.image_filename(filename))
+				.then(image64 => {
+					this.state.videos.setExtra(index, Extra.image64, image64);
+					this.updateSelectedVideo();
 				})
+				.catch(error => {
+					console.error(error);
+					this.error(`Unable to get thumbnail! ${filename}`);
+				});
 		}
 	}
 
 	renderVideos() {
-		const index = this.state.videoIndex;
-		const hasIndex = index >= 0;
+		const index = this.getVideoIndex();
+		const hasIndex = index !== null;
 		const filename = hasIndex ? this.state.videos.get(index, Fields.filename) : null;
 		const image64 = hasIndex ? this.state.videos.getExtra(index, Extra.image64) : null;
-		const clip = hasIndex ? this.state.videos.getExtra(index, Extra.clip) : null;
-		const clipIsLoading = hasIndex ? this.state.videos.getExtra(index, Extra.clipIsLoading) : null;
+		let newName = this.state.newName;
 		return (
 			<div className="videos row">
 				<div className="col-md-9 videos-wrapper">
-					<VideoPage videos={this.state.videos}
+					<VideoPage key={this.state.videos.size()}
+							   videos={this.state.videos}
 							   field={this.state.field}
 							   reverse={this.state.reverse}
 							   currentPage={this.state.currentPage}
 							   pageSize={this.state.pageSize}
-							   videoIndex={this.state.videoIndex}/>
+							   onSelect={this.onSelectVideo}
+							   videoIndex={index === null ? -1 : index}/>
 				</div>
 				{hasIndex ? (
-					<div className="col-md-3 p-3">
-						<div className="row align-items-center video-options">
-							<div className="col-sm-8">
-								<div id="video-image"
-									 {...(image64 ?
-										 {style: {backgroundImage: `url(data:image/png;base64,${image64})`}}
-										 : {})} />
-							</div>
-							<div className="col-sm-4">
-								<button className="btn btn-primary btn-sm btn-block"
-										onClick={() => this.openFilename(filename)}>
-									open
-								</button>
-								{clip ? ('') : (
-									<button className="btn btn-primary btn-sm btn-block"
-											disabled={clipIsLoading}
-											onClick={this.showSelectedVideoClip}>
-										{clipIsLoading ? 'loading clip ...' : 'show clip'}
-									</button>
-								)}
-							</div>
+					<div className="col-md-3 p-3" key={this.state.videoIndex}>
+						<div>
+							<div id="video-image"
+								 {...(image64 ?
+									 {style: {backgroundImage: `url(data:image/png;base64,${image64})`}}
+									 : {})} />
 						</div>
-						<div className="mt-4">
-							<video id={`video-clip`} controls={true} {...(clip ? {src: clip.url} : {})} />
+						<div className="mt-5">
+							<button className="btn btn-success btn-sm btn-block"
+									onClick={() => this.openFilename(filename)}>
+								open
+							</button>
+						</div>
+						<div className="mt-5">
+							<form>
+								<div className="form-group">
+									<label className="sr-only" htmlFor="inputVideoName">rename</label>
+									<input type="text"
+										   className="form-control"
+										   id="inputVideoName"
+										   onChange={this.onChangeNewName}
+										   value={newName}/>
+								</div>
+								<div>
+									<button type="button"
+											className="btn btn-warning btn-sm btn-block"
+											onClick={this.changeNewName}>
+										rename
+									</button>
+								</div>
+							</form>
+						</div>
+						<div className="mt-5">
+							<button className="btn btn-danger btn-sm btn-block"
+									onClick={() => this.deleteVideoFromIndex(index)}>
+								delete
+							</button>
 						</div>
 					</div>
 				) : (
@@ -405,7 +516,7 @@ export class App extends React.Component {
 		);
 	}
 
-	pageForm() {
+	renderTopForm() {
 		return (
 			<div className="page-forms">
 				<form className="form-inline">
@@ -419,7 +530,7 @@ export class App extends React.Component {
 						))}
 					</select>
 					<button type="button" disabled={this.state.currentPage === 0}
-							className="btn btn-primary btn-sm mx-1" onClick={this.previousPage}>
+							className="btn btn-dark btn-sm mx-1" onClick={this.previousPage}>
 						{Utils.UNICODE_LEFT_ARROW}
 					</button>
 					<label className="sr-only" htmlFor="currentPage">current page</label>
@@ -436,9 +547,32 @@ export class App extends React.Component {
 						})()}
 					</select>
 					<button type="button" disabled={this.state.currentPage === this.getNbPages() - 1}
-							className="btn btn-primary btn-sm mx-1" onClick={this.nextPage}>
+							className="btn btn-dark btn-sm mx-1" onClick={this.nextPage}>
 						{Utils.UNICODE_RIGHT_ARROW}
 					</button>
+
+					<label className="mx-1" htmlFor="sortInput">Sort by:</label>
+					<select className="custom-select custom-select-sm mx-1"
+							id="sortInput"
+							value={this.state.field}
+							onChange={this.onChangeSort}>
+						{(() => {
+							const options = [];
+							const entries = Object.entries(Sort);
+							entries.sort((a, b) => a[1].localeCompare(b[1]));
+							for (let i = 0; i < entries.length; ++i) {
+								const field = entries[i][0];
+								const title = entries[i][1];
+								options.push(<option key={i} value={field}>{title}</option>);
+							}
+							return options;
+						})()}
+					</select>
+					<div className="custom-control custom-checkbox mx-1">
+						<input type="checkbox" onChange={this.onChangeReverse}
+							   checked={this.state.reverse} className="custom-control-input" id="reverseInput"/>
+						<label className="custom-control-label" htmlFor="reverseInput">reverse</label>
+					</div>
 				</form>
 			</div>
 		)
@@ -451,36 +585,27 @@ export class App extends React.Component {
 					<title>Pysaurus!</title>
 				</Helmet>
 				<main className="d-flex flex-column">
-					<header className="row align-items-center p-2">
-						<div className="col-md-1"><strong>Pysaurus</strong></div>
-						<div className="col-md-2 text-md-right">
-							{this.mainButton()}
+					<header className="row align-items-center p-1">
+						<div className="col-md-2 p-0">
+							<div className="d-flex">
+							<div className="logo d-flex flex-column justify-content-center">&#120529;s</div>
+							<div className="d-flex flex-column justify-content-center">{this.mainButton()}</div>
+							</div>
+						</div>
+						<div className="col-md-8">
+							{this.state.status === Status.VIDEOS_LOADED ? this.renderTopForm() : ''}
 						</div>
 						<div className="col-md-2">
-							{this.state.message_type ?
-								(
-									<div className={`app-status alert ${this.state.message_type}`}
-										 title={this.state.message}>
-										{this.state.message}
-									</div>
-								) :
-								<div className="app-status alert alert-secondary"
-									 style={{visibility: 'hidden'}}>&nbsp;</div>
-							}
-						</div>
-						<div className="col-md-7">
-							{this.state.status === Status.VIDEOS_LOADED ? this.pageForm() : ''}
+							<div className={`message ${this.state.message_type}`} title={this.state.message}>
+								{this.state.message}
+							</div>
 						</div>
 					</header>
 					<div className="loading row flex-grow-1">
 						{this.state.status === Status.DB_LOADING ?
 							<Notification title={this.state.notificationTitle}
-										  content={this.state.notificationContent}/> :
-							''}
-						{/*{this.state.status === Status.VIDEOS_LOADED ? `${this.state.videos.size()} videos!` : ''}*/}
-						{this.state.status === Status.VIDEOS_LOADED ? (
-							this.renderVideos()
-						) : ''}
+										  content={this.state.notificationContent}/> : ''}
+						{this.state.status === Status.VIDEOS_LOADED ? this.renderVideos() : ''}
 					</div>
 				</main>
 			</div>
