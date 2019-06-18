@@ -9,6 +9,7 @@ export class VideoView extends React.Component {
 				 {...(onSelect ? {onClick: () => onSelect(video.index)} : {})}>
 				<div className="line video-line-name d-flex flex-row">
 					<code className="video-extension">{video.extension.toUpperCase()}</code>
+					<code className="video-quality">{Math.round(video.quality * 100) / 100}</code>
 					<div className="video-name flex-grow-1">{video.name}</div>
 				</div>
 				<div className="line video-line-file d-flex flex-row">

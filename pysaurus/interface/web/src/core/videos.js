@@ -37,21 +37,13 @@ export const Sort = {
 	file_title: 'title (file name)',
 	extension: 'extension',
 	name: 'title',
+	quality: 'quality'
 };
 
 export const Extra = {
 	image64: 'image64',
-	clip: 'clip',
 	newName: 'newName'
 };
-
-export class VideoClip {
-	constructor(index, length, url) {
-		this.index = index;
-		this.length = length;
-		this.url = url;
-	}
-}
 
 export class Videos {
 	constructor(table) {
@@ -65,6 +57,8 @@ export class Videos {
 		}
 		this.sortField = null;
 		this.sortReverse = false;
+		this.get = this.get.bind(this);
+		this.getFromLine = this.getFromLine.bind(this);
 	}
 
 	size() {
@@ -119,12 +113,16 @@ export class Videos {
 	get(index, field) {
 		if (field === 'name')
 			return this.getName(index);
+		if (field === 'quality')
+			return this.getQuality(index);
 		return this.lines[index][this.fieldIndex[field]];
 	}
 
 	getFromLine(line, field) {
 		if (field === 'name')
 			return this.getNameFromLine(line);
+		if (field === 'quality')
+			return this.getQualityFromLine(line);
 		return line[this.fieldIndex[field]];
 	}
 
@@ -133,9 +131,29 @@ export class Videos {
 		return metaTitle ? metaTitle : this.get(index, Fields.file_title);
 	}
 
+	static computeQuality(data, getter) {
+		// !!audio_codec, width, height, !errors.length, frame_rate, duration_value
+		const audioCodecFactor = getter(data, Fields.audio_codec) ? 1 : 0.5;
+		const width = getter(data, Fields.width);
+		const height = getter(data, Fields.height);
+		const errorFactor = getter(data, Fields.errors).length ? 0.25 : 1;
+		const frameRate = getter(data, Fields.frame_rate);
+		const duration = getter(data, Fields.duration_value) / 1000000;
+		const score = audioCodecFactor * width * height * errorFactor * frameRate * duration;
+		return Math.log(score);
+	}
+
+	getQuality(index) {
+		return Videos.computeQuality(index, this.get);
+	}
+
+	getQualityFromLine(line) {
+		return Videos.computeQuality(line, this.getFromLine);
+	}
+
 	getNameFromLine(line) {
-		const metaTitle = line[this.fieldIndex[Fields.meta_title]];
-		return metaTitle ? metaTitle : line[this.fieldIndex[Fields.file_title]];
+		const metaTitle = this.getFromLine(line, Fields.meta_title);
+		return metaTitle ? metaTitle : this.getFromLine(line, Fields.file_title);
 	}
 
 	setExtra(index, field, value) {
@@ -176,6 +194,7 @@ export class Videos {
 		}
 		video.frame_rate = Math.round(video.frame_rate);
 		video.name = this.getName(index);
+		video.quality = this.getQuality(index);
 		video.index = index;
 		return video;
 	}

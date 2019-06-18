@@ -97,6 +97,7 @@ class ThumbnailsToLoad(VideosToLoad):
     pass
 
 
+# Unused, sub-classed,
 class MissingVideos(Notification):
     __slots__ = ['names']
 

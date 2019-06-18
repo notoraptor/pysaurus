@@ -44,6 +44,10 @@ export class App extends React.Component {
 			notificationContent: '...',
 			videosToLoad: 0,
 			thumbnailsToLoad: 0,
+			videosLoaded: 0,
+			thumbnailsLoaded: 0,
+			foldersNotFound: [],
+			pathsIgnored: [],
 			// videos
 			pageSize: DEFAULT_PAGE_SIZE,
 			currentPage: 0,
@@ -75,6 +79,21 @@ export class App extends React.Component {
 		const state = {
 			videoIndex: null,
 			newName: ''
+		};
+		return otherState ? Object.assign({}, otherState, state) : state;
+	}
+
+	static getStateNoNotifications(otherState) {
+		const state = {
+			notificationCount: 0,
+			notificationTitle: 'loading',
+			notificationContent: '...',
+			videosToLoad: 0,
+			thumbnailsToLoad: 0,
+			videosLoaded: 0,
+			thumbnailsLoaded: 0,
+			foldersNotFound: [],
+			pathsIgnored: [],
 		};
 		return otherState ? Object.assign({}, otherState, state) : state;
 	}
@@ -188,7 +207,7 @@ export class App extends React.Component {
 	}
 
 	loadDatabase() {
-		this.setState({status: Status.DB_LOADING, notificationCount: 0});
+		this.setState(App.getStateNoNotifications({status: Status.DB_LOADING}));
 		this.connection.send(Request.load())
 			.then(databaseStatus => {
 				if (![DB_LOADING, DB_LOADED].includes(databaseStatus))
@@ -241,9 +260,22 @@ export class App extends React.Component {
 						<strong>{thumbnails}</strong> with thumbnails.</span>
 				);
 				break;
+			case 'DatabaseSaved':
+				this.info(`Database saved!`);
+				break;
 			case 'CollectingFiles':
 				title = 'Collecting files in';
 				content = notification.parameters.folder;
+				break;
+			case 'FolderNotFound':
+				const foldersNotFound = this.state.foldersNotFound.slice();
+				foldersNotFound.push(notification.parameters.folder);
+				this.setState({foldersNotFound});
+				break;
+			case 'PathIgnored':
+				const pathsIgnored = this.state.pathsIgnored.slice();
+				pathsIgnored.push(notification.parameters.folder);
+				this.setState({pathsIgnored});
 				break;
 			case 'CollectedFiles':
 				title = <span>Collected {notification.parameters.count} file(s).</span>;
@@ -252,12 +284,45 @@ export class App extends React.Component {
 				title = <span>{notification.parameters.total} video(s) to load.</span>;
 				this.setState({videosToLoad: notification.parameters.total});
 				break;
-			case 'UnusedThumbnails':
-				title = <span>Removed {notification.parameters.removed} unused thumbnail(s).</span>;
-				break;
 			case 'ThumbnailsToLoad':
 				title = <span>{notification.parameters.total} thumbnail(s) to load.</span>;
 				this.setState({thumbnailsToLoad: notification.parameters.total});
+				break;
+			case 'VideoJob':
+				const videosLoaded = this.state.videosLoaded + notification.parameters.parsed;
+				title = <span>Loading {videosLoaded}/{this.state.videosToLoad} video(s)</span>;
+				content = (
+					<div className="progress">
+						<div className="progress-bar"
+							 style={{width: `${videosLoaded * 100 / this.state.videosToLoad}%`}}
+							 role="progressbar"
+							 aria-valuenow={videosLoaded}
+							 aria-valuemin="0"
+							 aria-valuemax={this.state.videosToLoad}/>
+					</div>
+				);
+				this.setState({videosLoaded});
+				break;
+			case 'ThumbnailJob':
+				const thumbnailsLoaded = this.state.thumbnailsLoaded + notification.parameters.parsed;
+				title = <span>Generating {thumbnailsLoaded}/{this.state.thumbnailsToLoad} thumbnail(s)</span>;
+				content = (
+					<div className="progress">
+						<div className="progress-bar"
+							 style={{width: `${thumbnailsLoaded * 100 / this.state.thumbnailsToLoad}%`}}
+							 role="progressbar"
+							 aria-valuenow={thumbnailsLoaded}
+							 aria-valuemin="0"
+							 aria-valuemax={this.state.thumbnailsToLoad}/>
+					</div>
+				);
+				this.setState({thumbnailsLoaded});
+				break;
+			case 'VideosLoaded':
+				title = <span>Loaded {notification.parameters.total}/{this.state.videosToLoad} video(s)!</span>;
+				break;
+			case 'UnusedThumbnails':
+				title = <span>Removed {notification.parameters.removed} unused thumbnail(s).</span>;
 				break;
 			case 'MissingThumbnails':
 				title = <span>{notification.parameters.names.length} missing thumbnail(s).</span>;

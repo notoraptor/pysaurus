@@ -89,8 +89,7 @@ export class Connection {
 	onOpenError(error) {
 		console.error(error);
 		this.status = ConnectionStatus.NOT_CONNECTED;
-		const exception = Exceptions.connectionFailed();
-		this.futureConnection.setException(exception);
+		this.futureConnection.setException(Exceptions.connectionFailed());
 	}
 
 	onSocketClose() {
