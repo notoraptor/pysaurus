@@ -285,3 +285,25 @@ header {
 .react-confirm-alert .alert-filename code {
 	color: black;
 }
+
+.context-menu {
+	background-color: white;
+	font-weight: bold;
+	cursor: pointer;
+	border-radius: 0.5rem;
+	border: 1px solid gray;
+}
+
+.menu-item {
+	padding: 0.5rem 1rem;
+	min-width: 10rem;
+}
+
+.menu-item:hover {
+	background-color: rgb(100, 100, 105);
+	color: white;
+}
+
+.menu-item.action-delete {
+	color: red;
+}

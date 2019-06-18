@@ -18,9 +18,9 @@ export class VideoPage extends React.Component {
 				for (let i = start; i < end; ++i) {
 					views.push(<VideoView key={i - start}
 										  video={videos.getPrintableVideo(i)}
-										  index={i}
 										  onSelect={this.props.onSelect}
 										  onOpenIndex={this.props.onOpenIndex}
+										  onDeleteIndex={this.props.onDeleteIndex}
 										  isSelected={i === this.props.videoIndex}/>);
 				}
 				return views;
@@ -38,4 +38,5 @@ VideoPage.propTypes = {
 	videoIndex: PropTypes.number.isRequired,
 	onSelect: PropTypes.func,
 	onOpenIndex: PropTypes.func.isRequired, // onOpenIndex(index)
+	onDeleteIndex: PropTypes.func.isRequired, // onDeleteIndex(index)
 };

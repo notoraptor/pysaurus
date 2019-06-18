@@ -496,6 +496,7 @@ export class App extends React.Component {
 							   pageSize={this.state.pageSize}
 							   onSelect={this.onSelectVideo}
 							   onOpenIndex={this.openIndex}
+							   onDeleteIndex={this.deleteIndex}
 							   videoIndex={index === null ? -1 : index}/>
 				</div>
 				<div className="col-md-3 p-3">

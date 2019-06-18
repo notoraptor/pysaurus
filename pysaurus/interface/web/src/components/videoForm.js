@@ -19,8 +19,6 @@ export class VideoForm extends React.Component {
 	render() {
 		const index = this.props.index;
 		const videos = this.props.videos;
-		const onOpenIndex = this.props.onOpenIndex;
-		const onDeleteIndex = this.props.onDeleteIndex;
 		if (index === null || index < 0 || index >= videos.size())
 			return <div className="video-form empty">No video selected!</div>;
 		const image64 = videos.getExtra(index, Extra.image64);
@@ -30,11 +28,6 @@ export class VideoForm extends React.Component {
 				<div>
 					<div id="video-image"
 						 {...(image64 ? {style: {backgroundImage: `url(data:image/png;base64,${image64})`}} : {})} />
-				</div>
-				<div className="mt-5">
-					<button className="btn btn-success btn-sm btn-block" onClick={() => onOpenIndex(index)}>
-						open
-					</button>
 				</div>
 				<div className="mt-5">
 					<form onSubmit={this.changeFileTitle}>
@@ -52,11 +45,6 @@ export class VideoForm extends React.Component {
 							</button>
 						</div>
 					</form>
-				</div>
-				<div className="mt-5">
-					<button className="btn btn-danger btn-sm btn-block" onClick={() => onDeleteIndex(index)}>
-						delete
-					</button>
 				</div>
 			</div>
 		)
