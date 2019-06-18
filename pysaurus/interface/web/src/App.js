@@ -56,23 +56,26 @@ export class App extends React.Component {
 			reverse: false,
 			videos: null,
 			videoIndex: null,
+			search: '',
+			searchType: ''
 		};
 		this.connect = this.connect.bind(this);
 		this.onConnectionClosed = this.onConnectionClosed.bind(this);
 		this.loadDatabase = this.loadDatabase.bind(this);
 		this.loadVideos = this.loadVideos.bind(this);
 		this.onNotification = this.onNotification.bind(this);
-		this.previousPage = this.previousPage.bind(this);
-		this.nextPage = this.nextPage.bind(this);
 		this.onChangePageSize = this.onChangePageSize.bind(this);
 		this.onChangeCurrentPage = this.onChangeCurrentPage.bind(this);
 		this.openIndex = this.openIndex.bind(this);
 		this.onSelectVideo = this.onSelectVideo.bind(this);
+		this.onDeselectVideo = this.onDeselectVideo.bind(this);
 		this.loadVideoImage = this.loadVideoImage.bind(this);
 		this.onChangeSort = this.onChangeSort.bind(this);
 		this.onChangeReverse = this.onChangeReverse.bind(this);
 		this.changeFileTitle = this.changeFileTitle.bind(this);
 		this.deleteIndex = this.deleteIndex.bind(this);
+		this.onChangeSearch = this.onChangeSearch.bind(this);
+		this.onChangeSearchType = this.onChangeSearchType.bind(this);
 	}
 
 	static getStateNoNotifications(otherState) {
@@ -337,30 +340,26 @@ export class App extends React.Component {
 			this.setState({videoIndex: null, pageSize: pageSize, currentPage: 0});
 	}
 
-	previousPage() {
-		let currentPage = this.state.currentPage;
-		if (currentPage > 0) {
-			--currentPage;
-			this.setState({videoIndex: null, currentPage: currentPage});
-		}
-	}
-
-	nextPage() {
-		let currentPage = this.state.currentPage;
-		if (currentPage < this.getNbPages() - 1) {
-			++currentPage;
-			this.setState({videoIndex: null, currentPage: currentPage});
-		}
-	}
-
-	onChangeCurrentPage(event) {
-		let currentPage = parseInt(event.target.value);
+	changeCurrentPage(currentPage) {
 		if (currentPage < 0)
 			currentPage = 0;
 		if (currentPage >= this.getNbPages())
 			currentPage = this.getNbPages() - 1;
-		console.log(`Selected current page ${currentPage}`);
+		console.log(`Page ${currentPage + 1}/${this.getNbPages()}`);
 		this.setState({videoIndex: null, currentPage: currentPage});
+	}
+
+	onChangeCurrentPage(event) {
+		this.changeCurrentPage(parseInt(event.target.value));
+	}
+
+	onChangeSearch(event) {
+		this.setState({search: event.target.value, searchType: null});
+	}
+
+	onChangeSearchType(event) {
+		this.setState({searchType: event.target.value});
+		// TDDO run search.
 	}
 
 	onChangeSort(event) {
@@ -373,12 +372,12 @@ export class App extends React.Component {
 	}
 
 	onSelectVideo(index) {
-		/*
-		if (index === this.state.videoIndex)
-			return this.setState({videoIndex: null});
-		*/
 		if (index >= 0 && index < this.state.videos.size())
 			this.setState({videoIndex: index});
+	}
+
+	onDeselectVideo() {
+		this.setState({videoIndex: null});
 	}
 
 	getNbPages() {
@@ -497,6 +496,7 @@ export class App extends React.Component {
 							   onSelect={this.onSelectVideo}
 							   onOpenIndex={this.openIndex}
 							   onDeleteIndex={this.deleteIndex}
+							   onDeselectIndex={this.onDeselectVideo}
 							   videoIndex={index === null ? -1 : index}/>
 				</div>
 				<div className="col-md-3 p-3">
@@ -513,7 +513,7 @@ export class App extends React.Component {
 
 	renderTopForm() {
 		return (
-			<div className="page-forms">
+			<div className="page-forms d-flex flex-row">
 				<form className="form-inline">
 					<label className="sr-only" htmlFor="pageSize">page size</label>
 					<select className="custom-select custom-select-sm mx-1"
@@ -524,8 +524,10 @@ export class App extends React.Component {
 							<option key={index} value={value}>{value} per page</option>
 						))}
 					</select>
-					<button type="button" disabled={this.state.currentPage === 0}
-							className="btn btn-dark btn-sm mx-1" onClick={this.previousPage}>
+					<button type="button"
+							disabled={this.state.currentPage === 0}
+							className="btn btn-dark btn-sm mx-1"
+							onClick={() => this.changeCurrentPage(this.state.currentPage - 1)}>
 						{Utils.UNICODE_LEFT_ARROW}
 					</button>
 					<label className="sr-only" htmlFor="currentPage">current page</label>
@@ -541,11 +543,12 @@ export class App extends React.Component {
 							return options;
 						})()}
 					</select>
-					<button type="button" disabled={this.state.currentPage === this.getNbPages() - 1}
-							className="btn btn-dark btn-sm mx-1" onClick={this.nextPage}>
+					<button type="button"
+							disabled={this.state.currentPage === this.getNbPages() - 1}
+							className="btn btn-dark btn-sm mx-1"
+							onClick={() => this.changeCurrentPage(this.state.currentPage + 1)}>
 						{Utils.UNICODE_RIGHT_ARROW}
 					</button>
-
 					<label className="mx-1" htmlFor="sortInput">Sort by:</label>
 					<select className="custom-select custom-select-sm mx-1"
 							id="sortInput"
@@ -567,6 +570,42 @@ export class App extends React.Component {
 						<input type="checkbox" onChange={this.onChangeReverse}
 							   checked={this.state.reverse} className="custom-control-input" id="reverseInput"/>
 						<label className="custom-control-label" htmlFor="reverseInput">reverse</label>
+					</div>
+				</form>
+				<form className="form-inline">
+					<div className="form-group">
+						<label className="sr-only" htmlFor="searchInput">search</label>
+						<input type="text" className="custom-control" id="search-input" value={this.state.search} onChange={this.onChangeSearch}/>
+					</div>
+					<div className="form-check form-check-inline">
+						<input className="custom-radio"
+							   type="radio"
+							   name="searchType"
+							   id="searchTypeExact"
+							   value={'exact'}
+							   checked={this.state.searchType === 'exact'}
+							   onChange={this.onChangeSearchType}/>
+						<label className="form-check-label" htmlFor="searchTypeExact">exact</label>
+					</div>
+					<div className="form-check form-check-inline">
+						<input className="custom-radio"
+							   type="radio"
+							   name="searchType"
+							   id="searchTypeAll"
+							   value={'all'}
+							   checked={this.state.searchType === 'all'}
+							   onChange={this.onChangeSearchType}/>
+						<label className="form-check-label" htmlFor="searchTypeAll">all terms</label>
+					</div>
+					<div className="form-check form-check-inline">
+						<input className="custom-radio"
+							   type="radio"
+							   name="searchType"
+							   id="searchTypeAny"
+							   value={'any'}
+							   checked={this.state.searchType === 'any'}
+							   onChange={this.onChangeSearchType}/>
+						<label className="form-check-label" htmlFor="searchTypeAny">any term</label>
 					</div>
 				</form>
 			</div>

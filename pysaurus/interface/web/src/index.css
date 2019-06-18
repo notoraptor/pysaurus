@@ -44,6 +44,7 @@ header {
 	font-weight: bold;
 	margin-right: 0.5rem;
 	text-align: center;
+	cursor: default;
 }
 
 .container-fluid button, .container-fluid label {
@@ -163,6 +164,7 @@ header {
 .video-view .video-name {
 	font-weight: bold;
 	padding: 0.2rem 1ch;
+	word-break: break-all;
 }
 
 .video-view .video-name .video-name-link {
@@ -211,13 +213,11 @@ header {
 	color: white;
 	width: 6ch;
 	text-align: center;
-}
-
-.video-view .video-line-name .video-extension {
 	border-bottom-color: transparent;
 }
 
 .video-view .video-line-name .video-quality {
+	min-width: 8ch;
 	border-bottom-color: transparent;
 }
 
@@ -290,7 +290,6 @@ header {
 	background-color: white;
 	font-weight: bold;
 	cursor: pointer;
-	border-radius: 0.5rem;
 	border: 1px solid gray;
 }
 

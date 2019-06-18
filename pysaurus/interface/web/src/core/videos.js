@@ -170,10 +170,14 @@ export class Videos {
 			return;
 
 		this.lines.sort((a, b) => {
-			const valueA = this.getFromLine(a, field);
-			const valueB = this.getFromLine(b, field);
+			let valueA = this.getFromLine(a, field);
+			let valueB = this.getFromLine(b, field);
 			let ret = 0;
-			if (valueA < valueB)
+			if (typeof valueA === 'string') {
+				ret = valueA.toLocaleLowerCase().localeCompare(valueB.toLocaleLowerCase());
+				if (ret === 0)
+					ret = valueA.localeCompare(valueB);
+			} else if (valueA < valueB)
 				ret = -1;
 			else if (valueA > valueB)
 				ret = 1;
