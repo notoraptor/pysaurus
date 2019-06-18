@@ -32,7 +32,7 @@ header {
 }
 
 .custom-checkbox .custom-control-input:checked ~ .custom-control-label::before {
-	background-color: black!important;
+	background-color: black !important;
 }
 
 .logo {
@@ -132,7 +132,7 @@ header {
 
 .video-view {
 	padding: 0.5rem 1rem;
-	cursor: pointer;
+	cursor: default;
 }
 
 .video-view:nth-child(odd) {
@@ -163,6 +163,18 @@ header {
 .video-view .video-name {
 	font-weight: bold;
 	padding: 0.2rem 1ch;
+}
+
+.video-view .video-name .video-name-link {
+	cursor: pointer;
+}
+
+.video-view .video-name .video-name-link:hover {
+	text-decoration: underline;
+}
+
+.video-view .video-name .video-name-link:active {
+	color: red;
 }
 
 .video-view code {

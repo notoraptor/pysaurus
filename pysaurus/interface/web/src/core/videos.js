@@ -57,57 +57,42 @@ export class Videos {
 		}
 		this.sortField = null;
 		this.sortReverse = false;
+		this.nbUpdates = 0;
 		this.get = this.get.bind(this);
 		this.getFromLine = this.getFromLine.bind(this);
 	}
 
-	size() {
-		return this.lines.length;
+	static computeName(data, getter) {
+		const metaTitle = getter(data, Fields.meta_title);
+		return metaTitle ? metaTitle : getter(data, Fields.file_title);
 	}
 
-	sort(field, reverse) {
-		reverse = !!reverse;
-		if (this.sortField === field && this.sortReverse === reverse)
-			return;
-
-		this.lines.sort((a, b) => {
-			const valueA = this.getFromLine(a, field);
-			const valueB = this.getFromLine(b, field);
-			let ret = 0;
-			if (valueA < valueB)
-				ret = -1;
-			else if (valueA > valueB)
-				ret = 1;
-			return reverse ? -ret : ret;
-		});
-		this.sortField = field;
-		this.sortReverse = reverse;
+	static computeQuality(data, getter) {
+		// !!audio_codec, width, height, !errors.length, frame_rate, duration_value
+		const audioCodecFactor = getter(data, Fields.audio_codec) ? 1 : 0.5;
+		const width = getter(data, Fields.width);
+		const height = getter(data, Fields.height);
+		const errorFactor = getter(data, Fields.errors).length ? 0.25 : 1;
+		const frameRate = getter(data, Fields.frame_rate);
+		const duration = getter(data, Fields.duration_value) / 1000000;
+		const score = audioCodecFactor * width * height * errorFactor * frameRate * duration;
+		return Math.log(score);
 	}
 
-	remove(index) {
-		if (index >= 0 && index < this.lines.length) {
-			const filename = this.get(index, Fields.filename);
-			if (this.extras.hasOwnProperty(filename))
-				delete this.extras[filename];
-			this.lines.splice(index, 1);
-		}
+	getName(index) {
+		return Videos.computeName(index, this.get);
 	}
 
-	changeFilename(index, newFilename, newFileTitle) {
-		if (index >= 0 && index < this.lines.length) {
-			const filename = this.get(index, Fields.filename);
-			let extra = null;
-			if (this.extras.hasOwnProperty(filename)) {
-				extra = this.extras[filename];
-				delete this.extras[filename];
-				if (extra.hasOwnProperty(Extra.newName))
-					delete extra.newName;
-			}
-			this.lines[index][this.fieldIndex[Fields.filename]] = newFilename;
-			this.lines[index][this.fieldIndex[Fields.file_title]] = newFileTitle;
-			if (extra)
-				this.extras[newFilename] = extra;
-		}
+	getQuality(index) {
+		return Videos.computeQuality(index, this.get);
+	}
+
+	getNameFromLine(line) {
+		return Videos.computeName(line, this.getFromLine);
+	}
+
+	getQualityFromLine(line) {
+		return Videos.computeQuality(line, this.getFromLine);
 	}
 
 	get(index, field) {
@@ -124,43 +109,6 @@ export class Videos {
 		if (field === 'quality')
 			return this.getQualityFromLine(line);
 		return line[this.fieldIndex[field]];
-	}
-
-	getName(index) {
-		const metaTitle = this.get(index, Fields.meta_title);
-		return metaTitle ? metaTitle : this.get(index, Fields.file_title);
-	}
-
-	static computeQuality(data, getter) {
-		// !!audio_codec, width, height, !errors.length, frame_rate, duration_value
-		const audioCodecFactor = getter(data, Fields.audio_codec) ? 1 : 0.5;
-		const width = getter(data, Fields.width);
-		const height = getter(data, Fields.height);
-		const errorFactor = getter(data, Fields.errors).length ? 0.25 : 1;
-		const frameRate = getter(data, Fields.frame_rate);
-		const duration = getter(data, Fields.duration_value) / 1000000;
-		const score = audioCodecFactor * width * height * errorFactor * frameRate * duration;
-		return Math.log(score);
-	}
-
-	getQuality(index) {
-		return Videos.computeQuality(index, this.get);
-	}
-
-	getQualityFromLine(line) {
-		return Videos.computeQuality(line, this.getFromLine);
-	}
-
-	getNameFromLine(line) {
-		const metaTitle = this.getFromLine(line, Fields.meta_title);
-		return metaTitle ? metaTitle : this.getFromLine(line, Fields.file_title);
-	}
-
-	setExtra(index, field, value) {
-		const filename = this.get(index, Fields.filename);
-		if (!this.extras.hasOwnProperty(filename))
-			this.extras[filename] = {};
-		this.extras[filename][field] = value;
 	}
 
 	getExtra(index, field) {
@@ -193,9 +141,74 @@ export class Videos {
 			video[field] = this.get(index, field);
 		}
 		video.frame_rate = Math.round(video.frame_rate);
+		video.audio_bit_rate = `${Math.round(video.audio_bit_rate / 1000)} Kb/s`;
 		video.name = this.getName(index);
-		video.quality = this.getQuality(index);
+		video.quality = Math.round(this.getQuality(index) * 100) / 100;
 		video.index = index;
 		return video;
+	}
+
+	size() {
+		return this.lines.length;
+	}
+
+	getNbUpdates() {
+		return this.nbUpdates;
+	}
+
+	setExtra(index, field, value) {
+		const filename = this.get(index, Fields.filename);
+		if (!this.extras.hasOwnProperty(filename))
+			this.extras[filename] = {};
+		this.extras[filename][field] = value;
+		++this.nbUpdates;
+	}
+
+	sort(field, reverse) {
+		reverse = !!reverse;
+		if (this.sortField === field && this.sortReverse === reverse)
+			return;
+
+		this.lines.sort((a, b) => {
+			const valueA = this.getFromLine(a, field);
+			const valueB = this.getFromLine(b, field);
+			let ret = 0;
+			if (valueA < valueB)
+				ret = -1;
+			else if (valueA > valueB)
+				ret = 1;
+			return reverse ? -ret : ret;
+		});
+		this.sortField = field;
+		this.sortReverse = reverse;
+		++this.nbUpdates;
+	}
+
+	remove(index) {
+		if (index >= 0 && index < this.lines.length) {
+			const filename = this.get(index, Fields.filename);
+			if (this.extras.hasOwnProperty(filename))
+				delete this.extras[filename];
+			this.lines.splice(index, 1);
+			++this.nbUpdates;
+		}
+	}
+
+	changeFilename(index, newFilename, newFileTitle) {
+		if (index >= 0 && index < this.lines.length) {
+			const filename = this.get(index, Fields.filename);
+			let extra = null;
+			if (this.extras.hasOwnProperty(filename)) {
+				extra = this.extras[filename];
+				delete this.extras[filename];
+				if (extra.hasOwnProperty(Extra.newName))
+					delete extra.newName;
+			}
+			this.lines[index][this.fieldIndex[Fields.filename]] = newFilename;
+			this.lines[index][this.fieldIndex[Fields.file_title]] = newFileTitle;
+			if (extra)
+				this.extras[newFilename] = extra;
+			++this.nbUpdates;
+		}
 	}
 }
