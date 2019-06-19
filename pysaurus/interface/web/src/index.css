@@ -31,7 +31,16 @@ header {
 	border-bottom: 1px solid rgb(130, 130, 140);
 }
 
+section {
+	position: relative;
+	background-color: palegoldenrod;
+}
+
 .custom-checkbox .custom-control-input:checked ~ .custom-control-label::before {
+	background-color: black !important;
+}
+
+.custom-radio .custom-control-input:checked ~ .custom-control-label::before {
 	background-color: black !important;
 }
 
@@ -57,10 +66,15 @@ header {
 	line-height: 0.9rem;
 	font-weight: bold;
 	border: 1px solid;
-	display: none;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
+}
+
+.message, .alert {
+	position: absolute;
+	cursor: pointer;
+	z-index: 1;
 }
 
 .message.error {
@@ -84,6 +98,8 @@ header {
 	color: rgb(100, 150, 100);
 }
 
+.search-form {}
+
 .notification-wrapper {
 	width: 100%;
 	height: 100%;
@@ -106,14 +122,11 @@ header {
 	padding: 0;
 }
 
-.loading {
-	position: relative;
-}
-
 .videos .videos-wrapper {
 	height: 100%;
 	overflow: auto;
 	padding: 0;
+	background-color: rgb(120, 120, 125);
 }
 
 #video-image {

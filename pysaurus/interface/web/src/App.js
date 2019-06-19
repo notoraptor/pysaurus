@@ -5,7 +5,7 @@ import {Helmet} from "react-helmet/es/Helmet";
 import {Exceptions} from "./client/exceptions";
 import {Notification} from "./components/notification";
 import {Utils} from "./core/utils";
-import {Extra, Fields, Sort, Videos} from "./core/videos";
+import {Extra, Fields, Sort, SearchType, Videos} from "./core/videos";
 import {VideoPage} from "./components/videoPage";
 import {VideoForm} from "./components/videoForm";
 import {confirmAlert} from 'react-confirm-alert'; // Import
@@ -17,6 +17,7 @@ const PAGE_SIZES = [10, 20, 50, 100];
 const DEFAULT_PAGE_SIZE = 100;
 const DB_LOADING = 'DB_LOADING';
 const DB_LOADED = 'DB_LOADED';
+const MESSAGE_TIMEOUT_SECONDS = 10;
 
 const Status = {
 	SERVER_NOT_CONNECTED: 1,
@@ -34,9 +35,11 @@ export class App extends React.Component {
 		this.connection = null;
 		/** @var Connection this.connection */
 		this.state = {
+			update: null,
 			// alert
-			message_type: null,
+			messageType: null,
 			message: null,
+			messageTimeoutID: null,
 			// status
 			status: Status.SERVER_NOT_CONNECTED,
 			// notification when loading database
@@ -75,7 +78,11 @@ export class App extends React.Component {
 		this.changeFileTitle = this.changeFileTitle.bind(this);
 		this.deleteIndex = this.deleteIndex.bind(this);
 		this.onChangeSearch = this.onChangeSearch.bind(this);
+		this.clearSearch = this.clearSearch.bind(this);
 		this.onChangeSearchType = this.onChangeSearchType.bind(this);
+		this.clearMessage = this.clearMessage.bind(this);
+		this.search = this.search.bind(this);
+		this.submitSearchForm = this.submitSearchForm.bind(this);
 	}
 
 	static getStateNoNotifications(otherState) {
@@ -93,20 +100,35 @@ export class App extends React.Component {
 		return otherState ? Object.assign({}, otherState, state) : state;
 	}
 
-	error(message) {
-		this.setState({message_type: 'error', message: message});
+	update(update) {
+		this.setState({update});
 	}
 
-	info(message) {
-		this.setState({message_type: 'info', message: message});
+	message(messageType, message, otherState) {
+		const messageState = {messageType, message};
+		const combinedState = otherState ? Object.assign({}, otherState, messageState) : messageState;
+		if (message) {
+			if (this.state.messageTimeoutID)
+				clearTimeout(this.state.messageTimeoutID);
+			combinedState.messageTimeoutID = setTimeout(this.clearMessage, MESSAGE_TIMEOUT_SECONDS * 1000);
+		}
+		this.setState(combinedState);
 	}
 
-	success(message) {
-		this.setState({message_type: 'success', message: message});
+	error(message, otherState) {
+		this.message('alert alert-danger', message, otherState);
 	}
 
-	clearMessage() {
-		this.setState({message_type: null, message: null});
+	info(message, otherState) {
+		this.message('alert alert-warning', message, otherState);
+	}
+
+	success(message, otherState) {
+		this.message('alert alert-success', message, otherState);
+	}
+
+	clearMessage(otherState) {
+		this.message(null, null, otherState);
 	}
 
 	mainButton() {
@@ -214,10 +236,7 @@ export class App extends React.Component {
 			this.connection.send(Request.videos())
 				.then(table => {
 					const videos = new Videos(table);
-					this.setState({
-						videos: videos, status: Status.VIDEOS_LOADED,
-						message_type: 'success', message: 'Videos loaded!'
-					})
+					this.success('Videos loaded!', {videos: videos, status: Status.VIDEOS_LOADED});
 				});
 		});
 	}
@@ -354,12 +373,42 @@ export class App extends React.Component {
 	}
 
 	onChangeSearch(event) {
-		this.setState({search: event.target.value, searchType: null});
+		// const changed = this.state.videos.setSearch(null, null);
+		const changed = false;
+		this.setState({
+			search: event.target.value,
+			searchType: null,
+			videoIndex: changed ? null : this.state.videoIndex,
+			currentPage: changed ? 0 : this.state.currentPage
+		});
+	}
+
+	clearSearch() {
+		const changed = this.state.videos.setSearch(null, null);
+		this.setState({
+			search: '',
+			searchType: null,
+			videoIndex: changed ? null : this.state.videoIndex,
+			currentPage: changed ? 0 : this.state.currentPage
+		});
+	}
+
+	search() {
+		const changed = this.state.videos.setSearch(this.state.search, this.state.searchType);
+		// `Found ${this.state.videos.size()} video(s).`
+		this.setState( {
+			videoIndex: changed ? null : this.state.videoIndex,
+			currentPage: changed ? 0 : this.state.currentPage
+		});
 	}
 
 	onChangeSearchType(event) {
-		this.setState({searchType: event.target.value});
-		// TDDO run search.
+		this.setState({searchType: event.target.value}, this.search);
+	}
+
+	submitSearchForm(event) {
+		event.preventDefault();
+		this.setState({searchType: SearchType.all}, this.search);
 	}
 
 	onChangeSort(event) {
@@ -399,13 +448,9 @@ export class App extends React.Component {
 		const deleteFn = (onClose) => {
 			this.connection.send(Request.delete_filename(filename))
 				.then(newSize => {
-					if (newSize === this.state.videos.size() - 1) {
+					if (newSize === this.state.videos.databaseSize() - 1) {
 						this.state.videos.remove(index);
-						this.setState({
-							videoIndex: null,
-							message_type: 'success',
-							message: `Video deleted! ${filename}`
-						});
+						this.success(`Video deleted! ${filename}`, {videoIndex: null});
 					} else {
 						this.error(`Files does not seem to have been deleted 
 						(${newSize} vs ${this.state.videos.size()}). ${filename}`);
@@ -454,11 +499,7 @@ export class App extends React.Component {
 					const newFileTitle = newString[1];
 					if (filename !== newFilename) {
 						this.state.videos.changeFilename(index, newFilename, newFileTitle);
-						this.setState({
-							videoIndex: null,
-							message_type: 'success',
-							message: `File renamed to ${newFilename}`
-						});
+						this.success(`File renamed to ${newFilename}`);
 					}
 				})
 				.catch(error => {
@@ -474,7 +515,7 @@ export class App extends React.Component {
 			this.connection.send(Request.image_filename(filename))
 				.then(image64 => {
 					this.state.videos.setExtra(index, Extra.image64, image64);
-					this.success(`Image loaded! ${filename}`)
+					this.update(`Image loaded! ${filename}`)
 				})
 				.catch(error => {
 					console.error(error);
@@ -572,40 +613,51 @@ export class App extends React.Component {
 						<label className="custom-control-label" htmlFor="reverseInput">reverse</label>
 					</div>
 				</form>
-				<form className="form-inline">
-					<div className="form-group">
+				<form className="form-inline flex-grow-1 d-flex flex-row ml-3 pl-3 search-form"
+					  onSubmit={this.submitSearchForm}>
+					<div className="form-group flex-grow-1">
 						<label className="sr-only" htmlFor="searchInput">search</label>
-						<input type="text" className="custom-control" id="search-input" value={this.state.search} onChange={this.onChangeSearch}/>
+						<div className="input-group input-group-sm mx-1 w-100">
+							<input type="text"
+								   className="form-control"
+								   id="search-input"
+								   placeholder="search ..."
+								   value={this.state.search}
+								   onChange={this.onChangeSearch}/>
+							<div className="input-group-append">
+								<div className="btn btn-dark" onClick={this.clearSearch}><strong>&times;</strong></div>
+							</div>
+						</div>
 					</div>
-					<div className="form-check form-check-inline">
-						<input className="custom-radio"
+					<div className="custom-control custom-radio custom-control-inline">
+						<input className="custom-control-input mx-1"
 							   type="radio"
 							   name="searchType"
 							   id="searchTypeExact"
-							   value={'exact'}
-							   checked={this.state.searchType === 'exact'}
+							   value={SearchType.exact}
+							   checked={this.state.searchType === SearchType.exact}
 							   onChange={this.onChangeSearchType}/>
-						<label className="form-check-label" htmlFor="searchTypeExact">exact</label>
+						<label className="custom-control-label mx-1" htmlFor="searchTypeExact">exact</label>
 					</div>
-					<div className="form-check form-check-inline">
-						<input className="custom-radio"
+					<div className="custom-control custom-radio custom-control-inline">
+						<input className="custom-control-input mx-1"
 							   type="radio"
 							   name="searchType"
 							   id="searchTypeAll"
-							   value={'all'}
-							   checked={this.state.searchType === 'all'}
+							   value={SearchType.all}
+							   checked={this.state.searchType === SearchType.all}
 							   onChange={this.onChangeSearchType}/>
-						<label className="form-check-label" htmlFor="searchTypeAll">all terms</label>
+						<label className="custom-control-label mx-1" htmlFor="searchTypeAll">all terms</label>
 					</div>
-					<div className="form-check form-check-inline">
-						<input className="custom-radio"
+					<div className="custom-control custom-radio custom-control-inline">
+						<input className="custom-control-input mx-1"
 							   type="radio"
 							   name="searchType"
 							   id="searchTypeAny"
-							   value={'any'}
-							   checked={this.state.searchType === 'any'}
+							   value={SearchType.any}
+							   checked={this.state.searchType === SearchType.any}
 							   onChange={this.onChangeSearchType}/>
-						<label className="form-check-label" htmlFor="searchTypeAny">any term</label>
+						<label className="custom-control-label mx-1" htmlFor="searchTypeAny">any term</label>
 					</div>
 				</form>
 			</div>
@@ -624,23 +676,28 @@ export class App extends React.Component {
 							<div className="d-flex">
 								<div className="logo d-flex flex-column justify-content-center">&#120529;s</div>
 								<div className="d-flex flex-column justify-content-center">{this.mainButton()}</div>
+								{this.state.videos ? (
+									<div className="d-flex flex-column justify-content-center pl-2">({this.state.videos.size()} video(s))</div>
+								) : ''}
 							</div>
 						</div>
-						<div className="col-md-8">
+						<div className="col-md-10">
 							{this.state.status === Status.VIDEOS_LOADED ? this.renderTopForm() : ''}
 						</div>
-						<div className="col-md-2">
-							<div className={`message ${this.state.message_type}`} title={this.state.message}>
+					</header>
+					<section className="row flex-grow-1">
+						{this.state.message ? (
+							<div className={`${this.state.messageType}`}
+								 title={this.state.message}
+								 onClick={this.clearMessage}>
 								{this.state.message}
 							</div>
-						</div>
-					</header>
-					<div className="loading row flex-grow-1">
+						) : ''}
 						{this.state.status === Status.DB_LOADING ?
 							<Notification title={this.state.notificationTitle}
 										  content={this.state.notificationContent}/> : ''}
 						{this.state.status === Status.VIDEOS_LOADED ? this.renderVideos() : ''}
-					</div>
+					</section>
 				</main>
 			</div>
 		);

@@ -282,6 +282,7 @@ class Database(object):
         thumb_path = video.get_thumbnail_path(self.__database_path)
         if thumb_path.isfile():
             thumb_path.delete()
+        self.save()
 
     def change_video_file_title(self, video, new_title):
         # type: (Video, str) -> None

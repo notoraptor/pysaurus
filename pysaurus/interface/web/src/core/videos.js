@@ -20,6 +20,8 @@ export const Fields = {
 	extension: 'extension'
 };
 
+export const SpecialFields = {id: 'id'};
+
 export const Sort = {
 	filename: 'path',
 	container_format: 'format',
@@ -40,6 +42,12 @@ export const Sort = {
 	quality: 'quality'
 };
 
+export const SearchType = {
+	exact: 'exact',
+	all: 'all',
+	any: 'any'
+};
+
 export const Extra = {
 	image64: 'image64',
 	newName: 'newName'
@@ -49,17 +57,101 @@ export class Videos {
 	constructor(table) {
 		/** @var Array table */
 		this.headers = table.shift();
-		this.lines = table;
+		this.database = table;
+		for (let i = 0; i < this.database.length; ++i)
+			this.database[i].push(i);
+		this.lines = this.database;
 		this.extras = {};
 		this.fieldIndex = {};
 		for (let i = 0; i < this.headers.length; ++i) {
 			this.fieldIndex[this.headers[i]] = i;
 		}
+		this.fieldIndex[SpecialFields.id] = this.headers.length;
 		this.sortField = null;
 		this.sortReverse = false;
 		this.nbUpdates = 0;
 		this.get = this.get.bind(this);
 		this.getFromLine = this.getFromLine.bind(this);
+	}
+
+	find(sequence, searchType) {
+		const found = [];
+		if (!sequence || !searchType || !SearchType.hasOwnProperty(searchType))
+			return found;
+		sequence = sequence.toLocaleLowerCase();
+		if (searchType === SearchType.exact) {
+			for (let i = 0; i < this.database.length; ++i) {
+				for (let fieldName of Object.keys(Fields)) {
+					const fieldValue = `${this.getFromLine(this.database[i], fieldName)}`.toLocaleLowerCase();
+					if (fieldValue.indexOf(sequence) >= 0) {
+						found.push(this.database[i]);
+						break;
+					}
+				}
+			}
+		} else {
+			const terms = sequence.split(/[ \t\r\n\b\v]+/).map(term => term.toLocaleLowerCase());
+			if (searchType === SearchType.all) {
+				for (let i = 0; i < this.database.length; ++i) {
+					let allTermsFound = true;
+					for (let term of terms) {
+						let termFound = false;
+						for (let fieldName of Object.keys(Fields)) {
+							const fieldValue = `${this.getFromLine(this.database[i], fieldName)}`.toLocaleLowerCase();
+							if (fieldValue.indexOf(term) >= 0) {
+								termFound = true;
+								break;
+							}
+						}
+						if (!termFound) {
+							allTermsFound = false;
+							break;
+						}
+					}
+					if (allTermsFound)
+						found.push(this.database[i]);
+				}
+			} else { // Any.
+				for (let i = 0; i < this.database.length; ++i) {
+					let anyTermFound = false;
+					for (let term of terms) {
+						for (let fieldName of Object.keys(Fields)) {
+							const fieldValue = `${this.getFromLine(this.database[i], fieldName)}`.toLocaleLowerCase();
+							if (fieldValue.indexOf(term) >= 0) {
+								anyTermFound = true;
+								break;
+							}
+						}
+						if (anyTermFound)
+							break;
+					}
+					if (anyTermFound)
+						found.push(this.database[i]);
+				}
+			}
+		}
+		return found;
+	}
+
+	setSearch(sequence, searchType) {
+		let changed = false;
+		if (!sequence || !searchType || !SearchType.hasOwnProperty(searchType)) {
+			if (this.lines !== this.database) {
+				this.lines = this.database;
+				changed = true;
+			}
+		} else {
+			this.lines = this.find(sequence, searchType);
+			changed = true;
+		}
+		if (changed) {
+			const sortField = this.sortField;
+			const sortReverse = this.sortReverse;
+			this.sortField = null;
+			this.sortReverse = null;
+			this.sort(sortField, sortReverse);
+		}
+		return changed;
 	}
 
 	static computeName(data, getter) {
@@ -73,9 +165,10 @@ export class Videos {
 		const width = getter(data, Fields.width);
 		const height = getter(data, Fields.height);
 		const errorFactor = getter(data, Fields.errors).length ? 0.25 : 1;
-		const frameRate = getter(data, Fields.frame_rate);
+		const frameRate = Math.pow(getter(data, Fields.frame_rate), 2);
 		const duration = getter(data, Fields.duration_value) / 1000000;
-		const score = audioCodecFactor * width * height * errorFactor * frameRate * duration;
+		const audioBitrate = Math.log(getter(data, Fields.audio_bit_rate) / 1000 || 1);
+		const score = audioCodecFactor * width * height * errorFactor * frameRate * duration * audioBitrate;
 		return Math.log(score);
 	}
 
@@ -152,8 +245,8 @@ export class Videos {
 		return this.lines.length;
 	}
 
-	getNbUpdates() {
-		return this.nbUpdates;
+	databaseSize() {
+		return this.database.length;
 	}
 
 	setExtra(index, field, value) {
@@ -193,6 +286,10 @@ export class Videos {
 			const filename = this.get(index, Fields.filename);
 			if (this.extras.hasOwnProperty(filename))
 				delete this.extras[filename];
+			if (this.lines !== this.database) {
+				const id = this.get(index, SpecialFields.id);
+				this.database.splice(id, 1);
+			}
 			this.lines.splice(index, 1);
 			++this.nbUpdates;
 		}
