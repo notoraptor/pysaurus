@@ -33,7 +33,6 @@ header {
 
 section {
 	position: relative;
-	background-color: palegoldenrod;
 }
 
 .custom-checkbox .custom-control-input:checked ~ .custom-control-label::before {

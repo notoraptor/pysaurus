@@ -161,12 +161,14 @@ export class App extends React.Component {
 				disabled = true;
 				break;
 			case Status.VIDEOS_LOADED:
-				title = 'Video(s) loaded!';
-				disabled = true;
+				// title = 'Videos loaded!';
+				// disabled = true;
 				break;
 			default:
 				throw new Error(`Invalid app status ${this.state.status}`);
 		}
+		if (title === '')
+			return '';
 		return (
 			<button type="button"
 					className="btn btn-dark main-button btn-sm"
@@ -260,7 +262,7 @@ export class App extends React.Component {
 				);
 				break;
 			case 'DatabaseSaved':
-				this.info(`Database saved!`);
+				this.update(`Database saved!`);
 				break;
 			case 'CollectingFiles':
 				title = 'Collecting files in';
@@ -453,7 +455,7 @@ export class App extends React.Component {
 						this.success(`Video deleted! ${filename}`, {videoIndex: null});
 					} else {
 						this.error(`Files does not seem to have been deleted 
-						(${newSize} vs ${this.state.videos.size()}). ${filename}`);
+						(${newSize} vs ${this.state.videos.database()}). ${filename}`);
 					}
 				})
 				.catch(error => {
@@ -677,7 +679,9 @@ export class App extends React.Component {
 								<div className="logo d-flex flex-column justify-content-center">&#120529;s</div>
 								<div className="d-flex flex-column justify-content-center">{this.mainButton()}</div>
 								{this.state.videos ? (
-									<div className="d-flex flex-column justify-content-center pl-2">({this.state.videos.size()} video(s))</div>
+									<div className="d-flex flex-column justify-content-center pl-2">
+										({this.state.videos.size()} video{this.state.videos.size() === 1 ? '' : 's'})
+									</div>
 								) : ''}
 							</div>
 						</div>
