@@ -276,23 +276,23 @@ section {
 	border: 1px solid black;
 }
 
-.react-confirm-alert h1 {
+.confirm {
 	text-align: center;
 }
 
-.react-confirm-alert .alert-box {
+.confirm h1 {
 	text-align: center;
 }
 
-.react-confirm-alert .alert-attention {
+.confirm .alert-attention {
 	color: red;
 }
 
-.react-confirm-alert .alert-filename {
+.confirm .alert-filename {
 	border: 1px solid gray;
 }
 
-.react-confirm-alert .alert-filename code {
+.confirm .alert-filename code {
 	color: black;
 }
 
@@ -315,4 +315,13 @@ section {
 
 .menu-item.action-delete {
 	color: red;
+}
+
+.video-form.empty {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	text-align: center;
+	width: 100%;
+	height: 100%;
 }

@@ -271,6 +271,10 @@ export class Videos {
 		return this.lines.length;
 	}
 
+	nbPages(pageSize) {
+		return Math.floor(this.size() / pageSize) + (this.size() % pageSize ? 1 : 0);
+	}
+
 	databaseSize() {
 		return Object.keys(this.database).length;
 	}

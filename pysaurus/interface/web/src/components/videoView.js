@@ -42,6 +42,10 @@ export class VideoView extends React.Component {
 							  onClick={() => this.props.onOpenIndex(video.index)}>
 						Open
 					</MenuItem>
+					<MenuItem attributes={{className: 'menu-item action-rename'}}
+							  onClick={() => this.props.onRenameIndex(video.index)}>
+						Rename
+					</MenuItem>
 					<MenuItem attributes={{className: 'menu-item action-delete'}}
 							  onClick={() => this.props.onDeleteIndex(video.index)}>
 						Delete
@@ -62,5 +66,6 @@ VideoView.propTypes = {
 	onSelect: PropTypes.func,
 	onOpenIndex: PropTypes.func.isRequired, // onOpenIndex(index)
 	onDeleteIndex: PropTypes.func.isRequired, // onDeleteIndex(index)
+	onRenameIndex: PropTypes.func.isRequired, // onRenameIndex(index)
 	onDeselectIndex: PropTypes.func.isRequired, // onDeselectIndex(index)
 };

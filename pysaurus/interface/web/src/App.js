@@ -10,7 +10,9 @@ import {VideoPage} from "./components/videoPage";
 import {VideoForm} from "./components/videoForm";
 import {AppForm} from "./components/appForm";
 import {confirmAlert} from 'react-confirm-alert'; // Import
+import {DeleteDialog} from "./components/deleteDialog";
 import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
+import {RenameDialog} from "./components/renameDialog";
 
 const AppStatus = {
 	DB_NOT_LOADED: 3, DB_LOADING: 4,
@@ -24,12 +26,12 @@ export class App extends React.Component {
 		/** @var Connection this.connection */
 		this.state = {
 			update: null,
+			// status
+			status: AppStatus.SERVER_NOT_CONNECTED,
 			// alert
 			messageType: null,
 			message: null,
 			messageTimeoutID: null,
-			// status
-			status: AppStatus.SERVER_NOT_CONNECTED,
 			// notification when loading database
 			notificationCount: 0,
 			notificationTitle: 'loading',
@@ -40,20 +42,23 @@ export class App extends React.Component {
 			thumbnailsLoaded: 0,
 			foldersNotFound: [],
 			pathsIgnored: [],
-			// videos
+			// app form
 			pageSize: Utils.config.DEFAULT_PAGE_SIZE,
 			currentPage: 0,
 			field: 'name',
 			reverse: false,
-			videos: null,
-			videoIndex: null,
 			search: '',
-			searchType: ''
+			searchType: '',
+			// videos
+			videos: null,
+			// current selected video
+			videoIndex: null,
 		};
 		this.changeFileTitle = this.changeFileTitle.bind(this);
 		this.clearMessage = this.clearMessage.bind(this);
 		this.connect = this.connect.bind(this);
 		this.deleteIndex = this.deleteIndex.bind(this);
+		this.renameIndex = this.renameIndex.bind(this);
 		this.loadDatabase = this.loadDatabase.bind(this);
 		this.loadVideoImage = this.loadVideoImage.bind(this);
 		this.loadVideos = this.loadVideos.bind(this);
@@ -70,6 +75,7 @@ export class App extends React.Component {
 		this.openIndex = this.openIndex.bind(this);
 		this.search = this.search.bind(this);
 		this.submitSearchForm = this.submitSearchForm.bind(this);
+		this.deleteVideo = this.deleteVideo.bind(this);
 	}
 
 	static getStateNoNotifications(otherState) {
@@ -336,8 +342,7 @@ export class App extends React.Component {
 	}
 
 	onConnectionClosed() {
-		this.setState({status: AppStatus.SERVER_NOT_CONNECTED});
-		this.error('Connection closed!');
+		this.error('Connection closed!', {status: AppStatus.SERVER_NOT_CONNECTED});
 	}
 
 	onChangePageSize(pageSize) {
@@ -350,12 +355,20 @@ export class App extends React.Component {
 	}
 
 	onChangeCurrentPage(currentPage) {
+		const nbPages = this.state.videos.nbPages(this.state.pageSize);
 		if (currentPage < 0)
 			currentPage = 0;
-		if (currentPage >= this.getNbPages())
-			currentPage = this.getNbPages() - 1;
-		console.log(`Page ${currentPage + 1}/${this.getNbPages()}`);
+		if (currentPage >= nbPages)
+			currentPage = nbPages - 1;
 		this.setState({videoIndex: null, currentPage: currentPage});
+	}
+
+	onChangeSort(field) {
+		this.setState({videoIndex: null, field: field, reverse: false});
+	}
+
+	onChangeReverse(reverse) {
+		this.setState({videoIndex: null, reverse: reverse});
 	}
 
 	onChangeSearch(search) {
@@ -372,29 +385,17 @@ export class App extends React.Component {
 		});
 	}
 
-	search() {
-		const changed = this.state.videos.setSearch(this.state.search, this.state.searchType);
-		// `Found ${this.state.videos.size()} video(s).`
-		this.setState({
-			videoIndex: changed ? null : this.state.videoIndex,
-			currentPage: changed ? 0 : this.state.currentPage
-		});
-	}
-
 	onChangeSearchType(searchType) {
 		this.setState({searchType: searchType}, this.search);
 	}
 
+	search() {
+		if (this.state.videos.setSearch(this.state.search, this.state.searchType))
+			this.setState({videoIndex: null, currentPage: 0});
+	}
+
 	submitSearchForm() {
 		this.setState({searchType: this.state.searchType ? this.state.searchType : SearchType.all}, this.search);
-	}
-
-	onChangeSort(field) {
-		this.setState({videoIndex: null, field: field, reverse: false});
-	}
-
-	onChangeReverse(reverse) {
-		this.setState({videoIndex: null, reverse: reverse});
 	}
 
 	onSelectVideo(index) {
@@ -404,10 +405,6 @@ export class App extends React.Component {
 
 	onDeselectVideo() {
 		this.setState({videoIndex: null});
-	}
-
-	getNbPages() {
-		return Math.floor(this.state.videos.size() / this.state.pageSize) + (this.state.videos.size() % this.state.pageSize ? 1 : 0);
 	}
 
 	openIndex(index) {
@@ -420,70 +417,61 @@ export class App extends React.Component {
 			})
 	}
 
-	deleteIndex(index) {
+	deleteVideo(index) {
+		// Return a promise.
 		const filename = this.state.videos.get(index, Fields.filename);
-		const deleteFn = (onClose) => {
-			this.connection.send(Request.delete_filename(filename))
-				.then(newSize => {
-					if (newSize === this.state.videos.databaseSize() - 1) {
-						this.state.videos.remove(index);
-						this.success(`Video deleted! ${filename}`, {videoIndex: null});
-					} else {
-						this.error(`Files does not seem to have been deleted 
+		return this.connection.send(Request.delete_filename(filename))
+			.then(newSize => {
+				if (newSize === this.state.videos.databaseSize() - 1) {
+					this.state.videos.remove(index);
+					this.success(`Video deleted! ${filename}`, {videoIndex: null});
+				} else {
+					this.error(`Files does not seem to have been deleted 
 						(${newSize} vs ${this.state.videos.databaseSize()}). ${filename}`);
-					}
-				})
-				.catch(error => {
-					console.error(error);
-					this.error(`Error while deleting file ${filename}`);
-				})
-				.finally(() => onClose())
-		};
+				}
+			})
+			.catch(error => {
+				console.error(error);
+				this.error(`Error while deleting file ${filename}`);
+			});
+	}
+
+	deleteIndex(index) {
 		confirmAlert({
 			customUI: ({onClose}) => (
-				<div className="confirm">
-					<h1><strong>Deleting a file</strong></h1>
-					<div className="alert-box">
-						<p>Do you really want to delete this file?</p>
-						<p className="alert-attention"><strong>NB: This operation is irreversible!</strong></p>
-						<p className="p-2 alert-filename">
-							<code>{filename}</code>
-						</p>
-					</div>
-					<div className="row">
-						<div className="col-md">
-							<button className="btn btn-danger btn-block" onClick={() => deleteFn(onClose)}>
-								<strong>YES</strong>
-							</button>
-						</div>
-						<div className="col-md">
-							<button className="btn btn-dark btn-block" onClick={onClose}>
-								<strong>NO</strong>
-							</button>
-						</div>
-					</div>
-				</div>
+				<DeleteDialog filename={this.state.videos.get(index, Fields.filename)}
+							  onDelete={() => this.deleteVideo(index)}
+							  onClose={onClose}/>
 			)
 		});
 	}
 
+	renameIndex(index) {
+		confirmAlert({
+			customUI: ({onClose}) => (
+				<RenameDialog videos={this.state.videos}
+							  index={index}
+							  onRename={this.changeFileTitle}
+							  onClose={onClose}/>
+			)
+		})
+	}
+
 	changeFileTitle(index, fileTitle) {
-		if (fileTitle !== null && fileTitle.length) {
-			const filename = this.state.videos.get(index, Fields.filename);
-			this.connection.send(Request.rename_filename(filename, fileTitle))
-				.then(newString => {
-					const newFilename = newString[0];
-					const newFileTitle = newString[1];
-					if (filename !== newFilename) {
-						this.state.videos.changeFilename(index, newFilename, newFileTitle);
-						this.success(`File renamed to ${newFilename}`);
-					}
-				})
-				.catch(error => {
-					console.error(error);
-					this.error(`Unable to rename file! ${filename}`);
-				})
-		}
+		const filename = this.state.videos.get(index, Fields.filename);
+		return this.connection.send(Request.rename_filename(filename, fileTitle))
+			.then(newString => {
+				const newFilename = newString[0];
+				const newFileTitle = newString[1];
+				if (filename !== newFilename) {
+					this.state.videos.changeFilename(index, newFilename, newFileTitle);
+					this.success(`File renamed to ${newFilename}`);
+				}
+			})
+			.catch(error => {
+				console.error(error);
+				this.error(`Unable to rename file! ${filename}`);
+			});
 	}
 
 	loadVideoImage(index) {
@@ -514,7 +502,7 @@ export class App extends React.Component {
 							<div className="d-flex">
 								<div className="logo d-flex flex-column justify-content-center">&#120529;s</div>
 								<div className="d-flex flex-column justify-content-center">{this.mainButton()}</div>
-								{this.state.videos ? (
+								{this.state.status === AppStatus.VIDEOS_LOADED ? (
 									<div className="d-flex flex-column justify-content-center pl-2">
 										({this.state.videos.size()} video{this.state.videos.size() === 1 ? '' : 's'})
 									</div>
@@ -523,7 +511,7 @@ export class App extends React.Component {
 						</div>
 						<div className="col-md-10">
 							{this.state.status === AppStatus.VIDEOS_LOADED ? (
-								<AppForm nbPages={this.getNbPages()}
+								<AppForm nbPages={this.state.videos.nbPages(this.state.pageSize)}
 										 currentPage={this.state.currentPage}
 										 pageSize={this.state.pageSize}
 										 reverse={this.state.reverse}
@@ -562,15 +550,13 @@ export class App extends React.Component {
 											   onSelect={this.onSelectVideo}
 											   onOpenIndex={this.openIndex}
 											   onDeleteIndex={this.deleteIndex}
+											   onRenameIndex={this.renameIndex}
 											   onDeselectIndex={this.onDeselectVideo}
 											   videoIndex={index === null ? -1 : index}/>
 								</div>
 								<div className="col-md-3 p-3">
 									<VideoForm videos={this.state.videos}
 											   index={this.state.videoIndex}
-											   onOpenIndex={this.openIndex}
-											   onDeleteIndex={this.deleteIndex}
-											   onChangeFileTitle={this.changeFileTitle}
 											   imageLoader={this.loadVideoImage}/>
 								</div>
 							</div>
