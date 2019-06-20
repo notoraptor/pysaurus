@@ -14,7 +14,7 @@ from pysaurus.core.utils.functions import bool_type
 from pysaurus.public import api_errors
 
 NbType = utils.enumeration(('entries', 'unreadable', 'not_found', 'valid', 'found', 'thumbnails'))
-FieldType = utils.enumeration(Video.PUBLIC_INFO)
+FieldType = utils.enumeration(Video.TABLE_FIELDS)
 
 
 class API:
@@ -187,14 +187,13 @@ class API:
                 if all(term in video.title.lower() or term in video.filename.path.lower() for term in terms)]
 
     def list(self, field, reverse, page_size, page_number):
-        # type: (str, bool, int, int) -> List[dict]
+        # type: (str, bool, int, int) -> List[Video]
         if page_size <= 0:
             raise api_errors.InvalidPageSize(page_size)
         field = FieldType(field)  # type: str
         reverse = utils.bool_type(reverse)
         videos = sorted(self.database.valid_videos, key=lambda v: v.get(field), reverse=reverse)
-        return [video.info(video_id=self.database.get_video_id(video))
-                for video in videos[(page_size * page_number):(page_size * (page_number + 1))]]
+        return videos[(page_size * page_number):(page_size * (page_number + 1))]
 
     def videos(self):
         # type: () -> Table

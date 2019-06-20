@@ -68,14 +68,6 @@ class Video(object):
 
     LONG_TO_MIN = {_long: _min for _min, _long in MIN_TO_LONG.items()}
 
-    PUBLIC_INFO = (
-        # Video class fields
-        'filename', 'container_format', 'audio_codec', 'video_codec', 'width', 'height', 'sample_rate',
-        'audio_bit_rate', 'audio_codec_description', 'video_codec_description',
-        # special fields
-        'size', 'duration', 'microseconds', 'frame_rate', 'name', 'date', 'meta_title', 'file_title'
-    )
-
     def __init__(self, filename, title='', container_format='', audio_codec='', video_codec='',
                  audio_codec_description='', video_codec_description='', width=0, height=0,
                  frame_rate_num=0, frame_rate_den=0, sample_rate=0, duration=0, duration_time_base=0, size=0,
@@ -158,28 +150,10 @@ class Video(object):
         return path_utils.generate_thumb_path(folder, self.ensure_thumbnail_name())
 
     def get(self, field):
-        if field == 'size':
-            return self.get_size()
-        if field == 'duration':
-            return self.get_duration()
-        if field == 'microseconds':
-            return self.get_duration().total_microseconds
-        if field == 'frame_rate':
-            return self.frame_rate_num / self.frame_rate_den
-        if field == 'name':
-            return self.get_title()
-        if field == 'meta_title':
-            return self.title
-        if field == 'file_title':
-            return self.filename.title
-        if field == 'date':
-            return self.filename.get_date_modified()
-        if field in self.PUBLIC_INFO:
-            return getattr(self, field)
-        return None
+        return self.to_table_line()[self.TABLE_FIELDS.index(field)]
 
     def info(self, **extra):
-        info = {public_field: self.get(public_field) for public_field in self.PUBLIC_INFO}
+        info = {field: value for (field, value) in zip(self.TABLE_FIELDS, self.to_table_line())}
         info.update(extra)
         return info
 

@@ -50,5 +50,5 @@ class ConsoleParser(FunctionParser):
         headers = ['No', 'ID', field.upper(), 'Path']
         lines = []
         for i, video in enumerate(selected_videos):
-            lines.append(['(%d)' % i, self.api.database.get_video_id(video), video[field], video['filename']])
+            lines.append(['(%d)' % i, self.api.database.get_video_id(video), video.get(field), video.filename])
         return Table(headers=headers, lines=lines)

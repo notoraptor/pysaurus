@@ -10,25 +10,22 @@ def job_collect_videos(job):
     # type: (list) -> dict
     folder_to_files = {}
     paths, _, notifier = job
-    folders = set()
     for path in paths:  # type: AbsolutePath
         if not path.exists():
             notifier.notify(notifications.FolderNotFound(path))
         elif path.isdir():
-            folders.add(path)
-        elif utils.is_valid_video_filename(path.path):
-            folder_to_files.setdefault(path.get_directory(), set()).add(path)
+            collect_files(path, folder_to_files, notifier)
+        elif path.extension in utils.VIDEO_SUPPORTED_EXTENSIONS:
             notifier.notify(notifications.CollectingFiles(path))
+            folder_to_files.setdefault(path.get_directory(), []).append(path)
         else:
             notifier.notify(notifications.PathIgnored(path))
-    for folder in folders:
-        collect_files(folder, folder_to_files, notifier)
     return folder_to_files
 
 
 def job_videos_info(job):
     results = []
-    file_names, job_id, notifier = job  # type: (list, int, Notifier)
+    file_names, job_id, notifier = job  # type: (list, str, Notifier)
     count_tasks = len(file_names)
     cursor = 0
     while cursor < count_tasks:
@@ -41,7 +38,7 @@ def job_videos_info(job):
 
 def job_videos_thumbnails(job):
     results = []
-    file_names, thumb_names, thumb_folder, job_id, notifier = job  # type: (list, list, str, int, Notifier)
+    file_names, thumb_names, thumb_folder, job_id, notifier = job  # type: (list, list, str, str, Notifier)
     cursor = 0
     count_tasks = len(file_names)
     while cursor < count_tasks:
@@ -57,15 +54,11 @@ def job_videos_thumbnails(job):
 
 
 def collect_files(folder_path, folder_to_files, notifier):
-    # type: (AbsolutePath, dict, Notifier) -> int
-    nb_collected = 0
+    # type: (AbsolutePath, dict, Notifier) -> None
+    notifier.notify(notifications.CollectingFiles(folder_path))
     for file_name in folder_path.listdir():
         path = AbsolutePath.join(folder_path, file_name)
         if path.isdir():
             collect_files(path, folder_to_files, notifier)
-        elif utils.is_valid_video_filename(path.path):
-            folder_to_files.setdefault(folder_path, set()).add(path)
-            nb_collected += 1
-    if nb_collected:
-        notifier.notify(notifications.CollectingFiles(folder_path))
-    return nb_collected
+        elif path.extension in utils.VIDEO_SUPPORTED_EXTENSIONS:
+            folder_to_files.setdefault(folder_path, []).append(path)

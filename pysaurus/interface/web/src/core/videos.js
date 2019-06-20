@@ -84,6 +84,41 @@ export class Videos {
 		this.viewIsDatabase = true;
 	}
 
+	static computeName(data, getter) {
+		const metaTitle = getter(data, Fields.meta_title);
+		return metaTitle ? metaTitle : getter(data, Fields.file_title);
+	}
+
+	static computeQuality1(data, getter) {
+		// !!audio_codec, width, height, !errors.length, frame_rate, duration_value
+		const audioCodecFactor = getter(data, Fields.audio_codec) ? 1 : 0.5;
+		const width = getter(data, Fields.width);
+		const height = getter(data, Fields.height);
+		const errorFactor = getter(data, Fields.errors).length ? 0.25 : 1;
+		const frameRate = getter(data, Fields.frame_rate);
+		const duration = getter(data, Fields.duration_value) / 1000000;
+		let audioBitrate = getter(data, Fields.audio_bit_rate) / 1000;
+		audioBitrate = audioBitrate ? Math.log(audioBitrate) : 1;
+		const score = audioCodecFactor * width * height * errorFactor * frameRate * duration * audioBitrate;
+		return Math.log(score);
+	}
+
+	static computeQuality2(data, getter) {
+		const width = getter(data, Fields.width);
+		const height = getter(data, Fields.height);
+		const frameRate = getter(data, Fields.frame_rate);
+		const nbSeconds = getter(data, Fields.duration_value) / 1000000;
+		const audioBitrate = getter(data, Fields.audio_bit_rate);
+		const hasErrors = getter(data, Fields.errors).length;
+		const totalRelevantBytes = (width * height * frameRate * nbSeconds * 3) + ((audioBitrate * nbSeconds) / 8);
+		const rawQuality = hasErrors ? Math.sqrt(totalRelevantBytes) : totalRelevantBytes;
+		return rawQuality ? Math.log(rawQuality) : 0;
+	}
+
+	static computeQuality(data, getter) {
+		return Videos.computeQuality2(data, getter);
+	}
+
 	find(sequence, searchType) {
 		const found = [];
 		if (!sequence || !searchType || !SearchType.hasOwnProperty(searchType))
@@ -164,25 +199,6 @@ export class Videos {
 			this.sort(sortField, sortReverse);
 		}
 		return changed;
-	}
-
-	static computeName(data, getter) {
-		const metaTitle = getter(data, Fields.meta_title);
-		return metaTitle ? metaTitle : getter(data, Fields.file_title);
-	}
-
-	static computeQuality(data, getter) {
-		// !!audio_codec, width, height, !errors.length, frame_rate, duration_value
-		const audioCodecFactor = getter(data, Fields.audio_codec) ? 1 : 0.5;
-		const width = getter(data, Fields.width);
-		const height = getter(data, Fields.height);
-		const errorFactor = getter(data, Fields.errors).length ? 0.25 : 1;
-		const frameRate = getter(data, Fields.frame_rate);
-		const duration = getter(data, Fields.duration_value) / 1000000;
-		let audioBitrate = getter(data, Fields.audio_bit_rate) / 1000;
-		audioBitrate = audioBitrate ? Math.log(audioBitrate) : 1;
-		const score = audioCodecFactor * width * height * errorFactor * frameRate * duration * audioBitrate;
-		return Math.log(score);
 	}
 
 	getName(index) {
