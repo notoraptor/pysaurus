@@ -60,20 +60,7 @@ section {
 }
 
 .message {
-	padding: 0.2rem 1rem;
-	font-size: 0.9rem;
-	line-height: 0.9rem;
-	font-weight: bold;
-	border: 1px solid;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-}
-
-.message, .alert {
-	position: absolute;
 	cursor: pointer;
-	z-index: 1;
 }
 
 .message.error {
@@ -111,6 +98,31 @@ section {
 	background-color: lightgray;
 }
 
+.page-content {
+	background-color: royalblue;
+}
+
+.status-bar {
+	position: relative;
+	border-top: 1px solid black;
+	background-color: rgb(250, 250, 255);
+}
+
+.status-bar .info-bar {
+	border-right: 1px solid black;
+}
+.status-bar .message {
+	font-size: 0.9rem;
+	font-weight: bold;
+}
+
+.status-bar .info-bar, .status-bar .message {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	padding: 0.2rem 1rem;
+}
+
 .videos {
 	position: absolute;
 	width: 100%;
@@ -120,10 +132,17 @@ section {
 }
 
 .videos .videos-wrapper {
+	background-color: rgb(120, 120, 125);
+	position: relative;
 	height: 100%;
 	overflow: auto;
 	padding: 0;
-	background-color: rgb(120, 120, 125);
+}
+
+.videos .videos-wrapper .video-page {
+}
+
+.videos .videos-wrapper .video-page .video-view {
 }
 
 #video-image {

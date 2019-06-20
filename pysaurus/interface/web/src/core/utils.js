@@ -12,7 +12,7 @@ export const Utils = {
 		PORT: 8432,
 		PAGE_SIZES: [10, 20, 50, 100],
 		DEFAULT_PAGE_SIZE: 100,
-		MESSAGE_TIMEOUT_SECONDS: 10
+		MESSAGE_TIMEOUT_SECONDS: 100
 	},
 	getFileSeparator: function (path) {
 		if (path.length >= 2 && path.charAt(1) === '\\')

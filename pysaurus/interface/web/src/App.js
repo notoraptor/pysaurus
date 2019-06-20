@@ -15,6 +15,7 @@ import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
 import {RenameDialog} from "./components/renameDialog";
 
 const AppStatus = {
+	SERVER_NOT_CONNECTED: 1, SERVER_CONNECTING: 2,
 	DB_NOT_LOADED: 3, DB_LOADING: 4,
 	VIDEO_NOT_LOADED: 5, VIDEOS_LOADING: 6, VIDEOS_LOADED: 7
 };
@@ -110,15 +111,15 @@ export class App extends React.Component {
 	}
 
 	error(message, otherState) {
-		this.message('alert alert-danger', message, otherState);
+		this.message('error', message, otherState);
 	}
 
 	info(message, otherState) {
-		this.message('alert alert-warning', message, otherState);
+		this.message('info', message, otherState);
 	}
 
 	success(message, otherState) {
-		this.message('alert alert-success', message, otherState);
+		this.message('success', message, otherState);
 	}
 
 	clearMessage(otherState) {
@@ -169,6 +170,38 @@ export class App extends React.Component {
 				{title}
 			</button>
 		);
+	}
+
+	statusBar() {
+		switch (this.state.status) {
+			case AppStatus.SERVER_NOT_CONNECTED:
+				return 'Not yet connected to server.';
+			case AppStatus.SERVER_CONNECTING:
+				return 'Connecting to server ...';
+			case AppStatus.DB_NOT_LOADED:
+				return 'Connected to server, database not yet loaded.';
+			case AppStatus.DB_LOADING:
+				return 'Loading database ...';
+			case AppStatus.VIDEO_NOT_LOADED:
+				return 'Database loaded, videos not yet loaded.';
+			case AppStatus.VIDEOS_LOADING:
+				return 'Loading videos ...';
+			case AppStatus.VIDEOS_LOADED:
+				return (
+					<span>
+						<span className="status-db">
+							{this.state.videos.databaseSize()} video{this.state.videos.databaseSize() === 1 ? '' : 's'}.
+						</span>
+						{this.state.videos.viewIsDatabase ? '' : (
+							<span className="status-view">
+								{this.state.videos.size()} viewed.
+							</span>
+						)}
+					</span>
+				);
+			default:
+				throw new Error(`Invalid app status ${this.state.status}`);
+		}
 	}
 
 	connect() {
@@ -492,78 +525,77 @@ export class App extends React.Component {
 	render() {
 		const index = this.state.videoIndex;
 		return (
-			<div className="container-fluid">
+			<main className="container-fluid d-flex flex-column">
 				<Helmet>
 					<title>Pysaurus!</title>
 				</Helmet>
-				<main className="d-flex flex-column">
-					<header className="row align-items-center p-1">
-						<div className="col-md-2 p-0">
-							<div className="d-flex">
-								<div className="logo d-flex flex-column justify-content-center">&#120529;s</div>
-								<div className="d-flex flex-column justify-content-center">{this.mainButton()}</div>
-								{this.state.status === AppStatus.VIDEOS_LOADED ? (
-									<div className="d-flex flex-column justify-content-center pl-2">
-										({this.state.videos.size()} video{this.state.videos.size() === 1 ? '' : 's'})
-									</div>
-								) : ''}
-							</div>
-						</div>
-						<div className="col-md-10">
+				<header className="row align-items-center p-1">
+					<div className="col-md-2 p-0">
+						<div className="d-flex">
+							<div className="logo d-flex flex-column justify-content-center">&#120529;s</div>
+							<div className="d-flex flex-column justify-content-center">{this.mainButton()}</div>
 							{this.state.status === AppStatus.VIDEOS_LOADED ? (
-								<AppForm nbPages={this.state.videos.nbPages(this.state.pageSize)}
-										 currentPage={this.state.currentPage}
-										 pageSize={this.state.pageSize}
-										 reverse={this.state.reverse}
-										 search={this.state.search}
-										 searchType={this.state.searchType}
-										 sort={this.state.field}
-										 onChangeCurrentPage={this.onChangeCurrentPage}
-										 onChangePageSize={this.onChangePageSize}
-										 onChangeReverse={this.onChangeReverse}
-										 onChangeSearch={this.onChangeSearch}
-										 onChangeSearchType={this.onChangeSearchType}
-										 onChangeSort={this.onChangeSort}
-										 onSearch={this.submitSearchForm}/>
+								<div className="d-flex flex-column justify-content-center pl-2">
+									({this.state.videos.size()} video{this.state.videos.size() === 1 ? '' : 's'})
+								</div>
 							) : ''}
 						</div>
-					</header>
-					<section className="row flex-grow-1">
-						{this.state.message ? (
-							<div className={`${this.state.messageType}`}
-								 title={this.state.message}
-								 onClick={this.clearMessage}>
-								{this.state.message}
-							</div>
-						) : ''}
-						{this.state.status === AppStatus.DB_LOADING ?
-							<Notification title={this.state.notificationTitle}
-										  content={this.state.notificationContent}/> : ''}
+					</div>
+					<div className="col-md-10">
 						{this.state.status === AppStatus.VIDEOS_LOADED ? (
-							<div className="videos row">
-								<div className="col-md-9 videos-wrapper">
-									<VideoPage videos={this.state.videos}
-											   field={this.state.field}
-											   reverse={this.state.reverse}
-											   currentPage={this.state.currentPage}
-											   pageSize={this.state.pageSize}
-											   onSelect={this.onSelectVideo}
-											   onOpenIndex={this.openIndex}
-											   onDeleteIndex={this.deleteIndex}
-											   onRenameIndex={this.renameIndex}
-											   onDeselectIndex={this.onDeselectVideo}
-											   videoIndex={index === null ? -1 : index}/>
-								</div>
-								<div className="col-md-3 p-3">
-									<VideoForm videos={this.state.videos}
-											   index={this.state.videoIndex}
-											   imageLoader={this.loadVideoImage}/>
-								</div>
-							</div>
+							<AppForm nbPages={this.state.videos.nbPages(this.state.pageSize)}
+									 currentPage={this.state.currentPage}
+									 pageSize={this.state.pageSize}
+									 reverse={this.state.reverse}
+									 search={this.state.search}
+									 searchType={this.state.searchType}
+									 sort={this.state.field}
+									 onChangeCurrentPage={this.onChangeCurrentPage}
+									 onChangePageSize={this.onChangePageSize}
+									 onChangeReverse={this.onChangeReverse}
+									 onChangeSearch={this.onChangeSearch}
+									 onChangeSearchType={this.onChangeSearchType}
+									 onChangeSort={this.onChangeSort}
+									 onSearch={this.submitSearchForm}/>
 						) : ''}
-					</section>
-				</main>
-			</div>
+					</div>
+				</header>
+				<section className="row flex-grow-1">
+					{this.state.status === AppStatus.DB_LOADING ?
+						<Notification title={this.state.notificationTitle}
+									  content={this.state.notificationContent}/> : ''}
+					{this.state.status === AppStatus.VIDEOS_LOADED ? (
+						<div className="videos row">
+							<div className="col-md-9 videos-wrapper">
+								<VideoPage videos={this.state.videos}
+										   field={this.state.field}
+										   reverse={this.state.reverse}
+										   currentPage={this.state.currentPage}
+										   pageSize={this.state.pageSize}
+										   onSelect={this.onSelectVideo}
+										   onOpenIndex={this.openIndex}
+										   onDeleteIndex={this.deleteIndex}
+										   onRenameIndex={this.renameIndex}
+										   onDeselectIndex={this.onDeselectVideo}
+										   videoIndex={index === null ? -1 : index}/>
+							</div>
+							<div className="col-md-3 p-3">
+								<VideoForm videos={this.state.videos}
+										   index={this.state.videoIndex}
+										   imageLoader={this.loadVideoImage}/>
+							</div>
+						</div>
+					) : ''}
+				</section>
+				<footer className="status-bar row">
+					<div className="col-md-9 info-bar">{this.statusBar()}</div>
+					<div className={`col-md-3 message ${this.state.message ? this.state.messageType : ''}`}
+						 title={this.state.message || '(no message)'}
+						 onClick={this.clearMessage}>
+						{this.state.message || ''}
+					</div>
+				</footer>
+			</main>
 		);
 	}
 }
