@@ -35,7 +35,7 @@ export const Sort = {
 	sample_rate: 'Sample rate',
 	audio_bit_rate: 'Audio bit rate',
 	frame_rate: 'Frame rate',
-	duration_value: 'JavascriptDuration',
+	duration_value: 'Duration',
 	size_value: 'Size',
 	date_value: 'Date',
 	meta_title: 'Title (meta tag)',
@@ -52,8 +52,7 @@ export const SearchType = {
 };
 
 export const Extra = {
-	image64: 'image64',
-	newName: 'newName'
+	image64: 'image64'
 };
 
 export class Videos {
@@ -71,7 +70,7 @@ export class Videos {
 		this.nbUpdates = 0;
 		// Functions.
 		this.get = this.get.bind(this);
-		this.getFromLine = this.getFromLine.bind(this);
+		this.__getFromLine = this.__getFromLine.bind(this);
 		// Initialization.
 		this.headers = table.shift();
 		for (let i = 0; i < this.headers.length; ++i) {
@@ -92,21 +91,7 @@ export class Videos {
 		return metaTitle ? metaTitle : getter(data, Fields.file_title);
 	}
 
-	static computeQuality1(data, getter) {
-		// !!audio_codec, width, height, !errors.length, frame_rate, duration_value
-		const audioCodecFactor = getter(data, Fields.audio_codec) ? 1 : 0.5;
-		const width = getter(data, Fields.width);
-		const height = getter(data, Fields.height);
-		const errorFactor = getter(data, Fields.errors).length ? 0.25 : 1;
-		const frameRate = getter(data, Fields.frame_rate);
-		const duration = getter(data, Fields.duration_value) / 1000000;
-		let audioBitrate = getter(data, Fields.audio_bit_rate) / 1000;
-		audioBitrate = audioBitrate ? Math.log(audioBitrate) : 1;
-		const score = audioCodecFactor * width * height * errorFactor * frameRate * duration * audioBitrate;
-		return Math.log(score);
-	}
-
-	static computeQuality2(data, getter) {
+	static computeQuality(data, getter) {
 		const width = getter(data, Fields.width);
 		const height = getter(data, Fields.height);
 		const frameRate = getter(data, Fields.frame_rate);
@@ -118,126 +103,55 @@ export class Videos {
 		return rawQuality ? Math.log(rawQuality) : 0;
 	}
 
-	static computeQuality(data, getter) {
-		return Videos.computeQuality2(data, getter);
-	}
-
-	find(sequence, searchType) {
-		const found = [];
-		if (!sequence || !searchType || !SearchType.hasOwnProperty(searchType))
-			return found;
-		sequence = sequence.toLocaleLowerCase();
-		if (searchType === SearchType.exact) {
-			for (let line of Object.values(this.database)) {
-				for (let fieldName of Object.keys(Fields)) {
-					const fieldValue = `${this.getFromLine(line, fieldName)}`.toLocaleLowerCase();
-					if (fieldValue.indexOf(sequence) >= 0) {
-						found.push(line);
-						break;
-					}
-				}
-			}
-		} else {
-			const terms = sequence.split(/[ \t\r\n\b\v]+/).map(term => term.toLocaleLowerCase());
-			if (searchType === SearchType.all) {
-				for (let line of Object.values(this.database)) {
-					let allTermsFound = true;
-					for (let term of terms) {
-						let termFound = false;
-						for (let fieldName of Object.keys(Fields)) {
-							const fieldValue = `${this.getFromLine(line, fieldName)}`.toLocaleLowerCase();
-							if (fieldValue.indexOf(term) >= 0) {
-								termFound = true;
-								break;
-							}
-						}
-						if (!termFound) {
-							allTermsFound = false;
-							break;
-						}
-					}
-					if (allTermsFound)
-						found.push(line);
-				}
-			} else { // Any.
-				for (let line of Object.values(this.database)) {
-					let anyTermFound = false;
-					for (let term of terms) {
-						for (let fieldName of Object.keys(Fields)) {
-							const fieldValue = `${this.getFromLine(line, fieldName)}`.toLocaleLowerCase();
-							if (fieldValue.indexOf(term) >= 0) {
-								anyTermFound = true;
-								break;
-							}
-						}
-						if (anyTermFound)
-							break;
-					}
-					if (anyTermFound)
-						found.push(line);
-				}
-			}
-		}
-		return found;
-	}
-
-	setSearch(sequence, searchType) {
-		let changed = false;
-		if (!sequence || !searchType || !SearchType.hasOwnProperty(searchType)) {
-			if (!this.viewIsDatabase) {
-				this.lines = Object.values(this.database);
-				this.viewIsDatabase = true;
-				changed = true;
-			}
-		} else {
-			this.lines = this.find(sequence, searchType);
-			this.viewIsDatabase = false;
-			changed = true;
-		}
-		if (changed) {
-			const sortField = this.sortField;
-			const sortReverse = this.sortReverse;
-			this.sortField = null;
-			this.sortReverse = null;
-			this.sort(sortField, sortReverse);
-		}
-		return changed;
-	}
-
-	getName(index) {
+	__getName(index) {
 		return Videos.computeName(index, this.get);
 	}
 
-	getQuality(index) {
+	__getQuality(index) {
 		return Videos.computeQuality(index, this.get);
 	}
 
-	getNameFromLine(line) {
-		return Videos.computeName(line, this.getFromLine);
+	__getNameFromLine(line) {
+		return Videos.computeName(line, this.__getFromLine);
 	}
 
-	getQualityFromLine(line) {
-		return Videos.computeQuality(line, this.getFromLine);
+	__getQualityFromLine(line) {
+		return Videos.computeQuality(line, this.__getFromLine);
+	}
+
+	__getFromLine(line, field) {
+		if (field === 'name')
+			return this.__getNameFromLine(line);
+		if (field === 'quality')
+			return this.__getQualityFromLine(line);
+		return line[this.fieldIndex[field]];
 	}
 
 	get(index, field) {
 		if (field === 'name')
-			return this.getName(index);
+			return this.__getName(index);
 		if (field === 'quality')
-			return this.getQuality(index);
+			return this.__getQuality(index);
 		return this.lines[index][this.fieldIndex[field]];
-	}
-
-	getFromLine(line, field) {
-		if (field === 'name')
-			return this.getNameFromLine(line);
-		if (field === 'quality')
-			return this.getQualityFromLine(line);
-		return line[this.fieldIndex[field]];
 	}
 
 	getExtra(index, field) {
 		const filename = this.get(index, Fields.filename);
+		if (this.extras.hasOwnProperty(filename) && this.extras[filename].hasOwnProperty(field))
+			return this.extras[filename][field];
+		return null;
+	}
+
+	getDatabaseIdentifiers() {
+		return Object.keys(this.database);
+	}
+
+	getFromDatabase(identifier, field) {
+		return this.__getFromLine(this.database[identifier], field);
+	}
+
+	getExtraFromDatabase(identifier, field) {
+		const filename = this.getFromDatabase(identifier, Fields.filename);
 		if (this.extras.hasOwnProperty(filename) && this.extras[filename].hasOwnProperty(field))
 			return this.extras[filename][field];
 		return null;
@@ -264,32 +178,36 @@ export class Videos {
 		}
 		video.frame_rate = Math.round(video.frame_rate);
 		video.audio_bit_rate = `${Math.round(video.audio_bit_rate / 1000)} Kb/s`;
-		video.name = this.getName(index);
-		video.quality = Math.round(this.getQuality(index) * 100) / 100;
+		video.name = this.__getName(index);
+		video.quality = Math.round(this.__getQuality(index) * 100) / 100;
 		video.index = index;
 		return video;
+	}
+
+	hasView() {
+		return !this.viewIsDatabase;
 	}
 
 	size() {
 		return this.lines.length;
 	}
 
-	nbPages(pageSize) {
-		return Math.floor(this.size() / pageSize) + (this.size() % pageSize ? 1 : 0);
-	}
-
 	duration() {
 		let totalMicroseconds = 0;
 		for (let line of this.lines)
-			totalMicroseconds += this.getFromLine(line, Fields.duration_value);
+			totalMicroseconds += this.__getFromLine(line, Fields.duration_value);
 		return new JavascriptDuration(totalMicroseconds);
 	}
 
 	fileSize() {
 		let totalSize = 0;
 		for (let line of this.lines)
-			totalSize += this.getFromLine(line, Fields.size_value);
+			totalSize += this.__getFromLine(line, Fields.size_value);
 		return new JavascriptFileSize(totalSize);
+	}
+
+	nbPages(pageSize) {
+		return Math.floor(this.size() / pageSize) + (this.size() % pageSize ? 1 : 0);
 	}
 
 	databaseSize() {
@@ -299,47 +217,97 @@ export class Videos {
 	databaseDuration() {
 		let totalMicroseconds = 0;
 		for (let line of Object.values(this.database))
-			totalMicroseconds += this.getFromLine(line, Fields.duration_value);
+			totalMicroseconds += this.__getFromLine(line, Fields.duration_value);
 		return new JavascriptDuration(totalMicroseconds);
 	}
 
 	databaseFileSize() {
 		let totalSize = 0;
 		for (let line of Object.values(this.database))
-			totalSize += this.getFromLine(line, Fields.size_value);
+			totalSize += this.__getFromLine(line, Fields.size_value);
 		return new JavascriptFileSize(totalSize);
 	}
 
-	setExtra(index, field, value) {
-		const filename = this.get(index, Fields.filename);
-		if (!this.extras.hasOwnProperty(filename))
-			this.extras[filename] = {};
-		this.extras[filename][field] = value;
-		++this.nbUpdates;
+	__find(sequence, searchType) {
+		const found = [];
+		if (!sequence || !searchType || !SearchType.hasOwnProperty(searchType))
+			return found;
+		sequence = sequence.toLocaleLowerCase();
+		if (searchType === SearchType.exact) {
+			for (let line of Object.values(this.database)) {
+				for (let fieldName of Object.keys(Fields)) {
+					const fieldValue = `${this.__getFromLine(line, fieldName)}`.toLocaleLowerCase();
+					if (fieldValue.indexOf(sequence) >= 0) {
+						found.push(line);
+						break;
+					}
+				}
+			}
+		} else {
+			const terms = sequence.split(/[ \t\r\n\b\v]+/).map(term => term.toLocaleLowerCase());
+			if (searchType === SearchType.all) {
+				for (let line of Object.values(this.database)) {
+					let allTermsFound = true;
+					for (let term of terms) {
+						let termFound = false;
+						for (let fieldName of Object.keys(Fields)) {
+							const fieldValue = `${this.__getFromLine(line, fieldName)}`.toLocaleLowerCase();
+							if (fieldValue.indexOf(term) >= 0) {
+								termFound = true;
+								break;
+							}
+						}
+						if (!termFound) {
+							allTermsFound = false;
+							break;
+						}
+					}
+					if (allTermsFound)
+						found.push(line);
+				}
+			} else { // Any.
+				for (let line of Object.values(this.database)) {
+					let anyTermFound = false;
+					for (let term of terms) {
+						for (let fieldName of Object.keys(Fields)) {
+							const fieldValue = `${this.__getFromLine(line, fieldName)}`.toLocaleLowerCase();
+							if (fieldValue.indexOf(term) >= 0) {
+								anyTermFound = true;
+								break;
+							}
+						}
+						if (anyTermFound)
+							break;
+					}
+					if (anyTermFound)
+						found.push(line);
+				}
+			}
+		}
+		return found;
 	}
 
-	sort(field, reverse) {
-		reverse = !!reverse;
-		if (this.sortField === field && this.sortReverse === reverse)
-			return;
-
-		this.lines.sort((a, b) => {
-			let valueA = this.getFromLine(a, field);
-			let valueB = this.getFromLine(b, field);
-			let ret = 0;
-			if (typeof valueA === 'string') {
-				ret = valueA.toLocaleLowerCase().localeCompare(valueB.toLocaleLowerCase());
-				if (ret === 0)
-					ret = valueA.localeCompare(valueB);
-			} else if (valueA < valueB)
-				ret = -1;
-			else if (valueA > valueB)
-				ret = 1;
-			return reverse ? -ret : ret;
-		});
-		this.sortField = field;
-		this.sortReverse = reverse;
-		++this.nbUpdates;
+	setSearch(sequence, searchType) {
+		let changed = false;
+		if (!sequence || !searchType || !SearchType.hasOwnProperty(searchType)) {
+			if (!this.viewIsDatabase) {
+				this.lines = Object.values(this.database);
+				this.viewIsDatabase = true;
+				changed = true;
+			}
+		} else {
+			this.lines = this.__find(sequence, searchType);
+			this.viewIsDatabase = false;
+			changed = true;
+		}
+		if (changed) {
+			const sortField = this.sortField;
+			const sortReverse = this.sortReverse;
+			this.sortField = null;
+			this.sortReverse = null;
+			this.sort(sortField, sortReverse);
+		}
+		return changed;
 	}
 
 	remove(index) {
@@ -361,8 +329,6 @@ export class Videos {
 			if (this.extras.hasOwnProperty(filename)) {
 				extra = this.extras[filename];
 				delete this.extras[filename];
-				if (extra.hasOwnProperty(Extra.newName))
-					delete extra.newName;
 			}
 			this.lines[index][this.fieldIndex[Fields.filename]] = newFilename;
 			this.lines[index][this.fieldIndex[Fields.file_title]] = newFileTitle;
@@ -370,5 +336,62 @@ export class Videos {
 				this.extras[newFilename] = extra;
 			++this.nbUpdates;
 		}
+	}
+
+	setExtra(index, field, value) {
+		const filename = this.get(index, Fields.filename);
+		if (!this.extras.hasOwnProperty(filename))
+			this.extras[filename] = {};
+		this.extras[filename][field] = value;
+		++this.nbUpdates;
+	}
+
+	sort(field, reverse) {
+		reverse = !!reverse;
+		if (this.sortField === field && this.sortReverse === reverse)
+			return;
+
+		this.lines.sort((a, b) => {
+			let valueA = this.__getFromLine(a, field);
+			let valueB = this.__getFromLine(b, field);
+			let ret = 0;
+			if (typeof valueA === 'string') {
+				ret = valueA.toLocaleLowerCase().localeCompare(valueB.toLocaleLowerCase());
+				if (ret === 0)
+					ret = valueA.localeCompare(valueB);
+			} else if (valueA < valueB)
+				ret = -1;
+			else if (valueA > valueB)
+				ret = 1;
+			return reverse ? -ret : ret;
+		});
+		this.sortField = field;
+		this.sortReverse = reverse;
+		++this.nbUpdates;
+	}
+
+	findSameValues(field) {
+		const groups = {};
+		let dbSize = 0;
+		for (let line of Object.values(this.database)) {
+			++dbSize;
+			const value = this.__getFromLine(line, field);
+			if (!groups.hasOwnProperty(value))
+				groups[value] = [];
+			groups[value].push(line);
+		}
+		const countGroups = Object.keys(groups).length;
+		if (countGroups === 0 || countGroups === 1 || countGroups === dbSize)
+			return 0;
+		const lines = [];
+		for (let groupedLines of Object.values(groups)) {
+			if (groupedLines.length > 1)
+				lines.push(...groupedLines);
+		}
+		if (lines.length) {
+			this.lines = lines;
+			this.viewIsDatabase = false;
+		}
+		return lines.length;
 	}
 }

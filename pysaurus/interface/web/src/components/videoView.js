@@ -44,7 +44,7 @@ export class VideoView extends React.Component {
 					</MenuItem>
 					<MenuItem attributes={{className: 'menu-item action-rename'}}
 							  onClick={() => this.props.onRenameIndex(video.index)}>
-						Rename
+						Rename ...
 					</MenuItem>
 					<MenuItem attributes={{className: 'menu-item action-delete'}}
 							  onClick={() => this.props.onDeleteIndex(video.index)}>

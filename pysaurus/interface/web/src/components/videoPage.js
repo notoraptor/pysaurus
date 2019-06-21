@@ -16,6 +16,11 @@ export class VideoPage extends React.Component {
 				if (end > videos.size())
 					end = videos.size();
 				for (let i = start; i < end; ++i) {
+					if (this.props.splitter) {
+						const divider = this.props.splitter(videos, i - 1, i);
+						if (divider)
+							views.push(divider);
+					}
 					views.push(<VideoView key={i - start}
 										  video={videos.getPrintableVideo(i)}
 										  onSelect={this.props.onSelect}
@@ -43,4 +48,5 @@ VideoPage.propTypes = {
 	onDeleteIndex: PropTypes.func.isRequired, // onDeleteIndex(index)
 	onRenameIndex: PropTypes.func.isRequired, // onRenameIndex(index)
 	onDeselectIndex: PropTypes.func.isRequired, // onDeselectIndex(index)
+	splitter: PropTypes.func, // splitter(videos, previousIndex, nextIndex)
 };

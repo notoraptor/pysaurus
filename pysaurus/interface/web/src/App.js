@@ -9,12 +9,14 @@ import {Extra, Fields, SearchType, Videos} from "./core/videos";
 import {VideoPage} from "./components/videoPage";
 import {VideoForm} from "./components/videoForm";
 import {AppForm} from "./components/appForm";
-import {confirmAlert} from 'react-confirm-alert'; // Import
 import {DeleteDialog} from "./components/deleteDialog";
-import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
 import {RenameDialog} from "./components/renameDialog";
+import {SameValueDialog} from "./components/sameValueDialog";
 import {FileSize} from "./components/fileSize";
 import {Duration} from "./components/duration";
+
+import {confirmAlert} from 'react-confirm-alert'; // Import
+import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
 
 const AppStatus = {
 	SERVER_NOT_CONNECTED: 1, SERVER_CONNECTING: 2,
@@ -54,6 +56,7 @@ export class App extends React.Component {
 			searchType: '',
 			// videos
 			videos: null,
+			splitter: null,
 			// current selected video
 			videoIndex: null,
 		};
@@ -79,6 +82,9 @@ export class App extends React.Component {
 		this.search = this.search.bind(this);
 		this.submitSearchForm = this.submitSearchForm.bind(this);
 		this.deleteVideo = this.deleteVideo.bind(this);
+		this.findSame = this.findSame.bind(this);
+		this.onFind = this.onFind.bind(this);
+		this.showDatabase = this.showDatabase.bind(this);
 	}
 
 	static getStateNoNotifications(otherState) {
@@ -174,9 +180,10 @@ export class App extends React.Component {
 						</div>
 					</button>
 					<div className="dropdown-menu" aria-labelledby="dropdownMenuButton">
-						<button className="dropdown-item">Action</button>
-						<button className="dropdown-item">Another action</button>
-						<button className="dropdown-item">Something else here</button>
+						{this.state.splitter ? (
+							<button className="dropdown-item" onClick={this.showDatabase}>Display database</button>
+						) : ''}
+						<button className="dropdown-item" onClick={this.findSame}>Find videos with same value for ...</button>
 					</div>
 				</div>
 			);
@@ -222,7 +229,7 @@ export class App extends React.Component {
 								<FileSize size={this.state.videos.databaseFileSize()}/>
 							</span>
 						</span>
-						{this.state.videos.viewIsDatabase ? '' : (
+						{this.state.videos.hasView() ? (
 							<span className="status-section status-view">
 								<span className="status-info">
 									<strong>{this.state.videos.size()}</strong> viewed
@@ -234,7 +241,7 @@ export class App extends React.Component {
 									<FileSize size={this.state.videos.fileSize()}/>
 								</span>
 							</span>
-						)}
+						) : ''}
 					</span>
 				);
 			default:
@@ -465,6 +472,17 @@ export class App extends React.Component {
 			this.setState({videoIndex: null, currentPage: 0});
 	}
 
+	showDatabase() {
+		this.state.videos.setSearch('', '');
+		this.setState({
+			currentPage: 0,
+			search: '',
+			searchType: '',
+			splitter: null,
+			videoIndex: null,
+		});
+	}
+
 	submitSearchForm() {
 		this.setState({searchType: this.state.searchType ? this.state.searchType : SearchType.all}, this.search);
 	}
@@ -524,6 +542,39 @@ export class App extends React.Component {
 							  index={index}
 							  onRename={this.changeFileTitle}
 							  onClose={onClose}/>
+			)
+		})
+	}
+
+	onFind(field) {
+		return new Promise((resolve, reject) => {
+			const count = this.state.videos.findSameValues(field);
+			if (count) {
+				this.setState({field: field, reverse: false}, () => {
+					this.success(`Found ${count} videos.`, {
+						splitter: (videos, previousIndex, currentIndex) => {
+							if (field !== this.state.field)
+								return '';
+							const previousField = previousIndex === -1 ? null : videos.get(previousIndex, field);
+							const currentField = videos.get(currentIndex, field);
+							if (previousField !== currentField) {
+								return <div key={`splitter-${currentIndex}`}><p/><p/><p/><p/></div>;
+							}
+						}
+					});
+					resolve(count);
+				});
+			} else {
+				this.error('No videos found.');
+				reject(count);
+			}
+		})
+	}
+
+	findSame() {
+		confirmAlert({
+			customUI: ({onClose}) => (
+				<SameValueDialog onClose={onClose} onFind={this.onFind}/>
 			)
 		})
 	}
@@ -613,6 +664,7 @@ export class App extends React.Component {
 										   onDeleteIndex={this.deleteIndex}
 										   onRenameIndex={this.renameIndex}
 										   onDeselectIndex={this.onDeselectVideo}
+										   splitter={this.state.splitter}
 										   videoIndex={index === null ? -1 : index}/>
 							</div>
 							<div className="col-md-3 p-3">
