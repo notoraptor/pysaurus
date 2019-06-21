@@ -23,23 +23,23 @@ export const Fields = {
 export const SpecialFields = {id: 'id'};
 
 export const Sort = {
-	filename: 'path',
-	container_format: 'format',
-	audio_codec: 'audio codec',
-	video_codec: 'video codec',
-	width: 'width',
-	height: 'height',
-	sample_rate: 'sample rate',
-	audio_bit_rate: 'audio bit rate',
-	frame_rate: 'frame rate',
-	duration_value: 'duration',
-	size_value: 'size',
-	date_value: 'date',
-	meta_title: 'title (meta tag)',
-	file_title: 'title (file name)',
-	extension: 'extension',
-	name: 'title',
-	quality: 'quality'
+	filename: 'Path',
+	container_format: 'Format',
+	audio_codec: 'Audio codec',
+	video_codec: 'Video codec',
+	width: 'Width',
+	height: 'Height',
+	sample_rate: 'Sample rate',
+	audio_bit_rate: 'Audio bit rate',
+	frame_rate: 'Frame rate',
+	duration_value: 'Duration',
+	size_value: 'Size',
+	date_value: 'Date',
+	meta_title: 'Title (meta tag)',
+	file_title: 'Title (file name)',
+	extension: 'Extension',
+	name: 'Title',
+	quality: 'Quality'
 };
 
 export const SearchType = {

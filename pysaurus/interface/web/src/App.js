@@ -161,13 +161,32 @@ export class App extends React.Component {
 				throw new Error(`Invalid app status ${this.state.status}`);
 		}
 		if (title === '')
-			return '';
+			return (
+				<div className="dropdown">
+					<button type="button"
+							id="dropdownMenuButton"
+							data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+							className="btn btn-dark main-button btn-sm dropdown-toggle">
+						<div style={{display: 'inline-block'}}>
+							{this.logo()}
+						</div>
+					</button>
+					<div className="dropdown-menu" aria-labelledby="dropdownMenuButton">
+						<button className="dropdown-item">Action</button>
+						<button className="dropdown-item">Another action</button>
+						<button className="dropdown-item">Something else here</button>
+					</div>
+				</div>
+			);
 		return (
 			<button type="button"
 					className="btn btn-dark main-button btn-sm"
 					disabled={disabled}
 					{...(callback ? {onClick: callback} : {})}>
-				{title}
+				<div className="d-flex flex-row">
+					{this.logo()}
+					<div className="d-flex flex-column justify-content-center">{title}</div>
+				</div>
 			</button>
 		);
 	}
@@ -522,6 +541,10 @@ export class App extends React.Component {
 		}
 	}
 
+	logo() {
+		return <div className="logo d-flex flex-column justify-content-center">&#120529;s</div>;
+	}
+
 	render() {
 		const index = this.state.videoIndex;
 		return (
@@ -531,15 +554,7 @@ export class App extends React.Component {
 				</Helmet>
 				<header className="row align-items-center p-1">
 					<div className="col-md-2 p-0">
-						<div className="d-flex">
-							<div className="logo d-flex flex-column justify-content-center">&#120529;s</div>
-							<div className="d-flex flex-column justify-content-center">{this.mainButton()}</div>
-							{this.state.status === AppStatus.VIDEOS_LOADED ? (
-								<div className="d-flex flex-column justify-content-center pl-2">
-									({this.state.videos.size()} video{this.state.videos.size() === 1 ? '' : 's'})
-								</div>
-							) : ''}
-						</div>
+						{this.mainButton()}
 					</div>
 					<div className="col-md-10">
 						{this.state.status === AppStatus.VIDEOS_LOADED ? (

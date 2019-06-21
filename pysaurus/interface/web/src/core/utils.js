@@ -10,9 +10,9 @@ export const Utils = {
 	config: {
 		HOSTNAME: 'localhost',
 		PORT: 8432,
-		PAGE_SIZES: [10, 20, 50, 100],
+		PAGE_SIZES: [5, 10, 20, 50, 100],
 		DEFAULT_PAGE_SIZE: 100,
-		MESSAGE_TIMEOUT_SECONDS: 100
+		MESSAGE_TIMEOUT_SECONDS: 15
 	},
 	getFileSeparator: function (path) {
 		if (path.length >= 2 && path.charAt(1) === '\\')

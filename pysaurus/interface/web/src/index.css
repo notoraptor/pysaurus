@@ -46,42 +46,18 @@ section {
 .logo {
 	background-color: chartreuse;
 	border: 4px solid green;
-	width: 2.2rem;
-	height: 2.2rem;
-	border-radius: 1.1rem;
+	width: 2rem;
+	height: 2rem;
+	border-radius: 1rem;
 	font-weight: bold;
 	margin-right: 0.5rem;
 	text-align: center;
 	cursor: default;
+	color: black;
 }
 
 .container-fluid button, .container-fluid label {
 	font-weight: bold;
-}
-
-.message {
-	cursor: pointer;
-}
-
-.message.error {
-	display: block;
-	border-color: rgb(150, 100, 100);
-	background-color: rgb(255, 240, 240);
-	color: rgb(150, 100, 100);
-}
-
-.message.info {
-	display: block;
-	border-color: rgb(150, 150, 100);
-	background-color: rgb(255, 255, 240);
-	color: rgb(150, 150, 100);
-}
-
-.message.success {
-	display: block;
-	border-color: rgb(100, 150, 100);
-	background-color: rgb(240, 255, 240);
-	color: rgb(100, 150, 100);
 }
 
 .notification-wrapper {
@@ -104,16 +80,36 @@ section {
 
 .status-bar {
 	position: relative;
-	border-top: 1px solid black;
-	background-color: rgb(250, 250, 255);
+	border-top: 1px solid rgb(70,70, 75);
+	background-color: rgb(80, 80, 85);
+	background-image: linear-gradient(rgb(100, 100, 105), rgb(80, 80, 85));
+	color: white;
 }
 
 .status-bar .info-bar {
-	border-right: 1px solid black;
+	border-right: 1px solid rgb(70, 70, 75);
 }
 .status-bar .message {
-	font-size: 0.9rem;
 	font-weight: bold;
+	cursor: pointer;
+}
+
+.message.error {
+	/*border-color: rgb(150, 100, 100);*/
+	/*background-color: rgb(255, 240, 240);*/
+	color: rgb(250, 200, 200);
+}
+
+.message.info {
+	/*border-color: rgb(150, 150, 100);*/
+	/*background-color: rgb(255, 255, 240);*/
+	color: rgb(250, 250, 200);
+}
+
+.message.success {
+	/*border-color: rgb(100, 150, 100);*/
+	/*background-color: rgb(240, 255, 240);*/
+	color: rgb(200, 250, 200);
 }
 
 .status-bar .info-bar, .status-bar .message {
