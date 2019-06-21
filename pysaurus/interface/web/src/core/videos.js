@@ -1,3 +1,6 @@
+import {JavascriptDuration} from "./javascriptDuration";
+import {JavascriptFileSize} from "./javascriptFileSize";
+
 export const Fields = {
 	filename: 'filename',
 	container_format: 'container_format',
@@ -32,7 +35,7 @@ export const Sort = {
 	sample_rate: 'Sample rate',
 	audio_bit_rate: 'Audio bit rate',
 	frame_rate: 'Frame rate',
-	duration_value: 'Duration',
+	duration_value: 'JavascriptDuration',
 	size_value: 'Size',
 	date_value: 'Date',
 	meta_title: 'Title (meta tag)',
@@ -275,8 +278,36 @@ export class Videos {
 		return Math.floor(this.size() / pageSize) + (this.size() % pageSize ? 1 : 0);
 	}
 
+	duration() {
+		let totalMicroseconds = 0;
+		for (let line of this.lines)
+			totalMicroseconds += this.getFromLine(line, Fields.duration_value);
+		return new JavascriptDuration(totalMicroseconds);
+	}
+
+	fileSize() {
+		let totalSize = 0;
+		for (let line of this.lines)
+			totalSize += this.getFromLine(line, Fields.size_value);
+		return new JavascriptFileSize(totalSize);
+	}
+
 	databaseSize() {
 		return Object.keys(this.database).length;
+	}
+
+	databaseDuration() {
+		let totalMicroseconds = 0;
+		for (let line of Object.values(this.database))
+			totalMicroseconds += this.getFromLine(line, Fields.duration_value);
+		return new JavascriptDuration(totalMicroseconds);
+	}
+
+	databaseFileSize() {
+		let totalSize = 0;
+		for (let line of Object.values(this.database))
+			totalSize += this.getFromLine(line, Fields.size_value);
+		return new JavascriptFileSize(totalSize);
 	}
 
 	setExtra(index, field, value) {

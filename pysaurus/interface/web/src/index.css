@@ -80,7 +80,7 @@ section {
 
 .status-bar {
 	position: relative;
-	border-top: 1px solid rgb(70,70, 75);
+	border-top: 1px solid rgb(70, 70, 75);
 	background-color: rgb(80, 80, 85);
 	background-image: linear-gradient(rgb(100, 100, 105), rgb(80, 80, 85));
 	color: white;
@@ -89,6 +89,7 @@ section {
 .status-bar .info-bar {
 	border-right: 1px solid rgb(70, 70, 75);
 }
+
 .status-bar .message {
 	font-weight: bold;
 	cursor: pointer;
@@ -117,6 +118,24 @@ section {
 	overflow: hidden;
 	text-overflow: ellipsis;
 	padding: 0.2rem 1rem;
+}
+
+.status-section + .status-section {
+	border-left: 1px solid white;
+	margin-left: 1rem;
+	padding-left: 1rem;
+}
+
+.status-section .status-info + .status-info:before {
+	content: ', ';
+}
+
+.status-section.status-db {
+	color: rgb(255, 245, 0);
+}
+
+.status-section .status-info .total-duration > span + span:before {
+	content: ' ';
 }
 
 .videos {

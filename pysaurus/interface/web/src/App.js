@@ -13,6 +13,8 @@ import {confirmAlert} from 'react-confirm-alert'; // Import
 import {DeleteDialog} from "./components/deleteDialog";
 import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
 import {RenameDialog} from "./components/renameDialog";
+import {FileSize} from "./components/fileSize";
+import {Duration} from "./components/duration";
 
 const AppStatus = {
 	SERVER_NOT_CONNECTED: 1, SERVER_CONNECTING: 2,
@@ -35,8 +37,8 @@ export class App extends React.Component {
 			messageTimeoutID: null,
 			// notification when loading database
 			notificationCount: 0,
-			notificationTitle: 'loading',
-			notificationContent: '...',
+			notificationTitle: '',
+			notificationContent: '',
 			videosToLoad: 0,
 			thumbnailsToLoad: 0,
 			videosLoaded: 0,
@@ -82,8 +84,8 @@ export class App extends React.Component {
 	static getStateNoNotifications(otherState) {
 		const state = {
 			notificationCount: 0,
-			notificationTitle: 'loading',
-			notificationContent: '...',
+			notificationTitle: '',
+			notificationContent: '',
 			videosToLoad: 0,
 			thumbnailsToLoad: 0,
 			videosLoaded: 0,
@@ -208,12 +210,29 @@ export class App extends React.Component {
 			case AppStatus.VIDEOS_LOADED:
 				return (
 					<span>
-						<span className="status-db">
-							{this.state.videos.databaseSize()} video{this.state.videos.databaseSize() === 1 ? '' : 's'}.
+						<span className="status-section status-db">
+							<span className="status-info">
+								<strong>{this.state.videos.databaseSize()}</strong> video{
+								this.state.videos.databaseSize() === 1 ? '' : 's'}
+							</span>
+							<span className="status-info">
+								<Duration duration={this.state.videos.databaseDuration()}/>
+							</span>
+							<span className="status-info">
+								<FileSize size={this.state.videos.databaseFileSize()}/>
+							</span>
 						</span>
 						{this.state.videos.viewIsDatabase ? '' : (
-							<span className="status-view">
-								{this.state.videos.size()} viewed.
+							<span className="status-section status-view">
+								<span className="status-info">
+									<strong>{this.state.videos.size()}</strong> viewed
+								</span>
+								<span className="status-info">
+									<Duration duration={this.state.videos.duration()}/>
+								</span>
+								<span className="status-info">
+									<FileSize size={this.state.videos.fileSize()}/>
+								</span>
 							</span>
 						)}
 					</span>
@@ -576,7 +595,9 @@ export class App extends React.Component {
 					</div>
 				</header>
 				<section className="row flex-grow-1">
-					{this.state.status === AppStatus.DB_LOADING ?
+					{(this.state.status >= AppStatus.DB_LOADING
+						&& this.state.status <= AppStatus.VIDEOS_LOADING
+						&& (this.state.notificationTitle || this.state.notificationContent)) ?
 						<Notification title={this.state.notificationTitle}
 									  content={this.state.notificationContent}/> : ''}
 					{this.state.status === AppStatus.VIDEOS_LOADED ? (

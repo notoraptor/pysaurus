@@ -37,6 +37,7 @@ class Video(object):
         duration = self.get_duration()
         date_modified = self.filename.get_date_modified()
         return [
+            # basic fields
             self.filename.path,
             self.container_format,
             self.width,
@@ -48,6 +49,7 @@ class Video(object):
             self.sample_rate,
             self.audio_bit_rate,
             self.errors,
+            # special fields
             self.frame_rate_num / self.frame_rate_den,
             str(duration),
             duration.total_microseconds,
