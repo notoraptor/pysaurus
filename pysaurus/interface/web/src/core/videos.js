@@ -170,6 +170,7 @@ export class Videos {
 			Fields.audio_bit_rate,
 			Fields.frame_rate,
 			Fields.duration_string,
+			Fields.size_value,
 			Fields.size_string,
 			Fields.date_string,
 			Fields.extension,

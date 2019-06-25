@@ -359,3 +359,22 @@ section {
 	width: 100%;
 	height: 100%;
 }
+
+
+.splitter {
+	padding: 1rem;
+	font-weight: bold;
+}
+
+.splitter .name {
+	color: rgb(255, 245, 0);
+}
+
+.splitter .name:after {
+	content: ': ';
+	color: red;
+}
+
+.splitter .value {
+	color: white;
+}

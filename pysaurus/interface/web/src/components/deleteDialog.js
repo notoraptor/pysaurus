@@ -4,7 +4,15 @@ import PropTypes from 'prop-types';
 export class DeleteDialog extends React.Component {
 	constructor(props) {
 		super(props);
+		this.state = {
+			clicked: false
+		};
+		this.onClickDelete = this.onClickDelete.bind(this);
 		this.onDelete = this.onDelete.bind(this);
+	}
+
+	onClickDelete() {
+		this.setState({clicked: true}, this.onDelete);
 	}
 
 	onDelete() {
@@ -24,12 +32,16 @@ export class DeleteDialog extends React.Component {
 				</div>
 				<div className="row">
 					<div className="col-md">
-						<button className="btn btn-danger btn-block" onClick={this.onDelete}>
-							<strong>YES</strong>
+						<button className="btn btn-danger btn-block"
+								disabled={this.state.clicked}
+								onClick={this.onClickDelete}>
+							<strong>{this.state.clicked ? 'Deleting ...' : 'YES'}</strong>
 						</button>
 					</div>
 					<div className="col-md">
-						<button className="btn btn-dark btn-block" onClick={this.props.onClose}>
+						<button className="btn btn-dark btn-block"
+								disabled={this.state.clicked}
+								onClick={this.props.onClose}>
 							<strong>NO</strong>
 						</button>
 					</div>

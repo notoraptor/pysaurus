@@ -5,7 +5,7 @@ import {Fields, Videos} from "../core/videos";
 export class RenameDialog extends React.Component {
 	constructor(props) {
 		super(props);
-		this.state = {title: ''};
+		this.state = {title: '', clicked: false};
 		this.onChangeTitle = this.onChangeTitle.bind(this);
 		this.onSubmit = this.onSubmit.bind(this);
 		this.onRename = this.onRename.bind(this);
@@ -17,7 +17,7 @@ export class RenameDialog extends React.Component {
 
 	onSubmit(event) {
 		event.preventDefault();
-		this.onRename();
+		this.setState({clicked: true}, this.onRename);
 	}
 
 	onRename() {
@@ -55,6 +55,7 @@ export class RenameDialog extends React.Component {
 							<div className="col-md text-md-left">
 								<input type="text"
 									   className="form-control form-control-sm"
+									   size={100}
 									   id="inputFileTitle"
 									   onChange={this.onChangeTitle}
 									   value={fileTitle}/>
@@ -65,12 +66,14 @@ export class RenameDialog extends React.Component {
 						<div className="col-md">
 							<button type="submit"
 									className="btn btn-warning btn-block"
-									disabled={!fileTitle || fileTitle === initialFileTitle}>
-								<strong>RENAME</strong>
+									disabled={!fileTitle || fileTitle === initialFileTitle || this.state.clicked}>
+								<strong>{this.state.clicked ? 'Renaming ...' : 'RENAME'}</strong>
 							</button>
 						</div>
 						<div className="col-md">
-							<button className="btn btn-dark btn-block" onClick={this.props.onClose}>
+							<button className="btn btn-dark btn-block"
+									disabled={this.state.clicked}
+									onClick={this.props.onClose}>
 								<strong>CANCEL</strong>
 							</button>
 						</div>

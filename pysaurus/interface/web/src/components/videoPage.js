@@ -1,15 +1,15 @@
 import React from "react";
-import {VideoView} from "./videoView";
 import PropTypes from "prop-types";
+import {VideoView} from "./videoView";
+import $ from 'jquery';
 
 export class VideoPage extends React.Component {
 	render() {
 		const videos = this.props.videos;
 		/** @var Videos videos */
 		videos.sort(this.props.field, this.props.reverse);
-
 		return (
-			<div className="video-page">{(() => {
+			<div className="video-page" id="video-page">{(() => {
 				const views = [];
 				const start = this.props.pageSize * this.props.currentPage;
 				let end = this.props.pageSize * (this.props.currentPage + 1);
@@ -33,6 +33,20 @@ export class VideoPage extends React.Component {
 				return views;
 			})()}</div>
 		)
+	}
+
+	componentDidUpdate(prevProps, prevState, snapshot) {
+		let changed = false;
+		for (let propName of ['videos', 'field', 'reverse', 'currentPage', 'pageSize', 'splitter']) {
+			if (prevProps[propName] !== this.props[propName]) {
+				changed = true;
+				break;
+			}
+		}
+		if (changed) {
+			const element = $('#video-page');
+			element.parent().animate({scrollTop: 0}, 400);
+		}
 	}
 }
 

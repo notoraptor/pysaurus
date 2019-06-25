@@ -105,7 +105,7 @@ export class AppForm extends React.Component {
 						<div className="input-group input-group-sm mx-1 w-100">
 							<input type="text"
 								   className="form-control"
-								   id="search-input"
+								   id="searchInput"
 								   placeholder="search ..."
 								   value={this.props.search}
 								   onChange={this.onChangeSearch}/>

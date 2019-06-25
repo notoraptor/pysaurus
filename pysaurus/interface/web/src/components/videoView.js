@@ -28,7 +28,7 @@ export class VideoView extends React.Component {
 						</code>
 						<code className="value video-frame-rate" title="frame rate">{video.frame_rate} img/s</code>
 						<code className="value video-duration" title="duration">{video.duration_string}</code>
-						<code className="value video-size" title="size">{video.size_string}</code>
+						<code className="value video-size" title={video.size_value}>{video.size_string}</code>
 						<code className="value video-format" title="format">{video.container_format}</code>
 						<code className="value video-codec" title="video codec">{video.video_codec}</code>
 						<code className="value audio-codec" title="audio codec">
@@ -48,7 +48,7 @@ export class VideoView extends React.Component {
 					</MenuItem>
 					<MenuItem attributes={{className: 'menu-item action-delete'}}
 							  onClick={() => this.props.onDeleteIndex(video.index)}>
-						Delete
+						Delete ...
 					</MenuItem>
 					<MenuItem attributes={{className: 'menu-item action-deselect'}}
 							  onClick={() => this.props.onDeselectIndex(video.index)}>

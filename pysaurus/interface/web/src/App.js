@@ -5,7 +5,7 @@ import {Helmet} from "react-helmet/es/Helmet";
 import {Exceptions} from "./client/exceptions";
 import {Notification} from "./components/notification";
 import {Utils} from "./core/utils";
-import {Extra, Fields, SearchType, Videos} from "./core/videos";
+import {Extra, Fields, SearchType, Sort, Videos} from "./core/videos";
 import {VideoPage} from "./components/videoPage";
 import {VideoForm} from "./components/videoForm";
 import {AppForm} from "./components/appForm";
@@ -16,7 +16,8 @@ import {FileSize} from "./components/fileSize";
 import {Duration} from "./components/duration";
 
 import {confirmAlert} from 'react-confirm-alert'; // Import
-import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
+import 'react-confirm-alert/src/react-confirm-alert.css';
+import {Logo} from "./components/logo"; // Import css
 
 const AppStatus = {
 	SERVER_NOT_CONNECTED: 1, SERVER_CONNECTING: 2,
@@ -176,14 +177,16 @@ export class App extends React.Component {
 							data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
 							className="btn btn-dark main-button btn-sm dropdown-toggle">
 						<div style={{display: 'inline-block'}}>
-							{this.logo()}
+							<Logo/>
 						</div>
 					</button>
 					<div className="dropdown-menu" aria-labelledby="dropdownMenuButton">
 						{this.state.splitter ? (
 							<button className="dropdown-item" onClick={this.showDatabase}>Display database</button>
 						) : ''}
-						<button className="dropdown-item" onClick={this.findSame}>Find videos with same value for ...</button>
+						<button className="dropdown-item" onClick={this.findSame}>
+							Find videos with same value for ...
+						</button>
 					</div>
 				</div>
 			);
@@ -193,7 +196,7 @@ export class App extends React.Component {
 					disabled={disabled}
 					{...(callback ? {onClick: callback} : {})}>
 				<div className="d-flex flex-row">
-					{this.logo()}
+					<Logo/>
 					<div className="d-flex flex-column justify-content-center">{title}</div>
 				</div>
 			</button>
@@ -295,7 +298,9 @@ export class App extends React.Component {
 							AppStatus.VIDEO_NOT_LOADED)
 				});
 				if (databaseStatus === Utils.strings.DB_LOADING)
-					this.info('Loading database ...');
+					this.info('Loading database ...', {
+						notificationTitle: 'Loading database', notificationContent: '...'
+					});
 				else
 					this.success('Database loaded!');
 			})
@@ -552,13 +557,23 @@ export class App extends React.Component {
 			if (count) {
 				this.setState({field: field, reverse: false}, () => {
 					this.success(`Found ${count} videos.`, {
+						videoIndex: null,
 						splitter: (videos, previousIndex, currentIndex) => {
 							if (field !== this.state.field)
 								return '';
 							const previousField = previousIndex === -1 ? null : videos.get(previousIndex, field);
 							const currentField = videos.get(currentIndex, field);
 							if (previousField !== currentField) {
-								return <div key={`splitter-${currentIndex}`}><p/><p/><p/><p/></div>;
+								let printableField = currentField;
+								if (field === Fields.size_value) {
+									printableField = videos.get(currentIndex, Fields.size_string);
+								} else if (field === Fields.duration_value) {
+									printableField = videos.get(currentIndex, Fields.duration_string);
+								}
+								return <div key={`splitter-${currentIndex}`} className="splitter">
+									<span className="name">{Sort[field]}</span>
+									<span className="value">{printableField}</span>
+								</div>;
 							}
 						}
 					});
@@ -609,10 +624,6 @@ export class App extends React.Component {
 					this.error(`Unable to get thumbnail! ${filename}`);
 				});
 		}
-	}
-
-	logo() {
-		return <div className="logo d-flex flex-column justify-content-center">&#120529;s</div>;
 	}
 
 	render() {
