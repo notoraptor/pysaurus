@@ -27,5 +27,11 @@ def main():
         print()
 
 
+def main2():
+    a = [[1, 1, 1], [1, 1, 1]]
+    b = [[0, 0, 0], [1, 0, 0]]
+    print(video_raptor.align_integer_sequences(a, b, 1, -1, -1))
+
 if __name__ == '__main__':
-    main()
+    # main()
+    main2()
