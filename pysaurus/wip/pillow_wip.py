@@ -1,8 +1,12 @@
 import sys
 
 import math
+from PIL import Image
 
-from pysaurus.wip.pillow_example import open_image, simplify, save_image, WORK_MODE
+from pysaurus.core.video_raptor import api as video_raptor
+from pysaurus.wip.aligner import Aligner
+
+from pysaurus.wip.image_utils import open_image, simplify, WORK_MODE
 
 R, G, B = 0, 1, 2
 CHANNELS = (R, G, B)
@@ -290,6 +294,39 @@ def refine_groups(pixels, width, height):
         group_color = pixels[coord_to_flat(chosen_x, chosen_y, width)]
         output.append(group_color)
     return output, nb_refined
+
+
+def save_image(mode, size, data, name):
+    output_image = Image.new(mode=mode, size=size, color=0)
+    output_image.putdata(data)
+    output_image.save(name)
+    return output_image
+
+
+def align_by_diff(array_1, array_2):
+    nb_rows = len(array_1)
+    aligner = Aligner(in_del=0)
+    total_score = video_raptor.align_integer_sequences_by_diff(array_1, array_2, 0, 255, aligner.gap_score)
+    n_cells = nb_rows * len(array_1[0])
+    min_val = min(-1, 1, aligner.gap_score) * n_cells
+    max_val = max(-1, 1, aligner.gap_score) * n_cells
+    return (total_score - min_val) / (max_val - min_val)
+
+
+def align_python(array_1, array_2):
+    nb_rows = len(array_1)
+    nb_cols = len(array_1[0])
+    aligner = Aligner()
+    total_score = 0
+    matrix = [([0] * (1 + nb_cols)) for _ in range(1 + nb_rows)]
+    for i in range(1 + nb_cols):
+        matrix[0][i] = i * aligner.gap_score
+    for i in range(nb_rows):
+        total_score += aligner.align(array_1[i], array_2[i], score_only=True, matrix=matrix)
+    n_cells = nb_rows * nb_cols
+    min_val = min(aligner.match_score, aligner.diff_score, aligner.gap_score) * n_cells
+    max_val = max(aligner.match_score, aligner.diff_score, aligner.gap_score) * n_cells
+    return (total_score - min_val) / (max_val - min_val)
 
 
 def main():
