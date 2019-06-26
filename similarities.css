@@ -1,0 +1,18 @@
+
+.thumbnail {
+    display: inline-block;
+    max-width: 10rem;
+}
+.image {
+}
+img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+td {
+    vertical-align: top;
+}
+.score {
+    text-align: center;
+}

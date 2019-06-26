@@ -11,7 +11,7 @@ from pysaurus.wip.aligner import Aligner
 class ImageComparator:
     __slots__ = ('aligner',)
     WORK_MODE = 'RGB'
-    THUMBNAIL_SIZE = (100, 100)
+    THUMBNAIL_SIZE = (32, 32)
 
     def __init__(self):
         self.aligner = Aligner()
