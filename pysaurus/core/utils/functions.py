@@ -44,6 +44,31 @@ def dispatch_tasks(tasks, job_count, extra_args=None):
     return jobs
 
 
+def count_couples(n):
+    return int(n * (n - 1) / 2)
+
+
+def dispatch_combinations(n, job_count, extra_args=None):
+    nb_couples = count_couples(n)
+    batch_size = int(nb_couples / job_count)
+    intervals = []
+    index = 0
+    u = 1
+    b = n - 1
+    while index < n:
+        while b - u + 1 > 0:
+            v = u + batch_size - 1
+            if v <= b:
+                intervals.append([index, u, v])
+                u = v + 1
+            else:
+                intervals.append([index, u, b])
+                u = b + 1
+        index += 1
+        u = index + 1
+    return dispatch_tasks(intervals, job_count, extra_args)
+
+
 def print_title(message, wrapper='='):
     message = str(message)
     len_message = len(message)
