@@ -6,7 +6,6 @@ def identity(value):
 
 
 class Alignment:
-
     __slots__ = ('sequence_1', 'sequence_2', 'difference', 'score')
 
     def __init__(self, sequence_1, sequence_2, difference, score):
@@ -78,7 +77,6 @@ class Alignment:
 
 
 class Aligner:
-
     __slots__ = ('match_score', 'diff_score', 'gap_score', 'gap_symbol')
 
     def __init__(self, match=1, mis_match=-1, in_del=-1, gap=' '):

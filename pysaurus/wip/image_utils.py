@@ -1,9 +1,11 @@
 import sys
-from pysaurus.wip.aligner import Aligner
+from typing import List
+
+from PIL import Image
+
 from pysaurus.core.profiling import Profiler
 from pysaurus.core.video_raptor import api as video_raptor
-from PIL import Image
-from typing import List
+from pysaurus.wip.aligner import Aligner
 
 
 class ImageComparator:

@@ -167,7 +167,6 @@ class Database(object):
                     video_errors[file_path] = [PYTHON_ERROR_NOTHING]
 
         assert len(all_file_names) == len(videos) + len(video_errors)
-        self.__notify(notifications.VideosLoaded(len(videos)))
 
         # Parsing messages.
         if videos:

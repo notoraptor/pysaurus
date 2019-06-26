@@ -1,3 +1,4 @@
+import sys
 from html.parser import HTMLParser
 from io import StringIO
 from itertools import chain
@@ -121,3 +122,17 @@ class ToDict:
         return '%s(%s)' % (
             self.get_name(),
             ', '.join('%s=%s' % (name, to_printable(getattr(self, name))) for name in sorted(self.__slots__)))
+
+
+class System:
+    @staticmethod
+    def is_windows():
+        return sys.platform == 'win32'
+
+    @staticmethod
+    def is_linux():
+        return sys.platform == 'linux'
+
+    @staticmethod
+    def is_mac():
+        return sys.platform == 'darwin'

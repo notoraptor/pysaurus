@@ -1,9 +1,9 @@
 import os
-import platform
 import shutil
 from typing import Union
 
 from pysaurus.core.components.date_modified import DateModified
+from pysaurus.core.utils.classes import System
 from pysaurus.core.utils.constants import WINDOWS_PATH_PREFIX
 
 
@@ -13,7 +13,7 @@ class AbsolutePath(object):
     def __init__(self, path):
         # type: (str) -> None
         path = os.path.abspath(path)
-        if len(path) >= 260 and platform.system() == 'Windows' and not path.startswith(WINDOWS_PATH_PREFIX):
+        if len(path) >= 260 and System.is_windows() and not path.startswith(WINDOWS_PATH_PREFIX):
             path = '%s%s' % (WINDOWS_PATH_PREFIX, path)
         self.__path = path
 

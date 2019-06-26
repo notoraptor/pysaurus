@@ -9,6 +9,7 @@ from pysaurus.core.database.video import Video
 from pysaurus.core.function_parsing.function_parser import FunctionParser
 from pysaurus.core.notification import Notifier
 from pysaurus.core.utils import functions as utils
+from pysaurus.core.utils.classes import System
 from pysaurus.core.utils.classes import Table
 from pysaurus.core.utils.functions import bool_type
 from pysaurus.public import api_errors
@@ -77,14 +78,13 @@ class API:
 
     def __open(self, video):
         # type: (Video) -> None
-        platform_commands = {
-            'linux': 'xdg-open',
-            'darwin': 'open'
-        }
-        if sys.platform in platform_commands:
-            open_command = platform_commands[sys.platform]
+        if System.is_linux():
+            open_command = 'xdg-open'
             subprocess.run([open_command, video.filename.path])
-        elif sys.platform == 'win32':
+        elif System.is_mac():
+            open_command = 'open'
+            subprocess.run([open_command, video.filename.path])
+        elif System.is_windows():
             os.startfile(video.filename.path)
         else:
             raise api_errors.UnsupportedOS(sys.platform)

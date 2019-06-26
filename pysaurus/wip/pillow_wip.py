@@ -1,12 +1,11 @@
+import math
 import sys
 
-import math
 from PIL import Image
 
 from pysaurus.core.video_raptor import api as video_raptor
 from pysaurus.wip.aligner import Aligner
-
-from pysaurus.wip.image_utils import open_image, simplify, WORK_MODE
+from pysaurus.wip.image_utils import ImageComparator
 
 R, G, B = 0, 1, 2
 CHANNELS = (R, G, B)
@@ -334,18 +333,22 @@ def main():
     assert len(arguments) in (1, 2)
     file_name = arguments[0]
     threshold = int(arguments[1]) if len(arguments) == 2 else PIXEL_DISTANCE_TRESHOLD
-    image = open_image(file_name)
-    output = simplify(image, threshold)
-    save_image(WORK_MODE, image.size, output, 'simplification.png')
+    image = ImageComparator.open_image(file_name)
+    output = ImageComparator.simplify(image, threshold)
+    save_image(ImageComparator.WORK_MODE, image.size, output, 'simplification.png')
     refined, nb_refined = refine(output, image.width, image.height)
-    save_image(WORK_MODE, image.size, refined, 'simplification_refined.png')
+    save_image(ImageComparator.WORK_MODE, image.size, refined, 'simplification_refined.png')
     go, nr = refine_groups(refined, image.width, image.height)
     print('(1)', nr, 'group-refined')
     for i in range(5):
         go, nr = refine_groups(go, image.width, image.height)
         print('(%d)' % (i + 2), nr, 'group-refined')
-    save_image(WORK_MODE, image.size, go, 'group_refined.png')
+    save_image(ImageComparator.WORK_MODE, image.size, go, 'group_refined.png')
     # x = get_segmentation(output_image, threshold)
     # save_image('L', image.size, x, 'segmentation.png')
     # rx = get_segmentation(refined_image, threshold)
     # save_image('L', image.size, rx, 'segmentation_refined.png')
+
+
+if __name__ == '__main__':
+    main()

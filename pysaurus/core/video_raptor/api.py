@@ -1,16 +1,24 @@
+import os
 from ctypes import pointer, c_char_p, c_int
 from typing import List, Optional
 
 from pysaurus.core.database.video import Video
+from pysaurus.core.utils.classes import System
 from pysaurus.core.video_raptor.functions import (__fn_VideoRaptorInfo_init, __fn_VideoRaptorInfo_clear,
                                                   __fn_VideoReport_hasError, __fn_ErrorReader_init,
                                                   __fn_ErrorReader_next, __PtrVideoInfo, __fn_VideoInfo_init,
                                                   __fn_videoRaptorDetails, __PtrPtrVideoInfo, __fn_VideoReport_isDone,
                                                   __fn_VideoInfo_clear, __PtrVideoThumbnail,
                                                   __fn_VideoThumbnail_init, __fn_videoRaptorThumbnails,
-                                                  __PtrPtrVideoThumbnail, __fn_batchAlignmentScore, __PtrPtrInt, __PtrInt,
+                                                  __PtrPtrVideoThumbnail, __fn_batchAlignmentScore, __PtrPtrInt,
+                                                  __PtrInt,
                                                   __fn_batchAlignmentScoreByDiff)
 from pysaurus.core.video_raptor.structures import VideoRaptorInfo, ErrorReader, VideoInfo, VideoThumbnail
+
+if System.is_linux():
+    # Trying to prevent this warning on Ubuntu:
+    # Failed to open VDPAU backend libvdpau_.so: cannot open shared object file: No such file or directory
+    os.environ['VDPAU_DRIVER'] = 'va_gl'
 
 
 class VideoRaptorResult:

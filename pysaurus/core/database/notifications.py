@@ -89,10 +89,6 @@ class VideosToLoad(Notification):
         self.total = total
 
 
-class VideosLoaded(VideosToLoad):
-    pass
-
-
 class ThumbnailsToLoad(VideosToLoad):
     pass
 
