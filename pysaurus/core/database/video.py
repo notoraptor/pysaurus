@@ -141,7 +141,7 @@ class Video(object):
         return FileSize(self.size)
 
     def thumbnail_is_valid(self, folder: AbsolutePath):
-        return self.get_thumbnail_path(folder).isfile()
+        return not self.error_thumbnail and self.get_thumbnail_path(folder).isfile()
 
     def ensure_thumbnail_name(self):
         if not self.thumb_name:

@@ -99,7 +99,7 @@ class Database(object):
 
     @property
     def nb_thumbnails(self):
-        return sum((not video.error_thumbnail and video.thumbnail_is_valid(self.__database_path))
+        return sum((video.exists() and video.thumbnail_is_valid(self.__database_path))
                    for video in self.__videos.values())
 
     @property
@@ -118,6 +118,11 @@ class Database(object):
     @property
     def valid_videos(self):
         return (video for video in self.__videos.values() if video.exists())
+
+    @property
+    def valid_videos_with_thumbnails(self):
+        return (video for video in self.__videos.values()
+                if video.exists() and video.thumbnail_is_valid(self.__database_path))
 
     @property
     def folder(self):

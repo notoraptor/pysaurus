@@ -1,48 +1,35 @@
 import concurrent.futures
 import os
+from typing import List, Tuple
 
+from pysaurus.core.database.database import Database
 from pysaurus.core.profiling import Profiler
 from pysaurus.core.utils.classes import StringPrinter
 from pysaurus.core.utils.functions import dispatch_tasks
 from pysaurus.public.api import API
-from pysaurus.wip.image_utils import ImageComparator
-from pysaurus.core.components.absolute_path import AbsolutePath
-from typing import List, Tuple
+from pysaurus.wip.image_utils import ImageComparator, ThumbnailChannels
 
-BATCH_SIZE = 500
-
-
-class GrayThumbnail:
-    __slots__ = ('array', 'file_path', 'thumbnail_path')
-
-    def __init__(self, array, file_path, thumbnail_path):
-        # type: (List[List[int]], AbsolutePath, AbsolutePath) -> None
-        self.array = array
-        self.file_path = file_path
-        self.thumbnail_path = thumbnail_path
+PRINT_STEP = 500
 
 
 def job_generate_gray_arrays(job):
+    # type: (Tuple[list, str, ImageComparator]) -> List[ThumbnailChannels]
     thumbnails, job_id, comparator = job
     nb_videos = len(thumbnails)
     gray_arrays = []
     count = 0
     for file_name, thumbnail_path in thumbnails:
         if thumbnail_path.isfile():
-            gray_arrays.append(GrayThumbnail(
-                array=comparator.to_thumbnail_gray_array(thumbnail_path.path),
-                file_path=file_name,
-                thumbnail_path=thumbnail_path
-            ))
+            gray_arrays.append(comparator.to_thumbnail_channels(thumbnail_path.path, file_name))
         count += 1
-        if count % BATCH_SIZE == 0:
+        if count % PRINT_STEP == 0:
             print('[JOB %s] %d/%d' % (job_id, count, nb_videos))
     print('[JOB %s] %d/%d' % (job_id, count, nb_videos))
     return gray_arrays
 
 
-def similar_group_to_html_file(group_id, group, gray_arrays):
-    # type: (int, List[Tuple[int, float]], List[GrayThumbnail]) -> None
+def similar_group_to_html_file(group_id, group, gray_arrays, database):
+    # type: (int, List[Tuple[int, float]], List[ThumbnailChannels], Database) -> None
     size = len(group)
     min_score = min(value[1] for value in group[1:])
     max_score = max(value[1] for value in group[1:])
@@ -63,7 +50,8 @@ def similar_group_to_html_file(group_id, group, gray_arrays):
     html.write('<td class="group-id">%d</td>' % group_id)
     html.write('<td class="thumbnails">')
     for image_index, image_score in group:
-        thumb_path = gray_arrays[image_index].thumbnail_path
+        thumb_channels = gray_arrays[image_index]
+        thumb_path = database.get_video_from_filename(thumb_channels.identifier).get_thumbnail_path(database.folder)
         html.write('<div class="thumbnail">')
         html.write('<div class="image">')
         html.write('<img src="file://%s"/>' % thumb_path)
@@ -82,81 +70,114 @@ def similar_group_to_html_file(group_id, group, gray_arrays):
         file.write(str(html))
 
 
-def main():
-    database = API.load_database()
-    comparator = ImageComparator()
-    gray_arrays = []  # type: List[GrayThumbnail]
+def generate_thumbnails_channels(database, comparator):
+    # type: (Database, ImageComparator) -> List[ThumbnailChannels]
+    thumbnails_channels = []
     cpu_count = os.cpu_count()
-    tasks = [(video.filename, video.get_thumbnail_path(database.folder)) for video in database.valid_videos]
+    tasks = [(video.filename, video.get_thumbnail_path(database.folder))
+             for video in database.valid_videos_with_thumbnails]
     jobs = dispatch_tasks(tasks, cpu_count, [comparator])
     with Profiler('Generating gray arrays.'):
         with concurrent.futures.ProcessPoolExecutor(max_workers=cpu_count) as executor:
             results = list(executor.map(job_generate_gray_arrays, jobs))
     for local_array in results:
-        gray_arrays.extend(local_array)
-    nb_gray_arrays = len(gray_arrays)
-    print('Generated gray arrays for %d/%d videos.' % (nb_gray_arrays, len(tasks)))
+        thumbnails_channels.extend(local_array)
+    return thumbnails_channels
 
+
+def job_resolve_sim_group(job):
+    potential_sim_group, comparator, sim_limit, diff_limit = job
+
+    alone_indices = []
+    sim_groups = []
+    new_potential_sim_groups = []
+
+    index_ref_thumb, ref_channels = potential_sim_group[0]
+    ref_sim_group = [(index_ref_thumb, 1)]
+    ref_diff_group = []
+    for index_group in range(1, len(potential_sim_group)):
+        index_local_thumb, local_channels = potential_sim_group[index_group]
+        score = comparator.align_channels_by_diff(ref_channels, local_channels)
+        if score >= sim_limit:
+            ref_sim_group.append((index_local_thumb, score))
+        else:
+            ref_diff_group.append((index_local_thumb, score))
+
+    if len(ref_sim_group) == 1:
+        alone_indices.append(ref_sim_group[0][0])
+    else:
+        print('Found', len(ref_sim_group), 'similar images.')
+        sim_groups.append(ref_sim_group)
+
+    ref_diff_group.sort(key=lambda couple: couple[1])
+    nb_ref_diff_group = len(ref_diff_group)
+    start = 0
+    cursor = 1
+    while cursor < nb_ref_diff_group:
+        groups = []
+        start_score = ref_diff_group[start][1]
+        curr_score = ref_diff_group[cursor][1]
+        if abs(start_score - curr_score) > diff_limit:
+            groups.append([ref_diff_group[i][0] for i in range(start, cursor)])
+            if cursor == nb_ref_diff_group - 1:
+                alone_indices.append(ref_diff_group[cursor][0])
+            else:
+                start = cursor
+        elif cursor == nb_ref_diff_group - 1:
+            groups.append([ref_diff_group[i][0] for i in range(start, nb_ref_diff_group)])
+        for group in groups:
+            if len(group) == 1:
+                alone_indices.append(group[0])
+            else:
+                new_potential_sim_groups.append(group)
+        cursor += 1
+
+    return sim_groups, new_potential_sim_groups, alone_indices
+
+
+def find_similar_images(thumbnails_channels, comparator):
+    # type: (List[ThumbnailChannels], ImageComparator) -> List[List[Tuple[int, float]]]
     sim_limit = 0.94
     diff_limit = 0.1
     sim_groups = []
-    potential_alone_arrays = []
+    alone_indices = []
 
     with Profiler('Looking for similar images.'):
-        potential_sim_groups = [list(range(nb_gray_arrays))]
+        potential_sim_groups = [list(range(len(thumbnails_channels)))]
         while potential_sim_groups:
-            print(len(potential_sim_groups), 'groups to check')
+            print('Checking', sum(len(g) for g in potential_sim_groups), 'images in',
+                  len(potential_sim_groups), 'groups.')
+
+            jobs = [([(i, thumbnails_channels[i]) for i in g], comparator, sim_limit, diff_limit)
+                    for g in potential_sim_groups]
+
+            with concurrent.futures.ProcessPoolExecutor(max_workers=len(jobs)) as executor:
+                results = executor.map(job_resolve_sim_group, jobs)
+
             new_potential_sim_groups = []
-            for potential_sim_group in potential_sim_groups:
-                ref_index = potential_sim_group[0]
-                ref_sim_group = [(ref_index, 1)]
-                ref_diff_group = []
-                ref_array = gray_arrays[ref_index].array
-                for j in range(1, len(potential_sim_group)):
-                    i = potential_sim_group[j]
-                    score = comparator.align_by_diff(ref_array, gray_arrays[i].array)
-                    if score >= sim_limit:
-                        ref_sim_group.append((i, score))
-                    else:
-                        ref_diff_group.append((i, score))
+            for (local_sim_groups, local_new_potential_sim_groups, local_alone_indices) in results:
+                sim_groups.extend(local_sim_groups)
+                new_potential_sim_groups.extend(local_new_potential_sim_groups)
+                alone_indices.extend(local_alone_indices)
 
-                if len(ref_sim_group) == 1:
-                    potential_alone_arrays.append(ref_sim_group[0][0])
-                else:
-                    print('Found', len(ref_sim_group), 'potential similar images.')
-                    sim_groups.append(ref_sim_group)
-
-                ref_diff_group.sort(key=lambda couple: couple[1])
-                nb_ref_diff_group = len(ref_diff_group)
-                start = 0
-                cursor = 1
-                while cursor < nb_ref_diff_group:
-                    start_score = ref_diff_group[start][1]
-                    curr_score = ref_diff_group[cursor][1]
-                    groups = []
-                    if abs(start_score - curr_score) >= diff_limit:
-                        groups.append([index for index, _ in ref_diff_group[start:cursor]])
-                        if cursor == nb_ref_diff_group - 1:
-                            groups.append([ref_diff_group[cursor][0]])
-                        else:
-                            start = cursor
-                    elif cursor == nb_ref_diff_group - 1:
-                        groups.append([index for index, _ in ref_diff_group[start:]])
-                    for group in groups:
-                        if len(group) == 1:
-                            potential_alone_arrays.append(group[0])
-                        else:
-                            new_potential_sim_groups.append(group)
-                    cursor += 1
             potential_sim_groups = new_potential_sim_groups
+
+    return sim_groups
+
+
+def main():
+    database = API.load_database()
+    comparator = ImageComparator()
+    thumbnails_channels = generate_thumbnails_channels(database, comparator)
+    print('Extracted thumbnails channels from %d/%d videos.' % (len(thumbnails_channels), database.nb_valid))
+
+    sim_groups = find_similar_images(thumbnails_channels, comparator)
 
     print()
     print('Finally found', len(sim_groups), 'similarity groups.')
-    total = 0
     for i, g in enumerate(sorted(sim_groups, key=lambda v: len(v))):
-        total += len(g)
-        similar_group_to_html_file(i + 1, g, gray_arrays)
-    print(total, 'similar images from', nb_gray_arrays, 'total images.')
+        similar_group_to_html_file(i + 1, g, thumbnails_channels, database)
+    print(sum(len(g) for g in sim_groups), 'similar images from', len(thumbnails_channels), 'total images.')
 
 
 if __name__ == '__main__':

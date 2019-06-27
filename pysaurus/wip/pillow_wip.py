@@ -1,6 +1,6 @@
+import math
 import sys
 
-import math
 from PIL import Image
 
 from pysaurus.core.video_raptor import api as video_raptor
@@ -302,16 +302,6 @@ def save_image(mode, size, data, name):
     return output_image
 
 
-def align_by_diff(array_1, array_2):
-    nb_rows = len(array_1)
-    aligner = Aligner(in_del=0)
-    total_score = video_raptor.align_integer_sequences_by_diff(array_1, array_2, 0, 255, aligner.gap_score)
-    n_cells = nb_rows * len(array_1[0])
-    min_val = min(-1, 1, aligner.gap_score) * n_cells
-    max_val = max(-1, 1, aligner.gap_score) * n_cells
-    return (total_score - min_val) / (max_val - min_val)
-
-
 def align_python(array_1, array_2):
     nb_rows = len(array_1)
     nb_cols = len(array_1[0])
@@ -328,13 +318,45 @@ def align_python(array_1, array_2):
     return (total_score - min_val) / (max_val - min_val)
 
 
+def classify_pixel(pixel, l, k):
+    n = (l - 1) // k - 1
+    pixel_class = []
+    for v in pixel:
+        if v % (n + 1) == 0:
+            c = v
+        else:
+            i = int(v / (n + 1))
+            p1 = i * (n + 1)
+            p2 = (i + 1) * (n + 1)
+            d1 = v - p1
+            d2 = p2 - v
+            if d1 <= d2:
+                c = p1
+            else:
+                c = p2
+        pixel_class.append(c)
+    return tuple(pixel_class)
+
+
+def simplify(image, threshold):
+    alphabet_size = 256
+    k = threshold
+    assert isinstance(k, int)
+    assert (alphabet_size - 1) % k == 0
+    assert k <= alphabet_size - 1
+    output = []
+    for pixel in image.getdata():
+        output.append(classify_pixel(pixel, alphabet_size, k))
+    return output
+
+
 def main():
     arguments = sys.argv[1:]
     assert len(arguments) in (1, 2)
     file_name = arguments[0]
     threshold = int(arguments[1]) if len(arguments) == 2 else PIXEL_DISTANCE_TRESHOLD
-    image = ImageComparator.open_image(file_name)
-    output = ImageComparator.simplify(image, threshold)
+    image = ImageComparator.open_rgb_image(file_name)
+    output = simplify(image, threshold)
     save_image(ImageComparator.WORK_MODE, image.size, output, 'simplification.png')
     refined, nb_refined = refine(output, image.width, image.height)
     save_image(ImageComparator.WORK_MODE, image.size, refined, 'simplification_refined.png')

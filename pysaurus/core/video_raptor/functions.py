@@ -54,5 +54,5 @@ __fn_videoRaptorThumbnails.argtypes = [c_int, __PtrPtrVideoThumbnail]
 __fn_videoRaptorThumbnails.restype = c_int
 __fn_batchAlignmentScore.argtypes = [__PtrPtrInt, __PtrPtrInt, c_int, c_int, c_int, c_int, c_int]
 __fn_batchAlignmentScore.restype = c_int
-__fn_batchAlignmentScoreByDiff.argtypes = [__PtrPtrInt, __PtrPtrInt, c_int, c_int, c_int, c_int, c_int]
+__fn_batchAlignmentScoreByDiff.argtypes = [__PtrInt, __PtrInt, c_int, c_int, c_int, c_int, c_int]
 __fn_batchAlignmentScoreByDiff.restype = c_double
