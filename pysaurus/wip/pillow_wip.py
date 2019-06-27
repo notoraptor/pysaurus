@@ -1,6 +1,6 @@
-import math
 import sys
 
+import math
 from PIL import Image
 
 from pysaurus.core.video_raptor import api as video_raptor

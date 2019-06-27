@@ -1,7 +1,8 @@
-
+body {
+    font-family: Verdana, Geneva, sans-serif;
+}
 .thumbnail {
     display: inline-block;
-    max-width: 10rem;
 }
 .image {
 }
@@ -15,4 +16,5 @@ td {
 }
 .score {
     text-align: center;
+    font-weight: bold;
 }

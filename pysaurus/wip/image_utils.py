@@ -26,6 +26,15 @@ class ImageComparator:
         max_val = max(self.aligner.match_score, self.aligner.diff_score, self.aligner.gap_score) * n_cells
         return (total_score - min_val) / (max_val - min_val)
 
+    def align_by_diff(self, array_1, array_2):
+        # type: (List[List[int]], List[List[int]]) -> float
+        nb_rows = len(array_1)
+        total_score = video_raptor.align_integer_sequences_by_diff(array_1, array_2, 0, 255, self.aligner.gap_score)
+        n_cells = nb_rows * len(array_1[0])
+        min_val = min(-1, 1, self.aligner.gap_score) * n_cells
+        max_val = max(-1, 1, self.aligner.gap_score) * n_cells
+        return (total_score - min_val) / (max_val - min_val)
+
     @staticmethod
     def open_image(file_name):
         image = Image.open(file_name)
