@@ -91,7 +91,7 @@ class ImageComparator:
     def to_thumbnail_gray_array(file_name, threshold=3):
         image = ImageComparator.open_image(file_name)
         thumbnail = image.resize(ImageComparator.THUMBNAIL_SIZE)
-        return ImageComparator.to_gray_array(thumbnail, threshold=threshold)
+        return ImageComparator.to_gray_array(thumbnail, threshold=0)
 
 
 def main():

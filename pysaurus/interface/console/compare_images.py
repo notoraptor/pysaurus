@@ -77,7 +77,8 @@ def similar_group_to_html_file(group_id, group, gray_arrays):
     html.write('</table>')
     html.write('</body>')
     html.write('</html>')
-    with open('sim.%03d.html' % group_id, 'w') as file:
+    os.makedirs('.html', exist_ok=True)
+    with open('.html/sim.%03d.html' % group_id, 'w') as file:
         file.write(str(html))
 
 
@@ -96,7 +97,7 @@ def main():
     nb_gray_arrays = len(gray_arrays)
     print('Generated gray arrays for %d/%d videos.' % (nb_gray_arrays, len(tasks)))
 
-    sim_limit = 0.75
+    sim_limit = 0.94
     diff_limit = 0.1
     sim_groups = []
     potential_alone_arrays = []
@@ -113,7 +114,7 @@ def main():
                 ref_array = gray_arrays[ref_index].array
                 for j in range(1, len(potential_sim_group)):
                     i = potential_sim_group[j]
-                    score = comparator.align(ref_array, gray_arrays[i].array)
+                    score = comparator.align_by_diff(ref_array, gray_arrays[i].array)
                     if score >= sim_limit:
                         ref_sim_group.append((i, score))
                     else:
@@ -152,7 +153,7 @@ def main():
     print()
     print('Finally found', len(sim_groups), 'similarity groups.')
     total = 0
-    for i, g in enumerate(sim_groups):
+    for i, g in enumerate(sorted(sim_groups, key=lambda v: len(v))):
         total += len(g)
         similar_group_to_html_file(i + 1, g, gray_arrays)
     print(total, 'similar images from', nb_gray_arrays, 'total images.')
