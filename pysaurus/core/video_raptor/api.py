@@ -11,8 +11,7 @@ from pysaurus.core.video_raptor.functions import (__fn_VideoRaptorInfo_init, __f
                                                   __fn_VideoInfo_clear, __PtrVideoThumbnail,
                                                   __fn_VideoThumbnail_init, __fn_videoRaptorThumbnails,
                                                   __PtrPtrVideoThumbnail, __fn_batchAlignmentScore, __PtrPtrInt,
-                                                  __PtrInt,
-                                                  __fn_batchAlignmentScoreByDiff)
+                                                  __PtrInt)
 from pysaurus.core.video_raptor.structures import VideoRaptorInfo, ErrorReader, VideoInfo, VideoThumbnail
 
 if System.is_linux():
@@ -122,21 +121,9 @@ def generate_video_thumbnails(file_names: list, thumb_names: list, output_folder
     return output
 
 
-def align_integer_sequences(sequences_1, sequences_2, match_score, diff_score, gap_score):
-    n_rows = len(sequences_1)
-    n_cols = len(sequences_1[0])
-    line_type = c_int * n_cols
-    array_type = __PtrInt * n_rows
-    return __fn_batchAlignmentScore(
-        __PtrPtrInt(array_type(*[line_type(*line) for line in sequences_1])),
-        __PtrPtrInt(array_type(*[line_type(*line) for line in sequences_2])),
-        n_rows, n_cols, match_score, diff_score, gap_score
-    )
-
-
-def align_integer_sequences_by_diff(sequences_1, sequences_2, width, height, min_val, max_val, gap_score):
+def align_integer_sequences(sequences_1, sequences_2, width, height, min_val, max_val, gap_score):
     line_type = c_int * (width * height)
-    return __fn_batchAlignmentScoreByDiff(
+    return __fn_batchAlignmentScore(
         __PtrInt(line_type(*sequences_1)),
         __PtrInt(line_type(*sequences_2)),
         height, width, min_val, max_val, gap_score

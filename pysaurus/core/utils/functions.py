@@ -1,7 +1,12 @@
 import codecs
 import os
+from datetime import datetime
 
 from pysaurus.core.utils.constants import VIDEO_SUPPORTED_EXTENSIONS
+
+
+# Datetime since timestamp 0.
+EPOCH = datetime.utcfromtimestamp(0)
 
 
 def is_valid_video_filename(filename):
@@ -199,3 +204,11 @@ def bool_type(mixed):
             except ValueError:
                 pass
     return bool(mixed)
+
+
+def timestamp_microseconds():
+    """ Return current timestamp with microsecond resolution.
+        :return: int
+    """
+    delta = datetime.now() - EPOCH
+    return (delta.days * 24 * 60 * 60 + delta.seconds) * 1000000 + delta.microseconds

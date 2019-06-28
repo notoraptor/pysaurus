@@ -32,7 +32,6 @@ __fn_videoRaptorDetails = __dll_video_raptor.videoRaptorDetails
 __fn_videoRaptorThumbnails = __dll_video_raptor.videoRaptorThumbnails
 
 __fn_batchAlignmentScore = __dll_video_raptor.batchAlignmentScore
-__fn_batchAlignmentScoreByDiff = __dll_video_raptor.batchAlignmentScoreByDiff
 
 __fn_VideoRaptorInfo_init.argtypes = [__PtrVideoRaptorInfo]
 __fn_VideoRaptorInfo_clear.argtypes = [__PtrVideoRaptorInfo]
@@ -52,7 +51,5 @@ __fn_videoRaptorDetails.argtypes = [c_int, __PtrPtrVideoInfo]
 __fn_videoRaptorDetails.restype = c_int
 __fn_videoRaptorThumbnails.argtypes = [c_int, __PtrPtrVideoThumbnail]
 __fn_videoRaptorThumbnails.restype = c_int
-__fn_batchAlignmentScore.argtypes = [__PtrPtrInt, __PtrPtrInt, c_int, c_int, c_int, c_int, c_int]
-__fn_batchAlignmentScore.restype = c_int
-__fn_batchAlignmentScoreByDiff.argtypes = [__PtrInt, __PtrInt, c_int, c_int, c_int, c_int, c_int]
-__fn_batchAlignmentScoreByDiff.restype = c_double
+__fn_batchAlignmentScore.argtypes = [__PtrInt, __PtrInt, c_int, c_int, c_int, c_int, c_int]
+__fn_batchAlignmentScore.restype = c_double

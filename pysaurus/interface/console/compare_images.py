@@ -5,9 +5,10 @@ from typing import List, Tuple
 from pysaurus.core.database.database import Database
 from pysaurus.core.profiling import Profiler
 from pysaurus.core.utils.classes import StringPrinter
-from pysaurus.core.utils.functions import dispatch_tasks
+from pysaurus.core.utils.functions import dispatch_tasks, timestamp_microseconds
 from pysaurus.public.api import API
 from pysaurus.wip.image_utils import ImageComparator, ThumbnailChannels
+from pysaurus.core.components.absolute_path import AbsolutePath
 
 PRINT_STEP = 500
 
@@ -26,63 +27,6 @@ def job_generate_gray_arrays(job):
             print('[JOB %s] %d/%d' % (job_id, count, nb_videos))
     print('[JOB %s] %d/%d' % (job_id, count, nb_videos))
     return gray_arrays
-
-
-def similar_group_to_html_file(group_id, group, gray_arrays, database):
-    # type: (int, List[Tuple[int, float]], List[ThumbnailChannels], Database) -> None
-    size = len(group)
-    min_score = min(value[1] for value in group[1:])
-    max_score = max(value[1] for value in group[1:])
-    html = StringPrinter()
-    html.write('<html>')
-    html.write('<header>')
-    html.write('<meta charset="utf-8"/>')
-    html.write('<title>Thumbnails similarities for group %03d</title>' % group_id)
-    html.write('<link rel="stylesheet" href="similarities.css"/>')
-    html.write('</header>')
-    html.write('<body>')
-    html.write('<h1>%d files, min score %s, max score %s</h1>' % (size, min_score, max_score))
-    html.write('<table>')
-    html.write('<thead>')
-    html.write('<tr><th class="group-id">Group ID</th><th class="thumbnails">Thumbnails</th></tr>')
-    html.write('<tbody>')
-    html.write('<tr>')
-    html.write('<td class="group-id">%d</td>' % group_id)
-    html.write('<td class="thumbnails">')
-    for image_index, image_score in group:
-        thumb_channels = gray_arrays[image_index]
-        thumb_path = database.get_video_from_filename(thumb_channels.identifier).get_thumbnail_path(database.folder)
-        html.write('<div class="thumbnail">')
-        html.write('<div class="image">')
-        html.write('<img src="file://%s"/>' % thumb_path)
-        html.write('</div>')
-        html.write('<div class="score">%s</div>' % image_score)
-        html.write('</div>')
-    html.write('</td>')
-    html.write('</tr>')
-    html.write('</tbody>')
-    html.write('</thead>')
-    html.write('</table>')
-    html.write('</body>')
-    html.write('</html>')
-    os.makedirs('.html', exist_ok=True)
-    with open('.html/sim.%03d.html' % group_id, 'w') as file:
-        file.write(str(html))
-
-
-def generate_thumbnails_channels(database, comparator):
-    # type: (Database, ImageComparator) -> List[ThumbnailChannels]
-    thumbnails_channels = []
-    cpu_count = os.cpu_count()
-    tasks = [(video.filename, video.get_thumbnail_path(database.folder))
-             for video in database.valid_videos_with_thumbnails]
-    jobs = dispatch_tasks(tasks, cpu_count, [comparator])
-    with Profiler('Generating gray arrays.'):
-        with concurrent.futures.ProcessPoolExecutor(max_workers=cpu_count) as executor:
-            results = list(executor.map(job_generate_gray_arrays, jobs))
-    for local_array in results:
-        thumbnails_channels.extend(local_array)
-    return thumbnails_channels
 
 
 def job_resolve_sim_group(job):
@@ -135,12 +79,28 @@ def job_resolve_sim_group(job):
     return sim_groups, new_potential_sim_groups, alone_indices
 
 
+def generate_thumbnails_channels(database, comparator):
+    # type: (Database, ImageComparator) -> List[ThumbnailChannels]
+    thumbnails_channels = []
+    cpu_count = os.cpu_count()
+    tasks = [(video.filename, video.get_thumbnail_path(database.folder))
+             for video in database.valid_videos_with_thumbnails]
+    jobs = dispatch_tasks(tasks, cpu_count, [comparator])
+    with Profiler('Generating gray arrays.'):
+        with concurrent.futures.ProcessPoolExecutor(max_workers=cpu_count) as executor:
+            results = list(executor.map(job_generate_gray_arrays, jobs))
+    for local_array in results:
+        thumbnails_channels.extend(local_array)
+    return thumbnails_channels
+
+
 def find_similar_images(thumbnails_channels, comparator):
     # type: (List[ThumbnailChannels], ImageComparator) -> List[List[Tuple[int, float]]]
     sim_limit = 0.94
-    diff_limit = 0.1
+    diff_limit = 1 - sim_limit
     sim_groups = []
     alone_indices = []
+    cpu_count = os.cpu_count() - 1
 
     with Profiler('Looking for similar images.'):
         potential_sim_groups = [list(range(len(thumbnails_channels)))]
@@ -151,7 +111,7 @@ def find_similar_images(thumbnails_channels, comparator):
             jobs = [([(i, thumbnails_channels[i]) for i in g], comparator, sim_limit, diff_limit)
                     for g in potential_sim_groups]
 
-            with concurrent.futures.ProcessPoolExecutor(max_workers=len(jobs)) as executor:
+            with concurrent.futures.ProcessPoolExecutor(max_workers=cpu_count) as executor:
                 results = executor.map(job_resolve_sim_group, jobs)
 
             new_potential_sim_groups = []
@@ -165,6 +125,49 @@ def find_similar_images(thumbnails_channels, comparator):
     return sim_groups
 
 
+def similar_group_to_html_file(group_id, group, gray_arrays, database, html_dir, unique_id):
+    # type: (int, List[Tuple[int, float]], List[ThumbnailChannels], Database, AbsolutePath, object) -> None
+    size = len(group)
+    min_score = min(value[1] for value in group[1:])
+    max_score = max(value[1] for value in group[1:])
+    html = StringPrinter()
+    html.write('<html>')
+    html.write('<header>')
+    html.write('<meta charset="utf-8"/>')
+    html.write('<title>Thumbnails similarities for group %03d</title>' % group_id)
+    html.write('<link rel="stylesheet" href="similarities.css"/>')
+    html.write('</header>')
+    html.write('<body>')
+    html.write('<h1>%d files, min score %s, max score %s</h1>' % (size, min_score, max_score))
+    html.write('<table>')
+    html.write('<thead>')
+    html.write('<tr><th class="group-id">Group ID</th><th class="thumbnails">Thumbnails</th></tr>')
+    html.write('<tbody>')
+    html.write('<tr>')
+    html.write('<td class="group-id">%d</td>' % group_id)
+    html.write('<td class="thumbnails">')
+    for image_index, image_score in group:
+        thumb_channels = gray_arrays[image_index]
+        thumb_path = database.get_video_from_filename(thumb_channels.identifier).get_thumbnail_path(database.folder)
+        html.write('<div class="thumbnail">')
+        html.write('<div class="image">')
+        html.write('<img src="file://%s"/>' % thumb_path)
+        html.write('</div>')
+        html.write('<div class="score">%s</div>' % image_score)
+        html.write('</div>')
+    html.write('</td>')
+    html.write('</tr>')
+    html.write('</tbody>')
+    html.write('</thead>')
+    html.write('</table>')
+    html.write('</body>')
+    html.write('</html>')
+
+    output_file_name = AbsolutePath.join(html_dir, 'sim.%s.%03d.html' % (unique_id, group_id))
+    with open(output_file_name.path, 'w') as file:
+        file.write(str(html))
+
+
 def main():
     database = API.load_database()
     comparator = ImageComparator()
@@ -175,8 +178,21 @@ def main():
 
     print()
     print('Finally found', len(sim_groups), 'similarity groups.')
+
+    html_dir = AbsolutePath('.html')
+    if html_dir.isdir():
+        for file_name in html_dir.listdir():
+            if file_name.endswith('.html'):
+                AbsolutePath.join(html_dir, file_name).delete()
+    elif html_dir.isfile():
+        raise OSError('Path .html is a file, not a directory.')
+    else:
+        os.makedirs(html_dir.path, exist_ok=True)
+
+    unique_id = timestamp_microseconds()
+
     for i, g in enumerate(sorted(sim_groups, key=lambda v: len(v))):
-        similar_group_to_html_file(i + 1, g, thumbnails_channels, database)
+        similar_group_to_html_file(i + 1, g, thumbnails_channels, database, html_dir, unique_id)
     print(sum(len(g) for g in sim_groups), 'similar images from', len(thumbnails_channels), 'total images.')
 
 

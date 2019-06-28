@@ -37,11 +37,11 @@ class ImageComparator:
         v_min = 0
         v_max = 255
         v_gap = self.aligner.gap_score
-        score_r = video_raptor.align_integer_sequences_by_diff(
+        score_r = video_raptor.align_integer_sequences(
             channels_1.r, channels_2.r, self.width, self.height, v_min, v_max, v_gap)
-        score_g = video_raptor.align_integer_sequences_by_diff(
+        score_g = video_raptor.align_integer_sequences(
             channels_1.g, channels_2.g, self.width, self.height, v_min, v_max, v_gap)
-        score_b = video_raptor.align_integer_sequences_by_diff(
+        score_b = video_raptor.align_integer_sequences(
             channels_1.b, channels_2.b, self.width, self.height, v_min, v_max, v_gap)
         return (score_r + score_g + score_b - 3 * self.min_thumb_score_by_diff) / (
                 3 * (self.max_thumb_score_by_diff - self.min_thumb_score_by_diff))
