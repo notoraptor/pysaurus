@@ -7,8 +7,10 @@ from pysaurus.core.profiling import Profiler
 from pysaurus.core.utils.classes import StringPrinter
 from pysaurus.core.utils.functions import dispatch_tasks, timestamp_microseconds
 from pysaurus.public.api import API
-from pysaurus.wip.image_utils import ImageComparator, ThumbnailChannels
+from pysaurus.wip.image_utils import ImageComparator
+from pysaurus.core.video_raptor.api import ThumbnailChannels
 from pysaurus.core.components.absolute_path import AbsolutePath
+from pysaurus.core.video_raptor import api as video_raptor
 
 PRINT_STEP = 500
 
@@ -93,6 +95,8 @@ def generate_thumbnails_channels(database, comparator):
         thumbnails_channels.extend(local_array)
     return thumbnails_channels
 
+def classify_similarities(job):
+    return video_raptor.classify_similarities(*job)
 
 def find_similar_images(thumbnails_channels, comparator):
     # type: (List[ThumbnailChannels], ImageComparator) -> List[List[Tuple[int, float]]]
@@ -108,17 +112,27 @@ def find_similar_images(thumbnails_channels, comparator):
             print('Checking', sum(len(g) for g in potential_sim_groups), 'images in',
                   len(potential_sim_groups), 'groups.')
 
-            jobs = [([(i, thumbnails_channels[i]) for i in g], comparator, sim_limit, diff_limit)
+            jobs = [(g,
+                     [thumbnails_channels[i] for i in g],
+                     comparator.width,
+                     comparator.height,
+                     comparator.min_val,
+                     comparator.max_val,
+                     comparator.aligner.gap_score,
+                     sim_limit,
+                     diff_limit)
                     for g in potential_sim_groups]
 
             with concurrent.futures.ProcessPoolExecutor(max_workers=cpu_count) as executor:
-                results = executor.map(job_resolve_sim_group, jobs)
+                results = executor.map(classify_similarities, jobs)
 
             new_potential_sim_groups = []
             for (local_sim_groups, local_new_potential_sim_groups, local_alone_indices) in results:
                 sim_groups.extend(local_sim_groups)
                 new_potential_sim_groups.extend(local_new_potential_sim_groups)
                 alone_indices.extend(local_alone_indices)
+                if local_sim_groups and len(local_sim_groups[0]) > 1:
+                    print('Found', len(local_sim_groups[0]), 'similar images.')
 
             potential_sim_groups = new_potential_sim_groups
 

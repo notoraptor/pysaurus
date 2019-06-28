@@ -1,7 +1,7 @@
 import sys
 from ctypes import cdll, POINTER, c_char_p, c_int, c_uint, c_bool, c_double
 
-from pysaurus.core.video_raptor.structures import VideoRaptorInfo, ErrorReader, VideoReport, VideoInfo, VideoThumbnail
+from pysaurus.core.video_raptor.structures import VideoRaptorInfo, ErrorReader, VideoReport, VideoInfo, VideoThumbnail, c_int_p, Sequence
 
 __PtrVideoRaptorInfo = POINTER(VideoRaptorInfo)
 __PtrErrorReader = POINTER(ErrorReader)
@@ -10,8 +10,9 @@ __PtrVideoInfo = POINTER(VideoInfo)
 __PtrVideoThumbnail = POINTER(VideoThumbnail)
 __PtrPtrVideoInfo = POINTER(__PtrVideoInfo)
 __PtrPtrVideoThumbnail = POINTER(__PtrVideoThumbnail)
-__PtrInt = POINTER(c_int)
-__PtrPtrInt = POINTER(__PtrInt)
+__PtrPtrInt = POINTER(c_int_p)
+__PtrSequence = POINTER(Sequence)
+__PtrPtrSequence = POINTER(__PtrSequence)
 
 if sys.platform == 'linux':
     __dll_video_raptor = cdll.LoadLibrary('videoRaptorBatch.so')
@@ -32,6 +33,7 @@ __fn_videoRaptorDetails = __dll_video_raptor.videoRaptorDetails
 __fn_videoRaptorThumbnails = __dll_video_raptor.videoRaptorThumbnails
 
 __fn_batchAlignmentScore = __dll_video_raptor.batchAlignmentScore
+__fn_classifySimilarities = __dll_video_raptor.classifySimilarities
 
 __fn_VideoRaptorInfo_init.argtypes = [__PtrVideoRaptorInfo]
 __fn_VideoRaptorInfo_clear.argtypes = [__PtrVideoRaptorInfo]
@@ -51,5 +53,7 @@ __fn_videoRaptorDetails.argtypes = [c_int, __PtrPtrVideoInfo]
 __fn_videoRaptorDetails.restype = c_int
 __fn_videoRaptorThumbnails.argtypes = [c_int, __PtrPtrVideoThumbnail]
 __fn_videoRaptorThumbnails.restype = c_int
-__fn_batchAlignmentScore.argtypes = [__PtrInt, __PtrInt, c_int, c_int, c_int, c_int, c_int]
+__fn_batchAlignmentScore.argtypes = [c_int_p, c_int_p, c_int, c_int, c_int, c_int, c_int]
 __fn_batchAlignmentScore.restype = c_double
+__fn_classifySimilarities.argtypes = [__PtrPtrSequence, c_int, c_double, c_double, c_int, c_int, c_int, c_int, c_int]
+__fn_classifySimilarities.restype = c_int

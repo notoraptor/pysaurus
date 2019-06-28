@@ -5,21 +5,13 @@ from PIL import Image
 
 from pysaurus.core.profiling import Profiler
 from pysaurus.core.video_raptor import api as video_raptor
+from pysaurus.core.video_raptor.api import ThumbnailChannels
 from pysaurus.wip.aligner import Aligner
 
 
-class ThumbnailChannels:
-    __slots__ = ('identifier', 'r', 'g', 'b')
-
-    def __init__(self, red, green, blue, identifier=None):
-        self.r = red
-        self.g = green
-        self.b = blue
-        self.identifier = identifier
-
-
 class ImageComparator:
-    __slots__ = ('aligner', 'min_thumb_score_by_diff', 'max_thumb_score_by_diff', 'width', 'height')
+    __slots__ = ('aligner', 'min_thumb_score_by_diff', 'max_thumb_score_by_diff',
+                 'width', 'height', 'min_val', 'max_val')
     WORK_MODE = 'RGB'
     THUMBNAIL_SIZE = (32, 32)
 
@@ -31,18 +23,18 @@ class ImageComparator:
         self.aligner = aligner
         self.min_thumb_score_by_diff = min(unit_scores_by_diff) * size
         self.max_thumb_score_by_diff = max(unit_scores_by_diff) * size
+        self.min_val = 0
+        self.max_val = 255
 
     def align_channels_by_diff(self, channels_1, channels_2):
         # type: (ThumbnailChannels, ThumbnailChannels) -> float
-        v_min = 0
-        v_max = 255
         v_gap = self.aligner.gap_score
         score_r = video_raptor.align_integer_sequences(
-            channels_1.r, channels_2.r, self.width, self.height, v_min, v_max, v_gap)
+            channels_1.r, channels_2.r, self.width, self.height, self.min_val, self.max_val, v_gap)
         score_g = video_raptor.align_integer_sequences(
-            channels_1.g, channels_2.g, self.width, self.height, v_min, v_max, v_gap)
+            channels_1.g, channels_2.g, self.width, self.height, self.min_val, self.max_val, v_gap)
         score_b = video_raptor.align_integer_sequences(
-            channels_1.b, channels_2.b, self.width, self.height, v_min, v_max, v_gap)
+            channels_1.b, channels_2.b, self.width, self.height, self.min_val, self.max_val, v_gap)
         return (score_r + score_g + score_b - 3 * self.min_thumb_score_by_diff) / (
                 3 * (self.max_thumb_score_by_diff - self.min_thumb_score_by_diff))
 

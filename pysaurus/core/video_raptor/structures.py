@@ -1,7 +1,9 @@
 from _ctypes import Structure
-from ctypes import c_size_t, c_char_p, c_uint, c_char, c_int, c_int64
+from ctypes import c_size_t, c_char_p, c_uint, c_char, c_int, c_int64, c_double, POINTER
 
 ERROR_DETAIL_MAX_LENGTH = 64
+
+c_int_p = POINTER(c_int)
 
 
 class VideoRaptorInfo(Structure):
@@ -53,4 +55,14 @@ class VideoThumbnail(Structure):
         ("thumbnailFolder", c_char_p),
         ("thumbnailName", c_char_p),
         ("report", VideoReport)
+    ]
+
+
+class Sequence(Structure):
+    _fields_ = [
+        ('r', c_int_p),
+        ('g', c_int_p),
+        ('b', c_int_p),
+        ('score', c_double),
+        ('classification', c_int),
     ]
