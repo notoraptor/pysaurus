@@ -1,9 +1,8 @@
-import math
 import sys
 
+import math
 from PIL import Image
 
-from pysaurus.core.video_raptor import api as video_raptor
 from pysaurus.wip.aligner import Aligner
 from pysaurus.wip.image_utils import ImageComparator
 

@@ -9,8 +9,7 @@ from pysaurus.core.database.video import Video
 from pysaurus.core.function_parsing.function_parser import FunctionParser
 from pysaurus.core.notification import Notifier
 from pysaurus.core.utils import functions as utils
-from pysaurus.core.utils.classes import System
-from pysaurus.core.utils.classes import Table
+from pysaurus.core.utils.classes import System, Table
 from pysaurus.core.utils.functions import bool_type
 from pysaurus.public import api_errors
 

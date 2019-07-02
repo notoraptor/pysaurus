@@ -4,7 +4,7 @@ from pysaurus.core.components.absolute_path import AbsolutePath
 from pysaurus.core.components.duration import Duration
 from pysaurus.core.components.file_size import FileSize
 from pysaurus.core.database import path_utils
-from pysaurus.core.utils.classes import StringPrinter, HTMLStripper
+from pysaurus.core.utils.classes import HTMLStripper, StringPrinter
 from pysaurus.core.utils.constants import PYTHON_ERROR_THUMBNAIL
 from pysaurus.core.video_clipping import video_clip_to_base64
 from pysaurus.core.video_raptor.structures import VideoInfo

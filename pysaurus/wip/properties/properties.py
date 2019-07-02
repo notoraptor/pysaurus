@@ -1,6 +1,6 @@
 import re
 
-from pysaurus.core.utils.functions import is_iterable, ensure_set, to_printable
+from pysaurus.core.utils.functions import ensure_set, is_iterable, to_printable
 from pysaurus.wip.properties import property_errors
 
 

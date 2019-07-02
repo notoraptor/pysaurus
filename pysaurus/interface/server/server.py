@@ -26,8 +26,7 @@ from tornado.ioloop import IOLoop
 from tornado.queues import Queue
 from tornado.websocket import WebSocketClosedError
 
-from pysaurus.interface.server import common
-from pysaurus.interface.server import protocol
+from pysaurus.interface.server import common, protocol
 from pysaurus.interface.server.connection_handler import ConnectionHandler
 from pysaurus.interface.server.connection_manager import ConnectionManager
 

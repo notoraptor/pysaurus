@@ -5,7 +5,7 @@ import queue
 import traceback
 
 from pysaurus.interface.server import protocol
-from pysaurus.interface.server.server import Server, DEFAULT_PORT
+from pysaurus.interface.server.server import DEFAULT_PORT, Server
 from pysaurus.interface.server_instance.request_manager import REQUEST_MANAGER
 from pysaurus.interface.server_instance.server_context import ServerContext
 

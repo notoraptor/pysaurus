@@ -1,6 +1,6 @@
 import os
 
-from pysaurus.core.utils.functions import dispatch_combinations, count_couples
+from pysaurus.core.utils.functions import count_couples, dispatch_combinations
 
 
 def main():

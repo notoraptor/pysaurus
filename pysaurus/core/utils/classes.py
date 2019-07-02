@@ -2,7 +2,7 @@ import sys
 from html.parser import HTMLParser
 from io import StringIO
 from itertools import chain
-from typing import List, Any
+from typing import Any, List
 
 import whirlpool
 

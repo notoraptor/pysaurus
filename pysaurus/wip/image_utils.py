@@ -1,11 +1,11 @@
 import sys
-from typing import Optional, Any
+from typing import Any, Optional
 
 from PIL import Image
 
 from pysaurus.core.profiling import Profiler
-from pysaurus.core.video_raptor import api as video_raptor
-from pysaurus.core.video_raptor.api import ThumbnailChannels
+from pysaurus.core.video_raptor import alignment as native_alignment
+from pysaurus.core.video_raptor.alignment_utils import Miniature
 from pysaurus.wip.aligner import Aligner
 
 
@@ -26,15 +26,15 @@ class ImageComparator:
         self.min_val = 0
         self.max_val = 255
 
-    def align_channels_by_diff(self, channels_1, channels_2):
-        # type: (ThumbnailChannels, ThumbnailChannels) -> float
+    def align_channels_by_diff(self, miniature_1, miniature_2):
+        # type: (Miniature, Miniature) -> float
         v_gap = self.aligner.gap_score
-        score_r = video_raptor.align_integer_sequences(
-            channels_1.r, channels_2.r, self.width, self.height, self.min_val, self.max_val, v_gap)
-        score_g = video_raptor.align_integer_sequences(
-            channels_1.g, channels_2.g, self.width, self.height, self.min_val, self.max_val, v_gap)
-        score_b = video_raptor.align_integer_sequences(
-            channels_1.b, channels_2.b, self.width, self.height, self.min_val, self.max_val, v_gap)
+        score_r = native_alignment.align_integer_sequences(
+            miniature_1.r, miniature_2.r, self.width, self.height, self.min_val, self.max_val, v_gap)
+        score_g = native_alignment.align_integer_sequences(
+            miniature_1.g, miniature_2.g, self.width, self.height, self.min_val, self.max_val, v_gap)
+        score_b = native_alignment.align_integer_sequences(
+            miniature_1.b, miniature_2.b, self.width, self.height, self.min_val, self.max_val, v_gap)
         return (score_r + score_g + score_b - 3 * self.min_thumb_score_by_diff) / (
                 3 * (self.max_thumb_score_by_diff - self.min_thumb_score_by_diff))
 
@@ -46,8 +46,8 @@ class ImageComparator:
         return image
 
     @staticmethod
-    def to_thumbnail_channels(file_name, identifier=None):
-        # type: (str, Optional[Any]) -> ThumbnailChannels
+    def to_miniature(file_name, identifier=None):
+        # type: (str, Optional[Any]) -> Miniature
         image = ImageComparator.open_rgb_image(file_name)
         thumbnail = image.resize(ImageComparator.THUMBNAIL_SIZE)
         width, height = ImageComparator.THUMBNAIL_SIZE
@@ -59,7 +59,7 @@ class ImageComparator:
             red[i] = r
             green[i] = g
             blue[i] = b
-        return ThumbnailChannels(red, green, blue, identifier)
+        return Miniature(red, green, blue, width, height, identifier)
 
 
 def main():
@@ -68,8 +68,8 @@ def main():
         exit(-1)
     file_name_1 = sys.argv[1]
     file_name_2 = sys.argv[2]
-    output_1 = image_comparator.to_thumbnail_channels(file_name_1)
-    output_2 = image_comparator.to_thumbnail_channels(file_name_2)
+    output_1 = image_comparator.to_miniature(file_name_1)
+    output_2 = image_comparator.to_miniature(file_name_2)
     with Profiler('align'):
         print(image_comparator.align_channels_by_diff(output_1, output_2))
 

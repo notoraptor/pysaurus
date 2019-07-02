@@ -1,7 +1,6 @@
 import multiprocessing
 
-from pysaurus.core.notification import Notification
-from pysaurus.core.notification import Notifier
+from pysaurus.core.notification import Notification, Notifier
 
 
 class ParallelNotifier(Notifier):

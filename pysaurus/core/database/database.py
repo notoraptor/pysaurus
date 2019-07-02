@@ -7,9 +7,9 @@ import ujson as json
 from pysaurus.core.components.absolute_path import AbsolutePath
 from pysaurus.core.components.duration import Duration
 from pysaurus.core.components.file_size import FileSize
-from pysaurus.core.database import notifications, path_utils, parallelism
+from pysaurus.core.database import notifications, parallelism, path_utils
 from pysaurus.core.database.video import Video
-from pysaurus.core.notification import Notifier, DEFAULT_NOTIFIER
+from pysaurus.core.notification import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.profiling import Profiler
 from pysaurus.core.utils import functions as utils
 from pysaurus.core.utils.constants import PYTHON_ERROR_NOTHING, THUMBNAIL_EXTENSION

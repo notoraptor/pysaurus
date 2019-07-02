@@ -3,7 +3,7 @@ import traceback
 from urllib.parse import urlparse
 
 import ujson as json
-from tornado.websocket import WebSocketHandler, WebSocketClosedError
+from tornado.websocket import WebSocketClosedError, WebSocketHandler
 
 from pysaurus.core.error import PysaurusError
 from pysaurus.interface.server import protocol

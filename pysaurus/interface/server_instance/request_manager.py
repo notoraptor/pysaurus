@@ -1,13 +1,12 @@
 import asyncio
-from typing import Optional, Callable
+from typing import Callable, Optional
 
 import tornado.concurrent
 
 from pysaurus.interface.common.common_functions import launch_thread
-from pysaurus.interface.server.protocol import DataResponse
-from pysaurus.interface.server.protocol import Request, Response
+from pysaurus.interface.server.protocol import DataResponse, Request, Response
 from pysaurus.interface.server.server import Server
-from pysaurus.interface.server_instance import error_responses, core_notifications
+from pysaurus.interface.server_instance import core_notifications, error_responses
 from pysaurus.interface.server_instance.server_context import ServerContext
 from pysaurus.public.api import API
 

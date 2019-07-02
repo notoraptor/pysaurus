@@ -4,7 +4,6 @@ from datetime import datetime
 
 from pysaurus.core.utils.constants import VIDEO_SUPPORTED_EXTENSIONS
 
-
 # Datetime since timestamp 0.
 EPOCH = datetime.utcfromtimestamp(0)
 

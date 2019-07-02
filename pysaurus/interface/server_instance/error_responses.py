@@ -1,4 +1,4 @@
-from pysaurus.interface.server.protocol import Request, AutoErrorResponse
+from pysaurus.interface.server.protocol import AutoErrorResponse, Request
 
 
 class ErrroUnknownRequest(AutoErrorResponse):

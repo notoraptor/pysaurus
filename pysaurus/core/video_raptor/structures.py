@@ -1,5 +1,5 @@
 from _ctypes import Structure
-from ctypes import c_size_t, c_char_p, c_uint, c_char, c_int, c_int64, c_double, POINTER
+from ctypes import POINTER, c_char, c_char_p, c_double, c_int, c_int64, c_size_t, c_uint
 
 ERROR_DETAIL_MAX_LENGTH = 64
 
@@ -63,6 +63,7 @@ class Sequence(Structure):
         ('r', c_int_p),
         ('g', c_int_p),
         ('b', c_int_p),
+        ('i', c_int_p),
         ('score', c_double),
         ('classification', c_int),
     ]

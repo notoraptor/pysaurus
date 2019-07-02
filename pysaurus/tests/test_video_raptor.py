@@ -1,6 +1,6 @@
 import sys
 
-from pysaurus.core.video_raptor import api as video_raptor
+from pysaurus.core.video_raptor import alignment as native_alignment, api as video_raptor
 
 
 def main():
@@ -30,7 +30,7 @@ def main():
 def main2():
     a = [[1, 1, 1], [1, 1, 1]]
     b = [[0, 0, 0], [1, 0, 0]]
-    print(video_raptor.align_integer_sequences(a, b, 1, -1, -1))
+    print(native_alignment.align_integer_sequences(a, b, 1, -1, -1))
 
 
 if __name__ == '__main__':
