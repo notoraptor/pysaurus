@@ -9,7 +9,7 @@ ALPHABET_SIZE = 256
 NB_DIVISIONS = 3
 NB_ALPHABET_CLASSES = NB_DIVISIONS + 1
 MAX_ALPHABET_VALUE = ALPHABET_SIZE - 1
-ALPHABET_CLASS_SIZE = int((ALPHABET_SIZE - 1) // NB_DIVISIONS)
+ALPHABET_CLASS_SIZE = int(MAX_ALPHABET_VALUE // NB_DIVISIONS)
 assert ALPHABET_SIZE == NB_DIVISIONS * ALPHABET_CLASS_SIZE + 1
 
 
@@ -30,6 +30,17 @@ def classify_intensity(value, alphabet_size, divisions):
     return c
 
 
+class Rectangle:
+    __slots__ = ('top', 'left', 'bottom', 'right')
+
+    def __init__(self, top, left, bottom, right):
+        # type: (float, float, float, float) -> None
+        self.top = top
+        self.left = left
+        self.bottom = bottom
+        self.right = right
+
+
 class IntensityPoint:
     __slots__ = ('value', 'count', 'x', 'y')
 
@@ -42,6 +53,9 @@ class IntensityPoint:
 
     def __str__(self):
         return 'IP[%d, n=%d, pos=(%s; %s)]' % (self.value, self.count, self.x, self.y)
+
+    def __repr__(self):
+        return str(self)
 
     def __hash__(self):
         return hash((self.value, self.count, self.x, self.y))
@@ -61,58 +75,49 @@ class IntensityPoint:
     def classify(value):
         return classify_intensity(value, ALPHABET_SIZE, NB_DIVISIONS)
 
-    @staticmethod
-    def align_points(sequence_1, sequence_2, width, height):
-        # type: (List[IntensityPoint], List[IntensityPoint], int, int) -> float
-        max_c = ALPHABET_SIZE - 1
-        max_n = width * height
-        max_d = math.sqrt((width - 1) ** 2 + (height - 1) ** 2)
-        class_size = int((ALPHABET_SIZE - 1) // NB_DIVISIONS)
-        classes_1 = {ip.value: ip for ip in sequence_1}
-        classes_2 = {ip.value: ip for ip in sequence_2}
-        score = 0
-        nb_classes = 0
-        class_value = 0
-        while class_value < ALPHABET_SIZE:
-            nb_classes += 1
-            gg1 = classes_1.get(class_value, None)  # type: IntensityPoint
-            gg2 = classes_2.get(class_value, None)  # type: IntensityPoint
-            class_value += class_size
-            if not gg1 and not gg2:
-                continue
-            if not gg1:
-                gg1 = IntensityPoint(gg2.value)
-                gg1.x = gg2.x
-                gg1.y = gg2.y
-            elif not gg2:
-                gg2 = IntensityPoint(gg1.value)
-                gg2.x = gg1.x
-                gg2.y = gg1.y
-            c = abs(gg1.value - gg2.value)
-            n = abs(gg1.count - gg2.count)
-            d = math.sqrt((gg1.x - gg2.x) ** 2 + (gg1.y - gg2.y) ** 2)
-            score += math.sqrt(((max_c - c) / max_c) * ((max_n - n) / max_n) * ((max_d - d) / max_d))
-        assert class_value - class_size == ALPHABET_SIZE - 1
-        assert nb_classes == NB_DIVISIONS + 1
-        return score / nb_classes
 
+class IntensitySequence:
+    __slots__ = ('max_n', 'max_d')
 
-class IntensityPointsAligner:
     def __init__(self, width, height):
         # type: (int, int) -> None
         self.max_n = width * height
         self.max_d = math.sqrt((width - 1) ** 2 + (height - 1) ** 2)
+
+    @staticmethod
+    def get_rectangle(sequence):
+        # type: (List[IntensityPoint]) -> Rectangle
+        x_min = sequence[0].x
+        x_max = sequence[0].x
+        y_min = sequence[0].y
+        y_max = sequence[0].y
+        for point in sequence:
+            x = point.x
+            y = point.y
+            if x < x_min:
+                x_min = x
+            if x > x_max:
+                x_max = x
+            if y < y_min:
+                y_min = y
+            if y > y_max:
+                y_max = y
+        return Rectangle(
+            top=y_min,
+            left=x_min,
+            bottom=y_max,
+            right=x_max
+        )
 
     def align_points(self, sequence_1, sequence_2):
         # type: (List[IntensityPoint], List[IntensityPoint]) -> float
         classes_1 = {ip.value: ip for ip in sequence_1}
         classes_2 = {ip.value: ip for ip in sequence_2}
         score = 0
-        class_value = 0
-        while class_value < ALPHABET_SIZE:
+        for class_index in range(NB_ALPHABET_CLASSES):
+            class_value = class_index * ALPHABET_CLASS_SIZE
             gg1 = classes_1.get(class_value, None)  # type: IntensityPoint
             gg2 = classes_2.get(class_value, None)  # type: IntensityPoint
-            class_value += ALPHABET_CLASS_SIZE
             if not gg1 and not gg2:
                 continue
             if not gg1:

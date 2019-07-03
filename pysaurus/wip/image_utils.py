@@ -13,6 +13,7 @@ class ImageComparator:
     __slots__ = ('aligner', 'min_thumb_score_by_diff', 'max_thumb_score_by_diff',
                  'width', 'height', 'min_val', 'max_val')
     WORK_MODE = 'RGB'
+    GRAY_MODE = 'L'
     THUMBNAIL_SIZE = (32, 32)
 
     def __init__(self):
@@ -60,6 +61,21 @@ class ImageComparator:
             green[i] = g
             blue[i] = b
         return Miniature(red, green, blue, width, height, identifier)
+
+
+def save_image(mode, size, data, name):
+    output_image = Image.new(mode=mode, size=size, color=0)
+    output_image.putdata(data)
+    output_image.save(name)
+    return output_image
+
+
+def save_gray_image(width, height, data, name):
+    return save_image(ImageComparator.GRAY_MODE, (width, height), data, name)
+
+
+def save_rgb_image(width, height, data, name):
+    return save_image(ImageComparator.WORK_MODE, (width, height), data, name)
 
 
 def main():

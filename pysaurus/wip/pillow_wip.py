@@ -1,10 +1,9 @@
 import sys
 
 import math
-from PIL import Image
 
 from pysaurus.wip.aligner import Aligner
-from pysaurus.wip.image_utils import ImageComparator
+from pysaurus.wip.image_utils import ImageComparator, save_image
 
 R, G, B = 0, 1, 2
 CHANNELS = (R, G, B)
@@ -292,13 +291,6 @@ def refine_groups(pixels, width, height):
         group_color = pixels[coord_to_flat(chosen_x, chosen_y, width)]
         output.append(group_color)
     return output, nb_refined
-
-
-def save_image(mode, size, data, name):
-    output_image = Image.new(mode=mode, size=size, color=0)
-    output_image.putdata(data)
-    output_image.save(name)
-    return output_image
 
 
 def align_python(array_1, array_2):
