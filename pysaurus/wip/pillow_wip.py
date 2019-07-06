@@ -3,12 +3,12 @@ import sys
 import math
 
 from pysaurus.wip.aligner import Aligner
-from pysaurus.wip.image_utils import ImageComparator, save_image
+from pysaurus.wip.image_utils import IMAGE_RGB_MODE, open_rgb_image, save_image
 
 R, G, B = 0, 1, 2
 CHANNELS = (R, G, B)
 BLACK = (0, 0, 0)
-PIXEL_DISTANCE_TRESHOLD = 1
+PIXEL_DISTANCE_THRESHOLD = 1
 
 
 def get_segmentation(image, threshold):
@@ -345,18 +345,18 @@ def main():
     arguments = sys.argv[1:]
     assert len(arguments) in (1, 2)
     file_name = arguments[0]
-    threshold = int(arguments[1]) if len(arguments) == 2 else PIXEL_DISTANCE_TRESHOLD
-    image = ImageComparator.open_rgb_image(file_name)
+    threshold = int(arguments[1]) if len(arguments) == 2 else PIXEL_DISTANCE_THRESHOLD
+    image = open_rgb_image(file_name)
     output = simplify(image, threshold)
-    save_image(ImageComparator.WORK_MODE, image.size, output, 'simplification.png')
+    save_image(IMAGE_RGB_MODE, image.size, output, 'simplification.png')
     refined, nb_refined = refine(output, image.width, image.height)
-    save_image(ImageComparator.WORK_MODE, image.size, refined, 'simplification_refined.png')
+    save_image(IMAGE_RGB_MODE, image.size, refined, 'simplification_refined.png')
     go, nr = refine_groups(refined, image.width, image.height)
     print('(1)', nr, 'group-refined')
     for i in range(5):
         go, nr = refine_groups(go, image.width, image.height)
         print('(%d)' % (i + 2), nr, 'group-refined')
-    save_image(ImageComparator.WORK_MODE, image.size, go, 'group_refined.png')
+    save_image(IMAGE_RGB_MODE, image.size, go, 'group_refined.png')
     # x = get_segmentation(output_image, threshold)
     # save_image('L', image.size, x, 'segmentation.png')
     # rx = get_segmentation(refined_image, threshold)
