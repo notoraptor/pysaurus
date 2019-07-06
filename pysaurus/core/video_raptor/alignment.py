@@ -19,10 +19,10 @@ def align_integer_sequences(sequences_1, sequences_2, width, height, min_val, ma
 
 def classify_similarities(parameters):
     # type: (Tuple[List[Any], List[Miniature], int, int, int, int, int, float, float]) -> tuple
-    identifiers, sequences, width, height, min_val, max_val, gap_score, sim_limit, diff_limit = parameters
-    nb_sequences = len(sequences)
+    identifiers, miniatures, width, height, min_val, max_val, gap_score, sim_limit, diff_limit = parameters
+    nb_sequences = len(miniatures)
     size = width * height
-    native_sequences = [sequence.to_c_sequence() for sequence in sequences]
+    native_sequences = [sequence.to_c_sequence() for sequence in miniatures]
     native_sequence_pointers = [pointer(sequence) for sequence in native_sequences]
     pointer_array_type = __PtrSequence * nb_sequences
     assert all(s.classification == 0 for s in native_sequences)
