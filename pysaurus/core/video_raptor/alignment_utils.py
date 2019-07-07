@@ -23,4 +23,4 @@ class Miniature:
                         c_int_p(array_type(*self.g)),
                         c_int_p(array_type(*self.b)),
                         c_int_p(array_type(*self.i)),
-                        0.0, 0)
+                        0.0, -1)

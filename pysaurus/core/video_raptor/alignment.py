@@ -4,7 +4,7 @@ from typing import Any, List, Tuple
 
 from pysaurus.core.video_raptor.alignment_utils import Miniature
 from pysaurus.core.video_raptor.functions import (__PtrPtrSequence, __PtrSequence, __fn_batchAlignmentScore,
-                                                  __fn_classifySimilarities)
+                                                  __fn_classifySimilarities, __fn_classifySimilarities2)
 from pysaurus.core.video_raptor.structures import c_int_p
 
 
@@ -52,6 +52,19 @@ def classify_similarities(parameters):
         else:
             new_potential_sim_groups.append([identifiers[index] for index in group])
     return sim_groups, new_potential_sim_groups, alone_indices
+
+
+def classify_similarities_2(miniatures, similarity_limit, len_interval):
+    # type: (List[Miniature], float, int) -> List[Tuple[int, int, float]]
+    nb_sequences = len(miniatures)
+    len_sequence = miniatures[0].width * miniatures[0].height
+    native_sequences = [sequence.to_c_sequence() for sequence in miniatures]
+    native_sequence_pointers = [pointer(sequence) for sequence in native_sequences]
+    pointer_array_type = __PtrSequence * nb_sequences
+    assert all(s.classification == -1 for s in native_sequences)
+    __fn_classifySimilarities2(__PtrPtrSequence(pointer_array_type(*native_sequence_pointers)),
+                               nb_sequences, len_sequence, similarity_limit, len_interval)
+    return [(i, native_sequences[i].classification, native_sequences[i].score) for i in range(nb_sequences)]
 
 
 def main():

@@ -169,14 +169,79 @@ def similar_group_to_html_file(group_id, group, miniatures, database, html_dir, 
         file.write(str(html))
 
 
+def array_distance(a, b):
+    # type: (List[int], List[int]) -> int
+    return sum(abs(a[i] - b[i]) for i in range(len(a)))
+
+
+def compare_miniatures(i, j):
+    # type: (Miniature, Miniature) -> float
+    n = i.width * i.height
+    v = 255
+    return (3 * n * v - array_distance(i.r, j.r) - array_distance(i.g, j.g) - array_distance(i.b, j.b)) / (3 * n * v)
+
+
+def find_similar_images_2(miniatures):
+    # type: (List[Miniature]) -> List[List[Tuple[int, float]]]
+    interrupted = False
+    scores = [None] * len(miniatures)
+    with Profiler('Finding similar images using simpler comparison.'):
+        try:
+            for i in range(len(miniatures)):
+                # if i == 1: raise KeyboardInterrupt()
+                if scores[i] is not None:
+                    continue
+                scores[i] = (i, 1)
+                for j in range(i + 1, len(miniatures)):
+                    if scores[j] is not None:
+                        continue
+                    score = compare_miniatures(miniatures[i], miniatures[j])
+                    if score >= SIM_LIMIT:
+                        scores[j] = (i, score)
+                        print('(', score, ')')
+                        print('\t', miniatures[i].identifier)
+                        print('\t', miniatures[j].identifier)
+                    if ((i + 1) * (j + 1)) % (10 * PRINT_STEP) == 0:
+                        print('At', i + 1, 'vs', j + 1, 'on', len(miniatures), 'value(s).')
+        except KeyboardInterrupt as exc:
+            interrupted = exc
+    if interrupted:
+        print('Min score', min(info[1] for info in scores if info is not None))
+        print('Max score', max(info[1] for info in scores if info is not None))
+        raise interrupted
+    groups = {}
+    for i, score_info in enumerate(scores):
+        if score_info is not None:
+            group_id, score = score_info
+            groups.setdefault(group_id, []).append((i, score))
+    print('Min score', min(info[1] for info in scores if info is not None))
+    print('Max score', max(info[1] for info in scores if info is not None))
+    return [groups[group_id] for group_id in sorted(groups)]
+
+
+def find_similar_images_3(miniatures):
+    # type: (List[Miniature]) -> List[List[Tuple[int, float]]]
+    with Profiler('Finding similar images using simpler NATIVE comparison.'):
+        results = native_alignment.classify_similarities_2(miniatures, SIM_LIMIT, 255)
+    groups = {}
+    min_score = None
+    max_score = None
+    for i, group_id, score in results:
+        min_score = score if min_score is None else min(min_score, score)
+        max_score = score if max_score is None else max(max_score, score)
+        if group_id != -1:
+            groups.setdefault(group_id, []).append((i, score))
+    print('Min score', min_score)
+    print('Max score', max_score)
+    return [group for group in sorted(groups.values(), key=lambda g: max(v[1] for v in g)) if len(group) > 1]
+
+
 def main():
     database = API.load_database()
     miniatures = generate_miniatures(database)
     print('Extracted miniatures from %d/%d videos.' % (len(miniatures), database.nb_valid))
 
-    sim_groups = find_similar_images(miniatures)
-
-    print()
+    sim_groups = find_similar_images_3(miniatures)
     print('Finally found', len(sim_groups), 'similarity groups.')
 
     html_dir = AbsolutePath('.html')
@@ -190,7 +255,7 @@ def main():
         os.makedirs(html_dir.path, exist_ok=True)
     unique_id = timestamp_microseconds()
 
-    for i, g in enumerate(sorted(sim_groups, key=lambda v: len(v))):
+    for i, g in enumerate(sim_groups):
         similar_group_to_html_file(i + 1, g, miniatures, database, html_dir, unique_id)
     print(sum(len(g) for g in sim_groups), 'similar images from', len(miniatures), 'total images.')
 
