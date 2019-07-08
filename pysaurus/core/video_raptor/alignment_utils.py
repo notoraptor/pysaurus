@@ -4,6 +4,10 @@ from typing import Any, List
 from pysaurus.core.video_raptor.structures import Sequence, c_int_p
 
 
+def project(value, from_a, from_b, to_u, to_v):
+    return ((value - from_a) * (to_v - to_u) / (from_b - from_a)) + to_u
+
+
 class Miniature:
     __slots__ = ('identifier', 'r', 'g', 'b', 'i', 'width', 'height')
 

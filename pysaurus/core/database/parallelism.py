@@ -55,7 +55,7 @@ def job_videos_thumbnails(job):
 
 def collect_files(folder_path, folder_to_files, notifier):
     # type: (AbsolutePath, dict, Notifier) -> None
-    notifier.notify(notifications.CollectingFiles(folder_path))
+    # notifier.notify(notifications.CollectingFiles(folder_path))
     for file_name in folder_path.listdir():
         path = AbsolutePath.join(folder_path, file_name)
         if path.isdir():
