@@ -29,7 +29,7 @@ class API:
         list_file_path = AbsolutePath(os.path.join(utils.package_dir(), '..', '..', '.local', 'test_folder.log'))
         database = Database(list_file_path, notifier)
         database.update()
-        # database.clean_unused_thumbnails()
+        database.clean_unused_thumbnails()
         database.ensure_thumbnails()
         return database
 

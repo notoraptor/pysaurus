@@ -3,7 +3,7 @@ import sys
 import math
 
 from pysaurus.wip.aligner import Aligner
-from pysaurus.wip.image_utils import IMAGE_RGB_MODE, open_rgb_image, save_image
+from pysaurus.wip.image_utils import IMAGE_RGB_MODE, open_rgb_image, save_image, flat_to_coord, coord_to_flat
 
 R, G, B = 0, 1, 2
 CHANNELS = (R, G, B)
@@ -26,16 +26,6 @@ def get_segmentation(image, threshold):
             output.append(min(255 if dst < threshold else 0 for dst in (distance_red, distance_green, distance_blue)))
         previous_pixel = pixel
     return output
-
-
-def flat_to_coord(index_pixel, width):
-    # i => (x, y)
-    return index_pixel % width, index_pixel // width
-
-
-def coord_to_flat(x, y, width):
-    # (x, y) => i
-    return y * width + x
 
 
 def refine_pixel(pixel, pixels_around):

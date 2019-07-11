@@ -47,3 +47,13 @@ def save_gray_image(width, height, data, name):
 def save_rgb_image(width, height, data, name):
     # Data must be a list of triples (r, g, b), each in [0; 255].
     return save_image(IMAGE_RGB_MODE, (width, height), data, name)
+
+
+def flat_to_coord(index_pixel, width):
+    # i => (x, y)
+    return index_pixel % width, index_pixel // width
+
+
+def coord_to_flat(x, y, width):
+    # (x, y) => i
+    return y * width + x

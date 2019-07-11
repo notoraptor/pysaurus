@@ -13,7 +13,7 @@ from pysaurus.public.api import API
 from pysaurus.wip.image_utils import DEFAULT_THUMBNAIL_SIZE, image_to_miniature
 
 PRINT_STEP = 500
-SIM_LIMIT = 0.9
+SIM_LIMIT = 0.7
 MIN_VAL = 0
 MAX_VAL = 255
 GAP_SCORE = -1
@@ -46,6 +46,7 @@ def generate_miniatures(database):
             results = list(executor.map(job_generate_miniatures, jobs))
     for local_array in results:
         miniatures.extend(local_array)
+    miniatures.sort(key=lambda m: m.identifier)
     return miniatures
 
 
