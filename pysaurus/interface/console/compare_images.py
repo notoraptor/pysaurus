@@ -1,5 +1,6 @@
 import concurrent.futures
 import os
+import sys
 from typing import Any, List, Tuple
 
 from pysaurus.core.components.absolute_path import AbsolutePath
@@ -238,7 +239,8 @@ def find_similar_images_3(miniatures):
 
 
 def main():
-    database = API.load_database()
+    list_file_path = sys.argv[1] if len(sys.argv) > 1 else None
+    database = API.load_database(list_file_path=list_file_path)
     miniatures = generate_miniatures(database)
     print('Extracted miniatures from %d/%d videos.' % (len(miniatures), database.nb_valid))
 

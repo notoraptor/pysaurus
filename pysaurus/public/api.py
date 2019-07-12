@@ -1,7 +1,7 @@
 import os
 import subprocess
 import sys
-from typing import Dict, List
+from typing import Dict, List, Union
 
 from pysaurus.core.components.absolute_path import AbsolutePath
 from pysaurus.core.database.database import Database
@@ -24,9 +24,12 @@ class API:
         self.database = API.load_database(notifier)
 
     @staticmethod
-    def load_database(notifier=None):
-        # type: (Notifier) -> Database
-        list_file_path = AbsolutePath(os.path.join(utils.package_dir(), '..', '..', '.local', 'test_folder.log'))
+    def load_database(list_file_path=None, notifier=None):
+        # type: (Union[str, AbsolutePath], Notifier) -> Database
+        if list_file_path is None:
+            list_file_path = AbsolutePath(os.path.join(utils.package_dir(), '..', '..', '.local', 'test_folder.log'))
+        else:
+            list_file_path = AbsolutePath.ensure(list_file_path)
         database = Database(list_file_path, notifier)
         database.update()
         database.clean_unused_thumbnails()
