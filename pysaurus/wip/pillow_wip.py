@@ -3,7 +3,7 @@ import sys
 import math
 
 from pysaurus.wip.aligner import Aligner
-from pysaurus.wip.image_utils import IMAGE_RGB_MODE, open_rgb_image, save_image, flat_to_coord, coord_to_flat
+from pysaurus.wip.image_utils import IMAGE_RGB_MODE, coord_to_flat, flat_to_coord, open_rgb_image, save_image
 
 R, G, B = 0, 1, 2
 CHANNELS = (R, G, B)
@@ -299,8 +299,11 @@ def align_python(array_1, array_2):
     return (total_score - min_val) / (max_val - min_val)
 
 
-def classify_pixel(pixel, l, k):
-    n = (l - 1) // k - 1
+VALID_NB_DIVISIONS = (3, 5, 17)
+
+
+def classify_pixel(pixel, alphabet_size, nb_divisions):
+    n = (alphabet_size - 1) // nb_divisions - 1
     pixel_class = []
     for v in pixel:
         if v % (n + 1) == 0:
@@ -309,12 +312,13 @@ def classify_pixel(pixel, l, k):
             i = int(v / (n + 1))
             p1 = i * (n + 1)
             p2 = (i + 1) * (n + 1)
-            d1 = v - p1
-            d2 = p2 - v
-            if d1 <= d2:
-                c = p1
-            else:
-                c = p2
+            c = p2
+            # d1 = v - p1
+            # d2 = p2 - v
+            # if d1 <= d2:
+            #     c = p1
+            # else:
+            #     c = p2
         pixel_class.append(c)
     return tuple(pixel_class)
 
@@ -355,3 +359,27 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+def pixel_dominance_class(r, g, b):
+    if r > g == b: return (1, 0, 0)
+    if g > r == b: return (0, 1, 0)
+    if b > r == g: return (0, 0, 1)
+    if r == g > b: return (1, 1, 0)
+    if r == b > g: return (1, 0, 1)
+    if g == b > r: return (0, 1, 1)
+    if r == g == b: return (0, 0, 0)
+    if r > g > b: return (2, 1, 0)
+    if r > b > g: return (2, 0, 1)
+    if g > r > b: return (1, 2, 0)
+    if g > b > r: return (0, 2, 1)
+    if b > r > g: return (1, 0, 2)
+    if b > g > r: return (0, 1, 2)
+
+
+def pixel_dominance_class_to_value(pc):
+    return tuple((v + 1) * 85 for v in pc)
+
+
+MAX_PIXEL_DOMINANCE_CLASS_DISTANCE = 4
+MAX_PIXEL_DISTANCE = 255 * math.sqrt(3)

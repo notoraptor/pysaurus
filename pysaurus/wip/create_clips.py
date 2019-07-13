@@ -1,6 +1,8 @@
-from pysaurus.core import video_clipping
 import sys
-from  pysaurus.core.components.absolute_path import AbsolutePath
+
+from pysaurus.core import video_clipping
+from pysaurus.core.components.absolute_path import AbsolutePath
+
 
 def main():
     if len(sys.argv) != 2:
@@ -14,6 +16,7 @@ def main():
     while cursor < duration:
         video_clipping.video_clip(file_path.path, cursor, clip_seconds, unique_id)
         cursor += clip_seconds
+
 
 if __name__ == '__main__':
     main()
