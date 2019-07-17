@@ -32,7 +32,7 @@ class API:
             list_file_path = AbsolutePath.ensure(list_file_path)
         database = Database(list_file_path, notifier)
         database.update()
-        database.clean_unused_thumbnails()
+        # database.clean_unused_thumbnails()
         database.ensure_thumbnails()
         return database
 

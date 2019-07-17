@@ -35,7 +35,6 @@ __fn_videoRaptorThumbnails = __dll_video_raptor.videoRaptorThumbnails
 
 __fn_batchAlignmentScore = __dll_video_raptor.batchAlignmentScore
 __fn_classifySimilarities = __dll_video_raptor.classifySimilarities
-__fn_classifySimilarities2 = __dll_video_raptor.classifySimilarities2
 
 __fn_VideoRaptorInfo_init.argtypes = [__PtrVideoRaptorInfo]
 __fn_VideoRaptorInfo_clear.argtypes = [__PtrVideoRaptorInfo]
@@ -57,6 +56,4 @@ __fn_videoRaptorThumbnails.argtypes = [c_int, __PtrPtrVideoThumbnail]
 __fn_videoRaptorThumbnails.restype = c_int
 __fn_batchAlignmentScore.argtypes = [c_int_p, c_int_p, c_int, c_int, c_int, c_int, c_int]
 __fn_batchAlignmentScore.restype = c_double
-__fn_classifySimilarities.argtypes = [__PtrPtrSequence, c_int, c_double, c_double, c_int, c_int, c_int, c_int, c_int]
-__fn_classifySimilarities.restype = c_int
-__fn_classifySimilarities2.argtypes = [__PtrPtrSequence, c_int, c_int, c_double, c_int]
+__fn_classifySimilarities.argtypes = [__PtrPtrSequence, c_int, c_int, c_int, c_double, c_int]

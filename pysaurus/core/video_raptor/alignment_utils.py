@@ -16,15 +16,16 @@ class Miniature:
         self.r = red
         self.g = green
         self.b = blue
-        self.i = [int(sum(pixel) / 3) for pixel in zip(red, green, blue)]
+        self.i = list(range(width * height))
         self.width = width
         self.height = height
         self.identifier = identifier
+        self.i.sort(key=lambda index: (self.r[index], self.g[index], self.b[index], index % width, index // width))
 
-    def to_c_sequence(self):
+    def to_c_sequence(self, score=0.0, classification=-1):
         array_type = c_int * len(self.r)
         return Sequence(c_int_p(array_type(*self.r)),
                         c_int_p(array_type(*self.g)),
                         c_int_p(array_type(*self.b)),
                         c_int_p(array_type(*self.i)),
-                        0.0, -1)
+                        score, classification)
