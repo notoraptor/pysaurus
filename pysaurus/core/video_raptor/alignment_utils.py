@@ -1,7 +1,8 @@
 from ctypes import c_int
-from typing import Any, List
-import functools
+from typing import Any, List, Optional, Tuple
+
 from pysaurus.core.video_raptor.structures import Sequence, c_int_p
+from pysaurus.wip.image_utils import coord_to_flat, flat_to_coord, open_rgb_image
 
 
 def project(value, from_a, from_b, to_u, to_v):
@@ -71,22 +72,29 @@ class Miniature:
         pass
 
     def get_pixel(self, index):
-        return Pixel(self.r[index], self.g[index], self.b[index], index % self.width, index // self.width)
+        x, y = flat_to_coord(index, self.width)
+        return Pixel(self.r[index], self.g[index], self.b[index], x, y)
+
+    def pixel_at(self, x, y):
+        index = coord_to_flat(x, y, self.width)
+        return Pixel(self.r[index], self.g[index], self.b[index], x, y)
+
+    def coordinates_around(self, x, y, radius=1):
+        coordinates = []
+        for local_x in range(max(0, x - radius), min(x + radius, self.width - 1) + 1):
+            for local_y in range(max(0, y - radius), min(y + radius, self.height - 1) + 1):
+                coordinates.append((local_x, local_y))
+        return coordinates
 
     def __init__(self, red, green, blue, width, height, identifier=None):
         # type: (List[int], List[int], List[int], int, int, Any) -> None
         self.r = red
         self.g = green
         self.b = blue
-        self.i = list(range(width * height))
+        self.i = [0]
         self.width = width
         self.height = height
         self.identifier = identifier
-        self.i.sort(key=lambda index: self.get_pixel(index))
-        # for i in self.i:
-        #     pixel = self.get_pixel(i)
-        #     print(pixel, pixel.get_channels_order())
-        # exit(0)
 
     def to_c_sequence(self, score=0.0, classification=-1):
         array_type = c_int * len(self.r)
@@ -95,3 +103,19 @@ class Miniature:
                         c_int_p(array_type(*self.b)),
                         c_int_p(array_type(*self.i)),
                         score, classification)
+
+    @staticmethod
+    def from_file_name(file_name, dimensions, identifier=None):
+        # type: (str, Tuple[int, int], Optional[Any]) -> Miniature
+        image = open_rgb_image(file_name)
+        thumbnail = image.resize(dimensions)
+        width, height = dimensions
+        size = width * height
+        red = [0] * size
+        green = [0] * size
+        blue = [0] * size
+        for i, (r, g, b) in enumerate(thumbnail.getdata()):
+            red[i] = r
+            green[i] = g
+            blue[i] = b
+        return Miniature(red, green, blue, width, height, identifier)

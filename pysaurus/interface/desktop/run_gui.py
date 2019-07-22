@@ -2,7 +2,6 @@ import sys
 import traceback
 
 from PySide2 import QtCore, QtWidgets
-
 from pysaurus.core.database import notifications
 from pysaurus.core.notification import Notification
 from pysaurus.interface.common.app_context import AppContext

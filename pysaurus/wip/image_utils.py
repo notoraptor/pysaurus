@@ -1,8 +1,4 @@
-from typing import Any, Optional, Tuple
-
 from PIL import Image
-
-from pysaurus.core.video_raptor.alignment_utils import Miniature
 
 IMAGE_RGB_MODE = 'RGB'
 IMAGE_GRAY_MODE = 'L'
@@ -14,22 +10,6 @@ def open_rgb_image(file_name):
     if image.mode != IMAGE_RGB_MODE:
         image = image.convert(IMAGE_RGB_MODE)
     return image
-
-
-def image_to_miniature(file_name, dimensions, identifier=None):
-    # type: (str, Tuple[int, int], Optional[Any]) -> Miniature
-    image = open_rgb_image(file_name)
-    thumbnail = image.resize(dimensions)
-    width, height = dimensions
-    size = width * height
-    red = [0] * size
-    green = [0] * size
-    blue = [0] * size
-    for i, (r, g, b) in enumerate(thumbnail.getdata()):
-        red[i] = r
-        green[i] = g
-        blue[i] = b
-    return Miniature(red, green, blue, width, height, identifier)
 
 
 def save_image(mode, size, data, name):

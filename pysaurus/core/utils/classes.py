@@ -5,7 +5,6 @@ from itertools import chain
 from typing import Any, List
 
 import whirlpool
-
 from pysaurus.core.utils.functions import to_printable
 
 

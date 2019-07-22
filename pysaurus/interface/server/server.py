@@ -21,14 +21,13 @@ from typing import Union
 import tornado
 import tornado.web
 import ujson as json
+from pysaurus.interface.server import common, protocol
+from pysaurus.interface.server.connection_handler import ConnectionHandler
+from pysaurus.interface.server.connection_manager import ConnectionManager
 from tornado.gen import multi
 from tornado.ioloop import IOLoop
 from tornado.queues import Queue
 from tornado.websocket import WebSocketClosedError
-
-from pysaurus.interface.server import common, protocol
-from pysaurus.interface.server.connection_handler import ConnectionHandler
-from pysaurus.interface.server.connection_manager import ConnectionManager
 
 DEFAULT_PORT = 8432
 DEFAULT_PING_SECONDS = 60

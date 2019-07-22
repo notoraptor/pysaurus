@@ -3,7 +3,6 @@ import os
 from typing import Dict, List, Optional, Set, Union
 
 import ujson as json
-
 from pysaurus.core.components.absolute_path import AbsolutePath
 from pysaurus.core.components.duration import Duration
 from pysaurus.core.components.file_size import FileSize

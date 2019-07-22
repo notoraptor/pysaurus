@@ -1,7 +1,6 @@
 import sys
 
 import math
-
 from pysaurus.wip.aligner import Aligner
 from pysaurus.wip.image_utils import IMAGE_RGB_MODE, coord_to_flat, flat_to_coord, open_rgb_image, save_image
 

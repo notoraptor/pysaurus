@@ -11,14 +11,6 @@ def generate_moderator_2(v):
     return function
 
 
-def generate_moderator(V, b):
-    def function(x):
-        return (V + b) * x / (x + b)
-
-    function.__name__ = 'f(x) = (%(V)s + %(b)s) * x / (x + %(b)s)' % {'V': V, 'b': b}
-    return function
-
-
 def gen(V, c):
     b = (c * abs(V + c) - abs(c) * (V + c)) / V
     d = - c * (V + b) / (abs(c) + b)
@@ -32,7 +24,15 @@ def gen(V, c):
     return function
 
 
-def ultimate_generation(V, h, p):
+def super_generator(V, b):
+    def function(x):
+        return (V + b) * x / (x + b)
+
+    function.__name__ = 'f(x)=(%(V)s+%(b)s)*x/(x+%(b)s)' % {'V': V, 'b': b}
+    return function
+
+
+def ultimate_generator(V, h, p):
     m = V * (V * h + V * p - h * h + p * p) / (2 * V * h + V * p - 2 * h * h)
     q = m * h / (h + p)
 
@@ -52,10 +52,44 @@ def ultimate_generation(V, h, p):
 def main():
     V = 10
     for p in (0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10):
-        f = ultimate_generation(V, V/2, p)
+        f = ultimate_generator(V, V / 2, p)
         print("with p = %s:" % p, f.__name__)
         print()
 
 
+def n_digits(s):
+    n = 0
+    while s:
+        s = s // 10
+        n += 1
+    return n
+
+def ten_power(value):
+    n = 1
+    while value:
+        n *= 10
+        value -= 1
+    return n
+
+
+def babylonian_squre_root(s):
+    nb_iterations = 0
+    o = ten_power(n_digits(s)//2)
+    print('Initial for %s is %s' % (s, o))
+    while abs(s - o * o) >= 0.05:
+        o = (o + s/o)/2
+        nb_iterations += 1
+    print(nb_iterations, 'iteration(s), (%s)^2 = %s, expected = %s' % (o, o * o, s))
+    return s
+
+
 if __name__ == '__main__':
-    main()
+    # main()
+    babylonian_squre_root(1)
+    babylonian_squre_root(2)
+    babylonian_squre_root(4)
+    babylonian_squre_root(20)
+    babylonian_squre_root(100)
+    babylonian_squre_root(1024)
+    babylonian_squre_root(600)
+    babylonian_squre_root(600000000000)

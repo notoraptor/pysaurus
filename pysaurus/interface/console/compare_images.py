@@ -11,7 +11,7 @@ from pysaurus.core.utils.functions import dispatch_tasks, timestamp_microseconds
 from pysaurus.core.video_raptor import alignment as native_alignment
 from pysaurus.core.video_raptor.alignment_utils import Miniature
 from pysaurus.public.api import API
-from pysaurus.wip.image_utils import DEFAULT_THUMBNAIL_SIZE, image_to_miniature
+from pysaurus.wip.image_utils import DEFAULT_THUMBNAIL_SIZE
 
 PRINT_STEP = 500
 SIM_LIMIT = 0.94
@@ -27,7 +27,7 @@ def job_generate_miniatures(job):
     miniatures = []
     count = 0
     for file_name, thumbnail_path in thumbnails:
-        miniatures.append(image_to_miniature(thumbnail_path.path, DEFAULT_THUMBNAIL_SIZE, file_name))
+        miniatures.append(Miniature.from_file_name(thumbnail_path.path, DEFAULT_THUMBNAIL_SIZE, file_name))
         count += 1
         if count % PRINT_STEP == 0:
             print('[Generating miniatures on thread %s] %d/%d' % (job_id, count, nb_videos))
@@ -49,33 +49,6 @@ def generate_miniatures(database):
         miniatures.extend(local_array)
     miniatures.sort(key=lambda m: m.identifier)
     return miniatures
-
-
-def split_vs_white_image(indices, miniatures, gap_score, diff_limit):
-    # type: (List[int], List[Miniature], int, float) -> List[List[int]]
-    against_white = []
-    size = miniatures[0].width * miniatures[0].height
-    global_min_score = min(0, 255, gap_score) * size
-    global_max_score = max(0, 255, gap_score) * size
-    for index in indices:
-        miniature = miniatures[index]
-        score = (sum(miniature.r) + sum(miniature.g) + sum(miniature.b) - 3 * global_min_score) / (
-                3 * (global_max_score - global_min_score))
-        assert 0 <= score <= 1
-        against_white.append((index, score))
-    against_white.sort(key=lambda couple: couple[1])
-    nb_sequences = len(against_white)
-    initial_groups = []
-    start = 0
-    cursor = start + 1
-    while cursor < nb_sequences:
-        distance = against_white[start][1] - against_white[cursor][1]
-        if distance < -diff_limit or distance > diff_limit:
-            initial_groups.append([against_white[i][0] for i in range(start, cursor)])
-            start = cursor
-        cursor += 1
-    initial_groups.append([against_white[i][0] for i in range(start, nb_sequences)])
-    return initial_groups
 
 
 def similar_group_to_html_file(group_id, group, miniatures, database, html_dir, unique_id):
@@ -131,44 +104,6 @@ def compare_miniatures(i, j):
     n = i.width * i.height
     v = 255
     return (3 * n * v - array_distance(i.r, j.r) - array_distance(i.g, j.g) - array_distance(i.b, j.b)) / (3 * n * v)
-
-
-def find_similar_images_2(miniatures):
-    # type: (List[Miniature]) -> List[List[Tuple[int, float]]]
-    interrupted = False
-    scores = [None] * len(miniatures)
-    with Profiler('Finding similar images using simpler comparison.'):
-        try:
-            for i in range(len(miniatures)):
-                # if i == 1: raise KeyboardInterrupt()
-                if scores[i] is not None:
-                    continue
-                scores[i] = (i, 1)
-                for j in range(i + 1, len(miniatures)):
-                    if scores[j] is not None:
-                        continue
-                    score = compare_miniatures(miniatures[i], miniatures[j])
-                    if score >= SIM_LIMIT:
-                        scores[j] = (i, score)
-                        print('(', score, ')')
-                        print('\t', miniatures[i].identifier)
-                        print('\t', miniatures[j].identifier)
-                    if ((i + 1) * (j + 1)) % (10 * PRINT_STEP) == 0:
-                        print('At', i + 1, 'vs', j + 1, 'on', len(miniatures), 'value(s).')
-        except KeyboardInterrupt as exc:
-            interrupted = exc
-    if interrupted:
-        print('Min score', min(info[1] for info in scores if info is not None))
-        print('Max score', max(info[1] for info in scores if info is not None))
-        raise interrupted
-    groups = {}
-    for i, score_info in enumerate(scores):
-        if score_info is not None:
-            group_id, score = score_info
-            groups.setdefault(group_id, []).append((i, score))
-    print('Min score', min(info[1] for info in scores if info is not None))
-    print('Max score', max(info[1] for info in scores if info is not None))
-    return [groups[group_id] for group_id in sorted(groups)]
 
 
 def find_similar_images_3(miniatures):

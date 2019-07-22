@@ -2,7 +2,6 @@ import asyncio
 from typing import Callable, Optional
 
 import tornado.concurrent
-
 from pysaurus.interface.common.common_functions import launch_thread
 from pysaurus.interface.server.protocol import DataResponse, Request, Response
 from pysaurus.interface.server.server import Server

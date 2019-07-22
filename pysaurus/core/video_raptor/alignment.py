@@ -1,6 +1,6 @@
 from _ctypes import pointer
 from ctypes import c_int
-from typing import Any, List, Tuple
+from typing import List, Tuple
 
 from pysaurus.core.video_raptor.alignment_utils import Miniature
 from pysaurus.core.video_raptor.functions import (__PtrPtrSequence, __PtrSequence, __fn_batchAlignmentScore,
