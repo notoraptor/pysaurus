@@ -15,8 +15,10 @@ H = MAX_PIXEL_DISTANCE / 2
 P = MAX_PIXEL_DISTANCE / 4
 B = V / 2
 
-moderate = ultimate_generator(V, H, P)
 super_moderate = super_generator(V, B)
+
+SIMPLE_MAX_PIXEL_DISTANCE = 255 * 3
+simple_super_moderate = super_generator(SIMPLE_MAX_PIXEL_DISTANCE, SIMPLE_MAX_PIXEL_DISTANCE / 2)
 
 
 def similar_group_to_html_file(group_id, group, html_dir):
@@ -65,21 +67,22 @@ def pixel_similarity(p1, p2):
     db = p1.b - p2.b
     d = math.sqrt(dr * dr + dg * dg + db * db)
     return (MAX_PIXEL_DISTANCE - super_moderate(d)) / MAX_PIXEL_DISTANCE
-    # c1 = pixel_dominance_class(p1.r, p1.g, p1.b)
-    # c2 = pixel_dominance_class(p2.r, p2.g, p2.b)
-    # ndc = sum(abs(c1[i] - c2[i]) for i in range(len(c1))) / MAX_PIXEL_DOMINANCE_CLASS_DISTANCE
-    # return (MAX_PIXEL_DISTANCE - d * (1 + ndc) / 2) / MAX_PIXEL_DISTANCE
 
 
-def compare(miniature_1, miniature_2):
-    # type: (Miniature, Miniature) -> float
+def pixel_raw_sim(p1, p2):
+    d = abs(p1.r - p2.r) + abs(p1.g - p2.g) + abs(p1.b - p2.b)
+    return (SIMPLE_MAX_PIXEL_DISTANCE - simple_super_moderate(d)) / SIMPLE_MAX_PIXEL_DISTANCE
+
+
+def compare(miniature_1, miniature_2, radius=1):
+    # type: (Miniature, Miniature, int) -> float
     score = 0
     for x in range(miniature_1.width):
         for y in range(miniature_1.height):
             pixel_1 = miniature_1.pixel_at(x, y)
             pixels_around = [miniature_2.pixel_at(other_x, other_y)
-                             for (other_x, other_y) in miniature_1.coordinates_around(x, y, radius=1)]
-            score += max(pixel_similarity(pixel_1, other_pixel) for other_pixel in pixels_around)
+                             for (other_x, other_y) in miniature_1.coordinates_around(x, y, radius=radius)]
+            score += max(pixel_raw_sim(pixel_1, other_pixel) for other_pixel in pixels_around)
     return score / (miniature_1.width * miniature_1.height)
 
 
@@ -116,13 +119,14 @@ def find(user_path):
 
 
 def main():
-    if len(sys.argv) != 3:
+    if len(sys.argv) < 3:
         return
-    print(super_moderate.__name__)
+    print(simple_super_moderate.__name__)
     thumbnail_size = image_utils.DEFAULT_THUMBNAIL_SIZE
     miniature_1 = Miniature.from_file_name(sys.argv[1], dimensions=thumbnail_size)
     miniature_2 = Miniature.from_file_name(sys.argv[2], dimensions=thumbnail_size)
-    print(compare(miniature_1, miniature_2))
+    radius = int(sys.argv[3]) if len(sys.argv) == 4 else 1
+    print(compare(miniature_1, miniature_2, radius))
 
 
 def main2():
@@ -132,4 +136,4 @@ def main2():
 
 
 if __name__ == '__main__':
-    main2()
+    main()

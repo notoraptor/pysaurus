@@ -14,7 +14,7 @@ from pysaurus.public.api import API
 from pysaurus.wip.image_utils import DEFAULT_THUMBNAIL_SIZE
 
 PRINT_STEP = 500
-SIM_LIMIT = 0.94
+SIM_LIMIT = 0.9
 MIN_VAL = 0
 MAX_VAL = 255
 GAP_SCORE = -1
