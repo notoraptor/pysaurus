@@ -40,7 +40,7 @@ def generate_miniatures(database):
     miniatures = []  # type: List[Miniature]
     cpu_count = os.cpu_count()
     tasks = [(video.filename, video.get_thumbnail_path(database.folder))
-             for video in database.valid_videos_with_thumbnails]
+             for video in database.valid_videos_with_thumbnails][:2000]
     jobs = dispatch_tasks(tasks, cpu_count)
     with Profiler('Generating miniatures.'):
         with concurrent.futures.ProcessPoolExecutor(max_workers=cpu_count) as executor:
@@ -94,22 +94,9 @@ def similar_group_to_html_file(group_id, group, miniatures, database, html_dir, 
         file.write(str(html))
 
 
-def array_distance(a, b):
-    # type: (List[int], List[int]) -> int
-    return sum(abs(a[i] - b[i]) for i in range(len(a)))
-
-
-def compare_miniatures(i, j):
-    # type: (Miniature, Miniature) -> float
-    n = i.width * i.height
-    v = 255
-    return (3 * n * v - array_distance(i.r, j.r) - array_distance(i.g, j.g) - array_distance(i.b, j.b)) / (3 * n * v)
-
-
 def find_similar_images_3(miniatures):
     # type: (List[Miniature]) -> List[List[Tuple[int, float]]]
-    with Profiler('Finding similar images using simpler NATIVE comparison.'):
-        results = native_alignment.classify_similarities(miniatures, SIM_LIMIT, 255)
+    results = native_alignment.classify_similarities(miniatures, SIM_LIMIT, 255)
     groups = {}
     min_score = None
     max_score = None
