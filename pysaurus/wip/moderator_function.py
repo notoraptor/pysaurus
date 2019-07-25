@@ -25,10 +25,12 @@ def gen(V, c):
 
 
 def super_generator(V, b):
-    def function(x):
-        return (V + b) * x / (x + b)
+    v_plus_b = V + b
 
-    function.__name__ = 'f(x)=(%(V)s+%(b)s)*x/(x+%(b)s)' % {'V': V, 'b': b}
+    def function(x):
+        return v_plus_b * x / (x + b)
+
+    function.__name__ = 'f(x)=(%(v_plus_b)s)*x/(x+%(b)s)' % {'v_plus_b': v_plus_b, 'b': b}
     return function
 
 
@@ -64,6 +66,7 @@ def n_digits(s):
         n += 1
     return n
 
+
 def ten_power(value):
     n = 1
     while value:
@@ -74,10 +77,10 @@ def ten_power(value):
 
 def babylonian_squre_root(s):
     nb_iterations = 0
-    o = ten_power(n_digits(s)//2)
+    o = ten_power(n_digits(s) // 2)
     print('Initial for %s is %s' % (s, o))
     while abs(s - o * o) >= 0.05:
-        o = (o + s/o)/2
+        o = (o + s / o) / 2
         nb_iterations += 1
     print(nb_iterations, 'iteration(s), (%s)^2 = %s, expected = %s' % (o, o * o, s))
     return s

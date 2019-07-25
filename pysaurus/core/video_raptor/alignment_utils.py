@@ -65,15 +65,43 @@ class Pixel:
         return self.x < other.x
 
 
+class Histogram:
+    __slots__ = ('colors',)
+
+    def __init__(self, pixels):
+        self.colors = {}
+        for pixel in pixels:
+            if pixel in self.colors:
+                self.colors[pixel] += 1
+            else:
+                self.colors[pixel] = 1
+
+    @property
+    def nb_colors(self):
+        return len(self.colors)
+
+    @property
+    def nb_pixels(self):
+        return sum(count for count in self.colors.values())
+
+
+
 class Miniature:
     __slots__ = ('identifier', 'r', 'g', 'b', 'i', 'width', 'height')
 
-    def compare(self, i, j):
-        pass
+    def __init__(self, red, green, blue, width, height, identifier=None):
+        # type: (List[int], List[int], List[int], int, int, Any) -> None
+        self.r = red
+        self.g = green
+        self.b = blue
+        self.i = [0]
+        self.width = width
+        self.height = height
+        self.identifier = identifier
 
-    def get_pixel(self, index):
-        x, y = flat_to_coord(index, self.width)
-        return Pixel(self.r[index], self.g[index], self.b[index], x, y)
+    @property
+    def size(self):
+        return self.width * self.height
 
     def pixel_at(self, x, y):
         index = coord_to_flat(x, y, self.width)
@@ -86,15 +114,12 @@ class Miniature:
                 coordinates.append((local_x, local_y))
         return coordinates
 
-    def __init__(self, red, green, blue, width, height, identifier=None):
-        # type: (List[int], List[int], List[int], int, int, Any) -> None
-        self.r = red
-        self.g = green
-        self.b = blue
-        self.i = [0]
-        self.width = width
-        self.height = height
-        self.identifier = identifier
+    def tuples(self):
+        for i in range(len(self.r)):
+            yield (self.r[i], self.g[i], self.b[i])
+
+    def to_histogram(self):
+        return Histogram(self.tuples())
 
     def to_c_sequence(self, score=0.0, classification=-1):
         array_type = c_int * len(self.r)

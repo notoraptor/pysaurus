@@ -40,7 +40,7 @@ def generate_miniatures(database):
     miniatures = []  # type: List[Miniature]
     cpu_count = os.cpu_count()
     tasks = [(video.filename, video.get_thumbnail_path(database.folder))
-             for video in database.valid_videos_with_thumbnails][:2000]
+             for video in database.valid_videos_with_thumbnails]
     jobs = dispatch_tasks(tasks, cpu_count)
     with Profiler('Generating miniatures.'):
         with concurrent.futures.ProcessPoolExecutor(max_workers=cpu_count) as executor:

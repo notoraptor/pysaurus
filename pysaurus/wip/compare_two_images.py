@@ -15,10 +15,8 @@ H = MAX_PIXEL_DISTANCE / 2
 P = MAX_PIXEL_DISTANCE / 4
 B = V / 2
 
-super_moderate = super_generator(V, B)
-
 SIMPLE_MAX_PIXEL_DISTANCE = 255 * 3
-simple_super_moderate = super_generator(SIMPLE_MAX_PIXEL_DISTANCE, SIMPLE_MAX_PIXEL_DISTANCE / 2)
+moderate = super_generator(SIMPLE_MAX_PIXEL_DISTANCE, SIMPLE_MAX_PIXEL_DISTANCE / 2)
 
 
 def similar_group_to_html_file(group_id, group, html_dir):
@@ -62,77 +60,40 @@ def similar_group_to_html_file(group_id, group, html_dir):
 
 
 def pixel_similarity(p1, p2):
-    dr = p1.r - p2.r
-    dg = p1.g - p2.g
-    db = p1.b - p2.b
-    d = math.sqrt(dr * dr + dg * dg + db * db)
-    return (MAX_PIXEL_DISTANCE - super_moderate(d)) / MAX_PIXEL_DISTANCE
-
-
-def pixel_raw_sim(p1, p2):
     d = abs(p1.r - p2.r) + abs(p1.g - p2.g) + abs(p1.b - p2.b)
-    return (SIMPLE_MAX_PIXEL_DISTANCE - simple_super_moderate(d)) / SIMPLE_MAX_PIXEL_DISTANCE
+    return (SIMPLE_MAX_PIXEL_DISTANCE - moderate(d)) / SIMPLE_MAX_PIXEL_DISTANCE
+
+
+def pixel_distance(p1, p2):
+    return moderate(abs(p1.r - p2.r) + abs(p1.g - p2.g) + abs(p1.b - p2.b))
 
 
 def compare(miniature_1, miniature_2, radius=1):
     # type: (Miniature, Miniature, int) -> float
-    score = 0
+    size = miniature_1.width * miniature_1.height
+    distance = 0
     for x in range(miniature_1.width):
         for y in range(miniature_1.height):
             pixel_1 = miniature_1.pixel_at(x, y)
             pixels_around = [miniature_2.pixel_at(other_x, other_y)
                              for (other_x, other_y) in miniature_1.coordinates_around(x, y, radius=radius)]
-            score += max(pixel_raw_sim(pixel_1, other_pixel) for other_pixel in pixels_around)
-    return score / (miniature_1.width * miniature_1.height)
-
-
-def find(user_path):
-    score_limit = 0.9
-    thumbnail_size = image_utils.DEFAULT_THUMBNAIL_SIZE
-    miniatures = []
-    print('Collecting miniatures.')
-    for path in os.listdir(user_path):
-        if is_image(path):
-            img = os.path.join(user_path, path)
-            miniatures.append(Miniature.from_file_name(img, dimensions=thumbnail_size, identifier=img))
-            if len(miniatures) % 100 == 0:
-                print('Collected', len(miniatures), 'miniatures.')
-    print('Finished collecting', len(miniatures), 'miniatures.')
-    print('Comparing miniatures.')
-    classes = [(i, 1.) for i in range(len(miniatures))]
-    for i in range(len(miniatures)):
-        for j in range(i + 1, len(miniatures)):
-            score = compare(miniatures[i], miniatures[j])
-            if score >= score_limit:
-                classes[j] = (classes[i][0], score)
-        if i % 100 == 0:
-            print('Comparing miniature', i + 1, '/', len(miniatures))
-    print('Finished comparing', len(miniatures), 'miniatures.')
-    groups = {}
-    for index_image, (image_class, image_score) in enumerate(classes):
-        groups.setdefault(image_class, []).append((miniatures[index_image].identifier, image_score))
-    valid_groups = [group for group in groups.values() if len(group) > 1]
-    if valid_groups:
-        print('Found', len(valid_groups), 'similar images.')
-        for i, group in enumerate(valid_groups):
-            similar_group_to_html_file(i, group, '.similar')
+            distance += min(pixel_distance(pixel_1, other_pixel) for other_pixel in pixels_around)
+    return (SIMPLE_MAX_PIXEL_DISTANCE * size - distance) / (SIMPLE_MAX_PIXEL_DISTANCE * size)
 
 
 def main():
     if len(sys.argv) < 3:
         return
-    print(simple_super_moderate.__name__)
+    print('Moderator:', moderate.__name__)
     thumbnail_size = image_utils.DEFAULT_THUMBNAIL_SIZE
     miniature_1 = Miniature.from_file_name(sys.argv[1], dimensions=thumbnail_size)
     miniature_2 = Miniature.from_file_name(sys.argv[2], dimensions=thumbnail_size)
+    histogram_1 = miniature_1.to_histogram()
+    histogram_2 = miniature_2.to_histogram()
+    print('Histogram 1:', histogram_1.nb_colors, 'colors for', histogram_1.nb_pixels, 'pixels')
+    print('Histogram 2:', histogram_2.nb_colors, 'colors for', histogram_2.nb_pixels, 'pixels')
     radius = int(sys.argv[3]) if len(sys.argv) == 4 else 1
-    print(compare(miniature_1, miniature_2, radius))
-
-
-def main2():
-    if len(sys.argv) != 2:
-        return
-    find(sys.argv[1])
+    print('Score:', compare(miniature_1, miniature_2, radius))
 
 
 if __name__ == '__main__':
