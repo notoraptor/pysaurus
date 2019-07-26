@@ -9,6 +9,8 @@ from pysaurus.wip import image_utils
 from pysaurus.wip.find_similar_images import is_image
 from pysaurus.wip.moderator_function import super_generator, ultimate_generator
 from pysaurus.wip.pillow_wip import MAX_PIXEL_DISTANCE
+from pysaurus.core.video_raptor import alignment as native_alignment
+from typing import Tuple
 
 V = MAX_PIXEL_DISTANCE
 H = MAX_PIXEL_DISTANCE / 2
@@ -17,46 +19,6 @@ B = V / 2
 
 SIMPLE_MAX_PIXEL_DISTANCE = 255 * 3
 moderate = super_generator(SIMPLE_MAX_PIXEL_DISTANCE, SIMPLE_MAX_PIXEL_DISTANCE / 2)
-
-
-def similar_group_to_html_file(group_id, group, html_dir):
-    size = len(group)
-    html = StringPrinter()
-    html.write('<html>')
-    html.write('<header>')
-    html.write('<meta charset="utf-8"/>')
-    html.write('<title>Thumbnails similarities for group %s</title>' % group_id)
-    html.write('<link rel="stylesheet" href="similarities.css"/>')
-    html.write('</header>')
-    html.write('<body>')
-    html.write('<h1>%d files</h1>' % size)
-    html.write('<table>')
-    html.write('<thead>')
-    html.write('<tr><th class="group-id">Group ID</th><th class="thumbnails">Thumbnails</th></tr>')
-    html.write('<tbody>')
-    html.write('<tr>')
-    html.write('<td class="group-id">%s</td>' % group_id)
-    html.write('<td class="thumbnails">')
-    for thumb_path, score in group:
-        html.write('<div class="thumbnail">')
-        html.write('<div class="image">')
-        html.write('<img src="file://%s"/>' % thumb_path)
-        html.write('</div>')
-        html.write('<div><strong>%s</strong></div>' % score)
-        html.write('<div><code>%s</code></div>' % thumb_path)
-        html.write('</div>')
-    html.write('</td>')
-    html.write('</tr>')
-    html.write('</tbody>')
-    html.write('</thead>')
-    html.write('</table>')
-    html.write('</body>')
-    html.write('</html>')
-
-    output_file_name = AbsolutePath.join(html_dir, 'sim.%s.html' % (group_id))
-    os.makedirs(html_dir, exist_ok=True)
-    with open(output_file_name.path, 'w') as file:
-        file.write(str(html))
 
 
 def pixel_similarity(p1, p2):
@@ -81,6 +43,18 @@ def compare(miniature_1, miniature_2, radius=1):
     return (SIMPLE_MAX_PIXEL_DISTANCE * size - distance) / (SIMPLE_MAX_PIXEL_DISTANCE * size)
 
 
+def average_pixel(miniature):
+    # type: (Miniature) -> Tuple[float, float, float]
+    sum_r = 0
+    sum_g = 0
+    sum_b = 0
+    for r, g, b in miniature.tuples():
+        sum_r += r
+        sum_g += g
+        sum_b += b
+    return (sum_r / miniature.size, sum_b / miniature.size, sum_g / miniature.size)
+
+
 def main():
     if len(sys.argv) < 3:
         return
@@ -94,6 +68,19 @@ def main():
     print('Histogram 2:', histogram_2.nb_colors, 'colors for', histogram_2.nb_pixels, 'pixels')
     radius = int(sys.argv[3]) if len(sys.argv) == 4 else 1
     print('Score:', compare(miniature_1, miniature_2, radius))
+    results = native_alignment.classify_similarities([miniature_1, miniature_2], 0.0, 255)
+    for i, group_id, score in results:
+        print(i, group_id, score)
+    average_pixel_1 = average_pixel(miniature_1)
+    average_pixel_2 = average_pixel(miniature_2)
+    print('Average 1:', average_pixel_1)
+    print('Average 2:', average_pixel_2)
+    m = 255 * math.sqrt(3)
+    print('Similarity:', (m - math.sqrt(
+        abs(average_pixel_1[0] - average_pixel_2[0]) ** 2 +
+        abs(average_pixel_1[1] - average_pixel_2[1]) ** 2+
+        abs(average_pixel_1[2] - average_pixel_2[2]) ** 2
+    )) / m)
 
 
 if __name__ == '__main__':

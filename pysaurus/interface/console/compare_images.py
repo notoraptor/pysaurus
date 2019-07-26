@@ -2,6 +2,7 @@ import concurrent.futures
 import os
 import sys
 from typing import Any, List, Tuple
+import ujson as json
 
 from pysaurus.core.components.absolute_path import AbsolutePath
 from pysaurus.core.database.database import Database
@@ -94,7 +95,7 @@ def similar_group_to_html_file(group_id, group, miniatures, database, html_dir, 
         file.write(str(html))
 
 
-def find_similar_images_3(miniatures):
+def find_similar_images(miniatures):
     # type: (List[Miniature]) -> List[List[Tuple[int, float]]]
     results = native_alignment.classify_similarities(miniatures, SIM_LIMIT, 255)
     groups = {}
@@ -116,7 +117,7 @@ def main():
     miniatures = generate_miniatures(database)
     print('Extracted miniatures from %d/%d videos.' % (len(miniatures), database.nb_valid))
 
-    sim_groups = find_similar_images_3(miniatures)
+    sim_groups = find_similar_images(miniatures)
     print('Finally found', len(sim_groups), 'similarity groups.')
 
     html_dir = AbsolutePath('.html')
@@ -134,6 +135,15 @@ def main():
     for i, g in enumerate(sim_groups):
         similar_group_to_html_file(i + 1, g, miniatures, database, html_dir, unique_id)
     print(sum(len(g) for g in sim_groups), 'similar images from', len(miniatures), 'total images.')
+
+    json_groups = [{miniatures[image_index].identifier: image_score for image_index, image_score in group}
+                   for group in sim_groups]
+
+    json_output_file_name = 'similarities.json'
+    with open(json_output_file_name, 'w') as file:
+        json.dump(json_groups, file)
+
+    print('Similarities saved in', json_output_file_name)
 
 
 if __name__ == '__main__':
