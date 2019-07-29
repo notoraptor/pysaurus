@@ -327,8 +327,7 @@ class Database(object):
                     # This should not happen. Anyway, remove this entry from database.
                     # It may be recreated if database is updated.
                     del self.__videos[file_path]
-                elif file_path.isfile():
-                    # Keep errors only for existing files.
+                else:
                     self.__unreadable[file_path] = errors
         # Generate videos identifiers.
         self.__generate_identifiers()
