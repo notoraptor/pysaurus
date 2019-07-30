@@ -1,14 +1,14 @@
-import functools
+import math
 import math
 import sys
-from typing import List, Tuple, Optional
+from typing import Tuple
 
 import ujson as json
 
+from pysaurus.core.profiling import Profiler
 from pysaurus.core.video_raptor.alignment_utils import Miniature
 from pysaurus.interface.console.compare_images import generate_miniatures
 from pysaurus.public.api import API
-from pysaurus.core.profiling import Profiler
 
 # r = g = b     ***
 
@@ -35,12 +35,10 @@ from pysaurus.core.profiling import Profiler
 PixelTuple = Tuple[float, float, float]
 RED, GREEN, BLUE = 0, 1, 2
 
-
 SIMPLE_MAX_PIXEL_DISTANCE = 255 * 3
 V = SIMPLE_MAX_PIXEL_DISTANCE
 B = V / 2.0
 V_PLUS_B = V + B
-
 
 
 def bounds(mu, theta):
@@ -159,7 +157,7 @@ def standard_deviation(miniature, mu):
 
 
 def main():
-    sim_limit = 0.9
+    sim_limit = 0.95
     json_file_name = sys.argv[1]
     with open(json_file_name) as file:
         similarities = json.load(file)
@@ -178,23 +176,30 @@ def main():
         standard_deviations.append(theta)
     print('SORTING MINIATURES')
     nb_miniatures = len(miniatures)
-    classes = list(range(nb_miniatures))
-    scores = [0] * nb_miniatures
+    graph = {}
     with Profiler('Comparing miniatures.'):
         for i in range(nb_miniatures):
             for j in range(i + 1, nb_miniatures):
                 s = pixel_similarity(averages[i], averages[j])
-                if s >= sim_limit and s > scores[j]:
+                if s >= sim_limit:
                     s = pixel_similarity(standard_deviations[i], standard_deviations[j])
-                    if s >= sim_limit and s > scores[j]:
-                        classes[j] = classes[i]
-                        scores[j] = s
+                    if s >= sim_limit and s:
+                        graph.setdefault(i, []).append(j)
+                        graph.setdefault(j, []).append(i)
             if i % 500 == 0:
                 print('Compared', i + 1, '/', nb_miniatures)
-    groups = {}
-    for index_image, group_id in enumerate(classes):
-        groups.setdefault(group_id, []).append(index_image)
-    valid_groups = [group for group in groups.values() if len(group) > 1]
+    groups = []
+    while graph:
+        node_in, linked_nodes = next(iter(graph.items()))
+        group = {node_in}
+        del graph[node_in]
+        while linked_nodes:
+            node_out = linked_nodes.pop()
+            if node_out not in group:
+                group.add(node_out)
+                linked_nodes.extend(graph.pop(node_out, []))
+        groups.append(group)
+    valid_groups = [group for group in groups if len(group) > 1]
     print('Found', len(groups), 'groups,', len(valid_groups), 'valid groups, in', len(miniatures), 'miniatures')
     source_to_group_id = {}
     source_to_miniature = {}
@@ -243,9 +248,11 @@ def main():
                       '[%d images in %d groups]. Strong ones:' % (len(saved_sim_group), len(computed_group)),
                       ', '.join(str(i) for i in computed_group))
                 for i in range(len(remaining_sources)):
-                    print('\t%s' % database.get_video_from_filename(remaining_sources[i]).get_thumbnail_path(database.folder))
+                    print('\t%s' % database.get_video_from_filename(remaining_sources[i]).get_thumbnail_path(
+                        database.folder))
                     print('\t%s\t%s' % (mus[i], thetas[i]))
                     print('\t%s\t%s' % (mu_sims[i], theta_sims[i]))
+
 
 if __name__ == '__main__':
     main()
