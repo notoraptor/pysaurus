@@ -1,7 +1,7 @@
 import math
 import math
 import sys
-from typing import Tuple
+from typing import List, Tuple
 
 import ujson as json
 
@@ -133,31 +133,26 @@ def compare_intervals(mu_0, theta_0, mu_1, theta_1):
 
 def average(miniature):
     # type: (Miniature) -> Tuple[float, float, float]
-    sum_r = 0
-    sum_g = 0
-    sum_b = 0
-    for r, g, b in miniature.tuples():
-        sum_r += r
-        sum_g += g
-        sum_b += b
-    return sum_r / miniature.size, sum_g / miniature.size, sum_b / miniature.size
+    return sum(miniature.r) / miniature.size, sum(miniature.g) / miniature.size, sum(miniature.b) / miniature.size
+
+
+def _standard_deviation(values, mu):
+    # type: (List[int], float) -> float
+    return math.sqrt(sum((value - mu) * (value - mu) for value in values) / len(values))
 
 
 def standard_deviation(miniature, mu):
     # type: (Miniature, PixelTuple) -> Tuple[float, float, float]
     mu_r, mu_g, mu_b = mu
-    sum_r = 0
-    sum_g = 0
-    sum_b = 0
-    for r, g, b in miniature.tuples():
-        sum_r += (r - mu_r) * (r - mu_r)
-        sum_g += (g - mu_g) * (g - mu_g)
-        sum_b += (b - mu_b) * (b - mu_b)
-    return math.sqrt(sum_r / miniature.size), math.sqrt(sum_g / miniature.size), math.sqrt(sum_b / miniature.size)
+    return (
+        _standard_deviation(miniature.r, mu_r),
+        _standard_deviation(miniature.g, mu_g),
+        _standard_deviation(miniature.b, mu_b)
+    )
 
 
 def main():
-    sim_limit = 0.95
+    discrimination_limit = 0.9
     json_file_name = sys.argv[1]
     with open(json_file_name) as file:
         similarities = json.load(file)
@@ -174,16 +169,15 @@ def main():
         theta = standard_deviation(miniature, mu)
         averages.append(mu)
         standard_deviations.append(theta)
-    print('SORTING MINIATURES')
-    nb_miniatures = len(miniatures)
     graph = {}
-    with Profiler('Comparing miniatures.'):
+    nb_miniatures = len(miniatures)
+    with Profiler('COMPARING MINIATURES.'):
         for i in range(nb_miniatures):
             for j in range(i + 1, nb_miniatures):
                 s = pixel_similarity(averages[i], averages[j])
-                if s >= sim_limit:
+                if s >= discrimination_limit:
                     s = pixel_similarity(standard_deviations[i], standard_deviations[j])
-                    if s >= sim_limit and s:
+                    if s >= discrimination_limit:
                         graph.setdefault(i, []).append(j)
                         graph.setdefault(j, []).append(i)
             if i % 500 == 0:
@@ -198,17 +192,19 @@ def main():
             if node_out not in group:
                 group.add(node_out)
                 linked_nodes.extend(graph.pop(node_out, []))
-        groups.append(group)
+        groups.append(sorted(group))
     valid_groups = [group for group in groups if len(group) > 1]
-    print('Found', len(groups), 'groups,', len(valid_groups), 'valid groups, in', len(miniatures), 'miniatures')
+    print('Found', len(groups), 'groups,', len(valid_groups), 'valid groups keeping', sum(len(group) for group in valid_groups),'/', len(miniatures), 'miniatures')
+    print('Smallest group', min(len(group) for group in valid_groups))
+    print('Biggest  group', max(len(group) for group in valid_groups))
+    print('Average  group', sum(len(group) for group in valid_groups) / len(valid_groups))
+    print('Group    sizes', ', '.join(str(length) for length in sorted(len(group) for group in valid_groups)))
     source_to_group_id = {}
-    source_to_miniature = {}
     source_to_index = {}
     for index_group, group in enumerate(valid_groups):
         for index_image in group:
             source_to_group_id[str(miniatures[index_image].identifier)] = index_group
     for i, miniature in enumerate(miniatures):
-        source_to_miniature[str(miniature.identifier)] = miniature
         source_to_index[str(miniature.identifier)] = i
     print('CHECKING SAVED GROUPS')
     for index_saved, saved_sim_group in enumerate(similarities):
@@ -218,40 +214,11 @@ def main():
         if len(computed_group) == 1 and -1 not in computed_group:
             print(index_saved, 'OK')
         else:
-            remaining_sources = []
-            mus = []
-            thetas = []
-            mu_sims = []
-            theta_sims = []
-            for saved_source in saved_sim_group:
-                mu = averages[source_to_index[saved_source]]
-                theta = standard_deviations[source_to_index[saved_source]]
-                if not remaining_sources:
-                    remaining_sources.append(saved_source)
-                    mus.append(mu)
-                    thetas.append(theta)
-                    mu_sims.append(1)
-                    theta_sims.append(1)
-                    continue
-                mu_sim = pixel_similarity(mu, mus[0])
-                theta_sim = pixel_similarity(theta, thetas[0])
-                if mu_sim >= sim_limit and theta_sim >= sim_limit:
-                    remaining_sources.append(saved_source)
-                    mus.append(mu)
-                    thetas.append(theta)
-                    mu_sims.append(mu_sim)
-                    theta_sims.append(theta_sim)
-            if len(remaining_sources) == 1:
-                print(index_saved, 'OK (only 1 remaining image after removing weak links)')
-            else:
-                print(index_saved, '** NOT FOUND **',
-                      '[%d images in %d groups]. Strong ones:' % (len(saved_sim_group), len(computed_group)),
-                      ', '.join(str(i) for i in computed_group))
-                for i in range(len(remaining_sources)):
-                    print('\t%s' % database.get_video_from_filename(remaining_sources[i]).get_thumbnail_path(
-                        database.folder))
-                    print('\t%s\t%s' % (mus[i], thetas[i]))
-                    print('\t%s\t%s' % (mu_sims[i], theta_sims[i]))
+            if -1 in computed_group:
+                computed_group.remove(-1)
+            print(index_saved, '** NOT FOUND **', len(saved_sim_group), 'images in', len(computed_group), 'groups')
+            for source, score in saved_sim_group.items():
+                print('\t%s\t%s\t%s' % (source_to_group_id.get(source, 'X'), score, database.get_video_from_filename(source).get_thumbnail_path(database.folder)))
 
 
 if __name__ == '__main__':

@@ -4,6 +4,7 @@
 *.dll
 *.log
 *.pyc
+*.json
 .idea
 .local
 pysaurus.egg-info
