@@ -26,7 +26,7 @@ class ConsoleParser(FunctionParser):
                 elements = duplicated_sizes[size]  # type: list
                 elements.sort(key=lambda v: v.filename)
                 for video in elements:
-                    lines.append([size, self.api.database.get_video_id(video), video.filename])
+                    lines.append([size, self.api.database.get_video_id(video), '"%s"' % video.filename])
                 lines.append([])
             return Table(headers=headers, lines=lines)
 

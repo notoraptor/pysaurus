@@ -21,7 +21,7 @@ class API:
     __slots__ = 'database',
 
     def __init__(self, notifier=None):
-        self.database = API.load_database(notifier)
+        self.database = API.load_database(notifier=notifier)
 
     @staticmethod
     def load_database(list_file_path=None, notifier=None):
