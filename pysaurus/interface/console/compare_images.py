@@ -21,6 +21,32 @@ MAX_VAL = 255
 GAP_SCORE = -1
 
 
+class Node:
+    __slots__ = ('node', 'edges')
+
+    def __init__(self, value):
+        self.node = value
+        self.edges = {}
+
+    def add_edge(self, node, weight):
+        self.edges[node] = weight
+
+    def min_weight(self):
+        return min(self.edges.values()) if self.edges else 0
+
+    def max_weight(self):
+        return max(self.edges.values()) if self.edges else 0
+
+    def __hash__(self):
+        return hash(self.node)
+
+    def __eq__(self, other):
+        return self.node == other.node
+
+    def __lt__(self, other):
+        return self.node < other.node
+
+
 def job_generate_miniatures(job):
     # type: (Tuple[list, str]) -> List[Miniature]
     thumbnails, job_id = job
@@ -53,10 +79,10 @@ def generate_miniatures(database):
 
 
 def similar_group_to_html_file(group_id, group, miniatures, database, html_dir, unique_id):
-    # type: (int, List[Tuple[int, float]], List[Miniature], Database, AbsolutePath, Any) -> None
+    # type: (int, List[Node], List[Miniature], Database, AbsolutePath, Any) -> None
     size = len(group)
-    min_score = min(value[1] for value in group[1:])
-    max_score = max(value[1] for value in group[1:])
+    min_score = min(node.min_weight() for node in group)
+    max_score = max(node.max_weight() for node in group)
     html = StringPrinter()
     html.write('<html>')
     html.write('<header>')
@@ -65,25 +91,26 @@ def similar_group_to_html_file(group_id, group, miniatures, database, html_dir, 
     html.write('<link rel="stylesheet" href="similarities.css"/>')
     html.write('</header>')
     html.write('<body>')
-    html.write('<h1>%d files, min score %s, max score %s</h1>' % (size, min_score, max_score))
+    html.write('<h1>Group %s, %d files, min score %s, max score %s</h1>' % (group_id, size, min_score, max_score))
     html.write('<table>')
     html.write('<thead>')
-    html.write('<tr><th class="group-id">Group ID</th><th class="thumbnails">Thumbnails</th></tr>')
+    html.write('<tr><th class="header-images">Image</th><th class="header-details">Details</th></tr>')
     html.write('<tbody>')
-    html.write('<tr>')
-    html.write('<td class="group-id">%d</td>' % group_id)
-    html.write('<td class="thumbnails">')
-    for image_index, image_score in group:
-        miniature_i = miniatures[image_index]
+    for node in sorted(group):
+        miniature_i = miniatures[node.node]
         thumb_path = database.get_video_from_filename(miniature_i.identifier).get_thumbnail_path(database.folder)
-        html.write('<div class="thumbnail">')
-        html.write('<div class="image">')
+        html.write('<tr>')
+        html.write('<td class="image">')
         html.write('<img src="file://%s"/>' % thumb_path)
-        html.write('</div>')
-        html.write('<div class="score">%s</div>' % image_score)
-        html.write('</div>')
-    html.write('</td>')
-    html.write('</tr>')
+        html.write('</td>')
+        html.write('<td class="details">')
+        html.write('<div class="image-file"><strong><code>"%s"</code></strong></div>' % thumb_path)
+        html.write('<div class="origin-file"><em><code>"%s"</em></strong></div>' % miniature_i.identifier)
+        html.write('<div><code><strong><em>[%s]</em></strong></code></div>' % node.node)
+        for output_node in sorted(node.edges):
+            html.write('<div class="score"><code><em>With %s</em>: <strong>%s</strong></code></div>' % (output_node, node.edges[output_node]))
+        html.write('</td>')
+        html.write('</tr>')
     html.write('</tbody>')
     html.write('</thead>')
     html.write('</table>')
@@ -91,24 +118,49 @@ def similar_group_to_html_file(group_id, group, miniatures, database, html_dir, 
     html.write('</html>')
 
     output_file_name = AbsolutePath.join(html_dir, 'sim.%s.%03d.html' % (unique_id, group_id))
-    with open(output_file_name.path, 'w') as file:
-        file.write(str(html))
+    with open(output_file_name.path, 'wb') as file:
+        file.write(str(html).encode())
+
+
+def extract_linked_nodes(graph):
+    # type: (dict) -> List[List[Node]]
+    groups = []
+    while graph:
+        node_in, linked_nodes = next(iter(graph.items()))
+        group = {node_in: Node(node_in)}
+        del graph[node_in]
+        nodes_out = [(node_in, node_out, weight) for (node_out, weight) in linked_nodes]
+        while nodes_out:
+            v_in, v_out, w = nodes_out.pop()
+            if v_out not in group:
+                group[v_out] = Node(v_out)
+                group[v_out].add_edge(v_in, w)
+                group[v_in].add_edge(v_out, w)
+                if v_out in graph:
+                    nodes_out.extend((v_out, other_v, other_w) for (other_v, other_w) in graph.pop(v_out))
+        groups.append(sorted(group.values()))
+    return groups
 
 
 def find_similar_images(miniatures):
-    # type: (List[Miniature]) -> List[List[Tuple[int, float]]]
-    results = native_alignment.classify_similarities(miniatures, SIM_LIMIT, 255)
-    groups = {}
+    # type: (List[Miniature]) -> List[List[Node]]
+    edges = native_alignment.classify_similarities(miniatures)
+    graph = {}
+    nb_miniatures = len(miniatures)
     min_score = None
     max_score = None
-    for i, group_id, score in results:
-        min_score = score if min_score is None else min(min_score, score)
-        max_score = score if max_score is None else max(max_score, score)
-        if group_id != -1:
-            groups.setdefault(group_id, []).append((i, score))
+    for index, score in enumerate(edges):
+        if score >= SIM_LIMIT:
+            i = int(index / nb_miniatures)
+            j = index % nb_miniatures
+            graph.setdefault(i, []).append((j, score))
+            graph.setdefault(j, []).append((i, score))
+            min_score = score if min_score is None else min(min_score, score)
+            max_score = score if max_score is None else max(max_score, score)
     print('Min score', min_score)
     print('Max score', max_score)
-    return [group for group in sorted(groups.values(), key=lambda g: max(v[1] for v in g)) if len(group) > 1]
+    groups = extract_linked_nodes(graph)
+    return [group for group in groups if len(group) > 1]
 
 
 def main():
@@ -119,6 +171,8 @@ def main():
 
     sim_groups = find_similar_images(miniatures)
     print('Finally found', len(sim_groups), 'similarity groups.')
+    print(sum(len(g) for g in sim_groups), 'similar images from', len(miniatures), 'total images.')
+    sim_groups.sort(key=lambda group: len(group))
 
     html_dir = AbsolutePath('.html')
     unique_id = timestamp_microseconds()
@@ -134,10 +188,12 @@ def main():
 
     for i, g in enumerate(sim_groups):
         similar_group_to_html_file(i + 1, g, miniatures, database, html_dir, unique_id)
-    print(sum(len(g) for g in sim_groups), 'similar images from', len(miniatures), 'total images.')
 
-    json_groups = [{miniatures[image_index].identifier: image_score for image_index, image_score in group}
-                   for group in sim_groups]
+    json_groups = [
+        {miniatures[node.node].identifier.path:
+             database.get_video_from_filename(miniatures[node.node].identifier).get_thumbnail_path(database.folder).path
+         for node in group}
+        for group in sim_groups]
 
     json_output_file_name = 'similarities.json'
     with open(json_output_file_name, 'w') as file:

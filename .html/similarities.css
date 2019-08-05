@@ -1,11 +1,6 @@
 body {
     font-family: Verdana, Geneva, sans-serif;
 }
-.thumbnail {
-    display: inline-block;
-}
-.image {
-}
 img {
     max-width: 100%;
     height: auto;
@@ -13,9 +8,9 @@ img {
     margin: auto;
 }
 td {
-    vertical-align: top;
+    vertical-align: middle;
 }
-.score {
-    text-align: center;
-    font-weight: bold;
+
+td .image-file, td .origin-file {
+    margin-bottom: 0.5rem;
 }

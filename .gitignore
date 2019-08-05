@@ -5,6 +5,8 @@
 *.log
 *.pyc
 *.json
+*.csv
+*.tsv
 .idea
 .local
 pysaurus.egg-info

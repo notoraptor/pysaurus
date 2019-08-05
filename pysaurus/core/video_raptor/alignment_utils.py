@@ -94,7 +94,7 @@ class Miniature:
         self.r = red
         self.g = green
         self.b = blue
-        self.i = [0]
+        self.i = None
         self.width = width
         self.height = height
         self.identifier = identifier
@@ -126,7 +126,7 @@ class Miniature:
         return Sequence(c_int_p(array_type(*self.r)),
                         c_int_p(array_type(*self.g)),
                         c_int_p(array_type(*self.b)),
-                        c_int_p(array_type(*self.i)),
+                        None if self.i is None else c_int_p(array_type(*self.i)),
                         score, classification)
 
     @staticmethod

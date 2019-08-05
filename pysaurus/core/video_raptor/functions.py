@@ -4,6 +4,7 @@ from ctypes import POINTER, c_bool, c_char_p, c_double, c_int, c_uint, cdll
 from pysaurus.core.video_raptor.structures import (ErrorReader, Sequence, VideoInfo, VideoRaptorInfo, VideoReport,
                                                    VideoThumbnail, c_int_p)
 
+c_double_p = POINTER(c_double)
 __PtrVideoRaptorInfo = POINTER(VideoRaptorInfo)
 __PtrErrorReader = POINTER(ErrorReader)
 __PtrVideoReport = POINTER(VideoReport)
@@ -56,4 +57,4 @@ __fn_videoRaptorThumbnails.argtypes = [c_int, __PtrPtrVideoThumbnail]
 __fn_videoRaptorThumbnails.restype = c_int
 __fn_batchAlignmentScore.argtypes = [c_int_p, c_int_p, c_int, c_int, c_int, c_int, c_int]
 __fn_batchAlignmentScore.restype = c_double
-__fn_classifySimilarities.argtypes = [__PtrPtrSequence, c_int, c_int, c_int, c_double, c_int]
+__fn_classifySimilarities.argtypes = [__PtrPtrSequence, c_int, c_int, c_int, c_double_p]
