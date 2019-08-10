@@ -1,5 +1,5 @@
 from pysaurus.core.video_raptor.alignment_utils import Miniature
-from pysaurus.wip.moderator_function import super_generator
+from pysaurus.core.utils.functions import generate_amplifier_function
 from pysaurus.public.api import API
 from pysaurus.interface.console.compare_images import generate_miniatures
 
@@ -13,7 +13,7 @@ V = SIMPLE_MAX_PIXEL_DISTANCE
 B = V / 2.0
 
 
-moderate = super_generator(V, B)
+moderate = generate_amplifier_function(V, B)
 
 
 def pixel_distance(p1, x, y, p2, localX, localY, width):

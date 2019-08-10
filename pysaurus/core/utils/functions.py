@@ -211,3 +211,13 @@ def timestamp_microseconds():
     """
     delta = datetime.now() - EPOCH
     return (delta.days * 24 * 60 * 60 + delta.seconds) * 1000000 + delta.microseconds
+
+
+def generate_amplifier_function(V, b):
+    v_plus_b = V + b
+
+    def function(x):
+        return v_plus_b * x / (x + b)
+
+    function.__name__ = 'f(x)=(%(v_plus_b)s)*x/(x+%(b)s)' % {'v_plus_b': v_plus_b, 'b': b}
+    return function
