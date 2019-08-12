@@ -26,7 +26,7 @@ class ConsoleParser(FunctionParser):
                 elements = duplicated_sizes[size]  # type: list
                 elements.sort(key=lambda v: v.filename)
                 for video in elements:
-                    lines.append([size, self.api.database.get_video_id(video), '"%s"' % video.filename])
+                    lines.append([size, video.video_id, '"%s"' % video.filename])
                 lines.append([])
             return Table(headers=headers, lines=lines)
 
@@ -39,7 +39,7 @@ class ConsoleParser(FunctionParser):
             for video in found:
                 lines.append([
                     video.filename.get_date_modified(),
-                    self.api.database.get_video_id(video),
+                    video.video_id,
                     video.get_size(),
                     video.filename
                 ])
@@ -50,5 +50,5 @@ class ConsoleParser(FunctionParser):
         headers = ['No', 'ID', field.upper(), 'Path']
         lines = []
         for i, video in enumerate(selected_videos):
-            lines.append(['(%d)' % i, self.api.database.get_video_id(video), video.get(field), video.filename])
+            lines.append(['(%d)' % i, video.video_id, video.get(field), video.filename])
         return Table(headers=headers, lines=lines)

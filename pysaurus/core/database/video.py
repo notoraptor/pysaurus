@@ -1,3 +1,6 @@
+import base64
+from io import BytesIO
+
 from PIL import Image
 
 from pysaurus.core.components.absolute_path import AbsolutePath
@@ -5,14 +8,10 @@ from pysaurus.core.components.duration import Duration
 from pysaurus.core.components.file_size import FileSize
 from pysaurus.core.database import path_utils
 from pysaurus.core.utils.classes import HTMLStripper, StringPrinter
-from pysaurus.core.utils.constants import PYTHON_ERROR_THUMBNAIL
+from pysaurus.core.utils.constants import PYTHON_ERROR_THUMBNAIL, THUMBNAIL_EXTENSION
 from pysaurus.core.video_clipping import video_clip_to_base64
-from pysaurus.core.video_raptor.structures import VideoInfo
 
 WORK_MODE = 'RGB'
-import base64
-from io import BytesIO
-from pysaurus.core.utils.constants import THUMBNAIL_EXTENSION
 
 
 class Video(object):
@@ -20,9 +19,9 @@ class Video(object):
     __slots__ = ('filename', 'title', 'container_format', 'width', 'height',
                  'audio_codec', 'video_codec', 'audio_codec_description', 'video_codec_description',
                  'frame_rate_num', 'frame_rate_den', 'sample_rate', 'duration', 'duration_time_base', 'size',
-                 'audio_bit_rate', 'errors', 'thumb_name', 'error_thumbnail')
+                 'audio_bit_rate', 'errors', 'thumb_name', 'error_thumbnail', 'video_id', 'database')
 
-    __fields__ = __slots__[:-1]
+    __fields__ = __slots__[:-2]
 
     TABLE_FIELDS = (
         # basic fields
@@ -62,18 +61,28 @@ class Video(object):
             self.filename.extension
         ]
 
+    def get(self, field):
+        return self.to_table_line()[self.TABLE_FIELDS.index(field)]
+
+    def info(self, **extra):
+        info = {field: value for (field, value) in zip(self.TABLE_FIELDS, self.to_table_line())}
+        info.update(extra)
+        return info
+
     MIN_TO_LONG = {'f': 'filename', 'n': 'title', 'c': 'container_format', 'a': 'audio_codec', 'v': 'video_codec',
                    'A': 'audio_codec_description', 'V': 'video_codec_description',
                    'w': 'width', 'h': 'height', 'x': 'frame_rate_num', 'y': 'frame_rate_den', 'u': 'sample_rate',
                    'd': 'duration', 't': 'duration_time_base', 's': 'size', 'r': 'audio_bit_rate',
-                   'i': 'thumb_name', 'e': 'errors'}
+                   'i': 'thumb_name', 'e': 'errors', 'j': 'video_id'}
 
     LONG_TO_MIN = {_long: _min for _min, _long in MIN_TO_LONG.items()}
 
-    def __init__(self, filename, title='', container_format='', audio_codec='', video_codec='',
+    def __init__(self, filename, database, title='', container_format='', audio_codec='', video_codec='',
                  audio_codec_description='', video_codec_description='', width=0, height=0,
                  frame_rate_num=0, frame_rate_den=0, sample_rate=0, duration=0, duration_time_base=0, size=0,
-                 audio_bit_rate=0, thumb_name='', errors=()):
+                 audio_bit_rate=0, thumb_name='', errors=(), video_id=None):
+        from pysaurus.core.database.database import Database
+        self.database = database  # type: Database
         self.filename = AbsolutePath.ensure(filename)
         self.title = ''
         if title:
@@ -101,6 +110,7 @@ class Video(object):
         self.audio_bit_rate = audio_bit_rate or 0
         self.thumb_name = thumb_name
         self.errors = set(errors)
+        self.video_id = video_id if isinstance(video_id, int) else None
         self.error_thumbnail = PYTHON_ERROR_THUMBNAIL in self.errors
         if self.error_thumbnail:
             self.errors.remove(PYTHON_ERROR_THUMBNAIL)
@@ -108,7 +118,7 @@ class Video(object):
     def __str__(self):
         printer = StringPrinter()
         printer.write('Video:')
-        for field_name in ('filename', 'title', 'container_format',
+        for field_name in ('video_id', 'filename', 'title', 'container_format',
                            'audio_codec', 'video_codec', 'audio_codec_description', 'video_codec_description',
                            'width', 'height', 'sample_rate', 'audio_bit_rate'):
             printer.write('\t%s: %s' % (field_name, getattr(self, field_name)))
@@ -140,27 +150,19 @@ class Video(object):
     def get_size(self):
         return FileSize(self.size)
 
-    def thumbnail_is_valid(self, folder: AbsolutePath):
-        return not self.error_thumbnail and self.get_thumbnail_path(folder).isfile()
+    def get_thumbnail_path(self):
+        return path_utils.generate_thumb_path(self.database.folder, self.ensure_thumbnail_name())
 
     def ensure_thumbnail_name(self):
         if not self.thumb_name:
             self.thumb_name = path_utils.generate_thumb_name(self.filename)
         return self.thumb_name
 
-    def get_thumbnail_path(self, folder: AbsolutePath):
-        return path_utils.generate_thumb_path(folder, self.ensure_thumbnail_name())
+    def thumbnail_is_valid(self):
+        return not self.error_thumbnail and self.get_thumbnail_path().isfile()
 
-    def get(self, field):
-        return self.to_table_line()[self.TABLE_FIELDS.index(field)]
-
-    def info(self, **extra):
-        info = {field: value for (field, value) in zip(self.TABLE_FIELDS, self.to_table_line())}
-        info.update(extra)
-        return info
-
-    def thumbnail_to_base64(self, thumb_folder: AbsolutePath):
-        thumb_path = self.get_thumbnail_path(thumb_folder)
+    def thumbnail_to_base64(self):
+        thumb_path = self.get_thumbnail_path()
         if not thumb_path.isfile():
             return None
         image = Image.open(thumb_path.path)
@@ -180,33 +182,12 @@ class Video(object):
         )
 
     def to_dict(self):
-        dct = {self.LONG_TO_MIN[key]: getattr(self, key) for key in self.__fields__}
+        dct = {_min: getattr(self, _long) for (_min, _long) in self.MIN_TO_LONG.items()}
         dct[self.LONG_TO_MIN['filename']] = str(self.filename)
         if self.error_thumbnail:
             dct[self.LONG_TO_MIN['errors']].add(PYTHON_ERROR_THUMBNAIL)
         return dct
 
     @classmethod
-    def from_dict(cls, dct: dict):
-        return cls(**{field: dct[cls.LONG_TO_MIN[field]] for field in cls.__fields__})
-
-    @classmethod
-    def from_video_info(cls, video_info: VideoInfo):
-        return cls(filename=(AbsolutePath(video_info.filename.decode()) if video_info.filename else None),
-                   title=(video_info.title.decode() if video_info.title else None),
-                   container_format=(video_info.container_format.decode() if video_info.container_format else None),
-                   audio_codec=(video_info.audio_codec.decode() if video_info.audio_codec else None),
-                   video_codec=(video_info.video_codec.decode() if video_info.video_codec else None),
-                   audio_codec_description=(video_info.audio_codec_description.decode()
-                                            if video_info.audio_codec_description else None),
-                   video_codec_description=(video_info.video_codec_description.decode()
-                                            if video_info.video_codec_description else None),
-                   width=video_info.width,
-                   height=video_info.height,
-                   frame_rate_num=video_info.frame_rate_num,
-                   frame_rate_den=video_info.frame_rate_den,
-                   sample_rate=video_info.sample_rate,
-                   duration=video_info.duration,
-                   duration_time_base=video_info.duration_time_base,
-                   size=video_info.size,
-                   audio_bit_rate=video_info.audio_bit_rate)
+    def from_dict(cls, dct, database):
+        return cls(database=database, **{_long: dct[_min] for (_min, _long) in cls.MIN_TO_LONG})

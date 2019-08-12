@@ -2,7 +2,8 @@ import base64
 import os
 
 from moviepy.video.io.VideoFileClip import VideoFileClip
-from pysaurus.core.error import PysaurusError
+
+from pysaurus.core.pysaurus_errors import PysaurusError
 from pysaurus.core.utils.classes import Whirlpool
 
 

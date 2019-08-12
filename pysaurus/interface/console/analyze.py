@@ -1,5 +1,4 @@
 import math
-import math
 import sys
 from typing import List, Tuple
 
@@ -194,7 +193,8 @@ def main():
                 linked_nodes.extend(graph.pop(node_out, []))
         groups.append(sorted(group))
     valid_groups = [group for group in groups if len(group) > 1]
-    print('Found', len(groups), 'groups,', len(valid_groups), 'valid groups keeping', sum(len(group) for group in valid_groups),'/', len(miniatures), 'miniatures')
+    print('Found', len(groups), 'groups,', len(valid_groups), 'valid groups keeping',
+          sum(len(group) for group in valid_groups), '/', len(miniatures), 'miniatures')
     print('Smallest group', min(len(group) for group in valid_groups))
     print('Biggest  group', max(len(group) for group in valid_groups))
     print('Average  group', sum(len(group) for group in valid_groups) / len(valid_groups))
@@ -218,7 +218,8 @@ def main():
                 computed_group.remove(-1)
             print(index_saved, '** NOT FOUND **', len(saved_sim_group), 'images in', len(computed_group), 'groups')
             for source, score in saved_sim_group.items():
-                print('\t%s\t%s\t%s' % (source_to_group_id.get(source, 'X'), score, database.get_video_from_filename(source).get_thumbnail_path(database.folder)))
+                print('\t%s\t%s\t%s' % (source_to_group_id.get(source, 'X'), score,
+                                        database.get_video_from_filename(source).get_thumbnail_path()))
 
 
 if __name__ == '__main__':

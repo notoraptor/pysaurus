@@ -4,6 +4,7 @@ import sys
 from typing import Dict, List, Union
 
 from pysaurus.core.components.absolute_path import AbsolutePath
+from pysaurus.core.database import path_utils
 from pysaurus.core.database.database import Database
 from pysaurus.core.database.video import Video
 from pysaurus.core.function_parsing.function_parser import FunctionParser
@@ -30,7 +31,10 @@ class API:
             list_file_path = AbsolutePath(os.path.join(utils.package_dir(), '..', '..', '.local', 'test_folder.log'))
         else:
             list_file_path = AbsolutePath.ensure(list_file_path)
-        database = Database(list_file_path, notifier)
+        paths = path_utils.load_path_list_file(list_file_path)
+        database_folder = list_file_path.get_directory()
+        database = Database(path=database_folder, folders=paths, notifier=notifier)
+
         database.update()
         # database.clean_unused_thumbnails()
         database.ensure_thumbnails()
@@ -123,11 +127,11 @@ class API:
     def image(self, video_id):
         # type: (int) -> str
         video = self.__video(video_id)
-        return video.thumbnail_to_base64(self.database.folder)
+        return video.thumbnail_to_base64()
 
     def image_filename(self, filename):
         # type: (str) -> str
-        return self.__video_from_filename(filename).thumbnail_to_base64(self.database.folder)
+        return self.__video_from_filename(filename).thumbnail_to_base64()
 
     def clip(self, video_id, start, length):
         # type: (int, int, int) -> str
@@ -164,7 +168,7 @@ class API:
         new_title = str(new_title)
         video = self.__video(video_id)  # type: Video
         self.database.change_video_file_title(video, new_title)
-        return self.database.get_video_id(video)
+        return video.video_id
 
     def rename_filename(self, filename, new_title):
         # type: (str, str) -> (str, str)

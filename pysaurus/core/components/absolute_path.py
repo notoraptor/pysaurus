@@ -42,16 +42,19 @@ class AbsolutePath(object):
         return extension[1:].lower() if extension else ''
 
     def __str__(self):
-        return self.__path
+        return self.standard_path
+
+    def __repr__(self):
+        return repr(self.standard_path)
 
     def __hash__(self):
-        return hash(self.__path)
+        return hash(self.standard_path)
 
     def __eq__(self, other):
-        return self.__path == other.path
+        return self.standard_path == other.standard_path
 
     def __lt__(self, other):
-        return self.__path < other.path
+        return self.standard_path < other.standard_path
 
     def exists(self):
         return os.path.exists(self.__path)
@@ -75,12 +78,8 @@ class AbsolutePath(object):
         directory = AbsolutePath.ensure(directory)
         if not directory.isdir():
             return False
-        directory = directory.path
-        path = self.path
-        if directory.startswith(WINDOWS_PATH_PREFIX):
-            directory = directory[len(WINDOWS_PATH_PREFIX):]
-        if path.startswith(WINDOWS_PATH_PREFIX):
-            path = path[len(WINDOWS_PATH_PREFIX):]
+        directory = directory.standard_path
+        path = self.standard_path
         if len(directory) >= len(path):
             return False
         return path.startswith('%s%s' % (directory, os.sep))

@@ -36,13 +36,15 @@ class CollectedFiles(Notification):
     count: int
     folder_to_count: Dict[str, int]
 
-    def __init__(self, folder_to_files: dict):
-        self.count = 0
+    def __init__(self, paths: list):
+        self.count = len(paths)
         self.folder_to_count = {}
-        for folder, file_names in folder_to_files.items():
-            local_count = len(file_names)
-            self.count += local_count
-            self.folder_to_count[str(folder)] = local_count
+        for path in paths:
+            directory = str(path.get_directory())
+            if directory in self.folder_to_count:
+                self.folder_to_count[directory] += 1
+            else:
+                self.folder_to_count[directory] = 1
 
     def __str__(self):
         printer = StringPrinter()

@@ -1,4 +1,4 @@
-from pysaurus.core.error import PysaurusError
+from pysaurus.core.pysaurus_errors import PysaurusError
 
 
 class ApiError(PysaurusError):

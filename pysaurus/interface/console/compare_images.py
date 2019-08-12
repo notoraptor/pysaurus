@@ -2,7 +2,9 @@ import concurrent.futures
 import os
 import sys
 from typing import Any, List, Tuple
+
 import ujson as json
+from pysaurus.wip.image_utils import DEFAULT_THUMBNAIL_SIZE
 
 from pysaurus.core.components.absolute_path import AbsolutePath
 from pysaurus.core.database.database import Database
@@ -12,7 +14,6 @@ from pysaurus.core.utils.functions import dispatch_tasks, timestamp_microseconds
 from pysaurus.core.video_raptor import alignment as native_alignment
 from pysaurus.core.video_raptor.alignment_utils import Miniature
 from pysaurus.public.api import API
-from pysaurus.wip.image_utils import DEFAULT_THUMBNAIL_SIZE
 
 PRINT_STEP = 500
 SIM_LIMIT = 0.9
@@ -66,7 +67,7 @@ def generate_miniatures(database):
     # type: (Database) -> List[Miniature]
     miniatures = []  # type: List[Miniature]
     cpu_count = os.cpu_count()
-    tasks = [(video.filename, video.get_thumbnail_path(database.folder))
+    tasks = [(video.filename, video.get_thumbnail_path())
              for video in database.valid_videos_with_thumbnails]
     jobs = dispatch_tasks(tasks, cpu_count)
     with Profiler('Generating miniatures.'):
@@ -98,7 +99,7 @@ def similar_group_to_html_file(group_id, group, miniatures, database, html_dir, 
     html.write('<tbody>')
     for node in sorted(group):
         miniature_i = miniatures[node.node]
-        thumb_path = database.get_video_from_filename(miniature_i.identifier).get_thumbnail_path(database.folder)
+        thumb_path = database.get_video_from_filename(miniature_i.identifier).get_thumbnail_path()
         html.write('<tr>')
         html.write('<td class="image">')
         html.write('<img src="file://%s"/>' % thumb_path)
@@ -108,7 +109,8 @@ def similar_group_to_html_file(group_id, group, miniatures, database, html_dir, 
         html.write('<div class="origin-file"><em><code>"%s"</em></strong></div>' % miniature_i.identifier)
         html.write('<div><code><strong><em>[%s]</em></strong></code></div>' % node.node)
         for output_node in sorted(node.edges):
-            html.write('<div class="score"><code><em>With %s</em>: <strong>%s</strong></code></div>' % (output_node, node.edges[output_node]))
+            html.write('<div class="score"><code><em>With %s</em>: <strong>%s</strong></code></div>' % (
+            output_node, node.edges[output_node]))
         html.write('</td>')
         html.write('</tr>')
     html.write('</tbody>')
@@ -191,7 +193,7 @@ def main():
 
     json_groups = [
         {miniatures[node.node].identifier.path:
-             database.get_video_from_filename(miniatures[node.node].identifier).get_thumbnail_path(database.folder).path
+             database.get_video_from_filename(miniatures[node.node].identifier).get_thumbnail_path().path
          for node in group}
         for group in sim_groups]
 

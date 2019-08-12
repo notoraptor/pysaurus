@@ -1,8 +1,7 @@
-from pysaurus.core.video_raptor.alignment_utils import Miniature
 from pysaurus.core.utils.functions import generate_amplifier_function
-from pysaurus.public.api import API
+from pysaurus.core.video_raptor.alignment_utils import Miniature
 from pysaurus.interface.console.compare_images import generate_miniatures
-
+from pysaurus.public.api import API
 
 SIMPLE_MAX_PIXEL_DISTANCE = 255 * 3
 
@@ -11,7 +10,6 @@ HEIGHT = 1
 MAXIMUM_SIMILARITY_SCORE = SIMPLE_MAX_PIXEL_DISTANCE * WIDTH * HEIGHT
 V = SIMPLE_MAX_PIXEL_DISTANCE
 B = V / 2.0
-
 
 moderate = generate_amplifier_function(V, B)
 
@@ -165,7 +163,7 @@ def main():
     if len(valid_groups):
         print(min(len(g) for g in valid_groups), 'minimum size')
         print(max(len(g) for g in valid_groups), 'maximum size')
-        print(sum(len(g) for g in valid_groups)/len(valid_groups), 'average size')
+        print(sum(len(g) for g in valid_groups) / len(valid_groups), 'average size')
 
 
 if __name__ == '__main__':

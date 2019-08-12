@@ -1,8 +1,9 @@
 from ctypes import c_int
 from typing import Any, List, Optional, Tuple
 
+from pysaurus.core.utils.image_utils import coord_to_flat, open_rgb_image
+
 from pysaurus.core.video_raptor.structures import Sequence, c_int_p
-from pysaurus.wip.image_utils import coord_to_flat, flat_to_coord, open_rgb_image
 
 
 def project(value, from_a, from_b, to_u, to_v):
@@ -83,7 +84,6 @@ class Histogram:
     @property
     def nb_pixels(self):
         return sum(count for count in self.colors.values())
-
 
 
 class Miniature:
