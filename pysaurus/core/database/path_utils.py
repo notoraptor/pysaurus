@@ -7,7 +7,7 @@ from pysaurus.core.utils.constants import THUMBNAIL_EXTENSION
 
 def generate_thumb_name(file_name):
     # type: (AbsolutePath) -> str
-    return Whirlpool.hash(file_name.path)
+    return Whirlpool.hash(file_name.standard_path)
 
 
 def generate_thumb_path(folder, thumb_name):

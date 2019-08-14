@@ -140,6 +140,46 @@ class VideoInfoCollector:
         return output
 
 
+class VideoThumbnailGenerator:
+
+    def __init__(self, buffer_size, output_folder):
+        self.buffer_size = buffer_size
+        self.video_thumb_objects = [VideoThumbnail() for _ in range(buffer_size)]
+        self.video_thumb_pointers = [pointer(v) for v in self.video_thumb_objects]
+        self.array_type = PtrVideoThumbnail * buffer_size
+        self.array_object = self.array_type(*self.video_thumb_pointers)
+        self.encoded_output_folder = output_folder.encode()
+        self.c_output_folder = c_char_p(self.encoded_output_folder)
+
+    def generate(self, file_names, thumb_names):
+        # type: (List[str], List[str]) -> List[VideoRaptorResult]
+
+        assert len(file_names) == len(thumb_names) <= self.buffer_size
+
+        output = [None] * len(file_names)  # type: List[Optional[VideoRaptorResult]]
+        encoded_file_names = [file_name.encode() for file_name in file_names]
+        encoded_thumb_names = [thumb_name.encode() for thumb_name in thumb_names]
+
+        for i in range(len(file_names)):
+            fn_VideoThumbnail_init(
+                self.video_thumb_pointers[i],
+                c_char_p(encoded_file_names[i]),
+                self.c_output_folder,
+                c_char_p(encoded_thumb_names[i])
+            )
+
+        fn_videoRaptorThumbnails(len(file_names), PtrPtrVideoThumbnail(self.array_object))
+
+        for i in range(len(file_names)):
+            video_thumb = self.video_thumb_objects[i]
+            output[i] = VideoRaptorResult(
+                done=fn_VideoReport_isDone(pointer(video_thumb.report)),
+                errors=get_video_info_errors(video_thumb.report),
+            )
+
+        return output
+
+
 def generate_video_thumbnails(file_names: list, thumb_names: list, output_folder: str):
     if not file_names:
         return

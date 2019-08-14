@@ -35,13 +35,11 @@ def job_videos_thumbnails(job):
     file_names, thumb_names, thumb_folder, job_id, notifier = job  # type: (list, list, str, str, Notifier)
     cursor = 0
     count_tasks = len(file_names)
+    generator = video_raptor.VideoThumbnailGenerator(VIDEO_BATCH_SIZE, thumb_folder)
     while cursor < count_tasks:
         notifier.notify(notifications.ThumbnailJob(job_id, cursor, count_tasks))
-        results.extend(
-            video_raptor.generate_video_thumbnails(
-                file_names[cursor:(cursor + VIDEO_BATCH_SIZE)],
-                thumb_names[cursor:(cursor + VIDEO_BATCH_SIZE)],
-                thumb_folder))
+        results.extend(generator.generate(file_names[cursor:(cursor + VIDEO_BATCH_SIZE)],
+                                          thumb_names[cursor:(cursor + VIDEO_BATCH_SIZE)]))
         cursor += VIDEO_BATCH_SIZE
     notifier.notify(notifications.ThumbnailJob(job_id, count_tasks, count_tasks))
     return file_names, results

@@ -39,14 +39,9 @@ class StringPrinter(object):
 
 
 class Whirlpool:
-    wp = None
-
     @staticmethod
     def hash(string: str):
-        if not Whirlpool.wp:
-            Whirlpool.wp = whirlpool.new()
-        Whirlpool.wp.update(string.encode())
-        return Whirlpool.wp.hexdigest().lower()
+        return whirlpool.new(string.encode()).hexdigest().lower()
 
 
 class HTMLStripper(HTMLParser):

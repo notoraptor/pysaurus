@@ -1,7 +1,7 @@
 import concurrent.futures
 import os
 from typing import Dict, Iterable, List, Optional, Set, Union
-
+from datetime import datetime
 import ujson as json
 
 from pysaurus.core import pysaurus_errors
@@ -57,6 +57,10 @@ class Database(object):
         return nb_not_found, nb_existing
 
     @property
+    def system_is_case_insensitive(self):
+        return self.__system_is_case_insensitive
+
+    @property
     def nb_unreadable(self):
         return len(self.__unreadable)
 
@@ -110,9 +114,11 @@ class Database(object):
     def __load(self, folders=None, clear_old_folders=False):
         # type: (Optional[Iterable[Union[AbsolutePath, str]]], Optional[bool]) -> None
 
+        db_date = None
         if self.__json_path.exists():
             if not self.__json_path.isfile():
                 raise pysaurus_errors.NotFileError(self.__json_path)
+            db_date = self.__json_path.get_date_modified()
             with open(self.__json_path.path, 'r') as output_file:
                 json_dict = json.load(output_file)
         else:
@@ -143,6 +149,22 @@ class Database(object):
                 # It may be recreated if database is updated.
                 del self.__videos[file_path]
             self.__unreadable[file_path] = errors
+
+        # Remove files that were updated on disk since last time database was saved.
+        if db_date:
+            videos_to_reload = []
+            unreadable_to_reload = []
+            for filename in self.__videos:
+                if filename.exists() and filename.get_date_modified() >= db_date:
+                    videos_to_reload.append(filename)
+            for filename in self.__unreadable:
+                if filename.exists() and filename.get_date_modified() >= db_date:
+                    unreadable_to_reload.append(filename)
+            for filename in videos_to_reload:
+                del self.__videos[filename]
+            for filename in unreadable_to_reload:
+                del self.__unreadable[filename]
+
         # Notify database loaded.
         self.__notify(notifications.DatabaseLoaded(self))
 
@@ -184,7 +206,8 @@ class Database(object):
         all_file_names = []
         for file_name in self.get_videos_paths_from_disk():
             if file_name not in self.__videos and file_name not in self.__unreadable:
-                all_file_names.append(file_name)
+                all_file_names.append(file_name.path)
+
         self.__notify(notifications.VideosToLoad(len(all_file_names)))
         if not all_file_names:
             return
@@ -227,8 +250,6 @@ class Database(object):
         for video in self.__videos.values():
             if video.exists() and not video.error_thumbnail:
                 thumb_name = video.ensure_thumbnail_name()
-                if self.__system_is_case_insensitive:
-                    thumb_name = thumb_name.lower()
                 if thumb_name in existing_thumb_names:
                     thumb_to_videos.setdefault(thumb_name, []).append(video)
                 else:
@@ -247,7 +268,7 @@ class Database(object):
             return
 
         for video in videos_without_thumbs:
-            base_thumb_name = path_utils.generate_thumb_name(video.filename)
+            base_thumb_name = video.ensure_thumbnail_name()
             thumb_name_index = 0
             thumb_name = base_thumb_name
             while thumb_name in valid_thumb_names:
