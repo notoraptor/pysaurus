@@ -8,6 +8,7 @@ from pysaurus.core.profiling import Profiler
 from pysaurus.core.video_raptor.alignment_utils import Miniature
 from pysaurus.interface.console.compare_images import generate_miniatures
 from pysaurus.public.api import API
+from pysaurus.tests.test_utils import TEST_LIST_FILE_PATH
 
 # r = g = b     ***
 
@@ -156,7 +157,7 @@ def main():
     with open(json_file_name) as file:
         similarities = json.load(file)
     print('LOADING DATABASE')
-    database = API.load_database()
+    database = API.load_database(TEST_LIST_FILE_PATH)
     print('GENERATING MINIATURES')
     miniatures = generate_miniatures(database)
     print(len(miniatures), 'miniatures.')

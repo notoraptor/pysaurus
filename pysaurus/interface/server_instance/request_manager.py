@@ -9,6 +9,7 @@ from pysaurus.interface.server.server import Server
 from pysaurus.interface.server_instance import core_notifications, error_responses
 from pysaurus.interface.server_instance.server_context import ServerContext
 from pysaurus.public.api import API
+from pysaurus.tests.test_utils import TEST_LIST_FILE_PATH
 
 ManagerFunction = Callable[[Server, Request], Optional[Response]]
 
@@ -27,7 +28,7 @@ def to_serializable(mixed):
 
 def load_database(context):
     # type: (ServerContext) -> None
-    context.api = API(context.collector)
+    context.api = API(TEST_LIST_FILE_PATH, notifier=context.collector)
     context.api.export_api(context.function_parser)
     context.set_is_loaded()
     context.collector.notify(core_notifications.ServerDatabaseLoaded())

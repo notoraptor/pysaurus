@@ -110,7 +110,7 @@ def similar_group_to_html_file(group_id, group, miniatures, database, html_dir, 
         html.write('<div><code><strong><em>[%s]</em></strong></code></div>' % node.node)
         for output_node in sorted(node.edges):
             html.write('<div class="score"><code><em>With %s</em>: <strong>%s</strong></code></div>' % (
-            output_node, node.edges[output_node]))
+                output_node, node.edges[output_node]))
         html.write('</td>')
         html.write('</tr>')
     html.write('</tbody>')

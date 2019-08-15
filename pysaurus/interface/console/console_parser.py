@@ -6,10 +6,10 @@ from pysaurus.public.api import API
 class ConsoleParser(FunctionParser):
     __slots__ = 'api',
 
-    def __init__(self):
+    def __init__(self, list_file_path):
         super(ConsoleParser, self).__init__()
         # Load API.
-        self.api = API()
+        self.api = API(list_file_path)
         # Update parser from API.
         self.api.export_api(self)
         # Update parser with wrapped functions.

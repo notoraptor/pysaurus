@@ -2,6 +2,7 @@ from pysaurus.core.utils.functions import generate_amplifier_function
 from pysaurus.core.video_raptor.alignment_utils import Miniature
 from pysaurus.interface.console.compare_images import generate_miniatures
 from pysaurus.public.api import API
+from pysaurus.tests.test_utils import TEST_LIST_FILE_PATH
 
 SIMPLE_MAX_PIXEL_DISTANCE = 255 * 3
 
@@ -126,7 +127,7 @@ def extract_linked_nodes(graph):
 def main():
     sim_limit = 0.9
     print('LOADING DATABASE')
-    database = API.load_database()
+    database = API.load_database(TEST_LIST_FILE_PATH)
     print('GENERATING MINIATURES')
     miniatures = generate_miniatures(database)
     nb_miniatures = len(miniatures)

@@ -21,20 +21,16 @@ FieldType = utils.enumeration(Video.TABLE_FIELDS)
 class API:
     __slots__ = 'database',
 
-    def __init__(self, notifier=None):
-        self.database = API.load_database(notifier=notifier)
+    def __init__(self, list_file_path, notifier=None):
+        # type: (Union[str, AbsolutePath], Notifier) -> None
+        self.database = API.load_database(list_file_path, notifier=notifier)
 
     @staticmethod
-    def load_database(list_file_path=None, notifier=None):
+    def load_database(list_file_path, notifier=None):
         # type: (Union[str, AbsolutePath], Notifier) -> Database
-        if list_file_path is None:
-            list_file_path = AbsolutePath(os.path.join(utils.package_dir(), '..', '..', '.local', 'test_folder.log'))
-        else:
-            list_file_path = AbsolutePath.ensure(list_file_path)
         paths = path_utils.load_path_list_file(list_file_path)
         database_folder = list_file_path.get_directory()
         database = Database(path=database_folder, folders=paths, notifier=notifier)
-
         database.update()
         # database.clean_unused_thumbnails()
         database.ensure_thumbnails()

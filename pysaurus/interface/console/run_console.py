@@ -3,10 +3,11 @@ import traceback
 
 from pysaurus.core.function_parsing.function_definition import FunctionDefinition
 from pysaurus.interface.console.console_parser import ConsoleParser
+from pysaurus.tests.test_utils import TEST_LIST_FILE_PATH
 
 
 def main():
-    console_parser = ConsoleParser()
+    console_parser = ConsoleParser(TEST_LIST_FILE_PATH)
 
     print()
     print('[CONSOLE INTERFACE]')

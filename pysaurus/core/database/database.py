@@ -1,14 +1,14 @@
 import concurrent.futures
 import os
 from typing import Dict, Iterable, List, Optional, Set, Union
-from datetime import datetime
+
 import ujson as json
 
 from pysaurus.core import pysaurus_errors
 from pysaurus.core.components.absolute_path import AbsolutePath
 from pysaurus.core.components.duration import Duration
 from pysaurus.core.components.file_size import FileSize
-from pysaurus.core.database import notifications, parallelism, path_utils
+from pysaurus.core.database import notifications, parallelism
 from pysaurus.core.database.video import Video
 from pysaurus.core.notification import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.profiling import Profiler
@@ -16,13 +16,16 @@ from pysaurus.core.utils import functions as utils
 from pysaurus.core.utils.constants import PYTHON_ERROR_NOTHING, THUMBNAIL_EXTENSION
 from pysaurus.core.video_raptor.api import VideoRaptorResult
 
+Path = Union[AbsolutePath, str]
+
 
 class Database(object):
     __slots__ = ['__database_path', '__json_path', '__folders', '__videos', '__unreadable',
-                 '__system_is_case_insensitive', '__notifier', '__id_to_video', '__discarded']
+                 '__system_is_case_insensitive', '__notifier', '__id_to_video', '__discarded',
+                 '__discarded_unreadable']
 
     def __init__(self, path, folders=None, clear_old_folders=False, notifier=None):
-        # type: (Union[AbsolutePath, str], Optional[Iterable[Union[AbsolutePath, str]]], Optional[bool], Optional[Notifier]) -> None
+        # type: (Path, Optional[Iterable[Path]], Optional[bool], Optional[Notifier]) -> None
         path = AbsolutePath.ensure(path)
         if not path.isdir():
             raise pysaurus_errors.NotDirectoryError(path)
@@ -34,7 +37,8 @@ class Database(object):
         self.__unreadable = {}  # type: Dict[AbsolutePath, List[str]]
         self.__system_is_case_insensitive = utils.file_system_is_case_insensitive(self.__database_path.path)
         self.__id_to_video = {}
-        self.__discarded = {}
+        self.__discarded = {}  # type: Dict[AbsolutePath, Video]
+        self.__discarded_unreadable = {}  # type: Dict[AbsolutePath, List[str]]
         self.__load(folders, clear_old_folders)
         self.__ensure_identifiers()
         self.save()
@@ -111,8 +115,12 @@ class Database(object):
     def folder(self):
         return self.__database_path
 
+    def in_folders(self, path):
+        # type: (AbsolutePath) -> bool
+        return any(path.in_directory(folder) for folder in self.__folders)
+
     def __load(self, folders=None, clear_old_folders=False):
-        # type: (Optional[Iterable[Union[AbsolutePath, str]]], Optional[bool]) -> None
+        # type: (Optional[Iterable[Path]], Optional[bool]) -> None
 
         db_date = None
         if self.__json_path.exists():
@@ -121,11 +129,11 @@ class Database(object):
             db_date = self.__json_path.get_date_modified()
             with open(self.__json_path.path, 'r') as output_file:
                 json_dict = json.load(output_file)
+            if not isinstance(json_dict, dict):
+                raise pysaurus_errors.NotDirectoryError('Database file does not contain a dictionary.')
         else:
             json_dict = {}
 
-        if not isinstance(json_dict, dict):
-            raise pysaurus_errors.NotDirectoryError('Database file does not contain a dictionary.')
         # Parsing folders.
         if not clear_old_folders:
             for path in json_dict.get('folders', ()):
@@ -136,7 +144,7 @@ class Database(object):
         # Parsing videos.
         for video_dict in json_dict.get('videos', ()):
             video = Video.from_dict(video_dict, self)
-            if any(video.filename.in_directory(folder) for folder in self.__folders):
+            if self.in_folders(video.filename):
                 self.__videos[video.filename] = video
             else:
                 self.__discarded[video.filename] = video
@@ -144,11 +152,14 @@ class Database(object):
         for d in json_dict.get('unreadable', ()):
             file_path = AbsolutePath(d['f'])
             errors = d['e']
-            if file_path in self.__videos:
-                # This should not happen. Anyway, remove this entry from database.
-                # It may be recreated if database is updated.
-                del self.__videos[file_path]
-            self.__unreadable[file_path] = errors
+            if self.in_folders(file_path):
+                if file_path in self.__videos:
+                    # This should not happen. Anyway, remove this entry from database.
+                    # It may be recreated if database is updated.
+                    del self.__videos[file_path]
+                self.__unreadable[file_path] = errors
+            else:
+                self.__discarded_unreadable[file_path] = errors
 
         # Remove files that were updated on disk since last time database was saved.
         if db_date:
@@ -185,19 +196,16 @@ class Database(object):
         # Save database.
         json_output = {
             'folders': [folder.path for folder in sorted(self.__folders)],
-            'videos': [video.to_dict() for dct in (self.__videos, self.__discarded) for video in dct.values()],
-            'unreadable': [{'f': file_name.path, 'e': errors} for file_name, errors in self.__unreadable.items()]
+            'videos': [video.to_dict()
+                       for dct in (self.__videos, self.__discarded)
+                       for video in dct.values()],
+            'unreadable': [{'f': file_name.path, 'e': errors}
+                           for dct in (self.__unreadable, self.__discarded_unreadable)
+                           for file_name, errors in dct.items()]
         }
         with open(self.__json_path.path, 'w') as output_file:
             json.dump(json_output, output_file)
         self.__notify(notifications.DatabaseSaved(self))
-
-    def get_video_from_id(self, video_id):
-        # type: (int) -> Optional[Video]
-        return self.__id_to_video.get(video_id, None)
-
-    def get_video_from_filename(self, filename):
-        return self.__videos.get(AbsolutePath.ensure(filename), None)
 
     def update(self):
         cpu_count = os.cpu_count()
@@ -236,6 +244,13 @@ class Database(object):
             self.__notify(notifications.VideoInfoErrors(video_errors))
         if videos or video_errors:
             self.save()
+
+    def get_video_from_id(self, video_id):
+        # type: (int) -> Optional[Video]
+        return self.__id_to_video.get(video_id, None)
+
+    def get_video_from_filename(self, filename):
+        return self.__videos.get(AbsolutePath.ensure(filename), None)
 
     def ensure_thumbnails(self):
         cpu_count = os.cpu_count()
@@ -392,7 +407,6 @@ class Database(object):
 
     def get_videos_paths_from_disk(self):
         # type: () -> List[AbsolutePath]
-        folder_to_files = {}
         cpu_count = os.cpu_count()
         jobs = utils.dispatch_tasks(sorted(self.__folders), cpu_count)
         paths = []  # type: List[AbsolutePath]

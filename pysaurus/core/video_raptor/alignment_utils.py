@@ -2,7 +2,6 @@ from ctypes import c_int
 from typing import Any, List, Optional, Tuple
 
 from pysaurus.core.utils.image_utils import coord_to_flat, open_rgb_image
-
 from pysaurus.core.video_raptor.structures import Sequence, c_int_p
 
 
