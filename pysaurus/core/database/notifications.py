@@ -54,6 +54,13 @@ class CollectedFiles(Notification):
         return str(printer)
 
 
+class FinishedCollectingVideos(Notification):
+    __slots__ = ['count']
+
+    def __init__(self, path: list):
+        self.count = len(path)
+
+
 class VideoJob(Notification):
     __slots__ = ['index', 'parsed', 'total']
 
