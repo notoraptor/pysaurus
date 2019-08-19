@@ -136,27 +136,6 @@ def package_dir():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 
-def enumeration(values):
-    class Enumeration:
-        __slots__ = 'values',
-
-        def __init__(self, values):
-            self.values = set(values)
-
-        def __call__(self, value):
-            if value not in self.values:
-                raise ValueError('Invalid value\n\tGot: %s\n\tExpected:%s\n' % (value, self.values))
-            return value
-
-    enum_instance = Enumeration(values)
-
-    def enum_parser(value):
-        return enum_instance(value)
-
-    enum_parser.__name__ = '{%s}' % (', '.join(enum_instance.values))
-    return enum_parser
-
-
 def longest_prefix(a, b):
     # type: (str, str) -> str
     for i in range(min(len(a), len(b))):
@@ -221,3 +200,5 @@ def generate_amplifier_function(V, b):
 
     function.__name__ = 'f(x)=(%(v_plus_b)s)*x/(x+%(b)s)' % {'v_plus_b': v_plus_b, 'b': b}
     return function
+
+

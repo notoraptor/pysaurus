@@ -3,6 +3,7 @@ import subprocess
 import sys
 from typing import Dict, List, Union
 
+import pysaurus.core.utils.classes
 from pysaurus.core.components.absolute_path import AbsolutePath
 from pysaurus.core.database import path_utils
 from pysaurus.core.database.database import Database
@@ -10,12 +11,12 @@ from pysaurus.core.database.video import Video
 from pysaurus.core.function_parsing.function_parser import FunctionParser
 from pysaurus.core.notification import Notifier
 from pysaurus.core.utils import functions as utils
-from pysaurus.core.utils.classes import System, Table
+from pysaurus.core.utils.classes import System, Table, Enumeration
 from pysaurus.core.utils.functions import bool_type
 from pysaurus.public import api_errors
 
-NbType = utils.enumeration(('entries', 'unreadable', 'not_found', 'valid', 'found', 'thumbnails'))
-FieldType = utils.enumeration(Video.TABLE_FIELDS)
+NbType = Enumeration(('entries', 'discarded', 'not_found', 'found', 'unreadable', 'valid', 'thumbnails'))
+FieldType = Enumeration(Video.TABLE_FIELDS)
 
 
 class API:
@@ -32,64 +33,35 @@ class API:
         database_folder = list_file_path.get_directory()
         database = Database(path=database_folder, folders=paths, notifier=notifier)
         database.update()
-        # database.clean_unused_thumbnails()
         database.ensure_thumbnails()
         return database
 
-    def __video(self, video_id):
-        # type: (int) -> Video
-        video = self.database.get_video_from_id(video_id)
-        if not video:
-            raise api_errors.UnknownVideoID(video_id)
-        return video
-
-    def __video_from_filename(self, filename):
-        video = self.database.get_video_from_filename(filename)
-        if not video:
-            raise api_errors.UnknownVideoFilename()
-        return video
-
     def export_api(self, function_parser):
         # type: (FunctionParser) -> None
+        function_parser.add(self.clear_not_found)
+        function_parser.add(self.clip, arguments={'video_id': int, 'start': int, 'length': int})
+        function_parser.add(self.clip_from_filename, arguments={'filename': str, 'start': int, 'length': int})
+        function_parser.add(self.delete, arguments={'video_id': int})
+        function_parser.add(self.delete_from_filename, arguments={'filename': str})
+        function_parser.add(self.find, arguments={'terms': str})
+        function_parser.add(self.image, arguments={'video_id': int})
+        function_parser.add(self.image_from_filename, arguments={'filename': str})
+        function_parser.add(self.info, arguments={'video_id': int})
+        function_parser.add(self.list, arguments={'field': FieldType, 'reverse': bool_type, 'page_size': int, 'page_number': int})
         function_parser.add(self.nb, arguments={'query': NbType})
         function_parser.add(self.nb_pages, arguments={'query': NbType, 'page_size': int})
-        function_parser.add(self.valid_size)
-        function_parser.add(self.valid_length)
-        function_parser.add(self.clear_not_found)
-        function_parser.add(self.info, arguments={'video_id': int})
-        function_parser.add(self.image, arguments={'video_id': int})
-        function_parser.add(self.image_filename, arguments={'filename': str})
-        function_parser.add(self.clip, arguments={'video_id': int, 'start': int, 'length': int})
-        function_parser.add(self.clip_filename, arguments={'filename': str, 'start': int, 'length': int})
+        function_parser.add(self.not_found)
         function_parser.add(self.open, arguments={'video_id': int})
-        function_parser.add(self.open_filename, arguments={'filename': str})
-        function_parser.add(self.delete, arguments={'video_id': int})
-        function_parser.add(self.delete_filename, arguments={'filename': str})
+        function_parser.add(self.open_from_filename, arguments={'filename': str})
         function_parser.add(self.rename, arguments={'video_id': int, 'new_title': str})
-        function_parser.add(self.rename_filename, arguments={'filename': str, 'new_title': str})
+        function_parser.add(self.rename_from_filename, arguments={'filename': str, 'new_title': str})
         function_parser.add(self.same_sizes)
-        function_parser.add(self.find, arguments={'terms': str})
-        function_parser.add(self.list, arguments={
-            'field': FieldType,
-            'reverse': bool_type,
-            'page_size': int,
-            'page_number': int
-        })
+        function_parser.add(self.thumbnail_path, arguments={'video_id': int})
+        function_parser.add(self.thumbnail_path_from_filename, arguments={'filename': str})
+        function_parser.add(self.unreadable)
+        function_parser.add(self.valid_length)
+        function_parser.add(self.valid_size)
         function_parser.add(self.videos)
-        function_parser.add(self.database_info, arguments={'page_size': int})
-
-    def __open(self, video):
-        # type: (Video) -> None
-        if System.is_linux():
-            open_command = 'xdg-open'
-            subprocess.run([open_command, video.filename.path])
-        elif System.is_mac():
-            open_command = 'open'
-            subprocess.run([open_command, video.filename.path])
-        elif System.is_windows():
-            os.startfile(video.filename.path)
-        else:
-            raise api_errors.UnsupportedOS(sys.platform)
 
     # ------------------------------------------------------------------------------------------------------------------
 
@@ -118,61 +90,60 @@ class API:
 
     def info(self, video_id):
         # type: (int) -> Video
-        return self.__video(video_id)
+        return self.database.get_video_from_id(video_id, required=True)
 
     def image(self, video_id):
         # type: (int) -> str
-        video = self.__video(video_id)
-        return video.thumbnail_to_base64()
+        return self.database.get_video_from_id(video_id, required=True).thumbnail_to_base64()
 
-    def image_filename(self, filename):
+    def image_from_filename(self, filename):
         # type: (str) -> str
-        return self.__video_from_filename(filename).thumbnail_to_base64()
+        return self.database.get_video_from_filename(filename, required=True).thumbnail_to_base64()
+
+    def thumbnail_path(self, video_id):
+        return self.database.get_video_from_id(video_id).get_thumbnail_path()
+
+    def thumbnail_path_from_filename(self, filename):
+        return self.database.get_video_from_filename(filename).get_thumbnail_path()
 
     def clip(self, video_id, start, length):
         # type: (int, int, int) -> str
-        return self.__video(video_id).clip_to_base64(start, length)
+        return self.database.get_video_from_id(video_id, required=True).clip_to_base64(start, length)
+
+    def clip_from_filename(self, filename, start, length):
+        # type: (str, int, int) -> str
+        return self.database.get_video_from_filename(filename, required=True).clip_to_base64(start, length)
 
     def open(self, video_id):
-        # type: (int) -> None
-        return self.__open(self.__video(video_id))
+        # type: (int) -> AbsolutePath
+        return self.database.get_video_from_id(video_id, required=True).filename.open()
 
-    def clip_filename(self, filename, start, length):
-        # type: (str, int, int) -> str
-        return self.__video_from_filename(filename).clip_to_base64(start, length)
-
-    def open_filename(self, filename):
-        # type: (str) -> None
-        return self.__open(self.__video_from_filename(filename))
+    def open_from_filename(self, filename):
+        # type: (str) -> AbsolutePath
+        return self.database.get_video_from_filename(filename, required=True).filename.open()
 
     def delete(self, video_id):
-        # type: (int) -> int
-        video = self.__video(video_id)
-        self.database.delete_video(video)
-        return self.database.nb_valid
+        # type: (int) -> AbsolutePath
+        return self.database.delete_video(self.database.get_video_from_id(video_id, required=True))
 
-    def delete_filename(self, filename):
-        # type: (str) -> int
-        video = self.__video_from_filename(filename)
-        self.database.delete_video(video)
-        return self.database.nb_valid
+    def delete_from_filename(self, filename):
+        # type: (str) -> AbsolutePath
+        return self.database.delete_video(self.database.get_video_from_filename(filename, required=True))
 
     def rename(self, video_id, new_title):
         # type: (int, str) -> int
         if new_title is None or not str(new_title):
             raise api_errors.MissingVideoNewTitle()
-        new_title = str(new_title)
-        video = self.__video(video_id)  # type: Video
-        self.database.change_video_file_title(video, new_title)
+        video = self.database.get_video_from_id(video_id, required=True)  # type: Video
+        self.database.change_video_file_title(video, str(new_title))
         return video.video_id
 
-    def rename_filename(self, filename, new_title):
+    def rename_from_filename(self, filename, new_title):
         # type: (str, str) -> (str, str)
         if new_title is None or not str(new_title):
             raise api_errors.MissingVideoNewTitle()
-        new_title = str(new_title)
-        video = self.__video_from_filename(filename)  # type: Video
-        self.database.change_video_file_title(video, new_title)
+        video = self.database.get_video_from_filename(filename, required=True)  # type: Video
+        self.database.change_video_file_title(video, str(new_title))
         return video.filename.path, video.filename.title
 
     def same_sizes(self):
@@ -201,14 +172,8 @@ class API:
         # type: () -> Table
         return Table(headers=Video.TABLE_FIELDS, lines=[video.to_table_line() for video in self.database.valid_videos])
 
-    # ------------------------------------------------------------------------------------------------------------------
-    # Unstable APIs.
-    # ------------------------------------------------------------------------------------------------------------------
+    def not_found(self):
+        return sorted(self.database.videos_not_found, key=lambda video: video.filename)
 
-    def database_info(self, page_size):
-        return {
-            'count': self.nb('valid'),
-            'nbPages': self.nb_pages('valid', page_size),
-            'size': self.database.valid_size,
-            'duration': self.database.valid_length
-        }
+    def unreadable(self):
+        return sorted(self.database.unreadable_videos, key=lambda video: video.filename)

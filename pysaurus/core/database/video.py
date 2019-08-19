@@ -7,6 +7,7 @@ from pysaurus.core.components.absolute_path import AbsolutePath
 from pysaurus.core.components.duration import Duration
 from pysaurus.core.components.file_size import FileSize
 from pysaurus.core.database import path_utils
+from pysaurus.core.database.video_state import VideoState
 from pysaurus.core.utils.classes import HTMLStripper, StringPrinter
 from pysaurus.core.utils.constants import PYTHON_ERROR_THUMBNAIL, THUMBNAIL_EXTENSION
 from pysaurus.core.video_clipping import video_clip_to_base64
@@ -14,14 +15,12 @@ from pysaurus.core.video_clipping import video_clip_to_base64
 WORK_MODE = 'RGB'
 
 
-class Video(object):
+class Video(VideoState):
     # Currently 14 fields.
-    __slots__ = ('filename', 'title', 'container_format', 'width', 'height',
+    __slots__ = ('title', 'container_format', 'width', 'height',
                  'audio_codec', 'video_codec', 'audio_codec_description', 'video_codec_description',
-                 'frame_rate_num', 'frame_rate_den', 'sample_rate', 'duration', 'duration_time_base', 'size',
-                 'audio_bit_rate', 'errors', 'thumb_name', 'error_thumbnail', 'video_id', 'database')
-
-    __fields__ = __slots__[:-2]
+                 'frame_rate_num', 'frame_rate_den', 'sample_rate', 'duration', 'duration_time_base',
+                 'audio_bit_rate', 'thumb_name', 'video_id', 'database')
 
     TABLE_FIELDS = (
         # basic fields
@@ -81,9 +80,9 @@ class Video(object):
                  audio_codec_description='', video_codec_description='', width=0, height=0,
                  frame_rate_num=0, frame_rate_den=0, sample_rate=0, duration=0, duration_time_base=0, size=0,
                  audio_bit_rate=0, thumb_name='', errors=(), video_id=None):
+        super(Video, self).__init__(AbsolutePath.ensure(filename), size or 0, False, errors)
         from pysaurus.core.database.database import Database
         self.database = database  # type: Database
-        self.filename = AbsolutePath.ensure(filename)
         self.title = ''
         if title:
             self.title = HTMLStripper.strip(title)
@@ -106,14 +105,9 @@ class Video(object):
         self.sample_rate = sample_rate or 0
         self.duration = duration or 0
         self.duration_time_base = duration_time_base or 1
-        self.size = size or 0
         self.audio_bit_rate = audio_bit_rate or 0
         self.thumb_name = thumb_name
-        self.errors = set(errors)
         self.video_id = video_id if isinstance(video_id, int) else None
-        self.error_thumbnail = PYTHON_ERROR_THUMBNAIL in self.errors
-        if self.error_thumbnail:
-            self.errors.remove(PYTHON_ERROR_THUMBNAIL)
 
     def __str__(self):
         printer = StringPrinter()
@@ -125,15 +119,9 @@ class Video(object):
         printer.write('\tframe_rate: %s' % (self.frame_rate_num / self.frame_rate_den))
         printer.write('\tduration: %s' % (self.get_duration()))
         printer.write('\tsize: %s' % (self.get_size()))
-        errors = set(self.errors)
-        if self.error_thumbnail:
-            errors.add(PYTHON_ERROR_THUMBNAIL)
-        if errors:
-            printer.write('\terror(s): %s' % (', '.join(sorted(errors))))
+        if self.errors:
+            printer.write('\terror(s): %s' % (', '.join(sorted(self.errors))))
         return str(printer)
-
-    def exists(self):
-        return self.filename.isfile()
 
     def get_title(self):
         return self.title if self.title else self.filename.title
@@ -186,8 +174,6 @@ class Video(object):
     def to_dict(self):
         dct = {_min: getattr(self, _long) for (_min, _long) in self.MIN_TO_LONG.items()}
         dct[self.LONG_TO_MIN['filename']] = str(self.filename)
-        if self.error_thumbnail:
-            dct[self.LONG_TO_MIN['errors']].add(PYTHON_ERROR_THUMBNAIL)
         return dct
 
     @classmethod

@@ -5,10 +5,6 @@ class ApiError(PysaurusError):
     pass
 
 
-class UnsupportedOS(ApiError):
-    pass
-
-
 class UnknownVideoID(ApiError):
     pass
 

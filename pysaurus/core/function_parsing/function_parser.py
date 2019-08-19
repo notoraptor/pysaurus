@@ -23,6 +23,12 @@ class FunctionParser:
         # type: (callable) -> FunctionDefinition
         return self.definitions.get(function.__name__, None)
 
+    def remove_definition(self, name_or_function):
+        if isinstance(name_or_function, str):
+            self.definitions.pop(name_or_function, None)
+        elif callable(name_or_function):
+            self.definitions.pop(name_or_function.__name__, None)
+
     def help(self, name=None):
         if name is None:
             for fn_name in sorted(self.definitions):

@@ -76,14 +76,16 @@ class ThumbnailJob(VideoJob):
 
 
 class DatabaseLoaded(Notification):
-    __slots__ = ['unreadable', 'not_found', 'valid', 'entries', 'found', 'thumbnails']
+    __slots__ = ['entries', 'discarded', 'not_found', 'found', 'unreadable', 'valid', 'thumbnails']
+    __props__ = __slots__
 
     def __init__(self, database):
+        self.entries = database.nb_entries
+        self.discarded = database.nb_discarded
         self.not_found = database.nb_not_found
+        self.found = database.nb_found
         self.unreadable = database.nb_unreadable
         self.valid = database.nb_valid
-        self.entries = database.nb_entries
-        self.found = database.nb_found
         self.thumbnails = database.nb_thumbnails
 
 

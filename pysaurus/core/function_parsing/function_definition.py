@@ -1,3 +1,12 @@
+import inspect
+
+
+def symbol_to_string(symbol):
+    if inspect.isclass(symbol) or inspect.isfunction(symbol) or inspect.ismethod(symbol):
+        return symbol.__name__
+    return str(symbol)
+
+
 class FunctionDefinition:
     __slots__ = ('function', 'arguments', 'description', 'name')
 
@@ -19,4 +28,5 @@ class FunctionDefinition:
 
     def __str__(self):
         return '%s(%s)' % (self.name, ', '.join(
-            '%s:%s' % (arg_name, arg_parser.__name__) for arg_name, arg_parser in sorted(self.arguments.items())))
+            '%s:%s' % (arg_name, symbol_to_string(arg_parser))
+            for arg_name, arg_parser in sorted(self.arguments.items())))

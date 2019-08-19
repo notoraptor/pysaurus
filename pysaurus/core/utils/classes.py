@@ -105,7 +105,9 @@ class ToDict:
         return type(self).__name__
 
     def get_slots(self):
-        return chain.from_iterable(getattr(cls, '__slots__', []) for cls in type(self).__mro__)
+        if hasattr(self, '__props__'):
+            return self.__props__
+        return sorted(chain.from_iterable(getattr(cls, '__slots__', []) for cls in type(self).__mro__))
 
     def to_dict(self, **extra):
         dct = {field: getattr(self, field) for field in self.get_slots()}
@@ -116,7 +118,7 @@ class ToDict:
     def __str__(self):
         return '%s(%s)' % (
             self.get_name(),
-            ', '.join('%s=%s' % (name, to_printable(getattr(self, name))) for name in sorted(self.__slots__)))
+            ', '.join('%s=%s' % (name, to_printable(getattr(self, name))) for name in self.get_slots()))
 
 
 class System:
@@ -131,3 +133,25 @@ class System:
     @staticmethod
     def is_mac():
         return sys.platform == 'darwin'
+
+    @staticmethod
+    def platform():
+        return sys.platform
+
+
+class Enumeration:
+    __slots__ = 'values',
+
+    def __init__(self, enum_values):
+        self.values = set(enum_values)
+
+    def __call__(self, value):
+        if value not in self.values:
+            raise ValueError('Invalid value\n\tGot: %s\n\tExpected:%s\n' % (value, self))
+        return value
+
+    def __str__(self):
+        return '{%s}' % (', '.join(self.values))
+
+    def __repr__(self):
+        return str(self)

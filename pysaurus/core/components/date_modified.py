@@ -24,3 +24,7 @@ class DateModified:
 
     def to_json(self):
         return str(self)
+
+    @staticmethod
+    def now():
+        return DateModified(datetime.now().timestamp())

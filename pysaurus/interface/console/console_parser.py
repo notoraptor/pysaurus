@@ -1,6 +1,7 @@
 from pysaurus.core.function_parsing.function_parser import FunctionParser
 from pysaurus.core.utils.classes import Table
 from pysaurus.public.api import API
+from pysaurus.core.components.file_size import FileSize
 
 
 class ConsoleParser(FunctionParser):
@@ -16,6 +17,14 @@ class ConsoleParser(FunctionParser):
         self.get_definition(self.api.same_sizes).function = self.same_sizes
         self.get_definition(self.api.find).function = self.find
         self.get_definition(self.api.list).function = self.list
+        self.get_definition(self.api.not_found).function = self.not_found
+        self.get_definition(self.api.unreadable).function = self.unreadable
+        self.get_definition(self.api.thumbnail_path).function = self.thumbnail_path
+        self.get_definition(self.api.thumbnail_path_from_filename).function = self.thumbnail_path_from_filename
+        self.remove_definition(self.api.clip)
+        self.remove_definition(self.api.clip_from_filename)
+        self.remove_definition(self.api.image)
+        self.remove_definition(self.api.image_from_filename)
 
     def same_sizes(self):
         duplicated_sizes = self.api.same_sizes()
@@ -52,3 +61,19 @@ class ConsoleParser(FunctionParser):
         for i, video in enumerate(selected_videos):
             lines.append(['(%d)' % i, video.video_id, video.get(field), video.filename])
         return Table(headers=headers, lines=lines)
+
+    def not_found(self):
+        headers = ['ID', 'Filename']
+        lines = [[video.video_id, video.filename] for video in self.api.not_found()]
+        return Table(headers, lines)
+
+    def unreadable(self):
+        headers = ['Size', 'Filename']
+        lines = [[FileSize(video.filename.get_size()), video.filename] for video in self.api.unreadable()]
+        return Table(headers, lines)
+
+    def thumbnail_path(self, video_id):
+        return self.api.thumbnail_path(video_id).open()
+
+    def thumbnail_path_from_filename(self, filename):
+        return self.api.thumbnail_path_from_filename(filename).open()

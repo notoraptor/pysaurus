@@ -1,11 +1,12 @@
 import os
+import subprocess
 import shutil
 from typing import Union
 
 from pysaurus.core.components.date_modified import DateModified
 from pysaurus.core.utils.classes import System
 from pysaurus.core.utils.constants import WINDOWS_PATH_PREFIX
-
+from pysaurus.core.pysaurus_errors import UnsupportedOS
 
 class AbsolutePath(object):
     __slots__ = '__path',
@@ -118,6 +119,18 @@ class AbsolutePath(object):
 
     def to_json(self):
         return str(self)
+
+    def open(self):
+        """ Open path with default OS program. """
+        if System.is_linux():
+            subprocess.run(['xdg-open', self.path])
+        elif System.is_mac():
+            subprocess.run(['open', self.path])
+        elif System.is_windows():
+            os.startfile(self.path)
+        else:
+            raise UnsupportedOS(System.platform())
+        return self
 
     @staticmethod
     def ensure(path):

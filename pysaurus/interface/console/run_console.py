@@ -10,7 +10,7 @@ def main():
     console_parser = ConsoleParser(TEST_LIST_FILE_PATH)
 
     print()
-    print('[CONSOLE INTERFACE]')
+    print('[CONSOLE INTERFACE] ("exit", "e", "quit", "q" or Ctrl+C to exit, "help" to print help)')
 
     while True:
         calling_function = False
@@ -24,7 +24,7 @@ def main():
             else:
                 function_name = raw_function_name[:index_space]
                 function_arg = raw_function_name[index_space:].strip()
-            if function_name in ('exit', 'quit'):
+            if function_name.lower() in ('exit', 'e', 'quit', 'q'):
                 break
             if function_name == 'help':
                 console_parser.help(name=function_arg)

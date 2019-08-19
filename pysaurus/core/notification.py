@@ -6,9 +6,6 @@ from pysaurus.core.utils.classes import ToDict
 class Notification(ToDict):
     __slots__ = []
 
-    def get_slots(self):
-        return sorted(super().get_slots())
-
 
 ManagerType = Callable[[Notification], None]
 

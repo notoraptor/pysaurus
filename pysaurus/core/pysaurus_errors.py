@@ -13,3 +13,15 @@ class NotFileError(NotDirectoryError):
 
 class NotDictionaryError(PysaurusError):
     pass
+
+
+class UnsupportedOS(PysaurusError):
+    pass
+
+
+class UnknownVideoID(PysaurusError):
+    pass
+
+
+class UnknownVideoFilename(PysaurusError):
+    pass
