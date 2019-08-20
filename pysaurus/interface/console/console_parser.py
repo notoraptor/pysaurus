@@ -68,8 +68,9 @@ class ConsoleParser(FunctionParser):
         return Table(headers, lines)
 
     def unreadable(self):
-        headers = ['Size', 'Filename']
-        lines = [[FileSize(video.filename.get_size()), video.filename] for video in self.api.unreadable()]
+        headers = ['ID', 'Size', 'Filename']
+        lines = [[video.video_id, FileSize(video.filename.get_size()), video.filename]
+                 for video in self.api.unreadable()]
         return Table(headers, lines)
 
     def thumbnail_path(self, video_id):

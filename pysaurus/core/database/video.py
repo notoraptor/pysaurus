@@ -20,7 +20,7 @@ class Video(VideoState):
     __slots__ = ('title', 'container_format', 'width', 'height',
                  'audio_codec', 'video_codec', 'audio_codec_description', 'video_codec_description',
                  'frame_rate_num', 'frame_rate_den', 'sample_rate', 'duration', 'duration_time_base',
-                 'audio_bit_rate', 'thumb_name', 'video_id', 'database')
+                 'audio_bit_rate', 'thumb_name', 'database')
 
     TABLE_FIELDS = (
         # basic fields
@@ -80,9 +80,16 @@ class Video(VideoState):
                  audio_codec_description='', video_codec_description='', width=0, height=0,
                  frame_rate_num=0, frame_rate_den=0, sample_rate=0, duration=0, duration_time_base=0, size=0,
                  audio_bit_rate=0, thumb_name='', errors=(), video_id=None):
-        super(Video, self).__init__(AbsolutePath.ensure(filename), size or 0, False, errors)
-        from pysaurus.core.database.database import Database
-        self.database = database  # type: Database
+        """ Constructor.
+        :type database: pysaurus.core.database.database.Database
+        """
+        super(Video, self).__init__(
+            AbsolutePath.ensure(filename),
+            size or 0,
+            False,
+            errors,
+            video_id if isinstance(video_id, int) else None)
+        self.database = database
         self.title = ''
         if title:
             self.title = HTMLStripper.strip(title)
@@ -107,7 +114,6 @@ class Video(VideoState):
         self.duration_time_base = duration_time_base or 1
         self.audio_bit_rate = audio_bit_rate or 0
         self.thumb_name = thumb_name
-        self.video_id = video_id if isinstance(video_id, int) else None
 
     def __str__(self):
         printer = StringPrinter()
@@ -134,9 +140,6 @@ class Video(VideoState):
                 (number of seconds) = duration / duration_time_base
         """
         return Duration(round(self.duration * 1000000 / self.duration_time_base))
-
-    def get_size(self):
-        return FileSize(self.size)
 
     def get_thumbnail_path(self):
         return path_utils.generate_thumb_path(self.database.folder, self.ensure_thumbnail_name())

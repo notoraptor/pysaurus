@@ -8,6 +8,7 @@ from pysaurus.core.components.absolute_path import AbsolutePath
 from pysaurus.core.database import path_utils
 from pysaurus.core.database.database import Database
 from pysaurus.core.database.video import Video
+from pysaurus.core.database.video_state import VideoState
 from pysaurus.core.function_parsing.function_parser import FunctionParser
 from pysaurus.core.notification import Notifier
 from pysaurus.core.utils import functions as utils
@@ -89,8 +90,8 @@ class API:
         self.database.remove_videos_not_found(save=True)
 
     def info(self, video_id):
-        # type: (int) -> Video
-        return self.database.get_video_from_id(video_id, required=True)
+        # type: (int) -> Union[Video, VideoState]
+        return self.database.get_video_from_id(video_id, required=True, accept_unreadable=True)
 
     def image(self, video_id):
         # type: (int) -> str

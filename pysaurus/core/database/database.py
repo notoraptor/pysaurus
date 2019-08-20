@@ -37,10 +37,10 @@ class Database(object):
         # Database data
         self.__date = DateModified.now()
         self.__folders = set()  # type: Set[AbsolutePath]
-        self.__videos = {}  # type: Dict[AbsolutePath, VideoState]
+        self.__videos = {}  # type: Dict[AbsolutePath, Union[VideoState, Video]]
         self.__discarded = {}  # type: Dict[AbsolutePath, VideoState]
         # RAM data
-        self.__id_to_video = {}
+        self.__id_to_video = {}  # type: Dict[int, Union[VideoState, Video]]
         self.system_is_case_insensitive = utils.file_system_is_case_insensitive(self.__database_path.path)
         self.__notifier = notifier or DEFAULT_NOTIFIER
         # Load database
@@ -191,18 +191,17 @@ class Database(object):
         self.__notify(notifications.DatabaseLoaded(self))
 
     def __ensure_identifiers(self):
-        videos_without_identifiers = []
-        for video in self.__videos.values():
-            if isinstance(video, Video):
-                if video.video_id is None or video.video_id in self.__id_to_video:
-                    videos_without_identifiers.append(video)
-                else:
-                    self.__id_to_video[video.video_id] = video
+        without_identifiers = []
+        for video_state in self.__videos.values():
+            if video_state.video_id is None or video_state.video_id in self.__id_to_video:
+                without_identifiers.append(video_state)
+            else:
+                self.__id_to_video[video_state.video_id] = video_state
         next_id = (max(self.__id_to_video) + 1) if self.__id_to_video else 0
-        for video in videos_without_identifiers:
-            video.video_id = next_id
+        for video_state in without_identifiers:
+            video_state.video_id = next_id
             next_id += 1
-            self.__id_to_video[video.video_id] = video
+            self.__id_to_video[video_state.video_id] = video_state
 
     # Public methods.
 
@@ -260,7 +259,7 @@ class Database(object):
             self.__videos.update(videos)
         if video_errors:
             for file_name, errors in video_errors.items():
-                self.__videos[file_name] = VideoState(file_name, file_name.get_size(), True, errors)
+                self.__videos[file_name] = VideoState(file_name, file_name.get_size(), True, errors, None)
             self.__notify(notifications.VideoInfoErrors(video_errors))
         if videos or video_errors:
             self.save()
@@ -339,21 +338,19 @@ class Database(object):
 
     # Public features.
 
-    def get_video_from_id(self, video_id, required=False):
-        # type: (int, bool) -> Optional[Video]
-        if video_id in self.__id_to_video:
+    def get_video_from_id(self, video_id, required=False, accept_unreadable=False):
+        # type: (int, bool, bool) -> Optional[Video]
+        if video_id in self.__id_to_video and (accept_unreadable or isinstance(self.__id_to_video[video_id], Video)):
             return self.__id_to_video[video_id]
         if required:
             raise pysaurus_errors.UnknownVideoID(video_id)
         return None
 
-    def get_video_from_filename(self, filename, required=False):
-        # type: (Path, bool) -> Optional[Video]
+    def get_video_from_filename(self, filename, required=False, accept_unreadable=False):
+        # type: (Path, bool, bool) -> Optional[Video]
         filename = AbsolutePath.ensure(filename)
-        if filename in self.__videos:
-            video_state = self.__videos[filename]
-            if isinstance(video_state, Video):
-                return video_state
+        if filename in self.__videos and (accept_unreadable or isinstance(self.__videos[filename], Video)):
+            return self.__videos[filename]
         if required:
             raise pysaurus_errors.UnknownVideoFilename(filename)
         return None
