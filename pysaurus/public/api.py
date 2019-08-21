@@ -1,9 +1,6 @@
-import os
-import subprocess
-import sys
 from typing import Dict, List, Union
 
-import pysaurus.core.utils.classes
+from pysaurus.core import pysaurus_errors
 from pysaurus.core.components.absolute_path import AbsolutePath
 from pysaurus.core.database import path_utils
 from pysaurus.core.database.database import Database
@@ -12,7 +9,7 @@ from pysaurus.core.database.video_state import VideoState
 from pysaurus.core.function_parsing.function_parser import FunctionParser
 from pysaurus.core.notification import Notifier
 from pysaurus.core.utils import functions as utils
-from pysaurus.core.utils.classes import System, Table, Enumeration
+from pysaurus.core.utils.classes import Enumeration, Table
 from pysaurus.core.utils.functions import bool_type
 from pysaurus.public import api_errors
 
@@ -44,9 +41,11 @@ class API:
         function_parser.add(self.clip_from_filename, arguments={'filename': str, 'start': int, 'length': int})
         function_parser.add(self.delete, arguments={'video_id': int})
         function_parser.add(self.delete_from_filename, arguments={'filename': str})
+        function_parser.add(self.delete_unreadable, arguments={'video_id': int})
+        function_parser.add(self.delete_unreadable_from_filename, arguments={'filename': str})
+        function_parser.add(self.download_image, arguments={'video_id': int})
+        function_parser.add(self.download_image_from_filename, arguments={'filename': str})
         function_parser.add(self.find, arguments={'terms': str})
-        function_parser.add(self.image, arguments={'video_id': int})
-        function_parser.add(self.image_from_filename, arguments={'filename': str})
         function_parser.add(self.info, arguments={'video_id': int})
         function_parser.add(self.list, arguments={'field': FieldType, 'reverse': bool_type, 'page_size': int, 'page_number': int})
         function_parser.add(self.nb, arguments={'query': NbType})
@@ -54,11 +53,11 @@ class API:
         function_parser.add(self.not_found)
         function_parser.add(self.open, arguments={'video_id': int})
         function_parser.add(self.open_from_filename, arguments={'filename': str})
+        function_parser.add(self.open_image, arguments={'video_id': int})
+        function_parser.add(self.open_image_from_filename, arguments={'filename': str})
         function_parser.add(self.rename, arguments={'video_id': int, 'new_title': str})
         function_parser.add(self.rename_from_filename, arguments={'filename': str, 'new_title': str})
         function_parser.add(self.same_sizes)
-        function_parser.add(self.thumbnail_path, arguments={'video_id': int})
-        function_parser.add(self.thumbnail_path_from_filename, arguments={'filename': str})
         function_parser.add(self.unreadable)
         function_parser.add(self.valid_length)
         function_parser.add(self.valid_size)
@@ -93,19 +92,19 @@ class API:
         # type: (int) -> Union[Video, VideoState]
         return self.database.get_video_from_id(video_id, required=True, accept_unreadable=True)
 
-    def image(self, video_id):
+    def download_image(self, video_id):
         # type: (int) -> str
         return self.database.get_video_from_id(video_id, required=True).thumbnail_to_base64()
 
-    def image_from_filename(self, filename):
+    def download_image_from_filename(self, filename):
         # type: (str) -> str
         return self.database.get_video_from_filename(filename, required=True).thumbnail_to_base64()
 
-    def thumbnail_path(self, video_id):
-        return self.database.get_video_from_id(video_id).get_thumbnail_path()
+    def open_image(self, video_id):
+        return self.database.get_video_from_id(video_id).get_thumbnail_path().open()
 
-    def thumbnail_path_from_filename(self, filename):
-        return self.database.get_video_from_filename(filename).get_thumbnail_path()
+    def open_image_from_filename(self, filename):
+        return self.database.get_video_from_filename(filename).get_thumbnail_path().open()
 
     def clip(self, video_id, start, length):
         # type: (int, int, int) -> str
@@ -126,6 +125,18 @@ class API:
     def delete(self, video_id):
         # type: (int) -> AbsolutePath
         return self.database.delete_video(self.database.get_video_from_id(video_id, required=True))
+
+    def delete_unreadable(self, video_id):
+        video_state = self.database.get_video_from_id(video_id, required=True, accept_unreadable=True)
+        if not video_state.unreadable:
+            raise pysaurus_errors.UnknownUnreadableID(video_id)
+        return self.database.delete_video(video_state)
+
+    def delete_unreadable_from_filename(self, filename):
+        video_state = self.database.get_video_from_filename(filename, required=True, accept_unreadable=True)
+        if not video_state.unreadable:
+            raise pysaurus_errors.UnknownUnreadableFilename(filename)
+        return self.database.delete_video(video_state)
 
     def delete_from_filename(self, filename):
         # type: (str) -> AbsolutePath

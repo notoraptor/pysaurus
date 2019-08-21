@@ -1,7 +1,8 @@
 from typing import Iterable, Optional
-from pysaurus.core.utils.classes import StringPrinter
-from pysaurus.core.components.file_size import FileSize
+
 from pysaurus.core.components.absolute_path import AbsolutePath
+from pysaurus.core.components.file_size import FileSize
+from pysaurus.core.utils.classes import StringPrinter
 from pysaurus.core.utils.constants import PYTHON_ERROR_THUMBNAIL
 
 

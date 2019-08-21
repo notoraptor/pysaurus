@@ -29,3 +29,7 @@ class UnknownUnreadableID(PysaurusError):
 
 class UnknownVideoFilename(PysaurusError):
     pass
+
+
+class UnknownUnreadableFilename(PysaurusError):
+    pass

@@ -1,12 +1,13 @@
 import os
-import subprocess
 import shutil
+import subprocess
 from typing import Union
 
 from pysaurus.core.components.date_modified import DateModified
+from pysaurus.core.pysaurus_errors import UnsupportedOS
 from pysaurus.core.utils.classes import System
 from pysaurus.core.utils.constants import WINDOWS_PATH_PREFIX
-from pysaurus.core.pysaurus_errors import UnsupportedOS
+
 
 class AbsolutePath(object):
     __slots__ = '__path',

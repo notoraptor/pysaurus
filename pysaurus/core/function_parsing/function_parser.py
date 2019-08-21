@@ -34,10 +34,7 @@ class FunctionParser:
             for fn_name in sorted(self.definitions):
                 print(self.definitions[fn_name])
         elif name in self.definitions:
-            function_definition = self.definitions[name]
-            print(function_definition)
-            if function_definition.description:
-                print(function_definition.description)
+            print(self.definitions[name])
 
     def call(self, function_name, function_args=None):
         if function_name not in self.definitions:

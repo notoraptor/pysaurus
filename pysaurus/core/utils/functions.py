@@ -200,5 +200,3 @@ def generate_amplifier_function(V, b):
 
     function.__name__ = 'f(x)=(%(v_plus_b)s)*x/(x+%(b)s)' % {'v_plus_b': v_plus_b, 'b': b}
     return function
-
-

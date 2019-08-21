@@ -5,11 +5,10 @@ from PIL import Image
 
 from pysaurus.core.components.absolute_path import AbsolutePath
 from pysaurus.core.components.duration import Duration
-from pysaurus.core.components.file_size import FileSize
 from pysaurus.core.database import path_utils
 from pysaurus.core.database.video_state import VideoState
 from pysaurus.core.utils.classes import HTMLStripper, StringPrinter
-from pysaurus.core.utils.constants import PYTHON_ERROR_THUMBNAIL, THUMBNAIL_EXTENSION
+from pysaurus.core.utils.constants import THUMBNAIL_EXTENSION
 from pysaurus.core.video_clipping import video_clip_to_base64
 
 WORK_MODE = 'RGB'
@@ -49,7 +48,7 @@ class Video(VideoState):
             self.errors,
             # special fields
             self.frame_rate_num / self.frame_rate_den,
-            str(duration),
+            duration,
             duration.total_microseconds,
             str(self.get_size()),
             self.size,
