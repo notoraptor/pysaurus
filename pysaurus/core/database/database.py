@@ -103,6 +103,7 @@ class Database(object):
 
     @property
     def valid_videos(self):
+        # type: () -> Iterable[Video]
         return (video for video in self.__videos.values() if video.filename.isfile() and not video.unreadable)
 
     @property

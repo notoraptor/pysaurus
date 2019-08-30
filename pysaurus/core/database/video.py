@@ -27,15 +27,12 @@ class Video(VideoState):
         'audio_codec', 'video_codec', 'audio_codec_description', 'video_codec_description',
         'sample_rate', 'audio_bit_rate', 'errors',
         # special fields
-        'frame_rate', 'duration_string', 'duration_value', 'size_string', 'size_value', 'date_string', 'date_value',
-        'meta_title', 'file_title', 'extension')
+        'frame_rate', 'duration', 'size', 'date', 'title', 'meta_title', 'file_title', 'extension')
 
     def to_table_line(self):
-        duration = self.get_duration()
-        date_modified = self.filename.get_date_modified()
         return [
             # basic fields
-            self.filename.path,
+            self.filename,
             self.container_format,
             self.width,
             self.height,
@@ -47,13 +44,11 @@ class Video(VideoState):
             self.audio_bit_rate,
             self.errors,
             # special fields
-            self.frame_rate_num / self.frame_rate_den,
-            duration,
-            duration.total_microseconds,
-            str(self.get_size()),
-            self.size,
-            str(date_modified),
-            date_modified.time,
+            self.get_frame_rate(),
+            self.get_duration(),
+            self.get_size(),
+            self.filename.get_date_modified(),
+            self.get_title(),
             self.title,
             self.filename.title,
             self.filename.extension
@@ -121,7 +116,7 @@ class Video(VideoState):
                            'audio_codec', 'video_codec', 'audio_codec_description', 'video_codec_description',
                            'width', 'height', 'sample_rate', 'audio_bit_rate'):
             printer.write('\t%s: %s' % (field_name, getattr(self, field_name)))
-        printer.write('\tframe_rate: %s' % (self.frame_rate_num / self.frame_rate_den))
+        printer.write('\tframe_rate: %s' % self.get_frame_rate())
         printer.write('\tduration: %s' % (self.get_duration()))
         printer.write('\tsize: %s' % (self.get_size()))
         if self.errors:
@@ -130,6 +125,9 @@ class Video(VideoState):
 
     def get_title(self):
         return self.title if self.title else self.filename.title
+
+    def get_frame_rate(self):
+        return self.frame_rate_num / self.frame_rate_den
 
     def get_duration(self):
         """ Return a Duration object representing the video duration.

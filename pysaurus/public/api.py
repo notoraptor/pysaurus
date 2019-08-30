@@ -59,6 +59,7 @@ class API:
         function_parser.add(self.rename_from_filename, arguments={'filename': str, 'new_title': str})
         function_parser.add(self.same_sizes)
         function_parser.add(self.unreadable)
+        function_parser.add(self.update)
         function_parser.add(self.valid_length)
         function_parser.add(self.valid_size)
         function_parser.add(self.videos)
@@ -189,3 +190,7 @@ class API:
 
     def unreadable(self):
         return sorted(self.database.unreadable_videos, key=lambda video: video.filename)
+
+    def update(self):
+        self.database.update()
+        self.database.ensure_thumbnails()
