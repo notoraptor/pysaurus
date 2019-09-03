@@ -32,6 +32,7 @@ class API:
         database = Database(path=database_folder, folders=paths, notifier=notifier)
         database.update()
         database.ensure_thumbnails()
+        database.ensure_miniatures()
         return database
 
     def export_api(self, function_parser):
@@ -48,6 +49,7 @@ class API:
         function_parser.add(self.find, arguments={'terms': str})
         function_parser.add(self.info, arguments={'video_id': int})
         function_parser.add(self.list, arguments={'field': FieldType, 'reverse': bool_type, 'page_size': int, 'page_number': int})
+        function_parser.add(self.missing_thumbnails)
         function_parser.add(self.nb, arguments={'query': NbType})
         function_parser.add(self.nb_pages, arguments={'query': NbType, 'page_size': int})
         function_parser.add(self.not_found)
@@ -57,6 +59,7 @@ class API:
         function_parser.add(self.open_image_from_filename, arguments={'filename': str})
         function_parser.add(self.rename, arguments={'video_id': int, 'new_title': str})
         function_parser.add(self.rename_from_filename, arguments={'filename': str, 'new_title': str})
+        function_parser.add(self.reset_thumbnail_errors)
         function_parser.add(self.same_sizes)
         function_parser.add(self.unreadable)
         function_parser.add(self.update)
@@ -191,6 +194,18 @@ class API:
     def unreadable(self):
         return sorted(self.database.unreadable_videos, key=lambda video: video.filename)
 
+    def missing_thumbnails(self):
+        return sorted(self.database.valid_videos_missing_thumbnails, key=lambda video: video.filename)
+
+    def reset_thumbnail_errors(self):
+        count = 0
+        for video in self.database.valid_videos_missing_thumbnails:
+            video.error_thumbnail = False
+            count += 1
+        if count:
+            self.database.save()
+
     def update(self):
         self.database.update()
         self.database.ensure_thumbnails()
+        self.database.ensure_miniatures()

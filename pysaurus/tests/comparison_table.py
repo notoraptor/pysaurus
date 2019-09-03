@@ -1,7 +1,4 @@
-
-
 class ComparisonTable:
-
     __slots__ = ('__type', '__n', '__table')
 
     def __init__(self, n, value_type=int):
@@ -41,4 +38,6 @@ if __name__ == '__main__':
     def main():
         table = ComparisonTable(6)
         print(table.get(0, 1))
+
+
     main()

@@ -1,3 +1,4 @@
+import base64
 from ctypes import c_int
 from typing import Any, List, Optional, Tuple
 
@@ -127,6 +128,25 @@ class Miniature:
                         c_int_p(array_type(*self.b)),
                         None if self.i is None else c_int_p(array_type(*self.i)),
                         score, classification)
+
+    def to_dict(self):
+        return {
+            'r': base64.b64encode(bytearray(self.r)),
+            'g': base64.b64encode(bytearray(self.g)),
+            'b': base64.b64encode(bytearray(self.b)),
+            'w': self.width,
+            'h': self.height,
+            'i': self.identifier,
+        }
+
+    @staticmethod
+    def from_dict(dct):
+        return Miniature(red=[int(v) for v in base64.b64decode(dct['r'])],
+                         green=[int(v) for v in base64.b64decode(dct['g'])],
+                         blue=[int(v) for v in base64.b64decode(dct['b'])],
+                         width=dct['w'],
+                         height=dct['h'],
+                         identifier=dct['i'])
 
     @staticmethod
     def from_file_name(file_name, dimensions, identifier=None):

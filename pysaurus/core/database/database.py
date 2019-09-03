@@ -16,13 +16,16 @@ from pysaurus.core.notification import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.profiling import Profiler
 from pysaurus.core.utils import functions as utils
 from pysaurus.core.utils.constants import PYTHON_ERROR_NOTHING, THUMBNAIL_EXTENSION
+from pysaurus.core.utils.image_utils import DEFAULT_THUMBNAIL_SIZE
+from pysaurus.core.video_raptor.alignment_utils import Miniature
 from pysaurus.core.video_raptor.api import VideoRaptorResult
 
 Path = Union[AbsolutePath, str]
 
 
-class Database(object):
-    __slots__ = ['__database_path', '__json_path', '__date', '__folders', '__videos', '__discarded',
+class Database:
+    __slots__ = ['__database_path', '__json_path', '__miniatures_path',
+                 '__date', '__folders', '__videos', '__discarded',
                  '__notifier', '__id_to_video', 'system_is_case_insensitive']
 
     def __init__(self, path, folders=None, clear_old_folders=False, notifier=None):
@@ -30,19 +33,20 @@ class Database(object):
         path = AbsolutePath.ensure(path)
         if not path.isdir():
             raise pysaurus_errors.NotDirectoryError(path)
-        # Database folder path
+        # Paths
         self.__database_path = path
-        # JSON file path
         self.__json_path = AbsolutePath.new_file_path(self.__database_path, self.__database_path.title, 'json')
+        self.__miniatures_path = AbsolutePath.new_file_path(
+            self.__database_path, '%s.miniatures' % self.__database_path.title, 'json')
         # Database data
         self.__date = DateModified.now()
         self.__folders = set()  # type: Set[AbsolutePath]
         self.__videos = {}  # type: Dict[AbsolutePath, Union[VideoState, Video]]
         self.__discarded = {}  # type: Dict[AbsolutePath, VideoState]
         # RAM data
+        self.__notifier = notifier or DEFAULT_NOTIFIER
         self.__id_to_video = {}  # type: Dict[int, Union[VideoState, Video]]
         self.system_is_case_insensitive = utils.file_system_is_case_insensitive(self.__database_path.path)
-        self.__notifier = notifier or DEFAULT_NOTIFIER
         # Load database
         self.__load(folders, clear_old_folders)
         self.__ensure_identifiers()
@@ -111,6 +115,11 @@ class Database(object):
         return (video for video in self.__videos.values()
                 if isinstance(video, Video) and video.filename.isfile() and video.thumbnail_is_valid())
 
+    @property
+    def valid_videos_missing_thumbnails(self):
+        return (video for video in self.__videos.values()
+                if isinstance(video, Video) and video.filename.isfile() and not video.thumbnail_is_valid())
+
     # Private utility methods.
 
     def __in_folders(self, path):
@@ -162,7 +171,7 @@ class Database(object):
             with open(self.__json_path.path, 'r') as output_file:
                 json_dict = json.load(output_file)
             if not isinstance(json_dict, dict):
-                raise pysaurus_errors.NotDirectoryError('Database file does not contain a dictionary.')
+                raise pysaurus_errors.PysaurusError('Database file does not contain a dictionary.')
         else:
             json_dict = {}
 
@@ -336,6 +345,44 @@ class Database(object):
         if thumb_errors:
             self.__notify(notifications.VideoThumbnailErrors(thumb_errors))
         self.save()
+
+    def ensure_miniatures(self):
+        # type: () -> Dict[str, Miniature]
+        miniatures = {}
+        if self.__miniatures_path.exists():
+            if not self.__miniatures_path.isfile():
+                raise pysaurus_errors.NotFileError(self.__miniatures_path)
+            with open(self.__miniatures_path.path, 'r') as miniatures_file:
+                json_dict = json.load(miniatures_file)
+            if not isinstance(json_dict, list):
+                raise pysaurus_errors.PysaurusError('Miniatures file does not contain a list.')
+            for dct in json_dict:
+                video = self.get_video_from_filename(AbsolutePath.ensure(dct['i']))
+                if video and video.filename.exists() and DEFAULT_THUMBNAIL_SIZE == (dct['w'], dct['h']):
+                    miniature = Miniature.from_dict(dct)
+                    miniatures[miniature.identifier] = miniature
+            del json_dict
+        tasks = [(video.filename, video.get_thumbnail_path())
+                 for video in self.valid_videos_with_thumbnails
+                 if video.filename.path not in miniatures]
+        print('Missing', len(tasks), '/', len(tasks) + len(miniatures), 'miniature(s).')
+        if not tasks:
+            return miniatures
+        cpu_count = os.cpu_count()
+        jobs = utils.dispatch_tasks(tasks, cpu_count)
+        del tasks
+        with Profiler('Generating miniatures.'):
+            with concurrent.futures.ProcessPoolExecutor(max_workers=cpu_count) as executor:
+                results = list(executor.map(parallelism.job_generate_miniatures, jobs))
+        del jobs
+        for local_array in results:
+            for miniature in local_array:  # type: Miniature
+                miniature.identifier = miniature.identifier.path
+                miniatures[miniature.identifier] = miniature
+        del results
+        with open(self.__miniatures_path.path, 'w') as output_file:
+            json.dump([miniatures[identifier].to_dict() for identifier in sorted(miniatures)], output_file)
+        return miniatures
 
     # Public features.
 

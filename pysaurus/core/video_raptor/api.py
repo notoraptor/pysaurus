@@ -106,14 +106,14 @@ def collect_video_info(file_names):
 
 
 class VideoInfoCollector:
-    __slots__ = ('buffer_size', 'video_info_objects', 'video_info_pointers', 'array_type', 'array_object')
+    __slots__ = ('buffer_size', 'objects', 'pointers', 'array_type', 'array_object')
 
     def __init__(self, buffer_size):
         self.buffer_size = buffer_size
-        self.video_info_objects = [VideoInfo() for _ in range(buffer_size)]
-        self.video_info_pointers = [pointer(v) for v in self.video_info_objects]
+        self.objects = [VideoInfo() for _ in range(buffer_size)]
+        self.pointers = [pointer(v) for v in self.objects]
         self.array_type = PtrVideoInfo * buffer_size
-        self.array_object = self.array_type(*self.video_info_pointers)
+        self.array_object = self.array_type(*self.pointers)
 
     def collect(self, file_names):
         # type: (List[str]) -> List[VideoRaptorResult]
@@ -123,31 +123,33 @@ class VideoInfoCollector:
         encoded_file_names = [file_name.encode() for file_name in file_names]
 
         for i in range(len(file_names)):
-            fn_VideoInfo_init(self.video_info_pointers[i], c_char_p(encoded_file_names[i]))
+            fn_VideoInfo_init(self.pointers[i], c_char_p(encoded_file_names[i]))
 
         fn_videoRaptorDetails(len(file_names), PtrPtrVideoInfo(self.array_object))
 
         for i in range(len(file_names)):
-            video_info = self.video_info_objects[i]
+            video_info = self.objects[i]
             done = _video_info_to_params(video_info) if fn_VideoReport_isDone(pointer(video_info.report)) else None
             errors = get_video_info_errors(video_info.report)
             if done and errors:
                 done['errors'] = errors
                 errors = None
             output[i] = VideoRaptorResult(done=done, errors=errors)
-            fn_VideoInfo_clear(self.video_info_pointers[i])
+            fn_VideoInfo_clear(self.pointers[i])
 
         return output
 
 
 class VideoThumbnailGenerator:
+    __slots__ = ('buffer_size', 'objects', 'pointers', 'array_type', 'array_object',
+                 'encoded_output_folder', 'c_output_folder')
 
     def __init__(self, buffer_size, output_folder):
         self.buffer_size = buffer_size
-        self.video_thumb_objects = [VideoThumbnail() for _ in range(buffer_size)]
-        self.video_thumb_pointers = [pointer(v) for v in self.video_thumb_objects]
+        self.objects = [VideoThumbnail() for _ in range(buffer_size)]
+        self.pointers = [pointer(v) for v in self.objects]
         self.array_type = PtrVideoThumbnail * buffer_size
-        self.array_object = self.array_type(*self.video_thumb_pointers)
+        self.array_object = self.array_type(*self.pointers)
         self.encoded_output_folder = output_folder.encode()
         self.c_output_folder = c_char_p(self.encoded_output_folder)
 
@@ -155,14 +157,13 @@ class VideoThumbnailGenerator:
         # type: (List[str], List[str]) -> List[VideoRaptorResult]
 
         assert len(file_names) == len(thumb_names) <= self.buffer_size
-
         output = [None] * len(file_names)  # type: List[Optional[VideoRaptorResult]]
         encoded_file_names = [file_name.encode() for file_name in file_names]
         encoded_thumb_names = [thumb_name.encode() for thumb_name in thumb_names]
 
         for i in range(len(file_names)):
             fn_VideoThumbnail_init(
-                self.video_thumb_pointers[i],
+                self.pointers[i],
                 c_char_p(encoded_file_names[i]),
                 self.c_output_folder,
                 c_char_p(encoded_thumb_names[i])
@@ -171,7 +172,7 @@ class VideoThumbnailGenerator:
         fn_videoRaptorThumbnails(len(file_names), PtrPtrVideoThumbnail(self.array_object))
 
         for i in range(len(file_names)):
-            video_thumb = self.video_thumb_objects[i]
+            video_thumb = self.objects[i]
             output[i] = VideoRaptorResult(
                 done=fn_VideoReport_isDone(pointer(video_thumb.report)),
                 errors=get_video_info_errors(video_thumb.report),

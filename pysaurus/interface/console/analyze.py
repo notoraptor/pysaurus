@@ -6,7 +6,6 @@ import ujson as json
 
 from pysaurus.core.profiling import Profiler
 from pysaurus.core.video_raptor.alignment_utils import Miniature
-from pysaurus.interface.console.compare_images import generate_miniatures
 from pysaurus.public.api import API
 from pysaurus.tests.test_utils import TEST_LIST_FILE_PATH
 
@@ -159,7 +158,7 @@ def main():
     print('LOADING DATABASE')
     database = API.load_database(TEST_LIST_FILE_PATH)
     print('GENERATING MINIATURES')
-    miniatures = generate_miniatures(database)
+    miniatures = sorted(database.ensure_miniatures().values(), key=lambda m: m.identifier)
     print(len(miniatures), 'miniatures.')
     print('GENERATING AVERAGES')
     averages = []

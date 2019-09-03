@@ -2,9 +2,10 @@ from ctypes import c_double, c_int, memset, pointer, sizeof
 from typing import Iterable, List
 
 from pysaurus.core.profiling import Profiler
+from pysaurus.core.utils.constants import VIDEO_BATCH_SIZE
 from pysaurus.core.video_raptor.alignment_utils import Miniature
-from pysaurus.core.video_raptor.functions import (PtrPtrSequence, PtrSequence, fn_batchAlignmentScore,
-                                                  fn_classifySimilarities)
+from pysaurus.core.video_raptor.functions import (
+    PtrPtrSequence, PtrSequence, fn_batchAlignmentScore, fn_classifySimilarities)
 from pysaurus.core.video_raptor.structures import c_int_p
 
 
@@ -27,6 +28,12 @@ def classify_similarities(miniatures):
     memset(native_edges, 0, sizeof(native_edges))
     # assert all(s.classification == -1 for s in native_sequences)
     with Profiler('Finding similar images using simpler NATIVE comparison.'):
-        fn_classifySimilarities(PtrPtrSequence(pointer_array_type(*native_sequence_pointers)),
-                                nb_sequences, miniatures[0].width, miniatures[0].height, native_edges)
+        cursor = 0
+        while cursor < nb_sequences:
+            i_from = cursor
+            i_to = cursor + VIDEO_BATCH_SIZE
+            print('[%s;%s[/%s' % (i_from, i_to, nb_sequences))
+            fn_classifySimilarities(PtrPtrSequence(pointer_array_type(*native_sequence_pointers)),
+                                    nb_sequences, i_from, i_to, miniatures[0].width, miniatures[0].height, native_edges)
+            cursor = i_to
     return native_edges

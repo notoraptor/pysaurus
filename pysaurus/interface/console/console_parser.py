@@ -19,6 +19,7 @@ class ConsoleParser(FunctionParser):
         self.get_definition(self.api.list).function = self.list
         self.get_definition(self.api.not_found).function = self.not_found
         self.get_definition(self.api.unreadable).function = self.unreadable
+        self.get_definition(self.api.missing_thumbnails).function = self.missing_thumbnails
         self.remove_definition(self.api.clip)
         self.remove_definition(self.api.clip_from_filename)
         self.remove_definition(self.api.download_image)
@@ -70,4 +71,10 @@ class ConsoleParser(FunctionParser):
         headers = ['ID', 'Size', 'Filename']
         lines = [[video.video_id, FileSize(video.filename.get_size()), video.filename]
                  for video in self.api.unreadable()]
+        return Table(headers, lines)
+
+    def missing_thumbnails(self):
+        headers = ['ID', 'Size', 'Filename']
+        lines = [[video.video_id, FileSize(video.filename.get_size()), video.filename]
+                 for video in self.api.missing_thumbnails()]
         return Table(headers, lines)

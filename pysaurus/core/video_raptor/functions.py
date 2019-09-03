@@ -57,4 +57,4 @@ fn_videoRaptorThumbnails.argtypes = [c_int, PtrPtrVideoThumbnail]
 fn_videoRaptorThumbnails.restype = c_int
 fn_batchAlignmentScore.argtypes = [c_int_p, c_int_p, c_int, c_int, c_int, c_int, c_int]
 fn_batchAlignmentScore.restype = c_double
-fn_classifySimilarities.argtypes = [PtrPtrSequence, c_int, c_int, c_int, c_double_p]
+fn_classifySimilarities.argtypes = [PtrPtrSequence, c_int, c_int, c_int, c_int, c_int, c_double_p]

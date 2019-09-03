@@ -1,16 +1,13 @@
-import concurrent.futures
 import os
 import sys
-from typing import Any, List, Tuple
+from typing import Any, List
 
 import ujson as json
-from pysaurus.wip.image_utils import DEFAULT_THUMBNAIL_SIZE
 
 from pysaurus.core.components.absolute_path import AbsolutePath
 from pysaurus.core.database.database import Database
-from pysaurus.core.profiling import Profiler
 from pysaurus.core.utils.classes import StringPrinter
-from pysaurus.core.utils.functions import dispatch_tasks, timestamp_microseconds
+from pysaurus.core.utils.functions import timestamp_microseconds
 from pysaurus.core.video_raptor import alignment as native_alignment
 from pysaurus.core.video_raptor.alignment_utils import Miniature
 from pysaurus.public.api import API
@@ -46,37 +43,6 @@ class Node:
 
     def __lt__(self, other):
         return self.node < other.node
-
-
-def job_generate_miniatures(job):
-    # type: (Tuple[list, str]) -> List[Miniature]
-    thumbnails, job_id = job
-    nb_videos = len(thumbnails)
-    miniatures = []
-    count = 0
-    for file_name, thumbnail_path in thumbnails:
-        miniatures.append(Miniature.from_file_name(thumbnail_path.path, DEFAULT_THUMBNAIL_SIZE, file_name))
-        count += 1
-        if count % PRINT_STEP == 0:
-            print('[Generating miniatures on thread %s] %d/%d' % (job_id, count, nb_videos))
-    print('[Generated miniatures on thread %s] %d/%d' % (job_id, count, nb_videos))
-    return miniatures
-
-
-def generate_miniatures(database):
-    # type: (Database) -> List[Miniature]
-    miniatures = []  # type: List[Miniature]
-    cpu_count = os.cpu_count()
-    tasks = [(video.filename, video.get_thumbnail_path())
-             for video in database.valid_videos_with_thumbnails]
-    jobs = dispatch_tasks(tasks, cpu_count)
-    with Profiler('Generating miniatures.'):
-        with concurrent.futures.ProcessPoolExecutor(max_workers=cpu_count) as executor:
-            results = list(executor.map(job_generate_miniatures, jobs))
-    for local_array in results:
-        miniatures.extend(local_array)
-    miniatures.sort(key=lambda m: m.identifier)
-    return miniatures
 
 
 def similar_group_to_html_file(group_id, group, miniatures, database, html_dir, unique_id):
@@ -168,7 +134,7 @@ def find_similar_images(miniatures):
 def main():
     list_file_path = sys.argv[1] if len(sys.argv) > 1 else None
     database = API.load_database(list_file_path=list_file_path)
-    miniatures = generate_miniatures(database)
+    miniatures = sorted(database.ensure_miniatures().values(), key=lambda m: m.identifier)
     print('Extracted miniatures from %d/%d videos.' % (len(miniatures), database.nb_valid))
 
     sim_groups = find_similar_images(miniatures)
