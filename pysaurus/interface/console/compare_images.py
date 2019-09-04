@@ -11,6 +11,7 @@ from pysaurus.core.utils.functions import timestamp_microseconds
 from pysaurus.core.video_raptor import alignment as native_alignment
 from pysaurus.core.video_raptor.alignment_utils import Miniature
 from pysaurus.public.api import API
+from pysaurus.tests.test_utils import TEST_LIST_FILE_PATH
 
 PRINT_STEP = 500
 SIM_LIMIT = 0.9
@@ -132,7 +133,7 @@ def find_similar_images(miniatures):
 
 
 def main():
-    list_file_path = sys.argv[1] if len(sys.argv) > 1 else None
+    list_file_path = AbsolutePath.ensure(sys.argv[1]) if len(sys.argv) > 1 else TEST_LIST_FILE_PATH
     database = API.load_database(list_file_path=list_file_path)
     miniatures = sorted(database.ensure_miniatures().values(), key=lambda m: m.identifier)
     print('Extracted miniatures from %d/%d videos.' % (len(miniatures), database.nb_valid))
