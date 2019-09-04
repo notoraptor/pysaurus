@@ -13,7 +13,7 @@ class UnusedThumbnails(Notification):
 
 
 class VideosNotFoundRemoved(UnusedThumbnails):
-    pass
+    __slots__ = []
 
 
 class CollectingFiles(Notification):
@@ -24,11 +24,11 @@ class CollectingFiles(Notification):
 
 
 class FolderNotFound(CollectingFiles):
-    pass
+    __slots__ = []
 
 
 class PathIgnored(CollectingFiles):
-    pass
+    __slots__ = []
 
 
 class CollectedFiles(Notification):
@@ -72,7 +72,7 @@ class VideoJob(Notification):
 
 
 class ThumbnailJob(VideoJob):
-    pass
+    __slots__ = []
 
 
 class DatabaseLoaded(Notification):
@@ -90,7 +90,7 @@ class DatabaseLoaded(Notification):
 
 
 class DatabaseSaved(DatabaseLoaded):
-    pass
+    __slots__ = []
 
 
 class VideosToLoad(Notification):
@@ -101,7 +101,7 @@ class VideosToLoad(Notification):
 
 
 class ThumbnailsToLoad(VideosToLoad):
-    pass
+    __slots__ = []
 
 
 # Unused, sub-classed,
@@ -120,7 +120,7 @@ class MissingVideos(Notification):
 
 
 class MissingThumbnails(MissingVideos):
-    pass
+    __slots__ = []
 
 
 class VideoInfoErrors(Notification):
@@ -140,4 +140,4 @@ class VideoInfoErrors(Notification):
 
 
 class VideoThumbnailErrors(VideoInfoErrors):
-    pass
+    __slots__ = []

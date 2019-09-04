@@ -56,6 +56,7 @@ class Response(ServerMessage):
 
 
 class OkResponse(Response):
+    __slots__ = []
     def __init__(self, request_id):
         super(OkResponse, self).__init__(request_id, OK)
 
@@ -89,10 +90,12 @@ class DataResponse(Response):
 
 
 class AutoErrorResponse(ErrorResponse):
+    __slots__ = []
     def __init__(self, request_id, message):
         super(AutoErrorResponse, self).__init__(request_id, type(self).__name__, message)
 
 
 class AutoDataResponse(DataResponse):
+    __slots__ = []
     def __init__(self, request_id, data):
         super(AutoDataResponse, self).__init__(request_id, type(self).__name__, data)
