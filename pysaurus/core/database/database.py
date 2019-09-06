@@ -49,7 +49,6 @@ class Database:
         self.system_is_case_insensitive = utils.file_system_is_case_insensitive(self.__database_path.path)
         # Load database
         self.__load(folders, clear_old_folders)
-        self.__ensure_identifiers()
         self.save()
 
     # Properties.
@@ -216,6 +215,7 @@ class Database:
     # Public methods.
 
     def save(self):
+        self.__ensure_identifiers()
         # Save database.
         json_output = {'folders': [folder.path for folder in self.__folders],
                        'videos': [video.to_dict()
