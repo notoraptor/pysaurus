@@ -1,8 +1,8 @@
 import sys
 from ctypes import POINTER, c_bool, c_char_p, c_double, c_int, c_uint, cdll
 
-from pysaurus.core.video_raptor.structures import (ErrorReader, Sequence, VideoInfo, VideoRaptorInfo, VideoReport,
-                                                   VideoThumbnail, c_int_p)
+from pysaurus.core.video_raptor.structures import (
+    ErrorReader, Sequence, VideoInfo, VideoRaptorInfo, VideoReport, VideoThumbnail, c_int_p)
 
 c_double_p = POINTER(c_double)
 PtrVideoRaptorInfo = POINTER(VideoRaptorInfo)

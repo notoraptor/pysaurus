@@ -24,7 +24,9 @@ class AbsolutePath(object):
 
     @property
     def standard_path(self):
-        return self.__path[len(WINDOWS_PATH_PREFIX):] if self.__path.startswith(WINDOWS_PATH_PREFIX) else self.__path
+        return (self.__path[len(WINDOWS_PATH_PREFIX):]
+                if self.__path.startswith(WINDOWS_PATH_PREFIX)
+                else self.__path)
 
     @property
     def path(self):
