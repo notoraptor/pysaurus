@@ -2,16 +2,18 @@ from typing import Dict, List, Union
 
 from pysaurus.core import pysaurus_errors
 from pysaurus.core.components.absolute_path import AbsolutePath
-from pysaurus.core.database import path_utils
 from pysaurus.core.database.database import Database
 from pysaurus.core.database.video import Video
 from pysaurus.core.database.video_state import VideoState
 from pysaurus.core.function_parsing.function_parser import FunctionParser
 from pysaurus.core.notification import Notifier
 from pysaurus.core.utils import functions as utils
-from pysaurus.core.utils.classes import Enumeration, Table
+from pysaurus.core.utils.classes import Enumeration
 from pysaurus.core.utils.functions import bool_type
 from pysaurus.public import api_errors
+from pysaurus.core.database import path_utils
+from pysaurus.core.utils.classes import Table
+from pysaurus.public.tools.batch_search_results import BatchSearchResults
 
 NbType = Enumeration(('entries', 'discarded', 'not_found', 'found', 'unreadable', 'valid', 'thumbnails'))
 FieldType = Enumeration(Video.TABLE_FIELDS)
@@ -47,6 +49,7 @@ class API:
         function_parser.add(self.download_image, arguments={'video_id': int})
         function_parser.add(self.download_image_from_filename, arguments={'filename': str})
         function_parser.add(self.find, arguments={'terms': str})
+        function_parser.add(self.find_batch, arguments={'path': str})
         function_parser.add(self.info, arguments={'video_id': int})
         function_parser.add(self.list, arguments={'field': FieldType, 'reverse': bool_type, 'page_size': int, 'page_number': int})
         function_parser.add(self.missing_thumbnails)
@@ -171,9 +174,16 @@ class API:
 
     def find(self, terms):
         # type: (str) -> List[Video]
-        terms = {term.strip().lower() for term in terms.split()}
+        terms = utils.string_to_pieces(terms)
         return [video for video in self.database.valid_videos
                 if all(term in video.title.lower() or term in video.filename.path.lower() for term in terms)]
+
+    def find_batch(self, path):
+        # type: (str) -> BatchSearchResults
+        results = BatchSearchResults()
+        for sentence in path_utils.load_list_file(path):
+            results.results.append((sentence, self.find(sentence)))
+        return results
 
     def list(self, field, reverse, page_size, page_number):
         # type: (str, bool, int, int) -> List[Video]

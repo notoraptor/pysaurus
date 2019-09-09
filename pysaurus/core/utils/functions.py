@@ -1,11 +1,18 @@
 import codecs
 import os
+import re
 from datetime import datetime
 
 from pysaurus.core.utils.constants import VIDEO_SUPPORTED_EXTENSIONS
 
 # Datetime since timestamp 0.
 EPOCH = datetime.utcfromtimestamp(0)
+
+REGEX_NO_WORD = re.compile(r'(\W|_)+')
+
+
+def string_to_pieces(the_string):
+    return [piece.lower() for piece in REGEX_NO_WORD.sub(' ', the_string).split()]
 
 
 def is_valid_video_filename(filename):
