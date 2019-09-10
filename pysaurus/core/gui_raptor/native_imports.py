@@ -26,7 +26,9 @@ class DrawingImage(Structure):
     _fields_ = [
         ('path', c_char_p),
         ('x', c_float),
-        ('y', c_float)
+        ('y', c_float),
+        ('w', c_int),
+        ('h', c_int)
     ]
 
 
