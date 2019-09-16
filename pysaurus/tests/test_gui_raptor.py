@@ -24,6 +24,7 @@ def main2():
         patterns.PatternImage(src=path_image_2.path, x=300, y=600),
         text
     ]
+    frame = patterns.PatternFrame(x=100, y=100, width=400, height=200, patterns=elements)
     window = Window(1200, 800, "Hello tigers")
     event = Event()
     with window, event:
@@ -32,7 +33,8 @@ def main2():
                 if event.is_closed():
                     window.close()
             if window.is_open():
-                window.draw(elements)
+                # window.draw(elements)
+                window.draw([frame])
 
 
 if __name__ == '__main__':
