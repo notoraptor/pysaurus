@@ -1,20 +1,44 @@
 from ctypes import pointer
 from typing import List
 
-from pysaurus.core.gui_raptor import native_imports
-from pysaurus.core.gui_raptor.rendering import Render
+from pysaurus.core.gui_raptor import native_imports, patterns
 from pysaurus.core.meta.context import Context
 
 
-def window_draw(window, drawings):
-    # type: (native_imports.Window, List[Render]) -> None
-    objects = [render.drawing for render in drawings]
-    pointers = [pointer(drawing) for drawing in objects]
-    count = len(drawings)
-    array_type = native_imports.DrawingPtr * count
-    array_object = array_type(*pointers)
-    return native_imports.WindowDraw(window, array_object, count)
+class TextInfo(Context):
+    __slots__ = ['pattern_text_info']
+    def __init__(self, pattern_text):
+        # type: (patterns.PatternText) -> None
+        super().__init__()
+        self.pattern_text_info = native_imports.PatternTextInfoNew(pattern_text.get_native_pointer())
 
+    def on_exit(self):
+        native_imports.PatternTextInfoDelete(self.pattern_text_info)
+
+    @property
+    def length(self):
+        return self.pattern_text_info.contents.length
+
+    @property
+    def width(self):
+        return self.pattern_text_info.contents.width
+
+    @property
+    def height(self):
+        return self.pattern_text_info.contents.height
+
+    @property
+    def left(self):
+        return self.pattern_text_info.contents.left
+
+    @property
+    def top(self):
+        return self.pattern_text_info.contents.top
+
+    @property
+    def coordinates(self):
+        return [self.pattern_text_info.contents.coordinates[i]
+                for i in range(2 * self.pattern_text_info.contents.length)]
 
 class Event(Context):
     __slots__ = ['event']
@@ -51,6 +75,10 @@ class Window(Context):
         # type: (Event) -> bool
         return native_imports.WindowNextEvent(self.window, event.event)
 
-    def draw(self, renders):
-        # type: (List[Render]) -> None
-        return window_draw(self.window, renders)
+    def draw(self, patterns):
+        # type: (List[patterns.Pattern]) -> None
+        pointers = [pattern.get_pointer() for pattern in patterns]
+        count = len(pointers)
+        array_type = native_imports.PatternPtr * count
+        array_object = array_type(*pointers)
+        return native_imports.WindowDraw(self.window, array_object, count)
