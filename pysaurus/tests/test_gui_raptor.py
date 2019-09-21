@@ -1,6 +1,6 @@
 from pysaurus.core.components.absolute_path import AbsolutePath
-from pysaurus.core.gui_raptor.api import Event, Window, TextInfo
 from pysaurus.core.gui_raptor import patterns
+from pysaurus.core.gui_raptor.api import Event, TextInfo, Window
 from pysaurus.core.utils.functions import package_dir
 
 
@@ -8,7 +8,7 @@ def main2():
     image_folder = AbsolutePath.join(package_dir(), '..', '..', 'guiraptor', 'test')
     path_image_1 = AbsolutePath.join(image_folder, "tigre.jpg")
     path_image_2 = AbsolutePath.join(image_folder, "Tigerramki.jpg")
-    text = patterns.PatternText(content="Hello World! 漢字漢字 漢字! See you soon!", size=50, font=r"/usr/share/fonts/opentype/noto/NotoSerifCJK-Regular.ttc")
+    text = patterns.PatternText(content="Hello World! 漢字漢字 漢字! See you soon!", size=50)
     with TextInfo(text) as text_info:
         print(text_info.length)
         print(text_info.width)

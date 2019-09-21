@@ -27,6 +27,7 @@ def load_list_file(list_file_path):
                     strings.append(line)
     return strings
 
+
 def load_path_list_file(list_file_path):
     # type: (AbsolutePath) -> Iterable[AbsolutePath]
     return [AbsolutePath(string) for string in load_list_file(list_file_path)]

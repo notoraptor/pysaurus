@@ -2,17 +2,16 @@ from typing import Dict, List, Union
 
 from pysaurus.core import pysaurus_errors
 from pysaurus.core.components.absolute_path import AbsolutePath
+from pysaurus.core.database import path_utils
 from pysaurus.core.database.database import Database
 from pysaurus.core.database.video import Video
 from pysaurus.core.database.video_state import VideoState
 from pysaurus.core.function_parsing.function_parser import FunctionParser
 from pysaurus.core.notification import Notifier
 from pysaurus.core.utils import functions as utils
-from pysaurus.core.utils.classes import Enumeration
+from pysaurus.core.utils.classes import Enumeration, Table
 from pysaurus.core.utils.functions import bool_type
 from pysaurus.public import api_errors
-from pysaurus.core.database import path_utils
-from pysaurus.core.utils.classes import Table
 from pysaurus.public.tools.batch_search_results import BatchSearchResults
 
 NbType = Enumeration(('entries', 'discarded', 'not_found', 'found', 'unreadable', 'valid', 'thumbnails'))

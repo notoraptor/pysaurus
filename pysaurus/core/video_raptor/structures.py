@@ -1,5 +1,4 @@
-from ctypes import (
-    POINTER, c_char, c_char_p, c_double, c_int, c_int64, c_size_t, c_uint, Structure)
+from ctypes import (POINTER, Structure, c_char, c_char_p, c_double, c_int, c_int64, c_size_t, c_uint)
 
 ERROR_DETAIL_MAX_LENGTH = 64
 

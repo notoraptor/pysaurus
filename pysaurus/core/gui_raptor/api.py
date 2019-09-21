@@ -1,4 +1,3 @@
-from ctypes import pointer
 from typing import List
 
 from pysaurus.core.gui_raptor import native_imports, patterns
@@ -7,6 +6,7 @@ from pysaurus.core.meta.context import Context
 
 class TextInfo(Context):
     __slots__ = ['pattern_text_info']
+
     def __init__(self, pattern_text):
         # type: (patterns.PatternText) -> None
         super().__init__()
@@ -39,6 +39,7 @@ class TextInfo(Context):
     def coordinates(self):
         return [self.pattern_text_info.contents.coordinates[i]
                 for i in range(2 * self.pattern_text_info.contents.length)]
+
 
 class Event(Context):
     __slots__ = ['event']

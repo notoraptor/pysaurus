@@ -1,7 +1,6 @@
-from ctypes import c_void_p, Structure, POINTER, c_char_p, c_uint, c_bool, c_int, c_float, c_size_t
+from ctypes import POINTER, Structure, c_bool, c_char_p, c_float, c_int, c_size_t, c_uint, c_void_p
 
 from pysaurus.core.meta.native import CLibrary
-
 
 FloatPtr = POINTER(c_float)
 
@@ -37,7 +36,6 @@ class PatternTextInfo(Structure):
 
 
 PatternPtr = POINTER(Pattern)
-PatternTextInfoPtr = POINTER(PatternTextInfo)
 PatternPtrPtr = POINTER(PatternPtr)
 
 
@@ -97,6 +95,7 @@ PatternTextPtr = POINTER(PatternText)
 PatternFramePtr = POINTER(PatternFrame)
 PatternImagePtr = POINTER(PatternImage)
 PatternRectanglePtr = POINTER(PatternRectangle)
+PatternTextInfoPtr = POINTER(PatternTextInfo)
 
 _gui_raptor = CLibrary('guiRaptor')
 

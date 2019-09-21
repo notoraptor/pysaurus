@@ -1,4 +1,4 @@
-from ctypes import c_char_p, pointer, cast, c_void_p, Structure
+from ctypes import Structure, c_char_p, c_void_p, cast, pointer
 from typing import List
 
 from pysaurus.core.gui_raptor import native_imports
