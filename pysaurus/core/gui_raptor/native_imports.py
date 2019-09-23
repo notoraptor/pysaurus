@@ -71,8 +71,8 @@ class PatternImage(Structure):
     _fields_ = [
         ('x', c_float),
         ('y', c_float),
-        ('width', c_int),
-        ('height', c_int),
+        ('width', c_float),
+        ('height', c_float),
         ('src', c_char_p),
     ]
 

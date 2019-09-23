@@ -5,40 +5,40 @@ from pysaurus.core.meta.context import Context
 
 
 class TextInfo(Context):
-    __slots__ = ['pattern_text_info']
+    __slots__ = ['native']
 
     def __init__(self, pattern_text):
         # type: (patterns.PatternText) -> None
         super().__init__()
-        self.pattern_text_info = native_imports.PatternTextInfoNew(pattern_text.get_native_pointer())
+        self.native = native_imports.PatternTextInfoNew(pattern_text.native_pointer())
 
     def on_exit(self):
-        native_imports.PatternTextInfoDelete(self.pattern_text_info)
+        native_imports.PatternTextInfoDelete(self.native)
 
     @property
     def length(self):
-        return self.pattern_text_info.contents.length
+        return self.native.contents.length
 
     @property
     def width(self):
-        return self.pattern_text_info.contents.width
+        return self.native.contents.width
 
     @property
     def height(self):
-        return self.pattern_text_info.contents.height
+        return self.native.contents.height
 
     @property
     def left(self):
-        return self.pattern_text_info.contents.left
+        return self.native.contents.left
 
     @property
     def top(self):
-        return self.pattern_text_info.contents.top
+        return self.native.contents.top
 
     @property
     def coordinates(self):
-        return [self.pattern_text_info.contents.coordinates[i]
-                for i in range(2 * self.pattern_text_info.contents.length)]
+        return [(self.native.contents.coordinates[2 * i], self.native.contents.coordinates[2 * i + 1])
+                for i in range(self.native.contents.length)]
 
 
 class Event(Context):
@@ -78,7 +78,7 @@ class Window(Context):
 
     def draw(self, patterns):
         # type: (List[patterns.Pattern]) -> None
-        pointers = [pattern.get_pointer() for pattern in patterns]
+        pointers = [pattern.pointer() for pattern in patterns]
         count = len(pointers)
         array_type = native_imports.PatternPtr * count
         array_object = array_type(*pointers)
