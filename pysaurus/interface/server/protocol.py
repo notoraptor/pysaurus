@@ -1,6 +1,6 @@
 from typing import Any
 
-from pysaurus.core.utils.classes import ToDict
+from pysaurus.core.classes import ToDict
 
 OK = 'ok'
 ERROR = 'error'

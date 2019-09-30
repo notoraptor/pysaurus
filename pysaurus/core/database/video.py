@@ -3,13 +3,12 @@ from io import BytesIO
 
 from PIL import Image
 
-from pysaurus.core.components.absolute_path import AbsolutePath
-from pysaurus.core.components.duration import Duration
+from pysaurus.core.classes import StringPrinter
+from pysaurus.core.components import AbsolutePath, Duration
+from pysaurus.core.constants import THUMBNAIL_EXTENSION
 from pysaurus.core.database import path_utils
 from pysaurus.core.database.video_state import VideoState
-from pysaurus.core.utils.classes import HTMLStripper, StringPrinter
-from pysaurus.core.utils.constants import THUMBNAIL_EXTENSION
-from pysaurus.core.video_clipping import video_clip_to_base64
+from pysaurus.core.modules import HTMLStripper, VideoClipping
 
 WORK_MODE = 'RGB'
 
@@ -110,18 +109,18 @@ class Video(VideoState):
         self.thumb_name = thumb_name
 
     def __str__(self):
-        printer = StringPrinter()
-        printer.write('Video:')
-        for field_name in ('video_id', 'filename', 'title', 'container_format',
-                           'audio_codec', 'video_codec', 'audio_codec_description', 'video_codec_description',
-                           'width', 'height', 'sample_rate', 'audio_bit_rate'):
-            printer.write('\t%s: %s' % (field_name, getattr(self, field_name)))
-        printer.write('\tframe_rate: %s' % self.get_frame_rate())
-        printer.write('\tduration: %s' % (self.get_duration()))
-        printer.write('\tsize: %s' % (self.get_size()))
-        if self.errors:
-            printer.write('\terror(s): %s' % (', '.join(sorted(self.errors))))
-        return str(printer)
+        with StringPrinter() as printer:
+            printer.write('Video:')
+            for field_name in ('video_id', 'filename', 'title', 'container_format',
+                               'audio_codec', 'video_codec', 'audio_codec_description', 'video_codec_description',
+                               'width', 'height', 'sample_rate', 'audio_bit_rate'):
+                printer.write('\t%s: %s' % (field_name, getattr(self, field_name)))
+            printer.write('\tframe_rate: %s' % self.get_frame_rate())
+            printer.write('\tduration: %s' % (self.get_duration()))
+            printer.write('\tsize: %s' % (self.get_size()))
+            if self.errors:
+                printer.write('\terror(s): %s' % (', '.join(sorted(self.errors))))
+            return str(printer)
 
     def get_title(self):
         return self.title if self.title else self.filename.title
@@ -164,7 +163,7 @@ class Video(VideoState):
         return image_string
 
     def clip_to_base64(self, start, length):
-        return video_clip_to_base64(
+        return VideoClipping.video_clip_to_base64(
             path=self.filename.path,
             time_start=start,
             clip_seconds=length,

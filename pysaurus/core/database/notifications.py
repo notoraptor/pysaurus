@@ -1,7 +1,7 @@
 from typing import Dict
 
+from pysaurus.core.classes import StringPrinter
 from pysaurus.core.notification import Notification
-from pysaurus.core.utils.classes import StringPrinter
 
 
 class UnusedThumbnails(Notification):
@@ -47,11 +47,11 @@ class CollectedFiles(Notification):
                 self.folder_to_count[directory] = 1
 
     def __str__(self):
-        printer = StringPrinter()
-        printer.write('%s: %d' % (type(self).__name__, self.count))
-        for folder, local_count in sorted(self.folder_to_count.items(), key=lambda couple: (-couple[1], couple[0])):
-            printer.write('%d\t%s' % (local_count, folder))
-        return str(printer)
+        with StringPrinter() as printer:
+            printer.write('%s: %d' % (type(self).__name__, self.count))
+            for folder, local_count in sorted(self.folder_to_count.items(), key=lambda couple: (-couple[1], couple[0])):
+                printer.write('%d\t%s' % (local_count, folder))
+            return str(printer)
 
 
 class FinishedCollectingVideos(Notification):
@@ -112,11 +112,11 @@ class MissingVideos(Notification):
         self.names = [str(file_name) for file_name in file_names]
 
     def __str__(self):
-        printer = StringPrinter()
-        printer.write('%s: %d' % (type(self).__name__, len(self.names)))
-        for name in sorted(self.names):
-            printer.write('\t%s' % name)
-        return str(printer)
+        with StringPrinter() as printer:
+            printer.write('%s: %d' % (type(self).__name__, len(self.names)))
+            for name in sorted(self.names):
+                printer.write('\t%s' % name)
+            return str(printer)
 
 
 class MissingThumbnails(MissingVideos):
@@ -130,13 +130,13 @@ class VideoInfoErrors(Notification):
         self.video_errors = {str(file_name): errors for file_name, errors in video_errors.items()}
 
     def __str__(self):
-        printer = StringPrinter()
-        printer.write('%s: %d' % (type(self).__name__, len(self.video_errors)))
-        for file_name, errors in self.video_errors.items():
-            printer.title(file_name)
-            for video_error in errors:
-                printer.write('\t%s' % video_error)
-        return str(printer)
+        with StringPrinter() as printer:
+            printer.write('%s: %d' % (type(self).__name__, len(self.video_errors)))
+            for file_name, errors in self.video_errors.items():
+                printer.title(file_name)
+                for video_error in errors:
+                    printer.write('\t%s' % video_error)
+            return str(printer)
 
 
 class VideoThumbnailErrors(VideoInfoErrors):

@@ -3,12 +3,12 @@ from typing import Callable, Optional
 
 import tornado.concurrent
 
+from pysaurus.core.database.api import API
 from pysaurus.interface.common.common_functions import launch_thread
 from pysaurus.interface.server.protocol import DataResponse, Request, Response
 from pysaurus.interface.server.server import Server
 from pysaurus.interface.server_instance import core_notifications, error_responses
 from pysaurus.interface.server_instance.server_context import ServerContext
-from pysaurus.public.api import API
 from pysaurus.tests.test_utils import TEST_LIST_FILE_PATH
 
 ManagerFunction = Callable[[Server, Request], Optional[Response]]

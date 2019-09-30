@@ -1,4 +1,4 @@
-from pysaurus.core.utils.functions import string_to_pieces
+from pysaurus.core.functions import string_to_pieces
 
 
 def test_string_to_pieces():

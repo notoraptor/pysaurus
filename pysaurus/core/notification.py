@@ -1,6 +1,6 @@
 from typing import Callable, Dict
 
-from pysaurus.core.utils.classes import ToDict
+from pysaurus.core.classes import ToDict
 
 
 class Notification(ToDict):

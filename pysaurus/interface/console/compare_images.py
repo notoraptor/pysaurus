@@ -4,13 +4,13 @@ from typing import Any, List
 
 import ujson as json
 
-from pysaurus.core.components.absolute_path import AbsolutePath
+from pysaurus.core.classes import StringPrinter
+from pysaurus.core.components import AbsolutePath
+from pysaurus.core.database.api import API
 from pysaurus.core.database.database import Database
-from pysaurus.core.utils.classes import StringPrinter
-from pysaurus.core.utils.functions import timestamp_microseconds
-from pysaurus.core.video_raptor import alignment as native_alignment
-from pysaurus.core.video_raptor.alignment_utils import Miniature
-from pysaurus.public.api import API
+from pysaurus.core.functions import timestamp_microseconds
+from pysaurus.core.native.video_raptor import alignment as native_alignment
+from pysaurus.core.native.video_raptor.alignment import Miniature
 from pysaurus.tests.test_utils import TEST_LIST_FILE_PATH
 
 PRINT_STEP = 500
@@ -51,44 +51,68 @@ def similar_group_to_html_file(group_id, group, miniatures, database, html_dir, 
     size = len(group)
     min_score = min(node.min_weight() for node in group)
     max_score = max(node.max_weight() for node in group)
-    html = StringPrinter()
-    html.write('<html>')
-    html.write('<header>')
-    html.write('<meta charset="utf-8"/>')
-    html.write('<title>Thumbnails similarities for group %03d</title>' % group_id)
-    html.write('<link rel="stylesheet" href="similarities.css"/>')
-    html.write('</header>')
-    html.write('<body>')
-    html.write('<h1>Group %s, %d files, min score %s, max score %s</h1>' % (group_id, size, min_score, max_score))
-    html.write('<table>')
-    html.write('<thead>')
-    html.write('<tr><th class="header-images">Image</th><th class="header-details">Details</th></tr>')
-    html.write('<tbody>')
-    for node in sorted(group):
-        miniature_i = miniatures[node.node]
-        thumb_path = database.get_video_from_filename(miniature_i.identifier).get_thumbnail_path()
-        html.write('<tr>')
-        html.write('<td class="image">')
-        html.write('<img src="file://%s"/>' % thumb_path)
-        html.write('</td>')
-        html.write('<td class="details">')
-        html.write('<div class="image-file"><strong><code>"%s"</code></strong></div>' % thumb_path)
-        html.write('<div class="origin-file"><em><code>"%s"</em></strong></div>' % miniature_i.identifier)
-        html.write('<div><code><strong><em>[%s]</em></strong></code></div>' % node.node)
-        for output_node in sorted(node.edges):
-            html.write('<div class="score"><code><em>With %s</em>: <strong>%s</strong></code></div>' % (
-                output_node, node.edges[output_node]))
-        html.write('</td>')
-        html.write('</tr>')
-    html.write('</tbody>')
-    html.write('</thead>')
-    html.write('</table>')
-    html.write('</body>')
-    html.write('</html>')
+    with StringPrinter() as html:
+        html.write('<html>')
+        html.write('<header>')
+        html.write('<meta charset="utf-8"/>')
+        html.write('<title>Thumbnails similarities for group %03d</title>' % group_id)
+        html.write("""
+        <style>
+        body {
+            font-family: Verdana, Geneva, sans-serif;
+        }
+        .thumbnail {
+            display: inline-block;
+        }
+        .image {
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: auto;
+        }
+        td {
+            vertical-align: top;
+        }
+        .score {
+            text-align: center;
+            font-weight: bold;
+        }
+        </style>
+        """)
+        html.write('</header>')
+        html.write('<body>')
+        html.write('<h1>Group %s, %d files, min score %s, max score %s</h1>' % (group_id, size, min_score, max_score))
+        html.write('<table>')
+        html.write('<thead>')
+        html.write('<tr><th class="header-images">Image</th><th class="header-details">Details</th></tr>')
+        html.write('<tbody>')
+        for node in sorted(group):
+            miniature_i = miniatures[node.node]
+            thumb_path = database.get_video_from_filename(miniature_i.identifier).get_thumbnail_path()
+            html.write('<tr>')
+            html.write('<td class="image">')
+            html.write('<img src="file://%s"/>' % thumb_path)
+            html.write('</td>')
+            html.write('<td class="details">')
+            html.write('<div class="image-file"><strong><code>"%s"</code></strong></div>' % thumb_path)
+            html.write('<div class="origin-file"><em><code>"%s"</em></strong></div>' % miniature_i.identifier)
+            html.write('<div><code><strong><em>[%s]</em></strong></code></div>' % node.node)
+            for output_node in sorted(node.edges):
+                html.write('<div class="score"><code><em>With %s</em>: <strong>%s</strong></code></div>' % (
+                    output_node, node.edges[output_node]))
+            html.write('</td>')
+            html.write('</tr>')
+        html.write('</tbody>')
+        html.write('</thead>')
+        html.write('</table>')
+        html.write('</body>')
+        html.write('</html>')
 
-    output_file_name = AbsolutePath.join(html_dir, 'sim.%s.%03d.html' % (unique_id, group_id))
-    with open(output_file_name.path, 'wb') as file:
-        file.write(str(html).encode())
+        output_file_name = AbsolutePath.join(html_dir, 'sim.%s.%03d.html' % (unique_id, group_id))
+        with open(output_file_name.path, 'wb') as file:
+            file.write(str(html).encode())
 
 
 def extract_linked_nodes(graph):
@@ -159,8 +183,8 @@ def main():
         similar_group_to_html_file(i + 1, g, miniatures, database, html_dir, unique_id)
 
     json_groups = [
-        {miniatures[node.node].identifier.path:
-             database.get_video_from_filename(miniatures[node.node].identifier).get_thumbnail_path().path
+        {miniatures[node.node].identifier.path: database.get_video_from_filename(
+            miniatures[node.node].identifier).get_thumbnail_path().path
          for node in group}
         for group in sim_groups]
 

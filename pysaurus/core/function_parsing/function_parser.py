@@ -1,6 +1,6 @@
 from typing import Dict
 
-from pysaurus.core.function_parsing import function_parsing_errors
+from pysaurus.core import exceptions
 from pysaurus.core.function_parsing.function_definition import FunctionDefinition
 
 
@@ -23,6 +23,9 @@ class FunctionParser:
         # type: (callable) -> FunctionDefinition
         return self.definitions.get(function.__name__, None)
 
+    def override_definition(self, new_function):
+        self.get_definition(new_function).function = new_function
+
     def remove_definition(self, name_or_function):
         if isinstance(name_or_function, str):
             self.definitions.pop(name_or_function, None)
@@ -38,13 +41,13 @@ class FunctionParser:
 
     def call(self, function_name, function_args=None):
         if function_name not in self.definitions:
-            raise function_parsing_errors.UnknownQuery(function_name)
+            raise exceptions.UnknownQuery(function_name)
         function_definition = self.definitions[function_name]
         if len(function_args) != len(function_definition.arguments):
-            raise function_parsing_errors.InvalidQueryArgCount()
+            raise exceptions.InvalidQueryArgCount()
         kwargs = {}
         for argument_name, argument_parser in function_definition.arguments.items():
             if argument_name not in function_args:
-                raise function_parsing_errors.MissingQueryArg(argument_name)
+                raise exceptions.MissingQueryArg(argument_name)
             kwargs[argument_name] = argument_parser(str(function_args[argument_name]).strip())
         return function_definition.function(**kwargs)

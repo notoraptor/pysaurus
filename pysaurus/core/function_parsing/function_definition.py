@@ -3,25 +3,19 @@ import inspect
 import textwrap
 from typing import Callable, Dict, Optional
 
-from pysaurus.core.utils.classes import StringPrinter
-
-
-def symbol_to_string(symbol):
-    if inspect.isclass(symbol) or inspect.isfunction(symbol) or inspect.ismethod(symbol):
-        return symbol.__name__
-    return str(symbol)
+from pysaurus.core.classes import StringPrinter
 
 
 # Reference (2019/08/20) https://stackoverflow.com/a/14728477
 
 
-class ArgumentParserError(Exception):
+class _ArgumentParserError(Exception):
     pass
 
 
-class ThrowingArgumentParser(argparse.ArgumentParser):
+class _ThrowingArgumentParser(argparse.ArgumentParser):
     def error(self, message):
-        raise ArgumentParserError(message)
+        raise _ArgumentParserError(message)
 
 
 class FunctionDefinition:
@@ -33,7 +27,7 @@ class FunctionDefinition:
         if name is None:
             name = function.__name__
         if arguments is None:
-            arguments = dict()
+            arguments = {}
         if description is None:
             description = ''
         for argument_name, argument_parser in arguments.items():
@@ -45,25 +39,31 @@ class FunctionDefinition:
         self.name = name
 
     def __str__(self):
-        printer = StringPrinter()
-        if not self.arguments:
-            printer.write('%s()' % self.name)
-        else:
-            printer.write('%s(' % self.name, end='')
-            nb_args = len(self.arguments)
-            padding = ' ' * (len(self.name) + 1)
-            for i, (arg_name, arg_parser) in enumerate(sorted(self.arguments.items())):
-                printer.write('%s%s: %s' % (padding if i else '', arg_name, symbol_to_string(arg_parser)),
-                              end=('' if i == nb_args - 1 else ',\n'))
-            printer.write(')')
-        if self.description:
-            padding = ' ' * len(self.name)
-            for line in textwrap.wrap(self.description, width=(70 - len(padding))):
-                printer.write('%s%s' % (padding, line))
-        parser = self.to_command_line()
-        if parser:
-            printer.write(parser.description)
-        return str(printer)
+        with StringPrinter() as printer:
+            if not self.arguments:
+                printer.write('%s()' % self.name)
+            else:
+                printer.write('%s(' % self.name, end='')
+                nb_args = len(self.arguments)
+                padding = ' ' * (len(self.name) + 1)
+                for i, (arg_name, arg_parser) in enumerate(sorted(self.arguments.items())):
+                    printer.write('%s%s: %s' % (padding if i else '', arg_name, self.__symbol_to_string(arg_parser)),
+                                  end=('' if i == nb_args - 1 else ',\n'))
+                printer.write(')')
+            if self.description:
+                padding = ' ' * len(self.name)
+                for line in textwrap.wrap(self.description, width=(70 - len(padding))):
+                    printer.write('%s%s' % (padding, line))
+            parser = self.to_command_line()
+            if parser:
+                printer.write(parser.description)
+            return str(printer)
+
+    @staticmethod
+    def __symbol_to_string(symbol):
+        if inspect.isclass(symbol) or inspect.isfunction(symbol) or inspect.ismethod(symbol):
+            return symbol.__name__
+        return str(symbol)
 
     def to_command_line(self):
         # type: () -> Optional[argparse.ArgumentParser]
@@ -104,7 +104,7 @@ class FunctionDefinition:
         if not self.description:
             padding = ' ' * len(self.name)
             description = '%s%s\n%s%s' % (padding, self.name, padding, ('\n%s' % padding).join(helps))
-        parser = ThrowingArgumentParser(description=description)
+        parser = _ThrowingArgumentParser(description=description)
         for arg_name, arg_parser in sorted(self.arguments.items()):
             parser.add_argument('--%s' % arg_name, '-%s' % long_names[arg_name], type=arg_parser, required=True)
         return parser

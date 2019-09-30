@@ -2,7 +2,7 @@ import sys
 
 import ujson as json
 
-from pysaurus.public.api import API
+from pysaurus.core.database.api import API
 from pysaurus.tests.test_utils import TEST_LIST_FILE_PATH
 
 

@@ -35,6 +35,7 @@ def on_start(server):
 
 
 def on_exit(server):
+    del server
     print('Server closed.')
 
 

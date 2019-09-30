@@ -19,7 +19,7 @@ class ProfilingEnd(Notification):
         self.time = str(time)
 
 
-class Profile(object):
+class Profile:
     __slots__ = ('seconds', 'microseconds')
 
     def __init__(self, time_start, time_end):
@@ -43,7 +43,7 @@ class Profile(object):
         return '(%s)' % (' '.join(pieces) if pieces else '0 sec')
 
 
-class Profiler(object):
+class Profiler:
     __slots__ = ('__title', '__time_start', '__time_end', '__notifier')
     DEFAULT_PLACE_HOLDER = '__time__'
 

@@ -1,13 +1,13 @@
 from typing import List, Tuple
 
-from pysaurus.core.components.absolute_path import AbsolutePath
+from pysaurus.core import functions as utils
+from pysaurus.core.components import AbsolutePath
+from pysaurus.core.constants import VIDEO_BATCH_SIZE
 from pysaurus.core.database import notifications
+from pysaurus.core.modules import ImageUtils
+from pysaurus.core.native.video_raptor import api as video_raptor
+from pysaurus.core.native.video_raptor.alignment import Miniature
 from pysaurus.core.notification import Notifier
-from pysaurus.core.utils import functions as utils
-from pysaurus.core.utils.constants import VIDEO_BATCH_SIZE
-from pysaurus.core.utils.image_utils import DEFAULT_THUMBNAIL_SIZE
-from pysaurus.core.video_raptor import api as video_raptor
-from pysaurus.core.video_raptor.alignment_utils import Miniature
 
 
 def job_collect_videos(job):
@@ -54,7 +54,7 @@ def job_generate_miniatures(job):
     miniatures = []
     count = 0
     for file_name, thumbnail_path in thumbnails:
-        miniatures.append(Miniature.from_file_name(thumbnail_path.path, DEFAULT_THUMBNAIL_SIZE, file_name))
+        miniatures.append(Miniature.from_file_name(thumbnail_path.path, ImageUtils.DEFAULT_THUMBNAIL_SIZE, file_name))
         count += 1
         if count % 500 == 0:
             print('[Generating miniatures on thread %s] %d/%d' % (job_id, count, nb_videos))

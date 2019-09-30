@@ -1,9 +1,8 @@
 from typing import Iterable, Optional
 
-from pysaurus.core.components.absolute_path import AbsolutePath
-from pysaurus.core.components.file_size import FileSize
-from pysaurus.core.utils.classes import StringPrinter
-from pysaurus.core.utils.constants import PYTHON_ERROR_THUMBNAIL
+from pysaurus.core.classes import StringPrinter
+from pysaurus.core.components import AbsolutePath, FileSize
+from pysaurus.core.constants import PYTHON_ERROR_THUMBNAIL
 
 
 class VideoState:
@@ -18,14 +17,14 @@ class VideoState:
         self.video_id = video_id
 
     def __str__(self):
-        printer = StringPrinter()
-        printer.write('VideoState:')
-        printer.write('\tfilename:  ', self.filename)
-        printer.write('\tsize:      ', self.get_size())
-        printer.write('\tunreadable:', self.unreadable)
-        printer.write('\terrors:    ', ', '.join(sorted(self.errors)) if self.errors else '(none)')
-        printer.write('\tvideo_id:  ', self.video_id)
-        return str(printer)
+        with StringPrinter() as printer:
+            printer.write('VideoState:')
+            printer.write('\tfilename:  ', self.filename)
+            printer.write('\tsize:      ', self.get_size())
+            printer.write('\tunreadable:', self.unreadable)
+            printer.write('\terrors:    ', ', '.join(sorted(self.errors)) if self.errors else '(none)')
+            printer.write('\tvideo_id:  ', self.video_id)
+            return str(printer)
 
     @property
     def error_thumbnail(self):

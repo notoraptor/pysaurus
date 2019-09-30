@@ -1,6 +1,6 @@
 import sys
 
-from pysaurus.core.meta.context import Context
+from pysaurus.core.classes import Context
 
 
 class Test(Context):

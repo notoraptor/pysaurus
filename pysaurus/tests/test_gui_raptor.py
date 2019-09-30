@@ -1,14 +1,14 @@
-from pysaurus.core.components.absolute_path import AbsolutePath
-from pysaurus.core.gui_raptor import patterns
-from pysaurus.core.gui_raptor.api import Event, TextInfo, Window
-from pysaurus.core.utils.functions import package_dir
+from pysaurus.core.components import AbsolutePath
+from pysaurus.core.functions import package_dir
+from pysaurus.core.native.gui_raptor import rendering
+from pysaurus.core.native.gui_raptor.api import Event, TextInfo, Window
 
 
 def main2():
     image_folder = AbsolutePath.join(package_dir(), '..', '..', 'guiraptor', 'test')
     path_image_1 = AbsolutePath.join(image_folder, "tigre.jpg")
     path_image_2 = AbsolutePath.join(image_folder, "Tigerramki.jpg")
-    text = patterns.PatternText(content="Hello World! 漢字漢字 漢字! See you soon!", size=50)
+    text = rendering.PatternText(content="Hello World! 漢字漢字 漢字! See you soon!", size=50)
     with TextInfo(text) as text_info:
         print(text_info.length)
         print(text_info.width)
@@ -17,14 +17,14 @@ def main2():
         print(text_info.left)
         print(text_info.coordinates)
     elements = [
-        patterns.PatternImage(src=path_image_1.path, height=100, y=80),
-        patterns.PatternImage(src=path_image_1.path, x=20, y=60),
-        patterns.PatternImage(src=path_image_1.path, x=200, y=200),
-        patterns.PatternImage(src=path_image_2.path, x=100, y=400),
-        patterns.PatternImage(src=path_image_2.path, x=300, y=600),
+        rendering.PatternImage(src=path_image_1.path, height=100, y=80),
+        rendering.PatternImage(src=path_image_1.path, x=20, y=60),
+        rendering.PatternImage(src=path_image_1.path, x=200, y=200),
+        rendering.PatternImage(src=path_image_2.path, x=100, y=400),
+        rendering.PatternImage(src=path_image_2.path, x=300, y=600),
         text
     ]
-    frame = patterns.PatternFrame(x=100, y=100, width=400, height=200, patterns=elements)
+    frame = rendering.PatternFrame(x=100, y=100, width=400, height=200, patterns=elements)
     window = Window(1200, 800, "Hello tigers")
     event = Event()
     with window, event:

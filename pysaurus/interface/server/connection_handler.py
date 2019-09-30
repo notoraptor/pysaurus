@@ -3,9 +3,9 @@ import traceback
 from urllib.parse import urlparse
 
 import ujson as json
-from pysaurus.core.error import PysaurusError
 from tornado.websocket import WebSocketClosedError, WebSocketHandler
 
+from pysaurus.core.exceptions import PysaurusError
 from pysaurus.interface.server import protocol
 
 REQUEST_ID = 'request_id'
