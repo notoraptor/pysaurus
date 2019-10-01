@@ -1,7 +1,9 @@
 from abc import abstractmethod
 from io import StringIO
 from itertools import chain
-from typing import Any, List
+from typing import Any, List, Generic, TypeVar
+
+T = TypeVar('T')
 
 from pysaurus.core.functions import to_printable
 
@@ -46,13 +48,16 @@ class Table:
         self.lines = lines
 
     def __str__(self):
-        header_sizes = [max(len(str(self.headers[i])), max(len(str(line[i])) for line in self.lines if line)) + 2
+        header_sizes = [max(len(str(self.headers[i])),
+                            max(len(str(line[i])) for line in self.lines if line)) + 2
                         for i in range(len(self.headers))]
         with StringPrinter() as printer:
-            printer.write(''.join(str(self.headers[i]).ljust(header_sizes[i]) for i in range(len(self.headers))))
+            printer.write(''.join(
+                str(self.headers[i]).ljust(header_sizes[i]) for i in range(len(self.headers))))
             for line in self.lines:
                 if line:
-                    printer.write(''.join(str(line[i]).ljust(header_sizes[i]) for i in range(len(self.headers))))
+                    printer.write(''.join(
+                        str(line[i]).ljust(header_sizes[i]) for i in range(len(self.headers))))
                 else:
                     printer.write()
             return str(printer)
@@ -70,7 +75,8 @@ class ToDict:
     def get_slots(self):
         if hasattr(self, '__props__'):
             return self.__props__
-        return sorted(chain.from_iterable(getattr(cls, '__slots__', []) for cls in type(self).__mro__))
+        return sorted(
+            chain.from_iterable(getattr(cls, '__slots__', []) for cls in type(self).__mro__))
 
     def to_dict(self, **extra):
         dct = {field: getattr(self, field) for field in self.get_slots()}
@@ -81,7 +87,8 @@ class ToDict:
     def __str__(self):
         return '%s(%s)' % (
             self.get_name(),
-            ', '.join('%s=%s' % (name, to_printable(getattr(self, name))) for name in self.get_slots()))
+            ', '.join(
+                '%s=%s' % (name, to_printable(getattr(self, name))) for name in self.get_slots()))
 
 
 class Enumeration:
@@ -124,3 +131,25 @@ class Context:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.on_exit()
         self._context = False
+
+
+class ListView(Generic[T]):
+    __slots__ = ('__seq', '__start', '__end')
+
+    def __init__(self, sequence, start, end):
+        # type: (List[T], int, int) -> None
+        self.__seq = sequence
+        self.__start = max(len(sequence) + start if start < 0 else start, 0)
+        self.__end = min(max(len(sequence) + end if end < 0 else end, self.__start), len(sequence))
+
+    def __len__(self):
+        return self.__end - self.__start
+
+    def __bool__(self):
+        return self.__end != self.__start
+
+    def __getitem__(self, item):
+        return self.__seq[self.__end + item if item < 0 else self.__start + item]
+
+    def __iter__(self):
+        return (self.__seq[i] for i in range(self.__start, self.__end))

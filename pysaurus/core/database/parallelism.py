@@ -8,6 +8,7 @@ from pysaurus.core.modules import ImageUtils
 from pysaurus.core.native.video_raptor import api as video_raptor
 from pysaurus.core.native.video_raptor.alignment import Miniature
 from pysaurus.core.notification import Notifier
+from pysaurus.core.classes import ListView
 
 
 def job_collect_videos(job):
@@ -26,7 +27,7 @@ def job_videos_info(job):
     collector = video_raptor.VideoInfoCollector(VIDEO_BATCH_SIZE)
     while cursor < count_tasks:
         notifier.notify(notifications.VideoJob(job_id, cursor, count_tasks))
-        results.extend(collector.collect(file_names[cursor:(cursor + VIDEO_BATCH_SIZE)]))
+        results.extend(collector.collect(ListView(file_names, cursor, cursor + VIDEO_BATCH_SIZE)))
         cursor += VIDEO_BATCH_SIZE
     notifier.notify(notifications.VideoJob(job_id, count_tasks, count_tasks))
     return file_names, results
@@ -40,8 +41,8 @@ def job_videos_thumbnails(job):
     generator = video_raptor.VideoThumbnailGenerator(VIDEO_BATCH_SIZE, thumb_folder)
     while cursor < count_tasks:
         notifier.notify(notifications.ThumbnailJob(job_id, cursor, count_tasks))
-        results.extend(generator.generate(file_names[cursor:(cursor + VIDEO_BATCH_SIZE)],
-                                          thumb_names[cursor:(cursor + VIDEO_BATCH_SIZE)]))
+        results.extend(generator.generate(ListView(file_names, cursor, cursor + VIDEO_BATCH_SIZE),
+                                          ListView(thumb_names, cursor, cursor + VIDEO_BATCH_SIZE)))
         cursor += VIDEO_BATCH_SIZE
     notifier.notify(notifications.ThumbnailJob(job_id, count_tasks, count_tasks))
     return file_names, results

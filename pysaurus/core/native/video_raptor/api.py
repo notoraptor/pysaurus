@@ -4,6 +4,7 @@ from typing import List, Optional
 
 from pysaurus.core.modules import System
 from pysaurus.core.native.video_raptor import symbols
+from pysaurus.core.classes import ListView
 
 if System.is_linux():
     # Trying to prevent this warning on Ubuntu:
@@ -68,37 +69,6 @@ def _info_to_params(video_info: symbols.VideoInfo):
             'size': video_info.size, 'audio_bit_rate': video_info.audio_bit_rate}
 
 
-def collect_video_info(file_names):
-    # type: (List[str]) -> List[VideoRaptorResult]
-
-    if not file_names:
-        return []
-
-    output = [None] * len(file_names)  # type: List[Optional[VideoRaptorResult]]
-    encoded_file_names = [file_name.encode() for file_name in file_names]
-    video_info_objects = [symbols.VideoInfo() for _ in file_names]
-    video_info_pointers = [pointer(v) for v in video_info_objects]
-    array_type = symbols.PtrVideoInfo * len(file_names)
-    array_object = array_type(*video_info_pointers)
-
-    for i in range(len(file_names)):
-        symbols.fn_VideoInfo_init(video_info_pointers[i], c_char_p(encoded_file_names[i]))
-
-    symbols.fn_videoRaptorDetails(len(file_names), symbols.PtrPtrVideoInfo(array_object))
-
-    for i in range(len(file_names)):
-        video_info = video_info_objects[i]
-        done = _info_to_params(video_info) if symbols.fn_VideoReport_isDone(pointer(video_info.report)) else None
-        errors = get_video_info_errors(video_info.report)
-        if done and errors:
-            done['errors'] = errors
-            errors = None
-        output[i] = VideoRaptorResult(done=done, errors=errors)
-        symbols.fn_VideoInfo_clear(video_info_pointers[i])
-
-    return output
-
-
 class VideoInfoCollector:
     __slots__ = ('buffer_size', 'objects', 'pointers', 'array_type', 'array_object')
 
@@ -110,7 +80,7 @@ class VideoInfoCollector:
         self.array_object = self.array_type(*self.pointers)
 
     def collect(self, file_names):
-        # type: (List[str]) -> List[VideoRaptorResult]
+        # type: (ListView[str]) -> List[VideoRaptorResult]
 
         assert len(file_names) <= self.buffer_size
         output = [None] * len(file_names)  # type: List[Optional[VideoRaptorResult]]
@@ -148,7 +118,7 @@ class VideoThumbnailGenerator:
         self.c_output_folder = c_char_p(self.encoded_output_folder)
 
     def generate(self, file_names, thumb_names):
-        # type: (List[str], List[str]) -> List[VideoRaptorResult]
+        # type: (ListView[str], ListView[str]) -> List[VideoRaptorResult]
 
         assert len(file_names) == len(thumb_names) <= self.buffer_size
         output = [None] * len(file_names)  # type: List[Optional[VideoRaptorResult]]

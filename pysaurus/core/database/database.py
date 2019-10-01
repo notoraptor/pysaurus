@@ -65,10 +65,12 @@ class Database:
                                               for video in self.__videos.values()))
     valid_size = property(lambda self: FileSize(sum(video.size
                                                     for video in self.__videos.values()
-                                                    if isinstance(video, Video) and video.filename.isfile())))
+                                                    if isinstance(video, Video)
+                                                    and video.filename.isfile())))
     valid_length = property(lambda self: Duration(sum(video.get_duration().total_microseconds
                                                       for video in self.__videos.values()
-                                                      if isinstance(video, Video) and video.filename.isfile())))
+                                                      if isinstance(video, Video)
+                                                      and video.filename.isfile())))
     videos_not_found = property(lambda self: (video for video in self.__videos.values()
                                               if not video.filename.isfile()))
     unreadable_videos = property(lambda self: (video for video in self.__videos.values()
@@ -110,7 +112,7 @@ class Database:
                 results = list(executor.map(parallelism.job_collect_videos, jobs))
         for local_result in results:  # type: List[AbsolutePath]
             paths.extend(local_result)
-        self.__notify(notifications.FinishedCollectingVideos(paths))
+        self.__notifier.notify(notifications.FinishedCollectingVideos(paths))
         return paths
 
     def __notify_missing_thumbnails(self):
@@ -120,10 +122,7 @@ class Database:
             if (isinstance(video, Video) and video.filename.isfile()
                     and (video.error_thumbnail or video.ensure_thumbnail_name() not in existing_thumb_names)):
                 remaining_thumb_videos.append(video.filename.path)
-        self.__notify(notifications.MissingThumbnails(remaining_thumb_videos))
-
-    def __notify(self, notification):
-        self.__notifier.notify(notification)
+        self.__notifier.notify(notifications.MissingThumbnails(remaining_thumb_videos))
 
     # Private methods.
 
@@ -163,7 +162,7 @@ class Database:
                 self.__discarded[video_state.filename] = video_state
 
         # Notify database loaded.
-        self.__notify(notifications.DatabaseLoaded(self))
+        self.__notifier.notify(notifications.DatabaseLoaded(self))
 
     def __ensure_identifiers(self):
         without_identifiers = []
@@ -191,7 +190,7 @@ class Database:
         json_output['videos'].sort(key=lambda dct: dct['f'])
         with open(self.__json_path.path, 'w') as output_file:
             json.dump(json_output, output_file)
-        self.__notify(notifications.DatabaseSaved(self))
+        self.__notifier.notify(notifications.DatabaseSaved(self))
 
     def update(self):
         cpu_count = os.cpu_count()
@@ -207,7 +206,7 @@ class Database:
 
         nb_to_load = len(all_file_names)
 
-        self.__notify(notifications.VideosToLoad(nb_to_load))
+        self.__notifier.notify(notifications.VideosToLoad(nb_to_load))
         if not all_file_names:
             return
 
@@ -236,7 +235,7 @@ class Database:
         if video_errors:
             for file_name, errors in video_errors.items():
                 self.__videos[file_name] = VideoState(file_name, file_name.get_size(), True, errors, None)
-            self.__notify(notifications.VideoInfoErrors(video_errors))
+            self.__notifier.notify(notifications.VideoInfoErrors(video_errors))
         if videos or video_errors:
             self.save()
 
@@ -258,7 +257,8 @@ class Database:
                 else:
                     videos_without_thumbs.append(video)
 
-        # If a thumbnail name is associated to many videos, consider these videos don't have thumbnails.
+        # If a thumbnail name is associated to many videos,
+        # consider these videos don't have thumbnails.
         for valid_thumb_name, vds in thumb_to_videos.items():
             if len(vds) == 1:
                 valid_thumb_names.add(valid_thumb_name)
@@ -267,7 +267,7 @@ class Database:
         nb_videos_no_thumbs = len(videos_without_thumbs)
         del thumb_to_videos
 
-        self.__notify(notifications.ThumbnailsToLoad(nb_videos_no_thumbs))
+        self.__notifier.notify(notifications.ThumbnailsToLoad(nb_videos_no_thumbs))
         if not videos_without_thumbs:
             self.__notify_missing_thumbnails()
             return
@@ -309,7 +309,7 @@ class Database:
 
         self.__notify_missing_thumbnails()
         if thumb_errors:
-            self.__notify(notifications.VideoThumbnailErrors(thumb_errors))
+            self.__notifier.notify(notifications.VideoThumbnailErrors(thumb_errors))
         self.save()
 
     def ensure_miniatures(self):
@@ -376,7 +376,7 @@ class Database:
                 self.delete_video(video)
                 nb_removed += 1
         if nb_removed:
-            self.__notify(notifications.VideosNotFoundRemoved(nb_removed))
+            self.__notifier.notify(notifications.VideosNotFoundRemoved(nb_removed))
             self.save()
 
     def delete_video(self, video):
@@ -411,7 +411,7 @@ class Database:
                 thumb_name = video.ensure_thumbnail_name()
                 if thumb_name in existing_thumb_names:
                     existing_thumb_names.remove(thumb_name)
-        self.__notify(notifications.UnusedThumbnails(len(existing_thumb_names)))
+        self.__notifier.notify(notifications.UnusedThumbnails(len(existing_thumb_names)))
         for unused_thumb_name in existing_thumb_names:
             AbsolutePath.join(
                 self.__database_path.path, '%s.%s' % (unused_thumb_name, THUMBNAIL_EXTENSION)).delete()
