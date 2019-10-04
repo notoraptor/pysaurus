@@ -12,7 +12,7 @@ from pysaurus.core.functions import bool_type
 from pysaurus.core.notification import Notifier
 
 NbType = Enumeration(('entries', 'discarded', 'not_found', 'found', 'unreadable', 'valid', 'thumbnails'))
-FieldType = Enumeration(Video.TABLE_FIELDS)
+FieldType = Enumeration(Video.ROW_FIELDS)
 
 
 class API:
@@ -20,18 +20,10 @@ class API:
 
     def __init__(self, list_file_path, notifier=None):
         # type: (Union[str, AbsolutePath], Notifier) -> None
-        self.database = API.load_database(list_file_path, notifier=notifier)
-
-    @staticmethod
-    def load_database(list_file_path, notifier=None):
-        # type: (Union[str, AbsolutePath], Notifier) -> Database
         paths = path_utils.load_path_list_file(list_file_path)
         database_folder = list_file_path.get_directory()
-        database = Database(path=database_folder, folders=paths, notifier=notifier)
-        database.update()
-        database.ensure_thumbnails()
-        database.ensure_miniatures()
-        return database
+        self.database = Database(path=database_folder, folders=paths, notifier=notifier)
+        self.update()
 
     def export_api(self, function_parser):
         # type: (FunctionParser) -> None
@@ -90,7 +82,7 @@ class API:
 
     def clear_not_found(self):
         # type: () -> None
-        self.database.remove_videos_not_found(save=True)
+        self.database.remove_videos_not_found()
 
     def info(self, video_id):
         # type: (int) -> Union[Video, VideoState]
@@ -137,14 +129,16 @@ class API:
         return self.database.delete_video(video_state)
 
     def delete_unreadable_from_filename(self, filename):
-        video_state = self.database.get_video_from_filename(filename, required=True, accept_unreadable=True)
+        video_state = self.database.get_video_from_filename(
+            filename, required=True, accept_unreadable=True)
         if not video_state.unreadable:
             raise exceptions.UnknownUnreadableFilename(filename)
         return self.database.delete_video(video_state)
 
     def delete_from_filename(self, filename):
         # type: (str) -> AbsolutePath
-        return self.database.delete_video(self.database.get_video_from_filename(filename, required=True))
+        return self.database.delete_video(
+            self.database.get_video_from_filename(filename, required=True))
 
     def rename(self, video_id, new_title):
         # type: (int, str) -> int
@@ -193,7 +187,8 @@ class API:
 
     def videos(self):
         # type: () -> Table
-        return Table(headers=Video.TABLE_FIELDS, lines=[video.to_table_line() for video in self.database.valid_videos])
+        return Table(headers=Video.ROW_FIELDS,
+                     lines=[video.to_row() for video in self.database.valid_videos])
 
     def not_found(self):
         return sorted(self.database.videos_not_found, key=lambda video: video.filename)
@@ -202,7 +197,8 @@ class API:
         return sorted(self.database.unreadable_videos, key=lambda video: video.filename)
 
     def missing_thumbnails(self):
-        return sorted(self.database.valid_videos_missing_thumbnails, key=lambda video: video.filename)
+        return sorted(self.database.valid_videos_missing_thumbnails,
+                      key=lambda video: video.filename)
 
     def reset_thumbnail_errors(self):
         count = 0

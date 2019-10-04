@@ -1,6 +1,6 @@
 from ctypes import POINTER, Structure, c_bool, c_char_p, c_float, c_int, c_size_t, c_uint, c_void_p
 
-from pysaurus.core.native.binding import CLibrary
+from pysaurus.core.native.clibrary import CLibrary
 
 FloatPtr = POINTER(c_float)
 

@@ -4,8 +4,8 @@ from typing import Any, Iterable, List, Optional, Tuple
 
 from pysaurus.core.constants import VIDEO_BATCH_SIZE
 from pysaurus.core.modules import ImageUtils
-from pysaurus.core.native.video_raptor.symbols import (PtrPtrSequence, PtrSequence, Sequence, c_int_p,
-                                                       fn_classifySimilarities)
+from pysaurus.core.native.video_raptor.symbols import (PtrPtrSequence, PtrSequence, Sequence,
+                                                       c_int_p, fn_classifySimilarities)
 from pysaurus.core.profiling import Profiler
 
 
@@ -96,7 +96,8 @@ def classify_similarities(miniatures):
             i_from = cursor
             i_to = cursor + VIDEO_BATCH_SIZE
             print('[%s;%s[/%s' % (i_from, i_to, nb_sequences))
-            fn_classifySimilarities(PtrPtrSequence(pointer_array_type(*native_sequence_pointers)),
-                                    nb_sequences, i_from, i_to, miniatures[0].width, miniatures[0].height, native_edges)
+            fn_classifySimilarities(
+                PtrPtrSequence(pointer_array_type(*native_sequence_pointers)), nb_sequences,
+                i_from, i_to, miniatures[0].width, miniatures[0].height, native_edges)
             cursor = i_to
     return native_edges

@@ -13,7 +13,8 @@ def main():
     with open(sys.argv[1]) as file:
         similarities = json.load(file)
     print('LOADING DATABASE')
-    database = API.load_database(TEST_LIST_FILE_PATH)
+    api = API(TEST_LIST_FILE_PATH)
+    database = api.database
     with open('output.tsv', 'wb') as file:
         for group_id, group in enumerate(similarities):
             videos = []
@@ -24,7 +25,7 @@ def main():
             videos.sort(key=lambda v: v.size)
             file.write(('%d\n' % (group_id + 1)).encode())
             for video in videos:
-                file.write(('\t%s\t"%s"\n' % (str(video.get_size()).ljust(10), video.filename)).encode())
+                file.write(('\t%s\t"%s"\n' % (str(video.size).ljust(10), video.filename)).encode())
 
 
 if __name__ == '__main__':

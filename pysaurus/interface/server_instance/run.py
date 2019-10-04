@@ -46,7 +46,8 @@ async def on_request(server, request):
 
 def main():
     parser = argparse.ArgumentParser(description='Run server.')
-    parser.add_argument('--port', '-p', type=int, default=DEFAULT_PORT, help='server port (default %s)' % DEFAULT_PORT)
+    parser.add_argument('--port', '-p', type=int, default=DEFAULT_PORT,
+                        help='server port (default %s)' % DEFAULT_PORT)
     args = parser.parse_args()
     try:
         server = Server(context=ServerContext())

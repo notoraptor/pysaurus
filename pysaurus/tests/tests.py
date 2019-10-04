@@ -1,5 +1,5 @@
 from pysaurus.core.classes import ListView
-import typing
+
 
 class Test:
     def test_list_view(self):
@@ -15,7 +15,6 @@ class Test:
 
 def main():
     test = Test()
-    methods = []
     for field in sorted(dir(test)):
         if field.startswith('test_') and callable(getattr(test, field)):
             print(field, '...', end='')

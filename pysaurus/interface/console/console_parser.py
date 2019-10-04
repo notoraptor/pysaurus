@@ -37,7 +37,7 @@ class ConsoleParser(FunctionParser):
                 lines.append([
                     video.filename.get_date_modified(),
                     video.video_id,
-                    video.get_size(),
+                    video.size,
                     video.filename
                 ])
             return Table(headers=headers, lines=lines)
@@ -54,7 +54,7 @@ class ConsoleParser(FunctionParser):
                         lines.append(['',
                                       video.filename.get_date_modified(),
                                       video.video_id,
-                                      video.get_size(),
+                                      video.size,
                                       video.filename])
                     printer.write(Table(headers, lines))
                 else:

@@ -23,7 +23,7 @@ import tornado.web
 import ujson as json
 from tornado.gen import multi
 from tornado.ioloop import IOLoop
-from tornado.queues import Queue
+from tornado.queues import Queue, Future
 from tornado.websocket import WebSocketClosedError
 
 from pysaurus.interface.server import common, protocol
@@ -200,7 +200,7 @@ class Server(ConnectionManager):
         io_loop.start()
 
     def notify(self, notification):
-        # type: (protocol.Notification) -> None
+        # type: (protocol.Notification) -> Future[None]
         return self.__notifications.put(notification)
 
     def open_connection(self, connection_handler):

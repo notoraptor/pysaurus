@@ -1,3 +1,18 @@
+"""
+Video class. Properties:
+
+- length: Return a Duration object representing the video duration.
+  Based on raw duration fields `duration` and `duration_time_base`, we have: ::
+
+    duration = (number of seconds) * duration_time_base
+
+  So: ::
+
+    (number of seconds) = duration / duration_time_base
+
+
+"""
+
 import base64
 from io import BytesIO
 
@@ -14,52 +29,26 @@ WORK_MODE = 'RGB'
 
 
 class Video(VideoState):
+
     # Currently 14 fields.
-    __slots__ = ('title', 'container_format', 'width', 'height',
+    __slots__ = ('meta_title', 'container_format', 'width', 'height',
                  'audio_codec', 'video_codec', 'audio_codec_description', 'video_codec_description',
                  'frame_rate_num', 'frame_rate_den', 'sample_rate', 'duration', 'duration_time_base',
                  'audio_bit_rate', 'thumb_name', 'database')
 
-    TABLE_FIELDS = (
+    ROW_FIELDS = (
         # basic fields
         'filename', 'container_format', 'width', 'height',
         'audio_codec', 'video_codec', 'audio_codec_description', 'video_codec_description',
         'sample_rate', 'audio_bit_rate', 'errors',
         # special fields
-        'frame_rate', 'duration', 'size', 'date', 'title', 'meta_title', 'file_title', 'extension')
+        'frame_rate', 'length', 'size', 'date', 'title', 'meta_title', 'file_title', 'extension')
 
-    def to_table_line(self):
-        return [
-            # basic fields
-            self.filename,
-            self.container_format,
-            self.width,
-            self.height,
-            self.audio_codec,
-            self.video_codec,
-            self.audio_codec_description,
-            self.video_codec_description,
-            self.sample_rate,
-            self.audio_bit_rate,
-            self.errors,
-            # special fields
-            self.get_frame_rate(),
-            self.get_duration(),
-            self.get_size(),
-            self.filename.get_date_modified(),
-            self.get_title(),
-            self.title,
-            self.filename.title,
-            self.filename.extension
-        ]
+    def to_row(self):
+        return [getattr(self, field) for field in self.ROW_FIELDS]
 
     def get(self, field):
-        return self.to_table_line()[self.TABLE_FIELDS.index(field)]
-
-    def info(self, **extra):
-        info = {field: value for (field, value) in zip(self.TABLE_FIELDS, self.to_table_line())}
-        info.update(extra)
-        return info
+        return getattr(self, field)
 
     MIN_TO_LONG = {'f': 'filename', 'n': 'title', 'c': 'container_format', 'a': 'audio_codec', 'v': 'video_codec',
                    'A': 'audio_codec_description', 'V': 'video_codec_description',
@@ -83,15 +72,15 @@ class Video(VideoState):
             errors,
             video_id if isinstance(video_id, int) else None)
         self.database = database
-        self.title = ''
+        self.meta_title = ''
         if title:
-            self.title = HTMLStripper.strip(title)
+            self.meta_title = HTMLStripper.strip(title)
             strip_again = True
             while strip_again:
                 strip_again = False
                 for character in ('"', "'"):
-                    if self.title.startswith(character) and self.title.endswith(character):
-                        self.title = self.title.strip(character)
+                    if self.meta_title.startswith(character) and self.meta_title.endswith(character):
+                        self.meta_title = self.meta_title.strip(character)
                         strip_again = True
         self.container_format = container_format or ''
         self.audio_codec = audio_codec or ''
@@ -115,27 +104,19 @@ class Video(VideoState):
                                'audio_codec', 'video_codec', 'audio_codec_description', 'video_codec_description',
                                'width', 'height', 'sample_rate', 'audio_bit_rate'):
                 printer.write('\t%s: %s' % (field_name, getattr(self, field_name)))
-            printer.write('\tframe_rate: %s' % self.get_frame_rate())
-            printer.write('\tduration: %s' % (self.get_duration()))
-            printer.write('\tsize: %s' % (self.get_size()))
+            printer.write('\tframe_rate: %s' % self.frame_rate)
+            printer.write('\tduration: %s' % self.length)
+            printer.write('\tsize: %s' % self.size)
             if self.errors:
                 printer.write('\terror(s): %s' % (', '.join(sorted(self.errors))))
             return str(printer)
 
-    def get_title(self):
-        return self.title if self.title else self.filename.title
-
-    def get_frame_rate(self):
-        return self.frame_rate_num / self.frame_rate_den
-
-    def get_duration(self):
-        """ Return a Duration object representing the video duration.
-            Based on raw duration fields `duration` and `duration_time_base`, we have:
-                duration = (number of seconds) * duration_time_base
-            So
-                (number of seconds) = duration / duration_time_base
-        """
-        return Duration(round(self.duration * 1000000 / self.duration_time_base))
+    title = property(lambda self: self.meta_title if self.meta_title else self.filename.title)
+    frame_rate = property(lambda self: self.frame_rate_num / self.frame_rate_den)
+    date = property(lambda self: self.filename.get_date_modified())
+    file_title = property(lambda self: self.filename.title)
+    extension = property(lambda self: self.filename.extension)
+    length = property(lambda self: Duration(round(self.duration * 1000000 / self.duration_time_base)))
 
     def get_thumbnail_path(self):
         return path_utils.generate_thumb_path(self.database.folder, self.ensure_thumbnail_name())

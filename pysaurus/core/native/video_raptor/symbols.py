@@ -1,6 +1,6 @@
 from ctypes import POINTER, Structure, c_bool, c_char, c_char_p, c_double, c_int, c_int64, c_size_t, c_uint
 
-from pysaurus.core.native.binding import CLibrary
+from pysaurus.core.native.clibrary import CLibrary
 
 ERROR_DETAIL_MAX_LENGTH = 64
 

@@ -63,11 +63,11 @@ class Database:
                                               and video.filename.isfile()
                                               and video.thumbnail_is_valid()
                                               for video in self.__videos.values()))
-    valid_size = property(lambda self: FileSize(sum(video.size
+    valid_size = property(lambda self: FileSize(sum(video.file_size
                                                     for video in self.__videos.values()
                                                     if isinstance(video, Video)
                                                     and video.filename.isfile())))
-    valid_length = property(lambda self: Duration(sum(video.get_duration().total_microseconds
+    valid_length = property(lambda self: Duration(sum(video.length.total_microseconds
                                                       for video in self.__videos.values()
                                                       if isinstance(video, Video)
                                                       and video.filename.isfile())))
@@ -182,7 +182,8 @@ class Database:
     def save(self):
         self.__ensure_identifiers()
         # Save database.
-        json_output = {'folders': [folder.path for folder in self.__folders],
+        json_output = {'date': self.__date.time,
+                       'folders': [folder.path for folder in self.__folders],
                        'videos': [video.to_dict()
                                   for dct in (self.__videos, self.__discarded)
                                   for video in dct.values()]}
@@ -198,10 +199,12 @@ class Database:
         videos = {}
         all_file_names = []
 
-        for file_name in self.__get_videos_paths_from_disk():  # type: AbsolutePath
+        file_names = self.__get_videos_paths_from_disk()
+        current_date = DateModified.now()
+        for file_name in file_names:  # type: AbsolutePath
             if (file_name not in self.__videos
                     or file_name.get_date_modified() >= self.__date
-                    or file_name.get_size() != self.__videos[file_name].size):
+                    or file_name.get_size() != self.__videos[file_name].file_size):
                 all_file_names.append(file_name.path)
 
         nb_to_load = len(all_file_names)
@@ -237,6 +240,7 @@ class Database:
                 self.__videos[file_name] = VideoState(file_name, file_name.get_size(), True, errors, None)
             self.__notifier.notify(notifications.VideoInfoErrors(video_errors))
         if videos or video_errors:
+            self.__date = current_date
             self.save()
 
     def ensure_thumbnails(self):
@@ -302,7 +306,7 @@ class Database:
             nb_results += len(local_file_names)
             for file_name, thumb_result in zip(local_file_names, local_thumb_results):  # type: (str, VideoRaptorResult)
                 if not thumb_result.done:
-                    thumb_errors[file_name] = thumb_result.errors if thumb_result.errors else [PYTHON_ERROR_NOTHING]
+                    thumb_errors[file_name] = thumb_result.errors or [PYTHON_ERROR_NOTHING]
                     self.__videos[AbsolutePath(file_name)].error_thumbnail = True
         del thumb_results
         assert nb_results == nb_videos_no_thumbs
@@ -324,7 +328,7 @@ class Database:
                 raise exceptions.PysaurusError('Miniatures file does not contain a list.')
             for dct in json_dict:
                 video = self.get_video_from_filename(AbsolutePath.ensure(dct['i']))
-                if video and video.filename.exists() and ImageUtils.DEFAULT_THUMBNAIL_SIZE == (dct['w'], dct['h']):
+                if video and video.filename.isfile() and ImageUtils.DEFAULT_THUMBNAIL_SIZE == (dct['w'], dct['h']):
                     miniature = Miniature.from_dict(dct)
                     miniatures[miniature.identifier] = miniature
             del json_dict
