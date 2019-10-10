@@ -142,6 +142,7 @@ class Database:
         # Parsing date.
         if 'date' in json_dict:
             self.__date = DateModified(json_dict['date'])
+
         # Parsing folders.
         if not clear_old_folders:
             for path in json_dict.get('folders', ()):
@@ -149,6 +150,7 @@ class Database:
         if folders:
             for path in folders:
                 self.__folders.add(AbsolutePath.ensure(path))
+
         # Parsing videos.
         for video_dict in json_dict.get('videos', ()):
             if 'U' in video_dict:
