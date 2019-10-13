@@ -73,6 +73,9 @@ class AbsolutePath(object):
     def listdir(self):
         return os.listdir(self.__path)
 
+    def walk(self):
+        return os.walk(self.__path)
+
     def get_basename(self):
         return os.path.basename(self.__path)
 
@@ -112,7 +115,7 @@ class AbsolutePath(object):
 
     def new_title(self, title):
         # type: (str) -> AbsolutePath
-        new_path = AbsolutePath.new_file_path(self.get_directory(), title, self.extension)
+        new_path = FilePath(self.get_directory(), title, self.extension)
         if new_path.exists():
             raise OSError('Unable to rename (destination already exists) to', new_path)
         os.rename(self.__path, new_path.path)
@@ -143,18 +146,6 @@ class AbsolutePath(object):
         return path if isinstance(path, AbsolutePath) else AbsolutePath(str(path))
 
     @classmethod
-    def new_file_path(cls, folder_path, file_title, file_extension):
-        """ Create a new file path with a folder, a file title and a file extension.
-            Each piece will be converted to a string.
-        :param folder_path: folder path.
-        :param file_title: file title.
-        :param file_extension: file extension.
-        :return: a new AbsolutePath.
-        :rtype: AbsolutePath
-        """
-        return AbsolutePath(os.path.join(str(folder_path), '%s.%s' % (file_title, file_extension)))
-
-    @classmethod
     def join(cls, *args):
         """ Join pieces to create an absolute path (similar to os.path.join(...)).
         :param args: pieces of path to join (each converted to a string).
@@ -162,6 +153,21 @@ class AbsolutePath(object):
         :rtype: AbsolutePath
         """
         return AbsolutePath(os.path.join(*(str(piece) for piece in args)))
+
+
+PathType = Union[AbsolutePath, str]
+
+
+class FilePath(AbsolutePath):
+    def __init__(self, folder_path, file_title, file_extension):
+        # type: (PathType, str, str) -> None
+        """ Create a new file path with a folder, a file title and a file extension.
+            Each piece will be converted to a string.
+        :param folder_path: folder path.
+        :param file_title: file title.
+        :param file_extension: file extension.
+        """
+        super().__init__(os.path.join(str(folder_path), '%s.%s' % (file_title, file_extension)))
 
 
 class DateModified:

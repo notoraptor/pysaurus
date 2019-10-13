@@ -1,6 +1,6 @@
 from typing import Iterable, Union
 
-from pysaurus.core.components import AbsolutePath
+from pysaurus.core.components import AbsolutePath, FilePath
 from pysaurus.core.constants import THUMBNAIL_EXTENSION
 from pysaurus.core.functions import whirlpool_hash
 
@@ -12,7 +12,7 @@ def generate_thumb_name(file_name):
 
 def generate_thumb_path(folder, thumb_name):
     # type: (AbsolutePath, str) -> AbsolutePath
-    return AbsolutePath.new_file_path(folder, thumb_name, THUMBNAIL_EXTENSION)
+    return FilePath(folder, thumb_name, THUMBNAIL_EXTENSION)
 
 
 def load_list_file(list_file_path):

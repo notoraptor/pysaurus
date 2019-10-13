@@ -28,21 +28,112 @@ from pysaurus.core.modules import HTMLStripper, VideoClipping
 WORK_MODE = 'RGB'
 
 
+def html_to_title(title):
+    # type: (str) -> str
+    """
+    Remove HTML tags, simple starting/ending quotes and double starting/ending quotes from given string.
+    :param title: text to clear
+    :return: cleared text
+    """
+    if title:
+        title = HTMLStripper.strip(title)
+        strip_again = True
+        while strip_again:
+            strip_again = False
+            for character in ('"', "'"):
+                if title.startswith(character) and title.endswith(character):
+                    title = title.strip(character)
+                    strip_again = True
+    return title
+
+
 class Video(VideoState):
+    UNREADABLE = False
 
     # Currently 14 fields.
-    __slots__ = ('meta_title', 'container_format', 'width', 'height',
+    __slots__ = ('meta_title', 'container_format',
                  'audio_codec', 'video_codec', 'audio_codec_description', 'video_codec_description',
-                 'frame_rate_num', 'frame_rate_den', 'sample_rate', 'duration', 'duration_time_base',
-                 'audio_bit_rate', 'thumb_name', 'database')
+                 'width', 'height', 'frame_rate_num', 'frame_rate_den', 'sample_rate',
+                 'duration', 'duration_time_base', 'audio_bit_rate', 'thumb_name')
+
+    MIN_TO_LONG = {'n': 'meta_title', 'c': 'container_format', 'a': 'audio_codec', 'v': 'video_codec',
+                   'A': 'audio_codec_description', 'V': 'video_codec_description',
+                   'w': 'width', 'h': 'height', 'x': 'frame_rate_num', 'y': 'frame_rate_den', 'u': 'sample_rate',
+                   'd': 'duration', 't': 'duration_time_base', 'r': 'audio_bit_rate', 'i': 'thumb_name'}
+
+    LONG_TO_MIN = {_long: _min for _min, _long in MIN_TO_LONG.items()}
 
     ROW_FIELDS = (
         # basic fields
-        'filename', 'container_format', 'width', 'height',
+        'filename', 'errors', 'meta_title', 'container_format',
         'audio_codec', 'video_codec', 'audio_codec_description', 'video_codec_description',
-        'sample_rate', 'audio_bit_rate', 'errors',
+        'width', 'height', 'sample_rate', 'audio_bit_rate',
         # special fields
-        'frame_rate', 'length', 'size', 'date', 'title', 'meta_title', 'file_title', 'extension')
+        'frame_rate', 'length', 'size', 'date', 'title', 'file_title', 'extension')
+
+    def __init__(self, database, filename=None, size=0, errors=(), video_id=None,
+                 meta_title='', container_format='', audio_codec='', video_codec='',
+                 audio_codec_description='', video_codec_description='', width=0, height=0,
+                 frame_rate_num=0, frame_rate_den=0, sample_rate=0, duration=0, duration_time_base=0,
+                 audio_bit_rate=0, thumb_name='', from_dictionary=None):
+        """
+        :type filename: AbsolutePath | str
+        :type database: pysaurus.core.database.database.Database
+        :type size: int
+        :type errors: set
+        :type video_id: int, optional
+        :type meta_title: str
+        :type container_format: str
+        :type audio_codec: str
+        :type video_codec: str
+        :type audio_codec_description: str
+        :type video_codec_description: str
+        :type width: int
+        :type height: int
+        :type frame_rate_num: int
+        :type frame_rate_den: int
+        :type sample_rate: float
+        :type duration: int
+        :type duration_time_base: int
+        :type audio_bit_rate: int
+        :type thumb_name: str
+        :type from_dictionary: dict
+        """
+        if from_dictionary:
+            meta_title = from_dictionary.get(self.LONG_TO_MIN['meta_title'], meta_title)
+            container_format = from_dictionary.get(self.LONG_TO_MIN['container_format'], container_format)
+            audio_codec = from_dictionary.get(self.LONG_TO_MIN['audio_codec'], audio_codec)
+            video_codec = from_dictionary.get(self.LONG_TO_MIN['video_codec'], video_codec)
+            audio_codec_description = from_dictionary.get(self.LONG_TO_MIN['audio_codec_description'],
+                                                          audio_codec_description)
+            video_codec_description = from_dictionary.get(self.LONG_TO_MIN['video_codec_description'],
+                                                          video_codec_description)
+            width = from_dictionary.get(self.LONG_TO_MIN['width'], width)
+            height = from_dictionary.get(self.LONG_TO_MIN['height'], height)
+            frame_rate_num = from_dictionary.get(self.LONG_TO_MIN['frame_rate_num'], frame_rate_num)
+            frame_rate_den = from_dictionary.get(self.LONG_TO_MIN['frame_rate_den'], frame_rate_den)
+            sample_rate = from_dictionary.get(self.LONG_TO_MIN['sample_rate'], sample_rate)
+            duration = from_dictionary.get(self.LONG_TO_MIN['duration'], duration)
+            duration_time_base = from_dictionary.get(self.LONG_TO_MIN['duration_time_base'], duration_time_base)
+            audio_bit_rate = from_dictionary.get(self.LONG_TO_MIN['audio_bit_rate'], audio_bit_rate)
+            thumb_name = from_dictionary.get(self.LONG_TO_MIN['thumb_name'], thumb_name)
+        super(Video, self).__init__(filename=filename, size=size, errors=errors, video_id=video_id, database=database,
+                                    from_dictionary=from_dictionary)
+        self.meta_title = html_to_title(meta_title)
+        self.container_format = container_format
+        self.audio_codec = audio_codec
+        self.video_codec = video_codec
+        self.audio_codec_description = audio_codec_description
+        self.video_codec_description = video_codec_description
+        self.width = width
+        self.height = height
+        self.frame_rate_num = frame_rate_num
+        self.frame_rate_den = frame_rate_den or 1
+        self.sample_rate = sample_rate
+        self.duration = duration
+        self.duration_time_base = duration_time_base or 1
+        self.audio_bit_rate = audio_bit_rate
+        self.thumb_name = thumb_name
 
     def to_row(self):
         return [getattr(self, field) for field in self.ROW_FIELDS]
@@ -50,65 +141,11 @@ class Video(VideoState):
     def get(self, field):
         return getattr(self, field)
 
-    MIN_TO_LONG = {'f': 'filename', 'n': 'title', 'c': 'container_format', 'a': 'audio_codec', 'v': 'video_codec',
-                   'A': 'audio_codec_description', 'V': 'video_codec_description',
-                   'w': 'width', 'h': 'height', 'x': 'frame_rate_num', 'y': 'frame_rate_den', 'u': 'sample_rate',
-                   'd': 'duration', 't': 'duration_time_base', 's': 'size', 'r': 'audio_bit_rate',
-                   'i': 'thumb_name', 'e': 'errors', 'j': 'video_id'}
-
-    LONG_TO_MIN = {_long: _min for _min, _long in MIN_TO_LONG.items()}
-
-    def __init__(self, filename, database, title='', container_format='', audio_codec='', video_codec='',
-                 audio_codec_description='', video_codec_description='', width=0, height=0,
-                 frame_rate_num=0, frame_rate_den=0, sample_rate=0, duration=0, duration_time_base=0, size=0,
-                 audio_bit_rate=0, thumb_name='', errors=(), video_id=None):
-        """ Constructor.
-        :type database: pysaurus.core.database.database.Database
-        """
-        super(Video, self).__init__(
-            AbsolutePath.ensure(filename),
-            size or 0,
-            False,
-            errors,
-            video_id if isinstance(video_id, int) else None)
-        self.database = database
-        self.meta_title = ''
-        if title:
-            self.meta_title = HTMLStripper.strip(title)
-            strip_again = True
-            while strip_again:
-                strip_again = False
-                for character in ('"', "'"):
-                    if self.meta_title.startswith(character) and self.meta_title.endswith(character):
-                        self.meta_title = self.meta_title.strip(character)
-                        strip_again = True
-        self.container_format = container_format or ''
-        self.audio_codec = audio_codec or ''
-        self.video_codec = video_codec or ''
-        self.audio_codec_description = audio_codec_description or ''
-        self.video_codec_description = video_codec_description or ''
-        self.width = width or 0
-        self.height = height or 0
-        self.frame_rate_num = frame_rate_num or 0
-        self.frame_rate_den = frame_rate_den or 1
-        self.sample_rate = sample_rate or 0
-        self.duration = duration or 0
-        self.duration_time_base = duration_time_base or 1
-        self.audio_bit_rate = audio_bit_rate or 0
-        self.thumb_name = thumb_name
-
     def __str__(self):
         with StringPrinter() as printer:
-            printer.write('Video:')
-            for field_name in ('video_id', 'filename', 'title', 'container_format',
-                               'audio_codec', 'video_codec', 'audio_codec_description', 'video_codec_description',
-                               'width', 'height', 'sample_rate', 'audio_bit_rate'):
-                printer.write('\t%s: %s' % (field_name, getattr(self, field_name)))
-            printer.write('\tframe_rate: %s' % self.frame_rate)
-            printer.write('\tduration: %s' % self.length)
-            printer.write('\tsize: %s' % self.size)
-            if self.errors:
-                printer.write('\terror(s): %s' % (', '.join(sorted(self.errors))))
+            printer.write('Video %s:' % self.video_id)
+            for field in self.ROW_FIELDS:
+                printer.write('\t%s: %s' % (field, getattr(self, field)))
             return str(printer)
 
     title = property(lambda self: self.meta_title if self.meta_title else self.filename.title)
@@ -152,10 +189,18 @@ class Video(VideoState):
         )
 
     def to_dict(self):
-        dct = {_min: getattr(self, _long) for (_min, _long) in self.MIN_TO_LONG.items()}
-        dct[self.LONG_TO_MIN['filename']] = str(self.filename)
+        dct = super().to_dict()
+        len_before = len(dct)
+        for _min, _long in self.MIN_TO_LONG.items():
+            dct[_min] = getattr(self, _long)
+        assert len(dct) == len_before + len(self.MIN_TO_LONG)
         return dct
 
     @classmethod
     def from_dict(cls, dct, database):
-        return cls(database=database, **{_long: dct[_min] for (_min, _long) in cls.MIN_TO_LONG.items()})
+        """
+        :type dct: dict
+        :type database: pysaurus.core.database.database.Database
+        :rtype: Video
+        """
+        return cls(database=database, from_dictionary=dct)

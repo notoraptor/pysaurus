@@ -23,7 +23,7 @@ import tornado.web
 import ujson as json
 from tornado.gen import multi
 from tornado.ioloop import IOLoop
-from tornado.queues import Queue, Future
+from tornado.queues import Future, Queue
 from tornado.websocket import WebSocketClosedError
 
 from pysaurus.interface.server import common, protocol

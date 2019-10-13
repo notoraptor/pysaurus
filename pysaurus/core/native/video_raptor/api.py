@@ -2,9 +2,9 @@ import os
 from ctypes import c_char_p, pointer
 from typing import List, Optional
 
+from pysaurus.core.classes import ListView
 from pysaurus.core.modules import System
 from pysaurus.core.native.video_raptor import symbols
-from pysaurus.core.classes import ListView
 
 if System.is_linux():
     # Trying to prevent this warning on Ubuntu:
@@ -54,7 +54,7 @@ def get_video_info_errors(report):
 
 def _info_to_params(video_info: symbols.VideoInfo):
     return {'filename': (video_info.filename.decode() if video_info.filename else None),
-            'title': (video_info.title.decode() if video_info.title else None),
+            'meta_title': (video_info.title.decode() if video_info.title else None),
             'container_format': (video_info.container_format.decode() if video_info.container_format else None),
             'audio_codec': (video_info.audio_codec.decode() if video_info.audio_codec else None),
             'video_codec': (video_info.video_codec.decode() if video_info.video_codec else None),

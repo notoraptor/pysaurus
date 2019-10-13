@@ -5,7 +5,7 @@ from typing import Dict, Iterable, List, Optional, Set, Union
 import ujson as json
 
 from pysaurus.core import exceptions, functions as utils
-from pysaurus.core.components import AbsolutePath, DateModified, Duration, FileSize
+from pysaurus.core.components import AbsolutePath, DateModified, FilePath, PathType
 from pysaurus.core.constants import PYTHON_ERROR_NOTHING, THUMBNAIL_EXTENSION
 from pysaurus.core.database import notifications, parallelism
 from pysaurus.core.database.video import Video
@@ -16,77 +16,60 @@ from pysaurus.core.native.video_raptor.api import VideoRaptorResult
 from pysaurus.core.notification import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.profiling import Profiler
 
-Path = Union[AbsolutePath, str]
-
 
 class Database:
-    __slots__ = ['__database_path', '__json_path', '__miniatures_path',
-                 '__date', '__folders', '__videos', '__discarded',
+    __slots__ = ['__db_path', '__json_path', '__miniatures_path',
+                 '__date', '__folders', '__videos', '__unreadable', '__discarded', '__disk',
                  '__notifier', '__id_to_video', 'system_is_case_insensitive']
 
     def __init__(self, path, folders=None, clear_old_folders=False, notifier=None):
-        # type: (Path, Optional[Iterable[Path]], Optional[bool], Optional[Notifier]) -> None
+        # type: (PathType, Optional[Iterable[PathType]], Optional[bool], Optional[Notifier]) -> None
         path = AbsolutePath.ensure(path)
         if not path.isdir():
             raise exceptions.NotDirectoryError(path)
         # Paths
-        self.__database_path = path
-        self.__json_path = AbsolutePath.new_file_path(
-            self.__database_path, self.__database_path.title, 'json')
-        self.__miniatures_path = AbsolutePath.new_file_path(
-            self.__database_path, '%s.miniatures' % self.__database_path.title, 'json')
+        self.__db_path = path
+        self.__json_path = FilePath(self.__db_path, self.__db_path.title, 'json')
+        self.__miniatures_path = FilePath(self.__db_path, '%s.miniatures' % self.__db_path.title, 'json')
         # Database data
         self.__date = DateModified.now()
         self.__folders = set()  # type: Set[AbsolutePath]
-        self.__videos = {}  # type: Dict[AbsolutePath, Union[VideoState, Video]]
+        self.__videos = {}  # type: Dict[AbsolutePath, Video]
+        self.__unreadable = {}  # type: Dict[AbsolutePath, VideoState]
         self.__discarded = {}  # type: Dict[AbsolutePath, VideoState]
         # RAM data
+        self.__disk = set()  # type: Set[AbsolutePath]
         self.__notifier = notifier or DEFAULT_NOTIFIER
         self.__id_to_video = {}  # type: Dict[int, Union[VideoState, Video]]
-        self.system_is_case_insensitive = System.is_case_insensitive(self.__database_path.path)
+        self.system_is_case_insensitive = System.is_case_insensitive(self.__db_path.path)
         # Load database
         self.__load(folders, clear_old_folders)
         self.save()
 
     # Properties.
 
-    folder = property(lambda self: self.__database_path)
-    nb_entries = property(lambda self: len(self.__videos) + len(self.__discarded))
+    folder = property(lambda self: self.__db_path)
+    nb_entries = property(lambda self: len(self.__videos) + len(self.__unreadable) + len(self.__discarded))
     nb_discarded = property(lambda self: len(self.__discarded))
-    nb_not_found = property(lambda self: sum(not filename.isfile() for filename in self.__videos))
-    nb_found = property(lambda self: sum(filename.isfile() for filename in self.__videos))
-    nb_unreadable = property(lambda self: sum(video.filename.isfile() and video.unreadable
-                                              for video in self.__videos.values()))
-    nb_valid = property(lambda self: sum(video.filename.isfile() and not video.unreadable
-                                         for video in self.__videos.values()))
-    nb_thumbnails = property(lambda self: sum(isinstance(video, Video)
-                                              and video.filename.isfile()
-                                              and video.thumbnail_is_valid()
-                                              for video in self.__videos.values()))
-    valid_size = property(lambda self: FileSize(sum(video.file_size
-                                                    for video in self.__videos.values()
-                                                    if isinstance(video, Video)
-                                                    and video.filename.isfile())))
-    valid_length = property(lambda self: Duration(sum(video.length.total_microseconds
-                                                      for video in self.__videos.values()
-                                                      if isinstance(video, Video)
-                                                      and video.filename.isfile())))
-    videos_not_found = property(lambda self: (video for video in self.__videos.values()
-                                              if not video.filename.isfile()))
-    unreadable_videos = property(lambda self: (video for video in self.__videos.values()
-                                               if video.filename.isfile() and video.unreadable))
-    valid_videos = property(lambda self: (video for video in self.__videos.values()
-                                          if video.filename.isfile() and not video.unreadable))
-    valid_videos_with_thumbnails = property(lambda self: (video for video in self.__videos.values()
-                                                          if isinstance(video, Video)
-                                                          and video.filename.isfile()
-                                                          and video.thumbnail_is_valid()))
-    valid_videos_missing_thumbnails = property(lambda self: (video for video in self.__videos.values()
-                                                             if isinstance(video, Video)
-                                                             and video.filename.isfile()
-                                                             and not video.thumbnail_is_valid()))
+    nb_unreadable = property(lambda self: len(self.__unreadable))
+    nb_not_found = property(lambda self: sum(1 for _ in self.videos(unreadable=True, found=False, not_found=True)))
+    nb_found = property(lambda self: sum(1 for _ in self.videos(valid=True, unreadable=True)))
+    nb_valid = property(lambda self: sum(1 for _ in self.videos()))
+    nb_thumbnails = property(lambda self: sum(1 for _ in self.videos(no_thumbs=False)))
 
     # Private utility methods.
+
+    def __filter_not_found(self, video):
+        return not self.video_exists(video.filename)
+
+    def __filter_found(self, video):
+        return self.video_exists(video.filename)
+
+    def __filter_no_thumbs(self, video):
+        return not video.thumbnail_is_valid()
+
+    def __filter_with_thumbs(self, video):
+        return video.thumbnail_is_valid()
 
     def __in_folders(self, path):
         # type: (AbsolutePath) -> bool
@@ -95,25 +78,12 @@ class Database:
     def __get_thumbnails_names_on_disk(self):
         # type: () -> Set[str]
         all_images_paths = set()
-        for path_string in self.__database_path.listdir():
+        for path_string in self.__db_path.listdir():
             if path_string.lower().endswith('.%s' % THUMBNAIL_EXTENSION):
                 if self.system_is_case_insensitive:
                     path_string = path_string.lower()
                 all_images_paths.add(path_string[:-(len(THUMBNAIL_EXTENSION) + 1)])
         return all_images_paths
-
-    def __get_videos_paths_from_disk(self):
-        # type: () -> List[AbsolutePath]
-        cpu_count = os.cpu_count()
-        jobs = utils.dispatch_tasks(sorted(self.__folders), cpu_count)
-        paths = []  # type: List[AbsolutePath]
-        with Profiler(title='Collect videos (%d threads)' % len(jobs), notifier=self.__notifier):
-            with concurrent.futures.ProcessPoolExecutor(max_workers=cpu_count) as executor:
-                results = list(executor.map(parallelism.job_collect_videos, jobs))
-        for local_result in results:  # type: List[AbsolutePath]
-            paths.extend(local_result)
-        self.__notifier.notify(notifications.FinishedCollectingVideos(paths))
-        return paths
 
     def __notify_missing_thumbnails(self):
         remaining_thumb_videos = []
@@ -127,7 +97,7 @@ class Database:
     # Private methods.
 
     def __load(self, folders=None, clear_old_folders=False):
-        # type: (Optional[Iterable[Path]], Optional[bool]) -> None
+        # type: (Optional[Iterable[PathType]], Optional[bool]) -> None
 
         if self.__json_path.exists():
             if not self.__json_path.isfile():
@@ -153,26 +123,25 @@ class Database:
 
         # Parsing videos.
         for video_dict in json_dict.get('videos', ()):
-            if 'U' in video_dict:
-                assert video_dict['U']
+            if video_dict['U']:
                 video_state = VideoState.from_dict(video_dict, self)
+                destination = self.__unreadable
             else:
                 video_state = Video.from_dict(video_dict, self)
+                destination = self.__videos
             if self.__in_folders(video_state.filename):
-                self.__videos[video_state.filename] = video_state
+                destination[video_state.filename] = video_state
             else:
                 self.__discarded[video_state.filename] = video_state
 
-        # Notify database loaded.
-        self.__notifier.notify(notifications.DatabaseLoaded(self))
-
     def __ensure_identifiers(self):
         without_identifiers = []
-        for video_state in self.__videos.values():
-            if video_state.video_id is None or video_state.video_id in self.__id_to_video:
-                without_identifiers.append(video_state)
-            else:
-                self.__id_to_video[video_state.video_id] = video_state
+        for source in (self.__videos, self.__unreadable):
+            for video_state in source.values():
+                if not isinstance(video_state.video_id, int) or video_state.video_id in self.__id_to_video:
+                    without_identifiers.append(video_state)
+                else:
+                    self.__id_to_video[video_state.video_id] = video_state
         next_id = (max(self.__id_to_video) + 1) if self.__id_to_video else 0
         for video_state in without_identifiers:
             video_state.video_id = next_id
@@ -181,13 +150,38 @@ class Database:
 
     # Public methods.
 
+    def videos(self, valid=True, unreadable=False, found=True, not_found=False, with_thumbs=True, no_thumbs=True):
+
+        if found is not_found is with_thumbs is no_thumbs is False:
+            return ()
+
+        sources = []
+        filters = []
+
+        if valid:
+            sources.append(self.__videos)
+        if unreadable:
+            sources.append(self.__unreadable)
+
+        if not found and not_found:
+            filters.append(self.__filter_not_found)
+        elif found and not not_found:
+            filters.append(self.__filter_found)
+
+        if not with_thumbs and no_thumbs:
+            filters.append(self.__filter_no_thumbs)
+        elif with_thumbs and not no_thumbs:
+            filters.append(self.__filter_with_thumbs)
+
+        return (video for dictionary in sources for video in dictionary.values() if all(fn(video) for fn in filters))
+
     def save(self):
         self.__ensure_identifiers()
         # Save database.
         json_output = {'date': self.__date.time,
                        'folders': [folder.path for folder in self.__folders],
                        'videos': [video.to_dict()
-                                  for dct in (self.__videos, self.__discarded)
+                                  for dct in (self.__videos, self.__unreadable, self.__discarded)
                                   for video in dct.values()]}
         json_output['folders'].sort()
         json_output['videos'].sort(key=lambda dct: dct['f'])
@@ -197,16 +191,24 @@ class Database:
 
     def update(self):
         cpu_count = os.cpu_count()
-        video_errors = {}
         videos = {}
+        unreadable = {}
         all_file_names = []
 
-        file_names = self.__get_videos_paths_from_disk()
+        file_names = self.check_videos_on_disk()
         current_date = DateModified.now()
+
+        self.__notifier.notify(notifications.DatabaseReady(self))
+
         for file_name in file_names:  # type: AbsolutePath
-            if (file_name not in self.__videos
+            video_state = None
+            if file_name in self.__videos:
+                video_state = self.__videos[file_name]
+            elif file_name in self.__unreadable:
+                video_state = self.__unreadable[file_name]
+            if (not video_state
                     or file_name.get_date_modified() >= self.__date
-                    or file_name.get_size() != self.__videos[file_name].file_size):
+                    or file_name.get_size() != video_state.file_size):
                 all_file_names.append(file_name.path)
 
         nb_to_load = len(all_file_names)
@@ -227,21 +229,21 @@ class Database:
                 file_path = AbsolutePath.ensure(file_name)
                 if result.done:  # type: Video
                     videos[file_path] = Video(database=self, **result.done)
-                elif result.errors:
-                    video_errors[file_path] = result.errors
                 else:
-                    video_errors[file_path] = [PYTHON_ERROR_NOTHING]
+                    unreadable[file_path] = VideoState(filename=file_path,
+                                                       size=file_path.get_size(),
+                                                       errors=(result.errors or [PYTHON_ERROR_NOTHING]),
+                                                       database=self)
 
         del results
-        assert nb_to_load == len(videos) + len(video_errors)
+        assert nb_to_load == len(videos) + len(unreadable)
 
         if videos:
             self.__videos.update(videos)
-        if video_errors:
-            for file_name, errors in video_errors.items():
-                self.__videos[file_name] = VideoState(file_name, file_name.get_size(), True, errors, None)
-            self.__notifier.notify(notifications.VideoInfoErrors(video_errors))
-        if videos or video_errors:
+        if unreadable:
+            self.__unreadable.update(unreadable)
+            self.__notifier.notify(notifications.VideoInfoErrors(unreadable))
+        if videos or unreadable:
             self.__date = current_date
             self.save()
 
@@ -256,7 +258,7 @@ class Database:
         # Collect videos with and without thumbnails.
         existing_thumb_names = self.__get_thumbnails_names_on_disk()
         for video in self.__videos.values():
-            if isinstance(video, Video) and video.filename.isfile() and not video.error_thumbnail:
+            if self.video_exists(video.filename) and not video.error_thumbnail:
                 thumb_name = video.ensure_thumbnail_name()
                 if thumb_name in existing_thumb_names:
                     thumb_to_videos.setdefault(thumb_name, []).append(video)
@@ -298,13 +300,13 @@ class Database:
             for video in job_videos:
                 job_file_names.append(video.filename.path)
                 job_thumb_names.append(video.thumb_name)
-            thumb_jobs.append((job_file_names, job_thumb_names, self.__database_path.path, job_id, self.__notifier))
+            thumb_jobs.append((job_file_names, job_thumb_names, self.__db_path.path, job_id, self.__notifier))
         with Profiler(title='Get thumbnails through %d thread(s)' % len(thumb_jobs), notifier=self.__notifier):
             with concurrent.futures.ProcessPoolExecutor(max_workers=cpu_count) as executor:
                 thumb_results = list(executor.map(parallelism.job_videos_thumbnails, thumb_jobs))
 
         nb_results = 0
-        for (local_file_names, local_thumb_results) in thumb_results:  # type: dict
+        for local_file_names, local_thumb_results in thumb_results:  # type: dict
             nb_results += len(local_file_names)
             for file_name, thumb_result in zip(local_file_names, local_thumb_results):  # type: (str, VideoRaptorResult)
                 if not thumb_result.done:
@@ -335,7 +337,7 @@ class Database:
                     miniatures[miniature.identifier] = miniature
             del json_dict
         tasks = [(video.filename, video.get_thumbnail_path())
-                 for video in self.valid_videos_with_thumbnails
+                 for video in self.videos(no_thumbs=False)
                  if video.filename.path not in miniatures]
         print('Missing', len(tasks), '/', len(tasks) + len(miniatures), 'miniature(s).')
         if not tasks:
@@ -358,6 +360,26 @@ class Database:
 
     # Public features.
 
+    def check_videos_on_disk(self, use_list_dir=False):
+        # type: (bool) -> Set[AbsolutePath]
+        cpu_count = os.cpu_count()
+        jobs = utils.dispatch_tasks(sorted(self.__folders), cpu_count)
+        with Profiler(title='Collect videos using %s (%d threads)' %
+                            ('listdir' if use_list_dir else 'walk', len(jobs)),
+                      notifier=self.__notifier):
+            with concurrent.futures.ProcessPoolExecutor(max_workers=cpu_count) as executor:
+                results = list(executor.map(parallelism.job_collect_videos_listdir
+                                            if use_list_dir else parallelism.job_collect_videos_walk,
+                                            jobs))
+        self.__disk.clear()
+        for local_result in results:  # type: List[AbsolutePath]
+            self.__disk.update(local_result)
+        self.__notifier.notify(notifications.FinishedCollectingVideos(self.__disk))
+        return self.__disk
+
+    def video_exists(self, path):
+        return path in self.__disk
+
     def get_video_from_id(self, video_id, required=False, accept_unreadable=False):
         # type: (int, bool, bool) -> Optional[Video]
         if video_id in self.__id_to_video and (accept_unreadable or isinstance(self.__id_to_video[video_id], Video)):
@@ -367,7 +389,7 @@ class Database:
         return None
 
     def get_video_from_filename(self, filename, required=False, accept_unreadable=False):
-        # type: (Path, bool, bool) -> Optional[Video]
+        # type: (PathType, bool, bool) -> Optional[Video]
         filename = AbsolutePath.ensure(filename)
         if filename in self.__videos and (accept_unreadable or isinstance(self.__videos[filename], Video)):
             return self.__videos[filename]
@@ -420,4 +442,4 @@ class Database:
         self.__notifier.notify(notifications.UnusedThumbnails(len(existing_thumb_names)))
         for unused_thumb_name in existing_thumb_names:
             AbsolutePath.join(
-                self.__database_path.path, '%s.%s' % (unused_thumb_name, THUMBNAIL_EXTENSION)).delete()
+                self.__db_path.path, '%s.%s' % (unused_thumb_name, THUMBNAIL_EXTENSION)).delete()

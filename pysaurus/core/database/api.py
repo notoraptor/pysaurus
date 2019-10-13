@@ -2,7 +2,7 @@ from typing import Dict, List, Tuple, Union
 
 from pysaurus.core import exceptions, functions as utils
 from pysaurus.core.classes import Enumeration, Table
-from pysaurus.core.components import AbsolutePath
+from pysaurus.core.components import AbsolutePath, Duration, FileSize
 from pysaurus.core.database import path_utils
 from pysaurus.core.database.database import Database
 from pysaurus.core.database.video import Video
@@ -73,12 +73,12 @@ class API:
         return (count // page_size) + bool(count % page_size)
 
     def valid_size(self):
-        # type: () -> int
-        return self.database.valid_size
+        # type: () -> FileSize
+        return FileSize(sum(video.file_size for video in self.database.videos()))
 
     def valid_length(self):
-        # type: () -> int
-        return self.database.valid_length
+        # type: () -> Duration
+        return Duration(sum(video.length.total_microseconds for video in self.database.videos()))
 
     def clear_not_found(self):
         # type: () -> None
@@ -159,14 +159,14 @@ class API:
     def same_sizes(self):
         # type: () -> Dict[int, List[Video]]
         sizes = {}
-        for video in self.database.valid_videos:
+        for video in self.database.videos():
             sizes.setdefault(video.size, []).append(video)
         return {size: elements for (size, elements) in sizes.items() if len(elements) > 1}
 
     def find(self, terms):
         # type: (str) -> List[Video]
         terms = utils.string_to_pieces(terms)
-        return [video for video in self.database.valid_videos
+        return [video for video in self.database.videos()
                 if all(term in video.title.lower() or term in video.filename.path.lower() for term in terms)]
 
     def find_batch(self, path):
@@ -182,27 +182,27 @@ class API:
             raise exceptions.InvalidPageSize(page_size)
         field = FieldType(field)  # type: str
         reverse = utils.bool_type(reverse)
-        videos = sorted(self.database.valid_videos, key=lambda v: v.get(field), reverse=reverse)
+        videos = sorted(self.database.videos(), key=lambda v: v.get(field), reverse=reverse)
         return videos[(page_size * page_number):(page_size * (page_number + 1))]
 
     def videos(self):
         # type: () -> Table
         return Table(headers=Video.ROW_FIELDS,
-                     lines=[video.to_row() for video in self.database.valid_videos])
+                     lines=[video.to_row() for video in self.database.videos()])
 
     def not_found(self):
-        return sorted(self.database.videos_not_found, key=lambda video: video.filename)
+        return sorted(self.database.videos(found=False, not_found=True), key=lambda video: video.filename)
 
     def unreadable(self):
-        return sorted(self.database.unreadable_videos, key=lambda video: video.filename)
+        return sorted(self.database.videos(valid=False, unreadable=True), key=lambda video: video.filename)
 
     def missing_thumbnails(self):
-        return sorted(self.database.valid_videos_missing_thumbnails,
+        return sorted(self.database.videos(with_thumbs=False, no_thumbs=True),
                       key=lambda video: video.filename)
 
     def reset_thumbnail_errors(self):
         count = 0
-        for video in self.database.valid_videos_missing_thumbnails:
+        for video in self.database.videos(with_thumbs=False, no_thumbs=True):
             video.error_thumbnail = False
             count += 1
         if count:

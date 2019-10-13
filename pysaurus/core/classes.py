@@ -1,11 +1,11 @@
 from abc import abstractmethod
 from io import StringIO
 from itertools import chain
-from typing import Any, List, Generic, TypeVar
-
-T = TypeVar('T')
+from typing import Any, Generic, List, TypeVar
 
 from pysaurus.core.functions import to_printable
+
+T = TypeVar('T')
 
 
 class StringPrinter(object):

@@ -57,8 +57,8 @@ class CollectedFiles(Notification):
 class FinishedCollectingVideos(Notification):
     __slots__ = ['count']
 
-    def __init__(self, path: list):
-        self.count = len(path)
+    def __init__(self, paths):
+        self.count = len(paths)
 
 
 class VideoJob(Notification):
@@ -80,6 +80,7 @@ class DatabaseLoaded(Notification):
     __props__ = __slots__
 
     def __init__(self, database):
+        from pysaurus.core.profiling import Profiler
         self.entries = database.nb_entries
         self.discarded = database.nb_discarded
         self.not_found = database.nb_not_found
@@ -87,6 +88,10 @@ class DatabaseLoaded(Notification):
         self.unreadable = database.nb_unreadable
         self.valid = database.nb_valid
         self.thumbnails = database.nb_thumbnails
+
+
+class DatabaseReady(DatabaseLoaded):
+    pass
 
 
 class DatabaseSaved(DatabaseLoaded):
