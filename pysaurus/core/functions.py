@@ -132,3 +132,11 @@ def flat_to_coord(index, width):
 def coord_to_flat(x, y, width):
     # (x, y) => i
     return y * width + x
+
+
+def get_file_extension(string):
+    # type: (str) -> str
+    index_of_dot = string.rfind('.')
+    if index_of_dot >= 0:
+        return string[(index_of_dot + 1):].lower()
+    return ''

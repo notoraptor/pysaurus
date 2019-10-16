@@ -44,7 +44,6 @@ class Database:
         self.system_is_case_insensitive = System.is_case_insensitive(self.__db_path.path)
         # Load database
         self.__load(folders, clear_old_folders)
-        self.save()
 
     # Properties.
 
@@ -89,8 +88,9 @@ class Database:
         remaining_thumb_videos = []
         existing_thumb_names = self.__get_thumbnails_names_on_disk()
         for video in self.__videos.values():
-            if (isinstance(video, Video) and video.filename.isfile()
-                    and (video.error_thumbnail or video.ensure_thumbnail_name() not in existing_thumb_names)):
+            if (self.video_exists(video.filename)
+                    and (video.error_thumbnail
+                         or video.ensure_thumbnail_name() not in existing_thumb_names)):
                 remaining_thumb_videos.append(video.filename.path)
         self.__notifier.notify(notifications.MissingThumbnails(remaining_thumb_videos))
 
@@ -230,10 +230,11 @@ class Database:
                 if result.done:  # type: Video
                     videos[file_path] = Video(database=self, **result.done)
                 else:
-                    unreadable[file_path] = VideoState(filename=file_path,
-                                                       size=file_path.get_size(),
-                                                       errors=(result.errors or [PYTHON_ERROR_NOTHING]),
-                                                       database=self)
+                    unreadable[file_path] = VideoState(
+                        filename=file_path,
+                        size=file_path.get_size(),
+                        errors=(result.errors or [PYTHON_ERROR_NOTHING]),
+                        database=self)
 
         del results
         assert nb_to_load == len(videos) + len(unreadable)
@@ -360,17 +361,13 @@ class Database:
 
     # Public features.
 
-    def check_videos_on_disk(self, use_list_dir=False):
-        # type: (bool) -> Set[AbsolutePath]
+    def check_videos_on_disk(self):
+        # type: () -> Set[AbsolutePath]
         cpu_count = os.cpu_count()
         jobs = utils.dispatch_tasks(sorted(self.__folders), cpu_count)
-        with Profiler(title='Collect videos using %s (%d threads)' %
-                            ('listdir' if use_list_dir else 'walk', len(jobs)),
-                      notifier=self.__notifier):
+        with Profiler(title='Collect videos (%d threads)', notifier=self.__notifier):
             with concurrent.futures.ProcessPoolExecutor(max_workers=cpu_count) as executor:
-                results = list(executor.map(parallelism.job_collect_videos_listdir
-                                            if use_list_dir else parallelism.job_collect_videos_walk,
-                                            jobs))
+                results = list(executor.map(parallelism.job_collect_videos, jobs))
         self.__disk.clear()
         for local_result in results:  # type: List[AbsolutePath]
             self.__disk.update(local_result)
