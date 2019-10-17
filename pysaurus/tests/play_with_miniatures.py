@@ -21,7 +21,6 @@ def main():
     with Profiler('Getting miniatures:'):
         miniatures = api.database.ensure_miniatures()
     print(len(miniatures), 'miniature(s)')
-    return
     ratios = {}
     for i, miniature in enumerate(miniatures.values()):
         nb_unique_pixels = len(set(miniature.tuples()))

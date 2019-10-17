@@ -19,7 +19,7 @@ class API:
     __slots__ = 'database',
 
     def __init__(self, list_file_path, notifier=None, ensure_miniatures=False):
-        # type: (Union[str, AbsolutePath], Notifier) -> None
+        # type: (Union[str, AbsolutePath], Notifier, bool) -> None
         paths = path_utils.load_path_list_file(list_file_path)
         database_folder = list_file_path.get_directory()
         self.database = Database(path=database_folder, folders=paths, notifier=notifier)
@@ -39,8 +39,7 @@ class API:
         function_parser.add(self.find, arguments={'terms': str})
         function_parser.add(self.find_batch, arguments={'path': str})
         function_parser.add(self.info, arguments={'video_id': int})
-        function_parser.add(self.list,
-                            arguments={'field': FieldType, 'reverse': bool_type, 'page_size': int, 'page_number': int})
+        function_parser.add(self.list, arguments={'field': FieldType, 'reverse': bool_type, 'page_size': int, 'page_number': int})
         function_parser.add(self.missing_thumbnails)
         function_parser.add(self.nb, arguments={'query': NbType})
         function_parser.add(self.nb_pages, arguments={'query': NbType, 'page_size': int})
@@ -54,7 +53,7 @@ class API:
         function_parser.add(self.reset_thumbnail_errors)
         function_parser.add(self.same_sizes)
         function_parser.add(self.unreadable)
-        function_parser.add(self.update)
+        function_parser.add(self.update, arguments={'ensure_miniatures': bool_type})
         function_parser.add(self.valid_length)
         function_parser.add(self.valid_size)
         function_parser.add(self.videos)

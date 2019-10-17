@@ -13,7 +13,7 @@ class Miniature:
     __slots__ = ('identifier', 'r', 'g', 'b', 'i', 'width', 'height')
 
     def __init__(self, red, green, blue, width, height, identifier=None):
-        # type: (List[int], List[int], List[int], int, int, Any) -> None
+        # type: (bytearray, bytearray, bytearray, int, int, Any) -> None
         self.r = red
         self.g = green
         self.b = blue
@@ -47,9 +47,9 @@ class Miniature:
 
     def to_dict(self):
         return {
-            'r': base64.b64encode(bytearray(self.r)),
-            'g': base64.b64encode(bytearray(self.g)),
-            'b': base64.b64encode(bytearray(self.b)),
+            'r': base64.b64encode(self.r),
+            'g': base64.b64encode(self.g),
+            'b': base64.b64encode(self.b),
             'w': self.width,
             'h': self.height,
             'i': self.identifier,
@@ -57,9 +57,9 @@ class Miniature:
 
     @staticmethod
     def from_dict(dct):
-        return Miniature(red=[int(v) for v in base64.b64decode(dct['r'])],
-                         green=[int(v) for v in base64.b64decode(dct['g'])],
-                         blue=[int(v) for v in base64.b64decode(dct['b'])],
+        return Miniature(red=base64.b64decode(dct['r']),
+                         green=base64.b64decode(dct['g']),
+                         blue=base64.b64decode(dct['b']),
                          width=dct['w'],
                          height=dct['h'],
                          identifier=dct['i'])
@@ -71,9 +71,9 @@ class Miniature:
         thumbnail = image.resize(dimensions)
         width, height = dimensions
         size = width * height
-        red = [0] * size
-        green = [0] * size
-        blue = [0] * size
+        red = bytearray(size)
+        green = bytearray(size)
+        blue = bytearray(size)
         for i, (r, g, b) in enumerate(thumbnail.getdata()):
             red[i] = r
             green[i] = g
