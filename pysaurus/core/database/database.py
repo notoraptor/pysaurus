@@ -138,7 +138,8 @@ class Database:
         without_identifiers = []
         for source in (self.__videos, self.__unreadable):
             for video_state in source.values():
-                if not isinstance(video_state.video_id, int) or video_state.video_id in self.__id_to_video:
+                if (not isinstance(video_state.video_id, int)
+                        or video_state.video_id in self.__id_to_video):
                     without_identifiers.append(video_state)
                 else:
                     self.__id_to_video[video_state.video_id] = video_state
@@ -332,8 +333,10 @@ class Database:
             if not isinstance(json_dict, list):
                 raise exceptions.PysaurusError('Miniatures file does not contain a list.')
             for dct in json_dict:
-                video = self.get_video_from_filename(AbsolutePath.ensure(dct['i']))
-                if video and video.filename.isfile() and ImageUtils.DEFAULT_THUMBNAIL_SIZE == (dct['w'], dct['h']):
+                video = self.get_video_from_filename(dct['i'], required=False)
+                if (video
+                        and self.video_exists(video.filename)
+                        and ImageUtils.DEFAULT_THUMBNAIL_SIZE == (dct['w'], dct['h'])):
                     miniature = Miniature.from_dict(dct)
                     miniatures[miniature.identifier] = miniature
             del json_dict
@@ -377,19 +380,38 @@ class Database:
     def video_exists(self, path):
         return path in self.__disk
 
-    def get_video_from_id(self, video_id, required=False, accept_unreadable=False):
-        # type: (int, bool, bool) -> Optional[Video]
-        if video_id in self.__id_to_video and (accept_unreadable or isinstance(self.__id_to_video[video_id], Video)):
+    def get_video_from_id(self, video_id, required=True):
+        # type: (int, bool) -> Optional[Video]
+        if (video_id in self.__id_to_video
+                and self.__id_to_video[video_id].filename in self.__videos):
             return self.__id_to_video[video_id]
         if required:
             raise exceptions.UnknownVideoID(video_id)
         return None
 
-    def get_video_from_filename(self, filename, required=False, accept_unreadable=False):
-        # type: (PathType, bool, bool) -> Optional[Video]
+    def get_unreadable_from_id(self, video_id, required=True):
+        # type: (int, bool) -> Optional[VideoState]
+        if (video_id in self.__id_to_video
+                and self.__id_to_video[video_id].filename in self.__unreadable):
+            return self.__id_to_video[video_id]
+        if required:
+            raise exceptions.UnknownVideoID(video_id)
+        return None
+
+    def get_video_from_filename(self, filename, required=True):
+        # type: (PathType, bool) -> Optional[Video]
         filename = AbsolutePath.ensure(filename)
-        if filename in self.__videos and (accept_unreadable or isinstance(self.__videos[filename], Video)):
+        if filename in self.__videos:
             return self.__videos[filename]
+        if required:
+            raise exceptions.UnknownVideoFilename(filename)
+        return None
+
+    def get_unreadable_from_filename(self, filename, required=True):
+        # type: (PathType, bool) -> Optional[VideoState]
+        filename = AbsolutePath.ensure(filename)
+        if filename in self.__unreadable:
+            return self.__unreadable[filename]
         if required:
             raise exceptions.UnknownVideoFilename(filename)
         return None

@@ -140,3 +140,20 @@ def get_file_extension(string):
     if index_of_dot >= 0:
         return string[(index_of_dot + 1):].lower()
     return ''
+
+
+def _pgcd(a, b):
+    # type: (int, int) -> int
+    return a if not b else _pgcd(b, a % b)
+
+
+def pgcd(a, b):
+    # type: (int, int) -> int
+    """ "Plus grand commun diviseur" (Greatest Common Divider) """
+    if a < 0:
+        a = -a
+    if b < 0:
+        b = -b
+    if a < b:
+        a, b = b, a
+    return _pgcd(a, b)

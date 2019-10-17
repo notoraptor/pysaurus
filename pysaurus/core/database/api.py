@@ -86,15 +86,16 @@ class API:
 
     def info(self, video_id):
         # type: (int) -> Union[Video, VideoState]
-        return self.database.get_video_from_id(video_id, required=True, accept_unreadable=True)
+        return (self.database.get_video_from_id(video_id, required=False)
+                or self.database.get_unreadable_from_id(video_id, required=False))
 
     def download_image(self, video_id):
         # type: (int) -> str
-        return self.database.get_video_from_id(video_id, required=True).thumbnail_to_base64()
+        return self.database.get_video_from_id(video_id).thumbnail_to_base64()
 
     def download_image_from_filename(self, filename):
         # type: (str) -> str
-        return self.database.get_video_from_filename(filename, required=True).thumbnail_to_base64()
+        return self.database.get_video_from_filename(filename).thumbnail_to_base64()
 
     def open_image(self, video_id):
         return self.database.get_video_from_id(video_id).get_thumbnail_path().open()
@@ -104,47 +105,40 @@ class API:
 
     def clip(self, video_id, start, length):
         # type: (int, int, int) -> str
-        return self.database.get_video_from_id(video_id, required=True).clip_to_base64(start, length)
+        return self.database.get_video_from_id(video_id).clip_to_base64(start, length)
 
     def clip_from_filename(self, filename, start, length):
         # type: (str, int, int) -> str
-        return self.database.get_video_from_filename(filename, required=True).clip_to_base64(start, length)
+        return self.database.get_video_from_filename(filename).clip_to_base64(start, length)
 
     def open(self, video_id):
         # type: (int) -> AbsolutePath
-        return self.database.get_video_from_id(video_id, required=True).filename.open()
+        return self.database.get_video_from_id(video_id).filename.open()
 
     def open_from_filename(self, filename):
         # type: (str) -> AbsolutePath
-        return self.database.get_video_from_filename(filename, required=True).filename.open()
+        return self.database.get_video_from_filename(filename).filename.open()
 
     def delete(self, video_id):
         # type: (int) -> AbsolutePath
-        return self.database.delete_video(self.database.get_video_from_id(video_id, required=True))
+        return self.database.delete_video(self.database.get_video_from_id(video_id))
 
     def delete_unreadable(self, video_id):
-        video_state = self.database.get_video_from_id(video_id, required=True, accept_unreadable=True)
-        if not video_state.unreadable:
-            raise exceptions.UnknownUnreadableID(video_id)
-        return self.database.delete_video(video_state)
+        return self.database.delete_video(self.database.get_unreadable_from_id(video_id))
 
     def delete_unreadable_from_filename(self, filename):
-        video_state = self.database.get_video_from_filename(
-            filename, required=True, accept_unreadable=True)
-        if not video_state.unreadable:
-            raise exceptions.UnknownUnreadableFilename(filename)
-        return self.database.delete_video(video_state)
+        return self.database.delete_video(self.database.get_unreadable_from_filename(filename))
 
     def delete_from_filename(self, filename):
         # type: (str) -> AbsolutePath
         return self.database.delete_video(
-            self.database.get_video_from_filename(filename, required=True))
+            self.database.get_video_from_filename(filename))
 
     def rename(self, video_id, new_title):
         # type: (int, str) -> int
         if new_title is None or not str(new_title):
             raise exceptions.MissingVideoNewTitle()
-        video = self.database.get_video_from_id(video_id, required=True)  # type: Video
+        video = self.database.get_video_from_id(video_id)  # type: Video
         self.database.change_video_file_title(video, str(new_title))
         return video.video_id
 
@@ -152,7 +146,7 @@ class API:
         # type: (str, str) -> (str, str)
         if new_title is None or not str(new_title):
             raise exceptions.MissingVideoNewTitle()
-        video = self.database.get_video_from_filename(filename, required=True)  # type: Video
+        video = self.database.get_video_from_filename(filename)  # type: Video
         self.database.change_video_file_title(video, str(new_title))
         return video.filename.path, video.filename.title
 
