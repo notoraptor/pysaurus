@@ -90,10 +90,6 @@ class DatabaseLoaded(Notification):
         self.thumbnails = database.nb_thumbnails
 
 
-class DatabaseReady(DatabaseLoaded):
-    pass
-
-
 class DatabaseSaved(DatabaseLoaded):
     __slots__ = []
 

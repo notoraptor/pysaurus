@@ -18,7 +18,7 @@ FieldType = Enumeration(Video.ROW_FIELDS)
 class API:
     __slots__ = 'database',
 
-    def __init__(self, list_file_path, notifier=None, ensure_miniatures=False):
+    def __init__(self, list_file_path, notifier=None, ensure_miniatures=True):
         # type: (Union[str, AbsolutePath], Notifier, bool) -> None
         paths = path_utils.load_path_list_file(list_file_path)
         database_folder = list_file_path.get_directory()

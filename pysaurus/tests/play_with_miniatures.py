@@ -88,6 +88,7 @@ CENTER_CENTER = 10
 
 ZONE_TO_POS = [TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT]
 
+
 class Zone:
     __slots__ = 'zone',
     TO_STRING = [
@@ -103,8 +104,10 @@ class Zone:
         'center left',
         'center',
     ]
+
     def __init__(self, zone):
         self.zone = zone
+
     def __str__(self):
         return self.TO_STRING[self.zone]
 
@@ -132,7 +135,8 @@ def whitest_region(miniature):
     if len(intensities) == len(zones):
         return ZONE_TO_POS[intensities[max(zones)][0]]
     max_nb_zones = max(len(local_zones) for local_zones in intensities.values())
-    max_intensity = max(intensity for intensity in intensities if len(intensities[intensity]) == max_nb_zones)
+    max_intensity = max(
+        intensity for intensity in intensities if len(intensities[intensity]) == max_nb_zones)
     max_zones = intensities[max_intensity]
     if len(max_zones) == 1:
         return ZONE_TO_POS[max_zones[0]]
@@ -177,6 +181,7 @@ class SuperMiniature:
     def __lt__(self, other):
         return self.comparator < other.comparator
 
+
 def main():
     api = API(TEST_LIST_FILE_PATH)
     with Profiler('Getting miniatures:'):
@@ -191,7 +196,7 @@ def main():
     intensities.sort()
     count_inequalities = 0
     for i in range(1, len(intensities)):
-        if intensities[i-1].comparator != intensities[i].comparator:
+        if intensities[i - 1].comparator != intensities[i].comparator:
             count_inequalities += 1
             print(
                 'Different here',
@@ -200,7 +205,8 @@ def main():
                 Zone(intensities[i].zone),
                 intensities[i].miniature.identifier,
             )
-            thumb_path = api.database.get_video_from_filename(intensities[i].miniature.identifier).get_thumbnail_path()
+            thumb_path = api.database.get_video_from_filename(
+                intensities[i].miniature.identifier).get_thumbnail_path()
             print('file://%s' % thumb_path)
             print('xdg-open', thumb_path)
             print()
