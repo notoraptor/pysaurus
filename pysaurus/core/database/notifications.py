@@ -135,7 +135,7 @@ class VideoInfoErrors(Notification):
             printer.write('%s: %d' % (type(self).__name__, len(self.video_errors)))
             for file_name, errors in self.video_errors.items():
                 printer.title(file_name)
-                for video_error in errors:
+                for video_error in errors.errors:
                     printer.write('\t%s' % video_error)
             return str(printer)
 

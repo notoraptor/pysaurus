@@ -156,7 +156,7 @@ class Video(VideoState):
     length = property(lambda self: Duration(round(self.duration * 1000000 / self.duration_time_base)))
 
     def get_thumbnail_path(self):
-        return path_utils.generate_thumb_path(self.database.folder, self.ensure_thumbnail_name())
+        return path_utils.generate_thumb_path(self.database.thumbnail_folder, self.ensure_thumbnail_name())
 
     def ensure_thumbnail_name(self):
         if not self.thumb_name:

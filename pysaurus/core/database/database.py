@@ -18,7 +18,7 @@ from pysaurus.core.profiling import Profiler
 
 
 class Database:
-    __slots__ = ['__db_path', '__json_path', '__miniatures_path',
+    __slots__ = ['__db_path', '__thumb_folder', '__json_path', '__miniatures_path',
                  '__date', '__folders', '__videos', '__unreadable', '__discarded',
                  '__disk', '__thumbs', '__checked_disk', '__checked_thumbs',
                  '__notifier', '__id_to_video', 'system_is_case_insensitive']
@@ -30,6 +30,7 @@ class Database:
             raise exceptions.NotDirectoryError(path)
         # Paths
         self.__db_path = path
+        self.__thumb_folder = AbsolutePath.join(self.__db_path, '.thumbnails')
         self.__json_path = FilePath(self.__db_path, self.__db_path.title, 'json')
         self.__miniatures_path = FilePath(self.__db_path, '%s.miniatures' % self.__db_path.title, 'json')
         # Database data
@@ -47,11 +48,13 @@ class Database:
         self.__id_to_video = {}  # type: Dict[int, Union[VideoState, Video]]
         self.system_is_case_insensitive = System.is_case_insensitive(self.__db_path.path)
         # Load database
+        self.__thumb_folder.mkdir()
         self.__load(folders, clear_old_folders)
 
     # Properties.
 
     folder = property(lambda self: self.__db_path)
+    thumbnail_folder = property(lambda self: self.__thumb_folder)
     nb_entries = property(lambda self: len(self.__videos) + len(self.__unreadable) + len(self.__discarded))
     nb_discarded = property(lambda self: len(self.__discarded))
     nb_unreadable = property(lambda self: len(self.__unreadable))
@@ -85,7 +88,7 @@ class Database:
             return self.__disk
         cpu_count = os.cpu_count()
         jobs = utils.dispatch_tasks(sorted(self.__folders), cpu_count)
-        with Profiler(title='Collect videos (%d threads)', notifier=self.__notifier):
+        with Profiler(title='Collect videos (%d threads)' % cpu_count, notifier=self.__notifier):
             with concurrent.futures.ProcessPoolExecutor(max_workers=cpu_count) as executor:
                 results = list(executor.map(parallelism.job_collect_videos, jobs))
         self.__disk.clear()
@@ -271,10 +274,11 @@ class Database:
             self.__videos.update(videos)
         if unreadable:
             self.__unreadable.update(unreadable)
-            self.__notifier.notify(notifications.VideoInfoErrors(unreadable))
         if videos or unreadable:
             self.__date = current_date
             self.save()
+        if unreadable:
+            self.__notifier.notify(notifications.VideoInfoErrors(unreadable))
 
     def ensure_thumbnails(self):
         cpu_count = os.cpu_count()
@@ -330,7 +334,7 @@ class Database:
             for video in job_videos:
                 job_file_names.append(video.filename.path)
                 job_thumb_names.append(video.thumb_name)
-            thumb_jobs.append((job_file_names, job_thumb_names, self.__db_path.path, job_id, self.__notifier))
+            thumb_jobs.append((job_file_names, job_thumb_names, self.__thumb_folder.path, job_id, self.__notifier))
         with Profiler(title='Get thumbnails through %d thread(s)' % len(thumb_jobs), notifier=self.__notifier):
             with concurrent.futures.ProcessPoolExecutor(max_workers=cpu_count) as executor:
                 thumb_results = list(executor.map(parallelism.job_videos_thumbnails, thumb_jobs))
