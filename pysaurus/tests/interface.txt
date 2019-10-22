@@ -1,8 +1,27 @@
 Program configuration
 	database_folder: path where to save databases (each database will have its own sub-folder inside this folder)
 
+Notifications groups:
+	LOADING_DATABASE = 0
+
+class Notification:
+	def __init__(notification_group):
+		pass
+	def get_title():
+		pass
+	def get_content():
+		pass
+
+class Info(Notification):
+	def __init__(notification_group, title, content):
+		pass
+
+class Step(Notification):
+	def __init__(notification_group, name, amount_done, amount_total):
+		pass
+
 notification group
-	notification: text info or task info
+	notification: info or step
 	text info: ...
 	task info:
 		task name
@@ -11,13 +30,19 @@ notification group
 
 Functions
 	open_database(name)
-		finish by emitting notification DatabaseReady(with database object)
+		starts with notification LoadingDatabase
+		finish with notification DatabaseReady(with database object)
 	create_database(name, folders)
-		finish by emitting notification DatabaseReady(with database object)
+		starts with notification LoadingDatabase
+		finish with notification DatabaseReady(with database object)
 	update_database(database)
 		Use a window to show update progression
 
-Component: Video folders
+Component: Section: title, content
+	Label {title}
+	Label {content}
+
+Interface: Video folders
 	# input: optional list of video folders
 	# output: list of videos folders
 	Action list: video folders
@@ -26,10 +51,6 @@ Component: Video folders
 	Line:
 		Input folder: video folder
 		Button: add -> add to list above
-
-Component: Section: title, content
-	Label {title}
-	Label {content}
 
 Panel: Home
 	Title: {program name} - {program description}
@@ -42,14 +63,19 @@ Panel: Home
 			Line:
 				Input text: database name
 					Become red if a database exists with same name
-				(if a database exists with same name)
-					Label (red): a database already exists with this name
-			Component: Video folders
+				Label(color=red):
+					If a database exists with same name:
+						"A database already exists with this name"
+					Else:
+						""
+			Interface Video folders
 			Button: create -> create_database(database name, video folders)
-				Disabled if a databse exists with same name
+				Disabled if a database exists with same name
 	Status group:
-		Capture notifications
-		Empty until first notifications is received
+		Label title
+		Label content
+		Progress bar
+		Displays notifications from group LOADING_DATABASE
 		When receive DatabaseReady:
 			Label: Database loaded!
 			Button: show -> load panel Database
@@ -62,7 +88,7 @@ Panel: Database
 			Close database -> confirm + clean everything and go back to panel Home
 			Manage video folders ...
 				Window: video folders
-					Component: Video folders
+					Interface Video folders
 					Line:
 						Button save
 						Button cancel
