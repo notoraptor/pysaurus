@@ -1,176 +1,32 @@
-Program configuration
-	database_folder: path where to save databases (each database will have its own sub-folder inside this folder)
-
-Notifications groups:
-	LOADING_DATABASE = 0
-
 class Notification:
-	def __init__(notification_group):
-		pass
+	group_id: str
+	title: str
+	text: str
+
 	def get_title():
-		pass
-	def get_content():
-		pass
+		return title
+
+	def get_text():
+		return text
 
 class Info(Notification):
-	def __init__(notification_group, title, content):
-		pass
+	pass
 
 class Step(Notification):
-	def __init__(notification_group, name, amount_done, amount_total):
+	step: str
+	total: str
+
+class DatabaseReady(Info):
+	pass
+
+class Widget:
+	pass
+
+class Scrollable:
+	vertical = True
+	horizontal = True
+
+class Input(Widget):
+	def get_value():
 		pass
 
-notification group
-	notification: info or step
-	text info: ...
-	task info:
-		task name
-		count done
-		total count
-
-Functions
-	open_database(name)
-		starts with notification LoadingDatabase
-		finish with notification DatabaseReady(with database object)
-	create_database(name, folders)
-		starts with notification LoadingDatabase
-		finish with notification DatabaseReady(with database object)
-	update_database(database)
-		Use a window to show update progression
-
-Component: Section: title, content
-	Label {title}
-	Label {content}
-
-Interface: Video folders
-	# input: optional list of video folders
-	# output: list of videos folders
-	Action list: video folders
-		Label: {video folder}
-		Action: delete
-	Line:
-		Input folder: video folder
-		Button: add -> add to list above
-
-Panel: Home
-	Title: {program name} - {program description}
-	Tab group:
-		Tab: Open a database
-			Selection list: existing databases
-			Button: open -> open_database(selected database name)
-				Disabled if no item selected on list above
-		Tab: Create a database
-			Line:
-				Input text: database name
-					Become red if a database exists with same name
-				Label(color=red):
-					If a database exists with same name:
-						"A database already exists with this name"
-					Else:
-						""
-			Interface Video folders
-			Button: create -> create_database(database name, video folders)
-				Disabled if a database exists with same name
-	Status group:
-		Label title
-		Label content
-		Progress bar
-		Displays notifications from group LOADING_DATABASE
-		When receive DatabaseReady:
-			Label: Database loaded!
-			Button: show -> load panel Database
-
-Panel: Database
-	Variables:
-		to_display: either a list of videos or a list of groups
-	View:
-		Menu
-			Close database -> confirm + clean everything and go back to panel Home
-			Manage video folders ...
-				Window: video folders
-					Interface Video folders
-					Line:
-						Button save
-						Button cancel
-			Refresh database ...
-				Window: refresh database
-					Checkbox: ignore thumbnail errors
-					Line:
-						Button refresh -> update_database(database)
-						Button cancel
-			Clean up
-				Window: database cleanup
-					Checkbox: delete entries not found
-					Checkbox: delete discarded entries
-					Section: Help
-						Discarded entries are entries corresponding to videos from folders that are no longer in
-						list of video folders for this database. When a video folder is removed, corresponding
-						entries are not automatically removed, as folder might be re-added in future. If you
-						are sure you don't plan to add removed folders again in this database, or if removed
-						folders don't exist anymore, then you should better delete discarded entries.
-					Line:
-						button cleanup (+ confirm)
-						Button cancel
-			Group videos by ...
-				List of videos properties + "(none)"
-					on click : group videos by selected property
-						Only valid groups (ones with at least 2 videos) will be displayed
-		Display videos per page
-			Display options
-				Sort videos by {video property} {ascending / descending}
-				Search input
-				checkbox hide unreadable
-				checkbox hide valid
-				checkbox hide with thumbnails
-				checkbox hide without thumbnails
-			Pagination
-				dropdown: number of videos per page
-				button previous page
-				dropdown: page, default = current page
-				button next page
-				view stats:
-					nb entries
-					nb discarded
-					nb not found
-					nb found
-					nb found unreadable
-					nb found valid
-					nb found valid without thumbnails
-				other info:
-					description of current view
-					nb videos in current view
-					nb pages for current view
-				view:
-					For each video
-						Display:
-							thumbnail
-							file name
-							title: meta title (if exists) or file title
-							extension / video codec (+ video codec description on mouse hover) / audio codec (+ audo codec description on mouse hover)
-							width x height @ frame rate
-							length
-							size
-							date
-							sample rate
-							errors
-						Actions:
-							ouvrir
-							renommer ...
-								nouveau nom
-								confirmer ou annuler
-							supprimer ...
-								confirmer ou annuler
-		Display video groups
-			Display options
-				Sort groups (by group property) {ascending / descending}
-				Search input
-				checkbox hide unreadable
-				checkbox hide valid
-				checkbox hide with thumbnails
-				checkbox hide without thumbnails
-			view:
-				For each group
-					Property value + button "show/hide videos"
-					List of videos (if shown)
-						For each video
-							(... sams as for pagination ...)

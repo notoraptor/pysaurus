@@ -14,7 +14,7 @@ Functions:
 			notify DatabaseReady(database)
 	update_database(database, reset_thumbnail_errors)
 		todo
-component SelectionList values:list
+component SelectionList values=[]
 	method getValue() -> selected value, or None
 	Scrollable horizontal=false
 		[Label]
@@ -22,6 +22,21 @@ component SelectionList values:list
 			# one label selected at time, selection on click, selected must have specific appearance
 component ProgressBar value:unsigned int, total:unsigned int
 component Confirm title:str, lines:List[str], action:callable
+component Window title=''
+	# Blocking top view with title bar containing a title and a clove button, as content frame
+component Spoiler title=''
+	method spoil():
+		if spoilerButton.title == "show":
+			spoilerButton.title = "hide"
+			children.disabled = False
+		else:  # spoilerButton.title == "hide"
+			spoilerButton.title = "show"
+			children.disables = True
+	Column
+		Row
+			Button spoilerButton title="show" onclick={this.spoil}
+			Label spoilerTitle
+		Row children ...
 class VideoFolders values=[]
 	method addValue(value)
 	method getValues() => []
@@ -63,6 +78,29 @@ class NotificationInterface group:int, endif:callable, onend:callback endname:st
 					buttonEnd.onclick = () => this.onend(notification)
 		onload():
 			add notification manager this.manageNotification
+		onunload():
+			remove notification manager this.manageNotification
+class Video video=object
+	method quality():
+		int nbSeconds = ...
+		bool hasErrors = ...
+		const totalRelevantBytes = (width * height * frameRate * nbSeconds * 3) + ((audioBitrate * nbSeconds) / 8)
+		const rawQuality = hasErrors ? Math.sqrt(totalRelevantBytes) : totalRelevantBytes;
+		return rawQuality ? Math.log(rawQuality) : 0;
+	Row
+		Column
+			Image videoThumbnail
+		Column
+			Row of labels:
+				{extension} | {quality} | {title = meta title if available else file title}
+			Row of labels:
+				{date} | {file name}
+			Row of labels:
+				{width} x {height} | {frame rate} | {length} | {size} | {format} | {video codec, title={video codec description}} | {audio codec, title={audio codec description}}, {sample rate} Hz @ {bit rate / 1000} Kb/s
+			(if errors)
+				Row
+					Label "Errors:"
+					[Label error]
 Panel home
 	TabGroup
 		Tab openDatabase
@@ -82,7 +120,7 @@ Panel home
 	NotificationInterface(
 		group=LOADING_DATABASE
 		endname="show"
-		endif=lambda notification: {notification is a DatabaseReady}
+		endif=lambda notification: {notification type is DatabaseReady}
 		onend=lambda notification: {load panel database with notification.database}
 	)
 Panel database data:Database
@@ -166,10 +204,15 @@ Panel database data:Database
 				Label: number of videos in groups found
 		Bar displayOptions
 			Form sortBar onChange={sort according to sortProperty.getValue() and reverse.getValue()}
-				Row
-					Label Sort by
-					Dropdown sortProperty values={video properties}
-					Checkbox reverse
+				(if view is a list of videos)
+					Row
+						Label Sort by
+						Dropdown sortProperty values={video properties}
+						Checkbox reverse
+				(if view is a list of video groups)
+					Row
+						Label Sort by {video group property}
+						Checkbox reverse
 			Form searchBar onChange={search according to searchInput.getValue() and sortType.getValue()}
 				Row
 					InputText searchInput placeholder="type text to search"
@@ -179,4 +222,19 @@ Panel database data:Database
 						Radio exact
 		Frame viewFrame
 		(if view is a list of videos)
+			Pagination
+				form paginationBar onChange={display videos corresponding to selected page}
+					Dropdown nbVideosPerPage
+					Button previousPage
+						# Disabled if current page is 0
+					Dropdown currentPage
+					Button nextPage
+						# Disabled if current page is last page
+			Scrollable horizontal=false
+				Column
+					[Video]
 		(if view is a list of video groups)
+			Scrollable horizontal=false
+				[Spoiler title={video group property value}]
+					Column  # displayed/hidden if spoiler button is clicked
+						[Video]
