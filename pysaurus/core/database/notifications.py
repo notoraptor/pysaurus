@@ -1,7 +1,7 @@
 from typing import Dict
 
 from pysaurus.core.classes import StringPrinter
-from pysaurus.core.notification import Notification
+from pysaurus.core.notification import Notification, Info
 
 
 class UnusedThumbnails(Notification):
@@ -9,6 +9,7 @@ class UnusedThumbnails(Notification):
 
     def __init__(self, removed):
         # type: (int) -> None
+        super().__init__()
         self.removed = removed
 
 
@@ -20,6 +21,7 @@ class CollectingFiles(Notification):
     __slots__ = ['folder']
 
     def __init__(self, folder):
+        super().__init__()
         self.folder = str(folder)
 
 
@@ -37,6 +39,7 @@ class CollectedFiles(Notification):
     folder_to_count: Dict[str, int]
 
     def __init__(self, paths: list):
+        super().__init__()
         self.count = len(paths)
         self.folder_to_count = {}
         for path in paths:
@@ -58,6 +61,7 @@ class FinishedCollectingVideos(Notification):
     __slots__ = ['count']
 
     def __init__(self, paths):
+        super().__init__()
         self.count = len(paths)
 
 
@@ -66,6 +70,7 @@ class VideoJob(Notification):
 
     def __init__(self, job_id, step, total):
         # type: (str, int, int) -> None
+        super().__init__()
         self.index = job_id
         self.parsed = step
         self.total = total
@@ -80,7 +85,7 @@ class DatabaseLoaded(Notification):
     __props__ = __slots__
 
     def __init__(self, database):
-        from pysaurus.core.profiling import Profiler
+        super().__init__()
         self.entries = database.nb_entries
         self.discarded = database.nb_discarded
         self.not_found = database.nb_not_found
@@ -94,10 +99,29 @@ class DatabaseSaved(DatabaseLoaded):
     __slots__ = []
 
 
+class DatabaseReady(Info):
+    __slots__ = 'database',
+    __props__ = 'folder',
+
+    def __init__(self, database, group_id=None):
+        """
+
+        :type database: pysaurus.core.database.database.Database
+        :type group_id: int, optional
+        """
+        super().__init__(group_id=group_id)
+        self.database = database
+
+    @property
+    def folder(self):
+        return self.database.folder
+
+
 class VideosToLoad(Notification):
     __slots__ = ['total']
 
     def __init__(self, total):
+        super().__init__()
         self.total = total
 
 
@@ -110,6 +134,7 @@ class MissingVideos(Notification):
     __slots__ = ['names']
 
     def __init__(self, file_names):
+        super().__init__()
         self.names = [str(file_name) for file_name in file_names]
 
     def __str__(self):
@@ -128,6 +153,7 @@ class VideoInfoErrors(Notification):
     __slots__ = ['video_errors']
 
     def __init__(self, video_errors: dict):
+        super().__init__()
         self.video_errors = {str(file_name): errors for file_name, errors in video_errors.items()}
 
     def __str__(self):

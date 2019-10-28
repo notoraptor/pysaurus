@@ -1,10 +1,43 @@
 from typing import Callable, Dict
 
-from pysaurus.core.classes import ToDict
+from pysaurus.core.classes import ToDict, StringPrinter
 
 
 class Notification(ToDict):
-    __slots__ = []
+    __slots__ = 'group_id',
+
+    def __init__(self, group_id=None):
+        # type: (int) -> None
+        self.group_id = group_id
+
+    def with_group(self, group_id):
+        # type: (int) -> Notification
+        self.group_id = group_id
+        return self
+
+    def get_title(self):
+        return self.get_name()
+
+    def get_text(self):
+        with StringPrinter() as printer:
+            for name in self.get_slots():
+                value = getattr(self, name)
+                if value is not None:
+                    printer.write('%s:' % name, value)
+            return str(printer)
+
+
+class Info(Notification):
+    __slots__ = ()
+
+
+class Step(Notification):
+    __slots__ = 'step', 'total'
+
+    def __init__(self, group_id=None, step=0, total=0):
+        super().__init__(group_id)
+        self.step = step
+        self.total = total
 
 
 ManagerType = Callable[[Notification], None]

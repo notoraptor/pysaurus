@@ -67,7 +67,7 @@ class Table:
 
 
 class ToDict:
-    __slots__ = []
+    __slots__ = ()
 
     def get_name(self):
         return type(self).__name__
@@ -76,7 +76,7 @@ class ToDict:
         if hasattr(self, '__props__'):
             return self.__props__
         return sorted(
-            chain.from_iterable(getattr(cls, '__slots__', []) for cls in type(self).__mro__))
+            chain.from_iterable(getattr(cls, '__slots__', ()) for cls in type(self).__mro__))
 
     def to_dict(self, **extra):
         dct = {field: getattr(self, field) for field in self.get_slots()}
@@ -85,10 +85,12 @@ class ToDict:
         return dct
 
     def __str__(self):
-        return '%s(%s)' % (
-            self.get_name(),
-            ', '.join(
-                '%s=%s' % (name, to_printable(getattr(self, name))) for name in self.get_slots()))
+        values = []
+        for name in self.get_slots():
+            value = getattr(self, name)
+            if value is not None:
+                values.append((name, value))
+        return '%s(%s)' % (self.get_name(), ', '.join('%s=%s' % (name, to_printable(value)) for name, value in values))
 
 
 class Enumeration:

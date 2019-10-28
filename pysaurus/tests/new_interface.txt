@@ -14,16 +14,10 @@ Functions:
 			notify DatabaseReady(database)
 	update_database(database, reset_thumbnail_errors)
 		todo
-component SelectionList values=[]
-	method getValue() -> selected value, or None
-	Scrollable horizontal=false
-		[Label]
-			# one label per value
-			# one label selected at time, selection on click, selected must have specific appearance
 component ProgressBar value:unsigned int, total:unsigned int
 component Confirm title:str, lines:List[str], action:callable
-component Window title=''
-	# Blocking top view with title bar containing a title and a clove button, as content frame
+component Dialog title=''
+	# Blocking top view with title bar containing a title and a close button, as content frame
 component Spoiler title=''
 	method spoil():
 		if spoilerButton.title == "show":
@@ -31,7 +25,7 @@ component Spoiler title=''
 			children.disabled = False
 		else:  # spoilerButton.title == "hide"
 			spoilerButton.title = "show"
-			children.disables = True
+			children.disabled = True
 	Column
 		Row
 			Button spoilerButton title="show" onclick={this.spoil}
@@ -47,7 +41,7 @@ class VideoFolders values=[]
 				ContextMenu
 					"Delete" => TODO
 	Row
-		InputFolder newVideoFolder
+		FolderInput newVideoFolder
 		Button title="add" onclick={this.addValue(newVideoFolder.getValue())}
 class NotificationInterface group:int, endif:callable, onend:callback endname:str
 	var steps = {}
@@ -104,7 +98,7 @@ class Video video=object
 Panel home
 	TabGroup
 		Tab openDatabase
-			SelectionList existingDatabases
+			Select existingDatabases
 			Button title="open" onclick={open_database(existingDatabases.getValue())}
 		Tab createDatabase
 			Label text="Database name:"
@@ -130,12 +124,12 @@ Panel database data:Database
 		view = list[database.videos()]
 	MenuBar
 		Database
-			Manage video folders ... -> Window
+			Manage video folders ... -> Dialog
 				VideoFolders videoFolders
 				Row
 					Button save onclick={save video folders}
 					Button cancel
-			Clean up ... -> Window
+			Clean up ... -> Dialog
 				Checkbox deleteNotFound title="delete entries not found"
 				Checkbox deleteDiscarded title="delete discarded entries"
 				Label "Help"
@@ -148,7 +142,7 @@ Panel database data:Database
 				Row
 					Button cleanup -> Confirm(action={cleanup database and close window})
 					Button cancel
-			Refresh ... -> Window
+			Refresh ... -> Dialog
 				Panel confirmRefresh
 					Checkbox resetThumbnailErrors title="ignore thumbnails errors"
 					Row
@@ -165,11 +159,11 @@ Panel database data:Database
 					)
 			Close ... -> Confirm(action={close everything and go back to panel home})
 		View
-			Unreadable: checkbox, default = false
-			Valid: checkbox, default = true
-			Without thumbnails: checkbox, default = true
-			With thumbnails: checkbox, default = true
-			Statistics ... -> Window
+			Show|Hide Unreadable: menu with switched title, default = hide
+			Show|Hide Valid: menu with switched title, default = show
+			Show|Hide Without thumbnails: menu with switched title, default = show
+			Show|Hide With thumbnails: menu with switched title, default = show
+			Statistics ... -> Dialog
 				Labels:
 					Number of entries
 					Number of entries discarded
@@ -180,8 +174,8 @@ Panel database data:Database
 					Number of valid videos found
 					Number of valid videos found without thumbnails
 					Number of valid videos found with thumbnails
-			Group videos by ... -> Window
-				SelectionList videoProperties list=(["none"] + [video properties])
+			Group videos by ... -> Dialog
+				Select videoProperties list=(["none"] + [video properties])
 				Row
 					Button group onclick={group videos by selected property and put groups in view}
 					Button cancel
@@ -207,7 +201,7 @@ Panel database data:Database
 				(if view is a list of videos)
 					Row
 						Label Sort by
-						Dropdown sortProperty values={video properties}
+						Select sortProperty values={video properties}
 						Checkbox reverse
 				(if view is a list of video groups)
 					Row
@@ -224,10 +218,10 @@ Panel database data:Database
 		(if view is a list of videos)
 			Pagination
 				form paginationBar onChange={display videos corresponding to selected page}
-					Dropdown nbVideosPerPage
+					Select nbVideosPerPage
 					Button previousPage
 						# Disabled if current page is 0
-					Dropdown currentPage
+					Select currentPage
 					Button nextPage
 						# Disabled if current page is last page
 			Scrollable horizontal=false
