@@ -104,7 +104,7 @@ class Database:
             return self.__thumbs
         self.__thumbs.clear()
         with Profiler('Collect thumbnails', self.__notifier):
-            for path_string in self.__db_path.listdir():
+            for path_string in self.__thumb_folder.listdir():
                 if path_string.lower().endswith('.%s' % THUMBNAIL_EXTENSION):
                     if self.system_is_case_insensitive:
                         path_string = path_string.lower()
@@ -278,7 +278,8 @@ class Database:
             self.__date = current_date
             self.save()
         if unreadable:
-            self.__notifier.notify(notifications.VideoInfoErrors(unreadable))
+            self.__notifier.notify(notifications.VideoInfoErrors(
+                {file_name: video_state.errors for file_name, video_state in unreadable.items()}))
 
     def ensure_thumbnails(self):
         cpu_count = os.cpu_count()
@@ -349,9 +350,9 @@ class Database:
         del thumb_results
         assert nb_results == nb_videos_no_thumbs
 
-        self.__notify_missing_thumbnails()
         if thumb_errors:
             self.__notifier.notify(notifications.VideoThumbnailErrors(thumb_errors))
+        self.__notify_missing_thumbnails()
         self.save()
 
     def ensure_miniatures(self):

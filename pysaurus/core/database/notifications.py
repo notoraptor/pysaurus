@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, List
 
 from pysaurus.core.classes import StringPrinter
 from pysaurus.core.notification import Notification, Info
@@ -152,7 +152,7 @@ class MissingThumbnails(MissingVideos):
 class VideoInfoErrors(Notification):
     __slots__ = ['video_errors']
 
-    def __init__(self, video_errors: dict):
+    def __init__(self, video_errors: Dict[str, List[str]]):
         super().__init__()
         self.video_errors = {str(file_name): errors for file_name, errors in video_errors.items()}
 
@@ -161,7 +161,7 @@ class VideoInfoErrors(Notification):
             printer.write('%s: %d' % (type(self).__name__, len(self.video_errors)))
             for file_name, errors in self.video_errors.items():
                 printer.title(file_name)
-                for video_error in errors.errors:
+                for video_error in errors:
                     printer.write('\t%s' % video_error)
             return str(printer)
 

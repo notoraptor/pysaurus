@@ -202,6 +202,7 @@ class API:
             self.database.save()
 
     def update(self, ensure_miniatures=False):
+        self.reset_thumbnail_errors()
         self.database.update()
         self.database.ensure_thumbnails()
         if ensure_miniatures:
