@@ -352,6 +352,7 @@ class Database:
 
         if thumb_errors:
             self.__notifier.notify(notifications.VideoThumbnailErrors(thumb_errors))
+        self.__check_thumbnails_on_disk()
         self.__notify_missing_thumbnails()
         self.save()
 

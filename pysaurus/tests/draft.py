@@ -1,4 +1,5 @@
-from typing import List, Any
+from enum import Enum, auto
+from typing import Any, List
 
 
 ###########################
@@ -8,11 +9,19 @@ from typing import List, Any
 # Utilities.
 # ----------
 
+class Side(Enum):
+    TOP = auto()
+    RIGHT = auto()
+    BOTTOM = auto()
+    LEFT = auto()
+
+
 class Padding:
     top: int
     right: int
     bottom: int
     left: int
+
 
 # Menus
 # -----
@@ -52,7 +61,7 @@ class StateWidget(ActiveWidget):
 
 
 class Container(Widget):
-    children: list
+    children: List[Widget]
 
 
 # Abstract widgets with rendering
@@ -79,6 +88,13 @@ class Column(Container):
 
 class Row(Container):
     pass
+
+
+class BorderLayout(Container):
+    top_left: Side = Side.TOP
+    top_right: Side = Side.TOP
+    bottom_left: Side = Side.BOTTOM
+    bottom_right: Side = Side.BOTTOM
 
 
 # Widgets
