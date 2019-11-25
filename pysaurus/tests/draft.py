@@ -17,10 +17,10 @@ class Side(Enum):
 
 
 class Padding:
-    top: int
-    right: int
-    bottom: int
-    left: int
+    top: int = 0
+    right: int = 0
+    bottom: int = 0
+    left: int = 0
 
 
 # Menus
@@ -49,7 +49,7 @@ class ContextMenu(Menu):
 
 class Widget:
     allow_context_menu: bool = False
-    context_menu: ContextMenu
+    context_menu: ContextMenu = None
 
 
 class ActiveWidget(Widget):
@@ -97,6 +97,15 @@ class BorderLayout(Container):
     bottom_right: Side = Side.BOTTOM
 
 
+# Conceptual widgets (that cannot be rendered alone)
+
+class Option(Widget):
+    # Select option.
+    # DEPENDENT: Select
+    title: str
+    value: Any
+
+
 # Widgets
 # -------
 
@@ -129,26 +138,22 @@ class Image(Widget):
 class TextInput(StateWidget):
     """ Editable one-line text unit with one associated text style. """
     # Text dimensions are defined by text style.
+    # Currently, height is text height + padding top + padding bottom
     width: int
-    height: int
     padding: Padding
 
 
-class SelectOption(Widget):
-    # DEPENDENT: Select
-    title: str
-    value: Any
-
-
 class Select(StateWidget):
-    default: int = 0
+    # Text style for options.
+    index: int = 0
+    options: List[Option]
 
 
 class Button(AbstractButton):
     on_click: callable
 
 
-class SubmitButton(AbstractButton):
+class SubmitInput(AbstractButton):
     # Should have a form as ancestor.
     pass
 
