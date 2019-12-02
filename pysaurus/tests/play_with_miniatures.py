@@ -1,5 +1,6 @@
 from typing import Tuple, List, Optional
 
+from pysaurus.core.classes import Fraction
 from pysaurus.core.database.api import API
 from pysaurus.core.functions import pgcd, flat_to_coord
 from pysaurus.core.native.video_raptor.alignment import Miniature
@@ -16,57 +17,6 @@ def simplify_fraction(a, b):
 def compute_fraction(a, b):
     # type: (int, int) -> float
     return a / b
-
-
-class Fraction:
-    __slots__ = 'sign', 'num', 'den'
-
-    def __init__(self, a, b):
-        # type: (int, int) -> None
-        if b == 0:
-            raise ZeroDivisionError('%d/%d' % (a, b))
-        if a == 0:
-            self.sign = 1
-            self.num = 0
-            self.den = 1
-            return
-        if a < 0 and b < 0:
-            self.sign = 1
-            self.num = -a
-            self.den = -b
-        elif a * b < 0:
-            self.sign = -1
-            self.num = abs(a)
-            self.den = abs(b)
-        else:
-            # a > 0 and b > 0
-            self.sign = 1
-            self.num = a
-            self.den = b
-        d = pgcd(self.num, self.den)
-        self.num //= d
-        self.den //= d
-
-    def __float__(self):
-        return self.sign * self.num / self.den
-
-    def __str__(self):
-        if self.den == 0:
-            return '0'
-        if self.den == 1:
-            return '%s%d' % ('-' if self.sign < 0 else '', self.num)
-        return '%s%d/%d' % ('-' if self.sign < 0 else '', self.num, self.den)
-
-    def __hash__(self):
-        return hash((self.sign, self.num, self.den))
-
-    def __eq__(self, other):
-        return self.sign == other.sign and self.num == other.num and self.den == other.den
-
-    def __lt__(self, other):
-        if self.sign == other.sign:
-            return self.sign * (self.num * other.den - self.den * other.num) < 0
-        return self.sign < other.sign
 
 
 def global_intensity(miniature):

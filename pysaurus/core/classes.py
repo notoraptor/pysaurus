@@ -3,7 +3,7 @@ from io import StringIO
 from itertools import chain
 from typing import Any, Generic, List, TypeVar
 
-from pysaurus.core.functions import to_printable
+from pysaurus.core.functions import to_printable, pgcd
 
 T = TypeVar('T')
 
@@ -155,3 +155,54 @@ class ListView(Generic[T]):
 
     def __iter__(self):
         return (self.__seq[i] for i in range(self.__start, self.__end))
+
+
+class Fraction:
+    __slots__ = 'sign', 'num', 'den'
+
+    def __init__(self, a, b):
+        # type: (int, int) -> None
+        if b == 0:
+            raise ZeroDivisionError('%d/%d' % (a, b))
+        if a == 0:
+            self.sign = 1
+            self.num = 0
+            self.den = 1
+            return
+        if a < 0 and b < 0:
+            self.sign = 1
+            self.num = -a
+            self.den = -b
+        elif a * b < 0:
+            self.sign = -1
+            self.num = abs(a)
+            self.den = abs(b)
+        else:
+            # a > 0 and b > 0
+            self.sign = 1
+            self.num = a
+            self.den = b
+        d = pgcd(self.num, self.den)
+        self.num //= d
+        self.den //= d
+
+    def __float__(self):
+        return self.sign * self.num / self.den
+
+    def __str__(self):
+        if self.den == 0:
+            return '0'
+        if self.den == 1:
+            return '%s%d' % ('-' if self.sign < 0 else '', self.num)
+        return '%s%d/%d' % ('-' if self.sign < 0 else '', self.num, self.den)
+
+    def __hash__(self):
+        return hash((self.sign, self.num, self.den))
+
+    def __eq__(self, other):
+        return self.sign == other.sign and self.num == other.num and self.den == other.den
+
+    def __lt__(self, other):
+        if self.sign == other.sign:
+            return self.sign * (self.num * other.den - self.den * other.num) < 0
+        return self.sign < other.sign
