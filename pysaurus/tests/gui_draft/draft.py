@@ -1,5 +1,3 @@
-from pysaurus.core.classes import Fraction
-
 class Node:
     has_parent = True
     has_children = False
@@ -59,9 +57,20 @@ class Size:
 
 class RelativeSize:
     reference = None  # type: Widget
-    value = 0
-    # percent
-    # fraction
+    value: float = 0
+    # floating f(r, x) = r * x
+
+
+class FractionSize(RelativeSize):
+    # fraction f(r, a, b) = r * a / b
+    def __init__(self, a, b):
+        self.value = a / b
+
+
+class PercentSize(RelativeSize):
+    # percent f(r, x) = r * x /100
+    def __init__(self, value):
+        super().__init__(value, 100)
 
 
 class AutoSize:

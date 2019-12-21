@@ -451,6 +451,8 @@ class Database:
         # type: (VideoState) -> AbsolutePath
         if video.filename.isfile():
             video.filename.delete()
+        if video.filename in self.__disk:
+            self.__disk.remove(video.filename)
         if video.filename in self.__videos:
             del self.__videos[video.filename]
             if isinstance(video, Video):
@@ -465,6 +467,9 @@ class Database:
         if video.filename.title != new_title:
             new_filename = video.filename.new_title(new_title)
             if video.filename in self.__videos:
+                if video.filename in self.__disk:
+                    self.__disk.remove(video.filename)
+                    self.__disk.add(new_filename)
                 del self.__videos[video.filename]
                 self.__videos[new_filename] = video
                 video.filename = new_filename

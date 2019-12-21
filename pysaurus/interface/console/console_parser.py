@@ -88,8 +88,11 @@ class ConsoleParser(FunctionParser):
             for size in sorted(duplicated_sizes.keys()):
                 elements = duplicated_sizes[size]  # type: list
                 elements.sort(key=lambda v: v.filename)
+                indices = []
                 for video in elements:
                     lines.append([size, video.video_id, '"%s"' % video.filename])
+                    indices.append(video.video_id)
+                lines.append(["", "", "playlist %s" % (' '.join(str(video_id) for video_id in indices))])
                 lines.append([])
             return Table(headers=headers, lines=lines)
 

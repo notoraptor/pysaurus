@@ -1,8 +1,8 @@
 from typing import Dict, List, Tuple, Union
 
 from pysaurus.core import exceptions, functions as utils
-from pysaurus.core.classes import Enumeration, Table
-from pysaurus.core.components import AbsolutePath, Duration, FileSize
+from pysaurus.core.classes import Enumeration, Table, StringPrinter
+from pysaurus.core.components import AbsolutePath, Duration, FileSize, FilePath
 from pysaurus.core.database import path_utils
 from pysaurus.core.database.database import Database
 from pysaurus.core.database.video import Video
@@ -10,6 +10,10 @@ from pysaurus.core.database.video_state import VideoState
 from pysaurus.core.function_parsing.function_parser import FunctionParser
 from pysaurus.core.functions import bool_type
 from pysaurus.core.notification import Notifier
+import tempfile
+
+TEMP_DIR = tempfile.gettempdir()
+TEMP_PREFIX = tempfile.gettempprefix() + '_pysaurus_'
 
 NbType = Enumeration(('entries', 'discarded', 'not_found', 'found', 'unreadable', 'valid', 'thumbnails'))
 FieldType = Enumeration(Video.ROW_FIELDS)
@@ -48,6 +52,7 @@ class API:
         function_parser.add(self.open_from_filename, arguments={'filename': str})
         function_parser.add(self.open_image, arguments={'video_id': int})
         function_parser.add(self.open_image_from_filename, arguments={'filename': str})
+        function_parser.add(self.playlist, arguments={'indices': str})
         function_parser.add(self.rename, arguments={'video_id': int, 'new_title': str})
         function_parser.add(self.rename_from_filename, arguments={'filename': str, 'new_title': str})
         function_parser.add(self.reset_thumbnail_errors)
@@ -113,6 +118,55 @@ class API:
     def open(self, video_id):
         # type: (int) -> AbsolutePath
         return self.database.get_video_from_id(video_id).filename.open()
+
+    def playlist(self, indices):
+        # type: (str) -> str
+        videos = []
+        errors = []
+        unknown = []
+        for piece in indices.strip().split():
+            if piece:
+                try:
+                    video_id = int(piece)
+                except ValueError:
+                    errors.append(piece)
+                else:
+                    video = self.database.get_video_from_id(video_id, required=False)
+                    if video:
+                        videos.append(video)
+                    else:
+                        unknown.append(video_id)
+        temp_file_path = None
+        if videos:
+            tracks = ''.join('<track><location>%s</location></track>' % video.filename.uri for video in videos)
+            file_content = """<?xml version="1.0" encoding="UTF-8"?>
+<playlist version="1" xmlns="http://xspf.org/ns/0/"><trackList>%s</trackList></playlist>""" % tracks
+            temp_file_id = 0
+            while True:
+                temp_file_path = FilePath(TEMP_DIR, '%s%s' % (TEMP_PREFIX, temp_file_id), 'xspf')
+                if temp_file_path.exists():
+                    temp_file_id += 1
+                else:
+                    break
+            with open(temp_file_path.path, 'w') as file:
+                file.write(file_content)
+            temp_file_path.open()
+        with StringPrinter() as printer:
+            if videos:
+                printer.title('Playlist:')
+                for video in videos:
+                    printer.write(video.filename)
+            if errors:
+                printer.title('Invalid:')
+                for error in errors:
+                    printer.write(error)
+            if unknown:
+                printer.title('Unknown:')
+                for value in unknown:
+                    printer.write(value)
+            if temp_file_path:
+                printer.write('Output:', temp_file_path)
+            return str(printer)
 
     def open_from_filename(self, filename):
         # type: (str) -> AbsolutePath

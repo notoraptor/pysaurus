@@ -1,4 +1,5 @@
 import os
+import pathlib
 import shutil
 import subprocess
 from datetime import datetime
@@ -34,8 +35,14 @@ class AbsolutePath(object):
         return self.__path
 
     @property
+    def uri(self):
+        return pathlib.Path(self.standard_path).as_uri()
+
+    @property
     def title(self):
         basename = os.path.basename(self.__path)
+        if self.isdir():
+            return basename
         index_dot = basename.rfind('.')
         if index_dot == 0:
             return basename[1:]
