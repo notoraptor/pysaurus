@@ -4,8 +4,8 @@ from pysaurus.core.native.gui_raptor import rendering
 from pysaurus.core.native.gui_raptor.api import Event, TextInfo, Window
 
 
-def main2():
-    image_folder = AbsolutePath.join(package_dir(), '..', '..', 'guiraptor', 'test')
+def main():
+    image_folder = AbsolutePath.join(package_dir(), '..', '..', 'cysaurus', 'other', 'test', 'gui', 'resource')
     path_image_1 = AbsolutePath.join(image_folder, "tigre.jpg")
     path_image_2 = AbsolutePath.join(image_folder, "Tigerramki.jpg")
     text = rendering.PatternText(content="Hello World! 漢字漢字 漢字! See you soon!", size=50)
@@ -16,15 +16,14 @@ def main2():
         print(text_info.top)
         print(text_info.left)
         print(text_info.coordinates)
-    elements = [
+    frame = rendering.PatternFrame(x=100, y=100, width=400, height=500, patterns=[
         rendering.PatternImage(src=path_image_1.path, height=100, y=80),
         rendering.PatternImage(src=path_image_1.path, x=20, y=60),
         rendering.PatternImage(src=path_image_1.path, x=200, y=200),
         rendering.PatternImage(src=path_image_2.path, x=100, y=400),
-        rendering.PatternImage(src=path_image_2.path, x=300, y=600),
+        rendering.PatternImage(src=path_image_2.path, x=300, y=420),
         text
-    ]
-    frame = rendering.PatternFrame(x=100, y=100, width=400, height=200, patterns=elements)
+    ])
     window = Window(1200, 800, "Hello tigers")
     event = Event()
     with window, event:
@@ -38,4 +37,4 @@ def main2():
 
 
 if __name__ == '__main__':
-    main2()
+    main()

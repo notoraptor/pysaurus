@@ -34,11 +34,11 @@ class Pattern:
 
 
 class PatternText(Pattern):
-    __slots__ = ('x', 'y', 'font', 'content', 'size', 'outline', 'color', 'outlineColor',
+    __slots__ = ('x', 'y', 'font', 'content', 'size', 'outline', 'color', 'outline_color',
                  'bold', 'italic', 'underline', 'strike')
 
     def __init__(self, x=0, y=0, font="serif", content=None, size=12, outline=0, color="black",
-                 outlineColor=None, bold=False, italic=False, underline=False, strike=False):
+                 outline_color=None, bold=False, italic=False, underline=False, strike=False):
         super().__init__(symbols.DRAWING_TYPE_TEXT, symbols.PatternText())
         self.x = x
         self.y = y
@@ -47,11 +47,14 @@ class PatternText(Pattern):
         self.size = size
         self.outline = outline
         self.color = color
-        self.outlineColor = outlineColor
+        self.outline_color = outline_color
         self.bold = bold
         self.italic = italic
         self.underline = underline
         self.strike = strike
+
+    def get_native_outlineColor(self):
+        return self.outline_color
 
 
 class PatternFrame(Pattern):
@@ -89,9 +92,9 @@ class PatternImage(Pattern):
 
 
 class PatternRectangle(Pattern):
-    __slots__ = ('x', 'y', 'width', 'height', 'outline', 'color', 'outlineColor')
+    __slots__ = ('x', 'y', 'width', 'height', 'outline', 'color', 'outline_color')
 
-    def __init__(self, x=0, y=0, width=0, height=0, outline=0, color=None, outlineColor=None):
+    def __init__(self, x=0, y=0, width=0, height=0, outline=0, color=None, outline_color=None):
         # type: (float, float, float, float, float, str, str) -> None
         super().__init__(symbols.DRAWING_TYPE_RECTANGLE, symbols.PatternRectangle())
         self.x = x
@@ -100,4 +103,7 @@ class PatternRectangle(Pattern):
         self.height = height
         self.outline = outline
         self.color = color
-        self.outlineColor = outlineColor
+        self.outline_color = outline_color
+
+    def get_native_outlineColor(self):
+        return self.outline_color
