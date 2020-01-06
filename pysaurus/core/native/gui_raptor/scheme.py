@@ -1,17 +1,3 @@
-import inspect
-
-
-def public_static_attributes_of(cls):
-    for name, value in inspect.getmembers(cls):
-        if not name.startswith('__') and isinstance(value, str):
-            yield name
-
-
-def repr_fields(cls):
-    fields = sorted(public_static_attributes_of(cls))
-    return '%s.ATTRIBUTES = [%s]' % (cls.__name__, ', '.join('Field.%s' % field for field in fields))
-
-
 class Field:
     bold = 'bold'
     color = 'color'
@@ -36,7 +22,11 @@ class Field:
     y = 'y'
 
 
-class Text:
+class Scheme:
+    ATTRIBUTES = ()
+
+
+class Text(Scheme):
     x = Field.x
     y = Field.y
     font = Field.font
@@ -53,7 +43,7 @@ class Text:
                   Field.size, Field.strike, Field.underline, Field.x, Field.y]
 
 
-class Frame:
+class Frame(Scheme):
     x = Field.x
     y = Field.y
     width = Field.width
@@ -63,7 +53,7 @@ class Frame:
     ATTRIBUTES = [Field.count, Field.height, Field.patterns, Field.width, Field.x, Field.y]
 
 
-class Image:
+class Image(Scheme):
     x = Field.x
     y = Field.y
     width = Field.width
@@ -72,7 +62,7 @@ class Image:
     ATTRIBUTES = [Field.height, Field.src, Field.width, Field.x, Field.y]
 
 
-class Rectangle:
+class Rectangle(Scheme):
     x = Field.x
     y = Field.y
     width = Field.width
@@ -81,10 +71,3 @@ class Rectangle:
     color = Field.color
     outline_color = Field.outline_color
     ATTRIBUTES = [Field.color, Field.height, Field.outline, Field.outline_color, Field.width, Field.x, Field.y]
-
-
-if __name__ == '__main__':
-    print(repr_fields(Text))
-    print(repr_fields(Frame))
-    print(repr_fields(Image))
-    print(repr_fields(Rectangle))

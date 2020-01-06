@@ -39,6 +39,10 @@ PatternPtr = POINTER(Pattern)
 PatternPtrPtr = POINTER(PatternPtr)
 
 
+class NoPattern(Structure):
+    _fields_ = []
+
+
 class PatternText(Structure):
     _fields_ = [
         ('x', c_float),

@@ -1,18 +1,31 @@
 from ctypes import Structure, c_char_p, c_void_p, cast, pointer
 from typing import Iterable, List, Optional
 
-from pysaurus.core.native.gui_raptor import symbols
+from pysaurus.core.native.gui_raptor import symbols, scheme
+
+
+def get_ctypes(cls):
+    return {name: c_type for name, c_type in cls._fields_}
 
 
 class Pattern:
     __slots__ = ['__type', '__native', '__pattern', '__pointer']
+    __scheme__ = scheme.Scheme
+    __pattern__ = symbols.NoPattern
+    __ctypes__ = get_ctypes(symbols.NoPattern)
 
     def __init__(self, drawing_type, native_structure):
         # type: (int, Structure) -> None
         self.__type = drawing_type
-        self.__native = native_structure
+        self.__native = self.__pattern__()
         self.__pattern = symbols.Pattern(self.__type, cast(pointer(self.__native), c_void_p))
         self.__pointer = pointer(self.__pattern)
+
+    def get(self, field):
+        value = getattr(self.__native, field)
+
+    def set(self, field, value):
+        pass
 
     def __update(self):
         for field, _ in self.__native._fields_:
@@ -36,6 +49,7 @@ class Pattern:
 class PatternText(Pattern):
     __slots__ = ('x', 'y', 'font', 'content', 'size', 'outline', 'color', 'outline_color',
                  'bold', 'italic', 'underline', 'strike')
+    __scheme__ = scheme.Text
 
     def __init__(self, x=0, y=0, font="serif", content=None, size=12, outline=0, color="black",
                  outline_color=None, bold=False, italic=False, underline=False, strike=False):
@@ -59,6 +73,7 @@ class PatternText(Pattern):
 
 class PatternFrame(Pattern):
     __slots__ = ('x', 'y', 'width', 'height', 'patterns')
+    __scheme__ = scheme.Frame
 
     def __init__(self, x=0, y=0, width=0, height=0, patterns=None):
         # type: (float, float, int, int, Optional[Iterable[Pattern]]) -> None
@@ -80,6 +95,7 @@ class PatternFrame(Pattern):
 
 class PatternImage(Pattern):
     __slots__ = ('x', 'y', 'width', 'height', 'src')
+    __scheme__ = scheme.Image
 
     def __init__(self, x=0, y=0, width=-1, height=-1, src=None):
         # type: (float, float, float, float, str) -> None
@@ -93,6 +109,7 @@ class PatternImage(Pattern):
 
 class PatternRectangle(Pattern):
     __slots__ = ('x', 'y', 'width', 'height', 'outline', 'color', 'outline_color')
+    __scheme__ = scheme.Rectangle
 
     def __init__(self, x=0, y=0, width=0, height=0, outline=0, color=None, outline_color=None):
         # type: (float, float, float, float, float, str, str) -> None
