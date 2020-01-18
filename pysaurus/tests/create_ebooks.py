@@ -1,9 +1,14 @@
 import argparse
 from pysaurus.core.components import AbsolutePath, FilePath
+from pysaurus.core.modules import ImageUtils
+from pysaurus.core.functions import timestamp_microseconds
 import re
 import sys
 from typing import List
 import zipfile
+import tempfile
+
+TEMP_DIR = tempfile.gettempdir()
 
 REGEX_NUMBER = re.compile(r'[0-9]+')
 SUPPORTED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
@@ -35,24 +40,48 @@ class Converter:
             if self.file:
                 self.file.close()
 
+    def convert_image(self, log_file, input_image: AbsolutePath):
+        if input_image.extension == 'png':
+            return input_image
+        output_image = FilePath(input_image.get_directory(), input_image.title, 'png')
+        if not output_image.isfile():
+            image = ImageUtils.open_rgb_image(input_image.path)
+            ImageUtils.save_rgb_image(*image.size, image.getdata(), output_image.path)
+            assert output_image.isfile()
+            message(log_file, 'CONVERTED', input_image.get_directory(), '%s => %s' % (input_image.get_basename(), output_image.get_basename()))
+        return output_image
+
     def convert_to_ebook(self, directory, files, log_file):
         # type: (AbsolutePath, List[AbsolutePath], object) -> None
+        to_update = False
+        convert_images = len({file.extension for file in files}) != 1
+        if convert_images:
+            for input_file in files:
+                output_file = self.convert_image(log_file, input_file)
+                to_update = to_update or output_file != input_file
+
         upper_directory = directory.get_directory()
         output_directory = AbsolutePath(upper_directory.path.replace(self.input_folder.path, self.output_folder.path))
         output_ebook = FilePath(output_directory, directory.title, 'cbz')
-        if output_ebook.isfile() and output_ebook.get_size():
+        if output_ebook.isfile() and output_ebook.get_size() > 1024 and not to_update:
             message(log_file, 'EXISTS', directory, '%d image(s) => %s' % (len(files), output_ebook))
         else:
             try:
+                new_files = set()
+                for file in files:
+                    if convert_images:
+                        new_files.add(self.convert_image(log_file, file))
+                    else:
+                        new_files.add(file)
                 output_directory.mkdir()
                 with zipfile.ZipFile(
                         output_ebook.path, mode='w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as ebook:
-                    for file in files:
-                        ebook.write(file.path)
+                    for file in sorted(new_files):
+                        ebook.write(file.path, file.get_basename())
             except Exception as e:
                 fatal_error(log_file, directory, '%d image(s) => %s: %s' % (len(files), output_ebook, e))
             else:
-                message(log_file, 'SUCCESS', directory, '%d image(s) => %s' % (len(files), output_ebook))
+                message(log_file, 'SUCCESS', directory, '%d image(s) => %s%s' % (len(files), output_ebook, ' (updated)' if to_update else ''))
 
     def visit(self, directory: AbsolutePath, log_file):
         assert directory.isdir()
@@ -70,7 +99,7 @@ class Converter:
             if any(extension in SUPPORTED_EXTENSIONS for extension in extensions):
                 # Found images.
                 for file in files:
-                    if REGEX_NUMBER.search(file.title) and file.title != directory.title:
+                    if file.title != directory.title and REGEX_NUMBER.search(file.title):
                         return fatal_error(
                             log_file,
                             directory,
