@@ -55,7 +55,8 @@ class VideoInfo(Structure):
         ("duration_time_base", c_int64),
         ("size", c_int64),
         ("audio_bit_rate", c_int64),
-        ("report", VideoReport)
+        ("report", VideoReport),
+        ("device_name", c_char_p),
     ]
 
 

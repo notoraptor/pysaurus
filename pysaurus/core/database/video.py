@@ -54,12 +54,13 @@ class Video(VideoState):
     __slots__ = ('meta_title', 'container_format',
                  'audio_codec', 'video_codec', 'audio_codec_description', 'video_codec_description',
                  'width', 'height', 'frame_rate_num', 'frame_rate_den', 'sample_rate',
-                 'duration', 'duration_time_base', 'audio_bit_rate', 'thumb_name')
+                 'duration', 'duration_time_base', 'audio_bit_rate', 'thumb_name', 'device_name')
 
     MIN_TO_LONG = {'n': 'meta_title', 'c': 'container_format', 'a': 'audio_codec', 'v': 'video_codec',
                    'A': 'audio_codec_description', 'V': 'video_codec_description',
                    'w': 'width', 'h': 'height', 'x': 'frame_rate_num', 'y': 'frame_rate_den', 'u': 'sample_rate',
-                   'd': 'duration', 't': 'duration_time_base', 'r': 'audio_bit_rate', 'i': 'thumb_name'}
+                   'd': 'duration', 't': 'duration_time_base', 'r': 'audio_bit_rate', 'i': 'thumb_name',
+                   'b': 'device_name'}
 
     LONG_TO_MIN = {_long: _min for _min, _long in MIN_TO_LONG.items()}
 
@@ -75,7 +76,7 @@ class Video(VideoState):
                  meta_title='', container_format='', audio_codec='', video_codec='',
                  audio_codec_description='', video_codec_description='', width=0, height=0,
                  frame_rate_num=0, frame_rate_den=0, sample_rate=0, duration=0, duration_time_base=0,
-                 audio_bit_rate=0, thumb_name='', from_dictionary=None):
+                 audio_bit_rate=0, thumb_name='', device_name='', from_dictionary=None):
         """
         :type filename: AbsolutePath | str
         :type database: pysaurus.core.database.database.Database
@@ -97,6 +98,7 @@ class Video(VideoState):
         :type duration_time_base: int
         :type audio_bit_rate: int
         :type thumb_name: str
+        :type device_name: str
         :type from_dictionary: dict
         """
         if from_dictionary:
@@ -117,6 +119,7 @@ class Video(VideoState):
             duration_time_base = from_dictionary.get(self.LONG_TO_MIN['duration_time_base'], duration_time_base)
             audio_bit_rate = from_dictionary.get(self.LONG_TO_MIN['audio_bit_rate'], audio_bit_rate)
             thumb_name = from_dictionary.get(self.LONG_TO_MIN['thumb_name'], thumb_name)
+            device_name = from_dictionary.get(self.LONG_TO_MIN['device_name'], device_name)
         super(Video, self).__init__(filename=filename, size=size, errors=errors, video_id=video_id, database=database,
                                     from_dictionary=from_dictionary)
         self.meta_title = html_to_title(meta_title)
@@ -134,6 +137,7 @@ class Video(VideoState):
         self.duration_time_base = duration_time_base or 1
         self.audio_bit_rate = audio_bit_rate
         self.thumb_name = thumb_name
+        self.device_name = device_name
 
     def to_row(self):
         return [getattr(self, field) for field in self.ROW_FIELDS]
@@ -192,6 +196,7 @@ class Video(VideoState):
         dct = super().to_dict()
         len_before = len(dct)
         for _min, _long in self.MIN_TO_LONG.items():
+            assert _min not in dct, (_min, _long)
             dct[_min] = getattr(self, _long)
         assert len(dct) == len_before + len(self.MIN_TO_LONG)
         return dct

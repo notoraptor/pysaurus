@@ -165,6 +165,7 @@ class Database:
         self.__checked_disk = True
         self.__checked_thumbs = True
         self.__notifier.notify(notifications.DatabaseLoaded(self))
+        self.__ensure_identifiers()
 
     def __ensure_identifiers(self):
         without_identifiers = []
@@ -288,6 +289,8 @@ class Database:
         thumb_to_videos = {}
         thumb_errors = {}
         thumb_jobs = []
+
+        cpu_count = (cpu_count // 2) + 1
 
         # Collect videos with and without thumbnails.
         existing_thumb_names = self.__check_thumbnails_on_disk()
@@ -441,14 +444,14 @@ class Database:
         nb_removed = 0
         for video in list(self.__videos.values()):
             if not video.filename.isfile():
-                self.delete_video(video)
+                self.delete_video(video, save=False)
                 nb_removed += 1
         if nb_removed:
             self.__notifier.notify(notifications.VideosNotFoundRemoved(nb_removed))
             self.save()
 
-    def delete_video(self, video):
-        # type: (VideoState) -> AbsolutePath
+    def delete_video(self, video, save=True):
+        # type: (VideoState, bool) -> AbsolutePath
         if video.filename.isfile():
             video.filename.delete()
         if video.filename in self.__disk:
@@ -459,7 +462,8 @@ class Database:
                 del self.__id_to_video[video.video_id]
         if isinstance(video, Video):
             video.get_thumbnail_path().delete()
-        self.save()
+        if save:
+            self.save()
         return video.filename
 
     def change_video_file_title(self, video, new_title):

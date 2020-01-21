@@ -66,7 +66,8 @@ def _info_to_params(video_info: symbols.VideoInfo):
             'height': video_info.height, 'frame_rate_num': video_info.frame_rate_num,
             'frame_rate_den': video_info.frame_rate_den, 'sample_rate': video_info.sample_rate,
             'duration': video_info.duration, 'duration_time_base': video_info.duration_time_base,
-            'size': video_info.size, 'audio_bit_rate': video_info.audio_bit_rate}
+            'size': video_info.size, 'audio_bit_rate': video_info.audio_bit_rate,
+            'device_name': video_info.device_name}
 
 
 class VideoInfoCollector:
