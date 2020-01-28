@@ -127,20 +127,16 @@ class VideoThumbnailGenerator:
         encoded_thumb_names = [thumb_name.encode() for thumb_name in thumb_names]
 
         for i in range(len(file_names)):
-            symbols.fn_VideoThumbnail_init(
-                self.pointers[i],
-                c_char_p(encoded_file_names[i]),
-                self.c_output_folder,
-                c_char_p(encoded_thumb_names[i])
-            )
+            symbols.fn_VideoThumbnail_init(self.pointers[i],
+                                           c_char_p(encoded_file_names[i]),
+                                           self.c_output_folder,
+                                           c_char_p(encoded_thumb_names[i]))
 
         symbols.fn_videoRaptorThumbnails(len(file_names), symbols.PtrPtrVideoThumbnail(self.array_object))
 
         for i in range(len(file_names)):
             video_thumb = self.objects[i]
-            output[i] = VideoRaptorResult(
-                done=symbols.fn_VideoReport_isDone(pointer(video_thumb.report)),
-                errors=get_video_info_errors(video_thumb.report),
-            )
+            output[i] = VideoRaptorResult(done=symbols.fn_VideoReport_isDone(pointer(video_thumb.report)),
+                                          errors=get_video_info_errors(video_thumb.report))
 
         return output

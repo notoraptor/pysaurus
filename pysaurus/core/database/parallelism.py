@@ -54,6 +54,7 @@ def job_videos_thumbnails(job):
                                           ListView(thumb_names, cursor, cursor + VIDEO_THUMB_SIZE)))
         cursor += VIDEO_THUMB_SIZE
     notifier.notify(notifications.ThumbnailJob(job_id, count_tasks, count_tasks))
+    del generator
     return file_names, results
 
 
