@@ -49,7 +49,7 @@ class Table:
 
     def __str__(self):
         header_sizes = [max(len(str(self.headers[i])),
-                            max(len(str(line[i])) for line in self.lines if line)) + 2
+                            max(len(str(line[i]) if line else 0) for line in self.lines)) + 2
                         for i in range(len(self.headers))]
         with StringPrinter() as printer:
             printer.write(''.join(

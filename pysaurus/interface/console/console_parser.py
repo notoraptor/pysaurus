@@ -1,6 +1,6 @@
 from pysaurus.core.classes import StringPrinter, Table
 from pysaurus.core.components import FileSize
-from pysaurus.core.database.api import API
+from pysaurus.core.database.api import API, parse_fields
 from pysaurus.core.function_parsing.function_parser import FunctionParser
 
 
@@ -61,12 +61,20 @@ class ConsoleParser(FunctionParser):
                     printer.write('\t(nothing)')
             return str(printer)
 
-    def list(self, field, reverse, page_size, page_number):
-        selected_videos = self.api.list(field, reverse, page_size, page_number)
-        headers = ['ID', field.upper(), 'Path']
+    def list(self, fields, page_size, page_number):
+        selected_videos = self.api.list(fields, page_size, page_number)
+        fields = parse_fields(fields)
+        headers = ['ID']
+        for field in fields:
+            headers.append(field.upper())
+        headers.append('Path')
         lines = []
         for i, video in enumerate(selected_videos):
-            lines.append([video.video_id, video.get(field), video.filename])
+            line = [video.video_id]
+            for field in fields:
+                line.append(video.get(field))
+            line.append(video.filename)
+            lines.append(line)
         return Table(headers=headers, lines=lines)
 
     def missing_thumbnails(self):

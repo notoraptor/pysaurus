@@ -11,12 +11,38 @@ from pysaurus.core.function_parsing.function_parser import FunctionParser
 from pysaurus.core.functions import bool_type
 from pysaurus.core.notification import Notifier
 import tempfile
+import functools
+
 
 TEMP_DIR = tempfile.gettempdir()
 TEMP_PREFIX = tempfile.gettempprefix() + '_pysaurus_'
 
 NbType = Enumeration(('entries', 'discarded', 'not_found', 'found', 'unreadable', 'valid', 'thumbnails'))
 FieldType = Enumeration(Video.ROW_FIELDS)
+
+
+def compare_videos(v1: Video, v2: Video, sorting: List[Tuple[str, bool]]):
+    for field, reverse in sorting:
+        f1 = v1.get(field)
+        f2 = v2.get(field)
+        ret = 0
+        if f1 < f2:
+            ret = -1
+        elif f2 < f1:
+            ret = 1
+        if ret:
+            return -ret if reverse else ret
+    return 0
+
+
+def parse_fields(fields: str):
+    real_fields = []
+    pieces = fields.split()
+    for piece in pieces:
+        if piece[0] in '-+':
+            piece = piece[1:]
+        real_fields.append(FieldType(piece))
+    return real_fields
 
 
 class API:
@@ -43,7 +69,7 @@ class API:
         function_parser.add(self.find, arguments={'terms': str})
         function_parser.add(self.find_batch, arguments={'path': str})
         function_parser.add(self.info, arguments={'video_id': int})
-        function_parser.add(self.list, arguments={'field': FieldType, 'reverse': bool_type, 'page_size': int, 'page_number': int})
+        function_parser.add(self.list, arguments={'fields': str, 'page_size': int, 'page_number': int})
         function_parser.add(self.missing_thumbnails)
         function_parser.add(self.nb, arguments={'query': NbType})
         function_parser.add(self.nb_pages, arguments={'query': NbType, 'page_size': int})
@@ -223,13 +249,22 @@ class API:
             results.append((sentence, self.find(sentence)))
         return results
 
-    def list(self, field, reverse, page_size, page_number):
-        # type: (str, bool, int, int) -> List[Video]
+    def list(self, fields, page_size, page_number):
+        # type: (str, int, int) -> List[Video]
         if page_size <= 0:
             raise exceptions.InvalidPageSize(page_size)
-        field = FieldType(field)  # type: str
-        reverse = utils.bool_type(reverse)
-        videos = sorted(self.database.videos(), key=lambda v: v.get(field), reverse=reverse)
+        sorting = []
+        pieces = fields.split()
+        for piece in pieces:
+            if piece[0] in '-+':
+                reverse = piece[0] == '-'
+                piece = piece[1:]
+            else:
+                reverse = False
+            field = FieldType(piece)
+            sorting.append((field, reverse))
+        videos = sorted(self.database.videos(),
+                        key=functools.cmp_to_key(lambda v1, v2: compare_videos(v1, v2, sorting)))
         return videos[(page_size * page_number):(page_size * (page_number + 1))]
 
     def videos(self):
