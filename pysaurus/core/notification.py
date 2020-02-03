@@ -27,19 +27,6 @@ class Notification(ToDict):
             return str(printer)
 
 
-class Info(Notification):
-    __slots__ = ()
-
-
-class Step(Notification):
-    __slots__ = 'step', 'total'
-
-    def __init__(self, group_id=None, step=0, total=0):
-        super().__init__(group_id)
-        self.step = step
-        self.total = total
-
-
 ManagerType = Callable[[Notification], None]
 
 

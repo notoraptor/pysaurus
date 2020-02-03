@@ -1,7 +1,7 @@
 from typing import Dict, List
 
 from pysaurus.core.classes import StringPrinter
-from pysaurus.core.notification import Notification, Info
+from pysaurus.core.notification import Notification
 
 
 class UnusedThumbnails(Notification):
@@ -97,24 +97,6 @@ class DatabaseLoaded(Notification):
 
 class DatabaseSaved(DatabaseLoaded):
     __slots__ = []
-
-
-class DatabaseReady(Info):
-    __slots__ = 'database',
-    __props__ = 'folder',
-
-    def __init__(self, database, group_id=None):
-        """
-
-        :type database: pysaurus.core.database.database.Database
-        :type group_id: int, optional
-        """
-        super().__init__(group_id=group_id)
-        self.database = database
-
-    @property
-    def folder(self):
-        return self.database.folder
 
 
 class VideosToLoad(Notification):

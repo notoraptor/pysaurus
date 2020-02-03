@@ -1,0 +1,67 @@
+include "sciter:reactor.tis";
+include "notifications.tis";
+
+const Status = {
+	INITIAL: 0,
+	LOADING: 1,
+	LOADED: 2
+}
+
+function notifyApp(app, notification) {
+	const messages = app.data.messages.slice();
+	messages.push(notification.message);
+	const update = {messages: messages};
+	if (notification.name === 'DatabaseReady')
+		update.status = Status.LOADED;
+	app.update(update);
+}
+
+class App: Reactor.Component {
+	function this(props, children) {
+		this.props = props || {};
+		this.children = children || {};
+		this.data = {
+			status: Status.INITIAL,
+			messages: [],
+		};
+		this.callbackIndex = -1;
+	}
+	function getInitialButton() {
+		if (this.data.status === Status.INITIAL)
+			return <button :disabled={false}>Load database</button>;
+		if (this.data.status === Status.LOADING)
+			return <button :disabled={true}>Loading database ...</button>;
+		if (this.data.status === Status.LOADED)
+			return <button :disabled={false}>Display videos</button>;
+	}
+	function getMessages() {
+		const messages = this.data.messages.map((message, index) => <div key={index}>{message}</div>);
+		if (messages.length && this.data.status !== Status.LOADED)
+			messages.push(<div key={messages.length}>...</div>);
+		return messages;
+	}
+	function render() {
+		return (
+			<main>
+				<div id="button-initial">{this.getInitialButton()}</div>
+				<div class="notifications">{this.getMessages()}</div>
+			</main>
+		);
+	}
+	function attached() {
+		const app = this;
+		this.callbackIndex = Notifications.register(function(notification) {
+			notifyApp(app, notification);
+		});
+	}
+	function detached() {
+		Notifications.unregister(this.callbackIndex);
+	}
+	event click $(#button-initial > button) (evt, element) {
+		if (this.data.status === Status.INITIAL) {
+			view.load_database();
+			this.update({status: Status.LOADING});
+			return;
+		}
+	}
+}

@@ -1,0 +1,14 @@
+<html>
+<head>
+    <title>Pysaurus</title>
+    <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+    <reactor(App) src="App.tis"></reactor>
+    <script type="text/tiscript">
+        view.root.on('closerequest', function(event) {
+            // Should wait for all threads (including in Python side) to terminate before closing window.
+        });
+    </script>
+</body>
+</html>

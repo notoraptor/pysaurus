@@ -1,7 +1,7 @@
 bcrypt
-cefpython3==66.0
 moviepy
 Pillow
 tornado>=5.0
 ujson
 whirlpool
+PySciter

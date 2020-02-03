@@ -1,0 +1,16 @@
+namespace Notifications {
+	const callbacks = [];
+	function register(callback) {
+		callbacks.push(callback);
+		return callback.length - 1;
+	}
+	function unregister(index) {
+		callbacks.splice(index, 1);
+	}
+}
+
+function notify(notification) {
+	for (let callback in Notifications.callbacks) {
+		callback(notification);
+	}
+}
