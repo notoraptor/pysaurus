@@ -71,6 +71,7 @@ class API:
         function_parser.add(self.find_batch, arguments={'path': str})
         function_parser.add(self.info, arguments={'video_id': int})
         function_parser.add(self.list, arguments={'fields': str, 'page_size': int, 'page_number': int})
+        function_parser.add(self.list_files, arguments={'output': str})
         function_parser.add(self.missing_thumbnails)
         function_parser.add(self.nb, arguments={'query': NbType})
         function_parser.add(self.nb_pages, arguments={'query': NbType, 'page_size': int})
@@ -297,3 +298,10 @@ class API:
         self.database.ensure_thumbnails()
         if ensure_miniatures:
             self.database.ensure_miniatures()
+
+    def list_files(self, output):
+        self.database.list_files(output)
+        output_path = AbsolutePath(output)
+        if not output_path.isfile():
+            raise OSError('Unable to output videos file names in %s' % output_path)
+        return str(output_path)

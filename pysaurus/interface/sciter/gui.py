@@ -7,33 +7,25 @@ from pysaurus.core.database.api import API
 from pysaurus.core.notification import Notifier, Notification
 from pysaurus.interface.common.common_functions import launch_thread
 import threading
+from typing import Optional
 
 
 class DatabaseReady(Notification):
     __slots__ = ()
 
 
-class SciterNotifier(Notifier):
-    def __init__(self, frame):
-        # type: (Frame) -> None
-        super().__init__()
-        self.set_default_manager(frame.notify)
-
-
 class Frame(sciter.Window):
     def __init__(self):
         super().__init__(ismain=True, uni_theme=True)
+        notifier = Notifier()
+        notifier.set_default_manager(self.notify)
         self.api = None
-        self.notifier = SciterNotifier(self)
-        self.thread = None  # type: threading.Thread
+        self.notifier = notifier
+        self.thread = None  # type: Optional[threading.Thread]
 
     def _load_database(self):
         self.api = API(TEST_LIST_FILE_PATH, notifier=self.notifier, ensure_miniatures=False)
         self.notifier.notify(DatabaseReady())
-
-    @sciter.script
-    def load_database(self):
-        self.thread = launch_thread(self._load_database)
 
     def notify(self, notification):
         # type: (Notification) -> None
@@ -43,6 +35,10 @@ class Frame(sciter.Window):
             'notification': notification.to_dict(),
             'message': str(notification)
         })
+
+    @sciter.script
+    def load_database(self):
+        self.thread = launch_thread(self._load_database)
 
 
 def main():

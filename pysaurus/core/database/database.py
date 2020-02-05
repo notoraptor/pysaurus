@@ -399,6 +399,18 @@ class Database:
             json.dump([miniatures[identifier].to_dict() for identifier in sorted(miniatures)], output_file)
         return miniatures
 
+    def list_files(self, output_name):
+        with open(output_name, 'wb') as file:
+            file.write('# Videos\n'.encode())
+            for file_name in sorted(self.__videos):
+                file.write(('%s\n' % str(file_name)).encode())
+            file.write('# Unreadable\n'.encode())
+            for file_name in sorted(self.__unreadable):
+                file.write(('%s\n' % str(file_name)).encode())
+            file.write('# Discarded\n'.encode())
+            for file_name in sorted(self.__discarded):
+                file.write(('%s\n' % str(file_name)).encode())
+
     # Public features.
 
     def video_exists(self, path):

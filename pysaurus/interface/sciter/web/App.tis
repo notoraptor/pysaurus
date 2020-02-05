@@ -9,7 +9,7 @@ const Status = {
 
 function notifyApp(app, notification) {
 	const messages = app.data.messages.slice();
-	messages.push(notification.message);
+	messages.push(notification);
 	const update = {messages: messages};
 	if (notification.name === 'DatabaseReady')
 		update.status = Status.LOADED;
@@ -35,8 +35,8 @@ class App: Reactor.Component {
 			return <button :disabled={false}>Display videos</button>;
 	}
 	function getMessages() {
-		const messages = this.data.messages.map((message, index) => <div key={index}>{message}</div>);
-		if (messages.length && this.data.status !== Status.LOADED)
+		const messages = this.data.messages.map((message, index) => <div key={index}>{message.message}</div>);
+		if (messages.length && this.data.status < Status.LOADED)
 			messages.push(<div key={messages.length}>...</div>);
 		return messages;
 	}
