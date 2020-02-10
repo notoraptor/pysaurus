@@ -7,7 +7,6 @@ from PIL import Image
 from moviepy.video.io.VideoFileClip import VideoFileClip
 
 from pysaurus.core.exceptions import NoVideoClip
-from pysaurus.core.functions import whirlpool_hash
 
 
 class HTMLStripper(HTMLParser):
@@ -97,7 +96,7 @@ class VideoClipping:
             raise NoVideoClip()
         if unique_id is None:
             path = os.path.abspath(path)
-            unique_id = whirlpool_hash(path)
+            unique_id = FNV64.hash(path)
         output_name = '%s_%s_%s.mp4' % (unique_id, time_start, clip_seconds)
         print('Taking clip from %s to %s sec in: %s' % (time_start, time_end, output_name))
         sub_clip = clip.subclip(time_start, time_end)
@@ -147,3 +146,23 @@ class ImageUtils:
     def save_rgb_image(width, height, data, name):
         # Data must be a list of triples (r, g, b), each in [0; 255].
         return ImageUtils.__save_image(ImageUtils.IMAGE_RGB_MODE, (width, height), data, name)
+
+
+class FNV64:
+    FNV_64_PRIME = 0x00000100000001B3
+    FNV_64_OFFSET_BASIS = 0xcbf29ce484222325
+
+    @staticmethod
+    def _bytes_to_uint64(bytes):
+        h = FNV64.FNV_64_OFFSET_BASIS
+        for byte in bytes:
+            h *= FNV64.FNV_64_PRIME
+            h &= 0xffffffffffffffff
+            h ^= byte
+        return h
+
+    @staticmethod
+    def hash(string):
+        # type: (str) -> str
+        h = FNV64._bytes_to_uint64(string.encode())
+        return hex(h)[2:]

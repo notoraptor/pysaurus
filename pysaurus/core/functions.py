@@ -2,8 +2,6 @@ import os
 import re
 from datetime import datetime
 
-import whirlpool
-
 from pysaurus.core.constants import VIDEO_SUPPORTED_EXTENSIONS
 
 # Datetime since timestamp 0.
@@ -118,10 +116,6 @@ def timestamp_microseconds():
     """
     delta = datetime.now() - EPOCH
     return (delta.days * 24 * 60 * 60 + delta.seconds) * 1000000 + delta.microseconds
-
-
-def whirlpool_hash(string: str):
-    return whirlpool.new(string.encode()).hexdigest().lower()
 
 
 def flat_to_coord(index, width):

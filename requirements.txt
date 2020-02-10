@@ -3,5 +3,4 @@ moviepy
 Pillow
 tornado>=5.0
 ujson
-whirlpool
 PySciter

@@ -2,12 +2,12 @@ from typing import Iterable, Union
 
 from pysaurus.core.components import AbsolutePath, FilePath
 from pysaurus.core.constants import THUMBNAIL_EXTENSION
-from pysaurus.core.functions import whirlpool_hash
+from pysaurus.core.modules import FNV64
 
 
 def generate_thumb_name(file_name):
     # type: (AbsolutePath) -> str
-    return whirlpool_hash(file_name.standard_path)
+    return FNV64.hash(file_name.standard_path)
 
 
 def generate_thumb_path(folder, thumb_name):
