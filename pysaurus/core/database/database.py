@@ -1,18 +1,18 @@
-import concurrent.futures
 import os
 from typing import Dict, Iterable, List, Optional, Set, Union
 
 import ujson as json
 
+from pysaurus.core.database.jobs import jobs_python, jobs_video_raptor
 from pysaurus.core import exceptions, functions as utils
 from pysaurus.core.components import AbsolutePath, DateModified, FilePath, PathType
 from pysaurus.core.constants import PYTHON_ERROR_NOTHING, THUMBNAIL_EXTENSION
-from pysaurus.core.database import notifications, parallelism
+from pysaurus.core.database import notifications
 from pysaurus.core.database.video import Video
 from pysaurus.core.database.video_state import VideoState
 from pysaurus.core.modules import ImageUtils, System
-from pysaurus.core.native.video_raptor.alignment import Miniature
 from pysaurus.core.native.video_raptor.api import VideoRaptorResult
+from pysaurus.core.native.video_raptor.miniature import Miniature
 from pysaurus.core.notification import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.profiling import Profiler
 
@@ -89,8 +89,7 @@ class Database:
         cpu_count = os.cpu_count()
         jobs = utils.dispatch_tasks(sorted(self.__folders), cpu_count)
         with Profiler(title='Collect videos (%d threads)' % cpu_count, notifier=self.__notifier):
-            with concurrent.futures.ProcessPoolExecutor(max_workers=cpu_count) as executor:
-                results = list(executor.map(parallelism.job_collect_videos, jobs))
+            results = utils.parallelize(jobs_python.job_collect_videos, jobs, cpu_count)
         self.__disk.clear()
         for local_result in results:  # type: List[AbsolutePath]
             self.__disk.update(local_result)
@@ -223,14 +222,10 @@ class Database:
             json.dump(json_output, output_file)
         self.__notifier.notify(notifications.DatabaseSaved(self))
 
-    def update(self):
-        cpu_count = os.cpu_count()
-        videos = {}
-        unreadable = {}
+    def get_new_video_paths(self):
         all_file_names = []
 
         file_names = self.__check_videos_on_disk()
-        current_date = DateModified.now()
 
         for file_name in file_names:  # type: AbsolutePath
             video_state = None
@@ -243,6 +238,16 @@ class Database:
                     or file_name.get_size() != video_state.file_size):
                 all_file_names.append(file_name.path)
 
+        all_file_names.sort()
+        return all_file_names
+
+    def update(self):
+        cpu_count = os.cpu_count()
+        videos = {}
+        unreadable = {}
+
+        current_date = DateModified.now()
+        all_file_names = self.get_new_video_paths()
         nb_to_load = len(all_file_names)
 
         self.__notifier.notify(notifications.VideosToLoad(nb_to_load))
@@ -253,8 +258,7 @@ class Database:
         del all_file_names
 
         with Profiler(title='Get videos info (%d threads)' % len(jobs), notifier=self.__notifier):
-            with concurrent.futures.ProcessPoolExecutor(max_workers=cpu_count) as executor:
-                results = list(executor.map(parallelism.job_videos_info, jobs))
+            results = utils.parallelize(jobs_video_raptor.job_videos_info, jobs, cpu_count)
 
         for (local_file_names, local_results) in results:  # type: dict
             for file_name, result in zip(local_file_names, local_results):  # type: (str, VideoRaptorResult)
@@ -340,8 +344,7 @@ class Database:
                 job_thumb_names.append(video.thumb_name)
             thumb_jobs.append((job_file_names, job_thumb_names, self.__thumb_folder.path, job_id, self.__notifier))
         with Profiler(title='Get thumbnails through %d thread(s)' % len(thumb_jobs), notifier=self.__notifier):
-            with concurrent.futures.ProcessPoolExecutor(max_workers=cpu_count) as executor:
-                thumb_results = list(executor.map(parallelism.job_videos_thumbnails, thumb_jobs))
+            thumb_results = utils.parallelize(jobs_video_raptor.job_videos_thumbnails, thumb_jobs, cpu_count)
 
         nb_results = 0
         for local_file_names, local_thumb_results in thumb_results:  # type: dict
@@ -387,8 +390,7 @@ class Database:
         jobs = utils.dispatch_tasks(tasks, cpu_count)
         del tasks
         with Profiler('Generating miniatures.'):
-            with concurrent.futures.ProcessPoolExecutor(max_workers=cpu_count) as executor:
-                results = list(executor.map(parallelism.job_generate_miniatures, jobs))
+            results = utils.parallelize(jobs_python.job_generate_miniatures, jobs, cpu_count)
         del jobs
         for local_array in results:
             for miniature in local_array:  # type: Miniature

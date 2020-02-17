@@ -1,3 +1,4 @@
+import concurrent.futures
 import os
 import re
 from datetime import datetime
@@ -151,3 +152,9 @@ def pgcd(a, b):
     if a < b:
         a, b = b, a
     return _pgcd(a, b)
+
+
+def parallelize(function, jobs, cpu_count):
+    with concurrent.futures.ProcessPoolExecutor(max_workers=cpu_count) as executor:
+        results = list(executor.map(function, jobs))
+    return results

@@ -71,7 +71,7 @@ def _info_to_params(video_info: symbols.VideoInfo):
 
 
 class VideoInfoCollector:
-    __slots__ = ('buffer_size', 'objects', 'pointers', 'array_type', 'array_object')
+    __slots__ = ('buffer_size', 'objects', 'pointers', 'array_type', 'array_object', 'context')
 
     def __init__(self, buffer_size):
         self.buffer_size = buffer_size
@@ -79,6 +79,10 @@ class VideoInfoCollector:
         self.pointers = [pointer(v) for v in self.objects]
         self.array_type = symbols.PtrVideoInfo * buffer_size
         self.array_object = self.array_type(*self.pointers)
+        self.context = symbols.fn_VideoRaptorContextNew()
+
+    def close(self):
+        symbols.fn_VideoRaptorContextDelete(self.context)
 
     def collect(self, file_names):
         # type: (ListView[str]) -> List[VideoRaptorResult]
@@ -90,7 +94,7 @@ class VideoInfoCollector:
         for i in range(len(file_names)):
             symbols.fn_VideoInfo_init(self.pointers[i], c_char_p(encoded_file_names[i]))
 
-        symbols.fn_videoRaptorDetails(len(file_names), symbols.PtrPtrVideoInfo(self.array_object))
+        symbols.fn_videoRaptorDetails(self.context, len(file_names), symbols.PtrPtrVideoInfo(self.array_object))
 
         for i in range(len(file_names)):
             video_info = self.objects[i]
@@ -107,7 +111,7 @@ class VideoInfoCollector:
 
 class VideoThumbnailGenerator:
     __slots__ = ('buffer_size', 'objects', 'pointers', 'array_type', 'array_object',
-                 'encoded_output_folder', 'c_output_folder')
+                 'encoded_output_folder', 'c_output_folder', 'context')
 
     def __init__(self, buffer_size, output_folder):
         self.buffer_size = buffer_size
@@ -117,6 +121,10 @@ class VideoThumbnailGenerator:
         self.array_object = self.array_type(*self.pointers)
         self.encoded_output_folder = output_folder.encode()
         self.c_output_folder = c_char_p(self.encoded_output_folder)
+        self.context = symbols.fn_VideoRaptorContextNew()
+
+    def close(self):
+        symbols.fn_VideoRaptorContextDelete(self.context)
 
     def generate(self, file_names, thumb_names):
         # type: (ListView[str], ListView[str]) -> List[VideoRaptorResult]
@@ -132,7 +140,7 @@ class VideoThumbnailGenerator:
                                            self.c_output_folder,
                                            c_char_p(encoded_thumb_names[i]))
 
-        symbols.fn_videoRaptorThumbnails(len(file_names), symbols.PtrPtrVideoThumbnail(self.array_object))
+        symbols.fn_videoRaptorThumbnails(self.context, len(file_names), symbols.PtrPtrVideoThumbnail(self.array_object))
 
         for i in range(len(file_names)):
             video_thumb = self.objects[i]

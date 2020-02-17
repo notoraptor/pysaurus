@@ -1,10 +1,12 @@
 import sys
-from ctypes import c_char_p, cdll
+from ctypes import c_char_p, cdll, windll
 
 
 def c_library(name):
     if sys.platform == 'linux':
         dll = cdll.LoadLibrary('%s.so' % name)
+    elif sys.platform == 'win32':
+        dll = getattr(windll, name)
     else:
         dll = getattr(cdll, name)
     return dll

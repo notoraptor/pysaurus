@@ -1,10 +1,11 @@
-from ctypes import POINTER, Structure, c_bool, c_char, c_char_p, c_double, c_int, c_int64, c_size_t, c_uint
+from ctypes import POINTER, Structure, c_bool, c_char, c_char_p, c_double, c_int, c_int64, c_size_t, c_uint, c_void_p
 
 from pysaurus.core.native.clibrary import CLibrary
 
 ERROR_DETAIL_MAX_LENGTH = 64
 
 c_double_p = POINTER(c_double)
+c_char_array = POINTER(c_char_p)
 
 
 class VideoRaptorInfo(Structure):
@@ -35,6 +36,7 @@ class VideoReport(Structure):
 
 
 PtrVideoReport = POINTER(VideoReport)
+PtrPtrVideoReport = POINTER(PtrVideoReport)
 
 
 class VideoInfo(Structure):
@@ -95,10 +97,10 @@ PtrPtrSequence = POINTER(PtrSequence)
 
 _dll_video_raptor = CLibrary('videoRaptorBatch')
 
-fn_VideoRaptorInfo_init = _dll_video_raptor.prototype(
-    'VideoRaptorInfo_init', None, [PtrVideoRaptorInfo])
-fn_VideoRaptorInfo_clear = _dll_video_raptor.prototype(
-    'VideoRaptorInfo_clear', None, [PtrVideoRaptorInfo])
+fn_VideoRaptorContextNew = _dll_video_raptor.prototype(
+    'VideoRaptorContext_New', c_void_p, [])
+fn_VideoRaptorContextDelete = _dll_video_raptor.prototype(
+    'VideoRaptorContext_Delete', None, [c_void_p])
 fn_ErrorReader_init = _dll_video_raptor.prototype(
     'ErrorReader_init', None, [PtrErrorReader, c_uint])
 fn_ErrorReader_next = _dll_video_raptor.prototype(
@@ -116,9 +118,11 @@ fn_VideoInfo_clear = _dll_video_raptor.prototype(
 fn_VideoThumbnail_init = _dll_video_raptor.prototype(
     'VideoThumbnail_init', None, [PtrVideoThumbnail, c_char_p, c_char_p, c_char_p])
 fn_videoRaptorDetails = _dll_video_raptor.prototype(
-    'videoRaptorDetails', c_int, [c_int, PtrPtrVideoInfo])
+    'videoRaptorDetails', c_int, [c_void_p, c_int, PtrPtrVideoInfo])
 fn_videoRaptorThumbnails = _dll_video_raptor.prototype(
-    'videoRaptorThumbnails', c_int, [c_int, PtrPtrVideoThumbnail])
+    'videoRaptorThumbnails', c_int, [c_void_p, c_int, PtrPtrVideoThumbnail])
+fn_videoRaptorJSON = _dll_video_raptor.prototype(
+    'videoRaptorJSON', c_int, [c_void_p, c_int, c_char_array, PtrPtrVideoReport, c_char_p])
 fn_batchAlignmentScore = _dll_video_raptor.prototype(
     'batchAlignmentScore', c_double, [c_int_p, c_int_p, c_int, c_int, c_int, c_int, c_int])
 fn_classifySimilarities = _dll_video_raptor.prototype(

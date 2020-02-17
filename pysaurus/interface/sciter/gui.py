@@ -1,13 +1,15 @@
 """
 pip install PySciter
 """
+import threading
+from typing import Optional
+
 import sciter
-from pysaurus.tests.test_utils import TEST_LIST_FILE_PATH
+
 from pysaurus.core.database.api import API
 from pysaurus.core.notification import Notifier, Notification
 from pysaurus.interface.common.common_functions import launch_thread
-import threading
-from typing import Optional
+from pysaurus.tests.test_utils import TEST_LIST_FILE_PATH
 
 
 class DatabaseReady(Notification):
@@ -47,6 +49,7 @@ def main():
     frame.expand()
     frame.run_app()
     print('End')
+
 
 if __name__ == '__main__':
     main()
