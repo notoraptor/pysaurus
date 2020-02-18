@@ -243,6 +243,72 @@ class Database:
 
     def update(self):
         cpu_count = os.cpu_count()
+        all_file_names = self.get_new_video_paths()
+        current_date = DateModified.now()
+
+        self.__notifier.notify(notifications.VideosToLoad(len(all_file_names)))
+        if not all_file_names:
+            return
+
+        pre_jobs = utils.dispatch_tasks(all_file_names, cpu_count)
+        jobs = []
+        for index, (file_names, job_id) in enumerate(pre_jobs):
+            input_file_path = FilePath(self.__db_path, str(index), 'list')
+            output_file_path = FilePath(self.__db_path, str(index), 'jsonl')
+
+            with open(input_file_path.path, 'wb') as file:
+                for file_name in file_names:
+                    file.write(('%s\n' % file_name).encode())
+
+            jobs.append((
+                input_file_path.path,
+                output_file_path.path,
+                len(file_names),
+                job_id,
+                self.__notifier
+            ))
+
+        with Profiler(title='Get videos info from JSON (%d threads)' % len(jobs), notifier=self.__notifier):
+            counts_loaded = utils.parallelize(jobs_python.job_video_to_json, jobs, cpu_count)
+
+        videos = {}
+        unreadable = {}
+        for job in jobs:
+            list_file_path = AbsolutePath.ensure(job[0])
+            jsonl_file_path = AbsolutePath.ensure(job[1])
+            assert jsonl_file_path.isfile()
+            with open(jsonl_file_path.path) as file:
+                for line in file:
+                    line = line.strip()
+                    if line:
+                        d = json.loads(line)
+                        file_path = AbsolutePath.ensure(d['f'])
+                        if len(d) == 2:
+                            unreadable[file_path] = VideoState(
+                                filename=file_path,
+                                size=file_path.get_size(),
+                                errors=d['e'],
+                                database=self)
+                        else:
+                            videos[file_path] = Video.from_dict(d, self)
+            list_file_path.delete()
+            jsonl_file_path.delete()
+        assert sum(counts_loaded) == len(videos)
+        assert len(videos) + len(unreadable) == len(all_file_names)
+
+        if videos:
+            self.__videos.update(videos)
+        if unreadable:
+            self.__unreadable.update(unreadable)
+        if videos or unreadable:
+            self.__date = current_date
+            self.save()
+        if unreadable:
+            self.__notifier.notify(notifications.VideoInfoErrors(
+                {file_name: video_state.errors for file_name, video_state in unreadable.items()}))
+
+    def update_v0(self):
+        cpu_count = os.cpu_count()
         videos = {}
         unreadable = {}
 
