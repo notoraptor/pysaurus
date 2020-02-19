@@ -46,6 +46,7 @@ def job_video_to_json(job):
 
     nb_read = 0
     nb_loaded = 0
+    end = False
     input_file_path = AbsolutePath.ensure(input_file_name)
     output_file_path = AbsolutePath.ensure(output_file_name)
     assert input_file_path.isfile()
@@ -64,11 +65,13 @@ def job_video_to_json(job):
                     nb_read = int(line[7:])
                 elif line.startswith('#loaded '):
                     nb_loaded = int(line[8:])
+                elif line == '#end':
+                    end = True
             else:
                 step = int(line)
                 notifier.notify(notifications.VideoJob(job_id, step, job_count))
     program_errors = process.stderr.read().decode().strip()
-    if program_errors:
+    if not end and program_errors:
         raise Exception('Video-to-JSON error: ' + program_errors)
     assert nb_read == job_count
     notifier.notify(notifications.VideoJob(job_id, job_count, job_count))
@@ -80,6 +83,7 @@ def job_video_thumbnails_to_json(job):
 
     nb_read = 0
     nb_loaded = 0
+    end = False
     input_file_path = AbsolutePath.ensure(input_file_name)
     output_file_path = AbsolutePath.ensure(output_file_name)
     assert input_file_path.isfile()
@@ -98,11 +102,13 @@ def job_video_thumbnails_to_json(job):
                     nb_read = int(line[7:])
                 elif line.startswith('#loaded '):
                     nb_loaded = int(line[8:])
+                elif line == '#end':
+                    end = True
             else:
                 step = int(line)
                 notifier.notify(notifications.ThumbnailJob(job_id, step, job_count))
     program_errors = process.stderr.read().decode().strip()
-    if program_errors:
+    if not end and program_errors:
         raise Exception('Videos-thumbnails-to-JSON error: ' + program_errors)
     assert nb_read == job_count
     notifier.notify(notifications.ThumbnailJob(job_id, job_count, job_count))
