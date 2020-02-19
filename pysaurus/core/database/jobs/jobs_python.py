@@ -54,8 +54,10 @@ def job_video_to_json(job):
 
     process = subprocess.Popen(['runVideoRaptorBatch', input_file_name, output_file_name],
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    for line in process.stdout.readlines():
-        line = line.decode().strip()
+    while True:
+        line = process.stdout.readline().decode().strip()
+        if not line and process.poll() is not None:
+            break
         if line:
             if line.startswith('#'):
                 if line.startswith('#count '):
@@ -70,4 +72,38 @@ def job_video_to_json(job):
         raise Exception('Video-to-JSON error: ' + program_errors)
     assert nb_read == job_count
     notifier.notify(notifications.VideoJob(job_id, job_count, job_count))
+    return nb_loaded
+
+
+def job_video_thumbnails_to_json(job):
+    input_file_name, output_file_name, job_count, job_id, notifier = job
+
+    nb_read = 0
+    nb_loaded = 0
+    input_file_path = AbsolutePath.ensure(input_file_name)
+    output_file_path = AbsolutePath.ensure(output_file_name)
+    assert input_file_path.isfile()
+    if output_file_path.exists():
+        output_file_path.delete()
+
+    process = subprocess.Popen(['runVideoRaptorThumbnails', input_file_name, output_file_name],
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    while True:
+        line = process.stdout.readline().decode().strip()
+        if not line and process.poll() is not None:
+            break
+        if line:
+            if line.startswith('#'):
+                if line.startswith('#count '):
+                    nb_read = int(line[7:])
+                elif line.startswith('#loaded '):
+                    nb_loaded = int(line[8:])
+            else:
+                step = int(line)
+                notifier.notify(notifications.ThumbnailJob(job_id, step, job_count))
+    program_errors = process.stderr.read().decode().strip()
+    if program_errors:
+        raise Exception('Videos-thumbnails-to-JSON error: ' + program_errors)
+    assert nb_read == job_count
+    notifier.notify(notifications.ThumbnailJob(job_id, job_count, job_count))
     return nb_loaded

@@ -30,7 +30,7 @@ class Database:
             raise exceptions.NotDirectoryError(path)
         # Paths
         self.__db_path = path
-        self.__thumb_folder = AbsolutePath.join(self.__db_path, '.thumbnails')
+        self.__thumb_folder = AbsolutePath.join(self.__db_path, '%s.thumbnails' % self.__db_path.title)
         self.__json_path = FilePath(self.__db_path, self.__db_path.title, 'json')
         self.__miniatures_path = FilePath(self.__db_path, '%s.miniatures' % self.__db_path.title, 'json')
         # Database data
@@ -277,7 +277,7 @@ class Database:
             list_file_path = AbsolutePath.ensure(job[0])
             jsonl_file_path = AbsolutePath.ensure(job[1])
             assert jsonl_file_path.isfile()
-            with open(jsonl_file_path.path) as file:
+            with open(jsonl_file_path.path, encoding='utf-8') as file:
                 for line in file:
                     line = line.strip()
                     if line:
@@ -307,52 +307,101 @@ class Database:
             self.__notifier.notify(notifications.VideoInfoErrors(
                 {file_name: video_state.errors for file_name, video_state in unreadable.items()}))
 
-    def update_v0(self):
+    def ensure_thumbnails(self):
         cpu_count = os.cpu_count()
-        videos = {}
-        unreadable = {}
+        valid_thumb_names = set()
+        videos_without_thumbs = []
+        thumb_to_videos = {}
+        thumb_errors = {}
+        thumb_jobs = []
 
-        current_date = DateModified.now()
-        all_file_names = self.get_new_video_paths()
-        nb_to_load = len(all_file_names)
+        # Collect videos with and without thumbnails.
+        existing_thumb_names = self.__check_thumbnails_on_disk()
 
-        self.__notifier.notify(notifications.VideosToLoad(nb_to_load))
-        if not all_file_names:
+        for video in self.__videos.values():
+            if self.video_exists(video.filename) and not video.error_thumbnail:
+                thumb_name = video.ensure_thumbnail_name()
+                if thumb_name in existing_thumb_names:
+                    thumb_to_videos.setdefault(thumb_name, []).append(video)
+                else:
+                    videos_without_thumbs.append(video)
+
+        # If a thumbnail name is associated to many videos,
+        # consider these videos don't have thumbnails.
+        for valid_thumb_name, vds in thumb_to_videos.items():
+            if len(vds) == 1:
+                valid_thumb_names.add(valid_thumb_name)
+            else:
+                videos_without_thumbs.extend(vds)
+        nb_videos_no_thumbs = len(videos_without_thumbs)
+        del thumb_to_videos
+
+        self.__notifier.notify(notifications.ThumbnailsToLoad(nb_videos_no_thumbs))
+        if not videos_without_thumbs:
+            self.__notify_missing_thumbnails()
             return
 
-        jobs = utils.dispatch_tasks(all_file_names, cpu_count, extra_args=[self.__notifier])
-        del all_file_names
+        for video in videos_without_thumbs:
+            base_thumb_name = video.ensure_thumbnail_name()
+            thumb_name_index = 0
+            thumb_name = base_thumb_name
+            while thumb_name in valid_thumb_names:
+                thumb_name = '%s_%d' % (base_thumb_name, thumb_name_index)
+                thumb_name_index += 1
+            video.thumb_name = thumb_name
+            valid_thumb_names.add(thumb_name)
+        del valid_thumb_names
+        self.save()
 
-        with Profiler(title='Get videos info (%d threads)' % len(jobs), notifier=self.__notifier):
-            results = utils.parallelize(jobs_video_raptor.job_videos_info, jobs, cpu_count)
+        dispatched_thumb_jobs = utils.dispatch_tasks(videos_without_thumbs, cpu_count)
+        del videos_without_thumbs
+        for index, (job_videos, job_id) in enumerate(dispatched_thumb_jobs):
+            input_file_path = FilePath(self.__db_path, str(index), 'thumbnails.list')
+            output_file_path = FilePath(self.__db_path, str(index), 'thumbnails.jsonl')
 
-        for (local_file_names, local_results) in results:  # type: dict
-            for file_name, result in zip(local_file_names, local_results):  # type: (str, VideoRaptorResult)
-                file_path = AbsolutePath.ensure(file_name)
-                if result.done:  # type: Video
-                    videos[file_path] = Video(database=self, **result.done)
-                else:
-                    unreadable[file_path] = VideoState(
-                        filename=file_path,
-                        size=file_path.get_size(),
-                        errors=(result.errors or [PYTHON_ERROR_NOTHING]),
-                        database=self)
+            with open(input_file_path.path, 'wb') as file:
+                for video in job_videos:
+                    file.write(('%s\t%s\t%s\t\n' % (video.filename, self.__thumb_folder, video.thumb_name)).encode())
 
-        del results
-        assert nb_to_load == len(videos) + len(unreadable)
+            thumb_jobs.append((
+                input_file_path.path,
+                output_file_path.path,
+                len(job_videos),
+                job_id,
+                self.__notifier
+            ))
 
-        if videos:
-            self.__videos.update(videos)
-        if unreadable:
-            self.__unreadable.update(unreadable)
-        if videos or unreadable:
-            self.__date = current_date
-            self.save()
-        if unreadable:
-            self.__notifier.notify(notifications.VideoInfoErrors(
-                {file_name: video_state.errors for file_name, video_state in unreadable.items()}))
+        with Profiler(title='Get thumbnails from JSON through %d thread(s)' % len(thumb_jobs), notifier=self.__notifier):
+            counts_loaded = utils.parallelize(jobs_python.job_video_thumbnails_to_json, thumb_jobs, cpu_count)
 
-    def ensure_thumbnails(self):
+        for job in thumb_jobs:
+            list_file_path = AbsolutePath.ensure(job[0])
+            jsonl_file_path = AbsolutePath.ensure(job[1])
+            assert jsonl_file_path.isfile()
+
+            with open(jsonl_file_path.path, encoding='utf-8') as file:
+                for line in file:
+                    line = line.strip()
+                    if line:
+                        d = json.loads(line)
+                        assert len(d) == 2 and 'f' in d and 'e' in d
+                        file_name = d['f']
+                        file_path = AbsolutePath.ensure(file_name)
+                        thumb_errors[file_name] = d['e']
+                        self.__videos[file_path].error_thumbnail = True
+
+            list_file_path.delete()
+            jsonl_file_path.delete()
+
+        assert sum(counts_loaded) + len(thumb_errors) == nb_videos_no_thumbs
+
+        if thumb_errors:
+            self.__notifier.notify(notifications.VideoThumbnailErrors(thumb_errors))
+        self.__check_thumbnails_on_disk()
+        self.__notify_missing_thumbnails()
+        self.save()
+
+    def ensure_thumbnails_v0(self):
         cpu_count = os.cpu_count()
         valid_thumb_names = set()
         videos_without_thumbs = []
