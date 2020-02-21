@@ -1,6 +1,7 @@
 import concurrent.futures
 import os
 import re
+import threading
 from datetime import datetime
 
 from pysaurus.core.constants import VIDEO_SUPPORTED_EXTENSIONS
@@ -158,3 +159,9 @@ def parallelize(function, jobs, cpu_count):
     with concurrent.futures.ProcessPoolExecutor(max_workers=cpu_count) as executor:
         results = list(executor.map(function, jobs))
     return results
+
+
+def launch_thread(function, *args, **kwargs):
+    thread = threading.Thread(target=function, args=args, kwargs=kwargs)
+    thread.start()
+    return thread

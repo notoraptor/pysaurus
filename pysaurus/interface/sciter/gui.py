@@ -8,7 +8,7 @@ import sciter
 
 from pysaurus.core.database.api import API
 from pysaurus.core.notification import Notifier, Notification
-from pysaurus.interface.common.common_functions import launch_thread
+from pysaurus.core.functions import launch_thread
 from pysaurus.tests.test_utils import TEST_LIST_FILE_PATH
 
 
