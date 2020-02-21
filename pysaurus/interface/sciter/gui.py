@@ -26,7 +26,10 @@ class Frame(sciter.Window):
         self.thread = None  # type: Optional[threading.Thread]
 
     def _load_database(self):
-        self.api = API(TEST_LIST_FILE_PATH, notifier=self.notifier, ensure_miniatures=False)
+        self.api = API(TEST_LIST_FILE_PATH,
+                       notifier=self.notifier,
+                       ensure_miniatures=False,
+                       reset=True)
         self.notifier.notify(DatabaseReady())
 
     def notify(self, notification):

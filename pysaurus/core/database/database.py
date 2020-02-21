@@ -21,7 +21,6 @@ from pysaurus.core.database.jobs import async_jobs
 class Database:
     __slots__ = ['__db_path', '__thumb_folder', '__json_path', '__miniatures_path',
                  '__date', '__folders', '__videos', '__unreadable', '__discarded',
-                 '__disk', '__thumbs', '__checked_disk', '__checked_thumbs',
                  '__notifier', '__id_to_video', 'system_is_case_insensitive']
 
     def __init__(self, path, folders=None, clear_old_folders=False, notifier=None):
@@ -41,21 +40,15 @@ class Database:
         self.__unreadable = {}  # type: Dict[AbsolutePath, VideoState]
         self.__discarded = {}  # type: Dict[AbsolutePath, VideoState]
         # RAM data
-        self.__disk = set()  # type: Set[AbsolutePath]
-        self.__thumbs = set()  # type: Set[str]
-        self.__checked_disk = False
-        self.__checked_thumbs = False
         self.__notifier = notifier or DEFAULT_NOTIFIER
         self.__id_to_video = {}  # type: Dict[int, Union[VideoState, Video]]
         self.system_is_case_insensitive = System.is_case_insensitive(self.__db_path.path)
         # Load database
-        self.__thumb_folder.mkdir()
         self.__load(folders, clear_old_folders)
 
     # Properties.
 
     folder = property(lambda self: self.__db_path)
-    thumbnail_folder = property(lambda self: self.__thumb_folder)
     nb_entries = property(lambda self: len(self.__videos) + len(self.__unreadable) + len(self.__discarded))
     nb_discarded = property(lambda self: len(self.__discarded))
     nb_unreadable = property(lambda self: len(self.__unreadable))
@@ -63,6 +56,12 @@ class Database:
     nb_found = property(lambda self: sum(1 for _ in self.videos(valid=True, unreadable=True)))
     nb_valid = property(lambda self: sum(1 for _ in self.videos()))
     nb_thumbnails = property(lambda self: sum(1 for _ in self.videos(no_thumbs=False)))
+
+    @property
+    def thumbnail_folder(self):
+        if not self.__thumb_folder.isdir():
+            self.__thumb_folder.mkdir()
+        return self.__thumb_folder
 
     # Private utility methods.
 
@@ -84,39 +83,33 @@ class Database:
 
     def __check_videos_on_disk(self):
         # type: () -> Set[AbsolutePath]
-        if self.__checked_disk:
-            self.__checked_disk = False
-            return self.__disk
+        paths = set()
         cpu_count = os.cpu_count()
         jobs = utils.dispatch_tasks(sorted(self.__folders), cpu_count)
         with Profiler(title='Collect videos (%d threads)' % cpu_count, notifier=self.__notifier):
             results = utils.parallelize(jobs_python.job_collect_videos, jobs, cpu_count)
-        self.__disk.clear()
         for local_result in results:  # type: List[AbsolutePath]
-            self.__disk.update(local_result)
-        self.__notifier.notify(notifications.FinishedCollectingVideos(self.__disk))
-        return self.__disk
+            paths.update(local_result)
+        self.__notifier.notify(notifications.FinishedCollectingVideos(paths))
+        return paths
 
     def __check_thumbnails_on_disk(self):
         # type: () -> Set[str]
-        if self.__checked_thumbs:
-            self.__checked_thumbs = False
-            return self.__thumbs
-        self.__thumbs.clear()
+        thumbs = set()
         with Profiler('Collect thumbnails', self.__notifier):
-            for path_string in self.__thumb_folder.listdir():
+            for path_string in self.thumbnail_folder.listdir():
                 if path_string.lower().endswith('.%s' % THUMBNAIL_EXTENSION):
                     if self.system_is_case_insensitive:
                         path_string = path_string.lower()
-                    self.__thumbs.add(path_string[:-(len(THUMBNAIL_EXTENSION) + 1)])
-        return self.__thumbs
+                    thumbs.add(path_string[:-(len(THUMBNAIL_EXTENSION) + 1)])
+        return thumbs
 
     def __notify_missing_thumbnails(self):
         remaining_thumb_videos = []
         for video in self.__videos.values():
             if (self.video_exists(video.filename)
                     and (video.error_thumbnail
-                         or video.ensure_thumbnail_name() not in self.__thumbs)):
+                         or not video.get_thumbnail_path().isfile())):
                 remaining_thumb_videos.append(video.filename.path)
         self.__notifier.notify(notifications.MissingThumbnails(remaining_thumb_videos))
 
@@ -160,10 +153,6 @@ class Database:
             else:
                 self.__discarded[video_state.filename] = video_state
 
-        self.__check_videos_on_disk()
-        self.__check_thumbnails_on_disk()
-        self.__checked_disk = True
-        self.__checked_thumbs = True
         self.__notifier.notify(notifications.DatabaseLoaded(self))
         self.__ensure_identifiers()
 
@@ -398,83 +387,7 @@ class Database:
 
         if thumb_errors:
             self.__notifier.notify(notifications.VideoThumbnailErrors(thumb_errors))
-        self.__check_thumbnails_on_disk()
-        self.__notify_missing_thumbnails()
-        self.save()
 
-    def ensure_thumbnails_v0(self):
-        cpu_count = os.cpu_count()
-        valid_thumb_names = set()
-        videos_without_thumbs = []
-        thumb_to_videos = {}
-        thumb_errors = {}
-        thumb_jobs = []
-
-        cpu_count = (cpu_count // 2) + 1
-
-        # Collect videos with and without thumbnails.
-        existing_thumb_names = self.__check_thumbnails_on_disk()
-
-        for video in self.__videos.values():
-            if self.video_exists(video.filename) and not video.error_thumbnail:
-                thumb_name = video.ensure_thumbnail_name()
-                if thumb_name in existing_thumb_names:
-                    thumb_to_videos.setdefault(thumb_name, []).append(video)
-                else:
-                    videos_without_thumbs.append(video)
-
-        # If a thumbnail name is associated to many videos,
-        # consider these videos don't have thumbnails.
-        for valid_thumb_name, vds in thumb_to_videos.items():
-            if len(vds) == 1:
-                valid_thumb_names.add(valid_thumb_name)
-            else:
-                videos_without_thumbs.extend(vds)
-        nb_videos_no_thumbs = len(videos_without_thumbs)
-        del thumb_to_videos
-
-        self.__notifier.notify(notifications.ThumbnailsToLoad(nb_videos_no_thumbs))
-        if not videos_without_thumbs:
-            self.__notify_missing_thumbnails()
-            return
-
-        for video in videos_without_thumbs:
-            base_thumb_name = video.ensure_thumbnail_name()
-            thumb_name_index = 0
-            thumb_name = base_thumb_name
-            while thumb_name in valid_thumb_names:
-                thumb_name = '%s_%d' % (base_thumb_name, thumb_name_index)
-                thumb_name_index += 1
-            video.thumb_name = thumb_name
-            valid_thumb_names.add(thumb_name)
-        del valid_thumb_names
-        self.save()
-
-        dispatched_thumb_jobs = utils.dispatch_tasks(videos_without_thumbs, cpu_count)
-        del videos_without_thumbs
-        for job_videos, job_id in dispatched_thumb_jobs:
-            job_file_names = []
-            job_thumb_names = []
-            for video in job_videos:
-                job_file_names.append(video.filename.path)
-                job_thumb_names.append(video.thumb_name)
-            thumb_jobs.append((job_file_names, job_thumb_names, self.__thumb_folder.path, job_id, self.__notifier))
-        with Profiler(title='Get thumbnails through %d thread(s)' % len(thumb_jobs), notifier=self.__notifier):
-            thumb_results = utils.parallelize(jobs_video_raptor.job_videos_thumbnails, thumb_jobs, cpu_count)
-
-        nb_results = 0
-        for local_file_names, local_thumb_results in thumb_results:  # type: dict
-            nb_results += len(local_file_names)
-            for file_name, thumb_result in zip(local_file_names, local_thumb_results):  # type: (str, VideoRaptorResult)
-                if not thumb_result.done:
-                    thumb_errors[file_name] = thumb_result.errors or [PYTHON_ERROR_NOTHING]
-                    self.__videos[AbsolutePath(file_name)].error_thumbnail = True
-        del thumb_results
-        assert nb_results == nb_videos_no_thumbs
-
-        if thumb_errors:
-            self.__notifier.notify(notifications.VideoThumbnailErrors(thumb_errors))
-        self.__check_thumbnails_on_disk()
         self.__notify_missing_thumbnails()
         self.save()
 
@@ -529,10 +442,18 @@ class Database:
             for file_name in sorted(self.__discarded):
                 file.write(('%s\n' % str(file_name)).encode())
 
+    def reset(self):
+        self.__videos.clear()
+        self.__unreadable.clear()
+        self.__discarded.clear()
+        self.__json_path.delete()
+        self.__miniatures_path.delete()
+        self.__thumb_folder.delete()
+
     # Public features.
 
-    def video_exists(self, path):
-        return path in self.__disk
+    def video_exists(self, path: AbsolutePath):
+        return path.isfile()
 
     def get_video_from_id(self, video_id, required=True):
         # type: (int, bool) -> Optional[Video]
@@ -584,8 +505,6 @@ class Database:
         # type: (VideoState, bool) -> AbsolutePath
         if video.filename.isfile():
             video.filename.delete()
-        if video.filename in self.__disk:
-            self.__disk.remove(video.filename)
         if video.filename in self.__videos:
             del self.__videos[video.filename]
             if isinstance(video, Video):
@@ -601,9 +520,6 @@ class Database:
         if video.filename.title != new_title:
             new_filename = video.filename.new_title(new_title)
             if video.filename in self.__videos:
-                if video.filename in self.__disk:
-                    self.__disk.remove(video.filename)
-                    self.__disk.add(new_filename)
                 del self.__videos[video.filename]
                 self.__videos[new_filename] = video
                 video.filename = new_filename
@@ -616,17 +532,14 @@ class Database:
         for video in self.__videos.values():
             if self.video_exists(video.filename) and not video.error_thumbnail:
                 thumb_name = video.ensure_thumbnail_name()
-                if thumb_name in self.__thumbs:
+                if video.get_thumbnail_path().isfile():
                     used_thumbnails.add(thumb_name)
-        unused_thumbnails = self.__thumbs - used_thumbnails
+        unused_thumbnails = self.__check_thumbnails_on_disk() - used_thumbnails
         self.__notifier.notify(notifications.UnusedThumbnails(len(unused_thumbnails)))
-        removed_thumbnails = []
         for unused_thumb_name in unused_thumbnails:
             try:
-                AbsolutePath.join(
-                    self.__db_path.path, '%s.%s' % (unused_thumb_name, THUMBNAIL_EXTENSION)
-                ).delete()
-                removed_thumbnails.append(unused_thumb_name)
+                FilePath(self.__thumb_folder,
+                         unused_thumb_name,
+                         THUMBNAIL_EXTENSION).delete()
             except OSError:
                 pass
-        self.__thumbs.difference_update(removed_thumbnails)

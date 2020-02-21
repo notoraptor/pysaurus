@@ -47,11 +47,13 @@ def parse_fields(fields: str):
 class API:
     __slots__ = 'database',
 
-    def __init__(self, list_file_path, notifier=None, update=True, ensure_miniatures=True):
-        # type: (Union[str, AbsolutePath], Notifier, bool, bool) -> None
+    def __init__(self, list_file_path, notifier=None, update=True, ensure_miniatures=True, reset=False):
+        # type: (Union[str, AbsolutePath], Notifier, bool, bool, bool) -> None
         paths = path_utils.load_path_list_file(list_file_path)
         database_folder = list_file_path.get_directory()
         self.database = Database(path=database_folder, folders=paths, notifier=notifier)
+        if reset:
+            self.database.reset()
         if update:
             self.update(ensure_miniatures)
 

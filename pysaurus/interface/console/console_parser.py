@@ -10,7 +10,7 @@ class ConsoleParser(FunctionParser):
     def __init__(self, list_file_path):
         super(ConsoleParser, self).__init__()
         # Load API.
-        self.api = API(list_file_path)
+        self.api = API(list_file_path, reset=False)
         # Update parser from API.
         self.api.export_api(self)
         # Update parser with wrapped functions.
