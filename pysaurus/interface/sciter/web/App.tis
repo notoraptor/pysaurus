@@ -8,7 +8,7 @@ const Status = {
 }
 
 function notifyApp(app, notification) {
-	const messages = app.data.messages.slice();
+	const messages = app.messages.slice();
 	messages.push(notification);
 	const update = {messages: messages};
 	if (notification.name === 'DatabaseReady')
@@ -20,23 +20,21 @@ class App: Reactor.Component {
 	function this(props, children) {
 		this.props = props || {};
 		this.children = children || {};
-		this.data = {
-			status: Status.INITIAL,
-			messages: [],
-		};
+		this.status = Status.INITIAL;
+		this.messages = [];
 		this.callbackIndex = -1;
 	}
 	function getInitialButton() {
-		if (this.data.status === Status.INITIAL)
+		if (this.status === Status.INITIAL)
 			return <button :disabled={false}>Load database</button>;
-		if (this.data.status === Status.LOADING)
+		if (this.status === Status.LOADING)
 			return <button :disabled={true}>Loading database ...</button>;
-		if (this.data.status === Status.LOADED)
+		if (this.status === Status.LOADED)
 			return <button :disabled={false}>Display videos</button>;
 	}
 	function getMessages() {
-		const messages = this.data.messages.map((message, index) => <div key={index}>{message.message}</div>);
-		if (messages.length && this.data.status < Status.LOADED)
+		const messages = this.messages.map((message, index) => <div key={index}>{message.message}</div>);
+		if (messages.length && this.status < Status.LOADED)
 			messages.push(<div key={messages.length}>...</div>);
 		return messages;
 	}
@@ -58,7 +56,7 @@ class App: Reactor.Component {
 		Notifications.unregister(this.callbackIndex);
 	}
 	event click $(#button-initial > button) (evt, element) {
-		if (this.data.status === Status.INITIAL) {
+		if (this.status === Status.INITIAL) {
 			view.load_database();
 			this.update({status: Status.LOADING});
 			return;
