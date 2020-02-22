@@ -86,7 +86,9 @@ async def job_video_thumbnails_to_json(job):
     return nb_loaded
 
 
-def asynchronous_batch(function, jobs):
+def batch(function, jobs, cpu_count=None):
+    del cpu_count
+
     async def f():
         return await asyncio.gather(*[function(job) for job in jobs])
 
