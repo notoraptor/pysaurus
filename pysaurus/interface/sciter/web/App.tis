@@ -1,5 +1,5 @@
 include "sciter:reactor.tis";
-include "notifications.tis";
+include "Notifications.tis";
 
 const Status = {
 	INITIAL: 0,
@@ -23,6 +23,15 @@ class App: Reactor.Component {
 		this.status = Status.INITIAL;
 		this.messages = [];
 		this.callbackIndex = -1;
+		this.notificationsContainer = null;
+	}
+    function render() {
+		return (
+			<main>
+				<div id="button-initial">{this.getInitialButton()}</div>
+				<div class="notifications" @{this.notificationsContainer}>{this.getMessages()}</div>
+			</main>
+		);
 	}
 	function getInitialButton() {
 		if (this.status === Status.INITIAL)
@@ -37,14 +46,6 @@ class App: Reactor.Component {
 		if (messages.length && this.status < Status.LOADED)
 			messages.push(<div key={messages.length}>...</div>);
 		return messages;
-	}
-	function render() {
-		return (
-			<main>
-				<div id="button-initial">{this.getInitialButton()}</div>
-				<div class="notifications">{this.getMessages()}</div>
-			</main>
-		);
 	}
 	function attached() {
 		const app = this;
@@ -61,5 +62,8 @@ class App: Reactor.Component {
 			this.update({status: Status.LOADING});
 			return;
 		}
+	}
+	event contentchange $(div.notifications) (evt, element) {
+	    element[element.length - 1].scrollToView(false);
 	}
 }

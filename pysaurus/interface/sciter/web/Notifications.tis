@@ -7,10 +7,9 @@ namespace Notifications {
 	function unregister(index) {
 		callbacks.splice(index, 1);
 	}
-}
-
-function notify(notification) {
-	for (let callback in Notifications.callbacks) {
-		callback(notification);
-	}
+    function notify(notification) {
+        for (let callback in Notifications.callbacks) {
+            callback(notification);
+        }
+    }
 }

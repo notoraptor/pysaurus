@@ -5,10 +5,6 @@
 </head>
 <body>
     <reactor|App src="App.tis"></reactor>
-    <script type="text/tiscript">
-        view.root.on('closerequest', function(event) {
-            // Should wait for all threads (including in Python side) to terminate before closing window.
-        });
-    </script>
+    <script type="text/tiscript" src="index.tis"></script>
 </body>
 </html>

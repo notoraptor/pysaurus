@@ -15,7 +15,7 @@ from pysaurus.core.native.video_raptor.api import VideoRaptorResult
 from pysaurus.core.native.video_raptor.miniature import Miniature
 from pysaurus.core.notification import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.profiling import Profiler
-from pysaurus.core.database.jobs import async_jobs, jobs_python as job_module
+from pysaurus.core.database.jobs import async_jobs as job_module, jobs_python
 
 
 class Database:
@@ -442,13 +442,15 @@ class Database:
             for file_name in sorted(self.__discarded):
                 file.write(('%s\n' % str(file_name)).encode())
 
-    def reset(self):
+    def reset(self, reset_thumbnails=False, reset_miniatures=False):
         self.__videos.clear()
         self.__unreadable.clear()
         self.__discarded.clear()
         self.__json_path.delete()
-        self.__miniatures_path.delete()
-        self.__thumb_folder.delete()
+        if reset_miniatures:
+            self.__miniatures_path.delete()
+        if reset_thumbnails:
+            self.__thumb_folder.delete()
 
     # Public features.
 

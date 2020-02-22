@@ -35,7 +35,7 @@ class Frame(sciter.Window):
     def notify(self, notification):
         # type: (Notification) -> None
         print(notification)
-        self.call_function('notify', {
+        self.call_function('Notifications.notify', {
             'name': notification.get_name(),
             'notification': notification.to_dict(),
             'message': str(notification)
