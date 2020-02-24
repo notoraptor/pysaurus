@@ -6,11 +6,12 @@ from typing import Optional
 
 import sciter
 
-from pysaurus.core.database.api import API
-from pysaurus.core.notification import Notifier, Notification
-from pysaurus.core.functions import launch_thread
-from pysaurus.tests.test_utils import TEST_LIST_FILE_PATH
+from pysaurus.core import functions
 from pysaurus.core.components import FileSize, Duration
+from pysaurus.core.database.api import API
+from pysaurus.core.functions import launch_thread
+from pysaurus.core.notification import Notifier, Notification
+from pysaurus.tests.test_utils import TEST_LIST_FILE_PATH
 
 
 class DatabaseReady(Notification):
@@ -25,6 +26,7 @@ class Frame(sciter.Window):
         self.api = None
         self.notifier = notifier
         self.thread = None  # type: Optional[threading.Thread]
+        self.videos = []
         self.load_file('web/index.html')
         self.expand()
 
@@ -42,8 +44,7 @@ class Frame(sciter.Window):
                        notifier=self.notifier,
                        ensure_miniatures=False,
                        reset=False)
-        self.videos = self.api.list('title', self.api.nb('valid'), 0)
-        assert len(self.videos) == self.api.database.nb_valid
+        self.load_videos()
         self.notifier.notify(DatabaseReady())
 
     @sciter.script
@@ -86,6 +87,28 @@ class Frame(sciter.Window):
     @sciter.script
     def open_video(self, index):
         self.api.open(self.videos[index].video_id)
+
+    @sciter.script
+    def load_videos(self):
+        self.videos = sorted(self.api.database.videos(), key=lambda v: v.title)
+
+    @sciter.script
+    def search_videos(self, text, cond):
+        videos = []
+        terms = functions.string_to_pieces(text)
+        for video in self.api.database.videos():
+            video_terms = video.terms()
+            if cond == 'exact':
+                if ' '.join(terms) in ' '.join(video_terms):
+                    videos.append(video)
+            elif cond == 'and':
+                if all(term in video_terms for term in terms):
+                    videos.append(video)
+            elif cond == 'or':
+                if any(term in video_terms for term in terms):
+                    videos.append(video)
+        videos.sort(key=lambda v: v.title)
+        self.videos = videos
 
 
 def main():

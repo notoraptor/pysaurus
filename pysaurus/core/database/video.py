@@ -23,7 +23,7 @@ from pysaurus.core.components import AbsolutePath, Duration
 from pysaurus.core.constants import THUMBNAIL_EXTENSION
 from pysaurus.core.database import path_utils
 from pysaurus.core.database.video_state import VideoState
-from pysaurus.core.functions import html_to_title
+from pysaurus.core.functions import html_to_title, string_to_pieces
 from pysaurus.core.modules import VideoClipping, ImageUtils
 
 
@@ -170,6 +170,20 @@ class Video(VideoState):
             clip_seconds=length,
             unique_id=self.ensure_thumbnail_name()
         )
+
+    def terms(self):
+        return string_to_pieces(' '.join((
+            self.filename.path,
+            self.meta_title,
+            self.container_format,
+            self.audio_codec,
+            self.audio_codec_description,
+            self.video_codec,
+            self.video_codec_description,
+            str(self.width),
+            str(self.height),
+            str(self.sample_rate),
+        )))
 
     def to_dict(self):
         dct = super().to_dict()
