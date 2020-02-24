@@ -1,6 +1,7 @@
-from typing import Callable, Dict
+from typing import Callable, Dict, Optional
 
 from pysaurus.core.classes import ToDict, StringPrinter
+from pysaurus.core.components import DateModified
 
 
 class Notification(ToDict):
@@ -31,7 +32,7 @@ ManagerType = Callable[[Notification], None]
 
 
 class Notifier:
-    __slots__ = ('__managers', '__default_manager', '__default_manager_policy')
+    __slots__ = ('__managers', '__default_manager', '__default_manager_policy', '__log_path', '__log_written')
 
     DM_NO_CALL = 0
     DM_CALL_BEFORE = 1
@@ -45,6 +46,21 @@ class Notifier:
         self.__managers = {}  # type: Dict[type, ManagerType]
         self.__default_manager = None
         self.__default_manager_policy = Notifier.DM_CALL_BEFORE
+        self.__log_path = None
+        self.__log_written = False
+
+    def set_log_path(self, path: Optional[str]):
+        if self.__log_path != path:
+            self.__log_written = False
+        self.__log_path = path
+
+    def log(self, notification):
+        if self.__log_path:
+            with open(self.__log_path, 'a') as file:
+                if not self.__log_written:
+                    file.write('\n########## LOG %s ##########\n\n' % DateModified.now())
+                    self.__log_written = True
+                file.write('%s\n' % notification)
 
     def set_default_manager(self, function):
         # type: (ManagerType) -> None
@@ -75,6 +91,7 @@ class Notifier:
 
     def notify(self, notification):
         # type: (Notification) -> None
+        self.log(notification)
         default_manager = self.get_default_manager()
         if self.__default_manager_policy == Notifier.DM_CALL_BEFORE:
             default_manager(notification)

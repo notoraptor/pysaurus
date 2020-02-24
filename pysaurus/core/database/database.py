@@ -19,7 +19,7 @@ from pysaurus.core.database.jobs import async_jobs as job_module, jobs_python
 
 
 class Database:
-    __slots__ = ['__db_path', '__thumb_folder', '__json_path', '__miniatures_path',
+    __slots__ = ['__db_path', '__thumb_folder', '__json_path', '__miniatures_path', '__log_path',
                  '__date', '__folders', '__videos', '__unreadable', '__discarded',
                  '__notifier', '__id_to_video', 'system_is_case_insensitive']
 
@@ -33,6 +33,7 @@ class Database:
         self.__thumb_folder = AbsolutePath.join(self.__db_path, '%s.thumbnails' % self.__db_path.title)
         self.__json_path = FilePath(self.__db_path, self.__db_path.title, 'json')
         self.__miniatures_path = FilePath(self.__db_path, '%s.miniatures' % self.__db_path.title, 'json')
+        self.__log_path = FilePath(self.__db_path, self.__db_path.title, 'log')
         # Database data
         self.__date = DateModified.now()
         self.__folders = set()  # type: Set[AbsolutePath]
@@ -44,6 +45,7 @@ class Database:
         self.__id_to_video = {}  # type: Dict[int, Union[VideoState, Video]]
         self.system_is_case_insensitive = System.is_case_insensitive(self.__db_path.path)
         # Load database
+        self.__notifier.set_log_path(self.__log_path.path)
         self.__load(folders, clear_old_folders)
 
     # Properties.
@@ -526,6 +528,9 @@ class Database:
                 self.__videos[new_filename] = video
                 video.filename = new_filename
                 self.save()
+
+    def open_log(self):
+        return open(self.__log_path.path, 'a')
 
     # Unused.
 
