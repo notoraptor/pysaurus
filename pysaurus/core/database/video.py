@@ -23,28 +23,8 @@ from pysaurus.core.components import AbsolutePath, Duration
 from pysaurus.core.constants import THUMBNAIL_EXTENSION
 from pysaurus.core.database import path_utils
 from pysaurus.core.database.video_state import VideoState
-from pysaurus.core.modules import HTMLStripper, VideoClipping
-
-WORK_MODE = 'RGB'
-
-
-def html_to_title(title):
-    # type: (str) -> str
-    """
-    Remove HTML tags, simple starting/ending quotes and double starting/ending quotes from given string.
-    :param title: text to clear
-    :return: cleared text
-    """
-    if title:
-        title = HTMLStripper.strip(title)
-        strip_again = True
-        while strip_again:
-            strip_again = False
-            for character in ('"', "'"):
-                if title.startswith(character) and title.endswith(character):
-                    title = title.strip(character)
-                    strip_again = True
-    return title
+from pysaurus.core.functions import html_to_title
+from pysaurus.core.modules import VideoClipping, ImageUtils
 
 
 class Video(VideoState):
@@ -70,7 +50,7 @@ class Video(VideoState):
         'audio_codec', 'video_codec', 'audio_codec_description', 'video_codec_description',
         'width', 'height', 'sample_rate', 'audio_bit_rate',
         # special fields
-        'frame_rate', 'length', 'size', 'date', 'title', 'file_title', 'extension')
+        'frame_rate', 'length', 'size', 'date', 'title', 'file_title', 'extension', 'thumbnail_path')
 
     def __init__(self, database, filename=None, size=0, errors=(), video_id=None,
                  meta_title='', container_format='', audio_codec='', video_codec='',
@@ -159,7 +139,8 @@ class Video(VideoState):
     extension = property(lambda self: self.filename.extension)
     length = property(lambda self: Duration(round(self.duration * 1000000 / self.duration_time_base)))
 
-    def get_thumbnail_path(self):
+    @property
+    def thumbnail_path(self):
         return path_utils.generate_thumb_path(self.database.thumbnail_folder, self.ensure_thumbnail_name())
 
     def ensure_thumbnail_name(self):
@@ -170,15 +151,13 @@ class Video(VideoState):
         return self.thumb_name
 
     def thumbnail_is_valid(self):
-        return not self.error_thumbnail and self.get_thumbnail_path().isfile()
+        return not self.error_thumbnail and self.thumbnail_path.isfile()
 
     def thumbnail_to_base64(self):
-        thumb_path = self.get_thumbnail_path()
+        thumb_path = self.thumbnail_path
         if not thumb_path.isfile():
             return None
-        image = Image.open(thumb_path.path)
-        if image.mode != WORK_MODE:
-            image = image.convert(WORK_MODE)
+        image = ImageUtils.open_rgb_image(thumb_path.path)
         buffered = BytesIO()
         image.save(buffered, format=THUMBNAIL_EXTENSION)
         image_string = base64.b64encode(buffered.getvalue())

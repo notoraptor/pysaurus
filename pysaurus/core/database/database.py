@@ -109,7 +109,7 @@ class Database:
         for video in self.__videos.values():
             if (self.video_exists(video.filename)
                     and (video.error_thumbnail
-                         or not video.get_thumbnail_path().isfile())):
+                         or not video.thumbnail_path.isfile())):
                 remaining_thumb_videos.append(video.filename.path)
         self.__notifier.notify(notifications.MissingThumbnails(remaining_thumb_videos))
 
@@ -409,7 +409,7 @@ class Database:
                     miniature = Miniature.from_dict(dct)
                     miniatures[miniature.identifier] = miniature
             del json_dict
-        tasks = [(video.filename, video.get_thumbnail_path())
+        tasks = [(video.filename, video.thumbnail_path)
                  for video in self.videos(no_thumbs=False)
                  if video.filename.path not in miniatures]
         print('Missing', len(tasks), '/', len(tasks) + len(miniatures), 'miniature(s).')
@@ -512,7 +512,7 @@ class Database:
             if isinstance(video, Video):
                 del self.__id_to_video[video.video_id]
         if isinstance(video, Video):
-            video.get_thumbnail_path().delete()
+            video.thumbnail_path.delete()
         if save:
             self.save()
         return video.filename
@@ -534,7 +534,7 @@ class Database:
         for video in self.__videos.values():
             if self.video_exists(video.filename) and not video.error_thumbnail:
                 thumb_name = video.ensure_thumbnail_name()
-                if video.get_thumbnail_path().isfile():
+                if video.thumbnail_path.isfile():
                     used_thumbnails.add(thumb_name)
         unused_thumbnails = self.__check_thumbnails_on_disk() - used_thumbnails
         self.__notifier.notify(notifications.UnusedThumbnails(len(unused_thumbnails)))

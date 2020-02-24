@@ -3,7 +3,7 @@ import tempfile
 from typing import Dict, List, Tuple, Union
 
 from pysaurus.core import exceptions, functions as utils
-from pysaurus.core.classes import Enumeration, Table, StringPrinter
+from pysaurus.core.classes import Enumeration, StringPrinter
 from pysaurus.core.components import AbsolutePath, Duration, FileSize, FilePath
 from pysaurus.core.database import path_utils
 from pysaurus.core.database.database import Database
@@ -68,6 +68,7 @@ class API:
         function_parser.add(self.delete_unreadable_from_filename, arguments={'filename': str})
         function_parser.add(self.download_image, arguments={'video_id': int})
         function_parser.add(self.download_image_from_filename, arguments={'filename': str})
+        function_parser.add(self.field_names)
         function_parser.add(self.find, arguments={'terms': str})
         function_parser.add(self.find_batch, arguments={'path': str})
         function_parser.add(self.info, arguments={'video_id': int})
@@ -131,10 +132,10 @@ class API:
         return self.database.get_video_from_filename(filename).thumbnail_to_base64()
 
     def open_image(self, video_id):
-        return self.database.get_video_from_id(video_id).get_thumbnail_path().open()
+        return self.database.get_video_from_id(video_id).thumbnail_path.open()
 
     def open_image_from_filename(self, filename):
-        return self.database.get_video_from_filename(filename).get_thumbnail_path().open()
+        return self.database.get_video_from_filename(filename).thumbnail_path.open()
 
     def clip(self, video_id, start, length):
         # type: (int, int, int) -> str
@@ -271,9 +272,8 @@ class API:
         return videos[(page_size * page_number):(page_size * (page_number + 1))]
 
     def videos(self):
-        # type: () -> Table
-        return Table(headers=Video.ROW_FIELDS,
-                     lines=[video.to_row() for video in self.database.videos()])
+        # type: () -> List[Video]
+        return self.database.videos()
 
     def not_found(self):
         return sorted(self.database.videos(found=False, not_found=True), key=lambda video: video.filename)
@@ -306,3 +306,6 @@ class API:
         if not output_path.isfile():
             raise OSError('Unable to output videos file names in %s' % output_path)
         return str(output_path)
+
+    def field_names(self):
+        return list(Video.ROW_FIELDS)

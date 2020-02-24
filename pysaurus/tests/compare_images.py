@@ -90,7 +90,7 @@ def similar_group_to_html_file(group_id, group, miniatures, database, html_dir, 
         html.write('<tbody>')
         for node in sorted(group):
             miniature_i = miniatures[node.node]
-            thumb_path = database.get_video_from_filename(miniature_i.identifier).get_thumbnail_path()
+            thumb_path = database.get_video_from_filename(miniature_i.identifier).thumbnail_path
             html.write('<tr>')
             html.write('<td class="image">')
             html.write('<img src="file://%s"/>' % thumb_path)
@@ -185,7 +185,7 @@ def main():
 
     json_groups = [
         {miniatures[node.node].identifier.path: database.get_video_from_filename(
-            miniatures[node.node].identifier).get_thumbnail_path().path
+            miniatures[node.node].identifier).thumbnail_path.path
          for node in group}
         for group in sim_groups]
 

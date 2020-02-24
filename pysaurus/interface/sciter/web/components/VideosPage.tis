@@ -1,0 +1,77 @@
+include "sciter:reactor.tis";
+include "Video.tis";
+
+class VideosPage: Reactor.Component {
+    function this(props, children) {
+        this.props = props || {};
+        this.children = children || {};
+        this.pageSize = 20;
+        this.pageNumber = 0;
+
+        this.nbVideos = view.count_videos();
+        this.validSize = view.valid_size();
+        this.validLength = view.valid_length();
+    }
+    render() {
+        const nbPages = view.count_pages(this.pageSize);
+        return (
+            <div id="videos">
+                <div class="status">{this.nbVideos} video{this.nbVideos > 1 ? 's' : ''}, {this.validSize}, {this.validLength}</div>
+                <div class="form">
+                    <button id="first-page" :disabled={this.pageNumber === 0}>&lt;&lt;</button>
+                    <button id="previous-page" :disabled={this.pageNumber === 0}>&lt;</button>
+                    <span>Page {this.getPageSelector(nbPages)} / {nbPages}</span>
+                    <button id="next-page" :disabled={this.pageNumber === nbPages - 1}>&gt;</button>
+                    <button id="last-page" :disabled={this.pageNumber === nbPages - 1}>&gt;&gt;</button>
+                </div>
+                <div class="videos">{this.getVideos()}</div>
+            </div>
+        );
+    }
+    function getPageSelector(nbPages) {
+        const options = [];
+        for (let i = 0; i < nbPages; ++i) {
+            options.push(<option key={i} value={i}>{i + 1}</option>);
+        }
+        return <select id="current-page" :value={this.pageNumber}>{options}</select>;
+    }
+    function getVideos() {
+        const bounds = view.get_videos_index_range(this.pageSize, this.pageNumber);
+        const start = bounds[0];
+        const end = bounds[1];
+        const videos = [];
+        for (let i = start; i < end; ++i) {
+            videos.push(<Video key={view.get_video_field(i, 'video_id')} videoIndex={i}/>);
+        }
+        return videos;
+    }
+
+    event click $(button#first-page) {
+        if (this.pageNumber !== 0) {
+            this.update({pageNumber: 0});
+        }
+    }
+    event click $(button#previous-page) {
+        if (this.pageNumber > 0) {
+            this.update({pageNumber: this.pageNumber - 1});
+        }
+    }
+    event click $(button#next-page) {
+        const nbPages = view.count_pages(this.pageSize);
+        if (this.pageNumber < nbPages - 1) {
+            this.update({pageNumber: this.pageNumber + 1});
+        }
+    }
+    event click $(button#last-page) {
+        const nbPages = view.count_pages(this.pageSize);
+        if (this.pageNumber !== nbPages - 1) {
+            this.update({pageNumber: nbPages - 1});
+        }
+    }
+    event contentchange $(div.videos) (evt, element) {
+        element[0].scrollToView(true);
+    }
+    event change $(select#current-page) (evt, element) {
+        this.update({pageNumber: element.value});
+    }
+}

@@ -1,0 +1,24 @@
+include "sciter:reactor.tis";
+include "HomePage.tis";
+include "VideosPage.tis";
+
+class App: Reactor.Component {
+	function this(props, children) {
+		this.props = props || {};
+		this.children = children || {};
+		this.page = "home";
+	}
+    function render() {
+		return (
+			<main>{this.getPage()}</main>
+		);
+	}
+	function getPage() {
+	    const app = this;
+	    const pageLoader = pageName => app.update({page: pageName});
+	    if (this.page === "home")
+	        return <HomePage pageLoader={pageLoader}/>;
+	    if (this.page === "videos")
+	        return <VideosPage pageLoader={pageLoader}/>;
+	}
+}

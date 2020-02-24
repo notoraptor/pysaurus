@@ -7,6 +7,8 @@ from datetime import datetime
 from pysaurus.core.constants import VIDEO_SUPPORTED_EXTENSIONS
 
 # Datetime since timestamp 0.
+from pysaurus.core.modules import HTMLStripper
+
 EPOCH = datetime.utcfromtimestamp(0)
 
 REGEX_NO_WORD = re.compile(r'(\W|_)+')
@@ -165,3 +167,22 @@ def launch_thread(function, *args, **kwargs):
     thread = threading.Thread(target=function, args=args, kwargs=kwargs)
     thread.start()
     return thread
+
+
+def html_to_title(title):
+    # type: (str) -> str
+    """
+    Remove HTML tags, simple and double starting/ending quotes from given string.
+    :param title: text to clear
+    :return: cleared text
+    """
+    if title:
+        title = HTMLStripper.strip(title)
+        strip_again = True
+        while strip_again:
+            strip_again = False
+            for character in ('"', "'"):
+                if title.startswith(character) and title.endswith(character):
+                    title = title.strip(character)
+                    strip_again = True
+    return title

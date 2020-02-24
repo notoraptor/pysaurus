@@ -1,0 +1,57 @@
+include "sciter:reactor.tis";
+
+/*
+*/
+
+class Video: Reactor.Component {
+    function this(props, children) {
+        this.props = props || {};
+        this.children = children || {};
+    }
+    function render() {
+        const index = this.props.videoIndex;
+        const audioBitRate = Math.round(view.get_video_field(index, 'audio_bit_rate') / 1000).toInteger();
+        const audioCodec = view.get_video_field(index, 'audio_codec');
+        const audioCodecDescription = view.get_video_field(index, 'audio_codec_description');
+        const containerFormat = view.get_video_field(index, 'container_format');
+        const date = view.get_video_field(index, 'date');
+        const extension = view.get_video_field(index, 'extension').toUpperCase();
+        const filename = view.get_video_field(index, 'filename');
+        const fileTitle = view.get_video_field(index, 'file_title');
+        const frameRate = Math.round(view.get_video_field(index, 'frame_rate')).toInteger();
+        const height = view.get_video_field(index, 'height');
+        const length = view.get_video_field(index, 'length');
+        const sampleRate = view.get_video_field(index, 'sample_rate');
+        const size = view.get_video_field(index, 'size');
+        const thumbnail = view.get_video_field(index, 'thumbnail_path');
+        const title = view.get_video_field(index, 'title');
+        const videoCodec = view.get_video_field(index, 'video_codec');
+        const videoCodecDescription = view.get_video_field(index, 'video_codec_description');
+        const width = view.get_video_field(index, 'width');
+        return (
+            <div class={'video' + (index % 2 ? ' even' : ' odd')}>
+                <div class="image">
+                    <img alt={title} src={thumbnail}/>
+                </div>
+                <div class="info">
+                    <div class="name">
+                        <div><strong>{title}</strong></div>
+                        {title === fileTitle ? '' : <div><em>{fileTitle}</em></div>}
+                    </div>
+                    <div class="filename"><code>{filename}</code></div>
+                    <div class="format">
+                        <div class="extension"><code>{extension}</code></div>
+                        <div><strong>{size}</strong> / {containerFormat} (<span title={videoCodecDescription}>{videoCodec}</span>, <span title={audioCodecDescription}>{audioCodec}</span>)</div>
+                    </div>
+                    <div>{width} x {height} @ {frameRate} fps</div>
+                    <div>{length}</div>
+                    <div>{sampleRate} Hz, {audioBitRate} Kb/s</div>
+                    <div><code>{date}</code></div>
+                </div>
+            </div>
+        );
+    }
+    event click $(.video .info .filename code) (evt, element) {
+        view.open_video(this.props.videoIndex);
+    }
+}

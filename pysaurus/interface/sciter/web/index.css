@@ -1,0 +1,72 @@
+main {
+	height: 1*;
+}
+
+#home {
+	height: 1*;
+}
+#home #button-initial {
+	text-align: center;
+	padding: 0.5em;
+}
+#home div.notifications {
+	border: 1px solid gray;
+	height: 1*;
+	overflow: auto;
+}
+
+#videos {
+    height: 1*;
+}
+#videos .status, #videos .form {
+    text-align: center;
+    padding: 0.5em;
+}
+#videos .form > * {
+    margin-left: 0.25em;
+    margin-right: 0.25em;
+}
+#videos .videos {
+    border: 1px solid gray;
+    height: 1*;
+    overflow: auto;
+}
+#videos .video {
+    flow: horizontal;
+}
+#videos .video.even {
+    background-color: rgb(240, 240, 240);
+}
+#videos .video .image {
+    padding: 0.5em;
+}
+#videos .video .info {
+    padding: 0.5em;
+}
+#videos .video .info > div {
+    margin-bottom: 0.5em;
+}
+#videos .video .info .format {
+    flow: horizontal;
+}
+#videos .video .info .format .extension {
+    background-color: black;
+    color: white;
+    font-weight: bold;
+    padding-left: 1ex;
+    padding-right: 1ex;
+    width: 6ex;
+    text-align: center;
+    margin-right: 0.5em;
+}
+#videos .video .info .filename {
+    color: rgb(250, 140, 140);
+    border: 1px solid rgb(250, 240, 240);
+    background-color: rgb(250, 250, 250);
+    padding: 0.2em;
+}
+#videos .video .info .filename code:hover {
+    text-decoration: underline;
+    cursor: pointer;
+    color: red;
+}

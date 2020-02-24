@@ -156,7 +156,7 @@ def main():
                 intensities[i].miniature.identifier,
             )
             thumb_path = api.database.get_video_from_filename(
-                intensities[i].miniature.identifier).get_thumbnail_path()
+                intensities[i].miniature.identifier).thumbnail_path
             print('file://%s' % thumb_path)
             print('xdg-open', thumb_path)
             print()
