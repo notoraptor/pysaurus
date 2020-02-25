@@ -1,6 +1,6 @@
 from typing import Callable, Dict, Optional
 
-from pysaurus.core.classes import ToDict, StringPrinter
+from pysaurus.core.classes import ToDict
 from pysaurus.core.components import DateModified
 
 

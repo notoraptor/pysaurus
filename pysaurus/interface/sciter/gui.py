@@ -2,9 +2,13 @@
 pip install PySciter
 """
 import threading
+import multiprocessing
 from typing import Optional
 
 import sciter
+import queue
+import time
+import traceback
 
 from pysaurus.core import functions
 from pysaurus.core.components import FileSize, Duration
@@ -12,6 +16,7 @@ from pysaurus.core.database.api import API
 from pysaurus.core.functions import launch_thread
 from pysaurus.core.notification import Notifier, Notification
 from pysaurus.tests.test_utils import TEST_LIST_FILE_PATH
+from pysaurus.interface.common.parallel_notifier import ParallelNotifier
 
 
 class DatabaseReady(Notification):
@@ -25,11 +30,32 @@ class Frame(sciter.Window):
         notifier = Notifier()
         notifier.set_default_manager(self._notify)
         self.api = None
-        self.notifier = notifier
+        self.multiprocessing_manager = multiprocessing.Manager()
+        self.notifier = ParallelNotifier(self.multiprocessing_manager.Queue())
         self.thread = None  # type: Optional[threading.Thread]
         self.videos = []
+        self.end = False
         self.load_file('web/index.html')
         self.expand()
+        self.monitor_thread = launch_thread(self._monitor_notifications)
+
+    def _monitor_notifications(self):
+        print('Monitoring notifications ...')
+        while True:
+            if self.end:
+                break
+            try:
+                notification = self.notifier.queue.get_nowait()
+                self._notify(notification)
+            except queue.Empty:
+                time.sleep(1/10)
+            except Exception as exc:
+                print('Exception while sending notification:')
+                traceback.print_tb(exc.__traceback__)
+                print(type(exc).__name__)
+                print(exc)
+                print()
+        print('End monitoring.')
 
     def _notify(self, notification):
         # type: (Notification) -> None
@@ -47,6 +73,12 @@ class Frame(sciter.Window):
                        reset=False)
         self.load_videos()
         self.notifier.notify(DatabaseReady())
+
+    @sciter.script
+    def close_app(self):
+        self.end = True
+        if self.thread:
+            self.thread.join()
 
     @sciter.script
     def load_database(self):

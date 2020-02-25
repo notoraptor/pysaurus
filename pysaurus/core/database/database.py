@@ -3,19 +3,17 @@ from typing import Dict, Iterable, List, Optional, Set, Union
 
 import ujson as json
 
-from pysaurus.core.database.jobs import jobs_python, jobs_video_raptor
 from pysaurus.core import exceptions, functions as utils
 from pysaurus.core.components import AbsolutePath, DateModified, FilePath, PathType
-from pysaurus.core.constants import PYTHON_ERROR_NOTHING, THUMBNAIL_EXTENSION
+from pysaurus.core.constants import THUMBNAIL_EXTENSION
 from pysaurus.core.database import notifications
 from pysaurus.core.database.video import Video
 from pysaurus.core.database.video_state import VideoState
 from pysaurus.core.modules import ImageUtils, System
-from pysaurus.core.native.video_raptor.api import VideoRaptorResult
 from pysaurus.core.native.video_raptor.miniature import Miniature
 from pysaurus.core.notification import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.profiling import Profiler
-from pysaurus.core.database.jobs import async_jobs as job_module, jobs_python
+from pysaurus.core.database.jobs import jobs_python
 
 
 class Database:
@@ -261,7 +259,7 @@ class Database:
             ))
 
         with Profiler(title='Get videos info from JSON (%d threads)' % len(jobs), notifier=self.__notifier):
-            counts_loaded = job_module.batch(job_module.job_video_to_json, jobs, cpu_count=cpu_count)
+            counts_loaded = utils.parallelize(jobs_python.job_video_to_json, jobs, cpu_count=cpu_count)
 
         videos = {}
         unreadable = {}
@@ -364,7 +362,7 @@ class Database:
             ))
 
         with Profiler(title='Get thumbnails from JSON through %d thread(s)' % len(thumb_jobs), notifier=self.__notifier):
-            counts_loaded = job_module.batch(job_module.job_video_thumbnails_to_json, thumb_jobs, cpu_count=cpu_count)
+            counts_loaded = utils.parallelize(jobs_python.job_video_thumbnails_to_json, thumb_jobs, cpu_count=cpu_count)
 
         for job in thumb_jobs:
             list_file_path = AbsolutePath.ensure(job[0])

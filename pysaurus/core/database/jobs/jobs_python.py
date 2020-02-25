@@ -114,9 +114,3 @@ def job_video_thumbnails_to_json(job):
     assert nb_read == job_count
     notifier.notify(notifications.ThumbnailJob(job_id, job_count, job_count))
     return nb_loaded
-
-
-def batch(function, jobs, cpu_count):
-    with concurrent.futures.ThreadPoolExecutor(max_workers=cpu_count) as executor:
-        results = list(executor.map(function, jobs))
-    return results
