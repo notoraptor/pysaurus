@@ -78,11 +78,8 @@ class VideosPage: Reactor.Component {
         return <span>All</span>;
     }
     function getPageSelector(nbPages) {
-        const options = [];
-        for (let i = 0; i < nbPages; ++i) {
-            options.push(<option key={i} value={i}>{i + 1}</option>);
-        }
-        return <select id="current-page" :value={this.pageNumber}>{options}</select>;
+        const nbPages = view.count_pages(this.pageSize);
+        return <input type="integer" id="current-page" min={1} max={nbPages} step={1} :value={this.pageNumber + 1}/>
     }
     function getVideos() {
         const bounds = view.get_videos_index_range(this.pageSize, this.pageNumber);
@@ -122,8 +119,15 @@ class VideosPage: Reactor.Component {
             this.updatePage(nbPages - 1);
         }
     }
-    event change $(select#current-page) (evt, element) {
-        this.updatePage(element.value);
+    event change $(input#current-page) (evt, element) {
+        const nbPages = view.count_pages(this.pageSize);
+        let pageNumber = (element.value || 1) - 1;
+        if (pageNumber < 0)
+            pageNumber = 0;
+        if (pageNumber >= nbPages)
+            pageNumber = nbPages - 1;
+        if (pageNumber !== this.pageNumber)
+            this.updatePage(pageNumber);
     }
     event change $(input#input-search) {
         this.update({searchType: null});

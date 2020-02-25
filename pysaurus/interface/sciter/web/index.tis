@@ -4,7 +4,6 @@ event ready {
     const height = 600;
     const x = (sw - width) / 2;
     const y = (sh - height) / 2;
-    stdout.println('SCREEN', sx, sy, sw, sh, 'DIMENSIONS', width, height, 'POSITION', x, y);
     view.move(x, y, width, height);
 }
 event closerequest {
