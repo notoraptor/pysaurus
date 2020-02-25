@@ -1,10 +1,35 @@
 include "sciter:reactor.tis";
 include "Video.tis";
 
+function getVideoData(index) {
+    return view.get_video_fields(index, [
+        'audio_bit_rate',
+        'audio_codec',
+        'audio_codec_description',
+        'container_format',
+        'date',
+        'extension',
+        'file_title',
+        'filename',
+        'frame_rate',
+        'height',
+        'length',
+        'sample_rate',
+        'size',
+        'thumbnail_path',
+        'title',
+        'video_codec',
+        'video_codec_description',
+        'video_id',
+        'width',
+    ])
+}
+
 class VideosPage: Reactor.Component {
     function this(props, children) {
         this.props = props || {};
         this.children = children || {};
+
         this.pageSize = 20;
         this.pageNumber = 0;
         this.searchText = null;
@@ -65,7 +90,8 @@ class VideosPage: Reactor.Component {
         const end = bounds[1];
         const videos = [];
         for (let i = start; i < end; ++i) {
-            videos.push(<Video key={view.get_video_field(i, 'video_id')} videoIndex={i}/>);
+            const data = getVideoData(i);
+            videos.push(<Video key={data.video_id} data={data} videoIndex={i}/>);
         }
         return videos;
     }
@@ -108,12 +134,12 @@ class VideosPage: Reactor.Component {
         const cond = form.searchType.trim();
         if (text.length && cond.length && this.searchType !== cond) {
             view.search_videos(text, cond);
-            this.update({searchText: text, searchType: cond});
+            this.update({searchText: text, searchType: cond, pageNumber: 0});
         }
     }
     event click $(button#button-search-reset) (evt, element) {
         view.load_videos();
         $(input#input-search).value = '';
-        this.update({searchText: null, searchType: null});
+        this.update({searchText: null, searchType: null, pageNumber: 0});
     }
 }

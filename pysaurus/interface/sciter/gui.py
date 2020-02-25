@@ -19,6 +19,7 @@ class DatabaseReady(Notification):
 
 
 class Frame(sciter.Window):
+
     def __init__(self):
         super().__init__(ismain=True, uni_theme=True)
         notifier = Notifier()
@@ -83,6 +84,15 @@ class Frame(sciter.Window):
     def get_video_field(self, index, field):
         value = getattr(self.videos[index], field)
         return value if isinstance(value, (str, int, float, bool)) else str(value)
+
+    @sciter.script
+    def get_video_fields(self, index, fields):
+        video = self.videos[index]
+        values = {}
+        for field in fields:
+            value = getattr(video, field)
+            values[field] = value if isinstance(value, (str, int, float, bool)) else str(value)
+        return values
 
     @sciter.script
     def open_video(self, index):

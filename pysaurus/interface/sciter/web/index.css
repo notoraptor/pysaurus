@@ -14,6 +14,20 @@ main {
 	height: 1*;
 	overflow: auto;
 }
+#home .job {
+    flow: horizontal;
+}
+#home .job label {
+    padding-right: 0.5em;
+    vertical-align: middle;
+}
+#home .job progress {
+    width: 1*;
+    text-align: center;
+}
+#home .job progress span {
+    display: inline-block;
+}
 
 #videos {
     height: 1*;

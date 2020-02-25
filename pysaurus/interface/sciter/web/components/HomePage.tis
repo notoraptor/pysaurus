@@ -11,8 +11,14 @@ class HomePage: Reactor.Component {
     function this(props, children) {
         this.props = props || {};
 		this.children = children || {};
+
 		this.status = Status.INITIAL;
 		this.messages = [];
+		this.nbVideosToLoad = 0;
+		this.nbThumbnailsToLoad = 0;
+		this.latestVideoJobs = {};
+		this.latestThumbnailJobs = {};
+
 		this.callbackIndex = -1;
     }
     function render() {
@@ -41,17 +47,67 @@ class HomePage: Reactor.Component {
 			return <button :disabled={false}>Display videos</button>;
 	}
 	function getMessages() {
-		const messages = this.messages.map((message, index) => <div key={index}>{message.message}</div>);
-		if (messages.length && this.status < Status.LOADED)
-			messages.push(<div key={messages.length}>...</div>);
-		return messages;
+	    const output = [];
+	    for (let i = 0; i < this.messages.length; ++i) {
+	        const message = this.messages[i];
+	        if (message === 'VideoJob') {
+	            const total = this.nbVideosToLoad;
+	            let current = 0;
+	            for (let jobId in Object.keys(this.latestVideoJobs)) {
+	                current += this.latestVideoJobs[jobId];
+	            }
+	            const percent = Math.round(current * 100 / total).toInteger();
+	            output.push((
+	                <div key={i} class="job video-job">
+	                    <label for="video-job" class="info">{current} / {total} ({percent} %)</label>
+	                    <progress id="video-job" value={current} max={total}/>
+	                </div>
+	            ));
+	        } else if (message === 'ThumbnailJob') {
+	            const total = this.nbThumbnailsToLoad;
+	            let current = 0;
+	            for (let jobId in Object.keys(this.latestThumbnailJobs)) {
+	                current += this.latestThumbnailJobs[jobId];
+	            }
+	            const percent = Math.round(current * 100 / total).toInteger();
+	            output.push((
+	                <div key={i} class="job thumb-job">
+	                    <label for="thumb-job" class="info">{current} / {total} ({percent} %)</label>
+	                    <progress id="thumb-job" value={current} max={total}/>
+	                </div>
+	            ));
+	        } else {
+	            output.push(<div key={i}>{message.message}</div>);
+	        }
+	    }
+		return output;
 	}
 	function notify(notification) {
-        const messages = this.messages.slice();
-        messages.push(notification);
-        const update = {messages: messages};
-        if (notification.name === 'DatabaseReady')
+	    const update = {};
+	    let placeholder = notification;
+	    if (notification.name === 'DatabaseReady')
             update.status = Status.LOADED;
+        else if (notification.name === 'VideosToLoad')
+            update.nbVideosToLoad = notification.notification.total;
+        else if (notification.name === 'ThumbnailsToLoad')
+            update.nbThumbnailsToLoad = notification.notification.total;
+        else if (notification.name === 'VideoJob') {
+            placeholder = notification.name;
+            const latestVideoJobs = this.latestVideoJobs.clone();
+            latestVideoJobs[notification.notification.index] = notification.notification.parsed;
+            update.latestVideoJobs = latestVideoJobs;
+        }
+        else if (notification.name === 'ThumbnailJob') {
+            placeholder = notification.name;
+            const latestThumbnailJobs = this.latestThumbnailJobs.clone();
+            latestThumbnailJobs[notification.notification.index] = notification.notification.parsed;
+            update.latestThumbnailJobs = latestThumbnailJobs;
+        }
+        if (placeholder && (!this.messages.length || this.messages[this.messages.length - 1] !== placeholder)) {
+            const messages = this.messages.slice();
+            messages.push(placeholder);
+            update.messages = messages;
+        }
         this.update(update);
     }
     event click $(#button-initial > button) (evt, element) {

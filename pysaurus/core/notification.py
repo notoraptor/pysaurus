@@ -5,27 +5,7 @@ from pysaurus.core.components import DateModified
 
 
 class Notification(ToDict):
-    __slots__ = 'group_id',
-
-    def __init__(self, group_id=None):
-        # type: (int) -> None
-        self.group_id = group_id
-
-    def with_group(self, group_id):
-        # type: (int) -> Notification
-        self.group_id = group_id
-        return self
-
-    def get_title(self):
-        return self.get_name()
-
-    def get_text(self):
-        with StringPrinter() as printer:
-            for name in self.get_slots():
-                value = getattr(self, name)
-                if value is not None:
-                    printer.write('%s:' % name, value)
-            return str(printer)
+    pass
 
 
 ManagerType = Callable[[Notification], None]

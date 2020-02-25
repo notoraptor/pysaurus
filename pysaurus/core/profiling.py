@@ -6,17 +6,15 @@ from pysaurus.core.notification import DEFAULT_NOTIFIER, Notification
 class ProfilingStart(Notification):
     __slots__ = ['name']
 
-    def __init__(self, title, group_id=None):
+    def __init__(self, title):
         # type: (str, int) -> None
-        super().__init__(group_id)
         self.name = title
 
 
 class ProfilingEnd(Notification):
     __slots__ = ('name', 'time')
 
-    def __init__(self, name, time, group_id=None):
-        super().__init__(group_id)
+    def __init__(self, name, time):
         self.name = name
         self.time = str(time)
 
