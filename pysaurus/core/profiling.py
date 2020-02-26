@@ -7,7 +7,7 @@ class ProfilingStart(Notification):
     __slots__ = ['name']
 
     def __init__(self, title):
-        # type: (str, int) -> None
+        # type: (str) -> None
         self.name = title
 
 
@@ -40,7 +40,7 @@ class Profile:
             pieces.append('%d sec' % seconds)
         if self.microseconds:
             pieces.append('%d microsec' % self.microseconds)
-        return '(%s)' % (' '.join(pieces) if pieces else '0 sec')
+        return ' '.join(pieces) if pieces else '0 sec'
 
 
 class Profiler:

@@ -8,8 +8,8 @@ const Status = {
 }
 
 class HomePage: Reactor.Component {
-    function this(props, children) {
-        this.props = props || {};
+	function this(props, children) {
+		this.props = props || {};
 		this.children = children || {};
 
 		this.status = Status.INITIAL;
@@ -20,8 +20,8 @@ class HomePage: Reactor.Component {
 		this.latestThumbnailJobs = {};
 
 		this.callbackIndex = -1;
-    }
-    function render() {
+	}
+	function render() {
 		return (
 			<div id="home">
 				<div id="button-initial">{this.getInitialButton()}</div>
@@ -47,81 +47,142 @@ class HomePage: Reactor.Component {
 			return <button :disabled={false}>Display videos</button>;
 	}
 	function getMessages() {
-	    const output = [];
-	    for (let i = 0; i < this.messages.length; ++i) {
-	        const message = this.messages[i];
-	        if (message === 'VideoJob') {
-	            const total = this.nbVideosToLoad;
-	            let current = 0;
-	            for (let jobId in Object.keys(this.latestVideoJobs)) {
-	                current += this.latestVideoJobs[jobId];
-	            }
-	            const percent = Math.round(current * 100 / total).toInteger();
-	            output.push((
-	                <div key={i} class="job video-job">
-	                    <label for="video-job" class="info">{current} / {total} ({percent} %)</label>
-	                    <progress id="video-job" value={current} max={total}/>
-	                </div>
-	            ));
-	        } else if (message === 'ThumbnailJob') {
-	            const total = this.nbThumbnailsToLoad;
-	            let current = 0;
-	            for (let jobId in Object.keys(this.latestThumbnailJobs)) {
-	                current += this.latestThumbnailJobs[jobId];
-	            }
-	            const percent = Math.round(current * 100 / total).toInteger();
-	            output.push((
-	                <div key={i} class="job thumb-job">
-	                    <label for="thumb-job" class="info">{current} / {total} ({percent} %)</label>
-	                    <progress id="thumb-job" value={current} max={total}/>
-	                </div>
-	            ));
-	        } else {
-	            output.push(<div key={i}>{message.message}</div>);
-	        }
-	    }
+		const output = [];
+		for (let i = 0; i < this.messages.length; ++i) {
+			const message = this.messages[i];
+			if (message === 'VideoJob') {
+				const total = this.nbVideosToLoad;
+				let current = 0;
+				for (let jobId in Object.keys(this.latestVideoJobs)) {
+					current += this.latestVideoJobs[jobId];
+				}
+				const percent = Math.round(current * 100 / total).toInteger();
+				output.push(
+					<div key={i} class="job video-job">
+						<label for="video-job" class="info">{current} / {total} ({percent} %)</label>
+						<progress id="video-job" value={current} max={total}/>
+					</div>
+				);
+			} else if (message === 'ThumbnailJob') {
+				const total = this.nbThumbnailsToLoad;
+				let current = 0;
+				for (let jobId in Object.keys(this.latestThumbnailJobs)) {
+					current += this.latestThumbnailJobs[jobId];
+				}
+				const percent = Math.round(current * 100 / total).toInteger();
+				output.push(
+					<div key={i} class="job thumb-job">
+						<label for="thumb-job" class="info">{current} / {total} ({percent} %)</label>
+						<progress id="thumb-job" value={current} max={total}/>
+					</div>
+				);
+			} else if (message.name === 'DatabaseLoaded' || message.name === 'DatabaseSaved') {
+				const data = message.notification;
+				output.push(
+					<div key={i}>
+						<strong>Database {message.name === 'DatabaseSaved' ? 'saved' : 'loaded'}</strong>:
+						{data.entries}{' '}{data.entries > 1 ? 'entries': 'entry'},
+						{data.discarded} discarded,
+						{data.not_found} not found,
+						{data.found} found,
+						{data.unreadable} unreadable,
+						{data.valid} valid,
+						{data.thumbnails} with thumbnails
+					</div>
+				);
+			} else if (message.name === 'DatabaseReady') {
+				output.push(<div key={i}><strong>Database open!</strong></div>);
+			} else if (message.name === 'FinishedCollectingVideos') {
+				const count = message.notification.count;
+				output.push(<div key={i}><strong>Collected</strong>{' '}{count} file{count > 1 ? 's' : ''}</div>);
+			} else if (message.name === 'MissingThumbnails') {
+				const names = message.notification.names;
+				if (names.length) {
+					output.push(
+						<div key={i}>
+							<div><strong>Missing {names.length} thumbnails</strong>:</div>
+							{names.map((name, indexName) => <div key={indexName}><code>{name}</code></div>)}
+						</div>
+					);
+				} else {
+					output.push(<div key={i}><em>No missing thumbnails!</em></div>);
+				}
+			} else if (message.name === 'ProfilingEnd') {
+				if (i > 0 && (this.messages[i - 1] === 'VideoJob' || this.messages[i - 1] === 'ThumbnailJob'))
+					output.push(<div key={i}><strong>Loaded</strong> in {message.notification.time}</div>);
+			} else if (message.name === 'VideoInfoErrors' || message.name === 'VideoThumbnailErrors') {
+				const errors = message.notification.video_errors;
+				const keys = Object.keys(errors);
+				keys.sort();
+				output.push(
+					<div key={i}>
+						<div><strong>
+							{errors.length}{' '}{message.name === 'VideoInfoErrors' ? 'video' : 'thumbnail'}
+							error{errors.length > 1 ? 's' : ''}
+						</strong>:</div>
+						<ul>{keys.map((name, indexName) => (
+							<li key={indexName}>
+								<div><code>{name}</code></div>
+								<ul>{errors[name].map((error, indexError) => <li key={indexError}><code>{error}</code></li>)}</ul>
+							</li>
+						))}</ul>
+					</div>
+				);
+			} else if (message.name === 'VideosToLoad' || message.name === 'ThumbnailsToLoad') {
+				const total = message.notification.total;
+				const label = (message.name === 'ThumbnailsToLoad') ? 'thumbnail' : 'video';
+				if (total) {
+					output.push(<div key={i}><strong>{total}{' '}{label}{total > 1 ? 's' : ''} to load.</strong></div>);
+				} else {
+					output.push(<div key={i}><em>No {label}s to load!</em></div>);
+				}
+			} else {
+				output.push(<div key={i}><em>unknown</em>: {message.message}</div>);
+			}
+		}
 		return output;
 	}
 	function notify(notification) {
-	    const update = {};
-	    let placeholder = notification;
-	    if (notification.name === 'DatabaseReady')
-            update.status = Status.LOADED;
-        else if (notification.name === 'VideosToLoad')
-            update.nbVideosToLoad = notification.notification.total;
-        else if (notification.name === 'ThumbnailsToLoad')
-            update.nbThumbnailsToLoad = notification.notification.total;
-        else if (notification.name === 'VideoJob') {
-            placeholder = notification.name;
-            const latestVideoJobs = this.latestVideoJobs.clone();
-            latestVideoJobs[notification.notification.index] = notification.notification.parsed;
-            update.latestVideoJobs = latestVideoJobs;
-        }
-        else if (notification.name === 'ThumbnailJob') {
-            placeholder = notification.name;
-            const latestThumbnailJobs = this.latestThumbnailJobs.clone();
-            latestThumbnailJobs[notification.notification.index] = notification.notification.parsed;
-            update.latestThumbnailJobs = latestThumbnailJobs;
-        }
-        if (placeholder && (!this.messages.length || this.messages[this.messages.length - 1] !== placeholder)) {
-            const messages = this.messages.slice();
-            messages.push(placeholder);
-            update.messages = messages;
-        }
-        this.update(update);
-    }
-    event click $(#button-initial > button) (evt, element) {
+		// Ignore some notifications/
+		if (['ProfilingStart'].indexOf(notification.name) !== -1)
+			return;
+
+		const update = {};
+		let placeholder = notification;
+		if (notification.name === 'DatabaseReady')
+			update.status = Status.LOADED;
+		else if (notification.name === 'VideosToLoad')
+			update.nbVideosToLoad = notification.notification.total;
+		else if (notification.name === 'ThumbnailsToLoad')
+			update.nbThumbnailsToLoad = notification.notification.total;
+		else if (notification.name === 'VideoJob') {
+			placeholder = notification.name;
+			const latestVideoJobs = this.latestVideoJobs.clone();
+			latestVideoJobs[notification.notification.index] = notification.notification.parsed;
+			update.latestVideoJobs = latestVideoJobs;
+		}
+		else if (notification.name === 'ThumbnailJob') {
+			placeholder = notification.name;
+			const latestThumbnailJobs = this.latestThumbnailJobs.clone();
+			latestThumbnailJobs[notification.notification.index] = notification.notification.parsed;
+			update.latestThumbnailJobs = latestThumbnailJobs;
+		}
+		if (placeholder && (!this.messages.length || this.messages[this.messages.length - 1] !== placeholder)) {
+			const messages = this.messages.slice();
+			messages.push(placeholder);
+			update.messages = messages;
+		}
+		this.update(update);
+	}
+	event click $(#button-initial > button) (evt, element) {
 		if (this.status === Status.INITIAL) {
 			view.load_database();
 			this.update({status: Status.LOADING});
-			return;
-		}
-		if (this.status === Status.LOADED) {
-		    this.props.pageLoader("videos");
-		    return;
+		} else if (this.status === Status.LOADED) {
+			this.props.pageLoader("videos");
 		}
 	}
 	event contentchange $(div.notifications) (evt, element) {
-	    element[element.length - 1].scrollToView(false);
+		element[element.length - 1].scrollToView(false);
 	}
 }

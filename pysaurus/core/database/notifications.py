@@ -117,7 +117,7 @@ class MissingVideos(Notification):
 
     def __init__(self, file_names):
         super().__init__()
-        self.names = [str(file_name) for file_name in file_names]
+        self.names = sorted(str(file_name) for file_name in file_names)
 
     def __str__(self):
         with StringPrinter() as printer:
@@ -136,7 +136,7 @@ class VideoInfoErrors(Notification):
 
     def __init__(self, video_errors: Dict[str, List[str]]):
         super().__init__()
-        self.video_errors = {str(file_name): errors for file_name, errors in video_errors.items()}
+        self.video_errors = {str(file_name): sorted(errors) for file_name, errors in video_errors.items()}
 
     def __str__(self):
         with StringPrinter() as printer:
@@ -150,3 +150,7 @@ class VideoInfoErrors(Notification):
 
 class VideoThumbnailErrors(VideoInfoErrors):
     __slots__ = []
+
+
+class DatabaseReady(Notification):
+    __slots__ = ()

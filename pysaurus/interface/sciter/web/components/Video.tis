@@ -29,10 +29,8 @@ class Video: Reactor.Component {
                         <div class="extension"><code>{data.extension}</code></div>
                         <div><strong>{data.size}</strong> / {data.container_format} (<span title={data.video_codec_description}>{data.video_codec}</span>, <span title={data.audio_codec_description}>{data.audio_codec}</span>)</div>
                     </div>
-                    <div>{data.width} x {data.height} @ {data.frame_rate} fps</div>
-                    <div>{data.length}</div>
-                    <div>{data.sample_rate} Hz, {data.audio_bit_rate} Kb/s</div>
-                    <div><code>{data.date}</code></div>
+                    <div><strong>{data.width}</strong> x <strong>{data.height}</strong> @ {data.frame_rate} fps | {data.sample_rate} Hz, {data.audio_bit_rate} Kb/s</div>
+                    <div><strong>{data.length}</strong> | <code>{data.date}</code></div>
                 </div>
             </div>
         );

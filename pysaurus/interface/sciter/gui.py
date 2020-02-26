@@ -13,14 +13,11 @@ import traceback
 from pysaurus.core import functions
 from pysaurus.core.components import FileSize, Duration
 from pysaurus.core.database.api import API
+from pysaurus.core.database.notifications import DatabaseReady
 from pysaurus.core.functions import launch_thread
 from pysaurus.core.notification import Notifier, Notification
 from pysaurus.tests.test_utils import TEST_LIST_FILE_PATH
 from pysaurus.interface.common.parallel_notifier import ParallelNotifier
-
-
-class DatabaseReady(Notification):
-    __slots__ = ()
 
 
 class Frame(sciter.Window):
