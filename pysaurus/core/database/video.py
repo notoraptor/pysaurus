@@ -171,7 +171,7 @@ class Video(VideoState):
             unique_id=self.ensure_thumbnail_name()
         )
 
-    def terms(self):
+    def terms(self, as_set=False):
         return string_to_pieces(' '.join((
             self.filename.path,
             self.meta_title,
@@ -183,7 +183,7 @@ class Video(VideoState):
             str(self.width),
             str(self.height),
             str(self.sample_rate),
-        )))
+        )), as_set=as_set)
 
     def to_dict(self):
         dct = super().to_dict()

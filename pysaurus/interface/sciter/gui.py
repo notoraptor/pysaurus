@@ -3,22 +3,40 @@ pip install PySciter
 """
 import threading
 import multiprocessing
-from typing import Optional
+from typing import Optional, List
 
 import sciter
 import queue
 import time
 import traceback
+import random
 
 from pysaurus.core import functions
 from pysaurus.core.components import FileSize, Duration
 from pysaurus.core.database.api import API
+from pysaurus.core.database.video import Video
 from pysaurus.core.database.notifications import DatabaseReady
 from pysaurus.core.functions import launch_thread
 from pysaurus.core.notification import Notifier, Notification
 from pysaurus.tests.test_utils import TEST_LIST_FILE_PATH
 from pysaurus.interface.common.parallel_notifier import ParallelNotifier
 
+
+def filter_exact(video, terms):
+    return ' '.join(terms) in ' '.join(video.terms())
+
+
+def filter_and(video, terms):
+    video_terms = video.terms(as_set=True)
+    return all(term in video_terms for term in terms)
+
+
+def filter_or(video, terms):
+    video_terms = video.terms(as_set=True)
+    return any(term in video_terms for term in terms)
+
+
+VIDEO_FILTERS = {'exact': filter_exact, 'and': filter_and, 'or': filter_or}
 
 class Frame(sciter.Window):
 
@@ -30,7 +48,7 @@ class Frame(sciter.Window):
         self.multiprocessing_manager = multiprocessing.Manager()
         self.notifier = ParallelNotifier(self.multiprocessing_manager.Queue())
         self.thread = None  # type: Optional[threading.Thread]
-        self.videos = []
+        self.videos = []  # type: List[Video]
         self.end = False
         self.load_file('web/index.html')
         self.expand()
@@ -125,7 +143,15 @@ class Frame(sciter.Window):
 
     @sciter.script
     def open_video(self, index):
-        self.api.open(self.videos[index].video_id)
+        self.videos[index].filename.open()
+
+    @sciter.script
+    def open_random_video(self, page_size):
+        video_index = random.randrange(len(self.videos))
+        page_index = video_index // page_size
+        shift = video_index % page_size
+        self.videos[video_index].filename.open()
+        return page_index, shift
 
     @sciter.script
     def load_videos(self):
@@ -133,21 +159,10 @@ class Frame(sciter.Window):
 
     @sciter.script
     def search_videos(self, text, cond):
-        videos = []
         terms = functions.string_to_pieces(text)
-        for video in self.api.database.videos():
-            video_terms = video.terms()
-            if cond == 'exact':
-                if ' '.join(terms) in ' '.join(video_terms):
-                    videos.append(video)
-            elif cond == 'and':
-                if all(term in video_terms for term in terms):
-                    videos.append(video)
-            elif cond == 'or':
-                if any(term in video_terms for term in terms):
-                    videos.append(video)
-        videos.sort(key=lambda v: v.title)
-        self.videos = videos
+        video_filter = VIDEO_FILTERS[cond]
+        self.videos = [video for video in self.api.database.videos() if video_filter(video, terms)]
+        self.videos.sort(key=lambda v: v.title)
 
 
 def main():

@@ -14,8 +14,9 @@ EPOCH = datetime.utcfromtimestamp(0)
 REGEX_NO_WORD = re.compile(r'(\W|_)+')
 
 
-def string_to_pieces(the_string):
-    return [piece.lower() for piece in REGEX_NO_WORD.sub(' ', the_string).split()]
+def string_to_pieces(the_string, as_set=False):
+    builder = set if as_set else list
+    return builder(piece.lower() for piece in REGEX_NO_WORD.sub(' ', the_string).split())
 
 
 def is_valid_video_filename(filename):

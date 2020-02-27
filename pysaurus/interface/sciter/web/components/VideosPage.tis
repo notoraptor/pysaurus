@@ -47,7 +47,10 @@ class VideosPage: Reactor.Component {
 					{this.getVideosStatus()}{' '}
 					<span>{nbVideos} video{nbVideos > 1 ? 's' : ''}, {validSize}, {validLength}</span>
 					{this.searchText ? ' ' : ''}
+				</div>
+				<div class="status">
 					{this.searchText ? <button id="button-search-reset">reset</button> : ''}
+					<button id="button-random"><strong><em>open a random video</em></strong></button>
 				</div>
 				<form class="form" id="form-search">
 					<label for="input-search">search:</label>
@@ -60,13 +63,15 @@ class VideosPage: Reactor.Component {
 					<input type="radio" id="input-search-exact" name="searchType" value="exact" :checked={this.searchType === "exact"}/>
 					<label for="input-search-exact">exact sentence</label>
 				</form>
-				<div class="form">
-					<button id="first-page" :disabled={this.pageNumber === 0}>&lt;&lt;</button>
-					<button id="previous-page" :disabled={this.pageNumber === 0}>&lt;</button>
-					<span>Page {this.getPageSelector(nbPages)} / {nbPages}</span>
-					<button id="next-page" :disabled={this.pageNumber === nbPages - 1}>&gt;</button>
-					<button id="last-page" :disabled={this.pageNumber === nbPages - 1}>&gt;&gt;</button>
-				</div>
+				{nbPages ? (
+					<div class="form">
+						<button id="first-page" :disabled={this.pageNumber === 0}>&lt;&lt;</button>
+						<button id="previous-page" :disabled={this.pageNumber === 0}>&lt;</button>
+						<span>Page {this.getPageSelector(nbPages)} / {nbPages}</span>
+						<button id="next-page" :disabled={this.pageNumber === nbPages - 1}>&gt;</button>
+						<button id="last-page" :disabled={this.pageNumber === nbPages - 1}>&gt;&gt;</button>
+					</div>
+				) : (<div class="form"><em>0 / 0 pages</em></div>)}
 				<div class="videos">{this.getVideos()}</div>
 			</div>
 		);
@@ -92,16 +97,21 @@ class VideosPage: Reactor.Component {
 		}
 		return videos;
 	}
-	function updateView(state) {
+	function updateView(state, videoShift = undefined) {
 		this.update(state);
 		const container = $(div.videos);
+		container.scrollTo(0, 0);
 		if (container.length)
-			container[0].scrollToView(true);
+			container[videoShift || 0].scrollToView(true);
 	}
-	function updatePage(pageNumber) {
-		this.updateView({pageNumber: pageNumber});
+	function updatePage(pageNumber, videoShift = undefined) {
+		this.updateView({pageNumber: pageNumber}, videoShift);
 	}
 
+	event click $(button#button-random) {
+		const info = view.open_random_video(this.pageSize);
+		this.updatePage(info[0], info[1]);
+	}
 	event click $(button#first-page) {
 		if (this.pageNumber !== 0) {
 			this.updatePage(0);
