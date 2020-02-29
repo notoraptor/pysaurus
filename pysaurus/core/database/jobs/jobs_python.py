@@ -7,7 +7,7 @@ from pysaurus.core.database import notifications
 from pysaurus.core.functions import get_file_extension
 from pysaurus.core.modules import ImageUtils
 from pysaurus.core.native.video_raptor.miniature import Miniature
-import concurrent.futures
+from pysaurus.core.notification import Notifier
 
 
 def job_collect_videos(job):
@@ -24,22 +24,6 @@ def job_collect_videos(job):
                 and path.extension in utils.VIDEO_SUPPORTED_EXTENSIONS):
             files.append(path)
     return files
-
-
-def job_generate_miniatures(job):
-    # type: (Tuple[list, str]) -> List[Miniature]
-    thumbnails, job_id = job
-    nb_videos = len(thumbnails)
-    miniatures = []
-    count = 0
-    for file_name, thumbnail_path in thumbnails:
-        miniatures.append(Miniature.from_file_name(
-            thumbnail_path.path, ImageUtils.DEFAULT_THUMBNAIL_SIZE, file_name))
-        count += 1
-        if count % 500 == 0:
-            print('[Generating miniatures on thread %s] %d/%d' % (job_id, count, nb_videos))
-    print('[Generated miniatures on thread %s] %d/%d' % (job_id, count, nb_videos))
-    return miniatures
 
 
 def job_video_to_json(job):
@@ -114,3 +98,19 @@ def job_video_thumbnails_to_json(job):
     assert nb_read == job_count
     notifier.notify(notifications.ThumbnailJob(job_id, job_count, job_count))
     return nb_loaded
+
+
+def job_generate_miniatures(job):
+    # type: (Tuple[list, str, Notifier]) -> List[Miniature]
+    thumbnails, job_id, notifier = job
+    nb_videos = len(thumbnails)
+    miniatures = []
+    count = 0
+    for file_name, thumbnail_path in thumbnails:
+        miniatures.append(Miniature.from_file_name(
+            thumbnail_path.path, ImageUtils.DEFAULT_THUMBNAIL_SIZE, file_name))
+        count += 1
+        if count % 500 == 0:
+            notifier.notify(notifications.MiniatureJob(job_id, count, nb_videos))
+    notifier.notify(notifications.MiniatureJob(job_id, count, nb_videos))
+    return miniatures

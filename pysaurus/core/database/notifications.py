@@ -80,6 +80,10 @@ class ThumbnailJob(VideoJob):
     __slots__ = []
 
 
+class MiniatureJob(VideoJob):
+    __slots__ = ()
+
+
 class DatabaseLoaded(Notification):
     __slots__ = ['entries', 'discarded', 'not_found', 'found', 'unreadable', 'valid', 'thumbnails']
     __props__ = __slots__
