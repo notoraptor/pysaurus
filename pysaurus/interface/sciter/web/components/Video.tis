@@ -1,12 +1,12 @@
 include "sciter:reactor.tis";
 
-/*
-*/
-
 class Video: Reactor.Component {
     function this(props, children) {
         this.props = props || {};
         this.children = children || {};
+
+        this.elementVideo = null;
+        this.elementMenu = null;
     }
     function render() {
         const index = this.props.videoIndex;
@@ -14,8 +14,11 @@ class Video: Reactor.Component {
         data.audio_bit_rate = Math.round(data.audio_bit_rate / 1000).toInteger();
         data.extension = data.extension.toUpperCase();
         data.frame_rate = Math.round(data.frame_rate).toInteger();
+        const title = data.title;
+        const file_title = data.file_title;
+        const meta_title = (title == file_title ? null : title);
         return (
-            <div class={'video' + (index % 2 ? ' even' : ' odd')}>
+            <div class={'video' + (index % 2 ? ' even' : ' odd')} @{this.elementVideo}>
                 <div class="image">
                     <img alt={data.title} src={data.thumbnail_path}/>
                 </div>
@@ -32,10 +35,37 @@ class Video: Reactor.Component {
                     <div><strong>{data.width}</strong> x <strong>{data.height}</strong> @ {data.frame_rate} fps | {data.sample_rate} Hz, {data.audio_bit_rate} Kb/s</div>
                     <div><strong>{data.length}</strong> | <code>{data.date}</code></div>
                 </div>
+                <menu.context @{this.elementMenu} id={'video_' + data.video_id + '_' + index}>
+	                <li class="open-file">Open file</li>
+	                {meta_title ? <li class="copy-meta-title">Copy meta title</li> : ''}
+	                {file_title ? <li class="copy-file-title">Copy file title</li> : ''}
+	            </menu>
             </div>
         );
     }
-    event click $(.video .info .filename code) (evt, element) {
+    function openVideo() {
         view.open_video(this.props.videoIndex);
+        this.props.parent.updateStatus('Opened: ' + this.props.data.filename);
+    }
+
+    event click $(.video .info .filename code) (evt, element) {
+        this.openVideo();
+    }
+    event contextmenu $(.video) (evt, element) {
+        const (mx, my) = view.cursorLocation();
+        element.popup(element.$(menu), 7, mx, my);
+    }
+    event click $(menu li.open-file) (evt, element) {
+        this.openVideo();
+    }
+    event click $(menu li.copy-meta-title) (evt, element) {
+        const text = this.props.data.title;
+        view.clipboard(#put, text);
+        this.props.parent.updateStatus('Copied to clipboard: ' + text);
+    }
+    event click $(menu li.copy-file-title) (evt, element) {
+        const text = this.props.data.file_title;
+        view.clipboard(#put, text);
+        this.props.parent.updateStatus('Copied to clipboard: ' + text);
     }
 }

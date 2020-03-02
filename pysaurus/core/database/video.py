@@ -33,7 +33,7 @@ class Video(VideoState):
     # Currently 14 fields.
     __slots__ = ('meta_title', 'container_format',
                  'audio_codec', 'video_codec', 'audio_codec_description', 'video_codec_description',
-                 'width', 'height', 'frame_rate_num', 'frame_rate_den', 'sample_rate',
+                 'width', 'height', 'frame_rate_num', 'frame_rate_den', 'sample_rate', 'runtime_has_thumbnail',
                  'duration', 'duration_time_base', 'audio_bit_rate', 'thumb_name', 'device_name')
 
     MIN_TO_LONG = {'n': 'meta_title', 'c': 'container_format', 'a': 'audio_codec', 'v': 'video_codec',
@@ -118,6 +118,7 @@ class Video(VideoState):
         self.audio_bit_rate = audio_bit_rate
         self.thumb_name = thumb_name
         self.device_name = device_name
+        self.runtime_has_thumbnail = False
 
     def to_row(self):
         return [getattr(self, field) for field in self.ROW_FIELDS]
@@ -151,7 +152,7 @@ class Video(VideoState):
         return self.thumb_name
 
     def thumbnail_is_valid(self):
-        return not self.error_thumbnail and self.thumbnail_path.isfile()
+        return not self.error_thumbnail and self.runtime_has_thumbnail
 
     def thumbnail_to_base64(self):
         thumb_path = self.thumbnail_path
@@ -202,3 +203,20 @@ class Video(VideoState):
         :rtype: Video
         """
         return cls(database=database, from_dictionary=dct)
+
+    @staticmethod
+    def compare_to(self, other, sorting):
+        # type: (Video, Video, list) -> int
+        for sort in sorting:
+            reverse = sort[0] == '-'
+            field = sort[1:]
+            f1 = getattr(self, field)
+            f2 = getattr(other, field)
+            ret = 0
+            if f1 < f2:
+                ret = -1
+            elif f1 > f2:
+                ret = 1
+            if ret:
+                return -ret if reverse else ret
+        return 0

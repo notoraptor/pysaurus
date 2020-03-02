@@ -115,6 +115,14 @@ class ThumbnailsToLoad(VideosToLoad):
     __slots__ = []
 
 
+class MiniaturesToLoad(VideosToLoad):
+    __slots__ = ()
+
+
+class NbMiniatures(VideosToLoad):
+    __slots__ = ()
+
+
 # Unused, sub-classed,
 class MissingVideos(Notification):
     __slots__ = ['names']

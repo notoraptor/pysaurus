@@ -16,8 +16,10 @@ class HomePage: Reactor.Component {
 		this.messages = [];
 		this.nbVideosToLoad = 0;
 		this.nbThumbnailsToLoad = 0;
+		this.nbMiniaturesToLoad = 0;
 		this.latestVideoJobs = {};
 		this.latestThumbnailJobs = {};
+		this.latestMiniatureJobs = {};
 
 		this.callbackIndex = -1;
 	}
@@ -76,6 +78,19 @@ class HomePage: Reactor.Component {
 						<progress id="thumb-job" value={current} max={total}/>
 					</div>
 				);
+			} else if (message === 'MiniatureJob') {
+				const total = this.nbMiniaturesToLoad;
+				let current = 0;
+				for (let jobId in Object.keys(this.latestMiniatureJobs)) {
+					current += this.latestMiniatureJobs[jobId];
+				}
+				const percent = Math.round(current * 100 / total).toInteger();
+				output.push(
+					<div key={i} class="job miniature-job">
+						<label for="miniature-job" class="info">{current} / {total} ({percent} %)</label>
+						<progress id="miniature-job" value={current} max={total}/>
+					</div>
+				);
 			} else if (message.name === 'DatabaseLoaded' || message.name === 'DatabaseSaved') {
 				const data = message.notification;
 				output.push(
@@ -108,7 +123,7 @@ class HomePage: Reactor.Component {
 					output.push(<div key={i}><em>No missing thumbnails!</em></div>);
 				}
 			} else if (message.name === 'ProfilingEnd') {
-				if (i > 0 && (this.messages[i - 1] === 'VideoJob' || this.messages[i - 1] === 'ThumbnailJob'))
+				if (i > 0 && (['VideoJob', 'ThumbnailJob', 'MiniatureJob'].indexOf(this.messages[i - 1]) !== -1))
 					output.push(<div key={i}><strong>Loaded</strong> in {message.notification.time}</div>);
 			} else if (message.name === 'VideoInfoErrors' || message.name === 'VideoThumbnailErrors') {
 				const errors = message.notification.video_errors;
@@ -128,13 +143,21 @@ class HomePage: Reactor.Component {
 						))}</ul>
 					</div>
 				);
-			} else if (message.name === 'VideosToLoad' || message.name === 'ThumbnailsToLoad') {
+			} else if (['VideosToLoad', 'ThumbnailsToLoad', 'MiniaturesToLoad'].indexOf(message.name) !== -1) {
+				const labels = {VideosToLoad: 'video', ThumbnailsToLoad: 'thumbnail', MiniaturesToLoad: 'miniature'}
 				const total = message.notification.total;
-				const label = (message.name === 'ThumbnailsToLoad') ? 'thumbnail' : 'video';
+				const label = labels[message.name];
 				if (total) {
 					output.push(<div key={i}><strong>{total}{' '}{label}{total > 1 ? 's' : ''} to load.</strong></div>);
 				} else {
 					output.push(<div key={i}><em>No {label}s to load!</em></div>);
+				}
+			} else if (message.name === 'NbMiniatures') {
+				const total = message.notification.total;
+				if (total) {
+					output.push(<div key={i}><strong>{total} miniature{total > 1 ? 's' : ''} saved.</strong></div>);
+				} else {
+					output.push(<div key={i}><em>No miniatures saved!</em></div>);
 				}
 			} else {
 				output.push(<div key={i}><em>unknown</em>: {message.message}</div>);
@@ -155,6 +178,8 @@ class HomePage: Reactor.Component {
 			update.nbVideosToLoad = notification.notification.total;
 		else if (notification.name === 'ThumbnailsToLoad')
 			update.nbThumbnailsToLoad = notification.notification.total;
+		else if (notification.name === 'MiniaturesToLoad')
+			update.nbMiniaturesToLoad = notification.notification.total;
 		else if (notification.name === 'VideoJob') {
 			placeholder = notification.name;
 			const latestVideoJobs = this.latestVideoJobs.clone();
@@ -166,6 +191,12 @@ class HomePage: Reactor.Component {
 			const latestThumbnailJobs = this.latestThumbnailJobs.clone();
 			latestThumbnailJobs[notification.notification.index] = notification.notification.parsed;
 			update.latestThumbnailJobs = latestThumbnailJobs;
+		}
+		else if (notification.name === 'MiniatureJob') {
+			placeholder = notification.name;
+			const latestMiniatureJobs = this.latestMiniatureJobs.clone();
+			latestMiniatureJobs[notification.notification.index] = notification.notification.parsed;
+			update.latestMiniatureJobs = latestMiniatureJobs;
 		}
 		if (placeholder && (!this.messages.length || this.messages[this.messages.length - 1] !== placeholder)) {
 			const messages = this.messages.slice();
@@ -179,7 +210,7 @@ class HomePage: Reactor.Component {
 			view.load_database();
 			this.update({status: Status.LOADING});
 		} else if (this.status === Status.LOADED) {
-			this.props.pageLoader("videos");
+			this.props.app.loadPage("videos");
 		}
 	}
 	event contentchange $(div.notifications) (evt, element) {

@@ -6,7 +6,7 @@ from pysaurus.core.constants import PYTHON_ERROR_THUMBNAIL
 
 
 class VideoState:
-    __slots__ = ('filename', 'file_size', 'errors', 'video_id', 'database')
+    __slots__ = ('filename', 'file_size', 'errors', 'video_id', 'database', 'runtime_is_file')
     UNREADABLE = True
 
     def __init__(self, database, filename=None, size=0, errors=(), video_id=None, from_dictionary=None):
@@ -28,6 +28,7 @@ class VideoState:
         self.errors = set(errors)
         self.video_id = video_id
         self.database = database
+        self.runtime_is_file = False
 
     def __str__(self):
         with StringPrinter() as printer:
@@ -62,7 +63,7 @@ class VideoState:
         return FileSize(self.file_size)
 
     def exists(self):
-        return self.database.video_exists(self.filename)
+        return self.runtime_is_file
 
     def to_dict(self):
         return {'f': self.filename.path, 's': self.file_size, 'U': self.UNREADABLE, 'e': self.errors,

@@ -12,6 +12,8 @@ from pysaurus.core.database.video_state import VideoState
 from pysaurus.core.function_parsing.function_parser import FunctionParser
 from pysaurus.core.functions import bool_type
 from pysaurus.core.notification import Notifier
+from pysaurus.core.profiling import Profiler
+
 
 TEMP_DIR = tempfile.gettempdir()
 TEMP_PREFIX = tempfile.gettempprefix() + '_pysaurus_'
@@ -49,13 +51,14 @@ class API:
 
     def __init__(self, list_file_path, notifier=None, update=True, ensure_miniatures=True, reset=False, clear_old_folders=False):
         # type: (Union[str, AbsolutePath], Notifier, bool, bool, bool, bool) -> None
-        paths = path_utils.load_path_list_file(list_file_path)
-        database_folder = list_file_path.get_directory()
-        self.database = Database(path=database_folder, folders=paths, notifier=notifier, clear_old_folders=clear_old_folders)
-        if reset:
-            self.database.reset()
-        if update:
-            self.update(ensure_miniatures)
+        with Profiler('Open API'):
+            paths = path_utils.load_path_list_file(list_file_path)
+            database_folder = list_file_path.get_directory()
+            self.database = Database(path=database_folder, folders=paths, notifier=notifier, clear_old_folders=clear_old_folders)
+            if reset:
+                self.database.reset()
+            if update:
+                self.update(ensure_miniatures)
 
     def export_api(self, function_parser):
         # type: (FunctionParser) -> None
@@ -294,11 +297,15 @@ class API:
             self.database.save()
 
     def update(self, ensure_miniatures=False):
-        self.reset_thumbnail_errors()
-        self.database.update()
-        self.database.ensure_thumbnails()
+        with Profiler('Reset thumbnail errors'):
+            self.reset_thumbnail_errors()
+        with Profiler('Update database'):
+            self.database.update()
+        with Profiler('Ensure thumbnails'):
+            self.database.ensure_thumbnails()
         if ensure_miniatures:
-            self.database.ensure_miniatures()
+            with Profiler('Ensure miniatures'):
+                self.database.ensure_miniatures()
 
     def list_files(self, output):
         self.database.list_files(output)

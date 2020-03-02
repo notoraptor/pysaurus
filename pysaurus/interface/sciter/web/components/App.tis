@@ -15,10 +15,12 @@ class App: Reactor.Component {
 	}
 	function getPage() {
 	    const app = this;
-	    const pageLoader = pageName => app.update({page: pageName});
 	    if (this.page === "home")
-	        return <HomePage pageLoader={pageLoader}/>;
+	        return <HomePage app={app}/>;
 	    if (this.page === "videos")
-	        return <VideosPage pageLoader={pageLoader}/>;
+	        return <VideosPage app={app}/>;
+	}
+	function loadPage(pageName) {
+		this.update({page: pageName});
 	}
 }

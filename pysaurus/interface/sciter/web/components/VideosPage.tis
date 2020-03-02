@@ -1,28 +1,72 @@
 include "sciter:reactor.tis";
 include "Video.tis";
 
+const FIELDS = [
+	'audio_bit_rate',
+	'audio_codec',
+	'audio_codec_description',
+	'container_format',
+	'date',
+	'extension',
+	'file_title',
+	'filename',
+	'frame_rate',
+	'height',
+	'length',
+	'sample_rate',
+	'size',
+	'thumbnail_path',
+	'title',
+	'video_codec',
+	'video_codec_description',
+	'video_id',
+	'width',
+];
+
+const SORT_FIELDS = [
+	'audio_bit_rate',
+	'audio_codec',
+	'audio_codec_description',
+	'container_format',
+	'date',
+	'extension',
+	'file_title',
+	'filename',
+	'frame_rate',
+	'height',
+	'length',
+	'sample_rate',
+	'size',
+	'title',
+	'video_codec',
+	'video_codec_description',
+	'width',
+];
+
+const FIELD_TITLES = {
+	'audio_bit_rate': 'audio bit rate',
+	'audio_codec': 'audio codec',
+	'audio_codec_description': 'audio codec description',
+	'container_format': 'container format',
+	'date' : 'date modified',
+	'extension': 'file extension',
+	'file_title': 'file title',
+	'filename': 'file path',
+	'frame_rate': 'frame rate',
+	'height': 'height',
+	'length': 'length',
+	'sample_rate' : 'sample rate',
+	'size': 'size',
+	'thumbnail_path': 'thumbnail path',
+	'title': 'title',
+	'video_codec': 'video codec',
+	'video_codec_description' : 'video codec description',
+	'video_id': 'video ID',
+	'width': 'width',
+};
+
 function getVideoData(index) {
-	return view.get_video_fields(index, [
-		'audio_bit_rate',
-		'audio_codec',
-		'audio_codec_description',
-		'container_format',
-		'date',
-		'extension',
-		'file_title',
-		'filename',
-		'frame_rate',
-		'height',
-		'length',
-		'sample_rate',
-		'size',
-		'thumbnail_path',
-		'title',
-		'video_codec',
-		'video_codec_description',
-		'video_id',
-		'width',
-	])
+	return view.get_video_fields(index, FIELDS)
 }
 
 class VideosPage: Reactor.Component {
@@ -34,6 +78,13 @@ class VideosPage: Reactor.Component {
 		this.pageNumber = 0;
 		this.searchText = null;
 		this.searchType = null;
+		this.sorting = [];
+
+		this.countSorting = 0;
+		this.status = 'loaded';
+	}
+	function displaySortingStatus() {
+		return <span>Videos sorteed by {this.sorting.map((val, i) => <span key={i}>{i ? ', ' : ''}<strong>{val.substr(1)}</strong>{val[0] == '-' ? (<em> (reverse)</em>) : ''}</span>)}</span>;
 	}
 	function render() {
 		const nbVideos = view.count_videos();
@@ -48,8 +99,10 @@ class VideosPage: Reactor.Component {
 					<span>{nbVideos} video{nbVideos > 1 ? 's' : ''}, {validSize}, {validLength}</span>
 					{this.searchText ? ' ' : ''}
 				</div>
+				{this.sorting.length ? (<div class="status">{this.displaySortingStatus()}</div>) : ''}
 				<div class="status">
-					{this.searchText ? <button id="button-search-reset">reset</button> : ''}
+					{this.searchText ? <button id="button-search-reset">reset search</button> : ''}
+					{this.sorting.length ? <button id="button-sort-reset">reset sort</button> : ''}
 					<button id="button-random"><strong><em>open a random video</em></strong></button>
 				</div>
 				<form class="form" id="form-search">
@@ -63,6 +116,11 @@ class VideosPage: Reactor.Component {
 					<input type="radio" id="input-search-exact" name="searchType" value="exact" :checked={this.searchType === "exact"}/>
 					<label for="input-search-exact">exact sentence</label>
 				</form>
+				<form class="form" id="form-sort">
+					<p><strong>Sort videos</strong></p>
+					<p id="sorting"/>
+					<p><button id="button-sort-add-criterion">add sort</button> | <button id="button-sort"><strong>sort</strong></button></p>
+				</form>
 				{nbPages ? (
 					<div class="form">
 						<button id="first-page" :disabled={this.pageNumber === 0}>&lt;&lt;</button>
@@ -73,6 +131,7 @@ class VideosPage: Reactor.Component {
 					</div>
 				) : (<div class="form"><em>0 / 0 pages</em></div>)}
 				<div class="videos">{this.getVideos()}</div>
+				<div id="status">{this.status}</div>
 			</div>
 		);
 	}
@@ -91,9 +150,10 @@ class VideosPage: Reactor.Component {
 		const start = bounds[0];
 		const end = bounds[1];
 		const videos = [];
+		const parent = this;
 		for (let i = start; i < end; ++i) {
 			const data = getVideoData(i);
-			videos.push(<Video key={data.video_id} data={data} videoIndex={i}/>);
+			videos.push(<Video key={data.video_id} data={data} videoIndex={i} parent={parent}/>);
 		}
 		return videos;
 	}
@@ -106,6 +166,9 @@ class VideosPage: Reactor.Component {
 	}
 	function updatePage(pageNumber, videoShift = undefined) {
 		this.updateView({pageNumber: pageNumber}, videoShift);
+	}
+	function updateStatus(status) {
+		this.update({status: status});
 	}
 
 	event click $(button#button-random) {
@@ -152,7 +215,7 @@ class VideosPage: Reactor.Component {
 		const text = form.searchText.trim();
 		const cond = form.searchType.trim();
 		if (text.length && cond.length && this.searchType !== cond) {
-			view.search_videos(text, cond);
+			view.search_videos(text, cond, this.sorting);
 			this.updateView({searchText: text, searchType: cond, pageNumber: 0});
 		}
 	}
@@ -161,14 +224,60 @@ class VideosPage: Reactor.Component {
 			const text = $(input#input-search).value.trim();
 			const cond = 'and';
 			if (text.length) {
-				view.search_videos(text, cond);
+				view.search_videos(text, cond, this.sorting);
 				this.updateView({searchText: text, searchType: cond, pageNumber: 0});
 			}
 		}
 	}
 	event click $(button#button-search-reset) (evt, element) {
-		view.load_videos();
+		view.load_videos(this.sorting);
 		$(input#input-search).value = '';
 		this.updateView({searchText: null, searchType: null, pageNumber: 0});
+	}
+	event click $(button#button-sort-reset) (evt, element) {
+		view.sort_videos([]);
+		this.updateView({sorting: [], pageNumber: 0});
+	}
+	event click $(button#button-sort-add-criterion) (evt, element) {
+		const index = ++this.countSorting;
+		const name = `reverse`;
+		const selectName = `field`;
+		$(p#sorting).append(
+			<p key={index} name={index} class="sorting">
+				<select name={selectName}>
+					{SORT_FIELDS.map((field, fieldIndex) => <option key={fieldIndex} value={field}>{FIELD_TITLES[field]}</option>)}
+				</select>
+				<input type="checkbox" id={`${name}`} name={name}/>
+				<label for={`${name}`}>reverse</label>
+				<button class="button-remove-sort">remove</button>
+			</p>
+		);
+	}
+	event click $(button.button-remove-sort) (evt, element) {
+		element.parent.remove();
+	}
+	event click $(button#button-sort) (evt, element) {
+		const form = $(form#form-sort).value;
+		const indices = Object.keys(form).map(index => index.toString().toInteger());
+		indices.sort();
+		const fields = [];
+		const sorting = [];
+		for (let index in indices) {
+			const info = form[index.toString()];
+			const field = info.field;
+			const reverse = info.reverse;
+			if (fields.indexOf(field) === -1) {
+				fields.push(field);
+				sorting.push((reverse ? '-' : '+') + field);
+			}
+		}
+		$(p#sorting).clear();
+		if (sorting.length) {
+			view.sort_videos(sorting);
+			this.updateView({sorting: sorting, pageNumber: 0});
+		}
+	}
+	event click $(#status) {
+		this.updateStatus('');
 	}
 }

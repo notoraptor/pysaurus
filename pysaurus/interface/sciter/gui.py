@@ -4,6 +4,7 @@ pip install PySciter
 import threading
 import multiprocessing
 from typing import Optional, List
+import functools
 
 import sciter
 import queue
@@ -84,7 +85,6 @@ class Frame(sciter.Window):
     def _load_database(self):
         self.api = API(TEST_LIST_FILE_PATH,
                        notifier=self.notifier,
-                       ensure_miniatures=False,
                        reset=False)
         self.load_videos()
         self.notifier.notify(DatabaseReady())
@@ -154,15 +154,23 @@ class Frame(sciter.Window):
         return page_index, shift
 
     @sciter.script
-    def load_videos(self):
-        self.videos = sorted(self.api.database.videos(), key=lambda v: v.title)
+    def load_videos(self, sorting=()):
+        self.videos = list(self.api.database.videos())
+        self.sort_videos(sorting)
 
     @sciter.script
-    def search_videos(self, text, cond):
+    def search_videos(self, text, cond, sorting):
         terms = functions.string_to_pieces(text)
         video_filter = VIDEO_FILTERS[cond]
         self.videos = [video for video in self.api.database.videos() if video_filter(video, terms)]
-        self.videos.sort(key=lambda v: v.title)
+        self.sort_videos(sorting)
+
+    @sciter.script
+    def sort_videos(self, sorting):
+        if sorting:
+            self.videos.sort(key=functools.cmp_to_key(lambda v1, v2: Video.compare_to(v1, v2, sorting)))
+        else:
+            self.videos.sort(key=lambda v: v.title)
 
 
 def main():

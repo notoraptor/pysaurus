@@ -108,7 +108,7 @@ def job_generate_miniatures(job):
     count = 0
     for file_name, thumbnail_path in thumbnails:
         miniatures.append(Miniature.from_file_name(
-            thumbnail_path.path, ImageUtils.DEFAULT_THUMBNAIL_SIZE, file_name))
+            thumbnail_path.path, ImageUtils.DEFAULT_THUMBNAIL_SIZE, file_name.path))
         count += 1
         if count % 500 == 0:
             notifier.notify(notifications.MiniatureJob(job_id, count, nb_videos))
