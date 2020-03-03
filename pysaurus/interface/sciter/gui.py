@@ -146,6 +146,12 @@ class Frame(sciter.Window):
         self.videos[index].filename.open()
 
     @sciter.script
+    def open_containing_folder(self, index):
+        video = self.videos[index]
+        ret = video.filename.open_containing_folder()
+        return str(ret) if ret else None
+
+    @sciter.script
     def open_random_video(self, page_size):
         video_index = random.randrange(len(self.videos))
         page_index = video_index // page_size

@@ -147,6 +147,21 @@ class AbsolutePath(object):
             raise UnsupportedOS(System.platform())
         return self
 
+    def locate_file(self):
+        command = []
+        if System.is_windows():
+            command = 'explorer /select,"%s"' % self.path
+        elif System.is_mac():
+            command = ['open', '-R', self.path]
+        elif System.is_linux():
+            command = ['nautilus', self.path]
+        if command and not subprocess.run(command).returncode:
+            return self
+        return False
+
+    def open_containing_folder(self):
+        return self.locate_file() or self.get_directory().open()
+
     @staticmethod
     def ensure(path):
         # type: (Union[str, AbsolutePath]) -> AbsolutePath

@@ -37,6 +37,7 @@ class Video: Reactor.Component {
                 </div>
                 <menu.context @{this.elementMenu} id={'video_' + data.video_id + '_' + index}>
 	                <li class="open-file">Open file</li>
+	                <li class="open-folder">Open containing folder</li>
 	                {meta_title ? <li class="copy-meta-title">Copy meta title</li> : ''}
 	                {file_title ? <li class="copy-file-title">Copy file title</li> : ''}
 	            </menu>
@@ -57,6 +58,13 @@ class Video: Reactor.Component {
     }
     event click $(menu li.open-file) (evt, element) {
         this.openVideo();
+    }
+    event click $(menu li.open-folder) (evt, element) {
+        const folder = view.open_containing_folder(this.props.videoIndex);
+        if (folder)
+            this.props.parent.updateStatus('Opened folder: ' + folder)
+        else
+            this.props.parent.updateStatus('Unable to open containing folder for: ' + this.props.data.filename)
     }
     event click $(menu li.copy-meta-title) (evt, element) {
         const text = this.props.data.title;
