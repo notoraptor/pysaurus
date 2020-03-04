@@ -311,3 +311,13 @@ class FileSize(object):
 
     def to_json(self):
         return str(self)
+
+
+class PathInfo:
+    __slots__ = 'path', 'size', 'mtime', 'driver_id'
+
+    def __init__(self, path: AbsolutePath, size: int, mtime: float, driver_id: int):
+        self.path = path
+        self.size = size
+        self.mtime = mtime
+        self.driver_id = driver_id

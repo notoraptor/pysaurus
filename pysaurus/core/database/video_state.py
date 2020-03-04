@@ -1,12 +1,13 @@
 from typing import Iterable
 
 from pysaurus.core.classes import StringPrinter
-from pysaurus.core.components import AbsolutePath, FileSize
+from pysaurus.core.components import AbsolutePath, FileSize, DateModified
 from pysaurus.core.constants import PYTHON_ERROR_THUMBNAIL
 
 
 class VideoState:
-    __slots__ = ('filename', 'file_size', 'errors', 'video_id', 'database', 'runtime_is_file')
+    __slots__ = ('filename', 'file_size', 'errors', 'video_id', 'database',
+                 'rt_is_file', 'rt_size', 'rt_mtime', 'driver_id')
     UNREADABLE = True
 
     def __init__(self, database, filename=None, size=0, errors=(), video_id=None, from_dictionary=None):
@@ -28,7 +29,10 @@ class VideoState:
         self.errors = set(errors)
         self.video_id = video_id
         self.database = database
-        self.runtime_is_file = False
+        self.rt_is_file = False
+        self.rt_mtime = 0
+        self.rt_size = 0
+        self.driver_id = None
 
     def __str__(self):
         with StringPrinter() as printer:
@@ -62,8 +66,16 @@ class VideoState:
     def size(self):
         return FileSize(self.file_size)
 
+    @property
+    def runtime_size(self):
+        return FileSize(self.rt_size)
+
+    @property
+    def runtime_date(self):
+        return DateModified(self.rt_mtime)
+
     def exists(self):
-        return self.runtime_is_file
+        return self.rt_is_file
 
     def to_dict(self):
         return {'f': self.filename.path, 's': self.file_size, 'U': self.UNREADABLE, 'e': self.errors,

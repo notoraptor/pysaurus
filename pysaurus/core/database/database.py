@@ -4,7 +4,7 @@ from typing import Dict, Iterable, List, Optional, Set, Union
 import ujson as json
 
 from pysaurus.core import exceptions, functions as utils
-from pysaurus.core.components import AbsolutePath, DateModified, FilePath, PathType
+from pysaurus.core.components import AbsolutePath, DateModified, FilePath, PathType, PathInfo
 from pysaurus.core.constants import THUMBNAIL_EXTENSION
 from pysaurus.core.database import notifications
 from pysaurus.core.database.video import Video
@@ -80,14 +80,15 @@ class Database:
         return video.thumbnail_is_valid()
 
     def __check_videos_on_disk(self):
-        # type: () -> Set[AbsolutePath]
-        paths = set()
+        # type: () -> Dict[AbsolutePath, PathInfo]
+        paths = {}
         cpu_count = os.cpu_count()
         jobs = utils.dispatch_tasks(sorted(self.__folders), cpu_count)
         with Profiler(title='Collect videos (%d threads)' % cpu_count, notifier=self.__notifier):
-            results = utils.parallelize(jobs_python.job_collect_videos, jobs, cpu_count)
-        for local_result in results:  # type: List[AbsolutePath]
-            paths.update(local_result)
+            results = utils.parallelize(jobs_python.job_collect_videos_info, jobs, cpu_count)
+        for local_result in results:  # type: List[PathInfo]
+            for info in local_result:
+                paths[info.path] = info
         self.__notifier.notify(notifications.FinishedCollectingVideos(paths))
         return paths
 
@@ -158,15 +159,27 @@ class Database:
         self.__ensure_identifiers()
         self.__notifier.notify(notifications.DatabaseLoaded(self))
 
-    def __set_videos_flags(self):
+    def __set_videos_states_flags(self):
         file_paths = self.__check_videos_on_disk()
         for dictionaries in (self.__videos, self.__unreadable):
             for video_state in dictionaries.values():
-                video_state.runtime_is_file = video_state.filename in file_paths
+                info = file_paths.get(video_state.filename, None)
+                video_state.rt_is_file = info is not None
+                if info:
+                    video_state.rt_mtime = info.mtime
+                    video_state.rt_size = info.size
+                    video_state.driver_id = info.driver_id
+        return file_paths
 
+    def __set_videos_thumbs_flags(self):
         thumb_names = self.__check_thumbnails_on_disk()
         for video in self.__videos.values():
             video.runtime_has_thumbnail = video.ensure_thumbnail_name() in thumb_names
+        return thumb_names
+
+    def __set_videos_flags(self):
+        self.__set_videos_states_flags()
+        self.__set_videos_thumbs_flags()
 
     def __ensure_identifiers(self):
         without_identifiers = []
@@ -227,7 +240,7 @@ class Database:
     def get_new_video_paths(self):
         all_file_names = []
 
-        file_names = self.__check_videos_on_disk()
+        file_names = self.__set_videos_states_flags()
 
         for file_name in file_names:  # type: AbsolutePath
             video_state = None
@@ -237,11 +250,9 @@ class Database:
                 video_state = self.__unreadable[file_name]
 
             if (not video_state
-                    or file_name.get_date_modified() >= self.__date
-                    or file_name.get_size() != video_state.file_size):
+                    or video_state.runtime_date >= self.__date
+                    or video_state.rt_size != video_state.file_size):
                 all_file_names.append(file_name.path)
-            elif video_state:
-                video_state.runtime_is_file = True
 
         all_file_names.sort()
         return all_file_names
@@ -280,15 +291,21 @@ class Database:
                 arr = json.load(file)
             for d in arr:
                 file_path = AbsolutePath.ensure(d['f'])
+                stat = os.stat(file_path.path)
                 if len(d) == 2:
                     video_state = VideoState(
                         filename=file_path, size=file_path.get_size(), errors=d['e'], database=self)
-                    video_state.runtime_is_file = True
                     unreadable[file_path] = video_state
+                    self.__videos.pop(file_path, None)
                 else:
                     video_state = Video.from_dict(d, self)
-                    video_state.runtime_is_file = True
                     videos[file_path] = video_state
+                    self.__unreadable.pop(file_path, None)
+                video_state.rt_is_file = True
+                video_state.rt_size = stat.st_size
+                video_state.rt_mtime = stat.st_mtime
+                video_state.driver_id = stat.st_dev
+
             list_file_path.delete()
             json_file_path.delete()
         assert sum(counts_loaded) == len(videos)

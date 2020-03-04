@@ -1,8 +1,9 @@
+import os
 import subprocess
-from typing import List, Tuple
+from typing import List, Tuple, Set
 
 from pysaurus.core import functions as utils
-from pysaurus.core.components import AbsolutePath
+from pysaurus.core.components import AbsolutePath, PathInfo
 from pysaurus.core.database import notifications
 from pysaurus.core.functions import get_file_extension
 from pysaurus.core.modules import ImageUtils
@@ -23,6 +24,27 @@ def job_collect_videos(job):
                 and path.isfile()
                 and path.extension in utils.VIDEO_SUPPORTED_EXTENSIONS):
             files.append(path)
+    return files
+
+
+def _collect_videos_info(folder: str, files: List[PathInfo]):
+    for entry in os.scandir(folder):  # type: os.DirEntry
+        if entry.is_dir():
+            _collect_videos_info(entry.path, files)
+        elif get_file_extension(entry.name) in utils.VIDEO_SUPPORTED_EXTENSIONS:
+            stat = entry.stat()
+            files.append(PathInfo(AbsolutePath(entry.path), stat.st_size, stat.st_mtime, stat.st_dev))
+
+
+def job_collect_videos_info(job):
+    # type: (List) -> List[PathInfo]
+    files = []
+    for path in job[0]:  # type: AbsolutePath
+        if path.isdir():
+            _collect_videos_info(path.path, files)
+        elif path.extension in utils.VIDEO_SUPPORTED_EXTENSIONS:
+            stat = os.stat(path.path)
+            files.append(PathInfo(path, stat.st_size, stat.st_mtime, stat.st_dev))
     return files
 
 

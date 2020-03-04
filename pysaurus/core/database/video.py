@@ -135,7 +135,7 @@ class Video(VideoState):
 
     title = property(lambda self: self.meta_title if self.meta_title else self.filename.title)
     frame_rate = property(lambda self: self.frame_rate_num / self.frame_rate_den)
-    date = property(lambda self: self.filename.get_date_modified())
+    date = property(lambda self: self.runtime_date)
     file_title = property(lambda self: self.filename.title)
     extension = property(lambda self: self.filename.extension)
     length = property(lambda self: Duration(round(self.duration * 1000000 / self.duration_time_base)))
