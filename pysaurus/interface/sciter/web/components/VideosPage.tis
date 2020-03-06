@@ -12,6 +12,8 @@ class VideosPage: Reactor.Component {
 		this.pageNumber = 0;
 		this.searchText = null;
 		this.searchType = null;
+		this.group = null;
+		this.groupReverse = null;
 		this.sorting = [];
 		this.status = 'loaded';
 	}
@@ -90,6 +92,29 @@ class VideosPage: Reactor.Component {
 						)}
 						<hr/>
 
+						<form class="status" id="form-group">
+							<div class="mb-1">Group videos with same:</div>
+							<div class="mb-1">
+								<select id="group-videos" name="group" :value={this.group}>
+									<option value={null}>(not grouped)</option>
+									{SORT_FIELDS.map((field, fieldIndex) => <option key={fieldIndex} value={field}>{FIELD_TITLES[field]}</option>)}
+								</select>
+							</div>
+							{this.group ? (
+							<div>
+							<div class="mb-1">
+								<input type="radio" id="group-asc" name="groupReverse" value={false} :checked={this.groupReverse === "asc"}/>
+								<label for="group-asc">ascending</label>
+							</div>
+							<div class="mb-1">
+								<input type="radio" id="group-dsc" name="groupReverse" value={true} :checked={this.groupReverse === "dsc"}/>
+								<label for="group-dsc">ascending</label>
+							</div>
+							</div>
+							) : ''}
+						</form>
+						<hr/>
+
 						<div class="status">
 							<select class="select-page-size" novalue="videos per page" :value={20}>
 								{[10, 20, 50, 100].map((count, index) => <option key={index} value={count}>Display {count} video{count > 1 ? 's' : ''} per page</option>)}
@@ -149,7 +174,7 @@ class VideosPage: Reactor.Component {
 	event click $(button#open-random-file) (evt, element) {
 		element.state.disabled = true;
 		const info = view.open_random_video(this.pageSize);
-		this.updateView({pageNumber: info[0]}, info[1]);
+		this.updateView({pageNumber: info[0], status: 'Randomly opened: ' + info[2]}, info[1]);
 		this.post(() => element.state.disabled = false);
 	}
 	event click $(button#first-page) {
@@ -184,6 +209,7 @@ class VideosPage: Reactor.Component {
 		if (pageNumber !== this.pageNumber)
 			this.updateView({pageNumber: pageNumber});
 	}
+
 	event change $(input#input-search) {
 		this.update({searchType: null});
 	}
@@ -192,7 +218,7 @@ class VideosPage: Reactor.Component {
 		const text = form.searchText.trim();
 		const cond = form.searchType.trim();
 		if (text.length && cond.length && this.searchType !== cond) {
-			view.search_videos(text, cond);
+			view.set_search(text, cond);
 			this.updateView({searchText: text, searchType: cond, pageNumber: 0});
 		}
 	}
@@ -201,11 +227,21 @@ class VideosPage: Reactor.Component {
 			const text = $(input#input-search).value.trim();
 			const cond = 'and';
 			if (text.length) {
-				view.search_videos(text, cond);
+				view.set_search(text, cond);
 				this.updateView({searchText: text, searchType: cond, pageNumber: 0});
 			}
 		}
 	}
+
+	event change $(select#group-videos) (evt, element) {
+		const group = element.value;
+		this.update({group: group, groupReverse: null});
+	}
+	event change $(input[name=groupReverse]) (evt, element) {
+		const value = element.value;
+		stdout.println(this.group, value);
+	}
+
 	event click $(button#reset-search) (evt, element) {
 		view.load_videos();
 		$(input#input-search).value = '';

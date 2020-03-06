@@ -1,6 +1,3 @@
-"""
-pip install PySciter
-"""
 import functools
 import multiprocessing
 import queue
@@ -8,7 +5,7 @@ import random
 import threading
 import time
 import traceback
-from typing import Optional, List
+from typing import Optional, List, Tuple, Any
 
 import sciter
 
@@ -57,6 +54,10 @@ class Frame(sciter.Window):
         self.all_videos = []
         self.videos = []  # type: List[Video]
         self.sorting = DEFAULT_SORTING  # type: List[str]
+        self.search_text = ''
+        self.search_type = ''
+        self.groups = []  # type: List[Tuple[Any, List[Video]]]
+        self.group_index = 0
 
         self.load_file('web/index.html')
         self.expand()
@@ -96,8 +97,15 @@ class Frame(sciter.Window):
         self.notifier.notify(DatabaseReady())
 
     def _sort_videos(self):
-        self.videos.sort(key=functools.cmp_to_key(lambda v1, v2: Video.compare_to(v1, v2, self.sorting)))
+        self.videos.sort(key=functools.cmp_to_key(
+            lambda v1, v2: Video.compare_to(v1, v2, self.sorting)))
 
+    def _search_videos(self):
+        terms = functions.string_to_pieces(self.search_text)
+        video_filter = VIDEO_FILTERS[self.search_type]
+        self.videos = [video for video in self.api.database.videos()
+                       if video_filter(video, terms)]
+        self._sort_videos()
 
     @sciter.script
     def close_app(self):
@@ -109,8 +117,6 @@ class Frame(sciter.Window):
     def load_database(self):
         # Launch monitor thread.
         self.monitor_thread = launch_thread(self._monitor_notifications)
-        # Just wait a little to let monitor thread start.
-        time.sleep(0.1)
         # Then launch database loading thread.
         self.db_loading_thread = launch_thread(self._load_database)
 
@@ -119,6 +125,8 @@ class Frame(sciter.Window):
         if not self.all_videos:
             self.all_videos = list(self.api.database.videos())
         self.videos = list(self.all_videos)
+        self.search_text = ''
+        self.search_type = ''
         self._sort_videos()
 
     @sciter.script
@@ -129,8 +137,24 @@ class Frame(sciter.Window):
             self._sort_videos()
 
     @sciter.script
-    def get_video_field_names(self):
-        return self.api.field_names()
+    def get_sorting(self):
+        return self.sorting
+
+    @sciter.script
+    def set_search(self, search_text: str, search_type: str):
+        search_text = search_text.strip()
+        search_type = search_type.strip()
+        if (search_text
+                and search_type in VIDEO_FILTERS
+                and (search_text != self.search_text
+                     or search_type != self.search_type)):
+            self.search_text = search_text
+            self.search_type = search_type
+            self._search_videos()
+
+    @sciter.script
+    def get_search(self):
+        return self.search_text, self.search_type
 
     @sciter.script
     def count_videos(self):
@@ -142,7 +166,8 @@ class Frame(sciter.Window):
 
     @sciter.script
     def valid_length(self):
-        return str(Duration(sum(video.length.total_microseconds for video in self.videos)))
+        return str(Duration(sum(video.length.total_microseconds
+                                for video in self.videos)))
 
     @sciter.script
     def count_pages(self, page_size):
@@ -159,22 +184,19 @@ class Frame(sciter.Window):
         return start, end
 
     @sciter.script
-    def get_video_field(self, index, field):
-        value = getattr(self.videos[index], field)
-        return value if isinstance(value, (str, int, float, bool)) else str(value)
-
-    @sciter.script
     def get_video_fields(self, index, fields):
         video = self.videos[index]
         values = {}
         for field in fields:
             value = getattr(video, field)
-            values[field] = value if isinstance(value, (str, int, float, bool)) else str(value)
+            values[field] = (value
+                             if isinstance(value, (str, int, float, bool))
+                             else str(value))
         return values
 
     @sciter.script
     def open_video(self, index):
-        self.videos[index].filename.open()
+        return str(self.videos[index].filename.open())
 
     @sciter.script
     def open_containing_folder(self, index):
@@ -187,15 +209,8 @@ class Frame(sciter.Window):
         video_index = random.randrange(len(self.videos))
         page_index = video_index // page_size
         shift = video_index % page_size
-        self.videos[video_index].filename.open()
-        return page_index, shift
-
-    @sciter.script
-    def search_videos(self, text, cond):
-        terms = functions.string_to_pieces(text)
-        video_filter = VIDEO_FILTERS[cond]
-        self.videos = [video for video in self.api.database.videos() if video_filter(video, terms)]
-        self._sort_videos()
+        filename = self.videos[video_index].filename.open()
+        return page_index, shift, str(filename)
 
     @sciter.script
     def delete_video(self, index):
@@ -208,10 +223,25 @@ class Frame(sciter.Window):
         except OSError:
             return False
 
+    @sciter.script
+    def group_videos(self, field, reverse):
+        grouped_videos = {}
+        for video in self.api.database.videos():
+            value = getattr(video, field)
+            grouped_videos.setdefault(value, []).append(video)
+        groups = [(value, videos)
+                  for value, videos
+                  in grouped_videos.items()
+                  if len(videos) > 1]
+        groups.sort(key=lambda t: t[0], reverse=reverse)
+        self.groups = groups
+        self.group_index = 0
+        self.videos = self.groups[self.group_index]
+        self._sort_videos()
+
 
 def main():
-    frame = Frame()
-    frame.run_app()
+    Frame().run_app()
     print('End')
 
 

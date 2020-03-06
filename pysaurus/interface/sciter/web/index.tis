@@ -7,7 +7,5 @@ event ready {
     view.move(x, y, width, height);
 }
 event closerequest {
-    // TODO Should wait for all threads (including in Python side) to terminate before closing window.
-    stdout.println('Window required to close.');
     view.close_app();
 }
