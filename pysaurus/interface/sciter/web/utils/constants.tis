@@ -1,0 +1,75 @@
+const HomeStatus = {
+	INITIAL: 0,
+	LOADING: 1,
+	LOADED: 2
+}
+
+const FIELDS = [
+	'audio_bit_rate',
+	'audio_codec',
+	'audio_codec_description',
+	'container_format',
+	'date',
+	'extension',
+	'file_title',
+	'filename',
+	'frame_rate',
+	'height',
+	'length',
+	'sample_rate',
+	'size',
+	'thumbnail_path',
+	'title',
+	'video_codec',
+	'video_codec_description',
+	'video_id',
+	'width',
+];
+
+const SORT_FIELDS = [
+	'audio_bit_rate',
+	'audio_codec',
+	'audio_codec_description',
+	'container_format',
+	'date',
+	'extension',
+	'file_title',
+	'filename',
+	'frame_rate',
+	'height',
+	'length',
+	'sample_rate',
+	'size',
+	'title',
+	'video_codec',
+	'video_codec_description',
+	'width',
+];
+
+const FIELD_TITLES = {
+	'audio_bit_rate': 'audio bit rate',
+	'audio_codec': 'audio codec',
+	'audio_codec_description': 'audio codec description',
+	'container_format': 'container format',
+	'date' : 'date modified',
+	'extension': 'file extension',
+	'file_title': 'file title',
+	'filename': 'file path',
+	'frame_rate': 'frame rate',
+	'height': 'height',
+	'length': 'length',
+	'sample_rate' : 'sample rate',
+	'size': 'size',
+	'thumbnail_path': 'thumbnail path',
+	'title': 'title',
+	'video_codec': 'video codec',
+	'video_codec_description' : 'video codec description',
+	'video_id': 'video ID',
+	'width': 'width',
+};
+
+const SEARCH_TYPE_TITLE = {
+	exact: 'exactly',
+	and: 'all terms',
+	or: 'any term'
+};

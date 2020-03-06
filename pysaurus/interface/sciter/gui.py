@@ -1,26 +1,26 @@
 """
 pip install PySciter
 """
-import threading
-import multiprocessing
-from typing import Optional, List
 import functools
-
-import sciter
+import multiprocessing
 import queue
+import random
+import threading
 import time
 import traceback
-import random
+from typing import Optional, List
+
+import sciter
 
 from pysaurus.core import functions
 from pysaurus.core.components import FileSize, Duration
 from pysaurus.core.database.api import API
-from pysaurus.core.database.video import Video
 from pysaurus.core.database.notifications import DatabaseReady
+from pysaurus.core.database.video import Video
 from pysaurus.core.functions import launch_thread
 from pysaurus.core.notification import Notifier, Notification
-from pysaurus.tests.test_utils import TEST_LIST_FILE_PATH
 from pysaurus.interface.common.parallel_notifier import ParallelNotifier
+from pysaurus.tests.test_utils import TEST_LIST_FILE_PATH
 
 
 def filter_exact(video, terms):
@@ -39,32 +39,38 @@ def filter_or(video, terms):
 
 VIDEO_FILTERS = {'exact': filter_exact, 'and': filter_and, 'or': filter_or}
 
+
+DEFAULT_SORTING = ['-date']
+
+
 class Frame(sciter.Window):
 
     def __init__(self):
         super().__init__(ismain=True, uni_theme=True)
-        notifier = Notifier()
-        notifier.set_default_manager(self._notify)
-        self.api = None
         self.multiprocessing_manager = multiprocessing.Manager()
         self.notifier = ParallelNotifier(self.multiprocessing_manager.Queue())
-        self.thread = None  # type: Optional[threading.Thread]
+        self.monitor_thread = None  # type: Optional[threading.Thread]
+        self.db_loading_thread = None  # type: Optional[threading.Thread]
+        self.threads_stop_flag = False
+
+        self.api = None  # type: Optional[API]
+        self.all_videos = []
         self.videos = []  # type: List[Video]
-        self.end = False
+        self.sorting = DEFAULT_SORTING  # type: List[str]
+
         self.load_file('web/index.html')
         self.expand()
-        self.monitor_thread = launch_thread(self._monitor_notifications)
 
     def _monitor_notifications(self):
         print('Monitoring notifications ...')
         while True:
-            if self.end:
+            if self.threads_stop_flag:
                 break
             try:
                 notification = self.notifier.queue.get_nowait()
                 self._notify(notification)
             except queue.Empty:
-                time.sleep(1/10)
+                time.sleep(1 / 100)
             except Exception as exc:
                 print('Exception while sending notification:')
                 traceback.print_tb(exc.__traceback__)
@@ -89,15 +95,38 @@ class Frame(sciter.Window):
         self.load_videos()
         self.notifier.notify(DatabaseReady())
 
+    def _sort_videos(self):
+        self.videos.sort(key=functools.cmp_to_key(lambda v1, v2: Video.compare_to(v1, v2, self.sorting)))
+
+
     @sciter.script
     def close_app(self):
-        self.end = True
-        if self.thread:
-            self.thread.join()
+        self.threads_stop_flag = True
+        if self.db_loading_thread:
+            self.db_loading_thread.join()
 
     @sciter.script
     def load_database(self):
-        self.thread = launch_thread(self._load_database)
+        # Launch monitor thread.
+        self.monitor_thread = launch_thread(self._monitor_notifications)
+        # Just wait a little to let monitor thread start.
+        time.sleep(0.1)
+        # Then launch database loading thread.
+        self.db_loading_thread = launch_thread(self._load_database)
+
+    @sciter.script
+    def load_videos(self):
+        if not self.all_videos:
+            self.all_videos = list(self.api.database.videos())
+        self.videos = list(self.all_videos)
+        self._sort_videos()
+
+    @sciter.script
+    def set_sorting(self, sorting):
+        sorting = sorting or DEFAULT_SORTING
+        if self.sorting != sorting:
+            self.sorting = sorting
+            self._sort_videos()
 
     @sciter.script
     def get_video_field_names(self):
@@ -123,6 +152,8 @@ class Frame(sciter.Window):
 
     @sciter.script
     def get_videos_index_range(self, page_size, page_number):
+        if not self.videos:
+            return 0, 0
         start = page_size * page_number
         end = min(start + page_size, len(self.videos))
         return start, end
@@ -160,23 +191,22 @@ class Frame(sciter.Window):
         return page_index, shift
 
     @sciter.script
-    def load_videos(self, sorting=()):
-        self.videos = list(self.api.database.videos())
-        self.sort_videos(sorting)
-
-    @sciter.script
-    def search_videos(self, text, cond, sorting):
+    def search_videos(self, text, cond):
         terms = functions.string_to_pieces(text)
         video_filter = VIDEO_FILTERS[cond]
         self.videos = [video for video in self.api.database.videos() if video_filter(video, terms)]
-        self.sort_videos(sorting)
+        self._sort_videos()
 
     @sciter.script
-    def sort_videos(self, sorting):
-        if sorting:
-            self.videos.sort(key=functools.cmp_to_key(lambda v1, v2: Video.compare_to(v1, v2, sorting)))
-        else:
-            self.videos.sort(key=lambda v: v.title)
+    def delete_video(self, index):
+        video = self.videos[index]
+        try:
+            self.api.database.delete_video(video)
+            self.videos.pop(index)
+            self.all_videos.clear()
+            return True
+        except OSError:
+            return False
 
 
 def main():

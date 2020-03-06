@@ -1,0 +1,46 @@
+@set VideosPage {
+
+.central-panel, .side-panel, .main-panel {
+	height: 1*;
+}
+.side-panel {
+	margin-right: 0.5em;
+}
+.main-panel {
+	width: 1*;
+}
+
+.status {
+	text-align: center;
+	padding: 0.25em 0.5em 0.25em 0.5em;
+}
+.status > * {
+	margin-left: 0.25em;
+	margin-right: 0.25em;
+}
+
+#videos {
+	height: 1*;
+}
+
+#input-search {
+	display: block;
+	width: 1*;
+	margin-bottom: 0.5em;
+}
+
+#videos .videos {
+	border: 1px solid gray;
+	width: 1*;
+	height: 1*;
+	overflow: auto;
+}
+
+#videos #status {
+	padding: 0.5em;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+}

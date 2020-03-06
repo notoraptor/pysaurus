@@ -1,6 +1,7 @@
 include "sciter:reactor.tis";
 
 class Video: Reactor.Component {
+	const styleset = ['Video', $url(Video.css)];
     function this(props, children) {
         this.props = props || {};
         this.children = children || {};
@@ -9,7 +10,7 @@ class Video: Reactor.Component {
         this.elementMenu = null;
     }
     function render() {
-        const index = this.props.videoIndex;
+        const index = this.props.index;
         const data = this.props.data;
         data.audio_bit_rate = Math.round(data.audio_bit_rate / 1000).toInteger();
         data.extension = data.extension.toUpperCase();
@@ -40,12 +41,13 @@ class Video: Reactor.Component {
 	                <li class="open-folder">Open containing folder</li>
 	                {meta_title ? <li class="copy-meta-title">Copy meta title</li> : ''}
 	                {file_title ? <li class="copy-file-title">Copy file title</li> : ''}
+	                <li class="delete-file">Delete video</li>
 	            </menu>
             </div>
         );
     }
     function openVideo() {
-        view.open_video(this.props.videoIndex);
+        view.open_video(this.props.index);
         this.props.parent.updateStatus('Opened: ' + this.props.data.filename);
     }
 
@@ -60,7 +62,7 @@ class Video: Reactor.Component {
         this.openVideo();
     }
     event click $(menu li.open-folder) (evt, element) {
-        const folder = view.open_containing_folder(this.props.videoIndex);
+        const folder = view.open_containing_folder(this.props.index);
         if (folder)
             this.props.parent.updateStatus('Opened folder: ' + folder)
         else
@@ -75,5 +77,21 @@ class Video: Reactor.Component {
         const text = this.props.data.file_title;
         view.clipboard(#put, text);
         this.props.parent.updateStatus('Copied to clipboard: ' + text);
+    }
+    event click $(menu li.delete-file) (evt, element) {
+        const content = String.$(
+            <div class="dialog-delete" style="text-align: center">
+                <h1>Are you sure you want to <strong style="color: red;">definitely</strong> delete this video?</h1>
+                <div class="filename"><code>{this.props.data.filename}</code></div>
+                <p><img alt={this.props.data.title} src={this.props.data.thumbnail_path}/></p>
+            </div>
+        );
+        const pressedButton = view.msgbox(#warning, content, 'Delete ' + this.props.data.file_title, [#no, #yes]);
+        if (pressedButton === #yes) {
+            if (view.delete_video(this.props.index))
+                this.props.parent.updateStatus('Video deleted! ' + this.props.data.filename);
+            else
+                this.props.parent.updateStatus('Unable to delete video! ' + this.props.data.filename);
+        }
     }
 }

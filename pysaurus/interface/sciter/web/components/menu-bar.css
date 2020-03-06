@@ -1,0 +1,156 @@
+/** Menu bar. **/
+ul#menu-bar {
+	font: system; font-rendering-mode:classic;
+	behavior:menu-bar;
+	flow: horizontal;
+	color:windowtext;
+	margin:0;
+	padding:0;
+}
+ul#menu-bar > li {
+	padding:2dip 8dip;
+	margin:0;
+	white-space:nowrap;
+	width:max-intrinsic;
+	display:block;
+	flow:horizontal;
+	border: 1px solid rgb(200, 200, 200);
+	border-bottom-color: rgb(150, 150, 150);
+}
+ul#menu-bar > li:current {
+	background-color:highlight;
+	color:highlighttext;
+}
+ul#menu-bar button[type="menu"] {
+	behavior:button popup-menu;
+}
+ul#menu-bar button[type="menu"]:owns-popup {
+	background-image:url(theme:button-pressed); /* ?? */
+}
+ul#menu-bar menu {
+	font: system; font-rendering-mode:classic;
+	behavior:menu; /*is a menu*/
+	flow: vertical;
+	display:none;
+	margin:0;
+	padding:1dip;
+	max-width:max-intrinsic;
+	/*min-width: max-intrinsic;*/
+	border:1dip solid threedshadow;
+	background-color: window;
+	color:windowtext;
+	margin:0 1dip; /* to offset it from parent li */
+}
+ul#menu-bar menu menu {
+	max-width: max-intrinsic;
+}
+ul#menu-bar menu li {
+	width:*;
+	flow:horizontal;
+	padding-left:24dip; /* room for icon */
+	padding-right:12dip; /* room for the arrow */
+	padding-top:4dip;
+	padding-bottom:4dip;
+	foreground-repeat: no-repeat;
+	foreground-position: 2dip 50%;
+	color:windowtext;
+}
+ul#menu-bar menu li:rtl {
+	width:*;
+	padding-right:24dip; /* room for icon */
+	padding-left:12dip; /* room for the arrow */
+	foreground-repeat: no-repeat;
+	foreground-position-right: 2dip;
+	foreground-position-top: 50%;
+	text-align:right;
+	color:windowtext;
+}
+ul#menu-bar menu li:disabled {
+	color:graytext;
+	foreground-image: none;
+}
+ul#menu-bar menu li span.accesskey {
+	display:block;
+	width:max-intrinsic;
+	white-space:nowrap;
+	margin-left:*; /* spring to attach it to the right */
+	padding-left:1em;
+	color:threedshadow;
+}
+ul#menu-bar menu li:current span.accesskey {
+	color:#FFD700;
+}
+ul#menu-bar menu li:has-child-of-type(menu) {
+	foreground-image:url(stock:arrow-right); /* that arrow */
+	foreground-repeat: no-repeat;
+	foreground-position: 100% 50%;
+}
+ul#menu-bar menu li:has-child-of-type(menu):rtl {
+	foreground-image:url(stock:arrow-left); /* that arrow */
+	foreground-repeat: no-repeat;
+	foreground-position: 0% 50%;
+}
+ul#menu-bar menu li:hover:owns-popup,
+ul#menu-bar menu li:current {
+	//background-color:highlight;
+	//color:highlighttext;
+	//border-radius:3dip;
+	background:url(theme:list-view-item-selected) stretch;
+}
+ul#menu-bar menu hr {
+	margin:2dip;
+}
+ul#menu-bar menu li[type="radio"] {
+	behavior:radio;
+	foreground-repeat:no-repeat;
+	foreground-position:3dip 50%;
+	foreground-image:url(theme:radio-normal);
+}
+ul#menu-bar menu li[type="radio"]:hover {
+	foreground-image:url(theme:radio-hover);
+}
+ul#menu-bar menu li[type="radio"]:active {
+	foreground-image:url(theme:radio-pressed);
+}
+ul#menu-bar menu li[type="radio"]:disabled {
+	foreground-image:url(theme:radio-disabled);
+}
+ul#menu-bar menu li[type="radio"]:checked {
+	foreground-image:url(theme:radio-checked-normal);
+}
+ul#menu-bar menu > li[type="radio"]:checked:hover {
+	foreground-image:url(theme:radio-checked-hover);
+}
+ul#menu-bar menu li[type="radio"]:checked:active {
+	foreground-image:url(theme:radio-checked-pressed);
+}
+ul#menu-bar menu li[type="radio"]:checked:disabled {
+	foreground-image:url(theme:radio-checked-disabled);
+}
+ul#menu-bar menu li[type="check"] {
+	behavior:check;
+	foreground-repeat:no-repeat;
+	foreground-position:3dip 50%;
+	foreground-image:url(theme:check-normal);
+}
+ul#menu-bar menu li[type="check"]:hover {
+	foreground-image:url(theme:check-hover);
+}
+ul#menu-bar menu li[type="check"]:active {
+	foreground-image:url(theme:check-pressed);
+}
+ul#menu-bar menu li[type="check"]:disabled {
+	foreground-image:url(theme:check-disabled);
+}
+ul#menu-bar menu li[type="check"]:checked {
+	foreground-image:url(theme:check-checked-normal);
+}
+ul#menu-bar menu li[type="check"]:checked:hover {
+	foreground-image:url(theme:check-checked-hover);
+}
+ul#menu-bar menu li[type="check"]:checked:active {
+	foreground-image:url(theme:check-checked-pressed);
+}
+ul#menu-bar menu li[type="check"]:checked:disabled {
+	foreground-image:url(theme:check-checked-disabled);
+}

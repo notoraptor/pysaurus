@@ -16,18 +16,17 @@
 </form>
 <script type="text/tiscript">
     var countSorting = 0;
-    function addSorting() {
+    function addSorting(value = 'title', reverse = false) {
         const index = ++countSorting;
-		const name = `reverse`;
-		const selectName = `field`;
+		const reverseID = 'reverse-' + index;
 		$(p#sorting).append(
 			<p key={index} name={index} class="sorting">
 				<button class="button-remove-sort">-</button>
-				<select name={selectName}>
+				<select name="field" :value={value}>
 					{SORT_FIELDS.map((field, fieldIndex) => <option key={fieldIndex} value={field}>{FIELD_TITLES[field]}</option>)}
 				</select>
-				<input type="checkbox" id={`${name}`} name={name}/>
-				<label for={`${name}`}>reverse</label>
+				<input type="checkbox" id={reverseID} name="reverse" :checked={reverse}/>
+				<label for={reverseID}>reverse</label>
 			</p>
 		);
     }
@@ -57,7 +56,7 @@
 		    view.close(sorting);
 	}
 	event ready {
-	    addSorting();
+	    addSorting('date', true);
         const (sx, sy, sw, sh) = view.screenBox(#workarea, #rectw);
         const width = 400;
         const height = 300;

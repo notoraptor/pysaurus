@@ -270,7 +270,7 @@ class Duration(object):
         if self.seconds:
             view.append('%02ds' % self.seconds)
         if self.microseconds:
-            view.append('%06dms' % self.microseconds)
+            view.append('%06dµs' % self.microseconds)
         return ' '.join(view) if view else '00s'
 
     def to_json(self):

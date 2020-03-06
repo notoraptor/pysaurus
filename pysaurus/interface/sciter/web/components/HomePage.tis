@@ -1,18 +1,14 @@
 include "sciter:reactor.tis";
 include "../utils/Notifications.tis";
-
-const Status = {
-	INITIAL: 0,
-	LOADING: 1,
-	LOADED: 2
-}
+include "../utils/constants.tis";
 
 class HomePage: Reactor.Component {
+	const styleset = ['HomePage', $url(HomePage.css)];
 	function this(props, children) {
 		this.props = props || {};
 		this.children = children || {};
 
-		this.status = Status.INITIAL;
+		this.status = HomeStatus.INITIAL;
 		this.messages = [];
 		this.nbVideosToLoad = 0;
 		this.nbThumbnailsToLoad = 0;
@@ -41,11 +37,11 @@ class HomePage: Reactor.Component {
 		Notifications.unregister(this.callbackIndex);
 	}
 	function getInitialButton() {
-		if (this.status === Status.INITIAL)
+		if (this.status === HomeStatus.INITIAL)
 			return <button :disabled={false}>Load database</button>;
-		if (this.status === Status.LOADING)
+		if (this.status === HomeStatus.LOADING)
 			return <button :disabled={true}>Loading database ...</button>;
-		if (this.status === Status.LOADED)
+		if (this.status === HomeStatus.LOADED)
 			return <button :disabled={false}>Display videos</button>;
 	}
 	function getMessages() {
@@ -173,7 +169,7 @@ class HomePage: Reactor.Component {
 		const update = {};
 		let placeholder = notification;
 		if (notification.name === 'DatabaseReady')
-			update.status = Status.LOADED;
+			update.status = HomeStatus.LOADED;
 		else if (notification.name === 'VideosToLoad')
 			update.nbVideosToLoad = notification.notification.total;
 		else if (notification.name === 'ThumbnailsToLoad')
@@ -206,10 +202,10 @@ class HomePage: Reactor.Component {
 		this.update(update);
 	}
 	event click $(#button-initial > button) (evt, element) {
-		if (this.status === Status.INITIAL) {
+		if (this.status === HomeStatus.INITIAL) {
 			view.load_database();
-			this.update({status: Status.LOADING});
-		} else if (this.status === Status.LOADED) {
+			this.update({status: HomeStatus.LOADING});
+		} else if (this.status === HomeStatus.LOADED) {
 			this.props.app.loadPage("videos");
 		}
 	}
