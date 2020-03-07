@@ -40,6 +40,10 @@ VIDEO_FILTERS = {'exact': filter_exact, 'and': filter_and, 'or': filter_or}
 DEFAULT_SORTING = ['-date']
 
 
+def to_js_value(value):
+    return value if isinstance(value, (str, int, float, bool, type(None))) else str(value)
+
+
 class Frame(sciter.Window):
 
     def __init__(self):
@@ -56,8 +60,10 @@ class Frame(sciter.Window):
         self.sorting = DEFAULT_SORTING  # type: List[str]
         self.search_text = ''
         self.search_type = ''
-        self.groups = []  # type: List[Tuple[Any, List[Video]]]
-        self.group_index = 0
+        self.groups = None  # type: Optional[List[Tuple[Any, List[Video]]]]
+        self.group_field = None
+        self.group_reverse = None
+        self.group_number = 0
 
         self.load_file('web/index.html')
         self.expand()
@@ -122,12 +128,16 @@ class Frame(sciter.Window):
 
     @sciter.script
     def load_videos(self):
-        if not self.all_videos:
-            self.all_videos = list(self.api.database.videos())
-        self.videos = list(self.all_videos)
-        self.search_text = ''
-        self.search_type = ''
-        self._sort_videos()
+        if self.videos is not self.all_videos:
+            if not self.all_videos:
+                self.all_videos = list(self.api.database.videos())
+            self.groups = None
+            self.group_field = None
+            self.group_reverse = None
+            self.videos = self.all_videos
+            self.search_text = ''
+            self.search_type = ''
+            self._sort_videos()
 
     @sciter.script
     def set_sorting(self, sorting):
@@ -186,13 +196,7 @@ class Frame(sciter.Window):
     @sciter.script
     def get_video_fields(self, index, fields):
         video = self.videos[index]
-        values = {}
-        for field in fields:
-            value = getattr(video, field)
-            values[field] = (value
-                             if isinstance(value, (str, int, float, bool))
-                             else str(value))
-        return values
+        return {field: to_js_value(getattr(video, field)) for field in fields}
 
     @sciter.script
     def open_video(self, index):
@@ -218,10 +222,24 @@ class Frame(sciter.Window):
         try:
             self.api.database.delete_video(video)
             self.videos.pop(index)
-            self.all_videos.clear()
+            if self.all_videos:
+                self.all_videos = []
+            if self.groups is not None and len(self.videos) <= 1:
+                self.groups.pop(self.group_number)
+                self.group_number = max(0, min(self.group_number, len(self.groups) - 1))
+                self.videos = self.groups[self.group_number][1] if self.groups else []
             return True
         except OSError:
             return False
+
+    @sciter.script
+    def rename_video(self, index, new_title):
+        video = self.videos[index]
+        try:
+            self.api.database.change_video_file_title(video, new_title)
+            return {'filename': to_js_value(video.filename), 'file_title': video.file_title}
+        except OSError as exc:
+            return {'error': str(exc)}
 
     @sciter.script
     def group_videos(self, field, reverse):
@@ -235,9 +253,26 @@ class Frame(sciter.Window):
                   if len(videos) > 1]
         groups.sort(key=lambda t: t[0], reverse=reverse)
         self.groups = groups
-        self.group_index = 0
-        self.videos = self.groups[self.group_index]
+        self.group_field = field
+        self.group_reverse = reverse
+        self.group_number = 0
+        self.videos = self.groups[self.group_number][1] if self.groups else []
         self._sort_videos()
+
+    @sciter.script
+    def count_groups(self):
+        return 0 if self.groups is None else len(self.groups)
+
+    @sciter.script
+    def set_group(self, index):
+        if index != self.group_number:
+            self.videos = self.groups[index][1]
+            self.group_number = index
+            self._sort_videos()
+
+    @sciter.script
+    def get_group_field_value(self):
+        return to_js_value(getattr(self.videos[0], self.group_field))
 
 
 def main():

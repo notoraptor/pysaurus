@@ -64,6 +64,11 @@
         const y = (sh - height) / 2;
         view.move(x, y, width, height);
     }
+    event keydown (evt, element) {
+        if (evt.keyCode === Event.VK_ESCAPE) {
+            view.close();
+        }
+    }
 </script>
 </body>
 </html>

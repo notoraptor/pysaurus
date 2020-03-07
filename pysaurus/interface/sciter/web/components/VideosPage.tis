@@ -13,7 +13,10 @@ class VideosPage: Reactor.Component {
 		this.searchText = null;
 		this.searchType = null;
 		this.group = null;
+		this.groupField = null;
 		this.groupReverse = null;
+		this.grouped = false;
+		this.groupNumber = 0;
 		this.sorting = [];
 		this.status = 'loaded';
 	}
@@ -22,20 +25,60 @@ class VideosPage: Reactor.Component {
 		const nbPages = view.count_pages(this.pageSize);
 		const validSize = view.valid_size();
 		const validLength = view.valid_length();
-		const videosAreFiltered = this.searchText || this.sorting.length;
+		const nbGroups = view.count_groups();
+		const videosAreFiltered = this.searchText || this.sorting.length || this.grouped;
 
 		if (this.pageNumber >= nbPages - 1)
 			this.pageNumber = nbPages - 1;
 		if (this.pageNumber < 0)
 			this.pageNumber = 0;
 
+		if (this.grouped) {
+			const oldGroupNumber = this.groupNumber;
+			if (this.groupNumber >= nbGroups - 1)
+				this.groupNumber = nbGroups - 1;
+			if (this.groupNumber < 0)
+				this.groupNumber = 0;
+			if (oldGroupNumber !== this.groupNumber)
+				view.set_group(this.groupNumber);
+		}
+
 		return (
 			<div id="videos">
 				<div class="row central-panel">
 					<div class="col side-panel">
+
+						<div class="status" id="form-group">
+							<div class="mb-1"><input type="checkbox" id="group" :checked={this.group}/>{' '}<label for="group">Group videos{this.group ? ' with same:' : '.'}</label></div>
+							{this.group ? (
+							<div>
+								<div class="mb-1">
+									<select id="group-field" name="groupField" :value={this.groupField}>
+										{SORT_FIELDS.map((field, fieldIndex) => <option key={fieldIndex} value={field}>{FIELD_TITLES[field]}</option>)}
+									</select>
+								</div>
+								<div class="mb-1">
+									<input type="radio" id="group-reverse-off" name="groupReverse" value={false} :checked={this.groupReverse === false}/>
+									<label for="group-reverse-off">ascending</label>
+								</div>
+								<div class="mb-1">
+									<input type="radio" id="group-reverse-on" name="groupReverse" value={true} :checked={this.groupReverse === true}/>
+									<label for="group-reverse-on">descending</label>
+								</div>
+							</div>
+							) : ''}
+						</div>
+						<hr/>
+
 						<div class="status">
 							Displaying {videosAreFiltered ? <em>filtered</em> : <strong>all</strong>} videos
 						</div>
+						{this.grouped ? (
+						<div class="status">
+							<div>Videos grouped by {FIELD_TITLES[this.groupField]}{this.groupReverse ? ' in reverse order' : ''}.</div>
+							<div>{nbGroups} group{nbGroups > 1 ? 's' : ''}</div>
+						</div>
+						) : ''}
 						<div class="status">
 							<div>{nbVideos} video{nbVideos > 1 ? 's' : ''}</div>
 							<div>{validSize}</div>
@@ -92,29 +135,6 @@ class VideosPage: Reactor.Component {
 						)}
 						<hr/>
 
-						<form class="status" id="form-group">
-							<div class="mb-1">Group videos with same:</div>
-							<div class="mb-1">
-								<select id="group-videos" name="group" :value={this.group}>
-									<option value={null}>(not grouped)</option>
-									{SORT_FIELDS.map((field, fieldIndex) => <option key={fieldIndex} value={field}>{FIELD_TITLES[field]}</option>)}
-								</select>
-							</div>
-							{this.group ? (
-							<div>
-							<div class="mb-1">
-								<input type="radio" id="group-asc" name="groupReverse" value={false} :checked={this.groupReverse === "asc"}/>
-								<label for="group-asc">ascending</label>
-							</div>
-							<div class="mb-1">
-								<input type="radio" id="group-dsc" name="groupReverse" value={true} :checked={this.groupReverse === "dsc"}/>
-								<label for="group-dsc">ascending</label>
-							</div>
-							</div>
-							) : ''}
-						</form>
-						<hr/>
-
 						<div class="status">
 							<select class="select-page-size" novalue="videos per page" :value={20}>
 								{[10, 20, 50, 100].map((count, index) => <option key={index} value={count}>Display {count} video{count > 1 ? 's' : ''} per page</option>)}
@@ -127,15 +147,31 @@ class VideosPage: Reactor.Component {
 						</div>
 					</div>
 					<div class="col main-panel">
-						{nbPages ? (
-							<div class="status">
-								<button id="first-page" :disabled={this.pageNumber === 0}>&lt;&lt;</button>
-								<button id="previous-page" :disabled={this.pageNumber === 0}>&lt;</button>
-								<span>Page <input type="integer" id="current-page" min={1} max={nbPages} step={1} :value={this.pageNumber + 1}/> / {nbPages}</span>
-								<button id="next-page" :disabled={this.pageNumber === nbPages - 1}>&gt;</button>
-								<button id="last-page" :disabled={this.pageNumber === nbPages - 1}>&gt;&gt;</button>
-							</div>
-						) : (<div class="status"><em>0 / 0 pages</em></div>)}
+						<div class="status pagination">
+
+							{this.grouped ? (
+								nbGroups ? (
+								<span class="navigation status">
+									<button id="first-group" :disabled={this.groupNumber === 0}>&lt;&lt;</button>
+									<button id="previous-group" :disabled={this.groupNumber === 0}>&lt;</button>
+									<span>Group <input type="integer" id="current-group" min={1} max={nbGroups} step={1} :value={this.groupNumber + 1}/> / {nbGroups} <strong> ({view.get_group_field_value()})</strong></span>
+									<button id="next-group" :disabled={this.groupNumber === nbGroups - 1}>&gt;</button>
+									<button id="last-group" :disabled={this.groupNumber === nbGroups - 1}>&gt;&gt;</button>
+								</span>
+								) : (<div class="status"><em>0 / 0 groups</em></div>)
+							) : ''}
+
+							{nbPages ? (
+								<span class="navigation status">
+									<button id="first-page" :disabled={this.pageNumber === 0}>&lt;&lt;</button>
+									<button id="previous-page" :disabled={this.pageNumber === 0}>&lt;</button>
+									<span>Page <input type="integer" id="current-page" min={1} max={nbPages} step={1} :value={this.pageNumber + 1}/> / {nbPages}</span>
+									<button id="next-page" :disabled={this.pageNumber === nbPages - 1}>&gt;</button>
+									<button id="last-page" :disabled={this.pageNumber === nbPages - 1}>&gt;&gt;</button>
+								</span>
+							) : (<div class="status"><em>0 / 0 pages</em></div>)}
+
+						</div>
 						<div class="videos">{this.getVideos()}</div>
 					</div>
 				</div>
@@ -177,6 +213,7 @@ class VideosPage: Reactor.Component {
 		this.updateView({pageNumber: info[0], status: 'Randomly opened: ' + info[2]}, info[1]);
 		this.post(() => element.state.disabled = false);
 	}
+
 	event click $(button#first-page) {
 		if (this.pageNumber !== 0) {
 			this.updateView({pageNumber: 0});
@@ -233,14 +270,63 @@ class VideosPage: Reactor.Component {
 		}
 	}
 
-	event change $(select#group-videos) (evt, element) {
+	event change $(input#group) (evt, element) {
 		const group = element.value;
-		this.update({group: group, groupReverse: null});
+		if (group) {
+			this.update({group: group});
+		} else {
+			view.load_videos();
+			this.update({group: false, groupField: null, groupReverse: null, grouped: false});
+		}
+	}
+	event change $(select#group-field) (evt, element) {
+		const groupField = element.value;
+		this.update({groupField: groupField, groupReverse: null});
 	}
 	event change $(input[name=groupReverse]) (evt, element) {
-		const value = element.value;
-		stdout.println(this.group, value);
+		const reverse = element.value === "true";
+		view.group_videos(this.groupField, reverse);
+		this.updateView({groupReverse: reverse, grouped: true, groupNumber: 0});
 	}
+
+	//
+	function updateGroup(groupNumber) {
+		view.set_group(groupNumber);
+		this.updateView({groupNumber: groupNumber, pageNumber: 0});
+	}
+	event click $(button#first-group) {
+		if (this.groupNumber !== 0) {
+			this.updateGroup(0);
+		}
+	}
+	event click $(button#previous-group) {
+		if (this.groupNumber > 0) {
+			this.updateGroup(this.groupNumber - 1);
+		}
+	}
+	event click $(button#next-group) {
+		const nbGroups = view.count_groups();
+		if (this.groupNumber < nbGroups - 1) {
+			this.updateGroup(this.groupNumber + 1);
+		}
+	}
+	event click $(button#last-group) {
+		const nbGroups = view.count_groups();
+		if (this.groupNumber !== nbGroups - 1) {
+			this.updateGroup(nbGroups - 1);
+		}
+	}
+	event change $(input#current-groupNumber) (evt, element) {
+		const nbGroups = view.count_groups();
+		let groupNumber = (element.value || 1) - 1;
+		if (groupNumber >= nbGroups)
+			groupNumber = nbGroups - 1;
+		if (groupNumber < 0)
+			groupNumber = 0;
+		if (groupNumber !== this.groupNumber)
+			this.updateGroup(groupNumber);
+	}
+	//
 
 	event click $(button#reset-search) (evt, element) {
 		view.load_videos();

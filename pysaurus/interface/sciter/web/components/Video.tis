@@ -31,7 +31,7 @@ class Video: Reactor.Component {
                     <div class="filename"><code>{data.filename}</code></div>
                     <div class="format">
                         <div class="extension"><code>{data.extension}</code></div>
-                        <div><strong>{data.size}</strong> / {data.container_format} (<span title={data.video_codec_description}>{data.video_codec}</span>, <span title={data.audio_codec_description}>{data.audio_codec}</span>)</div>
+                        <div><strong title={data.file_size}>{data.size}</strong> / {data.container_format} (<span title={data.video_codec_description}>{data.video_codec}</span>, <span title={data.audio_codec_description}>{data.audio_codec}</span>)</div>
                     </div>
                     <div><strong>{data.width}</strong> x <strong>{data.height}</strong> @ {data.frame_rate} fps | {data.sample_rate} Hz, {data.audio_bit_rate} Kb/s</div>
                     <div><strong>{data.length}</strong> | <code>{data.date}</code></div>
@@ -41,6 +41,7 @@ class Video: Reactor.Component {
 	                <li class="open-folder">Open containing folder</li>
 	                {meta_title ? <li class="copy-meta-title">Copy meta title</li> : ''}
 	                {file_title ? <li class="copy-file-title">Copy file title</li> : ''}
+	                <li class="rename-file">Rename video</li>
 	                <li class="delete-file">Delete video</li>
 	            </menu>
             </div>
@@ -82,7 +83,7 @@ class Video: Reactor.Component {
         const content = String.$(
             <div class="dialog-delete" style="text-align: center">
                 <h1>Are you sure you want to <strong style="color: red;">definitely</strong> delete this video?</h1>
-                <div class="filename"><code>{this.props.data.filename}</code></div>
+                <div class="filename" style="word-break:break-all;"><code>{this.props.data.filename}</code></div>
                 <p><img alt={this.props.data.title} src={this.props.data.thumbnail_path}/></p>
             </div>
         );
@@ -92,6 +93,22 @@ class Video: Reactor.Component {
                 this.props.parent.updateStatus('Video deleted! ' + this.props.data.filename);
             else
                 this.props.parent.updateStatus('Unable to delete video! ' + this.props.data.filename);
+        }
+    }
+    event click $(menu li.rename-file) (evt, element) {
+        const newTitle = view.dialog({
+            url: 'html/rename.html',
+            parameters: {filename: this.props.data.filename, title: this.props.data.file_title}
+        });
+        if (newTitle) {
+            const data = view.rename_video(this.props.index, newTitle);
+            if (data.error) {
+                view.msgbox(#alert, String.printf('<div>Unable to rename</div><div><code>%s</code><div>Error message:<div><div><code>%s</code></div>', this.props.data.filename, data.error), 'Cannot rename video');
+            } else {
+	            this.props.data.filename = data.filename;
+	            this.props.data.file_title = data.file_title;
+	            this.props.parent.updateStatus('Renamed: ' + this.props.data.filename);
+            }
         }
     }
 }

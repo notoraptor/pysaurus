@@ -11,6 +11,7 @@ const FIELDS = [
 	'container_format',
 	'date',
 	'extension',
+	'file_size',
 	'file_title',
 	'filename',
 	'frame_rate',
@@ -66,6 +67,7 @@ const FIELD_TITLES = {
 	'video_codec_description' : 'video codec description',
 	'video_id': 'video ID',
 	'width': 'width',
+	'file_size': 'raw file size',
 };
 
 const SEARCH_TYPE_TITLE = {

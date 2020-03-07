@@ -19,6 +19,12 @@
 	margin-right: 0.25em;
 }
 
+.pagination .navigation {
+	display: inline-block;
+	margin-left: 0.5em;
+	margin-right: 0.5em;
+}
+
 #videos {
 	height: 1*;
 }

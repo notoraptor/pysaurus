@@ -550,7 +550,10 @@ class Database:
 
     def change_video_file_title(self, video, new_title):
         # type: (Video, str) -> None
+        discarded_characters = r'@#\\/?$'
         if video.filename.title != new_title:
+            if any(c in new_title for c in discarded_characters):
+                raise OSError('Characters not allowed: %s' % discarded_characters)
             new_filename = video.filename.new_title(new_title)
             if video.filename in self.__videos:
                 del self.__videos[video.filename]

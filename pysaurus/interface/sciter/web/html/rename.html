@@ -1,0 +1,79 @@
+<html>
+<head>
+    <title>Rename</title>
+    <style>
+        body {
+            text-align: center;
+        }
+        .form {
+            height: 1*;
+        }
+        input#name {
+            display: block;
+            width: 1*;
+        }
+        .button-bar {
+            flow: horizontal;
+        }
+        .button-bar button {
+            width: 1*;
+        }
+        button#cancel {
+            margin-right: 0.25em;
+        }
+        button#rename {
+            margin-left: 0,25em;
+            font-weight: bold;
+        }
+        h2 {
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+<h1>Rename</h1>
+<h2><code id="filename"></code></h2>
+<p class="form"><input type="text" name="name" id="name"/></p>
+<div class="button-bar">
+    <button id="cancel">cancel</button>
+    <button id="rename">rename</button>
+</div>
+<script type="text/tiscript">
+	event ready {
+	    const filename = view.parameters.filename;
+	    const title = view.parameters.title;
+
+        const (sx, sy, sw, sh) = view.screenBox(#workarea, #rectw);
+        const width = 400;
+        const height = 300;
+        const x = (sw - width) / 2;
+        const y = (sh - height) / 2;
+        view.move(x, y, width, height);
+
+        $(#filename).text = filename;
+        $(#name).value = title;
+    }
+    event click $(#cancel) {
+        view.close();
+    }
+    function submit() {
+        $(#rename).state.disabled = true;
+        const newTitle = $(#name).value.trim();
+        const oldTitle = view.parameters.title;
+        view.close(newTitle.length && newTitle !== oldTitle ? newTitle: undefined);
+    }
+    event click $(#rename) (evt, element) {
+        submit();
+    }
+    event keydown $(#name) (evt, element) {
+        if (evt.keyCode === Event.VK_RETURN)
+            submit();
+    }
+    event keydown (evt, element) {
+        if (evt.keyCode === Event.VK_ESCAPE) {
+            view.close();
+        }
+    }
+</script>
+</body>
+</html>
