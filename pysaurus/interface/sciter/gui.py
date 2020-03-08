@@ -83,6 +83,8 @@ class Frame(sciter.Window):
             try:
                 notification = self.notifier.queue.get_nowait()
                 self._notify(notification)
+                if isinstance(notification, DatabaseReady):
+                    break
             except queue.Empty:
                 time.sleep(1 / 100)
             except Exception as exc:

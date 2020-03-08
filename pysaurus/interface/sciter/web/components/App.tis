@@ -21,6 +21,7 @@ class App: Reactor.Component {
 	        return <VideosPage app={app}/>;
 	}
 	function loadPage(pageName) {
+		$(main).clear();
 		this.update({page: pageName});
 	}
 }
