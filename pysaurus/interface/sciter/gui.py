@@ -39,9 +39,16 @@ VIDEO_FILTERS = {'exact': filter_exact, 'and': filter_and, 'or': filter_or}
 
 DEFAULT_SORTING = ['-date']
 
+JSON_INTEGER_MIN = -2**31
+JSON_INTEGER_MAX = 2**31 - 1
+
 
 def to_js_value(value):
-    return value if isinstance(value, (str, int, float, bool, type(None))) else str(value)
+    if isinstance(value, (str, float, bool, type(None))):
+        return value
+    if isinstance(value, int) and JSON_INTEGER_MIN <= value <= JSON_INTEGER_MAX:
+        return value
+    return str(value)
 
 
 class Frame(sciter.Window):
@@ -98,6 +105,7 @@ class Frame(sciter.Window):
     def _load_database(self):
         self.api = API(TEST_LIST_FILE_PATH,
                        notifier=self.notifier,
+                       ensure_miniatures=False,
                        reset=False)
         self.load_videos()
         self.notifier.notify(DatabaseReady())
@@ -227,7 +235,7 @@ class Frame(sciter.Window):
             if self.groups is not None and len(self.videos) <= 1:
                 self.groups.pop(self.group_number)
                 self.group_number = max(0, min(self.group_number, len(self.groups) - 1))
-                self.videos = self.groups[self.group_number][1] if self.groups else []
+                self.videos = self.groups[self.group_number] if self.groups else []
             return True
         except OSError:
             return False
@@ -247,16 +255,13 @@ class Frame(sciter.Window):
         for video in self.api.database.videos():
             value = getattr(video, field)
             grouped_videos.setdefault(value, []).append(video)
-        groups = [(value, videos)
-                  for value, videos
-                  in grouped_videos.items()
-                  if len(videos) > 1]
-        groups.sort(key=lambda t: t[0], reverse=reverse)
+        filtered_groups = {value: videos for value, videos in grouped_videos.items() if len(videos) > 1}
+        groups = [filtered_groups[value] for value in sorted(filtered_groups.keys(), reverse=reverse)]
         self.groups = groups
         self.group_field = field
         self.group_reverse = reverse
         self.group_number = 0
-        self.videos = self.groups[self.group_number][1] if self.groups else []
+        self.videos = self.groups[self.group_number] if self.groups else []
         self._sort_videos()
 
     @sciter.script
@@ -266,7 +271,7 @@ class Frame(sciter.Window):
     @sciter.script
     def set_group(self, index):
         if index != self.group_number:
-            self.videos = self.groups[index][1]
+            self.videos = self.groups[index]
             self.group_number = index
             self._sort_videos()
 

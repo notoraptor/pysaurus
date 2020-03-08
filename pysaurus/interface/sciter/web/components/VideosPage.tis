@@ -2,6 +2,14 @@ include "sciter:reactor.tis";
 include "../utils/constants.tis";
 include "Video.tis";
 
+function sentence(str) {
+	if (str.length == 0)
+		return str;
+	if (str.length == 1)
+		return str.toUpperCase();
+	return str.substr(0, 1).toUpperCase() + str.substr(1);
+}
+
 class VideosPage: Reactor.Component {
 	const styleset = ['VideosPage', $url(VideosPage.css)];
 	function this(props, children) {
@@ -154,7 +162,7 @@ class VideosPage: Reactor.Component {
 								<span class="navigation status">
 									<button id="first-group" :disabled={this.groupNumber === 0}>&lt;&lt;</button>
 									<button id="previous-group" :disabled={this.groupNumber === 0}>&lt;</button>
-									<span>Group <input type="integer" id="current-group" min={1} max={nbGroups} step={1} :value={this.groupNumber + 1}/> / {nbGroups} <strong> ({view.get_group_field_value()})</strong></span>
+									<span>Group <input type="integer" id="current-group" min={1} max={nbGroups} step={1} :value={this.groupNumber + 1}/> / {nbGroups}</span>
 									<button id="next-group" :disabled={this.groupNumber === nbGroups - 1}>&gt;</button>
 									<button id="last-group" :disabled={this.groupNumber === nbGroups - 1}>&gt;&gt;</button>
 								</span>
@@ -172,6 +180,7 @@ class VideosPage: Reactor.Component {
 							) : (<div class="status"><em>0 / 0 pages</em></div>)}
 
 						</div>
+						{this.grouped && nbGroups ? (<div class="status">{sentence(FIELD_TITLES[this.groupField])}:  <strong>{view.get_group_field_value()}</strong></div>) : ''}
 						<div class="videos">{this.getVideos()}</div>
 					</div>
 				</div>
@@ -180,7 +189,7 @@ class VideosPage: Reactor.Component {
 		);
 	}
 
-	function privateResetView() {
+	function privateResetView(videoShift) {
 		const container = $(div.videos);
 		container.scrollTo(0, 0);
 		if (container.length)
@@ -201,7 +210,7 @@ class VideosPage: Reactor.Component {
 	}
 	function updateView(state, videoShift = undefined) {
 		this.update(state);
-		this.post(this.privateResetView);
+		this.post(() => this.privateResetView(videoShift));
 	}
 	function updateStatus(status) {
 		this.update({status: status});
@@ -247,6 +256,9 @@ class VideosPage: Reactor.Component {
 			this.updateView({pageNumber: pageNumber});
 	}
 
+	event focus $(input#input-search) (evt, element) {
+		element.doSelectAll();
+	}
 	event change $(input#input-search) {
 		this.update({searchType: null});
 	}
@@ -316,7 +328,7 @@ class VideosPage: Reactor.Component {
 			this.updateGroup(nbGroups - 1);
 		}
 	}
-	event change $(input#current-groupNumber) (evt, element) {
+	event change $(input#current-group) (evt, element) {
 		const nbGroups = view.count_groups();
 		let groupNumber = (element.value || 1) - 1;
 		if (groupNumber >= nbGroups)

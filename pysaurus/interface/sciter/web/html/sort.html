@@ -30,6 +30,9 @@
 			</p>
 		);
     }
+    event change $(p#sorting select[name=field]) (evt, element) {
+        element.nextNode.state.checked = false;
+    }
     event click $(button#button-sort-add-criterion) (evt, element) {
 		addSorting();
 	}
