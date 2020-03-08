@@ -3,7 +3,6 @@ include "../utils/Notifications.tis";
 include "../utils/constants.tis";
 
 class HomePage: Reactor.Component {
-	const styleset = ['HomePage', $url(HomePage.css)];
 	function this(props, children) {
 		this.props = props || {};
 		this.children = children || {};

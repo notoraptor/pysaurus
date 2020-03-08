@@ -1,15 +1,130 @@
+/** App **/
 main {
 	height: 1*;
 }
-
 .row {
 	flow: horizontal;
 }
-
 .text-right {
 	text-align: right;
 }
-
 .mb-1 {
 	margin-bottom: 0.25em;
+}
+
+/** Home page **/
+#home {
+	height: 1*;
+}
+#home #button-initial {
+	text-align: center;
+	padding: 0.5em;
+}
+#home div.notifications {
+	border: 1px solid gray;
+	height: 1*;
+	overflow: auto;
+}
+#home .job {
+	flow: horizontal;
+}
+#home .job label {
+	padding-right: 0.5em;
+	vertical-align: middle;
+}
+#home .job progress {
+	width: 1*;
+	text-align: center;
+}
+#home .job progress span {
+	display: inline-block;
+}
+
+/** Videos page **/
+#videos {
+	height: 1*;
+}
+#videos .central-panel, .side-panel, .main-panel {
+	height: 1*;
+}
+#videos .side-panel {
+	margin-right: 0.5em;
+}
+#videos .main-panel {
+	width: 1*;
+}
+#videos .status {
+	text-align: center;
+	padding: 0.25em 0.5em 0.25em 0.5em;
+}
+#videos .status > * {
+	margin-left: 0.25em;
+	margin-right: 0.25em;
+}
+#videos .pagination .navigation {
+	display: inline-block;
+	margin-left: 0.5em;
+	margin-right: 0.5em;
+}
+#videos #input-search {
+	display: block;
+	width: 1*;
+	margin-bottom: 0.5em;
+}
+#videos .videos {
+	border: 1px solid gray;
+	width: 1*;
+	height: 1*;
+	overflow: auto;
+}
+#videos #status {
+	padding: 0.5em;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/** Video item. **/
+.video {
+	flow: horizontal;
+}
+.video.even {
+	background-color: rgb(240, 240, 240);
+}
+.video .image {
+	padding: 0.5em;
+}
+.video .info {
+	padding: 0.5em;
+}
+.video .info > div {
+	margin-bottom: 0.5em;
+}
+.video .info .format {
+	flow: horizontal;
+}
+.video .info .format .extension {
+	background-color: black;
+	color: white;
+	font-weight: bold;
+	padding-left: 1ex;
+	padding-right: 1ex;
+	width: 6ex;
+	text-align: center;
+	margin-right: 0.5em;
+}
+.video .info .filename {
+	color: rgb(250, 140, 140);
+	border: 1px solid rgb(250, 240, 240);
+	background-color: rgb(250, 250, 250);
+	padding: 0.2em;
+}
+.video .info .filename code:hover {
+	text-decoration: underline;
+	cursor: pointer;
+	color: red;
+}
+.video li.delete-file {
+	font-weight: bold;
+	color: red;
 }

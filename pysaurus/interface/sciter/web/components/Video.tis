@@ -1,7 +1,6 @@
 include "sciter:reactor.tis";
 
 class Video: Reactor.Component {
-	const styleset = ['Video', $url(Video.css)];
     function this(props, children) {
         this.props = props || {};
         this.children = children || {};

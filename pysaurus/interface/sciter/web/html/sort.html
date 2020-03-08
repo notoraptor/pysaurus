@@ -1,7 +1,34 @@
 <html>
 <head>
     <title>Sort videos</title>
-    <link rel="stylesheet" href="sort.css"/>
+    <style>
+        .form {
+            text-align: center;
+            padding: 0.5em;
+            height: 1*;
+        }
+        .form > *,
+        .form#form-sort #sorting .sorting > * {
+            margin-left: 0.25em;
+            margin-right: 0.25em;
+        }
+        .button-bar {
+            flow: horizontal;
+        }
+        #sorting {
+            height: 1*;
+            overflow: auto;
+            border: 1px solid gray;
+            padding: 0.125em;
+        }
+        .button-bar button {
+            width: 1*;
+            margin: 0.5em;
+        }
+        button#button-sort {
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
 <form class="form" id="form-sort">

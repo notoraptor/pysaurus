@@ -4,7 +4,6 @@ include "../utils/utils.tis";
 include "Video.tis";
 
 class VideosPage: Reactor.Component {
-	const styleset = ['VideosPage', $url(VideosPage.css)];
 	function this(props, children) {
 		this.props = props || {};
 		this.children = children || {};
