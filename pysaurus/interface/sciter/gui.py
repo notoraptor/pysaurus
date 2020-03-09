@@ -119,8 +119,11 @@ class Frame(sciter.Window):
     def _search_videos(self):
         terms = functions.string_to_pieces(self.search_text)
         video_filter = VIDEO_FILTERS[self.search_type]
-        self.videos = [video for video in self.api.database.videos()
-                       if video_filter(video, terms)]
+        if self.groups:
+            videos = self.groups[self.group_number]
+        else:
+            videos = self.api.database.videos()
+        self.videos = [video for video in videos if video_filter(video, terms)]
         self._sort_videos()
 
     @sciter.script
@@ -164,17 +167,10 @@ class Frame(sciter.Window):
     def set_search(self, search_text: str, search_type: str):
         search_text = search_text.strip()
         search_type = search_type.strip()
-        if (search_text
-                and search_type in VIDEO_FILTERS
-                and (search_text != self.search_text
-                     or search_type != self.search_type)):
+        if search_text and search_type in VIDEO_FILTERS:
             self.search_text = search_text
             self.search_type = search_type
             self._search_videos()
-
-    @sciter.script
-    def get_search(self):
-        return self.search_text, self.search_type
 
     @sciter.script
     def count_videos(self):
@@ -279,7 +275,7 @@ class Frame(sciter.Window):
 
     @sciter.script
     def get_group_field_value(self):
-        return to_js_value(getattr(self.videos[0], self.group_field))
+        return to_js_value(getattr(self.groups[self.group_number][0], self.group_field))
 
 
 def main():

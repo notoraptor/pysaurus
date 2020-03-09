@@ -21,13 +21,22 @@ class VideosPage: Reactor.Component {
 		this.groupReverse = null;
 		this.groupNumber = 0;
 	}
+	function isGrouped() {
+		return this.group && this.groupField && this.groupReverse !== null;
+	}
+	function reloadVideos() {
+		if (this.isGrouped())
+			view.group_videos(this.groupField, this.groupReverse);
+		else
+			view.load_videos();
+	}
 	function render() {
 		const nbVideos = view.count_videos();
 		const nbPages = view.count_pages(this.pageSize);
 		const validSize = view.valid_size();
 		const validLength = view.valid_length();
 		const nbGroups = view.count_groups();
-		const grouped = this.group && this.groupField && this.groupReverse !== null;
+		const grouped = this.isGrouped();
 		const videosAreFiltered = this.searchText || this.sorting.length || grouped;
 
 		if (this.pageNumber >= nbPages - 1)
@@ -105,15 +114,15 @@ class VideosPage: Reactor.Component {
 								<input type="text" id="input-search" name="searchText" accesskey="^F" novalue="Search ..."/>
 							</div>
 							<div>
-								<input type="radio" id="input-search-and" name="searchType" value="and" :checked={this.searchType === "and"}/>
+								<input type="radio" id="input-search-and" name="searchType" value="and"/>
 								<label for="input-search-and">all terms</label>
 							</div>
 							<div>
-								<input type="radio" id="input-search-or" name="searchType" value="or" :checked={this.searchType === "or"}/>
+								<input type="radio" id="input-search-or" name="searchType" value="or"/>
 								<label for="input-search-or">any term</label>
 							</div>
 							<div>
-								<input type="radio" id="input-search-exact" name="searchType" value="exact" :checked={this.searchType === "exact"}/>
+								<input type="radio" id="input-search-exact" name="searchType" value="exact"/>
 								<label for="input-search-exact">exact sentence</label>
 							</div>
 						</form>
@@ -125,14 +134,14 @@ class VideosPage: Reactor.Component {
 									<div>Videos sorted by</div>
 									{this.sorting.map((val, i) => <div key={i}><strong>{val.substr(1)}</strong>{val[0] == '-' ? (<em> (reverse)</em>) : ''}</div>)}
 								</div>
-								<div class="status">
+								<div class="buttons-sorted">
 									<button class="sort">edit ...</button>
 									<button id="reset-sort">reset</button>
 								</div>
 							</div>
 						) : (
 							<div class="status">
-								<button class="sort">Sort ...</button>
+								<button class="sort block">Sort ...</button>
 							</div>
 						)}
 						<hr/>
@@ -210,11 +219,11 @@ class VideosPage: Reactor.Component {
 	}
 	function updateGroup(groupNumber) {
 		view.set_group(groupNumber);
-		this.updateView({groupNumber: groupNumber, pageNumber: 0});
+		this.updateView({groupNumber: groupNumber, pageNumber: 0, searchText: null, searchType: null});
 	}
 	function groupVideos(groupField, groupReverse) {
 		view.group_videos(groupField, groupReverse);
-		this.updateView({groupField: groupField, groupReverse: groupReverse, groupNumber: 0, pageNumber: 0});
+		this.updateView({groupField: groupField, groupReverse: groupReverse, groupNumber: 0, pageNumber: 0, searchText: null, searchType: null});
 	}
 
 	event click $(button#open-random-file) (evt, element) {
@@ -259,7 +268,9 @@ class VideosPage: Reactor.Component {
 		element.doSelectAll();
 	}
 	event change $(input#input-search) {
-		this.update({searchType: null});
+		$(input#input-search-and).state.checked = null;
+		$(input#input-search-or).state.checked = null;
+		$(input#input-search-exact).state.checked = null;
 	}
 	event change $(input[name=searchType]) {
 		const form = $(form#form-search).value;
@@ -285,8 +296,14 @@ class VideosPage: Reactor.Component {
 		if (group) {
 			this.update({group: group});
 		} else {
-			view.load_videos();
-			this.update({group: null, groupField: null, groupReverse: null, pageNumber: 0});
+			let update = null;
+			if (this.isGrouped()) {
+				view.load_videos();
+				update = {group: null, groupField: null, groupReverse: null, pageNumber: 0, searchText: null, searchType: null};
+			} else {
+				update = {group: null};
+			}
+			this.update(update);
 		}
 	}
 	event change $(select#group-field) (evt, element) {
@@ -332,7 +349,7 @@ class VideosPage: Reactor.Component {
 			this.updateGroup(groupNumber);
 	}
 	event click $(button#reset-search) (evt, element) {
-		view.load_videos();
+		this.reloadVideos();
 		$(input#input-search).value = '';
 		this.updateView({searchText: null, searchType: null, pageNumber: 0});
 	}

@@ -83,6 +83,23 @@ main {
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
+#videos button.sort.block,
+#videos button#open-random-file,
+#videos select.select-page-size,
+#videos select#group-field,
+#videos button#reset-search {
+	display: block;
+	width: 1*;
+}
+#videos .buttons-sorted {
+	flow: horizontal;
+}
+#videos .buttons-sorted button {
+	display: block;
+	width: 1*;
+}
+#videos .buttons-sorted button.sort {margin-right: 0.25em;}
+#videos .buttons-sorted button#reset-sort {margin-left: 0.25em;}
 
 /** Video item. **/
 .video {
