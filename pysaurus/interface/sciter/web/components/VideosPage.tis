@@ -169,7 +169,7 @@ class VideosPage: Reactor.Component {
 									<button id="next-group" :disabled={this.groupNumber === nbGroups - 1}>&gt;</button>
 									<button id="last-group" :disabled={this.groupNumber === nbGroups - 1}>&gt;&gt;</button>
 								</span>
-								) : (<div class="status"><em>0 / 0 groups</em></div>)
+								) : (<div class="navigation status"><em>0 / 0 groups</em></div>)
 							) : ''}
 
 							{nbPages ? (
@@ -180,7 +180,7 @@ class VideosPage: Reactor.Component {
 									<button id="next-page" :disabled={this.pageNumber === nbPages - 1}>&gt;</button>
 									<button id="last-page" :disabled={this.pageNumber === nbPages - 1}>&gt;&gt;</button>
 								</span>
-							) : (<div class="status"><em>0 / 0 pages</em></div>)}
+							) : (<div class="navigation status"><em>0 / 0 pages</em></div>)}
 
 						</div>
 						{(grouped && nbGroups) ? (<div class="status">{sentence(FIELD_TITLES[this.groupField])}:  <strong>{view.get_group_field_value()}</strong></div>) : ''}
