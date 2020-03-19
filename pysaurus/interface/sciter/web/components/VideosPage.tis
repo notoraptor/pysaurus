@@ -2,6 +2,7 @@ include "sciter:reactor.tis";
 include "../utils/constants.tis";
 include "../utils/utils.tis";
 include "Video.tis";
+include "Pagination.tis";
 
 class VideosPage: Reactor.Component {
 	function this(props, children) {
@@ -43,6 +44,14 @@ class VideosPage: Reactor.Component {
 			if (oldGroupNumber !== this.groupNumber)
 				view.set_group(this.groupNumber);
 		}
+
+		const app = this;
+		const onChangePage = function(pageNumber) {
+			app.updateView({pageNumber: pageNumber});
+		};
+		const onChangeGroup = function(groupNumber) {
+			app.updateGroup(groupNumber);
+		};
 
 		return (
 			<div id="videos">
@@ -138,7 +147,7 @@ class VideosPage: Reactor.Component {
 						<hr/>
 
 						<div class="status">
-							<select class="select-page-size" novalue="videos per page" :value={20}>
+							<select class="select-page-size" novalue="videos per page" :value={this.pageSize}>
 								{[10, 20, 50, 100].map((count, index) => <option key={index} value={count}>Display {count} video{count > 1 ? 's' : ''} per page</option>)}
 							</select>
 						</div>
@@ -150,29 +159,10 @@ class VideosPage: Reactor.Component {
 					</div>
 					<div class="col main-panel">
 						<div class="status pagination">
-
 							{grouped ? (
-								nbGroups ? (
-								<span class="navigation status">
-									<button id="first-group" :disabled={this.groupNumber === 0}>&lt;&lt;</button>
-									<button id="previous-group" :disabled={this.groupNumber === 0}>&lt;</button>
-									<span>Group <input type="integer" id="current-group" min={1} max={nbGroups} step={1} :value={this.groupNumber + 1}/> / {nbGroups}</span>
-									<button id="next-group" :disabled={this.groupNumber === nbGroups - 1}>&gt;</button>
-									<button id="last-group" :disabled={this.groupNumber === nbGroups - 1}>&gt;&gt;</button>
-								</span>
-								) : (<div class="navigation status"><em>0 / 0 groups</em></div>)
+								<Pagination singular="group" plural="groups" nbPages={nbGroups} pageNumber={this.groupNumber} onChange={onChangeGroup}/>
 							) : ''}
-
-							{nbPages ? (
-								<span class="navigation status">
-									<button id="first-page" :disabled={this.pageNumber === 0}>&lt;&lt;</button>
-									<button id="previous-page" :disabled={this.pageNumber === 0}>&lt;</button>
-									<span>Page <input type="integer" id="current-page" min={1} max={nbPages} step={1} :value={this.pageNumber + 1}/> / {nbPages}</span>
-									<button id="next-page" :disabled={this.pageNumber === nbPages - 1}>&gt;</button>
-									<button id="last-page" :disabled={this.pageNumber === nbPages - 1}>&gt;&gt;</button>
-								</span>
-							) : (<div class="navigation status"><em>0 / 0 pages</em></div>)}
-
+							<Pagination singular="page" plural="pages" nbPages={nbPages} pageNumber={this.pageNumber} onChange={onChangePage}/>
 						</div>
 						{(grouped && nbGroups) ? (<div class="status">{sentence(FIELD_TITLES[this.groupField])}:  <strong>{view.get_group_field_value()}</strong></div>) : ''}
 						<div class="videos">{this.getVideos()}</div>
@@ -234,38 +224,6 @@ class VideosPage: Reactor.Component {
 		this.updateView({pageNumber: info[0], status: 'Randomly opened: ' + info[2]}, info[1]);
 		this.post(() => element.state.disabled = false);
 	}
-	event click $(button#first-page) {
-		if (this.pageNumber !== 0) {
-			this.updateView({pageNumber: 0});
-		}
-	}
-	event click $(button#previous-page) {
-		if (this.pageNumber > 0) {
-			this.updateView({pageNumber: this.pageNumber - 1});
-		}
-	}
-	event click $(button#next-page) {
-		const nbPages = view.count_pages(this.pageSize);
-		if (this.pageNumber < nbPages - 1) {
-			this.updateView({pageNumber: this.pageNumber + 1});
-		}
-	}
-	event click $(button#last-page) {
-		const nbPages = view.count_pages(this.pageSize);
-		if (this.pageNumber !== nbPages - 1) {
-			this.updateView({pageNumber: nbPages - 1});
-		}
-	}
-	event change $(input#current-page) (evt, element) {
-		const nbPages = view.count_pages(this.pageSize);
-		let pageNumber = (element.value || 1) - 1;
-		if (pageNumber >= nbPages)
-			pageNumber = nbPages - 1;
-		if (pageNumber < 0)
-			pageNumber = 0;
-		if (pageNumber !== this.pageNumber)
-			this.updateView({pageNumber: pageNumber});
-	}
 	event focus $(input#input-search) (evt, element) {
 		//
 		element.doSelectAll();
@@ -318,38 +276,6 @@ class VideosPage: Reactor.Component {
 		const groupField = $(select#group-field).value;
 		const groupReverse = element.value === "true";
 		this.groupVideos(groupField, groupReverse);
-	}
-	event click $(button#first-group) {
-		if (this.groupNumber !== 0) {
-			this.updateGroup(0);
-		}
-	}
-	event click $(button#previous-group) {
-		if (this.groupNumber > 0) {
-			this.updateGroup(this.groupNumber - 1);
-		}
-	}
-	event click $(button#next-group) {
-		const nbGroups = view.count_groups();
-		if (this.groupNumber < nbGroups - 1) {
-			this.updateGroup(this.groupNumber + 1);
-		}
-	}
-	event click $(button#last-group) {
-		const nbGroups = view.count_groups();
-		if (this.groupNumber !== nbGroups - 1) {
-			this.updateGroup(nbGroups - 1);
-		}
-	}
-	event change $(input#current-group) (evt, element) {
-		const nbGroups = view.count_groups();
-		let groupNumber = (element.value || 1) - 1;
-		if (groupNumber >= nbGroups)
-			groupNumber = nbGroups - 1;
-		if (groupNumber < 0)
-			groupNumber = 0;
-		if (groupNumber !== this.groupNumber)
-			this.updateGroup(groupNumber);
 	}
 	event click $(button#reset-search) (evt, element) {
 		this.reloadVideos();
