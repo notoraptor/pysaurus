@@ -3,6 +3,7 @@ include "../utils/constants.tis";
 include "../utils/utils.tis";
 include "Video.tis";
 include "Pagination.tis";
+include "FormSearch.tis";
 
 class VideosPage: Reactor.Component {
 	function this(props, children) {
@@ -19,6 +20,7 @@ class VideosPage: Reactor.Component {
 		this.groupField = null;
 		this.groupReverse = null;
 		this.groupNumber = 0;
+		this.resetSearchCount = 0;
 	}
 	function render() {
 		const backend = view.get_info(this.pageSize);
@@ -51,6 +53,9 @@ class VideosPage: Reactor.Component {
 		};
 		const onChangeGroup = function(groupNumber) {
 			app.updateGroup(groupNumber);
+		};
+		const onSearch = function(text, cond) {
+			app.onSearch(text, cond);
 		};
 
 		return (
@@ -109,23 +114,7 @@ class VideosPage: Reactor.Component {
 								</div>
 							</div>
 						) : ''}
-						<form class="status" id="form-search">
-							<div>
-								<input type="text" id="input-search" name="searchText" accesskey="^F" novalue="Search ..."/>
-							</div>
-							<div>
-								<input type="radio" id="input-search-and" name="searchType" value="and"/>
-								<label for="input-search-and">all terms</label>
-							</div>
-							<div>
-								<input type="radio" id="input-search-or" name="searchType" value="or"/>
-								<label for="input-search-or">any term</label>
-							</div>
-							<div>
-								<input type="radio" id="input-search-exact" name="searchType" value="exact"/>
-								<label for="input-search-exact">exact sentence</label>
-							</div>
-						</form>
+						<FormSearch reset={this.resetSearchCount} onSearch={onSearch} />
 						<hr/>
 
 						{this.sorting.length ? (
@@ -217,40 +206,22 @@ class VideosPage: Reactor.Component {
 		view.group_videos(groupField, groupReverse);
 		this.updateView({groupField: groupField, groupReverse: groupReverse, groupNumber: 0, pageNumber: 0, searchText: null, searchType: null});
 	}
+	function onSearch(text, cond) {
+		if (text.length && cond.length) {
+			view.set_search(text, cond);
+			this.updateView({searchText: text, searchType: cond, pageNumber: 0});
+		}
+	}
+	function resetSearch() {
+		this.reloadVideos();
+		this.updateView({resetSearchCount: this.resetSearchCount + 1, searchText: null, searchType: null, pageNumber: 0});
+	}
 
 	event click $(button#open-random-file) (evt, element) {
 		element.state.disabled = true;
 		const info = view.open_random_video(this.pageSize);
 		this.updateView({pageNumber: info[0], status: 'Randomly opened: ' + info[2]}, info[1]);
 		this.post(() => element.state.disabled = false);
-	}
-	event focus $(input#input-search) (evt, element) {
-		//
-		element.doSelectAll();
-	}
-	event change $(input#input-search) {
-		$(input#input-search-and).state.checked = null;
-		$(input#input-search-or).state.checked = null;
-		$(input#input-search-exact).state.checked = null;
-	}
-	event change $(input[name=searchType]) {
-		const form = $(form#form-search).value;
-		const text = form.searchText.trim();
-		const cond = form.searchType.trim();
-		if (text.length && cond.length && this.searchType !== cond) {
-			view.set_search(text, cond);
-			this.updateView({searchText: text, searchType: cond, pageNumber: 0});
-		}
-	}
-	event keydown $(input#input-search) (evt, element) {
-		if (evt.keyCode === Event.VK_RETURN) {
-			const text = $(input#input-search).value.trim();
-			const cond = 'and';
-			if (text.length) {
-				view.set_search(text, cond);
-				this.updateView({searchText: text, searchType: cond, pageNumber: 0});
-			}
-		}
 	}
 	event change $(input#group) (evt, element) {
 		const group = element.value;
@@ -278,9 +249,8 @@ class VideosPage: Reactor.Component {
 		this.groupVideos(groupField, groupReverse);
 	}
 	event click $(button#reset-search) (evt, element) {
-		this.reloadVideos();
-		$(input#input-search).value = '';
-		this.updateView({searchText: null, searchType: null, pageNumber: 0});
+		//
+		this.resetSearch();
 	}
 	event click $(button#reset-sort) (evt, element) {
 		view.set_sorting([]);

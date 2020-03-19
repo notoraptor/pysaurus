@@ -31,7 +31,6 @@ class Pagination: Reactor.Component {
 		)
 	}
 
-
 	event click $(button.first) {
 		if (this.props.pageNumber !== 0) {
 			this.props.onChange(0);

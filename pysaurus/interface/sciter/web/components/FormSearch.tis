@@ -1,0 +1,59 @@
+include "sciter:reactor.tis";
+
+class FormSearch: Reactor.Component {
+	function this(props, children) {
+		/**
+		onSearch: function(text, cond)
+		reset: int
+		**/
+		this.props = props || {};
+		this.children = children || {};
+	}
+	function render() {
+		return (
+			<form class="status form-search">
+				<div>
+					<input type="text" id="input-search" name="searchText" accesskey="^F" novalue="Search ..."/>
+				</div>
+				<div>
+					<input type="radio" id="input-search-and" name="searchType" value="and"/>
+					<label for="input-search-and">all terms</label>
+				</div>
+				<div>
+					<input type="radio" id="input-search-or" name="searchType" value="or"/>
+					<label for="input-search-or">any term</label>
+				</div>
+				<div>
+					<input type="radio" id="input-search-exact" name="searchType" value="exact"/>
+					<label for="input-search-exact">exact sentence</label>
+				</div>
+			</form>
+		);
+	}
+	event focus $(input#input-search) (evt, element) {
+		//
+		element.doSelectAll();
+	}
+	event change $(input#input-search) {
+		$(input#input-search-and).state.checked = null;
+		$(input#input-search-or).state.checked = null;
+		$(input#input-search-exact).state.checked = null;
+	}
+	event change $(input[name=searchType]) {
+		const form = $(form.form-search).value;
+		const text = form.searchText.trim();
+		const cond = form.searchType.trim();
+		if (text.length && cond.length) {
+			this.props.onSearch(text, cond);
+		}
+	}
+	event keydown $(input#input-search) (evt, element) {
+		if (evt.keyCode === Event.VK_RETURN) {
+			const text = $(input#input-search).value.trim();
+			if (text.length) {
+				const cond = 'and';
+				this.props.onSearch(text, cond);
+			}
+		}
+	}
+}
