@@ -1,0 +1,42 @@
+include "sciter:reactor.tis";
+include "../utils/constants.tis";
+
+class FormGroup: Reactor.Component {
+	function this(props, children) {
+		/**
+		onGroup: function(groupField, groupReverse)
+		**/
+		this.props = props || {};
+		this.children = children || {};
+	}
+	function render() {
+		return (
+			<div>
+				<div class="mb-1">
+					<select id="group-field" name="groupField">
+						{SORT_FIELDS.map((field, fieldIndex) => <option key={fieldIndex} value={field}>{FIELD_TITLES[field]}</option>)}
+					</select>
+				</div>
+				<div class="mb-1">
+					<input type="radio" id="group-reverse-off" name="groupReverse" value={false}/>
+					<label for="group-reverse-off">ascending</label>
+				</div>
+				<div class="mb-1">
+					<input type="radio" id="group-reverse-on" name="groupReverse" value={true}/>
+					<label for="group-reverse-on">descending</label>
+				</div>
+			</div>
+		);
+	}
+
+	event change $(select#group-field) (evt, element) {
+		$(input#group-reverse-off).state.checked = null;
+		$(input#group-reverse-on).state.checked = null;
+	}
+	event change $(input[name=groupReverse]) (evt, element) {
+		const value = element.value;
+		const groupField = $(select#group-field).value;
+		const groupReverse = element.value === "true";
+		this.props.onGroup(groupField, groupReverse);
+	}
+}
