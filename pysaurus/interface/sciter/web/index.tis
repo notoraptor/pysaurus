@@ -1,5 +1,4 @@
 event ready {
-	stdout.println(Integer.MIN, Integer.MAX);
     const (sx, sy, sw, sh) = view.screenBox(#workarea, #rectw);
     const width = 1200;
     const height = 720;

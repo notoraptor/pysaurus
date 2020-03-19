@@ -277,6 +277,16 @@ class Frame(sciter.Window):
     def get_group_field_value(self):
         return to_js_value(getattr(self.groups[self.group_number][0], self.group_field))
 
+    @sciter.script
+    def get_info(self, page_size):
+        return {
+            'nbVideos': self.count_videos(),
+            'nbPages': self.count_pages(page_size),
+            'validSize': self.valid_size(),
+            'validLength': self.valid_length(),
+            'nbGroups': self.count_groups(),
+        }
+
 
 def main():
     Frame().run_app()

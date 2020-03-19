@@ -100,6 +100,10 @@ main {
 }
 #videos .buttons-sorted button.sort {margin-right: 0.25em;}
 #videos .buttons-sorted button#reset-sort {margin-left: 0.25em;}
+#videos button#open-random-file {
+	font-weight: bold;
+	font-style: italic;
+}
 
 /** Video item. **/
 .video {

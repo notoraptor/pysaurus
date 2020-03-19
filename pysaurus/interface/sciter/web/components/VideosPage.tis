@@ -12,30 +12,20 @@ class VideosPage: Reactor.Component {
 		this.pageNumber = 0;
 		this.searchText = null;
 		this.searchType = null;
-
 		this.sorting = [];
-		this.status = 'loaded';
-
+		this.status = 'Loaded.';
 		this.group = null;
 		this.groupField = null;
 		this.groupReverse = null;
 		this.groupNumber = 0;
 	}
-	function isGrouped() {
-		return this.group && this.groupField && this.groupReverse !== null;
-	}
-	function reloadVideos() {
-		if (this.isGrouped())
-			view.group_videos(this.groupField, this.groupReverse);
-		else
-			view.load_videos();
-	}
 	function render() {
-		const nbVideos = view.count_videos();
-		const nbPages = view.count_pages(this.pageSize);
-		const validSize = view.valid_size();
-		const validLength = view.valid_length();
-		const nbGroups = view.count_groups();
+		const backend = view.get_info(this.pageSize);
+		const nbVideos = backend.nbVideos;
+		const nbPages = backend.nbPages;
+		const validSize = backend.validSize;
+		const validLength = backend.validLength;
+		const nbGroups = backend.nbGroups;
 		const grouped = this.isGrouped();
 		const videosAreFiltered = this.searchText || this.sorting.length || grouped;
 
@@ -88,6 +78,7 @@ class VideosPage: Reactor.Component {
 						<div class="status">
 							<div>Videos grouped by {FIELD_TITLES[this.groupField]}{this.groupReverse ? ' in reverse order' : ''}.</div>
 							<div>{nbGroups} group{nbGroups > 1 ? 's' : ''}</div>
+							<div>Group {this.groupNumber + 1}</div>
 						</div>
 						) : ''}
 						<div class="status">
@@ -154,7 +145,7 @@ class VideosPage: Reactor.Component {
 						<hr/>
 
 						<div class="status">
-							<button id="open-random-file"><strong><em>open a random video</em></strong></button>
+							<button id="open-random-file">open a random video</button>
 						</div>
 					</div>
 					<div class="col main-panel">
@@ -192,7 +183,17 @@ class VideosPage: Reactor.Component {
 		);
 	}
 
-	function privateResetView(videoShift) {
+	function isGrouped() {
+		//
+		return this.group && this.groupField && this.groupReverse !== null;
+	}
+	function reloadVideos() {
+		if (this.isGrouped())
+			view.group_videos(this.groupField, this.groupReverse);
+		else
+			view.load_videos();
+	}
+	function resetView(videoShift) {
 		const container = $(div.videos);
 		container.scrollTo(0, 0);
 		if (container.length)
@@ -212,9 +213,10 @@ class VideosPage: Reactor.Component {
 	}
 	function updateView(state, videoShift = undefined) {
 		this.update(state);
-		this.post(() => this.privateResetView(videoShift));
+		this.post(() => this.resetView(videoShift));
 	}
 	function updateStatus(status) {
+		//
 		this.update({status: status});
 	}
 	function updateGroup(groupNumber) {
@@ -265,6 +267,7 @@ class VideosPage: Reactor.Component {
 			this.updateView({pageNumber: pageNumber});
 	}
 	event focus $(input#input-search) (evt, element) {
+		//
 		element.doSelectAll();
 	}
 	event change $(input#input-search) {
@@ -358,6 +361,7 @@ class VideosPage: Reactor.Component {
 		this.updateView({sorting: [], pageNumber: 0});
 	}
 	event click $(#status) {
+		//
 		this.updateStatus('');
 	}
 	event click $(button.sort) (evt, element) {
