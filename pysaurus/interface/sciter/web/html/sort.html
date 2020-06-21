@@ -47,12 +47,12 @@
         const index = ++countSorting;
 		const reverseID = 'reverse-' + index;
 		$(p#sorting).append(
-			<p key={index} name={index} class="sorting">
+			<p key={index} class="sorting">
 				<button class="button-remove-sort">-</button>
-				<select name="field" :value={value}>
+				<select name={'field-' + index} :value={value}>
 					{SORT_FIELDS.map((field, fieldIndex) => <option key={fieldIndex} value={field}>{FIELD_TITLES[field]}</option>)}
 				</select>
-				<input type="checkbox" id={reverseID} name="reverse" :checked={reverse}/>
+				<input type="checkbox" id={reverseID} name={'reverse-' + index} :checked={reverse}/>
 				<label for={reverseID}>reverse</label>
 			</p>
 		);
@@ -68,12 +68,25 @@
 	}
 	event click $(button#button-sort) (evt, element) {
 		const form = $(form#form-sort).value;
-		const indices = Object.keys(form).map(index => index.toString().toInteger());
+
+		const data = {};
+		const indices = [];
+		for (let key in Object.keys(form)) {
+		    const pieces = key.toString().split('-');
+		    const entry = pieces[0];
+		    const index = pieces[1].toInteger();
+		    if (!data[index]) {
+		        data[index] = {};
+		        indices.push(index);
+		    }
+		    data[index][entry] = form[key];
+		}
+
 		indices.sort();
 		const fields = [];
 		const sorting = [];
 		for (let index in indices) {
-			const info = form[index.toString()];
+			const info = data[index];
 			const field = info.field;
 			const reverse = info.reverse;
 			if (fields.indexOf(field) === -1) {
@@ -84,6 +97,8 @@
 		$(p#sorting).clear();
 		if (sorting.length)
 		    view.close(sorting);
+		else
+		    view.close();
 	}
 	event ready {
 	    addSorting('date', true);

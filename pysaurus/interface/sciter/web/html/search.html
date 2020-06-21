@@ -1,0 +1,76 @@
+<html>
+<head>
+    <title>Search videos</title>
+</head>
+<style>
+    body {
+        text-align: center;
+    }
+    #input-search {
+        display: block;
+        width: 1*;
+        margin-bottom: 0.5em;
+    }
+</style>
+<body>
+<form class="status form-search">
+    <p>Type text to search and choose how to search.</p>
+    <p>You can also type text and then press enter to automatically select "AND" as search method.</p>
+    <p>
+        <input type="text" id="input-search" name="searchText" accesskey="^F" novalue="Search ..."/>
+    </p>
+    <p>
+        <input type="radio" id="input-search-and" name="searchType" value="and"/>
+        <label for="input-search-and">all terms</label>
+    </p>
+    <p>
+        <input type="radio" id="input-search-or" name="searchType" value="or"/>
+        <label for="input-search-or">any term</label>
+    </p>
+    <p>
+        <input type="radio" id="input-search-exact" name="searchType" value="exact"/>
+        <label for="input-search-exact">exact sentence</label>
+    </p>
+</form>
+<script type="text/tiscript">
+    event ready {
+        const (sx, sy, sw, sh) = view.screenBox(#workarea, #rectw);
+        const width = 400;
+        const height = 300;
+        const x = (sw - width) / 2;
+        const y = (sh - height) / 2;
+        view.move(x, y, width, height);
+    }
+    event keydown (evt, element) {
+        if (evt.keyCode === Event.VK_ESCAPE) {
+            view.close();
+        }
+    }
+    event focus $(input#input-search) (evt, element) {
+		element.doSelectAll();
+	}
+	event change $(input#input-search) {
+		$(input#input-search-and).state.checked = null;
+		$(input#input-search-or).state.checked = null;
+		$(input#input-search-exact).state.checked = null;
+	}
+	event change $(input[name=searchType]) {
+		const form = $(form.form-search).value;
+		const text = form.searchText.trim();
+		const cond = form.searchType.trim();
+		if (text.length && cond.length) {
+			view.close({text: text, cond: cond});
+		}
+	}
+	event keydown $(input#input-search) (evt, element) {
+		if (evt.keyCode === Event.VK_RETURN) {
+			const text = $(input#input-search).value.trim();
+			if (text.length) {
+				const cond = 'and';
+				view.close({text: text, cond: cond});
+			}
+		}
+	}
+</script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+<html>
+<head>
+    <title>Group videos</title>
+</head>
+<style>
+    body {
+        text-align: center;
+    }
+    select {
+        display: block;
+        width: 1*;
+    }
+</style>
+<body>
+<form class="status form-search">
+    <div class="status" id="form-group">
+        <p class="mb-1">Group videos with same:</p>
+        <reactor|FormGroup src="../components/FormGroup.tis"></reactor>
+    </div>
+</form>
+<script type="text/tiscript">
+    event ready {
+        const (sx, sy, sw, sh) = view.screenBox(#workarea, #rectw);
+        const width = 400;
+        const height = 300;
+        const x = (sw - width) / 2;
+        const y = (sh - height) / 2;
+        view.move(x, y, width, height);
+    }
+    event keydown (evt, element) {
+        if (evt.keyCode === Event.VK_ESCAPE) {
+            view.close();
+        }
+    }
+</script>
+</body>
+</html>

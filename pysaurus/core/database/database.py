@@ -227,12 +227,12 @@ class Database:
         self.__ensure_identifiers()
         # Save database.
         json_output = {'date': self.__date.time,
-                       'folders': [folder.path for folder in self.__folders],
-                       'videos': [video.to_dict()
-                                  for dct in (self.__videos, self.__unreadable, self.__discarded)
-                                  for video in dct.values()]}
-        json_output['folders'].sort()
-        json_output['videos'].sort(key=lambda dct: dct['f'])
+                       'folders': sorted(folder.path for folder in self.__folders),
+                       'videos': sorted(
+                           (video.to_dict()
+                            for dct in (self.__videos, self.__unreadable, self.__discarded)
+                            for video in dct.values()),
+                           key=lambda dct: dct['f'])}
         with open(self.__json_path.path, 'w') as output_file:
             json.dump(json_output, output_file)
         self.__notifier.notify(notifications.DatabaseSaved(self))

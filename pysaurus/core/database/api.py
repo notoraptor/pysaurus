@@ -14,12 +14,22 @@ from pysaurus.core.functions import bool_type
 from pysaurus.core.notification import Notifier
 from pysaurus.core.profiling import Profiler
 
-
 TEMP_DIR = tempfile.gettempdir()
 TEMP_PREFIX = tempfile.gettempprefix() + '_pysaurus_'
 
 NbType = Enumeration(('entries', 'discarded', 'not_found', 'found', 'unreadable', 'valid', 'thumbnails'))
 FieldType = Enumeration(Video.ROW_FIELDS)
+
+
+def generate_temp_file_path(extension):
+    temp_file_id = 0
+    while True:
+        temp_file_path = FilePath(TEMP_DIR, '%s%s' % (TEMP_PREFIX, temp_file_id), extension)
+        if temp_file_path.exists():
+            temp_file_id += 1
+        else:
+            break
+    return temp_file_path
 
 
 def compare_videos(v1: Video, v2: Video, sorting: List[Tuple[str, bool]]):
@@ -49,12 +59,14 @@ def parse_fields(fields: str):
 class API:
     __slots__ = 'database',
 
-    def __init__(self, list_file_path, notifier=None, update=True, ensure_miniatures=True, reset=False, clear_old_folders=False):
+    def __init__(self, list_file_path, notifier=None, update=True, ensure_miniatures=True, reset=False,
+                 clear_old_folders=False):
         # type: (Union[str, AbsolutePath], Notifier, bool, bool, bool, bool) -> None
         with Profiler('Open API'):
             paths = path_utils.load_path_list_file(list_file_path)
             database_folder = list_file_path.get_directory()
-            self.database = Database(path=database_folder, folders=paths, notifier=notifier, clear_old_folders=clear_old_folders)
+            self.database = Database(path=database_folder, folders=paths, notifier=notifier,
+                                     clear_old_folders=clear_old_folders)
             if reset:
                 self.database.reset()
             if update:
@@ -67,6 +79,7 @@ class API:
         function_parser.add(self.clip_from_filename, arguments={'filename': str, 'start': int, 'length': int})
         function_parser.add(self.delete, arguments={'video_id': int})
         function_parser.add(self.delete_from_filename, arguments={'filename': str})
+        function_parser.add(self.delete_not_found_from_folder, arguments={'folder': str})
         function_parser.add(self.delete_unreadable, arguments={'video_id': int})
         function_parser.add(self.delete_unreadable_from_filename, arguments={'filename': str})
         function_parser.add(self.download_image, arguments={'video_id': int})
@@ -74,6 +87,8 @@ class API:
         function_parser.add(self.field_names)
         function_parser.add(self.find, arguments={'terms': str})
         function_parser.add(self.find_batch, arguments={'path': str})
+        function_parser.add(self.guess_moved)
+        function_parser.add(self.images, arguments={'indices': str})
         function_parser.add(self.info, arguments={'video_id': int})
         function_parser.add(self.list, arguments={'fields': str, 'page_size': int, 'page_number': int})
         function_parser.add(self.list_files, arguments={'output': str})
@@ -81,6 +96,8 @@ class API:
         function_parser.add(self.nb, arguments={'query': NbType})
         function_parser.add(self.nb_pages, arguments={'query': NbType, 'page_size': int})
         function_parser.add(self.not_found)
+        function_parser.add(self.not_found_html)
+        function_parser.add(self.not_found_from_folder, arguments={'folder': str})
         function_parser.add(self.open, arguments={'video_id': int})
         function_parser.add(self.open_from_filename, arguments={'filename': str})
         function_parser.add(self.open_image, arguments={'video_id': int})
@@ -151,6 +168,56 @@ class API:
     def open(self, video_id):
         # type: (int) -> AbsolutePath
         return self.database.get_video_from_id(video_id).filename.open()
+
+    def images(self, indices):
+        videos = []
+        errors = []
+        unknown = []
+        for piece in indices.strip().split():
+            if piece:
+                try:
+                    video_id = int(piece)
+                except ValueError:
+                    errors.append(piece)
+                else:
+                    video = self.database.get_video_from_id(video_id, required=False)
+                    if video:
+                        videos.append(video)
+                    else:
+                        unknown.append(video_id)
+        temp_file_path = None
+        if videos:
+            file_content = """<html><body>%s</body></html>""" % (
+                ''.join('<div><div><img alt="%s" src="file://%s"/></div><div><strong>%s</strong></div></div>' % (
+                    video.filename, video.thumbnail_path, video.filename
+                ) for video in videos)
+            )
+            temp_file_id = 0
+            while True:
+                temp_file_path = FilePath(TEMP_DIR, '%s%s' % (TEMP_PREFIX, temp_file_id), 'html')
+                if temp_file_path.exists():
+                    temp_file_id += 1
+                else:
+                    break
+            with open(temp_file_path.path, 'w') as file:
+                file.write(file_content)
+            temp_file_path.open()
+        with StringPrinter() as printer:
+            if videos:
+                printer.title('Images:')
+                for video in videos:
+                    printer.write(video.filename)
+            if errors:
+                printer.title('Invalid:')
+                for error in errors:
+                    printer.write(error)
+            if unknown:
+                printer.title('Unknown:')
+                for value in unknown:
+                    printer.write(value)
+            if temp_file_path:
+                printer.write('Output:', temp_file_path)
+            return str(printer)
 
     def playlist(self, indices):
         # type: (str) -> str
@@ -281,6 +348,79 @@ class API:
     def not_found(self):
         return sorted(self.database.videos(found=False, not_found=True), key=lambda video: video.filename)
 
+    def not_found_html(self):
+        videos = self.not_found()
+        if not videos:
+            return
+        count = len(videos)
+        size = FileSize(sum(video.file_size for video in videos))
+        length = Duration(sum(video.length.total_microseconds for video in videos))
+        file_content = """
+        <html>
+        <head>
+            <style>
+                table {margin: auto;}
+                .duration {color: red;}
+                .video_id {color: rgb(130, 130, 130);}
+                h1, h2, h3 {text-align: center;}
+            </style>
+        </head>
+        <body>
+        <h1>%(count)s video(s)</h1>
+        <h2>Total size: %(size)s</h2>
+        <h3>Total length: %(length)s</h3>
+        <table><tbody>%(body)s</tbody></table>
+        </body>
+        </html>
+        """ % {
+            'count': count,
+            'size': size,
+            'length': length,
+            'body': ''.join(
+            """
+            <tr>
+                <td><img alt="%(alt)s" src="file://%(src)s"/></td>
+                <td>
+                    <div><code class="video_id">%(video_id)s</code></div>
+                    <div><strong><u>%(meta_title)s</u></strong></div>
+                    <div><strong><em/>%(file_title)s</em></strong></div>
+                    <div><code>%(filename)s</code></div>
+                    <div><strong><code>%(size)s</code></strong> | <strong class="duration">%(duration)s</strong></div>
+                </td>
+            </tr>
+            """ % {
+                'video_id': video.video_id,
+                'alt': video.filename,
+                'src': video.thumbnail_path,
+                'filename' : video.filename,
+                'meta_title': video.meta_title,
+                'file_title': video.file_title,
+                'size': video.size,
+                'duration': video.length
+            } for video in videos
+        )
+        }
+        temp_file_path = generate_temp_file_path('html')
+        with open(temp_file_path.path, 'w', encoding='utf-8') as file:
+            file.write(file_content)
+        temp_file_path.open()
+        return str(temp_file_path)
+
+    def not_found_from_folder(self, folder):
+        folder = AbsolutePath.ensure(folder)
+        if not folder.isdir():
+            return ''
+        videos = []
+        for video in self.database.videos(found=False, not_found=True):
+            if video.filename.in_directory(folder, is_case_insensitive=self.database.system_is_case_insensitive):
+                videos.append(video)
+        videos.sort(key=lambda video: video.filename)
+        return videos
+
+    def delete_not_found_from_folder(self, folder):
+        for video in self.not_found_from_folder(folder):
+            self.delete(video.video_id)
+
     def unreadable(self):
         return sorted(self.database.videos(valid=False, unreadable=True), key=lambda video: video.filename)
 
@@ -316,3 +456,24 @@ class API:
 
     def field_names(self):
         return list(Video.ROW_FIELDS)
+
+    def guess_moved(self):
+        videos_not_found = {}
+        videos_found = {}
+        for video in self.database.videos(found=False, not_found=True):
+            videos_not_found.setdefault(video.meta(), []).append(video)
+        for video in self.database.videos():
+            meta = video.meta()
+            if meta in videos_not_found:
+                videos_found.setdefault(meta, []).append(video)
+        with StringPrinter() as printer:
+            for meta, found in videos_found.items():
+                not_found = videos_not_found[meta]
+                indices = [video.video_id for video in not_found] + [video.video_id for video in found]
+                printer.write('images', *indices)
+                for video in not_found:
+                    printer.write('[not found]', video.video_id, video.filename)
+                for video in found:
+                    printer.write('\t%i %s' % (video.video_id, video.filename))
+                printer.write()
+            return str(printer)

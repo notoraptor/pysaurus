@@ -89,15 +89,18 @@ class AbsolutePath(object):
     def get_directory(self):
         return AbsolutePath(os.path.dirname(self.__path))
 
-    def in_directory(self, directory):
+    def in_directory(self, directory, is_case_insensitive=None):
         directory = AbsolutePath.ensure(directory)
         if not directory.isdir():
             return False
         directory = directory.standard_path
         path = self.standard_path
+        if is_case_insensitive:
+            directory = directory.lower()
+            path = path.lower()
         if len(directory) >= len(path):
             return False
-        return path.startswith('%s%s' % (directory, os.sep))
+        return path.startswith('%s%s' % (directory, '' if directory.endswith(os.sep) else os.sep))
 
     def get_date_modified(self):
         return DateModified(os.path.getmtime(self.__path))

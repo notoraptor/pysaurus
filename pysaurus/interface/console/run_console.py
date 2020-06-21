@@ -9,7 +9,6 @@ from pysaurus.tests.test_utils import TEST_LIST_FILE_PATH
 
 def main():
     console_parser = ConsoleParser(TEST_LIST_FILE_PATH)
-    return
 
     print()
     print('[CONSOLE INTERFACE] ("exit", "e", "quit", "q" or Ctrl+C to exit, "help" or "h" to print help)')

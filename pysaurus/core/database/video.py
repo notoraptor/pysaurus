@@ -220,3 +220,25 @@ class Video(VideoState):
             if ret:
                 return -ret if reverse else ret
         return 0
+
+    META_FIELDS = (
+        'audio_bit_rate',
+        'audio_codec',
+        'audio_codec_description',
+        'container_format',
+        'duration',
+        'duration_time_base',
+        'file_size',
+        # 'file_title',
+        'frame_rate_den',
+        'frame_rate_num',
+        'height',
+        'meta_title',
+        'sample_rate',
+        'video_codec',
+        'video_codec_description',
+        'width',
+    )
+
+    def meta(self):
+        return tuple(getattr(self, field) for field in self.META_FIELDS)

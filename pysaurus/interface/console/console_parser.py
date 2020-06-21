@@ -19,6 +19,7 @@ class ConsoleParser(FunctionParser):
         self.override_definition(self.list)
         self.override_definition(self.missing_thumbnails)
         self.override_definition(self.not_found)
+        self.override_definition(self.not_found_from_folder)
         self.override_definition(self.same_sizes)
         self.override_definition(self.unreadable)
         self.remove_definition(self.api.clip)
@@ -86,6 +87,11 @@ class ConsoleParser(FunctionParser):
     def not_found(self):
         headers = ['ID', 'Filename']
         lines = [[video.video_id, video.filename] for video in self.api.not_found()]
+        return Table(headers, lines)
+
+    def not_found_from_folder(self, folder):
+        headers = ['ID', 'Filename']
+        lines = [[video.video_id, video.filename] for video in self.api.not_found_from_folder(folder)]
         return Table(headers, lines)
 
     def same_sizes(self):

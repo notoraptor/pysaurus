@@ -3,7 +3,6 @@ include "../utils/constants.tis";
 include "../utils/utils.tis";
 include "Video.tis";
 include "Pagination.tis";
-include "FormSearch.tis";
 include "FormGroup.tis";
 
 class VideosPage: Reactor.Component {
@@ -11,7 +10,7 @@ class VideosPage: Reactor.Component {
 		this.props = props || {};
 		this.children = children || {};
 
-		this.pageSize = 20;
+		this.pageSize = 100;
 		this.pageNumber = 0;
 		this.searchText = null;
 		this.searchType = null;
@@ -55,33 +54,14 @@ class VideosPage: Reactor.Component {
 		const onChangeGroup = function(groupNumber) {
 			app.updateGroup(groupNumber);
 		};
-		const onSearch = function(text, cond) {
-			app.onSearch(text, cond);
-		};
-		const onGroup = function(groupField, groupReverse) {
-			app.groupVideos(groupField, groupReverse);
-		};
 
 		return (
 			<div id="videos">
 				<div class="row central-panel">
 					<div class="col side-panel">
-						<div class="status" id="form-group">
-							<div class="mb-1"><input type="checkbox" id="group" :checked={this.group}/>{' '}<label for="group">Group videos{this.group ? ' with same:' : '.'}</label></div>
-							{this.group ? (<FormGroup onGroup={onGroup}/>) : ''}
-						</div>
-						<hr/>
-
 						<div class="status">
 							Displaying {videosAreFiltered ? <em>filtered</em> : <strong>all</strong>} videos
 						</div>
-						{grouped ? (
-						<div class="status">
-							<div>Videos grouped by {FIELD_TITLES[this.groupField]}{this.groupReverse ? ' in reverse order' : ''}.</div>
-							<div>{nbGroups} group{nbGroups > 1 ? 's' : ''}</div>
-							<div>Group {this.groupNumber + 1}</div>
-						</div>
-						) : ''}
 						<div class="status">
 							<div>{nbVideos} video{nbVideos > 1 ? 's' : ''}</div>
 							<div>{validSize}</div>
@@ -89,19 +69,44 @@ class VideosPage: Reactor.Component {
 						</div>
 						<hr/>
 
+						{grouped ? (
+							<div>
+								<div class="status">
+									<div>Videos grouped by</div>
+									<div>{FIELD_TITLES[this.groupField]}</div>
+									{this.groupReverse ? (<em>(in reverse order)</em>) : ''}
+									<div>{nbGroups} group{nbGroups > 1 ? 's' : ''}</div>
+									<div>Group {this.groupNumber + 1}</div>
+								</div>
+								<div class="buttons-sorted">
+									<button class="group">edit ...</button>
+									<button id="reset-group">reset</button>
+								</div>
+							</div>
+						) : (
+							<div class="status">
+								<button class="group block">Group videos ...</button>
+							</div>
+						)}
+						<hr/>
+
 						{this.searchText ? (
-							<div class="row">
-								<div class="col status">
+							<div>
+								<div class="status">
 									<div>Searched</div>
 									<div>&quot;<strong>{this.searchText}</strong>&quot;</div>
 									<div>({SEARCH_TYPE_TITLE[this.searchType]})</div>
 								</div>
-								<div class="col status text-right" style="height: 1*; width: 1*; vertical-align: bottom;">
+								<div class="buttons-sorted">
+									<button class="search">search ...</button>
 									<button id="reset-search">reset</button>
 								</div>
 							</div>
-						) : ''}
-						<FormSearch reset={this.resetSearchCount} onSearch={onSearch} />
+						) : (
+							<div class="status">
+								<button class="search block">Search ...</button>
+							</div>
+						)}
 						<hr/>
 
 						{this.sorting.length ? (
@@ -191,7 +196,7 @@ class VideosPage: Reactor.Component {
 	}
 	function groupVideos(groupField, groupReverse) {
 		view.group_videos(groupField, groupReverse);
-		this.updateView({groupField: groupField, groupReverse: groupReverse, groupNumber: 0, pageNumber: 0, searchText: null, searchType: null});
+		this.updateView({group: true, groupField: groupField, groupReverse: groupReverse, groupNumber: 0, pageNumber: 0, searchText: null, searchType: null});
 	}
 	function onSearch(text, cond) {
 		if (text.length && cond.length) {
@@ -233,6 +238,10 @@ class VideosPage: Reactor.Component {
 		view.set_sorting([]);
 		this.updateView({sorting: [], pageNumber: 0});
 	}
+	event click $(button#reset-group) (evt, element) {
+		view.load_videos();
+		this.update({group: null, groupField: null, groupReverse: null, pageNumber: 0, searchText: null, searchType: null});
+	}
 	event click $(#status) {
 		//
 		this.updateStatus('');
@@ -243,6 +252,18 @@ class VideosPage: Reactor.Component {
 			view.set_sorting(sorting);
 			this.updateView({sorting: sorting, pageNumber: 0});
 		}
+    }
+    event click $(button.search) (evt, element) {
+        const criterion = view.dialog('html/search.html');
+        if (criterion) {
+            this.onSearch(criterion.text, criterion.cond);
+        }
+    }
+    event click $(button.group) (evt, element) {
+        const criterion = view.dialog('html/group.html');
+        if (criterion) {
+            this.groupVideos(criterion.field, criterion.reverse);
+        }
     }
     event change $(select.select-page-size) (evt, element) {
         const value = element.value;
