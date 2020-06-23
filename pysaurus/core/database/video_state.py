@@ -6,8 +6,12 @@ from pysaurus.core.constants import PYTHON_ERROR_THUMBNAIL
 
 
 class VideoState:
-    __slots__ = ('filename', 'file_size', 'errors', 'video_id', 'database',
-                 'rt_is_file', 'rt_size', 'rt_mtime', 'driver_id')
+    __slots__ = (
+        # Video properties
+        'filename', 'file_size', 'errors', 'video_id',
+        # Runtime attributes
+        'database', 'rt_is_file', 'rt_size', 'rt_mtime', 'driver_id'
+    )
     UNREADABLE = True
 
     def __init__(self, database, filename=None, size=0, errors=(), video_id=None, from_dictionary=None):
@@ -28,6 +32,7 @@ class VideoState:
         self.file_size = size
         self.errors = set(errors)
         self.video_id = video_id
+
         self.database = database
         self.rt_is_file = False
         self.rt_mtime = 0
@@ -71,15 +76,19 @@ class VideoState:
         return FileSize(self.rt_size)
 
     @property
-    def runtime_date(self):
+    def date(self):
+        # runtime date
         return DateModified(self.rt_mtime)
 
     def exists(self):
         return self.rt_is_file
 
     def to_dict(self):
-        return {'f': self.filename.path, 's': self.file_size, 'U': self.UNREADABLE, 'e': self.errors,
-                'j': self.video_id}
+        return {'f': self.filename.path,
+                's': self.file_size,
+                'e': self.errors,
+                'j': self.video_id,
+                'U': self.UNREADABLE}
 
     @classmethod
     def from_dict(cls, dct, database):

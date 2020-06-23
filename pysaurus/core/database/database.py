@@ -17,10 +17,38 @@ from pysaurus.core.database.jobs import jobs_python
 from pysaurus.core.path_tree import PathTree
 
 
+class VideoPropertiesBounds:
+
+    def __init__(self, fields):
+        self.fields = tuple(fields)
+        self.min = {}
+        self.max = {}
+
+    def update(self, videos):
+        self.min.clear()
+        self.max.clear()
+        if not isinstance(videos, list):
+            videos = list(videos)
+        if not videos:
+            return
+        for field in self.fields:
+            min_value = getattr(videos[0], field)
+            max_value = min_value
+            for i in range(1, len(videos)):
+                value = getattr(videos[i], field)
+                if value < min_value:
+                    min_value = value
+                if value > max_value:
+                    max_value = value
+            self.min[field] = min_value
+            self.max[field] = max_value
+            # print('BOUNDS', field, min_value, max_value)
+
+
 class Database:
-    __slots__ = ['__db_path', '__thumb_folder', '__json_path', '__miniatures_path', '__log_path',
+    __slots__ = ('__db_path', '__thumb_folder', '__json_path', '__miniatures_path', '__log_path',
                  '__date', '__folders', '__videos', '__unreadable', '__discarded',
-                 '__notifier', '__id_to_video', 'system_is_case_insensitive']
+                 '__notifier', '__id_to_video', 'system_is_case_insensitive', 'video_properties_bounds')
 
     def __init__(self, path, folders=None, clear_old_folders=False, notifier=None):
         # type: (PathType, Optional[Iterable[PathType]], Optional[bool], Optional[Notifier]) -> None
@@ -47,6 +75,8 @@ class Database:
         self.__notifier.set_log_path(self.__log_path.path)
         with Profiler('Load database'):
             self.__load(folders, clear_old_folders)
+        self.video_properties_bounds = VideoPropertiesBounds(t[0] for t in Video.QUALITY_FIELDS)
+        self.video_properties_bounds.update(self.videos())
 
     # Properties.
 
@@ -225,6 +255,7 @@ class Database:
 
     def save(self):
         self.__ensure_identifiers()
+        self.video_properties_bounds.update(self.videos())
         # Save database.
         json_output = {'date': self.__date.time,
                        'folders': sorted(folder.path for folder in self.__folders),
@@ -250,7 +281,7 @@ class Database:
                 video_state = self.__unreadable[file_name]
 
             if (not video_state
-                    or video_state.runtime_date >= self.__date
+                    or video_state.date >= self.__date
                     or video_state.rt_size != video_state.file_size):
                 all_file_names.append(file_name.path)
 

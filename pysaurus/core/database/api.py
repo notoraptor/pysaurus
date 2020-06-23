@@ -34,8 +34,8 @@ def generate_temp_file_path(extension):
 
 def compare_videos(v1: Video, v2: Video, sorting: List[Tuple[str, bool]]):
     for field, reverse in sorting:
-        f1 = v1.get(field)
-        f2 = v2.get(field)
+        f1 = getattr(v1, field)
+        f2 = getattr(v2, field)
         ret = 0
         if f1 < f2:
             ret = -1
@@ -377,28 +377,28 @@ class API:
             'size': size,
             'length': length,
             'body': ''.join(
-            """
-            <tr>
-                <td><img alt="%(alt)s" src="file://%(src)s"/></td>
-                <td>
-                    <div><code class="video_id">%(video_id)s</code></div>
-                    <div><strong><u>%(meta_title)s</u></strong></div>
-                    <div><strong><em/>%(file_title)s</em></strong></div>
-                    <div><code>%(filename)s</code></div>
-                    <div><strong><code>%(size)s</code></strong> | <strong class="duration">%(duration)s</strong></div>
-                </td>
-            </tr>
-            """ % {
-                'video_id': video.video_id,
-                'alt': video.filename,
-                'src': video.thumbnail_path,
-                'filename' : video.filename,
-                'meta_title': video.meta_title,
-                'file_title': video.file_title,
-                'size': video.size,
-                'duration': video.length
-            } for video in videos
-        )
+                """
+                <tr>
+                    <td><img alt="%(alt)s" src="file://%(src)s"/></td>
+                    <td>
+                        <div><code class="video_id">%(video_id)s</code></div>
+                        <div><strong><u>%(meta_title)s</u></strong></div>
+                        <div><strong><em/>%(file_title)s</em></strong></div>
+                        <div><code>%(filename)s</code></div>
+                        <div><strong><code>%(size)s</code></strong> | <strong class="duration">%(duration)s</strong></div>
+                    </td>
+                </tr>
+                """ % {
+                    'video_id': video.video_id,
+                    'alt': video.filename,
+                    'src': video.thumbnail_path,
+                    'filename': video.filename,
+                    'meta_title': video.meta_title,
+                    'file_title': video.file_title,
+                    'size': video.size,
+                    'duration': video.length,
+                } for video in videos
+            )
         }
         temp_file_path = generate_temp_file_path('html')
         with open(temp_file_path.path, 'w', encoding='utf-8') as file:

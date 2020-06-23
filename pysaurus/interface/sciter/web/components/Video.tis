@@ -34,6 +34,10 @@ class Video: Reactor.Component {
                     </div>
                     <div><strong>{data.width}</strong> x <strong>{data.height}</strong> @ {data.frame_rate} fps | {data.sample_rate} Hz, {data.audio_bit_rate} Kb/s</div>
                     <div><strong>{data.length}</strong> | <code>{data.date}</code></div>
+                    <div class="quality">
+                        <div class="prepend"><code>Quality</code></div>
+                        <div><strong><em>{String.printf("%.2f", data.quality)}</em></strong> %</div>
+                    </div>
                 </div>
                 <menu.context @{this.elementMenu} id={'video_' + data.video_id + '_' + index}>
 	                <li class="open-file">Open file</li>

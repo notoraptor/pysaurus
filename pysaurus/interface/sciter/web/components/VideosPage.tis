@@ -3,7 +3,6 @@ include "../utils/constants.tis";
 include "../utils/utils.tis";
 include "Video.tis";
 include "Pagination.tis";
-include "FormGroup.tis";
 
 class VideosPage: Reactor.Component {
 	function this(props, children) {
@@ -98,13 +97,13 @@ class VideosPage: Reactor.Component {
 									<div>({SEARCH_TYPE_TITLE[this.searchType]})</div>
 								</div>
 								<div class="buttons-sorted">
-									<button class="search">search ...</button>
+									<button class="search" accesskey="^F">search ...</button>
 									<button id="reset-search">reset</button>
 								</div>
 							</div>
 						) : (
 							<div class="status">
-								<button class="search block">Search ...</button>
+								<button class="search block" accesskey="^F">Search ...</button>
 							</div>
 						)}
 						<hr/>
@@ -136,6 +135,11 @@ class VideosPage: Reactor.Component {
 
 						<div class="status">
 							<button id="open-random-file">open a random video</button>
+						</div>
+						<hr/>
+
+						<div class="status">
+							<button id="open-not-found">display videos not found (in new browser)</button>
 						</div>
 					</div>
 					<div class="col main-panel">
@@ -213,6 +217,15 @@ class VideosPage: Reactor.Component {
 		element.state.disabled = true;
 		const info = view.open_random_video(this.pageSize);
 		this.updateView({pageNumber: info[0], status: 'Randomly opened: ' + info[2]}, info[1]);
+		this.post(() => element.state.disabled = false);
+	}
+	event click $(button#open-not-found) (evt, element) {
+		element.state.disabled = true;
+		const info = view.open_not_found();
+		if (info)
+			this.updateView({status: 'Not found displayed: ' + info});
+		else
+			this.updateView({status: 'Unable to fidplay videos not found.'});
 		this.post(() => element.state.disabled = false);
 	}
 	event change $(input#group) (evt, element) {

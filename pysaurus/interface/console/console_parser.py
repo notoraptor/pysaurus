@@ -73,7 +73,7 @@ class ConsoleParser(FunctionParser):
         for i, video in enumerate(selected_videos):
             line = [video.video_id]
             for field in fields:
-                line.append(video.get(field))
+                line.append(getattr(video, field))
             line.append(video.filename)
             lines.append(line)
         return Table(headers=headers, lines=lines)

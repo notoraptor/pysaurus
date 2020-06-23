@@ -82,6 +82,7 @@ main {
 #videos button.search.block,
 #videos button.sort.block,
 #videos button#open-random-file,
+#videos button#open-not-found,
 #videos select.select-page-size,
 #videos select#group-field,
 #videos button#reset-search {
@@ -122,7 +123,8 @@ main {
 .video .info > div {
 	margin-bottom: 0.5em;
 }
-.video .info .format {
+.video .info .format,
+.video .info .quality {
 	flow: horizontal;
 }
 .video .info .format .extension {
@@ -132,6 +134,15 @@ main {
 	padding-left: 1ex;
 	padding-right: 1ex;
 	width: 6ex;
+	text-align: center;
+	margin-right: 0.5em;
+}
+.video .info .quality .prepend {
+	background-color: black;
+	color: white;
+	font-weight: bold;
+	padding-left: 1ex;
+	padding-right: 1ex;
 	text-align: center;
 	margin-right: 0.5em;
 }

@@ -223,6 +223,13 @@ class Frame(sciter.Window):
         return page_index, shift, str(filename)
 
     @sciter.script
+    def open_not_found(self):
+        try:
+            return self.api.not_found_html()
+        except Exception:
+            return False
+
+    @sciter.script
     def delete_video(self, index):
         video = self.videos[index]
         try:
