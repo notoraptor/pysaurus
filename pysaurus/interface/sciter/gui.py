@@ -114,7 +114,7 @@ class Frame(sciter.Window):
 
     def _sort_videos(self):
         self.videos.sort(key=functools.cmp_to_key(
-            lambda v1, v2: Video.compare_to(v1, v2, self.sorting)))
+            lambda v1, v2: Video.compare(v1, v2, self.sorting)))
 
     def _search_videos(self):
         terms = functions.string_to_pieces(self.search_text)

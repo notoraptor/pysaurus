@@ -229,9 +229,11 @@ class HomePage: Reactor.Component {
 	}
 	function getMessages() {
 		const output = [];
+		let ready = false;
 		for (let i = 0; i < this.messages.length; ++i) {
 			const message = this.messages[i];
 			const name = message.name;
+			ready = (name === 'DatabaseReady' && i === this.messages.length - 1);
 			let display = null;
 			if (NotificationMessenger[name]) {
 				display = NotificationMessenger[name](this, message, i);
@@ -241,6 +243,8 @@ class HomePage: Reactor.Component {
 				output.push(<div key={i}><em>unknown</em>: {message.message}</div>);
 			}
 		}
+		if (!ready)
+			output.push(<div key={this.messages.length}>...</div>);
 		return output;
 	}
 	function notify(notification) {

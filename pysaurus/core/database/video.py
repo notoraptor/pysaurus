@@ -57,6 +57,7 @@ class Video(VideoState):
         ('width', 4),
         ('raw_seconds', 3),
         ('frame_rate', 2),
+        ('file_size', 1),
         ('audio_bit_rate', 1),
     )
 
@@ -66,8 +67,8 @@ class Video(VideoState):
         qualities = {}
         for field, level in self.QUALITY_FIELDS:
             value = getattr(self, field)
-            min_value = self.database.video_properties_bounds.min[field]
-            max_value = self.database.video_properties_bounds.max[field]
+            min_value = self.database.video_property_bound.min[field]
+            max_value = self.database.video_property_bound.max[field]
             if min_value == max_value:
                 assert value == min_value, (value, min_value)
                 quality = 0
@@ -279,7 +280,7 @@ class Video(VideoState):
         return cls(database=database, from_dictionary=dct)
 
     @staticmethod
-    def compare_to(self, other, sorting):
+    def compare(self, other, sorting):
         # type: (Video, Video, list) -> int
         for sort in sorting:
             reverse = sort[0] == '-'

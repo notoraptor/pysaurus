@@ -17,7 +17,7 @@ from pysaurus.core.database.jobs import jobs_python
 from pysaurus.core.path_tree import PathTree
 
 
-class VideoPropertiesBounds:
+class VideoPropertyBound:
 
     def __init__(self, fields):
         self.fields = tuple(fields)
@@ -48,7 +48,7 @@ class VideoPropertiesBounds:
 class Database:
     __slots__ = ('__db_path', '__thumb_folder', '__json_path', '__miniatures_path', '__log_path',
                  '__date', '__folders', '__videos', '__unreadable', '__discarded',
-                 '__notifier', '__id_to_video', 'system_is_case_insensitive', 'video_properties_bounds')
+                 '__notifier', '__id_to_video', 'system_is_case_insensitive', 'video_property_bound')
 
     def __init__(self, path, folders=None, clear_old_folders=False, notifier=None):
         # type: (PathType, Optional[Iterable[PathType]], Optional[bool], Optional[Notifier]) -> None
@@ -75,8 +75,8 @@ class Database:
         self.__notifier.set_log_path(self.__log_path.path)
         with Profiler('Load database'):
             self.__load(folders, clear_old_folders)
-        self.video_properties_bounds = VideoPropertiesBounds(t[0] for t in Video.QUALITY_FIELDS)
-        self.video_properties_bounds.update(self.videos())
+        self.video_property_bound = VideoPropertyBound(t[0] for t in Video.QUALITY_FIELDS)
+        self.video_property_bound.update(self.videos())
 
     # Properties.
 
@@ -255,7 +255,7 @@ class Database:
 
     def save(self):
         self.__ensure_identifiers()
-        self.video_properties_bounds.update(self.videos())
+        self.video_property_bound.update(self.videos())
         # Save database.
         json_output = {'date': self.__date.time,
                        'folders': sorted(folder.path for folder in self.__folders),
