@@ -85,7 +85,7 @@ class Database:
     nb_discarded = property(lambda self: len(self.__discarded))
     nb_unreadable = property(lambda self: len(self.__unreadable))
     nb_not_found = property(lambda self: sum(1 for _ in self.videos(unreadable=True, found=False, not_found=True)))
-    nb_found = property(lambda self: sum(1 for _ in self.videos(valid=True, unreadable=True)))
+    nb_found = property(lambda self: sum(1 for _ in self.videos(unreadable=True)))
     nb_valid = property(lambda self: sum(1 for _ in self.videos()))
     nb_thumbnails = property(lambda self: sum(1 for _ in self.videos(no_thumbs=False)))
 
@@ -94,51 +94,6 @@ class Database:
         if not self.__thumb_folder.isdir():
             self.__thumb_folder.mkdir()
         return self.__thumb_folder
-
-    # Private utility methods.
-
-    def __filter_not_found(self, video):
-        return not video.exists()
-
-    def __filter_found(self, video):
-        return video.exists()
-
-    def __filter_no_thumbs(self, video):
-        return not video.thumbnail_is_valid()
-
-    def __filter_with_thumbs(self, video):
-        return video.thumbnail_is_valid()
-
-    def __check_videos_on_disk(self):
-        # type: () -> Dict[AbsolutePath, PathInfo]
-        paths = {}
-        cpu_count = os.cpu_count()
-        jobs = utils.dispatch_tasks(sorted(self.__folders), cpu_count)
-        with Profiler(title='Collect videos (%d threads)' % cpu_count, notifier=self.__notifier):
-            results = utils.parallelize(jobs_python.job_collect_videos_info, jobs, cpu_count)
-        for local_result in results:  # type: List[PathInfo]
-            for info in local_result:
-                paths[info.path] = info
-        self.__notifier.notify(notifications.FinishedCollectingVideos(paths))
-        return paths
-
-    def __check_thumbnails_on_disk(self):
-        # type: () -> Set[str]
-        thumbs = set()
-        with Profiler('Collect thumbnails', self.__notifier):
-            for path_string in self.thumbnail_folder.listdir():
-                if path_string.lower().endswith('.%s' % THUMBNAIL_EXTENSION):
-                    if self.system_is_case_insensitive:
-                        path_string = path_string.lower()
-                    thumbs.add(path_string[:-(len(THUMBNAIL_EXTENSION) + 1)])
-        return thumbs
-
-    def __notify_missing_thumbnails(self):
-        remaining_thumb_videos = []
-        for video in self.__videos.values():
-            if video.exists() and not video.thumbnail_is_valid():
-                remaining_thumb_videos.append(video.filename.path)
-        self.__notifier.notify(notifications.MissingThumbnails(remaining_thumb_videos))
 
     # Private methods.
 
@@ -185,27 +140,8 @@ class Database:
                 self.__discarded[video_state.filename] = video_state
 
         self.__set_videos_flags()
-
         self.__ensure_identifiers()
         self.__notifier.notify(notifications.DatabaseLoaded(self))
-
-    def __set_videos_states_flags(self):
-        file_paths = self.__check_videos_on_disk()
-        for dictionaries in (self.__videos, self.__unreadable):
-            for video_state in dictionaries.values():
-                info = file_paths.get(video_state.filename, None)
-                video_state.rt_is_file = info is not None
-                if info:
-                    video_state.rt_mtime = info.mtime
-                    video_state.rt_size = info.size
-                    video_state.driver_id = info.driver_id
-        return file_paths
-
-    def __set_videos_thumbs_flags(self):
-        thumb_names = self.__check_thumbnails_on_disk()
-        for video in self.__videos.values():
-            video.runtime_has_thumbnail = video.ensure_thumbnail_name() in thumb_names
-        return thumb_names
 
     def __set_videos_flags(self):
         self.__set_videos_states_flags()
@@ -226,67 +162,68 @@ class Database:
             next_id += 1
             self.__id_to_video[video_state.video_id] = video_state
 
+    def __set_videos_states_flags(self):
+        file_paths = self.__check_videos_on_disk()
+        for dictionaries in (self.__videos, self.__unreadable):
+            for video_state in dictionaries.values():
+                info = file_paths.get(video_state.filename, None)
+                video_state.rt_is_file = info is not None
+                if info:
+                    video_state.rt_mtime = info.mtime
+                    video_state.rt_size = info.size
+                    video_state.driver_id = info.driver_id
+        return file_paths
+
+    def __set_videos_thumbs_flags(self):
+        thumb_names = self.__check_thumbnails_on_disk()
+        for video in self.__videos.values():
+            video.runtime_has_thumbnail = video.ensure_thumbnail_name() in thumb_names
+        return thumb_names
+
+    def __check_videos_on_disk(self):
+        # type: () -> Dict[AbsolutePath, PathInfo]
+        paths = {}
+        cpu_count = os.cpu_count()
+        jobs = utils.dispatch_tasks(sorted(self.__folders), cpu_count)
+        with Profiler(title='Collect videos (%d threads)' % cpu_count, notifier=self.__notifier):
+            results = utils.parallelize(jobs_python.job_collect_videos_info, jobs, cpu_count)
+        for local_result in results:  # type: List[PathInfo]
+            for info in local_result:
+                paths[info.path] = info
+        self.__notifier.notify(notifications.FinishedCollectingVideos(paths))
+        return paths
+
+    def __check_thumbnails_on_disk(self):
+        # type: () -> Set[str]
+        thumbs = set()
+        with Profiler('Collect thumbnails', self.__notifier):
+            for path_string in self.thumbnail_folder.listdir():
+                if path_string.lower().endswith('.%s' % THUMBNAIL_EXTENSION):
+                    if self.system_is_case_insensitive:
+                        path_string = path_string.lower()
+                    thumbs.add(path_string[:-(len(THUMBNAIL_EXTENSION) + 1)])
+        return thumbs
+
+    def __filter_not_found(self, video):
+        return not video.exists()
+
+    def __filter_found(self, video):
+        return video.exists()
+
+    def __filter_no_thumbs(self, video):
+        return not video.thumbnail_is_valid()
+
+    def __filter_with_thumbs(self, video):
+        return video.thumbnail_is_valid()
+
+    def __notify_missing_thumbnails(self):
+        remaining_thumb_videos = []
+        for video in self.__videos.values():
+            if video.exists() and not video.thumbnail_is_valid():
+                remaining_thumb_videos.append(video.filename.path)
+        self.__notifier.notify(notifications.MissingThumbnails(remaining_thumb_videos))
+
     # Public methods.
-
-    def videos(self, valid=True, unreadable=False, found=True, not_found=False, with_thumbs=True, no_thumbs=True):
-
-        if found is not_found is with_thumbs is no_thumbs is False:
-            return ()
-
-        sources = []
-        filters = []
-
-        if valid:
-            sources.append(self.__videos)
-        if unreadable:
-            sources.append(self.__unreadable)
-
-        if not found and not_found:
-            filters.append(self.__filter_not_found)
-        elif found and not not_found:
-            filters.append(self.__filter_found)
-
-        if not with_thumbs and no_thumbs:
-            filters.append(self.__filter_no_thumbs)
-        elif with_thumbs and not no_thumbs:
-            filters.append(self.__filter_with_thumbs)
-
-        return (video for dictionary in sources for video in dictionary.values() if all(fn(video) for fn in filters))
-
-    def save(self):
-        self.__ensure_identifiers()
-        self.video_property_bound.update(self.videos())
-        # Save database.
-        json_output = {'date': self.__date.time,
-                       'folders': sorted(folder.path for folder in self.__folders),
-                       'videos': sorted(
-                           (video.to_dict()
-                            for dct in (self.__videos, self.__unreadable, self.__discarded)
-                            for video in dct.values()),
-                           key=lambda dct: dct['f'])}
-        with open(self.__json_path.path, 'w') as output_file:
-            json.dump(json_output, output_file)
-        self.__notifier.notify(notifications.DatabaseSaved(self))
-
-    def get_new_video_paths(self):
-        all_file_names = []
-
-        file_names = self.__set_videos_states_flags()
-
-        for file_name in file_names:  # type: AbsolutePath
-            video_state = None
-            if file_name in self.__videos:
-                video_state = self.__videos[file_name]
-            elif file_name in self.__unreadable:
-                video_state = self.__unreadable[file_name]
-
-            if (not video_state
-                    or video_state.date >= self.__date
-                    or video_state.rt_size != video_state.file_size):
-                all_file_names.append(file_name.path)
-
-        all_file_names.sort()
-        return all_file_names
 
     def update(self):
         cpu_count = os.cpu_count()
@@ -518,7 +455,28 @@ class Database:
         if reset_thumbnails:
             self.__thumb_folder.delete()
 
-    # Public features.
+    def change_video_file_title(self, video, new_title):
+        # type: (Video, str) -> None
+        discarded_characters = r'@#\\/?$'
+        if video.filename.title != new_title:
+            if any(c in new_title for c in discarded_characters):
+                raise OSError('Characters not allowed: %s' % discarded_characters)
+            new_filename = video.filename.new_title(new_title)
+            if video.filename in self.__videos:
+                del self.__videos[video.filename]
+                self.__videos[new_filename] = video
+                video.filename = new_filename
+                self.save()
+
+    def remove_videos_not_found(self):
+        nb_removed = 0
+        for video in list(self.__videos.values()):
+            if not video.filename.isfile():
+                self.delete_video(video, save=False)
+                nb_removed += 1
+        if nb_removed:
+            self.__notifier.notify(notifications.VideosNotFoundRemoved(nb_removed))
+            self.save()
 
     def get_video_from_id(self, video_id, required=True):
         # type: (int, bool) -> Optional[Video]
@@ -538,15 +496,6 @@ class Database:
             raise exceptions.UnknownVideoID(video_id)
         return None
 
-    def get_video_from_filename(self, filename, required=True):
-        # type: (PathType, bool) -> Optional[Video]
-        filename = AbsolutePath.ensure(filename)
-        if filename in self.__videos:
-            return self.__videos[filename]
-        if required:
-            raise exceptions.UnknownVideoFilename(filename)
-        return None
-
     def get_unreadable_from_filename(self, filename, required=True):
         # type: (PathType, bool) -> Optional[VideoState]
         filename = AbsolutePath.ensure(filename)
@@ -556,15 +505,6 @@ class Database:
             raise exceptions.UnknownVideoFilename(filename)
         return None
 
-    def remove_videos_not_found(self):
-        nb_removed = 0
-        for video in list(self.__videos.values()):
-            if not video.filename.isfile():
-                self.delete_video(video, save=False)
-                nb_removed += 1
-        if nb_removed:
-            self.__notifier.notify(notifications.VideosNotFoundRemoved(nb_removed))
-            self.save()
 
     def delete_video(self, video, save=True):
         # type: (VideoState, bool) -> AbsolutePath
@@ -579,21 +519,74 @@ class Database:
             self.save()
         return video.filename
 
-    def change_video_file_title(self, video, new_title):
-        # type: (Video, str) -> None
-        discarded_characters = r'@#\\/?$'
-        if video.filename.title != new_title:
-            if any(c in new_title for c in discarded_characters):
-                raise OSError('Characters not allowed: %s' % discarded_characters)
-            new_filename = video.filename.new_title(new_title)
-            if video.filename in self.__videos:
-                del self.__videos[video.filename]
-                self.__videos[new_filename] = video
-                video.filename = new_filename
-                self.save()
+    def save(self):
+        self.__ensure_identifiers()
+        self.video_property_bound.update(self.videos())
+        # Save database.
+        json_output = {'date': self.__date.time,
+                       'folders': sorted(folder.path for folder in self.__folders),
+                       'videos': sorted(
+                           (video.to_dict()
+                            for dct in (self.__videos, self.__unreadable, self.__discarded)
+                            for video in dct.values()),
+                           key=lambda dct: dct['f'])}
+        with open(self.__json_path.path, 'w') as output_file:
+            json.dump(json_output, output_file)
+        self.__notifier.notify(notifications.DatabaseSaved(self))
 
-    def open_log(self):
-        return open(self.__log_path.path, 'a')
+    def videos(self, valid=True, unreadable=False, found=True, not_found=False, with_thumbs=True, no_thumbs=True):
+
+        if found is not_found is with_thumbs is no_thumbs is False:
+            return ()
+
+        sources = []
+        filters = []
+
+        if valid:
+            sources.append(self.__videos)
+        if unreadable:
+            sources.append(self.__unreadable)
+
+        if not found and not_found:
+            filters.append(self.__filter_not_found)
+        elif found and not not_found:
+            filters.append(self.__filter_found)
+
+        if not with_thumbs and no_thumbs:
+            filters.append(self.__filter_no_thumbs)
+        elif with_thumbs and not no_thumbs:
+            filters.append(self.__filter_with_thumbs)
+
+        return (video for dictionary in sources for video in dictionary.values() if all(fn(video) for fn in filters))
+
+    def get_new_video_paths(self):
+        all_file_names = []
+
+        file_names = self.__set_videos_states_flags()
+
+        for file_name in file_names:  # type: AbsolutePath
+            video_state = None
+            if file_name in self.__videos:
+                video_state = self.__videos[file_name]
+            elif file_name in self.__unreadable:
+                video_state = self.__unreadable[file_name]
+
+            if (not video_state
+                    or video_state.date >= self.__date
+                    or video_state.rt_size != video_state.file_size):
+                all_file_names.append(file_name.path)
+
+        all_file_names.sort()
+        return all_file_names
+
+    def get_video_from_filename(self, filename, required=True):
+        # type: (PathType, bool) -> Optional[Video]
+        filename = AbsolutePath.ensure(filename)
+        if filename in self.__videos:
+            return self.__videos[filename]
+        if required:
+            raise exceptions.UnknownVideoFilename(filename)
+        return None
 
     # Unused.
 
