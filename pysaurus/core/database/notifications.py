@@ -85,18 +85,19 @@ class MiniatureJob(VideoJob):
 
 
 class DatabaseLoaded(Notification):
-    __slots__ = ['entries', 'discarded', 'not_found', 'found', 'unreadable', 'valid', 'thumbnails']
+    __slots__ = ('entries', 'discarded', 'unreadable_not_found', 'unreadable_found', 'readable_not_found', 'valid',
+                 'readable_found_without_thumbnails')
     __props__ = __slots__
 
     def __init__(self, database):
         super().__init__()
         self.entries = database.nb_entries
         self.discarded = database.nb_discarded
-        self.not_found = database.nb_not_found
-        self.found = database.nb_found
-        self.unreadable = database.nb_unreadable
+        self.unreadable_not_found = database.nb_unreadable_not_found
+        self.unreadable_found = database.nb_unreadable_found
+        self.readable_not_found = database.nb_readable_not_found
+        self.readable_found_without_thumbnails = database.nb_readable_found_without_thumbnails
         self.valid = database.nb_valid
-        self.thumbnails = database.nb_thumbnails
 
 
 class DatabaseSaved(DatabaseLoaded):

@@ -15,7 +15,7 @@ from pysaurus.core.database.api import API
 from pysaurus.core.database.notifications import DatabaseReady
 from pysaurus.core.database.video import Video
 from pysaurus.core.functions import launch_thread
-from pysaurus.core.notification import Notifier, Notification
+from pysaurus.core.notification import Notification
 from pysaurus.interface.common.parallel_notifier import ParallelNotifier
 from pysaurus.tests.test_utils import TEST_LIST_FILE_PATH
 

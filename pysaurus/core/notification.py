@@ -5,7 +5,7 @@ from pysaurus.core.components import DateModified
 
 
 class Notification(ToDict):
-    pass
+    __slots__ = ()
 
 
 ManagerType = Callable[[Notification], None]

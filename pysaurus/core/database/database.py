@@ -8,6 +8,7 @@ from pysaurus.core.components import AbsolutePath, DateModified, FilePath, PathT
 from pysaurus.core.constants import THUMBNAIL_EXTENSION
 from pysaurus.core.database import notifications
 from pysaurus.core.database.video import Video
+from pysaurus.core.database.video_property_bound import VideoPropertyBound
 from pysaurus.core.database.video_state import VideoState
 from pysaurus.core.modules import ImageUtils, System
 from pysaurus.core.native.video_raptor.miniature import Miniature
@@ -15,40 +16,14 @@ from pysaurus.core.notification import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.profiling import Profiler
 from pysaurus.core.database.jobs import jobs_python
 from pysaurus.core.path_tree import PathTree
-
-
-class VideoPropertyBound:
-
-    def __init__(self, fields):
-        self.fields = tuple(fields)
-        self.min = {}
-        self.max = {}
-
-    def update(self, videos):
-        self.min.clear()
-        self.max.clear()
-        if not isinstance(videos, list):
-            videos = list(videos)
-        if not videos:
-            return
-        for field in self.fields:
-            min_value = getattr(videos[0], field)
-            max_value = min_value
-            for i in range(1, len(videos)):
-                value = getattr(videos[i], field)
-                if value < min_value:
-                    min_value = value
-                if value > max_value:
-                    max_value = value
-            self.min[field] = min_value
-            self.max[field] = max_value
-            # print('BOUNDS', field, min_value, max_value)
+from pysaurus.core.database import video_filtering
 
 
 class Database:
     __slots__ = ('__db_path', '__thumb_folder', '__json_path', '__miniatures_path', '__log_path',
                  '__date', '__folders', '__videos', '__unreadable', '__discarded',
-                 '__notifier', '__id_to_video', 'system_is_case_insensitive', 'video_property_bound')
+                 '__notifier', '__id_to_video', 'system_is_case_insensitive', 'video_property_bound',
+                 'unreadable', 'readable')
 
     def __init__(self, path, folders=None, clear_old_folders=False, notifier=None):
         # type: (PathType, Optional[Iterable[PathType]], Optional[bool], Optional[Notifier]) -> None
@@ -71,6 +46,9 @@ class Database:
         self.__notifier = notifier or DEFAULT_NOTIFIER
         self.__id_to_video = {}  # type: Dict[int, Union[VideoState, Video]]
         self.system_is_case_insensitive = System.is_case_insensitive(self.__db_path.path)
+        # Properties
+        self.unreadable = video_filtering.Unreadable(self, self.__unreadable)
+        self.readable = video_filtering.Readable(self, self.__videos)
         # Load database
         self.__notifier.set_log_path(self.__log_path.path)
         with Profiler('Load database'):
@@ -81,13 +59,19 @@ class Database:
     # Properties.
 
     folder = property(lambda self: self.__db_path)
+
     nb_entries = property(lambda self: len(self.__videos) + len(self.__unreadable) + len(self.__discarded))
     nb_discarded = property(lambda self: len(self.__discarded))
     nb_unreadable = property(lambda self: len(self.__unreadable))
-    nb_not_found = property(lambda self: sum(1 for _ in self.videos(unreadable=True, found=False, not_found=True)))
-    nb_found = property(lambda self: sum(1 for _ in self.videos(unreadable=True)))
-    nb_valid = property(lambda self: sum(1 for _ in self.videos()))
-    nb_thumbnails = property(lambda self: sum(1 for _ in self.videos(no_thumbs=False)))
+    nb_unreadable_not_found = property(lambda self: self.unreadable.not_found.count())
+    nb_unreadable_found = property(lambda self: self.unreadable.found.count())
+    nb_readable = property(lambda self: len(self.__videos))
+    nb_readable_not_found = property(lambda self: self.readable.not_found.count())
+    nb_readable_found = property(lambda self: self.readable.found.count())
+    nb_readable_found_without_thumbnails = property(lambda self: self.readable.found.without_thumbnails.count())
+    nb_readable_found_with_thumbnails = property(lambda self: self.readable.found.with_thumbnails.count())
+
+    nb_valid = nb_readable_found_with_thumbnails
 
     @property
     def thumbnail_folder(self):
@@ -558,6 +542,40 @@ class Database:
             filters.append(self.__filter_with_thumbs)
 
         return (video for dictionary in sources for video in dictionary.values() if all(fn(video) for fn in filters))
+
+    def get_videos(self, found=False, not_found=False, unreadable=False, with_thumbnails=False, without_thumbnails=False):
+        sources = []
+        level_1_filters = []
+        level_2_filters = []
+        filter_levels = []
+        readable = with_thumbnails or without_thumbnails
+        if readable:
+            sources.append(self.__videos)
+        if unreadable:
+            sources.append(self.__unreadable)
+        if found:
+            level_1_filters.append(self.__filter_found)
+        if not_found:
+            level_1_filters.append(self.__filter_not_found)
+        if with_thumbnails:
+            level_2_filters.append(self.__filter_with_thumbs)
+        if without_thumbnails:
+            level_2_filters.append(self.__filter_no_thumbs)
+        if level_1_filters:
+            filter_levels.append(level_1_filters)
+        if level_2_filters:
+            filter_levels.append(level_2_filters)
+        if not filter_levels:
+            return ()
+        return (video
+                for dictionary in sources
+                for video in dictionary.values()
+                if self.__filter(video, filter_levels))
+
+    def __filter(self, video, filter_levels: List[List[callable]]):
+        return all(any(filter_video(video)
+                       for filter_video in level)
+                   for level in filter_levels)
 
     def get_new_video_paths(self):
         all_file_names = []

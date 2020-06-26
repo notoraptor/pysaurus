@@ -17,7 +17,9 @@ from pysaurus.core.profiling import Profiler
 TEMP_DIR = tempfile.gettempdir()
 TEMP_PREFIX = tempfile.gettempprefix() + '_pysaurus_'
 
-NbType = Enumeration(('entries', 'discarded', 'not_found', 'found', 'unreadable', 'valid', 'thumbnails'))
+NbType = Enumeration(('entries', 'discarded', 'unreadable', 'unreadable_not_found', 'unreadable_found', 'readable',
+                      'readable_not_found', 'readable_found', 'readable_found_without_thumbnails',
+                      'readable_found_with_thumbnails', 'valid'))
 FieldType = Enumeration(Video.ROW_FIELDS)
 
 

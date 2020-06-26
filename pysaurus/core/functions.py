@@ -13,6 +13,10 @@ EPOCH = datetime.utcfromtimestamp(0)
 
 REGEX_NO_WORD = re.compile(r'(\W|_)+')
 
+REGEX_CONSECUTIVE_UPPER_CASES = re.compile('[A-Z]{2,}')
+
+REGEX_LOWER_THEN_UPPER_CASES = re.compile('([a-z0-9])([A-Z])')
+
 
 def string_to_pieces(the_string, as_set=False):
     builder = set if as_set else list
@@ -187,3 +191,15 @@ def html_to_title(title):
                     title = title.strip(character)
                     strip_again = True
     return title
+
+
+def camel_case_to_snake_case(name):
+    """ Convert a string (expected to be in camel case) to snake case.
+        :param name: string to convert.
+        :return: snake case version of given name.
+        :rtype: str
+    """
+    if name == '':
+        return name
+    separated_consecutive_uppers = REGEX_CONSECUTIVE_UPPER_CASES.sub(lambda m: '_'.join(c for c in m.group(0)), name)
+    return REGEX_LOWER_THEN_UPPER_CASES.sub(r'\1_\2', separated_consecutive_uppers).lower()
