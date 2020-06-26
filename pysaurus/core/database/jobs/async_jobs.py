@@ -1,10 +1,11 @@
 import asyncio
-from pysaurus.core.components import AbsolutePath
+
+from pysaurus.core.components import AbsolutePath, System
 from pysaurus.core.database import notifications
-from pysaurus.core.components import System
 
 if System.is_windows():
     asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+
 
 async def job_video_to_json(job):
     input_file_name, output_file_name, job_count, job_id, notifier = job

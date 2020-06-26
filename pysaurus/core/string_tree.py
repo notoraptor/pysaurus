@@ -1,5 +1,6 @@
 from typing import Dict
 
+
 def _get_common_prefix(a: str, b: str):
     # a and be should be non-None non-empty strings.
     common_len = min(len(a), len(b))

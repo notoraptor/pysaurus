@@ -1,6 +1,5 @@
-import sys
 import subprocess
-import multiprocessing
+
 from pysaurus.core.functions import parallelize
 
 
@@ -13,7 +12,8 @@ def collect(*args):
 
 
 def video_list_to_jsonl(input_file_name, output_file_name, job_id, job_count):
-    process = subprocess.Popen(['runVideoRaptorBatch', input_file_name, output_file_name], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    process = subprocess.Popen(['runVideoRaptorBatch', input_file_name, output_file_name], stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE)
     for line in process.stdout.readlines():
         line = line.decode().strip()
         if line:
@@ -25,7 +25,6 @@ def video_list_to_jsonl(input_file_name, output_file_name, job_id, job_count):
 
 def main():
     parallelize(collect, [None, None, None, None], 8)
-
 
 
 if __name__ == '__main__':

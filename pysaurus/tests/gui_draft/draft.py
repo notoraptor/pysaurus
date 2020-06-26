@@ -1,6 +1,6 @@
 import enum
-from typing import List, Optional
 from abc import abstractmethod, ABC
+from typing import List, Optional
 
 unsigned_int = int
 unsigned_float = float

@@ -1,12 +1,12 @@
 import argparse
-from pysaurus.core.components import AbsolutePath, FilePath
-from pysaurus.core.modules import ImageUtils
-from pysaurus.core.functions import timestamp_microseconds
 import re
 import sys
-from typing import List
-import zipfile
 import tempfile
+import zipfile
+from typing import List
+
+from pysaurus.core.components import AbsolutePath, FilePath
+from pysaurus.core.modules import ImageUtils
 
 TEMP_DIR = tempfile.gettempdir()
 
@@ -48,7 +48,8 @@ class Converter:
             image = ImageUtils.open_rgb_image(input_image.path)
             ImageUtils.save_rgb_image(*image.size, image.getdata(), output_image.path)
             assert output_image.isfile()
-            message(log_file, 'CONVERTED', input_image.get_directory(), '%s => %s' % (input_image.get_basename(), output_image.get_basename()))
+            message(log_file, 'CONVERTED', input_image.get_directory(),
+                    '%s => %s' % (input_image.get_basename(), output_image.get_basename()))
         return output_image
 
     def convert_to_ebook(self, directory, files, log_file):
@@ -81,7 +82,8 @@ class Converter:
             except Exception as e:
                 fatal_error(log_file, directory, '%d image(s) => %s: %s' % (len(files), output_ebook, e))
             else:
-                message(log_file, 'SUCCESS', directory, '%d image(s) => %s%s' % (len(files), output_ebook, ' (updated)' if to_update else ''))
+                message(log_file, 'SUCCESS', directory,
+                        '%d image(s) => %s%s' % (len(files), output_ebook, ' (updated)' if to_update else ''))
 
     def visit(self, directory: AbsolutePath, log_file):
         assert directory.isdir()

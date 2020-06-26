@@ -16,8 +16,6 @@ Video class. Properties:
 import base64
 from io import BytesIO
 
-from PIL import Image
-
 from pysaurus.core.classes import StringPrinter
 from pysaurus.core.components import AbsolutePath, Duration
 from pysaurus.core.constants import THUMBNAIL_EXTENSION
@@ -165,7 +163,8 @@ class Video(VideoState):
         if from_dictionary:
             audio_bit_rate = from_dictionary.get(self.LONG_TO_MIN['audio_bit_rate'], audio_bit_rate)
             audio_codec = from_dictionary.get(self.LONG_TO_MIN['audio_codec'], audio_codec)
-            audio_codec_description = from_dictionary.get(self.LONG_TO_MIN['audio_codec_description'], audio_codec_description)
+            audio_codec_description = from_dictionary.get(self.LONG_TO_MIN['audio_codec_description'],
+                                                          audio_codec_description)
             container_format = from_dictionary.get(self.LONG_TO_MIN['container_format'], container_format)
             device_name = from_dictionary.get(self.LONG_TO_MIN['device_name'], device_name)
             duration = from_dictionary.get(self.LONG_TO_MIN['duration'], duration)
@@ -177,7 +176,8 @@ class Video(VideoState):
             sample_rate = from_dictionary.get(self.LONG_TO_MIN['sample_rate'], sample_rate)
             thumb_name = from_dictionary.get(self.LONG_TO_MIN['thumb_name'], thumb_name)
             video_codec = from_dictionary.get(self.LONG_TO_MIN['video_codec'], video_codec)
-            video_codec_description = from_dictionary.get(self.LONG_TO_MIN['video_codec_description'], video_codec_description)
+            video_codec_description = from_dictionary.get(self.LONG_TO_MIN['video_codec_description'],
+                                                          video_codec_description)
             width = from_dictionary.get(self.LONG_TO_MIN['width'], width)
         super(Video, self).__init__(filename=filename, size=size, errors=errors, video_id=video_id,
                                     database=database, from_dictionary=from_dictionary)

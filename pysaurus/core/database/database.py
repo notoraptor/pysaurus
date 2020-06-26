@@ -6,17 +6,16 @@ import ujson as json
 from pysaurus.core import exceptions, functions as utils
 from pysaurus.core.components import AbsolutePath, DateModified, FilePath, PathType, PathInfo
 from pysaurus.core.constants import THUMBNAIL_EXTENSION
-from pysaurus.core.database import notifications
+from pysaurus.core.database import notifications, video_filtering
+from pysaurus.core.database.jobs import jobs_python
 from pysaurus.core.database.video import Video
 from pysaurus.core.database.video_property_bound import VideoPropertyBound
 from pysaurus.core.database.video_state import VideoState
 from pysaurus.core.modules import ImageUtils, System
 from pysaurus.core.native.video_raptor.miniature import Miniature
 from pysaurus.core.notification import DEFAULT_NOTIFIER, Notifier
-from pysaurus.core.profiling import Profiler
-from pysaurus.core.database.jobs import jobs_python
 from pysaurus.core.path_tree import PathTree
-from pysaurus.core.database import video_filtering
+from pysaurus.core.profiling import Profiler
 
 
 class Database:
@@ -334,7 +333,8 @@ class Database:
 
             thumb_jobs.append((input_file_path.path, output_file_path.path, len(job_videos), job_id, self.__notifier))
 
-        with Profiler(title='Get thumbnails from JSON through %d thread(s)' % len(thumb_jobs), notifier=self.__notifier):
+        with Profiler(title='Get thumbnails from JSON through %d thread(s)' % len(thumb_jobs),
+                      notifier=self.__notifier):
             counts_loaded = utils.parallelize(jobs_python.job_video_thumbnails_to_json, thumb_jobs, cpu_count=cpu_count)
 
         for job in thumb_jobs:
@@ -489,7 +489,6 @@ class Database:
             raise exceptions.UnknownVideoFilename(filename)
         return None
 
-
     def delete_video(self, video, save=True):
         # type: (VideoState, bool) -> AbsolutePath
         video.filename.delete()
@@ -543,7 +542,8 @@ class Database:
 
         return (video for dictionary in sources for video in dictionary.values() if all(fn(video) for fn in filters))
 
-    def get_videos(self, found=False, not_found=False, unreadable=False, with_thumbnails=False, without_thumbnails=False):
+    def get_videos(self, found=False, not_found=False, unreadable=False, with_thumbnails=False,
+                   without_thumbnails=False):
         sources = []
         level_1_filters = []
         level_2_filters = []

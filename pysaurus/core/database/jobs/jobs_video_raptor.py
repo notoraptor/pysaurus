@@ -1,9 +1,10 @@
+from typing import List
+
 from pysaurus.core.classes import ListView
 from pysaurus.core.constants import VIDEO_BATCH_SIZE, VIDEO_THUMB_SIZE
 from pysaurus.core.database import notifications
 from pysaurus.core.native.video_raptor import api as video_raptor
 from pysaurus.core.notification import Notifier
-from typing import List
 
 
 def job_videos_info(job):

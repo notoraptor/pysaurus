@@ -1,8 +1,9 @@
-from pysaurus.tests.test_utils import TEST_LIST_FILE_PATH
-from pysaurus.core.database.api import API
-from pysaurus.core.database.database import Database
 import inspect
 import itertools
+
+from pysaurus.core.database.api import API
+from pysaurus.core.database.database import Database
+from pysaurus.tests.test_utils import TEST_LIST_FILE_PATH
 
 
 def main():

@@ -36,11 +36,10 @@ def filter_or(video, terms):
 
 VIDEO_FILTERS = {'exact': filter_exact, 'and': filter_and, 'or': filter_or}
 
-
 DEFAULT_SORTING = ['-date']
 
-JSON_INTEGER_MIN = -2**31
-JSON_INTEGER_MAX = 2**31 - 1
+JSON_INTEGER_MIN = -2 ** 31
+JSON_INTEGER_MAX = 2 ** 31 - 1
 
 
 def to_js_value(value):

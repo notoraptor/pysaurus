@@ -1,6 +1,7 @@
-from typing import Dict
-from pysaurus.core.components import AbsolutePath
 import os
+from typing import Dict
+
+from pysaurus.core.components import AbsolutePath
 
 
 class PathTreeNode:
