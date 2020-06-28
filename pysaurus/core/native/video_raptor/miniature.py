@@ -1,5 +1,5 @@
 import base64
-from typing import Any, Tuple
+from typing import Any, Optional, Tuple
 
 from pysaurus.core.modules import ImageUtils
 
