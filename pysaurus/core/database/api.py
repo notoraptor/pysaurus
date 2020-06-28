@@ -130,11 +130,11 @@ class API:
 
     def valid_size(self):
         # type: () -> FileSize
-        return FileSize(sum(video.file_size for video in self.database.videos()))
+        return FileSize(sum(video.file_size for video in self.database.readable.found.with_thumbnails))
 
     def valid_length(self):
         # type: () -> Duration
-        return Duration(sum(video.length.total_microseconds for video in self.database.videos()))
+        return Duration(sum(video.raw_microseconds for video in self.database.readable.found.with_thumbnails))
 
     def clear_not_found(self):
         # type: () -> None
@@ -308,14 +308,14 @@ class API:
     def same_sizes(self):
         # type: () -> Dict[int, List[Video]]
         sizes = {}
-        for video in self.database.videos():
+        for video in self.database.readable.found.with_thumbnails:
             sizes.setdefault(video.size, []).append(video)
         return {size: elements for (size, elements) in sizes.items() if len(elements) > 1}
 
     def find(self, terms):
         # type: (str) -> List[Video]
         terms = utils.string_to_pieces(terms)
-        return [video for video in self.database.videos()
+        return [video for video in self.database.readable.found.with_thumbnails
                 if all(term in video.title.lower() or term in video.filename.path.lower() for term in terms)]
 
     def find_batch(self, path):
@@ -339,16 +339,16 @@ class API:
                 reverse = False
             field = FieldType(piece)
             sorting.append((field, reverse))
-        videos = sorted(self.database.videos(),
+        videos = sorted(self.database.readable.found.with_thumbnails,
                         key=functools.cmp_to_key(lambda v1, v2: compare_videos(v1, v2, sorting)))
         return videos[(page_size * page_number):(page_size * (page_number + 1))]
 
     def videos(self):
         # type: () -> List[Video]
-        return self.database.videos()
+        return self.database.readable.found.with_thumbnails
 
     def not_found(self):
-        return sorted(self.database.videos(found=False, not_found=True), key=lambda video: video.filename)
+        return sorted(self.database.readable.not_found, key=lambda video: video.filename)
 
     def not_found_html(self):
         videos = self.not_found()
@@ -413,7 +413,7 @@ class API:
         if not folder.isdir():
             return ''
         videos = []
-        for video in self.database.videos(found=False, not_found=True):
+        for video in self.database.readable.not_found:
             if video.filename.in_directory(folder, is_case_insensitive=self.database.system_is_case_insensitive):
                 videos.append(video)
         videos.sort(key=lambda video: video.filename)
@@ -424,15 +424,15 @@ class API:
             self.delete(video.video_id)
 
     def unreadable(self):
-        return sorted(self.database.videos(valid=False, unreadable=True), key=lambda video: video.filename)
+        return sorted(self.database.unreadable.found, key=lambda video: video.filename)
 
     def missing_thumbnails(self):
-        return sorted(self.database.videos(with_thumbs=False, no_thumbs=True),
+        return sorted(self.database.readable.found.without_thumbnails,
                       key=lambda video: video.filename)
 
     def reset_thumbnail_errors(self):
         count = 0
-        for video in self.database.videos(with_thumbs=False, no_thumbs=True):
+        for video in self.database.readable.found.without_thumbnails:
             video.error_thumbnail = False
             count += 1
         if count:
@@ -462,9 +462,9 @@ class API:
     def guess_moved(self):
         videos_not_found = {}
         videos_found = {}
-        for video in self.database.videos(found=False, not_found=True):
+        for video in self.database.readable.not_found:
             videos_not_found.setdefault(video.meta(), []).append(video)
-        for video in self.database.videos():
+        for video in self.database.readable.found.with_thumbnails:
             meta = video.meta()
             if meta in videos_not_found:
                 videos_found.setdefault(meta, []).append(video)

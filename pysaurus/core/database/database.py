@@ -46,6 +46,11 @@ class Database:
         self.__id_to_video = {}  # type: Dict[int, Union[VideoState, Video]]
         self.system_is_case_insensitive = System.is_case_insensitive(self.__db_path.path)
         # Properties
+        # unreadable.not_found
+        # unreadable.found
+        # readable.not_found
+        # readable.found.without_thumbnails
+        # readable.found.with_thumbnails
         self.unreadable = video_filtering.Unreadable(self, self.__unreadable)
         self.readable = video_filtering.Readable(self, self.__videos)
         # Load database
@@ -53,7 +58,7 @@ class Database:
         with Profiler('Load database'):
             self.__load(folders, clear_old_folders)
         self.video_property_bound = VideoPropertyBound(t[0] for t in Video.QUALITY_FIELDS)
-        self.video_property_bound.update(self.videos())
+        self.video_property_bound.update(self.readable.found.with_thumbnails)
 
     # Properties.
 
@@ -186,18 +191,6 @@ class Database:
                         path_string = path_string.lower()
                     thumbs.add(path_string[:-(len(THUMBNAIL_EXTENSION) + 1)])
         return thumbs
-
-    def __filter_not_found(self, video):
-        return not video.exists()
-
-    def __filter_found(self, video):
-        return video.exists()
-
-    def __filter_no_thumbs(self, video):
-        return not video.thumbnail_is_valid()
-
-    def __filter_with_thumbs(self, video):
-        return video.thumbnail_is_valid()
 
     def __notify_missing_thumbnails(self):
         remaining_thumb_videos = []
@@ -392,7 +385,7 @@ class Database:
             del json_array
 
         tasks = [(video.filename, video.thumbnail_path)
-                 for video in self.videos(no_thumbs=False)
+                 for video in self.readable.found.with_thumbnails
                  if video.filename.path not in identifiers]
         self.__notifier.notify(notifications.MiniaturesToLoad(len(tasks)))
 
@@ -504,7 +497,7 @@ class Database:
 
     def save(self):
         self.__ensure_identifiers()
-        self.video_property_bound.update(self.videos())
+        self.video_property_bound.update(self.readable.found.with_thumbnails)
         # Save database.
         json_output = {'date': self.__date.time,
                        'folders': sorted(folder.path for folder in self.__folders),
@@ -516,66 +509,6 @@ class Database:
         with open(self.__json_path.path, 'w') as output_file:
             json.dump(json_output, output_file)
         self.__notifier.notify(notifications.DatabaseSaved(self))
-
-    def videos(self, valid=True, unreadable=False, found=True, not_found=False, with_thumbs=True, no_thumbs=True):
-
-        if found is not_found is with_thumbs is no_thumbs is False:
-            return ()
-
-        sources = []
-        filters = []
-
-        if valid:
-            sources.append(self.__videos)
-        if unreadable:
-            sources.append(self.__unreadable)
-
-        if not found and not_found:
-            filters.append(self.__filter_not_found)
-        elif found and not not_found:
-            filters.append(self.__filter_found)
-
-        if not with_thumbs and no_thumbs:
-            filters.append(self.__filter_no_thumbs)
-        elif with_thumbs and not no_thumbs:
-            filters.append(self.__filter_with_thumbs)
-
-        return (video for dictionary in sources for video in dictionary.values() if all(fn(video) for fn in filters))
-
-    def get_videos(self, found=False, not_found=False, unreadable=False, with_thumbnails=False,
-                   without_thumbnails=False):
-        sources = []
-        level_1_filters = []
-        level_2_filters = []
-        filter_levels = []
-        readable = with_thumbnails or without_thumbnails
-        if readable:
-            sources.append(self.__videos)
-        if unreadable:
-            sources.append(self.__unreadable)
-        if found:
-            level_1_filters.append(self.__filter_found)
-        if not_found:
-            level_1_filters.append(self.__filter_not_found)
-        if with_thumbnails:
-            level_2_filters.append(self.__filter_with_thumbs)
-        if without_thumbnails:
-            level_2_filters.append(self.__filter_no_thumbs)
-        if level_1_filters:
-            filter_levels.append(level_1_filters)
-        if level_2_filters:
-            filter_levels.append(level_2_filters)
-        if not filter_levels:
-            return ()
-        return (video
-                for dictionary in sources
-                for video in dictionary.values()
-                if self.__filter(video, filter_levels))
-
-    def __filter(self, video, filter_levels: List[List[callable]]):
-        return all(any(filter_video(video)
-                       for filter_video in level)
-                   for level in filter_levels)
 
     def get_new_video_paths(self):
         all_file_names = []

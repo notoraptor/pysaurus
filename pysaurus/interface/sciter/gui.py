@@ -121,7 +121,7 @@ class Frame(sciter.Window):
         if self.groups:
             videos = self.groups[self.group_number]
         else:
-            videos = self.api.database.videos()
+            videos = self.api.database.readable.found.with_thumbnails
         self.videos = [video for video in videos if video_filter(video, terms)]
         self._sort_videos()
 
@@ -142,7 +142,7 @@ class Frame(sciter.Window):
     def load_videos(self):
         if self.videos is not self.all_videos:
             if not self.all_videos:
-                self.all_videos = list(self.api.database.videos())
+                self.all_videos = list(self.api.database.readable.found.with_thumbnails)
             self.groups = None
             self.group_field = None
             self.group_reverse = None
@@ -256,7 +256,7 @@ class Frame(sciter.Window):
     @sciter.script
     def group_videos(self, field, reverse):
         grouped_videos = {}
-        for video in self.api.database.videos():
+        for video in self.api.database.readable.found.with_thumbnails:
             value = getattr(video, field)
             grouped_videos.setdefault(value, []).append(video)
         filtered_groups = {value: videos for value, videos in grouped_videos.items() if len(videos) > 1}

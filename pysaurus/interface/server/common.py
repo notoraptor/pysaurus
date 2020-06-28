@@ -16,7 +16,7 @@ def _sub_hash_password(password):
         :param password: password to hash.
         :return: (String) The hashed password.
     """
-    # Bcrypt only handles passwords up to 72 characters. We use this hashing method as a work around.
+    # bcrypt only handles passwords up to 72 characters. We use this hashing method as a work around.
     # Suggested in bcrypt PyPI page (2018/02/08 12:36 EST): https://pypi.python.org/pypi/bcrypt/3.1.0
     return base64.b64encode(hashlib.sha256(password.encode('utf-8')).digest())
 

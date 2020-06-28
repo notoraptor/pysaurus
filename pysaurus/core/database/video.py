@@ -214,6 +214,7 @@ class Video(VideoState):
     title = property(lambda self: self.meta_title if self.meta_title else self.filename.title)
 
     raw_seconds = property(lambda self: self.duration / self.duration_time_base)
+    raw_microseconds = property(lambda self: self.duration * 1000000 / self.duration_time_base)
 
     @property
     def thumbnail_path(self):

@@ -1,25 +1,5 @@
-import inspect
-import itertools
-
 from pysaurus.core.database.api import API
-from pysaurus.core.database.database import Database
 from pysaurus.tests.test_utils import TEST_LIST_FILE_PATH
-
-
-def main():
-    api = API(TEST_LIST_FILE_PATH)
-    all_arguments = set(inspect.getargspec(Database.get_videos).args)
-    all_arguments.remove('self')
-    arguments = sorted(all_arguments)
-    print(*arguments)
-    count = 0
-    for nb_values in range(len(arguments) + 1):
-        for true_values in itertools.combinations(arguments, nb_values):
-            count += 1
-            args = {arg: True for arg in true_values}
-            videos = list(api.database.get_videos(**args))
-            print('%2d' % count, true_values)
-            print('\t', len(videos))
 
 
 def main2():
@@ -32,6 +12,8 @@ def main2():
     print(api.database.readable.found)
     print(api.database.readable.found.without_thumbnails)
     print(api.database.readable.found.with_thumbnails)
+    print(sum(1 for _ in api.missing_thumbnails()))
+    print(sum(1 for _ in api.database.unreadable.found))
 
 
 if __name__ == '__main__':

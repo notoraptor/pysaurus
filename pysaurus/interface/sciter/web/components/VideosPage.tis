@@ -225,7 +225,7 @@ class VideosPage: Reactor.Component {
 		if (info)
 			this.updateView({status: 'Not found displayed: ' + info});
 		else
-			this.updateView({status: 'Unable to fidplay videos not found.'});
+			this.updateView({status: 'Unable to display videos not found.'});
 		this.post(() => element.state.disabled = false);
 	}
 	event change $(input#group) (evt, element) {

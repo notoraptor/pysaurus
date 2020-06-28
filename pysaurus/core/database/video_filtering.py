@@ -40,12 +40,18 @@ class AbstractSourceNode:
         path_name = '.'.join(camel_case_to_snake_case(type(element).get_name()) for element in reversed(chain))
         return '%s/%d' % (path_name, self.count())
 
+    def __len__(self):
+        return self.count()
+
+    def __iter__(self):
+        return self.videos()
+
 
 class SourceNode(AbstractSourceNode):
     __slots__ = ('__parent', '__database')
 
     def __init__(self, parent):
-        self.__parent = parent
+        self.__parent = parent  # type: SourceNode
         self.__database = self.__parent.database()
 
     def parent(self):
@@ -104,7 +110,7 @@ class VideoSource(AbstractSourceNode):
         return None
 
     def videos(self):
-        return self.__source.values()
+        return iter(self.__source.values())
 
 
 class ReadableFound(Found):

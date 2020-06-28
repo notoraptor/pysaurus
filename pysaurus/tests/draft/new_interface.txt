@@ -121,7 +121,7 @@ Panel database data:Database
 	var view = None # either a list of videos or a list of video groups
 	onload():
 		database = this.data
-		view = list[database.videos()]
+		view = list[database.readable.found.with_thumbnails]
 	MenuBar
 		Database
 			Manage video folders ... -> Dialog
