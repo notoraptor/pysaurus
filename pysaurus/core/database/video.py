@@ -14,6 +14,7 @@ Video class. Properties:
 """
 
 import base64
+from typing import Sequence
 from io import BytesIO
 
 from pysaurus.core.classes import StringPrinter
@@ -119,10 +120,10 @@ class Video(VideoState):
         'file_title',  # from VideoState.filename
         'frame_rate',  # frame_rate_num, frame_rate_den
         'length',  # duration, duration_time_base
+        'quality',  # SPECIAL
         'size',  # property VideoState.size
         'thumbnail_path',  # thumb_name
         'title',  # meta_title, file_title
-        'quality',  # SPECIAL
     )
 
     ROW_FIELDS = ROW_ATTRIBUTES + ROW_PROPERTIES
@@ -282,7 +283,7 @@ class Video(VideoState):
 
     @staticmethod
     def compare(self, other, sorting):
-        # type: (Video, Video, list) -> int
+        # type: (Video, Video, Sequence[str]) -> int
         for sort in sorting:
             reverse = sort[0] == '-'
             field = sort[1:]

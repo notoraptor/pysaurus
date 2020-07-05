@@ -105,11 +105,11 @@ const NotificationMessenger = {
 				<strong>Database {message.name === 'DatabaseSaved' ? 'saved' : 'loaded'}</strong>:
 				{data.entries}{' '}{data.entries > 1 ? 'entries': 'entry'},
 				{data.discarded} discarded,
-				{data.not_found} not found,
-				{data.found} found,
-				{data.unreadable} unreadable,
-				{data.valid} valid,
-				{data.thumbnails} with thumbnails
+				{data.unreadable_not_found} unreadable not found,
+				{data.unreadable_found} unreadable found,
+				{data.readable_not_found} readable not found,
+				{data.readable_found_without_thumbnails} readable found without thumbnails,
+				{data.valid} valid
 			</div>
 		);
 	},

@@ -227,7 +227,10 @@ class DateModified:
 class Duration(object):
     __slots__ = ('days', 'hours', 'minutes', 'seconds', 'microseconds', 'total_microseconds')
 
-    def __init__(self, microseconds):
+    def __init__(self, microseconds: Union[int, float]):
+        if isinstance(microseconds, float):
+            microseconds = round(microseconds)
+
         solid_seconds = microseconds // 1000000
         solid_minutes = solid_seconds // 60
         solid_hours = solid_minutes // 60
