@@ -159,6 +159,7 @@ class VideoProvider:
         if self.groups:
             self.set_search(DEFAULT_SEARCH_DEF.text, DEFAULT_SEARCH_DEF.cond)
         else:
+            self.search_def = DEFAULT_SEARCH_DEF
             self.view = []
 
     def set_search(self, text: Optional[str], cond: Optional[str]):
@@ -210,6 +211,16 @@ class VideoProvider:
     def get_group_field_value(self):
         return getattr(self.view[0], self.group_def.field)
 
+    def get_group_def(self):
+        if self.group_def:
+            return {'field': self.group_def.field, 'reverse': self.group_def.reverse, 'group_id': self.group_id, 'nb_groups': len(self.groups)}
+        return None
+
+    def get_search_def(self):
+        if self.search_def:
+            return {'text': self.search_def.text, 'cond': self.search_def.cond}
+        return None
+
     def get_sorting(self):
         return self.sort_def
 
@@ -226,6 +237,9 @@ class VideoProvider:
         if self.group_def or self.search_def or self.sort_def != DEFAULT_SORT_DEF:
             self.sort_def = DEFAULT_SORT_DEF
             self.set_source(self.source_def)
+
+    def get_group_id(self):
+        return self.group_id
 
     def __delete_current_group(self):
         del self.groups[self.group_id]

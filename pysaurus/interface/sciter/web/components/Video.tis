@@ -4,7 +4,11 @@ class Video: Reactor.Component {
     function this(props, children) {
         this.props = props || {};
         this.children = children || {};
-
+		/** props:
+		parent
+		index
+		data
+		**/
         this.elementVideo = null;
         this.elementMenu = null;
     }

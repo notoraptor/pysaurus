@@ -69,6 +69,14 @@ class Frame(sciter.Window):
         self.provider.set_sort(sorting)
 
     @sciter.script
+    def get_group_def(self):
+        return self.provider.get_group_def()
+
+    @sciter.script
+    def get_search_def(self):
+        return self.provider.get_search_def()
+
+    @sciter.script
     def get_sorting(self):
         return self.provider.get_sorting()
 

@@ -243,7 +243,7 @@ class HomePage: Reactor.Component {
 				output.push(<div key={i}><em>unknown</em>: {message.message}</div>);
 			}
 		}
-		if (!ready)
+		if (!ready && this.status === HomeStatus.LOADING)
 			output.push(<div key={this.messages.length}>...</div>);
 		return output;
 	}

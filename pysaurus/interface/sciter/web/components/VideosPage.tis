@@ -11,15 +11,7 @@ class VideosPage: Reactor.Component {
 
 		this.pageSize = 100;
 		this.pageNumber = 0;
-		this.searchText = null;
-		this.searchType = null;
-		this.sorting = [];
 		this.status = 'Loaded.';
-		this.group = null;
-		this.groupField = null;
-		this.groupReverse = null;
-		this.groupNumber = 0;
-		this.resetSearchCount = 0;
 	}
 	function render() {
 		const backend = view.get_info(this.pageSize);
@@ -28,23 +20,15 @@ class VideosPage: Reactor.Component {
 		const validSize = backend.validSize;
 		const validLength = backend.validLength;
 		const nbGroups = backend.nbGroups;
-		const grouped = this.isGrouped();
-		const videosAreFiltered = this.searchText || this.sorting.length || grouped;
+
+		const group_def = view.get_group_def();
+		const search_def = view.get_search_def();
+		const sorting = view.get_sorting();
 
 		if (this.pageNumber >= nbPages - 1)
 			this.pageNumber = nbPages - 1;
 		if (this.pageNumber < 0)
 			this.pageNumber = 0;
-
-		if (grouped) {
-			const oldGroupNumber = this.groupNumber;
-			if (this.groupNumber >= nbGroups - 1)
-				this.groupNumber = nbGroups - 1;
-			if (this.groupNumber < 0)
-				this.groupNumber = 0;
-			if (oldGroupNumber !== this.groupNumber)
-				view.set_group(this.groupNumber);
-		}
 
 		const app = this;
 		const onChangePage = function(pageNumber) {
@@ -59,7 +43,7 @@ class VideosPage: Reactor.Component {
 				<div class="row central-panel">
 					<div class="col side-panel">
 						<div class="status">
-							Displaying {videosAreFiltered ? <em>filtered</em> : <strong>all</strong>} videos
+							Displaying {group_def || search_def ? <em>filtered</em> : <strong>all</strong>} videos
 						</div>
 						<div class="status">
 							<div>{nbVideos} video{nbVideos > 1 ? 's' : ''}</div>
@@ -68,88 +52,88 @@ class VideosPage: Reactor.Component {
 						</div>
 						<hr/>
 
-						{grouped ? (
+						{group_def ? (
 							<div>
 								<div class="status">
 									<div>Videos grouped by</div>
-									<div>{FIELD_TITLES[this.groupField]}</div>
-									{this.groupReverse ? (<em>(in reverse order)</em>) : ''}
-									<div>{nbGroups} group{nbGroups > 1 ? 's' : ''}</div>
-									<div>Group {this.groupNumber + 1}</div>
+									<div>{FIELD_TITLES[group_def.field]}</div>
+									{group_def.reverse ? (<em>(in reverse order)</em>) : ''}
+									<div>{group_def.nb_groups} group{group_def.nb_groups > 1 ? 's' : ''}</div>
+									<div>Group {group_def.group_id + 1}</div>
 								</div>
-								<div class="buttons-sorted">
-									<button class="group">edit ...</button>
-									<button id="reset-group">reset</button>
+								<div class="buttons-line">
+									<button class="edit group">edit ...</button>
+									<button class="reset" id="reset-group">reset</button>
 								</div>
 							</div>
 						) : (
 							<div class="status">
-								<button class="group block">Group videos ...</button>
+								<button class="group plain">Group videos ...</button>
 							</div>
 						)}
 						<hr/>
 
-						{this.searchText ? (
+						{search_def ? (
 							<div>
 								<div class="status">
 									<div>Searched</div>
-									<div>&quot;<strong>{this.searchText}</strong>&quot;</div>
-									<div>({SEARCH_TYPE_TITLE[this.searchType]})</div>
+									<div>&quot;<strong>{search_def.text}</strong>&quot;</div>
+									<div>({SEARCH_TYPE_TITLE[search_def.cond]})</div>
 								</div>
-								<div class="buttons-sorted">
-									<button class="search" accesskey="^F">search ...</button>
-									<button id="reset-search">reset</button>
+								<div class="buttons-line">
+									<button class="edit search" accesskey="^F">search ...</button>
+									<button class="reset" id="reset-search">reset</button>
 								</div>
 							</div>
 						) : (
 							<div class="status">
-								<button class="search block" accesskey="^F">Search ...</button>
+								<button class="search plain" accesskey="^F">Search ...</button>
 							</div>
 						)}
 						<hr/>
 
-						{this.sorting.length ? (
+						{sorting.length ? (
 							<div>
 								<div class="status">
 									<div>Videos sorted by</div>
-									{this.sorting.map((val, i) => <div key={i}><strong>{val.substr(1)}</strong>{val[0] == '-' ? (<em> (reverse)</em>) : ''}</div>)}
+									{sorting.map((val, i) => <div key={i}><strong>{val.substr(1)}</strong>{val[0] == '-' ? (<em> (reverse)</em>) : ''}</div>)}
 								</div>
-								<div class="buttons-sorted">
-									<button class="sort">edit ...</button>
-									<button id="reset-sort">reset</button>
+								<div class="buttons-line">
+									<button class="edit sort">edit ...</button>
+									<button class="reset" id="reset-sort">reset</button>
 								</div>
 							</div>
 						) : (
 							<div class="status">
-								<button class="sort block">Sort ...</button>
+								<button class="sort plain">Sort ...</button>
 							</div>
 						)}
 						<hr/>
 
 						<div class="status">
-							<select class="select-page-size" novalue="videos per page" :value={this.pageSize}>
+							<select class="select-page-size plain" novalue="videos per page" :value={this.pageSize}>
 								{[10, 20, 50, 100].map((count, index) => <option key={index} value={count}>Display {count} video{count > 1 ? 's' : ''} per page</option>)}
 							</select>
 						</div>
 						<hr/>
 
 						<div class="status">
-							<button id="open-random-file">open a random video</button>
+							<button class="plain" id="open-random-file">open a random video</button>
 						</div>
 						<hr/>
 
 						<div class="status">
-							<button id="open-not-found">display videos not found (in new browser)</button>
+							<button class="plain" id="open-not-found">display videos not found (in new browser)</button>
 						</div>
 					</div>
 					<div class="col main-panel">
 						<div class="status pagination">
-							{grouped ? (
-								<Pagination singular="group" plural="groups" nbPages={nbGroups} pageNumber={this.groupNumber} onChange={onChangeGroup}/>
+							{group_def ? (
+								<Pagination singular="group" plural="groups" nbPages={group_def.nb_groups} pageNumber={group_def.group_id} onChange={onChangeGroup}/>
 							) : ''}
 							<Pagination singular="page" plural="pages" nbPages={nbPages} pageNumber={this.pageNumber} onChange={onChangePage}/>
 						</div>
-						{(grouped && nbGroups) ? (<div class="status">{sentence(FIELD_TITLES[this.groupField])}:  <strong>{view.get_group_field_value()}</strong></div>) : ''}
+						{(group_def && group_def.nb_groups) ? (<div class="status">{sentence(FIELD_TITLES[group_def.field])}:  <strong>{view.get_group_field_value()}</strong></div>) : ''}
 						<div class="videos">{this.getVideos()}</div>
 					</div>
 				</div>
@@ -158,21 +142,15 @@ class VideosPage: Reactor.Component {
 		);
 	}
 
-	function isGrouped() {
-		//
-		return this.group && this.groupField && this.groupReverse !== null;
-	}
-	function reloadVideos() {
-		if (this.isGrouped())
-			view.group_videos(this.groupField, this.groupReverse);
-		else
-			view.load_videos();
-	}
 	function resetView(videoShift) {
 		const container = $(div.videos);
 		container.scrollTo(0, 0);
 		if (container.length)
 			container[videoShift || 0].scrollToView(true);
+	}
+	function updateView(state, videoShift = undefined) {
+		this.update(state);
+		this.post(() => this.resetView(videoShift));
 	}
 	function getVideos() {
 		const bounds = view.get_videos_index_range(this.pageSize, this.pageNumber);
@@ -186,33 +164,14 @@ class VideosPage: Reactor.Component {
 		}
 		return videos;
 	}
-	function updateView(state, videoShift = undefined) {
-		this.update(state);
-		this.post(() => this.resetView(videoShift));
-	}
 	function updateStatus(status) {
 		//
 		this.update({status: status});
 	}
 	function updateGroup(groupNumber) {
 		view.set_group(groupNumber);
-		this.updateView({groupNumber: groupNumber, pageNumber: 0, searchText: null, searchType: null});
+		this.updateView({pageNumber: 0});
 	}
-	function groupVideos(groupField, groupReverse) {
-		view.group_videos(groupField, groupReverse);
-		this.updateView({group: true, groupField: groupField, groupReverse: groupReverse, groupNumber: 0, pageNumber: 0, searchText: null, searchType: null});
-	}
-	function onSearch(text, cond) {
-		if (text.length && cond.length) {
-			view.set_search(text, cond);
-			this.updateView({searchText: text, searchType: cond, pageNumber: 0});
-		}
-	}
-	function resetSearch() {
-		this.reloadVideos();
-		this.updateView({resetSearchCount: this.resetSearchCount + 1, searchText: null, searchType: null, pageNumber: 0});
-	}
-
 	event click $(button#open-random-file) (evt, element) {
 		element.state.disabled = true;
 		const info = view.open_random_video(this.pageSize);
@@ -228,32 +187,17 @@ class VideosPage: Reactor.Component {
 			this.updateView({status: 'Unable to display videos not found.'});
 		this.post(() => element.state.disabled = false);
 	}
-	event change $(input#group) (evt, element) {
-		const group = element.value;
-		if (group) {
-			this.update({group: group});
-		} else {
-			let update = null;
-			if (this.isGrouped()) {
-				view.load_videos();
-				update = {group: null, groupField: null, groupReverse: null, pageNumber: 0, searchText: null, searchType: null};
-			} else {
-				update = {group: null};
-			}
-			this.update(update);
-		}
-	}
 	event click $(button#reset-search) (evt, element) {
-		//
-		this.resetSearch();
+		view.set_search(null, null);
+		this.updateView({pageNumber: 0});
 	}
 	event click $(button#reset-sort) (evt, element) {
 		view.set_sorting([]);
-		this.updateView({sorting: [], pageNumber: 0});
+		this.updateView({pageNumber: 0});
 	}
 	event click $(button#reset-group) (evt, element) {
-		view.load_videos();
-		this.update({group: null, groupField: null, groupReverse: null, pageNumber: 0, searchText: null, searchType: null});
+		view.group_videos(null, null);
+		this.update({pageNumber: 0});
 	}
 	event click $(#status) {
 		//
@@ -263,19 +207,21 @@ class VideosPage: Reactor.Component {
 		const sorting = view.dialog('html/sort.html');
 		if (sorting && sorting.length) {
 			view.set_sorting(sorting);
-			this.updateView({sorting: sorting, pageNumber: 0});
+			this.updateView({pageNumber: 0});
 		}
     }
     event click $(button.search) (evt, element) {
         const criterion = view.dialog('html/search.html');
-        if (criterion) {
-            this.onSearch(criterion.text, criterion.cond);
-        }
+        if (criterion && criterion.text.length && criterion.cond.length) {
+			view.set_search(criterion.text, criterion.cond);
+			this.updateView({pageNumber: 0});
+		}
     }
     event click $(button.group) (evt, element) {
         const criterion = view.dialog('html/group.html');
         if (criterion) {
-            this.groupVideos(criterion.field, criterion.reverse);
+            view.group_videos(criterion.field, criterion.reverse);
+			this.updateView({pageNumber: 0});
         }
     }
     event change $(select.select-page-size) (evt, element) {

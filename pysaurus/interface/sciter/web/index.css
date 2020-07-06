@@ -11,6 +11,10 @@ main {
 .mb-1 {
 	margin-bottom: 0.25em;
 }
+.plain {
+	display: block;
+	width: 1*;
+}
 
 /** Home page **/
 #home {
@@ -78,30 +82,15 @@ main {
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
-#videos button.group.block,
-#videos button.search.block,
-#videos button.sort.block,
-#videos button#open-random-file,
-#videos button#open-not-found,
-#videos select.select-page-size,
-#videos select#group-field,
-#videos button#reset-search {
-	display: block;
-	width: 1*;
-}
-#videos .buttons-sorted {
+#videos .buttons-line {
 	flow: horizontal;
 }
-#videos .buttons-sorted button {
+#videos .buttons-line button {
 	display: block;
 	width: 1*;
 }
-#videos .buttons-sorted button.sort {margin-right: 0.25em;}
-#videos .buttons-sorted button.search {margin-right: 0.25em;}
-#videos .buttons-sorted button.group {margin-right: 0.25em;}
-#videos .buttons-sorted button#reset-sort {margin-left: 0.25em;}
-#videos .buttons-sorted button#reset-search {margin-left: 0.25em;}
-#videos .buttons-sorted button#reset-group {margin-left: 0.25em;}
+#videos .buttons-line button.edit {margin-right: 0.25em;}
+#videos .buttons-line button.reset {margin-left: 0.25em;}
 #videos button#open-random-file {
 	font-weight: bold;
 	font-style: italic;
