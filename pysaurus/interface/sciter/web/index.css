@@ -95,6 +95,10 @@ main {
 	font-weight: bold;
 	font-style: italic;
 }
+#videos button#reload {
+	font-weight: bold;
+	color: red;
+}
 
 /** Video item. **/
 .video {

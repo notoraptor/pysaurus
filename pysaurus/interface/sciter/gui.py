@@ -34,6 +34,7 @@ class Frame(sciter.Window):
         super().__init__(ismain=True, uni_theme=True)
         self.multiprocessing_manager = multiprocessing.Manager()
         self.notifier = ParallelNotifier(self.multiprocessing_manager.Queue())
+
         self.monitor_thread = None  # type: Optional[threading.Thread]
         self.db_loading_thread = None  # type: Optional[threading.Thread]
         self.threads_stop_flag = False
@@ -47,6 +48,8 @@ class Frame(sciter.Window):
     @sciter.script
     def close_app(self):
         self.threads_stop_flag = True
+        if self.monitor_thread:
+            self.monitor_thread.join()
         if self.db_loading_thread:
             self.db_loading_thread.join()
 
@@ -56,6 +59,13 @@ class Frame(sciter.Window):
         self.monitor_thread = launch_thread(self._monitor_notifications)
         # Then launch database loading thread.
         self.db_loading_thread = launch_thread(self._load_database)
+
+    @sciter.script
+    def update_database(self):
+        assert not self.monitor_thread
+        assert not self.db_loading_thread
+        self.monitor_thread = launch_thread(self._monitor_notifications)
+        self.db_loading_thread = launch_thread(self._update_database)
 
     @sciter.script
     def load_videos(self):
@@ -200,6 +210,7 @@ class Frame(sciter.Window):
                 print(type(exc).__name__)
                 print(exc)
                 print()
+        self.monitor_thread = None
         print('End monitoring.')
 
     def _notify(self, notification):
@@ -218,6 +229,15 @@ class Frame(sciter.Window):
                        reset=False)
         self.load_videos()
         self.notifier.notify(DatabaseReady())
+        self.db_loading_thread = None
+        print('End loading database.')
+
+    def _update_database(self):
+        self.api.update(ensure_miniatures=True)
+        self.load_videos()
+        self.notifier.notify(DatabaseReady())
+        self.db_loading_thread = None
+        print('End updating database.')
 
 
 def main():

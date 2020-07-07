@@ -98,7 +98,7 @@ class VideosPage: Reactor.Component {
 									<div>Videos sorted by</div>
 									{sorting.map((val, i) => <div key={i}><strong>{val.substr(1)}</strong>{val[0] == '-' ? (<em> (reverse)</em>) : ''}</div>)}
 								</div>
-								<div class="buttons-line">
+								<div class="buttons-line status">
 									<button class="edit sort">edit ...</button>
 									<button class="reset" id="reset-sort">reset</button>
 								</div>
@@ -116,14 +116,16 @@ class VideosPage: Reactor.Component {
 							</select>
 						</div>
 						<hr/>
-
 						<div class="status">
 							<button class="plain" id="open-random-file">open a random video</button>
 						</div>
 						<hr/>
-
 						<div class="status">
 							<button class="plain" id="open-not-found">display videos not found (in new browser)</button>
+						</div>
+						<hr/>
+						<div class="status">
+							<button class="plain" id="reload">reload database</button>
 						</div>
 					</div>
 					<div class="col main-panel">
@@ -177,6 +179,9 @@ class VideosPage: Reactor.Component {
 		const info = view.open_random_video(this.pageSize);
 		this.updateView({pageNumber: info[0], status: 'Randomly opened: ' + info[2]}, info[1]);
 		this.post(() => element.state.disabled = false);
+	}
+	event click $(button#reload) (evt, element) {
+		this.props.app.loadPage('home', {update: true});
 	}
 	event click $(button#open-not-found) (evt, element) {
 		element.state.disabled = true;

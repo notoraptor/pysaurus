@@ -193,7 +193,7 @@ class HomePage: Reactor.Component {
 		this.props = props || {};
 		this.children = children || {};
 
-		this.status = HomeStatus.INITIAL;
+		this.status = this.props.parameters.update ? HomeStatus.LOADING : HomeStatus.INITIAL;
 		this.messages = [];
 		this.videosMonitoring = new ProgressionMonitoring();
 		this.thumbnailsMonitoring = new ProgressionMonitoring();
@@ -214,6 +214,8 @@ class HomePage: Reactor.Component {
 		this.callbackIndex = Notifications.register(function(notification) {
 			app.notify(notification);
 		});
+		if (this.props.parameters.update)
+			view.update_database();
 	}
 	function detached() {
 		//
@@ -223,7 +225,7 @@ class HomePage: Reactor.Component {
 		if (this.status === HomeStatus.INITIAL)
 			return <button :disabled={false}>Load database</button>;
 		if (this.status === HomeStatus.LOADING)
-			return <button :disabled={true}>Loading database ...</button>;
+			return <button :disabled={true}>{this.props.parameters.update ? 'Updating' : 'Loading'} database ...</button>;
 		if (this.status === HomeStatus.LOADED)
 			return <button :disabled={false}>Display videos</button>;
 	}

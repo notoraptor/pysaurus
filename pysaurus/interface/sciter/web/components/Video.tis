@@ -9,8 +9,6 @@ class Video: Reactor.Component {
 		index
 		data
 		**/
-        this.elementVideo = null;
-        this.elementMenu = null;
     }
     function render() {
         const index = this.props.index;
@@ -22,7 +20,7 @@ class Video: Reactor.Component {
         const file_title = data.file_title;
         const meta_title = (title == file_title ? null : title);
         return (
-            <div class={'video' + (index % 2 ? ' even' : ' odd')} @{this.elementVideo}>
+            <div class={'video' + (index % 2 ? ' even' : ' odd')}>
                 <div class="image">
                     <img alt={data.title} src={data.thumbnail_path}/>
                 </div>
@@ -43,7 +41,7 @@ class Video: Reactor.Component {
                         <div><strong><em>{String.printf("%.2f", data.quality)}</em></strong> %</div>
                     </div>
                 </div>
-                <menu.context @{this.elementMenu} id={'video_' + data.video_id + '_' + index}>
+                <menu.context id={'video_' + data.video_id + '_' + index}>
 	                <li class="open-file">Open file</li>
 	                <li class="open-folder">Open containing folder</li>
 	                {meta_title ? <li class="copy-meta-title">Copy meta title</li> : ''}

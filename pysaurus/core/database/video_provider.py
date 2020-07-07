@@ -234,9 +234,8 @@ class VideoProvider:
         return self.view[index]
 
     def load(self):
-        if self.group_def or self.search_def or self.sort_def != DEFAULT_SORT_DEF:
-            self.sort_def = DEFAULT_SORT_DEF
-            self.set_source(self.source_def)
+        self.sort_def = DEFAULT_SORT_DEF
+        self.set_source(self.source_def)
 
     def get_group_id(self):
         return self.group_id
