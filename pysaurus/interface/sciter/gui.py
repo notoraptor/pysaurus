@@ -10,7 +10,7 @@ import sciter
 
 from pysaurus.core.database.api import API
 from pysaurus.core.database.notifications import DatabaseReady
-from pysaurus.core.database.video_provider import VideoProvider
+from pysaurus.core.database.video_provider import VideoProvider, SOURCE_TREE
 from pysaurus.core.functions import launch_thread
 from pysaurus.core.notification import Notification
 from pysaurus.interface.common.parallel_notifier import ParallelNotifier
@@ -191,6 +191,10 @@ class Frame(sciter.Window):
             'validLength': self.valid_length(),
             'nbGroups': self.count_groups(),
         }
+
+    @sciter.script
+    def get_source_tree(self):
+        return SOURCE_TREE
 
     def _monitor_notifications(self):
         print('Monitoring notifications ...')

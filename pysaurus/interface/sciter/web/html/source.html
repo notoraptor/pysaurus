@@ -1,0 +1,102 @@
+<html>
+<head>
+    <title>Select videos</title>
+</head>
+<style>
+</style>
+<script type="text/tiscript">
+    include "sciter:reactor.tis";
+
+    class FormSourceVideo: Reactor.Component {
+        function this(props, children) {
+            this.props = props || {};
+            this.children = children || {};
+        }
+        function render() {
+            return (
+                <form>
+                    {generateTree(view.parameters.tree)}
+                    <div>
+                        <button type="submit">select</button>
+                    </div>
+                </form>
+            );
+        }
+        function generateTree(tree, prefix='') {
+            const defaultEntry = 'readable-found-without_thumbnails';
+            const defaultPath = ['readable', 'readable-found'];
+            const app = this;
+            return (
+                <ul>
+                {Object.keys(tree).map((name, index) => {
+                    const subTree = tree[name];
+                    const entryName = prefix.length ? (prefix + '-' + name) : name;
+                    stdout.println(entryName);
+                    return (
+                        <li key={index}>
+                            {subTree ? (
+                                <p>
+                                    <div>
+                                        <strong>{name}</strong>
+                                        {' '}
+                                        <input type="radio" id={entryName + '0'} name={entryName} value={'select'}/>{' '}<label for={entryName + '0'}>select</label>
+                                        {' '}
+                                        <input type="radio" id={entryName + '1'} name={entryName} value={'develop'}/>{' '}<label for={entryName + '1'}>develop</label>
+                                    </div>
+                                    {app.generateTree(subTree, entryName)}
+                                </p>
+                            ) : (
+                                <p>
+                                    <label for={entryName + '0'}><strong>{name}</strong></label>{' '}
+                                    <input type="checkbox" id={entryName + '0'} name={entryName}/>
+                                </p>
+                            )}
+                        </li>
+                    );
+                })}
+                </ul>
+            );
+        }
+        event change $(input[type=radio]) (evt, element) {
+            const name = element.attributes['name'];
+            const value = element.value;
+            const ul = element.parent.nextNode;
+            if (ul.tag !== 'ul')
+                throw "not ul";
+            if (value === 'select') {
+                ul.select((el) => {el.value = null;}, 'input');
+                ul.style['display'] = 'none';
+            } else if (value === 'develop') {
+                ul.style['display'] = 'block';
+            }
+        }
+        event ready $(form) (evt, element) {
+            stdout.println('here');
+        }
+        function attached() {
+            stdout.println('here');
+            const element = $(form);
+            stdout.println(element);
+        };
+    }
+</script>
+<body>
+<main></main>
+<script type="text/tiscript">
+    event ready {
+        const (sx, sy, sw, sh) = view.screenBox(#workarea, #rectw);
+        const width = 500;
+        const height = 600;
+        const x = (sw - width) / 2;
+        const y = (sh - height) / 2;
+        view.move(x, y, width, height);
+        $(main).merge(<FormSourceVideo/>);
+    }
+    event keydown (evt, element) {
+        if (evt.keyCode === Event.VK_ESCAPE) {
+            view.close();
+        }
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+include "sciter:reactor.tis";
+
+class FormSourceVideo: Reactor.Component {
+	function this(props, children) {
+		this.props = props || {};
+		this.children = children || {};
+		stdout.println('Parameters:', view.parameters);
+	}
+	function render() {
+		return (
+			<div>
+				hello World
+			</div>
+		);
+	}
+}

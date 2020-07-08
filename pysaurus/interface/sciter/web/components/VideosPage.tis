@@ -52,6 +52,11 @@ class VideosPage: Reactor.Component {
 						</div>
 						<hr/>
 
+						<div class="status">
+							<button class="plain" id="source">Select videos</button>
+						</div>
+						<hr/>
+
 						{group_def ? (
 							<div>
 								<div class="status">
@@ -203,6 +208,10 @@ class VideosPage: Reactor.Component {
 	event click $(button#reset-group) (evt, element) {
 		view.group_videos(null, null);
 		this.update({pageNumber: 0});
+	}
+	event click $(button#source) (evt, element) {
+		const tree = view.get_source_tree();
+		const sources = view.dialog({url: 'html/source.html', parameters: {tree: tree}});
 	}
 	event click $(#status) {
 		//

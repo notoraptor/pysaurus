@@ -99,6 +99,9 @@ main {
 	font-weight: bold;
 	color: red;
 }
+#videos button#source {
+	font-weight: bold;
+}
 
 /** Video item. **/
 .video {
