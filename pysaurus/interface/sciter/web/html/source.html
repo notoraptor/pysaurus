@@ -1,37 +1,66 @@
 <html>
 <head>
     <title>Select videos</title>
-</head>
-<style>
-</style>
-<script type="text/tiscript">
+    <style>
+        button.submit {
+            display: block;
+            width: 1*;
+        }
+        p.submit {
+            margin: 1em 0.25em 1em 0.25em;
+        }
+        ul.path {
+            display: none;
+        }
+    </style>
+    <script type="text/tiscript">
     include "sciter:reactor.tis";
-
+    const DEFAULT_PATH = ["readable"];
+    const DEFAULT_ENTRY = DEFAULT_PATH.join("-");
+    const TREE = view.parameters.tree;
+    function getSubTree(tree, entryName) {
+        const steps = entryName.split('-');
+        let subTree = tree;
+        for (let step in steps)
+            subTree = subTree[step];
+        return subTree;
+    }
+    function collectPaths(tree, collection, prefix='') {
+        if (tree) {
+            for (let name in Object.keys(tree)) {
+                const entryName = prefix.length ? (prefix + '-' + name) : name;
+                collectPaths(tree[name], collection, entryName);
+            }
+        } else {
+            collection.push(prefix);
+        }
+    }
     class FormSourceVideo: Reactor.Component {
         function this(props, children) {
             this.props = props || {};
             this.children = children || {};
+            this.paths = [DEFAULT_ENTRY];
         }
         function render() {
+            const app = this;
             return (
-                <form>
-                    {generateTree(view.parameters.tree)}
-                    <div>
-                        <button type="submit">select</button>
-                    </div>
-                </form>
+                <div>
+                    {generateTree(app, view.parameters.tree)}
+                    <p>Currently selected:{this.paths.length ? '' : ' None'}</p>
+                    {this.paths.length ? (
+                        <ul>{this.paths.map((path, index) => <li key={index}><strong>{path.replace('-', '.')}</strong></li>)}</ul>
+                    ) : ''}
+                    <p class="submit"><button class="submit">select</button></p>
+                </div>
             );
         }
-        function generateTree(tree, prefix='') {
-            const defaultEntry = 'readable-found-without_thumbnails';
-            const defaultPath = ['readable', 'readable-found'];
-            const app = this;
+        function generateTree(app, tree, prefix='') {
             return (
                 <ul>
                 {Object.keys(tree).map((name, index) => {
                     const subTree = tree[name];
                     const entryName = prefix.length ? (prefix + '-' + name) : name;
-                    stdout.println(entryName);
+                    const hasPath = app.hasPath(entryName);
                     return (
                         <li key={index}>
                             {subTree ? (
@@ -39,16 +68,16 @@
                                     <div>
                                         <strong>{name}</strong>
                                         {' '}
-                                        <input type="radio" id={entryName + '0'} name={entryName} value={'select'}/>{' '}<label for={entryName + '0'}>select</label>
+                                        <input type="radio" id={entryName + '0'} name={entryName} value={'select'} :checked={hasPath}/>{' '}<label for={entryName + '0'}>select</label>
                                         {' '}
-                                        <input type="radio" id={entryName + '1'} name={entryName} value={'develop'}/>{' '}<label for={entryName + '1'}>develop</label>
+                                        <input type="radio" id={entryName + '1'} name={entryName} value={'develop'} :checked={!hasPath}/>{' '}<label for={entryName + '1'}>develop</label>
                                     </div>
-                                    {app.generateTree(subTree, entryName)}
+                                    {hasPath ? '' : app.generateTree(app, subTree, entryName)}
                                 </p>
                             ) : (
                                 <p>
                                     <label for={entryName + '0'}><strong>{name}</strong></label>{' '}
-                                    <input type="checkbox" id={entryName + '0'} name={entryName}/>
+                                    <input type="checkbox" id={entryName + '0'} name={entryName} :checked={hasPath}/>
                                 </p>
                             )}
                         </li>
@@ -57,32 +86,53 @@
                 </ul>
             );
         }
+        function addPaths(paths) {
+            const newPaths = this.paths.slice();
+            for (let path in paths) {
+                if (newPaths.indexOf(path) < 0) {
+                    newPaths.push(path);
+                }
+            }
+            newPaths.sort();
+            this.update({paths: newPaths});
+        }
+        function removePaths(paths) {
+            let newPaths = this.paths.slice();
+            for (let path in paths) {
+                const pos = newPaths.indexOf(path);
+                if (pos >= 0) {
+                    newPaths.splice(pos, 1);
+                }
+            }
+            this.update({paths: newPaths});
+        }
+        function hasPath(path) {
+            return this.paths.indexOf(path) >= 0;
+        }
         event change $(input[type=radio]) (evt, element) {
             const name = element.attributes['name'];
             const value = element.value;
-            const ul = element.parent.nextNode;
-            if (ul.tag !== 'ul')
-                throw "not ul";
             if (value === 'select') {
-                ul.select((el) => {el.value = null;}, 'input');
-                ul.style['display'] = 'none';
+                const pathsToRemove = [];
+                collectPaths(getSubTree(TREE, name), pathsToRemove, name);
+                this.removePaths(pathsToRemove);
+                this.addPaths([name]);
             } else if (value === 'develop') {
-                ul.style['display'] = 'block';
+                this.removePaths([name]);
             }
         }
-        event ready $(form) (evt, element) {
-            stdout.println('here');
+        event change $(input[type=checkbox]) (evt, element) {
+            const name = element.attributes['name'];
+            if (element.value) {
+                this.addPaths([name]);
+            } else {
+                this.removePaths([name]);
+            }
         }
-        function attached() {
-            stdout.println('here');
-            const element = $(form);
-            stdout.println(element);
-        };
+        event click $(button.submit) (evt, element) {
+            view.close(this.paths.map(path => path.split('-')));
+        }
     }
-</script>
-<body>
-<main></main>
-<script type="text/tiscript">
     event ready {
         const (sx, sy, sw, sh) = view.screenBox(#workarea, #rectw);
         const width = 500;
@@ -97,6 +147,11 @@
             view.close();
         }
     }
+    </script>
+</head>
+<body>
+<main></main>
+<script type="text/tiscript">
 </script>
 </body>
 </html>

@@ -106,9 +106,19 @@ main {
 /** Video item. **/
 .video {
 	flow: horizontal;
+	white-space: nowrap;
 }
-.video.even {
+.video.found.even {
 	background-color: rgb(240, 240, 240);
+}
+.video.not-found.even {
+	background-color: rgb(250, 250, 140);
+}
+.video.not-found.odd {
+	background-color: rgb(250, 250, 200);
+}
+.video.not-found .info .name {
+	color: rgb(100, 100, 80);
 }
 .video .image {
 	padding: 0.5em;
@@ -133,7 +143,7 @@ main {
 	text-align: center;
 	margin-right: 0.5em;
 }
-.video .info .quality .prepend {
+.video .info .prepend {
 	background-color: black;
 	color: white;
 	font-weight: bold;
@@ -141,19 +151,32 @@ main {
 	padding-right: 1ex;
 	text-align: center;
 	margin-right: 0.5em;
+	width: 10ex;
 }
-.video .info .filename {
-	color: rgb(250, 140, 140);
-	border: 1px solid rgb(250, 240, 240);
+.video.not-found .filename-line .prepend:hover {
+	background-color: red;
+	cursor: pointer;
+	content: 'DELETE';
+}
+.video.found .info .filename {
+	color: rgb(140, 140, 250);
+	border: 1px solid rgb(240, 240, 250);
 	background-color: rgb(250, 250, 250);
 	padding: 0.2em;
 }
-.video .info .filename code:hover {
+.video.found .info .filename code:hover {
 	text-decoration: underline;
 	cursor: pointer;
-	color: red;
+	color: blue;
+}
+.video.not-found .info .filename {
+	color: rgb(250, 140, 140);
 }
 .video li.delete-file {
 	font-weight: bold;
 	color: red;
+}
+caption.not-found {
+	text-align: center;
+	font-weight: bold;
 }

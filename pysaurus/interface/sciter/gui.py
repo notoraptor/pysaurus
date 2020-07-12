@@ -124,11 +124,16 @@ class Frame(sciter.Window):
     @sciter.script
     def get_video_fields(self, index, fields):
         video = self.provider.get_video(index)
-        return {field: to_js_value(getattr(video, field)) for field in fields}
+        fields = {field: to_js_value(getattr(video, field)) for field in fields}
+        fields['exists'] = video.exists()
+        return fields
 
     @sciter.script
     def open_video(self, index):
-        return str(self.provider.get_video(index).filename.open())
+        try:
+            return str(self.provider.get_video(index).filename.open())
+        except OSError:
+            return False
 
     @sciter.script
     def open_containing_folder(self, index):
@@ -194,7 +199,18 @@ class Frame(sciter.Window):
 
     @sciter.script
     def get_source_tree(self):
-        return SOURCE_TREE
+        # TODO unreable videos cannot be displayed yet, as they are incomplete VideoState (not Video) objects.
+        tree = SOURCE_TREE.copy()
+        del tree['unreadable']
+        return tree
+
+    @sciter.script
+    def set_sources(self, paths):
+        self.provider.set_source(paths)
+
+    @sciter.script
+    def get_sources(self):
+        return self.provider.get_sources()
 
     def _monitor_notifications(self):
         print('Monitoring notifications ...')

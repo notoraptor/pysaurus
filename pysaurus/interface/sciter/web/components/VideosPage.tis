@@ -12,6 +12,7 @@ class VideosPage: Reactor.Component {
 		this.pageSize = 100;
 		this.pageNumber = 0;
 		this.status = 'Loaded.';
+		this.confirmDeletion = true;
 	}
 	function render() {
 		const backend = view.get_info(this.pageSize);
@@ -21,6 +22,7 @@ class VideosPage: Reactor.Component {
 		const validLength = backend.validLength;
 		const nbGroups = backend.nbGroups;
 
+		const sources = view.get_sources();
 		const group_def = view.get_group_def();
 		const search_def = view.get_search_def();
 		const sorting = view.get_sorting();
@@ -44,6 +46,10 @@ class VideosPage: Reactor.Component {
 					<div class="col side-panel">
 						<div class="status">
 							Displaying {group_def || search_def ? <em>filtered</em> : <strong>all</strong>} videos
+						</div>
+						<div class="status sources">
+						<div class="sources">Sources:</div>
+						{sources.map((source, index) => <div class="source" key={index}>{source.join('.')}</div>)}
 						</div>
 						<div class="status">
 							<div>{nbVideos} video{nbVideos > 1 ? 's' : ''}</div>
@@ -132,6 +138,12 @@ class VideosPage: Reactor.Component {
 						<div class="status">
 							<button class="plain" id="reload">reload database</button>
 						</div>
+						<hr/>
+						<div class="status">
+							<input type="checkbox" name="confirm-deletion" id="confirm-deletion" :checked={this.confirmDeletion}/>
+							{' '}
+							<label for="confirm-deletion">confirm deletion for entries not found</label>
+						</div>
 					</div>
 					<div class="col main-panel">
 						<div class="status pagination">
@@ -167,7 +179,7 @@ class VideosPage: Reactor.Component {
 		const parent = this;
 		for (let i = start; i < end; ++i) {
 			const data = view.get_video_fields(i, FIELDS);
-			videos.push(<Video key={data.video_id} data={data} index={i} parent={parent}/>);
+			videos.push(<Video key={data.video_id} data={data} index={i} parent={parent} confirmDeletion={this.confirmDeletion}/>);
 		}
 		return videos;
 	}
@@ -212,6 +224,10 @@ class VideosPage: Reactor.Component {
 	event click $(button#source) (evt, element) {
 		const tree = view.get_source_tree();
 		const sources = view.dialog({url: 'html/source.html', parameters: {tree: tree}});
+		if (sources && sources.length) {
+			view.set_sources(sources);
+			this.update({pageNumber: 0});
+		}
 	}
 	event click $(#status) {
 		//
@@ -243,5 +259,8 @@ class VideosPage: Reactor.Component {
         if (value !== this.pageSize) {
             this.updateView({pageSize: value, pageNumber: 0});
         }
+    }
+    event change $(input[name=confirm-deletion]) (evt, element) {
+        this.update({confirmDeletion: element.value});
     }
 }

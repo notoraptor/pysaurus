@@ -76,7 +76,7 @@ class SearchDef:
         return cls(None, None)
 
 
-DEFAULT_SOURCE_DEF = (('readable', 'found', 'with_thumbnails'),)
+DEFAULT_SOURCE_DEF = (('readable',),)
 DEFAULT_GROUP_DEF = GroupDef.none()  # str field, bool reverse
 DEFAULT_SEARCH_DEF = SearchDef.none()  # str text, str cond
 DEFAULT_SORT_DEF = ('-date',)
@@ -190,7 +190,10 @@ class VideoProvider:
             self.database.delete_video(video)
             del self.source[filename]
             del self.view[index]
-            if self.group_def != (None, None) and len(self.view) < 2:
+            if not self.group_def:
+                self.groups = [list(self.source.values())]
+                self.set_search(self.search_def.text, self.search_def.cond)
+            elif len(self.view) < 2:
                 self.__delete_current_group()
             return True
         except OSError:
@@ -210,6 +213,9 @@ class VideoProvider:
 
     def get_group_field_value(self):
         return getattr(self.view[0], self.group_def.field)
+
+    def get_sources(self):
+        return self.source_def
 
     def get_group_def(self):
         if self.group_def:
@@ -253,7 +259,7 @@ class VideoProvider:
         for path in self.source_def:
             source.extend(_get_source(self.database, path, 0))
         source_dict = {video.filename: video for video in source}
-        assert len(source_dict) == len(source)
+        assert len(source_dict) == len(source), (len(source_dict), len(source))
         self.source = source_dict
 
     def __sort(self):

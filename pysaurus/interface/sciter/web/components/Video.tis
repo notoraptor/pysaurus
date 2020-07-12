@@ -8,6 +8,7 @@ class Video: Reactor.Component {
 		parent
 		index
 		data
+		confirmDeletion: bool
 		**/
     }
     function render() {
@@ -20,7 +21,7 @@ class Video: Reactor.Component {
         const file_title = data.file_title;
         const meta_title = (title == file_title ? null : title);
         return (
-            <div class={'video' + (index % 2 ? ' even' : ' odd')}>
+            <div class={'video' + (index % 2 ? ' even' : ' odd') + (data.exists ? ' found' : ' not-found')}>
                 <div class="image">
                     <img alt={data.title} src={data.thumbnail_path}/>
                 </div>
@@ -29,9 +30,12 @@ class Video: Reactor.Component {
                         <div><strong>{data.title}</strong></div>
                         {data.title === data.file_title ? '' : <div><em>{data.file_title}</em></div>}
                     </div>
-                    <div class="filename"><code>{data.filename}</code></div>
+                    <div class={'filename-line' + (data.exists ? '' : ' row')}>
+	                    {data.exists ? '' : <div class="prepend"><code>NOT FOUND</code></div>}
+	                    <div class="filename"><code>{data.filename}</code></div>
+                    </div>
                     <div class="format">
-                        <div class="extension"><code>{data.extension}</code></div>
+                        <div class="prepend"><code>{data.extension}</code></div>
                         <div><strong title={data.file_size}>{data.size}</strong> / {data.container_format} (<span title={data.video_codec_description}>{data.video_codec}</span>, <span title={data.audio_codec_description}>{data.audio_codec}</span>)</div>
                     </div>
                     <div><strong>{data.width}</strong> x <strong>{data.height}</strong> @ {data.frame_rate} fps | {data.sample_rate} Hz, {data.audio_bit_rate} Kb/s</div>
@@ -42,27 +46,51 @@ class Video: Reactor.Component {
                     </div>
                 </div>
                 <menu.context id={'video_' + data.video_id + '_' + index}>
-	                <li class="open-file">Open file</li>
-	                <li class="open-folder">Open containing folder</li>
+                    {data.exists ? <li class="open-file">Open file</li> : <caption class="not-found">(not found)</caption>}
+                    {data.exists ? '' : <li class="delete-file">Delete entry</li>}
+	                {data.exists ? <li class="open-folder">Open containing folder</li> : ''}
 	                {meta_title ? <li class="copy-meta-title">Copy meta title</li> : ''}
 	                {file_title ? <li class="copy-file-title">Copy file title</li> : ''}
-	                <li class="rename-file">Rename video</li>
-	                <li class="delete-file">Delete video</li>
+	                {data.exists ? <li class="rename-file">Rename video</li> : ''}
+	                {data.exists ? <li class="delete-file">Delete video</li> : ''}
 	            </menu>
             </div>
         );
     }
     function openVideo() {
-        view.open_video(this.props.index);
-        this.props.parent.updateStatus('Opened: ' + this.props.data.filename);
+        if (view.open_video(this.props.index))
+	        this.props.parent.updateStatus('Opened: ' + this.props.data.filename);
+	    else
+	        this.props.parent.updateStatus('Unable to open: ' + this.props.data.filename);
+    }
+    function confirmDeletion() {
+        return view.dialog({
+            url: 'html/delete.html',
+            parameters: {filename: this.props.data.filename, thumbnail_path: this.props.data.thumbnail_path}}
+        );
+    }
+    function deleteVideo() {
+        let deletionConfirmed = false;
+        if (this.props.data.exists)
+            deletionConfirmed = this.confirmDeletion();
+        else if (this.props.confirmDeletion)
+            deletionConfirmed = this.confirmDeletion();
+        else
+            deletionConfirmed = true;
+        if (deletionConfirmed) {
+            if (view.delete_video(this.props.index))
+                this.props.parent.updateStatus('Video deleted! ' + this.props.data.filename);
+            else
+                this.props.parent.updateStatus('Unable to delete video! ' + this.props.data.filename);
+        }
     }
 
-    event click $(.video .info .filename code) (evt, element) {
-        this.openVideo();
-    }
     event contextmenu $(.video) (evt, element) {
         const (mx, my) = view.cursorLocation();
         element.popup(element.$(menu), 7, mx, my);
+    }
+    event click $(.video.found .info .filename code) (evt, element) {
+        this.openVideo();
     }
     event click $(menu li.open-file) (evt, element) {
         this.openVideo();
@@ -85,15 +113,10 @@ class Video: Reactor.Component {
         this.props.parent.updateStatus('Copied to clipboard: ' + text);
     }
     event click $(menu li.delete-file) (evt, element) {
-        if (view.dialog({
-            url: 'html/delete.html',
-            parameters: {filename: this.props.data.filename, thumbnail_path: this.props.data.thumbnail_path}}
-        )) {
-            if (view.delete_video(this.props.index))
-                this.props.parent.updateStatus('Video deleted! ' + this.props.data.filename);
-            else
-                this.props.parent.updateStatus('Unable to delete video! ' + this.props.data.filename);
-        }
+        this.deleteVideo();
+    }
+    event click $(.video.not-found .filename-line .prepend) (evt, element) {
+        this.deleteVideo();
     }
     event click $(menu li.rename-file) (evt, element) {
         const newTitle = view.dialog({
