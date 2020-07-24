@@ -73,8 +73,8 @@ class VideosPage: Reactor.Component {
 									<div>Group {group_def.group_id + 1}</div>
 								</div>
 								<div class="buttons-line">
-									<button class="edit group">edit ...</button>
-									<button class="reset" id="reset-group">reset</button>
+									<button class="edit group">edit group ...</button>
+									<button class="reset" id="reset-group">reset group</button>
 								</div>
 							</div>
 						) : (
@@ -93,7 +93,7 @@ class VideosPage: Reactor.Component {
 								</div>
 								<div class="buttons-line">
 									<button class="edit search" accesskey="^F">search ...</button>
-									<button class="reset" id="reset-search">reset</button>
+									<button class="reset" id="reset-search">reset search</button>
 								</div>
 							</div>
 						) : (
@@ -110,8 +110,8 @@ class VideosPage: Reactor.Component {
 									{sorting.map((val, i) => <div key={i}><strong>{val.substr(1)}</strong>{val[0] == '-' ? (<em> (reverse)</em>) : ''}</div>)}
 								</div>
 								<div class="buttons-line status">
-									<button class="edit sort">edit ...</button>
-									<button class="reset" id="reset-sort">reset</button>
+									<button class="edit sort">edit sorting ...</button>
+									<button class="reset" id="reset-sort">reset sorting</button>
 								</div>
 							</div>
 						) : (
@@ -129,10 +129,6 @@ class VideosPage: Reactor.Component {
 						<hr/>
 						<div class="status">
 							<button class="plain" id="open-random-file">open a random video</button>
-						</div>
-						<hr/>
-						<div class="status">
-							<button class="plain" id="open-not-found">display videos not found (in new browser)</button>
 						</div>
 						<hr/>
 						<div class="status">
@@ -199,15 +195,6 @@ class VideosPage: Reactor.Component {
 	}
 	event click $(button#reload) (evt, element) {
 		this.props.app.loadPage('home', {update: true});
-	}
-	event click $(button#open-not-found) (evt, element) {
-		element.state.disabled = true;
-		const info = view.open_not_found();
-		if (info)
-			this.updateView({status: 'Not found displayed: ' + info});
-		else
-			this.updateView({status: 'Unable to display videos not found.'});
-		this.post(() => element.state.disabled = false);
 	}
 	event click $(button#reset-search) (evt, element) {
 		view.set_search(null, null);

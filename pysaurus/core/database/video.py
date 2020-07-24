@@ -26,6 +26,22 @@ from pysaurus.core.functions import html_to_title, string_to_pieces
 from pysaurus.core.modules import VideoClipping, ImageUtils
 
 
+def compare_with_lt(v1, v2):
+    if v1 < v2:
+        return -1
+    if v2 < v1:
+        return 1
+    return 0
+
+
+def compare_text(v1: str, v2: str):
+    return compare_with_lt(v1.lower(), v2.lower()) or compare_with_lt(v1, v2)
+
+
+def compare_text_or_data(v1, v2):
+    return compare_text(v1, v2) if isinstance(v1, str) else compare_with_lt(v1, v2)
+
+
 class Video(VideoState):
     UNREADABLE = False
 
@@ -289,11 +305,7 @@ class Video(VideoState):
             field = sort[1:]
             f1 = getattr(self, field)
             f2 = getattr(other, field)
-            ret = 0
-            if f1 < f2:
-                ret = -1
-            elif f1 > f2:
-                ret = 1
+            ret = compare_text_or_data(f1, f2)
             if ret:
                 return -ret if reverse else ret
         return 0
