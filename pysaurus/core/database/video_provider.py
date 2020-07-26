@@ -212,7 +212,7 @@ class VideoProvider:
         self.set_search(DEFAULT_SEARCH_DEF.text, DEFAULT_SEARCH_DEF.cond)
 
     def get_group_field_value(self):
-        return getattr(self.view[0], self.group_def.field)
+        return getattr(self.groups[self.group_id][0], self.group_def.field)
 
     def get_sources(self):
         return self.source_def

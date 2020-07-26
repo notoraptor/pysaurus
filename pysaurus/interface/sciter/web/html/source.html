@@ -15,9 +15,11 @@
     </style>
     <script type="text/tiscript">
     include "sciter:reactor.tis";
-    const DEFAULT_PATH = ["readable"];
-    const DEFAULT_ENTRY = DEFAULT_PATH.join("-");
+    // const DEFAULT_PATH = ["readable"];
+    // const DEFAULT_ENTRY = DEFAULT_PATH.join("-");
     const TREE = view.parameters.tree;
+    const SOURCES = view.parameters.sources;
+    const ENTRIES = SOURCES.map(path => path.join("-"));
     function getSubTree(tree, entryName) {
         const steps = entryName.split('-');
         let subTree = tree;
@@ -39,13 +41,13 @@
         function this(props, children) {
             this.props = props || {};
             this.children = children || {};
-            this.paths = [DEFAULT_ENTRY];
+            this.paths = ENTRIES;
         }
         function render() {
             const app = this;
             return (
                 <div>
-                    {generateTree(app, view.parameters.tree)}
+                    {generateTree(app, TREE)}
                     <p>Currently selected:{this.paths.length ? '' : ' None'}</p>
                     {this.paths.length ? (
                         <ul>{this.paths.map((path, index) => <li key={index}><strong>{path.replace('-', '.')}</strong></li>)}</ul>

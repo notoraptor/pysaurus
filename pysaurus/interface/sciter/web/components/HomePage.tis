@@ -90,12 +90,15 @@ const NotificationCollector = {
 
 const NotificationMessenger = {
 	VideoJob: function(app, message, i) {
+		//
 		return generateMonitoringMessage(app.videosMonitoring, 'video');
 	},
 	ThumbnailJob: function(app, message, i) {
+		//
 		return generateMonitoringMessage(app.thumbnailsMonitoring, 'thumb');
 	},
 	MiniatureJob: function(app, message, i) {
+		//
 		return generateMonitoringMessage(app.miniaturesMonitoring, 'miniature');
 	},
 	DatabaseLoaded: function(app, message, i) {
@@ -114,9 +117,11 @@ const NotificationMessenger = {
 		);
 	},
 	DatabaseSaved: function(app, message, i) {
+		//
 		return NotificationMessenger.DatabaseLoaded(app, message, i);
 	},
 	DatabaseReady: function(app, message, i) {
+		//
 		return <div key={i}><strong>Database open!</strong></div>;
 	},
 	FinishedCollectingVideos: function(app, message, i) {
@@ -160,6 +165,7 @@ const NotificationMessenger = {
 		);
 	},
 	VideoThumbnailErrors: function(app, message, i) {
+		//
 		return NotificationMessenger.VideoInfoErrors(app, message, i);
 	},
 	VideosToLoad: function(app, message, i) {
@@ -173,9 +179,11 @@ const NotificationMessenger = {
 		}
 	},
 	ThumbnailsToLoad: function(app, message, i) {
+		//
 		return NotificationMessenger.VideosToLoad(app, message, i);
 	},
 	MiniaturesToLoad: function(app, message, i) {
+		//
 		return NotificationMessenger.VideosToLoad(app, message, i);
 	},
 	NbMiniatures: function(app, message, i) {

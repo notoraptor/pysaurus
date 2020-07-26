@@ -59,7 +59,7 @@ class VideosPage: Reactor.Component {
 						<hr/>
 
 						<div class="status">
-							<button class="plain" id="source">Select videos</button>
+							<button class="plain" id="source">Select videos ...</button>
 						</div>
 						<hr/>
 
@@ -67,10 +67,8 @@ class VideosPage: Reactor.Component {
 							<div>
 								<div class="status">
 									<div>Videos grouped by</div>
-									<div>{FIELD_TITLES[group_def.field]}</div>
-									{group_def.reverse ? (<em>(in reverse order)</em>) : ''}
-									<div>{group_def.nb_groups} group{group_def.nb_groups > 1 ? 's' : ''}</div>
-									<div>Group {group_def.group_id + 1}</div>
+									<div>{FIELD_TITLES[group_def.field]}{' '}{group_def.reverse ? (<span>&#9660;</span>) : (<span>&#9650;</span>)}</div>
+									<div>Group {group_def.nb_groups ? group_def.group_id + 1 : 0} / {group_def.nb_groups}</div>
 								</div>
 								<div class="buttons-line">
 									<button class="edit group">edit group ...</button>
@@ -107,7 +105,7 @@ class VideosPage: Reactor.Component {
 							<div>
 								<div class="status">
 									<div>Videos sorted by</div>
-									{sorting.map((val, i) => <div key={i}><strong>{val.substr(1)}</strong>{val[0] == '-' ? (<em> (reverse)</em>) : ''}</div>)}
+									{sorting.map((val, i) => <div key={i}><strong>{val.substr(1)}</strong>{' '}{val[0] == '-' ? (<span>&#9660;</span>) : (<span>&#9650;</span>)}</div>)}
 								</div>
 								<div class="buttons-line status">
 									<button class="edit sort">edit sorting ...</button>
@@ -210,7 +208,8 @@ class VideosPage: Reactor.Component {
 	}
 	event click $(button#source) (evt, element) {
 		const tree = view.get_source_tree();
-		const sources = view.dialog({url: 'html/source.html', parameters: {tree: tree}});
+		const currentSources = view.get_sources();
+		const sources = view.dialog({url: 'html/source.html', parameters: {tree: tree, sources: currentSources}});
 		if (sources && sources.length) {
 			view.set_sources(sources);
 			this.update({pageNumber: 0});
@@ -221,7 +220,7 @@ class VideosPage: Reactor.Component {
 		this.updateStatus('');
 	}
 	event click $(button.sort) (evt, element) {
-		const sorting = view.dialog('html/sort.html');
+		const sorting = view.dialog({url: 'html/sort.html', parameters: {sorting: view.get_sorting()}});
 		if (sorting && sorting.length) {
 			view.set_sorting(sorting);
 			this.updateView({pageNumber: 0});

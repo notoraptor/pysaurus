@@ -29,6 +29,12 @@ main {
 	height: 1*;
 	overflow: auto;
 }
+#home div.notifications > div {
+	padding-left: 0.5em;
+	padding-right: 0.5em;
+	padding-bottom: 0.25em;
+	padding-top: 0.25em;
+}
 #home .job {
 	flow: horizontal;
 }

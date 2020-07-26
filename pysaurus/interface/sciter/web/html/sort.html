@@ -101,7 +101,17 @@
 		    view.close();
 	}
 	event ready {
-	    addSorting('date', true);
+	    const sorting = view.parameters.sorting;
+	    if (sorting.length) {
+	        for (let def in sorting) {
+	            const direction = def.substr(0, 1);
+	            const field = def.substr(1);
+	            const reverse = (direction == '-');
+	            addSorting(field, reverse);
+	        }
+	    } else {
+            addSorting('date', true);
+	    }
         const (sx, sy, sw, sh) = view.screenBox(#workarea, #rectw);
         const width = 400;
         const height = 300;

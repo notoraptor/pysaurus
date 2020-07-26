@@ -58,7 +58,7 @@ class Database:
         with Profiler('Load database'):
             self.__load(folders, clear_old_folders)
         self.video_property_bound = VideoPropertyBound(t[0] for t in Video.QUALITY_FIELDS)
-        self.video_property_bound.update(self.readable.found.with_thumbnails)
+        self.video_property_bound.update(self.readable)
 
     # Properties.
 
@@ -497,7 +497,7 @@ class Database:
 
     def save(self):
         self.__ensure_identifiers()
-        self.video_property_bound.update(self.readable.found.with_thumbnails)
+        self.video_property_bound.update(self.readable)
         # Save database.
         json_output = {'date': self.__date.time,
                        'folders': sorted(folder.path for folder in self.__folders),
