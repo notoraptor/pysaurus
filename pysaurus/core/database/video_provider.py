@@ -219,7 +219,10 @@ class VideoProvider:
 
     def get_group_def(self):
         if self.group_def:
-            return {'field': self.group_def.field, 'reverse': self.group_def.reverse, 'group_id': self.group_id, 'nb_groups': len(self.groups)}
+            return {'field': self.group_def.field,
+                    'reverse': self.group_def.reverse,
+                    'group_id': self.group_id,
+                    'nb_groups': len(self.groups)}
         return None
 
     def get_search_def(self):

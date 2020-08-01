@@ -1,0 +1,21 @@
+include "sciter:reactor.tis";
+
+class Test: Reactor.Component {
+	function this(props) {
+		this.props = props;
+	}
+	function render() {
+		return (
+			<div class="test">
+				<p><button>hello 1!</button></p>
+				<p><button>hello 2!</button></p>
+				<p><button>hello 3!</button></p>
+				<p><button>hello 4!</button></p>
+				<p><button>hello 5!</button></p>
+			</div>
+		);
+	}
+	event click $(.test button) (evt, element) {
+		this.props.app.loadDialog('Fancy Title!', onClose => <div><strong>Fancy content!</strong></div>);
+	}
+}

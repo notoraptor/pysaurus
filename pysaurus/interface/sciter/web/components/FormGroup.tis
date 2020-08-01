@@ -3,23 +3,26 @@ include "../utils/constants.tis";
 
 class FormGroup: Reactor.Component {
 	function this(props, children) {
+		// field
+		// reverse
+		// onClose
 		this.props = props || {};
 		this.children = children || {};
 	}
 	function render() {
 		return (
-			<div>
+			<div class="form-group">
 				<p>
-					<select id="group-field" name="groupField">
+					<select id="group-field" name="groupField" :value={this.props.field || null}>
 						{SORT_FIELDS.map((field, fieldIndex) => <option key={fieldIndex} value={field}>{FIELD_TITLES[field]}</option>)}
 					</select>
 				</p>
 				<p>
-					<input type="radio" id="group-reverse-off" name="groupReverse" value={false}/>
+					<input type="radio" id="group-reverse-off" name="groupReverse" value={false} :checked={this.props.reverse === false}/>
 					<label for="group-reverse-off"> ascending</label>
 				</p>
 				<p>
-					<input type="radio" id="group-reverse-on" name="groupReverse" value={true}/>
+					<input type="radio" id="group-reverse-on" name="groupReverse" value={true} :checked={this.props.reverse === true}/>
 					<label for="group-reverse-on"> descending</label>
 				</p>
 			</div>
@@ -34,6 +37,6 @@ class FormGroup: Reactor.Component {
 		const value = element.value;
 		const groupField = $(select#group-field).value;
 		const groupReverse = element.value === "true";
-		view.close({field: groupField, reverse: groupReverse});
+		this.props.onClose({field: groupField, reverse: groupReverse});
 	}
 }

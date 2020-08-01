@@ -3,6 +3,10 @@ include "../utils/constants.tis";
 include "../utils/utils.tis";
 include "Video.tis";
 include "Pagination.tis";
+include "FormSourceVideo.tis";
+include "FormSort.tis";
+include "FormSearch.tis";
+include "FormGroup.tis";
 
 class VideosPage: Reactor.Component {
 	function this(props, children) {
@@ -207,38 +211,57 @@ class VideosPage: Reactor.Component {
 		this.update({pageNumber: 0});
 	}
 	event click $(button#source) (evt, element) {
+		const app = this;
 		const tree = view.get_source_tree();
-		const currentSources = view.get_sources();
-		const sources = view.dialog({url: 'html/source.html', parameters: {tree: tree, sources: currentSources}});
-		if (sources && sources.length) {
-			view.set_sources(sources);
-			this.update({pageNumber: 0});
-		}
-	}
-	event click $(#status) {
-		//
-		this.updateStatus('');
+		const sources = view.get_sources();
+		this.props.app.loadDialog('Select Videos', onClose => (
+			<FormSourceVideo tree={tree} sources={sources} onClose={sources => {
+				onClose();
+				if (sources && sources.length) {
+					view.set_sources(sources);
+					app.update({pageNumber: 0});
+				}
+			}} />
+		));
 	}
 	event click $(button.sort) (evt, element) {
-		const sorting = view.dialog({url: 'html/sort.html', parameters: {sorting: view.get_sorting()}});
-		if (sorting && sorting.length) {
-			view.set_sorting(sorting);
-			this.updateView({pageNumber: 0});
-		}
+		const app = this;
+		const sorting = view.get_sorting();
+		this.props.app.loadDialog('Sort videos', onClose => (
+			<FormSort sorting={sorting} onClose={sorting => {
+				onClose();
+				if (sorting && sorting.length) {
+					view.set_sorting(sorting);
+					app.updateView({pageNumber: 0});
+				}
+			}}/>
+		));
     }
     event click $(button.search) (evt, element) {
-        const criterion = view.dialog('html/search.html');
-        if (criterion && criterion.text.length && criterion.cond.length) {
-			view.set_search(criterion.text, criterion.cond);
-			this.updateView({pageNumber: 0});
-		}
+        const app = this;
+        const search_def = view.get_search_def() || {text: null, cond: null};
+        this.props.app.loadDialog('Search videos', onClose => (
+            <FormSearch text={search_def.text} cond={search_def.cond} onClose={criterion => {
+                onClose();
+				if (criterion && criterion.text.length && criterion.cond.length) {
+					view.set_search(criterion.text, criterion.cond);
+					app.updateView({pageNumber: 0});
+				}
+            }} />
+        ));
     }
     event click $(button.group) (evt, element) {
-        const criterion = view.dialog('html/group.html');
-        if (criterion) {
-            view.group_videos(criterion.field, criterion.reverse);
-			this.updateView({pageNumber: 0});
-        }
+        const app = this;
+        const group_def = view.get_group_def() || {field: null, reverse: null};
+        this.props.app.loadDialog('Group videos with same:', onClose => (
+            <FormGroup field={group_def.field} reverse={group_def.reverse} onClose={criterion => {
+                onClose();
+		        if (criterion) {
+		            view.group_videos(criterion.field, criterion.reverse);
+					this.updateView({pageNumber: 0});
+		        }
+            }} />
+        ));
     }
     event change $(select.select-page-size) (evt, element) {
         const value = element.value;
@@ -249,4 +272,8 @@ class VideosPage: Reactor.Component {
     event change $(input[name=confirm-deletion]) (evt, element) {
         this.update({confirmDeletion: element.value});
     }
+    event click $(#status) {
+		//
+		this.updateStatus('');
+	}
 }

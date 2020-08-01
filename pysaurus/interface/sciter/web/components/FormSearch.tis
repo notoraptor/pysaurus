@@ -1,0 +1,61 @@
+include "sciter:reactor.tis";
+
+class FormSearch: Reactor.Component {
+	function this(props) {
+		// text
+		// cond
+		// onClose(criterion)
+		this.props = props || {};
+	}
+	function render() {
+		return (
+			<form class="status form-search">
+			    <p>Type text to search and choose how to search.</p>
+			    <p>You can also type text and then press enter to automatically select "AND" as search method.</p>
+			    <p>
+			        <input type="text" id="input-search" name="searchText" accesskey="^F" novalue="Search ..." :value={this.props.text || ''}/>
+			    </p>
+			    <p>
+			        <input type="radio" id="input-search-and" name="searchType" value="and" :checked={this.props.cond === 'and'}/>
+			        <label for="input-search-and">all terms</label>
+			    </p>
+			    <p>
+			        <input type="radio" id="input-search-or" name="searchType" value="or" :checked={this.props.cond === 'or'}/>
+			        <label for="input-search-or">any term</label>
+			    </p>
+			    <p>
+			        <input type="radio" id="input-search-exact" name="searchType" value="exact" :checked={this.props.cond === 'exact'}/>
+			        <label for="input-search-exact">exact sentence</label>
+			    </p>
+			</form>
+		);
+	}
+	function attached() {
+		$(input#input-search).state.focus = true;
+	}
+    event focus $(input#input-search) (evt, element) {
+		element.doSelectAll();
+	}
+	event change $(input#input-search) {
+		$(input#input-search-and).state.checked = null;
+		$(input#input-search-or).state.checked = null;
+		$(input#input-search-exact).state.checked = null;
+	}
+	event change $(input[name=searchType]) {
+		const form = $(form.form-search).value;
+		const text = form.searchText.trim();
+		const cond = form.searchType.trim();
+		if (text.length && cond.length) {
+			this.props.onClose({text: text, cond: cond});
+		}
+	}
+	event keydown $(input#input-search) (evt, element) {
+		if (evt.keyCode === Event.VK_RETURN) {
+			const text = $(input#input-search).value.trim();
+			if (text.length) {
+				const cond = 'and';
+				this.props.onClose({text: text, cond: cond});
+			}
+		}
+	}
+}

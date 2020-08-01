@@ -1,6 +1,8 @@
 include "sciter:reactor.tis";
 include "HomePage.tis";
 include "VideosPage.tis";
+include "FancyBox.tis";
+include "Test.tis";
 
 class App: Reactor.Component {
 	function this(props, children) {
@@ -8,15 +10,23 @@ class App: Reactor.Component {
 		this.children = children || {};
 		this.page = "home";
 		this.parameters = {};
+		this.fancy = null;
 	}
     function render() {
 		return (
-			<main>{this.getPage()}</main>
+			<div class="app">
+				<main class={this.fancy ? 'with-fancybox' : 'without-fancybox'}>
+					{this.getPage()}
+				</main>
+				{this.fancy ? (this.fancy.render()) : ''}
+			</div>
 		);
 	}
 	function getPage() {
 	    const app = this;
 	    const parameters = this.parameters;
+	    if (this.page === "test")
+	        return <Test app={app} parameters={parameters}/>;
 	    if (this.page === "home")
 	        return <HomePage app={app} parameters={parameters}/>;
 	    if (this.page === "videos")
@@ -25,6 +35,39 @@ class App: Reactor.Component {
 	function loadPage(pageName, parameters=undefined) {
 		$(main).clear();
 		parameters = parameters ? parameters : {};
-		this.update({page: pageName, parameters: parameters});
+		this.updateApp({page: pageName, parameters: parameters});
+	}
+	function loadDialog(title, onBuild) {
+		if (this.fancy)
+			throw "a fancy box is already displayed.";
+		const app = this;
+		const onClose = () => app.onCloseFancyBox();
+		this.updateApp({fancy: new FancyDef(title, onClose, onBuild)});
+	}
+	function onCloseFancyBox() {
+		this.updateApp({fancy: null});
+	}
+	function manageFancyBoxView() {
+		for (let element in $$(main *)) {
+			if (element.state.focusable || element.attributes['fancy']) {
+				if (this.fancy) {
+					// deactivate if necessary
+					if (!element.state.disabled) {
+						element.attributes['fancy'] = true;
+						element.state.disabled = true;
+					}
+				} else {
+					// activate if necessary
+					if (element.attributes['fancy']) {
+						element.attributes.remove('fancy');
+						element.state.disabled = false;
+					}
+				}
+			}
+		}
+	}
+	function updateApp(state) {
+		this.update(state);
+		this.post(this.manageFancyBoxView);
 	}
 }

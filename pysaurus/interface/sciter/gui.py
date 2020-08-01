@@ -1,3 +1,4 @@
+import os
 import multiprocessing
 import queue
 import random
@@ -143,6 +144,7 @@ class Frame(sciter.Window):
 
     @sciter.script
     def open_random_video(self, page_size):
+        # todo: may fail if not-found videos are displayed.
         nb_videos = self.count_videos()
         video_index = random.randrange(nb_videos)
         page_index = video_index // page_size
@@ -212,6 +214,10 @@ class Frame(sciter.Window):
     def get_sources(self):
         return self.provider.get_sources()
 
+    @sciter.script
+    def get_gui_path(self):
+        return os.path.dirname(__file__)
+
     def _monitor_notifications(self):
         print('Monitoring notifications ...')
         while True:
@@ -236,7 +242,7 @@ class Frame(sciter.Window):
     def _notify(self, notification):
         # type: (Notification) -> None
         print(notification)
-        self.call_function('Notifications.notify', {
+        self.call_function('__notify', {
             'name': notification.get_name(),
             'notification': notification.to_dict(),
             'message': str(notification)
