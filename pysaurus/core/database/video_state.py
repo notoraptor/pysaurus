@@ -84,11 +84,13 @@ class VideoState:
         return self.rt_is_file
 
     def to_dict(self):
-        return {'f': self.filename.path,
-                's': self.file_size,
-                'e': self.errors,
-                'j': self.video_id,
-                'U': self.UNREADABLE}
+        return {
+            'e': self.errors,
+            'f': self.filename.path,
+            'j': self.video_id,
+            's': self.file_size,
+            'U': self.UNREADABLE,
+        }
 
     @classmethod
     def from_dict(cls, dct, database):

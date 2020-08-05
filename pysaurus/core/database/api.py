@@ -89,7 +89,6 @@ class API:
         function_parser.add(self.field_names)
         function_parser.add(self.find, arguments={'terms': str})
         function_parser.add(self.find_batch, arguments={'path': str})
-        function_parser.add(self.guess_moved)
         function_parser.add(self.images, arguments={'indices': str})
         function_parser.add(self.info, arguments={'video_id': int})
         function_parser.add(self.list, arguments={'fields': str, 'page_size': int, 'page_number': int})
@@ -458,24 +457,3 @@ class API:
 
     def field_names(self):
         return list(Video.ROW_FIELDS)
-
-    def guess_moved(self):
-        videos_not_found = {}
-        videos_found = {}
-        for video in self.database.readable.not_found:
-            videos_not_found.setdefault(video.meta(), []).append(video)
-        for video in self.database.readable.found.with_thumbnails:
-            meta = video.meta()
-            if meta in videos_not_found:
-                videos_found.setdefault(meta, []).append(video)
-        with StringPrinter() as printer:
-            for meta, found in videos_found.items():
-                not_found = videos_not_found[meta]
-                indices = [video.video_id for video in not_found] + [video.video_id for video in found]
-                printer.write('images', *indices)
-                for video in not_found:
-                    printer.write('[not found]', video.video_id, video.filename)
-                for video in found:
-                    printer.write('\t%i %s' % (video.video_id, video.filename))
-                printer.write()
-            return str(printer)

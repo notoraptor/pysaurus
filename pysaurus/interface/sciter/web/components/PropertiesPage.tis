@@ -1,0 +1,173 @@
+include "sciter:reactor.tis";
+
+const DEFAULT_VALUES = {
+	bool: false,
+	int: 0,
+	float: 0.0,
+	str: '',
+	enum: ''
+};
+
+class PropertiesPage: Reactor.Component {
+	function this(props) {
+		this.props = props;
+		this.name = '';
+		this.type = 'str';
+		this.defaultValue = '';
+		this.multiple = false;
+	}
+	function render() {
+		return (
+			<div id="properties">
+				<h2>
+					<div><button class="back">&lt;-</button></div>
+					<div class="title">Properties Management</div>
+				</h2>
+				<hr/>
+				<div class="list">
+					{this.renderPropTypes()}
+				</div>
+				<hr/>
+				<form class="new">
+					<h3>Add a new property:</h3>
+					<div class="col">
+						<div class="label">
+							<label for="prop-name">Name:</label>
+						</div>
+						<div class="input">
+							<input type="text" name="name" id="prop-name" :value={this.name}/>
+						</div>
+					</div>
+					<div class="col">
+						<div class="label">
+							<label for="prop-type">Type:</label>
+						</div>
+						<div class="input">
+							<select name="type" id="prop-type" :value={this.type}>
+								<option value="bool">boolean</option>
+								<option value="int">integer</option>
+								<option value="float">floating number</option>
+								<option value="str">text</option>
+								<option value="enum">enumeration (comma-separated)</option>
+							</select>
+						</div>
+					</div>
+					<div class="col">
+						<div class="label">
+							<label for="prop-default">
+								{this.type === 'enum' ? 'Enumeration values (first is default)' : 'Default value'}
+							</label>
+						</div>
+						<div class="input">
+							{this.renderDefaultInput()}
+						</div>
+					</div>
+					<div class="col">
+						<input type="checkbox" name="multiple" id="prop-multiple" :checked={this.multiple}/>
+						{' '}
+						<label for="prop-multiple">accept many values?</label>
+					</div>
+					<div class="col buttons">
+						<button class="submit">add</button>
+						<button class="reset">reset</button>
+					</div>
+				</form>
+			</div>
+		);
+	}
+	function renderPropTypes() {
+		return (
+			<table>
+				<thead>
+					<tr>
+						<th>Name</th>
+						<th>Type</th>
+						<th>Default</th>
+						<th>Options</th>
+					</tr>
+				</thead>
+				<tbody>
+				{view.get_prop_types().map((def, index) => (
+					<tr key={index}>
+						<td class="name">{def.name}</td>
+						<td class="type">
+							{def.multiple ? <span>one or many&nbsp;</span> : ''}
+							{def.type === 'enum' ? <span>value{def.multiple ? 's' : ''} in {'{'}{def.values.join(', ')}{'}'}</span> : <span>{def.type}</span>}
+						</td>
+						<td class="default">
+							{['str', 'enum'].indexOf(def.type) >= 0 ? '"' : ''}
+							{def.defaultValue}
+							{['str', 'enum'].indexOf(def.type) >= 0 ? '"' : ''}
+						</td>
+						<td>
+							<button class="delete" propName={def.name}>delete</button>
+						</td>
+					</tr>
+				))}
+				</tbody>
+			</table>
+		);
+	}
+	function renderDefaultInput() {
+		if (this.type === 'bool') {
+			return (
+				<select name="default-value" id="prop-default" :value={this.defaultValue}>
+					<option value="false">false</option>
+					<option value="true">true</option>
+				</select>
+			);
+		}
+		if (this.type === 'int') {
+			return (
+				<input type="number" name="default-value" id="prop-default" :value={this.defaultValue}/>
+			);
+		}
+		return <input type="text" name="default-value" id="prop-default" :value={this.defaultValue}/>;
+	}
+	event click $(button.back) (evt, element) {
+		this.props.app.loadPage("videos");
+	}
+	event change $(input[name=name]) (evt, element) {
+		const value = element.value;
+		if (this.name !== value)
+			this.update({name: value});
+	}
+	event change $(select[name=type]) (evt, element) {
+		const value = element.value;
+		if (this.type !== value)
+			this.update({type: value, defaultValue: DEFAULT_VALUES[value]});
+	}
+	event change $(#prop-default) (evt, element) {
+		const value = element.value;
+		if (this.defaultValue !== value)
+			this.update({defaultValue: value});
+	}
+	event change $(input[name=multiple]) (evt, element) {
+		this.update({multiple: element.value});
+	}
+	event click $(button.reset) (evt, element) {
+		this.reset();
+	}
+	event click $(button.submit) (evt, element) {
+		const result = view.add_prop_type(this.name, this.type, this.defaultValue, this.multiple);
+		if (result.status === 0)
+			this.reset();
+		else
+			view.msgbox(#alert, 'Error while adding a property: ' + result.message);
+	}
+	event click $(button.delete) (evt, element) {
+		const name = element.attributes['propName'];
+		const result = view.msgbox(
+			#alert,
+			String.printf('Are you sure you want to delete property "%s"?', name),
+			String.printf('Delete property "%s"', name),
+			[{id: #ok, text: "delete"}, {id: #cancel, text: "cancel"}]);
+		if (result === #ok) {
+			view.delete_prop_type(name);
+			this.reset();
+		}
+	}
+	function reset() {
+		this.update({name: '', type: 'str', defaultValue: '', multiple: false});
+	}
+}

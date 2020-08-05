@@ -1,6 +1,7 @@
 include "sciter:reactor.tis";
 include "HomePage.tis";
 include "VideosPage.tis";
+include "PropertiesPage.tis";
 include "FancyBox.tis";
 include "Test.tis";
 
@@ -31,6 +32,8 @@ class App: Reactor.Component {
 	        return <HomePage app={app} parameters={parameters}/>;
 	    if (this.page === "videos")
 	        return <VideosPage app={app} parameters={parameters}/>;
+	    if (this.page === "properties")
+	        return <PropertiesPage app={app} parameters={parameters}/>;
 	}
 	function loadPage(pageName, parameters=undefined) {
 		$(main).clear();

@@ -94,10 +94,16 @@ class ToDict:
 
 
 class Enumeration:
-    __slots__ = 'values',
+    __slots__ = 'values', 'type'
 
     def __init__(self, enum_values):
         self.values = set(enum_values)
+        types = {type(value) for value in self.values}
+        if len(types) != 1:
+            raise ValueError('Invalid enumeration: expected exactly 1 type for all values, got %s' % types)
+        self.type = next(iter(types))
+        if self.type not in (bool, int, float, str):
+            raise ValueError('Invalid enumeration: expected basic type for values, got %s' % self.type)
 
     def __call__(self, value):
         if value not in self.values:

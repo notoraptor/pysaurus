@@ -58,6 +58,7 @@ class Video(VideoState):
         'frame_rate_num',
         'height',
         'meta_title',
+        'properties',
         'sample_rate',
         'thumb_name',
         'video_codec',
@@ -82,8 +83,8 @@ class Video(VideoState):
         qualities = {}
         for field, level in self.QUALITY_FIELDS:
             value = getattr(self, field)
-            min_value = self.database.video_property_bound.min[field]
-            max_value = self.database.video_property_bound.max[field]
+            min_value = self.database.video_interval.min[field]
+            max_value = self.database.video_interval.max[field]
             if min_value == max_value:
                 assert value == min_value, (value, min_value)
                 quality = 0
@@ -95,22 +96,23 @@ class Video(VideoState):
         return sum(qualities.values()) * 100 / total_level
 
     MIN_TO_LONG = {
-        'r': 'audio_bit_rate',
-        'a': 'audio_codec',
         'A': 'audio_codec_description',
-        'c': 'container_format',
-        'b': 'device_name',
-        'd': 'duration',
-        't': 'duration_time_base',
-        'y': 'frame_rate_den',
-        'x': 'frame_rate_num',
-        'h': 'height',
-        'n': 'meta_title',
-        'u': 'sample_rate',
-        'i': 'thumb_name',
-        'v': 'video_codec',
         'V': 'video_codec_description',
+        'a': 'audio_codec',
+        'b': 'device_name',
+        'c': 'container_format',
+        'd': 'duration',
+        'h': 'height',
+        'i': 'thumb_name',
+        'n': 'meta_title',
+        'p': 'properties',
+        'r': 'audio_bit_rate',
+        't': 'duration_time_base',
+        'u': 'sample_rate',
+        'v': 'video_codec',
         'w': 'width',
+        'x': 'frame_rate_num',
+        'y': 'frame_rate_den',
     }
 
     LONG_TO_MIN = {_long: _min for _min, _long in MIN_TO_LONG.items()}
@@ -152,6 +154,7 @@ class Video(VideoState):
                  # Video optional arguments
                  audio_bit_rate=0, audio_codec='', audio_codec_description='', container_format='', device_name='',
                  duration=0, duration_time_base=0, frame_rate_den=0, frame_rate_num=0, height=0, meta_title='',
+                 properties=None,
                  sample_rate=0, thumb_name='', video_codec='', video_codec_description='', width=0):
         """
         :type filename: AbsolutePath | str
@@ -176,6 +179,7 @@ class Video(VideoState):
         :type thumb_name: str
         :type device_name: str
         :type from_dictionary: dict
+        :type properties: dict
         """
         if from_dictionary:
             audio_bit_rate = from_dictionary.get(self.LONG_TO_MIN['audio_bit_rate'], audio_bit_rate)
@@ -190,6 +194,7 @@ class Video(VideoState):
             frame_rate_num = from_dictionary.get(self.LONG_TO_MIN['frame_rate_num'], frame_rate_num)
             height = from_dictionary.get(self.LONG_TO_MIN['height'], height)
             meta_title = from_dictionary.get(self.LONG_TO_MIN['meta_title'], meta_title)
+            properties = from_dictionary.get(self.LONG_TO_MIN['properties'], properties)
             sample_rate = from_dictionary.get(self.LONG_TO_MIN['sample_rate'], sample_rate)
             thumb_name = from_dictionary.get(self.LONG_TO_MIN['thumb_name'], thumb_name)
             video_codec = from_dictionary.get(self.LONG_TO_MIN['video_codec'], video_codec)
@@ -214,6 +219,10 @@ class Video(VideoState):
         self.video_codec = video_codec
         self.video_codec_description = video_codec_description
         self.width = width
+        self.properties = {}
+        if properties is None:
+            properties = {}
+        self.set_properties(properties)
 
         self.runtime_has_thumbnail = False
 
@@ -310,23 +319,12 @@ class Video(VideoState):
                 return -ret if reverse else ret
         return 0
 
-    META_FIELDS = (
-        'audio_bit_rate',
-        'audio_codec',
-        'audio_codec_description',
-        'container_format',
-        'duration',
-        'duration_time_base',
-        'file_size',
-        'frame_rate_den',
-        'frame_rate_num',
-        'height',
-        'meta_title',
-        'sample_rate',
-        'video_codec',
-        'video_codec_description',
-        'width',
-    )
+    def set_properties(self, properties: dict):
+        for name, value in properties.items():
+            self.set_property(name, value)
 
-    def meta(self):
-        return tuple(getattr(self, field) for field in self.META_FIELDS)
+    def set_property(self, name, value):
+        if not self.database.has_prop_type(name):
+            raise ValueError('Unknown property: %s' % name)
+        prop_type = self.database.get_prop_type(name)
+        self.properties[name] = prop_type(value)

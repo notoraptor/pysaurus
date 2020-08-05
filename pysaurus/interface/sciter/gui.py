@@ -16,6 +16,8 @@ from pysaurus.core.functions import launch_thread
 from pysaurus.core.notification import Notification
 from pysaurus.interface.common.parallel_notifier import ParallelNotifier
 from pysaurus.tests.test_utils import TEST_LIST_FILE_PATH
+from pysaurus.core.classes import Enumeration
+from pysaurus.core.database.properties import PropType
 
 JSON_INTEGER_MIN = -2 ** 31
 JSON_INTEGER_MAX = 2 ** 31 - 1
@@ -27,6 +29,14 @@ def to_js_value(value):
     if isinstance(value, int) and JSON_INTEGER_MIN <= value <= JSON_INTEGER_MAX:
         return value
     return str(value)
+
+
+def js_error(message):
+    return {'status': -1, 'message': message}
+
+
+def js_ok():
+    return {'status': 0}
 
 
 class Frame(sciter.Window):
@@ -217,6 +227,33 @@ class Frame(sciter.Window):
     @sciter.script
     def get_gui_path(self):
         return os.path.dirname(__file__)
+
+    @sciter.script
+    def add_prop_type(self, prop_name, prop_type, prop_default, prop_multiple):
+        db = self.api.database
+        if prop_type not in ('bool', 'int', 'float', 'str', 'enum'):
+            return js_error('Unknown property type: %s' % prop_type)
+        try:
+            if prop_type == 'enum':
+                values = [element.strip() for element in prop_default.split(',') if element]
+                enumeration = Enumeration(values)
+                default_value = values[0]
+                definition = [default_value] + [element for element in enumeration.values if element != default_value]
+            else:
+                definition = dict(bool=bool, int=int, float=float, str=str)[prop_type](prop_default)
+            db.add_prop_type(PropType(prop_name, definition, prop_multiple))
+        except ValueError as exc:
+            return js_error(str(exc))
+        return js_ok()
+
+    @sciter.script
+    def get_prop_types(self):
+        props = sorted(self.api.database.get_prop_types(), key=lambda prop: prop.name)
+        return [prop.to_json() for prop in props]
+
+    @sciter.script
+    def delete_prop_type(self, name):
+        self.api.database.remove_prop_type(name)
 
     def _monitor_notifications(self):
         print('Monitoring notifications ...')

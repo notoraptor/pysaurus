@@ -7,9 +7,10 @@ from pysaurus.core import exceptions, functions as utils
 from pysaurus.core.components import AbsolutePath, DateModified, FilePath, PathType, PathInfo
 from pysaurus.core.constants import THUMBNAIL_EXTENSION
 from pysaurus.core.database import notifications, video_filtering
+from pysaurus.core.database.properties import PropType
 from pysaurus.core.database.jobs import jobs_python
 from pysaurus.core.database.video import Video
-from pysaurus.core.database.video_property_bound import VideoPropertyBound
+from pysaurus.core.database.video_interval import VideoInterval
 from pysaurus.core.database.video_state import VideoState
 from pysaurus.core.modules import ImageUtils, System
 from pysaurus.core.native.video_raptor.miniature import Miniature
@@ -20,8 +21,8 @@ from pysaurus.core.profiling import Profiler
 
 class Database:
     __slots__ = ('__db_path', '__thumb_folder', '__json_path', '__miniatures_path', '__log_path',
-                 '__date', '__folders', '__videos', '__unreadable', '__discarded',
-                 '__notifier', '__id_to_video', 'system_is_case_insensitive', 'video_property_bound',
+                 '__date', '__folders', '__videos', '__unreadable', '__discarded', '__prop_types',
+                 '__notifier', '__id_to_video', 'system_is_case_insensitive', 'video_interval',
                  'unreadable', 'readable')
 
     def __init__(self, path, folders=None, clear_old_folders=False, notifier=None):
@@ -41,11 +42,12 @@ class Database:
         self.__videos = {}  # type: Dict[AbsolutePath, Video]
         self.__unreadable = {}  # type: Dict[AbsolutePath, VideoState]
         self.__discarded = {}  # type: Dict[AbsolutePath, VideoState]
+        self.__prop_types = {}  # type: Dict[str, PropType]
         # RAM data
         self.__notifier = notifier or DEFAULT_NOTIFIER
         self.__id_to_video = {}  # type: Dict[int, Union[VideoState, Video]]
         self.system_is_case_insensitive = System.is_case_insensitive(self.__db_path.path)
-        # Properties
+        # Sources:
         # unreadable.not_found
         # unreadable.found
         # readable.not_found
@@ -57,8 +59,8 @@ class Database:
         self.__notifier.set_log_path(self.__log_path.path)
         with Profiler('Load database'):
             self.__load(folders, clear_old_folders)
-        self.video_property_bound = VideoPropertyBound(t[0] for t in Video.QUALITY_FIELDS)
-        self.video_property_bound.update(self.readable)
+        self.video_interval = VideoInterval(t[0] for t in Video.QUALITY_FIELDS)
+        self.video_interval.update(self.readable)
 
     # Properties.
 
@@ -126,6 +128,10 @@ class Database:
                 destination[video_state.filename] = video_state
             else:
                 self.__discarded[video_state.filename] = video_state
+
+        # Parsing video property types.
+        for prop_dict in json_dict.get('prop_types', ()):
+            self.add_prop_type(PropType.from_dict(prop_dict), save=False)
 
         self.__set_videos_flags()
         self.__ensure_identifiers()
@@ -497,7 +503,7 @@ class Database:
 
     def save(self):
         self.__ensure_identifiers()
-        self.video_property_bound.update(self.readable)
+        self.video_interval.update(self.readable)
         # Save database.
         json_output = {'date': self.__date.time,
                        'folders': sorted(folder.path for folder in self.__folders),
@@ -505,7 +511,8 @@ class Database:
                            (video.to_dict()
                             for dct in (self.__videos, self.__unreadable, self.__discarded)
                             for video in dct.values()),
-                           key=lambda dct: dct['f'])}
+                           key=lambda dct: dct['f']),
+                       'prop_types': [prop.to_dict() for prop in self.__prop_types.values()]}
         with open(self.__json_path.path, 'w') as output_file:
             json.dump(json_output, output_file)
         self.__notifier.notify(notifications.DatabaseSaved(self))
@@ -538,6 +545,27 @@ class Database:
         if required:
             raise exceptions.UnknownVideoFilename(filename)
         return None
+
+    def add_prop_type(self, prop: PropType, save: bool = True):
+        if prop.name in self.__prop_types:
+            raise ValueError('Property name already exists: %s' % prop.name)
+        self.__prop_types[prop.name] = prop
+        if save:
+            self.save()
+
+    def remove_prop_type(self, name):
+        if name in self.__prop_types:
+            del self.__prop_types[name]
+            self.save()
+
+    def has_prop_type(self, name):
+        return name in self.__prop_types
+
+    def get_prop_type(self, name):
+        return self.__prop_types[name]
+
+    def get_prop_types(self):
+        return list(self.__prop_types.values())
 
     # Unused.
 
