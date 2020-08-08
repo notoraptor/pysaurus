@@ -4,7 +4,6 @@
 *.dll
 *.log
 *.pyc
-*.json
 *.csv
 *.tsv
 .idea

@@ -235,9 +235,10 @@ class Frame(sciter.Window):
             return js_error('Unknown property type: %s' % prop_type)
         try:
             if prop_type == 'enum':
-                values = [element.strip() for element in prop_default.split(',') if element]
-                enumeration = Enumeration(values)
-                default_value = values[0]
+                if not isinstance(prop_default, list):
+                    raise ValueError('Expected a list for an enumeration')
+                enumeration = Enumeration(prop_default)
+                default_value = prop_default[0]
                 definition = [default_value] + [element for element in enumeration.values if element != default_value]
             else:
                 definition = dict(bool=bool, int=int, float=float, str=str)[prop_type](prop_default)

@@ -4,3 +4,5 @@ Pillow
 tornado>=5.0
 ujson
 PySciter
+kivy
+cefpython3==66.0

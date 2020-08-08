@@ -149,7 +149,7 @@ class VideosPage: Reactor.Component {
 							) : ''}
 							<Pagination singular="page" plural="pages" nbPages={nbPages} pageNumber={this.pageNumber} onChange={onChangePage}/>
 						</div>
-						{(group_def && group_def.nb_groups) ? (<div class="status">{sentence(FIELD_TITLES[group_def.field])}:  <strong>{view.get_group_field_value()}</strong></div>) : ''}
+						{(group_def && group_def.nb_groups) ? (<div class="status">{Utils.sentence(FIELD_TITLES[group_def.field])}:  <strong>{view.get_group_field_value()}</strong></div>) : ''}
 						<div class="videos">{this.getVideos()}</div>
 					</div>
 				</div>

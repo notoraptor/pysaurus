@@ -37,14 +37,3 @@ class FancyBox: Reactor.Component {
 		KEYBOARD_MANAGER.unregister(this.callbackIndex);
 	}
 }
-
-class FancyDef {
-	function this(title, onClose, onBuild) {
-		this.title = title;
-		this.onClose = onClose;
-		this.onBuild = onBuild;
-	}
-	function render() {
-		return <FancyBox title={this.title} onBuild={this.onBuild} onClose={this.onClose}/>;
-	}
-}

@@ -23,7 +23,7 @@ class Pagination: Reactor.Component {
 				<span class="navigation status">
 					<button class="first" :disabled={pageNumber === 0}>&lt;&lt;</button>
 					<button class="previous" :disabled={pageNumber === 0}>&lt;</button>{' '}
-					<span>{sentence(singular)}{' '}<input type="integer" class="current" min={1} max={nbPages} step={1} :value={pageNumber + 1}/> / {nbPages}</span>{' '}
+					<span>{Utils.sentence(singular)}{' '}<input type="integer" class="current" min={1} max={nbPages} step={1} :value={pageNumber + 1}/> / {nbPages}</span>{' '}
 					<button class="next" :disabled={pageNumber === nbPages - 1}>&gt;</button>
 					<button class="last" :disabled={pageNumber === nbPages - 1}>&gt;&gt;</button>
 				</span>

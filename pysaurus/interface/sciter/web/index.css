@@ -366,3 +366,31 @@ caption.not-found {
 	margin-right: 0.5em;
 	display: inline-block;
 }
+
+/** SetInput **/
+.list-input {
+	display: inline-block;
+	border: 1px solid rgb(220, 220, 220);
+}
+.list-input button {
+	display: block;
+	width: 1*;
+	font-weight: bold;
+}
+.list-input button.add {
+	color: green;
+}
+.list-input button.remove {
+	color: red;
+}
+.list-input input {
+	display: block;
+}
+.list-input table {
+	background: rgb(240, 240, 240);
+	width: 1*;
+}
+.list-input td {
+	padding: 0.25em;
+	border: 1px solid red;
+}

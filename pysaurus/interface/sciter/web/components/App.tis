@@ -19,7 +19,7 @@ class App: Reactor.Component {
 				<main class={this.fancy ? 'with-fancybox' : 'without-fancybox'}>
 					{this.getPage()}
 				</main>
-				{this.fancy ? (this.fancy.render()) : ''}
+				{this.fancy ? (this.renderFancyBox()) : ''}
 			</div>
 		);
 	}
@@ -35,6 +35,9 @@ class App: Reactor.Component {
 	    if (this.page === "properties")
 	        return <PropertiesPage app={app} parameters={parameters}/>;
 	}
+	function renderFancyBox() {
+		return <FancyBox title={this.fancy.title} onBuild={this.fancy.onBuild} onClose={this.fancy.onClose}/>;
+	}
 	function loadPage(pageName, parameters=undefined) {
 		$(main).clear();
 		parameters = parameters ? parameters : {};
@@ -45,7 +48,7 @@ class App: Reactor.Component {
 			throw "a fancy box is already displayed.";
 		const app = this;
 		const onClose = () => app.onCloseFancyBox();
-		this.updateApp({fancy: new FancyDef(title, onClose, onBuild)});
+		this.updateApp({fancy: {title: title, onClose: onClose, onBuild: onBuild}});
 	}
 	function onCloseFancyBox() {
 		this.updateApp({fancy: null});

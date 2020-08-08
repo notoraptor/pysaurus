@@ -1,4 +1,5 @@
 include "sciter:reactor.tis";
+include "SetInput.tis";
 
 const DEFAULT_VALUES = {
 	bool: false,
@@ -8,12 +9,46 @@ const DEFAULT_VALUES = {
 	enum: ''
 };
 
+function getDefaultValue(propType) {
+	if (propType === 'enum')
+		return [];
+	return DEFAULT_VALUES[propType];
+}
+
+class EnumController: SetController {
+	function this(page) {
+		this.page = page;
+	}
+	function size() {
+		return this.page.defaultValue.length;
+	}
+	function get(index) {
+		return this.page.defaultValue[index];
+	}
+	function has(value) {
+		return this.page.defaultValue.indexOf(value) >= 0;
+	}
+	function add(value) {
+		const arr = this.page.defaultValue.slice();
+		arr.push(value);
+		this.page.update({defaultValue: arr});
+	}
+	function remove(toRemove) {
+		const arr = [];
+		for (let value in this.page.defaultValue) {
+			if (value !== toRemove)
+				arr.push(value);
+		}
+		this.page.update({defaultValue: arr});
+	}
+}
+
 class PropertiesPage: Reactor.Component {
 	function this(props) {
 		this.props = props;
 		this.name = '';
-		this.type = 'str';
-		this.defaultValue = '';
+		this.type = 'enum';
+		this.defaultValue = getDefaultValue(this.type);
 		this.multiple = false;
 	}
 	function render() {
@@ -118,9 +153,11 @@ class PropertiesPage: Reactor.Component {
 			);
 		}
 		if (this.type === 'int') {
-			return (
-				<input type="number" name="default-value" id="prop-default" :value={this.defaultValue}/>
-			);
+			return <input type="number" name="default-value" id="prop-default" :value={this.defaultValue}/>;
+		}
+		if (this.type === 'enum') {
+			const controller = new EnumController(this);
+			return <SetInput controller={controller}/>;
 		}
 		return <input type="text" name="default-value" id="prop-default" :value={this.defaultValue}/>;
 	}
@@ -135,7 +172,7 @@ class PropertiesPage: Reactor.Component {
 	event change $(select[name=type]) (evt, element) {
 		const value = element.value;
 		if (this.type !== value)
-			this.update({type: value, defaultValue: DEFAULT_VALUES[value]});
+			this.update({type: value, defaultValue: getDefaultValue(value)});
 	}
 	event change $(#prop-default) (evt, element) {
 		const value = element.value;
