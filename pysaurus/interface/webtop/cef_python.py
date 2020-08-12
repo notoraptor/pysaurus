@@ -1,9 +1,6 @@
-# Hello world example. Doesn't depend on any third party GUI framework.
-# Tested with CEF Python v57.0+.
-
 import os
-import platform
 import sys
+import tempfile
 
 from cefpython3 import cefpython as cef
 
@@ -32,17 +29,20 @@ def set_javascript_bindings(browser):
 
 
 def main():
+    sys.excepthook = cef.ExceptHook  # To shutdown all CEF processes on error
     entry_path = os.path.normpath(os.path.join(os.path.dirname(__file__), 'web/index.html')).replace('\\', '/')
     url = 'file:///' + entry_path
-    sys.excepthook = cef.ExceptHook  # To shutdown all CEF processes on error
     settings = {
         "debug": True,
         "log_severity": cef.LOGSEVERITY_INFO,
         # "log_file": "debug.log",
-        "remote_debugging_port": 4000
+        "remote_debugging_port": 4000,
+        # todo: cache path should be cleared when program is closed ?
+        "cache_path": tempfile.gettempdir(),
     }
     switches = {
-        "disable-web-security" : ""
+        # prevent local CORS exceptions.
+        "disable-web-security": ""
     }
     cef.Initialize(settings=settings, switches=switches)
     browser = cef.CreateBrowserSync(url=url, window_title="Pysaurus")
