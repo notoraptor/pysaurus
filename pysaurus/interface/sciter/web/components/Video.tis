@@ -20,10 +20,11 @@ class Video: Reactor.Component {
         const title = data.title;
         const file_title = data.file_title;
         const meta_title = (title == file_title ? null : title);
+        const hasThumbnail = System.scanFiles(data.thumbnail_path);
         return (
             <div class={'video' + (index % 2 ? ' even' : ' odd') + (data.exists ? ' found' : ' not-found')}>
                 <div class="image">
-                    <img alt={data.title} src={data.thumbnail_path}/>
+                    {hasThumbnail ? <img alt={data.title} src={data.thumbnail_path}/> : <div class="no-thumbnail">no thumbnail</div>}
                 </div>
                 <div class="info">
                     <div class="name">

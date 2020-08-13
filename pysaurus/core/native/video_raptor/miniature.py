@@ -34,9 +34,9 @@ class Miniature:
 
     def to_dict(self):
         return {
-            'r': base64.b64encode(self.r),
-            'g': base64.b64encode(self.g),
-            'b': base64.b64encode(self.b),
+            'r': base64.b64encode(self.r).decode(),
+            'g': base64.b64encode(self.g).decode(),
+            'b': base64.b64encode(self.b).decode(),
             'w': self.width,
             'h': self.height,
             'i': self.identifier,

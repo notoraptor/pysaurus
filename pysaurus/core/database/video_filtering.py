@@ -123,6 +123,16 @@ class ReadableFound(Found):
         self.without_thumbnails = WithoutThumbnails(self)
 
 
+class ReadableNotFound(NotFound):
+    __slots__ = ('with_thumbnails', 'without_thumbnails')
+    __title__ = 'not_found'
+
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.with_thumbnails = WithThumbnails(self)
+        self.without_thumbnails = WithoutThumbnails(self)
+
+
 class Unreadable(VideoSource):
     __slots__ = ('not_found', 'found')
 
@@ -137,5 +147,5 @@ class Readable(VideoSource):
 
     def __init__(self, database, source):
         super().__init__(database, source)
-        self.not_found = NotFound(self)
+        self.not_found = ReadableNotFound(self)
         self.found = ReadableFound(self)

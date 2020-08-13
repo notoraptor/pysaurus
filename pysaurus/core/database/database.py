@@ -50,7 +50,8 @@ class Database:
         # Sources:
         # unreadable.not_found
         # unreadable.found
-        # readable.not_found
+        # readable.not_found.without_thumbnails
+        # readable.not_found.with_thumbnails
         # readable.found.without_thumbnails
         # readable.found.with_thumbnails
         self.unreadable = video_filtering.Unreadable(self, self.__unreadable)
@@ -513,6 +514,7 @@ class Database:
                             for video in dct.values()),
                            key=lambda dct: dct['f']),
                        'prop_types': [prop.to_dict() for prop in self.__prop_types.values()]}
+        # utils.assert_data_is_serializable(json_output)
         with open(self.__json_path.path, 'w') as output_file:
             json.dump(json_output, output_file)
         self.__notifier.notify(notifications.DatabaseSaved(self))

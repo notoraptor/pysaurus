@@ -1,21 +1,40 @@
 include "sciter:reactor.tis";
+include "SetInput.tis";
 
 class Test: Reactor.Component {
 	function this(props) {
 		this.props = props;
+		this.checked = true;
+		this.arr = ['a', 'b', 'ccc'];
 	}
 	function render() {
 		return (
 			<div class="test">
-				<p><button>hello 1!</button></p>
-				<p><button>hello 2!</button></p>
-				<p><button>hello 3!</button></p>
-				<p><button>hello 4!</button></p>
-				<p><button>hello 5!</button></p>
+				<p>
+					<input type="checkbox" :checked={this.checked} id="input"/>
+					&nbsp;
+					<label for="input"> switch</label>
+				</p>
+				<div>
+					{this.renderSwitch()}
+				</div>
 			</div>
 		);
 	}
-	event click $(.test button) (evt, element) {
-		this.props.app.loadDialog('Fancy Title!', onClose => <div><strong>Fancy content!</strong></div>);
+	function renderSwitch() {
+		if (this.checked) {
+			const c = new ComponentController(this, 'arr');
+			return (
+				<div key="list">
+					<p><label for="entry">entry</label></p>
+					<SetInput identifier="entry" controller={c}/>
+				</div>
+			);
+		} else {
+			return <div key="label"><strong>checked!</strong></div>;
+		}
+	}
+	event change $(input#input) (evt, element) {
+		this.update({checked: element.value, arr: ['a', 'b', 'ccc']});
 	}
 }

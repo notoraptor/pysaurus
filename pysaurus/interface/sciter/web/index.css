@@ -1,9 +1,7 @@
 /** App **/
-div.app {
-	height: 1*;
-}
-main {
-	height: 1*;
+
+table, th, td {
+	border-collapse: collapse;
 }
 .row {
 	flow: horizontal;
@@ -18,8 +16,13 @@ main {
 	display: block;
 	width: 1*;
 }
-table, th, td {
-	border-collapse: collapse;
+
+/** App **/
+div.app {
+	height: 1*;
+}
+main {
+	height: 1*;
 }
 
 /** Home page **/
@@ -137,6 +140,59 @@ table, th, td {
 	font-weight: bold;
 }
 
+/** Property page **/
+#properties h2 {
+	vertical-align: middle;
+	flow: horizontal;
+}
+#properties h2 .title {
+	text-align: center;
+	width: 1*;
+}
+#properties .list {
+	text-align: center;
+}
+#properties .list table {
+	margin: auto;
+	width: 50%;
+	min-width: 400px;
+}
+#properties .list table thead {
+	font-weight: bold;
+	background-color: rgb(220, 220, 220);
+}
+#properties .list table tbody td {
+	border-bottom: 1px solid rgb(220, 220, 220);
+	padding-left: 0.5em;
+	padding-right: 0.5em;
+	padding-top: 0.25em;
+	padding-bottom: 0.25em;
+}
+#properties .list buttons {
+	flow: horizontal;
+}
+#properties .list button.delete {
+	font-weight: bold;
+	display: inline-block;
+}
+#properties .list table td.name {
+	font-weight: bold;
+}
+#properties form.new {
+	text-align: center;
+}
+#properties form.new .col {
+	margin-bottom: 0.5em;
+}
+#properties form.new .col .label {
+	margin-bottom: 0.5em;
+}
+#properties form.new button {
+	margin-left: 0.5em;
+	margin-right: 0.5em;
+	display: inline-block;
+}
+
 /** Video item. **/
 .video {
 	flow: horizontal;
@@ -210,9 +266,18 @@ table, th, td {
 	font-weight: bold;
 	color: red;
 }
-caption.not-found {
+.video caption.not-found {
 	text-align: center;
 	font-weight: bold;
+}
+.video div.no-thumbnail {
+	width: 300px;
+	height: 168.75px;
+	text-align: center;
+	text-transform: uppercase;
+	font-size: 0.9em;
+	color: gray;
+	vertical-align: middle;
 }
 
 /**Fancy box.**/
@@ -314,83 +379,30 @@ caption.not-found {
     width: 1*;
 }
 
-/** Property page **/
-#properties h2 {
-	vertical-align: middle;
-	flow: horizontal;
-}
-#properties h2 .title {
-	text-align: center;
-	width: 1*;
-}
-#properties .list {
-	text-align: center;
-}
-#properties .list table {
-	margin: auto;
-	width: 50%;
-	min-width: 400px;
-}
-#properties .list table thead {
-	font-weight: bold;
-	background-color: rgb(220, 220, 220);
-}
-#properties .list table tbody td {
-	border-bottom: 1px solid rgb(220, 220, 220);
-	padding-left: 0.5em;
-	padding-right: 0.5em;
-	padding-top: 0.25em;
-	padding-bottom: 0.25em;
-}
-#properties .list buttons {
-	flow: horizontal;
-}
-#properties .list button.delete {
-	font-weight: bold;
-	display: inline-block;
-}
-#properties .list table td.name {
-	font-weight: bold;
-}
-#properties form.new {
-	text-align: center;
-}
-#properties form.new .col {
-	margin-bottom: 0.5em;
-}
-#properties form.new .col .label {
-	margin-bottom: 0.5em;
-}
-#properties form.new button {
-	margin-left: 0.5em;
-	margin-right: 0.5em;
-	display: inline-block;
-}
-
 /** SetInput **/
-.list-input {
+.set-input {
 	display: inline-block;
 	border: 1px solid rgb(220, 220, 220);
+	box-shadow: 0 0 5px gray;
 }
-.list-input button {
+.set-input table {
+	width: 1*;
+}
+.set-input td {
+	padding: 0.1em;
+}
+.set-input td.label,
+.set-input td.input {
+	text-align: right;
+	padding-right: 0.5em;
+}
+.set-input td button {
 	display: block;
 	width: 1*;
-	font-weight: bold;
 }
-.list-input button.add {
+.set-input td button.add {
 	color: green;
 }
-.list-input button.remove {
+.set-input td button.remove {
 	color: red;
-}
-.list-input input {
-	display: block;
-}
-.list-input table {
-	background: rgb(240, 240, 240);
-	width: 1*;
-}
-.list-input td {
-	padding: 0.25em;
-	border: 1px solid red;
 }

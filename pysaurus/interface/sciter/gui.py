@@ -305,6 +305,8 @@ class Frame(sciter.Window):
 
 
 def main():
+    # sciter.set_option(sciter.SCITER_RT_OPTIONS.SCITER_SET_SCRIPT_RUNTIME_FEATURES, 1)
+    sciter.runtime_features()
     Frame().run_app()
     print('End')
 

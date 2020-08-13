@@ -8,10 +8,40 @@ class SetController {
 	function remove(value) {}
 }
 
+class ComponentController: SetController {
+	function this(app, field) {
+		this.app = app;
+		this.field = field;
+	}
+	function size() {
+		return this.app[this.field].length;
+	}
+	function get(index) {
+		return this.app[this.field][index];
+	}
+	function has(value) {
+		return this.app[this.field].indexOf(value) >= 0;
+	}
+	function add(value) {
+		const arr = this.app[this.field].slice();
+		arr.push(value);
+		this.app.update({[this.field]: arr});
+	}
+	function remove(toRemove) {
+		const arr = [];
+		for (let value in this.app[this.field]) {
+			if (value !== toRemove)
+				arr.push(value);
+		}
+		this.app.update({[this.field]: arr});
+	}
+}
+
 class SetInput: Reactor.Component {
 	function this(props) {
 		// controller: SetController
 		this.props = props;
+		stdout.println('construct set input');
 	}
 	function attached() {
 		stdout.println('attached');
@@ -20,12 +50,15 @@ class SetInput: Reactor.Component {
 		stdout.println('detached');
 	}
 	function render() {
+		stdout.println('render set input', this.props.identifier);
 		return (
-			<div class="list-input">
+			<div class="set-input">
 				<table>
 					{this.renderList()}
 					<tr class="form">
-						<td class="input"><input type="text" name="add" size="10"/></td>
+						<td class="input">
+							<input type="text" name="add" size="10" id={this.props.identifier}/>
+						</td>
 						<td class="action"><button class="add">+</button></td>
 					</tr>
 				</table>
@@ -47,15 +80,14 @@ class SetInput: Reactor.Component {
 		}
 		return output;
 	}
-	event change $(.list-input input[name=add]) (evt, element) {
-		stdout.println('we change input');
+	event change $(.set-input input[name=add]) (evt, element) {
 		this.update();
 	}
-	event click $(.list-input button.add) (evt, element) {
+	event click $(.set-input button.add) (evt, element) {
 		const input = $(input[name=add]);
 		this.add(input);
 	}
-	event click $(.list-input button.remove) (evt, element) {
+	event click $(.set-input button.remove) (evt, element) {
 		const value = element.attributes['item'];
 		const controller = this.props.controller;
 		if (!controller.has(value))
@@ -63,17 +95,15 @@ class SetInput: Reactor.Component {
 		controller.remove(value);
 		this.update();
 	}
-	event keydown $(input[name=add]) (evt, element) {
+	event keydown $(.set-input input[name=add]) (evt, element) {
 		if (evt.keyCode === Event.VK_RETURN) {
 			this.add(element);
 		}
 	}
 	function add(input) {
-		stdout.println('we click on add');
 		const value = input.value;
 		if (!value.length)
 			return;
-		stdout.println('Valid value to add');
 		const controller = this.props.controller;
 		if (controller.has(value))
 			return view.msgbox(#alert, 'Value already in list: ' + value);

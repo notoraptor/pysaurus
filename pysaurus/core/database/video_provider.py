@@ -37,7 +37,10 @@ SOURCE_TREE = {
         FOUND: False
     },
     READABLE: {
-        NOT_FOUND: False,
+        NOT_FOUND: {
+            WITH_THUMBNAILS: False,
+            WITHOUT_THUMBNAILS: False,
+        },
         FOUND: {
             WITH_THUMBNAILS: False,
             WITHOUT_THUMBNAILS: False

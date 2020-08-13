@@ -15,34 +15,6 @@ function getDefaultValue(propType) {
 	return DEFAULT_VALUES[propType];
 }
 
-class EnumController: SetController {
-	function this(page) {
-		this.page = page;
-	}
-	function size() {
-		return this.page.defaultValue.length;
-	}
-	function get(index) {
-		return this.page.defaultValue[index];
-	}
-	function has(value) {
-		return this.page.defaultValue.indexOf(value) >= 0;
-	}
-	function add(value) {
-		const arr = this.page.defaultValue.slice();
-		arr.push(value);
-		this.page.update({defaultValue: arr});
-	}
-	function remove(toRemove) {
-		const arr = [];
-		for (let value in this.page.defaultValue) {
-			if (value !== toRemove)
-				arr.push(value);
-		}
-		this.page.update({defaultValue: arr});
-	}
-}
-
 class PropertiesPage: Reactor.Component {
 	function this(props) {
 		this.props = props;
@@ -66,41 +38,37 @@ class PropertiesPage: Reactor.Component {
 				<form class="new">
 					<h3>Add a new property:</h3>
 					<div class="col">
-						<div class="label">
-							<label for="prop-name">Name:</label>
-						</div>
+						<div class="label"><label for="prop-name">Name:</label></div>
 						<div class="input">
 							<input type="text" name="name" id="prop-name" :value={this.name}/>
 						</div>
 					</div>
 					<div class="col">
-						<div class="label">
-							<label for="prop-type">Type:</label>
-						</div>
+						<div class="label"><label for="prop-type">Type:</label></div>
 						<div class="input">
 							<select name="type" id="prop-type" :value={this.type}>
 								<option value="bool">boolean</option>
 								<option value="int">integer</option>
 								<option value="float">floating number</option>
 								<option value="str">text</option>
-								<option value="enum">enumeration (comma-separated)</option>
+								<option value="enum">enumeration</option>
 							</select>
 						</div>
 					</div>
 					<div class="col">
 						<div class="label">
-							<label for="prop-default">
+							<label for={'prop-default-' + this.type}>
 								{this.type === 'enum' ? 'Enumeration values (first is default)' : 'Default value'}
 							</label>
 						</div>
-						<div class="input">
+						<div key={this.type} class="input">
 							{this.renderDefaultInput()}
 						</div>
 					</div>
 					<div class="col">
 						<input type="checkbox" name="multiple" id="prop-multiple" :checked={this.multiple}/>
 						{' '}
-						<label for="prop-multiple">accept many values?</label>
+						<label for="prop-multiple">accept many values</label>
 					</div>
 					<div class="col buttons">
 						<button class="submit">add</button>
@@ -134,7 +102,7 @@ class PropertiesPage: Reactor.Component {
 							{def.defaultValue}
 							{['str', 'enum'].indexOf(def.type) >= 0 ? '"' : ''}
 						</td>
-						<td>
+						<td class="options">
 							<button class="delete" propName={def.name}>delete</button>
 						</td>
 					</tr>
@@ -146,20 +114,20 @@ class PropertiesPage: Reactor.Component {
 	function renderDefaultInput() {
 		if (this.type === 'bool') {
 			return (
-				<select name="default-value" id="prop-default" :value={this.defaultValue}>
+				<select class="prop-default" id="prop-default-bool" :value={this.defaultValue}>
 					<option value="false">false</option>
 					<option value="true">true</option>
 				</select>
 			);
 		}
 		if (this.type === 'int') {
-			return <input type="number" name="default-value" id="prop-default" :value={this.defaultValue}/>;
+			return <input type="number" class="prop-default" id="prop-default-int" :value={this.defaultValue}/>;
 		}
 		if (this.type === 'enum') {
-			const controller = new EnumController(this);
-			return <SetInput controller={controller}/>;
+			const controller = new ComponentController(this, 'defaultValue');
+			return <SetInput identifier={'prop-default-' + this.type} controller={controller}/>;
 		}
-		return <input type="text" name="default-value" id="prop-default" :value={this.defaultValue}/>;
+		return <input type="text" class="prop-default" id={'prop-default-' + this.type} :value={this.defaultValue}/>;
 	}
 	event click $(button.back) (evt, element) {
 		this.props.app.loadPage("videos");
@@ -174,7 +142,7 @@ class PropertiesPage: Reactor.Component {
 		if (this.type !== value)
 			this.update({type: value, defaultValue: getDefaultValue(value)});
 	}
-	event change $(#prop-default) (evt, element) {
+	event change $(.prop-default) (evt, element) {
 		const value = element.value;
 		if (this.defaultValue !== value)
 			this.update({defaultValue: value});

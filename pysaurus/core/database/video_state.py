@@ -85,7 +85,7 @@ class VideoState:
 
     def to_dict(self):
         return {
-            'e': self.errors,
+            'e': list(self.errors),
             'f': self.filename.path,
             'j': self.video_id,
             's': self.file_size,

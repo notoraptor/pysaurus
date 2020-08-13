@@ -215,3 +215,16 @@ def html_to_title(title):
                     title = title.strip(character)
                     strip_again = True
     return title
+
+
+def assert_data_is_serializable(data, path=()):
+    if isinstance(data, list):
+        for index, element in enumerate(data):
+            assert_data_is_serializable(element, path + (index,))
+    elif isinstance(data, dict):
+        for key, value in data.items():
+            current_path = path + (key,)
+            assert isinstance(key, str), current_path
+            assert_data_is_serializable(value, current_path)
+    else:
+        assert isinstance(data, (bool, int, float, str)), (path, data)
