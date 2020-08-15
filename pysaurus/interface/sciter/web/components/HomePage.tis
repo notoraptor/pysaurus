@@ -36,7 +36,7 @@ function generateMonitoringMessage(monitoring, name) {
 	}
 	const percent = Math.round(current * 100 / total).toInteger();
 	const s0 = name + "-job";
-	const s1 = "job " + s0;
+	const s1 = "job horizontal " + s0;
 	return (
 		<div key={i} class={s1}>
 			<label for={s0} class="info">{current} / {total} ({percent} %)</label>

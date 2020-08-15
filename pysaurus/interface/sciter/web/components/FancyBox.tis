@@ -13,7 +13,7 @@ class FancyBox: Reactor.Component {
 		return (
 			<div class="fancybox-wrapper">
 				<div class="fancybox">
-					<div class="fancybox-header">
+					<div class="fancybox-header horizontal">
 						<div class="fancybox-title">{this.props.title}</div>
 						<div class="fancybox-close"><button>&times;</button></div>
 					</div>

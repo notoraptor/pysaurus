@@ -16,6 +16,7 @@ from group look for videos
     | search $text $condition
 sort by $field ?reverse
 """
+import random
 import functools
 from typing import Optional, Sequence
 
@@ -251,6 +252,18 @@ class VideoProvider:
 
     def get_group_id(self):
         return self.group_id
+
+    def all_not_found(self):
+        return all(NOT_FOUND in source for source in self.source_def)
+
+    def get_random_found_video(self):
+        # type: () -> Video
+        paths = [path for path in self.source_def if NOT_FOUND not in path]
+        path_index = random.randrange(len(paths))
+        path = paths[path_index]
+        videos = list(_get_source(self.database, path))
+        video_index = random.randrange(len(videos))
+        return videos[video_index]
 
     def __delete_current_group(self):
         del self.groups[self.group_id]

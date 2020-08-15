@@ -15,7 +15,7 @@ class App: Reactor.Component {
 	}
     function render() {
 		return (
-			<div class="app">
+			<div class="app" key={this.page}>
 				<main class={this.fancy ? 'with-fancybox' : 'without-fancybox'}>
 					{this.getPage()}
 				</main>

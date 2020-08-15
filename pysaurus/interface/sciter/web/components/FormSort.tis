@@ -14,7 +14,7 @@ class FormSort: Reactor.Component {
 			    <div>Click on "-" to remove a sorting criterion.</div>
 			    <div>Click on "sort" to validate, or close dialog to cancel.</div>
 			    <p id="sorting"></p>
-			    <div class="button-bar">
+			    <div class="button-bar horizontal">
 			        <button id="button-sort-add-criterion">+</button>
 			        <button id="button-sort">sort</button>
 			    </div>

@@ -154,13 +154,8 @@ class Frame(sciter.Window):
 
     @sciter.script
     def open_random_video(self, page_size):
-        # todo: may fail if not-found videos are displayed.
-        nb_videos = self.count_videos()
-        video_index = random.randrange(nb_videos)
-        page_index = video_index // page_size
-        shift = video_index % page_size
-        filename = self.provider.get_video(video_index).filename.open()
-        return page_index, shift, str(filename)
+        assert not self.provider.all_not_found()
+        return str(self.provider.get_random_found_video().filename.open())
 
     @sciter.script
     def open_not_found(self):
@@ -207,6 +202,7 @@ class Frame(sciter.Window):
             'validSize': self.valid_size(),
             'validLength': self.valid_length(),
             'nbGroups': self.count_groups(),
+            'notFound': self.provider.all_not_found(),
         }
 
     @sciter.script

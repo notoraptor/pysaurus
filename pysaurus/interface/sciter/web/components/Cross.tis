@@ -1,0 +1,20 @@
+include "sciter:reactor.tis";
+
+class Cross: Reactor.Component {
+	function this(props) {
+		// action ? function()
+		// title? str
+		this.props = props || {};
+	}
+	function render() {
+		return (
+			<div class="cross" {(this.props.title ? {title: this.props.title} : '')}>
+				<span class="content">&#10005;</span>
+			</div>
+		);
+	}
+	event click $(.cross) {
+		if (this.props.action)
+			this.props.action();
+	}
+}

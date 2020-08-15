@@ -10,6 +10,8 @@ function getSubTree(tree, entryName) {
 
 function collectPaths(tree, collection, prefix='') {
     if (tree) {
+        if (prefix.length)
+            collection.push(prefix);
         for (let name in Object.keys(tree)) {
             const entryName = prefix.length ? (prefix + '-' + name) : name;
             collectPaths(tree[name], collection, entryName);

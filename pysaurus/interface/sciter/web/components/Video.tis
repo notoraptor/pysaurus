@@ -22,7 +22,7 @@ class Video: Reactor.Component {
         const meta_title = (title == file_title ? null : title);
         const hasThumbnail = System.scanFiles(data.thumbnail_path);
         return (
-            <div class={'video' + (index % 2 ? ' even' : ' odd') + (data.exists ? ' found' : ' not-found')}>
+            <div class={'video horizontal' + (index % 2 ? ' even' : ' odd') + (data.exists ? ' found' : ' not-found')}>
                 <div class="image">
                     {hasThumbnail ? <img alt={data.title} src={data.thumbnail_path}/> : <div class="no-thumbnail">no thumbnail</div>}
                 </div>
@@ -31,17 +31,17 @@ class Video: Reactor.Component {
                         <div><strong>{data.title}</strong></div>
                         {data.title === data.file_title ? '' : <div><em>{data.file_title}</em></div>}
                     </div>
-                    <div class={'filename-line' + (data.exists ? '' : ' row')}>
+                    <div class={'filename-line' + (data.exists ? '' : ' horizontal')}>
 	                    {data.exists ? '' : <div class="prepend"><code>NOT FOUND</code></div>}
 	                    <div class="filename"><code>{data.filename}</code></div>
                     </div>
-                    <div class="format">
+                    <div class="format horizontal">
                         <div class="prepend"><code>{data.extension}</code></div>
                         <div><strong title={data.file_size}>{data.size}</strong> / {data.container_format} (<span title={data.video_codec_description}>{data.video_codec}</span>, <span title={data.audio_codec_description}>{data.audio_codec}</span>)</div>
                     </div>
                     <div><strong>{data.width}</strong> x <strong>{data.height}</strong> @ {data.frame_rate} fps | {data.sample_rate} Hz, {data.audio_bit_rate} Kb/s</div>
                     <div><strong>{data.length}</strong> | <code>{data.date}</code></div>
-                    <div class="quality">
+                    <div class="quality horizontal">
                         <div class="prepend"><code>Quality</code></div>
                         <div><strong><em>{String.printf("%.2f", data.quality)}</em></strong> %</div>
                     </div>

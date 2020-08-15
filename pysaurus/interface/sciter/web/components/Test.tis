@@ -1,15 +1,65 @@
 include "sciter:reactor.tis";
 include "SetInput.tis";
+include "Selector.tis";
+include "MenuPack.tis";
+include "Cross.tis";
+include "../utils/utils.tis";
+
+function make_call(obj, func) {
+	const f = function(args...) {
+		return func.apply(obj, args);
+	};
+	return f;
+}
 
 class Test: Reactor.Component {
 	function this(props) {
 		this.props = props;
 		this.checked = true;
 		this.arr = ['a', 'b', 'ccc'];
+		this.option = null;
+		this.checked = false;
+	}
+	function test() {
+		stdout.println(this.arr);
 	}
 	function render() {
 		return (
 			<div class="test">
+				<header>
+					<MenuPack title="Menu pack">
+						<MenuItem>Hello world!</MenuItem>
+						<MenuItem>Item 1</MenuItem>
+						<MenuItem>Item 2</MenuItem>
+						<Menu title="wow">
+							<MenuItem>1</MenuItem>
+							<MenuItem>2</MenuItem>
+							<MenuItem>wolololololololol</MenuItem>
+							<MenuItem>1111</MenuItem>
+						</Menu>
+						<MenuItem>Item 3</MenuItem>
+						<MenuItem>The world!</MenuItem>
+						<Menu title="sub-menu">
+							<MenuItem>Sub-item 1</MenuItem>
+							<MenuItem>Sub-item 2</MenuItem>
+							<MenuItem>Sub-item 3</MenuItem>
+							<MenuItem>Sub-item 4</MenuItem>
+							<Menu title="sub menu again">
+								<MenuItem>a menu 1</MenuItem>
+								<MenuItem>a menu 2</MenuItem>
+							</Menu>
+							<MenuItem>Sub-item 5</MenuItem>
+							<MenuItem>Sub-item 6</MenuItem>
+						</Menu>
+						<MenuItem>The world 1</MenuItem>
+						<MenuItem>The world 2</MenuItem>
+						<MenuItem>The world 3</MenuItem>
+						<MenuItemCheck checked={this.checked} action={Utils.callback(this, this.onCheck)}>check!</MenuItemCheck>
+					</MenuPack>
+				</header>
+				<p>
+				hello cross! <Cross action={() => stdout.println('crossed!')} title="za warudo!"/>
+				</p>
 				<p>
 					<input type="checkbox" :checked={this.checked} id="input"/>
 					&nbsp;
@@ -18,8 +68,24 @@ class Test: Reactor.Component {
 				<div>
 					{this.renderSwitch()}
 				</div>
+				<div>padding</div>
+				<div>padding</div>
+				<div>padding</div>
+				<div>padding</div>
+				<div>padding</div>
+				<div>padding</div>
+				<div>padding</div>
+				<div>padding</div>
+				<div>padding</div>
+				<div>padding</div>
 			</div>
 		);
+	}
+	function onSelect(value) {
+		this.update({option: value});
+	}
+	function onCheck(value) {
+		this.update({checked: value});
 	}
 	function renderSwitch() {
 		if (this.checked) {

@@ -7,11 +7,12 @@ include "FormSourceVideo.tis";
 include "FormSort.tis";
 include "FormSearch.tis";
 include "FormGroup.tis";
+include "MenuPack.tis";
+include "Cross.tis";
 
 class VideosPage: Reactor.Component {
-	function this(props, children) {
+	function this(props) {
 		this.props = props || {};
-		this.children = children || {};
 
 		this.pageSize = 100;
 		this.pageNumber = 0;
@@ -25,6 +26,7 @@ class VideosPage: Reactor.Component {
 		const validSize = backend.validSize;
 		const validLength = backend.validLength;
 		const nbGroups = backend.nbGroups;
+		const notFound = backend.notFound;
 
 		const sources = view.get_sources();
 		const group_def = view.get_group_def();
@@ -36,118 +38,68 @@ class VideosPage: Reactor.Component {
 		if (this.pageNumber < 0)
 			this.pageNumber = 0;
 
+		const sortingIsDefault = sorting.length === 1 && sorting[0] === '-date';
 		const app = this;
-		const onChangePage = function(pageNumber) {
-			app.updateView({pageNumber: pageNumber});
-		};
-		const onChangeGroup = function(groupNumber) {
-			app.updateGroup(groupNumber);
-		};
 
 		return (
 			<div id="videos">
-				<div class="row central-panel">
-					<div class="col side-panel">
-						<div class="status">
-							Displaying {group_def || search_def ? <em>filtered</em> : <strong>all</strong>} videos
-						</div>
-						<div class="status sources">
-						<div class="sources">Sources:</div>
-						{sources.map((source, index) => <div class="source" key={index}>{source.join('.')}</div>)}
-						</div>
-						<hr/>
-
-						<div class="status">
-							<button class="plain" id="source">Select videos ...</button>
-						</div>
-						<hr/>
-
-						{group_def ? (
-							<div>
-								<div class="status">
-									<div>Videos grouped by</div>
-									<div>{FIELD_TITLES[group_def.field]}{' '}{group_def.reverse ? (<span>&#9660;</span>) : (<span>&#9650;</span>)}</div>
-									<div>Group {group_def.nb_groups ? group_def.group_id + 1 : 0} / {group_def.nb_groups}</div>
-								</div>
-								<div class="buttons-line">
-									<button class="edit group">edit group ...</button>
-									<button class="reset" id="reset-group">reset group</button>
-								</div>
-							</div>
-						) : (
+				<header>
+					<MenuPack title="Options">
+						<MenuItem action={Utils.callback(this, this.selectVideos)}>Select videos ...</MenuItem>
+						{notFound ? '' : <MenuItem action={Utils.callback(this, this.openRandomVideo)}>Open random video</MenuItem>}
+						<MenuItem action={Utils.callback(this, this.reloadDatabase)} >Reload database ...</MenuItem>
+						<MenuItem action={Utils.callback(this, this.manageProperties)} >Manage properties</MenuItem>
+						<Menu title="Page size ...">
+							{[10, 20, 50, 100].map((count, index) => (
+								<MenuItemCheck key={index} checked={this.pageSize === count} action={checked => {if (checked) app.setPageSize(count);}} >
+									{count} video{count > 1 ? 's' : ''} per page
+								</MenuItemCheck>
+							))}
+						</Menu>
+						<MenuItemCheck checked={this.confirmDeletion} action={Utils.callback(this, this.confirmDeletionForNotFound)}>
+							confirm deletion for entries not found
+						</MenuItemCheck>
+					</MenuPack>
+					<div class="buttons">
+						<button class="group" accesskey="^G">Group videos ...</button>
+						<button class="search" accesskey="^F">Search ...</button>
+						<button class="sort" accesskey="^S">Sort ...</button>
+					</div>
+				</header>
+				<div class="horizontal central-panel">
+					<div class="side-panel">
+						<div>
 							<div class="status">
-								<button class="group plain">Group videos ...</button>
+								Displaying {group_def || search_def ? <em>filtered</em> : <strong>all</strong>} videos
 							</div>
-						)}
-						<hr/>
-
-						{search_def ? (
-							<div>
-								<div class="status">
-									<div>Searched</div>
-									<div>&quot;<strong>{search_def.text}</strong>&quot;</div>
-									<div>({SEARCH_TYPE_TITLE[search_def.cond]})</div>
-								</div>
-								<div class="buttons-line">
-									<button class="edit search" accesskey="^F">search ...</button>
-									<button class="reset" id="reset-search">reset search</button>
-								</div>
+							<div class="status sources">
+								<div class="sources">Sources:</div>
+								{sources.map((source, index) => <div class="source" key={index}>{source.join('.')}</div>)}
 							</div>
-						) : (
+							{group_def ? (
 							<div class="status">
-								<button class="search plain" accesskey="^F">Search ...</button>
+								<div>Grouped by <Cross title="reset group" action={Utils.callback(this, this.resetGroup)}/></div>
+								<div>{FIELD_TITLES[group_def.field]}{' '}{group_def.reverse ? (<span>&#9660;</span>) : (<span>&#9650;</span>)}</div>
 							</div>
-						)}
-						<hr/>
-
-						{sorting.length ? (
-							<div>
-								<div class="status">
-									<div>Videos sorted by</div>
-									{sorting.map((val, i) => <div key={i}><strong>{val.substr(1)}</strong>{' '}{val[0] == '-' ? (<span>&#9660;</span>) : (<span>&#9650;</span>)}</div>)}
-								</div>
-								<div class="buttons-line status">
-									<button class="edit sort">edit sorting ...</button>
-									<button class="reset" id="reset-sort">reset sorting</button>
-								</div>
-							</div>
-						) : (
+							) : ''}
+							{search_def ? (
 							<div class="status">
-								<button class="sort plain">Sort ...</button>
+								<div>Searched {SEARCH_TYPE_TITLE[search_def.cond]} <Cross title="reset search" action={Utils.callback(this, this.resetSearch)}/></div>
+								<div>&quot;<strong>{search_def.text}</strong>&quot;</div>
 							</div>
-						)}
-						<hr/>
-
-						<div class="status">
-							<select class="select-page-size plain" novalue="videos per page" :value={this.pageSize}>
-								{[10, 20, 50, 100].map((count, index) => <option key={index} value={count}>Display {count} video{count > 1 ? 's' : ''} per page</option>)}
-							</select>
-						</div>
-						<hr/>
-						<div class="status">
-							<button class="plain" id="open-random-file">open a random video</button>
-						</div>
-						<hr/>
-						<div class="status">
-							<button class="plain" id="reload">reload database</button>
-						</div>
-						<hr/>
-						<div class="status">
-							<button class="plain" id="manage-properties">manage properties</button>
-						</div>
-						<hr/>
-						<div class="status">
-							<input type="checkbox" name="confirm-deletion" id="confirm-deletion" :checked={this.confirmDeletion}/>
-							{' '}
-							<label for="confirm-deletion">confirm deletion for entries not found</label>
+							) : ''}
+							<div class="status">
+								<div>Sorted by {sortingIsDefault ? '' : <Cross title="reset sorting" action={Utils.callback(this, this.resetSort)} />}</div>
+								{sorting.map((val, i) => <div key={i}><strong>{val.substr(1)}</strong>{' '}{val[0] == '-' ? (<span>&#9660;</span>) : (<span>&#9650;</span>)}</div>)}
+							</div>
 						</div>
 					</div>
-					<div class="col main-panel">
+					<div class="main-panel">
 						<div class="status pagination">
 							{group_def ? (
-								<Pagination singular="group" plural="groups" nbPages={group_def.nb_groups} pageNumber={group_def.group_id} onChange={onChangeGroup}/>
+								<Pagination singular="group" plural="groups" nbPages={group_def.nb_groups} pageNumber={group_def.group_id} onChange={Utils.callback(this, this.changeGroup)}/>
 							) : ''}
-							<Pagination singular="page" plural="pages" nbPages={nbPages} pageNumber={this.pageNumber} onChange={onChangePage}/>
+							<Pagination singular="page" plural="pages" nbPages={nbPages} pageNumber={this.pageNumber} onChange={Utils.callback(this, this.changePage)}/>
 						</div>
 						{(group_def && group_def.nb_groups) ? (<div class="status">{Utils.sentence(FIELD_TITLES[group_def.field])}:  <strong>{view.get_group_field_value()}</strong></div>) : ''}
 						<div class="videos">{this.getVideos()}</div>
@@ -159,6 +111,9 @@ class VideosPage: Reactor.Component {
 							<span class="info count">{nbVideos} video{nbVideos > 1 ? 's' : ''}</span>
 							<span class="info size">{validSize}</span>
 							<span class="info length">{validLength}</span>
+					</div>
+					<div>
+						<div class="select-videos" accesskey="^V"/>
 					</div>
 				</footer>
 			</div>
@@ -195,31 +150,7 @@ class VideosPage: Reactor.Component {
 		view.set_group(groupNumber);
 		this.updateView({pageNumber: 0});
 	}
-	event click $(button#open-random-file) (evt, element) {
-		element.state.disabled = true;
-		const info = view.open_random_video(this.pageSize);
-		this.updateView({pageNumber: info[0], status: 'Randomly opened: ' + info[2]}, info[1]);
-		this.post(() => element.state.disabled = false);
-	}
-	event click $(button#reload) (evt, element) {
-		this.props.app.loadPage('home', {update: true});
-	}
-	event click $(button#manage-properties) (evt, element) {
-		this.props.app.loadPage('properties');
-	}
-	event click $(button#reset-search) (evt, element) {
-		view.set_search(null, null);
-		this.updateView({pageNumber: 0});
-	}
-	event click $(button#reset-sort) (evt, element) {
-		view.set_sorting([]);
-		this.updateView({pageNumber: 0});
-	}
-	event click $(button#reset-group) (evt, element) {
-		view.group_videos(null, null);
-		this.update({pageNumber: 0});
-	}
-	event click $(button#source) (evt, element) {
+	function selectVideos() {
 		const app = this;
 		const tree = view.get_source_tree();
 		const sources = view.get_sources();
@@ -232,6 +163,61 @@ class VideosPage: Reactor.Component {
 				}
 			}} />
 		));
+	}
+	function openRandomVideo() {
+		const filename = view.open_random_video(this.pageSize);
+		this.updateView({status: 'Randomly opened: ' + filename});
+	}
+	function reloadDatabase() {
+		//
+		this.props.app.loadPage('home', {update: true});
+	}
+	function manageProperties() {
+		//
+		this.props.app.loadPage('properties');
+	}
+	function confirmDeletionForNotFound(value) {
+		//
+        this.update({confirmDeletion: value});
+	}
+	function setPageSize(value) {
+        if (value !== this.pageSize) {
+            this.updateView({pageSize: value, pageNumber: 0});
+        }
+	}
+	function changePage(pageNumber) {
+		this.updateView({pageNumber: pageNumber});
+	}
+	function changeGroup(groupNumber) {
+		this.updateGroup(groupNumber);
+	}
+	function resetSearch() {
+		view.set_search(null, null);
+		this.updateView({pageNumber: 0});
+	}
+	function resetSort() {
+		view.set_sorting([]);
+		this.updateView({pageNumber: 0});
+	}
+	function resetGroup() {
+		view.group_videos(null, null);
+		this.update({pageNumber: 0});
+	}
+
+	event focus $(.select-videos) (evt, element) {
+		stdout.println('FOCUS');
+	}
+	event click $(button#reset-search) (evt, element) {
+		//
+		this.resetSearch();
+	}
+	event click $(button#reset-sort) (evt, element) {
+		//
+		this.resetSort();
+	}
+	event click $(button#reset-group) (evt, element) {
+		//
+		this.resetGroup();
 	}
 	event click $(button.sort) (evt, element) {
 		const app = this;
@@ -271,15 +257,6 @@ class VideosPage: Reactor.Component {
 		        }
             }} />
         ));
-    }
-    event change $(select.select-page-size) (evt, element) {
-        const value = element.value;
-        if (value !== this.pageSize) {
-            this.updateView({pageSize: value, pageNumber: 0});
-        }
-    }
-    event change $(input[name=confirm-deletion]) (evt, element) {
-        this.update({confirmDeletion: element.value});
     }
     event click $(#status) {
 		//

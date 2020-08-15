@@ -1,5 +1,6 @@
 include "sciter:reactor.tis";
 include "SetInput.tis";
+include "Selector.tis";
 
 const DEFAULT_VALUES = {
 	bool: false,
@@ -24,57 +25,70 @@ class PropertiesPage: Reactor.Component {
 		this.multiple = false;
 	}
 	function render() {
+		const app = this;
+		const onSelectType = (value) => app.setType(value);
 		return (
 			<div id="properties">
-				<h2>
+				<h2 class="horizontal">
 					<div><button class="back">&lt;-</button></div>
 					<div class="title">Properties Management</div>
 				</h2>
 				<hr/>
-				<div class="list">
-					{this.renderPropTypes()}
+				<div class="content horizontal">
+					<div class="list">
+						<h3>Current properties</h3>
+						{this.renderPropTypes()}
+					</div>
+					<form class="new">
+						<h3>Add a new property</h3>
+						<div class="entries">
+							<div class="entry">
+								<div class="label"><label for="prop-name">Name:</label></div>
+								<div class="input">
+									<input type="text" name="name" id="prop-name" :value={this.name}/>
+								</div>
+							</div>
+							<div class="entry">
+								<div class="label"><label for="prop-type">Type:</label></div>
+								<div class="input">
+									<select name="type" id="prop-type" :value={this.type}>
+										<option value="bool">boolean</option>
+										<option value="int">integer</option>
+										<option value="float">floating number</option>
+										<option value="str">text</option>
+										<option value="enum">enumeration</option>
+									</select>
+								</div>
+							</div>
+							<div class="entry">
+								<div class="label">
+									<label for={'prop-default-' + this.type}>
+										{this.type === 'enum' ? 'Enumeration values (first is default)' : 'Default value'}
+									</label>
+								</div>
+								<div key={this.type} class="input">
+									{this.renderDefaultInput()}
+								</div>
+							</div>
+							<div class="entry">
+								<div class="label">
+									<input type="checkbox" name="multiple" id="prop-multiple" :checked={this.multiple}/>
+								</div>
+								<div class="input">
+									<label for="prop-multiple">accept many values</label>
+								</div>
+							</div>
+							<div class="entry buttons">
+								<div class="label">
+									<button class="reset">reset</button>
+								</div>
+								<div class="input">
+									<button class="submit">add</button>
+								</div>
+							</div>
+						</div>
+					</form>
 				</div>
-				<hr/>
-				<form class="new">
-					<h3>Add a new property:</h3>
-					<div class="col">
-						<div class="label"><label for="prop-name">Name:</label></div>
-						<div class="input">
-							<input type="text" name="name" id="prop-name" :value={this.name}/>
-						</div>
-					</div>
-					<div class="col">
-						<div class="label"><label for="prop-type">Type:</label></div>
-						<div class="input">
-							<select name="type" id="prop-type" :value={this.type}>
-								<option value="bool">boolean</option>
-								<option value="int">integer</option>
-								<option value="float">floating number</option>
-								<option value="str">text</option>
-								<option value="enum">enumeration</option>
-							</select>
-						</div>
-					</div>
-					<div class="col">
-						<div class="label">
-							<label for={'prop-default-' + this.type}>
-								{this.type === 'enum' ? 'Enumeration values (first is default)' : 'Default value'}
-							</label>
-						</div>
-						<div key={this.type} class="input">
-							{this.renderDefaultInput()}
-						</div>
-					</div>
-					<div class="col">
-						<input type="checkbox" name="multiple" id="prop-multiple" :checked={this.multiple}/>
-						{' '}
-						<label for="prop-multiple">accept many values</label>
-					</div>
-					<div class="col buttons">
-						<button class="submit">add</button>
-						<button class="reset">reset</button>
-					</div>
-				</form>
 			</div>
 		);
 	}
@@ -129,6 +143,10 @@ class PropertiesPage: Reactor.Component {
 		}
 		return <input type="text" class="prop-default" id={'prop-default-' + this.type} :value={this.defaultValue}/>;
 	}
+	function setType(value) {
+		if (this.type !== value)
+			this.update({type: value, defaultValue: getDefaultValue(value)});
+	}
 	event click $(button.back) (evt, element) {
 		this.props.app.loadPage("videos");
 	}
@@ -138,9 +156,7 @@ class PropertiesPage: Reactor.Component {
 			this.update({name: value});
 	}
 	event change $(select[name=type]) (evt, element) {
-		const value = element.value;
-		if (this.type !== value)
-			this.update({type: value, defaultValue: getDefaultValue(value)});
+		this.setType(element.value);
 	}
 	event change $(.prop-default) (evt, element) {
 		const value = element.value;

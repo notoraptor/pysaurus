@@ -1,0 +1,54 @@
+include "sciter:reactor.tis";
+
+class Selector: Reactor.Component {
+	function this(props) {
+		// values: [str]
+		// onSelect(value)
+		// selected?: str
+		// novalue?: str
+		this.props = props;
+		this.display = false;
+
+		const app = this;
+		this.hide = function(evt, element) {
+			stdout.println('selector outer click', evt, element);
+			app.update({display: false});
+		};
+	}
+	function render() {
+		let selected = null;
+		if (this.props.selected && this.props.values.indexOf(this.props.selected) >= 0)
+			selected = this.props.selected;
+		return (
+			<div class="selector">
+				<div class="view-bar horizontal">
+					<div class={'view ' + (selected ? 'selected' : 'novalue')}>
+						{selected ? selected : (this.props.novalue ? this.props.novalue: '...')}
+					</div>
+					<div class="icon">&#9660;</div>
+				</div>
+				<div class={'select ' + (this.display ? 'show' : 'hide')}>
+					{this.props.values.map((value, index) => (
+						<div class={'option' + (value === selected ? ' selected' : '')} key={index} item={value}>{value}</div>
+					))}
+				</div>
+			</div>
+		);
+	}
+	function attached() {
+		view.root.on('click', this.hide);
+	}
+	function detached() {
+		view.root.off(this.hide);
+	}
+	event click $(.view-bar) (evt, element) {
+		this.update({display: !this.display});
+		return true;
+	}
+	event click $(.option) (evt, element) {
+		const value = element.attributes['item'];
+		this.update({display: false});
+		this.post(() => this.props.onSelect(value));
+		return true;
+	}
+}
