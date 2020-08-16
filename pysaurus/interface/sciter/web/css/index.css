@@ -25,6 +25,16 @@ table, th, td {
 .col {
 	display: table-cell;
 }
+.navigation {
+	display: inline-block;
+	white-space: nowrap;
+	text-align: center;
+	padding-top: 0.25em;
+	padding-bottom: 0.25em;
+}
+.navigation > * + * {
+	margin-left: 0.5em;
+}
 
 /** App **/
 div.app {
@@ -72,6 +82,35 @@ main {
 #videos header {
 	flow: horizontal;
 }
+#videos .frontier {
+	display: block;
+	width: 1*;
+	height: 0.5em;
+	background: linear-gradient(90deg, white, rgb(220, 220, 220));
+}
+
+#videos table.filter {
+	width: 1*;
+}
+#videos table.filter td {
+	padding: 0.4em;
+	text-align: center;
+}
+#videos table.filter td.right div + div {
+	margin-top: 0.4em;
+}
+#videos table.filter .no-filter {
+	font-style: italic;
+	color: gray;
+}
+#videos table.filter tr:hover {
+	background-color: rgb(140, 140, 140);
+	color: white;
+}
+#videos table.filter tr:hover .no-filter {
+	color: white;
+}
+
 #videos header .buttons {
 	height: 1*;
 	vertical-align: middle;
@@ -79,7 +118,18 @@ main {
 }
 #videos header .buttons button {
 	margin-left: 1em;
-	min-width: 100px;
+	min-width: 80px;
+}
+#videos header .pagination {
+	width: 1*;
+	text-align: right;
+}
+#videos header .pagination .navigation {
+	margin-left: 2em;
+}
+
+#videos .central-panel {
+	border-top: 1px solid rgb(220, 220, 220);
 }
 #videos .central-panel, .side-panel, .main-panel {
 	height: 1*;
@@ -98,11 +148,6 @@ main {
 	margin-left: 0.25em;
 	margin-right: 0.25em;
 }
-#videos .pagination .navigation {
-	display: inline-block;
-	margin-left: 0.5em;
-	margin-right: 0.5em;
-}
 #videos .videos {
 	border-top: 1px solid gray;
 	border-left: 1px solid gray;
@@ -114,45 +159,29 @@ main {
 #videos footer {
 	border-top: 1px solid gray;
 	font-size: 0.9em;
+	flow: horizontal;
 }
-#videos #status {
+#videos footer > * {
+	width: 1*;
+	height: min-intrinsic;
 	padding: 0.4em;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
-#videos .infos {
-	padding-top: 0.4em;
-	padding-bottom: 0.4em;
-	padding-left: 0.4em;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
+#videos #status {
+	border-right: 1px solid gray;
 }
-#videos .infos .info {
+#videos .information {
+	text-align: right;
+}
+#videos .information .info {
 	display: inline-block;
 }
-#videos .infos .info + .info {
+#videos .information .info + .info {
 	margin-left: 1em;
 	border-left: 1px solid black;
 	padding-left: 1em;
-}
-#videos .buttons-line button {
-	display: block;
-	width: 1*;
-}
-#videos .buttons-line button.edit {margin-right: 0.25em;}
-#videos .buttons-line button.reset {margin-left: 0.25em;}
-#videos button#open-random-file {
-	font-weight: bold;
-	font-style: italic;
-}
-#videos button#reload {
-	font-weight: bold;
-	color: red;
-}
-#videos button#source {
-	font-weight: bold;
 }
 
 /** Property page **/
@@ -481,7 +510,7 @@ main {
 }
 
 /** cross **/
-.cross {
+.pybutton {
 	display: inline-block;
 	width: max-intrinsic;
 	height: max-intrinsic;
@@ -489,10 +518,23 @@ main {
 	cursor: pointer;
 	font-size: 0.75em;
 	color: rgb(255, 255, 0);
+
+}
+.pybutton:hover {
+	color: rgb(255, 255, 150);
+
+}
+.pybutton.cross {
 	background-color: rgb(200, 0, 0);
 	border: 3px solid rgb(180, 0, 0);
 }
-.cross:hover {
-	color: rgb(255, 255, 150);
+.pybutton.cross:hover {
 	background-color: red;
+}
+.pybutton.settings {
+	background-color: rgb(0, 94, 205);
+	border: 3px solid rgb(0, 64, 175);
+}
+.pybutton.settings:hover {
+	background-color: DodgerBlue;
 }

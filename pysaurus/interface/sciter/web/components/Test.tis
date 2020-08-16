@@ -26,6 +26,23 @@ class Test: Reactor.Component {
 	function render() {
 		return (
 			<div class="test">
+				<div>
+					<button type="menu">test
+						<menu>
+							<li>1</li>
+							<li>2</li>
+							<li>3</li>
+							<li type="check" name="mychecks" id="mychecks-1">First check item</li>
+							<li>sub
+								<menu>
+									<li>a</li>
+									<li>b</li>
+									<li>c</li>
+								</menu>
+							</li>
+						</menu>
+					</button>
+				</div>
 				<header>
 					<MenuPack title="Menu pack">
 						<MenuItem>Hello world!</MenuItem>
@@ -57,9 +74,9 @@ class Test: Reactor.Component {
 						<MenuItemCheck checked={this.checked} action={Utils.callback(this, this.onCheck)}>check!</MenuItemCheck>
 					</MenuPack>
 				</header>
-				<p>
-				hello cross! <Cross action={() => stdout.println('crossed!')} title="za warudo!"/>
-				</p>
+
+				<div>hello cross! <Cross action={() => stdout.println('crossed!')} title="za warudo!"/>{' '}<SettingIcon action={() => stdout.println('zedited!')} title="za pasato!"/></div>
+				<div>hello cross! <SettingIcon action={() => stdout.println('zedited!')} title="za pasato!"/>{' '}<Cross action={() => stdout.println('crossed!')} title="za warudo!"/></div>
 				<p>
 					<input type="checkbox" :checked={this.checked} id="input"/>
 					&nbsp;

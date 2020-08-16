@@ -20,7 +20,7 @@ class Pagination: Reactor.Component {
 		const pageNumber = this.props.pageNumber;
 		return (
 			nbPages ? (
-				<span class="navigation status">
+				<span class="navigation">
 					<button class="first" :disabled={pageNumber === 0}>&lt;&lt;</button>
 					<button class="previous" :disabled={pageNumber === 0}>&lt;</button>{' '}
 					<span>{Utils.sentence(singular)}{' '}<input type="integer" class="current" min={1} max={nbPages} step={1} :value={pageNumber + 1}/> / {nbPages}</span>{' '}

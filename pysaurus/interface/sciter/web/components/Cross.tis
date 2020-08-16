@@ -8,12 +8,31 @@ class Cross: Reactor.Component {
 	}
 	function render() {
 		return (
-			<div class="cross" {(this.props.title ? {title: this.props.title} : '')}>
+			<div class="pybutton cross" {(this.props.title ? {title: this.props.title} : '')}>
 				<span class="content">&#10005;</span>
 			</div>
 		);
 	}
-	event click $(.cross) {
+	event click $(.pybutton.cross) {
+		if (this.props.action)
+			this.props.action();
+	}
+}
+
+class SettingIcon: Reactor.Component {
+	function this(props) {
+		// action ? function()
+		// title? str
+		this.props = props || {};
+	}
+	function render() {
+		return (
+			<div class="pybutton settings" {(this.props.title ? {title: this.props.title} : '')}>
+				<span class="content">&#x2630;</span>
+			</div>
+		);
+	}
+	event click $(.pybutton.settings) {
 		if (this.props.action)
 			this.props.action();
 	}

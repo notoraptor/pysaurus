@@ -196,6 +196,7 @@ class Frame(sciter.Window):
 
     @sciter.script
     def get_info(self, page_size):
+        group_def = self.get_group_def()
         return {
             'nbVideos': self.count_videos(),
             'nbPages': self.count_pages(page_size),
@@ -203,6 +204,11 @@ class Frame(sciter.Window):
             'validLength': self.valid_length(),
             'nbGroups': self.count_groups(),
             'notFound': self.provider.all_not_found(),
+            'sources': self.get_sources(),
+            'groupDef': group_def,
+            'groupFieldValue': (self.get_group_field_value() if group_def else None),
+            'searchDef': self.get_search_def(),
+            'sorting': self.get_sorting(),
         }
 
     @sciter.script

@@ -61,7 +61,7 @@ const FIELD_TITLES = {
 	'frame_rate': 'frame rate',
 	'height': 'height',
 	'length': 'length',
-	'quality': 'relative quality',
+	'quality': 'quality',
 	'sample_rate' : 'sample rate',
 	'size': 'size',
 	'thumbnail_path': 'thumbnail path',
@@ -70,11 +70,26 @@ const FIELD_TITLES = {
 	'video_codec_description' : 'video codec description',
 	'video_id': 'video ID',
 	'width': 'width',
-	'file_size': 'raw file size',
+	'file_size': 'size (raw)',
 };
+
+function __value_to_key(obj) {
+	const arr = Object.keys(obj).map(key => [key, obj[key]]);
+	arr.sort(function(t1, t2) {
+		let t = t1[1].lexicalCompare(t2[1]);
+		if (t === 0)
+			t = t1[0].lexicalCompare(t2[0]);
+		return t;
+	});
+	return arr;
+}
+
+const SORTED_FIELDS_AND_TITLES = __value_to_key(FIELD_TITLES);
 
 const SEARCH_TYPE_TITLE = {
 	exact: 'exactly',
 	and: 'all terms',
 	or: 'any term'
 };
+
+const PAGE_SIZES = [10, 20, 50, 100];
