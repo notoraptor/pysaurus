@@ -41,7 +41,7 @@ class VideosPage: Reactor.Component {
 				<header>
 					<button type="menu">Options ...
 						<menu class="popup">
-							<li class="select-videos" accesskey="^2">Select videos ...</li>
+							<li class="select-videos" accesskey="^V">Select videos ...</li>
 							<li class="open-random-video">Open random video</li>
 							<li class="reload-database">Reload database ...</li>
 							<li class="manage-properties">Manage properties</li>
