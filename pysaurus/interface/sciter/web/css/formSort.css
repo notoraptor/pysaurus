@@ -1,0 +1,24 @@
+/** form-sort **/
+#form-sort {
+    text-align: center;
+    padding: 0.5em;
+    height: 1*;
+}
+#form-sort > *,
+#form-sort #sorting .sorting > * {
+    margin-left: 0.25em;
+    margin-right: 0.25em;
+}
+#form-sort #sorting {
+    height: 1*;
+    overflow: auto;
+    border: 1px solid gray;
+    padding: 0.125em;
+}
+#form-sort .button-bar button {
+    width: 1*;
+    margin: 0.5em;
+}
+#form-sort button#button-sort {
+    font-weight: bold;
+}

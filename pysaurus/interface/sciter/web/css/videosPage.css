@@ -1,0 +1,108 @@
+/** Videos page **/
+#videos {
+	height: 1*;
+}
+#videos header {
+	flow: horizontal;
+}
+#videos .frontier {
+	display: block;
+	width: 1*;
+	height: 0.5em;
+	background: linear-gradient(90deg, white, rgb(220, 220, 220));
+}
+
+#videos table.filter {
+	width: 1*;
+}
+#videos table.filter td {
+	padding: 0.4em;
+	text-align: center;
+}
+#videos table.filter td.right div + div {
+	margin-top: 0.4em;
+}
+#videos table.filter .no-filter {
+	font-style: italic;
+	color: gray;
+}
+#videos table.filter tr:hover {
+	background-color: rgb(140, 140, 140);
+	color: white;
+}
+#videos table.filter tr:hover .no-filter {
+	color: white;
+}
+
+#videos header .buttons {
+	height: 1*;
+	vertical-align: middle;
+	flow: horizontal;
+}
+#videos header .buttons button {
+	margin-left: 1em;
+	min-width: 80px;
+}
+#videos header .pagination {
+	width: 1*;
+	text-align: right;
+}
+#videos header .pagination .navigation {
+	margin-left: 2em;
+}
+
+#videos .central-panel {
+	border-top: 1px solid rgb(220, 220, 220);
+}
+#videos .central-panel, .side-panel, .main-panel {
+	height: 1*;
+}
+#videos .side-panel {
+	margin-right: 0.5em;
+}
+#videos .main-panel {
+	width: 1*;
+}
+#videos .status {
+	text-align: center;
+	padding: 0.25em 0.5em 0.25em 0.5em;
+}
+#videos .status > * {
+	margin-left: 0.25em;
+	margin-right: 0.25em;
+}
+#videos .videos {
+	border-top: 1px solid gray;
+	border-left: 1px solid gray;
+	border-right: 1px solid gray;
+	width: 1*;
+	height: 1*;
+	overflow: auto;
+}
+#videos footer {
+	border-top: 1px solid gray;
+	font-size: 0.9em;
+	flow: horizontal;
+}
+#videos footer > * {
+	width: 1*;
+	height: min-intrinsic;
+	padding: 0.4em;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+#videos #status {
+	border-right: 1px solid gray;
+}
+#videos .information {
+	text-align: right;
+}
+#videos .information .info {
+	display: inline-block;
+}
+#videos .information .info + .info {
+	margin-left: 1em;
+	border-left: 1px solid black;
+	padding-left: 1em;
+}

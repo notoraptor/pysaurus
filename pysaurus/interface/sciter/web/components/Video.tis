@@ -20,7 +20,7 @@ class Video: Reactor.Component {
         const title = data.title;
         const file_title = data.file_title;
         const meta_title = (title == file_title ? null : title);
-        const hasThumbnail = System.scanFiles(data.thumbnail_path);
+        const hasThumbnail = data.hasThumbnail;
         return (
             <div class={'video horizontal' + (index % 2 ? ' even' : ' odd') + (data.exists ? ' found' : ' not-found')}>
                 <div class="image">
@@ -91,9 +91,11 @@ class Video: Reactor.Component {
         element.popup(element.$(menu), 7, mx, my);
     }
     event click $(.video.found .info .filename code) (evt, element) {
+        //
         this.openVideo();
     }
     event click $(menu li.open-file) (evt, element) {
+        //
         this.openVideo();
     }
     event click $(menu li.open-folder) (evt, element) {
@@ -114,9 +116,11 @@ class Video: Reactor.Component {
         this.props.parent.updateStatus('Copied to clipboard: ' + text);
     }
     event click $(menu li.delete-file) (evt, element) {
+        //
         this.deleteVideo();
     }
     event click $(.video.not-found .filename-line .prepend) (evt, element) {
+        //
         this.deleteVideo();
     }
     event click $(menu li.rename-file) (evt, element) {

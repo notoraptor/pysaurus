@@ -140,6 +140,22 @@ class Frame(sciter.Window):
         return fields
 
     @sciter.script
+    def get_videos(self, page_size, page_number, fields):
+        videos = []
+        nb_videos = self.count_videos()
+        if nb_videos:
+            start = page_size * page_number
+            end = min(start + page_size, nb_videos)
+            for index in range(start, end):
+                video = self.provider.get_video(index)
+                js = {field: to_js_value(getattr(video, field)) for field in fields}
+                js['exists'] = video.exists()
+                js['hasThumbnail'] = video.thumbnail_path.exists()
+                js['local_id'] = index
+                videos.append(js)
+        return videos
+
+    @sciter.script
     def open_video(self, index):
         try:
             return str(self.provider.get_video(index).filename.open())

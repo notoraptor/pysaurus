@@ -1,0 +1,8 @@
+/** Form source video **/
+.form-source-video button.submit {
+    display: block;
+    width: 1*;
+}
+.form-source-video p.submit {
+    margin: 1em 0.25em 1em 0.25em;
+}

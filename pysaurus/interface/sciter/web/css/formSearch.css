@@ -1,0 +1,13 @@
+/** form-search **/
+.form-search {
+	text-align: center;
+}
+.form-search #input-search {
+    display: block;
+    width: 1*;
+    margin-bottom: 0.5em;
+}
+.form-search label {
+	display: inline-block;
+	padding-left: 0.5em;
+}
