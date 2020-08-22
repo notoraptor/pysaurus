@@ -1,6 +1,5 @@
 include "sciter:reactor.tis";
 include "SetInput.tis";
-include "Selector.tis";
 
 const DEFAULT_VALUES = {
 	bool: false,

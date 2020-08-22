@@ -1,0 +1,31 @@
+/** form-sort **/
+#form-sort {
+    text-align: center;
+    padding: 0.5em;
+    display: flex;
+    flex-direction: column;
+}
+#form-sort > *,
+#form-sort #sorting .sorting > * {
+    margin-left: 0.25em;
+    margin-right: 0.25em;
+}
+#form-sort > .help {
+    margin-bottom: 1em;
+}
+#form-sort #sorting {
+    flex-grow: 1;
+    overflow: auto;
+    border: 1px solid gray;
+    padding: 0.125em;
+}
+#form-sort .buttons button {
+    flex-grow: 1;
+}
+#form-sort .buttons button.add {
+    margin-right: 0.25em;
+}
+#form-sort .buttons button.sort {
+    margin-left: 0.5em;
+    font-weight: bold;
+}

@@ -1,24 +1,36 @@
 import os
 import sys
 import tempfile
+import pyperclip
 
 from cefpython3 import cefpython as cef
+from pysaurus.interface.common.gui_api import GuiAPI
 
 
-class Interface:
+class Interface(GuiAPI):
     def __init__(self, browser):
+        super().__init__()
         self.browser = browser
         self.name = 'from python'
 
-    def __call_javascript(self, *args):
-        self.browser.ExecuteFunction(*args)
+    def close_app(self):
+        super().close_app()
+        print('App closed.')
 
-    def print(self, *args):
-        print(*args)
+    def clipboard(self, text):
+        pyperclip.copy(text)
 
-    def get_name(self, callback):
-        callback.Call(self.name)
-        self.__call_javascript('test')
+    def call(self, name, args, resolve, reject):
+        try:
+            resolve.Call(getattr(self, name)(*args))
+        except Exception as exc:
+            import traceback
+            traceback.print_tb(exc.__traceback__)
+            print('%s:' % type(exc).__name__, exc)
+            reject.Call({'name': type(exc).__name__, 'message': str(exc)})
+
+    def _call_gui_function(self, function_name, *parameters):
+        self.browser.ExecuteFunction(function_name, *parameters)
 
 
 def set_javascript_bindings(browser):
@@ -33,7 +45,7 @@ def main():
     entry_path = os.path.normpath(os.path.join(os.path.dirname(__file__), 'web/index.html')).replace('\\', '/')
     url = 'file:///' + entry_path
     settings = {
-        "debug": True,
+        "debug": False,
         "log_severity": cef.LOGSEVERITY_INFO,
         # "log_file": "debug.log",
         "remote_debugging_port": 4000,

@@ -165,7 +165,6 @@ class VideosPage: Reactor.Component {
 			</div>
 		);
 	}
-
 	function renderVideos() {
 		return this.videos.map((data, i) => (
 			<Video key={data.video_id} data={data} index={data.local_id} parent={this} confirmDeletion={this.confirmDeletion}/>
@@ -192,9 +191,22 @@ class VideosPage: Reactor.Component {
 		//
 		this.updatePage({status: status});
 	}
-	function updateGroup(groupNumber) {
-		view.set_group(groupNumber);
-		this.updateView({pageNumber: 0});
+	function confirmDeletionForNotFound(value) {
+		//
+        this.updatePage({confirmDeletion: value});
+	}
+	function setPageSize(value) {
+        if (value !== this.pageSize) {
+            this.updateView({pageSize: value, pageNumber: 0});
+        }
+	}
+	function changePage(pageNumber) {
+		//
+		this.updateView({pageNumber: pageNumber});
+	}
+	function openRandomVideo() {
+		const filename = view.open_random_video(this.pageSize);
+		this.updateView({status: 'Randomly opened: ' + filename});
 	}
 	function selectVideos() {
 		const app = this;
@@ -210,6 +222,31 @@ class VideosPage: Reactor.Component {
 			}} />
 		));
 	}
+	function groupVideos() {
+		const app = this;
+        const group_def = view.get_group_def() || {field: null, reverse: null};
+        this.props.app.loadDialog('Group videos with same:', onClose => (
+            <FormGroup field={group_def.field} reverse={group_def.reverse} onClose={criterion => {
+                onClose();
+		        if (criterion) {
+		            view.group_videos(criterion.field, criterion.reverse);
+					this.updateView({pageNumber: 0});
+		        }
+            }} />
+        ));
+	}
+	function changeGroup(groupNumber) {
+		//
+		this.updateGroup(groupNumber);
+	}
+	function updateGroup(groupNumber) {
+		view.set_group(groupNumber);
+		this.updateView({pageNumber: 0});
+	}
+	function resetGroup() {
+		view.group_videos(null, null);
+		this.updateView({pageNumber: 0});
+	}
 	function searchVideos() {
 		const app = this;
         const search_def = view.get_search_def() || {text: null, cond: null};
@@ -222,6 +259,10 @@ class VideosPage: Reactor.Component {
 				}
             }} />
         ));
+	}
+	function resetSearch() {
+		view.set_search(null, null);
+		this.updateView({pageNumber: 0});
 	}
 	function sortVideos() {
 		const app = this;
@@ -236,22 +277,9 @@ class VideosPage: Reactor.Component {
 			}}/>
 		));
 	}
-	function groupVideos() {
-		const app = this;
-        const group_def = view.get_group_def() || {field: null, reverse: null};
-        this.props.app.loadDialog('Group videos with same:', onClose => (
-            <FormGroup field={group_def.field} reverse={group_def.reverse} onClose={criterion => {
-                onClose();
-		        if (criterion) {
-		            view.group_videos(criterion.field, criterion.reverse);
-					this.updateView({pageNumber: 0});
-		        }
-            }} />
-        ));
-	}
-	function openRandomVideo() {
-		const filename = view.open_random_video(this.pageSize);
-		this.updateView({status: 'Randomly opened: ' + filename});
+	function resetSort() {
+		view.set_sorting([]);
+		this.updateView({pageNumber: 0});
 	}
 	function reloadDatabase() {
 		//
@@ -261,36 +289,10 @@ class VideosPage: Reactor.Component {
 		//
 		this.props.app.loadPage('properties');
 	}
-	function confirmDeletionForNotFound(value) {
+	event click $(#status) {
 		//
-        this.updatePage({confirmDeletion: value});
+		this.updateStatus('Ready.');
 	}
-	function setPageSize(value) {
-        if (value !== this.pageSize) {
-            this.updateView({pageSize: value, pageNumber: 0});
-        }
-	}
-	function changePage(pageNumber) {
-		//
-		this.updateView({pageNumber: pageNumber});
-	}
-	function changeGroup(groupNumber) {
-		//
-		this.updateGroup(groupNumber);
-	}
-	function resetSearch() {
-		view.set_search(null, null);
-		this.updateView({pageNumber: 0});
-	}
-	function resetSort() {
-		view.set_sorting([]);
-		this.updateView({pageNumber: 0});
-	}
-	function resetGroup() {
-		view.group_videos(null, null);
-		this.updateView({pageNumber: 0});
-	}
-
 	event click $(button#reset-search) (evt, element) {
 		//
 		this.resetSearch();
@@ -315,11 +317,8 @@ class VideosPage: Reactor.Component {
         //
         this.groupVideos();
     }
-    event click $(#status) {
-		//
-		this.updateStatus('Ready.');
-	}
 	event click $(menu li.select-videos) {
+		//
 		this.selectVideos();
 	}
 }

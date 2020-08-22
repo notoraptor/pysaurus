@@ -5,13 +5,6 @@ include "MenuPack.tis";
 include "Cross.tis";
 include "../utils/utils.tis";
 
-function make_call(obj, func) {
-	const f = function(args...) {
-		return func.apply(obj, args);
-	};
-	return f;
-}
-
 class Test: Reactor.Component {
 	function this(props) {
 		this.props = props;

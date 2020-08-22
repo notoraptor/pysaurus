@@ -1,0 +1,93 @@
+/** Property page **/
+#properties h2 {
+	margin-left: 0.25em;
+	margin-right: 0.25em;
+}
+#properties h3 {
+	text-align: center;
+}
+#properties h2 .back {
+	vertical-align: middle;
+	position: relative;
+}
+#properties h2 .back button {
+	font-weight: bold;
+	display: block;
+	width: 100%;
+	height: 100%;
+	padding-left: 1em;
+	padding-right: 1em;
+}
+#properties h2 .title {
+	text-align: center;
+	flex-grow: 1;
+}
+#properties .content {
+	background-color: rgb(250, 250, 250);
+}
+#properties .content > .list {
+	text-align: center;
+	border-right: 1px solid rgb(182, 182, 182);
+	width: 50%;
+	padding: 1.5em;
+}
+#properties .list table {
+	margin: auto;
+	width: 100%;
+}
+#properties .list table thead {
+	font-weight: bold;
+	background-color: rgb(220, 220, 220);
+}
+#properties .list table thead th {
+	padding: 0.25em 0.5em 0.25em 0.5em;
+}
+#properties .list table tbody td {
+	border-bottom: 1px solid rgb(220, 220, 220);
+	padding: 0.25em 0.5em 0.25em 0.5em;
+}
+#properties .list button.delete {
+	font-weight: bold;
+	display: inline-block;
+}
+#properties .list table td.name {
+	font-weight: bold;
+}
+#properties .new {
+	border-left: 1px solid rgb(182, 182, 182);
+	margin-left: -1px;
+	width: 50%;
+	padding: 1.5em;
+}
+#properties .new .entry {
+	display: flex;
+	flex-direction: row;
+}
+#properties .new .entry .label {
+}
+#properties .new .entry .label label {
+}
+#properties .new .entry > .label,
+#properties .new .entry > .input {
+	width: 50%;
+	padding: 0.5em;
+}
+#properties .new .input > input,
+#properties .new .input > select,
+#properties .new .input > .set-input {
+	display: block;
+	width: 100%;
+}
+#properties .new .buttons button {
+	display: block;
+	width: 100%;
+}
+#properties .new .buttons button.submit {
+	font-weight: bold;
+}
+#properties .new .label {
+	text-align: right;
+}
+#properties .new .input {
+	text-align: left;
+}

@@ -1,3 +1,3 @@
-import {LikeButton} from "./LikeButton.js";
+import {App} from "./App.js";
 
-ReactDOM.render(<LikeButton/>, document.getElementById('root'));
+ReactDOM.render(<App/>, document.getElementById('root'));

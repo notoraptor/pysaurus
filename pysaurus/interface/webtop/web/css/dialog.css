@@ -1,0 +1,41 @@
+.dialog {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+.dialog .content {
+    flex-grow: 1;
+    position: relative;
+}
+.dialog .content .wrapper {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    overflow: auto;
+    padding: 0.5em;
+}
+.dialog .buttons {
+    border-top: 1px solid gray;
+}
+.dialog .buttons .button {
+    flex-grow: 1;
+    padding: 0.5em;
+}
+.dialog .buttons .button button {
+    display: block;
+    width: 100%;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+.dialog .buttons .button.yes button {
+    color: green;
+}
+.dialog .buttons .button.no button {
+    color: red;
+}

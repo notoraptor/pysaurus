@@ -1,0 +1,76 @@
+/** Global. **/
+body {
+	font-family: "Trebuchet MS", Helvetica, sans-serif;
+}
+#root {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	display: flex;
+	flex-direction: column;
+}
+table, th, td {
+	border-collapse: collapse;
+}
+.horizontal {
+	display: flex;
+	flex-direction: row;
+}
+.text-right {
+	text-align: right;
+}
+.mb-1 {
+	margin-bottom: 0.25em;
+}
+.table {
+	display: table;
+}
+.table-row {
+	display: table-row;
+}
+.table-cell {
+	display: table-cell;
+}
+.cell-full {
+	width: 100%;
+	height: 100%;
+}
+.cell-center > .table-cell {
+	vertical-align: middle;
+}
+
+.delete-property {
+	text-align: center;
+}
+
+.form-rename-video {
+	text-align: center;
+}
+.form-rename-video input#name {
+	display: block;
+	width: 100%;
+}
+.form-rename-video h2 {
+	word-break: break-all;
+}
+
+.form-delete-video {
+	text-align: center;
+}
+.form-delete-video .details {
+	overflow: auto;
+	word-break: break-all;
+	color: rgb(250, 140, 140);
+	border: 1px solid rgb(250, 240, 240);
+	background-color: rgb(250, 250, 250);
+	padding: 0.22em 0.5em 0.22em 0.5em;
+	vertical-align: middle;
+	font-weight: bold;
+	font-size: 1.25em;
+}
+.form-delete-video h2 strong {
+	font-weight: bold;
+	color: red;
+}

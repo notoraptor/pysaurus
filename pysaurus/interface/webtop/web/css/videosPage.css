@@ -1,0 +1,107 @@
+/** Videos page **/
+#videos {
+	flex-grow: 1;
+	display: flex;
+	flex-direction: column;
+	padding: 1em;
+}
+#videos header {
+	align-items: center;
+}
+#videos .frontier {
+	display: block;
+	width: 100%;
+	height: 0.5em;
+	background: linear-gradient(white, rgb(220, 220, 220));
+}
+#videos > .content {
+	flex-grow: 1;
+	border-top: 1px solid rgb(220, 220, 220);
+	position: relative;
+}
+#videos > .content .wrapper {
+	position: absolute;
+	top: 0;
+	left: 0;
+	bottom: 0;
+	right: 0;
+	display: flex;
+	flex-direction: row;
+}
+#videos > .content .wrapper .side-panel {}
+#videos > .content .wrapper .main-panel {
+	flex-grow: 1;
+	border-top: 1px solid gray;
+	border-left: 1px solid gray;
+	border-right: 1px solid gray;
+	overflow: auto;
+}
+
+#videos header .buttons {
+	vertical-align: middle;
+}
+#videos header .buttons button {
+	margin-left: 1em;
+	min-width: 20ex;
+}
+#videos header .pagination {
+	flex-grow: 1;
+	text-align: right;
+}
+#videos header .pagination .navigation {
+	margin-left: 2em;
+}
+
+#videos table.filter {
+	background-color: greenyellow;
+}
+#videos table.filter td {
+	padding: 0.4em;
+	text-align: center;
+}
+#videos table.filter td.right div + div {
+	margin-top: 0.4em;
+}
+#videos table.filter .no-filter {
+	font-style: italic;
+	color: gray;
+}
+#videos table.filter tr:hover {
+	background-color: rgb(140, 140, 140);
+	color: white;
+}
+#videos table.filter tr:hover .no-filter {
+	color: white;
+}
+
+#videos footer {
+	border-top: 1px solid gray;
+	font-size: 0.9em;
+}
+#videos footer > .footer-status,
+#videos footer > .footer-information {
+	/*flex-grow: 1;*/
+	width: 50%;
+	padding: 0.4em;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+#videos .footer-status {
+	border-right: 1px solid gray;
+	cursor: pointer;
+}
+#videos .footer-status:hover {
+	color: gray;
+}
+#videos .footer-information {
+	text-align: right;
+}
+#videos .footer-information .info {
+	display: inline-block;
+}
+#videos .footer-information .info + .info {
+	margin-left: 1em;
+	border-left: 1px solid black;
+	padding-left: 1em;
+}

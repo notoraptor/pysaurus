@@ -86,6 +86,17 @@ DEFAULT_SEARCH_DEF = SearchDef.none()  # str text, str cond
 DEFAULT_SORT_DEF = ('-date',)
 
 
+def _collect_full_paths(tree: dict, collection: list, prefix=()):
+    if not isinstance(prefix, list):
+        prefix = list(prefix)
+    if tree:
+        for key, value in tree.items():
+            entry_name = prefix + [key] if prefix else [key]
+            _collect_full_paths(value, collection, entry_name)
+    elif prefix:
+        collection.append(prefix)
+
+
 def _check_source_path(dct, seq, index=0):
     if index < len(seq):
         _check_source_path(dct[seq[index]], seq, index + 1)
@@ -94,6 +105,13 @@ def _check_source_path(dct, seq, index=0):
 def _get_source(inp, seq, index=0):
     if index < len(seq):
         return _get_source(getattr(inp, seq[index]), seq, index + 1)
+    else:
+        return inp
+
+
+def _get_source_from_dict(inp, seq, index=0):
+    if index < len(seq):
+        return _get_source(inp[seq[index]], seq, index + 1)
     else:
         return inp
 
@@ -258,12 +276,27 @@ class VideoProvider:
 
     def get_random_found_video(self):
         # type: () -> Video
-        paths = [path for path in self.source_def if NOT_FOUND not in path]
-        path_index = random.randrange(len(paths))
-        path = paths[path_index]
-        videos = list(_get_source(self.database, path))
-        video_index = random.randrange(len(videos))
-        return videos[video_index]
+        # Get all full paths from source definition
+        all_paths = []
+        for path in self.source_def:
+            desc = _get_source_from_dict(SOURCE_TREE, path)
+            if isinstance(desc, dict):
+                _collect_full_paths(desc, all_paths, path)
+            else:
+                all_paths.append(path)
+        # Key paths with found videos
+        paths = [path for path in all_paths if NOT_FOUND not in path]
+        assert paths
+        # Iterate as long as we have paths and we have not pick a video
+        while paths:
+            path_index = random.randrange(len(paths))
+            path = paths[path_index]
+            del paths[path_index]
+            videos = list(_get_source(self.database, path))
+            if videos:
+                video_index = random.randrange(len(videos))
+                return videos[video_index]
+        raise RuntimeError("No videos available.")
 
     def __delete_current_group(self):
         del self.groups[self.group_id]

@@ -94,9 +94,18 @@ class Video: Reactor.Component {
         //
         this.openVideo();
     }
+    event click $(.video.not-found .filename-line .prepend) (evt, element) {
+        //
+        this.deleteVideo();
+    }
+
     event click $(menu li.open-file) (evt, element) {
         //
         this.openVideo();
+    }
+    event click $(menu li.delete-file) (evt, element) {
+        //
+        this.deleteVideo();
     }
     event click $(menu li.open-folder) (evt, element) {
         const folder = view.open_containing_folder(this.props.index);
@@ -114,14 +123,6 @@ class Video: Reactor.Component {
         const text = this.props.data.file_title;
         view.clipboard(#put, text);
         this.props.parent.updateStatus('Copied to clipboard: ' + text);
-    }
-    event click $(menu li.delete-file) (evt, element) {
-        //
-        this.deleteVideo();
-    }
-    event click $(.video.not-found .filename-line .prepend) (evt, element) {
-        //
-        this.deleteVideo();
     }
     event click $(menu li.rename-file) (evt, element) {
         const newTitle = view.dialog({

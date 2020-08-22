@@ -1,13 +1,13 @@
-System.register(["./LikeButton.js"], function (_export, _context) {
+System.register(["./App.js"], function (_export, _context) {
   "use strict";
 
-  var LikeButton;
+  var App;
   return {
-    setters: [function (_LikeButtonJs) {
-      LikeButton = _LikeButtonJs.LikeButton;
+    setters: [function (_AppJs) {
+      App = _AppJs.App;
     }],
     execute: function () {
-      ReactDOM.render( /*#__PURE__*/React.createElement(LikeButton, null), document.getElementById('root'));
+      ReactDOM.render( /*#__PURE__*/React.createElement(App, null), document.getElementById('root'));
     }
   };
 });

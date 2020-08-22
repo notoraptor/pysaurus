@@ -1,0 +1,72 @@
+export const HomeStatus = {
+    INITIAL: 0,
+    LOADING: 1,
+    LOADED: 2
+}
+
+export const FIELDS = [
+    'audio_bit_rate',
+    'audio_codec',
+    'audio_codec_description',
+    'container_format',
+    'date',
+    'extension',
+    'file_size',
+    'file_title',
+    'filename',
+    'frame_rate',
+    'height',
+    'length',
+    'quality',
+    'sample_rate',
+    'size',
+    'thumbnail_path',
+    'title',
+    'video_codec',
+    'video_codec_description',
+    'video_id',
+    'width',
+];
+
+export const FIELD_TITLES = {
+    'audio_bit_rate': 'audio bit rate',
+    'audio_codec': 'audio codec',
+    'audio_codec_description': 'audio codec description',
+    'container_format': 'container format',
+    'date' : 'date modified',
+    'extension': 'file extension',
+    'file_size': 'size (raw)',
+    'file_title': 'file title',
+    'filename': 'file path',
+    'frame_rate': 'frame rate',
+    'height': 'height',
+    'length': 'length',
+    'quality': 'quality',
+    'sample_rate' : 'sample rate',
+    'size': 'size',
+    'thumbnail_path': 'thumbnail path',
+    'title': 'title',
+    'video_codec': 'video codec',
+    'video_codec_description' : 'video codec description',
+    'video_id': 'video ID',
+    'width': 'width',
+};
+
+export const SORTED_FIELDS_AND_TITLES = (function (obj) {
+    const arr = Object.keys(obj).map(key => [key, obj[key]]);
+    arr.sort(function(t1, t2) {
+        let t = t1[1].localeCompare(t2[1]);
+        if (t === 0)
+            t = t1[0].localeCompare(t2[0]);
+        return t;
+    });
+    return arr;
+})(FIELD_TITLES);
+
+export const SEARCH_TYPE_TITLE = {
+    exact: 'exactly',
+    and: 'all terms',
+    or: 'any term'
+};
+
+export const PAGE_SIZES = [10, 20, 50, 100];

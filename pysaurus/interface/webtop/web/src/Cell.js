@@ -1,0 +1,21 @@
+export class Cell extends React.Component {
+    // className? str
+    // center? bool
+    // full? bool
+    render() {
+        const classNames = ['table'];
+        if (this.props.className)
+            classNames.push(this.props.className);
+        if (this.props.center)
+            classNames.push('cell-center');
+        if (this.props.full)
+            classNames.push('cell-full');
+        return (
+            <div className={classNames.join(' ')}>
+                <div className="table-cell">
+                    {this.props.children}
+                </div>
+            </div>
+        );
+    }
+}
