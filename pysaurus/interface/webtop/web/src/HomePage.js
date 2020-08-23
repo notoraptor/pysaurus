@@ -197,16 +197,31 @@ export class HomePage extends React.Component {
             videosMonitoring: new ProgressionMonitoring(),
             thumbnailsMonitoring: new ProgressionMonitoring(),
             miniaturesMonitoring: new ProgressionMonitoring(),
+            update: false,
         };
         this.callbackIndex = -1;
         this.notify = this.notify.bind(this);
         this.loadDatabase = this.loadDatabase.bind(this);
         this.displayVideos = this.displayVideos.bind(this);
+        this.onChangeUpdate = this.onChangeUpdate.bind(this);
     }
     render() {
         return (
             <div id="home">
-                <div className="button-initial">{this.renderInitialButton()}</div>
+                <div className="button-initial">
+                    {this.state.status === HomeStatus.INITIAL ? (
+                        <span className="input-update">
+                            <input type="checkbox"
+                                   name="update"
+                                   id="update"
+                                   checked={this.state.update}
+                                   onChange={this.onChangeUpdate}/>
+                            {' '}
+                            <label htmlFor="update">Update on load</label>
+                        </span>
+                    ) : ''}
+                    {this.renderInitialButton()}
+                </div>
                 <div className="notifications">{this.renderMessages()}</div>
             </div>
         );
@@ -256,7 +271,7 @@ export class HomePage extends React.Component {
             collectNotification(this, notification, {});
     }
     loadDatabase() {
-        python_call('load_database', false)
+        python_call('load_database', this.state.update)
             .then(() => {
                 this.setState({status: HomeStatus.LOADING});
             })
@@ -265,5 +280,8 @@ export class HomePage extends React.Component {
     displayVideos() {
         this.props.app.loadVideosPage();
         // this.props.app.loadPropertiesPage();
+    }
+    onChangeUpdate(event) {
+        this.setState({update: event.target.checked});
     }
 }

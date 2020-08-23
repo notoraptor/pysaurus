@@ -75,7 +75,9 @@ System.register(["./MenuPack.js", "./FormRenameVideo.js", "./Dialog.js"], functi
             action: this.deleteVideo
           }, data.exists ? 'Delete video' : 'Delete entry')), /*#__PURE__*/React.createElement("strong", {
             className: "title"
-          }, data.title)), data.title === data.file_title ? '' : /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("em", null, data.file_title))), /*#__PURE__*/React.createElement("div", {
+          }, data.title)), data.title === data.file_title ? '' : /*#__PURE__*/React.createElement("div", {
+            className: "file-title"
+          }, /*#__PURE__*/React.createElement("em", null, data.file_title))), /*#__PURE__*/React.createElement("div", {
             className: 'filename-line' + (data.exists ? '' : ' horizontal')
           }, data.exists ? '' : /*#__PURE__*/React.createElement("div", {
             className: "prepend",

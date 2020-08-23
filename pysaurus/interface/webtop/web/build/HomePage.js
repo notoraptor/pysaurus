@@ -217,12 +217,14 @@ System.register(["./constants.js"], function (_export, _context) {
             messages: [],
             videosMonitoring: new ProgressionMonitoring(),
             thumbnailsMonitoring: new ProgressionMonitoring(),
-            miniaturesMonitoring: new ProgressionMonitoring()
+            miniaturesMonitoring: new ProgressionMonitoring(),
+            update: false
           };
           this.callbackIndex = -1;
           this.notify = this.notify.bind(this);
           this.loadDatabase = this.loadDatabase.bind(this);
           this.displayVideos = this.displayVideos.bind(this);
+          this.onChangeUpdate = this.onChangeUpdate.bind(this);
         }
 
         render() {
@@ -230,7 +232,17 @@ System.register(["./constants.js"], function (_export, _context) {
             id: "home"
           }, /*#__PURE__*/React.createElement("div", {
             className: "button-initial"
-          }, this.renderInitialButton()), /*#__PURE__*/React.createElement("div", {
+          }, this.state.status === HomeStatus.INITIAL ? /*#__PURE__*/React.createElement("span", {
+            className: "input-update"
+          }, /*#__PURE__*/React.createElement("input", {
+            type: "checkbox",
+            name: "update",
+            id: "update",
+            checked: this.state.update,
+            onChange: this.onChangeUpdate
+          }), ' ', /*#__PURE__*/React.createElement("label", {
+            htmlFor: "update"
+          }, "Update on load")) : '', this.renderInitialButton()), /*#__PURE__*/React.createElement("div", {
             className: "notifications"
           }, this.renderMessages()));
         }
@@ -289,7 +301,7 @@ System.register(["./constants.js"], function (_export, _context) {
         }
 
         loadDatabase() {
-          python_call('load_database', false).then(() => {
+          python_call('load_database', this.state.update).then(() => {
             this.setState({
               status: HomeStatus.LOADING
             });
@@ -298,6 +310,12 @@ System.register(["./constants.js"], function (_export, _context) {
 
         displayVideos() {
           this.props.app.loadVideosPage(); // this.props.app.loadPropertiesPage();
+        }
+
+        onChangeUpdate(event) {
+          this.setState({
+            update: event.target.checked
+          });
         }
 
       });

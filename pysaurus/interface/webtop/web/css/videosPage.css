@@ -52,9 +52,7 @@
 	margin-left: 2em;
 }
 
-#videos table.filter {
-	background-color: greenyellow;
-}
+#videos table.filter {}
 #videos table.filter td {
 	padding: 0.4em;
 	text-align: center;

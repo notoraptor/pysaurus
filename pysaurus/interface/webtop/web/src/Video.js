@@ -47,7 +47,7 @@ export class Video extends React.Component {
                             </MenuPack>
                             <strong className="title">{data.title}</strong>
                         </div>
-                        {data.title === data.file_title ? '' : <div><em>{data.file_title}</em></div>}
+                        {data.title === data.file_title ? '' : <div className="file-title"><em>{data.file_title}</em></div>}
                     </div>
                     <div className={'filename-line' + (data.exists ? '' : ' horizontal')}>
                         {data.exists ? '' : <div className="prepend" onClick={this.deleteVideo}><code className="text-not-found">NOT FOUND</code><code className="text-delete">DELETE</code></div>}

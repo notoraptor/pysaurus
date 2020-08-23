@@ -9,6 +9,9 @@
 	text-align: center;
 	padding: 0.5em;
 }
+#home .button-initial .input-update {
+	margin-right: 1em;
+}
 #home div.notifications {
 	flex-grow: 1;
 	border: 1px solid gray;
