@@ -29,10 +29,11 @@ System.register([], function (_export, _context) {
       };
 
       _export("ComponentController", ComponentController = class ComponentController extends SetController {
-        constructor(app, field) {
+        constructor(app, field, parser = null) {
           super();
           this.app = app;
           this.field = field;
+          this.parser = parser;
         }
 
         size() {
@@ -49,7 +50,14 @@ System.register([], function (_export, _context) {
 
         add(value) {
           const arr = this.app.state[this.field].slice();
-          arr.push(value);
+
+          if (this.parser) {
+            const parsedValue = this.parser(value);
+            if (parsedValue !== undefined) arr.push(parsedValue);
+          } else {
+            arr.push(value);
+          }
+
           this.app.setState({
             [this.field]: arr
           });
@@ -73,9 +81,11 @@ System.register([], function (_export, _context) {
         constructor(props) {
           // controller: SetController
           // identifier? str
+          // values
+          // onCheck? function(value)
           super(props);
           this.state = {
-            add: ''
+            add: this.props.values ? this.props.values[0] : ''
           };
           this.onChangeAdd = this.onChangeAdd.bind(this);
           this.onInputAdd = this.onInputAdd.bind(this);
@@ -91,7 +101,14 @@ System.register([], function (_export, _context) {
             className: "form"
           }, /*#__PURE__*/React.createElement("td", {
             className: "input"
-          }, /*#__PURE__*/React.createElement("input", _extends({
+          }, this.props.values ? /*#__PURE__*/React.createElement("select", {
+            name: "add",
+            value: this.state.add,
+            onChange: this.onChangeAdd
+          }, this.props.values.map((value, index) => /*#__PURE__*/React.createElement("option", {
+            key: index,
+            value: value
+          }, value))) : /*#__PURE__*/React.createElement("input", _extends({
             type: "text",
             name: "add",
             value: this.state.add,
@@ -148,7 +165,7 @@ System.register([], function (_export, _context) {
         }
 
         add(value) {
-          if (value.length) {
+          if (value.length && (!this.props.onCheck || this.props.onCheck(value))) {
             const controller = this.props.controller;
             if (controller.has(value)) return window.alert(`Value already in list: ${value}`);
             this.setState({

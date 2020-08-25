@@ -37,7 +37,8 @@ System.register(["./buttons.js", "./MenuPack.js", "./constants.js", "./SetInput.
           const c = new ComponentController(this, 'arr');
           return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(SetInput, {
             identifier: "entry",
-            controller: c
+            controller: c,
+            values: ['my', 'name', 'is', 'Emninem']
           }), /*#__PURE__*/React.createElement(MenuPack, {
             title: "Options"
           }, /*#__PURE__*/React.createElement(MenuItem, {

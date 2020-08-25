@@ -103,6 +103,7 @@ class GuiAPI:
     def get_info_and_videos(self, page_size, page_number, fields):
         info = self.get_info(page_size)
         info['videos'] = self.get_videos(page_size, page_number, fields)
+        info['properties'] = self.get_prop_types()
         return info
 
     def open_video(self, index):
@@ -131,6 +132,9 @@ class GuiAPI:
             return {'filename': self._to_json_value(video.filename), 'file_title': video.file_title}
         except OSError as exc:
             return {'error': str(exc)}
+
+    def set_video_properties(self, index, properties):
+        return self.api.database.set_video_properties(self.provider.get_video(index), properties)
 
     def group_videos(self, field, reverse):
         print('Grouping videos', field, reverse)
@@ -262,6 +266,10 @@ class GuiAPI:
         print('End updating database.')
 
     def _to_json_value(self, value):
+        if isinstance(value, (tuple, list, set)):
+            return [self._to_json_value(element) for element in value]
+        if isinstance(value, dict):
+            return {self._to_json_value(key): self._to_json_value(element) for key, element in value.items()}
         if isinstance(value, (str, float, bool, type(None))):
             return value
         if isinstance(value, int) and self.JSON_INTEGER_MIN <= value <= self.JSON_INTEGER_MAX:

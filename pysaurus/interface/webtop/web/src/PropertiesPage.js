@@ -148,9 +148,15 @@ export class PropertiesPage extends React.Component {
                                 : <span>{def.type}</span>}
                         </td>
                         <td className="default">
-                            {['str', 'enum'].indexOf(def.type) >= 0 ? '"' : ''}
-                            {def.defaultValue.toString()}
-                            {['str', 'enum'].indexOf(def.type) >= 0 ? '"' : ''}
+                            {(function() {
+                                if (def.multiple) {
+                                    return `{${def.defaultValue.join(', ')}}`;
+                                } else if (["str", 'enum'].indexOf(def.type) >= 0) {
+                                    return `"${def.defaultValue}"`;
+                                } else {
+                                    return def.defaultValue.toString();
+                                }
+                            })()}
                         </td>
                         <td className="options">
                             <button className="delete" onClick={() => this.deleteProperty(def.name)}>delete</button>

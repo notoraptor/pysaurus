@@ -91,10 +91,8 @@ class Filter extends React.Component {
                                 {groupDef.nb_groups ? (
                                     <div>
                                         <div>Group {groupDef.group_id + 1} / {groupDef.nb_groups}</div>
-                                        <div>
-                                            {Utils.sentence(FIELD_TITLES[groupDef.field])}:{' '}
-                                            <strong>{groupFieldValue}</strong>
-                                        </div>
+                                        <div><u>{Utils.sentence(FIELD_TITLES[groupDef.field])}</u>:</div>
+                                        <div><strong>{groupFieldValue}</strong></div>
                                     </div>
                                 ) : ''}
                             </div>
@@ -255,7 +253,11 @@ export class VideosPage extends React.Component {
     }
     renderVideos() {
         return this.state.info.videos.map(data => (
-            <Video key={data.video_id} data={data} index={data.local_id} parent={this} confirmDeletion={this.state.confirmDeletion}/>
+            <Video key={data.video_id}
+                   data={data}
+                   index={data.local_id}
+                   parent={this}
+                   confirmDeletion={this.state.confirmDeletion}/>
         ));
     }
     scrollTop() {

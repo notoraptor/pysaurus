@@ -117,6 +117,10 @@ class Database:
         for f in self.__folders:
             folders_tree.add(f)
 
+        # Parsing video property types.
+        for prop_dict in json_dict.get('prop_types', ()):
+            self.add_prop_type(PropType.from_dict(prop_dict), save=False)
+
         # Parsing videos.
         for video_dict in json_dict.get('videos', ()):
             if video_dict['U']:
@@ -129,10 +133,6 @@ class Database:
                 destination[video_state.filename] = video_state
             else:
                 self.__discarded[video_state.filename] = video_state
-
-        # Parsing video property types.
-        for prop_dict in json_dict.get('prop_types', ()):
-            self.add_prop_type(PropType.from_dict(prop_dict), save=False)
 
         self.__set_videos_flags()
         self.__ensure_identifiers()
@@ -568,6 +568,10 @@ class Database:
 
     def get_prop_types(self):
         return list(self.__prop_types.values())
+
+    def set_video_properties(self, video: Video, properties):
+        video.set_properties(properties)
+        self.save()
 
     # Unused.
 

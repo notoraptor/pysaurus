@@ -11,7 +11,7 @@ System.register([], function (_export, _context) {
         LOADED: 2
       });
 
-      _export("FIELDS", FIELDS = ['audio_bit_rate', 'audio_codec', 'audio_codec_description', 'container_format', 'date', 'extension', 'file_size', 'file_title', 'filename', 'frame_rate', 'height', 'length', 'quality', 'sample_rate', 'size', 'thumbnail_path', 'title', 'video_codec', 'video_codec_description', 'video_id', 'width']);
+      _export("FIELDS", FIELDS = ['audio_bit_rate', 'audio_codec', 'audio_codec_description', 'container_format', 'date', 'extension', 'file_size', 'file_title', 'filename', 'frame_rate', 'height', 'length', 'properties', 'quality', 'sample_rate', 'size', 'thumbnail_path', 'title', 'video_codec', 'video_codec_description', 'video_id', 'width']);
 
       _export("FIELD_TITLES", FIELD_TITLES = {
         'audio_bit_rate': 'audio bit rate',
@@ -26,6 +26,7 @@ System.register([], function (_export, _context) {
         'frame_rate': 'frame rate',
         'height': 'height',
         'length': 'length',
+        'properties': 'properties',
         'quality': 'quality',
         'sample_rate': 'sample rate',
         'size': 'size',

@@ -1,6 +1,7 @@
 import {MenuPack, MenuItem} from "./MenuPack.js";
 import {FormRenameVideo} from "./FormRenameVideo.js";
 import {Dialog} from "./Dialog.js";
+import {FormSetProperties} from "./FormSetProperties.js";
 
 export class Video extends React.Component {
     constructor(props) {
@@ -16,6 +17,7 @@ export class Video extends React.Component {
         this.copyMetaTitle = this.copyMetaTitle.bind(this);
         this.copyFileTitle = this.copyFileTitle.bind(this);
         this.renameVideo = this.renameVideo.bind(this);
+        this.editProperties = this.editProperties.bind(this);
     }
     render() {
         const index = this.props.index;
@@ -23,6 +25,7 @@ export class Video extends React.Component {
         data.audio_bit_rate = Math.round(data.audio_bit_rate / 1000);
         data.extension = data.extension.toUpperCase();
         data.frame_rate = Math.round(data.frame_rate);
+        data.quality = Math.round(data.quality * 100) / 100;
         const title = data.title;
         const file_title = data.file_title;
         const meta_title = (title === file_title ? null : title);
@@ -42,6 +45,8 @@ export class Video extends React.Component {
                                 {data.exists ? <MenuItem action={this.openContainingFolder}>Open containing folder</MenuItem> : ''}
                                 {meta_title ? <MenuItem action={this.copyMetaTitle}>Copy meta title</MenuItem> : ''}
                                 {file_title ? <MenuItem action={this.copyFileTitle}>Copy file title</MenuItem> : ''}
+                                {data.exists && this.props.parent.state.info.properties.length ?
+                                    <MenuItem action={this.editProperties}>Edit properties ...</MenuItem> : ''}
                                 {data.exists ? <MenuItem action={this.renameVideo}>Rename video</MenuItem> : ''}
                                 <MenuItem className="menu-delete" action={this.deleteVideo}>{data.exists ? 'Delete video' : 'Delete entry'}</MenuItem>
                             </MenuPack>
@@ -56,13 +61,36 @@ export class Video extends React.Component {
                     <div className="format horizontal">
                         <div className="prepend"><code>{data.extension}</code></div>
                         <div><strong title={data.file_size}>{data.size}</strong> / {data.container_format} (<span title={data.video_codec_description}>{data.video_codec}</span>, <span title={data.audio_codec_description}>{data.audio_codec}</span>)</div>
-                    </div>
-                    <div><strong>{data.width}</strong> x <strong>{data.height}</strong> @ {data.frame_rate} fps | {data.sample_rate} Hz, {data.audio_bit_rate} Kb/s</div>
-                    <div><strong>{data.length}</strong> | <code>{data.date}</code></div>
-                    <div className="quality horizontal">
                         <div className="prepend"><code>Quality</code></div>
                         <div><strong><em>{data.quality}</em></strong> %</div>
                     </div>
+                    <div><strong>{data.width}</strong> x <strong>{data.height}</strong> @ {data.frame_rate} fps | {data.sample_rate} Hz, {data.audio_bit_rate} Kb/s | <strong>{data.length}</strong> | <code>{data.date}</code></div>
+                    {this.renderProperties()}
+                </div>
+            </div>
+        );
+    }
+    renderProperties() {
+        const props = this.props.data.properties;
+        const propDefs = this.props.parent.state.info.properties;
+        if (!propDefs.length)
+            return '';
+        return (
+            <div className="properties">
+                <div className="table">
+                {propDefs.map((def, index) => {
+                    const name = def.name;
+                    const value = props.hasOwnProperty(name) ? props[name] : (def.multiple ? [def.defaultValue] : def.defaultValue);
+                    const valueString = propertyValueToString(def.type,def.multiple ? value.join(', ') : value);
+                    return (
+                        <div key={name} className="property table-row">
+                            <div className="table-cell property-name"><strong>{name}</strong>:</div>
+                            <div className="table-cell">
+                                {valueString ? <span>{valueString}</span> : <span className="no-value">no value</span>}
+                            </div>
+                        </div>
+                    );
+                })}
                 </div>
             </div>
         );
@@ -76,6 +104,21 @@ export class Video extends React.Component {
                     this.props.parent.updateStatus('Unable to open: ' + this.props.data.filename);
             })
             .catch(backend_error);
+    }
+    editProperties() {
+        const data = this.props.data;
+        const definitions = this.props.parent.state.info.properties;
+        this.props.parent.props.app.loadDialog('Edit video properties', onClose => (
+            <FormSetProperties data={data} definitions={definitions} onClose={properties => {
+                onClose();
+                if (properties) {
+                    console.log(`Properties: ${properties ? JSON.stringify(properties) : properties}`);
+                    python_call('set_video_properties', this.props.index, properties)
+                        .then(() => this.props.parent.updateStatus(`Properties updated: ${data.filename}`, true))
+                        .catch(backend_error);
+                }
+            }} />
+        ));
     }
     confirmDeletion() {
         /*

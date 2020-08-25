@@ -74,6 +74,12 @@ const Utils = {
     }
 }
 
+function propertyValueToString(propType, value) {
+    if (['bool', 'int', 'float'].indexOf(propType) >= 0)
+        return value;
+    return value.length ? value: null;
+}
+
 window.onload = function() {
     System.import('./build/index.js');
 };

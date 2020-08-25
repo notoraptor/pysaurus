@@ -30,13 +30,13 @@ class PropType:
         return self.validate(value)
 
     def new(self):
-        return set() if self.multiple else self.type(self.default)
+        return [] if self.multiple else self.type(self.default)
 
     def validate(self, value):
         if self.multiple:
             if not isinstance(value, (list, tuple, set)):
                 raise ValueError('Expected a list, tuple or set of values for a multiple prop.')
-            return {self.type(element) for element in value}
+            return list({self.type(element) for element in value})
         return self.type(value)
 
     def to_dict(self):
@@ -58,7 +58,7 @@ class PropType:
         else:
             prop_type = self.type.__name__
             prop_values = None
-        prop_default = self.default
+        prop_default = [] if self.multiple else self.default
         prop_multiple = self.multiple
         return {
             'name': prop_name,

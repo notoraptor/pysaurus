@@ -17,7 +17,7 @@ export class Test extends React.Component {
         const c = new ComponentController(this, 'arr');
         return (
             <div>
-                <SetInput identifier="entry" controller={c}/>
+                <SetInput identifier="entry" controller={c} values={['my', 'name', 'is', 'Emninem']}/>
                 <MenuPack title="Options">
                     <MenuItem shortcut="Ctrl+S" action={() => console.log('select videos')}>Select videos ...</MenuItem>
                     <MenuItem action={() => console.log('reload database')}>Reload database ...</MenuItem>

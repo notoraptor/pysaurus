@@ -19,6 +19,7 @@
 }
 .video .info {
 	padding: 0.5em;
+	flex-grow: 1;
 }
 .video .info > div {
 	margin-bottom: 0.5em;
@@ -35,6 +36,9 @@
 	text-align: center;
 	margin-right: 0.5em;
 	width: 10ex;
+}
+* + .prepend {
+	margin-left: 0.5em;
 }
 
 .video .info .name .options .menu-pack > .title {
@@ -109,4 +113,18 @@
 	text-transform: uppercase;
 	font-size: 0.9em;
 	color: gray;
+}
+
+.video .info > div.properties {
+	border-top: 1px solid rgb(200, 200, 200);
+	padding-top: 0.5em;
+	margin-bottom: 0;
+}
+.video .properties .property .no-value {
+	font-style: italic;
+	font-weight: lighter;
+	color: lightgrey;
+}
+.video .properties .property .property-name {
+	padding-right: 1em;
 }

@@ -278,14 +278,6 @@ class Video(VideoState):
         return string_to_pieces(' '.join((
             self.filename.path,
             self.meta_title,
-            self.container_format,
-            self.audio_codec,
-            self.audio_codec_description,
-            self.video_codec,
-            self.video_codec_description,
-            str(self.width),
-            str(self.height),
-            str(self.sample_rate),
         )), as_set=as_set)
 
     def to_dict(self):

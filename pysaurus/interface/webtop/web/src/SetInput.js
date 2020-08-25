@@ -8,10 +8,11 @@ class SetController {
 }
 
 export class ComponentController extends SetController {
-    constructor(app, field) {
+    constructor(app, field, parser = null) {
         super();
         this.app = app;
         this.field = field;
+        this.parser = parser;
     }
     size() {
         return this.app.state[this.field].length;
@@ -24,7 +25,13 @@ export class ComponentController extends SetController {
     }
     add(value) {
         const arr = this.app.state[this.field].slice();
-        arr.push(value);
+        if (this.parser) {
+            const parsedValue = this.parser(value);
+            if (parsedValue !== undefined)
+                arr.push(parsedValue);
+        } else {
+            arr.push(value);
+        }
         this.app.setState({[this.field]: arr});
     }
     remove(toRemove) {
@@ -41,9 +48,11 @@ export class SetInput extends React.Component {
     constructor(props) {
         // controller: SetController
         // identifier? str
+        // values
+        // onCheck? function(value)
         super(props);
         this.state = {
-            add: ''
+            add: this.props.values ? this.props.values[0] : ''
         };
         this.onChangeAdd = this.onChangeAdd.bind(this);
         this.onInputAdd = this.onInputAdd.bind(this);
@@ -59,13 +68,21 @@ export class SetInput extends React.Component {
                         {this.renderList()}
                         <tr className="form">
                             <td className="input">
-                                <input type="text"
-                                       name="add"
-                                       value={this.state.add}
-                                       onChange={this.onChangeAdd}
-                                       onKeyDown={this.onInputAdd}
-                                       size="10"
-                                       {...(this.props.identifier ? {id: this.props.identifier} : {})}/>
+                                {this.props.values ? (
+                                    <select name="add" value={this.state.add} onChange={this.onChangeAdd}>
+                                        {this.props.values.map((value, index) => (
+                                            <option key={index} value={value}>{value}</option>
+                                        ))}
+                                    </select>
+                                ) : (
+                                    <input type="text"
+                                           name="add"
+                                           value={this.state.add}
+                                           onChange={this.onChangeAdd}
+                                           onKeyDown={this.onInputAdd}
+                                           size="10"
+                                           {...(this.props.identifier ? {id: this.props.identifier} : {})}/>
+                                )}
                             </td>
                             <td className="action"><button className="add" onClick={this.onAdd}>+</button></td>
                         </tr>
@@ -102,7 +119,7 @@ export class SetInput extends React.Component {
         this.add(this.state.add);
     }
     add(value) {
-        if (value.length) {
+        if (value.length && (!this.props.onCheck || this.props.onCheck(value))) {
             const controller = this.props.controller;
             if (controller.has(value))
                 return window.alert(`Value already in list: ${value}`);

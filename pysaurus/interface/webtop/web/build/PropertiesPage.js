@@ -157,7 +157,15 @@ System.register(["./SetInput.js", "./Dialog.js", "./Cell.js"], function (_export
             className: "type"
           }, def.multiple ? /*#__PURE__*/React.createElement("span", null, "one or many\xA0") : '', def.type === 'enum' ? /*#__PURE__*/React.createElement("span", null, "value", def.multiple ? 's' : '', " in ", '{', def.values.join(', '), '}') : /*#__PURE__*/React.createElement("span", null, def.type)), /*#__PURE__*/React.createElement("td", {
             className: "default"
-          }, ['str', 'enum'].indexOf(def.type) >= 0 ? '"' : '', def.defaultValue.toString(), ['str', 'enum'].indexOf(def.type) >= 0 ? '"' : ''), /*#__PURE__*/React.createElement("td", {
+          }, function () {
+            if (def.multiple) {
+              return `{${def.defaultValue.join(', ')}}`;
+            } else if (["str", 'enum'].indexOf(def.type) >= 0) {
+              return `"${def.defaultValue}"`;
+            } else {
+              return def.defaultValue.toString();
+            }
+          }()), /*#__PURE__*/React.createElement("td", {
             className: "options"
           }, /*#__PURE__*/React.createElement("button", {
             className: "delete",
