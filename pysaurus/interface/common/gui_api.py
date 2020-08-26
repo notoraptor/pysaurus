@@ -162,19 +162,12 @@ class GuiAPI:
         self.provider.set_source(paths)
 
     def add_prop_type(self, prop_name, prop_type, prop_default, prop_multiple):
-        if prop_type not in ('bool', 'int', 'float', 'str', 'enum'):
-            return self._json_error('Unknown property type: %s' % prop_type)
-
-        if prop_type == 'enum':
-            if not isinstance(prop_default, list):
-                raise ValueError('Expected a list for an enumeration')
-            enumeration = Enumeration(prop_default)
-            default_value = prop_default[0]
-            definition = [default_value] + [element for element in enumeration.values if element != default_value]
-        else:
-            definition = dict(bool=bool, int=int, float=float, str=str)[prop_type](prop_default)
-
-        self.api.database.add_prop_type(PropType(prop_name, definition, prop_multiple))
+        if prop_type == 'float':
+            if isinstance(prop_default, list):
+                prop_default = [float(element) for element in prop_default]
+            else:
+                prop_default = float(prop_default)
+        self.api.database.add_prop_type(PropType(prop_name, prop_default, prop_multiple))
         return self.get_prop_types()
 
     def get_prop_types(self):

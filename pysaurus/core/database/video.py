@@ -13,6 +13,7 @@ Video class. Properties:
 
 """
 
+import sys
 import base64
 from typing import Sequence
 from io import BytesIO
@@ -317,6 +318,11 @@ class Video(VideoState):
 
     def set_property(self, name, value):
         if not self.database.has_prop_type(name):
-            raise ValueError('Unknown property: %s' % name)
+            print('Unknown property: %s' % name, file=sys.stderr)
+            return False
         prop_type = self.database.get_prop_type(name)
         self.properties[name] = prop_type(value)
+        return True
+
+    def remove_property(self, name):
+        self.properties.pop(name, None)

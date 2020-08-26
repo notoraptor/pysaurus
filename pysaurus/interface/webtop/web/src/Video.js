@@ -80,11 +80,11 @@ export class Video extends React.Component {
                 <div className="table">
                 {propDefs.map((def, index) => {
                     const name = def.name;
-                    const value = props.hasOwnProperty(name) ? props[name] : (def.multiple ? [def.defaultValue] : def.defaultValue);
-                    const valueString = propertyValueToString(def.type,def.multiple ? value.join(', ') : value);
+                    const value = props.hasOwnProperty(name) ? props[name] : def.defaultValue;
+                    const valueString = propertyValueToString(def.type,def.multiple ? value.join(', ') : value.toString());
                     return (
                         <div key={name} className="property table-row">
-                            <div className="table-cell property-name"><strong>{name}</strong>:</div>
+                            <div className="table-cell property-name"><strong {...(props.hasOwnProperty(name) ? {className: "defined"} : {})}>{name}</strong>:</div>
                             <div className="table-cell">
                                 {valueString ? <span>{valueString}</span> : <span className="no-value">no value</span>}
                             </div>

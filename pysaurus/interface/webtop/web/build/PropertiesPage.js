@@ -4,8 +4,7 @@ System.register(["./SetInput.js", "./Dialog.js", "./Cell.js"], function (_export
   var SetInput, ComponentController, Dialog, Cell, PropertiesPage, DEFAULT_VALUES;
 
   function getDefaultValue(propType) {
-    if (propType === 'enum') return [];
-    return DEFAULT_VALUES[propType];
+    return DEFAULT_VALUES[propType].toString();
   }
 
   _export("PropertiesPage", void 0);
@@ -24,8 +23,7 @@ System.register(["./SetInput.js", "./Dialog.js", "./Cell.js"], function (_export
         bool: false,
         int: 0,
         float: 0.0,
-        str: '',
-        enum: ''
+        str: ''
       };
 
       _export("PropertiesPage", PropertiesPage = class PropertiesPage extends React.Component {
@@ -34,11 +32,12 @@ System.register(["./SetInput.js", "./Dialog.js", "./Cell.js"], function (_export
           // parameters {definitons}
           super(props);
           const definitions = this.props.parameters.definitions;
-          const defaultType = 'enum';
+          const defaultType = 'str';
           this.state = {
             definitions: definitions,
             name: '',
             type: defaultType,
+            enumeration: true,
             defaultValue: getDefaultValue(defaultType),
             multiple: false
           };
@@ -47,8 +46,8 @@ System.register(["./SetInput.js", "./Dialog.js", "./Cell.js"], function (_export
           this.onChangeName = this.onChangeName.bind(this);
           this.onChangeType = this.onChangeType.bind(this);
           this.onChangeDefault = this.onChangeDefault.bind(this);
-          this.onChangeDefaultBool = this.onChangeDefaultBool.bind(this);
           this.onChangeMultiple = this.onChangeMultiple.bind(this);
+          this.onChangeEnumeration = this.onChangeEnumeration.bind(this);
           this.reset = this.reset.bind(this);
           this.submit = this.submit.bind(this);
           this.deleteProperty = this.deleteProperty.bind(this);
@@ -109,17 +108,7 @@ System.register(["./SetInput.js", "./Dialog.js", "./Cell.js"], function (_export
             value: "float"
           }, "floating number"), /*#__PURE__*/React.createElement("option", {
             value: "str"
-          }, "text"), /*#__PURE__*/React.createElement("option", {
-            value: "enum"
-          }, "enumeration")))), /*#__PURE__*/React.createElement("div", {
-            className: "entry"
-          }, /*#__PURE__*/React.createElement("div", {
-            className: "label"
-          }, /*#__PURE__*/React.createElement("label", {
-            htmlFor: 'prop-default-' + this.state.type
-          }, this.state.type === 'enum' ? 'Enumeration values (first is default)' : 'Default value')), /*#__PURE__*/React.createElement("div", {
-            className: "input"
-          }, this.renderDefaultInput())), /*#__PURE__*/React.createElement("div", {
+          }, "text")))), /*#__PURE__*/React.createElement("div", {
             className: "entry"
           }, /*#__PURE__*/React.createElement("div", {
             className: "label"
@@ -134,6 +123,28 @@ System.register(["./SetInput.js", "./Dialog.js", "./Cell.js"], function (_export
           }, /*#__PURE__*/React.createElement("label", {
             htmlFor: "prop-multiple"
           }, "accept many values"))), /*#__PURE__*/React.createElement("div", {
+            className: "entry"
+          }, /*#__PURE__*/React.createElement("div", {
+            className: "label"
+          }, /*#__PURE__*/React.createElement("input", {
+            type: "checkbox",
+            name: "enumeration",
+            id: "prop-enumeration",
+            checked: this.state.enumeration,
+            onChange: this.onChangeEnumeration
+          })), /*#__PURE__*/React.createElement("div", {
+            className: "input"
+          }, /*#__PURE__*/React.createElement("label", {
+            htmlFor: "prop-enumeration"
+          }, "Is enumeration"))), this.state.multiple && !this.state.enumeration ? '' : /*#__PURE__*/React.createElement("div", {
+            className: "entry"
+          }, /*#__PURE__*/React.createElement("div", {
+            className: "label"
+          }, /*#__PURE__*/React.createElement("label", {
+            htmlFor: 'prop-default-' + this.state.type
+          }, this.state.enumeration ? 'Enumeration values' + (this.state.multiple ? '' : ' (first is default)') : 'Default value')), /*#__PURE__*/React.createElement("div", {
+            className: "input"
+          }, this.renderDefaultInput())), /*#__PURE__*/React.createElement("div", {
             className: "entry buttons"
           }, /*#__PURE__*/React.createElement("div", {
             className: "label"
@@ -155,12 +166,12 @@ System.register(["./SetInput.js", "./Dialog.js", "./Cell.js"], function (_export
             className: "name"
           }, def.name), /*#__PURE__*/React.createElement("td", {
             className: "type"
-          }, def.multiple ? /*#__PURE__*/React.createElement("span", null, "one or many\xA0") : '', def.type === 'enum' ? /*#__PURE__*/React.createElement("span", null, "value", def.multiple ? 's' : '', " in ", '{', def.values.join(', '), '}') : /*#__PURE__*/React.createElement("span", null, def.type)), /*#__PURE__*/React.createElement("td", {
+          }, def.multiple ? /*#__PURE__*/React.createElement("span", null, "one or many\xA0") : '', /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("code", null, def.type), " value", def.multiple ? 's' : ''), def.enumeration ? /*#__PURE__*/React.createElement("span", null, "\xA0in ", '{', def.enumeration.join(', '), '}') : ''), /*#__PURE__*/React.createElement("td", {
             className: "default"
           }, function () {
             if (def.multiple) {
               return `{${def.defaultValue.join(', ')}}`;
-            } else if (["str", 'enum'].indexOf(def.type) >= 0) {
+            } else if (def.type === "str") {
               return `"${def.defaultValue}"`;
             } else {
               return def.defaultValue.toString();
@@ -174,12 +185,20 @@ System.register(["./SetInput.js", "./Dialog.js", "./Cell.js"], function (_export
         }
 
         renderDefaultInput() {
+          if (this.state.enumeration) {
+            const controller = new ComponentController(this, 'defaultValue', value => parsePropValString(this.state.type, null, value));
+            return /*#__PURE__*/React.createElement(SetInput, {
+              identifier: 'prop-default-' + this.state.type,
+              controller: controller
+            });
+          }
+
           if (this.state.type === 'bool') {
             return /*#__PURE__*/React.createElement("select", {
               className: "prop-default",
               id: "prop-default-bool",
               value: this.state.defaultValue,
-              onChange: this.onChangeDefaultBool
+              onChange: this.onChangeDefault
             }, /*#__PURE__*/React.createElement("option", {
               value: "false"
             }, "false"), /*#__PURE__*/React.createElement("option", {
@@ -187,26 +206,8 @@ System.register(["./SetInput.js", "./Dialog.js", "./Cell.js"], function (_export
             }, "true"));
           }
 
-          if (this.state.type === 'int') {
-            return /*#__PURE__*/React.createElement("input", {
-              type: "number",
-              className: "prop-default",
-              id: "prop-default-int",
-              onChange: this.onChangeDefault,
-              value: this.state.defaultValue
-            });
-          }
-
-          if (this.state.type === 'enum') {
-            const controller = new ComponentController(this, 'defaultValue');
-            return /*#__PURE__*/React.createElement(SetInput, {
-              identifier: 'prop-default-' + this.state.type,
-              controller: controller
-            });
-          }
-
           return /*#__PURE__*/React.createElement("input", {
-            type: "text",
+            type: this.state.type === "int" ? "number" : "text",
             className: "prop-default",
             id: 'prop-default-' + this.state.type,
             onChange: this.onChangeDefault,
@@ -217,7 +218,9 @@ System.register(["./SetInput.js", "./Dialog.js", "./Cell.js"], function (_export
         setType(value) {
           if (this.state.type !== value) this.setState({
             type: value,
-            defaultValue: getDefaultValue(value)
+            enumeration: false,
+            defaultValue: getDefaultValue(value),
+            multiple: false
           });
         }
 
@@ -243,19 +246,18 @@ System.register(["./SetInput.js", "./Dialog.js", "./Cell.js"], function (_export
           });
         }
 
-        onChangeDefaultBool(event) {
-          const defaultValue = {
-            "true": true,
-            "false": false
-          }[event.target.value];
-          if (this.state.defaultValue !== defaultValue) this.setState({
-            defaultValue
-          });
-        }
-
         onChangeMultiple(event) {
           this.setState({
             multiple: event.target.checked
+          });
+        }
+
+        onChangeEnumeration(event) {
+          const enumeration = event.target.checked;
+          const defaultValue = enumeration ? [] : getDefaultValue(this.state.type);
+          this.setState({
+            enumeration,
+            defaultValue
           });
         }
 
@@ -264,11 +266,17 @@ System.register(["./SetInput.js", "./Dialog.js", "./Cell.js"], function (_export
         }
 
         submit() {
-          python_call('add_prop_type', this.state.name, this.state.type, this.state.defaultValue, this.state.multiple).then(definitions => {
-            const state = this.getDefaultInputState();
-            state.definitions = definitions;
-            this.setState(state);
-          }).catch(backend_error);
+          try {
+            let definition = this.state.defaultValue;
+            if (!this.state.enumeration) definition = parsePropValString(this.state.type, null, definition);
+            python_call('add_prop_type', this.state.name, this.state.type, definition, this.state.multiple).then(definitions => {
+              const state = this.getDefaultInputState();
+              state.definitions = definitions;
+              this.setState(state);
+            }).catch(backend_error);
+          } catch (exception) {
+            window.alert(exception.toString());
+          }
         }
 
         deleteProperty(name) {
@@ -298,6 +306,7 @@ System.register(["./SetInput.js", "./Dialog.js", "./Cell.js"], function (_export
           return {
             name: '',
             type: defaultType,
+            enumeration: false,
             defaultValue: getDefaultValue(defaultType),
             multiple: false
           };

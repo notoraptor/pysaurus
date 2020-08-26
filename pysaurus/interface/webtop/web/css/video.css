@@ -128,3 +128,6 @@
 .video .properties .property .property-name {
 	padding-right: 1em;
 }
+.video .properties .property .property-name .defined {
+	color: royalblue;
+}

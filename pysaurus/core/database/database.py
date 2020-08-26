@@ -558,6 +558,8 @@ class Database:
     def remove_prop_type(self, name):
         if name in self.__prop_types:
             del self.__prop_types[name]
+            for video in self.__videos.values():
+                video.remove_property(name)
             self.save()
 
     def has_prop_type(self, name):

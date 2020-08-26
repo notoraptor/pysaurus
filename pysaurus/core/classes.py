@@ -98,8 +98,8 @@ class Enumeration:
 
     def __init__(self, enum_values):
         self.values = set(enum_values)
-        if len(self.values) < 1:
-            raise ValueError('Invalid enumeration: expected at least 1 value, got %s' % len(self.values))
+        if len(self.values) < 2:
+            raise ValueError('Invalid enumeration: expected at least 2 values, got %s' % len(self.values))
         types = {type(value) for value in self.values}
         if len(types) != 1:
             raise ValueError('Invalid enumeration: expected exactly 1 type for all values, got %s' % len(types))

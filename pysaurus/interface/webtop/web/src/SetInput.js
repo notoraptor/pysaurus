@@ -21,20 +21,20 @@ export class ComponentController extends SetController {
         return this.app.state[this.field][index];
     }
     has(value) {
+        if (this.parser)
+            value = this.parser(value);
         return this.app.state[this.field].indexOf(value) >= 0;
     }
     add(value) {
         const arr = this.app.state[this.field].slice();
-        if (this.parser) {
-            const parsedValue = this.parser(value);
-            if (parsedValue !== undefined)
-                arr.push(parsedValue);
-        } else {
-            arr.push(value);
-        }
+        if (this.parser)
+            value = this.parser(value);
+        arr.push(value);
         this.app.setState({[this.field]: arr});
     }
     remove(toRemove) {
+        if (this.parser)
+            toRemove = this.parser(toRemove);
         const arr = [];
         for (let value of this.app.state[this.field]) {
             if (value !== toRemove)
@@ -49,11 +49,8 @@ export class SetInput extends React.Component {
         // controller: SetController
         // identifier? str
         // values
-        // onCheck? function(value)
         super(props);
-        this.state = {
-            add: this.props.values ? this.props.values[0] : ''
-        };
+        this.state = {add: this.props.values ? this.props.values[0] : ''};
         this.onChangeAdd = this.onChangeAdd.bind(this);
         this.onInputAdd = this.onInputAdd.bind(this);
         this.onAdd = this.onAdd.bind(this);
@@ -99,7 +96,7 @@ export class SetInput extends React.Component {
             const value = controller.get(i);
             output.push(
                 <tr className="item" key={i}>
-                    <td className="label">{value}</td>
+                    <td className="label">{value.toString()}</td>
                     <td className="action"><button className="remove" onClick={() => this.remove(value)}>-</button></td>
                 </tr>
             );
@@ -119,17 +116,25 @@ export class SetInput extends React.Component {
         this.add(this.state.add);
     }
     add(value) {
-        if (value.length && (!this.props.onCheck || this.props.onCheck(value))) {
-            const controller = this.props.controller;
+        if (!value.length)
+            return;
+        const controller = this.props.controller;
+        try {
             if (controller.has(value))
-                return window.alert(`Value already in list: ${value}`);
-            this.setState({add: ''}, () => controller.add(value));
+                window.alert(`Value already in list: ${value}`);
+            else
+                this.setState({add: ''}, () => controller.add(value));
+        } catch (exception) {
+            window.alert(exception.toString());
         }
     }
     remove(value) {
         const controller = this.props.controller;
-        if (controller.has(value)) {
-            controller.remove(value);
+        try {
+            if (controller.has(value))
+                controller.remove(value);
+        } catch (e) {
+            window.alert(e.toString());
         }
     }
 }

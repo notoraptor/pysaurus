@@ -1,45 +1,6 @@
 import {ComponentController, SetInput} from "./SetInput.js";
 import {Dialog} from "./Dialog.js";
 
-function generatePropValChecker(propType, values) {
-    switch (propType) {
-        case "bool":
-            return function(value) {
-                if (["false", "true"].indexOf(value) < 0) {
-                    window.alert(`Invalid bool value, expected: [false, true], got ${value}`);
-                    return false;
-                }
-                return true;
-            };
-        case "int":
-            return function(value) {
-                if(isNaN(parseInt(value))) {
-                    window.alert(`Unable to parse integer: ${value}`);
-                    return false;
-                }
-                return true;
-            };
-        case "float":
-            return function (value) {
-                if (isNaN(parseFloat(value))) {
-                    window.alert(`Unable to parse floating value: ${value}`);
-                    return false;
-                }
-                return true;
-            };
-        case "str":
-            return function(value) {return true;};
-        case "enum":
-            return function (value) {
-                if (values.indexOf(value) < 0) {
-                    window.alert(`Invalid enum value, expected: [${values.join(', ')}], got ${value}`);
-                    return false;
-                }
-                return true;
-            };
-    }
-}
-
 export class FormSetProperties extends React.Component {
     constructor(props) {
         // data
@@ -54,7 +15,6 @@ export class FormSetProperties extends React.Component {
         }
         this.onClose = this.onClose.bind(this);
         this.onChange = this.onChange.bind(this);
-        this.parsePropVal = this.parsePropVal.bind(this);
     }
     render() {
         const data = this.props.data;
@@ -78,51 +38,32 @@ export class FormSetProperties extends React.Component {
                                 let input = null;
                                 if (def.multiple) {
                                     let possibleValues = null;
-                                    switch (def.type) {
-                                        case "bool":
-                                            possibleValues = [false, true];
-                                            break;
-                                        case "enum":
-                                            possibleValues = def.values;
-                                            break;
-                                        default:
-                                            break;
-                                    }
+                                    if (def.enumeration)
+                                        possibleValues = def.enumeration;
+                                    else if (def.type === "bool")
+                                        possibleValues = [false, true];
                                     const controller = new ComponentController(
-                                        this, name, value => this.parsePropVal(def, value)
+                                        this, name, value => parsePropValString(def.type, possibleValues, value));
+                                    input = <SetInput controller={controller} values={possibleValues}/>;
+                                } else if (def.enumeration) {
+                                    input = (
+                                        <select value={this.state[name]} onChange={event => this.onChange(event, def)}>
+                                            {def.enumeration.map((value, valueIndex) =>
+                                                <option key={valueIndex} value={value}>{value}</option>)}
+                                        </select>
                                     );
-                                    input = <SetInput controller={controller}
-                                                      values={possibleValues}
-                                                      onCheck={generatePropValChecker(def.type, possibleValues)} />;
+                                } else if (def.type === "bool") {
+                                    input = (
+                                        <select value={this.state[name]}
+                                                onChange={event => this.onChange(event, def)}>
+                                            <option value="false">false</option>
+                                            <option value="true">true</option>
+                                        </select>
+                                    );
                                 } else {
-                                    switch (def.type) {
-                                        case "bool":
-                                            input = (
-                                                <select value={this.state[name]}
-                                                        onChange={event => this.onChange(event, def)}>
-                                                    <option value="false">false</option>
-                                                    <option value="true">true</option>
-                                                </select>
-                                            );
-                                            break;
-                                        case "int":
-                                            input = <input type="number"
-                                                           onChange={event => this.onChange(event, def)}
-                                                           value={this.state[name]}/>;
-                                            break;
-                                        case "enum":
-                                            input = (
-                                                <select value={this.state[name]} onChange={event => this.onChange(event, def)}>
-                                                    {def.values.map((value, valueIndex) => <option key={valueIndex} value={value}>{value}</option>)}
-                                                </select>
-                                            );
-                                            break;
-                                        default:
-                                            input = <input type="text"
-                                                           onChange={event => this.onChange(event, def)}
-                                                           value={this.state[name]}/>;
-                                            break;
-                                    }
+                                    input = <input type={def.type === "int" ? "number" : "text"}
+                                                   onChange={event => this.onChange(event, def)}
+                                                   value={this.state[name]}/>;
                                 }
                                 return (
                                     <div className="table-row" key={index}>
@@ -141,23 +82,10 @@ export class FormSetProperties extends React.Component {
         this.props.onClose(yes ? this.state: null);
     }
     onChange(event, def) {
-        const value = this.parsePropVal(def, event.target.value);
-        if (value !== undefined)
-            this.setState({[def.name]: value});
-    }
-    parsePropVal(def, value) {
-        const checker = generatePropValChecker(def.type, def.values);
-        if (checker(value)) {
-            switch (def.type) {
-                case "bool":
-                    return {"false": false, "true": true}[value];
-                case "int":
-                    return parseInt(value);
-                case "float":
-                    return parseFloat(value);
-                default:
-                    return value;
-            }
+        try {
+            this.setState({[def.name]: parsePropValString(def.type, def.enumeration, event.target.value)});
+        } catch (exception) {
+            window.alert(exception.toString());
         }
     }
 }

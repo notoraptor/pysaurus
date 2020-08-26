@@ -121,14 +121,16 @@ System.register(["./MenuPack.js", "./FormRenameVideo.js", "./Dialog.js", "./Form
             className: "table"
           }, propDefs.map((def, index) => {
             const name = def.name;
-            const value = props.hasOwnProperty(name) ? props[name] : def.multiple ? [def.defaultValue] : def.defaultValue;
-            const valueString = propertyValueToString(def.type, def.multiple ? value.join(', ') : value);
+            const value = props.hasOwnProperty(name) ? props[name] : def.defaultValue;
+            const valueString = propertyValueToString(def.type, def.multiple ? value.join(', ') : value.toString());
             return /*#__PURE__*/React.createElement("div", {
               key: name,
               className: "property table-row"
             }, /*#__PURE__*/React.createElement("div", {
               className: "table-cell property-name"
-            }, /*#__PURE__*/React.createElement("strong", null, name), ":"), /*#__PURE__*/React.createElement("div", {
+            }, /*#__PURE__*/React.createElement("strong", props.hasOwnProperty(name) ? {
+              className: "defined"
+            } : {}, name), ":"), /*#__PURE__*/React.createElement("div", {
               className: "table-cell"
             }, valueString ? /*#__PURE__*/React.createElement("span", null, valueString) : /*#__PURE__*/React.createElement("span", {
               className: "no-value"

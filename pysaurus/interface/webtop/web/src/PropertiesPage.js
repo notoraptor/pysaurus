@@ -7,13 +7,11 @@ const DEFAULT_VALUES = {
     int: 0,
     float: 0.0,
     str: '',
-    enum: ''
 };
 
+
 function getDefaultValue(propType) {
-    if (propType === 'enum')
-        return [];
-    return DEFAULT_VALUES[propType];
+    return DEFAULT_VALUES[propType].toString();
 }
 
 export class PropertiesPage extends React.Component {
@@ -22,11 +20,12 @@ export class PropertiesPage extends React.Component {
         // parameters {definitons}
         super(props);
         const definitions = this.props.parameters.definitions;
-        const defaultType = 'enum';
+        const defaultType = 'str';
         this.state = {
             definitions: definitions,
             name: '',
             type: defaultType,
+            enumeration: true,
             defaultValue: getDefaultValue(defaultType),
             multiple: false,
         };
@@ -35,21 +34,18 @@ export class PropertiesPage extends React.Component {
         this.onChangeName = this.onChangeName.bind(this);
         this.onChangeType = this.onChangeType.bind(this);
         this.onChangeDefault = this.onChangeDefault.bind(this);
-        this.onChangeDefaultBool = this.onChangeDefaultBool.bind(this);
         this.onChangeMultiple = this.onChangeMultiple.bind(this);
+        this.onChangeEnumeration = this.onChangeEnumeration.bind(this);
         this.reset = this.reset.bind(this);
         this.submit = this.submit.bind(this);
         this.deleteProperty = this.deleteProperty.bind(this);
         this.getDefaultInputState = this.getDefaultInputState.bind(this);
     }
-
     render() {
         return (
             <div id="properties">
                 <h2 className="horizontal">
-                    <div className="back">
-                        <button onClick={this.back}>&#11164;</button>
-                    </div>
+                    <div className="back"><button onClick={this.back}>&#11164;</button></div>
                     <div className="title">Properties Management</div>
                 </h2>
                 <hr/>
@@ -82,20 +78,7 @@ export class PropertiesPage extends React.Component {
                                         <option value="int">integer</option>
                                         <option value="float">floating number</option>
                                         <option value="str">text</option>
-                                        <option value="enum">enumeration</option>
                                     </select>
-                                </div>
-                            </div>
-                            <div className="entry">
-                                <div className="label">
-                                    <label htmlFor={'prop-default-' + this.state.type}>
-                                        {this.state.type === 'enum' ?
-                                            'Enumeration values (first is default)'
-                                            : 'Default value'}
-                                    </label>
-                                </div>
-                                <div className="input">
-                                    {this.renderDefaultInput()}
                                 </div>
                             </div>
                             <div className="entry">
@@ -106,10 +89,30 @@ export class PropertiesPage extends React.Component {
                                            checked={this.state.multiple}
                                            onChange={this.onChangeMultiple}/>
                                 </div>
-                                <div className="input">
-                                    <label htmlFor="prop-multiple">accept many values</label>
-                                </div>
+                                <div className="input"><label htmlFor="prop-multiple">accept many values</label></div>
                             </div>
+                            <div className="entry">
+                                <div className="label">
+                                    <input type="checkbox"
+                                           name="enumeration"
+                                           id="prop-enumeration"
+                                           checked={this.state.enumeration}
+                                           onChange={this.onChangeEnumeration}/>
+                                </div>
+                                <div className="input"><label htmlFor="prop-enumeration">Is enumeration</label></div>
+                            </div>
+                            {this.state.multiple && !this.state.enumeration ? '' : (
+                                <div className="entry">
+                                    <div className="label">
+                                        <label htmlFor={'prop-default-' + this.state.type}>
+                                            {this.state.enumeration ?
+                                                'Enumeration values' + (this.state.multiple ? '' : ' (first is default)')
+                                                : 'Default value'}
+                                        </label>
+                                    </div>
+                                    <div className="input">{this.renderDefaultInput()}</div>
+                                </div>
+                            )}
                             <div className="entry buttons">
                                 <div className="label">
                                     <button className="reset" onClick={this.reset}>reset</button>
@@ -128,12 +131,7 @@ export class PropertiesPage extends React.Component {
         return (
             <table>
                 <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Type</th>
-                    <th>Default</th>
-                    <th>Options</th>
-                </tr>
+                <tr><th>Name</th><th>Type</th><th>Default</th><th>Options</th></tr>
                 </thead>
                 <tbody>
                 {this.state.definitions.map((def, index) => (
@@ -141,17 +139,16 @@ export class PropertiesPage extends React.Component {
                         <td className="name">{def.name}</td>
                         <td className="type">
                             {def.multiple ? <span>one or many&nbsp;</span> : ''}
-                            {def.type === 'enum' ?
-                                <span>
-                                    value{def.multiple ? 's' : ''} in {'{'}{def.values.join(', ')}{'}'}
-                                </span>
-                                : <span>{def.type}</span>}
+                            <span><code>{def.type}</code> value{def.multiple ? 's' : ''}</span>
+                            {def.enumeration ?
+                                <span>&nbsp;in {'{'}{def.enumeration.join(', ')}{'}'}</span>
+                                : ''}
                         </td>
                         <td className="default">
                             {(function() {
                                 if (def.multiple) {
                                     return `{${def.defaultValue.join(', ')}}`;
-                                } else if (["str", 'enum'].indexOf(def.type) >= 0) {
+                                } else if (def.type === "str") {
                                     return `"${def.defaultValue}"`;
                                 } else {
                                     return def.defaultValue.toString();
@@ -168,29 +165,23 @@ export class PropertiesPage extends React.Component {
         );
     }
     renderDefaultInput() {
+        if (this.state.enumeration) {
+            const controller = new ComponentController(
+                this, 'defaultValue', value => parsePropValString(this.state.type, null, value));
+            return <SetInput identifier={'prop-default-' + this.state.type} controller={controller}/>;
+        }
         if (this.state.type === 'bool') {
             return (
                 <select className="prop-default"
                         id="prop-default-bool"
                         value={this.state.defaultValue}
-                        onChange={this.onChangeDefaultBool}>
+                        onChange={this.onChangeDefault}>
                     <option value="false">false</option>
                     <option value="true">true</option>
                 </select>
             );
         }
-        if (this.state.type === 'int') {
-            return <input type="number"
-                          className="prop-default"
-                          id="prop-default-int"
-                          onChange={this.onChangeDefault}
-                          value={this.state.defaultValue}/>;
-        }
-        if (this.state.type === 'enum') {
-            const controller = new ComponentController(this, 'defaultValue');
-            return <SetInput identifier={'prop-default-' + this.state.type} controller={controller}/>;
-        }
-        return <input type="text"
+        return <input type={this.state.type === "int" ? "number" : "text"}
                       className="prop-default"
                       id={'prop-default-' + this.state.type}
                       onChange={this.onChangeDefault}
@@ -199,7 +190,7 @@ export class PropertiesPage extends React.Component {
 
     setType(value) {
         if (this.state.type !== value)
-            this.setState({type: value, defaultValue: getDefaultValue(value)});
+            this.setState({type: value, enumeration: false, defaultValue: getDefaultValue(value), multiple: false});
     }
     back() {
         this.props.app.loadVideosPage();
@@ -217,25 +208,32 @@ export class PropertiesPage extends React.Component {
         if (this.state.defaultValue !== defaultValue)
             this.setState({defaultValue});
     }
-    onChangeDefaultBool(event) {
-        const defaultValue = {"true": true, "false": false}[event.target.value];
-        if (this.state.defaultValue !== defaultValue)
-            this.setState({defaultValue});
-    }
     onChangeMultiple(event) {
         this.setState({multiple: event.target.checked});
+    }
+    onChangeEnumeration(event) {
+        const enumeration = event.target.checked;
+        const defaultValue = enumeration ? [] : getDefaultValue(this.state.type);
+        this.setState({enumeration, defaultValue});
     }
     reset() {
         this.setState(this.getDefaultInputState());
     }
     submit() {
-        python_call('add_prop_type', this.state.name, this.state.type, this.state.defaultValue, this.state.multiple)
-            .then(definitions => {
-                const state = this.getDefaultInputState();
-                state.definitions = definitions;
-                this.setState(state);
-            })
-            .catch(backend_error);
+        try {
+            let definition = this.state.defaultValue;
+            if (!this.state.enumeration)
+                definition = parsePropValString(this.state.type, null, definition);
+            python_call('add_prop_type', this.state.name, this.state.type, definition, this.state.multiple)
+                .then(definitions => {
+                    const state = this.getDefaultInputState();
+                    state.definitions = definitions;
+                    this.setState(state);
+                })
+                .catch(backend_error);
+        } catch (exception) {
+            window.alert(exception.toString());
+        }
     }
     deleteProperty(name) {
         this.props.app.loadDialog(`Delete property "${name}"?`, onClose => (
@@ -262,6 +260,7 @@ export class PropertiesPage extends React.Component {
         return {
             name: '',
             type: defaultType,
+            enumeration: false,
             defaultValue: getDefaultValue(defaultType),
             multiple: false,
         };

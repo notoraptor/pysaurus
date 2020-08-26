@@ -45,25 +45,21 @@ System.register([], function (_export, _context) {
         }
 
         has(value) {
+          if (this.parser) value = this.parser(value);
           return this.app.state[this.field].indexOf(value) >= 0;
         }
 
         add(value) {
           const arr = this.app.state[this.field].slice();
-
-          if (this.parser) {
-            const parsedValue = this.parser(value);
-            if (parsedValue !== undefined) arr.push(parsedValue);
-          } else {
-            arr.push(value);
-          }
-
+          if (this.parser) value = this.parser(value);
+          arr.push(value);
           this.app.setState({
             [this.field]: arr
           });
         }
 
         remove(toRemove) {
+          if (this.parser) toRemove = this.parser(toRemove);
           const arr = [];
 
           for (let value of this.app.state[this.field]) {
@@ -82,7 +78,6 @@ System.register([], function (_export, _context) {
           // controller: SetController
           // identifier? str
           // values
-          // onCheck? function(value)
           super(props);
           this.state = {
             add: this.props.values ? this.props.values[0] : ''
@@ -137,7 +132,7 @@ System.register([], function (_export, _context) {
               key: i
             }, /*#__PURE__*/React.createElement("td", {
               className: "label"
-            }, value), /*#__PURE__*/React.createElement("td", {
+            }, value.toString()), /*#__PURE__*/React.createElement("td", {
               className: "action"
             }, /*#__PURE__*/React.createElement("button", {
               className: "remove",
@@ -165,20 +160,25 @@ System.register([], function (_export, _context) {
         }
 
         add(value) {
-          if (value.length && (!this.props.onCheck || this.props.onCheck(value))) {
-            const controller = this.props.controller;
-            if (controller.has(value)) return window.alert(`Value already in list: ${value}`);
-            this.setState({
+          if (!value.length) return;
+          const controller = this.props.controller;
+
+          try {
+            if (controller.has(value)) window.alert(`Value already in list: ${value}`);else this.setState({
               add: ''
             }, () => controller.add(value));
+          } catch (exception) {
+            window.alert(exception.toString());
           }
         }
 
         remove(value) {
           const controller = this.props.controller;
 
-          if (controller.has(value)) {
-            controller.remove(value);
+          try {
+            if (controller.has(value)) controller.remove(value);
+          } catch (e) {
+            window.alert(e.toString());
           }
         }
 

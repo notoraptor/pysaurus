@@ -3,55 +3,6 @@ System.register(["./SetInput.js", "./Dialog.js"], function (_export, _context) {
 
   var ComponentController, SetInput, Dialog, FormSetProperties;
 
-  function generatePropValChecker(propType, values) {
-    switch (propType) {
-      case "bool":
-        return function (value) {
-          if (["false", "true"].indexOf(value) < 0) {
-            window.alert(`Invalid bool value, expected: [false, true], got ${value}`);
-            return false;
-          }
-
-          return true;
-        };
-
-      case "int":
-        return function (value) {
-          if (isNaN(parseInt(value))) {
-            window.alert(`Unable to parse integer: ${value}`);
-            return false;
-          }
-
-          return true;
-        };
-
-      case "float":
-        return function (value) {
-          if (isNaN(parseFloat(value))) {
-            window.alert(`Unable to parse floating value: ${value}`);
-            return false;
-          }
-
-          return true;
-        };
-
-      case "str":
-        return function (value) {
-          return true;
-        };
-
-      case "enum":
-        return function (value) {
-          if (values.indexOf(value) < 0) {
-            window.alert(`Invalid enum value, expected: [${values.join(', ')}], got ${value}`);
-            return false;
-          }
-
-          return true;
-        };
-    }
-  }
-
   _export("FormSetProperties", void 0);
 
   return {
@@ -78,7 +29,6 @@ System.register(["./SetInput.js", "./Dialog.js"], function (_export, _context) {
 
           this.onClose = this.onClose.bind(this);
           this.onChange = this.onChange.bind(this);
-          this.parsePropVal = this.parsePropVal.bind(this);
         }
 
         render() {
@@ -113,65 +63,35 @@ System.register(["./SetInput.js", "./Dialog.js"], function (_export, _context) {
 
             if (def.multiple) {
               let possibleValues = null;
-
-              switch (def.type) {
-                case "bool":
-                  possibleValues = [false, true];
-                  break;
-
-                case "enum":
-                  possibleValues = def.values;
-                  break;
-
-                default:
-                  break;
-              }
-
-              const controller = new ComponentController(this, name, value => this.parsePropVal(def, value));
+              if (def.enumeration) possibleValues = def.enumeration;else if (def.type === "bool") possibleValues = [false, true];
+              const controller = new ComponentController(this, name, value => parsePropValString(def.type, possibleValues, value));
               input = /*#__PURE__*/React.createElement(SetInput, {
                 controller: controller,
-                values: possibleValues,
-                onCheck: generatePropValChecker(def.type, possibleValues)
+                values: possibleValues
               });
+            } else if (def.enumeration) {
+              input = /*#__PURE__*/React.createElement("select", {
+                value: this.state[name],
+                onChange: event => this.onChange(event, def)
+              }, def.enumeration.map((value, valueIndex) => /*#__PURE__*/React.createElement("option", {
+                key: valueIndex,
+                value: value
+              }, value)));
+            } else if (def.type === "bool") {
+              input = /*#__PURE__*/React.createElement("select", {
+                value: this.state[name],
+                onChange: event => this.onChange(event, def)
+              }, /*#__PURE__*/React.createElement("option", {
+                value: "false"
+              }, "false"), /*#__PURE__*/React.createElement("option", {
+                value: "true"
+              }, "true"));
             } else {
-              switch (def.type) {
-                case "bool":
-                  input = /*#__PURE__*/React.createElement("select", {
-                    value: this.state[name],
-                    onChange: event => this.onChange(event, def)
-                  }, /*#__PURE__*/React.createElement("option", {
-                    value: "false"
-                  }, "false"), /*#__PURE__*/React.createElement("option", {
-                    value: "true"
-                  }, "true"));
-                  break;
-
-                case "int":
-                  input = /*#__PURE__*/React.createElement("input", {
-                    type: "number",
-                    onChange: event => this.onChange(event, def),
-                    value: this.state[name]
-                  });
-                  break;
-
-                case "enum":
-                  input = /*#__PURE__*/React.createElement("select", {
-                    value: this.state[name],
-                    onChange: event => this.onChange(event, def)
-                  }, def.values.map((value, valueIndex) => /*#__PURE__*/React.createElement("option", {
-                    key: valueIndex,
-                    value: value
-                  }, value)));
-                  break;
-
-                default:
-                  input = /*#__PURE__*/React.createElement("input", {
-                    type: "text",
-                    onChange: event => this.onChange(event, def),
-                    value: this.state[name]
-                  });
-                  break;
-              }
+              input = /*#__PURE__*/React.createElement("input", {
+                type: def.type === "int" ? "number" : "text",
+                onChange: event => this.onChange(event, def),
+                value: this.state[name]
+              });
             }
 
             return /*#__PURE__*/React.createElement("div", {
@@ -190,32 +110,12 @@ System.register(["./SetInput.js", "./Dialog.js"], function (_export, _context) {
         }
 
         onChange(event, def) {
-          const value = this.parsePropVal(def, event.target.value);
-          if (value !== undefined) this.setState({
-            [def.name]: value
-          });
-        }
-
-        parsePropVal(def, value) {
-          const checker = generatePropValChecker(def.type, def.values);
-
-          if (checker(value)) {
-            switch (def.type) {
-              case "bool":
-                return {
-                  "false": false,
-                  "true": true
-                }[value];
-
-              case "int":
-                return parseInt(value);
-
-              case "float":
-                return parseFloat(value);
-
-              default:
-                return value;
-            }
+          try {
+            this.setState({
+              [def.name]: parsePropValString(def.type, def.enumeration, event.target.value)
+            });
+          } catch (exception) {
+            window.alert(exception.toString());
           }
         }
 
