@@ -1,7 +1,7 @@
 System.register([], function (_export, _context) {
   "use strict";
 
-  var HomeStatus, FIELDS, FIELD_TITLES, SORTED_FIELDS_AND_TITLES, SEARCH_TYPE_TITLE, PAGE_SIZES;
+  var HomeStatus, FIELDS, GroupPermission, FIELDS_GROUP_DEF, STRING_FIELDS, FIELD_TITLES, SORTED_FIELDS_AND_TITLES, SEARCH_TYPE_TITLE, PAGE_SIZES;
   return {
     setters: [],
     execute: function () {
@@ -11,7 +11,57 @@ System.register([], function (_export, _context) {
         LOADED: 2
       });
 
-      _export("FIELDS", FIELDS = ['audio_bit_rate', 'audio_codec', 'audio_codec_description', 'container_format', 'date', 'extension', 'file_size', 'file_title', 'filename', 'frame_rate', 'height', 'length', 'properties', 'quality', 'sample_rate', 'size', 'thumbnail_path', 'title', 'video_codec', 'video_codec_description', 'video_id', 'width']);
+      _export("FIELDS", FIELDS = ['audio_bit_rate', 'audio_codec', 'audio_codec_description', 'container_format', 'date', 'day', 'disk', 'extension', 'file_size', 'file_title', 'filename', 'frame_rate', 'height', 'length', 'properties', 'quality', 'sample_rate', 'size', 'thumbnail_path', 'title', 'video_codec', 'video_codec_description', 'video_id', 'width']);
+
+      _export("GroupPermission", GroupPermission = {
+        FORBIDDEN: 0,
+        ONLY_ONE: 1,
+        ONLY_MANY: 2,
+        ALL: 3
+      });
+
+      _export("FIELDS_GROUP_DEF", FIELDS_GROUP_DEF = {
+        'audio_bit_rate': GroupPermission.ALL,
+        'audio_codec': GroupPermission.ALL,
+        'audio_codec_description': GroupPermission.ALL,
+        'container_format': GroupPermission.ALL,
+        'date': GroupPermission.FORBIDDEN,
+        'day': GroupPermission.ALL,
+        'disk': GroupPermission.ALL,
+        'extension': GroupPermission.ALL,
+        'file_size': GroupPermission.ONLY_MANY,
+        'file_title': GroupPermission.ONLY_MANY,
+        'filename': GroupPermission.ONLY_MANY,
+        'frame_rate': GroupPermission.ALL,
+        'height': GroupPermission.ALL,
+        'length': GroupPermission.ONLY_MANY,
+        'properties': GroupPermission.FORBIDDEN,
+        'quality': GroupPermission.FORBIDDEN,
+        'sample_rate': GroupPermission.ALL,
+        'size': GroupPermission.ONLY_MANY,
+        'thumbnail_path': GroupPermission.FORBIDDEN,
+        'title': GroupPermission.ONLY_MANY,
+        'video_codec': GroupPermission.ALL,
+        'video_codec_description': GroupPermission.ALL,
+        'video_id': GroupPermission.FORBIDDEN,
+        'width': GroupPermission.ALL
+      });
+
+      _export("STRING_FIELDS", STRING_FIELDS = {
+        'audio_codec': true,
+        'audio_codec_description': true,
+        'container_format': true,
+        'day': true,
+        'disk': true,
+        'extension': true,
+        'file_size': true,
+        'file_title': true,
+        'filename': true,
+        'thumbnail_path': true,
+        'title': true,
+        'video_codec': true,
+        'video_codec_description': true
+      });
 
       _export("FIELD_TITLES", FIELD_TITLES = {
         'audio_bit_rate': 'audio bit rate',
@@ -19,8 +69,10 @@ System.register([], function (_export, _context) {
         'audio_codec_description': 'audio codec description',
         'container_format': 'container format',
         'date': 'date modified',
+        'day': 'day',
+        'disk': 'disk',
         'extension': 'file extension',
-        'file_size': 'size (raw)',
+        'file_size': 'size (bytes)',
         'file_title': 'file title',
         'filename': 'file path',
         'frame_rate': 'frame rate',

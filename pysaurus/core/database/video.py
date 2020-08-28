@@ -118,7 +118,7 @@ class Video(VideoState):
 
     LONG_TO_MIN = {_long: _min for _min, _long in MIN_TO_LONG.items()}
 
-    ROW_ATTRIBUTES = (
+    ROW_FIELDS = (
         'audio_bit_rate',
         'audio_codec',
         'audio_codec_description',
@@ -131,10 +131,8 @@ class Video(VideoState):
         'video_codec',
         'video_codec_description',
         'width',
-    )
-
-    ROW_PROPERTIES = (
         'date',  # property VideoState.date
+        'day', # from date
         'extension',  # from VideoState.filename
         'file_title',  # from VideoState.filename
         'frame_rate',  # frame_rate_num, frame_rate_den
@@ -145,7 +143,21 @@ class Video(VideoState):
         'title',  # meta_title, file_title
     )
 
-    ROW_FIELDS = ROW_ATTRIBUTES + ROW_PROPERTIES
+    STRING_FIELDS = {
+        'audio_codec',
+        'audio_codec_description',
+        'container_format',
+        'day',
+        'disk',
+        'extension',
+        'file_size',
+        'file_title',
+        'filename',
+        'thumbnail_path',
+        'title',
+        'video_codec',
+        'video_codec_description',
+    }
 
     def __init__(self,
                  # Runtime arguments
@@ -280,6 +292,20 @@ class Video(VideoState):
             self.filename.path,
             self.meta_title,
         )), as_set=as_set)
+
+    def has_terms_exact(self, terms):
+        return ' '.join(terms) in ' '.join(self.terms())
+
+    def has_terms_and(self, terms):
+        video_terms = self.terms(as_set=True)
+        return all(term in video_terms for term in terms)
+
+    def has_terms_or(self, terms):
+        video_terms = self.terms(as_set=True)
+        return any(term in video_terms for term in terms)
+
+    def has_terms(self, terms, condition):
+        return getattr(self, 'has_terms_%s' % condition)(terms)
 
     def to_dict(self):
         dct = super().to_dict()

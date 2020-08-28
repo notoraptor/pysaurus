@@ -65,6 +65,8 @@ function __notify(notification) {
 const Utils = {
     CHARACTER_CROSS: "\u2715",
     CHARACTER_SETTINGS: "\u2630",
+    CHARACTER_ARROW_DOWN: "\u25BC",
+    CHARACTER_ARROW_UP: "\u25B2",
     sentence: function(str) {
         if (str.length === 0)
             return str;

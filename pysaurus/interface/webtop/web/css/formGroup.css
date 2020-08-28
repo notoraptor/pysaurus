@@ -1,8 +1,15 @@
 /** form group **/
 .form-group {
-    text-align: center;
+    width: 100%;
 }
 .form-group select {
     display: block;
     width: 100%;
+}
+.form-group td {
+    padding: 0.5em;
+    width: 50%;
+}
+.form-group td.label {
+    text-align: right;
 }

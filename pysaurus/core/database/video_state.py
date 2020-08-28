@@ -3,6 +3,7 @@ from typing import Iterable
 from pysaurus.core.classes import StringPrinter
 from pysaurus.core.components import AbsolutePath, FileSize, DateModified
 from pysaurus.core.constants import PYTHON_ERROR_THUMBNAIL
+from pysaurus.core.modules import System
 
 
 class VideoState:
@@ -79,6 +80,16 @@ class VideoState:
     def date(self):
         # runtime date
         return DateModified(self.rt_mtime)
+
+    @property
+    def disk(self):
+        if System.is_windows():
+            return '%s:\\' % (self.filename.path.split(':')[0])
+        return self.driver_id
+
+    @property
+    def day(self):
+        return self.date.day
 
     def exists(self):
         return self.rt_is_file

@@ -1,7 +1,7 @@
-System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Pagination.js", "./Video.js", "./FormSourceVideo.js", "./FormGroup.js", "./FormSearch.js", "./FormSort.js"], function (_export, _context) {
+System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Pagination.js", "./Video.js", "./FormSourceVideo.js", "./FormGroup.js", "./FormSearch.js", "./FormSort.js", "./GroupView.js"], function (_export, _context) {
   "use strict";
 
-  var SettingIcon, Cross, FIELD_TITLES, PAGE_SIZES, FIELDS, SEARCH_TYPE_TITLE, MenuPack, MenuItem, Menu, MenuItemCheck, Pagination, Video, FormSourceVideo, FormGroup, FormSearch, FormSort, Filter, VideosPage, SHORTCUTS, SPECIAL_KEYS;
+  var SettingIcon, Cross, FIELD_TITLES, PAGE_SIZES, FIELDS, SEARCH_TYPE_TITLE, MenuPack, MenuItem, Menu, MenuItemCheck, Pagination, Video, FormSourceVideo, FormGroup, FormSearch, FormSort, GroupView, Filter, VideosPage, SHORTCUTS, SPECIAL_KEYS;
 
   function assertUniqueShortcuts() {
     const duplicates = {};
@@ -58,6 +58,8 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
       FormSearch = _FormSearchJs.FormSearch;
     }, function (_FormSortJs) {
       FormSort = _FormSortJs.FormSort;
+    }, function (_GroupViewJs) {
+      GroupView = _GroupViewJs.GroupView;
     }],
     execute: function () {
       SHORTCUTS = {
@@ -158,7 +160,9 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
             pageNumber: args.pageNumber,
             status: 'Loaded.',
             confirmDeletion: true,
-            info: args.info
+            info: args.info,
+            stackFilter: false,
+            stackGroup: false
           };
           this.callbackIndex = -1;
           this.checkShortcut = this.checkShortcut.bind(this);
@@ -179,6 +183,8 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           this.updateStatus = this.updateStatus.bind(this);
           this.resetStatus = this.resetStatus.bind(this);
           this.scrollTop = this.scrollTop.bind(this);
+          this.stackGroup = this.stackGroup.bind(this);
+          this.stackFilter = this.stackFilter.bind(this);
           this.shortcuts = {
             [SHORTCUTS.select]: this.selectVideos,
             [SHORTCUTS.group]: this.groupVideos,
@@ -260,9 +266,63 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
             className: "wrapper"
           }, /*#__PURE__*/React.createElement("div", {
             className: "side-panel"
+          }, /*#__PURE__*/React.createElement("div", {
+            className: "stack filter"
+          }, /*#__PURE__*/React.createElement("div", {
+            className: "stack-title",
+            onClick: this.stackFilter
+          }, /*#__PURE__*/React.createElement("div", {
+            className: "title"
+          }, "Filter"), /*#__PURE__*/React.createElement("div", {
+            className: "icon"
+          }, this.state.stackFilter ? Utils.CHARACTER_ARROW_DOWN : Utils.CHARACTER_ARROW_UP)), this.state.stackFilter ? '' : /*#__PURE__*/React.createElement("div", {
+            className: "stack-content"
           }, /*#__PURE__*/React.createElement(Filter, {
             page: this
-          })), /*#__PURE__*/React.createElement("div", {
+          }))), /*#__PURE__*/React.createElement("div", {
+            className: "stack group"
+          }, /*#__PURE__*/React.createElement("div", {
+            className: "stack-title",
+            onClick: this.stackGroup
+          }, /*#__PURE__*/React.createElement("div", {
+            className: "title"
+          }, "Groups"), /*#__PURE__*/React.createElement("div", {
+            className: "icon"
+          }, this.state.stackGroup ? Utils.CHARACTER_ARROW_DOWN : Utils.CHARACTER_ARROW_UP)), this.state.stackGroup ? '' : /*#__PURE__*/React.createElement("div", {
+            className: "stack-content"
+          }, /*#__PURE__*/React.createElement(GroupView, {
+            all: 100003,
+            title: "za field",
+            isString: true,
+            groups: {
+              a: 1,
+              b: 2,
+              wwec: 1,
+              wwwd: 1,
+              e: 1,
+              f: 1,
+              ge: 1,
+              hq: 8,
+              i: 9,
+              j: 10,
+              k: 11,
+              lq: 12,
+              qqm: 13,
+              n: 14,
+              o: 25,
+              p: 2,
+              q: 17,
+              r: 18,
+              wws: 1,
+              t: 20,
+              u: 21,
+              v: 22,
+              wwq: 23,
+              xww: 24,
+              y: 25,
+              z: 26
+            }
+          })))), /*#__PURE__*/React.createElement("div", {
             className: "main-panel videos"
           }, this.renderVideos()))), /*#__PURE__*/React.createElement("footer", {
             className: "horizontal"
@@ -290,17 +350,22 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           }));
         }
 
+        componentDidMount() {
+          this.callbackIndex = KEYBOARD_MANAGER.register(this.checkShortcut);
+        }
+
         scrollTop() {
           const videos = document.querySelector('#videos .videos');
           videos.scrollTop = 0;
         }
 
         updatePage(state, top = true) {
+          // todo what if page size is out or page range ?
           const pageSize = state.pageSize !== undefined ? state.pageSize : this.state.pageSize;
           const pageNumber = state.pageNumber !== undefined ? state.pageNumber : this.state.pageNumber;
           python_call('get_info_and_videos', pageSize, pageNumber, FIELDS).then(info => {
             state.pageSize = pageSize;
-            state.pageNumber = pageNumber;
+            state.pageNumber = info.pageNumber;
             state.info = info;
             if (top) this.setState(state, this.scrollTop);else this.setState(state);
           }).catch(backend_error);
@@ -320,10 +385,6 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
 
         resetStatus() {
           this.updateStatus("Ready.");
-        }
-
-        componentDidMount() {
-          this.callbackIndex = KEYBOARD_MANAGER.register(this.checkShortcut);
         }
 
         componentWillUnmount() {
@@ -364,14 +425,13 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
             field: null,
             reverse: null
           };
-          this.props.app.loadDialog('Group videos with same:', onClose => /*#__PURE__*/React.createElement(FormGroup, {
-            field: group_def.field,
-            reverse: group_def.reverse,
+          this.props.app.loadDialog('Group videos:', onClose => /*#__PURE__*/React.createElement(FormGroup, {
+            definition: group_def,
             onClose: criterion => {
               onClose();
 
               if (criterion) {
-                python_call('group_videos', criterion.field, criterion.reverse).then(() => this.updatePage({
+                python_call('group_videos', criterion.field, criterion.sorting, criterion.reverse, criterion.allowSingletons, criterion.allowMultiple).then(() => this.updatePage({
                   pageNumber: 0
                 })).catch(backend_error);
               }
@@ -473,6 +533,18 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
         changePage(pageNumber) {
           this.updatePage({
             pageNumber
+          });
+        }
+
+        stackGroup() {
+          this.setState({
+            stackGroup: !this.state.stackGroup
+          });
+        }
+
+        stackFilter() {
+          this.setState({
+            stackFilter: !this.state.stackFilter
           });
         }
 

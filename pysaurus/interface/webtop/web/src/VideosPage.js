@@ -7,6 +7,7 @@ import {FormSourceVideo} from "./FormSourceVideo.js";
 import {FormGroup} from "./FormGroup.js";
 import {FormSearch} from "./FormSearch.js";
 import {FormSort} from "./FormSort.js";
+import {GroupView} from "./GroupView.js";
 
 const SHORTCUTS = {
     select: "Ctrl+T",
@@ -151,6 +152,8 @@ export class VideosPage extends React.Component {
             status: 'Loaded.',
             confirmDeletion: true,
             info: args.info,
+            stackFilter: false,
+            stackGroup: false,
         };
         this.callbackIndex = -1;
         this.checkShortcut = this.checkShortcut.bind(this);
@@ -171,6 +174,8 @@ export class VideosPage extends React.Component {
         this.updateStatus = this.updateStatus.bind(this);
         this.resetStatus = this.resetStatus.bind(this);
         this.scrollTop = this.scrollTop.bind(this);
+        this.stackGroup = this.stackGroup.bind(this);
+        this.stackFilter = this.stackFilter.bind(this);
         this.shortcuts = {
             [SHORTCUTS.select]: this.selectVideos,
             [SHORTCUTS.group]: this.groupVideos,
@@ -235,7 +240,34 @@ export class VideosPage extends React.Component {
                 <div className="content">
                     <div className="wrapper">
                         <div className="side-panel">
-                            <Filter page={this} />
+                            <div className="stack filter">
+                                <div className="stack-title" onClick={this.stackFilter}>
+                                    <div className="title">Filter</div>
+                                    <div className="icon">{this.state.stackFilter ? Utils.CHARACTER_ARROW_DOWN : Utils.CHARACTER_ARROW_UP}</div>
+                                </div>
+                                {this.state.stackFilter ? '' : (
+                                    <div className="stack-content">
+                                        <Filter page={this} />
+                                    </div>
+                                )}
+                            </div>
+                            <div className="stack group">
+                                <div className="stack-title" onClick={this.stackGroup}>
+                                    <div className="title">Groups</div>
+                                    <div className="icon">{this.state.stackGroup ? Utils.CHARACTER_ARROW_DOWN : Utils.CHARACTER_ARROW_UP}</div>
+                                </div>
+                                {this.state.stackGroup ? '' : (
+                                    <div className="stack-content">
+                                        <GroupView all={100003} title={"za field"} isString={true} groups={{
+                                            a: 1, b: 2, wwec: 1, wwwd: 1, e: 1,
+                                            f: 1, ge: 1, hq: 8, i: 9, j: 10,
+                                            k: 11, lq: 12, qqm: 13, n: 14, o: 25,
+                                            p: 2, q: 17, r: 18, wws: 1, t: 20,
+                                            u: 21, v: 22, wwq: 23, xww: 24, y: 25, z: 26,
+                                        }} />
+                                    </div>
+                                )}
+                            </div>
                         </div>
                         <div className="main-panel videos">{this.renderVideos()}</div>
                     </div>
@@ -260,17 +292,22 @@ export class VideosPage extends React.Component {
                    confirmDeletion={this.state.confirmDeletion}/>
         ));
     }
+    componentDidMount() {
+        this.callbackIndex = KEYBOARD_MANAGER.register(this.checkShortcut);
+    }
+
     scrollTop() {
         const videos = document.querySelector('#videos .videos');
         videos.scrollTop = 0;
     }
     updatePage(state, top = true) {
+        // todo what if page size is out or page range ?
         const pageSize = state.pageSize !== undefined ? state.pageSize: this.state.pageSize;
         const pageNumber = state.pageNumber !== undefined ? state.pageNumber: this.state.pageNumber;
         python_call('get_info_and_videos', pageSize, pageNumber, FIELDS)
             .then(info => {
                 state.pageSize = pageSize;
-                state.pageNumber = pageNumber;
+                state.pageNumber = info.pageNumber;
                 state.info = info;
                 if (top)
                     this.setState(state, this.scrollTop);
@@ -288,9 +325,6 @@ export class VideosPage extends React.Component {
     }
     resetStatus() {
         this.updateStatus("Ready.");
-    }
-    componentDidMount() {
-        this.callbackIndex = KEYBOARD_MANAGER.register(this.checkShortcut);
     }
     componentWillUnmount() {
         KEYBOARD_MANAGER.unregister(this.callbackIndex);
@@ -321,15 +355,15 @@ export class VideosPage extends React.Component {
     }
     groupVideos() {
         const group_def = this.state.info.groupDef || {field: null, reverse: null};
-        this.props.app.loadDialog('Group videos with same:', onClose => (
-            <FormGroup field={group_def.field} reverse={group_def.reverse} onClose={criterion => {
+        this.props.app.loadDialog('Group videos:', onClose => (
+            <FormGroup definition={group_def} onClose={criterion => {
                 onClose();
                 if (criterion) {
-                    python_call('group_videos', criterion.field, criterion.reverse)
+                    python_call('group_videos', criterion.field, criterion.sorting, criterion.reverse, criterion.allowSingletons, criterion.allowMultiple)
                         .then(() => this.updatePage({pageNumber: 0}))
                         .catch(backend_error);
                 }
-            }} />
+            }}/>
         ));
     }
     searchVideos() {
@@ -400,5 +434,11 @@ export class VideosPage extends React.Component {
     }
     changePage(pageNumber) {
         this.updatePage({pageNumber});
+    }
+    stackGroup() {
+        this.setState({stackGroup: !this.state.stackGroup});
+    }
+    stackFilter() {
+        this.setState({stackFilter: !this.state.stackFilter});
     }
 }

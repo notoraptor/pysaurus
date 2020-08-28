@@ -1,27 +1,18 @@
 """
-select videos
-    [] unreadable
-        [] not found (x)
-        [] found.
-    [] readable
-        [] not found (x)
-        [] found
-            [] with thumbnails.
-            [] without thumbnails.
-from videos select group
-    | all
-    | grouped by $field ?reverse # len(group) > 1
-from group look for videos
-    | all
-    | search $text $condition
-sort by $field ?reverse
+Select sources
+Select group
+Search
+Sort
 """
-import random
 import functools
-from typing import Optional, Sequence
+import random
+from abc import abstractmethod
+from copy import copy
+from typing import Optional, Sequence, Dict, Generic, List, Callable, Any, TypeVar, Type, Union
 
 from pysaurus.core import functions
-from pysaurus.core.components import FileSize, Duration
+from pysaurus.core.classes import ToDict
+from pysaurus.core.components import FileSize, Duration, AbsolutePath
 from pysaurus.core.database.database import Database
 from pysaurus.core.database.video import Video
 
@@ -50,40 +41,117 @@ SOURCE_TREE = {
 }
 
 
-class GroupDef:
+class NegativeComparator:
+    __slots__ = 'value',
 
-    def __init__(self, field: Optional[str], reverse: Optional[bool]):
-        self.field = field
-        self.reverse = reverse
+    def __init__(self, value):
+        self.value = value
+
+    def __lt__(self, other):
+        return other.value < self.value
+
+
+def make_comparable_number(value: Union[int, float], reverse: bool):
+    return -value if reverse else value
+
+
+def generate_comparator(field, reverse, remaining_tuple=()):
+    if field in Video.STRING_FIELDS:
+        if reverse:
+            return lambda value: (NegativeComparator(value.lower()), NegativeComparator(value)) + remaining_tuple
+        else:
+            return lambda value: (value.lower(), NegativeComparator(value)) + remaining_tuple
+    elif reverse:
+        return lambda value: (NegativeComparator(value),) + remaining_tuple
+    else:
+        return lambda value: (value,) + remaining_tuple
+
+
+class GroupDef(ToDict):
+    __slots__ = 'field', 'sorting', 'reverse', 'allow_singletons', 'allow_multiple'
+    __none__ = True
+
+    FIELD = "field"
+    LENGTH = "length"
+    COUNT = "count"
+
+    def __init__(self,
+                 field: Optional[str],
+                 sorting: Optional[str] = 'field',
+                 reverse: Optional[bool] = False,
+                 allow_singletons: Optional[bool] = False,
+                 allow_multiple: Optional[bool] = True):
+        self.field = field.strip() if field else None
+        self.sorting = sorting.strip() if sorting else None
+        self.reverse = bool(reverse)
+        self.allow_singletons = bool(allow_singletons)
+        self.allow_multiple = bool(allow_multiple)
+        assert self.sorting in (self.FIELD, self.LENGTH, self.COUNT)
 
     def __bool__(self):
         return bool(self.field)
 
+    def __eq__(self, other):
+        return (self.field == other.field
+                and self.sorting == other.sorting
+                and self.reverse == other.reverse
+                and self.allow_singletons == other.allow_singletons
+                and self.allow_multiple == other.allow_multiple)
+
+    def copy(self, field=None, sorting=None, reverse=None, allow_singletons=None, allow_multiple=None):
+        field = field if field is not None else self.field
+        sorting = sorting if sorting is not None else self.sorting
+        reverse = reverse if reverse is not None else self.reverse
+        allow_singletons = allow_singletons if allow_singletons is not None else self.allow_singletons
+        allow_multiple = allow_multiple if allow_multiple is not None else self.allow_multiple
+        return GroupDef(field, sorting, reverse, allow_singletons, allow_multiple)
+
+    def sort(self, groups):
+        # type: (List[Group]) -> None
+        field_comparator = generate_comparator(self.field, self.reverse)
+        if self.sorting == self.FIELD:
+            key = lambda group: field_comparator(group.field_value)
+        elif self.sorting == self.COUNT:
+            key = lambda group: (
+                make_comparable_number(len(group.videos), self.reverse),
+            ) + field_comparator(group.field_value)
+        else:
+            assert self.sorting == self.LENGTH
+            key = lambda group: (
+                make_comparable_number(len(str(group.field_value)), self.reverse),
+            ) + field_comparator(group.field_value)
+        groups.sort(key=key)
+
     @classmethod
     def none(cls):
-        return cls(None, None)
+        return cls(None)
 
 
-class SearchDef:
+class SearchDef(ToDict):
+    __slots__ = 'text', 'cond'
+    __none__ = True
 
     def __init__(self, text: Optional[str], cond: Optional[str]):
         self.text = text.strip() if text else None
         self.cond = cond.strip() if cond else None
-        if not self.cond or self.cond not in VIDEO_FILTERS:
+        if not self.cond or not hasattr(Video, 'has_terms_%s' % self.cond):
             self.cond = 'and'
 
     def __bool__(self):
         return bool(self.text)
 
+    def __eq__(self, other):
+        return self.text == other.text and self.cond == other.cond
+
     @classmethod
     def none(cls):
         return cls(None, None)
 
 
-DEFAULT_SOURCE_DEF = (('readable',),)
+DEFAULT_SOURCE_DEF = [('readable',)]
 DEFAULT_GROUP_DEF = GroupDef.none()  # str field, bool reverse
 DEFAULT_SEARCH_DEF = SearchDef.none()  # str text, str cond
-DEFAULT_SORT_DEF = ('-date',)
+DEFAULT_SORT_DEF = ['-date']
 
 
 def _collect_full_paths(tree: dict, collection: list, prefix=()):
@@ -116,88 +184,427 @@ def _get_source_from_dict(inp, seq, index=0):
         return inp
 
 
-def filter_exact(video, terms):
-    return ' '.join(terms) in ' '.join(video.terms())
+def deep_equals(value, other):
+    value_type = type(value)
+    assert value_type is type(other), (value_type, type(other))
+    if value_type in (bool, int, float, str):
+        return value == other
+    if value_type in (list, tuple, set):
+        if len(value) != len(other):
+            return False
+        if value_type is set:
+            value = sorted(value)
+            other = sorted(other)
+        return all(deep_equals(value[i], other[i]) for i in range(len(value)))
+    if value_type is dict:
+        if len(value) != len(other):
+            return False
+        return all(key in other and deep_equals(value[key], other[key]) for key in value)
+    return value == other
 
 
-def filter_and(video, terms):
-    video_terms = video.terms(as_set=True)
-    return all(term in video_terms for term in terms)
+T = TypeVar('T')
 
 
-def filter_or(video, terms):
-    video_terms = video.terms(as_set=True)
-    return any(term in video_terms for term in terms)
+class Group:
+    __slots__ = 'field_value', 'videos'
+
+    def __init__(self, field_value, videos):
+        self.field_value = field_value
+        self.videos = VideoArray(videos)
+
+    def __str__(self):
+        return 'Group(%s, %s)' % (self.field_value, len(self.videos))
 
 
-VIDEO_FILTERS = {'exact': filter_exact, 'and': filter_and, 'or': filter_or}
+class LookupArray(Generic[T]):
+    __slots__ = '__type', '__content', '__table', '__key_fn'
+
+    def __init__(self, element_type, content: Sequence = (), key: callable = None):
+        self.__type = element_type  # type: Type
+        self.__content = []  # type: List[T]
+        self.__table = {}  # type: Dict[Any, int]
+        self.__key_fn = key if callable(key) else lambda value: value  # type: Callable[[T], Any]
+        for element in content:
+            self.append(element)
+
+    def __str__(self):
+        return '%s<%s>%s' % (type(self).__name__, self.__type.__name__, self.__content)
+
+    def __len__(self):
+        return len(self.__content)
+
+    def __getitem__(self, item):
+        return copy(self.__content[item])
+
+    def __iter__(self):
+        return self.__content.__iter__()
+
+    def __reversed__(self):
+        return self.__content.__reversed__()
+
+    def __contains__(self, value: T):
+        return isinstance(value, self.__type) and self.__key_fn(value) in self.__table
+
+    def extend(self, iterable):
+        for element in iterable:
+            self.append(element)
+
+    def append(self, value: T):
+        assert isinstance(value, self.__type)
+        self.__content.append(value)
+        self.__table[self.__key_fn(value)] = len(self.__content) - 1
+
+    def pop(self, index: int):
+        if index < 0:
+            index = len(self.__content) + index
+        value = self.__content.pop(index)
+        assert index == self.__table.pop(self.__key_fn(value))
+        for i in range(index, len(self.__content)):
+            self.__table[self.__key_fn(self.__content[i])] = i
+        return value
+
+    def remove(self, value: T):
+        assert isinstance(value, self.__type)
+        self.pop(self.__table[self.__key_fn(value)])
+
+    def lookup(self, key):
+        value = self.__content[self.__table[key]]
+        assert key == self.__key_fn(value)
+        return value
+
+    def contains_key(self, key):
+        return key in self.__table
+
+    def keys(self):
+        return self.__table.keys()
+
+    def new(self, content=()):
+        return LookupArray(self.__type, content, self.__key_fn)
+
+
+class VideoArray(LookupArray[Video]):
+    __slots__ = ()
+
+    def __init__(self, content=()):
+        super().__init__(Video, content, lambda video: video.filename)
+
+
+class GroupArray(LookupArray[Group]):
+    __slots__ = ()
+
+    def __init__(self, content=()):
+        super().__init__(Group, content, lambda group: group.field_value)
+
+
+class Layer:
+    __slots__ = ('__sub_layer', '__args', '__to_update', '__filtered', '__data')
+    __props__ = ()
+
+    def __init__(self):
+        self.__args = {}
+        self.__sub_layer = None  # type: Optional[Layer]
+        self.__to_update = False
+        self.__filtered = None
+        self.__data = None
+        self.reset_parameters()
+
+    def __log(self, *args, **kwargs):
+        prefix = '%s/' % type(self).__name__
+        print(prefix, *args, **kwargs)
+
+    def set_sub_layer(self, sub_filter):
+        self.__sub_layer = sub_filter
+        self.__log('sub-filter', None if self.__sub_layer is None else 'set')
+
+    def _set_parameters(self, **kwargs):
+        for key in kwargs:
+            assert key in self.__props__, (key, self.__props__)
+            if key not in self.__args or not deep_equals(kwargs[key], self.__args[key]):
+                self.__to_update = True
+                self.__args[key] = kwargs[key]
+                self.__log('set parameter', key, kwargs[key])
+
+    @property
+    def _cache(self):
+        return self.__filtered
+
+    def set_data(self, data):
+        self.__to_update = True
+        self.__data = data
+        self.__log('data', None if self.__data is None else 'set %s' % type(data).__name__)
+
+    def request_update(self):
+        self.__to_update = True
+        self.__log('update forced')
+
+    def requires_update(self):
+        return self.__to_update
+
+    def get_parameter(self, key):
+        return self.__args[key]
+
+    def run(self):
+        if not self.__data:
+            self.__log('run no data')
+            return ()
+        if self.__to_update:
+            self.__filtered = self.filter(self.__data)
+            self.__to_update = False
+            self.__log('run')
+            if self.__sub_layer:
+                self.__sub_layer.set_data(self.__filtered)
+                return self.__sub_layer.run()
+            else:
+                return self.__filtered
+        elif self.__sub_layer:
+            if self.__sub_layer.requires_update():
+                self.__sub_layer.set_data(self.__filtered)
+            return self.__sub_layer.run()
+        else:
+            return self.__filtered
+
+    def delete_video(self, video):
+        self.remove_from_cache(self.__filtered, video)
+        self.__log('delete', video.filename)
+        if self.__sub_layer:
+            self.__sub_layer.delete_video(video)
+
+    @abstractmethod
+    def reset_parameters(self):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def filter(self, data):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def remove_from_cache(self, cache, video: Video):
+        raise NotImplementedError
+
+
+class SourceLayer(Layer):
+    __slots__ = ()
+    __props__ = ('sources',)
+
+    def set_sources(self, paths: Sequence[Sequence[str]]):
+        valid_paths = set()
+        for path in paths:
+            path = tuple(path)
+            if path not in valid_paths:
+                _check_source_path(SOURCE_TREE, path)
+                valid_paths.add(path)
+        if valid_paths:
+            self._set_parameters(sources=sorted(valid_paths))
+
+    def get_sources(self):
+        return self.get_parameter('sources')
+
+    def reset_parameters(self):
+        self.set_sources(DEFAULT_SOURCE_DEF)
+
+    def filter(self, database: Database) -> Dict[AbsolutePath, Video]:
+        source = []
+        for path in self.get_sources():
+            source.extend(_get_source(database, path, 0))
+        source_dict = {video.filename: video for video in source}
+        assert len(source_dict) == len(source), (len(source_dict), len(source))
+        return source_dict
+
+    def remove_from_cache(self, cache: Dict[AbsolutePath, Video], video: Video):
+        cache.pop(video.filename, None)
+
+
+class GroupingLayer(Layer):
+    __slots__ = ()
+    __props__ = ('grouping', 'allow_singletons', 'allow_multiple')
+    _cache: GroupArray
+
+    def set_grouping(self, *,
+                     field: Optional[str] = None,
+                     sorting: Optional[str] = None,
+                     reverse: Optional[bool] = None,
+                     allow_singletons: Optional[bool] = None,
+                     allow_multiple: Optional[bool] = None):
+        self._set_parameters(grouping=self.get_grouping().copy(
+            field, sorting, reverse, allow_singletons, allow_multiple))
+
+    def get_grouping(self) -> GroupDef:
+        return self.get_parameter('grouping')
+
+    def reset_parameters(self):
+        self._set_parameters(grouping=DEFAULT_GROUP_DEF, allow_singletons=False, allow_multiple=True)
+
+    def filter(self, data: Dict[AbsolutePath, Video]) -> GroupArray:
+        group_def = self.get_grouping()  # type: GroupDef
+        groups = []
+        if not group_def:
+            groups.append(Group(None, list(data.values())))
+        elif group_def.allow_singletons or group_def.allow_multiple:
+            grouped_videos = {}
+            for video in data.values():
+                grouped_videos.setdefault(getattr(video, group_def.field), []).append(video)
+            for field_value, videos in grouped_videos.items():
+                if ((group_def.allow_singletons and len(videos) == 1)
+                        or (group_def.allow_multiple and len(videos) > 1)):
+                    groups.append(Group(field_value, videos))
+            group_def.sort(groups)
+        return GroupArray(groups)
+
+    def remove_from_cache(self, cache: GroupArray, video: Video):
+        group = None
+        if len(cache) == 1 and cache[0].field_value is None:
+            group = cache[0]
+        else:
+            field_value = getattr(video, self.get_grouping().field)
+            if cache.contains_key(field_value):
+                group = cache.lookup(field_value)
+        if group and video in group.videos:
+            group.videos.remove(video)
+            if not group.videos or (not self.get_grouping().allow_singletons and len(group.videos) == 1):
+                cache.remove(group)
+
+    def count_groups(self):
+        return len(self._cache)
+
+    def get_stats(self):
+        return [{'value': str(g.field_value), 'count': len(g.videos)} for g in self._cache]
+
+
+class GroupLayer(Layer):
+    __slots__ = ()
+    __props__ = ('group_id',)
+
+    _cache: Group
+
+    def set_group_id(self, group_id: int):
+        if group_id < 0:
+            group_id = 0
+        self._set_parameters(group_id=group_id)
+
+    def get_group_id(self) -> int:
+        return self.get_parameter('group_id')
+
+    def _clip_group_id(self, nb_groups):
+        group_id = self.get_group_id()
+        if group_id >= nb_groups:
+            group_id = nb_groups - 1
+            self.set_group_id(group_id)
+        return self.get_group_id()
+
+    def reset_parameters(self):
+        self.set_group_id(0)
+
+    def filter(self, data: Sequence[Group]) -> Group:
+        return data[self._clip_group_id(len(data))]
+
+    def remove_from_cache(self, cache: Group, video: Video):
+        if video in cache.videos:
+            cache.videos.remove(video)
+        if not cache.videos:
+            self.request_update()
+
+    def get_field_value(self):
+        return self._cache.field_value
+
+
+class SearchLayer(Layer):
+    __slots__ = ()
+    __props__ = ('search',)
+
+    def set_search(self, text: Optional[str], cond: Optional[str]):
+        self._set_parameters(search=SearchDef(text, cond))
+
+    def get_search(self) -> SearchDef:
+        return self.get_parameter('search')
+
+    def reset_parameters(self):
+        self._set_parameters(search=DEFAULT_SEARCH_DEF)
+
+    def filter(self, data: Group) -> VideoArray:
+        search_def = self.get_search()
+        if search_def:
+            terms = functions.string_to_pieces(search_def.text)
+            video_filter = getattr(Video, 'has_terms_%s' % search_def.cond)
+            view = data.videos.new(video for video in data.videos if video_filter(video, terms))
+        else:
+            view = data.videos
+        return view
+
+    def remove_from_cache(self, cache: VideoArray, video: Video):
+        if video in cache:
+            cache.remove(video)
+
+
+class SortLayer(Layer):
+    __slots__ = ()
+    __props__ = ('sorting',)
+
+    def set_sorting(self, sorting: Sequence[str]):
+        self._set_parameters(sorting=list(sorting) if sorting else DEFAULT_SORT_DEF)
+
+    def get_sorting(self):
+        return self.get_parameter('sorting')
+
+    def reset_parameters(self):
+        self.set_sorting(DEFAULT_SORT_DEF)
+
+    def filter(self, data: Sequence[Video]) -> VideoArray:
+        return VideoArray(sorted(data, key=functools.cmp_to_key(
+            lambda v1, v2: Video.compare(v1, v2, self.get_sorting()))))
+
+    def remove_from_cache(self, cache: VideoArray, video: Video):
+        if video in cache:
+            cache.remove(video)
 
 
 class VideoProvider:
-    __slots__ = ('database',
-                 'source_def', 'group_def', 'search_def', 'sort_def',
-                 'source', 'groups', 'group_id', 'view')
+    __slots__ = ('database', 'source_layer', 'grouping_layer', 'group_layer', 'search_layer', 'sort_layer', 'view')
 
     def __init__(self, database: Database):
         self.database = database
-
-        self.source_def = DEFAULT_SOURCE_DEF
-        self.group_def = DEFAULT_GROUP_DEF
-        self.search_def = DEFAULT_SEARCH_DEF
-        self.sort_def = DEFAULT_SORT_DEF
-
-        self.source = {}
-        self.groups = []
-        self.group_id = 0
         self.view = []
 
-        self.set_source(self.source_def)
+        self.source_layer = SourceLayer()
+        self.grouping_layer = GroupingLayer()
+        self.group_layer = GroupLayer()
+        self.search_layer = SearchLayer()
+        self.sort_layer = SortLayer()
+
+        self.source_layer.set_sub_layer(self.grouping_layer)
+        self.grouping_layer.set_sub_layer(self.group_layer)
+        self.group_layer.set_sub_layer(self.search_layer)
+        self.search_layer.set_sub_layer(self.sort_layer)
+
+        self.source_layer.set_data(self.database)
+        self.view = self.source_layer.run()
+        assert isinstance(self.view, VideoArray)
 
     def set_source(self, paths: Sequence[Sequence[str]]):
-        valid_paths = set()
-        for path in paths:
-            _check_source_path(SOURCE_TREE, path)
-            valid_paths.add(tuple(path))
-        if valid_paths:
-            self.source_def = sorted(valid_paths)
-        else:
-            self.source_def = DEFAULT_SOURCE_DEF
-        self.__update_source()
-        self.set_groups(DEFAULT_GROUP_DEF.field, DEFAULT_GROUP_DEF.reverse)
+        self.source_layer.set_sources(paths)
+        self.view = self.source_layer.run()
 
-    def set_groups(self, field: Optional[str], reverse: Optional[bool]):
-        group_def = GroupDef(field, reverse)
-        if group_def:
-            grouped_videos = {}
-            for video in self.source.values():
-                grouped_videos.setdefault(getattr(video, group_def.field), []).append(video)
-            groups = {value: videos for value, videos in grouped_videos.items() if len(videos) > 1}
-            self.groups = [groups[value] for value in sorted(groups.keys(), reverse=group_def.reverse)]
-        else:
-            # No group.
-            self.groups = [list(self.source.values())]
-        self.group_def = group_def
-        self.group_id = 0
-        if self.groups:
-            self.set_search(DEFAULT_SEARCH_DEF.text, DEFAULT_SEARCH_DEF.cond)
-        else:
-            self.search_def = DEFAULT_SEARCH_DEF
-            self.view = []
+    def set_groups(self,
+                   field: Optional[str],
+                   sorting: Optional[str] = None,
+                   reverse: Optional[bool] = None,
+                   allow_singletons: Optional[bool] = None,
+                   allow_multiple: Optional[bool] = None):
+        self.grouping_layer.set_grouping(field=field,
+                                         sorting=sorting,
+                                         reverse=reverse,
+                                         allow_singletons=allow_singletons,
+                                         allow_multiple=allow_multiple)
+        self.group_layer.set_group_id(0)
+        self.view = self.source_layer.run()
 
     def set_search(self, text: Optional[str], cond: Optional[str]):
-        search_def = SearchDef(text, cond)
-        if search_def:
-            terms = functions.string_to_pieces(search_def.text)
-            video_filter = VIDEO_FILTERS[search_def.cond]
-            self.view = [video for video in self.groups[self.group_id] if video_filter(video, terms)]
-        else:
-            self.view = self.groups[self.group_id]
-        self.search_def = search_def
-        self.__sort()
+        self.search_layer.set_search(text, cond)
+        self.view = self.source_layer.run()
 
     def set_sort(self, sorting: Sequence[str]):
-        self.sort_def = sorting or DEFAULT_SORT_DEF
-        self.__sort()
+        self.sort_layer.set_sorting(sorting)
+        self.view = self.source_layer.run()
 
     def get_view_file_size(self):
         return FileSize(sum(video.file_size for video in self.view))
@@ -206,79 +613,71 @@ class VideoProvider:
         return Duration(sum(video.raw_microseconds for video in self.view))
 
     def delete_video(self, index):
-        video = self.view[index]
-        filename = video.filename
         try:
+            video = self.view[index]
             self.database.delete_video(video)
-            del self.source[filename]
-            del self.view[index]
-            if not self.group_def:
-                self.groups = [list(self.source.values())]
-                self.set_search(self.search_def.text, self.search_def.cond)
-            elif len(self.view) < 2:
-                self.__delete_current_group()
+            self.source_layer.delete_video(video)
+            self.view = self.source_layer.run()
             return True
         except OSError:
             return False
 
-    def check_group(self):
-        if not self.view or not self.group_def:
-            return
-        field_value = {getattr(video, self.group_def.field) for video in self.view}
-        if len(field_value) != 1:
-            # Group is not relevant anymore.
-            self.__delete_current_group()
-
     def set_group(self, group_id):
-        self.group_id = group_id
-        self.set_search(DEFAULT_SEARCH_DEF.text, DEFAULT_SEARCH_DEF.cond)
+        self.group_layer.set_group_id(group_id)
+        self.view = self.source_layer.run()
 
     def get_group_field_value(self):
-        return getattr(self.groups[self.group_id][0], self.group_def.field)
+        return self.group_layer.get_field_value()
 
     def get_sources(self):
-        return self.source_def
+        return self.source_layer.get_sources()
 
     def get_group_def(self):
-        if self.group_def:
-            return {'field': self.group_def.field,
-                    'reverse': self.group_def.reverse,
-                    'group_id': self.group_id,
-                    'nb_groups': len(self.groups)}
+        group_def = self.grouping_layer.get_grouping()
+        if group_def:
+            return {'field': group_def.field,
+                    'sorting': group_def.sorting,
+                    'reverse': group_def.reverse,
+                    'allowSingletons': group_def.allow_singletons,
+                    'allowMultiple': group_def.allow_multiple,
+                    'group_id': self.group_layer.get_group_id(),
+                    'nb_groups': self.grouping_layer.count_groups(),
+                    'groups': self.grouping_layer.get_stats()}
         return None
 
     def get_search_def(self):
-        if self.search_def:
-            return {'text': self.search_def.text, 'cond': self.search_def.cond}
+        search_def = self.search_layer.get_search()
+        if search_def:
+            return {'text': search_def.text, 'cond': search_def.cond}
         return None
 
     def get_sorting(self):
-        return self.sort_def
+        return self.sort_layer.get_sorting()
 
     def count(self):
         return len(self.view)
 
     def count_groups(self):
-        return len(self.groups) if self.group_def else 0
+        return self.grouping_layer.count_groups() if self.grouping_layer.get_grouping() else 0
 
     def get_video(self, index):
         return self.view[index]
 
     def load(self):
-        self.sort_def = DEFAULT_SORT_DEF
-        self.set_source(self.source_def)
+        self.source_layer.request_update()
+        self.view = self.source_layer.run()
 
     def get_group_id(self):
-        return self.group_id
+        return self.group_layer.get_group_id()
 
     def all_not_found(self):
-        return all(NOT_FOUND in source for source in self.source_def)
+        return all(NOT_FOUND in source for source in self.source_layer.get_sources())
 
     def get_random_found_video(self):
         # type: () -> Video
         # Get all full paths from source definition
         all_paths = []
-        for path in self.source_def:
+        for path in self.source_layer.get_sources():
             desc = _get_source_from_dict(SOURCE_TREE, path)
             if isinstance(desc, dict):
                 _collect_full_paths(desc, all_paths, path)
@@ -298,21 +697,72 @@ class VideoProvider:
                 return videos[video_index]
         raise RuntimeError("No videos available.")
 
-    def __delete_current_group(self):
-        del self.groups[self.group_id]
-        if not self.groups:
-            return
-        if self.group_id == len(self.groups):
-            self.group_id -= 1
-        self.set_search(DEFAULT_SEARCH_DEF.text, DEFAULT_SEARCH_DEF.cond)
 
-    def __update_source(self):
-        source = []
-        for path in self.source_def:
-            source.extend(_get_source(self.database, path, 0))
-        source_dict = {video.filename: video for video in source}
-        assert len(source_dict) == len(source), (len(source_dict), len(source))
-        self.source = source_dict
+def main():
 
-    def __sort(self):
-        self.view.sort(key=functools.cmp_to_key(lambda v1, v2: Video.compare(v1, v2, self.sort_def)))
+    from pysaurus.core.database.api import API
+    from pysaurus.tests.test_utils import TEST_LIST_FILE_PATH
+    api = API(TEST_LIST_FILE_PATH, update=False, ensure_miniatures=False, reset=False)
+
+    root_layer = SourceLayer()
+    grouping_layer = GroupingLayer()
+    group_layer = GroupLayer()
+    search_layer = SearchLayer()
+    sort_layer = SortLayer()
+
+    root_layer.set_sub_layer(grouping_layer)
+    grouping_layer.set_sub_layer(group_layer)
+    group_layer.set_sub_layer(search_layer)
+    search_layer.set_sub_layer(sort_layer)
+
+    root_layer.set_data(api.database)
+    output = root_layer.run()
+    assert isinstance(output, VideoArray)
+    print(len(output))
+
+    output_1 = root_layer.run()
+    assert isinstance(output_1, VideoArray)
+    print(len(output_1))
+
+    grouping_layer.set_grouping(field='size', allow_singletons=False, allow_multiple=False)
+    output_2 = root_layer.run()
+    assert output_2 is None
+    print('~~')
+    grouping_layer.set_grouping(field='size', allow_singletons=False, allow_multiple=False)
+    output_2 = root_layer.run()
+    assert output_2 is None
+
+    grouping_layer.reset_parameters()
+    o = root_layer.run()
+    assert isinstance(o, VideoArray)
+    print(len(o))
+
+
+def main2():
+    array = LookupArray(int, key=lambda value: float(value) + 0.5)
+    array.extend((5, 6, 7, 2, 1, 8, 3, 4, 10))
+    assert len(array) == 9, len(array)
+    array.append(9)
+    assert len(array) == 10, len(array)
+    assert array[0] == 5, array
+    assert array[-1] == 9, array
+    assert array[3:5] == [2, 1], array[3:5]
+    assert tuple(array) == (5, 6, 7, 2, 1, 8, 3, 4, 10, 9)
+    assert tuple(reversed(array)) == (9, 10, 4, 3, 8, 1, 2, 7, 6, 5)
+    assert 7 in array
+    assert 11 not in array
+    array.pop(4)
+    assert len(array) == 9, len(array)
+    assert array[4] == 8, array
+    array.pop(-1)
+    assert len(array) == 8, len(array)
+    assert array[-1] == 10, array
+    assert array[6] == 4, array
+    array.remove(4)
+    assert len(array) == 7, len(array)
+    assert array[6] == 10, array
+    assert array.lookup(7.5) == 7, array.keys()
+
+
+if __name__ == '__main__':
+    main()

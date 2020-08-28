@@ -42,7 +42,9 @@ System.register([], function (_export, _context) {
           }, "<"), ' ', /*#__PURE__*/React.createElement("span", null, Utils.sentence(singular), ' ', /*#__PURE__*/React.createElement("input", {
             type: "number",
             className: "current",
-            size: nbCharacters,
+            style: {
+              width: `${nbCharacters}em`
+            },
             min: 1,
             max: nbPages,
             step: 1,

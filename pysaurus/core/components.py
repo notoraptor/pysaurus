@@ -219,6 +219,10 @@ class DateModified:
     def to_json(self):
         return str(self)
 
+    @property
+    def day(self):
+        return datetime.fromtimestamp(self.time).strftime('%Y-%m-%d')
+
     @staticmethod
     def now():
         return DateModified(datetime.now().timestamp())

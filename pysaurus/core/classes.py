@@ -68,6 +68,7 @@ class Table:
 
 class ToDict:
     __slots__ = ()
+    __none__ = False
 
     def get_name(self):
         return type(self).__name__
@@ -88,7 +89,7 @@ class ToDict:
         values = []
         for name in self.get_slots():
             value = getattr(self, name)
-            if value is not None:
+            if self.__none__ or value is not None:
                 values.append((name, value))
         return '%s(%s)' % (self.get_name(), ', '.join('%s=%s' % (name, to_printable(value)) for name, value in values))
 

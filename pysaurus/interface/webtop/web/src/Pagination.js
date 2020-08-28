@@ -27,7 +27,7 @@ export class Pagination extends React.Component {
                         {Utils.sentence(singular)}{' '}
                         <input type="number"
                                className="current"
-                               size={nbCharacters}
+                               style={{width: `${nbCharacters}em`}}
                                min={1}
                                max={nbPages}
                                step={1}

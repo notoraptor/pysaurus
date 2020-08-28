@@ -5,7 +5,6 @@ import time
 import traceback
 from typing import Optional
 
-from pysaurus.core.classes import Enumeration
 from pysaurus.core.database.api import API
 from pysaurus.core.database.notifications import DatabaseReady
 from pysaurus.core.database.properties import PropType
@@ -72,6 +71,11 @@ class GuiAPI:
         videos = []
         nb_videos = self._count_videos()
         if nb_videos:
+            nb_pages = self._count_pages(page_size)
+            if page_number < 0:
+                page_number = 0
+            if page_number >= nb_pages:
+                page_number = nb_pages - 1
             start = page_size * page_number
             end = min(start + page_size, nb_videos)
             for index in range(start, end):
@@ -81,7 +85,7 @@ class GuiAPI:
                 js['hasThumbnail'] = video.thumbnail_path.exists()
                 js['local_id'] = index
                 videos.append(js)
-        return videos
+        return {'videos' : videos, 'pageNumber': page_number}
 
     def get_info(self, page_size):
         group_def = self.get_group_def()
@@ -102,7 +106,7 @@ class GuiAPI:
 
     def get_info_and_videos(self, page_size, page_number, fields):
         info = self.get_info(page_size)
-        info['videos'] = self.get_videos(page_size, page_number, fields)
+        info.update(self.get_videos(page_size, page_number, fields))
         info['properties'] = self.get_prop_types()
         return info
 
@@ -136,9 +140,9 @@ class GuiAPI:
     def set_video_properties(self, index, properties):
         return self.api.database.set_video_properties(self.provider.get_video(index), properties)
 
-    def group_videos(self, field, reverse):
-        print('Grouping videos', field, reverse)
-        self.provider.set_groups(field, reverse)
+    def group_videos(self, field, sorting=None, reverse=None, allow_singletons=None, allow_multiple=None):
+        print('Grouping videos', field, sorting, reverse, allow_singletons, allow_multiple)
+        self.provider.set_groups(field, sorting, reverse, allow_singletons, allow_multiple)
 
     def set_group(self, index):
         self.provider.set_group(index)
