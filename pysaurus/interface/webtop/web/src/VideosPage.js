@@ -89,13 +89,6 @@ class Filter extends React.Component {
                                     {FIELD_TITLES[groupDef.field]}{' '}
                                     {groupDef.reverse ? (<span>&#9660;</span>) : (<span>&#9650;</span>)}
                                 </div>
-                                {groupDef.nb_groups ? (
-                                    <div>
-                                        <div>Group {groupDef.group_id + 1} / {groupDef.nb_groups}</div>
-                                        <div><u>{Utils.sentence(FIELD_TITLES[groupDef.field])}</u>:</div>
-                                        <div><strong>{groupFieldValue}</strong></div>
-                                    </div>
-                                ) : ''}
                             </div>
                         ) : <div className="no-filter">Ungrouped</div>}
                     </td>
@@ -176,6 +169,7 @@ export class VideosPage extends React.Component {
         this.scrollTop = this.scrollTop.bind(this);
         this.stackGroup = this.stackGroup.bind(this);
         this.stackFilter = this.stackFilter.bind(this);
+        this.selectGroup = this.selectGroup.bind(this);
         this.shortcuts = {
             [SHORTCUTS.select]: this.selectVideos,
             [SHORTCUTS.group]: this.groupVideos,
@@ -193,6 +187,7 @@ export class VideosPage extends React.Component {
         const validLength = backend.validLength;
         const notFound = backend.notFound;
         const group_def = backend.groupDef;
+        const totalVideos = backend.totalVideos;
 
         return (
             <div id="videos">
@@ -222,13 +217,6 @@ export class VideosPage extends React.Component {
                     </MenuPack>
                     <div className="buttons"/>
                     <div className="pagination">
-                        {group_def ? (
-                            <Pagination singular="group"
-                                        plural="groups"
-                                        nbPages={group_def.nb_groups}
-                                        pageNumber={group_def.group_id}
-                                        onChange={this.changeGroup}/>
-                        ) : ''}
                         <Pagination singular="page"
                                     plural="pages"
                                     nbPages={nbPages}
@@ -251,23 +239,22 @@ export class VideosPage extends React.Component {
                                     </div>
                                 )}
                             </div>
-                            <div className="stack group">
-                                <div className="stack-title" onClick={this.stackGroup}>
-                                    <div className="title">Groups</div>
-                                    <div className="icon">{this.state.stackGroup ? Utils.CHARACTER_ARROW_DOWN : Utils.CHARACTER_ARROW_UP}</div>
-                                </div>
-                                {this.state.stackGroup ? '' : (
-                                    <div className="stack-content">
-                                        <GroupView all={100003} title={"za field"} isString={true} groups={{
-                                            a: 1, b: 2, wwec: 1, wwwd: 1, e: 1,
-                                            f: 1, ge: 1, hq: 8, i: 9, j: 10,
-                                            k: 11, lq: 12, qqm: 13, n: 14, o: 25,
-                                            p: 2, q: 17, r: 18, wws: 1, t: 20,
-                                            u: 21, v: 22, wwq: 23, xww: 24, y: 25, z: 26,
-                                        }} />
+                            {group_def ? (
+                                <div className="stack group">
+                                    <div className="stack-title" onClick={this.stackGroup}>
+                                        <div className="title">Groups</div>
+                                        <div className="icon">
+                                            {this.state.stackGroup ?
+                                                Utils.CHARACTER_ARROW_DOWN : Utils.CHARACTER_ARROW_UP}
+                                        </div>
                                     </div>
-                                )}
-                            </div>
+                                    {this.state.stackGroup ? '' : (
+                                        <div className="stack-content">
+                                            <GroupView definition={group_def} onSelect={this.selectGroup}/>
+                                        </div>
+                                    )}
+                                </div>
+                            ) : ''}
                         </div>
                         <div className="main-panel videos">{this.renderVideos()}</div>
                     </div>
@@ -393,7 +380,7 @@ export class VideosPage extends React.Component {
         ));
     }
     resetGroup() {
-        python_call('group_videos', null, null)
+        python_call('group_videos', '')
             .then(() => this.updatePage({pageNumber: 0}))
             .catch(backend_error);
     }
@@ -431,6 +418,13 @@ export class VideosPage extends React.Component {
         python_call('set_group', groupNumber)
             .then(() => this.updatePage({pageNumber: 0}))
             .catch(backend_error);
+    }
+    selectGroup(value) {
+        console.log(`Selecting ${value.toString()}`);
+        if (value === -1)
+            this.resetGroup();
+        else
+            this.changeGroup(value);
     }
     changePage(pageNumber) {
         this.updatePage({pageNumber});

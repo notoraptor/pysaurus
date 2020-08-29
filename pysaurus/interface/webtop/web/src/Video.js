@@ -22,7 +22,7 @@ export class Video extends React.Component {
     render() {
         const index = this.props.index;
         const data = this.props.data;
-        data.audio_bit_rate = Math.round(data.audio_bit_rate / 1000);
+        const audio_bit_rate = Math.round(data.audio_bit_rate / 1000);
         data.extension = data.extension.toUpperCase();
         data.frame_rate = Math.round(data.frame_rate);
         data.quality = Math.round(data.quality * 100) / 100;
@@ -64,7 +64,7 @@ export class Video extends React.Component {
                         <div className="prepend"><code>Quality</code></div>
                         <div><strong><em>{data.quality}</em></strong> %</div>
                     </div>
-                    <div><strong>{data.width}</strong> x <strong>{data.height}</strong> @ {data.frame_rate} fps | {data.sample_rate} Hz, {data.audio_bit_rate} Kb/s | <strong>{data.length}</strong> | <code>{data.date}</code></div>
+                    <div><strong>{data.width}</strong> x <strong>{data.height}</strong> @ {data.frame_rate} fps | {data.sample_rate} Hz, <span title={data.audio_bit_rate}>{audio_bit_rate} Kb/s</span> | <strong>{data.length}</strong> | <code>{data.date}</code></div>
                     {this.renderProperties()}
                 </div>
             </div>

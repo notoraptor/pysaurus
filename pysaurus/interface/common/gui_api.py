@@ -90,6 +90,7 @@ class GuiAPI:
     def get_info(self, page_size):
         group_def = self.get_group_def()
         return {
+            'totalVideos': self.provider.count_total_videos(),
             'nbVideos': self._count_videos(),
             'nbPages': self._count_pages(page_size),
             'validSize': self._valid_size(),
@@ -146,6 +147,9 @@ class GuiAPI:
 
     def set_group(self, index):
         self.provider.set_group(index)
+
+    def set_group_by_value(self, value):
+        self.provider.set_group_by_value(value)
 
     def get_source_tree(self):
         # TODO unreable videos cannot be displayed yet, as they are incomplete VideoState (not Video) objects.

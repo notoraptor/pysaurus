@@ -273,6 +273,9 @@ class LookupArray(Generic[T]):
         assert key == self.__key_fn(value)
         return value
 
+    def lookup_index(self, key):
+        return self.__table[key]
+
     def contains_key(self, key):
         return key in self.__table
 
@@ -281,6 +284,10 @@ class LookupArray(Generic[T]):
 
     def new(self, content=()):
         return LookupArray(self.__type, content, self.__key_fn)
+
+    def clear(self):
+        self.__content.clear()
+        self.__table.clear()
 
 
 class VideoArray(LookupArray[Video]):
@@ -386,6 +393,7 @@ class Layer:
 class SourceLayer(Layer):
     __slots__ = ()
     __props__ = ('sources',)
+    _cache: Dict[AbsolutePath, Video]
 
     def set_sources(self, paths: Sequence[Sequence[str]]):
         valid_paths = set()
@@ -413,6 +421,9 @@ class SourceLayer(Layer):
 
     def remove_from_cache(self, cache: Dict[AbsolutePath, Video], video: Video):
         cache.pop(video.filename, None)
+
+    def count_videos(self):
+        return len(self._cache)
 
 
 class GroupingLayer(Layer):
@@ -462,6 +473,7 @@ class GroupingLayer(Layer):
         if group and video in group.videos:
             group.videos.remove(video)
             if not group.videos or (not self.get_grouping().allow_singletons and len(group.videos) == 1):
+                group.videos.clear()
                 cache.remove(group)
 
     def count_groups(self):
@@ -469,6 +481,12 @@ class GroupingLayer(Layer):
 
     def get_stats(self):
         return [{'value': str(g.field_value), 'count': len(g.videos)} for g in self._cache]
+
+    def get_group_id(self, field_value):
+        print('Looking for', field_value, 'in', list(self._cache.keys()))
+        if self._cache.contains_key(field_value):
+            return self._cache.lookup_index(field_value)
+        return None
 
 
 class GroupLayer(Layer):
@@ -626,6 +644,11 @@ class VideoProvider:
         self.group_layer.set_group_id(group_id)
         self.view = self.source_layer.run()
 
+    def set_group_by_value(self, value):
+        group_id = self.grouping_layer.get_group_id(value)
+        assert group_id is not None
+        self.set_group(group_id)
+
     def get_group_field_value(self):
         return self.group_layer.get_field_value()
 
@@ -656,6 +679,9 @@ class VideoProvider:
 
     def count(self):
         return len(self.view)
+
+    def count_total_videos(self):
+        return self.source_layer.count_videos()
 
     def count_groups(self):
         return self.grouping_layer.count_groups() if self.grouping_layer.get_grouping() else 0

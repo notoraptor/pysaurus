@@ -108,7 +108,7 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
             className: "left"
           }, groupDef ? /*#__PURE__*/React.createElement("div", {
             className: "filter"
-          }, /*#__PURE__*/React.createElement("div", null, "Grouped by"), /*#__PURE__*/React.createElement("div", null, FIELD_TITLES[groupDef.field], ' ', groupDef.reverse ? /*#__PURE__*/React.createElement("span", null, "\u25BC") : /*#__PURE__*/React.createElement("span", null, "\u25B2")), groupDef.nb_groups ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", null, "Group ", groupDef.group_id + 1, " / ", groupDef.nb_groups), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("u", null, Utils.sentence(FIELD_TITLES[groupDef.field])), ":"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, groupFieldValue))) : '') : /*#__PURE__*/React.createElement("div", {
+          }, /*#__PURE__*/React.createElement("div", null, "Grouped by"), /*#__PURE__*/React.createElement("div", null, FIELD_TITLES[groupDef.field], ' ', groupDef.reverse ? /*#__PURE__*/React.createElement("span", null, "\u25BC") : /*#__PURE__*/React.createElement("span", null, "\u25B2"))) : /*#__PURE__*/React.createElement("div", {
             className: "no-filter"
           }, "Ungrouped")), /*#__PURE__*/React.createElement("td", {
             className: "right"
@@ -185,6 +185,7 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           this.scrollTop = this.scrollTop.bind(this);
           this.stackGroup = this.stackGroup.bind(this);
           this.stackFilter = this.stackFilter.bind(this);
+          this.selectGroup = this.selectGroup.bind(this);
           this.shortcuts = {
             [SHORTCUTS.select]: this.selectVideos,
             [SHORTCUTS.group]: this.groupVideos,
@@ -203,6 +204,7 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           const validLength = backend.validLength;
           const notFound = backend.notFound;
           const group_def = backend.groupDef;
+          const totalVideos = backend.totalVideos;
           return /*#__PURE__*/React.createElement("div", {
             id: "videos"
           }, /*#__PURE__*/React.createElement("header", {
@@ -246,13 +248,7 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
             className: "buttons"
           }), /*#__PURE__*/React.createElement("div", {
             className: "pagination"
-          }, group_def ? /*#__PURE__*/React.createElement(Pagination, {
-            singular: "group",
-            plural: "groups",
-            nbPages: group_def.nb_groups,
-            pageNumber: group_def.group_id,
-            onChange: this.changeGroup
-          }) : '', /*#__PURE__*/React.createElement(Pagination, {
+          }, /*#__PURE__*/React.createElement(Pagination, {
             singular: "page",
             plural: "pages",
             nbPages: nbPages,
@@ -279,7 +275,7 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
             className: "stack-content"
           }, /*#__PURE__*/React.createElement(Filter, {
             page: this
-          }))), /*#__PURE__*/React.createElement("div", {
+          }))), group_def ? /*#__PURE__*/React.createElement("div", {
             className: "stack group"
           }, /*#__PURE__*/React.createElement("div", {
             className: "stack-title",
@@ -291,38 +287,9 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           }, this.state.stackGroup ? Utils.CHARACTER_ARROW_DOWN : Utils.CHARACTER_ARROW_UP)), this.state.stackGroup ? '' : /*#__PURE__*/React.createElement("div", {
             className: "stack-content"
           }, /*#__PURE__*/React.createElement(GroupView, {
-            all: 100003,
-            title: "za field",
-            isString: true,
-            groups: {
-              a: 1,
-              b: 2,
-              wwec: 1,
-              wwwd: 1,
-              e: 1,
-              f: 1,
-              ge: 1,
-              hq: 8,
-              i: 9,
-              j: 10,
-              k: 11,
-              lq: 12,
-              qqm: 13,
-              n: 14,
-              o: 25,
-              p: 2,
-              q: 17,
-              r: 18,
-              wws: 1,
-              t: 20,
-              u: 21,
-              v: 22,
-              wwq: 23,
-              xww: 24,
-              y: 25,
-              z: 26
-            }
-          })))), /*#__PURE__*/React.createElement("div", {
+            definition: group_def,
+            onSelect: this.selectGroup
+          }))) : ''), /*#__PURE__*/React.createElement("div", {
             className: "main-panel videos"
           }, this.renderVideos()))), /*#__PURE__*/React.createElement("footer", {
             className: "horizontal"
@@ -476,7 +443,7 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
         }
 
         resetGroup() {
-          python_call('group_videos', null, null).then(() => this.updatePage({
+          python_call('group_videos', '').then(() => this.updatePage({
             pageNumber: 0
           })).catch(backend_error);
         }
@@ -528,6 +495,11 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           python_call('set_group', groupNumber).then(() => this.updatePage({
             pageNumber: 0
           })).catch(backend_error);
+        }
+
+        selectGroup(value) {
+          console.log(`Selecting ${value.toString()}`);
+          if (value === -1) this.resetGroup();else this.changeGroup(value);
         }
 
         changePage(pageNumber) {

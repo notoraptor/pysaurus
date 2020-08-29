@@ -84,7 +84,7 @@ class VideoState:
     @property
     def disk(self):
         if System.is_windows():
-            return '%s:\\' % (self.filename.path.split(':')[0])
+            return '%s:\\' % (self.filename.standard_path.split(':')[0])
         return self.driver_id
 
     @property

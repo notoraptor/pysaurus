@@ -1,3 +1,5 @@
+import {FIELD_TITLES} from "./constants.js";
+
 function applyReverse(value, reverse) {
     return reverse ? -value: value;
 }
@@ -38,76 +40,38 @@ const Comparison = {
 
 export class GroupView extends React.Component {
     constructor(props) {
-        // title: str
-        // isString: true
-        // groups: {<value> : <count>}
-        // all? int
+        // definition: GroupDef
+        // onSelect
         super(props);
-        this.state = {
-            sorting: "field",
-            reverse: false,
-            data: []
-        };
-        this.state.data = this.sort(this.state.sorting, this.state.reverse);
-        this.sort = this.sort.bind(this);
-        this.changeSorting = this.changeSorting.bind(this);
-        this.changeReverse = this.changeReverse.bind(this);
-        this.switchReverse = this.switchReverse.bind(this);
     }
-    sort(sorting, reverse) {
-        const data = Object.entries(this.props.groups);
-        data.sort((a, b) => Comparison[sorting](a, b, reverse));
-        return data;
-    }
-    changeSorting(event) {
-        const sorting = event.target.value;
-        const reverse = false;
-        const data = this.sort(sorting, reverse);
-        this.setState({sorting, reverse, data});
-    }
-    changeReverse(event) {
-        const reverse = event.target.checked;
-        const data = this.sort(this.state.sorting, reverse);
-        this.setState({reverse, data});
-    }
-    switchReverse() {
-        const reverse = !this.state.reverse;
-        const data = this.sort(this.state.sorting, reverse);
-        this.setState({reverse, data});
-    }
-    renderReverse() {
-        return this.state.reverse ? Utils.CHARACTER_ARROW_DOWN : Utils.CHARACTER_ARROW_UP;
+    renderTitle() {
+        let title = Utils.sentence(FIELD_TITLES[this.props.definition.field]);
+        if (this.props.definition.sorting === "length")
+            title = `|| ${title} ||`;
+        else if (this.props.definition.sorting === "count")
+            title = `${title} (#)`;
+        title = `${title} ${this.props.definition.reverse ? Utils.CHARACTER_ARROW_DOWN : Utils.CHARACTER_ARROW_UP}`;
+        return title;
     }
     render() {
-        const title = Utils.sentence(this.props.title);
+        const selected = this.props.definition.group_id;
         return (
             <div className="group-view">
                 <div className="header">
-                    <div className="title">{title}</div>
-                    <div className="form">
-                        <select value={this.state.sorting} onChange={this.changeSorting}>
-                            <option value="field">{title}</option>
-                            {this.props.isString ? <option value="length">|| {title} ||</option> : ''}
-                            <option value="count">#</option>
-                        </select>
-                        <button onClick={this.switchReverse}>{this.renderReverse()}</button>
-                    </div>
+                    <div className="title">{this.renderTitle()}</div>
                 </div>
                 <div className="content">
-                    {this.props.all !== undefined ? (
-                        <div className="line all">
-                            <div className="column left" title="(all)">(all)</div>
-                            <div className="column right" title={this.props.all}>{this.props.all}</div>
-                        </div>
-                    ) : ''}
-                    {this.state.data.map((entry, index) => (
-                        <div className="line" key={index}>
-                            <div className="column left" title={entry[0]}>{entry[0]}</div>
-                            <div className="column right" title={entry[1]}>{entry[1]}</div>
+                    {this.props.definition.groups.map((entry, index) => (
+                        <div className={`line ${selected === index ? 'selected' : ''}`} key={index} onClick={() => this.select(index)}>
+                            <div className="column left" title={entry.value}>{entry.value}</div>
+                            <div className="column right" title={entry.count}>{entry.count}</div>
                         </div>
                     ))}
                 </div>
             </div>
         );
+    }
+    select(value) {
+        this.props.onSelect(value);
     }
 }
