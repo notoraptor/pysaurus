@@ -1,20 +1,24 @@
 import {FIELDS_GROUP_DEF, GroupPermission, SORTED_FIELDS_AND_TITLES, STRING_FIELDS} from "./constants.js";
 import {Dialog} from "./Dialog.js";
 
-
-const REVERSE_VALUES = {"true": true, "false": false};
-
 export class FormGroup extends React.Component {
     constructor(props) {
         // definition: GroupDef
+        // properties: [PropDef]
         // onClose(groupDef)
         super(props);
+        const properties = {};
+        if (this.props.properties) {
+            for (let def of this.props.properties)
+                properties[`:${def.name}`] = def;
+        }
         this.state = {
             field: this.props.definition.field || '',
             sorting: this.props.definition.sorting || 'field',
             reverse: this.props.definition.reverse || false,
             allowSingletons: this.props.definition.allowSingletons || false,
             allowMultiple: this.props.definition.allowMultiple || true,
+            properties: properties
         };
         this.onChangeAllowSingleton = this.onChangeAllowSingleton.bind(this);
         this.onChangeAllowMultiple = this.onChangeAllowMultiple.bind(this);
@@ -23,13 +27,23 @@ export class FormGroup extends React.Component {
         this.onChangeGroupReverse = this.onChangeGroupReverse.bind(this);
         this.onClose = this.onClose.bind(this);
     }
+    hasStringProperty(name) {
+        return name.charAt(0) === ':' && this.state.properties[name].type === "str";
+    }
     getDefaultField() {
         return document.querySelector('#group-field').options[0].value;
     }
     renderFieldOptions() {
         const options = [];
-        for (let i = 0; i < SORTED_FIELDS_AND_TITLES.length; ++i) {
-            const [name, title] = SORTED_FIELDS_AND_TITLES[i];
+        let i = 0;
+        if (this.props.properties) {
+            for (let def of this.props.properties) {
+                options.push(<option key={i} value={`:${def.name}`}>Property: {def.name}</option>);
+                ++i;
+            }
+        }
+        for (let entry of SORTED_FIELDS_AND_TITLES) {
+            const [name, title] = entry;
             const permission = FIELDS_GROUP_DEF[name];
             if (
                 permission === GroupPermission.ALL
@@ -37,6 +51,7 @@ export class FormGroup extends React.Component {
                 || (permission === GroupPermission.ONLY_MANY && !this.state.allowSingletons && this.state.allowMultiple)
             ) {
                 options.push(<option key={i} value={name}>{title}</option>);
+                ++i;
             }
         }
         return options;
@@ -83,7 +98,7 @@ export class FormGroup extends React.Component {
                             <td className="input">
                                 <select id="group-sorting" value={this.state.sorting} onChange={this.onChangeSorting}>
                                     <option value="field">Field value</option>
-                                    {STRING_FIELDS.hasOwnProperty(this.state.field) ? <option value="length">Field value length</option> : ''}
+                                    {STRING_FIELDS.hasOwnProperty(this.state.field) || this.hasStringProperty(this.state.field) ? <option value="length">Field value length</option> : ''}
                                     <option value="count">Group size</option>
                                 </select>
                             </td>

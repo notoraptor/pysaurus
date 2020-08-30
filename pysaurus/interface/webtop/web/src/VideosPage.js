@@ -8,6 +8,9 @@ import {FormGroup} from "./FormGroup.js";
 import {FormSearch} from "./FormSearch.js";
 import {FormSort} from "./FormSort.js";
 import {GroupView} from "./GroupView.js";
+import {Dialog} from "./Dialog.js";
+import {Cell} from "./Cell.js";
+import {FormEditPropertyValue} from "./FormEditPropertyValue.js";
 
 const SHORTCUTS = {
     select: "Ctrl+T",
@@ -83,13 +86,7 @@ class Filter extends React.Component {
                 <tr>
                     <td className="left">
                         {groupDef ? (
-                            <div className="filter">
-                                <div>Grouped by</div>
-                                <div>
-                                    {FIELD_TITLES[groupDef.field]}{' '}
-                                    {groupDef.reverse ? (<span>&#9660;</span>) : (<span>&#9650;</span>)}
-                                </div>
-                            </div>
+                            <div className="filter">Grouped</div>
                         ) : <div className="no-filter">Ungrouped</div>}
                     </td>
                     <td className="right">
@@ -147,6 +144,8 @@ export class VideosPage extends React.Component {
             info: args.info,
             stackFilter: false,
             stackGroup: false,
+            stringSetProperties: this.getStringSetProperties(args.info.properties),
+            propTable: this.generatePropTable(args.info.properties)
         };
         this.callbackIndex = -1;
         this.checkShortcut = this.checkShortcut.bind(this);
@@ -170,6 +169,7 @@ export class VideosPage extends React.Component {
         this.stackGroup = this.stackGroup.bind(this);
         this.stackFilter = this.stackFilter.bind(this);
         this.selectGroup = this.selectGroup.bind(this);
+        this.editPropertyValue = this.editPropertyValue.bind(this);
         this.shortcuts = {
             [SHORTCUTS.select]: this.selectVideos,
             [SHORTCUTS.group]: this.groupVideos,
@@ -187,7 +187,6 @@ export class VideosPage extends React.Component {
         const validLength = backend.validLength;
         const notFound = backend.notFound;
         const group_def = backend.groupDef;
-        const totalVideos = backend.totalVideos;
 
         return (
             <div id="videos">
@@ -195,13 +194,20 @@ export class VideosPage extends React.Component {
                     <MenuPack title="Options">
                         <Menu title="Filter videos ...">
                             <MenuItem shortcut={SHORTCUTS.select} action={this.selectVideos}>Select videos ...</MenuItem>
-                            <MenuItem shortcut={SHORTCUTS.group} action={this.selectVideos}>Group ...</MenuItem>
-                            <MenuItem shortcut={SHORTCUTS.search} action={this.selectVideos}>Search ...</MenuItem>
-                            <MenuItem shortcut={SHORTCUTS.sort} action={this.selectVideos}>Sort ...</MenuItem>
+                            <MenuItem shortcut={SHORTCUTS.group} action={this.groupVideos}>Group ...</MenuItem>
+                            <MenuItem shortcut={SHORTCUTS.search} action={this.searchVideos}>Search ...</MenuItem>
+                            <MenuItem shortcut={SHORTCUTS.sort} action={this.sortVideos}>Sort ...</MenuItem>
                         </Menu>
                         {notFound || !nbVideos ? '' : <MenuItem action={this.openRandomVideo}>Open random video</MenuItem>}
                         <MenuItem shortcut={SHORTCUTS.reload} action={this.reloadDatabase}>Reload database ...</MenuItem>
-                        <MenuItem shortcut={SHORTCUTS.manageProperties} action={this.manageProperties}>Manage properties</MenuItem>
+                        <MenuItem shortcut={SHORTCUTS.manageProperties} action={this.manageProperties}>Manage properties ...</MenuItem>
+                        {this.state.stringSetProperties.length ? (
+                            <Menu title="Put keywords into a property">
+                                {this.state.stringSetProperties.map((def, i) => (
+                                    <MenuItem key={i} action={() => this.fillWithKeywords(def.name)}>{def.name}</MenuItem>
+                                ))}
+                            </Menu>
+                        ) : ''}
                         <Menu title="Page size ...">
                             {PAGE_SIZES.map((count, index) => (
                                 <MenuItemCheck key={index}
@@ -250,7 +256,9 @@ export class VideosPage extends React.Component {
                                     </div>
                                     {this.state.stackGroup ? '' : (
                                         <div className="stack-content">
-                                            <GroupView definition={group_def} onSelect={this.selectGroup}/>
+                                            <GroupView definition={group_def}
+                                                       onSelect={this.selectGroup}
+                                                       onValueOptions={this.editPropertyValue}/>
                                         </div>
                                     )}
                                 </div>
@@ -262,6 +270,11 @@ export class VideosPage extends React.Component {
                 <footer className="horizontal">
                     <div className="footer-status" onClick={this.resetStatus}>{this.state.status}</div>
                     <div className="footer-information">
+                        {group_def ? (
+                            <div className="info group">
+                                Group {group_def.group_id + 1}/{group_def.nb_groups}
+                            </div>
+                        ) : ''}
                         <div className="info count">{nbVideos} video{nbVideos > 1 ? 's' : ''}</div>
                         <div className="info size">{validSize}</div>
                         <div className="info length">{validLength}</div>
@@ -343,7 +356,7 @@ export class VideosPage extends React.Component {
     groupVideos() {
         const group_def = this.state.info.groupDef || {field: null, reverse: null};
         this.props.app.loadDialog('Group videos:', onClose => (
-            <FormGroup definition={group_def} onClose={criterion => {
+            <FormGroup definition={group_def} properties={this.state.info.properties} onClose={criterion => {
                 onClose();
                 if (criterion) {
                     python_call('group_videos', criterion.field, criterion.sorting, criterion.reverse, criterion.allowSingletons, criterion.allowMultiple)
@@ -434,5 +447,65 @@ export class VideosPage extends React.Component {
     }
     stackFilter() {
         this.setState({stackFilter: !this.state.stackFilter});
+    }
+    getStringSetProperties(definitions) {
+        const properties = [];
+        for (let def of definitions) {
+            if (def.multiple && def.type === "str")
+                properties.push(def);
+        }
+        return properties;
+    }
+    generatePropTable(definitions) {
+        const properties = {};
+        for (let def of definitions) {
+            properties[def.name] = def;
+        }
+        return properties;
+    }
+    fillWithKeywords(propertyName) {
+        this.props.app.loadDialog(`Fill property "${propertyName}"`, onClose => (
+            <Dialog yes={'fill'} no={'cancel'} onClose={yes => {
+                onClose();
+                if (yes) {
+                    python_call('fill_property_with_terms', propertyName)
+                        .then(() => this.updateStatus(
+                            `Filled property "${propertyName}" with video keywords.`, true, true))
+                        .catch(backend_error);
+                }
+            }}>
+                <Cell className="text-center" center={true} full={true}>
+                    <h3>Fill property "{propertyName}" with videos keywords (meta title and file path excluding extension)?</h3>
+                </Cell>
+            </Dialog>
+        ));
+    }
+    editPropertyValue(name, value) {
+        console.log(JSON.stringify([name, value]));
+        this.props.app.loadDialog(`Property "${name}", value "${value}"`, onClose => (
+            <FormEditPropertyValue properties={this.state.propTable} name={name} value={value} onClose={operation => {
+                onClose();
+                if (operation) {
+                    switch (operation.form) {
+                        case 'delete':
+                            python_call('delete_property_value', name, value)
+                                .then(() => this.updateStatus(`Property value deleted: "${name}" / "${value}"`, true))
+                                .catch(backend_error)
+                            break;
+                        case 'edit':
+                            python_call('edit_property_value', name, value, operation.value)
+                                .then(() => this.updateStatus(`Property value edited: "${name}" : "${value}" -> "${operation.value}"`, true))
+                                .catch(backend_error);
+                            break;
+                        case 'move':
+                            console.log(`we must move ${operation.move}`);
+                            python_call('move_property_value', name, value, operation.move)
+                                .then(() => this.updateStatus(`Property value moved: "${value}" from "${name}" to "${operation.move}"`, true))
+                                .catch(backend_error)
+                            break;
+                    }
+                }
+            }}/>
+        ));
     }
 }

@@ -289,7 +289,8 @@ class Video(VideoState):
 
     def terms(self, as_set=False):
         return string_to_pieces(' '.join((
-            self.filename.path,
+            self.filename.get_directory().path,
+            self.filename.title,
             self.meta_title,
         )), as_set=as_set)
 
@@ -339,16 +340,26 @@ class Video(VideoState):
         return 0
 
     def set_properties(self, properties: dict):
+        modified = set()
         for name, value in properties.items():
-            self.set_property(name, value)
+            if self.set_property(name, value):
+                modified.add(name)
+        return modified
 
     def set_property(self, name, value):
         if not self.database.has_prop_type(name):
             print('Unknown property: %s' % name, file=sys.stderr)
             return False
         prop_type = self.database.get_prop_type(name)
-        self.properties[name] = prop_type(value)
-        return True
+        value = prop_type(value)
+        modified = name not in self.properties or self.properties[name] != value
+        self.properties[name] = value
+        return modified
+
+    def get_property(self, name):
+        if self.database.has_prop_type(name):
+            return self.database.get_prop_type(name)(self.properties.get(name, None))
+        return None
 
     def remove_property(self, name):
         self.properties.pop(name, None)

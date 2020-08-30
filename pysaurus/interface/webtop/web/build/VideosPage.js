@@ -1,7 +1,7 @@
-System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Pagination.js", "./Video.js", "./FormSourceVideo.js", "./FormGroup.js", "./FormSearch.js", "./FormSort.js", "./GroupView.js"], function (_export, _context) {
+System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Pagination.js", "./Video.js", "./FormSourceVideo.js", "./FormGroup.js", "./FormSearch.js", "./FormSort.js", "./GroupView.js", "./Dialog.js", "./Cell.js", "./FormEditPropertyValue.js"], function (_export, _context) {
   "use strict";
 
-  var SettingIcon, Cross, FIELD_TITLES, PAGE_SIZES, FIELDS, SEARCH_TYPE_TITLE, MenuPack, MenuItem, Menu, MenuItemCheck, Pagination, Video, FormSourceVideo, FormGroup, FormSearch, FormSort, GroupView, Filter, VideosPage, SHORTCUTS, SPECIAL_KEYS;
+  var SettingIcon, Cross, FIELD_TITLES, PAGE_SIZES, FIELDS, SEARCH_TYPE_TITLE, MenuPack, MenuItem, Menu, MenuItemCheck, Pagination, Video, FormSourceVideo, FormGroup, FormSearch, FormSort, GroupView, Dialog, Cell, FormEditPropertyValue, Filter, VideosPage, SHORTCUTS, SPECIAL_KEYS;
 
   function assertUniqueShortcuts() {
     const duplicates = {};
@@ -60,6 +60,12 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
       FormSort = _FormSortJs.FormSort;
     }, function (_GroupViewJs) {
       GroupView = _GroupViewJs.GroupView;
+    }, function (_DialogJs) {
+      Dialog = _DialogJs.Dialog;
+    }, function (_CellJs) {
+      Cell = _CellJs.Cell;
+    }, function (_FormEditPropertyValueJs) {
+      FormEditPropertyValue = _FormEditPropertyValueJs.FormEditPropertyValue;
     }],
     execute: function () {
       SHORTCUTS = {
@@ -108,7 +114,7 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
             className: "left"
           }, groupDef ? /*#__PURE__*/React.createElement("div", {
             className: "filter"
-          }, /*#__PURE__*/React.createElement("div", null, "Grouped by"), /*#__PURE__*/React.createElement("div", null, FIELD_TITLES[groupDef.field], ' ', groupDef.reverse ? /*#__PURE__*/React.createElement("span", null, "\u25BC") : /*#__PURE__*/React.createElement("span", null, "\u25B2"))) : /*#__PURE__*/React.createElement("div", {
+          }, "Grouped") : /*#__PURE__*/React.createElement("div", {
             className: "no-filter"
           }, "Ungrouped")), /*#__PURE__*/React.createElement("td", {
             className: "right"
@@ -162,7 +168,9 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
             confirmDeletion: true,
             info: args.info,
             stackFilter: false,
-            stackGroup: false
+            stackGroup: false,
+            stringSetProperties: this.getStringSetProperties(args.info.properties),
+            propTable: this.generatePropTable(args.info.properties)
           };
           this.callbackIndex = -1;
           this.checkShortcut = this.checkShortcut.bind(this);
@@ -186,6 +194,7 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           this.stackGroup = this.stackGroup.bind(this);
           this.stackFilter = this.stackFilter.bind(this);
           this.selectGroup = this.selectGroup.bind(this);
+          this.editPropertyValue = this.editPropertyValue.bind(this);
           this.shortcuts = {
             [SHORTCUTS.select]: this.selectVideos,
             [SHORTCUTS.group]: this.groupVideos,
@@ -204,7 +213,6 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           const validLength = backend.validLength;
           const notFound = backend.notFound;
           const group_def = backend.groupDef;
-          const totalVideos = backend.totalVideos;
           return /*#__PURE__*/React.createElement("div", {
             id: "videos"
           }, /*#__PURE__*/React.createElement("header", {
@@ -218,13 +226,13 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
             action: this.selectVideos
           }, "Select videos ..."), /*#__PURE__*/React.createElement(MenuItem, {
             shortcut: SHORTCUTS.group,
-            action: this.selectVideos
+            action: this.groupVideos
           }, "Group ..."), /*#__PURE__*/React.createElement(MenuItem, {
             shortcut: SHORTCUTS.search,
-            action: this.selectVideos
+            action: this.searchVideos
           }, "Search ..."), /*#__PURE__*/React.createElement(MenuItem, {
             shortcut: SHORTCUTS.sort,
-            action: this.selectVideos
+            action: this.sortVideos
           }, "Sort ...")), notFound || !nbVideos ? '' : /*#__PURE__*/React.createElement(MenuItem, {
             action: this.openRandomVideo
           }, "Open random video"), /*#__PURE__*/React.createElement(MenuItem, {
@@ -233,7 +241,12 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           }, "Reload database ..."), /*#__PURE__*/React.createElement(MenuItem, {
             shortcut: SHORTCUTS.manageProperties,
             action: this.manageProperties
-          }, "Manage properties"), /*#__PURE__*/React.createElement(Menu, {
+          }, "Manage properties ..."), this.state.stringSetProperties.length ? /*#__PURE__*/React.createElement(Menu, {
+            title: "Put keywords into a property"
+          }, this.state.stringSetProperties.map((def, i) => /*#__PURE__*/React.createElement(MenuItem, {
+            key: i,
+            action: () => this.fillWithKeywords(def.name)
+          }, def.name))) : '', /*#__PURE__*/React.createElement(Menu, {
             title: "Page size ..."
           }, PAGE_SIZES.map((count, index) => /*#__PURE__*/React.createElement(MenuItemCheck, {
             key: index,
@@ -288,7 +301,8 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
             className: "stack-content"
           }, /*#__PURE__*/React.createElement(GroupView, {
             definition: group_def,
-            onSelect: this.selectGroup
+            onSelect: this.selectGroup,
+            onValueOptions: this.editPropertyValue
           }))) : ''), /*#__PURE__*/React.createElement("div", {
             className: "main-panel videos"
           }, this.renderVideos()))), /*#__PURE__*/React.createElement("footer", {
@@ -298,7 +312,9 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
             onClick: this.resetStatus
           }, this.state.status), /*#__PURE__*/React.createElement("div", {
             className: "footer-information"
-          }, /*#__PURE__*/React.createElement("div", {
+          }, group_def ? /*#__PURE__*/React.createElement("div", {
+            className: "info group"
+          }, "Group ", group_def.group_id + 1, "/", group_def.nb_groups) : '', /*#__PURE__*/React.createElement("div", {
             className: "info count"
           }, nbVideos, " video", nbVideos > 1 ? 's' : ''), /*#__PURE__*/React.createElement("div", {
             className: "info size"
@@ -394,6 +410,7 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           };
           this.props.app.loadDialog('Group videos:', onClose => /*#__PURE__*/React.createElement(FormGroup, {
             definition: group_def,
+            properties: this.state.info.properties,
             onClose: criterion => {
               onClose();
 
@@ -518,6 +535,73 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           this.setState({
             stackFilter: !this.state.stackFilter
           });
+        }
+
+        getStringSetProperties(definitions) {
+          const properties = [];
+
+          for (let def of definitions) {
+            if (def.multiple && def.type === "str") properties.push(def);
+          }
+
+          return properties;
+        }
+
+        generatePropTable(definitions) {
+          const properties = {};
+
+          for (let def of definitions) {
+            properties[def.name] = def;
+          }
+
+          return properties;
+        }
+
+        fillWithKeywords(propertyName) {
+          this.props.app.loadDialog(`Fill property "${propertyName}"`, onClose => /*#__PURE__*/React.createElement(Dialog, {
+            yes: 'fill',
+            no: 'cancel',
+            onClose: yes => {
+              onClose();
+
+              if (yes) {
+                python_call('fill_property_with_terms', propertyName).then(() => this.updateStatus(`Filled property "${propertyName}" with video keywords.`, true, true)).catch(backend_error);
+              }
+            }
+          }, /*#__PURE__*/React.createElement(Cell, {
+            className: "text-center",
+            center: true,
+            full: true
+          }, /*#__PURE__*/React.createElement("h3", null, "Fill property \"", propertyName, "\" with videos keywords (meta title and file path excluding extension)?"))));
+        }
+
+        editPropertyValue(name, value) {
+          console.log(JSON.stringify([name, value]));
+          this.props.app.loadDialog(`Property "${name}", value "${value}"`, onClose => /*#__PURE__*/React.createElement(FormEditPropertyValue, {
+            properties: this.state.propTable,
+            name: name,
+            value: value,
+            onClose: operation => {
+              onClose();
+
+              if (operation) {
+                switch (operation.form) {
+                  case 'delete':
+                    python_call('delete_property_value', name, value).then(() => this.updateStatus(`Property value deleted: "${name}" / "${value}"`, true)).catch(backend_error);
+                    break;
+
+                  case 'edit':
+                    python_call('edit_property_value', name, value, operation.value).then(() => this.updateStatus(`Property value edited: "${name}" : "${value}" -> "${operation.value}"`, true)).catch(backend_error);
+                    break;
+
+                  case 'move':
+                    console.log(`we must move ${operation.move}`);
+                    python_call('move_property_value', name, value, operation.move).then(() => this.updateStatus(`Property value moved: "${value}" from "${name}" to "${operation.move}"`, true)).catch(backend_error);
+                    break;
+                }
+              }
+            }
+          }));
         }
 
       });

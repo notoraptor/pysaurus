@@ -249,7 +249,7 @@ export class PropertiesPage extends React.Component {
                         })
                 }
             }}>
-                <Cell className="delete-property" center={true} full={true}>
+                <Cell className="text-center" center={true} full={true}>
                     <h3>Are you sure you want to delete property "{name}"?</h3>
                 </Cell>
             </Dialog>

@@ -138,11 +138,7 @@ class GuiAPI:
         except OSError as exc:
             return {'error': str(exc)}
 
-    def set_video_properties(self, index, properties):
-        return self.api.database.set_video_properties(self.provider.get_video(index), properties)
-
     def group_videos(self, field, sorting=None, reverse=None, allow_singletons=None, allow_multiple=None):
-        print('Grouping videos', field, sorting, reverse, allow_singletons, allow_multiple)
         self.provider.set_groups(field, sorting, reverse, allow_singletons, allow_multiple)
 
     def set_group(self, index):
@@ -185,6 +181,85 @@ class GuiAPI:
     def delete_prop_type(self, name):
         self.api.database.remove_prop_type(name)
         return self.get_prop_types()
+
+    def set_video_properties(self, index, properties):
+        modified = self.api.database.set_video_properties(self.provider.get_video(index), properties)
+        self.provider.on_properties_modified(modified)
+
+    def fill_property_with_terms(self, prop_name):
+        db = self.api.database
+        prop_type = db.get_prop_type(prop_name)
+        assert prop_type.multiple
+        assert prop_type.type is str
+        for video in self.provider.source_layer.videos():
+            values = video.terms(as_set=True)
+            values.update(video.properties.get(prop_name, ()))
+            video.set_property(prop_name, prop_type(values))
+        db.save()
+
+    def delete_property_value(self, name, value):
+        print('delete property value', name, value)
+        modified = []
+        prop_type = self.api.database.get_prop_type(name)
+        if prop_type.multiple:
+            prop_type.validate([value])
+            for video in self.provider.videos():
+                if name in video.properties and video.properties[name]:
+                    new_values = set(video.properties[name])
+                    if value in new_values:
+                        new_values.remove(value)
+                        video.properties[name] = prop_type(new_values)
+                        modified.append(video)
+        else:
+            prop_type.validate(value)
+            for video in self.provider.videos():
+                if name in video.properties and video.properties[name] == value:
+                    del video.properties[name]
+                    modified.append(video)
+        if modified:
+            self.api.database.save()
+        return modified
+
+    def edit_property_value(self, name, old_value, new_value):
+        print('edit property value', name, old_value, new_value)
+        modified = False
+        prop_type = self.api.database.get_prop_type(name)
+        if prop_type.multiple:
+            prop_type.validate([old_value])
+            prop_type.validate([new_value])
+            for video in self.provider.videos():
+                if name in video.properties and video.properties[name]:
+                    new_values = set(video.properties[name])
+                    if old_value in new_values:
+                        new_values.remove(old_value)
+                        new_values.add(new_value)
+                        video.properties[name] = prop_type(new_values)
+                        modified = True
+        else:
+            prop_type.validate(old_value)
+            prop_type.validate(new_value)
+            for video in self.provider.videos():
+                if name in video.properties and video.properties[name] == old_value:
+                    video.properties[name] = new_value
+                    modified = True
+        if modified:
+            self.api.database.save()
+
+    def move_property_value(self, old_name, value, new_name):
+        print('move property value', old_name, new_name, value)
+        prop_type = self.api.database.get_prop_type(new_name)
+        prop_type.validate([value] if prop_type.multiple else value)
+        videos = self.delete_property_value(old_name, value)
+        if prop_type.multiple:
+            for video in videos:
+                new_values = set(video.properties.get(new_name, ()))
+                new_values.add(value)
+                video.properties[new_name] = prop_type(new_values)
+        else:
+            for video in videos:
+                video.properties[new_name] = value
+        if videos:
+            self.api.database.save()
 
     def _count_videos(self):
         return self.provider.count()

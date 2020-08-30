@@ -565,15 +565,16 @@ class Database:
     def has_prop_type(self, name):
         return name in self.__prop_types
 
-    def get_prop_type(self, name):
+    def get_prop_type(self, name: str) -> PropType:
         return self.__prop_types[name]
 
     def get_prop_types(self):
         return list(self.__prop_types.values())
 
     def set_video_properties(self, video: Video, properties):
-        video.set_properties(properties)
+        modified = video.set_properties(properties)
         self.save()
+        return modified
 
     # Unused.
 

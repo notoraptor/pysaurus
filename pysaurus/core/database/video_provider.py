@@ -16,13 +16,13 @@ from pysaurus.core.components import FileSize, Duration, AbsolutePath
 from pysaurus.core.database.database import Database
 from pysaurus.core.database.video import Video
 
+T = TypeVar('T')
 UNREADABLE = 'unreadable'
 READABLE = 'readable'
 NOT_FOUND = 'not_found'
 FOUND = 'found'
 WITH_THUMBNAILS = 'with_thumbnails'
 WITHOUT_THUMBNAILS = 'without_thumbnails'
-
 SOURCE_TREE = {
     UNREADABLE: {
         NOT_FOUND: False,
@@ -49,22 +49,6 @@ class NegativeComparator:
 
     def __lt__(self, other):
         return other.value < self.value
-
-
-def make_comparable_number(value: Union[int, float], reverse: bool):
-    return -value if reverse else value
-
-
-def generate_comparator(field, reverse, remaining_tuple=()):
-    if field in Video.STRING_FIELDS:
-        if reverse:
-            return lambda value: (NegativeComparator(value.lower()), NegativeComparator(value)) + remaining_tuple
-        else:
-            return lambda value: (value.lower(), NegativeComparator(value)) + remaining_tuple
-    elif reverse:
-        return lambda value: (NegativeComparator(value),) + remaining_tuple
-    else:
-        return lambda value: (value,) + remaining_tuple
 
 
 class GroupDef(ToDict):
@@ -108,23 +92,39 @@ class GroupDef(ToDict):
 
     def sort(self, groups):
         # type: (List[Group]) -> None
-        field_comparator = generate_comparator(self.field, self.reverse)
+        field_comparator = self.generate_comparator(self.field, self.reverse)
         if self.sorting == self.FIELD:
             key = lambda group: field_comparator(group.field_value)
         elif self.sorting == self.COUNT:
             key = lambda group: (
-                make_comparable_number(len(group.videos), self.reverse),
+                self.make_comparable_number(len(group.videos), self.reverse),
             ) + field_comparator(group.field_value)
         else:
             assert self.sorting == self.LENGTH
             key = lambda group: (
-                make_comparable_number(len(str(group.field_value)), self.reverse),
+                self.make_comparable_number(len(str(group.field_value)), self.reverse),
             ) + field_comparator(group.field_value)
         groups.sort(key=key)
 
     @classmethod
     def none(cls):
         return cls(None)
+
+    @classmethod
+    def make_comparable_number(cls, value: Union[int, float], reverse: bool):
+        return -value if reverse else value
+
+    @classmethod
+    def generate_comparator(cls, field, reverse, remaining_tuple=()):
+        if field in Video.STRING_FIELDS:
+            if reverse:
+                return lambda value: (NegativeComparator(value.lower()), NegativeComparator(value)) + remaining_tuple
+            else:
+                return lambda value: (value.lower(), NegativeComparator(value)) + remaining_tuple
+        elif reverse:
+            return lambda value: (NegativeComparator(value),) + remaining_tuple
+        else:
+            return lambda value: (value,) + remaining_tuple
 
 
 class SearchDef(ToDict):
@@ -146,12 +146,6 @@ class SearchDef(ToDict):
     @classmethod
     def none(cls):
         return cls(None, None)
-
-
-DEFAULT_SOURCE_DEF = [('readable',)]
-DEFAULT_GROUP_DEF = GroupDef.none()  # str field, bool reverse
-DEFAULT_SEARCH_DEF = SearchDef.none()  # str text, str cond
-DEFAULT_SORT_DEF = ['-date']
 
 
 def _collect_full_paths(tree: dict, collection: list, prefix=()):
@@ -201,9 +195,6 @@ def deep_equals(value, other):
             return False
         return all(key in other and deep_equals(value[key], other[key]) for key in value)
     return value == other
-
-
-T = TypeVar('T')
 
 
 class Group:
@@ -305,15 +296,16 @@ class GroupArray(LookupArray[Group]):
 
 
 class Layer:
-    __slots__ = ('__sub_layer', '__args', '__to_update', '__filtered', '__data')
+    __slots__ = ('__sub_layer', '__args', '__to_update', '__filtered', '__data', 'database')
     __props__ = ()
 
-    def __init__(self):
+    def __init__(self, database: Database):
         self.__args = {}
         self.__sub_layer = None  # type: Optional[Layer]
         self.__to_update = False
         self.__filtered = None
         self.__data = None
+        self.database = database
         self.reset_parameters()
 
     def __log(self, *args, **kwargs):
@@ -394,6 +386,7 @@ class SourceLayer(Layer):
     __slots__ = ()
     __props__ = ('sources',)
     _cache: Dict[AbsolutePath, Video]
+    DEFAULT_SOURCE_DEF = [('readable',)]
 
     def set_sources(self, paths: Sequence[Sequence[str]]):
         valid_paths = set()
@@ -409,7 +402,7 @@ class SourceLayer(Layer):
         return self.get_parameter('sources')
 
     def reset_parameters(self):
-        self.set_sources(DEFAULT_SOURCE_DEF)
+        self.set_sources(self.DEFAULT_SOURCE_DEF)
 
     def filter(self, database: Database) -> Dict[AbsolutePath, Video]:
         source = []
@@ -425,11 +418,15 @@ class SourceLayer(Layer):
     def count_videos(self):
         return len(self._cache)
 
+    def videos(self):
+        return self._cache.values()
+
 
 class GroupingLayer(Layer):
     __slots__ = ()
     __props__ = ('grouping', 'allow_singletons', 'allow_multiple')
     _cache: GroupArray
+    DEFAULT_GROUP_DEF = GroupDef.none()  # str field, bool reverse
 
     def set_grouping(self, *,
                      field: Optional[str] = None,
@@ -444,17 +441,28 @@ class GroupingLayer(Layer):
         return self.get_parameter('grouping')
 
     def reset_parameters(self):
-        self._set_parameters(grouping=DEFAULT_GROUP_DEF, allow_singletons=False, allow_multiple=True)
+        self._set_parameters(grouping=self.DEFAULT_GROUP_DEF, allow_singletons=False, allow_multiple=True)
 
     def filter(self, data: Dict[AbsolutePath, Video]) -> GroupArray:
-        group_def = self.get_grouping()  # type: GroupDef
+        group_def = self.get_grouping()
         groups = []
         if not group_def:
             groups.append(Group(None, list(data.values())))
         elif group_def.allow_singletons or group_def.allow_multiple:
             grouped_videos = {}
-            for video in data.values():
-                grouped_videos.setdefault(getattr(video, group_def.field), []).append(video)
+            if group_def.field[0] == ':':
+                field = group_def.field[1:]
+                prop_type = self.database.get_prop_type(field)
+                if prop_type.multiple:
+                    for video in data.values():
+                        for value in video.properties.get(field, []):
+                            grouped_videos.setdefault(value, []).append(video)
+                else:
+                    for video in data.values():
+                        grouped_videos.setdefault(video.properties.get(field, prop_type.default), []).append(video)
+            else:
+                for video in data.values():
+                    grouped_videos.setdefault(getattr(video, group_def.field), []).append(video)
             for field_value, videos in grouped_videos.items():
                 if ((group_def.allow_singletons and len(videos) == 1)
                         or (group_def.allow_multiple and len(videos) > 1)):
@@ -480,7 +488,15 @@ class GroupingLayer(Layer):
         return len(self._cache)
 
     def get_stats(self):
-        return [{'value': str(g.field_value), 'count': len(g.videos)} for g in self._cache]
+        group_def = self.get_grouping()
+        if group_def.field[0] == ':':
+            converter = lambda v: v
+        else:
+            converter = str
+        return [{'value': converter(g.field_value), 'count': len(g.videos)} for g in self._cache]
+
+    def get_hash(self):
+        return ';'.join('%s=%d' % (g.field_value, len(g.videos)) for g in self._cache)
 
     def get_group_id(self, field_value):
         print('Looking for', field_value, 'in', list(self._cache.keys()))
@@ -529,6 +545,7 @@ class GroupLayer(Layer):
 class SearchLayer(Layer):
     __slots__ = ()
     __props__ = ('search',)
+    DEFAULT_SEARCH_DEF = SearchDef.none()  # str text, str cond
 
     def set_search(self, text: Optional[str], cond: Optional[str]):
         self._set_parameters(search=SearchDef(text, cond))
@@ -537,7 +554,7 @@ class SearchLayer(Layer):
         return self.get_parameter('search')
 
     def reset_parameters(self):
-        self._set_parameters(search=DEFAULT_SEARCH_DEF)
+        self._set_parameters(search=self.DEFAULT_SEARCH_DEF)
 
     def filter(self, data: Group) -> VideoArray:
         search_def = self.get_search()
@@ -557,15 +574,16 @@ class SearchLayer(Layer):
 class SortLayer(Layer):
     __slots__ = ()
     __props__ = ('sorting',)
+    DEFAULT_SORT_DEF = ['-date']
 
     def set_sorting(self, sorting: Sequence[str]):
-        self._set_parameters(sorting=list(sorting) if sorting else DEFAULT_SORT_DEF)
+        self._set_parameters(sorting=list(sorting) if sorting else self.DEFAULT_SORT_DEF)
 
     def get_sorting(self):
         return self.get_parameter('sorting')
 
     def reset_parameters(self):
-        self.set_sorting(DEFAULT_SORT_DEF)
+        self.set_sorting(self.DEFAULT_SORT_DEF)
 
     def filter(self, data: Sequence[Video]) -> VideoArray:
         return VideoArray(sorted(data, key=functools.cmp_to_key(
@@ -583,11 +601,11 @@ class VideoProvider:
         self.database = database
         self.view = []
 
-        self.source_layer = SourceLayer()
-        self.grouping_layer = GroupingLayer()
-        self.group_layer = GroupLayer()
-        self.search_layer = SearchLayer()
-        self.sort_layer = SortLayer()
+        self.source_layer = SourceLayer(database)
+        self.grouping_layer = GroupingLayer(database)
+        self.group_layer = GroupLayer(database)
+        self.search_layer = SearchLayer(database)
+        self.sort_layer = SortLayer(database)
 
         self.source_layer.set_sub_layer(self.grouping_layer)
         self.grouping_layer.set_sub_layer(self.group_layer)
@@ -614,6 +632,7 @@ class VideoProvider:
                                          allow_singletons=allow_singletons,
                                          allow_multiple=allow_multiple)
         self.group_layer.set_group_id(0)
+        self.search_layer.reset_parameters()
         self.view = self.source_layer.run()
 
     def set_search(self, text: Optional[str], cond: Optional[str]):
@@ -665,7 +684,9 @@ class VideoProvider:
                     'allowMultiple': group_def.allow_multiple,
                     'group_id': self.group_layer.get_group_id(),
                     'nb_groups': self.grouping_layer.count_groups(),
-                    'groups': self.grouping_layer.get_stats()}
+                    'groups': self.grouping_layer.get_stats(),
+                    # 'hash': self.grouping_layer.get_hash()
+                    }
         return None
 
     def get_search_def(self):
@@ -723,72 +744,17 @@ class VideoProvider:
                 return videos[video_index]
         raise RuntimeError("No videos available.")
 
+    def on_properties_modified(self, properties: Sequence[str]):
+        group_def = self.grouping_layer.get_grouping()
+        if group_def and group_def.field[0] == ':' and group_def.field[1:] in properties:
+            print('Grouping to update', group_def.field)
+            self.grouping_layer.request_update()
+            self.group_layer.request_update()
+            self.view = self.source_layer.run()
 
-def main():
+    def reset_grouping(self):
+        self.grouping_layer.request_update()
+        self.view = self.source_layer.run()
 
-    from pysaurus.core.database.api import API
-    from pysaurus.tests.test_utils import TEST_LIST_FILE_PATH
-    api = API(TEST_LIST_FILE_PATH, update=False, ensure_miniatures=False, reset=False)
-
-    root_layer = SourceLayer()
-    grouping_layer = GroupingLayer()
-    group_layer = GroupLayer()
-    search_layer = SearchLayer()
-    sort_layer = SortLayer()
-
-    root_layer.set_sub_layer(grouping_layer)
-    grouping_layer.set_sub_layer(group_layer)
-    group_layer.set_sub_layer(search_layer)
-    search_layer.set_sub_layer(sort_layer)
-
-    root_layer.set_data(api.database)
-    output = root_layer.run()
-    assert isinstance(output, VideoArray)
-    print(len(output))
-
-    output_1 = root_layer.run()
-    assert isinstance(output_1, VideoArray)
-    print(len(output_1))
-
-    grouping_layer.set_grouping(field='size', allow_singletons=False, allow_multiple=False)
-    output_2 = root_layer.run()
-    assert output_2 is None
-    print('~~')
-    grouping_layer.set_grouping(field='size', allow_singletons=False, allow_multiple=False)
-    output_2 = root_layer.run()
-    assert output_2 is None
-
-    grouping_layer.reset_parameters()
-    o = root_layer.run()
-    assert isinstance(o, VideoArray)
-    print(len(o))
-
-
-def main2():
-    array = LookupArray(int, key=lambda value: float(value) + 0.5)
-    array.extend((5, 6, 7, 2, 1, 8, 3, 4, 10))
-    assert len(array) == 9, len(array)
-    array.append(9)
-    assert len(array) == 10, len(array)
-    assert array[0] == 5, array
-    assert array[-1] == 9, array
-    assert array[3:5] == [2, 1], array[3:5]
-    assert tuple(array) == (5, 6, 7, 2, 1, 8, 3, 4, 10, 9)
-    assert tuple(reversed(array)) == (9, 10, 4, 3, 8, 1, 2, 7, 6, 5)
-    assert 7 in array
-    assert 11 not in array
-    array.pop(4)
-    assert len(array) == 9, len(array)
-    assert array[4] == 8, array
-    array.pop(-1)
-    assert len(array) == 8, len(array)
-    assert array[-1] == 10, array
-    assert array[6] == 4, array
-    array.remove(4)
-    assert len(array) == 7, len(array)
-    assert array[6] == 10, array
-    assert array.lookup(7.5) == 7, array.keys()
-
-
-if __name__ == '__main__':
-    main()
+    def videos(self):
+        return self.source_layer.videos()

@@ -1,7 +1,7 @@
 System.register(["./constants.js", "./Dialog.js"], function (_export, _context) {
   "use strict";
 
-  var FIELDS_GROUP_DEF, GroupPermission, SORTED_FIELDS_AND_TITLES, STRING_FIELDS, Dialog, FormGroup, REVERSE_VALUES;
+  var FIELDS_GROUP_DEF, GroupPermission, SORTED_FIELDS_AND_TITLES, STRING_FIELDS, Dialog, FormGroup;
 
   _export("FormGroup", void 0);
 
@@ -15,22 +15,25 @@ System.register(["./constants.js", "./Dialog.js"], function (_export, _context) 
       Dialog = _DialogJs.Dialog;
     }],
     execute: function () {
-      REVERSE_VALUES = {
-        "true": true,
-        "false": false
-      };
-
       _export("FormGroup", FormGroup = class FormGroup extends React.Component {
         constructor(props) {
           // definition: GroupDef
+          // properties: [PropDef]
           // onClose(groupDef)
           super(props);
+          const properties = {};
+
+          if (this.props.properties) {
+            for (let def of this.props.properties) properties[`:${def.name}`] = def;
+          }
+
           this.state = {
             field: this.props.definition.field || '',
             sorting: this.props.definition.sorting || 'field',
             reverse: this.props.definition.reverse || false,
             allowSingletons: this.props.definition.allowSingletons || false,
-            allowMultiple: this.props.definition.allowMultiple || true
+            allowMultiple: this.props.definition.allowMultiple || true,
+            properties: properties
           };
           this.onChangeAllowSingleton = this.onChangeAllowSingleton.bind(this);
           this.onChangeAllowMultiple = this.onChangeAllowMultiple.bind(this);
@@ -40,15 +43,30 @@ System.register(["./constants.js", "./Dialog.js"], function (_export, _context) 
           this.onClose = this.onClose.bind(this);
         }
 
+        hasStringProperty(name) {
+          return name.charAt(0) === ':' && this.state.properties[name].type === "str";
+        }
+
         getDefaultField() {
           return document.querySelector('#group-field').options[0].value;
         }
 
         renderFieldOptions() {
           const options = [];
+          let i = 0;
 
-          for (let i = 0; i < SORTED_FIELDS_AND_TITLES.length; ++i) {
-            const [name, title] = SORTED_FIELDS_AND_TITLES[i];
+          if (this.props.properties) {
+            for (let def of this.props.properties) {
+              options.push( /*#__PURE__*/React.createElement("option", {
+                key: i,
+                value: `:${def.name}`
+              }, "Property: ", def.name));
+              ++i;
+            }
+          }
+
+          for (let entry of SORTED_FIELDS_AND_TITLES) {
+            const [name, title] = entry;
             const permission = FIELDS_GROUP_DEF[name];
 
             if (permission === GroupPermission.ALL || permission === GroupPermission.ONLY_ONE && this.state.allowSingletons && !this.state.allowMultiple || permission === GroupPermission.ONLY_MANY && !this.state.allowSingletons && this.state.allowMultiple) {
@@ -56,6 +74,7 @@ System.register(["./constants.js", "./Dialog.js"], function (_export, _context) 
                 key: i,
                 value: name
               }, title));
+              ++i;
             }
           }
 
@@ -113,7 +132,7 @@ System.register(["./constants.js", "./Dialog.js"], function (_export, _context) 
             onChange: this.onChangeSorting
           }, /*#__PURE__*/React.createElement("option", {
             value: "field"
-          }, "Field value"), STRING_FIELDS.hasOwnProperty(this.state.field) ? /*#__PURE__*/React.createElement("option", {
+          }, "Field value"), STRING_FIELDS.hasOwnProperty(this.state.field) || this.hasStringProperty(this.state.field) ? /*#__PURE__*/React.createElement("option", {
             value: "length"
           }, "Field value length") : '', /*#__PURE__*/React.createElement("option", {
             value: "count"

@@ -7,11 +7,11 @@
     left: 0;
     right: 0;
 }
-.dialog .content {
+.dialog > .content {
     flex-grow: 1;
     position: relative;
 }
-.dialog .content .wrapper {
+.dialog > .content > .wrapper {
     position: absolute;
     top: 0;
     bottom: 0;
@@ -20,22 +20,22 @@
     overflow: auto;
     padding: 0.5em;
 }
-.dialog .buttons {
+.dialog > .buttons {
     border-top: 1px solid gray;
 }
-.dialog .buttons .button {
+.dialog > .buttons .button {
     flex-grow: 1;
     padding: 0.5em;
 }
-.dialog .buttons .button button {
+.dialog > .buttons .button button {
     display: block;
     width: 100%;
     font-weight: bold;
     text-transform: uppercase;
 }
-.dialog .buttons .button.yes button {
+.dialog > .buttons .button.yes button {
     color: green;
 }
-.dialog .buttons .button.no button {
+.dialog > .buttons .button.no button {
     color: red;
 }

@@ -295,7 +295,7 @@ System.register(["./SetInput.js", "./Dialog.js", "./Cell.js"], function (_export
               }
             }
           }, /*#__PURE__*/React.createElement(Cell, {
-            className: "delete-property",
+            className: "text-center",
             center: true,
             full: true
           }, /*#__PURE__*/React.createElement("h3", null, "Are you sure you want to delete property \"", name, "\"?"))));
