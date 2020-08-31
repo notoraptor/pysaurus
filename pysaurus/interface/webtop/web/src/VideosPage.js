@@ -1,5 +1,5 @@
 import {SettingIcon, Cross} from "./buttons.js";
-import {FIELD_TITLES, PAGE_SIZES, FIELDS, SEARCH_TYPE_TITLE} from "./constants.js";
+import {PAGE_SIZES, FIELDS, SEARCH_TYPE_TITLE} from "./constants.js";
 import {MenuPack, MenuItem, Menu, MenuItemCheck} from "./MenuPack.js";
 import {Pagination} from "./Pagination.js";
 import {Video} from "./Video.js";
@@ -63,10 +63,9 @@ class Filter extends React.Component {
     }
     render() {
         const app = this.props.page;
-        const backend = this.props.page.state.info;
+        const backend = app.state;
         const sources = backend.sources;
         const groupDef = backend.groupDef;
-        const groupFieldValue = backend.groupFieldValue;
         const searchDef = backend.searchDef;
         const sorting = backend.sorting;
         const sortingIsDefault = sorting.length === 1 && sorting[0] === '-date';
@@ -131,23 +130,33 @@ class Filter extends React.Component {
 }
 
 export class VideosPage extends React.Component {
+    parametersToState(parameters, state) {
+        state.pageSize = parameters.pageSize;
+        state.pageNumber = parameters.pageNumber;
+        state.nbVideos = parameters.info.nbVideos;
+        state.nbPages = parameters.info.nbPages;
+        state.validSize = parameters.info.validSize;
+        state.validLength = parameters.info.validLength;
+        state.notFound = parameters.info.notFound;
+        state.groupDef = parameters.info.groupDef;
+        state.searchDef = parameters.info.searchDef;
+        state.sources = parameters.info.sources;
+        state.sorting = parameters.info.sorting;
+        state.sourceTree = parameters.info.sourceTree;
+        state.properties = parameters.info.properties;
+        state.videos = parameters.info.videos;
+    }
     constructor(props) {
         // parameters: {pageSize, pageNumber, info}
         // app: App
         super(props);
-        const args = this.props.parameters;
         this.state = {
-            pageSize: args.pageSize,
-            pageNumber: args.pageNumber,
             status: 'Loaded.',
             confirmDeletion: true,
-            info: args.info,
             stackFilter: false,
             stackGroup: false,
-            stringSetProperties: this.getStringSetProperties(args.info.properties),
-            propTable: this.generatePropTable(args.info.properties)
         };
-        this.callbackIndex = -1;
+        this.parametersToState = this.parametersToState.bind(this);
         this.checkShortcut = this.checkShortcut.bind(this);
         this.changeGroup = this.changeGroup.bind(this);
         this.changePage = this.changePage.bind(this);
@@ -170,6 +179,8 @@ export class VideosPage extends React.Component {
         this.stackFilter = this.stackFilter.bind(this);
         this.selectGroup = this.selectGroup.bind(this);
         this.editPropertyValue = this.editPropertyValue.bind(this);
+        this.parametersToState(this.props.parameters, this.state);
+        this.callbackIndex = -1;
         this.shortcuts = {
             [SHORTCUTS.select]: this.selectVideos,
             [SHORTCUTS.group]: this.groupVideos,
@@ -180,13 +191,13 @@ export class VideosPage extends React.Component {
         };
     }
     render() {
-        const backend = this.state.info;
-        const nbVideos = backend.nbVideos;
-        const nbPages = backend.nbPages;
-        const validSize = backend.validSize;
-        const validLength = backend.validLength;
-        const notFound = backend.notFound;
-        const group_def = backend.groupDef;
+        const nbVideos = this.state.nbVideos;
+        const nbPages = this.state.nbPages;
+        const validSize = this.state.validSize;
+        const validLength = this.state.validLength;
+        const notFound = this.state.notFound;
+        const groupDef = this.state.groupDef;
+        const stringSetProperties = this.getStringSetProperties(this.state.properties);
 
         return (
             <div id="videos">
@@ -201,9 +212,9 @@ export class VideosPage extends React.Component {
                         {notFound || !nbVideos ? '' : <MenuItem action={this.openRandomVideo}>Open random video</MenuItem>}
                         <MenuItem shortcut={SHORTCUTS.reload} action={this.reloadDatabase}>Reload database ...</MenuItem>
                         <MenuItem shortcut={SHORTCUTS.manageProperties} action={this.manageProperties}>Manage properties ...</MenuItem>
-                        {this.state.stringSetProperties.length ? (
+                        {stringSetProperties.length ? (
                             <Menu title="Put keywords into a property">
-                                {this.state.stringSetProperties.map((def, i) => (
+                                {stringSetProperties.map((def, i) => (
                                     <MenuItem key={i} action={() => this.fillWithKeywords(def.name)}>{def.name}</MenuItem>
                                 ))}
                             </Menu>
@@ -227,52 +238,51 @@ export class VideosPage extends React.Component {
                                     plural="pages"
                                     nbPages={nbPages}
                                     pageNumber={this.state.pageNumber}
+                                    key={this.state.pageNumber}
                                     onChange={this.changePage}/>
                     </div>
                 </header>
                 <div className="frontier"/>
                 <div className="content">
-                    <div className="wrapper">
-                        <div className="side-panel">
-                            <div className="stack filter">
-                                <div className="stack-title" onClick={this.stackFilter}>
-                                    <div className="title">Filter</div>
-                                    <div className="icon">{this.state.stackFilter ? Utils.CHARACTER_ARROW_DOWN : Utils.CHARACTER_ARROW_UP}</div>
+                    <div className="side-panel">
+                        <div className="stack filter">
+                            <div className="stack-title" onClick={this.stackFilter}>
+                                <div className="title">Filter</div>
+                                <div className="icon">{this.state.stackFilter ? Utils.CHARACTER_ARROW_DOWN : Utils.CHARACTER_ARROW_UP}</div>
+                            </div>
+                            {this.state.stackFilter ? '' : (
+                                <div className="stack-content">
+                                    <Filter page={this} />
                                 </div>
-                                {this.state.stackFilter ? '' : (
+                            )}
+                        </div>
+                        {groupDef ? (
+                            <div className="stack group">
+                                <div className="stack-title" onClick={this.stackGroup}>
+                                    <div className="title">Groups</div>
+                                    <div className="icon">
+                                        {this.state.stackGroup ?
+                                            Utils.CHARACTER_ARROW_DOWN : Utils.CHARACTER_ARROW_UP}
+                                    </div>
+                                </div>
+                                {this.state.stackGroup ? '' : (
                                     <div className="stack-content">
-                                        <Filter page={this} />
+                                        <GroupView definition={groupDef}
+                                                   onSelect={this.selectGroup}
+                                                   onValueOptions={this.editPropertyValue}/>
                                     </div>
                                 )}
                             </div>
-                            {group_def ? (
-                                <div className="stack group">
-                                    <div className="stack-title" onClick={this.stackGroup}>
-                                        <div className="title">Groups</div>
-                                        <div className="icon">
-                                            {this.state.stackGroup ?
-                                                Utils.CHARACTER_ARROW_DOWN : Utils.CHARACTER_ARROW_UP}
-                                        </div>
-                                    </div>
-                                    {this.state.stackGroup ? '' : (
-                                        <div className="stack-content">
-                                            <GroupView definition={group_def}
-                                                       onSelect={this.selectGroup}
-                                                       onValueOptions={this.editPropertyValue}/>
-                                        </div>
-                                    )}
-                                </div>
-                            ) : ''}
-                        </div>
-                        <div className="main-panel videos">{this.renderVideos()}</div>
+                        ) : ''}
                     </div>
+                    <div className="main-panel videos">{this.renderVideos()}</div>
                 </div>
                 <footer className="horizontal">
                     <div className="footer-status" onClick={this.resetStatus}>{this.state.status}</div>
                     <div className="footer-information">
-                        {group_def ? (
+                        {groupDef ? (
                             <div className="info group">
-                                Group {group_def.group_id + 1}/{group_def.nb_groups}
+                                Group {groupDef.group_id + 1}/{groupDef.nb_groups}
                             </div>
                         ) : ''}
                         <div className="info count">{nbVideos} video{nbVideos > 1 ? 's' : ''}</div>
@@ -284,7 +294,7 @@ export class VideosPage extends React.Component {
         );
     }
     renderVideos() {
-        return this.state.info.videos.map(data => (
+        return this.state.videos.map(data => (
             <Video key={data.video_id}
                    data={data}
                    index={data.local_id}
@@ -306,9 +316,7 @@ export class VideosPage extends React.Component {
         const pageNumber = state.pageNumber !== undefined ? state.pageNumber: this.state.pageNumber;
         python_call('get_info_and_videos', pageSize, pageNumber, FIELDS)
             .then(info => {
-                state.pageSize = pageSize;
-                state.pageNumber = info.pageNumber;
-                state.info = info;
+                this.parametersToState({pageSize, pageNumber, info}, state);
                 if (top)
                     this.setState(state, this.scrollTop);
                 else
@@ -343,7 +351,7 @@ export class VideosPage extends React.Component {
 
     selectVideos() {
         this.props.app.loadDialog('Select Videos', onClose => (
-            <FormSourceVideo tree={this.state.info.sourceTree} sources={this.state.info.sources} onClose={sources => {
+            <FormSourceVideo tree={this.state.sourceTree} sources={this.state.sources} onClose={sources => {
                 onClose();
                 if (sources && sources.length) {
                     python_call('set_sources', sources)
@@ -354,9 +362,9 @@ export class VideosPage extends React.Component {
         ));
     }
     groupVideos() {
-        const group_def = this.state.info.groupDef || {field: null, reverse: null};
+        const group_def = this.state.groupDef || {field: null, reverse: null};
         this.props.app.loadDialog('Group videos:', onClose => (
-            <FormGroup definition={group_def} properties={this.state.info.properties} onClose={criterion => {
+            <FormGroup definition={group_def} properties={this.state.properties} onClose={criterion => {
                 onClose();
                 if (criterion) {
                     python_call('group_videos', criterion.field, criterion.sorting, criterion.reverse, criterion.allowSingletons, criterion.allowMultiple)
@@ -367,7 +375,7 @@ export class VideosPage extends React.Component {
         ));
     }
     searchVideos() {
-        const search_def = this.state.info.searchDef || {text: null, cond: null};
+        const search_def = this.state.searchDef || {text: null, cond: null};
         this.props.app.loadDialog('Search videos', onClose => (
             <FormSearch text={search_def.text} cond={search_def.cond} onClose={criterion => {
                 onClose();
@@ -380,7 +388,7 @@ export class VideosPage extends React.Component {
         ));
     }
     sortVideos() {
-        const sorting = this.state.info.sorting;
+        const sorting = this.state.sorting;
         this.props.app.loadDialog('Sort videos', onClose => (
             <FormSort sorting={sorting} onClose={sorting => {
                 onClose();
@@ -433,7 +441,6 @@ export class VideosPage extends React.Component {
             .catch(backend_error);
     }
     selectGroup(value) {
-        console.log(`Selecting ${value.toString()}`);
         if (value === -1)
             this.resetGroup();
         else
@@ -481,9 +488,8 @@ export class VideosPage extends React.Component {
         ));
     }
     editPropertyValue(name, value) {
-        console.log(JSON.stringify([name, value]));
         this.props.app.loadDialog(`Property "${name}", value "${value}"`, onClose => (
-            <FormEditPropertyValue properties={this.state.propTable} name={name} value={value} onClose={operation => {
+            <FormEditPropertyValue properties={this.generatePropTable(this.state.properties)} name={name} value={value} onClose={operation => {
                 onClose();
                 if (operation) {
                     switch (operation.form) {
@@ -498,7 +504,6 @@ export class VideosPage extends React.Component {
                                 .catch(backend_error);
                             break;
                         case 'move':
-                            console.log(`we must move ${operation.move}`);
                             python_call('move_property_value', name, value, operation.move)
                                 .then(() => this.updateStatus(`Property value moved: "${value}" from "${name}" to "${operation.move}"`, true))
                                 .catch(backend_error)

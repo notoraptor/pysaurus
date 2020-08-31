@@ -90,7 +90,6 @@ class GuiAPI:
     def get_info(self, page_size):
         group_def = self.get_group_def()
         return {
-            'totalVideos': self.provider.count_total_videos(),
             'nbVideos': self._count_videos(),
             'nbPages': self._count_pages(page_size),
             'validSize': self._valid_size(),
@@ -99,7 +98,6 @@ class GuiAPI:
             'notFound': self.provider.all_not_found(),
             'sources': self.get_sources(),
             'groupDef': group_def,
-            'groupFieldValue': (self._get_group_field_value() if group_def else None),
             'searchDef': self.get_search_def(),
             'sorting': self.get_sorting(),
             'sourceTree': self.get_source_tree()
@@ -191,11 +189,12 @@ class GuiAPI:
         prop_type = db.get_prop_type(prop_name)
         assert prop_type.multiple
         assert prop_type.type is str
-        for video in self.provider.source_layer.videos():
+        for video in self.provider.videos():
             values = video.terms(as_set=True)
             values.update(video.properties.get(prop_name, ()))
             video.set_property(prop_name, prop_type(values))
         db.save()
+        self.provider.on_properties_modified([prop_name])
 
     def delete_property_value(self, name, value):
         print('delete property value', name, value)
@@ -218,6 +217,7 @@ class GuiAPI:
                     modified.append(video)
         if modified:
             self.api.database.save()
+            self.provider.on_properties_modified([name])
         return modified
 
     def edit_property_value(self, name, old_value, new_value):
@@ -244,6 +244,7 @@ class GuiAPI:
                     modified = True
         if modified:
             self.api.database.save()
+            self.provider.on_properties_modified([name])
 
     def move_property_value(self, old_name, value, new_name):
         print('move property value', old_name, new_name, value)
@@ -260,6 +261,7 @@ class GuiAPI:
                 video.properties[new_name] = value
         if videos:
             self.api.database.save()
+            self.provider.on_properties_modified((old_name, new_name))
 
     def _count_videos(self):
         return self.provider.count()

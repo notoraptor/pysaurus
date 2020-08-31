@@ -36,6 +36,7 @@ export class GroupView extends React.Component {
         const isProperty = (this.props.definition.field.charAt(0) === ':');
         const start = this.state.pageSize * this.state.pageNumber;
         const end = Math.min(start + this.state.pageSize, this.props.definition.groups.length);
+        console.log(`Rendering ${this.props.definition.groups.length} group(s).`);
         return (
             <div className="group-view">
                 <div className="header">
@@ -45,18 +46,19 @@ export class GroupView extends React.Component {
                                     plural="pages"
                                     nbPages={this.getNbPages()}
                                     pageNumber={this.state.pageNumber}
+                                    key={this.state.pageNumber}
                                     onChange={this.setPage}
                         />
                     </div>
                 </div>
                 <div className="content">
                     {this.props.definition.groups.slice(start, end).map((entry, index) => (
-                        <div className={`line ${selected === index ? 'selected' : ''} ${isProperty ? 'property' : 'attribute'}`}
+                        <div className={`line ${selected === index ? 'selected' : ''} ${isProperty ? 'property' : 'attribute'} ${entry.value === null ? 'all' : ''}`}
                              key={index}
                              onClick={() => this.select(start + index)}>
                             <div className="column left" {...(isProperty ? {} : {title: entry.value})}>
-                                {isProperty ? ([<SettingIcon key="options" title={`Options ...`} action={() => this.openPropertyOptions(index)}/>, '  ']) : ''}
-                                <span key="value" {...(isProperty ? {title: entry.value} : {})}>{entry.value}</span>
+                                {isProperty && entry.value !== null ? ([<SettingIcon key="options" title={`Options ...`} action={() => this.openPropertyOptions(index)}/>, '  ']) : ''}
+                                <span key="value" {...(isProperty ? {title: entry.value} : {})}>{entry.value === null ? `(none)` : entry.value}</span>
                             </div>
                             <div className="column right" title={entry.count}>{entry.count}</div>
                         </div>

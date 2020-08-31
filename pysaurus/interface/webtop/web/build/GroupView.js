@@ -48,6 +48,7 @@ System.register(["./constants.js", "./buttons.js", "./Pagination.js"], function 
           const isProperty = this.props.definition.field.charAt(0) === ':';
           const start = this.state.pageSize * this.state.pageNumber;
           const end = Math.min(start + this.state.pageSize, this.props.definition.groups.length);
+          console.log(`Rendering ${this.props.definition.groups.length} group(s).`);
           return /*#__PURE__*/React.createElement("div", {
             className: "group-view"
           }, /*#__PURE__*/React.createElement("div", {
@@ -59,18 +60,19 @@ System.register(["./constants.js", "./buttons.js", "./Pagination.js"], function 
             plural: "pages",
             nbPages: this.getNbPages(),
             pageNumber: this.state.pageNumber,
+            key: this.state.pageNumber,
             onChange: this.setPage
           }))), /*#__PURE__*/React.createElement("div", {
             className: "content"
           }, this.props.definition.groups.slice(start, end).map((entry, index) => /*#__PURE__*/React.createElement("div", {
-            className: `line ${selected === index ? 'selected' : ''} ${isProperty ? 'property' : 'attribute'}`,
+            className: `line ${selected === index ? 'selected' : ''} ${isProperty ? 'property' : 'attribute'} ${entry.value === null ? 'all' : ''}`,
             key: index,
             onClick: () => this.select(start + index)
           }, /*#__PURE__*/React.createElement("div", _extends({
             className: "column left"
           }, isProperty ? {} : {
             title: entry.value
-          }), isProperty ? [/*#__PURE__*/React.createElement(SettingIcon, {
+          }), isProperty && entry.value !== null ? [/*#__PURE__*/React.createElement(SettingIcon, {
             key: "options",
             title: `Options ...`,
             action: () => this.openPropertyOptions(index)
@@ -78,7 +80,7 @@ System.register(["./constants.js", "./buttons.js", "./Pagination.js"], function 
             key: "value"
           }, isProperty ? {
             title: entry.value
-          } : {}), entry.value)), /*#__PURE__*/React.createElement("div", {
+          } : {}), entry.value === null ? `(none)` : entry.value)), /*#__PURE__*/React.createElement("div", {
             className: "column right",
             title: entry.count
           }, entry.count)))));

@@ -38,6 +38,7 @@ System.register(["./Test.js", "./HomePage.js", "./VideosPage.js", "./PropertiesP
           this.loadDialog = this.loadDialog.bind(this);
           this.loadVideosPage = this.loadVideosPage.bind(this);
           this.loadPropertiesPage = this.loadPropertiesPage.bind(this);
+          APP = this;
         }
 
         render() {

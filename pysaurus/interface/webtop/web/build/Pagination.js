@@ -1,12 +1,14 @@
-System.register([], function (_export, _context) {
+System.register(["./FormGoToPage.js"], function (_export, _context) {
   "use strict";
 
-  var Pagination;
+  var FormGoToPage, Pagination;
 
   _export("Pagination", void 0);
 
   return {
-    setters: [],
+    setters: [function (_FormGoToPageJs) {
+      FormGoToPage = _FormGoToPageJs.FormGoToPage;
+    }],
     execute: function () {
       _export("Pagination", Pagination = class Pagination extends React.Component {
         constructor(props) {
@@ -20,7 +22,7 @@ System.register([], function (_export, _context) {
           this.onNext = this.onNext.bind(this);
           this.onLast = this.onLast.bind(this);
           this.onPrevious = this.onPrevious.bind(this);
-          this.onInput = this.onInput.bind(this);
+          this.go = this.go.bind(this);
         }
 
         render() {
@@ -28,7 +30,6 @@ System.register([], function (_export, _context) {
           const plural = this.props.plural;
           const nbPages = this.props.nbPages;
           const pageNumber = this.props.pageNumber;
-          const nbCharacters = Math.round(Math.log10(nbPages)) + 1;
           return nbPages ? /*#__PURE__*/React.createElement("span", {
             className: "navigation"
           }, /*#__PURE__*/React.createElement("button", {
@@ -39,18 +40,10 @@ System.register([], function (_export, _context) {
             className: "previous",
             disabled: pageNumber === 0,
             onClick: this.onPrevious
-          }, "<"), ' ', /*#__PURE__*/React.createElement("span", null, Utils.sentence(singular), ' ', /*#__PURE__*/React.createElement("input", {
-            type: "number",
-            className: "current",
-            style: {
-              width: `${nbCharacters}em`
-            },
-            min: 1,
-            max: nbPages,
-            step: 1,
-            value: pageNumber + 1,
-            onChange: this.onInput
-          }), " / ", nbPages), ' ', /*#__PURE__*/React.createElement("button", {
+          }, "<"), ' ', /*#__PURE__*/React.createElement("span", {
+            className: "go",
+            onClick: this.go
+          }, Utils.sentence(singular), ' ', pageNumber + 1, " / ", nbPages), ' ', /*#__PURE__*/React.createElement("button", {
             className: "next",
             disabled: pageNumber === nbPages - 1,
             onClick: this.onNext
@@ -87,12 +80,15 @@ System.register([], function (_export, _context) {
           }
         }
 
-        onInput(event) {
-          const value = event.target.value;
-          let pageNumber = (value || 1) - 1;
-          if (pageNumber >= this.props.nbPages) pageNumber = this.props.nbPages - 1;
-          if (pageNumber < 0) pageNumber = 0;
-          if (pageNumber !== this.props.pageNumber) this.props.onChange(pageNumber);
+        go() {
+          APP.loadDialog('Go to page:', onClose => /*#__PURE__*/React.createElement(FormGoToPage, {
+            nbPages: this.props.nbPages,
+            pageNumber: this.props.pageNumber,
+            onClose: pageNumber => {
+              onClose();
+              if (pageNumber !== this.props.pageNumber) this.props.onChange(pageNumber);
+            }
+          }));
         }
 
       });

@@ -45,7 +45,7 @@ export class Video extends React.Component {
                                 {data.exists ? <MenuItem action={this.openContainingFolder}>Open containing folder</MenuItem> : ''}
                                 {meta_title ? <MenuItem action={this.copyMetaTitle}>Copy meta title</MenuItem> : ''}
                                 {file_title ? <MenuItem action={this.copyFileTitle}>Copy file title</MenuItem> : ''}
-                                {data.exists && this.props.parent.state.info.properties.length ?
+                                {data.exists && this.props.parent.state.properties.length ?
                                     <MenuItem action={this.editProperties}>Edit properties ...</MenuItem> : ''}
                                 {data.exists ? <MenuItem action={this.renameVideo}>Rename video</MenuItem> : ''}
                                 <MenuItem className="menu-delete" action={this.deleteVideo}>{data.exists ? 'Delete video' : 'Delete entry'}</MenuItem>
@@ -72,7 +72,7 @@ export class Video extends React.Component {
     }
     renderProperties() {
         const props = this.props.data.properties;
-        const propDefs = this.props.parent.state.info.properties;
+        const propDefs = this.props.parent.state.properties;
         if (!propDefs.length)
             return '';
         return (
@@ -107,12 +107,11 @@ export class Video extends React.Component {
     }
     editProperties() {
         const data = this.props.data;
-        const definitions = this.props.parent.state.info.properties;
+        const definitions = this.props.parent.state.properties;
         this.props.parent.props.app.loadDialog('Edit video properties', onClose => (
             <FormSetProperties data={data} definitions={definitions} onClose={properties => {
                 onClose();
                 if (properties) {
-                    console.log(`Properties: ${properties ? JSON.stringify(properties) : properties}`);
                     python_call('set_video_properties', this.props.index, properties)
                         .then(() => this.props.parent.updateStatus(`Properties updated: ${data.filename}`, true))
                         .catch(backend_error);

@@ -120,6 +120,9 @@ function parsePropValString(propType, propEnum, value) {
     return parsed;
 }
 
+let APP = null;
+/** @type App */
+
 window.onload = function() {
     System.import('./build/index.js');
 };

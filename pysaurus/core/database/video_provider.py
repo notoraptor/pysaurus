@@ -91,7 +91,15 @@ class GroupDef(ToDict):
         return GroupDef(field, sorting, reverse, allow_singletons, allow_multiple)
 
     def sort(self, groups):
-        # type: (List[Group]) -> None
+        # type: (List[Group]) -> List[Group]
+        none_group = None
+        other_groups = []
+        for group in groups:
+            if group.field_value is None:
+                assert none_group is None
+                none_group = group
+            else:
+                other_groups.append(group)
         field_comparator = self.generate_comparator(self.field, self.reverse)
         if self.sorting == self.FIELD:
             key = lambda group: field_comparator(group.field_value)
@@ -104,7 +112,8 @@ class GroupDef(ToDict):
             key = lambda group: (
                 self.make_comparable_number(len(str(group.field_value)), self.reverse),
             ) + field_comparator(group.field_value)
-        groups.sort(key=key)
+        other_groups.sort(key=key)
+        return ([none_group] + other_groups) if none_group else other_groups
 
     @classmethod
     def none(cls):
@@ -237,12 +246,15 @@ class LookupArray(Generic[T]):
     def __contains__(self, value: T):
         return isinstance(value, self.__type) and self.__key_fn(value) in self.__table
 
+    def __check_type(self, value):
+        assert value is None or isinstance(value, self.__type), value
+
     def extend(self, iterable):
         for element in iterable:
             self.append(element)
 
     def append(self, value: T):
-        assert isinstance(value, self.__type)
+        self.__check_type(value)
         self.__content.append(value)
         self.__table[self.__key_fn(value)] = len(self.__content) - 1
 
@@ -256,7 +268,7 @@ class LookupArray(Generic[T]):
         return value
 
     def remove(self, value: T):
-        assert isinstance(value, self.__type)
+        self.__check_type(value)
         self.pop(self.__table[self.__key_fn(value)])
 
     def lookup(self, key):
@@ -455,7 +467,7 @@ class GroupingLayer(Layer):
                 prop_type = self.database.get_prop_type(field)
                 if prop_type.multiple:
                     for video in data.values():
-                        for value in video.properties.get(field, []):
+                        for value in video.properties.get(field, [None]):
                             grouped_videos.setdefault(value, []).append(video)
                 else:
                     for video in data.values():
@@ -464,10 +476,11 @@ class GroupingLayer(Layer):
                 for video in data.values():
                     grouped_videos.setdefault(getattr(video, group_def.field), []).append(video)
             for field_value, videos in grouped_videos.items():
-                if ((group_def.allow_singletons and len(videos) == 1)
+                if (field_value is None
+                        or (group_def.allow_singletons and len(videos) == 1)
                         or (group_def.allow_multiple and len(videos) > 1)):
                     groups.append(Group(field_value, videos))
-            group_def.sort(groups)
+            groups = group_def.sort(groups)
         return GroupArray(groups)
 
     def remove_from_cache(self, cache: GroupArray, video: Video):

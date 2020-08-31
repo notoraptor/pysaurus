@@ -72,7 +72,7 @@ System.register(["./MenuPack.js", "./FormRenameVideo.js", "./Dialog.js", "./Form
             action: this.copyMetaTitle
           }, "Copy meta title") : '', file_title ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.copyFileTitle
-          }, "Copy file title") : '', data.exists && this.props.parent.state.info.properties.length ? /*#__PURE__*/React.createElement(MenuItem, {
+          }, "Copy file title") : '', data.exists && this.props.parent.state.properties.length ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.editProperties
           }, "Edit properties ...") : '', data.exists ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.renameVideo
@@ -115,7 +115,7 @@ System.register(["./MenuPack.js", "./FormRenameVideo.js", "./Dialog.js", "./Form
 
         renderProperties() {
           const props = this.props.data.properties;
-          const propDefs = this.props.parent.state.info.properties;
+          const propDefs = this.props.parent.state.properties;
           if (!propDefs.length) return '';
           return /*#__PURE__*/React.createElement("div", {
             className: "properties"
@@ -148,7 +148,7 @@ System.register(["./MenuPack.js", "./FormRenameVideo.js", "./Dialog.js", "./Form
 
         editProperties() {
           const data = this.props.data;
-          const definitions = this.props.parent.state.info.properties;
+          const definitions = this.props.parent.state.properties;
           this.props.parent.props.app.loadDialog('Edit video properties', onClose => /*#__PURE__*/React.createElement(FormSetProperties, {
             data: data,
             definitions: definitions,
@@ -156,7 +156,6 @@ System.register(["./MenuPack.js", "./FormRenameVideo.js", "./Dialog.js", "./Form
               onClose();
 
               if (properties) {
-                console.log(`Properties: ${properties ? JSON.stringify(properties) : properties}`);
                 python_call('set_video_properties', this.props.index, properties).then(() => this.props.parent.updateStatus(`Properties updated: ${data.filename}`, true)).catch(backend_error);
               }
             }

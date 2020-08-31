@@ -1,7 +1,7 @@
 System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Pagination.js", "./Video.js", "./FormSourceVideo.js", "./FormGroup.js", "./FormSearch.js", "./FormSort.js", "./GroupView.js", "./Dialog.js", "./Cell.js", "./FormEditPropertyValue.js"], function (_export, _context) {
   "use strict";
 
-  var SettingIcon, Cross, FIELD_TITLES, PAGE_SIZES, FIELDS, SEARCH_TYPE_TITLE, MenuPack, MenuItem, Menu, MenuItemCheck, Pagination, Video, FormSourceVideo, FormGroup, FormSearch, FormSort, GroupView, Dialog, Cell, FormEditPropertyValue, Filter, VideosPage, SHORTCUTS, SPECIAL_KEYS;
+  var SettingIcon, Cross, PAGE_SIZES, FIELDS, SEARCH_TYPE_TITLE, MenuPack, MenuItem, Menu, MenuItemCheck, Pagination, Video, FormSourceVideo, FormGroup, FormSearch, FormSort, GroupView, Dialog, Cell, FormEditPropertyValue, Filter, VideosPage, SHORTCUTS, SPECIAL_KEYS;
 
   function assertUniqueShortcuts() {
     const duplicates = {};
@@ -37,7 +37,6 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
       SettingIcon = _buttonsJs.SettingIcon;
       Cross = _buttonsJs.Cross;
     }, function (_constantsJs) {
-      FIELD_TITLES = _constantsJs.FIELD_TITLES;
       PAGE_SIZES = _constantsJs.PAGE_SIZES;
       FIELDS = _constantsJs.FIELDS;
       SEARCH_TYPE_TITLE = _constantsJs.SEARCH_TYPE_TITLE;
@@ -91,10 +90,9 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
 
         render() {
           const app = this.props.page;
-          const backend = this.props.page.state.info;
+          const backend = app.state;
           const sources = backend.sources;
           const groupDef = backend.groupDef;
-          const groupFieldValue = backend.groupFieldValue;
           const searchDef = backend.searchDef;
           const sorting = backend.sorting;
           const sortingIsDefault = sorting.length === 1 && sorting[0] === '-date';
@@ -156,23 +154,34 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
       };
 
       _export("VideosPage", VideosPage = class VideosPage extends React.Component {
+        parametersToState(parameters, state) {
+          state.pageSize = parameters.pageSize;
+          state.pageNumber = parameters.pageNumber;
+          state.nbVideos = parameters.info.nbVideos;
+          state.nbPages = parameters.info.nbPages;
+          state.validSize = parameters.info.validSize;
+          state.validLength = parameters.info.validLength;
+          state.notFound = parameters.info.notFound;
+          state.groupDef = parameters.info.groupDef;
+          state.searchDef = parameters.info.searchDef;
+          state.sources = parameters.info.sources;
+          state.sorting = parameters.info.sorting;
+          state.sourceTree = parameters.info.sourceTree;
+          state.properties = parameters.info.properties;
+          state.videos = parameters.info.videos;
+        }
+
         constructor(props) {
           // parameters: {pageSize, pageNumber, info}
           // app: App
           super(props);
-          const args = this.props.parameters;
           this.state = {
-            pageSize: args.pageSize,
-            pageNumber: args.pageNumber,
             status: 'Loaded.',
             confirmDeletion: true,
-            info: args.info,
             stackFilter: false,
-            stackGroup: false,
-            stringSetProperties: this.getStringSetProperties(args.info.properties),
-            propTable: this.generatePropTable(args.info.properties)
+            stackGroup: false
           };
-          this.callbackIndex = -1;
+          this.parametersToState = this.parametersToState.bind(this);
           this.checkShortcut = this.checkShortcut.bind(this);
           this.changeGroup = this.changeGroup.bind(this);
           this.changePage = this.changePage.bind(this);
@@ -195,6 +204,8 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           this.stackFilter = this.stackFilter.bind(this);
           this.selectGroup = this.selectGroup.bind(this);
           this.editPropertyValue = this.editPropertyValue.bind(this);
+          this.parametersToState(this.props.parameters, this.state);
+          this.callbackIndex = -1;
           this.shortcuts = {
             [SHORTCUTS.select]: this.selectVideos,
             [SHORTCUTS.group]: this.groupVideos,
@@ -206,13 +217,13 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
         }
 
         render() {
-          const backend = this.state.info;
-          const nbVideos = backend.nbVideos;
-          const nbPages = backend.nbPages;
-          const validSize = backend.validSize;
-          const validLength = backend.validLength;
-          const notFound = backend.notFound;
-          const group_def = backend.groupDef;
+          const nbVideos = this.state.nbVideos;
+          const nbPages = this.state.nbPages;
+          const validSize = this.state.validSize;
+          const validLength = this.state.validLength;
+          const notFound = this.state.notFound;
+          const groupDef = this.state.groupDef;
+          const stringSetProperties = this.getStringSetProperties(this.state.properties);
           return /*#__PURE__*/React.createElement("div", {
             id: "videos"
           }, /*#__PURE__*/React.createElement("header", {
@@ -241,9 +252,9 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           }, "Reload database ..."), /*#__PURE__*/React.createElement(MenuItem, {
             shortcut: SHORTCUTS.manageProperties,
             action: this.manageProperties
-          }, "Manage properties ..."), this.state.stringSetProperties.length ? /*#__PURE__*/React.createElement(Menu, {
+          }, "Manage properties ..."), stringSetProperties.length ? /*#__PURE__*/React.createElement(Menu, {
             title: "Put keywords into a property"
-          }, this.state.stringSetProperties.map((def, i) => /*#__PURE__*/React.createElement(MenuItem, {
+          }, stringSetProperties.map((def, i) => /*#__PURE__*/React.createElement(MenuItem, {
             key: i,
             action: () => this.fillWithKeywords(def.name)
           }, def.name))) : '', /*#__PURE__*/React.createElement(Menu, {
@@ -266,13 +277,12 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
             plural: "pages",
             nbPages: nbPages,
             pageNumber: this.state.pageNumber,
+            key: this.state.pageNumber,
             onChange: this.changePage
           }))), /*#__PURE__*/React.createElement("div", {
             className: "frontier"
           }), /*#__PURE__*/React.createElement("div", {
             className: "content"
-          }, /*#__PURE__*/React.createElement("div", {
-            className: "wrapper"
           }, /*#__PURE__*/React.createElement("div", {
             className: "side-panel"
           }, /*#__PURE__*/React.createElement("div", {
@@ -288,7 +298,7 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
             className: "stack-content"
           }, /*#__PURE__*/React.createElement(Filter, {
             page: this
-          }))), group_def ? /*#__PURE__*/React.createElement("div", {
+          }))), groupDef ? /*#__PURE__*/React.createElement("div", {
             className: "stack group"
           }, /*#__PURE__*/React.createElement("div", {
             className: "stack-title",
@@ -300,21 +310,21 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           }, this.state.stackGroup ? Utils.CHARACTER_ARROW_DOWN : Utils.CHARACTER_ARROW_UP)), this.state.stackGroup ? '' : /*#__PURE__*/React.createElement("div", {
             className: "stack-content"
           }, /*#__PURE__*/React.createElement(GroupView, {
-            definition: group_def,
+            definition: groupDef,
             onSelect: this.selectGroup,
             onValueOptions: this.editPropertyValue
           }))) : ''), /*#__PURE__*/React.createElement("div", {
             className: "main-panel videos"
-          }, this.renderVideos()))), /*#__PURE__*/React.createElement("footer", {
+          }, this.renderVideos())), /*#__PURE__*/React.createElement("footer", {
             className: "horizontal"
           }, /*#__PURE__*/React.createElement("div", {
             className: "footer-status",
             onClick: this.resetStatus
           }, this.state.status), /*#__PURE__*/React.createElement("div", {
             className: "footer-information"
-          }, group_def ? /*#__PURE__*/React.createElement("div", {
+          }, groupDef ? /*#__PURE__*/React.createElement("div", {
             className: "info group"
-          }, "Group ", group_def.group_id + 1, "/", group_def.nb_groups) : '', /*#__PURE__*/React.createElement("div", {
+          }, "Group ", groupDef.group_id + 1, "/", groupDef.nb_groups) : '', /*#__PURE__*/React.createElement("div", {
             className: "info count"
           }, nbVideos, " video", nbVideos > 1 ? 's' : ''), /*#__PURE__*/React.createElement("div", {
             className: "info size"
@@ -324,7 +334,7 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
         }
 
         renderVideos() {
-          return this.state.info.videos.map(data => /*#__PURE__*/React.createElement(Video, {
+          return this.state.videos.map(data => /*#__PURE__*/React.createElement(Video, {
             key: data.video_id,
             data: data,
             index: data.local_id,
@@ -347,9 +357,11 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           const pageSize = state.pageSize !== undefined ? state.pageSize : this.state.pageSize;
           const pageNumber = state.pageNumber !== undefined ? state.pageNumber : this.state.pageNumber;
           python_call('get_info_and_videos', pageSize, pageNumber, FIELDS).then(info => {
-            state.pageSize = pageSize;
-            state.pageNumber = info.pageNumber;
-            state.info = info;
+            this.parametersToState({
+              pageSize,
+              pageNumber,
+              info
+            }, state);
             if (top) this.setState(state, this.scrollTop);else this.setState(state);
           }).catch(backend_error);
         }
@@ -389,8 +401,8 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
 
         selectVideos() {
           this.props.app.loadDialog('Select Videos', onClose => /*#__PURE__*/React.createElement(FormSourceVideo, {
-            tree: this.state.info.sourceTree,
-            sources: this.state.info.sources,
+            tree: this.state.sourceTree,
+            sources: this.state.sources,
             onClose: sources => {
               onClose();
 
@@ -404,13 +416,13 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
         }
 
         groupVideos() {
-          const group_def = this.state.info.groupDef || {
+          const group_def = this.state.groupDef || {
             field: null,
             reverse: null
           };
           this.props.app.loadDialog('Group videos:', onClose => /*#__PURE__*/React.createElement(FormGroup, {
             definition: group_def,
-            properties: this.state.info.properties,
+            properties: this.state.properties,
             onClose: criterion => {
               onClose();
 
@@ -424,7 +436,7 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
         }
 
         searchVideos() {
-          const search_def = this.state.info.searchDef || {
+          const search_def = this.state.searchDef || {
             text: null,
             cond: null
           };
@@ -444,7 +456,7 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
         }
 
         sortVideos() {
-          const sorting = this.state.info.sorting;
+          const sorting = this.state.sorting;
           this.props.app.loadDialog('Sort videos', onClose => /*#__PURE__*/React.createElement(FormSort, {
             sorting: sorting,
             onClose: sorting => {
@@ -515,7 +527,6 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
         }
 
         selectGroup(value) {
-          console.log(`Selecting ${value.toString()}`);
           if (value === -1) this.resetGroup();else this.changeGroup(value);
         }
 
@@ -576,9 +587,8 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
         }
 
         editPropertyValue(name, value) {
-          console.log(JSON.stringify([name, value]));
           this.props.app.loadDialog(`Property "${name}", value "${value}"`, onClose => /*#__PURE__*/React.createElement(FormEditPropertyValue, {
-            properties: this.state.propTable,
+            properties: this.generatePropTable(this.state.properties),
             name: name,
             value: value,
             onClose: operation => {
@@ -595,7 +605,6 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
                     break;
 
                   case 'move':
-                    console.log(`we must move ${operation.move}`);
                     python_call('move_property_value', name, value, operation.move).then(() => this.updateStatus(`Property value moved: "${value}" from "${name}" to "${operation.move}"`, true)).catch(backend_error);
                     break;
                 }
