@@ -83,7 +83,6 @@ System.register(["./SetInput.js", "./Dialog.js", "./Cell.js"], function (_export
             className: "input"
           }, /*#__PURE__*/React.createElement("input", {
             type: "text",
-            name: "name",
             id: "prop-name",
             value: this.state.name,
             onChange: this.onChangeName
@@ -96,7 +95,6 @@ System.register(["./SetInput.js", "./Dialog.js", "./Cell.js"], function (_export
           }, "Type:")), /*#__PURE__*/React.createElement("div", {
             className: "input"
           }, /*#__PURE__*/React.createElement("select", {
-            name: "type",
             id: "prop-type",
             value: this.state.type,
             onChange: this.onChangeType
@@ -114,7 +112,6 @@ System.register(["./SetInput.js", "./Dialog.js", "./Cell.js"], function (_export
             className: "label"
           }, /*#__PURE__*/React.createElement("input", {
             type: "checkbox",
-            name: "multiple",
             id: "prop-multiple",
             checked: this.state.multiple,
             onChange: this.onChangeMultiple
@@ -128,7 +125,6 @@ System.register(["./SetInput.js", "./Dialog.js", "./Cell.js"], function (_export
             className: "label"
           }, /*#__PURE__*/React.createElement("input", {
             type: "checkbox",
-            name: "enumeration",
             id: "prop-enumeration",
             checked: this.state.enumeration,
             onChange: this.onChangeEnumeration

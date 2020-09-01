@@ -95,9 +95,7 @@ System.register(["./constants.js", "./Dialog.js"], function (_export, _context) 
             id: "allow-singletons",
             checked: this.state.allowSingletons,
             onChange: this.onChangeAllowSingleton
-          })), /*#__PURE__*/React.createElement("td", {
-            className: "input"
-          }, /*#__PURE__*/React.createElement("label", {
+          })), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("label", {
             htmlFor: "allow-singletons"
           }, "Allow singletons (groups with only 1 video)"))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
             className: "label"
@@ -106,17 +104,13 @@ System.register(["./constants.js", "./Dialog.js"], function (_export, _context) 
             id: "allow-multiple",
             checked: this.state.allowMultiple,
             onChange: this.onChangeAllowMultiple
-          })), /*#__PURE__*/React.createElement("td", {
-            className: "input"
-          }, /*#__PURE__*/React.createElement("label", {
+          })), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("label", {
             htmlFor: "allow-multiple"
           }, "Allow multiple (groups with at least 2 videos)"))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
             className: "label"
           }, /*#__PURE__*/React.createElement("label", {
             htmlFor: "group-field"
-          }, "Field to group (available fields depend on if singletons or multiple groups are allowed)")), /*#__PURE__*/React.createElement("td", {
-            className: "input"
-          }, /*#__PURE__*/React.createElement("select", {
+          }, "Field to group (available fields depend on if singletons or multiple groups are allowed)")), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("select", {
             id: "group-field",
             value: this.state.field,
             onChange: this.onChangeGroupField
@@ -124,9 +118,7 @@ System.register(["./constants.js", "./Dialog.js"], function (_export, _context) 
             className: "label"
           }, /*#__PURE__*/React.createElement("label", {
             htmlFor: "group-sorting"
-          }, "Sort using:")), /*#__PURE__*/React.createElement("td", {
-            className: "input"
-          }, /*#__PURE__*/React.createElement("select", {
+          }, "Sort using:")), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("select", {
             id: "group-sorting",
             value: this.state.sorting,
             onChange: this.onChangeSorting
@@ -143,9 +135,7 @@ System.register(["./constants.js", "./Dialog.js"], function (_export, _context) 
             id: "group-reverse",
             checked: this.state.reverse,
             onChange: this.onChangeGroupReverse
-          })), /*#__PURE__*/React.createElement("td", {
-            className: "input"
-          }, /*#__PURE__*/React.createElement("label", {
+          })), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("label", {
             htmlFor: "group-reverse"
           }, "sort in reverse order"))))));
         }

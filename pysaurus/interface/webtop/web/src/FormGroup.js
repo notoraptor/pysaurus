@@ -65,7 +65,7 @@ export class FormGroup extends React.Component {
                             <td className="label">
                                 <input type="checkbox" id="allow-singletons" checked={this.state.allowSingletons} onChange={this.onChangeAllowSingleton}/>
                             </td>
-                            <td className="input">
+                            <td>
                                 <label htmlFor="allow-singletons">Allow singletons (groups with only 1 video)</label>
                             </td>
                         </tr>
@@ -73,7 +73,7 @@ export class FormGroup extends React.Component {
                             <td className="label">
                                 <input type="checkbox" id="allow-multiple" checked={this.state.allowMultiple} onChange={this.onChangeAllowMultiple}/>
                             </td>
-                            <td className="input">
+                            <td>
                                 <label htmlFor="allow-multiple">Allow multiple (groups with at least 2 videos)</label>
                             </td>
                         </tr>
@@ -83,7 +83,7 @@ export class FormGroup extends React.Component {
                                     Field to group (available fields depend on if singletons or multiple groups are allowed)
                                 </label>
                             </td>
-                            <td className="input">
+                            <td>
                                 <select id="group-field"
                                         value={this.state.field}
                                         onChange={this.onChangeGroupField}>
@@ -95,7 +95,7 @@ export class FormGroup extends React.Component {
                             <td className="label">
                                 <label htmlFor="group-sorting">Sort using:</label>
                             </td>
-                            <td className="input">
+                            <td>
                                 <select id="group-sorting" value={this.state.sorting} onChange={this.onChangeSorting}>
                                     <option value="field">Field value</option>
                                     {STRING_FIELDS.hasOwnProperty(this.state.field) || this.hasStringProperty(this.state.field) ? <option value="length">Field value length</option> : ''}
@@ -107,7 +107,7 @@ export class FormGroup extends React.Component {
                             <td className="label">
                                 <input type='checkbox' id="group-reverse" checked={this.state.reverse} onChange={this.onChangeGroupReverse}/>
                             </td>
-                            <td className="input">
+                            <td>
                                 <label htmlFor="group-reverse">sort in reverse order</label>
                             </td>
                         </tr>

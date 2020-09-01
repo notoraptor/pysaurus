@@ -66,14 +66,13 @@ export class SetInput extends React.Component {
                         <tr className="form">
                             <td className="input">
                                 {this.props.values ? (
-                                    <select name="add" value={this.state.add} onChange={this.onChangeAdd}>
+                                    <select value={this.state.add} onChange={this.onChangeAdd}>
                                         {this.props.values.map((value, index) => (
                                             <option key={index} value={value}>{value}</option>
                                         ))}
                                     </select>
                                 ) : (
                                     <input type="text"
-                                           name="add"
                                            value={this.state.add}
                                            onChange={this.onChangeAdd}
                                            onKeyDown={this.onInputAdd}

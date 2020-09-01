@@ -15,9 +15,7 @@ export class FancyBox extends React.Component {
                         <div className="fancybox-title">{this.props.title}</div>
                         <div className="fancybox-close"><button onClick={this.props.onClose}>&times;</button></div>
                     </div>
-                    <div className="fancybox-content">
-                        <div className="fancybox-inner-content">{this.props.onBuild(this.props.onClose)}</div>
-                    </div>
+                    <div className="fancybox-content">{this.props.onBuild(this.props.onClose)}</div>
                 </div>
             </div>
         );

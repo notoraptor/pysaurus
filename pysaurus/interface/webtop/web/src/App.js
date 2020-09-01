@@ -28,7 +28,7 @@ export class App extends React.Component {
         const fancy = this.state.fancy;
         return (
             <div className="app">
-                <main className={fancy ? 'with-fancybox' : 'without-fancybox'}>
+                <main>
                     {this.renderPage()}
                 </main>
                 {fancy ? this.renderFancyBox() : ''}

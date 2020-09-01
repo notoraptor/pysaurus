@@ -61,7 +61,6 @@ export class PropertiesPage extends React.Component {
                                 <div className="label"><label htmlFor="prop-name">Name:</label></div>
                                 <div className="input">
                                     <input type="text"
-                                           name="name"
                                            id="prop-name"
                                            value={this.state.name}
                                            onChange={this.onChangeName}/>
@@ -70,8 +69,7 @@ export class PropertiesPage extends React.Component {
                             <div className="entry">
                                 <div className="label"><label htmlFor="prop-type">Type:</label></div>
                                 <div className="input">
-                                    <select name="type"
-                                            id="prop-type"
+                                    <select id="prop-type"
                                             value={this.state.type}
                                             onChange={this.onChangeType}>
                                         <option value="bool">boolean</option>
@@ -84,7 +82,6 @@ export class PropertiesPage extends React.Component {
                             <div className="entry">
                                 <div className="label">
                                     <input type="checkbox"
-                                           name="multiple"
                                            id="prop-multiple"
                                            checked={this.state.multiple}
                                            onChange={this.onChangeMultiple}/>
@@ -94,7 +91,6 @@ export class PropertiesPage extends React.Component {
                             <div className="entry">
                                 <div className="label">
                                     <input type="checkbox"
-                                           name="enumeration"
                                            id="prop-enumeration"
                                            checked={this.state.enumeration}
                                            onChange={this.onChangeEnumeration}/>

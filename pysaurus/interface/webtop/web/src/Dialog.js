@@ -10,11 +10,7 @@ export class Dialog extends React.Component {
     render() {
         return (
             <div className="dialog">
-                <div className="content">
-                    <div className="wrapper">
-                        {this.props.children}
-                    </div>
-                </div>
+                <div className="content">{this.props.children}</div>
                 <div className="buttons horizontal">
                     <div className="button yes"><button onClick={this.yes}>{this.props.yes || "yes"}</button></div>
                     <div className="button no"><button onClick={this.no}>{this.props.no || "no"}</button></div>

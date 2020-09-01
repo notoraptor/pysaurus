@@ -3,7 +3,7 @@ export class Cell extends React.Component {
     // center? bool
     // full? bool
     render() {
-        const classNames = ['table'];
+        const classNames = ['cell-wrapper'];
         if (this.props.className)
             classNames.push(this.props.className);
         if (this.props.center)
@@ -12,7 +12,7 @@ export class Cell extends React.Component {
             classNames.push('cell-full');
         return (
             <div className={classNames.join(' ')}>
-                <div className="table-cell">
+                <div className="cell">
                     {this.props.children}
                 </div>
             </div>

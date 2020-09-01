@@ -39,7 +39,6 @@ System.register(["./Dialog.js"], function (_export, _context) {
             className: "form"
           }, /*#__PURE__*/React.createElement("input", {
             type: "text",
-            name: "name",
             id: "name",
             value: this.state.title,
             onChange: this.onChange,

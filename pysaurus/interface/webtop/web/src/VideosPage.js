@@ -73,36 +73,36 @@ class Filter extends React.Component {
             <table className="filter">
                 <tbody>
                 <tr>
-                    <td className="left">
+                    <td>
                         {sources.map((source, index) => (
-                            <div className="source" key={index}>
+                            <div key={index}>
                                 {source.join(' ').replace('_', ' ')}
                             </div>
                         ))}
                     </td>
-                    <td className="right"><SettingIcon title={`Select sources ... (${SHORTCUTS.select})`} action={app.selectVideos}/></td>
+                    <td><SettingIcon title={`Select sources ... (${SHORTCUTS.select})`} action={app.selectVideos}/></td>
                 </tr>
                 <tr>
-                    <td className="left">
+                    <td>
                         {groupDef ? (
-                            <div className="filter">Grouped</div>
+                            <div>Grouped</div>
                         ) : <div className="no-filter">Ungrouped</div>}
                     </td>
-                    <td className="right">
+                    <td>
                         <div><SettingIcon title={(groupDef ? 'Edit ...' : 'Group ...') + ` (${SHORTCUTS.group})`} action={app.groupVideos}/></div>
                         {groupDef ? <div><Cross title="Reset group" action={app.resetGroup}/></div> : ''}
                     </td>
                 </tr>
                 <tr>
-                    <td className="left">
+                    <td>
                         {searchDef ? (
-                            <div className="filter">
+                            <div>
                                 <div>Searched {SEARCH_TYPE_TITLE[searchDef.cond]}</div>
                                 <div>&quot;<strong>{searchDef.text}</strong>&quot;</div>
                             </div>
                         ) : <div className="no-filter">No search</div>}
                     </td>
-                    <td className="right">
+                    <td>
                         <div>
                             <SettingIcon title={(searchDef ? 'Edit ...' : 'Search ...') + ` (${SHORTCUTS.search})`} action={app.searchVideos}/>
                         </div>
@@ -110,7 +110,7 @@ class Filter extends React.Component {
                     </td>
                 </tr>
                 <tr>
-                    <td className="left">
+                    <td>
                         <div>Sorted by</div>
                         {sorting.map((val, i) => (
                             <div key={i}>
@@ -118,7 +118,7 @@ class Filter extends React.Component {
                                 {val[0] === '-' ? (<span>&#9660;</span>) : (<span>&#9650;</span>)}
                             </div>))}
                     </td>
-                    <td className="right">
+                    <td>
                         <div><SettingIcon title={`Sort ... (${SHORTCUTS.sort})`} action={app.sortVideos}/></div>
                         {sortingIsDefault ? '' : <Cross title="reset sorting" action={app.resetSort} />}
                     </td>

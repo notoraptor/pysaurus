@@ -23,9 +23,7 @@ System.register([], function (_export, _context) {
             className: "dialog"
           }, /*#__PURE__*/React.createElement("div", {
             className: "content"
-          }, /*#__PURE__*/React.createElement("div", {
-            className: "wrapper"
-          }, this.props.children)), /*#__PURE__*/React.createElement("div", {
+          }, this.props.children), /*#__PURE__*/React.createElement("div", {
             className: "buttons horizontal"
           }, /*#__PURE__*/React.createElement("div", {
             className: "button yes"

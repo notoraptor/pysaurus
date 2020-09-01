@@ -105,7 +105,7 @@
 	padding: 0.4em;
 	text-align: center;
 }
-#videos table.filter td.right div + div {
+#videos table.filter td:last-child div + div {
 	margin-top: 0.4em;
 }
 #videos table.filter .no-filter {

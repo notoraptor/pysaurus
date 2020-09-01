@@ -52,26 +52,26 @@ class GuiAPI:
         self.monitor_thread = launch_thread(self._monitor_notifications)
         self.db_loading_thread = launch_thread(self._update_database)
 
-    def set_sorting(self, sorting):
-        self.provider.set_sort(sorting)
+    def set_sources(self, paths):
+        self.provider.set_source(paths)
 
-    def get_group_def(self):
-        return self.provider.get_group_def()
+    def group_videos(self, field, sorting=None, reverse=None, allow_singletons=None, allow_multiple=None):
+        self.provider.set_groups(field, sorting, reverse, allow_singletons, allow_multiple)
 
-    def get_search_def(self):
-        return self.provider.get_search_def()
-
-    def get_sorting(self):
-        return self.provider.get_sorting()
+    def set_group(self, index):
+        self.provider.set_group(index)
 
     def set_search(self, search_text: str, search_type: str):
         self.provider.set_search(search_text, search_type)
 
-    def get_videos(self, page_size, page_number, fields):
+    def set_sorting(self, sorting):
+        self.provider.set_sort(sorting)
+
+    def get_info_and_videos(self, page_size, page_number, fields):
         videos = []
         nb_videos = self._count_videos()
+        nb_pages = self._count_pages(page_size)
         if nb_videos:
-            nb_pages = self._count_pages(page_size)
             if page_number < 0:
                 page_number = 0
             if page_number >= nb_pages:
@@ -85,29 +85,22 @@ class GuiAPI:
                 js['hasThumbnail'] = video.thumbnail_path.exists()
                 js['local_id'] = index
                 videos.append(js)
-        return {'videos' : videos, 'pageNumber': page_number}
-
-    def get_info(self, page_size):
-        group_def = self.get_group_def()
         return {
-            'nbVideos': self._count_videos(),
-            'nbPages': self._count_pages(page_size),
-            'validSize': self._valid_size(),
-            'validLength': self._valid_length(),
-            'nbGroups': self._count_groups(),
+            'nbVideos': nb_videos,
+            'nbPages': nb_pages,
+            'validSize': str(self.provider.get_view_file_size()),
+            'validLength': str(self.provider.get_view_duration()),
+            'nbGroups': self.provider.count_groups(),
             'notFound': self.provider.all_not_found(),
-            'sources': self.get_sources(),
-            'groupDef': group_def,
-            'searchDef': self.get_search_def(),
-            'sorting': self.get_sorting(),
-            'sourceTree': self.get_source_tree()
+            'sources': self.provider.get_sources(),
+            'groupDef': self.provider.get_group_def(),
+            'searchDef': self.provider.get_search_def(),
+            'sorting': self.provider.get_sorting(),
+            'sourceTree': self._get_source_tree(),
+            'videos': videos,
+            'pageNumber': page_number,
+            'properties': self.get_prop_types(),
         }
-
-    def get_info_and_videos(self, page_size, page_number, fields):
-        info = self.get_info(page_size)
-        info.update(self.get_videos(page_size, page_number, fields))
-        info['properties'] = self.get_prop_types()
-        return info
 
     def open_video(self, index):
         try:
@@ -131,37 +124,12 @@ class GuiAPI:
         video = self.provider.get_video(index)
         try:
             self.api.database.change_video_file_title(video, new_title)
-            self.provider.check_group()
+            self.provider.on_properties_modified(
+                ('filename', 'file_title') + (() if video.meta_title else ('meta_title',)))
+            self.provider.load()
             return {'filename': self._to_json_value(video.filename), 'file_title': video.file_title}
         except OSError as exc:
             return {'error': str(exc)}
-
-    def group_videos(self, field, sorting=None, reverse=None, allow_singletons=None, allow_multiple=None):
-        self.provider.set_groups(field, sorting, reverse, allow_singletons, allow_multiple)
-
-    def set_group(self, index):
-        self.provider.set_group(index)
-
-    def set_group_by_value(self, value):
-        self.provider.set_group_by_value(value)
-
-    def get_source_tree(self):
-        # TODO unreable videos cannot be displayed yet, as they are incomplete VideoState (not Video) objects.
-        tree = SOURCE_TREE.copy()
-        del tree['unreadable']
-        return tree
-
-    def get_sources(self):
-        return self.provider.get_sources()
-
-    def get_source_info(self):
-        return {
-            'tree': self.get_source_tree(),
-            'sources': self.provider.get_sources()
-        }
-
-    def set_sources(self, paths):
-        self.provider.set_source(paths)
 
     def add_prop_type(self, prop_name, prop_type, prop_default, prop_multiple):
         if prop_type == 'float':
@@ -172,17 +140,13 @@ class GuiAPI:
         self.api.database.add_prop_type(PropType(prop_name, prop_default, prop_multiple))
         return self.get_prop_types()
 
-    def get_prop_types(self):
-        props = sorted(self.api.database.get_prop_types(), key=lambda prop: prop.name)
-        return [prop.to_json() for prop in props]
-
     def delete_prop_type(self, name):
         self.api.database.remove_prop_type(name)
         return self.get_prop_types()
 
-    def set_video_properties(self, index, properties):
-        modified = self.api.database.set_video_properties(self.provider.get_video(index), properties)
-        self.provider.on_properties_modified(modified)
+    def get_prop_types(self):
+        props = sorted(self.api.database.get_prop_types(), key=lambda prop: prop.name)
+        return [prop.to_json() for prop in props]
 
     def fill_property_with_terms(self, prop_name):
         db = self.api.database
@@ -263,6 +227,16 @@ class GuiAPI:
             self.api.database.save()
             self.provider.on_properties_modified((old_name, new_name))
 
+    def set_video_properties(self, index, properties):
+        modified = self.api.database.set_video_properties(self.provider.get_video(index), properties)
+        self.provider.on_properties_modified(modified)
+
+    def _get_source_tree(self):
+        # TODO unreable videos cannot be displayed yet, as they are incomplete VideoState (not Video) objects.
+        tree = SOURCE_TREE.copy()
+        del tree['unreadable']
+        return tree
+
     def _count_videos(self):
         return self.provider.count()
 
@@ -270,24 +244,6 @@ class GuiAPI:
         assert page_size > 0
         count = self._count_videos()
         return (count // page_size) + bool(count % page_size)
-
-    def _count_groups(self):
-        return self.provider.count_groups()
-
-    def _valid_size(self):
-        return str(self.provider.get_view_file_size())
-
-    def _valid_length(self):
-        return str(self.provider.get_view_duration())
-
-    def _get_group_field_value(self):
-        return self._to_json_value(self.provider.get_group_field_value())
-
-    def _load_videos(self):
-        if self.provider:
-            self.provider.load()
-        else:
-            self.provider = VideoProvider(self.api.database)
 
     def _monitor_notifications(self):
         print('Monitoring notifications ...')
@@ -323,6 +279,12 @@ class GuiAPI:
         # to override.
         pass
 
+    def _load_videos(self):
+        if self.provider:
+            self.provider.load()
+        else:
+            self.provider = VideoProvider(self.api.database)
+
     def _load_database(self):
         update = self.__update_on_load
         self.__update_on_load = True
@@ -353,9 +315,3 @@ class GuiAPI:
         if isinstance(value, int) and self.JSON_INTEGER_MIN <= value <= self.JSON_INTEGER_MAX:
             return value
         return str(value)
-
-    def _json_error(self, message):
-        return {'status': -1, 'message': message}
-
-    def _json_ok(self):
-        return {'status': 0}

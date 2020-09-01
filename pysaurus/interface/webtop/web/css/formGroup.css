@@ -10,6 +10,6 @@
     padding: 0.5em;
     width: 50%;
 }
-.form-group td.label {
+.form-group td:first-child {
     text-align: right;
 }

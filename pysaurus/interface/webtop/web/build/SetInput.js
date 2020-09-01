@@ -97,7 +97,6 @@ System.register([], function (_export, _context) {
           }, /*#__PURE__*/React.createElement("td", {
             className: "input"
           }, this.props.values ? /*#__PURE__*/React.createElement("select", {
-            name: "add",
             value: this.state.add,
             onChange: this.onChangeAdd
           }, this.props.values.map((value, index) => /*#__PURE__*/React.createElement("option", {
@@ -105,7 +104,6 @@ System.register([], function (_export, _context) {
             value: value
           }, value))) : /*#__PURE__*/React.createElement("input", _extends({
             type: "text",
-            name: "add",
             value: this.state.add,
             onChange: this.onChangeAdd,
             onKeyDown: this.onInputAdd,

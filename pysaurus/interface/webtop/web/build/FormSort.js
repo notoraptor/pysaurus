@@ -58,7 +58,6 @@ System.register(["./constants.js"], function (_export, _context) {
               className: "button-remove-sort",
               onClick: () => this.removeCriterion(index)
             }, "-"), /*#__PURE__*/React.createElement("select", {
-              name: 'field-' + index,
               value: field,
               onChange: event => this.setField(index, event.target.value)
             }, SORTED_FIELDS_AND_TITLES.map((entry, fieldIndex) => /*#__PURE__*/React.createElement("option", {
@@ -67,7 +66,6 @@ System.register(["./constants.js"], function (_export, _context) {
             }, entry[1]))), /*#__PURE__*/React.createElement("input", {
               type: "checkbox",
               id: reverseID,
-              name: 'reverse-' + index,
               checked: reverse,
               onChange: event => this.setReverse(index, event.target.checked)
             }), /*#__PURE__*/React.createElement("label", {

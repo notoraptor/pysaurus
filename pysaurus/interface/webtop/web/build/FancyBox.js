@@ -33,9 +33,7 @@ System.register([], function (_export, _context) {
             onClick: this.props.onClose
           }, "\xD7"))), /*#__PURE__*/React.createElement("div", {
             className: "fancybox-content"
-          }, /*#__PURE__*/React.createElement("div", {
-            className: "fancybox-inner-content"
-          }, this.props.onBuild(this.props.onClose)))));
+          }, this.props.onBuild(this.props.onClose))));
         }
 
         componentDidMount() {

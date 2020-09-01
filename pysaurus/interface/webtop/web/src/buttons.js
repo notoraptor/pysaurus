@@ -11,7 +11,7 @@ export class Cross extends React.Component {
             <div className={"small-button " + this.type}
                  {...(this.props.title ? {title: this.props.title} : {})}
                  {...(this.props.action ? {onClick: this.props.action} : {})}>
-                <span className="content">{this.content}</span>
+                {this.content}
             </div>
         );
     }

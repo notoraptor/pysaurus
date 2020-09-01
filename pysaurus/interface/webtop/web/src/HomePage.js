@@ -212,7 +212,6 @@ export class HomePage extends React.Component {
                     {this.state.status === HomeStatus.INITIAL ? (
                         <span className="input-update">
                             <input type="checkbox"
-                                   name="update"
                                    id="update"
                                    checked={this.state.update}
                                    onChange={this.onChangeUpdate}/>

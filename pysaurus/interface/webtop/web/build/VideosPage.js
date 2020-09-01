@@ -98,51 +98,30 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           const sortingIsDefault = sorting.length === 1 && sorting[0] === '-date';
           return /*#__PURE__*/React.createElement("table", {
             className: "filter"
-          }, /*#__PURE__*/React.createElement("tbody", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
-            className: "left"
-          }, sources.map((source, index) => /*#__PURE__*/React.createElement("div", {
-            className: "source",
+          }, /*#__PURE__*/React.createElement("tbody", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, sources.map((source, index) => /*#__PURE__*/React.createElement("div", {
             key: index
-          }, source.join(' ').replace('_', ' ')))), /*#__PURE__*/React.createElement("td", {
-            className: "right"
-          }, /*#__PURE__*/React.createElement(SettingIcon, {
+          }, source.join(' ').replace('_', ' ')))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement(SettingIcon, {
             title: `Select sources ... (${SHORTCUTS.select})`,
             action: app.selectVideos
-          }))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
-            className: "left"
-          }, groupDef ? /*#__PURE__*/React.createElement("div", {
-            className: "filter"
-          }, "Grouped") : /*#__PURE__*/React.createElement("div", {
+          }))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, groupDef ? /*#__PURE__*/React.createElement("div", null, "Grouped") : /*#__PURE__*/React.createElement("div", {
             className: "no-filter"
-          }, "Ungrouped")), /*#__PURE__*/React.createElement("td", {
-            className: "right"
-          }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(SettingIcon, {
+          }, "Ungrouped")), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(SettingIcon, {
             title: (groupDef ? 'Edit ...' : 'Group ...') + ` (${SHORTCUTS.group})`,
             action: app.groupVideos
           })), groupDef ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Cross, {
             title: "Reset group",
             action: app.resetGroup
-          })) : '')), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
-            className: "left"
-          }, searchDef ? /*#__PURE__*/React.createElement("div", {
-            className: "filter"
-          }, /*#__PURE__*/React.createElement("div", null, "Searched ", SEARCH_TYPE_TITLE[searchDef.cond]), /*#__PURE__*/React.createElement("div", null, "\"", /*#__PURE__*/React.createElement("strong", null, searchDef.text), "\"")) : /*#__PURE__*/React.createElement("div", {
+          })) : '')), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, searchDef ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", null, "Searched ", SEARCH_TYPE_TITLE[searchDef.cond]), /*#__PURE__*/React.createElement("div", null, "\"", /*#__PURE__*/React.createElement("strong", null, searchDef.text), "\"")) : /*#__PURE__*/React.createElement("div", {
             className: "no-filter"
-          }, "No search")), /*#__PURE__*/React.createElement("td", {
-            className: "right"
-          }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(SettingIcon, {
+          }, "No search")), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(SettingIcon, {
             title: (searchDef ? 'Edit ...' : 'Search ...') + ` (${SHORTCUTS.search})`,
             action: app.searchVideos
           })), searchDef ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Cross, {
             title: "reset search",
             action: app.resetSearch
-          })) : '')), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
-            className: "left"
-          }, /*#__PURE__*/React.createElement("div", null, "Sorted by"), sorting.map((val, i) => /*#__PURE__*/React.createElement("div", {
+          })) : '')), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, "Sorted by"), sorting.map((val, i) => /*#__PURE__*/React.createElement("div", {
             key: i
-          }, /*#__PURE__*/React.createElement("strong", null, val.substr(1)), ' ', val[0] === '-' ? /*#__PURE__*/React.createElement("span", null, "\u25BC") : /*#__PURE__*/React.createElement("span", null, "\u25B2")))), /*#__PURE__*/React.createElement("td", {
-            className: "right"
-          }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(SettingIcon, {
+          }, /*#__PURE__*/React.createElement("strong", null, val.substr(1)), ' ', val[0] === '-' ? /*#__PURE__*/React.createElement("span", null, "\u25BC") : /*#__PURE__*/React.createElement("span", null, "\u25B2")))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(SettingIcon, {
             title: `Sort ... (${SHORTCUTS.sort})`,
             action: app.sortVideos
           })), sortingIsDefault ? '' : /*#__PURE__*/React.createElement(Cross, {

@@ -13,14 +13,14 @@ System.register([], function (_export, _context) {
         // center? bool
         // full? bool
         render() {
-          const classNames = ['table'];
+          const classNames = ['cell-wrapper'];
           if (this.props.className) classNames.push(this.props.className);
           if (this.props.center) classNames.push('cell-center');
           if (this.props.full) classNames.push('cell-full');
           return /*#__PURE__*/React.createElement("div", {
             className: classNames.join(' ')
           }, /*#__PURE__*/React.createElement("div", {
-            className: "table-cell"
+            className: "cell"
           }, this.props.children));
         }
 

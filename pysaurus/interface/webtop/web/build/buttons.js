@@ -29,9 +29,7 @@ System.register([], function (_export, _context) {
             title: this.props.title
           } : {}, this.props.action ? {
             onClick: this.props.action
-          } : {}), /*#__PURE__*/React.createElement("span", {
-            className: "content"
-          }, this.content));
+          } : {}), this.content);
         }
 
       });

@@ -26,7 +26,7 @@ System.register([], function (_export, _context) {
 
         render() {
           return /*#__PURE__*/React.createElement("form", {
-            className: "status form-search"
+            className: "form-search"
           }, /*#__PURE__*/React.createElement("p", null, "Type text to search and choose how to search."), /*#__PURE__*/React.createElement("p", null, "You can also type text and then press enter to automatically select \"AND\" as search method."), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("input", {
             type: "text",
             id: "input-search",

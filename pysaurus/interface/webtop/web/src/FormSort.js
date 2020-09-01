@@ -38,10 +38,10 @@ export class FormSort extends React.Component {
             return (
                 <p key={index} className="sorting">
                     <button className="button-remove-sort" onClick={() => this.removeCriterion(index)}>-</button>
-                    <select name={'field-' + index} value={field} onChange={(event) => this.setField(index, event.target.value)}>
+                    <select value={field} onChange={(event) => this.setField(index, event.target.value)}>
                         {SORTED_FIELDS_AND_TITLES.map((entry, fieldIndex) => <option key={fieldIndex} value={entry[0]}>{entry[1]}</option>)}
                     </select>
-                    <input type="checkbox" id={reverseID} name={'reverse-' + index} checked={reverse} onChange={event => this.setReverse(index, event.target.checked)}/>
+                    <input type="checkbox" id={reverseID} checked={reverse} onChange={event => this.setReverse(index, event.target.checked)}/>
                     <label htmlFor={reverseID}>reverse</label>
                 </p>
             );

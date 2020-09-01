@@ -21,7 +21,6 @@ export class FormRenameVideo extends React.Component {
                     <h2><code id="filename">{this.props.filename}</code></h2>
                     <p className="form">
                         <input type="text"
-                               name="name"
                                id="name"
                                value={this.state.title}
                                onChange={this.onChange}

@@ -45,9 +45,7 @@ System.register(["./Test.js", "./HomePage.js", "./VideosPage.js", "./PropertiesP
           const fancy = this.state.fancy;
           return /*#__PURE__*/React.createElement("div", {
             className: "app"
-          }, /*#__PURE__*/React.createElement("main", {
-            className: fancy ? 'with-fancybox' : 'without-fancybox'
-          }, this.renderPage()), fancy ? this.renderFancyBox() : '');
+          }, /*#__PURE__*/React.createElement("main", null, this.renderPage()), fancy ? this.renderFancyBox() : '');
         }
 
         renderPage() {

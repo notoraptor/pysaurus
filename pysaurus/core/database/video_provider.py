@@ -511,12 +511,6 @@ class GroupingLayer(Layer):
     def get_hash(self):
         return ';'.join('%s=%d' % (g.field_value, len(g.videos)) for g in self._cache)
 
-    def get_group_id(self, field_value):
-        print('Looking for', field_value, 'in', list(self._cache.keys()))
-        if self._cache.contains_key(field_value):
-            return self._cache.lookup_index(field_value)
-        return None
-
 
 class GroupLayer(Layer):
     __slots__ = ()
@@ -676,11 +670,6 @@ class VideoProvider:
         self.group_layer.set_group_id(group_id)
         self.view = self.source_layer.run()
 
-    def set_group_by_value(self, value):
-        group_id = self.grouping_layer.get_group_id(value)
-        assert group_id is not None
-        self.set_group(group_id)
-
     def get_group_field_value(self):
         return self.group_layer.get_field_value()
 
@@ -720,11 +709,14 @@ class VideoProvider:
     def count_groups(self):
         return self.grouping_layer.count_groups() if self.grouping_layer.get_grouping() else 0
 
-    def get_video(self, index):
+    def get_video(self, index: int) -> Video:
         return self.view[index]
 
     def load(self):
         self.source_layer.request_update()
+        self.view = self.source_layer.run()
+
+    def update_view(self):
         self.view = self.source_layer.run()
 
     def get_group_id(self):
@@ -759,11 +751,14 @@ class VideoProvider:
 
     def on_properties_modified(self, properties: Sequence[str]):
         group_def = self.grouping_layer.get_grouping()
-        if group_def and group_def.field[0] == ':' and group_def.field[1:] in properties:
-            print('Grouping to update', group_def.field)
-            self.grouping_layer.request_update()
-            self.group_layer.request_update()
-            self.view = self.source_layer.run()
+        if group_def:
+            field = group_def.field[1:] if group_def.field[0] == ':' else group_def.field
+            if field in properties:
+                print('Grouping to update', group_def.field)
+                self.grouping_layer.request_update()
+                self.group_layer.request_update()
+                self.view = self.source_layer.run()
+                return True
 
     def reset_grouping(self):
         self.grouping_layer.request_update()

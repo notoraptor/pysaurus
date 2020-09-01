@@ -236,7 +236,6 @@ System.register(["./constants.js"], function (_export, _context) {
             className: "input-update"
           }, /*#__PURE__*/React.createElement("input", {
             type: "checkbox",
-            name: "update",
             id: "update",
             checked: this.state.update,
             onChange: this.onChangeUpdate
