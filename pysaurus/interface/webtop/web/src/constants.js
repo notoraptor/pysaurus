@@ -37,6 +37,7 @@ export const GroupPermission = {
     ONLY_MANY: 2,
     ALL: 3
 };
+
 export const FIELDS_GROUP_DEF = {
     'audio_bit_rate': GroupPermission.ALL,
     'audio_codec': GroupPermission.ALL,
@@ -125,3 +126,7 @@ export const SEARCH_TYPE_TITLE = {
 };
 
 export const PAGE_SIZES = [10, 20, 50, 100];
+
+export const VIDEO_DEFAULT_PAGE_SIZE = PAGE_SIZES[PAGE_SIZES.length - 1];
+
+export const VIDEO_DEFAULT_PAGE_NUMBER = 0;

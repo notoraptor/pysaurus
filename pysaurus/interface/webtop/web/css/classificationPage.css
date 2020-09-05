@@ -1,0 +1,7 @@
+.path-step {
+    background-color: yellow;
+    padding: 0.5em;
+}
+.path-step .title {
+    flex-grow: 1;
+}

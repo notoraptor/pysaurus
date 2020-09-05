@@ -1,7 +1,7 @@
-System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Pagination.js", "./Video.js", "./FormSourceVideo.js", "./FormGroup.js", "./FormSearch.js", "./FormSort.js", "./GroupView.js", "./Dialog.js", "./Cell.js", "./FormEditPropertyValue.js"], function (_export, _context) {
+System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Pagination.js", "./Video.js", "./FormSourceVideo.js", "./FormGroup.js", "./FormSearch.js", "./FormSort.js", "./GroupView.js", "./Dialog.js", "./Cell.js", "./FormEditPropertyValue.js", "./FormSetClassification.js", "./FormFillKeywords.js"], function (_export, _context) {
   "use strict";
 
-  var SettingIcon, Cross, PAGE_SIZES, FIELDS, SEARCH_TYPE_TITLE, MenuPack, MenuItem, Menu, MenuItemCheck, Pagination, Video, FormSourceVideo, FormGroup, FormSearch, FormSort, GroupView, Dialog, Cell, FormEditPropertyValue, Filter, VideosPage, SHORTCUTS, SPECIAL_KEYS;
+  var SettingIcon, Cross, PAGE_SIZES, FIELDS, SEARCH_TYPE_TITLE, MenuPack, MenuItem, Menu, MenuItemCheck, Pagination, Video, FormSourceVideo, FormGroup, FormSearch, FormSort, GroupView, Dialog, Cell, FormEditPropertyValue, FormSetClassification, FormFillKeywords, Filter, VideosPage, SHORTCUTS, SPECIAL_KEYS;
 
   function assertUniqueShortcuts() {
     const duplicates = {};
@@ -65,6 +65,10 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
       Cell = _CellJs.Cell;
     }, function (_FormEditPropertyValueJs) {
       FormEditPropertyValue = _FormEditPropertyValueJs.FormEditPropertyValue;
+    }, function (_FormSetClassificationJs) {
+      FormSetClassification = _FormSetClassificationJs.FormSetClassification;
+    }, function (_FormFillKeywordsJs) {
+      FormFillKeywords = _FormFillKeywordsJs.FormFillKeywords;
     }],
     execute: function () {
       SHORTCUTS = {
@@ -133,23 +137,6 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
       };
 
       _export("VideosPage", VideosPage = class VideosPage extends React.Component {
-        parametersToState(parameters, state) {
-          state.pageSize = parameters.pageSize;
-          state.pageNumber = parameters.pageNumber;
-          state.nbVideos = parameters.info.nbVideos;
-          state.nbPages = parameters.info.nbPages;
-          state.validSize = parameters.info.validSize;
-          state.validLength = parameters.info.validLength;
-          state.notFound = parameters.info.notFound;
-          state.groupDef = parameters.info.groupDef;
-          state.searchDef = parameters.info.searchDef;
-          state.sources = parameters.info.sources;
-          state.sorting = parameters.info.sorting;
-          state.sourceTree = parameters.info.sourceTree;
-          state.properties = parameters.info.properties;
-          state.videos = parameters.info.videos;
-        }
-
         constructor(props) {
           // parameters: {pageSize, pageNumber, info}
           // app: App
@@ -183,6 +170,8 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           this.stackFilter = this.stackFilter.bind(this);
           this.selectGroup = this.selectGroup.bind(this);
           this.editPropertyValue = this.editPropertyValue.bind(this);
+          this.classify = this.classify.bind(this);
+          this.fillWithKeywords = this.fillWithKeywords.bind(this);
           this.parametersToState(this.props.parameters, this.state);
           this.callbackIndex = -1;
           this.shortcuts = {
@@ -203,6 +192,7 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           const notFound = this.state.notFound;
           const groupDef = this.state.groupDef;
           const stringSetProperties = this.getStringSetProperties(this.state.properties);
+          const multipleProperties = this.getMultipleProperties(this.state.properties);
           return /*#__PURE__*/React.createElement("div", {
             id: "videos"
           }, /*#__PURE__*/React.createElement("header", {
@@ -231,12 +221,11 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           }, "Reload database ..."), /*#__PURE__*/React.createElement(MenuItem, {
             shortcut: SHORTCUTS.manageProperties,
             action: this.manageProperties
-          }, "Manage properties ..."), stringSetProperties.length ? /*#__PURE__*/React.createElement(Menu, {
-            title: "Put keywords into a property"
-          }, stringSetProperties.map((def, i) => /*#__PURE__*/React.createElement(MenuItem, {
-            key: i,
-            action: () => this.fillWithKeywords(def.name)
-          }, def.name))) : '', /*#__PURE__*/React.createElement(Menu, {
+          }, "Manage properties ..."), multipleProperties.length ? /*#__PURE__*/React.createElement(MenuItem, {
+            action: this.classify
+          }, "Classify ...") : '', stringSetProperties.length ? /*#__PURE__*/React.createElement(MenuItem, {
+            action: this.fillWithKeywords
+          }, "Put keywords into a property ...") : '', /*#__PURE__*/React.createElement(Menu, {
             title: "Page size ..."
           }, PAGE_SIZES.map((count, index) => /*#__PURE__*/React.createElement(MenuItemCheck, {
             key: index,
@@ -289,9 +278,13 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           }, this.state.stackGroup ? Utils.CHARACTER_ARROW_DOWN : Utils.CHARACTER_ARROW_UP)), this.state.stackGroup ? '' : /*#__PURE__*/React.createElement("div", {
             className: "stack-content"
           }, /*#__PURE__*/React.createElement(GroupView, {
-            definition: groupDef,
+            groupID: groupDef.group_id,
+            field: groupDef.field,
+            sorting: groupDef.sorting,
+            reverse: groupDef.reverse,
+            groups: groupDef.groups,
             onSelect: this.selectGroup,
-            onValueOptions: this.editPropertyValue
+            onOptions: this.editPropertyValue
           }))) : ''), /*#__PURE__*/React.createElement("div", {
             className: "main-panel videos"
           }, this.renderVideos())), /*#__PURE__*/React.createElement("footer", {
@@ -324,6 +317,23 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
 
         componentDidMount() {
           this.callbackIndex = KEYBOARD_MANAGER.register(this.checkShortcut);
+        }
+
+        parametersToState(parameters, state) {
+          state.pageSize = parameters.pageSize;
+          state.pageNumber = parameters.pageNumber;
+          state.nbVideos = parameters.info.nbVideos;
+          state.nbPages = parameters.info.nbPages;
+          state.validSize = parameters.info.validSize;
+          state.validLength = parameters.info.validLength;
+          state.notFound = parameters.info.notFound;
+          state.groupDef = parameters.info.groupDef;
+          state.searchDef = parameters.info.searchDef;
+          state.sources = parameters.info.sources;
+          state.sorting = parameters.info.sorting;
+          state.sourceTree = parameters.info.sourceTree;
+          state.properties = parameters.info.properties;
+          state.videos = parameters.info.videos;
         }
 
         scrollTop() {
@@ -486,6 +496,32 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           this.props.app.loadPropertiesPage();
         }
 
+        classify() {
+          this.props.app.loadDialog('Choose property to classify:', onClose => /*#__PURE__*/React.createElement(FormSetClassification, {
+            properties: this.getMultipleProperties(this.state.properties),
+            onClose: field => {
+              onClose();
+
+              if (field) {
+                python_call('classifier_set_property', field).then(data => this.props.app.loadClassificationPage(data)).catch(backend_error);
+              }
+            }
+          }));
+        }
+
+        fillWithKeywords() {
+          this.props.app.loadDialog(`Fill property`, onClose => /*#__PURE__*/React.createElement(FormFillKeywords, {
+            properties: this.getStringSetProperties(this.state.properties),
+            onClose: state => {
+              onClose();
+
+              if (state) {
+                python_call('fill_property_with_terms', state.field, state.onlyEmpty).then(() => this.updateStatus(`Filled property "${state.field}" with video keywords.`, true, true)).catch(backend_error);
+              }
+            }
+          }));
+        }
+
         setPageSize(count) {
           if (count !== this.state.pageSize) this.updatePage({
             pageSize: count,
@@ -537,6 +573,16 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           return properties;
         }
 
+        getMultipleProperties(definitions) {
+          const properties = [];
+
+          for (let def of definitions) {
+            if (def.multiple) properties.push(def);
+          }
+
+          return properties;
+        }
+
         generatePropTable(definitions) {
           const properties = {};
 
@@ -547,25 +593,10 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           return properties;
         }
 
-        fillWithKeywords(propertyName) {
-          this.props.app.loadDialog(`Fill property "${propertyName}"`, onClose => /*#__PURE__*/React.createElement(Dialog, {
-            yes: 'fill',
-            no: 'cancel',
-            onClose: yes => {
-              onClose();
-
-              if (yes) {
-                python_call('fill_property_with_terms', propertyName).then(() => this.updateStatus(`Filled property "${propertyName}" with video keywords.`, true, true)).catch(backend_error);
-              }
-            }
-          }, /*#__PURE__*/React.createElement(Cell, {
-            className: "text-center",
-            center: true,
-            full: true
-          }, /*#__PURE__*/React.createElement("h3", null, "Fill property \"", propertyName, "\" with videos keywords (meta title and file path excluding extension)?"))));
-        }
-
-        editPropertyValue(name, value) {
+        editPropertyValue(index) {
+          const groupDef = this.state.groupDef;
+          const name = groupDef.field.substr(1);
+          const value = groupDef.groups[index].value;
           this.props.app.loadDialog(`Property "${name}", value "${value}"`, onClose => /*#__PURE__*/React.createElement(FormEditPropertyValue, {
             properties: this.generatePropTable(this.state.properties),
             name: name,

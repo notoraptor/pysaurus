@@ -11,6 +11,8 @@ import {GroupView} from "./GroupView.js";
 import {Dialog} from "./Dialog.js";
 import {Cell} from "./Cell.js";
 import {FormEditPropertyValue} from "./FormEditPropertyValue.js";
+import {FormSetClassification} from "./FormSetClassification.js";
+import {FormFillKeywords} from "./FormFillKeywords.js";
 
 const SHORTCUTS = {
     select: "Ctrl+T",
@@ -130,22 +132,6 @@ class Filter extends React.Component {
 }
 
 export class VideosPage extends React.Component {
-    parametersToState(parameters, state) {
-        state.pageSize = parameters.pageSize;
-        state.pageNumber = parameters.pageNumber;
-        state.nbVideos = parameters.info.nbVideos;
-        state.nbPages = parameters.info.nbPages;
-        state.validSize = parameters.info.validSize;
-        state.validLength = parameters.info.validLength;
-        state.notFound = parameters.info.notFound;
-        state.groupDef = parameters.info.groupDef;
-        state.searchDef = parameters.info.searchDef;
-        state.sources = parameters.info.sources;
-        state.sorting = parameters.info.sorting;
-        state.sourceTree = parameters.info.sourceTree;
-        state.properties = parameters.info.properties;
-        state.videos = parameters.info.videos;
-    }
     constructor(props) {
         // parameters: {pageSize, pageNumber, info}
         // app: App
@@ -179,6 +165,9 @@ export class VideosPage extends React.Component {
         this.stackFilter = this.stackFilter.bind(this);
         this.selectGroup = this.selectGroup.bind(this);
         this.editPropertyValue = this.editPropertyValue.bind(this);
+        this.classify = this.classify.bind(this);
+        this.fillWithKeywords = this.fillWithKeywords.bind(this);
+
         this.parametersToState(this.props.parameters, this.state);
         this.callbackIndex = -1;
         this.shortcuts = {
@@ -198,6 +187,7 @@ export class VideosPage extends React.Component {
         const notFound = this.state.notFound;
         const groupDef = this.state.groupDef;
         const stringSetProperties = this.getStringSetProperties(this.state.properties);
+        const multipleProperties = this.getMultipleProperties(this.state.properties);
 
         return (
             <div id="videos">
@@ -212,13 +202,8 @@ export class VideosPage extends React.Component {
                         {notFound || !nbVideos ? '' : <MenuItem action={this.openRandomVideo}>Open random video</MenuItem>}
                         <MenuItem shortcut={SHORTCUTS.reload} action={this.reloadDatabase}>Reload database ...</MenuItem>
                         <MenuItem shortcut={SHORTCUTS.manageProperties} action={this.manageProperties}>Manage properties ...</MenuItem>
-                        {stringSetProperties.length ? (
-                            <Menu title="Put keywords into a property">
-                                {stringSetProperties.map((def, i) => (
-                                    <MenuItem key={i} action={() => this.fillWithKeywords(def.name)}>{def.name}</MenuItem>
-                                ))}
-                            </Menu>
-                        ) : ''}
+                        {multipleProperties.length ? <MenuItem action={this.classify}>Classify ...</MenuItem> : ''}
+                        {stringSetProperties.length ? <MenuItem action={this.fillWithKeywords}>Put keywords into a property ...</MenuItem> : ''}
                         <Menu title="Page size ...">
                             {PAGE_SIZES.map((count, index) => (
                                 <MenuItemCheck key={index}
@@ -267,9 +252,13 @@ export class VideosPage extends React.Component {
                                 </div>
                                 {this.state.stackGroup ? '' : (
                                     <div className="stack-content">
-                                        <GroupView definition={groupDef}
+                                        <GroupView groupID={groupDef.group_id}
+                                                   field={groupDef.field}
+                                                   sorting={groupDef.sorting}
+                                                   reverse={groupDef.reverse}
+                                                   groups={groupDef.groups}
                                                    onSelect={this.selectGroup}
-                                                   onValueOptions={this.editPropertyValue}/>
+                                                   onOptions={this.editPropertyValue}/>
                                     </div>
                                 )}
                             </div>
@@ -304,6 +293,22 @@ export class VideosPage extends React.Component {
     }
     componentDidMount() {
         this.callbackIndex = KEYBOARD_MANAGER.register(this.checkShortcut);
+    }
+    parametersToState(parameters, state) {
+        state.pageSize = parameters.pageSize;
+        state.pageNumber = parameters.pageNumber;
+        state.nbVideos = parameters.info.nbVideos;
+        state.nbPages = parameters.info.nbPages;
+        state.validSize = parameters.info.validSize;
+        state.validLength = parameters.info.validLength;
+        state.notFound = parameters.info.notFound;
+        state.groupDef = parameters.info.groupDef;
+        state.searchDef = parameters.info.searchDef;
+        state.sources = parameters.info.sources;
+        state.sorting = parameters.info.sorting;
+        state.sourceTree = parameters.info.sourceTree;
+        state.properties = parameters.info.properties;
+        state.videos = parameters.info.videos;
     }
 
     scrollTop() {
@@ -428,6 +433,31 @@ export class VideosPage extends React.Component {
     manageProperties() {
         this.props.app.loadPropertiesPage();
     }
+    classify() {
+        this.props.app.loadDialog('Choose property to classify:', onClose => (
+            <FormSetClassification properties={this.getMultipleProperties(this.state.properties)} onClose={field => {
+                onClose();
+                if (field) {
+                    python_call('classifier_set_property', field)
+                        .then(data => this.props.app.loadClassificationPage(data))
+                        .catch(backend_error);
+                }
+            }}/>
+        ));
+    }
+    fillWithKeywords() {
+        this.props.app.loadDialog(`Fill property`, onClose => (
+            <FormFillKeywords properties={this.getStringSetProperties(this.state.properties)} onClose={state => {
+                onClose();
+                if (state) {
+                    python_call('fill_property_with_terms', state.field, state.onlyEmpty)
+                        .then(() => this.updateStatus(
+                            `Filled property "${state.field}" with video keywords.`, true, true))
+                        .catch(backend_error);
+                }
+            }}/>
+        ));
+    }
     setPageSize(count) {
         if (count !== this.state.pageSize)
             this.updatePage({pageSize: count, pageNumber: 0});
@@ -463,6 +493,14 @@ export class VideosPage extends React.Component {
         }
         return properties;
     }
+    getMultipleProperties(definitions) {
+        const properties = [];
+        for (let def of definitions) {
+            if (def.multiple)
+                properties.push(def);
+        }
+        return properties;
+    }
     generatePropTable(definitions) {
         const properties = {};
         for (let def of definitions) {
@@ -470,24 +508,10 @@ export class VideosPage extends React.Component {
         }
         return properties;
     }
-    fillWithKeywords(propertyName) {
-        this.props.app.loadDialog(`Fill property "${propertyName}"`, onClose => (
-            <Dialog yes={'fill'} no={'cancel'} onClose={yes => {
-                onClose();
-                if (yes) {
-                    python_call('fill_property_with_terms', propertyName)
-                        .then(() => this.updateStatus(
-                            `Filled property "${propertyName}" with video keywords.`, true, true))
-                        .catch(backend_error);
-                }
-            }}>
-                <Cell className="text-center" center={true} full={true}>
-                    <h3>Fill property "{propertyName}" with videos keywords (meta title and file path excluding extension)?</h3>
-                </Cell>
-            </Dialog>
-        ));
-    }
-    editPropertyValue(name, value) {
+    editPropertyValue(index) {
+        const groupDef = this.state.groupDef;
+        const name = groupDef.field.substr(1);
+        const value = groupDef.groups[index].value;
         this.props.app.loadDialog(`Property "${name}", value "${value}"`, onClose => (
             <FormEditPropertyValue properties={this.generatePropTable(this.state.properties)} name={name} value={value} onClose={operation => {
                 onClose();

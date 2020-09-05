@@ -8,11 +8,12 @@ from typing import Optional
 from pysaurus.core.database.api import API
 from pysaurus.core.database.notifications import DatabaseReady
 from pysaurus.core.database.properties import PropType
-from pysaurus.core.database.video_provider import VideoProvider, SOURCE_TREE
+from pysaurus.core.database.video_provider import VideoProvider, GroupArray, classify_videos, SOURCE_TREE
 from pysaurus.core.functions import launch_thread
 from pysaurus.core.notification import Notification
 from pysaurus.interface.common.parallel_notifier import ParallelNotifier
 from pysaurus.tests.test_utils import TEST_LIST_FILE_PATH
+from pysaurus.core.components import AbsolutePath
 
 
 class GuiAPI:
@@ -29,6 +30,7 @@ class GuiAPI:
 
         self.api = None  # type: Optional[API]
         self.provider = None  # type: Optional[VideoProvider]
+        self.classifier = None  # type: Optional[GroupArray]
 
         self.__update_on_load = True
 
@@ -108,6 +110,12 @@ class GuiAPI:
         except OSError:
             return False
 
+    def open_video_from_filename(self, filename):
+        try:
+            return str(AbsolutePath.ensure(filename).open())
+        except OSError:
+            return False
+
     def open_containing_folder(self, index):
         video = self.provider.get_video(index)
         ret = video.filename.open_containing_folder()
@@ -148,15 +156,17 @@ class GuiAPI:
         props = sorted(self.api.database.get_prop_types(), key=lambda prop: prop.name)
         return [prop.to_json() for prop in props]
 
-    def fill_property_with_terms(self, prop_name):
+    def fill_property_with_terms(self, prop_name, only_empty=False):
         db = self.api.database
         prop_type = db.get_prop_type(prop_name)
         assert prop_type.multiple
         assert prop_type.type is str
-        for video in self.provider.videos():
+        for video in self.provider.get_all_videos():
+            if only_empty and video.properties.get(prop_name, None):
+                continue
             values = video.terms(as_set=True)
             values.update(video.properties.get(prop_name, ()))
-            video.set_property(prop_name, prop_type(values))
+            video.properties[prop_name] = prop_type(values)
         db.save()
         self.provider.on_properties_modified([prop_name])
 
@@ -166,7 +176,7 @@ class GuiAPI:
         prop_type = self.api.database.get_prop_type(name)
         if prop_type.multiple:
             prop_type.validate([value])
-            for video in self.provider.videos():
+            for video in self.provider.get_all_videos():
                 if name in video.properties and video.properties[name]:
                     new_values = set(video.properties[name])
                     if value in new_values:
@@ -175,7 +185,7 @@ class GuiAPI:
                         modified.append(video)
         else:
             prop_type.validate(value)
-            for video in self.provider.videos():
+            for video in self.provider.get_all_videos():
                 if name in video.properties and video.properties[name] == value:
                     del video.properties[name]
                     modified.append(video)
@@ -191,7 +201,7 @@ class GuiAPI:
         if prop_type.multiple:
             prop_type.validate([old_value])
             prop_type.validate([new_value])
-            for video in self.provider.videos():
+            for video in self.provider.get_all_videos():
                 if name in video.properties and video.properties[name]:
                     new_values = set(video.properties[name])
                     if old_value in new_values:
@@ -202,7 +212,7 @@ class GuiAPI:
         else:
             prop_type.validate(old_value)
             prop_type.validate(new_value)
-            for video in self.provider.videos():
+            for video in self.provider.get_all_videos():
                 if name in video.properties and video.properties[name] == old_value:
                     video.properties[name] = new_value
                     modified = True
@@ -231,8 +241,101 @@ class GuiAPI:
         modified = self.api.database.set_video_properties(self.provider.get_video(index), properties)
         self.provider.on_properties_modified(modified)
 
-    def _get_source_tree(self):
-        # TODO unreable videos cannot be displayed yet, as they are incomplete VideoState (not Video) objects.
+    def classifier_set_property(self, prop_name):
+        print('classifier set property')
+        assert self.api.database.get_prop_type(prop_name).multiple
+        self.classifier = classify_videos(self.provider.get_all_videos(), prop_name, [])
+        if not self.classifier:
+            raise ValueError('No values to classify for property "%s"' % prop_name)
+        return {
+            'properties': self.get_prop_types(),
+            'property': prop_name,
+            'path': [],
+            'groups': [{'value': g.field_value, 'count': len(g.videos)} for g in self.classifier],
+            'videos': [video.to_json() for video in self.classifier[0].videos]
+        }
+
+    def classifier_show_group(self, group_id):
+        print('classifier show group')
+        return {'videos': [video.to_json() for video in self.classifier[group_id].videos]}
+
+    def classifier_select_group(self, prop_name, path, group_id):
+        print('classifier select group', group_id)
+        assert self.api.database.get_prop_type(prop_name).multiple
+        group = self.classifier[group_id]
+        new_path = path + [group.field_value]
+        self.classifier = classify_videos(group.videos, prop_name, new_path)
+        return {
+            'path': new_path,
+            'groups': [{'value': g.field_value, 'count': len(g.videos)} for g in self.classifier],
+            'videos': [video.to_json() for video in self.classifier[0].videos]
+        }
+
+    def classifier_back(self, prop_name, path):
+        print('classifier back')
+        assert self.api.database.get_prop_type(prop_name).multiple
+        previous_path = path[:-1]
+
+        if previous_path:
+            # Select videos
+            videos = []
+            for video in self.provider.get_all_videos():
+                prop_values = set(video.properties.get(prop_name, ()))
+                if all(value in prop_values for value in previous_path):
+                    videos.append(video)
+        else:
+            videos = self.provider.get_all_videos()
+
+        self.classifier = classify_videos(videos, prop_name, previous_path)
+        return {
+            'path': previous_path,
+            'groups': [{'value': g.field_value, 'count': len(g.videos)} for g in self.classifier],
+            'videos': [video.to_json() for video in self.classifier[0].videos]
+        }
+
+    def classifier_concatenate_path(self, path, from_property, to_property):
+        assert path
+        from_prop_type = self.api.database.get_prop_type(from_property)
+        to_prop_type = self.api.database.get_prop_type(to_property)
+        assert from_prop_type.multiple
+        assert to_prop_type.type is str
+        from_prop_type.validate(path)
+        modified = []
+
+        for video in self.provider.get_all_videos():
+            if from_property in video.properties and video.properties[from_property]:
+                new_values = set(video.properties[from_property])
+                len_before = len(new_values)
+                new_values = new_values - set(path)
+                if len_before == len(new_values) + len(path):
+                    video.properties[from_property] = from_prop_type(new_values)
+                    modified.append(video)
+
+        new_value = ' '.join(str(value) for value in path)
+        if to_prop_type.multiple:
+            for video in modified:
+                new_values = set(video.properties.get(to_property, ()))
+                new_values.add(new_value)
+                video.properties[to_property] = to_prop_type(new_values)
+        else:
+            for video in modified:
+                video.properties[to_property] = to_prop_type(new_value)
+
+        if modified:
+            self.api.database.save()
+            self.provider.on_properties_modified([from_property, to_property])
+
+        self.classifier = classify_videos(self.provider.get_all_videos(), from_property, [])
+        if not self.classifier:
+            raise ValueError('No values to classify for property "%s"' % from_property)
+        return {
+            'groups': [{'value': g.field_value, 'count': len(g.videos)} for g in self.classifier],
+            'videos': [video.to_json() for video in self.classifier[0].videos]
+        }
+
+    @staticmethod
+    def _get_source_tree():
+        # TODO unreadable videos cannot be displayed yet, as they are incomplete VideoState (not Video) objects.
         tree = SOURCE_TREE.copy()
         del tree['unreadable']
         return tree
@@ -262,7 +365,6 @@ class GuiAPI:
                 traceback.print_tb(exc.__traceback__)
                 print(type(exc).__name__)
                 print(exc)
-                print()
         self.monitor_thread = None
         print('End monitoring.')
 

@@ -82,6 +82,9 @@
 	flex-direction: column;
 }
 
+#videos.classifier header > * + * {
+	margin-left: 1em;
+}
 #videos header .buttons {
 	vertical-align: middle;
 }

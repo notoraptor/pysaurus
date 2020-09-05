@@ -21,6 +21,7 @@ System.register(["./Dialog.js", "./Cell.js"], function (_export, _context) {
           this.state = {
             pageNumber: this.props.pageNumber
           };
+          this.onFocusInput = this.onFocusInput.bind(this);
           this.onChange = this.onChange.bind(this);
           this.onInput = this.onInput.bind(this);
           this.onClose = this.onClose.bind(this);
@@ -37,13 +38,23 @@ System.register(["./Dialog.js", "./Cell.js"], function (_export, _context) {
             className: "text-center"
           }, /*#__PURE__*/React.createElement("input", {
             type: "number",
+            id: "input-go",
             min: 1,
             max: this.props.nbPages,
             step: 1,
             value: this.state.pageNumber + 1,
+            onFocus: this.onFocusInput,
             onChange: this.onChange,
             onKeyDown: this.onInput
           }), " / ", this.props.nbPages));
+        }
+
+        componentDidMount() {
+          document.querySelector('#input-go').focus();
+        }
+
+        onFocusInput(event) {
+          event.target.select();
         }
 
         onChange(event) {

@@ -308,7 +308,13 @@ System.register(["./constants.js"], function (_export, _context) {
         }
 
         displayVideos() {
-          this.props.app.loadVideosPage(); // this.props.app.loadPropertiesPage();
+          this.props.app.loadVideosPage();
+          /*
+          this.props.app.loadPropertiesPage();
+          python_call('classifier_set_property', "category")
+              .then(data => this.props.app.loadClassificationPage(data))
+              .catch(backend_error);
+          */
         }
 
         onChangeUpdate(event) {

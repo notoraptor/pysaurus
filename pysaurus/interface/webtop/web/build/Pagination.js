@@ -1,13 +1,15 @@
-System.register(["./FormGoToPage.js"], function (_export, _context) {
+System.register(["./FormGoToPage.js", "./DialogSearch.js"], function (_export, _context) {
   "use strict";
 
-  var FormGoToPage, Pagination;
+  var FormGoToPage, DialogSearch, Pagination;
 
   _export("Pagination", void 0);
 
   return {
     setters: [function (_FormGoToPageJs) {
       FormGoToPage = _FormGoToPageJs.FormGoToPage;
+    }, function (_DialogSearchJs) {
+      DialogSearch = _DialogSearchJs.DialogSearch;
     }],
     execute: function () {
       _export("Pagination", Pagination = class Pagination extends React.Component {
@@ -17,12 +19,14 @@ System.register(["./FormGoToPage.js"], function (_export, _context) {
           // nbPages: int
           // pageNumber: int
           // onChange: function(int)
+          // onSearch? function(str)
           super(props);
           this.onFirst = this.onFirst.bind(this);
           this.onNext = this.onNext.bind(this);
           this.onLast = this.onLast.bind(this);
           this.onPrevious = this.onPrevious.bind(this);
           this.go = this.go.bind(this);
+          this.look = this.look.bind(this);
         }
 
         render() {
@@ -42,8 +46,11 @@ System.register(["./FormGoToPage.js"], function (_export, _context) {
             onClick: this.onPrevious
           }, "<"), ' ', /*#__PURE__*/React.createElement("span", {
             className: "go",
+            onClick: this.props.onSearch ? this.look : this.look
+          }, Utils.sentence(singular)), ' ', /*#__PURE__*/React.createElement("span", {
+            className: "go",
             onClick: this.go
-          }, Utils.sentence(singular), ' ', pageNumber + 1, " / ", nbPages), ' ', /*#__PURE__*/React.createElement("button", {
+          }, pageNumber + 1, " / ", nbPages), ' ', /*#__PURE__*/React.createElement("button", {
             className: "next",
             disabled: pageNumber === nbPages - 1,
             onClick: this.onNext
@@ -87,6 +94,15 @@ System.register(["./FormGoToPage.js"], function (_export, _context) {
             onClose: pageNumber => {
               onClose();
               if (pageNumber !== this.props.pageNumber) this.props.onChange(pageNumber);
+            }
+          }));
+        }
+
+        look() {
+          APP.loadDialog('Search first:', onClose => /*#__PURE__*/React.createElement(DialogSearch, {
+            onClose: text => {
+              onClose();
+              if (text && text.length) this.props.onSearch(text);
             }
           }));
         }

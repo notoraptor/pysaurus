@@ -43,6 +43,19 @@ def compare_text_or_data(v1, v2):
     return compare_text(v1, v2) if isinstance(v1, str) else compare_with_lt(v1, v2)
 
 
+JSON_INTEGER_MIN = -2 ** 31
+JSON_INTEGER_MAX = 2 ** 31 - 1
+def _to_json_value(value):
+    if isinstance(value, (tuple, list, set)):
+        return [_to_json_value(element) for element in value]
+    if isinstance(value, dict):
+        return {_to_json_value(key): _to_json_value(element) for key, element in value.items()}
+    if isinstance(value, (str, float, bool, type(None))):
+        return value
+    if isinstance(value, int) and JSON_INTEGER_MIN <= value <= JSON_INTEGER_MAX:
+        return value
+    return str(value)
+
 class Video(VideoState):
     UNREADABLE = False
 
@@ -123,24 +136,26 @@ class Video(VideoState):
         'audio_codec',
         'audio_codec_description',
         'container_format',
-        'errors',  # from VideoState
-        'filename',  # from VideoState
+        'date',
+        'day',
+        'disk',
+        'extension',
+        'file_size',
+        'file_title',
+        'filename',
+        'frame_rate',
         'height',
-        'meta_title',
+        'length',
+        'properties',
+        'quality',
         'sample_rate',
+        'size',
+        'thumbnail_path',
+        'title',
         'video_codec',
         'video_codec_description',
+        'video_id',
         'width',
-        'date',  # property VideoState.date
-        'day', # from date
-        'extension',  # from VideoState.filename
-        'file_title',  # from VideoState.filename
-        'frame_rate',  # frame_rate_num, frame_rate_den
-        'length',  # duration, duration_time_base
-        'quality',  # SPECIAL
-        'size',  # property VideoState.size
-        'thumbnail_path',  # thumb_name
-        'title',  # meta_title, file_title
     )
 
     STRING_FIELDS = {
@@ -157,6 +172,7 @@ class Video(VideoState):
         'title',
         'video_codec',
         'video_codec_description',
+        'meta_title',
     }
 
     def __init__(self,
@@ -316,6 +332,12 @@ class Video(VideoState):
             dct[_min] = getattr(self, _long)
         assert len(dct) == len_before + len(self.MIN_TO_LONG)
         return dct
+
+    def to_json(self):
+        js = {field: _to_json_value(getattr(self, field)) for field in self.ROW_FIELDS}
+        js['exists'] = self.exists()
+        js['hasThumbnail'] = self.thumbnail_path.exists()
+        return js
 
     @classmethod
     def from_dict(cls, dct, database):

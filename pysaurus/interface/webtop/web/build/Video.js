@@ -46,7 +46,7 @@ System.register(["./MenuPack.js", "./FormRenameVideo.js", "./Dialog.js", "./Form
           const meta_title = title === file_title ? null : title;
           const hasThumbnail = data.hasThumbnail;
           return /*#__PURE__*/React.createElement("div", {
-            className: 'video horizontal' + (index % 2 ? ' even' : ' odd') + (data.exists ? ' found' : ' not-found')
+            className: 'video horizontal' + (data.exists ? ' found' : ' not-found')
           }, /*#__PURE__*/React.createElement("div", {
             className: "image"
           }, hasThumbnail ? /*#__PURE__*/React.createElement("img", {
@@ -125,6 +125,9 @@ System.register(["./MenuPack.js", "./FormRenameVideo.js", "./Dialog.js", "./Form
             const name = def.name;
             const value = props.hasOwnProperty(name) ? props[name] : def.defaultValue;
             const valueString = propertyValueToString(def.type, def.multiple ? value.join(', ') : value.toString());
+            let noValue;
+            if (def.multiple) noValue = !value.length;else noValue = def.type === "str" && !value;
+            const printableValues = def.multiple ? value : [value];
             return /*#__PURE__*/React.createElement("div", {
               key: name,
               className: "property table-row"
@@ -133,8 +136,11 @@ System.register(["./MenuPack.js", "./FormRenameVideo.js", "./Dialog.js", "./Form
             }, /*#__PURE__*/React.createElement("strong", props.hasOwnProperty(name) ? {
               className: "defined"
             } : {}, name), ":"), /*#__PURE__*/React.createElement("div", {
-              className: "table-cell"
-            }, valueString ? /*#__PURE__*/React.createElement("span", null, valueString) : /*#__PURE__*/React.createElement("span", {
+              className: "table-cell property-value"
+            }, !noValue ? printableValues.map((element, elementIndex) => /*#__PURE__*/React.createElement("span", {
+              className: "value",
+              key: elementIndex
+            }, element.toString())) : /*#__PURE__*/React.createElement("span", {
               className: "no-value"
             }, "no value")));
           })));
@@ -219,7 +225,7 @@ System.register(["./MenuPack.js", "./FormRenameVideo.js", "./Dialog.js", "./Form
 
         renameVideo() {
           const filename = this.props.data.filename;
-          const title = this.props.data.title;
+          const title = this.props.data.file_title;
           this.props.parent.props.app.loadDialog('Rename', onClose => /*#__PURE__*/React.createElement(FormRenameVideo, {
             filename: filename,
             title: title,

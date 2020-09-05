@@ -1,13 +1,14 @@
 System.register([], function (_export, _context) {
   "use strict";
 
-  var Cross, SettingIcon;
+  var Cross, SettingIcon, PlusIcon;
 
   function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
   _export({
     Cross: void 0,
-    SettingIcon: void 0
+    SettingIcon: void 0,
+    PlusIcon: void 0
   });
 
   return {
@@ -41,6 +42,17 @@ System.register([], function (_export, _context) {
           super(props);
           this.type = "settings";
           this.content = Utils.CHARACTER_SETTINGS;
+        }
+
+      });
+
+      _export("PlusIcon", PlusIcon = class PlusIcon extends Cross {
+        constructor(props) {
+          // action ? function()
+          // title? str
+          super(props);
+          this.type = "plus";
+          this.content = "\u271A";
         }
 
       });

@@ -8,6 +8,7 @@ export class FormGoToPage extends React.Component {
         // onClose(pageNumber)
         super(props);
         this.state = {pageNumber: this.props.pageNumber};
+        this.onFocusInput = this.onFocusInput.bind(this);
         this.onChange = this.onChange.bind(this);
         this.onInput = this.onInput.bind(this);
         this.onClose = this.onClose.bind(this);
@@ -17,15 +18,23 @@ export class FormGoToPage extends React.Component {
             <Dialog yes={"go"} no={"cancel"} onClose={this.onClose}>
                 <Cell center={true} full={true} className="text-center">
                     <input type="number"
+                           id="input-go"
                            min={1}
                            max={this.props.nbPages}
                            step={1}
                            value={this.state.pageNumber + 1}
+                           onFocus={this.onFocusInput}
                            onChange={this.onChange}
                            onKeyDown={this.onInput}/> / {this.props.nbPages}
                 </Cell>
             </Dialog>
         );
+    }
+    componentDidMount() {
+        document.querySelector('#input-go').focus();
+    }
+    onFocusInput(event) {
+        event.target.select();
     }
     onChange(event) {
         const value = event.target.value;

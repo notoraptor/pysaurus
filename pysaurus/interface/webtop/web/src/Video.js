@@ -31,7 +31,7 @@ export class Video extends React.Component {
         const meta_title = (title === file_title ? null : title);
         const hasThumbnail = data.hasThumbnail;
         return (
-            <div className={'video horizontal' + (index % 2 ? ' even' : ' odd') + (data.exists ? ' found' : ' not-found')}>
+            <div className={'video horizontal' + (data.exists ? ' found' : ' not-found')}>
                 <div className="image">
                     {hasThumbnail ?
                         <img alt={data.title} src={data.thumbnail_path}/> :
@@ -56,7 +56,7 @@ export class Video extends React.Component {
                     </div>
                     <div className={'filename-line' + (data.exists ? '' : ' horizontal')}>
                         {data.exists ? '' : <div className="prepend" onClick={this.deleteVideo}><code className="text-not-found">NOT FOUND</code><code className="text-delete">DELETE</code></div>}
-                        <div className="filename"><code {...(data.exists ? {onClick: this.openVideo} : {})} >{data.filename}</code></div>
+                        <div className="filename"><code {...(data.exists ? {onClick: this.openVideo} : {})}>{data.filename}</code></div>
                     </div>
                     <div className="format horizontal">
                         <div className="prepend"><code>{data.extension}</code></div>
@@ -82,11 +82,19 @@ export class Video extends React.Component {
                     const name = def.name;
                     const value = props.hasOwnProperty(name) ? props[name] : def.defaultValue;
                     const valueString = propertyValueToString(def.type,def.multiple ? value.join(', ') : value.toString());
+                    let noValue;
+                    if (def.multiple)
+                        noValue = !value.length;
+                    else
+                        noValue = def.type === "str" && !value;
+                    const printableValues = def.multiple ? value : [value];
                     return (
                         <div key={name} className="property table-row">
                             <div className="table-cell property-name"><strong {...(props.hasOwnProperty(name) ? {className: "defined"} : {})}>{name}</strong>:</div>
-                            <div className="table-cell">
-                                {valueString ? <span>{valueString}</span> : <span className="no-value">no value</span>}
+                            <div className="table-cell property-value">
+                                {!noValue ? (printableValues.map((element, elementIndex) => (
+                                    <span className="value" key={elementIndex}>{element.toString()}</span>
+                                ))) : <span className="no-value">no value</span>}
                             </div>
                         </div>
                     );
@@ -182,7 +190,7 @@ export class Video extends React.Component {
     }
     renameVideo() {
         const filename = this.props.data.filename;
-        const title = this.props.data.title;
+        const title = this.props.data.file_title;
         this.props.parent.props.app.loadDialog('Rename', onClose => (
             <FormRenameVideo filename={filename} title={title} onClose={newTitle => {
                 onClose();

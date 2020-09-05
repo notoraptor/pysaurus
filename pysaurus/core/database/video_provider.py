@@ -92,6 +92,11 @@ class GroupDef(ToDict):
 
     def sort(self, groups):
         # type: (List[Group]) -> List[Group]
+        return self.sort_groups(groups, self.field, self.sorting, self.reverse)
+
+    @classmethod
+    def sort_groups(cls, groups, field, sorting='field', reverse=False):
+        # type: (List[Group], str, str, bool) -> List[Group]
         none_group = None
         other_groups = []
         for group in groups:
@@ -100,17 +105,17 @@ class GroupDef(ToDict):
                 none_group = group
             else:
                 other_groups.append(group)
-        field_comparator = self.generate_comparator(self.field, self.reverse)
-        if self.sorting == self.FIELD:
+        field_comparator = cls.generate_comparator(field, reverse)
+        if sorting == cls.FIELD:
             key = lambda group: field_comparator(group.field_value)
-        elif self.sorting == self.COUNT:
+        elif sorting == cls.COUNT:
             key = lambda group: (
-                self.make_comparable_number(len(group.videos), self.reverse),
+                cls.make_comparable_number(len(group.videos), reverse),
             ) + field_comparator(group.field_value)
         else:
-            assert self.sorting == self.LENGTH
+            assert sorting == cls.LENGTH
             key = lambda group: (
-                self.make_comparable_number(len(str(group.field_value)), self.reverse),
+                cls.make_comparable_number(len(str(group.field_value)), reverse),
             ) + field_comparator(group.field_value)
         other_groups.sort(key=key)
         return ([none_group] + other_groups) if none_group else other_groups
@@ -601,6 +606,23 @@ class SortLayer(Layer):
             cache.remove(video)
 
 
+def classify_videos(videos: Sequence[Video], prop_name: str, values: List) -> GroupArray:
+    classes = {}
+    for video in videos:
+        for value in video.properties.get(prop_name, []):
+            classes.setdefault(value, []).append(video)
+    if values:
+        latest_value = values[-1]
+        for value in values[:-1]:
+            classes.pop(value)
+        latest_group = Group(None, classes.pop(latest_value))
+        other_groups = [Group(field_value, group_videos) for field_value, group_videos in classes.items()]
+        groups = other_groups if latest_group is None else [latest_group] + other_groups
+    else:
+        groups = [Group(field_value, group_videos) for field_value, group_videos in classes.items()]
+    return GroupArray(GroupDef.sort_groups(groups, ':' + prop_name))
+
+
 class VideoProvider:
     __slots__ = ('database', 'source_layer', 'grouping_layer', 'group_layer', 'search_layer', 'sort_layer', 'view')
 
@@ -764,5 +786,5 @@ class VideoProvider:
         self.grouping_layer.request_update()
         self.view = self.source_layer.run()
 
-    def videos(self):
+    def get_all_videos(self):
         return self.source_layer.videos()

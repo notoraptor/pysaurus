@@ -1,4 +1,5 @@
 import {FormGoToPage} from "./FormGoToPage.js";
+import {DialogSearch} from "./DialogSearch.js";
 
 export class Pagination extends React.Component {
     constructor(props) {
@@ -7,12 +8,14 @@ export class Pagination extends React.Component {
         // nbPages: int
         // pageNumber: int
         // onChange: function(int)
+        // onSearch? function(str)
         super(props);
         this.onFirst = this.onFirst.bind(this);
         this.onNext = this.onNext.bind(this);
         this.onLast = this.onLast.bind(this);
         this.onPrevious = this.onPrevious.bind(this);
         this.go = this.go.bind(this);
+        this.look = this.look.bind(this);
     }
     render() {
         const singular = this.props.singular;
@@ -24,7 +27,9 @@ export class Pagination extends React.Component {
                 <span className="navigation">
                     <button className="first" disabled={pageNumber === 0} onClick={this.onFirst}>&lt;&lt;</button>
                     <button className="previous" disabled={pageNumber === 0} onClick={this.onPrevious}>&lt;</button>{' '}
-                    <span className="go" onClick={this.go}>{Utils.sentence(singular)}{' '}{pageNumber + 1} / {nbPages}</span>{' '}
+                    <span className="go" onClick={this.props.onSearch ? this.look : this.look}>{Utils.sentence(singular)}</span>
+                    {' '}
+                    <span className="go" onClick={this.go}>{pageNumber + 1} / {nbPages}</span>{' '}
                     <button className="next" disabled={pageNumber === nbPages - 1} onClick={this.onNext}>&gt;</button>
                     <button className="last" disabled={pageNumber === nbPages - 1} onClick={this.onLast}>&gt;&gt;</button>
                 </span>
@@ -58,6 +63,15 @@ export class Pagination extends React.Component {
                 onClose();
                 if (pageNumber !== this.props.pageNumber)
                     this.props.onChange(pageNumber);
+            }} />
+        ));
+    }
+    look() {
+        APP.loadDialog('Search first:', onClose => (
+            <DialogSearch onClose={text => {
+                onClose();
+                if (text && text.length)
+                    this.props.onSearch(text);
             }} />
         ));
     }
