@@ -278,12 +278,6 @@ export class HomePage extends React.Component {
     }
     displayVideos() {
         this.props.app.loadVideosPage();
-        /*
-        this.props.app.loadPropertiesPage();
-        python_call('classifier_set_property', "category")
-            .then(data => this.props.app.loadClassificationPage(data))
-            .catch(backend_error);
-        */
     }
     onChangeUpdate(event) {
         this.setState({update: event.target.checked});

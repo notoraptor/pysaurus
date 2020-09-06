@@ -20,6 +20,7 @@ export class FormEditPropertyValue extends React.Component {
         this.onEdit = this.onEdit.bind(this);
         this.onMove = this.onMove.bind(this);
         this.onClose = this.onClose.bind(this);
+        this.onEditKeyDown = this.onEditKeyDown.bind(this);
     }
     render() {
         const canMove = this.state.otherDefinitions.length;
@@ -85,7 +86,7 @@ export class FormEditPropertyValue extends React.Component {
                 </select>
             );
         } else {
-            input = <input type={def.type === "int" ? "number" : "text"} onChange={this.onEdit} value={propVal}/>;
+            input = <input type={def.type === "int" ? "number" : "text"} onChange={this.onEdit} value={propVal} onKeyDown={this.onEditKeyDown}/>;
         }
         return <div>{input}</div>;
     }
@@ -127,6 +128,11 @@ export class FormEditPropertyValue extends React.Component {
             this.setState({value: parsePropValString(def.type, def.enumeration, event.target.value)});
         } catch (exception) {
             window.alert(exception.toString());
+        }
+    }
+    onEditKeyDown(event) {
+        if (event.key === "Enter") {
+            this.onClose(true);
         }
     }
     onMove(event) {

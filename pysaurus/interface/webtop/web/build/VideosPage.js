@@ -145,7 +145,9 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
             status: 'Loaded.',
             confirmDeletion: true,
             stackFilter: false,
-            stackGroup: false
+            stackGroup: false,
+            stackPath: false,
+            path: []
           };
           this.parametersToState = this.parametersToState.bind(this);
           this.checkShortcut = this.checkShortcut.bind(this);
@@ -170,9 +172,18 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           this.stackFilter = this.stackFilter.bind(this);
           this.selectGroup = this.selectGroup.bind(this);
           this.editPropertyValue = this.editPropertyValue.bind(this);
-          this.classify = this.classify.bind(this);
           this.fillWithKeywords = this.fillWithKeywords.bind(this);
+          this.classifierSelectGroup = this.classifierSelectGroup.bind(this);
+          this.classifierUnstack = this.classifierUnstack.bind(this);
+          this.classifierConcatenate = this.classifierConcatenate.bind(this);
+          this.stackPath = this.stackPath.bind(this);
           this.parametersToState(this.props.parameters, this.state);
+          this.definitions = {};
+
+          for (let def of this.state.properties) {
+            this.definitions[def.name] = def;
+          }
+
           this.callbackIndex = -1;
           this.shortcuts = {
             [SHORTCUTS.select]: this.selectVideos,
@@ -193,6 +204,7 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           const groupDef = this.state.groupDef;
           const stringSetProperties = this.getStringSetProperties(this.state.properties);
           const multipleProperties = this.getMultipleProperties(this.state.properties);
+          const stringProperties = this.getStringProperties(this.state.properties);
           return /*#__PURE__*/React.createElement("div", {
             id: "videos"
           }, /*#__PURE__*/React.createElement("header", {
@@ -221,9 +233,7 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           }, "Reload database ..."), /*#__PURE__*/React.createElement(MenuItem, {
             shortcut: SHORTCUTS.manageProperties,
             action: this.manageProperties
-          }, "Manage properties ..."), multipleProperties.length ? /*#__PURE__*/React.createElement(MenuItem, {
-            action: this.classify
-          }, "Classify ...") : '', stringSetProperties.length ? /*#__PURE__*/React.createElement(MenuItem, {
+          }, "Manage properties ..."), stringSetProperties.length ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.fillWithKeywords
           }, "Put keywords into a property ...") : '', /*#__PURE__*/React.createElement(Menu, {
             title: "Page size ..."
@@ -266,7 +276,35 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
             className: "stack-content"
           }, /*#__PURE__*/React.createElement(Filter, {
             page: this
-          }))), groupDef ? /*#__PURE__*/React.createElement("div", {
+          }))), this.state.path.length ? /*#__PURE__*/React.createElement("div", {
+            className: "stack filter"
+          }, /*#__PURE__*/React.createElement("div", {
+            className: "stack-title",
+            onClick: this.stackPath
+          }, /*#__PURE__*/React.createElement("div", {
+            className: "title"
+          }, "Classifier path"), /*#__PURE__*/React.createElement("div", {
+            className: "icon"
+          }, this.state.stackPath ? Utils.CHARACTER_ARROW_DOWN : Utils.CHARACTER_ARROW_UP)), this.state.stackPath ? '' : /*#__PURE__*/React.createElement("div", {
+            className: "stack-content"
+          }, this.state.path.length > 1 && stringProperties.length ? /*#__PURE__*/React.createElement("div", {
+            className: "path-menu"
+          }, /*#__PURE__*/React.createElement(MenuPack, {
+            title: "Concatenate path into ..."
+          }, stringProperties.map((def, i) => /*#__PURE__*/React.createElement(MenuItem, {
+            key: i,
+            action: () => this.classifierConcatenate(def.name)
+          }, def.name)))) : '', this.state.path.map((value, index) => /*#__PURE__*/React.createElement("div", {
+            key: index,
+            className: "path-step horizontal"
+          }, /*#__PURE__*/React.createElement("div", {
+            className: "title"
+          }, value.toString()), index === this.state.path.length - 1 ? /*#__PURE__*/React.createElement("div", {
+            className: "icon"
+          }, /*#__PURE__*/React.createElement(Cross, {
+            title: "unstack",
+            action: this.classifierUnstack
+          })) : '')))) : '', groupDef ? /*#__PURE__*/React.createElement("div", {
             className: "stack group"
           }, /*#__PURE__*/React.createElement("div", {
             className: "stack-title",
@@ -278,13 +316,15 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           }, this.state.stackGroup ? Utils.CHARACTER_ARROW_DOWN : Utils.CHARACTER_ARROW_UP)), this.state.stackGroup ? '' : /*#__PURE__*/React.createElement("div", {
             className: "stack-content"
           }, /*#__PURE__*/React.createElement(GroupView, {
+            key: `${groupDef.field}-${this.state.path.join('-')}`,
             groupID: groupDef.group_id,
             field: groupDef.field,
             sorting: groupDef.sorting,
             reverse: groupDef.reverse,
             groups: groupDef.groups,
             onSelect: this.selectGroup,
-            onOptions: this.editPropertyValue
+            onOptions: this.editPropertyValue,
+            onPlus: groupDef.field[0] === ':' && this.definitions[groupDef.field.substr(1)].multiple ? this.classifierSelectGroup : null
           }))) : ''), /*#__PURE__*/React.createElement("div", {
             className: "main-panel videos"
           }, this.renderVideos())), /*#__PURE__*/React.createElement("footer", {
@@ -334,6 +374,7 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           state.sourceTree = parameters.info.sourceTree;
           state.properties = parameters.info.properties;
           state.videos = parameters.info.videos;
+          state.path = parameters.info.path;
         }
 
         scrollTop() {
@@ -496,19 +537,6 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           this.props.app.loadPropertiesPage();
         }
 
-        classify() {
-          this.props.app.loadDialog('Choose property to classify:', onClose => /*#__PURE__*/React.createElement(FormSetClassification, {
-            properties: this.getMultipleProperties(this.state.properties),
-            onClose: field => {
-              onClose();
-
-              if (field) {
-                python_call('classifier_set_property', field).then(data => this.props.app.loadClassificationPage(data)).catch(backend_error);
-              }
-            }
-          }));
-        }
-
         fillWithKeywords() {
           this.props.app.loadDialog(`Fill property`, onClose => /*#__PURE__*/React.createElement(FormFillKeywords, {
             properties: this.getStringSetProperties(this.state.properties),
@@ -563,6 +591,12 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           });
         }
 
+        stackPath() {
+          this.setState({
+            stackPath: !this.state.stackPath
+          });
+        }
+
         getStringSetProperties(definitions) {
           const properties = [];
 
@@ -578,6 +612,17 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
 
           for (let def of definitions) {
             if (def.multiple) properties.push(def);
+          }
+
+          return properties;
+        }
+
+        getStringProperties(definitions) {
+          const field = this.state.groupDef ? this.state.groupDef.field : null;
+          const properties = [];
+
+          for (let def of definitions) {
+            if (def.type === "str" && (!field || field.charAt(0) !== ':' || def.name !== field.substr(1))) properties.push(def);
           }
 
           return properties;
@@ -621,6 +666,24 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
               }
             }
           }));
+        }
+
+        classifierSelectGroup(index) {
+          python_call('classifier_select_group', index).then(() => this.updatePage({
+            pageNumber: 0
+          })).catch(backend_error);
+        }
+
+        classifierUnstack() {
+          python_call('classifier_back', this.state.path).then(() => this.updatePage({
+            pageNumber: 0
+          })).catch(backend_error);
+        }
+
+        classifierConcatenate(outputPropertyName) {
+          python_call('classifier_concatenate_path', outputPropertyName).then(() => this.updatePage({
+            pageNumber: 0
+          })).catch(backend_error);
         }
 
       });

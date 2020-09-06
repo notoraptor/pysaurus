@@ -8,7 +8,7 @@ from typing import Optional
 from pysaurus.core.database.api import API
 from pysaurus.core.database.notifications import DatabaseReady
 from pysaurus.core.database.properties import PropType
-from pysaurus.core.database.video_provider import VideoProvider, GroupArray, classify_videos, SOURCE_TREE
+from pysaurus.core.database.video_provider import VideoProvider, GroupArray, SOURCE_TREE
 from pysaurus.core.functions import launch_thread
 from pysaurus.core.notification import Notification
 from pysaurus.interface.common.parallel_notifier import ParallelNotifier
@@ -102,6 +102,7 @@ class GuiAPI:
             'videos': videos,
             'pageNumber': page_number,
             'properties': self.get_prop_types(),
+            'path': self.provider.classifier_layer.get_path(),
         }
 
     def open_video(self, index):
@@ -241,60 +242,30 @@ class GuiAPI:
         modified = self.api.database.set_video_properties(self.provider.get_video(index), properties)
         self.provider.on_properties_modified(modified)
 
-    def classifier_set_property(self, prop_name):
-        print('classifier set property')
-        assert self.api.database.get_prop_type(prop_name).multiple
-        self.classifier = classify_videos(self.provider.get_all_videos(), prop_name, [])
-        if not self.classifier:
-            raise ValueError('No values to classify for property "%s"' % prop_name)
-        return {
-            'properties': self.get_prop_types(),
-            'property': prop_name,
-            'path': [],
-            'groups': [{'value': g.field_value, 'count': len(g.videos)} for g in self.classifier],
-            'videos': [video.to_json() for video in self.classifier[0].videos]
-        }
-
     def classifier_show_group(self, group_id):
         print('classifier show group')
         return {'videos': [video.to_json() for video in self.classifier[group_id].videos]}
 
-    def classifier_select_group(self, prop_name, path, group_id):
+    def classifier_select_group(self, group_id):
         print('classifier select group', group_id)
-        assert self.api.database.get_prop_type(prop_name).multiple
-        group = self.classifier[group_id]
-        new_path = path + [group.field_value]
-        self.classifier = classify_videos(group.videos, prop_name, new_path)
-        return {
-            'path': new_path,
-            'groups': [{'value': g.field_value, 'count': len(g.videos)} for g in self.classifier],
-            'videos': [video.to_json() for video in self.classifier[0].videos]
-        }
+        prop_name = self.provider.grouping_layer.get_grouping().field[1:]
+        path = self.provider.classifier_layer.get_path()
+        value = self.provider.classifier_layer.get_group_value(group_id)
+        new_path = path + [value]
+        self.provider.classifier_layer.set_path(new_path)
+        self.provider.group_layer.set_group_id(0)
+        self.provider.on_properties_modified([prop_name])
 
-    def classifier_back(self, prop_name, path):
+    def classifier_back(self, path):
         print('classifier back')
-        assert self.api.database.get_prop_type(prop_name).multiple
-        previous_path = path[:-1]
+        prop_name = self.provider.grouping_layer.get_grouping().field[1:]
+        self.provider.classifier_layer.set_path(path[:-1])
+        self.provider.group_layer.set_group_id(0)
+        self.provider.on_properties_modified([prop_name])
 
-        if previous_path:
-            # Select videos
-            videos = []
-            for video in self.provider.get_all_videos():
-                prop_values = set(video.properties.get(prop_name, ()))
-                if all(value in prop_values for value in previous_path):
-                    videos.append(video)
-        else:
-            videos = self.provider.get_all_videos()
-
-        self.classifier = classify_videos(videos, prop_name, previous_path)
-        return {
-            'path': previous_path,
-            'groups': [{'value': g.field_value, 'count': len(g.videos)} for g in self.classifier],
-            'videos': [video.to_json() for video in self.classifier[0].videos]
-        }
-
-    def classifier_concatenate_path(self, path, from_property, to_property):
-        assert path
+    def classifier_concatenate_path(self, to_property):
+        path = self.provider.classifier_layer.get_path()
+        from_property = self.provider.grouping_layer.get_grouping().field[1:]
         from_prop_type = self.api.database.get_prop_type(from_property)
         to_prop_type = self.api.database.get_prop_type(to_property)
         assert from_prop_type.multiple
@@ -323,15 +294,11 @@ class GuiAPI:
 
         if modified:
             self.api.database.save()
+            self.provider.classifier_layer.set_path([])
+            self.provider.group_layer.set_group_id(0)
             self.provider.on_properties_modified([from_property, to_property])
 
-        self.classifier = classify_videos(self.provider.get_all_videos(), from_property, [])
-        if not self.classifier:
-            raise ValueError('No values to classify for property "%s"' % from_property)
-        return {
-            'groups': [{'value': g.field_value, 'count': len(g.videos)} for g in self.classifier],
-            'videos': [video.to_json() for video in self.classifier[0].videos]
-        }
+
 
     @staticmethod
     def _get_source_tree():

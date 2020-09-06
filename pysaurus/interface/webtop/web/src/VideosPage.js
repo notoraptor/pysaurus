@@ -141,6 +141,8 @@ export class VideosPage extends React.Component {
             confirmDeletion: true,
             stackFilter: false,
             stackGroup: false,
+            stackPath: false,
+            path: []
         };
         this.parametersToState = this.parametersToState.bind(this);
         this.checkShortcut = this.checkShortcut.bind(this);
@@ -165,10 +167,17 @@ export class VideosPage extends React.Component {
         this.stackFilter = this.stackFilter.bind(this);
         this.selectGroup = this.selectGroup.bind(this);
         this.editPropertyValue = this.editPropertyValue.bind(this);
-        this.classify = this.classify.bind(this);
         this.fillWithKeywords = this.fillWithKeywords.bind(this);
+        this.classifierSelectGroup = this.classifierSelectGroup.bind(this);
+        this.classifierUnstack = this.classifierUnstack.bind(this);
+        this.classifierConcatenate = this.classifierConcatenate.bind(this);
+        this.stackPath = this.stackPath.bind(this);
 
         this.parametersToState(this.props.parameters, this.state);
+        this.definitions = {};
+        for (let def of this.state.properties) {
+            this.definitions[def.name] = def;
+        }
         this.callbackIndex = -1;
         this.shortcuts = {
             [SHORTCUTS.select]: this.selectVideos,
@@ -188,6 +197,7 @@ export class VideosPage extends React.Component {
         const groupDef = this.state.groupDef;
         const stringSetProperties = this.getStringSetProperties(this.state.properties);
         const multipleProperties = this.getMultipleProperties(this.state.properties);
+        const stringProperties = this.getStringProperties(this.state.properties);
 
         return (
             <div id="videos">
@@ -202,7 +212,6 @@ export class VideosPage extends React.Component {
                         {notFound || !nbVideos ? '' : <MenuItem action={this.openRandomVideo}>Open random video</MenuItem>}
                         <MenuItem shortcut={SHORTCUTS.reload} action={this.reloadDatabase}>Reload database ...</MenuItem>
                         <MenuItem shortcut={SHORTCUTS.manageProperties} action={this.manageProperties}>Manage properties ...</MenuItem>
-                        {multipleProperties.length ? <MenuItem action={this.classify}>Classify ...</MenuItem> : ''}
                         {stringSetProperties.length ? <MenuItem action={this.fillWithKeywords}>Put keywords into a property ...</MenuItem> : ''}
                         <Menu title="Page size ...">
                             {PAGE_SIZES.map((count, index) => (
@@ -241,6 +250,37 @@ export class VideosPage extends React.Component {
                                 </div>
                             )}
                         </div>
+                        {this.state.path.length ? (
+                            <div className="stack filter">
+                                <div className="stack-title" onClick={this.stackPath}>
+                                    <div className="title">Classifier path</div>
+                                    <div className="icon">{this.state.stackPath ? Utils.CHARACTER_ARROW_DOWN : Utils.CHARACTER_ARROW_UP}</div>
+                                </div>
+                                {this.state.stackPath ? '' : (
+                                    <div className="stack-content">
+                                        {this.state.path.length > 1 && stringProperties.length ? (
+                                            <div className="path-menu">
+                                                <MenuPack title="Concatenate path into ...">
+                                                    {stringProperties.map((def, i) => (
+                                                        <MenuItem key={i} action={() => this.classifierConcatenate(def.name)}>{def.name}</MenuItem>
+                                                    ))}
+                                                </MenuPack>
+                                            </div>
+                                        ) : ''}
+                                        {this.state.path.map((value, index) => (
+                                            <div key={index} className="path-step horizontal">
+                                                <div className="title">{value.toString()}</div>
+                                                {index === this.state.path.length - 1 ? (
+                                                    <div className="icon">
+                                                        <Cross title="unstack" action={this.classifierUnstack}/>
+                                                    </div>
+                                                ) : ''}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        ) : ''}
                         {groupDef ? (
                             <div className="stack group">
                                 <div className="stack-title" onClick={this.stackGroup}>
@@ -252,13 +292,20 @@ export class VideosPage extends React.Component {
                                 </div>
                                 {this.state.stackGroup ? '' : (
                                     <div className="stack-content">
-                                        <GroupView groupID={groupDef.group_id}
+                                        <GroupView key={`${groupDef.field}-${this.state.path.join('-')}`}
+                                                   groupID={groupDef.group_id}
                                                    field={groupDef.field}
                                                    sorting={groupDef.sorting}
                                                    reverse={groupDef.reverse}
                                                    groups={groupDef.groups}
                                                    onSelect={this.selectGroup}
-                                                   onOptions={this.editPropertyValue}/>
+                                                   onOptions={this.editPropertyValue}
+                                                   onPlus={
+                                                       groupDef.field[0] === ':'
+                                                       && this.definitions[groupDef.field.substr(1)].multiple
+                                                           ? this.classifierSelectGroup
+                                                           : null
+                                                   }/>
                                     </div>
                                 )}
                             </div>
@@ -309,6 +356,7 @@ export class VideosPage extends React.Component {
         state.sourceTree = parameters.info.sourceTree;
         state.properties = parameters.info.properties;
         state.videos = parameters.info.videos;
+        state.path = parameters.info.path;
     }
 
     scrollTop() {
@@ -433,18 +481,6 @@ export class VideosPage extends React.Component {
     manageProperties() {
         this.props.app.loadPropertiesPage();
     }
-    classify() {
-        this.props.app.loadDialog('Choose property to classify:', onClose => (
-            <FormSetClassification properties={this.getMultipleProperties(this.state.properties)} onClose={field => {
-                onClose();
-                if (field) {
-                    python_call('classifier_set_property', field)
-                        .then(data => this.props.app.loadClassificationPage(data))
-                        .catch(backend_error);
-                }
-            }}/>
-        ));
-    }
     fillWithKeywords() {
         this.props.app.loadDialog(`Fill property`, onClose => (
             <FormFillKeywords properties={this.getStringSetProperties(this.state.properties)} onClose={state => {
@@ -485,6 +521,9 @@ export class VideosPage extends React.Component {
     stackFilter() {
         this.setState({stackFilter: !this.state.stackFilter});
     }
+    stackPath() {
+        this.setState({stackPath: !this.state.stackPath});
+    }
     getStringSetProperties(definitions) {
         const properties = [];
         for (let def of definitions) {
@@ -497,6 +536,15 @@ export class VideosPage extends React.Component {
         const properties = [];
         for (let def of definitions) {
             if (def.multiple)
+                properties.push(def);
+        }
+        return properties;
+    }
+    getStringProperties(definitions) {
+        const field = this.state.groupDef ? this.state.groupDef.field : null;
+        const properties = [];
+        for (let def of definitions) {
+            if (def.type === "str" && (!field || field.charAt(0) !== ':' || def.name !== field.substr(1)))
                 properties.push(def);
         }
         return properties;
@@ -536,5 +584,20 @@ export class VideosPage extends React.Component {
                 }
             }}/>
         ));
+    }
+    classifierSelectGroup(index) {
+        python_call('classifier_select_group', index)
+            .then(() => this.updatePage({pageNumber: 0}))
+            .catch(backend_error);
+    }
+    classifierUnstack() {
+        python_call('classifier_back', this.state.path)
+            .then(() => this.updatePage({pageNumber: 0}))
+            .catch(backend_error);
+    }
+    classifierConcatenate(outputPropertyName) {
+        python_call('classifier_concatenate_path', outputPropertyName)
+            .then(() => this.updatePage({pageNumber: 0}))
+            .catch(backend_error);
     }
 }

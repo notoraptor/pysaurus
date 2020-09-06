@@ -26,7 +26,7 @@ class Interface(GuiAPI):
         except Exception as exc:
             import traceback
             traceback.print_tb(exc.__traceback__)
-            print('%s:' % type(exc).__name__, exc)
+            print('%s:' % type(exc).__name__, exc, file=sys.stderr)
             reject.Call({'name': type(exc).__name__, 'message': str(exc)})
 
     def _call_gui_function(self, function_name, *parameters):

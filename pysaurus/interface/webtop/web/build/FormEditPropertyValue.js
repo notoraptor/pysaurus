@@ -31,6 +31,7 @@ System.register(["./Dialog.js", "./Cell.js"], function (_export, _context) {
           this.onEdit = this.onEdit.bind(this);
           this.onMove = this.onMove.bind(this);
           this.onClose = this.onClose.bind(this);
+          this.onEditKeyDown = this.onEditKeyDown.bind(this);
         }
 
         render() {
@@ -104,7 +105,8 @@ System.register(["./Dialog.js", "./Cell.js"], function (_export, _context) {
             input = /*#__PURE__*/React.createElement("input", {
               type: def.type === "int" ? "number" : "text",
               onChange: this.onEdit,
-              value: propVal
+              value: propVal,
+              onKeyDown: this.onEditKeyDown
             });
           }
 
@@ -162,6 +164,12 @@ System.register(["./Dialog.js", "./Cell.js"], function (_export, _context) {
             });
           } catch (exception) {
             window.alert(exception.toString());
+          }
+        }
+
+        onEditKeyDown(event) {
+          if (event.key === "Enter") {
+            this.onClose(true);
           }
         }
 

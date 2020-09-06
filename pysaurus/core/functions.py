@@ -228,3 +228,7 @@ def assert_data_is_serializable(data, path=()):
             assert_data_is_serializable(value, current_path)
     else:
         assert isinstance(data, (bool, int, float, str)), (path, data)
+
+
+def identity(value):
+    return value

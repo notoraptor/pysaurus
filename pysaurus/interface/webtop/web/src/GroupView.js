@@ -20,6 +20,7 @@ export class GroupView extends React.Component {
             pageNumber: 0,
         };
         this.openPropertyOptions = this.openPropertyOptions.bind(this);
+        this.openPropertyPlus = this.openPropertyPlus.bind(this);
         this.setPage = this.setPage.bind(this);
         this.search = this.search.bind(this);
     }
@@ -45,19 +46,27 @@ export class GroupView extends React.Component {
                 <div className="content">
                     {this.props.groups.slice(start, end).map((entry, index) => {
                         index = start + index;
+                        const buttons = [];
+                        if (isProperty && entry.value !== null) {
+                            if (this.props.onOptions) {
+                                buttons.push(<SettingIcon key="options"
+                                                          title={`Options ...`}
+                                                          action={(event) => this.openPropertyOptions(event, index)}/>);
+                                buttons.push(' ');
+                            }
+                            if (this.props.onPlus) {
+                                buttons.push(<PlusIcon key="add"
+                                                       title={`Add ...`}
+                                                       action={(event) => this.openPropertyPlus(event, index)}/>);
+                                buttons.push(' ');
+                            }
+                        }
                         return (
                             <div className={`line ${selected === index ? 'selected' : ''} ${isProperty ? 'property' : 'attribute'} ${entry.value === null ? 'all' : ''}`}
                                  key={index}
                                  onClick={() => this.select(index)}>
                                 <div className="column left" {...(isProperty ? {} : {title: entry.value})}>
-                                    {isProperty && entry.value !== null ? ([
-                                        this.props.onOptions ? (
-                                            <SettingIcon key="options" title={`Options ...`} action={(event) => this.openPropertyOptions(event, index)}/>
-                                        ) : (
-                                            <PlusIcon key="add" title={`Add ...`} action={(event) => this.openPropertyOptions(event, index)}/>
-                                        ),
-                                        '  '
-                                    ]) : ''}
+                                    {buttons}
                                     <span key="value" {...(isProperty ? {title: entry.value} : {})}>{entry.value === null ? `(none)` : entry.value}</span>
                                 </div>
                                 <div className="column right" title={entry.count}>{entry.count}</div>
@@ -90,10 +99,12 @@ export class GroupView extends React.Component {
     openPropertyOptions(event, index) {
         event.cancelBubble = true;
         event.stopPropagation();
-        if (this.props.onPlus)
-            this.props.onPlus(index);
-        else if (this.props.onOptions)
-            this.props.onOptions(index);
+        this.props.onOptions(index);
+    }
+    openPropertyPlus(event, index) {
+        event.cancelBubble = true;
+        event.stopPropagation();
+        this.props.onPlus(index);
     }
     setPage(pageNumber) {
         this.setState({pageNumber});

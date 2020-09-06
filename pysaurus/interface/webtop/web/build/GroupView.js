@@ -35,6 +35,7 @@ System.register(["./constants.js", "./buttons.js", "./Pagination.js"], function 
             pageNumber: 0
           };
           this.openPropertyOptions = this.openPropertyOptions.bind(this);
+          this.openPropertyPlus = this.openPropertyPlus.bind(this);
           this.setPage = this.setPage.bind(this);
           this.search = this.search.bind(this);
         }
@@ -62,6 +63,28 @@ System.register(["./constants.js", "./buttons.js", "./Pagination.js"], function 
             className: "content"
           }, this.props.groups.slice(start, end).map((entry, index) => {
             index = start + index;
+            const buttons = [];
+
+            if (isProperty && entry.value !== null) {
+              if (this.props.onOptions) {
+                buttons.push( /*#__PURE__*/React.createElement(SettingIcon, {
+                  key: "options",
+                  title: `Options ...`,
+                  action: event => this.openPropertyOptions(event, index)
+                }));
+                buttons.push(' ');
+              }
+
+              if (this.props.onPlus) {
+                buttons.push( /*#__PURE__*/React.createElement(PlusIcon, {
+                  key: "add",
+                  title: `Add ...`,
+                  action: event => this.openPropertyPlus(event, index)
+                }));
+                buttons.push(' ');
+              }
+            }
+
             return /*#__PURE__*/React.createElement("div", {
               className: `line ${selected === index ? 'selected' : ''} ${isProperty ? 'property' : 'attribute'} ${entry.value === null ? 'all' : ''}`,
               key: index,
@@ -70,15 +93,7 @@ System.register(["./constants.js", "./buttons.js", "./Pagination.js"], function 
               className: "column left"
             }, isProperty ? {} : {
               title: entry.value
-            }), isProperty && entry.value !== null ? [this.props.onOptions ? /*#__PURE__*/React.createElement(SettingIcon, {
-              key: "options",
-              title: `Options ...`,
-              action: event => this.openPropertyOptions(event, index)
-            }) : /*#__PURE__*/React.createElement(PlusIcon, {
-              key: "add",
-              title: `Add ...`,
-              action: event => this.openPropertyOptions(event, index)
-            }), '  '] : '', /*#__PURE__*/React.createElement("span", _extends({
+            }), buttons, /*#__PURE__*/React.createElement("span", _extends({
               key: "value"
             }, isProperty ? {
               title: entry.value
@@ -109,7 +124,13 @@ System.register(["./constants.js", "./buttons.js", "./Pagination.js"], function 
         openPropertyOptions(event, index) {
           event.cancelBubble = true;
           event.stopPropagation();
-          if (this.props.onPlus) this.props.onPlus(index);else if (this.props.onOptions) this.props.onOptions(index);
+          this.props.onOptions(index);
+        }
+
+        openPropertyPlus(event, index) {
+          event.cancelBubble = true;
+          event.stopPropagation();
+          this.props.onPlus(index);
         }
 
         setPage(pageNumber) {

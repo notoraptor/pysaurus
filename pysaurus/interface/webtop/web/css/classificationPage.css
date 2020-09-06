@@ -5,3 +5,8 @@
 .path-step .title {
     flex-grow: 1;
 }
+.path-menu {
+    text-align: center;
+    padding: 0.5em;
+    background-color: gray;
+}

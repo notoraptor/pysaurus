@@ -31,7 +31,7 @@ System.register(["./constants.js", "./Dialog.js"], function (_export, _context) 
             field: this.props.definition.field || '',
             sorting: this.props.definition.sorting || 'field',
             reverse: this.props.definition.reverse || false,
-            allowSingletons: this.props.definition.allowSingletons || false,
+            allowSingletons: this.props.definition.allowSingletons || true,
             allowMultiple: this.props.definition.allowMultiple || true,
             properties: properties
           };
