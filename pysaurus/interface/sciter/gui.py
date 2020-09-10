@@ -1,13 +1,6 @@
-import multiprocessing
-import threading
-from typing import Optional
-
 import sciter
 
-from pysaurus.core.database.api import API
-from pysaurus.core.database.video_provider import VideoProvider
 from pysaurus.interface.common.gui_api import GuiAPI
-from pysaurus.interface.common.parallel_notifier import ParallelNotifier
 
 
 class Frame(GuiAPI, sciter.Window):

@@ -1,7 +1,7 @@
-System.register(["./Test.js", "./HomePage.js", "./VideosPage.js", "./PropertiesPage.js", "./ClassificationPage.js", "./FancyBox.js", "./constants.js"], function (_export, _context) {
+System.register(["./Test.js", "./HomePage.js", "./VideosPage.js", "./PropertiesPage.js", "./FancyBox.js", "./constants.js"], function (_export, _context) {
   "use strict";
 
-  var Test, HomePage, VideosPage, PropertiesPage, ClassificationPage, FancyBox, FIELDS, PAGE_SIZES, VIDEO_DEFAULT_PAGE_SIZE, VIDEO_DEFAULT_PAGE_NUMBER, App;
+  var Test, HomePage, VideosPage, PropertiesPage, FancyBox, FIELDS, PAGE_SIZES, VIDEO_DEFAULT_PAGE_SIZE, VIDEO_DEFAULT_PAGE_NUMBER, App;
 
   _export("App", void 0);
 
@@ -14,8 +14,6 @@ System.register(["./Test.js", "./HomePage.js", "./VideosPage.js", "./PropertiesP
       VideosPage = _VideosPageJs.VideosPage;
     }, function (_PropertiesPageJs) {
       PropertiesPage = _PropertiesPageJs.PropertiesPage;
-    }, function (_ClassificationPageJs) {
-      ClassificationPage = _ClassificationPageJs.ClassificationPage;
     }, function (_FancyBoxJs) {
       FancyBox = _FancyBoxJs.FancyBox;
     }, function (_constantsJs) {
@@ -65,10 +63,6 @@ System.register(["./Test.js", "./HomePage.js", "./VideosPage.js", "./PropertiesP
             parameters: parameters
           });
           if (page === "properties") return /*#__PURE__*/React.createElement(PropertiesPage, {
-            app: this,
-            parameters: parameters
-          });
-          if (page === "classification") return /*#__PURE__*/React.createElement(ClassificationPage, {
             app: this,
             parameters: parameters
           });
@@ -151,10 +145,6 @@ System.register(["./Test.js", "./HomePage.js", "./VideosPage.js", "./PropertiesP
           python_call('get_prop_types').then(definitions => this.loadPage("properties", {
             definitions: definitions
           })).catch(backend_error);
-        }
-
-        loadClassificationPage(data) {
-          this.loadPage("classification", data);
         }
 
       });

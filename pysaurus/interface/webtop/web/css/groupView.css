@@ -5,6 +5,13 @@
 }
 .group-view .header {
     text-align: center;
+    flex-shrink: 0;
+    padding-top: 0.5em;
+    background-color: rgb(230, 230, 230);
+}
+.group-view .selection.line {
+    flex-shrink: 0;
+    text-align: left;
 }
 .group-view .header .title {
     padding-bottom: 0.5em;
@@ -22,11 +29,6 @@
 }
 .group-view .form > button {
     margin-left: 1rem;
-}
-.group-view .header {
-    flex-shrink: 0;
-    padding: 0.5em;
-    background-color: rgb(230, 230, 230);
 }
 .group-view .content {
     flex-grow: 1;

@@ -18,17 +18,32 @@ export class GroupView extends React.Component {
         this.state = {
             pageSize: 100,
             pageNumber: 0,
+            selection: new Set()
         };
         this.openPropertyOptions = this.openPropertyOptions.bind(this);
+        this.openPropertyOptionsAll = this.openPropertyOptionsAll.bind(this);
         this.openPropertyPlus = this.openPropertyPlus.bind(this);
         this.setPage = this.setPage.bind(this);
         this.search = this.search.bind(this);
+        this.allChecked = this.allChecked.bind(this);
+        this.onCheckEntry = this.onCheckEntry.bind(this);
+        this.onCheckAll = this.onCheckAll.bind(this);
+        this.nullIndex = -1;
+        for (let i = 0; i < this.props.groups.length; ++i) {
+            if (this.props.groups[i].value === null) {
+                if (i !== 0)
+                    throw `Group without value at position ${i}, expected 0`;
+                this.nullIndex = i;
+                break;
+            }
+        }
     }
     render() {
         const selected = this.props.groupID;
         const isProperty = (this.props.field.charAt(0) === ':');
         const start = this.state.pageSize * this.state.pageNumber;
         const end = Math.min(start + this.state.pageSize, this.props.groups.length);
+        const allChecked = this.allChecked(start, end);
         console.log(`Rendering ${this.props.groups.length} group(s).`);
         return (
             <div className="group-view">
@@ -42,19 +57,42 @@ export class GroupView extends React.Component {
                                     onChange={this.setPage}
                                     onSearch={this.search}/>
                     </div>
+                    {isProperty ? (
+                        <div className="selection line">
+                            <div className="column">
+                                <input id="group-view-select-all"
+                                       type="checkbox"
+                                       checked={allChecked}
+                                       onChange={event => this.onCheckAll(event, start, end)}/>
+                                {' '}
+                                <label htmlFor="group-view-select-all">
+                                    {allChecked ? 'All ' : ''}{this.state.selection.size} selected
+                                </label>
+                                {this.state.selection.size ? (
+                                    <span>
+                                        &nbsp;
+                                        <SettingIcon key="options-for-selected"
+                                                     title={`Options for selected...`}
+                                                     action={this.openPropertyOptionsAll}/>
+                                    </span>) : ''}
+                            </div>
+                        </div>
+                    ) : ''}
                 </div>
                 <div className="content">
                     {this.props.groups.slice(start, end).map((entry, index) => {
                         index = start + index;
                         const buttons = [];
                         if (isProperty && entry.value !== null) {
-                            if (this.props.onOptions) {
+                            buttons.push(<input type="checkbox" checked={this.state.selection.has(index)} onChange={event => this.onCheckEntry(event, index)}/>)
+                            buttons.push(' ');
+                            if (this.props.onOptions && !this.state.selection.size) {
                                 buttons.push(<SettingIcon key="options"
                                                           title={`Options ...`}
                                                           action={(event) => this.openPropertyOptions(event, index)}/>);
                                 buttons.push(' ');
                             }
-                            if (this.props.onPlus) {
+                            if (this.props.onPlus && !this.state.selection.size) {
                                 buttons.push(<PlusIcon key="add"
                                                        title={`Add ...`}
                                                        action={(event) => this.openPropertyPlus(event, index)}/>);
@@ -99,7 +137,10 @@ export class GroupView extends React.Component {
     openPropertyOptions(event, index) {
         event.cancelBubble = true;
         event.stopPropagation();
-        this.props.onOptions(index);
+        this.props.onOptions(new Set([index]));
+    }
+    openPropertyOptionsAll() {
+        this.props.onOptions(this.state.selection);
     }
     openPropertyPlus(event, index) {
         event.cancelBubble = true;
@@ -107,7 +148,8 @@ export class GroupView extends React.Component {
         this.props.onPlus(index);
     }
     setPage(pageNumber) {
-        this.setState({pageNumber});
+        if (this.state.pageNumber !== pageNumber)
+            this.setState({pageNumber: pageNumber, selection: new Set()});
     }
     search(text) {
         for (let index = 0; index < this.props.groups.length; ++index) {
@@ -117,8 +159,39 @@ export class GroupView extends React.Component {
             if (value.toString().toLowerCase().indexOf(text.trim().toLowerCase()) !== 0)
                 continue;
             const pageNumber = Math.floor(index / this.state.pageSize);
-            this.setState({pageNumber}, () => this.select(index));
+            if (this.state.pageNumber !== pageNumber)
+               this.setState({pageNumber: pageNumber, selection: new Set()}, () => this.select(index));
             return;
         }
+    }
+    allChecked(start, end) {
+        for (let i = start; i < end; ++i) {
+            if (!this.state.selection.has(i) && i !== this.nullIndex)
+                return false;
+        }
+        return true;
+    }
+    onCheckEntry(event, index) {
+        const selection = new Set(this.state.selection);
+        if (event.target.checked) {
+            selection.add(index);
+        } else {
+            selection.delete(index);
+        }
+        this.setState({selection});
+    }
+    onCheckAll(event, start, end) {
+        const selection = new Set(this.state.selection);
+        if (event.target.checked) {
+            for (let i = start; i < end; ++i) {
+                selection.add(i);
+            }
+        } else {
+            for (let i = start; i < end; ++i) {
+                selection.delete(i);
+            }
+        }
+        selection.delete(this.nullIndex);
+        this.setState({selection});
     }
 }

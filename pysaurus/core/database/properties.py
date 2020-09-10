@@ -1,11 +1,11 @@
 from typing import Union
+
 from pysaurus.core.classes import Enumeration
 
 DefType = Union[bool, int, float, str, list, tuple]
 
 
 class PropType:
-
     __slots__ = ('name', 'type', 'enumeration', 'default', 'multiple')
 
     def __init__(self, name: str, definition: DefType, multiple: bool = False):

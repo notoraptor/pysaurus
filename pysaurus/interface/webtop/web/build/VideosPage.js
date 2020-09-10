@@ -1,7 +1,7 @@
-System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Pagination.js", "./Video.js", "./FormSourceVideo.js", "./FormGroup.js", "./FormSearch.js", "./FormSort.js", "./GroupView.js", "./Dialog.js", "./Cell.js", "./FormEditPropertyValue.js", "./FormSetClassification.js", "./FormFillKeywords.js"], function (_export, _context) {
+System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Pagination.js", "./Video.js", "./FormSourceVideo.js", "./FormGroup.js", "./FormSearch.js", "./FormSort.js", "./GroupView.js", "./FormEditPropertyValue.js", "./FormFillKeywords.js"], function (_export, _context) {
   "use strict";
 
-  var SettingIcon, Cross, PAGE_SIZES, FIELDS, SEARCH_TYPE_TITLE, MenuPack, MenuItem, Menu, MenuItemCheck, Pagination, Video, FormSourceVideo, FormGroup, FormSearch, FormSort, GroupView, Dialog, Cell, FormEditPropertyValue, FormSetClassification, FormFillKeywords, Filter, VideosPage, SHORTCUTS, SPECIAL_KEYS;
+  var SettingIcon, Cross, PAGE_SIZES, FIELDS, SEARCH_TYPE_TITLE, MenuPack, MenuItem, Menu, MenuItemCheck, Pagination, Video, FormSourceVideo, FormGroup, FormSearch, FormSort, GroupView, FormEditPropertyValue, FormFillKeywords, Filter, VideosPage, SHORTCUTS, SPECIAL_KEYS;
 
   function assertUniqueShortcuts() {
     const duplicates = {};
@@ -59,14 +59,8 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
       FormSort = _FormSortJs.FormSort;
     }, function (_GroupViewJs) {
       GroupView = _GroupViewJs.GroupView;
-    }, function (_DialogJs) {
-      Dialog = _DialogJs.Dialog;
-    }, function (_CellJs) {
-      Cell = _CellJs.Cell;
     }, function (_FormEditPropertyValueJs) {
       FormEditPropertyValue = _FormEditPropertyValueJs.FormEditPropertyValue;
-    }, function (_FormSetClassificationJs) {
-      FormSetClassification = _FormSetClassificationJs.FormSetClassification;
     }, function (_FormFillKeywordsJs) {
       FormFillKeywords = _FormFillKeywordsJs.FormFillKeywords;
     }],
@@ -178,12 +172,6 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           this.classifierConcatenate = this.classifierConcatenate.bind(this);
           this.stackPath = this.stackPath.bind(this);
           this.parametersToState(this.props.parameters, this.state);
-          this.definitions = {};
-
-          for (let def of this.state.properties) {
-            this.definitions[def.name] = def;
-          }
-
           this.callbackIndex = -1;
           this.shortcuts = {
             [SHORTCUTS.select]: this.selectVideos,
@@ -203,8 +191,8 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           const notFound = this.state.notFound;
           const groupDef = this.state.groupDef;
           const stringSetProperties = this.getStringSetProperties(this.state.properties);
-          const multipleProperties = this.getMultipleProperties(this.state.properties);
           const stringProperties = this.getStringProperties(this.state.properties);
+          const groupField = groupDef && groupDef.field.charAt(0) === ':' ? groupDef.field.substr(1) : null;
           return /*#__PURE__*/React.createElement("div", {
             id: "videos"
           }, /*#__PURE__*/React.createElement("header", {
@@ -294,7 +282,9 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           }, stringProperties.map((def, i) => /*#__PURE__*/React.createElement(MenuItem, {
             key: i,
             action: () => this.classifierConcatenate(def.name)
-          }, def.name)))) : '', this.state.path.map((value, index) => /*#__PURE__*/React.createElement("div", {
+          }, def.name)), /*#__PURE__*/React.createElement(MenuItem, {
+            action: () => this.classifierConcatenate(groupField)
+          }, groupField))) : '', this.state.path.map((value, index) => /*#__PURE__*/React.createElement("div", {
             key: index,
             className: "path-step horizontal"
           }, /*#__PURE__*/React.createElement("div", {
@@ -316,7 +306,7 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           }, this.state.stackGroup ? Utils.CHARACTER_ARROW_DOWN : Utils.CHARACTER_ARROW_UP)), this.state.stackGroup ? '' : /*#__PURE__*/React.createElement("div", {
             className: "stack-content"
           }, /*#__PURE__*/React.createElement(GroupView, {
-            key: `${groupDef.field}-${this.state.path.join('-')}`,
+            key: `${groupDef.field}-${groupDef.groups.length}-${this.state.path.join('-')}`,
             groupID: groupDef.group_id,
             field: groupDef.field,
             sorting: groupDef.sorting,
@@ -324,7 +314,7 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
             groups: groupDef.groups,
             onSelect: this.selectGroup,
             onOptions: this.editPropertyValue,
-            onPlus: groupDef.field[0] === ':' && this.definitions[groupDef.field.substr(1)].multiple ? this.classifierSelectGroup : null
+            onPlus: groupDef.field[0] === ':' && this.state.definitions[groupDef.field.substr(1)].multiple ? this.classifierSelectGroup : null
           }))) : ''), /*#__PURE__*/React.createElement("div", {
             className: "main-panel videos"
           }, this.renderVideos())), /*#__PURE__*/React.createElement("footer", {
@@ -375,6 +365,11 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           state.properties = parameters.info.properties;
           state.videos = parameters.info.videos;
           state.path = parameters.info.path;
+          state.definitions = {};
+
+          for (let def of parameters.info.properties) {
+            state.definitions[def.name] = def;
+          }
         }
 
         scrollTop() {
@@ -637,30 +632,45 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
 
           return properties;
         }
+        /**
+         *
+         * @param indicesSet {Set}
+         */
 
-        editPropertyValue(index) {
+
+        editPropertyValue(indicesSet) {
           const groupDef = this.state.groupDef;
           const name = groupDef.field.substr(1);
-          const value = groupDef.groups[index].value;
-          this.props.app.loadDialog(`Property "${name}", value "${value}"`, onClose => /*#__PURE__*/React.createElement(FormEditPropertyValue, {
+          const values = [];
+          const indices = [];
+
+          for (let index of indicesSet.values()) indices.push(index);
+
+          indices.sort();
+
+          for (let index of indices) values.push(groupDef.groups[index].value);
+
+          let title;
+          if (values.length === 1) title = `Property "${name}", value "${values[0]}"`;else title = `Property "${name}", ${values.length} values"`;
+          this.props.app.loadDialog(title, onClose => /*#__PURE__*/React.createElement(FormEditPropertyValue, {
             properties: this.generatePropTable(this.state.properties),
             name: name,
-            value: value,
+            values: values,
             onClose: operation => {
               onClose();
 
               if (operation) {
                 switch (operation.form) {
                   case 'delete':
-                    python_call('delete_property_value', name, value).then(() => this.updateStatus(`Property value deleted: "${name}" / "${value}"`, true)).catch(backend_error);
+                    python_call('delete_property_value', name, values).then(() => this.updateStatus(`Property value deleted: "${name}" / "${values.join('", "')}"`, true)).catch(backend_error);
                     break;
 
                   case 'edit':
-                    python_call('edit_property_value', name, value, operation.value).then(() => this.updateStatus(`Property value edited: "${name}" : "${value}" -> "${operation.value}"`, true)).catch(backend_error);
+                    python_call('edit_property_value', name, values, operation.value).then(() => this.updateStatus(`Property value edited: "${name}" : "${values.join('", "')}" -> "${operation.value}"`, true)).catch(backend_error);
                     break;
 
                   case 'move':
-                    python_call('move_property_value', name, value, operation.move).then(() => this.updateStatus(`Property value moved: "${value}" from "${name}" to "${operation.move}"`, true)).catch(backend_error);
+                    python_call('move_property_value', name, values, operation.move).then(() => this.updateStatus(`Property value moved: "${values.join('", "')}" from "${name}" to "${operation.move}"`, true)).catch(backend_error);
                     break;
                 }
               }
@@ -675,7 +685,7 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
         }
 
         classifierUnstack() {
-          python_call('classifier_back', this.state.path).then(() => this.updatePage({
+          python_call('classifier_back').then(() => this.updatePage({
             pageNumber: 0
           })).catch(backend_error);
         }

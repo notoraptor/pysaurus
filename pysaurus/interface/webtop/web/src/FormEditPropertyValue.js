@@ -5,12 +5,12 @@ export class FormEditPropertyValue extends React.Component {
     constructor(props) {
         // properties: {name => def}
         // name: str
-        // value: str
+        // values: []
         // onClose(operation)
         super(props);
         this.state = {
             form: 'edit',
-            value: this.props.value,
+            value: this.props.values[0].toString(),
             move: '',
             otherDefinitions: this.getCompatibleDefinitions()
         };
@@ -21,9 +21,10 @@ export class FormEditPropertyValue extends React.Component {
         this.onMove = this.onMove.bind(this);
         this.onClose = this.onClose.bind(this);
         this.onEditKeyDown = this.onEditKeyDown.bind(this);
+        this.valuesToString = this.valuesToString.bind(this);
     }
     render() {
-        const canMove = this.state.otherDefinitions.length;
+        const canMove = this.state.otherDefinitions.length && this.props.values.length === 1;
         return (
             <Dialog yes={this.state.form} no="cancel" onClose={this.onClose}>
                 <div className="edit-property-value">
@@ -57,13 +58,20 @@ export class FormEditPropertyValue extends React.Component {
             case 'edit':
                 return this.renderEdit();
             case 'move':
-                return this.renderMove();
+                if (this.props.values.length === 1)
+                    return this.renderMove();
+                break;
             default:
                 break;
         }
     }
     renderDelete() {
-        return <h3>Are you sure you want to delete property value "{this.props.name}" / "{this.props.value}" ?</h3>;
+        return (
+            <div>
+                <h3>Are you sure you want to delete property value</h3>
+                <h3>"{this.props.name}" / {this.valuesToString()} ?</h3>
+            </div>
+        );
     }
     renderEdit() {
         const name = this.props.name;
@@ -88,13 +96,18 @@ export class FormEditPropertyValue extends React.Component {
         } else {
             input = <input type={def.type === "int" ? "number" : "text"} onChange={this.onEdit} value={propVal} onKeyDown={this.onEditKeyDown}/>;
         }
-        return <div>{input}</div>;
+        return (
+            <div>
+                <h3>Edit property "{this.props.name}" / {this.valuesToString()}</h3>
+                <div>{input}</div>
+            </div>
+        );
     }
     renderMove() {
         const def = this.props.properties[this.props.name];
         return (
             <div>
-                <p>Move this value to another property of type "{def.type}".</p>
+                <h3>Move property "{this.props.name}" / {this.valuesToString()} to another property of type "{def.type}".</h3>
                 <div>
                     <select value={this.state.move} onChange={this.onMove}>
                         {this.state.otherDefinitions.map((other, index) =>
@@ -140,5 +153,10 @@ export class FormEditPropertyValue extends React.Component {
     }
     onClose(yes) {
         this.props.onClose(yes ? Object.assign({}, this.state) : null);
+    }
+    valuesToString() {
+        if (this.props.values.length === 1)
+            return this.props.values[0].toString();
+        return `${this.props.values.length} values (${this.props.values[0].toString()} ... ${this.props.values[this.props.values.length - 1].toString()})`;
     }
 }

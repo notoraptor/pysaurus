@@ -13,10 +13,10 @@ Video class. Properties:
 
 """
 
-import sys
 import base64
-from typing import Sequence
+import sys
 from io import BytesIO
+from typing import Sequence
 
 from pysaurus.core.classes import StringPrinter
 from pysaurus.core.components import AbsolutePath, Duration
@@ -45,6 +45,8 @@ def compare_text_or_data(v1, v2):
 
 JSON_INTEGER_MIN = -2 ** 31
 JSON_INTEGER_MAX = 2 ** 31 - 1
+
+
 def _to_json_value(value):
     if isinstance(value, (tuple, list, set)):
         return [_to_json_value(element) for element in value]
@@ -55,6 +57,7 @@ def _to_json_value(value):
     if isinstance(value, int) and JSON_INTEGER_MIN <= value <= JSON_INTEGER_MAX:
         return value
     return str(value)
+
 
 class Video(VideoState):
     UNREADABLE = False

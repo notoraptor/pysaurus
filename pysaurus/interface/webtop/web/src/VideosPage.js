@@ -8,10 +8,7 @@ import {FormGroup} from "./FormGroup.js";
 import {FormSearch} from "./FormSearch.js";
 import {FormSort} from "./FormSort.js";
 import {GroupView} from "./GroupView.js";
-import {Dialog} from "./Dialog.js";
-import {Cell} from "./Cell.js";
 import {FormEditPropertyValue} from "./FormEditPropertyValue.js";
-import {FormSetClassification} from "./FormSetClassification.js";
 import {FormFillKeywords} from "./FormFillKeywords.js";
 
 const SHORTCUTS = {
@@ -174,10 +171,6 @@ export class VideosPage extends React.Component {
         this.stackPath = this.stackPath.bind(this);
 
         this.parametersToState(this.props.parameters, this.state);
-        this.definitions = {};
-        for (let def of this.state.properties) {
-            this.definitions[def.name] = def;
-        }
         this.callbackIndex = -1;
         this.shortcuts = {
             [SHORTCUTS.select]: this.selectVideos,
@@ -196,8 +189,8 @@ export class VideosPage extends React.Component {
         const notFound = this.state.notFound;
         const groupDef = this.state.groupDef;
         const stringSetProperties = this.getStringSetProperties(this.state.properties);
-        const multipleProperties = this.getMultipleProperties(this.state.properties);
         const stringProperties = this.getStringProperties(this.state.properties);
+        const groupField = groupDef && groupDef.field.charAt(0) === ':' ? groupDef.field.substr(1) : null;
 
         return (
             <div id="videos">
@@ -264,6 +257,7 @@ export class VideosPage extends React.Component {
                                                     {stringProperties.map((def, i) => (
                                                         <MenuItem key={i} action={() => this.classifierConcatenate(def.name)}>{def.name}</MenuItem>
                                                     ))}
+                                                    <MenuItem action={() => this.classifierConcatenate(groupField)}>{groupField}</MenuItem>
                                                 </MenuPack>
                                             </div>
                                         ) : ''}
@@ -292,7 +286,7 @@ export class VideosPage extends React.Component {
                                 </div>
                                 {this.state.stackGroup ? '' : (
                                     <div className="stack-content">
-                                        <GroupView key={`${groupDef.field}-${this.state.path.join('-')}`}
+                                        <GroupView key={`${groupDef.field}-${groupDef.groups.length}-${this.state.path.join('-')}`}
                                                    groupID={groupDef.group_id}
                                                    field={groupDef.field}
                                                    sorting={groupDef.sorting}
@@ -302,7 +296,7 @@ export class VideosPage extends React.Component {
                                                    onOptions={this.editPropertyValue}
                                                    onPlus={
                                                        groupDef.field[0] === ':'
-                                                       && this.definitions[groupDef.field.substr(1)].multiple
+                                                       && this.state.definitions[groupDef.field.substr(1)].multiple
                                                            ? this.classifierSelectGroup
                                                            : null
                                                    }/>
@@ -357,6 +351,10 @@ export class VideosPage extends React.Component {
         state.properties = parameters.info.properties;
         state.videos = parameters.info.videos;
         state.path = parameters.info.path;
+        state.definitions = {};
+        for (let def of parameters.info.properties) {
+            state.definitions[def.name] = def;
+        }
     }
 
     scrollTop() {
@@ -556,28 +554,44 @@ export class VideosPage extends React.Component {
         }
         return properties;
     }
-    editPropertyValue(index) {
+
+    /**
+     *
+     * @param indicesSet {Set}
+     */
+    editPropertyValue(indicesSet) {
         const groupDef = this.state.groupDef;
         const name = groupDef.field.substr(1);
-        const value = groupDef.groups[index].value;
-        this.props.app.loadDialog(`Property "${name}", value "${value}"`, onClose => (
-            <FormEditPropertyValue properties={this.generatePropTable(this.state.properties)} name={name} value={value} onClose={operation => {
+        const values = [];
+        const indices = [];
+        for (let index of indicesSet.values())
+            indices.push(index);
+        indices.sort();
+        for (let index of indices)
+            values.push(groupDef.groups[index].value);
+        let title;
+        if (values.length === 1)
+            title = `Property "${name}", value "${values[0]}"`;
+        else
+            title = `Property "${name}", ${values.length} values"`;
+        this.props.app.loadDialog(title, onClose => (
+            <FormEditPropertyValue properties={this.generatePropTable(this.state.properties)} name={name} values={values} onClose={operation => {
                 onClose();
                 if (operation) {
                     switch (operation.form) {
                         case 'delete':
-                            python_call('delete_property_value', name, value)
-                                .then(() => this.updateStatus(`Property value deleted: "${name}" / "${value}"`, true))
+                            python_call('delete_property_value', name, values)
+                                .then(() => this.updateStatus(`Property value deleted: "${name}" / "${values.join('", "')}"`, true))
                                 .catch(backend_error)
                             break;
                         case 'edit':
-                            python_call('edit_property_value', name, value, operation.value)
-                                .then(() => this.updateStatus(`Property value edited: "${name}" : "${value}" -> "${operation.value}"`, true))
+                            python_call('edit_property_value', name, values, operation.value)
+                                .then(() => this.updateStatus(`Property value edited: "${name}" : "${values.join('", "')}" -> "${operation.value}"`, true))
                                 .catch(backend_error);
                             break;
                         case 'move':
-                            python_call('move_property_value', name, value, operation.move)
-                                .then(() => this.updateStatus(`Property value moved: "${value}" from "${name}" to "${operation.move}"`, true))
+                            python_call('move_property_value', name, values, operation.move)
+                                .then(() => this.updateStatus(`Property value moved: "${values.join('", "')}" from "${name}" to "${operation.move}"`, true))
                                 .catch(backend_error)
                             break;
                     }
@@ -591,7 +605,7 @@ export class VideosPage extends React.Component {
             .catch(backend_error);
     }
     classifierUnstack() {
-        python_call('classifier_back', this.state.path)
+        python_call('classifier_back')
             .then(() => this.updatePage({pageNumber: 0}))
             .catch(backend_error);
     }

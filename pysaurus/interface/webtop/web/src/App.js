@@ -2,7 +2,6 @@ import {Test} from "./Test.js";
 import {HomePage} from "./HomePage.js";
 import {VideosPage} from "./VideosPage.js";
 import {PropertiesPage} from "./PropertiesPage.js";
-import {ClassificationPage} from "./ClassificationPage.js";
 import {FancyBox} from "./FancyBox.js";
 
 import {FIELDS, PAGE_SIZES, VIDEO_DEFAULT_PAGE_SIZE, VIDEO_DEFAULT_PAGE_NUMBER} from "./constants.js";
@@ -45,8 +44,6 @@ export class App extends React.Component {
             return <VideosPage app={this} parameters={parameters}/>;
         if (page === "properties")
             return <PropertiesPage app={this} parameters={parameters}/>;
-        if (page === "classification")
-            return <ClassificationPage app={this} parameters={parameters}/>;
     }
     renderFancyBox() {
         const fancy = this.state.fancy;
@@ -108,8 +105,5 @@ export class App extends React.Component {
         python_call('get_prop_types')
             .then(definitions => this.loadPage("properties", {definitions: definitions}))
             .catch(backend_error);
-    }
-    loadClassificationPage(data) {
-        this.loadPage("classification", data);
     }
 }

@@ -16,12 +16,12 @@ System.register(["./Dialog.js", "./Cell.js"], function (_export, _context) {
         constructor(props) {
           // properties: {name => def}
           // name: str
-          // value: str
+          // values: []
           // onClose(operation)
           super(props);
           this.state = {
             form: 'edit',
-            value: this.props.value,
+            value: this.props.values[0].toString(),
             move: '',
             otherDefinitions: this.getCompatibleDefinitions()
           };
@@ -32,10 +32,11 @@ System.register(["./Dialog.js", "./Cell.js"], function (_export, _context) {
           this.onMove = this.onMove.bind(this);
           this.onClose = this.onClose.bind(this);
           this.onEditKeyDown = this.onEditKeyDown.bind(this);
+          this.valuesToString = this.valuesToString.bind(this);
         }
 
         render() {
-          const canMove = this.state.otherDefinitions.length;
+          const canMove = this.state.otherDefinitions.length && this.props.values.length === 1;
           return /*#__PURE__*/React.createElement(Dialog, {
             yes: this.state.form,
             no: "cancel",
@@ -67,7 +68,8 @@ System.register(["./Dialog.js", "./Cell.js"], function (_export, _context) {
               return this.renderEdit();
 
             case 'move':
-              return this.renderMove();
+              if (this.props.values.length === 1) return this.renderMove();
+              break;
 
             default:
               break;
@@ -75,7 +77,7 @@ System.register(["./Dialog.js", "./Cell.js"], function (_export, _context) {
         }
 
         renderDelete() {
-          return /*#__PURE__*/React.createElement("h3", null, "Are you sure you want to delete property value \"", this.props.name, "\" / \"", this.props.value, "\" ?");
+          return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h3", null, "Are you sure you want to delete property value"), /*#__PURE__*/React.createElement("h3", null, "\"", this.props.name, "\" / ", this.valuesToString(), " ?"));
         }
 
         renderEdit() {
@@ -110,12 +112,12 @@ System.register(["./Dialog.js", "./Cell.js"], function (_export, _context) {
             });
           }
 
-          return /*#__PURE__*/React.createElement("div", null, input);
+          return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h3", null, "Edit property \"", this.props.name, "\" / ", this.valuesToString()), /*#__PURE__*/React.createElement("div", null, input));
         }
 
         renderMove() {
           const def = this.props.properties[this.props.name];
-          return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("p", null, "Move this value to another property of type \"", def.type, "\"."), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("select", {
+          return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h3", null, "Move property \"", this.props.name, "\" / ", this.valuesToString(), " to another property of type \"", def.type, "\"."), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("select", {
             value: this.state.move,
             onChange: this.onMove
           }, this.state.otherDefinitions.map((other, index) => /*#__PURE__*/React.createElement("option", {
@@ -181,6 +183,11 @@ System.register(["./Dialog.js", "./Cell.js"], function (_export, _context) {
 
         onClose(yes) {
           this.props.onClose(yes ? Object.assign({}, this.state) : null);
+        }
+
+        valuesToString() {
+          if (this.props.values.length === 1) return this.props.values[0].toString();
+          return `${this.props.values.length} values (${this.props.values[0].toString()} ... ${this.props.values[this.props.values.length - 1].toString()})`;
         }
 
       });

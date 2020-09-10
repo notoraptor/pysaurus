@@ -50,7 +50,7 @@ System.register(["./FormGoToPage.js", "./DialogSearch.js"], function (_export, _
           }, Utils.sentence(singular)), ' ', /*#__PURE__*/React.createElement("span", {
             className: "go",
             onClick: this.go
-          }, pageNumber + 1, " / ", nbPages), ' ', /*#__PURE__*/React.createElement("button", {
+          }, pageNumber + 1, "/", nbPages), ' ', /*#__PURE__*/React.createElement("button", {
             className: "next",
             disabled: pageNumber === nbPages - 1,
             onClick: this.onNext

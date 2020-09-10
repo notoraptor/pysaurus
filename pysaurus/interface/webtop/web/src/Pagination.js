@@ -29,7 +29,7 @@ export class Pagination extends React.Component {
                     <button className="previous" disabled={pageNumber === 0} onClick={this.onPrevious}>&lt;</button>{' '}
                     <span className="go" onClick={this.props.onSearch ? this.look : this.look}>{Utils.sentence(singular)}</span>
                     {' '}
-                    <span className="go" onClick={this.go}>{pageNumber + 1} / {nbPages}</span>{' '}
+                    <span className="go" onClick={this.go}>{pageNumber + 1}/{nbPages}</span>{' '}
                     <button className="next" disabled={pageNumber === nbPages - 1} onClick={this.onNext}>&gt;</button>
                     <button className="last" disabled={pageNumber === nbPages - 1} onClick={this.onLast}>&gt;&gt;</button>
                 </span>

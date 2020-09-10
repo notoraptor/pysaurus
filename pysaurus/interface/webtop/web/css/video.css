@@ -1,6 +1,6 @@
 /** Video item. **/
 .video {
-	white-space: nowrap;
+	/*white-space: nowrap;*/
 }
 .video.found:nth-child(even) {
 	background-color: rgb(240, 240, 240);

@@ -32,12 +32,26 @@ System.register(["./constants.js", "./buttons.js", "./Pagination.js"], function 
           super(props);
           this.state = {
             pageSize: 100,
-            pageNumber: 0
+            pageNumber: 0,
+            selection: new Set()
           };
           this.openPropertyOptions = this.openPropertyOptions.bind(this);
+          this.openPropertyOptionsAll = this.openPropertyOptionsAll.bind(this);
           this.openPropertyPlus = this.openPropertyPlus.bind(this);
           this.setPage = this.setPage.bind(this);
           this.search = this.search.bind(this);
+          this.allChecked = this.allChecked.bind(this);
+          this.onCheckEntry = this.onCheckEntry.bind(this);
+          this.onCheckAll = this.onCheckAll.bind(this);
+          this.nullIndex = -1;
+
+          for (let i = 0; i < this.props.groups.length; ++i) {
+            if (this.props.groups[i].value === null) {
+              if (i !== 0) throw `Group without value at position ${i}, expected 0`;
+              this.nullIndex = i;
+              break;
+            }
+          }
         }
 
         render() {
@@ -45,6 +59,7 @@ System.register(["./constants.js", "./buttons.js", "./Pagination.js"], function 
           const isProperty = this.props.field.charAt(0) === ':';
           const start = this.state.pageSize * this.state.pageNumber;
           const end = Math.min(start + this.state.pageSize, this.props.groups.length);
+          const allChecked = this.allChecked(start, end);
           console.log(`Rendering ${this.props.groups.length} group(s).`);
           return /*#__PURE__*/React.createElement("div", {
             className: "group-view"
@@ -59,14 +74,36 @@ System.register(["./constants.js", "./buttons.js", "./Pagination.js"], function 
             pageNumber: this.state.pageNumber,
             onChange: this.setPage,
             onSearch: this.search
-          }))), /*#__PURE__*/React.createElement("div", {
+          })), isProperty ? /*#__PURE__*/React.createElement("div", {
+            className: "selection line"
+          }, /*#__PURE__*/React.createElement("div", {
+            className: "column"
+          }, /*#__PURE__*/React.createElement("input", {
+            id: "group-view-select-all",
+            type: "checkbox",
+            checked: allChecked,
+            onChange: event => this.onCheckAll(event, start, end)
+          }), ' ', /*#__PURE__*/React.createElement("label", {
+            htmlFor: "group-view-select-all"
+          }, allChecked ? 'All ' : '', this.state.selection.size, " selected"), this.state.selection.size ? /*#__PURE__*/React.createElement("span", null, "\xA0", /*#__PURE__*/React.createElement(SettingIcon, {
+            key: "options-for-selected",
+            title: `Options for selected...`,
+            action: this.openPropertyOptionsAll
+          })) : '')) : ''), /*#__PURE__*/React.createElement("div", {
             className: "content"
           }, this.props.groups.slice(start, end).map((entry, index) => {
             index = start + index;
             const buttons = [];
 
             if (isProperty && entry.value !== null) {
-              if (this.props.onOptions) {
+              buttons.push( /*#__PURE__*/React.createElement("input", {
+                type: "checkbox",
+                checked: this.state.selection.has(index),
+                onChange: event => this.onCheckEntry(event, index)
+              }));
+              buttons.push(' ');
+
+              if (this.props.onOptions && !this.state.selection.size) {
                 buttons.push( /*#__PURE__*/React.createElement(SettingIcon, {
                   key: "options",
                   title: `Options ...`,
@@ -75,7 +112,7 @@ System.register(["./constants.js", "./buttons.js", "./Pagination.js"], function 
                 buttons.push(' ');
               }
 
-              if (this.props.onPlus) {
+              if (this.props.onPlus && !this.state.selection.size) {
                 buttons.push( /*#__PURE__*/React.createElement(PlusIcon, {
                   key: "add",
                   title: `Add ...`,
@@ -124,7 +161,11 @@ System.register(["./constants.js", "./buttons.js", "./Pagination.js"], function 
         openPropertyOptions(event, index) {
           event.cancelBubble = true;
           event.stopPropagation();
-          this.props.onOptions(index);
+          this.props.onOptions(new Set([index]));
+        }
+
+        openPropertyOptionsAll() {
+          this.props.onOptions(this.state.selection);
         }
 
         openPropertyPlus(event, index) {
@@ -134,8 +175,9 @@ System.register(["./constants.js", "./buttons.js", "./Pagination.js"], function 
         }
 
         setPage(pageNumber) {
-          this.setState({
-            pageNumber
+          if (this.state.pageNumber !== pageNumber) this.setState({
+            pageNumber: pageNumber,
+            selection: new Set()
           });
         }
 
@@ -145,11 +187,53 @@ System.register(["./constants.js", "./buttons.js", "./Pagination.js"], function 
             if (value === null) continue;
             if (value.toString().toLowerCase().indexOf(text.trim().toLowerCase()) !== 0) continue;
             const pageNumber = Math.floor(index / this.state.pageSize);
-            this.setState({
-              pageNumber
+            if (this.state.pageNumber !== pageNumber) this.setState({
+              pageNumber: pageNumber,
+              selection: new Set()
             }, () => this.select(index));
             return;
           }
+        }
+
+        allChecked(start, end) {
+          for (let i = start; i < end; ++i) {
+            if (!this.state.selection.has(i) && i !== this.nullIndex) return false;
+          }
+
+          return true;
+        }
+
+        onCheckEntry(event, index) {
+          const selection = new Set(this.state.selection);
+
+          if (event.target.checked) {
+            selection.add(index);
+          } else {
+            selection.delete(index);
+          }
+
+          this.setState({
+            selection
+          });
+        }
+
+        onCheckAll(event, start, end) {
+          const selection = new Set(this.state.selection);
+
+          if (event.target.checked) {
+            for (let i = start; i < end; ++i) {
+              selection.add(i);
+            }
+          } else {
+            for (let i = start; i < end; ++i) {
+              selection.delete(i);
+            }
+          }
+
+          selection.delete(this.nullIndex);
+          this.setState({
+            selection
+          });
         }
 
       });

@@ -8,7 +8,7 @@ import functools
 import random
 from abc import abstractmethod
 from copy import copy
-from typing import Optional, Sequence, Dict, Generic, List, Callable, Any, TypeVar, Type, Union, Iterable
+from typing import Optional, Sequence, Dict, Generic, List, Callable, Any, TypeVar, Type, Union, Iterable, Set
 
 from pysaurus.core import functions
 from pysaurus.core.classes import ToDict
@@ -322,24 +322,29 @@ class Layer:
 
     def __init__(self, database: Database):
         self.__args = {}
-        self.parent = None  # type: Optional[Layer]
         self.__sub_layer = None  # type: Optional[Layer]
         self.__to_update = False
         self.__filtered = None
         self.__data = None
+        self.parent = None  # type: Optional[Layer]
         self.database = database
         self.reset_parameters()
 
+    def get_root(self):
+        layer = self
+        while layer.parent is not None:
+            layer = layer.parent
+        return layer
+
     def __log(self, *args, **kwargs):
-        prefix = '%s/' % type(self).__name__
-        print(prefix, *args, **kwargs)
+        print('%s/' % type(self).__name__, *args, **kwargs)
 
     def set_parent(self, parent):
         self.parent = parent
 
-    def set_sub_layer(self, sub_filter):
-        self.__sub_layer = sub_filter
-        sub_filter.set_parent(self)
+    def set_sub_layer(self, sub_layer):
+        self.__sub_layer = sub_layer
+        sub_layer.set_parent(self)
         self.__log('sub-filter', None if self.__sub_layer is None else 'set')
 
     def _set_parameters(self, **kwargs):
@@ -409,10 +414,14 @@ class Layer:
 
 
 class SourceLayer(Layer):
-    __slots__ = ()
+    __slots__ = ('index',)
     __props__ = ('sources',)
     _cache: Dict[AbsolutePath, Video]
     DEFAULT_SOURCE_DEF = [('readable',)]
+
+    def __init__(self, database):
+        super().__init__(database)
+        self.index = {}  # type: Dict[str, Set[Video]]
 
     def set_sources(self, paths: Sequence[Sequence[str]]):
         valid_paths = set()
@@ -436,10 +445,17 @@ class SourceLayer(Layer):
             source.extend(TreeUtils.get_source_from_object(database, path, 0))
         source_dict = {video.filename: video for video in source}
         assert len(source_dict) == len(source), (len(source_dict), len(source))
+        self.index = self.__index_videos(source)
         return source_dict
 
     def remove_from_cache(self, cache: Dict[AbsolutePath, Video], video: Video):
-        cache.pop(video.filename, None)
+        assert video.filename in cache, len(cache)
+        for term in video.terms(as_set=True):
+            assert video in self.index[term], len(self.index[term])
+            self.index[term].remove(video)
+            if not self.index[term]:
+                del self.index[term]
+        del cache[video.filename]
 
     def count_videos(self):
         return len(self._cache)
@@ -447,10 +463,18 @@ class SourceLayer(Layer):
     def videos(self):
         return self._cache.values()
 
+    @classmethod
+    def __index_videos(cls, videos: Iterable[Video]) -> Dict[str, Set[Video]]:
+        term_to_videos = {}
+        for video in videos:
+            for term in video.terms():
+                term_to_videos.setdefault(term, set()).add(video)
+        return term_to_videos
+
 
 class GroupingLayer(Layer):
     __slots__ = ()
-    __props__ = ('grouping', 'allow_singletons', 'allow_multiple')
+    __props__ = ('grouping',)
     _cache: GroupArray
     DEFAULT_GROUP_DEF = GroupDef.none()  # str field, bool reverse
 
@@ -467,7 +491,7 @@ class GroupingLayer(Layer):
         return self.get_parameter('grouping')
 
     def reset_parameters(self):
-        self._set_parameters(grouping=self.DEFAULT_GROUP_DEF, allow_singletons=False, allow_multiple=True)
+        self._set_parameters(grouping=self.DEFAULT_GROUP_DEF)
 
     def filter(self, data: Dict[AbsolutePath, Video]) -> GroupArray:
         group_def = self.get_grouping()
@@ -664,12 +688,39 @@ class SearchLayer(Layer):
     def filter(self, data: Group) -> VideoArray:
         search_def = self.get_search()
         if search_def:
-            terms = functions.string_to_pieces(search_def.text)
+            root = self.get_root()
+            if isinstance(root, SourceLayer):
+                return self.__filter_from_root_layer(search_def, root, data)
+            return self.__filter_from_videos(search_def, data)
+        return data.videos
+
+    @classmethod
+    def __filter_from_videos(cls, search_def: SearchDef, data: Group) -> VideoArray:
+        terms = functions.string_to_pieces(search_def.text)
+        video_filter = getattr(Video, 'has_terms_%s' % search_def.cond)
+        return data.videos.new(video for video in data.videos if video_filter(video, terms))
+
+    @classmethod
+    def __filter_from_root_layer(cls, search_def: SearchDef, source_layer: SourceLayer, data: Group) -> VideoArray:
+        assert search_def.cond in ('exact', 'and', 'or')
+        term_to_videos = source_layer.index
+        terms = functions.string_to_pieces(search_def.text)
+        if search_def.cond == 'exact':
+            selection_and = set(data.videos)
+            for term in terms:
+                selection_and &= term_to_videos.get(term, set())
             video_filter = getattr(Video, 'has_terms_%s' % search_def.cond)
-            view = data.videos.new(video for video in data.videos if video_filter(video, terms))
-        else:
-            view = data.videos
-        return view
+            selection = data.videos.new(video for video in selection_and if video_filter(video, terms))
+        elif search_def.cond == 'and':
+            selection = set(data.videos)
+            for term in terms:
+                selection &= term_to_videos.get(term, set())
+        else:  # search_def.cond == 'or'
+            selection = set(term_to_videos.get(terms[0], set()))
+            for term in terms[1:]:
+                selection |= term_to_videos.get(term, set())
+            selection &= set(data.videos)
+        return data.videos.new(selection)
 
     def remove_from_cache(self, cache: VideoArray, video: Video):
         if video in cache:
@@ -700,33 +751,46 @@ class SortLayer(Layer):
 
 
 class VideoProvider:
-    __slots__ = ('database', 'source_layer', 'grouping_layer', 'classifier_layer', 'group_layer', 'search_layer',
+    __slots__ = ('database', '__source_layer', 'grouping_layer', 'classifier_layer', 'group_layer', 'search_layer',
                  'sort_layer', 'view')
 
     def __init__(self, database: Database):
         self.database = database
         self.view = []
 
-        self.source_layer = SourceLayer(database)
+        self.__source_layer = SourceLayer(database)
         self.grouping_layer = GroupingLayer(database)
         self.classifier_layer = ClassifierLayer(database)
         self.group_layer = GroupLayer(database)
         self.search_layer = SearchLayer(database)
         self.sort_layer = SortLayer(database)
 
-        self.source_layer.set_sub_layer(self.grouping_layer)
+        self.__source_layer.set_sub_layer(self.grouping_layer)
         self.grouping_layer.set_sub_layer(self.classifier_layer)
         self.classifier_layer.set_sub_layer(self.group_layer)
         self.group_layer.set_sub_layer(self.search_layer)
         self.search_layer.set_sub_layer(self.sort_layer)
 
-        self.source_layer.set_data(self.database)
-        self.view = self.source_layer.run()
+        ##
+        if self.database.has_prop_type('category'):
+            prop_category = self.database.get_prop_type('category')
+            if prop_category.type is str and prop_category.multiple:
+                self.grouping_layer.set_grouping(
+                    field=':category',
+                    sorting='field',
+                    reverse=False,
+                    allow_singletons=True,
+                    allow_multiple=True
+                )
+        ##
+
+        self.__source_layer.set_data(self.database)
+        self.view = self.__source_layer.run()
         assert isinstance(self.view, VideoArray)
 
     def set_source(self, paths: Sequence[Sequence[str]]):
-        self.source_layer.set_sources(paths)
-        self.view = self.source_layer.run()
+        self.__source_layer.set_sources(paths)
+        self.view = self.__source_layer.run()
 
     def set_groups(self,
                    field: Optional[str],
@@ -741,15 +805,15 @@ class VideoProvider:
                                          allow_multiple=allow_multiple)
         self.group_layer.set_group_id(0)
         self.search_layer.reset_parameters()
-        self.view = self.source_layer.run()
+        self.view = self.__source_layer.run()
 
     def set_search(self, text: Optional[str], cond: Optional[str]):
         self.search_layer.set_search(text, cond)
-        self.view = self.source_layer.run()
+        self.view = self.__source_layer.run()
 
     def set_sort(self, sorting: Sequence[str]):
         self.sort_layer.set_sorting(sorting)
-        self.view = self.source_layer.run()
+        self.view = self.__source_layer.run()
 
     def get_view_file_size(self):
         return FileSize(sum(video.file_size for video in self.view))
@@ -761,21 +825,21 @@ class VideoProvider:
         try:
             video = self.view[index]
             self.database.delete_video(video)
-            self.source_layer.delete_video(video)
-            self.view = self.source_layer.run()
+            self.__source_layer.delete_video(video)
+            self.view = self.__source_layer.run()
             return True
         except OSError:
             return False
 
     def set_group(self, group_id):
         self.group_layer.set_group_id(group_id)
-        self.view = self.source_layer.run()
+        self.view = self.__source_layer.run()
 
     def get_group_field_value(self):
         return self.group_layer.get_field_value()
 
     def get_sources(self):
-        return self.source_layer.get_sources()
+        return self.__source_layer.get_sources()
 
     def get_group_def(self):
         group_def = self.grouping_layer.get_grouping()
@@ -804,7 +868,7 @@ class VideoProvider:
         return len(self.view)
 
     def count_total_videos(self):
-        return self.source_layer.count_videos()
+        return self.__source_layer.count_videos()
 
     def count_groups(self):
         return self.classifier_layer.count_groups() if self.grouping_layer.get_grouping() else 0
@@ -813,23 +877,23 @@ class VideoProvider:
         return self.view[index]
 
     def load(self):
-        self.source_layer.request_update()
-        self.view = self.source_layer.run()
+        self.__source_layer.request_update()
+        self.view = self.__source_layer.run()
 
     def update_view(self):
-        self.view = self.source_layer.run()
+        self.view = self.__source_layer.run()
 
     def get_group_id(self):
         return self.group_layer.get_group_id()
 
     def all_not_found(self):
-        return all(NOT_FOUND in source for source in self.source_layer.get_sources())
+        return all(NOT_FOUND in source for source in self.__source_layer.get_sources())
 
     def get_random_found_video(self):
         # type: () -> Video
         # Get all full paths from source definition
         all_paths = []
-        for path in self.source_layer.get_sources():
+        for path in self.__source_layer.get_sources():
             desc = TreeUtils.get_source_from_dict(SOURCE_TREE, path)
             if isinstance(desc, dict):
                 TreeUtils.collect_full_paths(desc, all_paths, path)
@@ -854,10 +918,9 @@ class VideoProvider:
         if group_def:
             field = group_def.field[1:] if group_def.field[0] == ':' else group_def.field
             if field in properties:
-                print('Grouping to update', group_def.field)
                 self.grouping_layer.request_update()
-                self.view = self.source_layer.run()
+                self.view = self.__source_layer.run()
                 return True
 
     def get_all_videos(self):
-        return self.source_layer.videos()
+        return self.__source_layer.videos()

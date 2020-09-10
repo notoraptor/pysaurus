@@ -5,15 +5,15 @@ import time
 import traceback
 from typing import Optional
 
+from pysaurus.core.components import AbsolutePath
 from pysaurus.core.database.api import API
 from pysaurus.core.database.notifications import DatabaseReady
 from pysaurus.core.database.properties import PropType
-from pysaurus.core.database.video_provider import VideoProvider, GroupArray, SOURCE_TREE
+from pysaurus.core.database.video_provider import VideoProvider, SOURCE_TREE
 from pysaurus.core.functions import launch_thread
 from pysaurus.core.notification import Notification
 from pysaurus.interface.common.parallel_notifier import ParallelNotifier
 from pysaurus.tests.test_utils import TEST_LIST_FILE_PATH
-from pysaurus.core.components import AbsolutePath
 
 
 class GuiAPI:
@@ -30,7 +30,6 @@ class GuiAPI:
 
         self.api = None  # type: Optional[API]
         self.provider = None  # type: Optional[VideoProvider]
-        self.classifier = None  # type: Optional[GroupArray]
 
         self.__update_on_load = True
 
@@ -171,23 +170,27 @@ class GuiAPI:
         db.save()
         self.provider.on_properties_modified([prop_name])
 
-    def delete_property_value(self, name, value):
-        print('delete property value', name, value)
+    def delete_property_value(self, name, values):
+        print('delete property value', name, values)
+        values = set(values)
         modified = []
         prop_type = self.api.database.get_prop_type(name)
         if prop_type.multiple:
-            prop_type.validate([value])
+            prop_type.validate(values)
             for video in self.provider.get_all_videos():
                 if name in video.properties and video.properties[name]:
                     new_values = set(video.properties[name])
-                    if value in new_values:
-                        new_values.remove(value)
+                    len_before = len(new_values)
+                    new_values = new_values - values
+                    len_after = len(new_values)
+                    if len_before > len_after:
                         video.properties[name] = prop_type(new_values)
                         modified.append(video)
         else:
-            prop_type.validate(value)
+            for value in values:
+                prop_type.validate(value)
             for video in self.provider.get_all_videos():
-                if name in video.properties and video.properties[name] == value:
+                if name in video.properties and video.properties[name] in values:
                     del video.properties[name]
                     modified.append(video)
         if modified:
@@ -195,33 +198,39 @@ class GuiAPI:
             self.provider.on_properties_modified([name])
         return modified
 
-    def edit_property_value(self, name, old_value, new_value):
-        print('edit property value', name, old_value, new_value)
+    def edit_property_value(self, name, old_values, new_value):
+        print('edit property value', name, old_values, new_value)
+        old_values = set(old_values)
         modified = False
         prop_type = self.api.database.get_prop_type(name)
         if prop_type.multiple:
-            prop_type.validate([old_value])
+            prop_type.validate(old_values)
             prop_type.validate([new_value])
             for video in self.provider.get_all_videos():
                 if name in video.properties and video.properties[name]:
                     new_values = set(video.properties[name])
-                    if old_value in new_values:
-                        new_values.remove(old_value)
+                    len_before = len(new_values)
+                    new_values = new_values - old_values
+                    len_after = len(new_values)
+                    if len_before > len_after:
                         new_values.add(new_value)
                         video.properties[name] = prop_type(new_values)
                         modified = True
         else:
-            prop_type.validate(old_value)
+            for old_value in old_values:
+                prop_type.validate(old_value)
             prop_type.validate(new_value)
             for video in self.provider.get_all_videos():
-                if name in video.properties and video.properties[name] == old_value:
+                if name in video.properties and video.properties[name] in old_values:
                     video.properties[name] = new_value
                     modified = True
         if modified:
             self.api.database.save()
             self.provider.on_properties_modified([name])
 
-    def move_property_value(self, old_name, value, new_name):
+    def move_property_value(self, old_name, values, new_name):
+        assert len(values) == 1, values
+        value = values[0]
         print('move property value', old_name, new_name, value)
         prop_type = self.api.database.get_prop_type(new_name)
         prop_type.validate([value] if prop_type.multiple else value)
@@ -242,10 +251,6 @@ class GuiAPI:
         modified = self.api.database.set_video_properties(self.provider.get_video(index), properties)
         self.provider.on_properties_modified(modified)
 
-    def classifier_show_group(self, group_id):
-        print('classifier show group')
-        return {'videos': [video.to_json() for video in self.classifier[group_id].videos]}
-
     def classifier_select_group(self, group_id):
         print('classifier select group', group_id)
         prop_name = self.provider.grouping_layer.get_grouping().field[1:]
@@ -256,9 +261,10 @@ class GuiAPI:
         self.provider.group_layer.set_group_id(0)
         self.provider.on_properties_modified([prop_name])
 
-    def classifier_back(self, path):
+    def classifier_back(self):
         print('classifier back')
         prop_name = self.provider.grouping_layer.get_grouping().field[1:]
+        path = self.provider.classifier_layer.get_path()
         self.provider.classifier_layer.set_path(path[:-1])
         self.provider.group_layer.set_group_id(0)
         self.provider.on_properties_modified([prop_name])
@@ -297,8 +303,6 @@ class GuiAPI:
             self.provider.classifier_layer.set_path([])
             self.provider.group_layer.set_group_id(0)
             self.provider.on_properties_modified([from_property, to_property])
-
-
 
     @staticmethod
     def _get_source_tree():
@@ -360,7 +364,7 @@ class GuiAPI:
         self.api = API(TEST_LIST_FILE_PATH,
                        update=update,
                        notifier=self.notifier,
-                       ensure_miniatures=False,
+                       ensure_miniatures=True,
                        reset=False)
         self._load_videos()
         self.notifier.notify(DatabaseReady())

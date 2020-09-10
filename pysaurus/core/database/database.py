@@ -7,8 +7,8 @@ from pysaurus.core import exceptions, functions as utils
 from pysaurus.core.components import AbsolutePath, DateModified, FilePath, PathType, PathInfo
 from pysaurus.core.constants import THUMBNAIL_EXTENSION
 from pysaurus.core.database import notifications, video_filtering
-from pysaurus.core.database.properties import PropType
 from pysaurus.core.database.jobs import jobs_python
+from pysaurus.core.database.properties import PropType
 from pysaurus.core.database.video import Video
 from pysaurus.core.database.video_interval import VideoInterval
 from pysaurus.core.database.video_state import VideoState

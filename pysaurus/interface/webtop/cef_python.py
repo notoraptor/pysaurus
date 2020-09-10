@@ -1,9 +1,10 @@
 import os
 import sys
 import tempfile
-import pyperclip
 
+import pyperclip
 from cefpython3 import cefpython as cef
+
 from pysaurus.interface.common.gui_api import GuiAPI
 
 

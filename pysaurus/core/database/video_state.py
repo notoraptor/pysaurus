@@ -49,6 +49,15 @@ class VideoState:
             printer.write('\tvideo_id:  ', self.video_id)
             return str(printer)
 
+    def __hash__(self):
+        return hash(self.filename)
+
+    def __eq__(self, other):
+        return self.filename == other.filename
+
+    def __lt__(self, other):
+        return self.filename < other.filename
+
     @property
     def unreadable(self):
         return self.UNREADABLE
