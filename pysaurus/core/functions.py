@@ -161,6 +161,15 @@ def coord_to_flat(x, y, width):
     return y * width + x
 
 
+def coordinates_around(x, y, width, height, radius=1):
+    coordinates = []
+    for local_x in range(max(0, x - radius), min(x + radius, width - 1) + 1):
+        for local_y in range(max(0, y - radius), min(y + radius, height - 1) + 1):
+            coordinates.append((local_x, local_y))
+    return coordinates
+
+
+
 def get_file_extension(string):
     # type: (str) -> str
     index_of_dot = string.rfind('.')

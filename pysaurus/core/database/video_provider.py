@@ -505,7 +505,8 @@ class GroupingLayer(Layer):
                 prop_type = self.database.get_prop_type(field)
                 if prop_type.multiple:
                     for video in data.values():
-                        for value in video.properties.get(field, [None]):
+                        values = video.properties.get(field, None) or [None]
+                        for value in values:
                             grouped_videos.setdefault(value, []).append(video)
                 else:
                     for video in data.values():
@@ -772,16 +773,16 @@ class VideoProvider:
         self.search_layer.set_sub_layer(self.sort_layer)
 
         ##
-        if self.database.has_prop_type('category'):
-            prop_category = self.database.get_prop_type('category')
-            if prop_category.type is str and prop_category.multiple:
-                self.grouping_layer.set_grouping(
-                    field=':category',
-                    sorting='field',
-                    reverse=False,
-                    allow_singletons=True,
-                    allow_multiple=True
-                )
+        # if self.database.has_prop_type('category'):
+        #     prop_category = self.database.get_prop_type('category')
+        #     if prop_category.type is str and prop_category.multiple:
+        #         self.grouping_layer.set_grouping(
+        #             field=':category',
+        #             sorting='field',
+        #             reverse=False,
+        #             allow_singletons=True,
+        #             allow_multiple=True
+        #         )
         ##
 
         self.__source_layer.set_data(self.database)

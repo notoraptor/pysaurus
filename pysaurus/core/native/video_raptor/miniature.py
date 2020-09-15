@@ -21,16 +21,20 @@ class Miniature:
     def size(self):
         return self.width * self.height
 
-    def coordinates_around(self, x, y, radius=1):
+    @property
+    def nb_pixels(self):
+        return len(self.r)
+
+    def __coordinates_around(self, x, y, radius=1):
         coordinates = []
         for local_x in range(max(0, x - radius), min(x + radius, self.width - 1) + 1):
             for local_y in range(max(0, y - radius), min(y + radius, self.height - 1) + 1):
                 coordinates.append((local_x, local_y))
         return coordinates
 
-    def tuples(self):
+    def data(self):
         for i in range(len(self.r)):
-            yield (self.r[i], self.g[i], self.b[i])
+            yield self.r[i], self.g[i], self.b[i]
 
     def to_dict(self):
         return {
