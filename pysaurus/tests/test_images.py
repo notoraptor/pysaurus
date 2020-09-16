@@ -1,12 +1,15 @@
+import os
 import tkinter as tk
+from multiprocessing import Pool
 from typing import List, Tuple, Dict, Set, Any, Union
-
+from pysaurus.core.database.video import Video
 from PIL import Image, ImageTk
 
 from pysaurus.core import functions
-from pysaurus.core.modules import ImageUtils, ColorUtils
 from pysaurus.core.database.api import API
-from pysaurus.core.database.video import Video
+from pysaurus.core.database.properties import PropType
+from pysaurus.core.modules import ColorUtils
+from pysaurus.core.profiling import Profiler
 from pysaurus.tests.test_utils import TEST_LIST_FILE_PATH
 
 
@@ -152,16 +155,15 @@ class Group:
 
     @property
     def edges(self):
-        for other in self.connections:
-            yield Arrow(self, other)
+        return [Arrow(self, other) for other in self.connections]
 
 
 class Arrow:
     __slots__ = 'from_color', 'to_color', 'rank', 'category'
 
-    GREATER = '>'
-    SMALLER = '<'
-    EQUALS = '='
+    SMALLER = 0
+    EQUALS = 1
+    GREATER = 2
 
     @classmethod
     def categorize_angle(cls, degrees):
@@ -184,15 +186,25 @@ class Arrow:
             rank = self.EQUALS
         angle = functions.get_vector_angle(a.center, b.center)
         self.from_color = a.color
+        self.to_color = b.color
         self.rank = rank
         self.category = self.categorize_angle(angle)
-        self.to_color = b.color
+
+    @property
+    def key(self):
+        return self.from_color + self.to_color + (self.rank, self.category)
+
+    def __hash__(self):
+        return hash(self.key)
+
+    def __eq__(self, other):
+        return self.key == other.key
 
     def __str__(self):
-        return f"{ColorUtils.rgb_to_hex(self.from_color)}{self.rank}{self.category}{ColorUtils.rgb_to_hex(self.to_color)}"
+        return f"{ColorUtils.rgb_to_hex(self.from_color)}-{self.rank}-{self.category}{ColorUtils.rgb_to_hex(self.to_color)}"
 
 
-def segment_image(grid: Grid):
+def segment_image(grid: Grid) -> List[Arrow]:
     """Column to right, row to bottom"""
     graph = Graph()
     disconnected = Graph()
@@ -247,39 +259,108 @@ def segment_image(grid: Grid):
             id_group_out = index_to_group[out_index]
             if id_group_in >= 0 and id_group_out >= 0:
                 groups[id_group_in].connections.add(groups[id_group_out])
-    # retain only groups with at least 3 members.
+    # Keep only groups with at least 3 members.
+    edges = []
     final_groups = [group for group in groups if len(group.members) > 2]
-    for group in final_groups:
-        print(group)
-        for edge in group.edges:
-            print(f"\t{edge}")
-    # Display number of groups.
-    print('Number of pixels:', grid.width * grid.height)
-    print('Number of colors', len(set(grid.data)))
-    print('Number of groups:', len(groups))
-    print('Number of final groups:', len(final_groups))
-    return final_groups
+    rows = {}  # type: Dict[float, Dict[float, List[Group]]]
+    for g in final_groups:
+        x, y = g.center
+        rows.setdefault(y, {}).setdefault(x, []).append(g)
+    for y, row in sorted(rows.items()):
+        for x, col in sorted(row.items()):
+            for e in sorted(col, key=lambda g: g.size):  # type: Group
+                for other in e.connections:
+                    other.connections.remove(e)
+                    edges.append(Arrow(e, other))
+    return edges
+
+
+def job_segment(job):
+    spaced_points = SpacedPoints()
+    miniatures, job_id = job
+    output = []
+    for i, m in enumerate(miniatures):
+        # Categorize pixels.
+        grid = Grid([spaced_points.nearest_points(pixel) for pixel in m.data()], m.width, m.height)
+        output.append({'filename': m.identifier, 'edges': segment_image(grid)})
+        if (i + 1) % 200 == 0:
+            print(job_id, 'segmented', i + 1, '/', len(miniatures), 'video(s)')
+    print(job_id, 'finished segmenting', len(miniatures), '/', len(miniatures), 'video(s)')
+    return output
+
+
+SP = SpacedPoints()
+
+
+def f(c):
+    i, m = c
+    if (i + 1) % 500 == 0:
+        print(i + 1)
+    return m.identifier, segment_image(Grid([SP.nearest_points(pixel) for pixel in m.data()], m.width, m.height))
 
 
 def main():
-    spaced_points = SpacedPoints()
+    cpu_count = max(1, os.cpu_count() - 1)
     api = API(TEST_LIST_FILE_PATH, update=False)
-    videos = sorted(api.database.readable.found.with_thumbnails)  # type: List[Video]
-    video = videos[3]
+    min_dict = {m.identifier: m for m in api.database.ensure_miniatures(return_miniatures=True)}
+    videos = list(api.database.readable.found.with_thumbnails)  # type: List[Video]
+    miniatures = [min_dict[video.filename.path] for video in videos]
+    tasks = list(enumerate(miniatures))
 
-    miniatures = api.database.ensure_miniatures(return_miniatures=True)
-    min_dict = {m.identifier: m for m in miniatures}
-    miniature = min_dict[video.filename.path]
-    img = ImageUtils.new_rgb_image(list(miniature.data()), miniature.width, miniature.height)
-    # Categorize pixels.
-    output_data = [spaced_points.nearest_points(pixel) for pixel in img.getdata()]
-    grid = Grid(output_data, *img.size)
-    segment_image(grid)
-    # Display.from_images(
-    #     img,
-    #     ImageUtils.new_rgb_image(output_data, *img.size),
-    #     ImageUtils.new_rgb_image(segment_image(grid), *img.size),
-    # )
+    with Profiler(f'Segment {len(tasks)} videos.'):
+        with Pool(cpu_count) as p:
+            output = list(p.imap(f, tasks))
+    assert len(output) == len(tasks), (len(output), len(tasks))
+
+    special_property = '__image__'
+    print('Create video property', special_property)
+    if not api.database.has_prop_type(special_property):
+        api.database.add_prop_type(PropType(special_property, '', True))
+    prop_type = api.database.get_prop_type(special_property)
+
+    print('Clear video property', special_property)
+    for video in videos:
+        video.properties.pop(special_property, None)
+
+    with Profiler('Create video graph.'):
+        path_to_arrows = {}
+        arrow_to_paths = {}
+        for path, arrows in output:
+            if arrows:
+                arrows = set(arrows)
+                path_to_arrows[path] = arrows
+                for arrow in arrows:
+                    arrow_to_paths.setdefault(arrow, []).append(path)
+
+    threshold = 0.85
+    with Profiler('Detect similar videos.'):
+        for i, (path, arrows) in enumerate(path_to_arrows.items()):
+            connected_paths = {}
+            for arrow in arrows:
+                for other_path in arrow_to_paths[arrow]:
+                    if other_path in connected_paths:
+                        connected_paths[other_path] += 1
+                    else:
+                        connected_paths[other_path] = 1
+            del connected_paths[path]
+            highest_paths = set()
+            highest_count = None
+            for other_path, arrow_count in connected_paths.items():
+                if not highest_paths or highest_count < arrow_count:
+                    highest_paths = {other_path}
+                    highest_count = arrow_count
+                elif highest_count == arrow_count:
+                    highest_paths.add(other_path)
+            if highest_paths and highest_count >= (len(arrows) * threshold):
+                print('Similarity', highest_count, len(arrows) * threshold, path, *sorted(highest_paths))
+                for connected_path in {path} | highest_paths:
+                    video = api.database.get_video_from_filename(connected_path)
+                    values = set(video.properties.get(special_property, []))
+                    values.add(str(i))
+                    video.properties[special_property] = prop_type(values)
+            if (i + 1) % 100 == 0:
+                print(i + 1, 'processed')
+    api.database.save()
 
 
 if __name__ == '__main__':

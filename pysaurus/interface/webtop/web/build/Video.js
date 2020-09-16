@@ -127,7 +127,14 @@ System.register(["./MenuPack.js", "./FormRenameVideo.js", "./Dialog.js", "./Form
             const valueString = propertyValueToString(def.type, def.multiple ? value.join(', ') : value.toString());
             let noValue;
             if (def.multiple) noValue = !value.length;else noValue = def.type === "str" && !value;
-            const printableValues = def.multiple ? value : [value];
+            let printableValues = def.multiple ? value : [value];
+            let tooMuch = false;
+
+            if (printableValues.length > 10) {
+              tooMuch = true;
+              printableValues = printableValues.slice(0, 10);
+            }
+
             return /*#__PURE__*/React.createElement("div", {
               key: name,
               className: "property table-row"
@@ -142,7 +149,7 @@ System.register(["./MenuPack.js", "./FormRenameVideo.js", "./Dialog.js", "./Form
               key: elementIndex
             }, element.toString())) : /*#__PURE__*/React.createElement("span", {
               className: "no-value"
-            }, "no value")));
+            }, "no value"), tooMuch ? ' ...' : ''));
           })));
         }
 

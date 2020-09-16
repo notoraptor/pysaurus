@@ -19,7 +19,7 @@ class ProfilingEnd(Notification):
         self.time = str(time)
 
 
-class Profile:
+class _Profile:
     __slots__ = ('seconds', 'microseconds')
 
     def __init__(self, time_start, time_end):
@@ -59,5 +59,5 @@ class Profiler:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.__time_end = datetime.now()
-        profiling = Profile(self.__time_start, self.__time_end)
+        profiling = _Profile(self.__time_start, self.__time_end)
         self.__notifier.notify(ProfilingEnd(self.__title, profiling))

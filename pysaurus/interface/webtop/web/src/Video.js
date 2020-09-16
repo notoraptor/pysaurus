@@ -87,7 +87,12 @@ export class Video extends React.Component {
                         noValue = !value.length;
                     else
                         noValue = def.type === "str" && !value;
-                    const printableValues = def.multiple ? value : [value];
+                    let printableValues = def.multiple ? value : [value];
+                    let tooMuch = false;
+                    if (printableValues.length > 10) {
+                        tooMuch = true;
+                        printableValues = printableValues.slice(0, 10);
+                    }
                     return (
                         <div key={name} className="property table-row">
                             <div className="table-cell property-name"><strong {...(props.hasOwnProperty(name) ? {className: "defined"} : {})}>{name}</strong>:</div>
@@ -95,6 +100,7 @@ export class Video extends React.Component {
                                 {!noValue ? (printableValues.map((element, elementIndex) => (
                                     <span className="value" key={elementIndex}>{element.toString()}</span>
                                 ))) : <span className="no-value">no value</span>}
+                                {tooMuch ? ' ...' : ''}
                             </div>
                         </div>
                     );

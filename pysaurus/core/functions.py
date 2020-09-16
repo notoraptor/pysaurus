@@ -174,6 +174,8 @@ def get_vector_angle(a, b):
     """Return the angle of vector a->b wrt/ horizontal vector (x = 1, y = 0).
         a and b must be each a couple of coordinates (x, y).
     """
+    if a == b:
+        return 0
     x_a, y_a = a
     x_b, y_b = b
     sin_theta = (y_b - y_a) / math.sqrt((x_b - x_a) ** 2 + (y_b - y_a) ** 2)
