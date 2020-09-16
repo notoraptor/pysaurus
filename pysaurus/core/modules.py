@@ -5,7 +5,7 @@ from html.parser import HTMLParser
 
 from PIL import Image
 from moviepy.video.io.VideoFileClip import VideoFileClip
-
+from typing import Tuple
 from pysaurus.core.exceptions import NoVideoClip
 
 
@@ -146,6 +146,24 @@ class ImageUtils:
     def save_rgb_image(width, height, data, name):
         # Data must be a list of triples (r, g, b), each in [0; 255].
         return ImageUtils.__save_image(ImageUtils.IMAGE_RGB_MODE, (width, height), data, name)
+
+    @staticmethod
+    def new_rgb_image(data, width, height):
+        image = Image.new('RGB', (width, height))
+        image.putdata(data)
+        return image
+
+
+class ColorUtils:
+    HEX_DIGITS = "0123456789ABCDEF"
+
+    @classmethod
+    def _unit_to_hex(cls, value):
+        return cls.HEX_DIGITS[value // 16] + cls.HEX_DIGITS[value % 16]
+
+    @classmethod
+    def rgb_to_hex(cls, color: Tuple[int, int, int]):
+        return f"#{cls._unit_to_hex(color[0])}{cls._unit_to_hex(color[1])}{cls._unit_to_hex(color[2])}"
 
 
 class FNV64:

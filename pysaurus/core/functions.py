@@ -3,6 +3,7 @@ import os
 import re
 import threading
 from datetime import datetime
+import math
 
 from pysaurus.core.constants import VIDEO_SUPPORTED_EXTENSIONS
 # Datetime since timestamp 0.
@@ -169,6 +170,20 @@ def coordinates_around(x, y, width, height, radius=1):
     return coordinates
 
 
+def get_vector_angle(a, b):
+    """Return the angle of vector a->b wrt/ horizontal vector (x = 1, y = 0).
+        a and b must be each a couple of coordinates (x, y).
+    """
+    x_a, y_a = a
+    x_b, y_b = b
+    sin_theta = (y_b - y_a) / math.sqrt((x_b - x_a) ** 2 + (y_b - y_a) ** 2)
+    deg = 180 * math.asin(sin_theta) / math.pi
+    if (x_b - x_a) < 0:
+        deg = 180 - deg
+    elif sin_theta < 0:
+        deg = 360 + deg
+    return deg
+
 
 def get_file_extension(string):
     # type: (str) -> str
@@ -176,6 +191,10 @@ def get_file_extension(string):
     if index_of_dot >= 0:
         return string[(index_of_dot + 1):].lower()
     return ''
+
+
+def get_plural_suffix(count, suffix='s'):
+    return '' if count == 1 else suffix
 
 
 def _pgcd(a, b):
