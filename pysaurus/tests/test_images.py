@@ -12,6 +12,10 @@ from pysaurus.core.notification import DEFAULT_NOTIFIER
 from pysaurus.core.profiling import Profiler
 from pysaurus.tests.test_utils import TEST_LIST_FILE_PATH
 
+LENGTH = 256
+NB_POINTS = 6
+THRESHOLD = 0.5
+MIN_COUNT = 10
 _MAP_POINTS = {}
 
 
@@ -35,7 +39,7 @@ def _available_points_and_spaces(interval_length):
 
 class SpacedPoints:
     """
-    for interval length = 256:
+    for interval length = 256, we have available points:
     k = 2;  c = 8;      l = 254
     k = 4;  c = 64;     l = 84
     k = 6;  c = 216;    l = 50
@@ -164,7 +168,7 @@ class Arrow:
         return f"{Color.rgb_to_hex(self.u)}-{self.r}-{self.a}{Color.rgb_to_hex(self.v)}"
 
 
-SPACED_POINTS = SpacedPoints()
+SPACED_POINTS = SpacedPoints(length=LENGTH, nb_points=NB_POINTS)
 
 
 def segment_image(raw_data: Iterable[Tuple[int, int, int]], width: int, height: int) -> List[Arrow]:
@@ -321,13 +325,10 @@ def main():
                 for a in ars:
                     atp.setdefault(a, []).append(vid)
 
-    threshold = 0.5
-    min_count = 10
-
     ####################################################################################################################
     workspace = Workspace.save(atp)
     t = list(pta.items())
-    j = functions.dispatch_tasks(t, cpu_count, [threshold, min_count, workspace, DEFAULT_NOTIFIER])
+    j = functions.dispatch_tasks(t, cpu_count, [THRESHOLD, MIN_COUNT, workspace, DEFAULT_NOTIFIER])
     with Profiler('Async find similarities'):
         results = functions.parallelize(job_find_similarities, j, cpu_count)
 
@@ -347,6 +348,27 @@ def main():
     api.database.save()
 
 
+def categorize_pixels(data, spaces_points):
+    return [spaces_points.nearest_points(pixel) for pixel in data]
+
+
+def main_simple():
+    from pysaurus.core.modules import ImageUtils, Display
+    api = API(TEST_LIST_FILE_PATH, update=False)
+    v1 = api.database.get_video_from_filename(r"R:\donnees\autres\p\Harley Dean - bkb16182-1080p.mp4")
+    v2 = api.database.get_video_from_filename(r"F:\donnees\autres\p\Real butler should be able to serve dinner and fuck his masters.mp4")
+    i1 = ImageUtils.open_rgb_image(v1.thumbnail_path.path)
+    i2 = ImageUtils.open_rgb_image(v2.thumbnail_path.path)
+    c1 = categorize_pixels(i1.getdata(), SPACED_POINTS)
+    c2 = categorize_pixels(i2.getdata(), SPACED_POINTS)
+    Display.from_images(
+        i1, i2,
+        ImageUtils.new_rgb_image(c1, *i1.size),
+        ImageUtils.new_rgb_image(c2, *i2.size),
+    )
+
+
 if __name__ == '__main__':
+    # main_simple()
     with Profiler('MAIN'):
         main()
