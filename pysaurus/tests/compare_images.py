@@ -158,9 +158,9 @@ def find_similar_images(miniatures):
 
 def main():
     list_file_path = AbsolutePath.ensure(sys.argv[1]) if len(sys.argv) > 1 else TEST_LIST_FILE_PATH
-    api = API(list_file_path=list_file_path)
+    api = API(list_file_path=list_file_path, update=False)
     database = api.database
-    miniatures = sorted(database.ensure_miniatures().values(), key=lambda m: m.identifier)
+    miniatures = sorted(database.ensure_miniatures(return_miniatures=True), key=lambda m: m.identifier)
     print('Extracted miniatures from %d/%d videos.' % (len(miniatures), database.nb_valid))
 
     sim_groups = find_similar_images(miniatures)
@@ -184,7 +184,7 @@ def main():
         similar_group_to_html_file(i + 1, g, miniatures, database, html_dir, unique_id)
 
     json_groups = [
-        {miniatures[node.node].identifier.path: database.get_video_from_filename(
+        {miniatures[node.node].identifier: database.get_video_from_filename(
             miniatures[node.node].identifier).thumbnail_path.path
          for node in group}
         for group in sim_groups]

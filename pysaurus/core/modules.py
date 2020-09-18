@@ -1,12 +1,14 @@
 import base64
 import os
 import sys
+import tkinter as tk
 from html.parser import HTMLParser
-
-from PIL import Image
+import tempfile
+from PIL import Image, ImageTk
 from moviepy.video.io.VideoFileClip import VideoFileClip
 from typing import Tuple
 from pysaurus.core.exceptions import NoVideoClip
+import ujson as json
 
 
 class HTMLStripper(HTMLParser):
@@ -154,7 +156,7 @@ class ImageUtils:
         return image
 
 
-class ColorUtils:
+class Color:
     HEX_DIGITS = "0123456789ABCDEF"
 
     @classmethod
@@ -163,7 +165,7 @@ class ColorUtils:
 
     @classmethod
     def rgb_to_hex(cls, color: Tuple[int, int, int]):
-        return f"#{cls._unit_to_hex(color[0])}{cls._unit_to_hex(color[1])}{cls._unit_to_hex(color[2])}"
+        return f"{cls._unit_to_hex(color[0])}{cls._unit_to_hex(color[1])}{cls._unit_to_hex(color[2])}"
 
 
 class FNV64:
@@ -184,3 +186,57 @@ class FNV64:
         # type: (str) -> str
         h = FNV64._bytes_to_uint64(string.encode())
         return hex(h)[2:]
+
+
+class Workspace:
+    directory = tempfile.gettempdir()
+    prefix = tempfile.gettempprefix()
+
+    @classmethod
+    def new_path(cls):
+        from pysaurus.core.components import FilePath
+        extension = 'json'
+        temp_file_id = 0
+        while True:
+            temp_file_path = FilePath(cls.directory, '%s%s' % (cls.prefix, temp_file_id), extension)
+            if temp_file_path.exists():
+                temp_file_id += 1
+            else:
+                break
+        return temp_file_path
+
+    @classmethod
+    def save(cls, data):
+        path = cls.new_path()
+        with open(path.path, 'w') as output_file:
+            json.dump(data, output_file)
+        return path
+
+    @classmethod
+    def load(cls, path):
+        with open(str(path), 'r') as input_file:
+            return json.load(input_file)
+
+
+class Display:
+
+    @staticmethod
+    def from_path(path):
+        root = tk.Tk()
+        img = Image.open(path)
+        tk_image = ImageTk.PhotoImage(img)
+        label = tk.Label(master=root)
+        label["image"] = tk_image
+        label.pack(side="left")
+        root.mainloop()
+
+    @staticmethod
+    def from_images(*images):
+        root = tk.Tk()
+        tk_images = []
+        for img in images:
+            tk_image = ImageTk.PhotoImage(img)
+            tk_images.append(tk_image)
+            tk.Label(master=root, image=tk_image).pack(side="left")
+            print(img.mode, *img.size)
+        root.mainloop()

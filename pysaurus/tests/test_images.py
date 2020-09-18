@@ -1,16 +1,36 @@
 import os
-import tkinter as tk
 from multiprocessing import Pool
-from typing import List, Tuple, Dict, Set, Any, Union
-from pysaurus.core.database.video import Video
-from PIL import Image, ImageTk
+from typing import List, Tuple, Dict, Set, Any, Union, Iterable
 
 from pysaurus.core import functions
+from pysaurus.core.database import notifications
 from pysaurus.core.database.api import API
 from pysaurus.core.database.properties import PropType
-from pysaurus.core.modules import ColorUtils
+from pysaurus.core.database.video import Video
+from pysaurus.core.modules import Color, Workspace
+from pysaurus.core.notification import DEFAULT_NOTIFIER
 from pysaurus.core.profiling import Profiler
 from pysaurus.tests.test_utils import TEST_LIST_FILE_PATH
+
+_MAP_POINTS = {}
+
+
+def _space_between_points(interval_length, nb_points):
+    # 2 <= k < interval_length
+    top = interval_length - nb_points
+    bottom = nb_points - 1
+    if top % (2 * bottom):
+        return None
+    return top // bottom
+
+
+def _available_points_and_spaces(interval_length):
+    pt_to_il = {}
+    for pt in range(2, interval_length):
+        il = _space_between_points(interval_length, pt)
+        if il:
+            pt_to_il[pt] = il
+    return pt_to_il
 
 
 class SpacedPoints:
@@ -25,69 +45,26 @@ class SpacedPoints:
     k = 86; c = 636056; l = 2
     """
 
-    __slots__ = 'length', 'points', 'nb_points', 'l'
-
-    @classmethod
-    def _space_between_points(cls, interval_length, nb_points):
-        # 2 <= k < interval_length
-        top = interval_length - nb_points
-        bottom = nb_points - 1
-        if top % (2 * bottom):
-            return None
-        return top // bottom
-
-    @classmethod
-    def _available_points_and_spaces(cls, interval_length):
-        pt_to_il = {}
-        for pt in range(2, interval_length):
-            il = cls._space_between_points(interval_length, pt)
-            if il:
-                pt_to_il[pt] = il
-        return pt_to_il
+    __slots__ = 'd',
 
     def __init__(self, length=256, nb_points=6):
-        points = self._available_points_and_spaces(length)
+        if length not in _MAP_POINTS:
+            _MAP_POINTS[length] = _available_points_and_spaces(length)
+        points = _MAP_POINTS[length]
         assert nb_points in points, tuple(points)
-        self.length = length
-        self.points = points
-        self.nb_points = nb_points
-        self.l = self.points[self.nb_points]
+        self.d = points[nb_points] + 1
 
     def nearest_point(self, value: int):
         # 0 <= value < interval length
-        i = value // (self.l + 1)
-        before = i * (self.l + 1)
-        after = (i + 1) * (self.l + 1)
+        i = value // self.d
+        before = i * self.d
+        after = (i + 1) * self.d
         if value - before < after - value:
             return before
         return after
 
-    def nearest_points(self, values: Union[List[int], Tuple[int]]):
+    def nearest_points(self, values: Union[List[int], Tuple[int, int, int]]):
         return type(values)(self.nearest_point(value) for value in values)
-
-
-class Display:
-
-    @staticmethod
-    def from_path(path):
-        root = tk.Tk()
-        img = Image.open(path)
-        tk_image = ImageTk.PhotoImage(img)
-        label = tk.Label(master=root)
-        label["image"] = tk_image
-        label.pack(side="left")
-        root.mainloop()
-
-    @staticmethod
-    def from_images(*images):
-        root = tk.Tk()
-        tk_images = []
-        for img in images:
-            tk_image = ImageTk.PhotoImage(img)
-            tk_images.append(tk_image)
-            tk.Label(master=root, image=tk_image).pack(side="left")
-            print(img.mode, *img.size)
-        root.mainloop()
 
 
 class Graph:
@@ -100,28 +77,24 @@ class Graph:
         self.edges.setdefault(a, set()).add(b)
         self.edges.setdefault(b, set()).add(a)
 
-
-class Grid:
-    __slots__ = 'data', 'width', 'height'
-
-    def __init__(self, data: List[Tuple[int, int, int]], width: int, height: int):
-        self.data = data
-        self.width = width
-        self.height = height
+    def remove(self, a):
+        for b in self.edges.pop(a):
+            self.edges[b].remove(a)
 
 
-class Group:
-    __slots__ = 'grid', 'identifier', 'members', 'connections'
+class PixelGroup:
+    __slots__ = 'color', 'image_width', 'identifier', 'members', 'connections'
 
-    def __init__(self, grid: Grid, identifier: int, members: Set[int]):
-        self.grid = grid
+    def __init__(self, color: Tuple[int, int, int], image_width: int, identifier: int, members: Set[int]):
+        self.color = color
+        self.image_width = image_width
         self.identifier = identifier
         self.members = members
-        self.connections = set()  # type: Set[Group]
+        self.connections = set()  # type: Set[PixelGroup]
 
     def __str__(self):
         return (
-            f"Group({self.identifier + 1} "
+            f"PixelGroup({self.identifier + 1} "
             f"{self.color}, "
             f"{len(self.members)} member{functions.get_plural_suffix(len(self.members))}, "
             f"center {self.center}, "
@@ -135,31 +108,19 @@ class Group:
         return self.identifier == other.identifier
 
     @property
-    def size(self):
-        return len(self.members)
-
-    @property
-    def color(self):
-        return self.grid.data[next(iter(self.members))]
-
-    @property
     def center(self):
         nb_points = len(self.members)
         total_x = 0
         total_y = 0
         for identifier in self.members:
-            x, y = functions.flat_to_coord(identifier, self.grid.width)
+            x, y = functions.flat_to_coord(identifier, self.image_width)
             total_x += x
             total_y += y
         return total_x / nb_points, total_y / nb_points
 
-    @property
-    def edges(self):
-        return [Arrow(self, other) for other in self.connections]
-
 
 class Arrow:
-    __slots__ = 'from_color', 'to_color', 'rank', 'category'
+    __slots__ = 'u', 'v', 'r', 'a'
 
     SMALLER = 0
     EQUALS = 1
@@ -175,24 +136,23 @@ class Arrow:
             return angle_before
         return angle_after % 360
 
-    def __init__(self, a: Group, b: Group):
-        size_a = a.size
-        size_b = b.size
+    def __init__(self, a: PixelGroup, b: PixelGroup):
+        size_a = len(a.members)
+        size_b = len(b.members)
         if size_a // size_b > 1:
             rank = self.GREATER
         elif size_b // size_a > 1:
             rank = self.SMALLER
         else:
             rank = self.EQUALS
-        angle = functions.get_vector_angle(a.center, b.center)
-        self.from_color = a.color
-        self.to_color = b.color
-        self.rank = rank
-        self.category = self.categorize_angle(angle)
+        self.u = a.color
+        self.v = b.color
+        self.r = rank
+        self.a = self.categorize_angle(functions.get_vector_angle(a.center, b.center))
 
     @property
     def key(self):
-        return self.from_color + self.to_color + (self.rank, self.category)
+        return self.u + self.v + (self.r, self.a)
 
     def __hash__(self):
         return hash(self.key)
@@ -201,167 +161,192 @@ class Arrow:
         return self.key == other.key
 
     def __str__(self):
-        return f"{ColorUtils.rgb_to_hex(self.from_color)}-{self.rank}-{self.category}{ColorUtils.rgb_to_hex(self.to_color)}"
+        return f"{Color.rgb_to_hex(self.u)}-{self.r}-{self.a}{Color.rgb_to_hex(self.v)}"
 
 
-def segment_image(grid: Grid) -> List[Arrow]:
+SPACED_POINTS = SpacedPoints()
+
+
+def segment_image(raw_data: Iterable[Tuple[int, int, int]], width: int, height: int) -> List[Arrow]:
     """Column to right, row to bottom"""
+    data = [SPACED_POINTS.nearest_points(pixel) for pixel in raw_data]
     graph = Graph()
     disconnected = Graph()
     # Connect pixels in first line.
-    for current_index in range(1, grid.width):
+    for current_index in range(1, width):
         previous_index = current_index - 1
-        if grid.data[previous_index] == grid.data[current_index]:
+        if data[previous_index] == data[current_index]:
             graph.connect(current_index, previous_index)
         else:
             disconnected.connect(current_index, previous_index)
     # Connect pixels in next lines.
-    for y in range(1, grid.height):
+    for y in range(1, height):
         # Connect first pixel.
-        current_index = y * grid.width
-        above_index = current_index - grid.width
-        if grid.data[current_index] == grid.data[above_index]:
+        current_index = y * width
+        above_index = current_index - width
+        if data[current_index] == data[above_index]:
             graph.connect(current_index, above_index)
         else:
             disconnected.connect(current_index, above_index)
         # Connect next pixels.
-        for x in range(1, grid.width):
-            current_index = y * grid.width + x
-            above_index = current_index - grid.width
+        for x in range(1, width):
+            current_index = y * width + x
+            above_index = current_index - width
             previous_index = current_index - 1
-            if grid.data[current_index] == grid.data[above_index]:
+            if data[current_index] == data[above_index]:
                 graph.connect(current_index, above_index)
             else:
                 disconnected.connect(current_index, above_index)
-            if grid.data[current_index] == grid.data[previous_index]:
+            if data[current_index] == data[previous_index]:
                 graph.connect(current_index, previous_index)
             else:
                 disconnected.connect(current_index, previous_index)
     # Get groups and connect each pixel to its group.
-    groups = []  # type: List[Group]
-    index_to_group = [-1] * grid.width * grid.height
+    groups = []  # type: List[PixelGroup]
+    _ungrouped_indices = set(range(width * height))  # type: Set[int]
+    _index_to_group = {}  # type: Dict[int, int]
     while graph.edges:
         group_id = len(groups)
         index, other_indices = graph.edges.popitem()
+        color = data[index]
         group = {index}
-        index_to_group[index] = group_id
+        _index_to_group[index] = group_id
+        _ungrouped_indices.remove(index)
         while other_indices:
             other_index = other_indices.pop()
             if other_index not in group:
                 group.add(other_index)
-                index_to_group[other_index] = group_id
+                _index_to_group[other_index] = group_id
+                _ungrouped_indices.remove(other_index)
                 other_indices.update(graph.edges.pop(other_index))
-        groups.append(Group(grid, group_id, group))
+        groups.append(PixelGroup(color, width, group_id, group))
+    for ungrouped_index in _ungrouped_indices:
+        disconnected.remove(ungrouped_index)
     # Connect groups.
     for in_index, out_indices in disconnected.edges.items():
+        id_group_in = _index_to_group[in_index]
         for out_index in out_indices:
-            id_group_in = index_to_group[in_index]
-            id_group_out = index_to_group[out_index]
-            if id_group_in >= 0 and id_group_out >= 0:
-                groups[id_group_in].connections.add(groups[id_group_out])
-    # Keep only groups with at least 3 members.
+            groups[id_group_in].connections.add(groups[_index_to_group[out_index]])
     edges = []
-    final_groups = [group for group in groups if len(group.members) > 2]
-    rows = {}  # type: Dict[float, Dict[float, List[Group]]]
-    for g in final_groups:
-        x, y = g.center
-        rows.setdefault(y, {}).setdefault(x, []).append(g)
+    # Order groups in grid.
+    rows = {}  # type: Dict[float, Dict[float, List[PixelGroup]]]
+    for g in groups:
+        # Keep only groups with at least 3 members.
+        if len(g.members) > 2:
+            x, y = g.center
+            rows.setdefault(y, {}).setdefault(x, []).append(g)
+    # Collect arrows following groups in grid (then biggest groups first),
+    # and only from a group to another (not in both directions).
     for y, row in sorted(rows.items()):
         for x, col in sorted(row.items()):
-            for e in sorted(col, key=lambda g: g.size):  # type: Group
+            for e in sorted(col, key=lambda gr: len(gr.members)):  # type: PixelGroup
                 for other in e.connections:
                     other.connections.remove(e)
                     edges.append(Arrow(e, other))
     return edges
 
 
-def job_segment(job):
-    spaced_points = SpacedPoints()
-    miniatures, job_id = job
-    output = []
-    for i, m in enumerate(miniatures):
-        # Categorize pixels.
-        grid = Grid([spaced_points.nearest_points(pixel) for pixel in m.data()], m.width, m.height)
-        output.append({'filename': m.identifier, 'edges': segment_image(grid)})
-        if (i + 1) % 200 == 0:
-            print(job_id, 'segmented', i + 1, '/', len(miniatures), 'video(s)')
-    print(job_id, 'finished segmenting', len(miniatures), '/', len(miniatures), 'video(s)')
-    return output
-
-
-SP = SpacedPoints()
-
-
-def f(c):
-    i, m = c
+def async_segment_image(context):
+    i, m, t, n = context
     if (i + 1) % 500 == 0:
-        print(i + 1)
-    return m.identifier, segment_image(Grid([SP.nearest_points(pixel) for pixel in m.data()], m.width, m.height))
+        n.notify(notifications.VideoJob('', i + 1, t))
+    return m.identifier, segment_image(m.data(), m.width, m.height)
+
+
+def job_find_similarities(job):
+    tasks, job_id, threshold, min_count, workspace, notifier = job
+    job_count = len(tasks)
+    arrow_to_paths = Workspace.load(workspace)
+    similarities = {}
+    for i, (path, arrows) in enumerate(tasks):
+        connected_paths = {}
+        for arrow in arrows:
+            for other_path in arrow_to_paths[arrow]:
+                connected_paths[other_path] = connected_paths.get(other_path, 0) + 1
+        del connected_paths[path]
+        for other_path in similarities.get(path, ()):
+            del connected_paths[other_path]
+        if connected_paths:
+            connections = iter(connected_paths.items())
+            p, c = next(connections)
+            highest_paths = [p]
+            highest_count = c
+            for other_path, arrow_count in connections:
+                if highest_count < arrow_count:
+                    highest_paths = [other_path]
+                    highest_count = arrow_count
+                elif highest_count == arrow_count:
+                    highest_paths.append(other_path)
+            if highest_paths and highest_count >= min_count and highest_count >= (len(arrows) * threshold):
+                for other_path in highest_paths:
+                    similarities.setdefault(other_path, {})[path] = highest_count / len(arrows)
+        if (i + 1) % 100 == 0:
+            notifier.notify(notifications.VideoJob(job_id, i + 1, job_count))
+    notifier.notify(notifications.VideoJob(job_id, job_count, job_count))
+    return similarities
 
 
 def main():
     cpu_count = max(1, os.cpu_count() - 1)
     api = API(TEST_LIST_FILE_PATH, update=False)
-    min_dict = {m.identifier: m for m in api.database.ensure_miniatures(return_miniatures=True)}
     videos = list(api.database.readable.found.with_thumbnails)  # type: List[Video]
+    videos_dict = {v.filename.path: v for v in videos}  # type: Dict[str, Video]
+    min_dict = {m.identifier: m for m in api.database.ensure_miniatures(return_miniatures=True)}
     miniatures = [min_dict[video.filename.path] for video in videos]
-    tasks = list(enumerate(miniatures))
+    tasks = [(i, m, len(miniatures), DEFAULT_NOTIFIER) for i, m in enumerate(miniatures)]
 
     with Profiler(f'Segment {len(tasks)} videos.'):
         with Pool(cpu_count) as p:
-            output = list(p.imap(f, tasks))
+            output = list(p.imap(async_segment_image, tasks))
+    DEFAULT_NOTIFIER.notify(notifications.VideoJob('', len(miniatures), len(miniatures)))
     assert len(output) == len(tasks), (len(output), len(tasks))
 
     special_property = '__image__'
-    print('Create video property', special_property)
+    DEFAULT_NOTIFIER.notify(notifications.Message('Create video property', special_property))
     if not api.database.has_prop_type(special_property):
         api.database.add_prop_type(PropType(special_property, '', True))
-    prop_type = api.database.get_prop_type(special_property)
 
-    print('Clear video property', special_property)
+    DEFAULT_NOTIFIER.notify(notifications.Message('Clear video property', special_property))
     for video in videos:
-        video.properties.pop(special_property, None)
+        video.properties[special_property] = []
 
     with Profiler('Create video graph.'):
-        path_to_arrows = {}
-        arrow_to_paths = {}
-        for path, arrows in output:
-            if arrows:
-                arrows = set(arrows)
-                path_to_arrows[path] = arrows
-                for arrow in arrows:
-                    arrow_to_paths.setdefault(arrow, []).append(path)
+        pta = {}
+        atp = {}
+        for _path, _arrows in output:
+            if _arrows:
+                vid = videos_dict[_path].video_id
+                ars = set(str(a) for a in _arrows)
+                pta[vid] = ars
+                for a in ars:
+                    atp.setdefault(a, []).append(vid)
 
-    threshold = 0.85
-    with Profiler('Detect similar videos.'):
-        for i, (path, arrows) in enumerate(path_to_arrows.items()):
-            connected_paths = {}
-            for arrow in arrows:
-                for other_path in arrow_to_paths[arrow]:
-                    if other_path in connected_paths:
-                        connected_paths[other_path] += 1
-                    else:
-                        connected_paths[other_path] = 1
-            del connected_paths[path]
-            highest_paths = set()
-            highest_count = None
-            for other_path, arrow_count in connected_paths.items():
-                if not highest_paths or highest_count < arrow_count:
-                    highest_paths = {other_path}
-                    highest_count = arrow_count
-                elif highest_count == arrow_count:
-                    highest_paths.add(other_path)
-            if highest_paths and highest_count >= (len(arrows) * threshold):
-                print('Similarity', highest_count, len(arrows) * threshold, path, *sorted(highest_paths))
-                for connected_path in {path} | highest_paths:
-                    video = api.database.get_video_from_filename(connected_path)
-                    values = set(video.properties.get(special_property, []))
-                    values.add(str(i))
-                    video.properties[special_property] = prop_type(values)
-            if (i + 1) % 100 == 0:
-                print(i + 1, 'processed')
+    threshold = 0.5
+    min_count = 10
+
+    ####################################################################################################################
+    workspace = Workspace.save(atp)
+    t = list(pta.items())
+    j = functions.dispatch_tasks(t, cpu_count, [threshold, min_count, workspace, DEFAULT_NOTIFIER])
+    with Profiler('Async find similarities'):
+        results = functions.parallelize(job_find_similarities, j, cpu_count)
+
+    i = 0
+    for similarities in results:
+        for video_id, video_indices in similarities.items():
+            for other_id, similarity in video_indices.items():
+                tag = f"{i}-{round(similarity * 100) / 100}"
+                DEFAULT_NOTIFIER.notify(notifications.Message(f'[{i + 1}] Similarity({len(video_indices) + 1}) tag({tag})'))
+                api.database.get_video_from_id(video_id).properties[special_property].append(tag)
+                api.database.get_video_from_id(other_id).properties[special_property].append(tag)
+                i += 1
+    ####################################################################################################################
+
+    for video in videos:
+        video.properties[special_property].sort()
     api.database.save()
 
 
 if __name__ == '__main__':
-    main()
+    with Profiler('MAIN'):
+        main()

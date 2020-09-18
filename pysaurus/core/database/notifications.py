@@ -124,7 +124,7 @@ class NbMiniatures(VideosToLoad):
     __slots__ = ()
 
 
-# Unused, sub-classed,
+# Unused, sub-classed.
 class MissingVideos(Notification):
     __slots__ = ['names']
 
@@ -167,3 +167,13 @@ class VideoThumbnailErrors(VideoInfoErrors):
 
 class DatabaseReady(Notification):
     __slots__ = ()
+
+
+class Message(Notification):
+    __slots__ = 'message',
+
+    def __init__(self, *message):
+        super().__init__()
+        with StringPrinter() as printer:
+            printer.write(*message)
+            self.message = str(printer)
