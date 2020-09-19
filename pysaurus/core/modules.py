@@ -238,5 +238,4 @@ class Display:
             tk_image = ImageTk.PhotoImage(img)
             tk_images.append(tk_image)
             tk.Label(master=root, image=tk_image).pack(side="left")
-            print(img.mode, *img.size)
         root.mainloop()

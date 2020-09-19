@@ -1,3 +1,4 @@
+import math
 import os
 from multiprocessing import Pool
 from typing import List, Tuple, Dict, Set, Any, Union, Iterable
@@ -11,6 +12,7 @@ from pysaurus.core.modules import Color, Workspace
 from pysaurus.core.notification import DEFAULT_NOTIFIER
 from pysaurus.core.profiling import Profiler
 from pysaurus.tests.test_utils import TEST_LIST_FILE_PATH
+from abc import abstractmethod
 
 LENGTH = 256
 NB_POINTS = 6
@@ -60,15 +62,119 @@ class SpacedPoints:
 
     def nearest_point(self, value: int):
         # 0 <= value < interval length
-        i = value // self.d
+        i = int(value // self.d)
         before = i * self.d
         after = (i + 1) * self.d
         if value - before < after - value:
             return before
         return after
 
-    def nearest_points(self, values: Union[List[int], Tuple[int, int, int]]):
+    def nearest_points(self, values: Union[list, tuple]):
         return type(values)(self.nearest_point(value) for value in values)
+
+
+class AbstractPixelComparator:
+    __slots__ = ()
+
+    @abstractmethod
+    def normalize_data(self, data, width):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def pixels_are_close(self, data, i, j, width):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def common_color(self, data, indices, width):
+        raise NotImplementedError()
+
+
+class PixelComparator(AbstractPixelComparator):
+    __slots__ = 'spaced_points',
+
+    def __init__(self, spaced_points: SpacedPoints):
+        self.spaced_points = spaced_points
+
+    def normalize_data(self, data, width):
+        return [self.spaced_points.nearest_points(pixel) for pixel in data]
+
+    def pixels_are_close(self, data, i, j, width):
+        return data[i] == data[j]
+
+    def common_color(self, data, indices, width):
+        return data[next(iter(indices))]
+
+
+class DistancePixelComparator(AbstractPixelComparator):
+    __slots__ = 'threshold', 'spaced_points'
+
+    MAX_REAL_DISTANCE = 255 * math.sqrt(3)
+
+    def __init__(self, threshold: Union[int, float], spaced_points: SpacedPoints):
+        self.threshold = threshold
+        self.spaced_points = spaced_points
+
+    def normalize_data(self, data, width):
+        return equalize(data)
+        # if isinstance(data, list):
+        #     return data
+        # return list(data)
+
+    def pixels_are_close(self, data, i, j, width):
+        return (abs(sum(data[i]) - sum(data[j])) / (3 * 255)) <= self.threshold
+
+    def _pixels_are_close(self, data, i, j, width):
+        r1, g1, b1 = data[i]
+        r2, g2, b2 = data[j]
+        distance = math.sqrt((r1 - r2) * (r1 - r2) + (g1 - g2) * (g1 - g2) + (b1 - b2) * (b1 - b2))
+        return distance <= self.threshold * self.MAX_REAL_DISTANCE
+
+    def common_color(self, data, indices, width):
+        sum_r = 0
+        sum_g = 0
+        sum_b = 0
+        for index in indices:
+            r, g, b = data[index]
+            sum_r += r
+            sum_g += g
+            sum_b += b
+        avg_r = sum_r / len(indices)
+        avg_g = sum_g / len(indices)
+        avg_b = sum_b / len(indices)
+        return self.spaced_points.nearest_points((avg_r, avg_g, avg_b))
+
+
+class GrayDistancePixelComparator(AbstractPixelComparator):
+    __slots__ = 'threshold', 'spaced_points'
+
+    MAX_REAL_DISTANCE = 255 * math.sqrt(3)
+
+    def __init__(self, threshold: Union[int, float], spaced_points: SpacedPoints):
+        self.threshold = threshold
+        self.spaced_points = spaced_points
+
+    def normalize_data(self, data, width):
+        return equalize(data)
+        # if isinstance(data, list):
+        #     return data
+        # return list(data)
+
+    def pixels_are_close(self, data, i, j, width):
+        return abs(sum(data[i]) - sum(data[j])) / 3 <= 255 * self.threshold
+
+    def common_color(self, data, indices, width):
+        sum_r = 0
+        sum_g = 0
+        sum_b = 0
+        for index in indices:
+            r, g, b = data[index]
+            sum_r += r
+            sum_g += g
+            sum_b += b
+        avg_r = sum_r / len(indices)
+        avg_g = sum_g / len(indices)
+        avg_b = sum_b / len(indices)
+        return self.spaced_points.nearest_points((avg_r, avg_g, avg_b))
 
 
 class Graph:
@@ -169,17 +275,20 @@ class Arrow:
 
 
 SPACED_POINTS = SpacedPoints(length=LENGTH, nb_points=NB_POINTS)
+SIMPLE_PIXEL_COMPARATOR = PixelComparator(SPACED_POINTS)
+DISTANCE_PIXEL_COMPARATOR = DistancePixelComparator(0.0125, SPACED_POINTS)
+GRAY_DISTANCE_PIXEL_COMPARATOR = GrayDistancePixelComparator(0.01, SPACED_POINTS)
+PIXEL_COMPARATOR = GRAY_DISTANCE_PIXEL_COMPARATOR
 
 
-def segment_image(raw_data: Iterable[Tuple[int, int, int]], width: int, height: int) -> List[Arrow]:
-    """Column to right, row to bottom"""
-    data = [SPACED_POINTS.nearest_points(pixel) for pixel in raw_data]
+def group_pixels(raw_data, width, height) -> List[PixelGroup]:
+    data = PIXEL_COMPARATOR.normalize_data(raw_data, width)
     graph = Graph()
     disconnected = Graph()
     # Connect pixels in first line.
     for current_index in range(1, width):
         previous_index = current_index - 1
-        if data[previous_index] == data[current_index]:
+        if PIXEL_COMPARATOR.pixels_are_close(data, current_index, previous_index, width):
             graph.connect(current_index, previous_index)
         else:
             disconnected.connect(current_index, previous_index)
@@ -188,7 +297,7 @@ def segment_image(raw_data: Iterable[Tuple[int, int, int]], width: int, height: 
         # Connect first pixel.
         current_index = y * width
         above_index = current_index - width
-        if data[current_index] == data[above_index]:
+        if PIXEL_COMPARATOR.pixels_are_close(data, current_index, above_index, width):
             graph.connect(current_index, above_index)
         else:
             disconnected.connect(current_index, above_index)
@@ -197,11 +306,11 @@ def segment_image(raw_data: Iterable[Tuple[int, int, int]], width: int, height: 
             current_index = y * width + x
             above_index = current_index - width
             previous_index = current_index - 1
-            if data[current_index] == data[above_index]:
+            if PIXEL_COMPARATOR.pixels_are_close(data, current_index, above_index, width):
                 graph.connect(current_index, above_index)
             else:
                 disconnected.connect(current_index, above_index)
-            if data[current_index] == data[previous_index]:
+            if PIXEL_COMPARATOR.pixels_are_close(data, current_index, previous_index, width):
                 graph.connect(current_index, previous_index)
             else:
                 disconnected.connect(current_index, previous_index)
@@ -212,7 +321,6 @@ def segment_image(raw_data: Iterable[Tuple[int, int, int]], width: int, height: 
     while graph.edges:
         group_id = len(groups)
         index, other_indices = graph.edges.popitem()
-        color = data[index]
         group = {index}
         _index_to_group[index] = group_id
         _ungrouped_indices.remove(index)
@@ -223,14 +331,30 @@ def segment_image(raw_data: Iterable[Tuple[int, int, int]], width: int, height: 
                 _index_to_group[other_index] = group_id
                 _ungrouped_indices.remove(other_index)
                 other_indices.update(graph.edges.pop(other_index))
-        groups.append(PixelGroup(color, width, group_id, group))
+        groups.append(PixelGroup(PIXEL_COMPARATOR.common_color(data, group, width), width, group_id, group))
     for ungrouped_index in _ungrouped_indices:
         disconnected.remove(ungrouped_index)
     # Connect groups.
     for in_index, out_indices in disconnected.edges.items():
         id_group_in = _index_to_group[in_index]
         for out_index in out_indices:
-            groups[id_group_in].connections.add(groups[_index_to_group[out_index]])
+            if id_group_in != _index_to_group[out_index]:
+                groups[id_group_in].connections.add(groups[_index_to_group[out_index]])
+    return groups
+
+
+def segment(data, width, height):
+    groups = group_pixels(data, width, height)
+    print(len(groups), 'groups')
+    output = [(0, 0, 0) for _ in range(width * height)]
+    for group in groups:
+        for index in group.members:
+            output[index] = group.color
+    return output
+
+
+def compute_arrows(raw_data: Iterable[Tuple[int, int, int]], width: int, height: int) -> List[Arrow]:
+    groups = group_pixels(raw_data, width, height)
     edges = []
     # Order groups in grid.
     rows = {}  # type: Dict[float, Dict[float, List[PixelGroup]]]
@@ -250,11 +374,11 @@ def segment_image(raw_data: Iterable[Tuple[int, int, int]], width: int, height: 
     return edges
 
 
-def async_segment_image(context):
+def async_compute_arrows(context):
     i, m, t, n = context
     if (i + 1) % 500 == 0:
         n.notify(notifications.VideoJob('', i + 1, t))
-    return m.identifier, segment_image(m.data(), m.width, m.height)
+    return m.identifier, compute_arrows(m.data(), m.width, m.height)
 
 
 def job_find_similarities(job):
@@ -301,7 +425,7 @@ def main():
 
     with Profiler(f'Segment {len(tasks)} videos.'):
         with Pool(cpu_count) as p:
-            output = list(p.imap(async_segment_image, tasks))
+            output = list(p.imap(async_compute_arrows, tasks))
     DEFAULT_NOTIFIER.notify(notifications.VideoJob('', len(miniatures), len(miniatures)))
     assert len(output) == len(tasks), (len(output), len(tasks))
 
@@ -348,27 +472,83 @@ def main():
     api.database.save()
 
 
-def categorize_pixels(data, spaces_points):
-    return [spaces_points.nearest_points(pixel) for pixel in data]
+def _average_distance(values):
+    if len(values) < 2:
+        return 0
+    total_distances = 0
+    for i in range(1, len(values)):
+        total_distances += abs(values[i] - values[i - 1])
+    return total_distances / (len(values) - 1)
+
+
+def contrast_rate(data):
+    grays = {int(sum(p) / 3) for p in data}
+    values = sorted(grays)
+    if len(values) < 2:
+        return 0
+    best_distance = 255 / (len(values) - 1)
+    average_distance = _average_distance(values)
+    return average_distance / best_distance
+
+
+def _clip_color(value):
+    return min(max(0, value), 255)
+
+
+def equalize(data):
+    if not isinstance(data, (list, tuple)):
+        data = list(data)
+    grays = sorted({int(sum(p) / 3) for p in data})
+    if len(grays) < 2:
+        return data
+    best_distance = 255 / (len(grays) - 1)
+    new_grays = [0]
+    for i in range(1, len(grays)):
+        new_grays.append(new_grays[i - 1] + best_distance)
+    new_grays = [round(gray) for gray in new_grays]
+    assert new_grays[-1] == 255, new_grays[-1]
+    gray_to_index = {gray: index for index, gray in enumerate(grays)}
+    output = []
+    for pixel in data:
+        r, g, b = pixel
+        gray = int((r + g + b) / 3)
+        index = gray_to_index[gray]
+        new_gray = new_grays[index]
+        distance = new_gray - gray
+        new_color = _clip_color(r + distance), _clip_color(g + distance), _clip_color(b + distance)
+        # assert int(sum(new_color) / 3) == new_gray, (int(sum(new_color) / 3), new_gray, gray, new_color, pixel)
+        output.append(new_color)
+    return output
 
 
 def main_simple():
+    from PIL import ImageOps
     from pysaurus.core.modules import ImageUtils, Display
     api = API(TEST_LIST_FILE_PATH, update=False)
-    v1 = api.database.get_video_from_filename(r"R:\donnees\autres\p\Harley Dean - bkb16182-1080p.mp4")
-    v2 = api.database.get_video_from_filename(r"F:\donnees\autres\p\Real butler should be able to serve dinner and fuck his masters.mp4")
+    p1 = r"R:\donnees\autres\p\Harley Dean - bkb16182-1080p.mp4"
+    p2 = r"F:\donnees\autres\p\Real butler should be able to serve dinner and fuck his masters.mp4"
+    # p1 = r"H:\donnees\autres\p\Watch Caribbeancom 092019-001 Haruka Juri Masochist Nipple Online  JAV HD FREE ONLINE 1080p.mp4"
+    # p2 = r"G:\donnees\autres\p\Rebecca More - Big Boobs In Army.mp4"
+    v1 = api.database.get_video_from_filename(p1)
+    v2 = api.database.get_video_from_filename(p2)
     i1 = ImageUtils.open_rgb_image(v1.thumbnail_path.path)
     i2 = ImageUtils.open_rgb_image(v2.thumbnail_path.path)
-    c1 = categorize_pixels(i1.getdata(), SPACED_POINTS)
-    c2 = categorize_pixels(i2.getdata(), SPACED_POINTS)
+    c1 = segment(i1.getdata(), *i1.size)
+    c2 = segment(i2.getdata(), *i2.size)
+    print(contrast_rate(i1.getdata()), contrast_rate(i2.getdata()))
+    o1 = equalize(i1.getdata())
+    o2 = equalize(i2.getdata())
+    d1 = segment(o1, *i1.size)
+    d2 = segment(o2, *i2.size)
     Display.from_images(
         i1, i2,
-        ImageUtils.new_rgb_image(c1, *i1.size),
-        ImageUtils.new_rgb_image(c2, *i2.size),
+        ImageUtils.new_rgb_image(c1, *i1.size), ImageUtils.new_rgb_image(c2, *i2.size),
+        # ImageUtils.new_rgb_image(o1, *i1.size), ImageUtils.new_rgb_image(o2, *i2.size),
+        # ImageUtils.new_rgb_image(d1, *i1.size), ImageUtils.new_rgb_image(d2, *i2.size),
     )
 
 
 if __name__ == '__main__':
-    # main_simple()
-    with Profiler('MAIN'):
-        main()
+    main_simple()
+    # with Profiler('MAIN'):
+    #     main()
