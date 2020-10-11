@@ -165,7 +165,7 @@ class Color:
 
     @classmethod
     def rgb_to_hex(cls, color: Tuple[int, int, int]):
-        return f"{cls._unit_to_hex(color[0])}{cls._unit_to_hex(color[1])}{cls._unit_to_hex(color[2])}"
+        return ''.join(cls._unit_to_hex(value) for value in (color if isinstance(color, tuple) else (color,)))
 
 
 class FNV64:

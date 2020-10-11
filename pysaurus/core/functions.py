@@ -1,3 +1,4 @@
+import bisect
 import concurrent.futures
 import os
 import re
@@ -262,3 +263,59 @@ def assert_data_is_serializable(data, path=()):
 
 def identity(value):
     return value
+
+
+def is_dictionary(dict_to_check):
+    """ Check if given variable is a dictionary-like object.
+
+        :param dict_to_check: Dictionary to check.
+        :return: Indicates if the object is a dictionary.
+        :rtype: bool
+    """
+    return isinstance(dict_to_check, dict) or all(
+        hasattr(dict_to_check, expected_attribute)
+        for expected_attribute in (
+            '__len__',
+            '__contains__',
+            '__bool__',
+            '__iter__',
+            '__getitem__',
+            'keys',
+            'values',
+            'items',
+        )
+    )
+
+
+def is_sequence(seq_to_check):
+    """ Check if given variable is a sequence-like object.
+        Note that strings and dictionary-like objects will not be considered as sequences.
+
+        :param seq_to_check: Sequence-like object to check.
+        :return: Indicates if the object is sequence-like.
+        :rtype: bool
+    """
+    # Strings and dicts are not valid sequences.
+    if isinstance(seq_to_check, str) or is_dictionary(seq_to_check):
+        return False
+    return hasattr(seq_to_check, '__iter__')
+
+
+def __get_start_index(sorted_content: list, element):
+    # a[i:] >= x
+    return bisect.bisect_left(sorted_content, element)
+    # position = bisect.bisect_left(sorted_content, element)
+    # if position != len(sorted_content):
+    #     return position
+    # import sys
+    # print('Position', position, 'Value', element, 'first', sorted_content[0], 'last', sorted_content[-1], file=sys.stderr)
+    # return None
+
+
+def __get_end_index(sorted_content: list, element):
+    # a[i:] > x
+    return bisect.bisect_right(sorted_content, element)
+
+
+get_start_index = bisect.bisect_left
+get_end_index = bisect.bisect_right

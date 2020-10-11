@@ -383,16 +383,15 @@ class Database:
                 raise exceptions.PysaurusError('Miniatures file does not contain a list.')
             for dct in json_array:
                 video = self.get_video_from_filename(dct['i'], required=False)
-                if (video
-                        and video.exists()
-                        and ImageUtils.DEFAULT_THUMBNAIL_SIZE == (dct['w'], dct['h'])):
+                if video and ImageUtils.DEFAULT_THUMBNAIL_SIZE == (dct['w'], dct['h']):
                     identifiers.add(video.filename.path)
                     valid_dictionaries.append(dct)
             have_removed = len(valid_dictionaries) != len(json_array)
             del json_array
 
         tasks = [(video.filename, video.thumbnail_path)
-                 for video in self.readable.found.with_thumbnails
+                 for source in (self.readable.found.with_thumbnails, self.readable.not_found.with_thumbnails)
+                 for video in source
                  if video.filename.path not in identifiers]
         self.__notifier.notify(notifications.MiniaturesToLoad(len(tasks)))
 
