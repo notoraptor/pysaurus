@@ -19,6 +19,11 @@ from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
 
 
+SPECIAL_PROPERTY_ERROR = '<error>'
+SPECIAL_PROPERTY_DEFINITIONS = {
+    SPECIAL_PROPERTY_ERROR: (SPECIAL_PROPERTY_ERROR, '', True)
+}
+
 class Database:
     __slots__ = ('__db_path', '__thumb_folder', '__json_path', '__miniatures_path', '__log_path',
                  '__date', '__folders', '__videos', '__unreadable', '__discarded', '__prop_types',
@@ -62,6 +67,22 @@ class Database:
             self.__load(folders, clear_old_folders)
         self.video_interval = VideoInterval(t[0] for t in Video.QUALITY_FIELDS)
         self.video_interval.update(self.readable)
+        # Set special properties.
+        to_save = False
+        for prop_name, prop_def in SPECIAL_PROPERTY_DEFINITIONS.items():
+            already_defined = False
+            expected = PropType(*prop_def)
+            if self.has_prop_type(prop_name):
+                prop_type = self.get_prop_type(prop_name)
+                if prop_type == expected:
+                    already_defined = True
+                else:
+                    self.remove_prop_type(prop_name)
+            if not already_defined:
+                self.add_prop_type(expected)
+                to_save = True
+        if to_save:
+            self.save()
 
     # Properties.
 
@@ -206,6 +227,9 @@ class Database:
                 remaining_thumb_videos.append(video.filename.path)
         self.__notifier.notify(notifications.MissingThumbnails(remaining_thumb_videos))
 
+    def _set_video_property_error(self, video: Video):
+        video.properties[SPECIAL_PROPERTY_ERROR] = sorted(video.errors)
+
     # Public methods.
 
     def update(self):
@@ -250,6 +274,17 @@ class Database:
                     self.__videos.pop(file_path, None)
                 else:
                     video_state = Video.from_dict(d, self)
+
+                    # Get previous properties, if available
+                    if file_path in self.__videos:
+                        video_state.properties.update(self.__videos[file_path].properties)
+
+                    # Set special properties
+                    for special_prop in SPECIAL_PROPERTY_DEFINITIONS:
+                        fn_name = f'_set_video_property_{special_prop[1:-1]}'
+                        if hasattr(self, fn_name):
+                            getattr(self, fn_name)(video_state)
+
                     videos[file_path] = video_state
                     self.__unreadable.pop(file_path, None)
                 video_state.rt_is_file = True
@@ -526,7 +561,9 @@ class Database:
         for file_name in file_names:  # type: AbsolutePath
             video_state = None
             if file_name in self.__videos:
-                video_state = self.__videos[file_name]
+                video = self.__videos[file_name]
+                if all(special_prop in video.properties for special_prop in SPECIAL_PROPERTY_DEFINITIONS):
+                    video_state = video
             elif file_name in self.__unreadable:
                 video_state = self.__unreadable[file_name]
 

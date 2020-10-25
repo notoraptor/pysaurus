@@ -15,7 +15,7 @@ class PropType:
         if isinstance(definition, (bool, int, float, str)):
             prop_type = type(definition)
             default = definition
-            enumeration = None
+            enumeration = ()
             if prop_type is str:
                 default = default.strip()
         elif isinstance(definition, (list, tuple)):
@@ -32,6 +32,16 @@ class PropType:
         self.enumeration = enumeration
         self.default = default
         self.multiple = multiple
+
+    @property
+    def key(self):
+        return self.name, self.type, self.default, self.multiple, tuple(sorted(self.enumeration))
+
+    def __hash__(self):
+        return hash(self.key)
+
+    def __eq__(self, other):
+        return self.key == other.key
 
     def __call__(self, value=None):
         return self.new() if value is None else self.validate(value)

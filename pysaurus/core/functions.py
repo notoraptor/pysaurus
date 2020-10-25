@@ -319,3 +319,13 @@ def __get_end_index(sorted_content: list, element):
 
 get_start_index = bisect.bisect_left
 get_end_index = bisect.bisect_right
+
+
+def flatten_list(data: list):
+    output = []
+    for element in data:
+        if isinstance(element, list):
+            output.extend(flatten_list(element))
+        else:
+            output.append(element)
+    return output
