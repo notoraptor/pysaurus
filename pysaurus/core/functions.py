@@ -307,8 +307,6 @@ def __get_start_index(sorted_content: list, element):
     # position = bisect.bisect_left(sorted_content, element)
     # if position != len(sorted_content):
     #     return position
-    # import sys
-    # print('Position', position, 'Value', element, 'first', sorted_content[0], 'last', sorted_content[-1], file=sys.stderr)
     # return None
 
 

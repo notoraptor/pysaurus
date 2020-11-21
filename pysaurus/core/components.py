@@ -286,6 +286,14 @@ class Duration(object):
     def to_json(self):
         return str(self)
 
+    @classmethod
+    def from_seconds(cls, seconds):
+        return cls(seconds * 1_000_000)
+
+    @classmethod
+    def from_minutes(cls, minutes):
+        return cls(minutes * 60_000_000)
+
 
 class FileSize(object):
     __slots__ = ('__size', '__unit')

@@ -13,7 +13,7 @@ def main():
     with open(sys.argv[1]) as file:
         similarities = json.load(file)
     print('LOADING DATABASE')
-    api = API(TEST_LIST_FILE_PATH)
+    api = API(list_file_path=TEST_LIST_FILE_PATH, update=False)
     database = api.database
     with open('output.tsv', 'wb') as file:
         for group_id, group in enumerate(similarities):
