@@ -1,9 +1,8 @@
 import itertools
 import math
 import os
-from abc import abstractmethod
 from multiprocessing import Pool
-from typing import List, Tuple, Dict, Set, Any, Union, Optional
+from typing import List, Dict, Union, Optional, Any
 
 import ujson as json
 
@@ -16,226 +15,12 @@ from pysaurus.core.database.video import Video
 from pysaurus.core.native.video_raptor.miniature import Miniature
 from pysaurus.core.notification import DEFAULT_NOTIFIER
 from pysaurus.core.profiling import Profiler
+from pysaurus.tests.image_management.graph import Graph
+from pysaurus.tests.image_management.group_computer import GroupComputer
+from pysaurus.tests.image_management.pixel_group import _categorize_position, _categorize_value, \
+    _categorize_sub_position, _categorize_sub_value
 from pysaurus.tests.test_utils import TEST_LIST_FILE_PATH
-from pysaurus.tests.trash import SpacedPoints
-
-
-class _AbstractPixelComparator:
-    __slots__ = ()
-
-    @abstractmethod
-    def normalize_data(self, data, width):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def pixels_are_close(self, data, i, j, width):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def common_color(self, data, indices, width):
-        raise NotImplementedError()
-
-
-class DistancePixelComparator(_AbstractPixelComparator):
-    __slots__ = 'threshold', 'limit'
-
-    def __init__(self, similarity_percent: Union[int, float]):
-        self.threshold = (100 - similarity_percent) / 100
-        self.limit = self.threshold * 255 * math.sqrt(3)
-
-    def normalize_data(self, data, width):
-        return list(data)
-
-    def pixels_are_close(self, data, i, j, width):
-        r1, g1, b1 = data[i]
-        r2, g2, b2 = data[j]
-        distance = math.sqrt((r1 - r2) * (r1 - r2) + (g1 - g2) * (g1 - g2) + (b1 - b2) * (b1 - b2))
-        return distance <= self.limit
-
-    def common_color(self, data, indices, width):
-        nb_indices = len(indices)
-        sum_r = 0
-        sum_g = 0
-        sum_b = 0
-        for index in indices:
-            r, g, b = data[index]
-            sum_r += r
-            sum_g += g
-            sum_b += b
-        return sum_r / nb_indices, sum_g / nb_indices, sum_b / nb_indices
-
-
-class Graph:
-    __slots__ = 'edges',
-
-    def __init__(self):
-        self.edges = {}  # type: Dict[Any, Set[Any]]
-
-    def connect(self, a, b):
-        self.edges.setdefault(a, set()).add(b)
-        self.edges.setdefault(b, set()).add(a)
-
-    def remove(self, a):
-        for b in self.edges.pop(a):
-            self.edges[b].remove(a)
-
-
-class BasicGroup:
-    __slots__ = 'color', 'center', 'size'
-
-    def __init__(self, color: Tuple, center: Tuple, size: int):
-        self.color = color
-        self.center = center
-        self.size = size
-
-    key = property(lambda self: (self.color, self.center, self.size))
-
-    def __str__(self):
-        return str(self.key)
-
-    def __hash__(self):
-        return hash(self.key)
-
-    def __eq__(self, other):
-        return self.key == other.key
-
-    def __lt__(self, other):
-        return self.key < other.key
-
-
-def _categorize_position(x, y, width, step):
-    return int(y // step) * (width // step) + int(x // step)
-
-
-def _categorize_value(x, step):
-    return int(x // step)
-
-
-def _categorize_sub_position(x, y, width, step):
-    p_x = _categorize_sub_value(x, step)
-    p_y = _categorize_sub_value(y, step)
-    return p_y * (1 + width // step) + p_x
-
-
-def _categorize_sub_value(x, step):
-    return int((int(x // (step // 2)) + 1) // 2)
-
-
-class PixelGroup:
-    __slots__ = 'color', 'image_width', 'identifier', 'members'
-
-    def __init__(self, color: Tuple[float, float, float], image_width: int, identifier: int, members: Set[int]):
-        self.color = color
-        self.image_width = image_width
-        self.identifier = identifier
-        self.members = members
-
-    def __str__(self):
-        return (
-            f"PixelGroup({self.identifier + 1} "
-            f"{self.color}, "
-            f"{len(self.members)} member{functions.get_plural_suffix(len(self.members))}, "
-            f"center {self.center})"
-        )
-
-    def __hash__(self):
-        return hash(self.identifier)
-
-    def __eq__(self, other):
-        return self.identifier == other.identifier
-
-    def to_basic_group(self, spaced_color: SpacedPoints, spaced_position: SpacedPoints, spaced_size: SpacedPoints):
-        color = tuple(spaced_color.nearest_point(value) for value in self.color)
-        center = tuple(spaced_position.nearest_point(value) for value in self.center)
-        size = spaced_size.nearest_point(len(self.members))
-        return BasicGroup(color, center, size)
-
-    def to_basic_group_raw(self):
-        return BasicGroup(self.color, self.center, len(self.members))
-
-    def to_basic_group_intervals(self, nb_color_points, nb_position_points, nb_size_points):
-        color = tuple(_categorize_value(value, 256 // nb_color_points) for value in self.color)
-        center = _categorize_position(*self.center, 32, 32 // nb_position_points)
-        size = _categorize_value(len(self.members), 1024 // nb_size_points)
-        return BasicGroup(color, center, size)
-
-    def to_basic_group_sub_intervals(self, nb_color_points, nb_position_points, nb_size_points):
-        color = tuple(_categorize_sub_value(value, 256 // nb_color_points) for value in self.color)
-        center = _categorize_sub_position(*self.center, 32, 32 // nb_position_points)
-        size = _categorize_sub_value(len(self.members), 1024 // nb_size_points)
-        return BasicGroup(color, center, size)
-
-    @property
-    def center(self):
-        nb_points = len(self.members)
-        total_x = 0
-        total_y = 0
-        for identifier in self.members:
-            x, y = functions.flat_to_coord(identifier, self.image_width)
-            total_x += x
-            total_y += y
-        return total_x / nb_points, total_y / nb_points
-
-
-class GroupComputer:
-    __slots__ = 'group_min_size', 'pixel_comparator'
-
-    def __init__(self, *, group_min_size, similarity_percent):
-        self.group_min_size = group_min_size
-        self.pixel_comparator = DistancePixelComparator(similarity_percent)
-
-    def group_pixels(self, raw_data, width, height) -> List[PixelGroup]:
-        data = self.pixel_comparator.normalize_data(raw_data, width)
-        graph = Graph()
-        # Connect pixels in first line.
-        for current_index in range(1, width):
-            previous_index = current_index - 1
-            if self.pixel_comparator.pixels_are_close(data, current_index, previous_index, width):
-                graph.connect(current_index, previous_index)
-        # Connect pixels in next lines.
-        for y in range(1, height):
-            # Connect first pixel.
-            current_index = y * width
-            above_index = current_index - width
-            if self.pixel_comparator.pixels_are_close(data, current_index, above_index, width):
-                graph.connect(current_index, above_index)
-            # Connect next pixels.
-            for x in range(1, width):
-                current_index = y * width + x
-                above_index = current_index - width
-                previous_index = current_index - 1
-                top_left_index = current_index - width - 1
-                if self.pixel_comparator.pixels_are_close(data, current_index, above_index, width):
-                    graph.connect(current_index, above_index)
-                if self.pixel_comparator.pixels_are_close(data, current_index, previous_index, width):
-                    graph.connect(current_index, previous_index)
-                if self.pixel_comparator.pixels_are_close(data, current_index, top_left_index, width):
-                    graph.connect(current_index, top_left_index)
-        # Get groups and connect each pixel to its group.
-        groups = []  # type: List[PixelGroup]
-        while graph.edges:
-            index, other_indices = graph.edges.popitem()
-            group_id = len(groups)
-            group = {index}
-            while other_indices:
-                other_index = other_indices.pop()
-                if other_index not in group:
-                    group.add(other_index)
-                    other_indices.update(graph.edges.pop(other_index))
-            groups.append(PixelGroup(self.pixel_comparator.common_color(data, group, width), width, group_id, group))
-        return groups
-
-    def compute_groups(self, miniature) -> List[PixelGroup]:
-        # compute_groups
-        return [group
-                for group in self.group_pixels(miniature.data(), miniature.width, miniature.height)
-                if len(group.members) >= self.group_min_size]
-
-    def async_compute(self, context):
-        index_task, miniature, nb_all_tasks, notifier = context
-        if (index_task + 1) % PRINT_STEP == 0:
-            notifier.notify(notifications.VideoJob('', index_task + 1, nb_all_tasks))
-        return miniature.identifier, self.compute_groups(miniature)
+from pysaurus.tests.image_management.spaced_points import SpacedPoints
 
 
 class SpacedPoints32To64(SpacedPoints):
@@ -292,6 +77,67 @@ def job_find_similarities(job):
     return similarities
 
 
+def get_min_val_keys(dct: Dict[Any, Union[int, float]]):
+    it_dct = iter(dct.items())
+    key, min_val = next(it_dct)
+    keys = [key]
+    for key, val in it_dct:
+        if val < min_val:
+            min_val = val
+            keys = [key]
+        elif val == min_val:
+            keys.append(key)
+    return min_val, keys
+
+
+def get_max_val_keys(dct: Dict[Any, Union[int, float]]):
+    it_dct = iter(dct.items())
+    key, max_val = next(it_dct)
+    keys = [key]
+    for key, val in it_dct:
+        if val > max_val:
+            max_val = val
+            keys = [key]
+        elif val == max_val:
+            keys.append(key)
+    return max_val, keys
+
+
+def separate(
+    video_to_groups: Dict[int, List[int]],
+    group_to_videos: Dict[int, List[int]],
+    video_to_group_to_len: Dict[int, Dict[int, int]],
+):
+    print('Nb videos before', len(video_to_groups))
+    print('Nb groups before', len(group_to_videos))
+    old_video_to_groups = video_to_groups
+    old_group_to_videos = group_to_videos
+    old_video_to_group_to_len = video_to_group_to_len
+
+    # Keep only videos with groups.
+    video_to_groups = {video: groups for video, groups in video_to_groups.items() if groups}
+    new_group_to_videos = {}
+    common_groups = []
+    for group, videos in group_to_videos.items():
+        if len(videos) == len(video_to_groups):
+            common_groups.append(group)
+        elif len(videos) > 1:
+            new_group_to_videos[group] = videos
+    group_to_videos = new_group_to_videos
+
+    group_to_min_len = {}
+    for group, videos in group_to_videos.items():
+        group_to_min_len[group] = min(video_to_group_to_len[video][group] for video in videos)
+    min_len, min_groups = get_min_val_keys(group_to_min_len)
+    max_len, max_groups = get_max_val_keys(group_to_min_len)
+    print('Nb common', len(common_groups))
+    print('Nb videos', len(video_to_groups))
+    print('Nb groups', len(group_to_videos))
+    print('Group len interval', min_len, max_len)
+    exit(1)
+
+
+
 def run(
         api: API,
         videos: List[Video],
@@ -325,7 +171,8 @@ def run(
     cpu_count = max(1, os.cpu_count() - 2)
     group_computer = GroupComputer(
         group_min_size=group_min_size,
-        similarity_percent=similarity_percent
+        similarity_percent=similarity_percent,
+        print_step=PRINT_STEP
     )
 
     tasks = [(i, m, len(miniatures), DEFAULT_NOTIFIER) for i, m in enumerate(miniatures)]
@@ -440,6 +287,8 @@ def run(
         for vid, b_to_s in vid_to_b_to_s.items():
             for b, s in b_to_s.items():
                 vid_to_gid_to_s.setdefault(vid, {})[group_to_gid[b]] = s
+
+        separate(vid_to_gid_s, gid_to_vid_s, vid_to_gid_to_s)
 
         tasks = [(v, g) for v, g in vid_to_gid_s.items() if len(g)]
         vid_to_len = {v: len(g) for v, g in vid_to_gid_s.items()}

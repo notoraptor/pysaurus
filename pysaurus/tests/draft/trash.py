@@ -2,109 +2,7 @@ import math
 from typing import Union, List
 
 from pysaurus.core.native.video_raptor.miniature import Miniature
-
-
-def _clip_color(value):
-    return min(max(0, value), 255)
-
-
-def equalize(data):
-    if not isinstance(data, (list, tuple)):
-        data = list(data)
-    grays = sorted({int(sum(p) / 3) for p in data})
-    if len(grays) < 2:
-        return data
-    best_distance = 255 / (len(grays) - 1)
-    new_grays = [0]
-    for i in range(1, len(grays)):
-        new_grays.append(new_grays[i - 1] + best_distance)
-    new_grays = [round(gray) for gray in new_grays]
-    assert new_grays[-1] == 255, new_grays[-1]
-    gray_to_index = {gray: index for index, gray in enumerate(grays)}
-    output = []
-    for pixel in data:
-        r, g, b = pixel
-        gray = int((r + g + b) / 3)
-        index = gray_to_index[gray]
-        new_gray = new_grays[index]
-        distance = new_gray - gray
-        new_color = _clip_color(r + distance), _clip_color(g + distance), _clip_color(b + distance)
-        # assert int(sum(new_color) / 3) == new_gray, (int(sum(new_color) / 3), new_gray, gray, new_color, pixel)
-        output.append(new_color)
-    return output
-
-
-class SpacedPoints:
-    """
-    Number of points and related interval size for some lengths:
-    Length 32:
-        2: 30
-    Length 64:
-        2: 62
-        4: 20
-        8: 8
-        10: 6
-        22: 2
-    Length 256:
-        2: 254
-        4: 84
-        6: 50
-        16: 16
-        18: 14
-        52: 4
-        86: 2
-    Length 1021:
-        5: 254
-        13: 84
-        21: 50
-        61: 16
-        69: 14
-        205: 4
-        341: 2
-    Length 1024:
-        2: 1022
-        4: 340
-        12: 92
-        32: 32
-        34: 30
-        94: 10
-        342: 2
-    """
-
-    __slots__ = 'd',
-    _MAP_POINTS = {}
-
-    def __init__(self, length=256, nb_points=6):
-        if length not in self._MAP_POINTS:
-            self._MAP_POINTS[length] = self.available_points_and_spaces(length)
-        points = self._MAP_POINTS[length]
-        assert nb_points in points, tuple(points)
-        self.d = points[nb_points] + 1
-
-    def nearest_point(self, value: Union[int, float]):
-        # 0 <= value < interval length
-        i = int(value // self.d)
-        before = i * self.d
-        after = (i + 1) * self.d
-        if value - before < after - value:
-            return before
-        return after
-
-    @classmethod
-    def _space_between_points(cls, interval_length, nb_points):
-        # we assume 2 <= k < interval_length
-        top = interval_length - nb_points
-        bottom = nb_points - 1
-        return None if top % (2 * bottom) else top // bottom
-
-    @classmethod
-    def available_points_and_spaces(cls, interval_length):
-        pt_to_il = {}
-        for pt in range(2, interval_length):
-            il = cls._space_between_points(interval_length, pt)
-            if il:
-                pt_to_il[pt] = il
-        return pt_to_il
+from pysaurus.tests.image_management.spaced_points import SpacedPoints
 
 
 class LinearFunction:
@@ -157,18 +55,6 @@ class LinearFunction:
         a = (y2 - y1) / (x2 - x1)
         b = y1 - a * x1
         return LinearFunction(a, b)
-
-
-def main():
-    for l in (32, 64, 128, 256, 1024 - 4 + 1, 1024):
-        pt_to_il = SpacedPoints.available_points_and_spaces(l)
-        print(f'Length {l}:')
-        for pt, il in sorted(pt_to_il.items()):
-            print(f'\t{pt}: {il}')
-
-
-if __name__ == '__main__':
-    main()
 
 
 class MiniatureComparator:
@@ -285,3 +171,15 @@ class MiniatureComparator:
                 cls.macro_pixel_distance(p1, x, y, p2, x, y + 1, width),
                 cls.macro_pixel_distance(p1, x, y, p2, x + 1, y + 1, width))
         return (maximum_similarity_score - total_distance) / maximum_similarity_score
+
+
+def main():
+    for l in (32, 64, 128, 256, 1024 - 4 + 1, 1024):
+        pt_to_il = SpacedPoints.available_points_and_spaces(l)
+        print(f'Length {l}:')
+        for pt, il in sorted(pt_to_il.items()):
+            print(f'\t{pt}: {il}')
+
+
+if __name__ == '__main__':
+    main()
