@@ -2,7 +2,7 @@ from ctypes import c_double, memset, pointer, sizeof, c_int
 from typing import Iterable, List
 
 from pysaurus.core.constants import VIDEO_BATCH_SIZE
-from pysaurus.core.native.video_raptor.miniature import Miniature
+from pysaurus.core.miniature import Miniature
 from pysaurus.core.native.video_raptor.symbols import (
     PtrPtrSequence, PtrSequence, fn_classifySimilarities, Sequence, c_int_p)
 from pysaurus.core.profiling import Profiler

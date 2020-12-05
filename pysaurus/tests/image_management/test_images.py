@@ -12,7 +12,7 @@ from pysaurus.core.database import notifications
 from pysaurus.core.database.api import API
 from pysaurus.core.database.properties import PropType
 from pysaurus.core.database.video import Video
-from pysaurus.core.native.video_raptor.miniature import Miniature
+from pysaurus.core.miniature import Miniature
 from pysaurus.core.notification import DEFAULT_NOTIFIER
 from pysaurus.core.profiling import Profiler
 from pysaurus.tests.image_management.graph import Graph

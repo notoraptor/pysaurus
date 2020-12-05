@@ -5,7 +5,7 @@ from pysaurus.core import functions
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.database.api import API
 from pysaurus.core.database.video import Video
-from pysaurus.core.native.video_raptor.miniature import Miniature
+from pysaurus.core.miniature import Miniature
 
 
 TEST_LIST_FILE_PATH = AbsolutePath(

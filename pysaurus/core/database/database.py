@@ -13,7 +13,7 @@ from pysaurus.core.database.video import Video
 from pysaurus.core.database.video_interval import VideoInterval
 from pysaurus.core.database.video_state import VideoState
 from pysaurus.core.modules import ImageUtils, System
-from pysaurus.core.native.video_raptor.miniature import Miniature
+from pysaurus.core.miniature import Miniature
 from pysaurus.core.notification import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler

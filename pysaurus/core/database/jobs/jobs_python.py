@@ -7,7 +7,7 @@ from pysaurus.core.components import AbsolutePath, PathInfo
 from pysaurus.core.database import notifications
 from pysaurus.core.functions import get_file_extension
 from pysaurus.core.modules import ImageUtils
-from pysaurus.core.native.video_raptor.miniature import Miniature
+from pysaurus.core.miniature import Miniature
 from pysaurus.core.notification import Notifier
 
 

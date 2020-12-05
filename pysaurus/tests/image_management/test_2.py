@@ -1,4 +1,4 @@
-from typing import Dict, Tuple, List, Union, Set
+from typing import Dict, Tuple, List, Union
 from pysaurus.tests.test_utils import TestAPI
 from pysaurus.tests.image_management.draw import Draw, dilate_miniature_data
 from collections import Counter
@@ -6,7 +6,7 @@ from pysaurus.core import functions
 from pysaurus.core.classes import StringPrinter
 from pysaurus.tests.image_management.group_computer import GroupComputer
 from pysaurus.tests.image_management.basic_group import BasicGroup
-from pysaurus.core.native.video_raptor.miniature import Miniature
+from pysaurus.core.miniature import Miniature
 from pysaurus.tests.image_management.pixel_group import PixelGroup
 
 

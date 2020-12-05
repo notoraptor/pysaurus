@@ -1,6 +1,6 @@
 from typing import List
 
-from pysaurus.core.native.video_raptor.miniature import Miniature
+from pysaurus.core.miniature import Miniature
 from pysaurus.tests.image_management.draw import Draw, dilate_miniature_data
 from pysaurus.tests.image_management.test_images import SpacedPoints32To64
 from pysaurus.tests.test_utils import TestAPI
