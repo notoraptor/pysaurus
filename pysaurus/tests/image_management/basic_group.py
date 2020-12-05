@@ -14,6 +14,9 @@ class BasicGroup:
     def __str__(self):
         return str(self.key)
 
+    def __repr__(self):
+        return repr(self.key)
+
     def __hash__(self):
         return hash(self.key)
 

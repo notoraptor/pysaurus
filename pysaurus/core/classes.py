@@ -9,23 +9,23 @@ T = TypeVar('T')
 
 
 class StringPrinter(object):
-    __slots__ = 'string_buffer', 'strip_right'
+    __slots__ = '__string_buffer', '__strip_right'
 
     def __init__(self, strip_right=True):
-        self.string_buffer = StringIO()
-        self.strip_right = bool(strip_right)
+        self.__string_buffer = StringIO()
+        self.__strip_right = bool(strip_right)
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.string_buffer.close()
+        self.__string_buffer.close()
 
     def __str__(self):
-        return self.string_buffer.getvalue().rstrip() if self.strip_right else self.string_buffer.getvalue()
+        return self.__string_buffer.getvalue().rstrip() if self.__strip_right else self.__string_buffer.getvalue()
 
     def write(self, *args, **kwargs):
-        kwargs['file'] = self.string_buffer
+        kwargs['file'] = self.__string_buffer
         print(*args, **kwargs)
 
     def title(self, message, character='=', up=True, down=False):

@@ -65,6 +65,7 @@ class Video(VideoState):
     __slots__ = (
         # Video properties
         'audio_bit_rate',
+        'channels',
         'audio_codec',
         'audio_codec_description',
         'container_format',
@@ -86,12 +87,13 @@ class Video(VideoState):
     )
 
     QUALITY_FIELDS = (
+        ('quality_compression', 6),
         ('height', 5),
         ('width', 4),
         ('raw_seconds', 3),
         ('frame_rate', 2),
         ('file_size', 1),
-        ('audio_bit_rate', 1),
+        ('audio_bit_rate', 0.5),
     )
 
     @property
@@ -112,8 +114,17 @@ class Video(VideoState):
             total_level += level
         return sum(qualities.values()) * 100 / total_level
 
+    @property
+    def quality_compression(self):
+        basic_file_size = (
+            self.width * self.height * self.frame_rate * 3
+            + self.sample_rate * self.channels * 2
+        ) * self.raw_seconds
+        return self.file_size / basic_file_size
+
     MIN_TO_LONG = {
         'A': 'audio_codec_description',
+        'C': 'channels',
         'V': 'video_codec_description',
         'a': 'audio_codec',
         'b': 'device_name',
@@ -139,6 +150,7 @@ class Video(VideoState):
         'audio_codec',
         'audio_codec_description',
         'container_format',
+        'channels',
         'date',
         'day',
         'disk',
@@ -186,6 +198,7 @@ class Video(VideoState):
                  # Video optional arguments
                  audio_bit_rate=0, audio_codec='', audio_codec_description='', container_format='', device_name='',
                  duration=0, duration_time_base=0, frame_rate_den=0, frame_rate_num=0, height=0, meta_title='',
+                 channels=2,
                  properties=None,
                  sample_rate=0, thumb_name='', video_codec='', video_codec_description='', width=0):
         """
@@ -211,6 +224,7 @@ class Video(VideoState):
         :type thumb_name: str
         :type device_name: str
         :type from_dictionary: dict
+        :type channels: int
         :type properties: dict
         """
         if from_dictionary:
@@ -233,6 +247,7 @@ class Video(VideoState):
             video_codec_description = from_dictionary.get(self.LONG_TO_MIN['video_codec_description'],
                                                           video_codec_description)
             width = from_dictionary.get(self.LONG_TO_MIN['width'], width)
+            channels = from_dictionary.get(self.LONG_TO_MIN['channels'], channels)
         super(Video, self).__init__(filename=filename, size=size, errors=errors, video_id=video_id,
                                     database=database, from_dictionary=from_dictionary)
         self.audio_bit_rate = audio_bit_rate
@@ -251,6 +266,7 @@ class Video(VideoState):
         self.video_codec = video_codec
         self.video_codec_description = video_codec_description
         self.width = width
+        self.channels = channels
         self.properties = {}
         if properties is None:
             properties = {}

@@ -17,8 +17,8 @@ from pysaurus.core.notification import DEFAULT_NOTIFIER
 from pysaurus.core.profiling import Profiler
 from pysaurus.tests.image_management.graph import Graph
 from pysaurus.tests.image_management.group_computer import GroupComputer
-from pysaurus.tests.image_management.pixel_group import _categorize_position, _categorize_value, \
-    _categorize_sub_position, _categorize_sub_value
+from pysaurus.tests.image_management.pixel_group import categorize_position, categorize_value, \
+    categorize_sub_position, categorize_sub_value
 from pysaurus.tests.test_utils import TEST_LIST_FILE_PATH
 from pysaurus.tests.image_management.spaced_points import SpacedPoints
 
@@ -613,19 +613,19 @@ def _main():
     step = 8
     for y in range(32):
         for x in range(32):
-            print(_categorize_position(x, y, width, step), end=' ')
+            print(categorize_position(x, y, width, step), end=' ')
         print()
     print()
     for y in range(32):
         for x in range(32):
-            print(_categorize_sub_position(x, y, width, step), end=' ')
+            print(categorize_sub_position(x, y, width, step), end=' ')
         print()
     print()
     for x in range(32):
-        print(_categorize_value(x, step), end=' ')
+        print(categorize_value(x, step), end=' ')
     print()
     for x in range(32):
-        print(_categorize_sub_value(x, step), end=' ')
+        print(categorize_sub_value(x, step), end=' ')
     print()
     exit(0)
 

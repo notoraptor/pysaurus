@@ -5,21 +5,21 @@ from pysaurus.tests.image_management.basic_group import BasicGroup
 from pysaurus.tests.image_management.spaced_points import SpacedPoints
 
 
-def _categorize_position(x, y, width, step):
+def categorize_position(x, y, width, step):
     return int(y // step) * (width // step) + int(x // step)
 
 
-def _categorize_value(x, step):
+def categorize_value(x, step):
     return int(x // step)
 
 
-def _categorize_sub_position(x, y, width, step):
-    p_x = _categorize_sub_value(x, step)
-    p_y = _categorize_sub_value(y, step)
+def categorize_sub_position(x, y, width, step):
+    p_x = categorize_sub_value(x, step)
+    p_y = categorize_sub_value(y, step)
     return p_y * (1 + width // step) + p_x
 
 
-def _categorize_sub_value(x, step):
+def categorize_sub_value(x, step):
     return int((int(x // (step // 2)) + 1) // 2)
 
 
@@ -56,15 +56,24 @@ class PixelGroup:
         return BasicGroup(self.color, self.center, len(self.members))
 
     def to_basic_group_intervals(self, nb_color_points, nb_position_points, nb_size_points):
-        color = tuple(_categorize_value(value, 256 // nb_color_points) for value in self.color)
-        center = _categorize_position(*self.center, 32, 32 // nb_position_points)
-        size = _categorize_value(len(self.members), 1024 // nb_size_points)
+        color = tuple(categorize_value(value, 256 // nb_color_points) for value in self.color)
+        center = categorize_position(*self.center, 32, 32 // nb_position_points)
+        size = categorize_value(len(self.members), 1024 // nb_size_points)
+        return BasicGroup(color, center, size)
+
+    def to_basic_group_intervals_alt(self, nb_color_points, nb_position_points, nb_size_points):
+        cil = 256 // nb_color_points
+        pil = 32 // nb_position_points
+        sil = 1024 // nb_size_points
+        color = tuple(int(value // cil) * cil for value in self.color)
+        center = tuple(int(value // pil) * pil for value in self.center)
+        size = int(len(self.members) // sil) * sil
         return BasicGroup(color, center, size)
 
     def to_basic_group_sub_intervals(self, nb_color_points, nb_position_points, nb_size_points):
-        color = tuple(_categorize_sub_value(value, 256 // nb_color_points) for value in self.color)
-        center = _categorize_sub_position(*self.center, 32, 32 // nb_position_points)
-        size = _categorize_sub_value(len(self.members), 1024 // nb_size_points)
+        color = tuple(categorize_sub_value(value, 256 // nb_color_points) for value in self.color)
+        center = categorize_sub_position(*self.center, 32, 32 // nb_position_points)
+        size = categorize_sub_value(len(self.members), 1024 // nb_size_points)
         return BasicGroup(color, center, size)
 
     @property
