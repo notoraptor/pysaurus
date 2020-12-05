@@ -65,8 +65,8 @@ export class Video extends React.Component {
                         <div><strong><em>{data.quality}</em></strong> %</div>
                     </div>
                     <div><strong>{data.width}</strong> x <strong>{data.height}</strong> @ {data.frame_rate} fps | {data.sample_rate} Hz, <span title={data.audio_bit_rate}>{audio_bit_rate} Kb/s</span> | <strong>{data.length}</strong> | <code>{data.date}</code></div>
-                    {this.renderProperties()}
                 </div>
+                {this.renderProperties()}
             </div>
         );
     }
