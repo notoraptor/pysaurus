@@ -5,6 +5,7 @@
     padding-right: 1em;
     width: 300px;
     text-align: center;
+    word-break: break-word;
 }
 .form-set-properties .filename {
     border: 1px solid black;

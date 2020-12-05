@@ -17,9 +17,13 @@
 .video .image {
 	padding: 0.5em;
 }
+.video .video-details {
+	flex-grow: 1;
+}
 .video .info {
 	padding: 0.5em;
-	flex-grow: 1;
+	/*flex-grow: 1;*/
+	width: 80%;
 }
 .video .info > div {
 	margin-bottom: 0.5em;
@@ -36,6 +40,7 @@
 	text-align: center;
 	margin-right: 0.5em;
 	width: 10ex;
+	min-width: 10ex;
 }
 * + .prepend {
 	margin-left: 0.5em;
@@ -68,13 +73,15 @@
 	font-weight: bold;
 }
 
+.video.not-found .filename-line.horizontal {
+	align-items: baseline;
+}
 .video.not-found .filename-line .prepend .text-delete {
 	display: none;
 }
 .video.not-found .filename-line .prepend:hover {
 	background-color: red;
 	cursor: pointer;
-	content: 'DELETE';
 }
 .video.not-found .filename-line .prepend:hover .text-delete {
 	display: inline;
@@ -83,6 +90,9 @@
 	display: none;
 }
 
+.video .info .filename {
+	word-break: break-word;
+}
 .video.found .info .filename {
 	color: rgb(140, 140, 250);
 	border: 1px solid rgb(240, 240, 250);
@@ -115,29 +125,22 @@
 	color: gray;
 }
 
-.video > div.properties {
+.video .properties {
 	/*border-top: 1px solid rgb(200, 200, 200);*/
 	padding: 0.5em;
+	width: 20%;
 	/*margin-bottom: 0;*/
+}
+.video .properties .collapsable .content {
+	text-align: center;
+	white-space: normal;
 }
 .video .properties .property .no-value {
 	font-style: italic;
 	font-weight: lighter;
 	color: lightgrey;
 }
-.video .properties .property .property-name {
-	padding-right: 1em;
-}
-.video .properties .property .property-name .defined {
-	color: royalblue;
-}
-.video .properties .property .table-cell {
-	padding-bottom: 0.25em;
-}
-.video .properties .property-value {
-	white-space: normal;
-}
-.video .properties .property-value .value {
+.video .properties .property .value {
 	display: inline-block;
 	background-color: rgb(245, 245, 245);
 	border: 2px solid rgb(252, 252, 252);
@@ -145,9 +148,30 @@
 	padding-left: 0.5em;
 	padding-right: 0.5em;
 }
+
+.video .properties .property.defined .collapsable .title {
+	color: royalblue;
+}
+.video .properties .property-value {
+	white-space: normal;
+}
 .video.found:nth-child(odd) .properties .property-value .value {
 	border-color: rgb(235, 235, 235);
 }
 .video .properties .property-value .value + .value {
 	margin-left: 0.5em;
+}
+
+.video .properties .edit-properties {
+	background-color: black;
+	color: white;
+	padding-left: 1ex;
+	padding-right: 1ex;
+	text-align: center;
+	margin-bottom: 0.5em;
+	cursor: pointer;
+}
+.video .properties .edit-properties:hover {
+	background-color: green;
+	color: yellow;
 }

@@ -58,6 +58,9 @@ const KEYBOARD_MANAGER = new KeyboardManager();
 
 const Notifications = new NotificationManager();
 
+/**
+ * Called from Python to send notifications to interface.
+ */
 function __notify(notification) {
     return Notifications.notify(notification);
 }

@@ -1,7 +1,7 @@
-System.register(["./MenuPack.js", "./FormRenameVideo.js", "./Dialog.js", "./FormSetProperties.js"], function (_export, _context) {
+System.register(["./MenuPack.js", "./FormRenameVideo.js", "./Dialog.js", "./FormSetProperties.js", "./Collapsable.js"], function (_export, _context) {
   "use strict";
 
-  var MenuPack, MenuItem, FormRenameVideo, Dialog, FormSetProperties, Video;
+  var MenuPack, MenuItem, FormRenameVideo, Dialog, FormSetProperties, Collapsable, Video;
 
   _export("Video", void 0);
 
@@ -15,6 +15,8 @@ System.register(["./MenuPack.js", "./FormRenameVideo.js", "./Dialog.js", "./Form
       Dialog = _DialogJs.Dialog;
     }, function (_FormSetPropertiesJs) {
       FormSetProperties = _FormSetPropertiesJs.FormSetProperties;
+    }, function (_CollapsableJs) {
+      Collapsable = _CollapsableJs.Collapsable;
     }],
     execute: function () {
       _export("Video", Video = class Video extends React.Component {
@@ -55,6 +57,8 @@ System.register(["./MenuPack.js", "./FormRenameVideo.js", "./Dialog.js", "./Form
           }) : /*#__PURE__*/React.createElement("div", {
             className: "no-thumbnail"
           }, "no thumbnail")), /*#__PURE__*/React.createElement("div", {
+            className: "video-details horizontal"
+          }, /*#__PURE__*/React.createElement("div", {
             className: "info"
           }, /*#__PURE__*/React.createElement("div", {
             className: "name"
@@ -72,9 +76,7 @@ System.register(["./MenuPack.js", "./FormRenameVideo.js", "./Dialog.js", "./Form
             action: this.copyMetaTitle
           }, "Copy meta title") : '', file_title ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.copyFileTitle
-          }, "Copy file title") : '', data.exists && this.props.parent.state.properties.length ? /*#__PURE__*/React.createElement(MenuItem, {
-            action: this.editProperties
-          }, "Edit properties ...") : '', data.exists ? /*#__PURE__*/React.createElement(MenuItem, {
+          }, "Copy file title") : '', data.exists ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.renameVideo
           }, "Rename video") : '', /*#__PURE__*/React.createElement(MenuItem, {
             className: "menu-delete",
@@ -110,7 +112,7 @@ System.register(["./MenuPack.js", "./FormRenameVideo.js", "./Dialog.js", "./Form
             className: "prepend"
           }, /*#__PURE__*/React.createElement("code", null, "Quality")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, /*#__PURE__*/React.createElement("em", null, data.quality)), " %")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, data.width), " x ", /*#__PURE__*/React.createElement("strong", null, data.height), " @ ", data.frame_rate, " fps | ", data.sample_rate, " Hz, ", /*#__PURE__*/React.createElement("span", {
             title: data.audio_bit_rate
-          }, audio_bit_rate, " Kb/s"), " | ", /*#__PURE__*/React.createElement("strong", null, data.length), " | ", /*#__PURE__*/React.createElement("code", null, data.date))), this.renderProperties());
+          }, audio_bit_rate, " Kb/s"), " | ", /*#__PURE__*/React.createElement("strong", null, data.length), " | ", /*#__PURE__*/React.createElement("code", null, data.date))), this.renderProperties()));
         }
 
         renderProperties() {
@@ -120,37 +122,27 @@ System.register(["./MenuPack.js", "./FormRenameVideo.js", "./Dialog.js", "./Form
           return /*#__PURE__*/React.createElement("div", {
             className: "properties"
           }, /*#__PURE__*/React.createElement("div", {
-            className: "table"
-          }, propDefs.map((def, index) => {
+            className: "edit-properties",
+            onClick: this.editProperties
+          }, "EDIT PROPERTIES"), propDefs.map((def, index) => {
             const name = def.name;
             const value = props.hasOwnProperty(name) ? props[name] : def.defaultValue;
             const valueString = propertyValueToString(def.type, def.multiple ? value.join(', ') : value.toString());
             let noValue;
             if (def.multiple) noValue = !value.length;else noValue = def.type === "str" && !value;
             let printableValues = def.multiple ? value : [value];
-            let tooMuch = false;
-
-            if (printableValues.length > 10) {
-              tooMuch = true;
-              printableValues = printableValues.slice(0, 10);
-            }
-
-            return /*#__PURE__*/React.createElement("div", {
+            return noValue ? '' : /*#__PURE__*/React.createElement("div", {
               key: name,
-              className: "property table-row"
-            }, /*#__PURE__*/React.createElement("div", {
-              className: "table-cell property-name"
-            }, /*#__PURE__*/React.createElement("strong", props.hasOwnProperty(name) ? {
-              className: "defined"
-            } : {}, name), ":"), /*#__PURE__*/React.createElement("div", {
-              className: "table-cell property-value"
+              className: `property ${props.hasOwnProperty(name) ? "defined" : ""}`
+            }, /*#__PURE__*/React.createElement(Collapsable, {
+              title: name
             }, !noValue ? printableValues.map((element, elementIndex) => /*#__PURE__*/React.createElement("span", {
               className: "value",
               key: elementIndex
             }, element.toString())) : /*#__PURE__*/React.createElement("span", {
               className: "no-value"
-            }, "no value"), tooMuch ? ' ...' : ''));
-          })));
+            }, "no value")));
+          }));
         }
 
         openVideo() {

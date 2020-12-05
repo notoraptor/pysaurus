@@ -11,11 +11,16 @@ import {GroupView} from "./GroupView.js";
 import {FormEditPropertyValue} from "./FormEditPropertyValue.js";
 import {FormFillKeywords} from "./FormFillKeywords.js";
 
+const INITIAL_SOURCES = [];
 const SHORTCUTS = {
     select: "Ctrl+T",
     group: "Ctrl+G",
     search: "Ctrl+F",
     sort: "Ctrl+S",
+    unselect: "Ctrl+Shift+T",
+    ungroup: "Ctrl+Shift+G",
+    unsearch: "Ctrl+Shift+F",
+    unsort: "Ctrl+Shift+S",
     reload: "Ctrl+R",
     manageProperties: "Ctrl+P",
 };
@@ -24,6 +29,22 @@ const SPECIAL_KEYS = {
     alt: "altKey",
     shift: "shiftKey",
     maj: "shiftKey",
+}
+
+function compareSources(s1, s2) {
+    if (s1.length !== s2.length)
+        return false;
+    for (let i = 0; i < s1.length; ++i) {
+        const l1 = s1[i];
+        const l2 = s2[i];
+        if (l1.length !== l2.length)
+            return false;
+        for (let j = 0; j < l1.length; ++j) {
+            if (l1[j] !== l2[j])
+                return false;
+        }
+    }
+    return true;
 }
 
 function assertUniqueShortcuts() {
@@ -47,11 +68,19 @@ function shortcutPressed(event, shortcut) {
         return false;
     if (event.key.toLowerCase() !== pieces[pieces.length - 1].toLowerCase())
         return false;
+    const specialKeys = new Set();
     for (let i = 0; i < pieces.length - 1; ++i) {
         const key = pieces[i].toLowerCase();
+        console.log(`key ${key} has ${SPECIAL_KEYS.hasOwnProperty(key)} event ${event[SPECIAL_KEYS[key]]}`);
         if (!SPECIAL_KEYS.hasOwnProperty(key) || !event[SPECIAL_KEYS[key]])
             return false;
+        specialKeys.add(SPECIAL_KEYS[key]);
     }
+    for (let key of Object.keys(SPECIAL_KEYS)) {
+        if (!specialKeys.has(SPECIAL_KEYS[key]) && event[SPECIAL_KEYS[key]])
+            return false;
+    }
+    console.log(pieces);
     return true;
 }
 
@@ -79,7 +108,12 @@ class Filter extends React.Component {
                             </div>
                         ))}
                     </td>
-                    <td><SettingIcon title={`Select sources ... (${SHORTCUTS.select})`} action={app.selectVideos}/></td>
+                    <td>
+                        <div><SettingIcon title={`Select sources ... (${SHORTCUTS.select})`} action={app.selectVideos}/></div>
+                        {INITIAL_SOURCES.length && !compareSources(INITIAL_SOURCES[0], sources) ? (
+                            <div><Cross title={`Reset selection (${SHORTCUTS.unselect})`} action={app.unselectVideos}/></div>
+                        ) : ''}
+                    </td>
                 </tr>
                 <tr>
                     <td>
@@ -89,7 +123,7 @@ class Filter extends React.Component {
                     </td>
                     <td>
                         <div><SettingIcon title={(groupDef ? 'Edit ...' : 'Group ...') + ` (${SHORTCUTS.group})`} action={app.groupVideos}/></div>
-                        {groupDef ? <div><Cross title="Reset group" action={app.resetGroup}/></div> : ''}
+                        {groupDef ? <div><Cross title={`Reset group (${SHORTCUTS.ungroup})`} action={app.resetGroup}/></div> : ''}
                     </td>
                 </tr>
                 <tr>
@@ -105,7 +139,7 @@ class Filter extends React.Component {
                         <div>
                             <SettingIcon title={(searchDef ? 'Edit ...' : 'Search ...') + ` (${SHORTCUTS.search})`} action={app.searchVideos}/>
                         </div>
-                        {searchDef ? <div><Cross title="reset search" action={app.resetSearch}/></div> : ''}
+                        {searchDef ? <div><Cross title={`reset search (${SHORTCUTS.unsearch})`} action={app.resetSearch}/></div> : ''}
                     </td>
                 </tr>
                 <tr>
@@ -119,7 +153,7 @@ class Filter extends React.Component {
                     </td>
                     <td>
                         <div><SettingIcon title={`Sort ... (${SHORTCUTS.sort})`} action={app.sortVideos}/></div>
-                        {sortingIsDefault ? '' : <Cross title="reset sorting" action={app.resetSort} />}
+                        {sortingIsDefault ? '' : <Cross title={`reset sorting (${SHORTCUTS.unsort})`} action={app.resetSort} />}
                     </td>
                 </tr>
                 </tbody>
@@ -169,6 +203,7 @@ export class VideosPage extends React.Component {
         this.classifierUnstack = this.classifierUnstack.bind(this);
         this.classifierConcatenate = this.classifierConcatenate.bind(this);
         this.stackPath = this.stackPath.bind(this);
+        this.unselectVideos = this.unselectVideos.bind(this);
 
         this.parametersToState(this.props.parameters, this.state);
         this.callbackIndex = -1;
@@ -176,6 +211,10 @@ export class VideosPage extends React.Component {
             [SHORTCUTS.select]: this.selectVideos,
             [SHORTCUTS.group]: this.groupVideos,
             [SHORTCUTS.search]: this.searchVideos,
+            [SHORTCUTS.unselect]: this.unselectVideos,
+            [SHORTCUTS.ungroup]: this.resetGroup,
+            [SHORTCUTS.unsearch]: this.resetSearch,
+            [SHORTCUTS.unsort]: this.resetSort,
             [SHORTCUTS.sort]: this.sortVideos,
             [SHORTCUTS.reload]: this.reloadDatabase,
             [SHORTCUTS.manageProperties]: this.manageProperties,
@@ -355,6 +394,8 @@ export class VideosPage extends React.Component {
         for (let def of parameters.info.properties) {
             state.definitions[def.name] = def;
         }
+        if (!INITIAL_SOURCES.length)
+            INITIAL_SOURCES.push(state.sources);
     }
 
     scrollTop() {
@@ -392,12 +433,18 @@ export class VideosPage extends React.Component {
      * @param event {KeyboardEvent}
      */
     checkShortcut(event) {
+        console.log(event);
         for (let shortcut of Object.values(SHORTCUTS)) {
             if (shortcutPressed(event, shortcut)) {
                 setTimeout(() => this.shortcuts[shortcut](), 0);
                 return true;
             }
         }
+    }
+    unselectVideos() {
+        python_call('set_sources', INITIAL_SOURCES[0])
+            .then(() => this.updatePage({pageNumber: 0}))
+            .catch(backend_error);
     }
 
     selectVideos() {

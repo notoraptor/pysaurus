@@ -188,7 +188,7 @@ const NotificationMessenger = {
 
 export class HomePage extends React.Component {
     constructor(props) {
-        // parameters: {}
+        // parameters: {update: bool = false}
         // app: App
         super(props);
         this.state = {

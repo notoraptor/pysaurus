@@ -80,6 +80,10 @@ System.register(["./Test.js", "./HomePage.js", "./VideosPage.js", "./PropertiesP
         updateApp(state) {
           this.setState(state, this.manageFancyBoxView);
         }
+        /**
+         * Make sure all active elements are disabled if fancy box is displayed, and re-enabled when fancybox is closed.
+         */
+
 
         manageFancyBoxView() {
           const focusableElements = [...document.querySelector(".app main").querySelectorAll('a, button, input, textarea, select, details, [tabindex]:not([tabindex="-1"])')].filter(el => !el.hasAttribute('disabled'));

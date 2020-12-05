@@ -2,6 +2,7 @@ import {MenuPack, MenuItem} from "./MenuPack.js";
 import {FormRenameVideo} from "./FormRenameVideo.js";
 import {Dialog} from "./Dialog.js";
 import {FormSetProperties} from "./FormSetProperties.js";
+import {Collapsable} from "./Collapsable.js";
 
 export class Video extends React.Component {
     constructor(props) {
@@ -37,36 +38,36 @@ export class Video extends React.Component {
                         <img alt={data.title} src={data.thumbnail_path}/> :
                         <div className="no-thumbnail">no thumbnail</div>}
                 </div>
-                <div className="info">
-                    <div className="name">
-                        <div className="options horizontal">
-                            <MenuPack title={`${Utils.CHARACTER_SETTINGS}`}>
-                                {data.exists ? <MenuItem action={this.openVideo}>Open file</MenuItem> : <div className="not-found">(not found)</div>}
-                                {data.exists ? <MenuItem action={this.openContainingFolder}>Open containing folder</MenuItem> : ''}
-                                {meta_title ? <MenuItem action={this.copyMetaTitle}>Copy meta title</MenuItem> : ''}
-                                {file_title ? <MenuItem action={this.copyFileTitle}>Copy file title</MenuItem> : ''}
-                                {data.exists && this.props.parent.state.properties.length ?
-                                    <MenuItem action={this.editProperties}>Edit properties ...</MenuItem> : ''}
-                                {data.exists ? <MenuItem action={this.renameVideo}>Rename video</MenuItem> : ''}
-                                <MenuItem className="menu-delete" action={this.deleteVideo}>{data.exists ? 'Delete video' : 'Delete entry'}</MenuItem>
-                            </MenuPack>
-                            <strong className="title">{data.title}</strong>
+                <div className="video-details horizontal">
+                    <div className="info">
+                        <div className="name">
+                            <div className="options horizontal">
+                                <MenuPack title={`${Utils.CHARACTER_SETTINGS}`}>
+                                    {data.exists ? <MenuItem action={this.openVideo}>Open file</MenuItem> : <div className="not-found">(not found)</div>}
+                                    {data.exists ? <MenuItem action={this.openContainingFolder}>Open containing folder</MenuItem> : ''}
+                                    {meta_title ? <MenuItem action={this.copyMetaTitle}>Copy meta title</MenuItem> : ''}
+                                    {file_title ? <MenuItem action={this.copyFileTitle}>Copy file title</MenuItem> : ''}
+                                    {data.exists ? <MenuItem action={this.renameVideo}>Rename video</MenuItem> : ''}
+                                    <MenuItem className="menu-delete" action={this.deleteVideo}>{data.exists ? 'Delete video' : 'Delete entry'}</MenuItem>
+                                </MenuPack>
+                                <strong className="title">{data.title}</strong>
+                            </div>
+                            {data.title === data.file_title ? '' : <div className="file-title"><em>{data.file_title}</em></div>}
                         </div>
-                        {data.title === data.file_title ? '' : <div className="file-title"><em>{data.file_title}</em></div>}
+                        <div className={'filename-line' + (data.exists ? '' : ' horizontal')}>
+                            {data.exists ? '' : <div className="prepend" onClick={this.deleteVideo}><code className="text-not-found">NOT FOUND</code><code className="text-delete">DELETE</code></div>}
+                            <div className="filename"><code {...(data.exists ? {onClick: this.openVideo} : {})}>{data.filename}</code></div>
+                        </div>
+                        <div className="format horizontal">
+                            <div className="prepend"><code>{data.extension}</code></div>
+                            <div><strong title={data.file_size}>{data.size}</strong> / {data.container_format} (<span title={data.video_codec_description}>{data.video_codec}</span>, <span title={data.audio_codec_description}>{data.audio_codec}</span>)</div>
+                            <div className="prepend"><code>Quality</code></div>
+                            <div><strong><em>{data.quality}</em></strong> %</div>
+                        </div>
+                        <div><strong>{data.width}</strong> x <strong>{data.height}</strong> @ {data.frame_rate} fps | {data.sample_rate} Hz, <span title={data.audio_bit_rate}>{audio_bit_rate} Kb/s</span> | <strong>{data.length}</strong> | <code>{data.date}</code></div>
                     </div>
-                    <div className={'filename-line' + (data.exists ? '' : ' horizontal')}>
-                        {data.exists ? '' : <div className="prepend" onClick={this.deleteVideo}><code className="text-not-found">NOT FOUND</code><code className="text-delete">DELETE</code></div>}
-                        <div className="filename"><code {...(data.exists ? {onClick: this.openVideo} : {})}>{data.filename}</code></div>
-                    </div>
-                    <div className="format horizontal">
-                        <div className="prepend"><code>{data.extension}</code></div>
-                        <div><strong title={data.file_size}>{data.size}</strong> / {data.container_format} (<span title={data.video_codec_description}>{data.video_codec}</span>, <span title={data.audio_codec_description}>{data.audio_codec}</span>)</div>
-                        <div className="prepend"><code>Quality</code></div>
-                        <div><strong><em>{data.quality}</em></strong> %</div>
-                    </div>
-                    <div><strong>{data.width}</strong> x <strong>{data.height}</strong> @ {data.frame_rate} fps | {data.sample_rate} Hz, <span title={data.audio_bit_rate}>{audio_bit_rate} Kb/s</span> | <strong>{data.length}</strong> | <code>{data.date}</code></div>
+                    {this.renderProperties()}
                 </div>
-                {this.renderProperties()}
             </div>
         );
     }
@@ -77,7 +78,7 @@ export class Video extends React.Component {
             return '';
         return (
             <div className="properties">
-                <div className="table">
+                <div className="edit-properties" onClick={this.editProperties}>EDIT PROPERTIES</div>
                 {propDefs.map((def, index) => {
                     const name = def.name;
                     const value = props.hasOwnProperty(name) ? props[name] : def.defaultValue;
@@ -88,24 +89,16 @@ export class Video extends React.Component {
                     else
                         noValue = def.type === "str" && !value;
                     let printableValues = def.multiple ? value : [value];
-                    let tooMuch = false;
-                    if (printableValues.length > 10) {
-                        tooMuch = true;
-                        printableValues = printableValues.slice(0, 10);
-                    }
-                    return (
-                        <div key={name} className="property table-row">
-                            <div className="table-cell property-name"><strong {...(props.hasOwnProperty(name) ? {className: "defined"} : {})}>{name}</strong>:</div>
-                            <div className="table-cell property-value">
+                    return noValue ? '' : (
+                        <div key={name} className={`property ${props.hasOwnProperty(name) ? "defined" : ""}`}>
+                            <Collapsable title={name}>
                                 {!noValue ? (printableValues.map((element, elementIndex) => (
                                     <span className="value" key={elementIndex}>{element.toString()}</span>
                                 ))) : <span className="no-value">no value</span>}
-                                {tooMuch ? ' ...' : ''}
-                            </div>
+                            </Collapsable>
                         </div>
                     );
                 })}
-                </div>
             </div>
         );
     }

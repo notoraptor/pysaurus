@@ -209,7 +209,7 @@ System.register(["./constants.js"], function (_export, _context) {
 
       _export("HomePage", HomePage = class HomePage extends React.Component {
         constructor(props) {
-          // parameters: {}
+          // parameters: {update: bool = false}
           // app: App
           super(props);
           this.state = {
