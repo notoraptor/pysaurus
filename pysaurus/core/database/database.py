@@ -17,6 +17,7 @@ from pysaurus.core.miniature import Miniature
 from pysaurus.core.notification import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
+from pysaurus.core.database import path_utils
 
 
 SPECIAL_PROPERTY_ERROR = '<error>'
@@ -87,7 +88,6 @@ class Database:
     # Properties.
 
     folder = property(lambda self: self.__db_path)
-
     nb_entries = property(lambda self: len(self.__videos) + len(self.__unreadable) + len(self.__discarded))
     nb_discarded = property(lambda self: len(self.__discarded))
     nb_unreadable = property(lambda self: len(self.__unreadable))
@@ -98,7 +98,6 @@ class Database:
     nb_readable_found = property(lambda self: self.readable.found.count())
     nb_readable_found_without_thumbnails = property(lambda self: self.readable.found.without_thumbnails.count())
     nb_readable_found_with_thumbnails = property(lambda self: self.readable.found.with_thumbnails.count())
-
     nb_valid = nb_readable_found_with_thumbnails
 
     @property
@@ -611,6 +610,38 @@ class Database:
         modified = video.set_properties(properties)
         self.save()
         return modified
+
+    def refresh(self, ensure_miniatures=False):
+        with Profiler('Reset thumbnail errors'):
+            for video in self.readable.found.without_thumbnails:
+                video.error_thumbnail = False
+        with Profiler('Update database'):
+            self.update()
+        with Profiler('Ensure thumbnails'):
+            self.ensure_thumbnails()
+        if ensure_miniatures:
+            with Profiler('Ensure miniatures'):
+                self.ensure_miniatures()
+
+    @classmethod
+    def load_from_list_file_path(
+        cls,
+        list_file_path,
+        notifier=None,
+        update=True,
+        ensure_miniatures=True,
+        reset=False,
+        clear_old_folders=False
+    ):
+        with Profiler('Open database.'):
+            paths = path_utils.load_path_list_file(list_file_path)
+            database_folder = list_file_path.get_directory()
+            database = cls(path=database_folder, folders=paths, notifier=notifier, clear_old_folders=clear_old_folders)
+            if reset:
+                database.reset()
+            if update:
+                database.refresh(ensure_miniatures)
+        return database
 
     # Unused.
 

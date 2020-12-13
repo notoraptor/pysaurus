@@ -1,6 +1,6 @@
 from pysaurus.core.classes import StringPrinter, Table
 from pysaurus.core.components import FileSize
-from pysaurus.core.database.api import API, parse_fields
+from pysaurus.interface.common.api import API, parse_fields
 from pysaurus.core.function_parsing.function_parser import FunctionParser
 
 

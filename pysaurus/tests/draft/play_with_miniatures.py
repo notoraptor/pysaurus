@@ -1,7 +1,7 @@
 from typing import Tuple, List, Optional
 
 from pysaurus.core.classes import Fraction
-from pysaurus.core.database.api import API
+from pysaurus.core.database.database import Database
 from pysaurus.core.functions import pgcd, flat_to_coord
 from pysaurus.core.native.video_raptor.alignment import Miniature
 from pysaurus.core.profiling import Profiler
@@ -133,9 +133,9 @@ class SuperMiniature:
 
 
 def main():
-    api = API(TEST_LIST_FILE_PATH)
+    database = Database.load_from_list_file_path(TEST_LIST_FILE_PATH)
     with Profiler('Getting miniatures:'):
-        miniatures_dict = api.database.ensure_miniatures()
+        miniatures_dict = database.ensure_miniatures()
     print(len(miniatures_dict), 'miniature(s)')
     miniatures = list(miniatures_dict.values())
     intensities = []
@@ -155,7 +155,7 @@ def main():
                 Zone(intensities[i].zone),
                 intensities[i].miniature.identifier,
             )
-            thumb_path = api.database.get_video_from_filename(
+            thumb_path = database.get_video_from_filename(
                 intensities[i].miniature.identifier).thumbnail_path
             print('file://%s' % thumb_path)
             print('xdg-open', thumb_path)

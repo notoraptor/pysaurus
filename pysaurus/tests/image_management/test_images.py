@@ -9,7 +9,7 @@ import ujson as json
 from pysaurus.core import functions
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.database import notifications
-from pysaurus.core.database.api import API
+from pysaurus.core.database.database import Database
 from pysaurus.core.database.properties import PropType
 from pysaurus.core.database.video import Video
 from pysaurus.core.miniature import Miniature
@@ -139,7 +139,7 @@ def separate(
 
 
 def run(
-        api: API,
+        database: Database,
         videos: List[Video],
         videos_dict: Dict[str, Video],
         vid_to_v: Dict[int, Video],
@@ -194,7 +194,7 @@ def run(
         elif classifier == 'intervals':
             callback = lambda g: g.to_basic_group_intervals(nb_color_points, nb_position_points, nb_size_points)
         elif classifier == 'sub_intervals':
-            callback = lambda g: g.to_basic_group_sub_intervals(nb_color_points, nb_position_points, nb_size_points)
+            callback = lambda sg: g.to_basic_group_sub_intervals(nb_color_points, nb_position_points, nb_size_points)
         elif classifier == 'raw':
             callback = lambda g: g.to_basic_group_raw()
         else:
@@ -383,8 +383,8 @@ def run(
     if not debug:
         special_property = '__image__'
         DEFAULT_NOTIFIER.notify(notifications.Message('Create video property', special_property))
-        if not api.database.has_prop_type(special_property):
-            api.database.add_prop_type(PropType(special_property, '', True))
+        if not database.has_prop_type(special_property):
+            database.add_prop_type(PropType(special_property, '', True))
         DEFAULT_NOTIFIER.notify(notifications.Message('Clear video property', special_property))
         for video in videos:
             video.properties[special_property] = []
@@ -406,7 +406,7 @@ def run(
                 vid_to_v[video_id].properties[special_property].extend([tag, '(similar)'])
         for video in videos:
             video.properties[special_property] = sorted(set(video.properties[special_property]))
-        api.database.save()
+        database.save()
 
     DEFAULT_NOTIFIER.notify(
         notifications.Message(f'Similar groups: {len(sim_groups)}, similar videos: {len(sim_vids)}, ratio {len(sim_vids) / len(sim_groups)}'))
@@ -446,19 +446,19 @@ def main(files=None, expected_groups=None):
     print('Estimated total time:', Duration.from_minutes(len(cases) * 1.5))
     # exit(0)
 
-    api = API(TEST_LIST_FILE_PATH, update=False)
+    database = Database.load_from_list_file_path(TEST_LIST_FILE_PATH, update=False)
     if files:
         videos = []
         for filename in files:
-            video = api.database.get_video_from_filename(filename)
+            video = database.get_video_from_filename(filename)
             assert video, filename
             videos.append(video)
     else:
-        videos = list(api.database.readable.found.with_thumbnails) + list(
-            api.database.readable.not_found.with_thumbnails)  # type: List[Video]
+        videos = list(database.readable.found.with_thumbnails) + list(
+            database.readable.not_found.with_thumbnails)  # type: List[Video]
     videos_dict = {v.filename.path: v for v in videos}  # type: Dict[str, Video]
     vid_to_v = {v.video_id: v for v in videos}  # type: Dict[int, Video]
-    min_dict = {m.identifier: m for m in api.database.ensure_miniatures(return_miniatures=True)}
+    min_dict = {m.identifier: m for m in database.ensure_miniatures(return_miniatures=True)}
     miniatures = [min_dict[video.filename.path] for video in videos]
     results = []
     assert expected_groups
@@ -468,7 +468,7 @@ def main(files=None, expected_groups=None):
     for index_case, case in enumerate(cases):
         threshold, min_count, nb_color_points, nb_position_points, nb_size_points, group_min_size, pixel_distance_radius = case
         sim_groups = run(
-            api, videos, videos_dict, vid_to_v, miniatures,
+            database, videos, videos_dict, vid_to_v, miniatures,
             threshold=threshold,
             min_count=min_count,
             nb_color_points=nb_color_points,
@@ -523,15 +523,15 @@ def main(files=None, expected_groups=None):
 
 def unique_run(threshold, min_count, nb_color_points, nb_position_points, nb_size_points, group_min_size,
                pixel_distance_radius, group_classifier=None, expected_groups=None, watch=None):
-    api = API(TEST_LIST_FILE_PATH, update=False)
-    videos = list(api.database.readable.found.with_thumbnails) + list(
-        api.database.readable.not_found.with_thumbnails)  # type: List[Video]
+    database = Database.load_from_list_file_path(TEST_LIST_FILE_PATH, update=False)
+    videos = list(database.readable.found.with_thumbnails) + list(
+        database.readable.not_found.with_thumbnails)  # type: List[Video]
     videos_dict = {v.filename.path: v for v in videos}  # type: Dict[str, Video]
     vid_to_v = {v.video_id: v for v in videos}  # type: Dict[int, Video]
-    min_dict = {m.identifier: m for m in api.database.ensure_miniatures(return_miniatures=True)}
+    min_dict = {m.identifier: m for m in database.ensure_miniatures(return_miniatures=True)}
     miniatures = [min_dict[video.filename.path] for video in videos]
     sim_groups = run(
-        api, videos, videos_dict, vid_to_v, miniatures,
+        database, videos, videos_dict, vid_to_v, miniatures,
         threshold=threshold,
         min_count=min_count,
         nb_color_points=nb_color_points,
@@ -581,21 +581,21 @@ def observe(
         group_classifier: Optional[str] = 'intervals',
         just_display_groups=True,
 ):
-    api = API(TEST_LIST_FILE_PATH, update=False)
+    database = Database.load_from_list_file_path(TEST_LIST_FILE_PATH, update=False)
 
     videos = []
     for filename in files:
-        video = api.database.get_video_from_filename(filename)
+        video = database.get_video_from_filename(filename)
         assert video, filename
         videos.append(video)
 
     videos_dict = {v.filename.path: v for v in videos}  # type: Dict[str, Video]
     vid_to_v = {v.video_id: v for v in videos}  # type: Dict[int, Video]
-    min_dict = {m.identifier: m for m in api.database.ensure_miniatures(return_miniatures=True)}
+    min_dict = {m.identifier: m for m in database.ensure_miniatures(return_miniatures=True)}
     miniatures = [min_dict[video.filename.path] for video in videos]
 
     run(
-        api, videos, videos_dict, vid_to_v, miniatures,
+        database, videos, videos_dict, vid_to_v, miniatures,
         threshold=threshold,
         min_count=min_count,
         nb_color_points=nb_color_points,

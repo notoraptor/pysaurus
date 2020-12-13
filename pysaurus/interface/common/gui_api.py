@@ -6,7 +6,7 @@ import traceback
 from typing import Optional
 
 from pysaurus.core.components import AbsolutePath
-from pysaurus.core.database.api import API
+from pysaurus.core.database.database import Database
 from pysaurus.core.database.notifications import DatabaseReady
 from pysaurus.core.database.properties import PropType
 from pysaurus.core.database.video_provider import VideoProvider, SOURCE_TREE
@@ -28,7 +28,7 @@ class GuiAPI:
         self.db_loading_thread = None  # type: Optional[threading.Thread]
         self.threads_stop_flag = False
 
-        self.api = None  # type: Optional[API]
+        self.database = None  # type: Optional[Database]
         self.provider = None  # type: Optional[VideoProvider]
 
         self.__update_on_load = True
@@ -131,7 +131,7 @@ class GuiAPI:
     def rename_video(self, index, new_title):
         video = self.provider.get_video(index)
         try:
-            self.api.database.change_video_file_title(video, new_title)
+            self.database.change_video_file_title(video, new_title)
             self.provider.on_properties_modified(
                 ('filename', 'file_title') + (() if video.meta_title else ('meta_title',)))
             self.provider.load()
@@ -145,19 +145,19 @@ class GuiAPI:
                 prop_default = [float(element) for element in prop_default]
             else:
                 prop_default = float(prop_default)
-        self.api.database.add_prop_type(PropType(prop_name, prop_default, prop_multiple))
+        self.database.add_prop_type(PropType(prop_name, prop_default, prop_multiple))
         return self.get_prop_types()
 
     def delete_prop_type(self, name):
-        self.api.database.remove_prop_type(name)
+        self.database.remove_prop_type(name)
         return self.get_prop_types()
 
     def get_prop_types(self):
-        props = sorted(self.api.database.get_prop_types(), key=lambda prop: prop.name)
+        props = sorted(self.database.get_prop_types(), key=lambda prop: prop.name)
         return [prop.to_json() for prop in props]
 
     def fill_property_with_terms(self, prop_name, only_empty=False):
-        db = self.api.database
+        db = self.database
         prop_type = db.get_prop_type(prop_name)
         assert prop_type.multiple
         assert prop_type.type is str
@@ -174,7 +174,7 @@ class GuiAPI:
         print('delete property value', name, values)
         values = set(values)
         modified = []
-        prop_type = self.api.database.get_prop_type(name)
+        prop_type = self.database.get_prop_type(name)
         if prop_type.multiple:
             prop_type.validate(values)
             for video in self.provider.get_all_videos():
@@ -194,7 +194,7 @@ class GuiAPI:
                     del video.properties[name]
                     modified.append(video)
         if modified:
-            self.api.database.save()
+            self.database.save()
             self.provider.on_properties_modified([name])
         return modified
 
@@ -202,7 +202,7 @@ class GuiAPI:
         print('edit property value', name, old_values, new_value)
         old_values = set(old_values)
         modified = False
-        prop_type = self.api.database.get_prop_type(name)
+        prop_type = self.database.get_prop_type(name)
         if prop_type.multiple:
             prop_type.validate(old_values)
             prop_type.validate([new_value])
@@ -225,14 +225,14 @@ class GuiAPI:
                     video.properties[name] = new_value
                     modified = True
         if modified:
-            self.api.database.save()
+            self.database.save()
             self.provider.on_properties_modified([name])
 
     def move_property_value(self, old_name, values, new_name):
         assert len(values) == 1, values
         value = values[0]
         print('move property value', old_name, new_name, value)
-        prop_type = self.api.database.get_prop_type(new_name)
+        prop_type = self.database.get_prop_type(new_name)
         prop_type.validate([value] if prop_type.multiple else value)
         videos = self.delete_property_value(old_name, value)
         if prop_type.multiple:
@@ -244,11 +244,11 @@ class GuiAPI:
             for video in videos:
                 video.properties[new_name] = value
         if videos:
-            self.api.database.save()
+            self.database.save()
             self.provider.on_properties_modified((old_name, new_name))
 
     def set_video_properties(self, index, properties):
-        modified = self.api.database.set_video_properties(self.provider.get_video(index), properties)
+        modified = self.database.set_video_properties(self.provider.get_video(index), properties)
         self.provider.on_properties_modified(modified)
 
     def classifier_select_group(self, group_id):
@@ -272,8 +272,8 @@ class GuiAPI:
     def classifier_concatenate_path(self, to_property):
         path = self.provider.classifier_layer.get_path()
         from_property = self.provider.grouping_layer.get_grouping().field[1:]
-        from_prop_type = self.api.database.get_prop_type(from_property)
-        to_prop_type = self.api.database.get_prop_type(to_property)
+        from_prop_type = self.database.get_prop_type(from_property)
+        to_prop_type = self.database.get_prop_type(to_property)
         assert from_prop_type.multiple
         assert to_prop_type.type is str
         from_prop_type.validate(path)
@@ -299,7 +299,7 @@ class GuiAPI:
                 video.properties[to_property] = to_prop_type(new_value)
 
         if modified:
-            self.api.database.save()
+            self.database.save()
             self.provider.classifier_layer.set_path([])
             self.provider.group_layer.set_group_id(0)
             self.provider.on_properties_modified([from_property, to_property])
@@ -356,23 +356,25 @@ class GuiAPI:
         if self.provider:
             self.provider.load()
         else:
-            self.provider = VideoProvider(self.api.database)
+            self.provider = VideoProvider(self.database)
 
     def _load_database(self):
         update = self.__update_on_load
         self.__update_on_load = True
-        self.api = API(TEST_LIST_FILE_PATH,
-                       update=update,
-                       notifier=self.notifier,
-                       ensure_miniatures=True,
-                       reset=False)
+        self.database = Database.load_from_list_file_path(
+            TEST_LIST_FILE_PATH,
+            update=update,
+            notifier=self.notifier,
+            ensure_miniatures=True,
+            reset=False
+        )
         self._load_videos()
         self.notifier.notify(DatabaseReady())
         self.db_loading_thread = None
         print('End loading database.')
 
     def _update_database(self):
-        self.api.update(ensure_miniatures=True)
+        self.database.refresh(ensure_miniatures=True)
         self._load_videos()
         self.notifier.notify(DatabaseReady())
         self.db_loading_thread = None

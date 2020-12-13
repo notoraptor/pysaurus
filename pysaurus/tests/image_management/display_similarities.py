@@ -2,7 +2,7 @@ import sys
 
 import ujson as json
 
-from pysaurus.core.database.api import API
+from pysaurus.core.database.database import Database
 from pysaurus.tests.test_utils import TEST_LIST_FILE_PATH
 
 
@@ -13,8 +13,7 @@ def main():
     with open(sys.argv[1]) as file:
         similarities = json.load(file)
     print('LOADING DATABASE')
-    api = API(list_file_path=TEST_LIST_FILE_PATH, update=False)
-    database = api.database
+    database = Database.load_from_list_file_path(list_file_path=TEST_LIST_FILE_PATH, update=False)
     with open('output.tsv', 'wb') as file:
         for group_id, group in enumerate(similarities):
             videos = []

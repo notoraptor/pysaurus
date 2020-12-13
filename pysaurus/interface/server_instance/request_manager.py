@@ -3,7 +3,7 @@ from typing import Callable, Optional
 
 import tornado.concurrent
 
-from pysaurus.core.database.api import API
+from pysaurus.interface.common.api import API
 from pysaurus.core.functions import launch_thread
 from pysaurus.interface.server.protocol import DataResponse, Request, Response
 from pysaurus.interface.server.server import Server

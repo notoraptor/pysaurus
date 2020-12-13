@@ -6,7 +6,6 @@ import ujson as json
 
 from pysaurus.core.classes import StringPrinter
 from pysaurus.core.components import AbsolutePath
-from pysaurus.core.database.api import API
 from pysaurus.core.database.database import Database
 from pysaurus.core.functions import timestamp_microseconds
 from pysaurus.core.native.video_raptor import alignment as native_alignment
@@ -158,8 +157,7 @@ def find_similar_images(miniatures):
 
 def main():
     list_file_path = AbsolutePath.ensure(sys.argv[1]) if len(sys.argv) > 1 else TEST_LIST_FILE_PATH
-    api = API(list_file_path=list_file_path, update=False)
-    database = api.database
+    database = Database.load_from_list_file_path(list_file_path=list_file_path, update=False)
     miniatures = sorted(database.ensure_miniatures(return_miniatures=True), key=lambda m: m.identifier)
     print('Extracted miniatures from %d/%d videos.' % (len(miniatures), database.nb_valid))
 
