@@ -604,6 +604,37 @@ class Database:
                     video.properties[new_name] = video.properties.pop(old_name)
             self.save()
 
+    def convert_prop_to_unique(self, name):
+        if name in self.__prop_types:
+            prop_type = self.__prop_types[name]
+            if not prop_type.multiple:
+                raise ValueError(f'"{name}" is already a unique property')
+            for video in self.__videos.values():
+                if name in video.properties and len(video.properties[name]) > 1:
+                    raise ValueError(f"""A video has multiple values for this property.
+Video: {video.filename}
+Values: {', '.join(str(v) for v in video.properties[name])}
+Make sure any video has at most 1 value for this property before making it unique.""")
+            prop_type.multiple = False
+            for video in self.__videos.values():
+                if name in video.properties:
+                    if video.properties[name]:
+                        video.properties[name] = video.properties[name][0]
+                    else:
+                        del video.properties[name]
+            self.save()
+
+    def convert_prop_to_multiple(self, name):
+        if name in self.__prop_types:
+            prop_type = self.__prop_types[name]
+            if prop_type.multiple:
+                raise ValueError(f'"{name}" is already a multiple property')
+            prop_type.multiple = True
+            for video in self.__videos.values():
+                if name in video.properties:
+                    video.properties[name] = [video.properties[name]]
+            self.save()
+
     def remove_prop_type(self, name):
         if name in self.__prop_types:
             del self.__prop_types[name]

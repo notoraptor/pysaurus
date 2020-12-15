@@ -164,6 +164,14 @@ class GuiAPI:
         self.database.rename_prop_type(old_name, new_name)
         return self.get_prop_types()
 
+    def convert_prop_to_unique(self, name):
+        self.database.convert_prop_to_unique(name)
+        return self.get_prop_types()
+
+    def convert_prop_to_multiple(self, name):
+        self.database.convert_prop_to_multiple(name)
+        return self.get_prop_types()
+
     def get_prop_types(self):
         props = sorted(self.database.get_prop_types(), key=lambda prop: prop.name)
         return [prop.to_json() for prop in props]

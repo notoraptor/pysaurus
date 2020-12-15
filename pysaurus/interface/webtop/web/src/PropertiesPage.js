@@ -156,6 +156,11 @@ export class PropertiesPage extends React.Component {
                         <td className="options">
                             <div><button className="delete" onClick={() => this.deleteProperty(def.name)}>delete</button></div>
                             <div><button className="rename" onClick={() => this.renameProperty(def.name)}>rename</button></div>
+                            {def.multiple ? (
+                                <div><button className="convert-to-unique" onClick={() => this.convertPropertyToUnique(def.name)}>convert to unique</button></div>
+                            ) : (
+                                <div><button className="convert-to-multiple" onClick={() => this.convertPropertyToMultiple(def.name)}>convert to multiple</button></div>
+                            )}
                         </td>
                     </tr>
                 ))}
@@ -250,6 +255,46 @@ export class PropertiesPage extends React.Component {
             }}>
                 <Cell className="text-center" center={true} full={true}>
                     <h3>Are you sure you want to delete property "{name}"?</h3>
+                </Cell>
+            </Dialog>
+        ));
+    }
+    convertPropertyToUnique(name) {
+        this.props.app.loadDialog(`Convert to unique property "${name}"?`, onClose => (
+            <Dialog yes={'convert to unique'} no={'cancel'} onClose={yes => {
+                onClose();
+                if (yes) {
+                    python_call('convert_prop_to_unique', name)
+                        .then(definitions => {
+                            const state = this.getDefaultInputState();
+                            state.definitions = definitions;
+                            this.setState(state);
+                        })
+                        .catch(backend_error)
+                }
+            }}>
+                <Cell className="text-center" center={true} full={true}>
+                    <h3>Are you sure you want to convert to unique property "{name}"?</h3>
+                </Cell>
+            </Dialog>
+        ));
+    }
+    convertPropertyToMultiple(name) {
+        this.props.app.loadDialog(`Convert to multiple property "${name}"?`, onClose => (
+            <Dialog yes={'convert to multiple'} no={'cancel'} onClose={yes => {
+                onClose();
+                if (yes) {
+                    python_call('convert_prop_to_multiple', name)
+                        .then(definitions => {
+                            const state = this.getDefaultInputState();
+                            state.definitions = definitions;
+                            this.setState(state);
+                        })
+                        .catch(backend_error)
+                }
+            }}>
+                <Cell className="text-center" center={true} full={true}>
+                    <h3>Are you sure you want to convert to multiple property "{name}"?</h3>
                 </Cell>
             </Dialog>
         ));

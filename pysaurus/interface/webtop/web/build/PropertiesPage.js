@@ -183,7 +183,13 @@ System.register(["./SetInput.js", "./Dialog.js", "./Cell.js", "./FormRenamePrope
           }, "delete")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("button", {
             className: "rename",
             onClick: () => this.renameProperty(def.name)
-          }, "rename")))))));
+          }, "rename")), def.multiple ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("button", {
+            className: "convert-to-unique",
+            onClick: () => this.convertPropertyToUnique(def.name)
+          }, "convert to unique")) : /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("button", {
+            className: "convert-to-multiple",
+            onClick: () => this.convertPropertyToMultiple(def.name)
+          }, "convert to multiple")))))));
         }
 
         renderDefaultInput() {
@@ -301,6 +307,50 @@ System.register(["./SetInput.js", "./Dialog.js", "./Cell.js", "./FormRenamePrope
             center: true,
             full: true
           }, /*#__PURE__*/React.createElement("h3", null, "Are you sure you want to delete property \"", name, "\"?"))));
+        }
+
+        convertPropertyToUnique(name) {
+          this.props.app.loadDialog(`Convert to unique property "${name}"?`, onClose => /*#__PURE__*/React.createElement(Dialog, {
+            yes: 'convert to unique',
+            no: 'cancel',
+            onClose: yes => {
+              onClose();
+
+              if (yes) {
+                python_call('convert_prop_to_unique', name).then(definitions => {
+                  const state = this.getDefaultInputState();
+                  state.definitions = definitions;
+                  this.setState(state);
+                }).catch(backend_error);
+              }
+            }
+          }, /*#__PURE__*/React.createElement(Cell, {
+            className: "text-center",
+            center: true,
+            full: true
+          }, /*#__PURE__*/React.createElement("h3", null, "Are you sure you want to convert to unique property \"", name, "\"?"))));
+        }
+
+        convertPropertyToMultiple(name) {
+          this.props.app.loadDialog(`Convert to multiple property "${name}"?`, onClose => /*#__PURE__*/React.createElement(Dialog, {
+            yes: 'convert to multiple',
+            no: 'cancel',
+            onClose: yes => {
+              onClose();
+
+              if (yes) {
+                python_call('convert_prop_to_multiple', name).then(definitions => {
+                  const state = this.getDefaultInputState();
+                  state.definitions = definitions;
+                  this.setState(state);
+                }).catch(backend_error);
+              }
+            }
+          }, /*#__PURE__*/React.createElement(Cell, {
+            className: "text-center",
+            center: true,
+            full: true
+          }, /*#__PURE__*/React.createElement("h3", null, "Are you sure you want to convert to multiple property \"", name, "\"?"))));
         }
 
         renameProperty(name) {
