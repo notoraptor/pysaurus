@@ -160,6 +160,10 @@ class GuiAPI:
         self.database.remove_prop_type(name)
         return self.get_prop_types()
 
+    def rename_property(self, old_name, new_name):
+        self.database.rename_prop_type(old_name, new_name)
+        return self.get_prop_types()
+
     def get_prop_types(self):
         props = sorted(self.database.get_prop_types(), key=lambda prop: prop.name)
         return [prop.to_json() for prop in props]

@@ -1,7 +1,7 @@
-System.register(["./SetInput.js", "./Dialog.js", "./Cell.js"], function (_export, _context) {
+System.register(["./SetInput.js", "./Dialog.js", "./Cell.js", "./FormRenameProperty.js"], function (_export, _context) {
   "use strict";
 
-  var SetInput, ComponentController, Dialog, Cell, PropertiesPage, DEFAULT_VALUES;
+  var SetInput, ComponentController, Dialog, Cell, FormRenameProperty, PropertiesPage, DEFAULT_VALUES;
 
   function getDefaultValue(propType) {
     return DEFAULT_VALUES[propType].toString();
@@ -17,6 +17,8 @@ System.register(["./SetInput.js", "./Dialog.js", "./Cell.js"], function (_export
       Dialog = _DialogJs.Dialog;
     }, function (_CellJs) {
       Cell = _CellJs.Cell;
+    }, function (_FormRenamePropertyJs) {
+      FormRenameProperty = _FormRenamePropertyJs.FormRenameProperty;
     }],
     execute: function () {
       DEFAULT_VALUES = {
@@ -51,6 +53,7 @@ System.register(["./SetInput.js", "./Dialog.js", "./Cell.js"], function (_export
           this.reset = this.reset.bind(this);
           this.submit = this.submit.bind(this);
           this.deleteProperty = this.deleteProperty.bind(this);
+          this.renameProperty = this.renameProperty.bind(this);
           this.getDefaultInputState = this.getDefaultInputState.bind(this);
         }
 
@@ -174,10 +177,13 @@ System.register(["./SetInput.js", "./Dialog.js", "./Cell.js"], function (_export
             }
           }()), /*#__PURE__*/React.createElement("td", {
             className: "options"
-          }, /*#__PURE__*/React.createElement("button", {
+          }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("button", {
             className: "delete",
             onClick: () => this.deleteProperty(def.name)
-          }, "delete"))))));
+          }, "delete")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("button", {
+            className: "rename",
+            onClick: () => this.renameProperty(def.name)
+          }, "rename")))))));
         }
 
         renderDefaultInput() {
@@ -295,6 +301,23 @@ System.register(["./SetInput.js", "./Dialog.js", "./Cell.js"], function (_export
             center: true,
             full: true
           }, /*#__PURE__*/React.createElement("h3", null, "Are you sure you want to delete property \"", name, "\"?"))));
+        }
+
+        renameProperty(name) {
+          this.props.app.loadDialog(`Rename property "${name}"?`, onClose => /*#__PURE__*/React.createElement(FormRenameProperty, {
+            title: name,
+            onClose: newName => {
+              onClose();
+
+              if (newName) {
+                python_call('rename_property', name, newName).then(definitions => {
+                  const state = this.getDefaultInputState();
+                  state.definitions = definitions;
+                  this.setState(state);
+                }).catch(backend_error);
+              }
+            }
+          }));
         }
 
         getDefaultInputState() {

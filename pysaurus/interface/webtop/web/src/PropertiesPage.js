@@ -1,6 +1,7 @@
 import {SetInput, ComponentController} from "./SetInput.js";
 import {Dialog} from "./Dialog.js";
 import {Cell} from "./Cell.js";
+import {FormRenameProperty} from "./FormRenameProperty.js";
 
 const DEFAULT_VALUES = {
     bool: false,
@@ -39,6 +40,7 @@ export class PropertiesPage extends React.Component {
         this.reset = this.reset.bind(this);
         this.submit = this.submit.bind(this);
         this.deleteProperty = this.deleteProperty.bind(this);
+        this.renameProperty = this.renameProperty.bind(this);
         this.getDefaultInputState = this.getDefaultInputState.bind(this);
     }
     render() {
@@ -152,7 +154,8 @@ export class PropertiesPage extends React.Component {
                             })()}
                         </td>
                         <td className="options">
-                            <button className="delete" onClick={() => this.deleteProperty(def.name)}>delete</button>
+                            <div><button className="delete" onClick={() => this.deleteProperty(def.name)}>delete</button></div>
+                            <div><button className="rename" onClick={() => this.renameProperty(def.name)}>rename</button></div>
                         </td>
                     </tr>
                 ))}
@@ -249,6 +252,22 @@ export class PropertiesPage extends React.Component {
                     <h3>Are you sure you want to delete property "{name}"?</h3>
                 </Cell>
             </Dialog>
+        ));
+    }
+    renameProperty(name) {
+        this.props.app.loadDialog(`Rename property "${name}"?`, onClose => (
+            <FormRenameProperty title={name} onClose={newName => {
+                onClose();
+                if (newName) {
+                    python_call('rename_property', name, newName)
+                        .then(definitions => {
+                            const state = this.getDefaultInputState();
+                            state.definitions = definitions;
+                            this.setState(state);
+                        })
+                        .catch(backend_error);
+                }
+            }} />
         ));
     }
     getDefaultInputState() {

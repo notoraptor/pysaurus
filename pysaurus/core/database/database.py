@@ -592,6 +592,18 @@ class Database:
         if save:
             self.save()
 
+    def rename_prop_type(self, old_name, new_name):
+        if old_name in self.__prop_types:
+            if new_name in self.__prop_types:
+                raise ValueError(f'Property new name already exists: {new_name}')
+            prop_type = self.__prop_types.pop(old_name)
+            prop_type.name = new_name
+            self.__prop_types[new_name] = prop_type
+            for video in self.__videos.values():
+                if old_name in video.properties:
+                    video.properties[new_name] = video.properties.pop(old_name)
+            self.save()
+
     def remove_prop_type(self, name):
         if name in self.__prop_types:
             del self.__prop_types[name]
