@@ -22,8 +22,10 @@ from pysaurus.core.database import path_utils
 
 SPECIAL_PROPERTY_ERROR = '<error>'
 SPECIAL_PROPERTY_DEFINITIONS = {
+    # name : (name, definition, is_multiple)
     SPECIAL_PROPERTY_ERROR: (SPECIAL_PROPERTY_ERROR, '', True)
 }
+
 
 class Database:
     __slots__ = ('__db_path', '__thumb_folder', '__json_path', '__miniatures_path', '__log_path',

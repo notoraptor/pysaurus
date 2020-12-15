@@ -41,6 +41,8 @@ class GuiAPI:
             self.db_loading_thread.join()
 
     def load_database(self, update=True):
+        assert not self.monitor_thread
+        assert not self.db_loading_thread
         self.__update_on_load = update
         # Launch monitor thread.
         self.monitor_thread = launch_thread(self._monitor_notifications)
@@ -52,6 +54,8 @@ class GuiAPI:
         assert not self.db_loading_thread
         self.monitor_thread = launch_thread(self._monitor_notifications)
         self.db_loading_thread = launch_thread(self._update_database)
+
+    # View features.
 
     def set_sources(self, paths):
         self.provider.set_source(paths)
@@ -104,6 +108,8 @@ class GuiAPI:
             'path': self.provider.classifier_layer.get_path(),
         }
 
+    # Video features.
+
     def open_video(self, index):
         try:
             return str(self.provider.get_video(index).filename.open())
@@ -138,6 +144,8 @@ class GuiAPI:
             return {'filename': self._to_json_value(video.filename), 'file_title': video.file_title}
         except OSError as exc:
             return {'error': str(exc)}
+
+    # Database properties features.
 
     def add_prop_type(self, prop_name, prop_type, prop_default, prop_multiple):
         if prop_type == 'float':
@@ -251,6 +259,8 @@ class GuiAPI:
         modified = self.database.set_video_properties(self.provider.get_video(index), properties)
         self.provider.on_properties_modified(modified)
 
+    # Property multi-selection and concatenation features.
+
     def classifier_select_group(self, group_id):
         print('classifier select group', group_id)
         prop_name = self.provider.grouping_layer.get_grouping().field[1:]
@@ -303,6 +313,8 @@ class GuiAPI:
             self.provider.classifier_layer.set_path([])
             self.provider.group_layer.set_group_id(0)
             self.provider.on_properties_modified([from_property, to_property])
+
+    # Private methods.
 
     @staticmethod
     def _get_source_tree():
