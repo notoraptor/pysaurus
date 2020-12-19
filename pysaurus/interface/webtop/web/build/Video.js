@@ -25,6 +25,8 @@ System.register(["./MenuPack.js", "./FormRenameVideo.js", "./Dialog.js", "./Form
           // index
           // data
           // confirmDeletion: bool
+          // selected: bool
+          // onSelect(videoID, selected)
           super(props);
           this.openVideo = this.openVideo.bind(this);
           this.confirmDeletion = this.confirmDeletion.bind(this);
@@ -34,6 +36,7 @@ System.register(["./MenuPack.js", "./FormRenameVideo.js", "./Dialog.js", "./Form
           this.copyFileTitle = this.copyFileTitle.bind(this);
           this.renameVideo = this.renameVideo.bind(this);
           this.editProperties = this.editProperties.bind(this);
+          this.onSelect = this.onSelect.bind(this);
         }
 
         render() {
@@ -47,6 +50,7 @@ System.register(["./MenuPack.js", "./FormRenameVideo.js", "./Dialog.js", "./Form
           const file_title = data.file_title;
           const meta_title = title === file_title ? null : title;
           const hasThumbnail = data.hasThumbnail;
+          const htmlID = `video-${this.props.index}`;
           return /*#__PURE__*/React.createElement("div", {
             className: 'video horizontal' + (data.exists ? ' found' : ' not-found')
           }, /*#__PURE__*/React.createElement("div", {
@@ -58,7 +62,7 @@ System.register(["./MenuPack.js", "./FormRenameVideo.js", "./Dialog.js", "./Form
             className: "no-thumbnail"
           }, "no thumbnail")), /*#__PURE__*/React.createElement("div", {
             className: "video-details horizontal"
-          }, /*#__PURE__*/React.createElement("div", {
+          }, this.renderProperties(), /*#__PURE__*/React.createElement("div", {
             className: "info"
           }, /*#__PURE__*/React.createElement("div", {
             className: "name"
@@ -81,9 +85,16 @@ System.register(["./MenuPack.js", "./FormRenameVideo.js", "./Dialog.js", "./Form
           }, "Rename video") : '', /*#__PURE__*/React.createElement(MenuItem, {
             className: "menu-delete",
             action: this.deleteVideo
-          }, data.exists ? 'Delete video' : 'Delete entry')), /*#__PURE__*/React.createElement("strong", {
+          }, data.exists ? 'Delete video' : 'Delete entry')), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("input", {
+            type: "checkbox",
+            checked: this.props.selected,
+            id: htmlID,
+            onChange: this.onSelect
+          }), "\xA0", /*#__PURE__*/React.createElement("label", {
+            htmlFor: htmlID
+          }, /*#__PURE__*/React.createElement("strong", {
             className: "title"
-          }, data.title)), data.title === data.file_title ? '' : /*#__PURE__*/React.createElement("div", {
+          }, data.title)))), data.title === data.file_title ? '' : /*#__PURE__*/React.createElement("div", {
             className: "file-title"
           }, /*#__PURE__*/React.createElement("em", null, data.file_title))), /*#__PURE__*/React.createElement("div", {
             className: 'filename-line' + (data.exists ? '' : ' horizontal')
@@ -112,7 +123,7 @@ System.register(["./MenuPack.js", "./FormRenameVideo.js", "./Dialog.js", "./Form
             className: "prepend"
           }, /*#__PURE__*/React.createElement("code", null, "Quality")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, /*#__PURE__*/React.createElement("em", null, data.quality)), " %")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, data.width), " x ", /*#__PURE__*/React.createElement("strong", null, data.height), " @ ", data.frame_rate, " fps | ", data.sample_rate, " Hz, ", /*#__PURE__*/React.createElement("span", {
             title: data.audio_bit_rate
-          }, audio_bit_rate, " Kb/s"), " | ", /*#__PURE__*/React.createElement("strong", null, data.length), " | ", /*#__PURE__*/React.createElement("code", null, data.date))), this.renderProperties()));
+          }, audio_bit_rate, " Kb/s"), " | ", /*#__PURE__*/React.createElement("strong", null, data.length), " | ", /*#__PURE__*/React.createElement("code", null, data.date)))));
         }
 
         renderProperties() {
@@ -124,7 +135,7 @@ System.register(["./MenuPack.js", "./FormRenameVideo.js", "./Dialog.js", "./Form
           }, /*#__PURE__*/React.createElement("div", {
             className: "edit-properties",
             onClick: this.editProperties
-          }, "EDIT PROPERTIES"), propDefs.map((def, index) => {
+          }, "PROPERTIES"), propDefs.map((def, index) => {
             const name = def.name;
             const value = props.hasOwnProperty(name) ? props[name] : def.defaultValue;
             const valueString = propertyValueToString(def.type, def.multiple ? value.join(', ') : value.toString());
@@ -238,6 +249,12 @@ System.register(["./MenuPack.js", "./FormRenameVideo.js", "./Dialog.js", "./Form
               }
             }
           }));
+        }
+
+        onSelect(event) {
+          if (this.props.onSelect) {
+            this.props.onSelect(this.props.data.video_id, event.target.checked);
+          }
         }
 
       });

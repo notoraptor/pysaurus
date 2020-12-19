@@ -97,6 +97,8 @@ class Filter extends React.Component {
         const searchDef = backend.searchDef;
         const sorting = backend.sorting;
         const sortingIsDefault = sorting.length === 1 && sorting[0] === '-date';
+        const selection = backend.selection;
+        const selectedAll = backend.realNbVideos === selection.size;
         return (
             <table className="filter">
                 <tbody>
@@ -156,6 +158,29 @@ class Filter extends React.Component {
                         {sortingIsDefault ? '' : <Cross title={`reset sorting (${SHORTCUTS.unsort})`} action={app.resetSort} />}
                     </td>
                 </tr>
+                <tr>
+                    <td>
+                        {selection.size ? (
+                            <div>
+                                <div>Selected</div>
+                                <div>
+                                    {selectedAll ? 'all' : ''} {selection.size} {selectedAll ? '' : `/ ${backend.realNbVideos}`} video{selection.size < 2 ? '' : 's'}
+                                </div>
+                                <div>
+                                    <button onClick={app.displayOnlySelected}>
+                                        {backend.displayOnlySelected ? 'Display all videos' : 'Display only selected videos'}
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <div>No videos selected</div>
+                        )}
+                        {selectedAll ? '' : <div><button onClick={app.selectAll}>select all</button></div>}
+                    </td>
+                    <td>
+                        {selection.size ? <Cross title={`Deselect all`} action={app.deselect} /> : ''}
+                    </td>
+                </tr>
                 </tbody>
             </table>
         );
@@ -173,7 +198,9 @@ export class VideosPage extends React.Component {
             stackFilter: false,
             stackGroup: false,
             stackPath: false,
-            path: []
+            path: [],
+            selection: new Set(),
+            displayOnlySelected: false,
         };
         this.parametersToState = this.parametersToState.bind(this);
         this.checkShortcut = this.checkShortcut.bind(this);
@@ -204,6 +231,10 @@ export class VideosPage extends React.Component {
         this.classifierConcatenate = this.classifierConcatenate.bind(this);
         this.stackPath = this.stackPath.bind(this);
         this.unselectVideos = this.unselectVideos.bind(this);
+        this.onVideoSelection = this.onVideoSelection.bind(this);
+        this.deselect = this.deselect.bind(this);
+        this.selectAll = this.selectAll.bind(this);
+        this.displayOnlySelected = this.displayOnlySelected.bind(this);
 
         this.parametersToState(this.props.parameters, this.state);
         this.callbackIndex = -1;
@@ -368,6 +399,8 @@ export class VideosPage extends React.Component {
                    data={data}
                    index={data.local_id}
                    parent={this}
+                   selected={this.state.selection.has(data.video_id)}
+                   onSelect={this.onVideoSelection}
                    confirmDeletion={this.state.confirmDeletion}/>
         ));
     }
@@ -378,6 +411,7 @@ export class VideosPage extends React.Component {
         state.pageSize = parameters.pageSize;
         state.pageNumber = parameters.pageNumber;
         state.nbVideos = parameters.info.nbVideos;
+        state.realNbVideos = parameters.info.realNbVideos;
         state.nbPages = parameters.info.nbPages;
         state.validSize = parameters.info.validSize;
         state.validLength = parameters.info.validLength;
@@ -397,13 +431,59 @@ export class VideosPage extends React.Component {
         if (!INITIAL_SOURCES.length)
             INITIAL_SOURCES.push(state.sources);
     }
+    onVideoSelection(videoID, selected) {
+        const selection = new Set(this.state.selection);
+        if (selected) {
+            selection.add(videoID);
+            this.setState({selection});
+        } else if (selection.has(videoID)) {
+            selection.delete(videoID);
+            if (this.state.displayOnlySelected) {
+                const displayOnlySelected = this.state.displayOnlySelected && selection.size;
+                python_call('set_selection', Array.from(selection))
+                    .then(() => this.updatePage({selection, displayOnlySelected}))
+                    .catch(backend_error);
+            } else {
+                this.setState({selection});
+            }
+        }
+    }
+    deselect() {
+        if (this.state.displayOnlySelected) {
+            python_call('set_selection', [])
+                .then(() => this.updatePage({selection: new Set(), displayOnlySelected: false}))
+                .catch(backend_error);
+        } else {
+            this.setState({selection: new Set()});
+        }
+    }
+    selectAll() {
+        if (this.state.displayOnlySelected) {
+            python_call('get_view_indices')
+                .then(indices => python_call('set_selection', indices).then(() => indices))
+                .then(indices => this.updatePage({selection: new Set(indices)}))
+                .catch(backend_error);
+        } else {
+            python_call('get_view_indices')
+                .then(indices => this.setState({selection: new Set(indices)}))
+                .catch(backend_error);
+        }
+    }
+    displayOnlySelected() {
+        const displayOnlySelected = !this.state.displayOnlySelected;
+        const selection = displayOnlySelected && this.state.nbVideos !== this.state.selection.size ?
+            Array.from(this.state.selection) : [];
+        python_call('set_selection', selection)
+            .then(() => this.updatePage({displayOnlySelected}))
+            .catch(backend_error);
+    }
 
     scrollTop() {
         const videos = document.querySelector('#videos .videos');
         videos.scrollTop = 0;
     }
     updatePage(state, top = true) {
-        // todo what if page size is out or page range ?
+        // todo what if page size is out of page range ?
         const pageSize = state.pageSize !== undefined ? state.pageSize: this.state.pageSize;
         const pageNumber = state.pageNumber !== undefined ? state.pageNumber: this.state.pageNumber;
         python_call('get_info_and_videos', pageSize, pageNumber, FIELDS)

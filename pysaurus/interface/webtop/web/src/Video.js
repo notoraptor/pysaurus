@@ -10,6 +10,8 @@ export class Video extends React.Component {
         // index
         // data
         // confirmDeletion: bool
+        // selected: bool
+        // onSelect(videoID, selected)
         super(props);
         this.openVideo = this.openVideo.bind(this);
         this.confirmDeletion = this.confirmDeletion.bind(this);
@@ -19,6 +21,7 @@ export class Video extends React.Component {
         this.copyFileTitle = this.copyFileTitle.bind(this);
         this.renameVideo = this.renameVideo.bind(this);
         this.editProperties = this.editProperties.bind(this);
+        this.onSelect = this.onSelect.bind(this);
     }
     render() {
         const index = this.props.index;
@@ -31,6 +34,7 @@ export class Video extends React.Component {
         const file_title = data.file_title;
         const meta_title = (title === file_title ? null : title);
         const hasThumbnail = data.hasThumbnail;
+        const htmlID = `video-${this.props.index}`;
         return (
             <div className={'video horizontal' + (data.exists ? ' found' : ' not-found')}>
                 <div className="image">
@@ -39,6 +43,7 @@ export class Video extends React.Component {
                         <div className="no-thumbnail">no thumbnail</div>}
                 </div>
                 <div className="video-details horizontal">
+                    {this.renderProperties()}
                     <div className="info">
                         <div className="name">
                             <div className="options horizontal">
@@ -50,7 +55,11 @@ export class Video extends React.Component {
                                     {data.exists ? <MenuItem action={this.renameVideo}>Rename video</MenuItem> : ''}
                                     <MenuItem className="menu-delete" action={this.deleteVideo}>{data.exists ? 'Delete video' : 'Delete entry'}</MenuItem>
                                 </MenuPack>
-                                <strong className="title">{data.title}</strong>
+                                <div>
+                                    <input type="checkbox" checked={this.props.selected} id={htmlID} onChange={this.onSelect}/>
+                                    &nbsp;
+                                    <label htmlFor={htmlID}><strong className="title">{data.title}</strong></label>
+                                </div>
                             </div>
                             {data.title === data.file_title ? '' : <div className="file-title"><em>{data.file_title}</em></div>}
                         </div>
@@ -66,7 +75,6 @@ export class Video extends React.Component {
                         </div>
                         <div><strong>{data.width}</strong> x <strong>{data.height}</strong> @ {data.frame_rate} fps | {data.sample_rate} Hz, <span title={data.audio_bit_rate}>{audio_bit_rate} Kb/s</span> | <strong>{data.length}</strong> | <code>{data.date}</code></div>
                     </div>
-                    {this.renderProperties()}
                 </div>
             </div>
         );
@@ -78,7 +86,7 @@ export class Video extends React.Component {
             return '';
         return (
             <div className="properties">
-                <div className="edit-properties" onClick={this.editProperties}>EDIT PROPERTIES</div>
+                <div className="edit-properties" onClick={this.editProperties}>PROPERTIES</div>
                 {propDefs.map((def, index) => {
                     const name = def.name;
                     const value = props.hasOwnProperty(name) ? props[name] : def.defaultValue;
@@ -202,5 +210,10 @@ export class Video extends React.Component {
                 }
             }}/>
         ));
+    }
+    onSelect(event) {
+        if (this.props.onSelect) {
+            this.props.onSelect(this.props.data.video_id, event.target.checked);
+        }
     }
 }

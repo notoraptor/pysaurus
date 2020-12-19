@@ -750,10 +750,34 @@ class SortLayer(Layer):
         if video in cache:
             cache.remove(video)
 
+    def count(self):
+        return len(self._cache)
+
+class SelectionLayer(Layer):
+    __slots__ = ()
+    __props__ = ('indices',)
+
+    def set_indices(self, indices: Iterable[int]):
+        self._set_parameters(indices=set(indices))
+
+    def get_indices(self):
+        return self.get_parameter('indices')
+
+    def reset_parameters(self):
+        self.set_indices(())
+
+    def filter(self, data: VideoArray) -> VideoArray:
+        indices = self.get_indices()
+        return VideoArray([video for video in data if video.video_id in indices]) if indices else data
+
+    def remove_from_cache(self, cache: VideoArray, video: Video):
+        if video in cache:
+            cache.remove(video)
+
 
 class VideoProvider:
     __slots__ = ('database', '__source_layer', 'grouping_layer', 'classifier_layer', 'group_layer', 'search_layer',
-                 'sort_layer', 'view')
+                 'sort_layer', 'selection_layer', 'view')
 
     def __init__(self, database: Database):
         self.database = database
@@ -765,12 +789,14 @@ class VideoProvider:
         self.group_layer = GroupLayer(database)
         self.search_layer = SearchLayer(database)
         self.sort_layer = SortLayer(database)
+        self.selection_layer = SelectionLayer(database)
 
         self.__source_layer.set_sub_layer(self.grouping_layer)
         self.grouping_layer.set_sub_layer(self.classifier_layer)
         self.classifier_layer.set_sub_layer(self.group_layer)
         self.group_layer.set_sub_layer(self.search_layer)
         self.search_layer.set_sub_layer(self.sort_layer)
+        self.sort_layer.set_sub_layer(self.selection_layer)
 
         ##
         # if self.database.has_prop_type('category'):
@@ -814,6 +840,10 @@ class VideoProvider:
 
     def set_sort(self, sorting: Sequence[str]):
         self.sort_layer.set_sorting(sorting)
+        self.view = self.__source_layer.run()
+
+    def set_selection(self, indices: Iterable[int]):
+        self.selection_layer.set_indices(indices)
         self.view = self.__source_layer.run()
 
     def get_view_file_size(self):

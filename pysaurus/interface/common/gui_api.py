@@ -72,6 +72,9 @@ class GuiAPI:
     def set_sorting(self, sorting):
         self.provider.set_sort(sorting)
 
+    def set_selection(self, indices):
+        self.provider.set_selection(indices)
+
     def get_info_and_videos(self, page_size, page_number, fields):
         videos = []
         nb_videos = self._count_videos()
@@ -92,6 +95,7 @@ class GuiAPI:
                 videos.append(js)
         return {
             'nbVideos': nb_videos,
+            'realNbVideos': self.provider.sort_layer.count(),
             'nbPages': nb_pages,
             'validSize': str(self.provider.get_view_file_size()),
             'validLength': str(self.provider.get_view_duration()),
@@ -107,6 +111,9 @@ class GuiAPI:
             'properties': self.get_prop_types(),
             'path': self.provider.classifier_layer.get_path(),
         }
+
+    def get_view_indices(self):
+        return [video.video_id for video in self.provider.get_all_videos()]
 
     # Video features.
 
