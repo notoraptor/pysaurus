@@ -11,6 +11,7 @@ Current important folders:
 
 
 TODO:
+- Make video indices (video_id) more stable
 - Interface
   - Option to edit properties for many videos at once (keep/generalize/add/remove propertiy values from selected videos)
   - When search terms, check videos properties too

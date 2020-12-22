@@ -100,7 +100,8 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
         unsearch: "Ctrl+Shift+F",
         unsort: "Ctrl+Shift+S",
         reload: "Ctrl+R",
-        manageProperties: "Ctrl+P"
+        manageProperties: "Ctrl+P",
+        openRandomVideo: "Ctrl+O"
       };
       SPECIAL_KEYS = {
         ctrl: "ctrlKey",
@@ -159,11 +160,21 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           })), sortingIsDefault ? '' : /*#__PURE__*/React.createElement(Cross, {
             title: `reset sorting (${SHORTCUTS.unsort})`,
             action: app.resetSort
-          }))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, selection.size ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", null, "Selected"), /*#__PURE__*/React.createElement("div", null, selectedAll ? 'all' : '', " ", selection.size, " ", selectedAll ? '' : `/ ${backend.realNbVideos}`, " video", selection.size < 2 ? '' : 's'), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("button", {
+          }))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, selection.size ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", null, "Selected"), /*#__PURE__*/React.createElement("div", null, selectedAll ? 'all' : '', " ", selection.size, " ", selectedAll ? '' : `/ ${backend.realNbVideos}`, " video", selection.size < 2 ? '' : 's'), /*#__PURE__*/React.createElement("div", {
+            className: "mb-1"
+          }, /*#__PURE__*/React.createElement("button", {
             onClick: app.displayOnlySelected
-          }, backend.displayOnlySelected ? 'Display all videos' : 'Display only selected videos'))) : /*#__PURE__*/React.createElement("div", null, "No videos selected"), selectedAll ? '' : /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("button", {
+          }, backend.displayOnlySelected ? 'Display all videos' : 'Display only selected videos'))) : /*#__PURE__*/React.createElement("div", null, "No videos selected"), selectedAll ? '' : /*#__PURE__*/React.createElement("div", {
+            className: "mb-1"
+          }, /*#__PURE__*/React.createElement("button", {
             onClick: app.selectAll
-          }, "select all"))), /*#__PURE__*/React.createElement("td", null, selection.size ? /*#__PURE__*/React.createElement(Cross, {
+          }, "select all")), selection.size ? /*#__PURE__*/React.createElement("div", {
+            className: "mb-1"
+          }, /*#__PURE__*/React.createElement(MenuPack, {
+            title: "Edit property ..."
+          }, backend.properties.map(def => /*#__PURE__*/React.createElement(MenuItem, {
+            action: () => app.editPropertiesForManyVideos(def.name)
+          }, def.name)))) : ''), /*#__PURE__*/React.createElement("td", null, selection.size ? /*#__PURE__*/React.createElement(Cross, {
             title: `Deselect all`,
             action: app.deselect
           }) : ''))));
@@ -219,6 +230,7 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           this.deselect = this.deselect.bind(this);
           this.selectAll = this.selectAll.bind(this);
           this.displayOnlySelected = this.displayOnlySelected.bind(this);
+          this.editPropertiesForManyVideos = this.editPropertiesForManyVideos.bind(this);
           this.parametersToState(this.props.parameters, this.state);
           this.callbackIndex = -1;
           this.shortcuts = {
@@ -231,7 +243,8 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
             [SHORTCUTS.unsort]: this.resetSort,
             [SHORTCUTS.sort]: this.sortVideos,
             [SHORTCUTS.reload]: this.reloadDatabase,
-            [SHORTCUTS.manageProperties]: this.manageProperties
+            [SHORTCUTS.manageProperties]: this.manageProperties,
+            [SHORTCUTS.openRandomVideo]: this.openRandomVideo
           };
         }
 
@@ -266,6 +279,7 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
             shortcut: SHORTCUTS.sort,
             action: this.sortVideos
           }, "Sort ...")), notFound || !nbVideos ? '' : /*#__PURE__*/React.createElement(MenuItem, {
+            shortcut: SHORTCUTS.openRandomVideo,
             action: this.openRandomVideo
           }, "Open random video"), /*#__PURE__*/React.createElement(MenuItem, {
             shortcut: SHORTCUTS.reload,
@@ -581,6 +595,15 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
               }
             }
           }));
+        }
+
+        editPropertiesForManyVideos(propertyName) {
+          // console.log(`Edit property ${propertyName} for ${this.state.selection.size} video(s).`);
+          python_call('get_prop_values', propertyName, Array.from(this.state.selection)).then(valuesAndCounts => {
+            for (let valueAndCount of valuesAndCounts) {
+              console.log(`Value ${valueAndCount[0]} count ${valueAndCount[1]}`);
+            }
+          }).catch(backend_error);
         }
 
         searchVideos() {

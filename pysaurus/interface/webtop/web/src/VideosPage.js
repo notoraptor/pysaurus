@@ -23,6 +23,7 @@ const SHORTCUTS = {
     unsort: "Ctrl+Shift+S",
     reload: "Ctrl+R",
     manageProperties: "Ctrl+P",
+    openRandomVideo: "Ctrl+O",
 };
 const SPECIAL_KEYS = {
     ctrl: "ctrlKey",
@@ -163,19 +164,24 @@ class Filter extends React.Component {
                         {selection.size ? (
                             <div>
                                 <div>Selected</div>
-                                <div>
-                                    {selectedAll ? 'all' : ''} {selection.size} {selectedAll ? '' : `/ ${backend.realNbVideos}`} video{selection.size < 2 ? '' : 's'}
-                                </div>
-                                <div>
-                                    <button onClick={app.displayOnlySelected}>
-                                        {backend.displayOnlySelected ? 'Display all videos' : 'Display only selected videos'}
-                                    </button>
+                                <div>{selectedAll ? 'all' : ''} {selection.size} {selectedAll ? '' : `/ ${backend.realNbVideos}`} video{selection.size < 2 ? '' : 's'}</div>
+                                <div className="mb-1">
+                                    <button onClick={app.displayOnlySelected}>{backend.displayOnlySelected ? 'Display all videos' : 'Display only selected videos'}</button>
                                 </div>
                             </div>
                         ) : (
                             <div>No videos selected</div>
                         )}
-                        {selectedAll ? '' : <div><button onClick={app.selectAll}>select all</button></div>}
+                        {selectedAll ? '' : <div className="mb-1"><button onClick={app.selectAll}>select all</button></div>}
+                        {selection.size ? (
+                            <div className="mb-1">
+                                <MenuPack title="Edit property ...">
+                                    {backend.properties.map(def => (
+                                        <MenuItem action={() => app.editPropertiesForManyVideos(def.name)}>{def.name}</MenuItem>
+                                    ))}
+                                </MenuPack>
+                            </div>
+                        ) : ''}
                     </td>
                     <td>
                         {selection.size ? <Cross title={`Deselect all`} action={app.deselect} /> : ''}
@@ -235,6 +241,7 @@ export class VideosPage extends React.Component {
         this.deselect = this.deselect.bind(this);
         this.selectAll = this.selectAll.bind(this);
         this.displayOnlySelected = this.displayOnlySelected.bind(this);
+        this.editPropertiesForManyVideos = this.editPropertiesForManyVideos.bind(this);
 
         this.parametersToState(this.props.parameters, this.state);
         this.callbackIndex = -1;
@@ -249,6 +256,7 @@ export class VideosPage extends React.Component {
             [SHORTCUTS.sort]: this.sortVideos,
             [SHORTCUTS.reload]: this.reloadDatabase,
             [SHORTCUTS.manageProperties]: this.manageProperties,
+            [SHORTCUTS.openRandomVideo]: this.openRandomVideo,
         };
     }
     render() {
@@ -272,7 +280,7 @@ export class VideosPage extends React.Component {
                             <MenuItem shortcut={SHORTCUTS.search} action={this.searchVideos}>Search ...</MenuItem>
                             <MenuItem shortcut={SHORTCUTS.sort} action={this.sortVideos}>Sort ...</MenuItem>
                         </Menu>
-                        {notFound || !nbVideos ? '' : <MenuItem action={this.openRandomVideo}>Open random video</MenuItem>}
+                        {notFound || !nbVideos ? '' : <MenuItem shortcut={SHORTCUTS.openRandomVideo} action={this.openRandomVideo}>Open random video</MenuItem>}
                         <MenuItem shortcut={SHORTCUTS.reload} action={this.reloadDatabase}>Reload database ...</MenuItem>
                         <MenuItem shortcut={SHORTCUTS.manageProperties} action={this.manageProperties}>Manage properties ...</MenuItem>
                         {stringSetProperties.length ? <MenuItem action={this.fillWithKeywords}>Put keywords into a property ...</MenuItem> : ''}
@@ -551,6 +559,16 @@ export class VideosPage extends React.Component {
                 }
             }}/>
         ));
+    }
+    editPropertiesForManyVideos(propertyName) {
+        // console.log(`Edit property ${propertyName} for ${this.state.selection.size} video(s).`);
+        python_call('get_prop_values', propertyName, Array.from(this.state.selection))
+            .then(valuesAndCounts => {
+                for (let valueAndCount of valuesAndCounts) {
+                    console.log(`Value ${valueAndCount[0]} count ${valueAndCount[1]}`);
+                }
+            })
+            .catch(backend_error);
     }
     searchVideos() {
         const search_def = this.state.searchDef || {text: null, cond: null};

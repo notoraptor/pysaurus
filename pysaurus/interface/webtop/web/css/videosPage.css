@@ -119,6 +119,9 @@
 	background-color: rgb(140, 140, 140);
 	color: white;
 }
+#videos table.filter tr:hover .menu-pack {
+	color: initial;
+}
 #videos table.filter tr:hover .no-filter {
 	color: white;
 }

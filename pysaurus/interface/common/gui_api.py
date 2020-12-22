@@ -115,6 +115,24 @@ class GuiAPI:
     def get_view_indices(self):
         return [video.video_id for video in self.provider.get_all_videos()]
 
+    def get_prop_values(self, name, video_indices):
+        prop_type = self.database.get_prop_type(name)
+        value_to_count = {}
+        nb_videos = 0
+        for video in self.provider.get_all_videos():
+            if video.video_id in video_indices:
+                nb_videos += 1
+                if prop_type.multiple:
+                    values = video.properties.get(prop_type.name, [])
+                elif prop_type.name in video.properties:
+                    values = [video.properties[prop_type.name]]
+                else:
+                    values = []
+                for value in values:
+                    value_to_count[value] = value_to_count.get(value, 0) + 1
+        assert len(video_indices) == nb_videos
+        return sorted(value_to_count.items())
+
     # Video features.
 
     def open_video(self, index):
