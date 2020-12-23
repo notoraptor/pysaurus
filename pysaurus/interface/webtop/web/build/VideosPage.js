@@ -126,8 +126,8 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           const searchDef = backend.searchDef;
           const sorting = backend.sorting;
           const sortingIsDefault = sorting.length === 1 && sorting[0] === '-date';
-          const selection = backend.selection;
-          const selectedAll = backend.realNbVideos === selection.size;
+          const selectionSize = backend.selection.size;
+          const selectedAll = backend.realNbVideos === selectionSize;
           return /*#__PURE__*/React.createElement("table", {
             className: "filter"
           }, /*#__PURE__*/React.createElement("tbody", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, sources.map((source, index) => /*#__PURE__*/React.createElement("div", {
@@ -162,7 +162,7 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           })), sortingIsDefault ? '' : /*#__PURE__*/React.createElement(Cross, {
             title: `reset sorting (${SHORTCUTS.unsort})`,
             action: app.resetSort
-          }))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, selection.size ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", null, "Selected"), /*#__PURE__*/React.createElement("div", null, selectedAll ? 'all' : '', " ", selection.size, " ", selectedAll ? '' : `/ ${backend.realNbVideos}`, " video", selection.size < 2 ? '' : 's'), /*#__PURE__*/React.createElement("div", {
+          }))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, selectionSize ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", null, "Selected"), /*#__PURE__*/React.createElement("div", null, selectedAll ? 'all' : '', " ", selectionSize, " ", selectedAll ? '' : `/ ${backend.nbVideos}`, " video", selectionSize < 2 ? '' : 's'), /*#__PURE__*/React.createElement("div", {
             className: "mb-1"
           }, /*#__PURE__*/React.createElement("button", {
             onClick: app.displayOnlySelected
@@ -170,14 +170,14 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
             className: "mb-1"
           }, /*#__PURE__*/React.createElement("button", {
             onClick: app.selectAll
-          }, "select all")), selection.size ? /*#__PURE__*/React.createElement("div", {
+          }, "select all")), selectionSize ? /*#__PURE__*/React.createElement("div", {
             className: "mb-1"
           }, /*#__PURE__*/React.createElement(MenuPack, {
             title: "Edit property ..."
           }, backend.properties.map((def, index) => /*#__PURE__*/React.createElement(MenuItem, {
             key: index,
             action: () => app.editPropertiesForManyVideos(def.name)
-          }, def.name)))) : ''), /*#__PURE__*/React.createElement("td", null, selection.size ? /*#__PURE__*/React.createElement(Cross, {
+          }, def.name)))) : ''), /*#__PURE__*/React.createElement("td", null, selectionSize ? /*#__PURE__*/React.createElement(Cross, {
             title: `Deselect all`,
             action: app.deselect
           }) : ''))));
@@ -200,6 +200,7 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
             selection: new Set(),
             displayOnlySelected: false
           };
+          this.updatePage = this.updatePage.bind(this);
           this.parametersToState = this.parametersToState.bind(this);
           this.checkShortcut = this.checkShortcut.bind(this);
           this.changeGroup = this.changeGroup.bind(this);
@@ -422,7 +423,7 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
 
         parametersToState(parameters, state) {
           state.pageSize = parameters.pageSize;
-          state.pageNumber = parameters.pageNumber;
+          state.pageNumber = parameters.info.pageNumber;
           state.nbVideos = parameters.info.nbVideos;
           state.realNbVideos = parameters.info.realNbVideos;
           state.nbPages = parameters.info.nbPages;
@@ -456,52 +457,32 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
             });
           } else if (selection.has(videoID)) {
             selection.delete(videoID);
-
-            if (this.state.displayOnlySelected) {
-              const displayOnlySelected = this.state.displayOnlySelected && selection.size;
-              python_call('set_selection', Array.from(selection)).then(() => this.updatePage({
-                selection,
-                displayOnlySelected
-              })).catch(backend_error);
-            } else {
-              this.setState({
-                selection
-              });
-            }
+            const displayOnlySelected = this.state.displayOnlySelected && selection.size;
+            const state = {
+              selection,
+              displayOnlySelected
+            };
+            if (this.state.displayOnlySelected) this.updatePage(state);else this.setState(state);
           }
         }
 
         deselect() {
-          if (this.state.displayOnlySelected) {
-            python_call('set_selection', []).then(() => this.updatePage({
-              selection: new Set(),
-              displayOnlySelected: false
-            })).catch(backend_error);
-          } else {
-            this.setState({
-              selection: new Set()
-            });
-          }
+          this.setState({
+            selection: new Set(),
+            displayOnlySelected: false
+          });
         }
 
         selectAll() {
-          if (this.state.displayOnlySelected) {
-            python_call('get_view_indices').then(indices => python_call('set_selection', indices).then(() => indices)).then(indices => this.updatePage({
-              selection: new Set(indices)
-            })).catch(backend_error);
-          } else {
-            python_call('get_view_indices').then(indices => this.setState({
-              selection: new Set(indices)
-            })).catch(backend_error);
-          }
+          python_call('get_view_indices').then(indices => this.setState({
+            selection: new Set(indices)
+          })).catch(backend_error);
         }
 
         displayOnlySelected() {
-          const displayOnlySelected = !this.state.displayOnlySelected;
-          const selection = displayOnlySelected && this.state.nbVideos !== this.state.selection.size ? Array.from(this.state.selection) : [];
-          python_call('set_selection', selection).then(() => this.updatePage({
-            displayOnlySelected
-          })).catch(backend_error);
+          this.updatePage({
+            displayOnlySelected: !this.state.displayOnlySelected
+          });
         }
 
         scrollTop() {
@@ -513,10 +494,11 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           // todo what if page size is out of page range ?
           const pageSize = state.pageSize !== undefined ? state.pageSize : this.state.pageSize;
           const pageNumber = state.pageNumber !== undefined ? state.pageNumber : this.state.pageNumber;
-          python_call('get_info_and_videos', pageSize, pageNumber, FIELDS).then(info => {
+          const displayOnlySelected = state.displayOnlySelected !== undefined ? state.displayOnlySelected : this.state.displayOnlySelected;
+          const selection = displayOnlySelected ? Array.from(state.selection !== undefined ? state.selection : this.state.selection) : [];
+          python_call('get_info_and_videos', pageSize, pageNumber, FIELDS, selection).then(info => {
             this.parametersToState({
               pageSize,
-              pageNumber,
               info
             }, state);
             if (top) this.setState(state, this.scrollTop);else this.setState(state);

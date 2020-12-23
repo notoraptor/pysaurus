@@ -72,13 +72,14 @@ class GuiAPI:
     def set_sorting(self, sorting):
         self.provider.set_sort(sorting)
 
-    def set_selection(self, indices):
-        self.provider.set_selection(indices)
-
-    def get_info_and_videos(self, page_size, page_number, fields):
+    def get_info_and_videos(self, page_size, page_number, fields, video_indices=()):
+        view = self.provider.get_view()
+        if video_indices:
+            video_indices = set(video_indices)
+            view = [video for video in view if video.video_id in video_indices]
         videos = []
-        nb_videos = self._count_videos()
-        nb_pages = self._count_pages(page_size)
+        nb_videos = len(view)
+        nb_pages = self._count_pages(nb_videos, page_size)
         if nb_videos:
             if page_number < 0:
                 page_number = 0
@@ -87,7 +88,7 @@ class GuiAPI:
             start = page_size * page_number
             end = min(start + page_size, nb_videos)
             for index in range(start, end):
-                video = self.provider.get_video(index)
+                video = view[index]
                 js = {field: self._to_json_value(getattr(video, field)) for field in fields}
                 js['exists'] = video.exists()
                 js['hasThumbnail'] = video.thumbnail_path.exists()
@@ -95,10 +96,10 @@ class GuiAPI:
                 videos.append(js)
         return {
             'nbVideos': nb_videos,
-            'realNbVideos': self.provider.sort_layer.count(),
+            'realNbVideos': self.provider.count(),
             'nbPages': nb_pages,
-            'validSize': str(self.provider.get_view_file_size()),
-            'validLength': str(self.provider.get_view_duration()),
+            'validSize': str(self.provider.get_view_file_size(view)),
+            'validLength': str(self.provider.get_view_duration(view)),
             'nbGroups': self.provider.count_groups(),
             'notFound': self.provider.all_not_found(),
             'sources': self.provider.get_sources(),
@@ -113,7 +114,7 @@ class GuiAPI:
         }
 
     def get_view_indices(self):
-        return [video.video_id for video in self.provider.sort_layer.videos()]
+        return self.provider.get_view_indices()
 
     def get_prop_values(self, name, video_indices):
         prop_type = self.database.get_prop_type(name)
@@ -393,9 +394,7 @@ class GuiAPI:
     def _count_videos(self):
         return self.provider.count()
 
-    def _count_pages(self, page_size):
-        assert page_size > 0
-        count = self._count_videos()
+    def _count_pages(self, count, page_size):
         return (count // page_size) + bool(count % page_size)
 
     def _monitor_notifications(self):
