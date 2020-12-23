@@ -25,54 +25,53 @@ export class FormPropertyMultiVideo extends React.Component {
         this.onAddNewValue = this.onAddNewValue.bind(this);
         this.remove = this.remove.bind(this);
         this.add = this.add.bind(this);
-        this.unRemove = this.unAdd.bind(this);
+        this.unRemove = this.unRemove.bind(this);
+        this.unAdd = this.unAdd.bind(this);
         this.onClose = this.onClose.bind(this);
     }
     render() {
         return (
             <Dialog yes="edit" no="cancel" onClose={this.onClose}>
-                <form className="form-property-multi-video">
-                    <div className="titles horizontal">
+                <div className="form-property-multi-video">
+                    <div className="bar titles horizontal">
                         <div>To remove</div>
                         <div>Current</div>
                         <div>To add</div>
                     </div>
-                    <div className="panels horizontal">
+                    <div className="bar panels horizontal">
                         <div className="remove">{this.renderRemove()}</div>
                         <div className="current">{this.renderCurrent()}</div>
                         <div className="add">{this.renderAdd()}</div>
                     </div>
                     {this.renderFormAdd()}
-                </form>
+                </div>
             </Dialog>
         )
     }
     renderRemove() {
         return this.state.remove.map((value, index) => (
-            <div key={index} className="horizontal">
-                <div>{value}</div>
+            <div key={index} className="entry horizontal">
+                <div className="value">{value}</div>
                 <div><button onClick={() => this.unRemove(value)}>{Utils.CHARACTER_SMART_ARROW_RIGHT}</button></div>
             </div>
         ));
     }
     renderCurrent() {
         return this.state.current.map((value, index) => (
-            <div key={index} className="horizontal">
+            <div key={index} className="entry horizontal">
                 <button onClick={() => this.remove(value)}>{Utils.CHARACTER_SMART_ARROW_LEFT}</button>
-                <div>{value} <em><strong>({this.state.mapping.get(value)})</strong></em></div>
+                <div className="value">{value} <em><strong>({this.state.mapping.get(value)})</strong></em></div>
                 <button onClick={() => this.add(value)}>{Utils.CHARACTER_SMART_ARROW_RIGHT}</button>
             </div>
         ))
     }
     renderAdd() {
         return this.state.add.map((value, index) => (
-            <div key={index} className="horizontal">
-                <div>
-                    <button onClick={() => this.unAdd(value)}>
-                        {this.state.mapping.has(value) ? Utils.CHARACTER_SMART_ARROW_LEFT : '-'}
-                    </button>
-                </div>
-                <div>{value}</div>
+            <div key={index} className="entry horizontal">
+                <button onClick={() => this.unAdd(value)}>
+                    {this.state.mapping.has(value) ? Utils.CHARACTER_SMART_ARROW_LEFT : '-'}
+                </button>
+                <div className="value">{value}</div>
             </div>
         ));
     }
@@ -97,9 +96,13 @@ export class FormPropertyMultiVideo extends React.Component {
             input = <input type={def.type === "int" ? "number" : "text"} onChange={this.onEdit} onKeyDown={this.onEditKeyDown}/>;
         }
         return (
-            <div className="horizontal">
-                <div>{input}</div>
-                <div><button onClick={this.onAddNewValue}>add</button></div>
+            <div className="bar new horizontal">
+                <div/>
+                <div/>
+                <div className="horizontal">
+                    <div>{input}</div>
+                    <button className="add-new-value" onClick={this.onAddNewValue}>add</button>
+                </div>
             </div>
         );
     }

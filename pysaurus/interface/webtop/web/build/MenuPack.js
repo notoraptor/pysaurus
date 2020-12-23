@@ -23,8 +23,7 @@ System.register([], function (_export, _context) {
           return /*#__PURE__*/React.createElement("div", {
             className: "menu-pack"
           }, /*#__PURE__*/React.createElement("div", {
-            className: "title",
-            onClick: this.showMenu
+            className: "title"
           }, /*#__PURE__*/React.createElement("div", {
             className: "text"
           }, this.props.title)), /*#__PURE__*/React.createElement("div", {

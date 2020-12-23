@@ -120,7 +120,8 @@ class GuiAPI:
         prop_type = self.database.get_prop_type(name)
         value_to_count = {}
         nb_videos = 0
-        for video in self.provider.get_all_videos():
+        video_indices = set(video_indices)
+        for video in self.provider.get_view():
             if video.video_id in video_indices:
                 nb_videos += 1
                 if prop_type.multiple:
@@ -138,13 +139,14 @@ class GuiAPI:
         prop_type = self.database.get_prop_type(name)
         nb_videos = 0
         if prop_type.multiple:
-            values_to_add = [prop_type(values_to_add)]
-            values_to_remove = [prop_type(values_to_remove)]
+            values_to_add = prop_type(values_to_add)
+            values_to_remove = prop_type(values_to_remove)
         else:
             assert len(values_to_add) < 2
             values_to_add = [prop_type(value) for value in values_to_add]
             values_to_remove = {prop_type(value) for value in values_to_remove}
-        for video in self.provider.get_all_videos():
+        video_indices = set(video_indices)
+        for video in self.provider.get_view():
             if video.video_id in video_indices:
                 nb_videos += 1
                 if prop_type.multiple:
@@ -163,6 +165,7 @@ class GuiAPI:
                     if values_to_add:
                         video.properties[prop_type.name] = values_to_add[0]
         assert len(video_indices) == nb_videos
+        self.database.save()
 
     # Video features.
 

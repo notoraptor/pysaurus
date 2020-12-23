@@ -167,19 +167,20 @@ class Database:
         self.__set_videos_thumbs_flags()
 
     def __ensure_identifiers(self):
+        id_to_video = {}  # type: Dict[int, Union[VideoState, Video]]
         without_identifiers = []
         for source in (self.__videos, self.__unreadable):
             for video_state in source.values():
-                if (not isinstance(video_state.video_id, int)
-                        or video_state.video_id in self.__id_to_video):
+                if not isinstance(video_state.video_id, int) or video_state.video_id in id_to_video:
                     without_identifiers.append(video_state)
                 else:
-                    self.__id_to_video[video_state.video_id] = video_state
-        next_id = (max(self.__id_to_video) + 1) if self.__id_to_video else 0
+                    id_to_video[video_state.video_id] = video_state
+        next_id = (max(id_to_video) + 1) if id_to_video else 0
         for video_state in without_identifiers:
             video_state.video_id = next_id
             next_id += 1
-            self.__id_to_video[video_state.video_id] = video_state
+            id_to_video[video_state.video_id] = video_state
+        self.__id_to_video = id_to_video
         return len(without_identifiers)
 
     def __set_videos_states_flags(self):

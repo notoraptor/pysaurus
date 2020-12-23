@@ -505,7 +505,6 @@ export class VideosPage extends React.Component {
      * @param event {KeyboardEvent}
      */
     checkShortcut(event) {
-        console.log(event);
         for (let shortcut of Object.values(SHORTCUTS)) {
             if (shortcutPressed(event, shortcut)) {
                 setTimeout(() => this.shortcuts[shortcut](), 0);
@@ -557,7 +556,7 @@ export class VideosPage extends React.Component {
                             onClose();
                             if (edition) {
                                 python_call('edit_property_for_videos', propertyName, videos, edition.add, edition.remove)
-                                    .then(() => this.updateStatus(`Edited property "${propertyName}" for ${this.state.selection.size} video${this.state.selection.size < 2 ? '' : 's'}`))
+                                    .then(() => this.updateStatus(`Edited property "${propertyName}" for ${this.state.selection.size} video${this.state.selection.size < 2 ? '' : 's'}`, true))
                                     .catch(backend_error);
                             }
                         }}/>

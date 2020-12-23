@@ -6,7 +6,7 @@ export class MenuPack extends React.Component {
     render() {
         return (
             <div className="menu-pack">
-                <div className="title" onClick={this.showMenu}>
+                <div className="title">
                     <div className="text">
                         {this.props.title}
                     </div>

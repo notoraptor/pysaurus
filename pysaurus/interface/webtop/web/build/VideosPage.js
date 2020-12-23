@@ -530,8 +530,6 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
 
 
         checkShortcut(event) {
-          console.log(event);
-
           for (let shortcut of Object.values(SHORTCUTS)) {
             if (shortcutPressed(event, shortcut)) {
               setTimeout(() => this.shortcuts[shortcut](), 0);
@@ -592,7 +590,7 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
               onClose();
 
               if (edition) {
-                python_call('edit_property_for_videos', propertyName, videos, edition.add, edition.remove).then(() => this.updateStatus(`Edited property "${propertyName}" for ${this.state.selection.size} video${this.state.selection.size < 2 ? '' : 's'}`)).catch(backend_error);
+                python_call('edit_property_for_videos', propertyName, videos, edition.add, edition.remove).then(() => this.updateStatus(`Edited property "${propertyName}" for ${this.state.selection.size} video${this.state.selection.size < 2 ? '' : 's'}`, true)).catch(backend_error);
               }
             }
           }))).catch(backend_error);
