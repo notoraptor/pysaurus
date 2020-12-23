@@ -1,7 +1,7 @@
-System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Pagination.js", "./Video.js", "./FormSourceVideo.js", "./FormGroup.js", "./FormSearch.js", "./FormSort.js", "./GroupView.js", "./FormEditPropertyValue.js", "./FormFillKeywords.js"], function (_export, _context) {
+System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Pagination.js", "./Video.js", "./FormSourceVideo.js", "./FormGroup.js", "./FormSearch.js", "./FormSort.js", "./GroupView.js", "./FormEditPropertyValue.js", "./FormFillKeywords.js", "./FormPropertyMultiVideo.js"], function (_export, _context) {
   "use strict";
 
-  var SettingIcon, Cross, PAGE_SIZES, FIELDS, SEARCH_TYPE_TITLE, MenuPack, MenuItem, Menu, MenuItemCheck, Pagination, Video, FormSourceVideo, FormGroup, FormSearch, FormSort, GroupView, FormEditPropertyValue, FormFillKeywords, Filter, VideosPage, INITIAL_SOURCES, SHORTCUTS, SPECIAL_KEYS;
+  var SettingIcon, Cross, PAGE_SIZES, FIELDS, SEARCH_TYPE_TITLE, MenuPack, MenuItem, Menu, MenuItemCheck, Pagination, Video, FormSourceVideo, FormGroup, FormSearch, FormSort, GroupView, FormEditPropertyValue, FormFillKeywords, FormPropertyMultiVideo, Filter, VideosPage, INITIAL_SOURCES, SHORTCUTS, SPECIAL_KEYS;
 
   function compareSources(s1, s2) {
     if (s1.length !== s2.length) return false;
@@ -87,6 +87,8 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
       FormEditPropertyValue = _FormEditPropertyValueJs.FormEditPropertyValue;
     }, function (_FormFillKeywordsJs) {
       FormFillKeywords = _FormFillKeywordsJs.FormFillKeywords;
+    }, function (_FormPropertyMultiVideoJs) {
+      FormPropertyMultiVideo = _FormPropertyMultiVideoJs.FormPropertyMultiVideo;
     }],
     execute: function () {
       INITIAL_SOURCES = [];
@@ -172,7 +174,8 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
             className: "mb-1"
           }, /*#__PURE__*/React.createElement(MenuPack, {
             title: "Edit property ..."
-          }, backend.properties.map(def => /*#__PURE__*/React.createElement(MenuItem, {
+          }, backend.properties.map((def, index) => /*#__PURE__*/React.createElement(MenuItem, {
+            key: index,
             action: () => app.editPropertiesForManyVideos(def.name)
           }, def.name)))) : ''), /*#__PURE__*/React.createElement("td", null, selection.size ? /*#__PURE__*/React.createElement(Cross, {
             title: `Deselect all`,
@@ -598,12 +601,19 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
         }
 
         editPropertiesForManyVideos(propertyName) {
-          // console.log(`Edit property ${propertyName} for ${this.state.selection.size} video(s).`);
-          python_call('get_prop_values', propertyName, Array.from(this.state.selection)).then(valuesAndCounts => {
-            for (let valueAndCount of valuesAndCounts) {
-              console.log(`Value ${valueAndCount[0]} count ${valueAndCount[1]}`);
+          const videos = Array.from(this.state.selection);
+          python_call('get_prop_values', propertyName, videos).then(valuesAndCounts => this.props.app.loadDialog(`Edit property "${propertyName}" for ${this.state.selection.size} video${this.state.selection.size < 2 ? '' : 's'}`, onClose => /*#__PURE__*/React.createElement(FormPropertyMultiVideo, {
+            nbVideos: this.state.selection.size,
+            definition: this.state.definitions[propertyName],
+            values: valuesAndCounts,
+            onClose: edition => {
+              onClose();
+
+              if (edition) {
+                python_call('edit_property_for_videos', propertyName, videos, edition.add, edition.remove).then(() => this.updateStatus(`Edited property "${propertyName}" for ${this.state.selection.size} video${this.state.selection.size < 2 ? '' : 's'}`)).catch(backend_error);
+              }
             }
-          }).catch(backend_error);
+          }))).catch(backend_error);
         }
 
         searchVideos() {

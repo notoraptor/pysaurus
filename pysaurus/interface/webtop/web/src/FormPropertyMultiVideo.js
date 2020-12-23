@@ -1,0 +1,196 @@
+import {Dialog} from "./Dialog.js";
+
+export class FormPropertyMultiVideo extends React.Component {
+    constructor(props) {
+        // nbVideos
+        // definition: property definition
+        // values: [(value, count)]
+        // onClose
+        super(props);
+        const mapping = new Map();
+        const current = [];
+        for (let valueAndCount of this.props.values) {
+            mapping.set(valueAndCount[0], valueAndCount[1]);
+            current.push(valueAndCount[0]);
+        }
+        this.state = {
+            mapping: mapping,
+            current: current,
+            add: [],
+            remove: [],
+            value: null
+        };
+        this.onEdit = this.onEdit.bind(this);
+        this.onEditKeyDown = this.onEditKeyDown.bind(this);
+        this.onAddNewValue = this.onAddNewValue.bind(this);
+        this.remove = this.remove.bind(this);
+        this.add = this.add.bind(this);
+        this.unRemove = this.unAdd.bind(this);
+        this.onClose = this.onClose.bind(this);
+    }
+    render() {
+        return (
+            <Dialog yes="edit" no="cancel" onClose={this.onClose}>
+                <form className="form-property-multi-video">
+                    <div className="titles horizontal">
+                        <div>To remove</div>
+                        <div>Current</div>
+                        <div>To add</div>
+                    </div>
+                    <div className="panels horizontal">
+                        <div className="remove">{this.renderRemove()}</div>
+                        <div className="current">{this.renderCurrent()}</div>
+                        <div className="add">{this.renderAdd()}</div>
+                    </div>
+                    {this.renderFormAdd()}
+                </form>
+            </Dialog>
+        )
+    }
+    renderRemove() {
+        return this.state.remove.map((value, index) => (
+            <div key={index} className="horizontal">
+                <div>{value}</div>
+                <div><button onClick={() => this.unRemove(value)}>{Utils.CHARACTER_SMART_ARROW_RIGHT}</button></div>
+            </div>
+        ));
+    }
+    renderCurrent() {
+        return this.state.current.map((value, index) => (
+            <div key={index} className="horizontal">
+                <button onClick={() => this.remove(value)}>{Utils.CHARACTER_SMART_ARROW_LEFT}</button>
+                <div>{value} <em><strong>({this.state.mapping.get(value)})</strong></em></div>
+                <button onClick={() => this.add(value)}>{Utils.CHARACTER_SMART_ARROW_RIGHT}</button>
+            </div>
+        ))
+    }
+    renderAdd() {
+        return this.state.add.map((value, index) => (
+            <div key={index} className="horizontal">
+                <div>
+                    <button onClick={() => this.unAdd(value)}>
+                        {this.state.mapping.has(value) ? Utils.CHARACTER_SMART_ARROW_LEFT : '-'}
+                    </button>
+                </div>
+                <div>{value}</div>
+            </div>
+        ));
+    }
+    renderFormAdd() {
+        const def = this.props.definition;
+        let input;
+        if (def.enumeration) {
+            input = (
+                <select onChange={this.onEdit}>
+                    {def.enumeration.map((value, valueIndex) =>
+                        <option key={valueIndex} value={value}>{value}</option>)}
+                </select>
+            );
+        } else if (def.type === "bool") {
+            input = (
+                <select onChange={this.onEdit}>
+                    <option value="false">false</option>
+                    <option value="true">true</option>
+                </select>
+            );
+        } else {
+            input = <input type={def.type === "int" ? "number" : "text"} onChange={this.onEdit} onKeyDown={this.onEditKeyDown}/>;
+        }
+        return (
+            <div className="horizontal">
+                <div>{input}</div>
+                <div><button onClick={this.onAddNewValue}>add</button></div>
+            </div>
+        );
+    }
+    onEdit(event) {
+        const def = this.props.definition;
+        try {
+            this.setState({value: parsePropValString(def.type, def.enumeration, event.target.value)});
+        } catch (exception) {
+            window.alert(exception.toString());
+        }
+    }
+    onEditKeyDown(event) {
+        if (event.key === "Enter") {
+            this.onAddNewValue();
+        }
+    }
+    onAddNewValue() {
+        if (this.state.value !== null) {
+            if (this.props.definition.multiple) {
+                const add = new Set(this.state.add);
+                add.add(this.state.value);
+                const output = Array.from(add);
+                output.sort();
+                this.setState({add: output});
+            } else {
+                const add = [this.state.value];
+                const current = [];
+                const remove = Array.from(this.state.mapping);
+                remove.sort();
+                this.setState({remove, current, add});
+            }
+        }
+    }
+    remove(value) {
+        const current = new Set(this.state.current);
+        const remove = new Set(this.state.remove);
+        current.delete(value);
+        remove.add(value);
+        const newCurrent = Array.from(current);
+        const newRemove = Array.from(remove);
+        newCurrent.sort();
+        newRemove.sort();
+        this.setState({current: newCurrent, remove: newRemove});
+    }
+    add(value) {
+        if (this.props.definition.multiple) {
+            const current = new Set(this.state.current);
+            const add = new Set(this.state.add);
+            current.delete(value);
+            add.add(value);
+            const newCurrent = Array.from(current);
+            const newAdd = Array.from(add);
+            newCurrent.sort();
+            newAdd.sort();
+            this.setState({current: newCurrent, add: newAdd});
+        } else {
+            const add = [value];
+            const current = [];
+            const remove = new Set(this.state.mapping);
+            remove.delete(value);
+            remove.sort();
+            this.setState({remove, current, add});
+        }
+    }
+    unRemove(value) {
+        const current = new Set(this.state.current);
+        const remove = new Set(this.state.remove);
+        remove.delete(value);
+        current.add(value);
+        const newCurrent = Array.from(current);
+        const newRemove = Array.from(remove);
+        newCurrent.sort();
+        newRemove.sort();
+        this.setState({current: newCurrent, remove: newRemove});
+    }
+    unAdd(value) {
+        const add = new Set(this.state.add);
+        add.delete(value);
+        const newAdd = Array.from(add);
+        newAdd.sort();
+        if (this.state.mapping.has(value)) {
+            const current = new Set(this.state.current);
+            current.add(value);
+            const newCurrent = Array.from(current);
+            newCurrent.sort();
+            this.setState({current: newCurrent, add: newAdd});
+        } else {
+            this.setState({add: newAdd});
+        }
+    }
+    onClose(yes) {
+        this.props.onClose(yes ? {add: this.state.add, remove: this.state.remove} : null);
+    }
+}

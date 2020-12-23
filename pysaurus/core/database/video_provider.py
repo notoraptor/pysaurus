@@ -753,6 +753,10 @@ class SortLayer(Layer):
     def count(self):
         return len(self._cache)
 
+    def videos(self):
+        return list(self._cache)
+
+
 class SelectionLayer(Layer):
     __slots__ = ()
     __props__ = ('indices',)

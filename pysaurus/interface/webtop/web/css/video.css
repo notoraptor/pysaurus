@@ -90,6 +90,9 @@
 	display: none;
 }
 
+.video .info .name .options label {
+	word-break: break-word;
+}
 .video .info .filename {
 	word-break: break-word;
 }

@@ -113,7 +113,7 @@ class GuiAPI:
         }
 
     def get_view_indices(self):
-        return [video.video_id for video in self.provider.get_all_videos()]
+        return [video.video_id for video in self.provider.sort_layer.videos()]
 
     def get_prop_values(self, name, video_indices):
         prop_type = self.database.get_prop_type(name)
@@ -132,6 +132,36 @@ class GuiAPI:
                     value_to_count[value] = value_to_count.get(value, 0) + 1
         assert len(video_indices) == nb_videos
         return sorted(value_to_count.items())
+
+    def edit_property_for_videos(self, name, video_indices, values_to_add, values_to_remove):
+        prop_type = self.database.get_prop_type(name)
+        nb_videos = 0
+        if prop_type.multiple:
+            values_to_add = [prop_type(values_to_add)]
+            values_to_remove = [prop_type(values_to_remove)]
+        else:
+            assert len(values_to_add) < 2
+            values_to_add = [prop_type(value) for value in values_to_add]
+            values_to_remove = {prop_type(value) for value in values_to_remove}
+        for video in self.provider.get_all_videos():
+            if video.video_id in video_indices:
+                nb_videos += 1
+                if prop_type.multiple:
+                    values = set(video.properties.get(prop_type.name, ()))
+                    values.difference_update(values_to_remove)
+                    values.update(values_to_add)
+                    if values:
+                        video.properties[prop_type.name] = prop_type(values)
+                    elif prop_type.name in video.properties:
+                        del video.properties[prop_type.name]
+                else:
+                    if (values_to_remove
+                            and prop_type.name in video.properties
+                            and video.properties[prop_type.name] in values_to_remove):
+                        del video.properties[prop_type.name]
+                    if values_to_add:
+                        video.properties[prop_type.name] = values_to_add[0]
+        assert len(video_indices) == nb_videos
 
     # Video features.
 

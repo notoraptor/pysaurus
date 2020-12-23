@@ -22,8 +22,8 @@ from pysaurus.core.database import path_utils
 
 SPECIAL_PROPERTY_ERROR = '<error>'
 SPECIAL_PROPERTY_DEFINITIONS = {
-    # name : (name, definition, is_multiple)
-    SPECIAL_PROPERTY_ERROR: (SPECIAL_PROPERTY_ERROR, '', True)
+    # name : (definition, is_multiple)
+    SPECIAL_PROPERTY_ERROR: ('', True)
 }
 
 
@@ -68,13 +68,14 @@ class Database:
         self.__notifier.set_log_path(self.__log_path.path)
         with Profiler('Load database'):
             self.__load(folders, clear_old_folders)
+        # Load VideoInterval object to compute videos quality.
         self.video_interval = VideoInterval(t[0] for t in Video.QUALITY_FIELDS)
         self.video_interval.update(self.readable)
         # Set special properties.
         to_save = False
         for prop_name, prop_def in SPECIAL_PROPERTY_DEFINITIONS.items():
             already_defined = False
-            expected = PropType(*prop_def)
+            expected = PropType(prop_name, *prop_def)
             if self.has_prop_type(prop_name):
                 prop_type = self.get_prop_type(prop_name)
                 if prop_type == expected:
@@ -157,7 +158,8 @@ class Database:
                 self.__discarded[video_state.filename] = video_state
 
         self.__set_videos_flags()
-        self.__ensure_identifiers()
+        if self.__ensure_identifiers():
+            self.save(ensure_identifiers=False)
         self.__notifier.notify(notifications.DatabaseLoaded(self))
 
     def __set_videos_flags(self):
@@ -178,6 +180,7 @@ class Database:
             video_state.video_id = next_id
             next_id += 1
             self.__id_to_video[video_state.video_id] = video_state
+        return len(without_identifiers)
 
     def __set_videos_states_flags(self):
         file_paths = self.__check_videos_on_disk()
@@ -537,8 +540,9 @@ class Database:
             self.save()
         return video.filename
 
-    def save(self):
-        self.__ensure_identifiers()
+    def save(self, ensure_identifiers=True):
+        if ensure_identifiers:
+            self.__ensure_identifiers()
         self.video_interval.update(self.readable)
         # Save database.
         json_output = {'date': self.__date.time,

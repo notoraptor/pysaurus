@@ -70,6 +70,8 @@ const Utils = {
     CHARACTER_SETTINGS: "\u2630",
     CHARACTER_ARROW_DOWN: "\u25BC",
     CHARACTER_ARROW_UP: "\u25B2",
+    CHARACTER_SMART_ARROW_LEFT: "\u2B9C",
+    CHARACTER_SMART_ARROW_RIGHT: "\u2B9E",
     sentence: function(str) {
         if (str.length === 0)
             return str;

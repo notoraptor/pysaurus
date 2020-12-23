@@ -10,6 +10,7 @@ import {FormSort} from "./FormSort.js";
 import {GroupView} from "./GroupView.js";
 import {FormEditPropertyValue} from "./FormEditPropertyValue.js";
 import {FormFillKeywords} from "./FormFillKeywords.js";
+import {FormPropertyMultiVideo} from "./FormPropertyMultiVideo.js";
 
 const INITIAL_SOURCES = [];
 const SHORTCUTS = {
@@ -176,8 +177,8 @@ class Filter extends React.Component {
                         {selection.size ? (
                             <div className="mb-1">
                                 <MenuPack title="Edit property ...">
-                                    {backend.properties.map(def => (
-                                        <MenuItem action={() => app.editPropertiesForManyVideos(def.name)}>{def.name}</MenuItem>
+                                    {backend.properties.map((def, index) => (
+                                        <MenuItem key={index} action={() => app.editPropertiesForManyVideos(def.name)}>{def.name}</MenuItem>
                                     ))}
                                 </MenuPack>
                             </div>
@@ -561,13 +562,25 @@ export class VideosPage extends React.Component {
         ));
     }
     editPropertiesForManyVideos(propertyName) {
-        // console.log(`Edit property ${propertyName} for ${this.state.selection.size} video(s).`);
-        python_call('get_prop_values', propertyName, Array.from(this.state.selection))
-            .then(valuesAndCounts => {
-                for (let valueAndCount of valuesAndCounts) {
-                    console.log(`Value ${valueAndCount[0]} count ${valueAndCount[1]}`);
-                }
-            })
+        const videos = Array.from(this.state.selection);
+        python_call('get_prop_values', propertyName, videos)
+            .then(valuesAndCounts => this.props.app.loadDialog(
+                    `Edit property "${propertyName}" for ${this.state.selection.size} video${this.state.selection.size < 2 ? '' : 's'}`,
+                    onClose => (
+                        <FormPropertyMultiVideo nbVideos={this.state.selection.size}
+                                                definition={this.state.definitions[propertyName]}
+                                                values={valuesAndCounts}
+                                                onClose={edition => {
+                            onClose();
+                            if (edition) {
+                                python_call('edit_property_for_videos', propertyName, videos, edition.add, edition.remove)
+                                    .then(() => this.updateStatus(`Edited property "${propertyName}" for ${this.state.selection.size} video${this.state.selection.size < 2 ? '' : 's'}`))
+                                    .catch(backend_error);
+                            }
+                        }}/>
+                    )
+                )
+            )
             .catch(backend_error);
     }
     searchVideos() {
