@@ -25,5 +25,7 @@ TODO:
   - Suggest existing values on property edition.
   - Filter width may exceed allocated width, e.g. on unbreakable search term.
   - Add new pages when program opens to choose/edit/delete/create many databases.
+  - Update group panel (bottom left) on property edition if group panel displays edited property.
+  - Auto-scroll down database loading panel.
 - Add possibility to change language. Minimum languages expected: english, french.
 - Memory leak in python code when running gui ?

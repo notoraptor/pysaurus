@@ -72,21 +72,7 @@ class Database:
         self.video_interval = VideoInterval(t[0] for t in Video.QUALITY_FIELDS)
         self.video_interval.update(self.readable)
         # Set special properties.
-        to_save = False
-        for prop_name, prop_def in SPECIAL_PROPERTY_DEFINITIONS.items():
-            already_defined = False
-            expected = PropType(prop_name, *prop_def)
-            if self.has_prop_type(prop_name):
-                prop_type = self.get_prop_type(prop_name)
-                if prop_type == expected:
-                    already_defined = True
-                else:
-                    self.remove_prop_type(prop_name)
-            if not already_defined:
-                self.add_prop_type(expected)
-                to_save = True
-        if to_save:
-            self.save()
+        self.__set_special_properties()
 
     # Properties.
 
@@ -232,12 +218,32 @@ class Database:
                 remaining_thumb_videos.append(video.filename.path)
         self.__notifier.notify(notifications.MissingThumbnails(remaining_thumb_videos))
 
+    def __set_special_properties(self):
+        to_save = False
+        for prop_name, prop_def in SPECIAL_PROPERTY_DEFINITIONS.items():
+            already_defined = False
+            expected = PropType(prop_name, *prop_def)
+            if self.has_prop_type(prop_name):
+                prop_type = self.get_prop_type(prop_name)
+                if prop_type == expected:
+                    already_defined = True
+                else:
+                    self.remove_prop_type(prop_name)
+            if not already_defined:
+                self.add_prop_type(expected)
+                to_save = True
+        if to_save:
+            self.save()
+
     def _set_video_property_error(self, video: Video):
         video.properties[SPECIAL_PROPERTY_ERROR] = sorted(video.errors)
 
     # Public methods.
 
     def update(self):
+
+        self.__set_special_properties()
+
         cpu_count = os.cpu_count()
         current_date = DateModified.now()
         all_file_names = self.get_new_video_paths()
