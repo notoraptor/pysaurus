@@ -1,7 +1,7 @@
-System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Pagination.js", "./Video.js", "./FormSourceVideo.js", "./FormGroup.js", "./FormSearch.js", "./FormSort.js", "./GroupView.js", "./FormEditPropertyValue.js", "./FormFillKeywords.js", "./FormPropertyMultiVideo.js"], function (_export, _context) {
+System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Pagination.js", "./Video.js", "./FormSourceVideo.js", "./FormGroup.js", "./FormSearch.js", "./FormSort.js", "./GroupView.js", "./FormEditPropertyValue.js", "./FormFillKeywords.js", "./FormPropertyMultiVideo.js", "./Stackable.js"], function (_export, _context) {
   "use strict";
 
-  var SettingIcon, Cross, PAGE_SIZES, FIELDS, SEARCH_TYPE_TITLE, MenuPack, MenuItem, Menu, MenuItemCheck, Pagination, Video, FormSourceVideo, FormGroup, FormSearch, FormSort, GroupView, FormEditPropertyValue, FormFillKeywords, FormPropertyMultiVideo, Filter, VideosPage, INITIAL_SOURCES, SHORTCUTS, SPECIAL_KEYS;
+  var SettingIcon, Cross, PAGE_SIZES, FIELDS, SEARCH_TYPE_TITLE, MenuPack, MenuItem, Menu, MenuItemCheck, Pagination, Video, FormSourceVideo, FormGroup, FormSearch, FormSort, GroupView, FormEditPropertyValue, FormFillKeywords, FormPropertyMultiVideo, Stackable, Filter, VideosPage, INITIAL_SOURCES, SHORTCUTS, SPECIAL_KEYS;
 
   function compareSources(s1, s2) {
     if (s1.length !== s2.length) return false;
@@ -89,6 +89,8 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
       FormFillKeywords = _FormFillKeywordsJs.FormFillKeywords;
     }, function (_FormPropertyMultiVideoJs) {
       FormPropertyMultiVideo = _FormPropertyMultiVideoJs.FormPropertyMultiVideo;
+    }, function (_StackableJs) {
+      Stackable = _StackableJs.Stackable;
     }],
     execute: function () {
       INITIAL_SOURCES = [];
@@ -193,48 +195,43 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           this.state = {
             status: 'Loaded.',
             confirmDeletion: true,
-            stackFilter: false,
-            stackGroup: false,
-            stackPath: false,
             path: [],
             selection: new Set(),
             displayOnlySelected: false
           };
-          this.updatePage = this.updatePage.bind(this);
-          this.parametersToState = this.parametersToState.bind(this);
-          this.checkShortcut = this.checkShortcut.bind(this);
           this.changeGroup = this.changeGroup.bind(this);
           this.changePage = this.changePage.bind(this);
+          this.checkShortcut = this.checkShortcut.bind(this);
+          this.classifierConcatenate = this.classifierConcatenate.bind(this);
+          this.classifierSelectGroup = this.classifierSelectGroup.bind(this);
+          this.classifierUnstack = this.classifierUnstack.bind(this);
           this.confirmDeletionForNotFound = this.confirmDeletionForNotFound.bind(this);
+          this.deselect = this.deselect.bind(this);
+          this.displayOnlySelected = this.displayOnlySelected.bind(this);
+          this.editPropertiesForManyVideos = this.editPropertiesForManyVideos.bind(this);
+          this.editPropertyValue = this.editPropertyValue.bind(this);
+          this.fillWithKeywords = this.fillWithKeywords.bind(this);
           this.groupVideos = this.groupVideos.bind(this);
           this.manageProperties = this.manageProperties.bind(this);
+          this.onVideoSelection = this.onVideoSelection.bind(this);
           this.openRandomVideo = this.openRandomVideo.bind(this);
+          this.parametersToState = this.parametersToState.bind(this);
           this.reloadDatabase = this.reloadDatabase.bind(this);
           this.resetGroup = this.resetGroup.bind(this);
           this.resetSearch = this.resetSearch.bind(this);
           this.resetSort = this.resetSort.bind(this);
+          this.resetStatus = this.resetStatus.bind(this);
+          this.scrollTop = this.scrollTop.bind(this);
           this.searchVideos = this.searchVideos.bind(this);
+          this.selectAll = this.selectAll.bind(this);
+          this.selectGroup = this.selectGroup.bind(this);
           this.selectVideos = this.selectVideos.bind(this);
           this.setPageSize = this.setPageSize.bind(this);
           this.sortVideos = this.sortVideos.bind(this);
-          this.updateStatus = this.updateStatus.bind(this);
-          this.resetStatus = this.resetStatus.bind(this);
-          this.scrollTop = this.scrollTop.bind(this);
-          this.stackGroup = this.stackGroup.bind(this);
-          this.stackFilter = this.stackFilter.bind(this);
-          this.selectGroup = this.selectGroup.bind(this);
-          this.editPropertyValue = this.editPropertyValue.bind(this);
-          this.fillWithKeywords = this.fillWithKeywords.bind(this);
-          this.classifierSelectGroup = this.classifierSelectGroup.bind(this);
-          this.classifierUnstack = this.classifierUnstack.bind(this);
-          this.classifierConcatenate = this.classifierConcatenate.bind(this);
-          this.stackPath = this.stackPath.bind(this);
           this.unselectVideos = this.unselectVideos.bind(this);
-          this.onVideoSelection = this.onVideoSelection.bind(this);
-          this.deselect = this.deselect.bind(this);
-          this.selectAll = this.selectAll.bind(this);
-          this.displayOnlySelected = this.displayOnlySelected.bind(this);
-          this.editPropertiesForManyVideos = this.editPropertiesForManyVideos.bind(this);
+          this.updatePage = this.updatePage.bind(this);
+          this.updateStatus = this.updateStatus.bind(this);
+          this.reverseClassifierPath = this.reverseClassifierPath.bind(this);
           this.parametersToState(this.props.parameters, this.state);
           this.callbackIndex = -1;
           this.shortcuts = {
@@ -321,30 +318,14 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
             className: "content"
           }, /*#__PURE__*/React.createElement("div", {
             className: "side-panel"
-          }, /*#__PURE__*/React.createElement("div", {
-            className: "stack filter"
-          }, /*#__PURE__*/React.createElement("div", {
-            className: "stack-title",
-            onClick: this.stackFilter
-          }, /*#__PURE__*/React.createElement("div", {
-            className: "title"
-          }, "Filter"), /*#__PURE__*/React.createElement("div", {
-            className: "icon"
-          }, this.state.stackFilter ? Utils.CHARACTER_ARROW_DOWN : Utils.CHARACTER_ARROW_UP)), this.state.stackFilter ? '' : /*#__PURE__*/React.createElement("div", {
-            className: "stack-content"
+          }, /*#__PURE__*/React.createElement(Stackable, {
+            className: "filter",
+            title: "Filter"
           }, /*#__PURE__*/React.createElement(Filter, {
             page: this
-          }))), this.state.path.length ? /*#__PURE__*/React.createElement("div", {
-            className: "stack filter"
-          }, /*#__PURE__*/React.createElement("div", {
-            className: "stack-title",
-            onClick: this.stackPath
-          }, /*#__PURE__*/React.createElement("div", {
-            className: "title"
-          }, "Classifier path"), /*#__PURE__*/React.createElement("div", {
-            className: "icon"
-          }, this.state.stackPath ? Utils.CHARACTER_ARROW_DOWN : Utils.CHARACTER_ARROW_UP)), this.state.stackPath ? '' : /*#__PURE__*/React.createElement("div", {
-            className: "stack-content"
+          })), this.state.path.length ? /*#__PURE__*/React.createElement(Stackable, {
+            className: "filter",
+            title: "Classifier path"
           }, this.state.path.length > 1 && stringProperties.length ? /*#__PURE__*/React.createElement("div", {
             className: "path-menu"
           }, /*#__PURE__*/React.createElement(MenuPack, {
@@ -354,7 +335,9 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
             action: () => this.classifierConcatenate(def.name)
           }, def.name)), /*#__PURE__*/React.createElement(MenuItem, {
             action: () => this.classifierConcatenate(groupField)
-          }, groupField))) : '', this.state.path.map((value, index) => /*#__PURE__*/React.createElement("div", {
+          }, groupField)), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("button", {
+            onClick: this.reverseClassifierPath
+          }, "reverse path"))) : '', this.state.path.map((value, index) => /*#__PURE__*/React.createElement("div", {
             key: index,
             className: "path-step horizontal"
           }, /*#__PURE__*/React.createElement("div", {
@@ -364,17 +347,9 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           }, /*#__PURE__*/React.createElement(Cross, {
             title: "unstack",
             action: this.classifierUnstack
-          })) : '')))) : '', groupDef ? /*#__PURE__*/React.createElement("div", {
-            className: "stack group"
-          }, /*#__PURE__*/React.createElement("div", {
-            className: "stack-title",
-            onClick: this.stackGroup
-          }, /*#__PURE__*/React.createElement("div", {
-            className: "title"
-          }, "Groups"), /*#__PURE__*/React.createElement("div", {
-            className: "icon"
-          }, this.state.stackGroup ? Utils.CHARACTER_ARROW_DOWN : Utils.CHARACTER_ARROW_UP)), this.state.stackGroup ? '' : /*#__PURE__*/React.createElement("div", {
-            className: "stack-content"
+          })) : ''))) : '', groupDef ? /*#__PURE__*/React.createElement(Stackable, {
+            className: "group",
+            title: "Groups"
           }, /*#__PURE__*/React.createElement(GroupView, {
             key: `${groupDef.field}-${groupDef.groups.length}-${this.state.path.join('-')}`,
             groupID: groupDef.group_id,
@@ -385,7 +360,7 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
             onSelect: this.selectGroup,
             onOptions: this.editPropertyValue,
             onPlus: groupDef.field[0] === ':' && this.state.definitions[groupDef.field.substr(1)].multiple ? this.classifierSelectGroup : null
-          }))) : ''), /*#__PURE__*/React.createElement("div", {
+          })) : ''), /*#__PURE__*/React.createElement("div", {
             className: "main-panel videos"
           }, this.renderVideos())), /*#__PURE__*/React.createElement("footer", {
             className: "horizontal"
@@ -710,24 +685,6 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           });
         }
 
-        stackGroup() {
-          this.setState({
-            stackGroup: !this.state.stackGroup
-          });
-        }
-
-        stackFilter() {
-          this.setState({
-            stackFilter: !this.state.stackFilter
-          });
-        }
-
-        stackPath() {
-          this.setState({
-            stackPath: !this.state.stackPath
-          });
-        }
-
         getStringSetProperties(definitions) {
           const properties = [];
 
@@ -767,6 +724,12 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           }
 
           return properties;
+        }
+
+        reverseClassifierPath() {
+          python_call('classifier_reverse').then(path => this.setState({
+            path
+          })).catch(backend_error);
         }
         /**
          *

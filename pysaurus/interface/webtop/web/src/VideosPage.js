@@ -11,6 +11,7 @@ import {GroupView} from "./GroupView.js";
 import {FormEditPropertyValue} from "./FormEditPropertyValue.js";
 import {FormFillKeywords} from "./FormFillKeywords.js";
 import {FormPropertyMultiVideo} from "./FormPropertyMultiVideo.js";
+import {Stackable} from "./Stackable.js";
 
 const INITIAL_SOURCES = [];
 const SHORTCUTS = {
@@ -202,48 +203,43 @@ export class VideosPage extends React.Component {
         this.state = {
             status: 'Loaded.',
             confirmDeletion: true,
-            stackFilter: false,
-            stackGroup: false,
-            stackPath: false,
             path: [],
             selection: new Set(),
             displayOnlySelected: false,
         };
-        this.updatePage = this.updatePage.bind(this);
-        this.parametersToState = this.parametersToState.bind(this);
-        this.checkShortcut = this.checkShortcut.bind(this);
         this.changeGroup = this.changeGroup.bind(this);
         this.changePage = this.changePage.bind(this);
+        this.checkShortcut = this.checkShortcut.bind(this);
+        this.classifierConcatenate = this.classifierConcatenate.bind(this);
+        this.classifierSelectGroup = this.classifierSelectGroup.bind(this);
+        this.classifierUnstack = this.classifierUnstack.bind(this);
         this.confirmDeletionForNotFound = this.confirmDeletionForNotFound.bind(this);
+        this.deselect = this.deselect.bind(this);
+        this.displayOnlySelected = this.displayOnlySelected.bind(this);
+        this.editPropertiesForManyVideos = this.editPropertiesForManyVideos.bind(this);
+        this.editPropertyValue = this.editPropertyValue.bind(this);
+        this.fillWithKeywords = this.fillWithKeywords.bind(this);
         this.groupVideos = this.groupVideos.bind(this);
         this.manageProperties = this.manageProperties.bind(this);
+        this.onVideoSelection = this.onVideoSelection.bind(this);
         this.openRandomVideo = this.openRandomVideo.bind(this);
+        this.parametersToState = this.parametersToState.bind(this);
         this.reloadDatabase = this.reloadDatabase.bind(this);
         this.resetGroup = this.resetGroup.bind(this);
         this.resetSearch = this.resetSearch.bind(this);
         this.resetSort = this.resetSort.bind(this);
+        this.resetStatus = this.resetStatus.bind(this);
+        this.scrollTop = this.scrollTop.bind(this);
         this.searchVideos = this.searchVideos.bind(this);
+        this.selectAll = this.selectAll.bind(this);
+        this.selectGroup = this.selectGroup.bind(this);
         this.selectVideos = this.selectVideos.bind(this);
         this.setPageSize = this.setPageSize.bind(this);
         this.sortVideos = this.sortVideos.bind(this);
-        this.updateStatus = this.updateStatus.bind(this);
-        this.resetStatus = this.resetStatus.bind(this);
-        this.scrollTop = this.scrollTop.bind(this);
-        this.stackGroup = this.stackGroup.bind(this);
-        this.stackFilter = this.stackFilter.bind(this);
-        this.selectGroup = this.selectGroup.bind(this);
-        this.editPropertyValue = this.editPropertyValue.bind(this);
-        this.fillWithKeywords = this.fillWithKeywords.bind(this);
-        this.classifierSelectGroup = this.classifierSelectGroup.bind(this);
-        this.classifierUnstack = this.classifierUnstack.bind(this);
-        this.classifierConcatenate = this.classifierConcatenate.bind(this);
-        this.stackPath = this.stackPath.bind(this);
         this.unselectVideos = this.unselectVideos.bind(this);
-        this.onVideoSelection = this.onVideoSelection.bind(this);
-        this.deselect = this.deselect.bind(this);
-        this.selectAll = this.selectAll.bind(this);
-        this.displayOnlySelected = this.displayOnlySelected.bind(this);
-        this.editPropertiesForManyVideos = this.editPropertiesForManyVideos.bind(this);
+        this.updatePage = this.updatePage.bind(this);
+        this.updateStatus = this.updateStatus.bind(this);
+        this.reverseClassifierPath = this.reverseClassifierPath.bind(this);
 
         this.parametersToState(this.props.parameters, this.state);
         this.callbackIndex = -1;
@@ -312,77 +308,53 @@ export class VideosPage extends React.Component {
                 <div className="frontier"/>
                 <div className="content">
                     <div className="side-panel">
-                        <div className="stack filter">
-                            <div className="stack-title" onClick={this.stackFilter}>
-                                <div className="title">Filter</div>
-                                <div className="icon">{this.state.stackFilter ? Utils.CHARACTER_ARROW_DOWN : Utils.CHARACTER_ARROW_UP}</div>
-                            </div>
-                            {this.state.stackFilter ? '' : (
-                                <div className="stack-content">
-                                    <Filter page={this} />
-                                </div>
-                            )}
-                        </div>
+                        <Stackable className="filter" title="Filter">
+                            <Filter page={this} />
+                        </Stackable>
                         {this.state.path.length ? (
-                            <div className="stack filter">
-                                <div className="stack-title" onClick={this.stackPath}>
-                                    <div className="title">Classifier path</div>
-                                    <div className="icon">{this.state.stackPath ? Utils.CHARACTER_ARROW_DOWN : Utils.CHARACTER_ARROW_UP}</div>
-                                </div>
-                                {this.state.stackPath ? '' : (
-                                    <div className="stack-content">
-                                        {this.state.path.length > 1 && stringProperties.length ? (
-                                            <div className="path-menu">
-                                                <MenuPack title="Concatenate path into ...">
-                                                    {stringProperties.map((def, i) => (
-                                                        <MenuItem key={i} action={() => this.classifierConcatenate(def.name)}>{def.name}</MenuItem>
-                                                    ))}
-                                                    <MenuItem action={() => this.classifierConcatenate(groupField)}>{groupField}</MenuItem>
-                                                </MenuPack>
+                            <Stackable className="filter" title="Classifier path">
+                                {this.state.path.length > 1 && stringProperties.length ? (
+                                    <div className="path-menu">
+                                        <MenuPack title="Concatenate path into ...">
+                                            {stringProperties.map((def, i) => (
+                                                <MenuItem key={i} action={() => this.classifierConcatenate(def.name)}>{def.name}</MenuItem>
+                                            ))}
+                                            <MenuItem action={() => this.classifierConcatenate(groupField)}>{groupField}</MenuItem>
+                                        </MenuPack>
+                                        <p>
+                                            <button onClick={this.reverseClassifierPath}>reverse path</button>
+                                        </p>
+                                    </div>
+                                ) : ''}
+                                {this.state.path.map((value, index) => (
+                                    <div key={index} className="path-step horizontal">
+                                        <div className="title">{value.toString()}</div>
+                                        {index === this.state.path.length - 1 ? (
+                                            <div className="icon">
+                                                <Cross title="unstack" action={this.classifierUnstack}/>
                                             </div>
                                         ) : ''}
-                                        {this.state.path.map((value, index) => (
-                                            <div key={index} className="path-step horizontal">
-                                                <div className="title">{value.toString()}</div>
-                                                {index === this.state.path.length - 1 ? (
-                                                    <div className="icon">
-                                                        <Cross title="unstack" action={this.classifierUnstack}/>
-                                                    </div>
-                                                ) : ''}
-                                            </div>
-                                        ))}
                                     </div>
-                                )}
-                            </div>
+                                ))}
+                            </Stackable>
                         ) : ''}
                         {groupDef ? (
-                            <div className="stack group">
-                                <div className="stack-title" onClick={this.stackGroup}>
-                                    <div className="title">Groups</div>
-                                    <div className="icon">
-                                        {this.state.stackGroup ?
-                                            Utils.CHARACTER_ARROW_DOWN : Utils.CHARACTER_ARROW_UP}
-                                    </div>
-                                </div>
-                                {this.state.stackGroup ? '' : (
-                                    <div className="stack-content">
-                                        <GroupView key={`${groupDef.field}-${groupDef.groups.length}-${this.state.path.join('-')}`}
-                                                   groupID={groupDef.group_id}
-                                                   field={groupDef.field}
-                                                   sorting={groupDef.sorting}
-                                                   reverse={groupDef.reverse}
-                                                   groups={groupDef.groups}
-                                                   onSelect={this.selectGroup}
-                                                   onOptions={this.editPropertyValue}
-                                                   onPlus={
-                                                       groupDef.field[0] === ':'
-                                                       && this.state.definitions[groupDef.field.substr(1)].multiple
-                                                           ? this.classifierSelectGroup
-                                                           : null
-                                                   }/>
-                                    </div>
-                                )}
-                            </div>
+                            <Stackable className="group" title="Groups">
+                                <GroupView key={`${groupDef.field}-${groupDef.groups.length}-${this.state.path.join('-')}`}
+                                           groupID={groupDef.group_id}
+                                           field={groupDef.field}
+                                           sorting={groupDef.sorting}
+                                           reverse={groupDef.reverse}
+                                           groups={groupDef.groups}
+                                           onSelect={this.selectGroup}
+                                           onOptions={this.editPropertyValue}
+                                           onPlus={
+                                               groupDef.field[0] === ':'
+                                               && this.state.definitions[groupDef.field.substr(1)].multiple
+                                                   ? this.classifierSelectGroup
+                                                   : null
+                                           }/>
+                            </Stackable>
                         ) : ''}
                     </div>
                     <div className="main-panel videos">{this.renderVideos()}</div>
@@ -653,15 +625,6 @@ export class VideosPage extends React.Component {
     changePage(pageNumber) {
         this.updatePage({pageNumber});
     }
-    stackGroup() {
-        this.setState({stackGroup: !this.state.stackGroup});
-    }
-    stackFilter() {
-        this.setState({stackFilter: !this.state.stackFilter});
-    }
-    stackPath() {
-        this.setState({stackPath: !this.state.stackPath});
-    }
     getStringSetProperties(definitions) {
         const properties = [];
         for (let def of definitions) {
@@ -693,6 +656,11 @@ export class VideosPage extends React.Component {
             properties[def.name] = def;
         }
         return properties;
+    }
+    reverseClassifierPath() {
+        python_call('classifier_reverse')
+            .then(path => this.setState({path}))
+            .catch(backend_error);
     }
 
     /**

@@ -350,6 +350,11 @@ class GuiAPI:
         self.provider.group_layer.set_group_id(0)
         self.provider.on_properties_modified([prop_name])
 
+    def classifier_reverse(self):
+        path = list(reversed(self.provider.classifier_layer.get_path()))
+        self.provider.classifier_layer.set_path(path)
+        return path
+
     def classifier_concatenate_path(self, to_property):
         path = self.provider.classifier_layer.get_path()
         from_property = self.provider.grouping_layer.get_grouping().field[1:]
