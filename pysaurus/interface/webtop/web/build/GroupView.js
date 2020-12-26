@@ -25,6 +25,7 @@ System.register(["./constants.js", "./buttons.js", "./Pagination.js"], function 
           sorting
           reverse
           groups
+          inPath?
           onSelect(index)
           onOptions? callback(index)
           onPlus? callback(index)
@@ -74,7 +75,7 @@ System.register(["./constants.js", "./buttons.js", "./Pagination.js"], function 
             pageNumber: this.state.pageNumber,
             onChange: this.setPage,
             onSearch: this.search
-          })), isProperty ? /*#__PURE__*/React.createElement("div", {
+          })), isProperty && !this.props.inPath ? /*#__PURE__*/React.createElement("div", {
             className: "selection line"
           }, /*#__PURE__*/React.createElement("div", {
             className: "column"
@@ -96,14 +97,16 @@ System.register(["./constants.js", "./buttons.js", "./Pagination.js"], function 
             const buttons = [];
 
             if (isProperty && entry.value !== null) {
-              buttons.push( /*#__PURE__*/React.createElement("input", {
-                type: "checkbox",
-                checked: this.state.selection.has(index),
-                onChange: event => this.onCheckEntry(event, index)
-              }));
-              buttons.push(' ');
+              if (!this.props.inPath) {
+                buttons.push( /*#__PURE__*/React.createElement("input", {
+                  type: "checkbox",
+                  checked: this.state.selection.has(index),
+                  onChange: event => this.onCheckEntry(event, index)
+                }));
+                buttons.push(' ');
+              }
 
-              if (this.props.onOptions && !this.state.selection.size) {
+              if (this.props.onOptions && !this.state.selection.size && !this.props.inPath) {
                 buttons.push( /*#__PURE__*/React.createElement(SettingIcon, {
                   key: "options",
                   title: `Options ...`,

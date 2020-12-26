@@ -357,6 +357,7 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
             sorting: groupDef.sorting,
             reverse: groupDef.reverse,
             groups: groupDef.groups,
+            inPath: this.state.path.length,
             onSelect: this.selectGroup,
             onOptions: this.editPropertyValue,
             onPlus: groupDef.field[0] === ':' && this.state.definitions[groupDef.field.substr(1)].multiple ? this.classifierSelectGroup : null

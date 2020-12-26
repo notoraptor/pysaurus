@@ -10,6 +10,7 @@ export class GroupView extends React.Component {
         sorting
         reverse
         groups
+        inPath?
         onSelect(index)
         onOptions? callback(index)
         onPlus? callback(index)
@@ -57,7 +58,7 @@ export class GroupView extends React.Component {
                                     onChange={this.setPage}
                                     onSearch={this.search}/>
                     </div>
-                    {isProperty ? (
+                    {isProperty && !this.props.inPath ? (
                         <div className="selection line">
                             <div className="column">
                                 <input id="group-view-select-all"
@@ -84,9 +85,12 @@ export class GroupView extends React.Component {
                         index = start + index;
                         const buttons = [];
                         if (isProperty && entry.value !== null) {
-                            buttons.push(<input type="checkbox" checked={this.state.selection.has(index)} onChange={event => this.onCheckEntry(event, index)}/>)
-                            buttons.push(' ');
-                            if (this.props.onOptions && !this.state.selection.size) {
+                            if (!this.props.inPath) {
+                                buttons.push(<input type="checkbox" checked={this.state.selection.has(index)}
+                                                    onChange={event => this.onCheckEntry(event, index)}/>)
+                                buttons.push(' ');
+                            }
+                            if (this.props.onOptions && !this.state.selection.size && !this.props.inPath) {
                                 buttons.push(<SettingIcon key="options"
                                                           title={`Options ...`}
                                                           action={(event) => this.openPropertyOptions(event, index)}/>);

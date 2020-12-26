@@ -346,6 +346,7 @@ export class VideosPage extends React.Component {
                                            sorting={groupDef.sorting}
                                            reverse={groupDef.reverse}
                                            groups={groupDef.groups}
+                                           inPath={this.state.path.length}
                                            onSelect={this.selectGroup}
                                            onOptions={this.editPropertyValue}
                                            onPlus={

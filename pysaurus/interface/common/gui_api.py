@@ -250,6 +250,7 @@ class GuiAPI:
         self.provider.on_properties_modified([prop_name])
 
     def delete_property_value(self, name, values):
+        assert isinstance(values, list), type(values)
         print('delete property value', name, values)
         values = set(values)
         modified = []
@@ -313,7 +314,7 @@ class GuiAPI:
         print('move property value', old_name, new_name, value)
         prop_type = self.database.get_prop_type(new_name)
         prop_type.validate([value] if prop_type.multiple else value)
-        videos = self.delete_property_value(old_name, value)
+        videos = self.delete_property_value(old_name, [value])
         if prop_type.multiple:
             for video in videos:
                 new_values = set(video.properties.get(new_name, ()))
