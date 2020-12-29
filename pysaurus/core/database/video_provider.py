@@ -546,6 +546,9 @@ class GroupingLayer(Layer):
                     group.videos.clear()
                     cache.remove(group)
 
+    def get_group_id(self, value):
+        return self._cache.lookup_index(value)
+
 
 class ClassifierLayer(Layer):
     __slots__ = ()
@@ -623,12 +626,15 @@ class ClassifierLayer(Layer):
     def get_group_value(self, index):
         return self._cache[index].field_value
 
+    def get_group_id(self, value):
+        return self._cache.lookup_index(value)
+
     def count_groups(self):
         return len(self._cache)
 
     def get_stats(self):
         field = self._cache.field
-        if field[0] == ':':
+        if field and field[0] == ':':
             converter = functions.identity
         else:
             converter = str

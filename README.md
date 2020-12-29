@@ -13,9 +13,7 @@ Current important folders:
 TODO:
 - Make video indices (video_id) more stable
 - Interface
-  - Option to edit properties for many videos at once (keep/generalize/add/remove propertiy values from selected videos)
   - When search terms, check videos properties too
-  - Option to reverse classifier path or move up/down pah elements.
   - Remember last property value edition panel selected (either delete, edit or move panel).
   - Property navigation: on click on a property value in a video property panel, go to that property value (group by property then display videos with clicked value)
   - Speed-up code, especially database (re)loading.

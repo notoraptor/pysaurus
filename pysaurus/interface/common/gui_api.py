@@ -343,6 +343,13 @@ class GuiAPI:
         self.provider.group_layer.set_group_id(0)
         self.provider.on_properties_modified([prop_name])
 
+    def classifier_select_group_by_value(self, field_value):
+        print('classifier select group by value', field_value)
+        group_id = self.provider.grouping_layer.get_group_id(field_value)
+        self.provider.classifier_layer.set_path([])
+        self.provider.classifier_layer.run()
+        self.classifier_select_group(group_id)
+
     def classifier_back(self):
         print('classifier back')
         prop_name = self.provider.grouping_layer.get_grouping().field[1:]

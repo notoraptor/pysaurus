@@ -150,6 +150,10 @@
 	border-radius: 0.5em;
 	padding-left: 0.5em;
 	padding-right: 0.5em;
+	cursor: pointer;
+}
+.video .properties .property .value:hover {
+	color: blue;
 }
 
 .video .properties .property.defined .collapsable .title {

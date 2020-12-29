@@ -37,6 +37,7 @@ System.register(["./MenuPack.js", "./FormRenameVideo.js", "./Dialog.js", "./Form
           this.renameVideo = this.renameVideo.bind(this);
           this.editProperties = this.editProperties.bind(this);
           this.onSelect = this.onSelect.bind(this);
+          this.focusPropertyValue = this.focusPropertyValue.bind(this);
         }
 
         render() {
@@ -138,7 +139,6 @@ System.register(["./MenuPack.js", "./FormRenameVideo.js", "./Dialog.js", "./Form
           }, "PROPERTIES"), propDefs.map((def, index) => {
             const name = def.name;
             const value = props.hasOwnProperty(name) ? props[name] : def.defaultValue;
-            const valueString = propertyValueToString(def.type, def.multiple ? value.join(', ') : value.toString());
             let noValue;
             if (def.multiple) noValue = !value.length;else noValue = def.type === "str" && !value;
             let printableValues = def.multiple ? value : [value];
@@ -149,11 +149,16 @@ System.register(["./MenuPack.js", "./FormRenameVideo.js", "./Dialog.js", "./Form
               title: name
             }, !noValue ? printableValues.map((element, elementIndex) => /*#__PURE__*/React.createElement("span", {
               className: "value",
-              key: elementIndex
+              key: elementIndex,
+              onClick: () => this.focusPropertyValue(name, element)
             }, element.toString())) : /*#__PURE__*/React.createElement("span", {
               className: "no-value"
             }, "no value")));
           }));
+        }
+
+        focusPropertyValue(propertyName, propertyValue) {
+          this.props.parent.focusPropertyValue(propertyName, propertyValue);
         }
 
         openVideo() {

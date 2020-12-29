@@ -232,6 +232,7 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           this.updatePage = this.updatePage.bind(this);
           this.updateStatus = this.updateStatus.bind(this);
           this.reverseClassifierPath = this.reverseClassifierPath.bind(this);
+          this.focusPropertyValue = this.focusPropertyValue.bind(this);
           this.parametersToState(this.props.parameters, this.state);
           this.callbackIndex = -1;
           this.shortcuts = {
@@ -792,6 +793,12 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
 
         classifierConcatenate(outputPropertyName) {
           python_call('classifier_concatenate_path', outputPropertyName).then(() => this.updatePage({
+            pageNumber: 0
+          })).catch(backend_error);
+        }
+
+        focusPropertyValue(propertyName, propertyValue) {
+          python_call('group_videos', `:${propertyName}`, "count", true, true, true).then(() => python_call('classifier_select_group_by_value', propertyValue)).then(() => this.updatePage({
             pageNumber: 0
           })).catch(backend_error);
         }
