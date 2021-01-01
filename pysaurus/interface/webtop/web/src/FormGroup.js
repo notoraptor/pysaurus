@@ -27,6 +27,66 @@ export class FormGroup extends React.Component {
         this.onChangeGroupReverse = this.onChangeGroupReverse.bind(this);
         this.onClose = this.onClose.bind(this);
     }
+    render() {
+        return (
+            <Dialog yes="group" no="cancel" onClose={this.onClose}>
+                <table className="form-group">
+                    <tbody>
+                    <tr>
+                        <td className="label">
+                            <input type="checkbox" id="allow-singletons" checked={this.state.allowSingletons} onChange={this.onChangeAllowSingleton}/>
+                        </td>
+                        <td>
+                            <label htmlFor="allow-singletons">Allow singletons (groups with only 1 video)</label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td className="label">
+                            <input type="checkbox" id="allow-multiple" checked={this.state.allowMultiple} onChange={this.onChangeAllowMultiple}/>
+                        </td>
+                        <td>
+                            <label htmlFor="allow-multiple">Allow multiple (groups with at least 2 videos)</label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td className="label">
+                            <label htmlFor="group-field">
+                                Field to group (available fields depend on if singletons or multiple groups are allowed)
+                            </label>
+                        </td>
+                        <td>
+                            <select id="group-field"
+                                    value={this.state.field}
+                                    onChange={this.onChangeGroupField}>
+                                {this.renderFieldOptions()}
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td className="label">
+                            <label htmlFor="group-sorting">Sort using:</label>
+                        </td>
+                        <td>
+                            <select id="group-sorting" value={this.state.sorting} onChange={this.onChangeSorting}>
+                                <option value="field">Field value</option>
+                                {STRING_FIELDS.hasOwnProperty(this.state.field) || this.hasStringProperty(this.state.field) ? <option value="length">Field value length</option> : ''}
+                                <option value="count">Group size</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td className="label">
+                            <input type='checkbox' id="group-reverse" checked={this.state.reverse} onChange={this.onChangeGroupReverse}/>
+                        </td>
+                        <td>
+                            <label htmlFor="group-reverse">sort in reverse order</label>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </Dialog>
+        );
+    }
     hasStringProperty(name) {
         return name.charAt(0) === ':' && this.state.properties[name].type === "str";
     }
@@ -55,66 +115,6 @@ export class FormGroup extends React.Component {
             }
         }
         return options;
-    }
-    render() {
-        return (
-            <Dialog yes="group" no="cancel" onClose={this.onClose}>
-                <table className="form-group">
-                    <tbody>
-                        <tr>
-                            <td className="label">
-                                <input type="checkbox" id="allow-singletons" checked={this.state.allowSingletons} onChange={this.onChangeAllowSingleton}/>
-                            </td>
-                            <td>
-                                <label htmlFor="allow-singletons">Allow singletons (groups with only 1 video)</label>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td className="label">
-                                <input type="checkbox" id="allow-multiple" checked={this.state.allowMultiple} onChange={this.onChangeAllowMultiple}/>
-                            </td>
-                            <td>
-                                <label htmlFor="allow-multiple">Allow multiple (groups with at least 2 videos)</label>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td className="label">
-                                <label htmlFor="group-field">
-                                    Field to group (available fields depend on if singletons or multiple groups are allowed)
-                                </label>
-                            </td>
-                            <td>
-                                <select id="group-field"
-                                        value={this.state.field}
-                                        onChange={this.onChangeGroupField}>
-                                    {this.renderFieldOptions()}
-                                </select>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td className="label">
-                                <label htmlFor="group-sorting">Sort using:</label>
-                            </td>
-                            <td>
-                                <select id="group-sorting" value={this.state.sorting} onChange={this.onChangeSorting}>
-                                    <option value="field">Field value</option>
-                                    {STRING_FIELDS.hasOwnProperty(this.state.field) || this.hasStringProperty(this.state.field) ? <option value="length">Field value length</option> : ''}
-                                    <option value="count">Group size</option>
-                                </select>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td className="label">
-                                <input type='checkbox' id="group-reverse" checked={this.state.reverse} onChange={this.onChangeGroupReverse}/>
-                            </td>
-                            <td>
-                                <label htmlFor="group-reverse">sort in reverse order</label>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </Dialog>
-        );
     }
     componentDidMount() {
         if (!this.state.field)

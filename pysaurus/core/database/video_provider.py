@@ -812,6 +812,7 @@ class VideoProvider:
                                          allow_multiple=allow_multiple)
         self.group_layer.set_group_id(0)
         self.search_layer.reset_parameters()
+        self.classifier_layer.reset_parameters()
         self.view = self.__source_layer.run()
 
     def set_search(self, text: Optional[str], cond: Optional[str]):

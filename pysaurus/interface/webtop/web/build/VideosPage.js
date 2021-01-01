@@ -233,6 +233,7 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           this.updateStatus = this.updateStatus.bind(this);
           this.reverseClassifierPath = this.reverseClassifierPath.bind(this);
           this.focusPropertyValue = this.focusPropertyValue.bind(this);
+          this.backendGroupVideos = this.backendGroupVideos.bind(this);
           this.parametersToState(this.props.parameters, this.state);
           this.callbackIndex = -1;
           this.shortcuts = {
@@ -302,7 +303,15 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           }, count, " video", count > 1 ? 's' : '', " per page"))), /*#__PURE__*/React.createElement(MenuItemCheck, {
             checked: this.state.confirmDeletion,
             action: this.confirmDeletionForNotFound
-          }, "confirm deletion for entries not found")), /*#__PURE__*/React.createElement("div", {
+          }, "confirm deletion for entries not found"), this.state.properties.length > 10 ? /*#__PURE__*/React.createElement(Menu, {
+            title: "Group videos by property ..."
+          }, this.state.properties.map((def, index) => /*#__PURE__*/React.createElement(MenuItem, {
+            key: index,
+            action: () => this.backendGroupVideos(`:${def.name}`)
+          }, def.name))) : this.state.properties.map((def, index) => /*#__PURE__*/React.createElement(MenuItem, {
+            key: index,
+            action: () => this.backendGroupVideos(`:${def.name}`)
+          }, "Group videos by property: ", def.name))), /*#__PURE__*/React.createElement("div", {
             className: "buttons"
           }), /*#__PURE__*/React.createElement("div", {
             className: "pagination"
@@ -555,6 +564,12 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
               }
             }
           }));
+        }
+
+        backendGroupVideos(field, sorting = "count", reverse = true, allowSingletons = true, allowMultiple = true) {
+          python_call('group_videos', field, sorting, reverse, allowSingletons, allowMultiple).then(() => this.updatePage({
+            pageNumber: 0
+          })).catch(backend_error);
         }
 
         editPropertiesForManyVideos(propertyName) {

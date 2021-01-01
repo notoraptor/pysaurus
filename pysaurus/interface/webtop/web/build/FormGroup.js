@@ -43,44 +43,6 @@ System.register(["./constants.js", "./Dialog.js"], function (_export, _context) 
           this.onClose = this.onClose.bind(this);
         }
 
-        hasStringProperty(name) {
-          return name.charAt(0) === ':' && this.state.properties[name].type === "str";
-        }
-
-        getDefaultField() {
-          return document.querySelector('#group-field').options[0].value;
-        }
-
-        renderFieldOptions() {
-          const options = [];
-          let i = 0;
-
-          if (this.props.properties) {
-            for (let def of this.props.properties) {
-              options.push( /*#__PURE__*/React.createElement("option", {
-                key: i,
-                value: `:${def.name}`
-              }, "Property: ", def.name));
-              ++i;
-            }
-          }
-
-          for (let entry of SORTED_FIELDS_AND_TITLES) {
-            const [name, title] = entry;
-            const permission = FIELDS_GROUP_DEF[name];
-
-            if (permission === GroupPermission.ALL || permission === GroupPermission.ONLY_ONE && this.state.allowSingletons && !this.state.allowMultiple || permission === GroupPermission.ONLY_MANY && !this.state.allowSingletons && this.state.allowMultiple) {
-              options.push( /*#__PURE__*/React.createElement("option", {
-                key: i,
-                value: name
-              }, title));
-              ++i;
-            }
-          }
-
-          return options;
-        }
-
         render() {
           return /*#__PURE__*/React.createElement(Dialog, {
             yes: "group",
@@ -138,6 +100,44 @@ System.register(["./constants.js", "./Dialog.js"], function (_export, _context) 
           })), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("label", {
             htmlFor: "group-reverse"
           }, "sort in reverse order"))))));
+        }
+
+        hasStringProperty(name) {
+          return name.charAt(0) === ':' && this.state.properties[name].type === "str";
+        }
+
+        getDefaultField() {
+          return document.querySelector('#group-field').options[0].value;
+        }
+
+        renderFieldOptions() {
+          const options = [];
+          let i = 0;
+
+          if (this.props.properties) {
+            for (let def of this.props.properties) {
+              options.push( /*#__PURE__*/React.createElement("option", {
+                key: i,
+                value: `:${def.name}`
+              }, "Property: ", def.name));
+              ++i;
+            }
+          }
+
+          for (let entry of SORTED_FIELDS_AND_TITLES) {
+            const [name, title] = entry;
+            const permission = FIELDS_GROUP_DEF[name];
+
+            if (permission === GroupPermission.ALL || permission === GroupPermission.ONLY_ONE && this.state.allowSingletons && !this.state.allowMultiple || permission === GroupPermission.ONLY_MANY && !this.state.allowSingletons && this.state.allowMultiple) {
+              options.push( /*#__PURE__*/React.createElement("option", {
+                key: i,
+                value: name
+              }, title));
+              ++i;
+            }
+          }
+
+          return options;
         }
 
         componentDidMount() {

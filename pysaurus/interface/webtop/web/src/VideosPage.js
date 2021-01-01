@@ -241,6 +241,7 @@ export class VideosPage extends React.Component {
         this.updateStatus = this.updateStatus.bind(this);
         this.reverseClassifierPath = this.reverseClassifierPath.bind(this);
         this.focusPropertyValue = this.focusPropertyValue.bind(this);
+        this.backendGroupVideos = this.backendGroupVideos.bind(this);
 
         this.parametersToState(this.props.parameters, this.state);
         this.callbackIndex = -1;
@@ -295,6 +296,17 @@ export class VideosPage extends React.Component {
                         <MenuItemCheck checked={this.state.confirmDeletion} action={this.confirmDeletionForNotFound}>
                             confirm deletion for entries not found
                         </MenuItemCheck>
+                        {this.state.properties.length > 10 ? (
+                            <Menu title="Group videos by property ...">{
+                                this.state.properties.map((def, index) => (
+                                    <MenuItem key={index} action={() => this.backendGroupVideos(`:${def.name}`)}>{def.name}</MenuItem>
+                                ))
+                            }</Menu>
+                        ) : (
+                            this.state.properties.map((def, index) => (
+                                <MenuItem key={index} action={() => this.backendGroupVideos(`:${def.name}`)}>Group videos by property: {def.name}</MenuItem>
+                            ))
+                        )}
                     </MenuPack>
                     <div className="buttons"/>
                     <div className="pagination">
@@ -516,6 +528,11 @@ export class VideosPage extends React.Component {
                 }
             }}/>
         ));
+    }
+    backendGroupVideos(field, sorting = "count", reverse = true, allowSingletons = true, allowMultiple = true) {
+        python_call('group_videos', field, sorting, reverse, allowSingletons, allowMultiple)
+            .then(() => this.updatePage({pageNumber: 0}))
+            .catch(backend_error);
     }
     editPropertiesForManyVideos(propertyName) {
         const videos = Array.from(this.state.selection);
