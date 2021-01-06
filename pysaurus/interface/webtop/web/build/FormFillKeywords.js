@@ -48,7 +48,7 @@ System.register(["./Dialog.js", "./Cell.js"], function (_export, _context) {
             onChange: this.onChangeEmpty
           }), ' ', /*#__PURE__*/React.createElement("label", {
             htmlFor: "only-empty"
-          }, "only videos without categories"))));
+          }, "only videos without values for property \"", this.state.field, "\""))));
         }
 
         onChangeGroupField(event) {

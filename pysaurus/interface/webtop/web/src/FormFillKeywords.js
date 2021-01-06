@@ -26,7 +26,7 @@ export class FormFillKeywords extends React.Component {
                     <p>
                         <input id="only-empty" type="checkbox" checked={this.state.onlyEmpty} onChange={this.onChangeEmpty}/>
                         {' '}
-                        <label htmlFor="only-empty">only videos without categories</label>
+                        <label htmlFor="only-empty">only videos without values for property "{this.state.field}"</label>
                     </p>
                 </Cell>
             </Dialog>

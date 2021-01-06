@@ -26,7 +26,8 @@
 .form-property-multi-video .panels .entry + .entry {
     margin-top: 0.1rem;
 }
-.form-property-multi-video .panels .value {
+.form-property-multi-video .panels .value,
+.form-property-multi-video .all .value {
     flex-grow: 1;
 }
 .form-property-multi-video .titles {

@@ -40,6 +40,10 @@ System.register(["./Dialog.js"], function (_export, _context) {
           this.unRemove = this.unRemove.bind(this);
           this.unAdd = this.unAdd.bind(this);
           this.onClose = this.onClose.bind(this);
+          this.unRemoveAll = this.unRemoveAll.bind(this);
+          this.removeAll = this.removeAll.bind(this);
+          this.addAll = this.addAll.bind(this);
+          this.unAddAll = this.unAddAll.bind(this);
         }
 
         render() {
@@ -59,7 +63,29 @@ System.register(["./Dialog.js"], function (_export, _context) {
             className: "current"
           }, this.renderCurrent()), /*#__PURE__*/React.createElement("div", {
             className: "add"
-          }, this.renderAdd())), this.renderFormAdd()));
+          }, this.renderAdd())), /*#__PURE__*/React.createElement("div", {
+            className: "bar new all horizontal"
+          }, this.state.remove.length > 1 ? /*#__PURE__*/React.createElement("div", {
+            className: "horizontal"
+          }, /*#__PURE__*/React.createElement("div", {
+            className: "value"
+          }, "all ", this.state.remove.length, " values"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("button", {
+            onClick: this.unRemoveAll
+          }, Utils.CHARACTER_SMART_ARROW_RIGHT))) : /*#__PURE__*/React.createElement("div", null), this.state.current.length > 1 ? /*#__PURE__*/React.createElement("div", {
+            className: "horizontal"
+          }, /*#__PURE__*/React.createElement("button", {
+            onClick: this.removeAll
+          }, Utils.CHARACTER_SMART_ARROW_LEFT), /*#__PURE__*/React.createElement("div", {
+            className: "value"
+          }, "all ", this.state.current.length, " values"), this.props.definition.multiple ? /*#__PURE__*/React.createElement("button", {
+            onClick: this.addAll
+          }, Utils.CHARACTER_SMART_ARROW_RIGHT) : '') : /*#__PURE__*/React.createElement("div", null), this.state.add.length > 1 ? /*#__PURE__*/React.createElement("div", {
+            className: "horizontal"
+          }, /*#__PURE__*/React.createElement("button", {
+            onClick: this.unAddAll
+          }, Utils.CHARACTER_SMART_ARROW_LEFT), /*#__PURE__*/React.createElement("div", {
+            className: "value"
+          }, "all ", this.state.add.length, " values")) : /*#__PURE__*/React.createElement("div", null)), this.renderFormAdd()));
         }
 
         renderRemove() {
@@ -191,6 +217,18 @@ System.register(["./Dialog.js"], function (_export, _context) {
           });
         }
 
+        removeAll() {
+          const remove = new Set(this.state.remove);
+          this.state.current.forEach(remove.add, remove);
+          const newCurrent = [];
+          const newRemove = Array.from(remove);
+          newRemove.sort();
+          this.setState({
+            current: newCurrent,
+            remove: newRemove
+          });
+        }
+
         add(value) {
           if (this.props.definition.multiple) {
             const current = new Set(this.state.current);
@@ -219,6 +257,18 @@ System.register(["./Dialog.js"], function (_export, _context) {
           }
         }
 
+        addAll() {
+          const add = new Set(this.state.add);
+          this.state.current.forEach(add.add, add);
+          const newCurrent = [];
+          const newAdd = Array.from(add);
+          newAdd.sort();
+          this.setState({
+            current: newCurrent,
+            add: newAdd
+          });
+        }
+
         unRemove(value) {
           const current = new Set(this.state.current);
           const remove = new Set(this.state.remove);
@@ -228,6 +278,18 @@ System.register(["./Dialog.js"], function (_export, _context) {
           const newRemove = Array.from(remove);
           newCurrent.sort();
           newRemove.sort();
+          this.setState({
+            current: newCurrent,
+            remove: newRemove
+          });
+        }
+
+        unRemoveAll() {
+          const current = new Set(this.state.current);
+          this.state.remove.forEach(current.add, current);
+          const newCurrent = Array.from(current);
+          const newRemove = [];
+          newCurrent.sort();
           this.setState({
             current: newCurrent,
             remove: newRemove
@@ -254,6 +316,24 @@ System.register(["./Dialog.js"], function (_export, _context) {
               add: newAdd
             });
           }
+        }
+
+        unAddAll() {
+          const current = new Set(this.state.current);
+
+          for (let value of this.state.add) {
+            if (this.state.mapping.has(value)) {
+              current.add(value);
+            }
+          }
+
+          const newCurrent = Array.from(current);
+          const newAdd = [];
+          newCurrent.sort();
+          this.setState({
+            current: newCurrent,
+            add: newAdd
+          });
         }
 
         onClose(yes) {
