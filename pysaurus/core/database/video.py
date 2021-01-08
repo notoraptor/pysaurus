@@ -340,9 +340,6 @@ class Video(VideoState):
         video_terms = self.terms(as_set=True)
         return any(term in video_terms for term in terms)
 
-    def has_terms(self, terms, condition):
-        return getattr(self, 'has_terms_%s' % condition)(terms)
-
     def to_dict(self):
         dct = super().to_dict()
         len_before = len(dct)

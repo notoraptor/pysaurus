@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Callable
 
 from pysaurus.core import exceptions
 from pysaurus.core.function_parsing.function_definition import FunctionDefinition
@@ -11,13 +11,10 @@ class FunctionParser:
         self.definitions = {}  # type: Dict[str, FunctionDefinition]
 
     def add(self, function, name=None, arguments=None, description=None):
-        # type: (callable, str, dict, str) -> None
+        # type: (callable, str, Dict[str, Callable], str) -> None
         function_definition = FunctionDefinition(function, name, arguments, description)
         assert function_definition.name not in self.definitions
         self.definitions[function_definition.name] = function_definition
-
-    def has_name(self, function_name):
-        return function_name in self.definitions
 
     def get_definition(self, function):
         # type: (callable) -> FunctionDefinition
@@ -39,6 +36,9 @@ class FunctionParser:
         elif name in self.definitions:
             print(self.definitions[name])
 
+    def has_name(self, function_name):
+        return function_name in self.definitions
+
     def call(self, function_name, function_args=None):
         if function_name not in self.definitions:
             raise exceptions.UnknownQuery(function_name)
@@ -49,5 +49,5 @@ class FunctionParser:
         for argument_name, argument_parser in function_definition.arguments.items():
             if argument_name not in function_args:
                 raise exceptions.MissingQueryArg(argument_name)
-            kwargs[argument_name] = argument_parser(str(function_args[argument_name]).strip())
+            kwargs[argument_name] = argument_parser(function_args[argument_name])
         return function_definition.function(**kwargs)

@@ -173,9 +173,9 @@ class FNV64:
     FNV_64_OFFSET_BASIS = 0xcbf29ce484222325
 
     @staticmethod
-    def _bytes_to_uint64(bytes):
+    def _bytes_to_uint64(data):
         h = FNV64.FNV_64_OFFSET_BASIS
-        for byte in bytes:
+        for byte in data:
             h *= FNV64.FNV_64_PRIME
             h &= 0xffffffffffffffff
             h ^= byte

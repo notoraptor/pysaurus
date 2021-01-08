@@ -15,7 +15,7 @@ class PropType:
         if isinstance(definition, (bool, int, float, str)):
             prop_type = type(definition)
             default = definition
-            enumeration = ()
+            enumeration = set()
             if prop_type is str:
                 default = default.strip()
         elif isinstance(definition, (list, tuple)):
