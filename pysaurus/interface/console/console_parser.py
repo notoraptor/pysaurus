@@ -1,7 +1,8 @@
 from pysaurus.core.classes import StringPrinter, Table
 from pysaurus.core.components import FileSize
-from pysaurus.interface.common.api import API, parse_fields
+from pysaurus.interface.console.api import API, parse_fields
 from pysaurus.core.function_parsing.function_parser import FunctionParser
+from pysaurus.core.database.database import Database
 
 
 class ConsoleParser(FunctionParser):
@@ -10,7 +11,7 @@ class ConsoleParser(FunctionParser):
     def __init__(self, list_file_path):
         super(ConsoleParser, self).__init__()
         # Load API.
-        self.api = API(list_file_path, reset=False)
+        self.api = API(Database.load_from_list_file_path(list_file_path, reset=False))
         # Update parser from API.
         self.api.export_api(self)
         # Update parser with wrapped functions.

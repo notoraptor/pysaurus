@@ -31,7 +31,7 @@ class Database:
     __slots__ = ('__db_path', '__thumb_folder', '__json_path', '__miniatures_path', '__log_path',
                  '__date', '__folders', '__videos', '__unreadable', '__discarded', '__prop_types',
                  '__notifier', '__id_to_video', 'system_is_case_insensitive', 'video_interval',
-                 'unreadable', 'readable')
+                 'unreadable', 'readable', '__special_property_parser')
 
     def __init__(self, path, folders=None, clear_old_folders=False, notifier=None):
         # type: (PathType, Optional[Iterable[PathType]], Optional[bool], Optional[Notifier]) -> None
@@ -55,6 +55,7 @@ class Database:
         self.__notifier = notifier or DEFAULT_NOTIFIER
         self.__id_to_video = {}  # type: Dict[int, Union[VideoState, Video]]
         self.system_is_case_insensitive = System.is_case_insensitive(self.__db_path.path)
+        self.__special_property_parser = {}  # type: Dict[str, callable]
         # Sources:
         # unreadable.not_found
         # unreadable.found
@@ -73,6 +74,7 @@ class Database:
         self.video_interval.update(self.readable)
         # Set special properties.
         self.__set_special_properties()
+        self.__register_special_property_parsers()
 
     # Properties.
 
@@ -235,7 +237,11 @@ class Database:
         if to_save:
             self.save()
 
-    def _set_video_property_error(self, video: Video):
+    def __register_special_property_parsers(self):
+        self.__special_property_parser['error'] = self._set_video_property_error
+
+    @staticmethod
+    def _set_video_property_error(video: Video):
         video.properties[SPECIAL_PROPERTY_ERROR] = sorted(video.errors)
 
     # Public methods.
@@ -292,9 +298,9 @@ class Database:
 
                     # Set special properties
                     for special_prop in SPECIAL_PROPERTY_DEFINITIONS:
-                        fn_name = f'_set_video_property_{special_prop[1:-1]}'
-                        if hasattr(self, fn_name):
-                            getattr(self, fn_name)(video_state)
+                        name = special_prop[1:-1]
+                        if name in self.__special_property_parser:
+                            self.__special_property_parser[name](video_state)
 
                     videos[file_path] = video_state
                     self.__unreadable.pop(file_path, None)

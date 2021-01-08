@@ -12,7 +12,7 @@ from pysaurus.core.database.properties import PropType
 from pysaurus.core.database.video_provider import VideoProvider, SOURCE_TREE
 from pysaurus.core.functions import launch_thread
 from pysaurus.core.notification import Notification
-from pysaurus.interface.common.parallel_notifier import ParallelNotifier
+from pysaurus.interface.webtop.parallel_notifier import ParallelNotifier
 from pysaurus.core.testing import TEST_LIST_FILE_PATH
 
 

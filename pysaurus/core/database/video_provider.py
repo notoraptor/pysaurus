@@ -679,9 +679,17 @@ class GroupLayer(Layer):
 
 
 class SearchLayer(Layer):
-    __slots__ = ()
+    __slots__ = ( 'term_parser',)
     __props__ = ('search',)
     DEFAULT_SEARCH_DEF = SearchDef.none()  # str text, str cond
+
+    def __init__(self, database):
+        super().__init__(database)
+        self.term_parser = {
+            'exact': Video.has_terms_exact,
+            'and': Video.has_terms_and,
+            'or': Video.has_terms_or,
+        }
 
     def set_search(self, text: Optional[str], cond: Optional[str]):
         self._set_parameters(search=SearchDef(text, cond))
@@ -701,14 +709,12 @@ class SearchLayer(Layer):
             return self.__filter_from_videos(search_def, data)
         return data.videos
 
-    @classmethod
-    def __filter_from_videos(cls, search_def: SearchDef, data: Group) -> VideoArray:
+    def __filter_from_videos(self, search_def: SearchDef, data: Group) -> VideoArray:
         terms = functions.string_to_pieces(search_def.text)
-        video_filter = getattr(Video, 'has_terms_%s' % search_def.cond)
+        video_filter = self.term_parser[search_def.cond]
         return data.videos.new(video for video in data.videos if video_filter(video, terms))
 
-    @classmethod
-    def __filter_from_root_layer(cls, search_def: SearchDef, source_layer: SourceLayer, data: Group) -> VideoArray:
+    def __filter_from_root_layer(self, search_def: SearchDef, source_layer: SourceLayer, data: Group) -> VideoArray:
         assert search_def.cond in ('exact', 'and', 'or')
         term_to_videos = source_layer.index
         terms = functions.string_to_pieces(search_def.text)
@@ -716,7 +722,7 @@ class SearchLayer(Layer):
             selection_and = set(data.videos)
             for term in terms:
                 selection_and &= term_to_videos.get(term, set())
-            video_filter = getattr(Video, 'has_terms_%s' % search_def.cond)
+            video_filter = self.term_parser[search_def.cond]
             selection = data.videos.new(video for video in selection_and if video_filter(video, terms))
         elif search_def.cond == 'and':
             selection = set(data.videos)

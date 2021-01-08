@@ -5,7 +5,7 @@ import tempfile
 import pyperclip
 from cefpython3 import cefpython as cef
 
-from pysaurus.interface.common.gui_api import GuiAPI
+from pysaurus.interface.webtop.gui_api import GuiAPI
 
 
 class Interface(GuiAPI):

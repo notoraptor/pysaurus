@@ -4,7 +4,7 @@ import traceback
 
 from pysaurus.core.function_parsing.function_definition import FunctionDefinition
 from pysaurus.interface.console.console_parser import ConsoleParser
-from pysaurus.tests.test_utils import TEST_LIST_FILE_PATH
+from pysaurus.core.testing import TEST_LIST_FILE_PATH
 
 
 def main():
