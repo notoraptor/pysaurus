@@ -25,18 +25,7 @@ class VideoRaptorResult:
         return str(self.errors)
 
 
-def get_hardware_device_names():
-    device_names = []
-    info = symbols.VideoRaptorInfo()
-    ptr_info = pointer(info)
-    symbols.fn_VideoRaptorInfo_init(ptr_info)
-    if info.hardwareDevicesCount:
-        device_names = info.hardwareDevicesNames.decode().split(', ')
-    symbols.fn_VideoRaptorInfo_clear(ptr_info)
-    return device_names
-
-
-def get_video_info_errors(report):
+def _get_video_info_errors(report):
     error_strings = []
     if symbols.fn_VideoReport_hasError(pointer(report)):
         error_reader = symbols.ErrorReader()
@@ -99,7 +88,7 @@ class VideoInfoCollector:
         for i in range(len(file_names)):
             video_info = self.objects[i]
             done = _info_to_params(video_info) if symbols.fn_VideoReport_isDone(pointer(video_info.report)) else None
-            errors = get_video_info_errors(video_info.report)
+            errors = _get_video_info_errors(video_info.report)
             if done and errors:
                 done['errors'] = errors
                 errors = None
@@ -145,6 +134,6 @@ class VideoThumbnailGenerator:
         for i in range(len(file_names)):
             video_thumb = self.objects[i]
             output[i] = VideoRaptorResult(done=symbols.fn_VideoReport_isDone(pointer(video_thumb.report)),
-                                          errors=get_video_info_errors(video_thumb.report))
+                                          errors=_get_video_info_errors(video_thumb.report))
 
         return output
