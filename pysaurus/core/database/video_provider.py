@@ -15,30 +15,9 @@ from pysaurus.core.classes import ToDict
 from pysaurus.core.components import FileSize, Duration, AbsolutePath
 from pysaurus.core.database.database import Database
 from pysaurus.core.database.video import Video
+from pysaurus.core.database.video_filtering import NOT_FOUND, SOURCE_TREE, TreeUtils
 
 T = TypeVar('T')
-UNREADABLE = 'unreadable'
-READABLE = 'readable'
-NOT_FOUND = 'not_found'
-FOUND = 'found'
-WITH_THUMBNAILS = 'with_thumbnails'
-WITHOUT_THUMBNAILS = 'without_thumbnails'
-SOURCE_TREE = {
-    UNREADABLE: {
-        NOT_FOUND: False,
-        FOUND: False
-    },
-    READABLE: {
-        NOT_FOUND: {
-            WITH_THUMBNAILS: False,
-            WITHOUT_THUMBNAILS: False,
-        },
-        FOUND: {
-            WITH_THUMBNAILS: False,
-            WITHOUT_THUMBNAILS: False
-        }
-    }
-}
 
 
 def deep_equals(value, other):
@@ -58,39 +37,6 @@ def deep_equals(value, other):
             return False
         return all(key in other and deep_equals(value[key], other[key]) for key in value)
     return value == other
-
-
-class TreeUtils:
-
-    @staticmethod
-    def collect_full_paths(tree: dict, collection: list, prefix=()):
-        if not isinstance(prefix, list):
-            prefix = list(prefix)
-        if tree:
-            for key, value in tree.items():
-                entry_name = prefix + [key]
-                TreeUtils.collect_full_paths(value, collection, entry_name)
-        elif prefix:
-            collection.append(prefix)
-
-    @staticmethod
-    def check_source_path(dct, seq, index=0):
-        if index < len(seq):
-            TreeUtils.check_source_path(dct[seq[index]], seq, index + 1)
-
-    @staticmethod
-    def get_source_from_object(inp, seq, index=0):
-        if index < len(seq):
-            return TreeUtils.get_source_from_object(getattr(inp, seq[index]), seq, index + 1)
-        else:
-            return inp
-
-    @staticmethod
-    def get_source_from_dict(inp, seq, index=0):
-        if index < len(seq):
-            return TreeUtils.get_source_from_dict(inp[seq[index]], seq, index + 1)
-        else:
-            return inp
 
 
 class NegativeComparator:

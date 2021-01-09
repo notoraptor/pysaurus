@@ -16,9 +16,6 @@ from pysaurus.core.profiling import Profiler
 TEMP_DIR = tempfile.gettempdir()
 TEMP_PREFIX = tempfile.gettempprefix() + '_pysaurus_'
 
-NbType = Enumeration(('entries', 'discarded', 'unreadable', 'unreadable_not_found', 'unreadable_found', 'readable',
-                      'readable_not_found', 'readable_found', 'readable_found_without_thumbnails',
-                      'readable_found_with_thumbnails', 'valid'))
 FieldType = Enumeration(Video.ROW_FIELDS)
 
 
@@ -83,8 +80,8 @@ class API:
         function_parser.add(self.list, arguments={'fields': str, 'page_size': int, 'page_number': int})
         function_parser.add(self.list_files, arguments={'output': str})
         function_parser.add(self.missing_thumbnails)
-        function_parser.add(self.nb, arguments={'query': NbType})
-        function_parser.add(self.nb_pages, arguments={'query': NbType, 'page_size': int})
+        function_parser.add(self.nb, arguments={'query': str})
+        function_parser.add(self.nb_pages, arguments={'query': str, 'page_size': int})
         function_parser.add(self.not_found)
         function_parser.add(self.not_found_html)
         function_parser.add(self.not_found_from_folder, arguments={'folder': str})
@@ -107,7 +104,11 @@ class API:
 
     def nb(self, query):
         # type: (str) -> int
-        return getattr(self.database, 'nb_%s' % NbType(query))
+        if query == 'entries':
+            return self.database.nb_entries
+        if query == 'discarded':
+            return self.database.nb_discarded
+        return len(self.database.get_source(*query.strip().split()))
 
     def nb_pages(self, query, page_size):
         # type: (str, int) -> int

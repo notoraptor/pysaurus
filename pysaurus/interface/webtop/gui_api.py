@@ -9,7 +9,8 @@ from pysaurus.core.components import AbsolutePath
 from pysaurus.core.database.database import Database
 from pysaurus.core.database.notifications import DatabaseReady
 from pysaurus.core.database.properties import PropType
-from pysaurus.core.database.video_provider import VideoProvider, SOURCE_TREE
+from pysaurus.core.database.video_provider import VideoProvider
+from pysaurus.core.database.video_filtering import SOURCE_TREE
 from pysaurus.core.functions import launch_thread
 from pysaurus.core.notification import Notification
 from pysaurus.interface.webtop.parallel_notifier import ParallelNotifier

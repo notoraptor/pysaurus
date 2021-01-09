@@ -17,7 +17,7 @@ from pysaurus.core.miniature import Miniature
 from pysaurus.core.notification import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
-from pysaurus.core.database import path_utils
+from pysaurus.core.database import path_utils, video_filtering
 
 
 SPECIAL_PROPERTY_ERROR = '<error>'
@@ -81,15 +81,6 @@ class Database:
     folder = property(lambda self: self.__db_path)
     nb_entries = property(lambda self: len(self.__videos) + len(self.__unreadable) + len(self.__discarded))
     nb_discarded = property(lambda self: len(self.__discarded))
-    nb_unreadable = property(lambda self: len(self.__unreadable))
-    nb_unreadable_not_found = property(lambda self: self.unreadable.not_found.count())
-    nb_unreadable_found = property(lambda self: self.unreadable.found.count())
-    nb_readable = property(lambda self: len(self.__videos))
-    nb_readable_not_found = property(lambda self: self.readable.not_found.count())
-    nb_readable_found = property(lambda self: self.readable.found.count())
-    nb_readable_found_without_thumbnails = property(lambda self: self.readable.found.without_thumbnails.count())
-    nb_readable_found_with_thumbnails = property(lambda self: self.readable.found.with_thumbnails.count())
-    nb_valid = nb_readable_found_with_thumbnails
 
     @property
     def thumbnail_folder(self):
@@ -684,6 +675,10 @@ Make sure any video has at most 1 value for this property before making it uniqu
         if ensure_miniatures:
             with Profiler('Ensure miniatures'):
                 self.ensure_miniatures()
+
+    def get_source(self, *path: List[str]):
+        video_filtering.TreeUtils.check_source_path(video_filtering.SOURCE_TREE, path)
+        return list(video_filtering.TreeUtils.get_source_from_object(self, path))
 
     @classmethod
     def load_from_list_file_path(
