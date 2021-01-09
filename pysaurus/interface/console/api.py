@@ -9,9 +9,8 @@ from pysaurus.core.database import path_utils
 from pysaurus.core.database.database import Database
 from pysaurus.core.database.video import Video
 from pysaurus.core.database.video_state import VideoState
-from pysaurus.core.function_parsing.function_parser import FunctionParser
+from pysaurus.core.function_parser import FunctionParser
 from pysaurus.core.functions import bool_type
-from pysaurus.core.notification import Notifier
 from pysaurus.core.profiling import Profiler
 
 TEMP_DIR = tempfile.gettempdir()
