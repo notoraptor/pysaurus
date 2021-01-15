@@ -6,16 +6,28 @@ from pysaurus.core.constants import PYTHON_ERROR_THUMBNAIL
 from pysaurus.core.modules import System
 
 
+class VideoRuntimeInfo:
+    __slots__ = 'is_file', 'size', 'mtime', 'driver_id'
+
+    def __init__(self):
+        self.is_file = False
+        self.mtime = 0
+        self.size = 0
+        self.driver_id = None
+
+
 class VideoState:
     __slots__ = (
         # Video properties
         'filename', 'file_size', 'errors', 'video_id',
         # Runtime attributes
-        'database', 'rt_is_file', 'rt_size', 'rt_mtime', 'driver_id'
+        'database', 'runtime'
     )
     UNREADABLE = True
 
-    def __init__(self, database, filename=None, size=0, errors=(), video_id=None, from_dictionary=None):
+    def __init__(self, database,
+                 filename=None, size=0, errors=(), video_id=None,
+                 from_dictionary=None):
         """
         :type filename: AbsolutePath
         :type size: int
@@ -35,10 +47,7 @@ class VideoState:
         self.video_id = video_id
 
         self.database = database
-        self.rt_is_file = False
-        self.rt_mtime = 0
-        self.rt_size = 0
-        self.driver_id = None
+        self.runtime = VideoRuntimeInfo()
 
     def __str__(self):
         with StringPrinter() as printer:
@@ -59,14 +68,6 @@ class VideoState:
         return self.filename < other.filename
 
     @property
-    def unreadable(self):
-        return self.UNREADABLE
-
-    @property
-    def readable(self):
-        return not self.UNREADABLE
-
-    @property
     def error_thumbnail(self):
         return PYTHON_ERROR_THUMBNAIL in self.errors
 
@@ -82,26 +83,22 @@ class VideoState:
         return FileSize(self.file_size)
 
     @property
-    def runtime_size(self):
-        return FileSize(self.rt_size)
-
-    @property
     def date(self):
         # runtime date
-        return DateModified(self.rt_mtime)
+        return DateModified(self.runtime.mtime)
 
     @property
     def disk(self):
         if System.is_windows():
             return '%s:\\' % (self.filename.standard_path.split(':')[0])
-        return self.driver_id
+        return self.runtime.driver_id
 
     @property
     def day(self):
         return self.date.day
 
     def exists(self):
-        return self.rt_is_file
+        return self.runtime.is_file
 
     def to_dict(self):
         return {

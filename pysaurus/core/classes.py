@@ -215,3 +215,13 @@ class Fraction:
         if self.sign == other.sign:
             return self.sign * (self.num * other.den - self.den * other.num) < 0
         return self.sign < other.sign
+
+
+class NegativeComparator:
+    __slots__ = 'value',
+
+    def __init__(self, value):
+        self.value = value
+
+    def __lt__(self, other):
+        return other.value < self.value

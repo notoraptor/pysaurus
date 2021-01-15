@@ -78,15 +78,10 @@ class Database:
 
     # Properties.
 
-    folder = property(lambda self: self.__db_path)
     nb_entries = property(lambda self: len(self.__videos) + len(self.__unreadable) + len(self.__discarded))
     nb_discarded = property(lambda self: len(self.__discarded))
-
-    @property
-    def thumbnail_folder(self):
-        if not self.__thumb_folder.isdir():
-            self.__thumb_folder.mkdir()
-        return self.__thumb_folder
+    folder = property(lambda self: self.__db_path)
+    thumbnail_folder = property(lambda self: self.__thumb_folder if self.__thumb_folder.isdir() else self.__thumb_folder.mkdir())
 
     # Private methods.
 
@@ -167,11 +162,11 @@ class Database:
         for dictionaries in (self.__videos, self.__unreadable):
             for video_state in dictionaries.values():
                 info = file_paths.get(video_state.filename, None)
-                video_state.rt_is_file = info is not None
+                video_state.runtime.is_file = info is not None
                 if info:
-                    video_state.rt_mtime = info.mtime
-                    video_state.rt_size = info.size
-                    video_state.driver_id = info.driver_id
+                    video_state.runtime.mtime = info.mtime
+                    video_state.runtime.size = info.size
+                    video_state.runtime.driver_id = info.driver_id
         return file_paths
 
     def __set_videos_thumbs_flags(self):
@@ -237,6 +232,24 @@ class Database:
 
     # Public methods.
 
+    def save(self, ensure_identifiers=True):
+        if ensure_identifiers:
+            self.__ensure_identifiers()
+        self.video_interval.update(self.readable)
+        # Save database.
+        json_output = {'date': self.__date.time,
+                       'folders': sorted(folder.path for folder in self.__folders),
+                       'videos': sorted(
+                           (video.to_dict()
+                            for dct in (self.__videos, self.__unreadable, self.__discarded)
+                            for video in dct.values()),
+                           key=lambda dct: dct['f']),
+                       'prop_types': [prop.to_dict() for prop in self.__prop_types.values()]}
+        # utils.assert_data_is_serializable(json_output)
+        with open(self.__json_path.path, 'w') as output_file:
+            json.dump(json_output, output_file)
+        self.__notifier.notify(notifications.DatabaseSaved(self))
+
     def update(self):
 
         self.__set_special_properties()
@@ -295,10 +308,10 @@ class Database:
 
                     videos[file_path] = video_state
                     self.__unreadable.pop(file_path, None)
-                video_state.rt_is_file = True
-                video_state.rt_size = stat.st_size
-                video_state.rt_mtime = stat.st_mtime
-                video_state.driver_id = stat.st_dev
+                video_state.runtime.is_file = True
+                video_state.runtime.size = stat.st_size
+                video_state.runtime.mtime = stat.st_mtime
+                video_state.runtime.driver_id = stat.st_dev
 
             list_file_path.delete()
             json_file_path.delete()
@@ -544,24 +557,6 @@ class Database:
             self.save()
         return video.filename
 
-    def save(self, ensure_identifiers=True):
-        if ensure_identifiers:
-            self.__ensure_identifiers()
-        self.video_interval.update(self.readable)
-        # Save database.
-        json_output = {'date': self.__date.time,
-                       'folders': sorted(folder.path for folder in self.__folders),
-                       'videos': sorted(
-                           (video.to_dict()
-                            for dct in (self.__videos, self.__unreadable, self.__discarded)
-                            for video in dct.values()),
-                           key=lambda dct: dct['f']),
-                       'prop_types': [prop.to_dict() for prop in self.__prop_types.values()]}
-        # utils.assert_data_is_serializable(json_output)
-        with open(self.__json_path.path, 'w') as output_file:
-            json.dump(json_output, output_file)
-        self.__notifier.notify(notifications.DatabaseSaved(self))
-
     def get_new_video_paths(self):
         all_file_names = []
 
@@ -578,7 +573,7 @@ class Database:
 
             if (not video_state
                     or video_state.date >= self.__date
-                    or video_state.rt_size != video_state.file_size):
+                    or video_state.runtime.size != video_state.file_size):
                 all_file_names.append(file_name.path)
 
         all_file_names.sort()

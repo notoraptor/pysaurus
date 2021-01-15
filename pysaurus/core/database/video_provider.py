@@ -11,7 +11,7 @@ from copy import copy
 from typing import Optional, Sequence, Dict, Generic, List, Callable, Any, TypeVar, Type, Union, Iterable, Set
 
 from pysaurus.core import functions
-from pysaurus.core.classes import ToDict
+from pysaurus.core.classes import ToDict, NegativeComparator
 from pysaurus.core.components import FileSize, Duration, AbsolutePath
 from pysaurus.core.database.database import Database
 from pysaurus.core.database.video import Video
@@ -37,16 +37,6 @@ def deep_equals(value, other):
             return False
         return all(key in other and deep_equals(value[key], other[key]) for key in value)
     return value == other
-
-
-class NegativeComparator:
-    __slots__ = 'value',
-
-    def __init__(self, value):
-        self.value = value
-
-    def __lt__(self, other):
-        return other.value < self.value
 
 
 class GroupDef(ToDict):
@@ -701,8 +691,8 @@ class SortLayer(Layer):
         self.set_sorting(self.DEFAULT_SORT_DEF)
 
     def filter(self, data: Sequence[Video]) -> VideoArray:
-        return VideoArray(sorted(data, key=functools.cmp_to_key(
-            lambda v1, v2: Video.compare(v1, v2, self.get_sorting()))))
+        sorting = self.get_sorting()
+        return VideoArray(sorted(data, key=functools.cmp_to_key(lambda v1, v2: Video.compare(v1, v2, sorting))))
 
     def remove_from_cache(self, cache: VideoArray, video: Video):
         if video in cache:

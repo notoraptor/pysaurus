@@ -9,8 +9,6 @@ Video class. Properties:
   So: ::
 
     (number of seconds) = duration / duration_time_base
-
-
 """
 
 import base64
@@ -28,11 +26,7 @@ from pysaurus.core.modules import VideoClipping, ImageUtils
 
 
 def compare_with_lt(v1, v2):
-    if v1 < v2:
-        return -1
-    if v2 < v1:
-        return 1
-    return 0
+    return -1 if v1 < v2 else (1 if v2 < v1 else 0)
 
 
 def compare_text(v1: str, v2: str):
@@ -43,31 +37,15 @@ def compare_text_or_data(v1, v2):
     return compare_text(v1, v2) if isinstance(v1, str) else compare_with_lt(v1, v2)
 
 
-JSON_INTEGER_MIN = -2 ** 31
-JSON_INTEGER_MAX = 2 ** 31 - 1
-
-
-def _to_json_value(value):
-    if isinstance(value, (tuple, list, set)):
-        return [_to_json_value(element) for element in value]
-    if isinstance(value, dict):
-        return {_to_json_value(key): _to_json_value(element) for key, element in value.items()}
-    if isinstance(value, (str, float, bool, type(None))):
-        return value
-    if isinstance(value, int) and JSON_INTEGER_MIN <= value <= JSON_INTEGER_MAX:
-        return value
-    return str(value)
-
-
 class Video(VideoState):
     UNREADABLE = False
 
     __slots__ = (
         # Video properties
         'audio_bit_rate',
-        'channels',
         'audio_codec',
         'audio_codec_description',
+        'channels',
         'container_format',
         'device_name',  # private field
         'duration',
@@ -86,42 +64,26 @@ class Video(VideoState):
         'runtime_has_thumbnail',
     )
 
-    QUALITY_FIELDS = (
-        ('quality_compression', 6),
-        ('height', 5),
-        ('width', 4),
-        ('raw_seconds', 3),
-        ('frame_rate', 2),
-        ('file_size', 1),
-        ('audio_bit_rate', 0.5),
-    )
+    # TODO to remove
+    STRING_FIELDS = {
+        'audio_codec',
+        'audio_codec_description',
+        'container_format',
+        'day',
+        'disk',
+        'extension',
+        'file_size',
+        'file_title',
+        'filename',
+        'thumbnail_path',
+        'title',
+        'video_codec',
+        'video_codec_description',
+        'meta_title',
+    }
 
-    @property
-    def quality(self):
-        total_level = 0
-        qualities = {}
-        for field, level in self.QUALITY_FIELDS:
-            value = getattr(self, field)
-            min_value = self.database.video_interval.min[field]
-            max_value = self.database.video_interval.max[field]
-            if min_value == max_value:
-                assert value == min_value, (value, min_value)
-                quality = 0
-            else:
-                quality = (value - min_value) / (max_value - min_value)
-                assert 0 <= quality <= 1, (quality, field, value, min_value, max_value)
-            qualities[field] = quality * level
-            total_level += level
-        return sum(qualities.values()) * 100 / total_level
-
-    @property
-    def quality_compression(self):
-        basic_file_size = (
-            self.width * self.height * self.frame_rate * 3
-            + self.sample_rate * self.channels * 2
-        ) * self.raw_seconds
-        return self.file_size / basic_file_size
-
+    # All video properties must be represented here.
+    # Runtime attributes should not appear here.
     MIN_TO_LONG = {
         'A': 'audio_codec_description',
         'C': 'channels',
@@ -145,6 +107,17 @@ class Video(VideoState):
 
     LONG_TO_MIN = {_long: _min for _min, _long in MIN_TO_LONG.items()}
 
+    QUALITY_FIELDS = (
+        ('quality_compression', 6),
+        ('height', 5),
+        ('width', 4),
+        ('raw_seconds', 3),
+        ('frame_rate', 2),
+        ('file_size', 1),
+        ('audio_bit_rate', 0.5),
+    )
+
+    # TODO to remove
     ROW_FIELDS = (
         'audio_bit_rate',
         'audio_codec',
@@ -173,65 +146,48 @@ class Video(VideoState):
         'width',
     )
 
-    STRING_FIELDS = {
-        'audio_codec',
-        'audio_codec_description',
-        'container_format',
-        'day',
-        'disk',
-        'extension',
-        'file_size',
-        'file_title',
-        'filename',
-        'thumbnail_path',
-        'title',
-        'video_codec',
-        'video_codec_description',
-        'meta_title',
-    }
-
     def __init__(self,
                  # Runtime arguments
                  database, from_dictionary=None,
                  # VideoState optional arguments
                  filename=None, size=0, errors=(), video_id=None,
                  # Video optional arguments
-                 audio_bit_rate=0, audio_codec='', audio_codec_description='', container_format='', device_name='',
-                 duration=0, duration_time_base=0, frame_rate_den=0, frame_rate_num=0, height=0, meta_title='',
-                 channels=2,
-                 properties=None,
-                 sample_rate=0, thumb_name='', video_codec='', video_codec_description='', width=0):
+                 audio_bit_rate=0, audio_codec='', audio_codec_description='', channels=2, container_format='',
+                 device_name='', duration=0, duration_time_base=0, frame_rate_den=0, frame_rate_num=0, height=0,
+                 meta_title='', properties=None, sample_rate=0, thumb_name='', video_codec='',
+                 video_codec_description='', width=0):
         """
-        :type filename: AbsolutePath | str
         :type database: pysaurus.core.database.database.Database
+        :type from_dictionary: dict
+        :type filename: AbsolutePath | str
         :type size: int
         :type errors: set
         :type video_id: int, optional
-        :type meta_title: str
-        :type container_format: str
+        :type audio_bit_rate: int
         :type audio_codec: str
-        :type video_codec: str
         :type audio_codec_description: str
-        :type video_codec_description: str
-        :type width: int
-        :type height: int
-        :type frame_rate_num: int
-        :type frame_rate_den: int
-        :type sample_rate: float
+        :type channels: int
+        :type container_format: str
+        :type device_name: str
         :type duration: int
         :type duration_time_base: int
-        :type audio_bit_rate: int
-        :type thumb_name: str
-        :type device_name: str
-        :type from_dictionary: dict
-        :type channels: int
+        :type frame_rate_den: int
+        :type frame_rate_num: int
+        :type height: int
+        :type meta_title: str
         :type properties: dict
+        :type sample_rate: float
+        :type thumb_name: str
+        :type video_codec: str
+        :type video_codec_description: str
+        :type width: int
         """
         if from_dictionary:
             audio_bit_rate = from_dictionary.get(self.LONG_TO_MIN['audio_bit_rate'], audio_bit_rate)
             audio_codec = from_dictionary.get(self.LONG_TO_MIN['audio_codec'], audio_codec)
             audio_codec_description = from_dictionary.get(self.LONG_TO_MIN['audio_codec_description'],
                                                           audio_codec_description)
+            channels = from_dictionary.get(self.LONG_TO_MIN['channels'], channels)
             container_format = from_dictionary.get(self.LONG_TO_MIN['container_format'], container_format)
             device_name = from_dictionary.get(self.LONG_TO_MIN['device_name'], device_name)
             duration = from_dictionary.get(self.LONG_TO_MIN['duration'], duration)
@@ -247,7 +203,6 @@ class Video(VideoState):
             video_codec_description = from_dictionary.get(self.LONG_TO_MIN['video_codec_description'],
                                                           video_codec_description)
             width = from_dictionary.get(self.LONG_TO_MIN['width'], width)
-            channels = from_dictionary.get(self.LONG_TO_MIN['channels'], channels)
         super(Video, self).__init__(filename=filename, size=size, errors=errors, video_id=video_id,
                                     database=database, from_dictionary=from_dictionary)
         self.audio_bit_rate = audio_bit_rate
@@ -268,10 +223,8 @@ class Video(VideoState):
         self.width = width
         self.channels = channels
         self.properties = {}
-        if properties is None:
-            properties = {}
-        self.set_properties(properties)
 
+        self.set_properties(properties or {})
         self.runtime_has_thumbnail = False
 
     def __str__(self):
@@ -293,6 +246,32 @@ class Video(VideoState):
     @property
     def thumbnail_path(self):
         return path_utils.generate_thumb_path(self.database.thumbnail_folder, self.ensure_thumbnail_name())
+
+    @property
+    def quality(self):
+        total_level = 0
+        qualities = {}
+        for field, level in self.QUALITY_FIELDS:
+            value = getattr(self, field)
+            min_value = self.database.video_interval.min[field]
+            max_value = self.database.video_interval.max[field]
+            if min_value == max_value:
+                assert value == min_value, (value, min_value)
+                quality = 0
+            else:
+                quality = (value - min_value) / (max_value - min_value)
+                assert 0 <= quality <= 1, (quality, field, value, min_value, max_value)
+            qualities[field] = quality * level
+            total_level += level
+        return sum(qualities.values()) * 100 / total_level
+
+    @property
+    def quality_compression(self):
+        basic_file_size = (
+            self.width * self.height * self.frame_rate * 3
+            + self.sample_rate * self.channels * 2
+        ) * self.raw_seconds
+        return self.file_size / basic_file_size
 
     def ensure_thumbnail_name(self):
         if not self.thumb_name:
@@ -324,8 +303,7 @@ class Video(VideoState):
 
     def terms(self, as_set=False):
         return string_to_pieces(' '.join((
-            self.filename.get_directory().path,
-            self.filename.title,
+            self.filename.path,
             self.meta_title,
         )), as_set=as_set)
 
@@ -348,12 +326,6 @@ class Video(VideoState):
             dct[_min] = getattr(self, _long)
         assert len(dct) == len_before + len(self.MIN_TO_LONG)
         return dct
-
-    def to_json(self):
-        js = {field: _to_json_value(getattr(self, field)) for field in self.ROW_FIELDS}
-        js['exists'] = self.exists()
-        js['hasThumbnail'] = self.thumbnail_path.exists()
-        return js
 
     @classmethod
     def from_dict(cls, dct, database):
@@ -393,11 +365,6 @@ class Video(VideoState):
         modified = name not in self.properties or self.properties[name] != value
         self.properties[name] = value
         return modified
-
-    def get_property(self, name):
-        if self.database.has_prop_type(name):
-            return self.database.get_prop_type(name)(self.properties.get(name, None))
-        return None
 
     def remove_property(self, name):
         self.properties.pop(name, None)

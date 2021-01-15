@@ -114,6 +114,7 @@ class AbsolutePath(object):
         os.makedirs(self.__path, exist_ok=True)
         if not os.path.isdir(self.__path):
             raise OSError("Unable to create a folder at path %s" % self.__path)
+        return self
 
     def delete(self):
         if self.isfile():
