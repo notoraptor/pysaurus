@@ -326,7 +326,7 @@ export class VideosPage extends React.Component {
                         </Stackable>
                         {this.state.path.length ? (
                             <Stackable className="filter" title="Classifier path">
-                                {this.state.path.length > 1 && stringProperties.length ? (
+                                {stringProperties.length ? (
                                     <div className="path-menu">
                                         <MenuPack title="Concatenate path into ...">
                                             {stringProperties.map((def, i) => (

@@ -336,7 +336,7 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           })), this.state.path.length ? /*#__PURE__*/React.createElement(Stackable, {
             className: "filter",
             title: "Classifier path"
-          }, this.state.path.length > 1 && stringProperties.length ? /*#__PURE__*/React.createElement("div", {
+          }, stringProperties.length ? /*#__PURE__*/React.createElement("div", {
             className: "path-menu"
           }, /*#__PURE__*/React.createElement(MenuPack, {
             title: "Concatenate path into ..."
