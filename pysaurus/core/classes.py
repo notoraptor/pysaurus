@@ -5,11 +5,11 @@ from typing import Any, Generic, List, TypeVar
 
 from pysaurus.core.functions import to_printable, pgcd
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class StringPrinter(object):
-    __slots__ = '__string_buffer', '__strip_right'
+    __slots__ = "__string_buffer", "__strip_right"
 
     def __init__(self, strip_right=True):
         self.__string_buffer = StringIO()
@@ -22,13 +22,17 @@ class StringPrinter(object):
         self.__string_buffer.close()
 
     def __str__(self):
-        return self.__string_buffer.getvalue().rstrip() if self.__strip_right else self.__string_buffer.getvalue()
+        return (
+            self.__string_buffer.getvalue().rstrip()
+            if self.__strip_right
+            else self.__string_buffer.getvalue()
+        )
 
     def write(self, *args, **kwargs):
-        kwargs['file'] = self.__string_buffer
+        kwargs["file"] = self.__string_buffer
         print(*args, **kwargs)
 
-    def title(self, message, character='=', up=True, down=False):
+    def title(self, message, character="=", up=True, down=False):
         if not isinstance(message, str):
             message = str(message)
         line = character * len(message)
@@ -40,7 +44,7 @@ class StringPrinter(object):
 
 
 class Table:
-    __slots__ = ('headers', 'lines')
+    __slots__ = ("headers", "lines")
 
     def __init__(self, headers, lines):
         # type: (List[str], List[List[Any]]) -> None
@@ -48,16 +52,29 @@ class Table:
         self.lines = lines
 
     def __str__(self):
-        header_sizes = [max(len(str(self.headers[i])),
-                            max([len(str(line[i])) for line in self.lines if line] + [0])) + 2
-                        for i in range(len(self.headers))]
+        header_sizes = [
+            max(
+                len(str(self.headers[i])),
+                max([len(str(line[i])) for line in self.lines if line] + [0]),
+            )
+            + 2
+            for i in range(len(self.headers))
+        ]
         with StringPrinter() as printer:
-            printer.write(''.join(
-                str(self.headers[i]).ljust(header_sizes[i]) for i in range(len(self.headers))))
+            printer.write(
+                "".join(
+                    str(self.headers[i]).ljust(header_sizes[i])
+                    for i in range(len(self.headers))
+                )
+            )
             for line in self.lines:
                 if line:
-                    printer.write(''.join(
-                        str(line[i]).ljust(header_sizes[i]) for i in range(len(self.headers))))
+                    printer.write(
+                        "".join(
+                            str(line[i]).ljust(header_sizes[i])
+                            for i in range(len(self.headers))
+                        )
+                    )
                 else:
                     printer.write()
             return str(printer)
@@ -74,10 +91,13 @@ class ToDict:
         return type(self).__name__
 
     def get_slots(self):
-        if hasattr(self, '__props__'):
+        if hasattr(self, "__props__"):
             return self.__props__
         return sorted(
-            chain.from_iterable(getattr(cls, '__slots__', ()) for cls in type(self).__mro__))
+            chain.from_iterable(
+                getattr(cls, "__slots__", ()) for cls in type(self).__mro__
+            )
+        )
 
     def to_dict(self, **extra):
         dct = {field: getattr(self, field) for field in self.get_slots()}
@@ -91,44 +111,58 @@ class ToDict:
             value = getattr(self, name)
             if self.__none__ or value is not None:
                 values.append((name, value))
-        return '%s(%s)' % (self.get_name(), ', '.join('%s=%s' % (name, to_printable(value)) for name, value in values))
+        return "%s(%s)" % (
+            self.get_name(),
+            ", ".join("%s=%s" % (name, to_printable(value)) for name, value in values),
+        )
 
 
 class Enumeration:
-    __slots__ = 'values', 'type'
+    __slots__ = "values", "type"
 
     def __init__(self, enum_values):
         self.values = set(enum_values)
         if len(self.values) < 2:
-            raise ValueError('Invalid enumeration: expected at least 2 values, got %s' % len(self.values))
+            raise ValueError(
+                "Invalid enumeration: expected at least 2 values, got %s"
+                % len(self.values)
+            )
         types = {type(value) for value in self.values}
         if len(types) != 1:
-            raise ValueError('Invalid enumeration: expected exactly 1 type for all values, got %s' % len(types))
+            raise ValueError(
+                "Invalid enumeration: expected exactly 1 type for all values, got %s"
+                % len(types)
+            )
         self.type = next(iter(types))
         if self.type not in (bool, int, float, str):
-            raise ValueError('Invalid enumeration: expected basic type for values, got %s' % self.type)
+            raise ValueError(
+                "Invalid enumeration: expected basic type for values, got %s"
+                % self.type
+            )
 
     def __call__(self, value):
         if value not in self.values:
-            raise ValueError('Invalid value\n\tGot: %s\n\tExpected:%s\n' % (value, self))
+            raise ValueError(
+                "Invalid value\n\tGot: %s\n\tExpected:%s\n" % (value, self)
+            )
         return value
 
     def __str__(self):
-        return '{%s}' % (', '.join(sorted(self.values)))
+        return "{%s}" % (", ".join(sorted(self.values)))
 
     def __repr__(self):
         return str(self)
 
 
 class Context:
-    __slots__ = ['_context']
+    __slots__ = ["_context"]
 
     def __init__(self):
         self._context = False
 
     def __getattribute__(self, item):
-        if not object.__getattribute__(self, '_context'):
-            raise RuntimeError('%s object not used as a context' % type(self).__name__)
+        if not object.__getattribute__(self, "_context"):
+            raise RuntimeError("%s object not used as a context" % type(self).__name__)
         return object.__getattribute__(self, item)
 
     @abstractmethod
@@ -145,13 +179,15 @@ class Context:
 
 
 class ListView(Generic[T]):
-    __slots__ = ('__seq', '__start', '__end')
+    __slots__ = ("__seq", "__start", "__end")
 
     def __init__(self, sequence, start, end):
         # type: (List[T], int, int) -> None
         self.__seq = sequence
         self.__start = max(len(sequence) + start if start < 0 else start, 0)
-        self.__end = min(max(len(sequence) + end if end < 0 else end, self.__start), len(sequence))
+        self.__end = min(
+            max(len(sequence) + end if end < 0 else end, self.__start), len(sequence)
+        )
 
     def __len__(self):
         return self.__end - self.__start
@@ -167,12 +203,12 @@ class ListView(Generic[T]):
 
 
 class Fraction:
-    __slots__ = 'sign', 'num', 'den'
+    __slots__ = "sign", "num", "den"
 
     def __init__(self, a, b):
         # type: (int, int) -> None
         if b == 0:
-            raise ZeroDivisionError('%d/%d' % (a, b))
+            raise ZeroDivisionError("%d/%d" % (a, b))
         if a == 0:
             self.sign = 1
             self.num = 0
@@ -200,16 +236,18 @@ class Fraction:
 
     def __str__(self):
         if self.den == 0:
-            return '0'
+            return "0"
         if self.den == 1:
-            return '%s%d' % ('-' if self.sign < 0 else '', self.num)
-        return '%s%d/%d' % ('-' if self.sign < 0 else '', self.num, self.den)
+            return "%s%d" % ("-" if self.sign < 0 else "", self.num)
+        return "%s%d/%d" % ("-" if self.sign < 0 else "", self.num, self.den)
 
     def __hash__(self):
         return hash((self.sign, self.num, self.den))
 
     def __eq__(self, other):
-        return self.sign == other.sign and self.num == other.num and self.den == other.den
+        return (
+            self.sign == other.sign and self.num == other.num and self.den == other.den
+        )
 
     def __lt__(self, other):
         if self.sign == other.sign:
@@ -218,7 +256,7 @@ class Fraction:
 
 
 class NegativeComparator:
-    __slots__ = 'value',
+    __slots__ = ("value",)
 
     def __init__(self, value):
         self.value = value

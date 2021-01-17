@@ -1,11 +1,11 @@
 import setuptools
 
 setuptools.setup(
-    name='pysaurus',
-    version='0.1',
+    name="pysaurus",
+    version="0.1",
     author="Steven Bocco",
     description="Pysaurus software",
-    long_description='Pysaurus video collection management software',
+    long_description="Pysaurus video collection management software",
     long_description_content_type="text/plain",
     packages=setuptools.find_packages(),
     classifiers=[

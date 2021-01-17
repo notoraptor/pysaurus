@@ -25,7 +25,11 @@ class AbstractSourceNode:
 
     @classmethod
     def get_name(cls):
-        return cls.__title__ if hasattr(cls, '__title__') else camel_case_to_snake_case(cls.__name__)
+        return (
+            cls.__title__
+            if hasattr(cls, "__title__")
+            else camel_case_to_snake_case(cls.__name__)
+        )
 
     def __str__(self):
         chain = []
@@ -37,8 +41,11 @@ class AbstractSourceNode:
                 parent = new_parent
             else:
                 break
-        path_name = '.'.join(camel_case_to_snake_case(type(element).get_name()) for element in reversed(chain))
-        return '%s/%d' % (path_name, self.count())
+        path_name = ".".join(
+            camel_case_to_snake_case(type(element).get_name())
+            for element in reversed(chain)
+        )
+        return "%s/%d" % (path_name, self.count())
 
     def __len__(self):
         return self.count()
@@ -48,7 +55,7 @@ class AbstractSourceNode:
 
 
 class SourceNode(AbstractSourceNode):
-    __slots__ = ('__parent', '__database')
+    __slots__ = ("__parent", "__database")
 
     def __init__(self, parent):
         self.__parent = parent  # type: SourceNode
@@ -61,7 +68,11 @@ class SourceNode(AbstractSourceNode):
         return self.__parent.database()
 
     def videos(self):
-        return (video for video in self.__parent.videos() if self.filter(self.__database, video))
+        return (
+            video
+            for video in self.__parent.videos()
+            if self.filter(self.__database, video)
+        )
 
     @abstractmethod
     def filter(self, database, video: VideoState):
@@ -97,7 +108,7 @@ class WithoutThumbnails(SourceNode):
 
 
 class VideoSource(AbstractSourceNode):
-    __slots__ = ('__database', '__source')
+    __slots__ = ("__database", "__source")
 
     def __init__(self, database, source: dict):
         self.__database = database
@@ -114,8 +125,8 @@ class VideoSource(AbstractSourceNode):
 
 
 class ReadableFound(Found):
-    __slots__ = ('with_thumbnails', 'without_thumbnails')
-    __title__ = 'found'
+    __slots__ = ("with_thumbnails", "without_thumbnails")
+    __title__ = "found"
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -124,8 +135,8 @@ class ReadableFound(Found):
 
 
 class ReadableNotFound(NotFound):
-    __slots__ = ('with_thumbnails', 'without_thumbnails')
-    __title__ = 'not_found'
+    __slots__ = ("with_thumbnails", "without_thumbnails")
+    __title__ = "not_found"
 
     def __init__(self, parent):
         super().__init__(parent)
@@ -134,7 +145,7 @@ class ReadableNotFound(NotFound):
 
 
 class Unreadable(VideoSource):
-    __slots__ = ('not_found', 'found')
+    __slots__ = ("not_found", "found")
 
     def __init__(self, database, source):
         super().__init__(database, source)
@@ -143,7 +154,7 @@ class Unreadable(VideoSource):
 
 
 class Readable(VideoSource):
-    __slots__ = ('not_found', 'found')
+    __slots__ = ("not_found", "found")
 
     def __init__(self, database, source):
         super().__init__(database, source)
@@ -151,32 +162,25 @@ class Readable(VideoSource):
         self.found = ReadableFound(self)
 
 
-UNREADABLE = 'unreadable'
-READABLE = 'readable'
-NOT_FOUND = 'not_found'
-FOUND = 'found'
-WITH_THUMBNAILS = 'with_thumbnails'
-WITHOUT_THUMBNAILS = 'without_thumbnails'
+UNREADABLE = "unreadable"
+READABLE = "readable"
+NOT_FOUND = "not_found"
+FOUND = "found"
+WITH_THUMBNAILS = "with_thumbnails"
+WITHOUT_THUMBNAILS = "without_thumbnails"
 SOURCE_TREE = {
-    UNREADABLE: {
-        NOT_FOUND: False,
-        FOUND: False
-    },
+    UNREADABLE: {NOT_FOUND: False, FOUND: False},
     READABLE: {
         NOT_FOUND: {
             WITH_THUMBNAILS: False,
             WITHOUT_THUMBNAILS: False,
         },
-        FOUND: {
-            WITH_THUMBNAILS: False,
-            WITHOUT_THUMBNAILS: False
-        }
-    }
+        FOUND: {WITH_THUMBNAILS: False, WITHOUT_THUMBNAILS: False},
+    },
 }
 
 
 class TreeUtils:
-
     @staticmethod
     def collect_full_paths(tree: dict, collection: list, prefix=()):
         if not isinstance(prefix, list):
@@ -196,7 +200,9 @@ class TreeUtils:
     @staticmethod
     def get_source_from_object(inp, seq, index=0):
         if index < len(seq):
-            return TreeUtils.get_source_from_object(getattr(inp, seq[index]), seq, index + 1)
+            return TreeUtils.get_source_from_object(
+                getattr(inp, seq[index]), seq, index + 1
+            )
         else:
             return inp
 

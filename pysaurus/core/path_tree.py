@@ -5,7 +5,7 @@ from pysaurus.core.components import AbsolutePath
 
 
 class PathTreeNode:
-    __slots__ = ('name', 'children')
+    __slots__ = ("name", "children")
 
     def __init__(self, name: str):
         self.name = name
@@ -16,7 +16,7 @@ class PathTree(PathTreeNode):
     __slots__ = ()
 
     def __init__(self):
-        super().__init__('')
+        super().__init__("")
 
     def add(self, path: AbsolutePath):
         pieces = path.standard_path.split(os.sep)
@@ -41,8 +41,8 @@ class PathTree(PathTreeNode):
 
     def _debug(self, children, indent):
         for name in sorted(children):
-            print('%s%s' % (indent, name))
-            self._debug(children[name].children, indent + '\t')
+            print("%s%s" % (indent, name))
+            self._debug(children[name].children, indent + "\t")
 
     def debug(self):
-        self._debug(self.children, '')
+        self._debug(self.children, "")

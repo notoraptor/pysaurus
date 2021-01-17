@@ -17,7 +17,7 @@ class _ThrowingArgumentParser(argparse.ArgumentParser):
 
 
 class FunctionDefinition:
-    __slots__ = ('function', 'arguments', 'description', 'name')
+    __slots__ = ("function", "arguments", "description", "name")
 
     def __init__(self, function, name=None, arguments=None, description=None):
         # type: (Callable, Optional[str], Optional[Dict], Optional[str]) -> None
@@ -27,7 +27,7 @@ class FunctionDefinition:
         if arguments is None:
             arguments = {}
         if description is None:
-            description = ''
+            description = ""
         for argument_name, argument_parser in arguments.items():
             assert isinstance(argument_name, str)
             assert callable(argument_parser)
@@ -39,19 +39,28 @@ class FunctionDefinition:
     def __str__(self):
         with StringPrinter() as printer:
             if not self.arguments:
-                printer.write('%s()' % self.name)
+                printer.write("%s()" % self.name)
             else:
-                printer.write('%s(' % self.name, end='')
+                printer.write("%s(" % self.name, end="")
                 nb_args = len(self.arguments)
-                padding = ' ' * (len(self.name) + 1)
-                for i, (arg_name, arg_parser) in enumerate(sorted(self.arguments.items())):
-                    printer.write('%s%s: %s' % (padding if i else '', arg_name, self.__symbol_to_string(arg_parser)),
-                                  end=('' if i == nb_args - 1 else ',\n'))
-                printer.write(')')
+                padding = " " * (len(self.name) + 1)
+                for i, (arg_name, arg_parser) in enumerate(
+                    sorted(self.arguments.items())
+                ):
+                    printer.write(
+                        "%s%s: %s"
+                        % (
+                            padding if i else "",
+                            arg_name,
+                            self.__symbol_to_string(arg_parser),
+                        ),
+                        end=("" if i == nb_args - 1 else ",\n"),
+                    )
+                printer.write(")")
             if self.description:
-                padding = ' ' * len(self.name)
+                padding = " " * len(self.name)
                 for line in textwrap.wrap(self.description, width=(70 - len(padding))):
-                    printer.write('%s%s' % (padding, line))
+                    printer.write("%s%s" % (padding, line))
             parser = self.to_command_line()
             if parser:
                 printer.write(parser.description)
@@ -59,7 +68,11 @@ class FunctionDefinition:
 
     @staticmethod
     def __symbol_to_string(symbol):
-        if inspect.isclass(symbol) or inspect.isfunction(symbol) or inspect.ismethod(symbol):
+        if (
+            inspect.isclass(symbol)
+            or inspect.isfunction(symbol)
+            or inspect.ismethod(symbol)
+        ):
             return symbol.__name__
         return str(symbol)
 
@@ -85,31 +98,45 @@ class FunctionDefinition:
                     added = True
                     break
             if not added:
-                for character in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ':
+                for character in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ":
                     if character not in short_names:
                         short_names[character] = arg_name
                         added = True
                         break
             if not added:
                 raise ValueError(
-                    'Unable to get command-line arg short name for function %s and arg %s' % (self.name, arg_name))
+                    "Unable to get command-line arg short name for function %s and arg %s"
+                    % (self.name, arg_name)
+                )
         long_names = {}
         for short_name, arg_name in short_names.items():
             place_holder = arg_name.upper()
-            helps.append('--%s %s | -%s %s' % (arg_name, place_holder, short_name, place_holder))
+            helps.append(
+                "--%s %s | -%s %s" % (arg_name, place_holder, short_name, place_holder)
+            )
             long_names[arg_name] = short_name
         description = None
         if not self.description:
-            padding = ' ' * len(self.name)
-            description = '%s%s\n%s%s' % (padding, self.name, padding, ('\n%s' % padding).join(helps))
+            padding = " " * len(self.name)
+            description = "%s%s\n%s%s" % (
+                padding,
+                self.name,
+                padding,
+                ("\n%s" % padding).join(helps),
+            )
         parser = _ThrowingArgumentParser(description=description)
         for arg_name, arg_parser in sorted(self.arguments.items()):
-            parser.add_argument('--%s' % arg_name, '-%s' % long_names[arg_name], type=arg_parser, required=True)
+            parser.add_argument(
+                "--%s" % arg_name,
+                "-%s" % long_names[arg_name],
+                type=arg_parser,
+                required=True,
+            )
         return parser
 
 
 class FunctionParser:
-    __slots__ = 'definitions',
+    __slots__ = ("definitions",)
 
     def __init__(self):
         self.definitions = {}  # type: Dict[str, FunctionDefinition]

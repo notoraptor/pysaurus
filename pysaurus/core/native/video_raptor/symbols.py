@@ -1,4 +1,16 @@
-from ctypes import POINTER, Structure, c_bool, c_char, c_char_p, c_double, c_int, c_int64, c_size_t, c_uint, c_void_p
+from ctypes import (
+    POINTER,
+    Structure,
+    c_bool,
+    c_char,
+    c_char_p,
+    c_double,
+    c_int,
+    c_int64,
+    c_size_t,
+    c_uint,
+    c_void_p,
+)
 
 from pysaurus.core.native.clibrary import CLibrary
 
@@ -9,10 +21,7 @@ c_char_array = POINTER(c_char_p)
 
 
 class VideoRaptorInfo(Structure):
-    _fields_ = [
-        ('hardwareDevicesCount', c_size_t),
-        ('hardwareDevicesNames', c_char_p)
-    ]
+    _fields_ = [("hardwareDevicesCount", c_size_t), ("hardwareDevicesNames", c_char_p)]
 
 
 PtrVideoRaptorInfo = POINTER(VideoRaptorInfo)
@@ -20,8 +29,8 @@ PtrVideoRaptorInfo = POINTER(VideoRaptorInfo)
 
 class ErrorReader(Structure):
     _fields_ = [
-        ('errors', c_uint),
-        ('position', c_uint),
+        ("errors", c_uint),
+        ("position", c_uint),
     ]
 
 
@@ -29,10 +38,7 @@ PtrErrorReader = POINTER(ErrorReader)
 
 
 class VideoReport(Structure):
-    _fields_ = [
-        ('errors', c_uint),
-        ('errorDetail', c_char * ERROR_DETAIL_MAX_LENGTH)
-    ]
+    _fields_ = [("errors", c_uint), ("errorDetail", c_char * ERROR_DETAIL_MAX_LENGTH)]
 
 
 PtrVideoReport = POINTER(VideoReport)
@@ -70,7 +76,7 @@ class VideoThumbnail(Structure):
         ("filename", c_char_p),
         ("thumbnailFolder", c_char_p),
         ("thumbnailName", c_char_p),
-        ("report", VideoReport)
+        ("report", VideoReport),
     ]
 
 
@@ -83,47 +89,68 @@ PtrPtrInt = POINTER(c_int_p)
 
 class Sequence(Structure):
     _fields_ = [
-        ('r', c_int_p),
-        ('g', c_int_p),
-        ('b', c_int_p),
-        ('i', c_int_p),
-        ('score', c_double),
-        ('classification', c_int),
+        ("r", c_int_p),
+        ("g", c_int_p),
+        ("b", c_int_p),
+        ("i", c_int_p),
+        ("score", c_double),
+        ("classification", c_int),
     ]
 
 
 PtrSequence = POINTER(Sequence)
 PtrPtrSequence = POINTER(PtrSequence)
 
-_dll_video_raptor = CLibrary('videoRaptorBatch')
+_dll_video_raptor = CLibrary("videoRaptorBatch")
 
 fn_VideoRaptorContextNew = _dll_video_raptor.prototype(
-    'VideoRaptorContext_New', c_void_p, [])
+    "VideoRaptorContext_New", c_void_p, []
+)
 fn_VideoRaptorContextDelete = _dll_video_raptor.prototype(
-    'VideoRaptorContext_Delete', None, [c_void_p])
+    "VideoRaptorContext_Delete", None, [c_void_p]
+)
 fn_ErrorReader_init = _dll_video_raptor.prototype(
-    'ErrorReader_init', None, [PtrErrorReader, c_uint])
+    "ErrorReader_init", None, [PtrErrorReader, c_uint]
+)
 fn_ErrorReader_next = _dll_video_raptor.prototype(
-    'ErrorReader_next', c_char_p, [PtrErrorReader])
+    "ErrorReader_next", c_char_p, [PtrErrorReader]
+)
 fn_VideoReport_isDone = _dll_video_raptor.prototype(
-    'VideoReport_isDone', c_bool, [PtrVideoReport])
+    "VideoReport_isDone", c_bool, [PtrVideoReport]
+)
 fn_VideoReport_hasError = _dll_video_raptor.prototype(
-    'VideoReport_hasError', c_bool, [PtrVideoReport])
+    "VideoReport_hasError", c_bool, [PtrVideoReport]
+)
 fn_VideoReport_hasDeviceError = _dll_video_raptor.prototype(
-    'VideoReport_hasDeviceError', c_bool, [PtrVideoReport])
+    "VideoReport_hasDeviceError", c_bool, [PtrVideoReport]
+)
 fn_VideoInfo_init = _dll_video_raptor.prototype(
-    'VideoInfo_init', None, [PtrVideoInfo, c_char_p])
+    "VideoInfo_init", None, [PtrVideoInfo, c_char_p]
+)
 fn_VideoInfo_clear = _dll_video_raptor.prototype(
-    'VideoInfo_clear', None, [PtrVideoInfo])
+    "VideoInfo_clear", None, [PtrVideoInfo]
+)
 fn_VideoThumbnail_init = _dll_video_raptor.prototype(
-    'VideoThumbnail_init', None, [PtrVideoThumbnail, c_char_p, c_char_p, c_char_p])
+    "VideoThumbnail_init", None, [PtrVideoThumbnail, c_char_p, c_char_p, c_char_p]
+)
 fn_videoRaptorDetails = _dll_video_raptor.prototype(
-    'videoRaptorDetails', c_int, [c_void_p, c_int, PtrPtrVideoInfo])
+    "videoRaptorDetails", c_int, [c_void_p, c_int, PtrPtrVideoInfo]
+)
 fn_videoRaptorThumbnails = _dll_video_raptor.prototype(
-    'videoRaptorThumbnails', c_int, [c_void_p, c_int, PtrPtrVideoThumbnail])
+    "videoRaptorThumbnails", c_int, [c_void_p, c_int, PtrPtrVideoThumbnail]
+)
 fn_videoRaptorJSON = _dll_video_raptor.prototype(
-    'videoRaptorJSON', c_int, [c_void_p, c_int, c_char_array, PtrPtrVideoReport, c_char_p])
+    "videoRaptorJSON",
+    c_int,
+    [c_void_p, c_int, c_char_array, PtrPtrVideoReport, c_char_p],
+)
 fn_batchAlignmentScore = _dll_video_raptor.prototype(
-    'batchAlignmentScore', c_double, [c_int_p, c_int_p, c_int, c_int, c_int, c_int, c_int])
+    "batchAlignmentScore",
+    c_double,
+    [c_int_p, c_int_p, c_int, c_int, c_int, c_int, c_int],
+)
 fn_classifySimilarities = _dll_video_raptor.prototype(
-    'classifySimilarities', None, [PtrPtrSequence, c_int, c_int, c_int, c_int, c_int, c_double_p])
+    "classifySimilarities",
+    None,
+    [PtrPtrSequence, c_int, c_int, c_int, c_int, c_int, c_double_p],
+)

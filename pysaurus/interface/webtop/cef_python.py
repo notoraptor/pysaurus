@@ -12,11 +12,11 @@ class Interface(GuiAPI):
     def __init__(self, browser):
         super().__init__()
         self.browser = browser
-        self.name = 'from python'
+        self.name = "from python"
 
     def close_app(self):
         super().close_app()
-        print('App closed.')
+        print("App closed.")
 
     def clipboard(self, text):
         pyperclip.copy(text)
@@ -26,9 +26,10 @@ class Interface(GuiAPI):
             resolve.Call(getattr(self, name)(*args))
         except Exception as exc:
             import traceback
+
             traceback.print_tb(exc.__traceback__)
-            print('%s:' % type(exc).__name__, exc, file=sys.stderr)
-            reject.Call({'name': type(exc).__name__, 'message': str(exc)})
+            print("%s:" % type(exc).__name__, exc, file=sys.stderr)
+            reject.Call({"name": type(exc).__name__, "message": str(exc)})
 
     def _call_gui_function(self, function_name, *parameters):
         self.browser.ExecuteFunction(function_name, *parameters)
@@ -43,8 +44,10 @@ def set_javascript_bindings(browser):
 
 def main():
     sys.excepthook = cef.ExceptHook  # To shutdown all CEF processes on error
-    entry_path = os.path.normpath(os.path.join(os.path.dirname(__file__), 'web/index.html')).replace('\\', '/')
-    url = 'file:///' + entry_path
+    entry_path = os.path.normpath(
+        os.path.join(os.path.dirname(__file__), "web/index.html")
+    ).replace("\\", "/")
+    url = "file:///" + entry_path
     settings = {
         "debug": False,
         "log_severity": cef.LOGSEVERITY_INFO,
@@ -64,5 +67,5 @@ def main():
     cef.Shutdown()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

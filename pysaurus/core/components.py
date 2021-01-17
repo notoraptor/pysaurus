@@ -12,13 +12,17 @@ from pysaurus.core.modules import System
 
 
 class AbsolutePath(object):
-    __slots__ = '__path',
+    __slots__ = ("__path",)
 
     def __init__(self, path):
         # type: (str) -> None
         path = os.path.abspath(path)
-        if len(path) >= 260 and System.is_windows() and not path.startswith(WINDOWS_PATH_PREFIX):
-            path = '%s%s' % (WINDOWS_PATH_PREFIX, path)
+        if (
+            len(path) >= 260
+            and System.is_windows()
+            and not path.startswith(WINDOWS_PATH_PREFIX)
+        ):
+            path = "%s%s" % (WINDOWS_PATH_PREFIX, path)
         self.__path = path
 
     def is_standard(self):
@@ -26,9 +30,11 @@ class AbsolutePath(object):
 
     @property
     def standard_path(self):
-        return (self.__path[len(WINDOWS_PATH_PREFIX):]
-                if self.__path.startswith(WINDOWS_PATH_PREFIX)
-                else self.__path)
+        return (
+            self.__path[len(WINDOWS_PATH_PREFIX) :]
+            if self.__path.startswith(WINDOWS_PATH_PREFIX)
+            else self.__path
+        )
 
     @property
     def path(self):
@@ -43,7 +49,7 @@ class AbsolutePath(object):
         basename = os.path.basename(self.__path)
         if self.isdir():
             return basename
-        index_dot = basename.rfind('.')
+        index_dot = basename.rfind(".")
         if index_dot == 0:
             return basename[1:]
         return basename if index_dot < 0 else basename[:index_dot]
@@ -51,7 +57,7 @@ class AbsolutePath(object):
     @property
     def extension(self):
         extension = os.path.splitext(self.__path)[1]
-        return extension[1:].lower() if extension else ''
+        return extension[1:].lower() if extension else ""
 
     def __str__(self):
         return self.standard_path
@@ -100,7 +106,9 @@ class AbsolutePath(object):
             path = path.lower()
         if len(directory) >= len(path):
             return False
-        return path.startswith('%s%s' % (directory, '' if directory.endswith(os.sep) else os.sep))
+        return path.startswith(
+            "%s%s" % (directory, "" if directory.endswith(os.sep) else os.sep)
+        )
 
     def get_date_modified(self):
         return DateModified(os.path.getmtime(self.__path))
@@ -122,18 +130,18 @@ class AbsolutePath(object):
         elif self.isdir():
             shutil.rmtree(self.__path)
         if self.exists():
-            raise OSError('Unable to delete path %s' % self.__path)
+            raise OSError("Unable to delete path %s" % self.__path)
 
     def new_title(self, title):
         # type: (str) -> AbsolutePath
         new_path = FilePath(self.get_directory(), title, self.extension)
         if new_path.exists():
-            raise OSError('Unable to rename (destination already exists) to', new_path)
+            raise OSError("Unable to rename (destination already exists) to", new_path)
         os.rename(self.__path, new_path.path)
         if self.exists():
-            raise OSError('Unable to rename: source still exists:', self.__path)
+            raise OSError("Unable to rename: source still exists:", self.__path)
         if not new_path.exists():
-            raise OSError('Unable to rename to', new_path)
+            raise OSError("Unable to rename to", new_path)
         return new_path
 
     def to_json(self):
@@ -142,9 +150,9 @@ class AbsolutePath(object):
     def open(self):
         """ Open path with default OS program. """
         if System.is_linux():
-            subprocess.run(['xdg-open', self.path])
+            subprocess.run(["xdg-open", self.path])
         elif System.is_mac():
-            subprocess.run(['open', self.path])
+            subprocess.run(["open", self.path])
         elif System.is_windows():
             os.startfile(self.path)
         else:
@@ -156,9 +164,9 @@ class AbsolutePath(object):
         if System.is_windows():
             command = 'explorer /select,"%s"' % self.path
         elif System.is_mac():
-            command = ['open', '-R', self.path]
+            command = ["open", "-R", self.path]
         elif System.is_linux():
-            command = ['nautilus', self.path]
+            command = ["nautilus", self.path]
         if command and not subprocess.run(command).returncode:
             return self
         return False
@@ -173,7 +181,7 @@ class AbsolutePath(object):
 
     @classmethod
     def join(cls, *args):
-        """ Join pieces to create an absolute path (similar to os.path.join(...)).
+        """Join pieces to create an absolute path (similar to os.path.join(...)).
         :param args: pieces of path to join (each converted to a string).
         :return: a new absolute path.
         :rtype: AbsolutePath
@@ -187,23 +195,25 @@ PathType = Union[AbsolutePath, str]
 class FilePath(AbsolutePath):
     def __init__(self, folder_path, file_title, file_extension):
         # type: (PathType, str, str) -> None
-        """ Create a new file path with a folder, a file title and a file extension.
+        """Create a new file path with a folder, a file title and a file extension.
             Each piece will be converted to a string.
         :param folder_path: folder path.
         :param file_title: file title.
         :param file_extension: file extension.
         """
-        super().__init__(os.path.join(str(folder_path), '%s.%s' % (file_title, file_extension)))
+        super().__init__(
+            os.path.join(str(folder_path), "%s.%s" % (file_title, file_extension))
+        )
 
 
 class DateModified:
-    __slots__ = 'time',
+    __slots__ = ("time",)
 
     def __init__(self, float_timestamp):
         self.time = float_timestamp
 
     def __str__(self):
-        return datetime.fromtimestamp(self.time).strftime('%Y-%m-%d %H:%M:%S')
+        return datetime.fromtimestamp(self.time).strftime("%Y-%m-%d %H:%M:%S")
 
     def __hash__(self):
         return hash(self.time)
@@ -222,7 +232,7 @@ class DateModified:
 
     @property
     def day(self):
-        return datetime.fromtimestamp(self.time).strftime('%Y-%m-%d')
+        return datetime.fromtimestamp(self.time).strftime("%Y-%m-%d")
 
     @staticmethod
     def now():
@@ -230,7 +240,14 @@ class DateModified:
 
 
 class Duration(object):
-    __slots__ = ('days', 'hours', 'minutes', 'seconds', 'microseconds', 'total_microseconds')
+    __slots__ = (
+        "days",
+        "hours",
+        "minutes",
+        "seconds",
+        "microseconds",
+        "total_microseconds",
+    )
 
     def __init__(self, microseconds: Union[int, float]):
         if isinstance(microseconds, float):
@@ -273,16 +290,16 @@ class Duration(object):
     def __str__(self):
         view = []
         if self.days:
-            view.append('%02dd' % self.days)
+            view.append("%02dd" % self.days)
         if self.hours:
-            view.append('%02dh' % self.hours)
+            view.append("%02dh" % self.hours)
         if self.minutes:
-            view.append('%02dm' % self.minutes)
+            view.append("%02dm" % self.minutes)
         if self.seconds:
-            view.append('%02ds' % self.seconds)
+            view.append("%02ds" % self.seconds)
         if self.microseconds:
-            view.append('%06dµs' % self.microseconds)
-        return ' '.join(view) if view else '00s'
+            view.append("%06dµs" % self.microseconds)
+        return " ".join(view) if view else "00s"
 
     def to_json(self):
         return str(self)
@@ -297,13 +314,18 @@ class Duration(object):
 
 
 class FileSize(object):
-    __slots__ = ('__size', '__unit')
+    __slots__ = ("__size", "__unit")
 
     def __init__(self, size):
         # type: (int) -> None
         self.__size = size
         self.__unit = constants.BYTES
-        for unit in (constants.TERA_BYTES, constants.GIGA_BYTES, constants.MEGA_BYTES, constants.KILO_BYTES):
+        for unit in (
+            constants.TERA_BYTES,
+            constants.GIGA_BYTES,
+            constants.MEGA_BYTES,
+            constants.KILO_BYTES,
+        ):
             if size // unit:
                 self.__unit = unit
                 break
@@ -326,14 +348,17 @@ class FileSize(object):
         return isinstance(other, FileSize) and self.value < other.value
 
     def __str__(self):
-        return '%s %s' % (round(self.nb_units, 2), constants.SIZE_UNIT_TO_STRING[self.__unit])
+        return "%s %s" % (
+            round(self.nb_units, 2),
+            constants.SIZE_UNIT_TO_STRING[self.__unit],
+        )
 
     def to_json(self):
         return str(self)
 
 
 class PathInfo:
-    __slots__ = 'path', 'size', 'mtime', 'driver_id'
+    __slots__ = "path", "size", "mtime", "driver_id"
 
     def __init__(self, path: AbsolutePath, size: int, mtime: float, driver_id: int):
         self.path = path

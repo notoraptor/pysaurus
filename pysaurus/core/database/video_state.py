@@ -7,7 +7,7 @@ from pysaurus.core.modules import System
 
 
 class VideoRuntimeInfo:
-    __slots__ = 'is_file', 'size', 'mtime', 'driver_id'
+    __slots__ = "is_file", "size", "mtime", "driver_id"
 
     def __init__(self):
         self.is_file = False
@@ -19,15 +19,25 @@ class VideoRuntimeInfo:
 class VideoState:
     __slots__ = (
         # Video properties
-        'filename', 'file_size', 'errors', 'video_id',
+        "filename",
+        "file_size",
+        "errors",
+        "video_id",
         # Runtime attributes
-        'database', 'runtime'
+        "database",
+        "runtime",
     )
     UNREADABLE = True
 
-    def __init__(self, database,
-                 filename=None, size=0, errors=(), video_id=None,
-                 from_dictionary=None):
+    def __init__(
+        self,
+        database,
+        filename=None,
+        size=0,
+        errors=(),
+        video_id=None,
+        from_dictionary=None,
+    ):
         """
         :type filename: AbsolutePath
         :type size: int
@@ -37,10 +47,10 @@ class VideoState:
         :type from_dictionary: dict
         """
         if from_dictionary:
-            filename = from_dictionary.get('f', filename)
-            size = from_dictionary.get('s', size)
-            errors = from_dictionary.get('e', errors)
-            video_id = from_dictionary.get('j', video_id)
+            filename = from_dictionary.get("f", filename)
+            size = from_dictionary.get("s", size)
+            errors = from_dictionary.get("e", errors)
+            video_id = from_dictionary.get("j", video_id)
         self.filename = AbsolutePath.ensure(filename)
         self.file_size = size
         self.errors = set(errors)
@@ -51,11 +61,14 @@ class VideoState:
 
     def __str__(self):
         with StringPrinter() as printer:
-            printer.write('VideoState:')
-            printer.write('\tfilename:  ', self.filename)
-            printer.write('\tsize:      ', self.size)
-            printer.write('\terrors:    ', ', '.join(sorted(self.errors)) if self.errors else '(none)')
-            printer.write('\tvideo_id:  ', self.video_id)
+            printer.write("VideoState:")
+            printer.write("\tfilename:  ", self.filename)
+            printer.write("\tsize:      ", self.size)
+            printer.write(
+                "\terrors:    ",
+                ", ".join(sorted(self.errors)) if self.errors else "(none)",
+            )
+            printer.write("\tvideo_id:  ", self.video_id)
             return str(printer)
 
     def __hash__(self):
@@ -90,7 +103,7 @@ class VideoState:
     @property
     def disk(self):
         if System.is_windows():
-            return '%s:\\' % (self.filename.standard_path.split(':')[0])
+            return "%s:\\" % (self.filename.standard_path.split(":")[0])
         return self.runtime.driver_id
 
     @property
@@ -102,11 +115,11 @@ class VideoState:
 
     def to_dict(self):
         return {
-            'e': list(self.errors),
-            'f': self.filename.path,
-            'j': self.video_id,
-            's': self.file_size,
-            'U': self.UNREADABLE,
+            "e": list(self.errors),
+            "f": self.filename.path,
+            "j": self.video_id,
+            "s": self.file_size,
+            "U": self.UNREADABLE,
         }
 
     @classmethod
@@ -116,8 +129,10 @@ class VideoState:
         :type database: pysaurus.core.database.database.Database
         :rtype: VideoState
         """
-        return cls(filename=dct['f'],
-                   size=dct['s'],
-                   errors=dct['e'],
-                   video_id=dct.get('j', None),
-                   database=database)
+        return cls(
+            filename=dct["f"],
+            size=dct["s"],
+            errors=dct["e"],
+            video_id=dct.get("j", None),
+            database=database,
+        )

@@ -4,7 +4,7 @@ from pysaurus.core.notification import Notification, Notifier
 
 
 class ParallelNotifier(Notifier):
-    __slots__ = ('queue',)
+    __slots__ = ("queue",)
 
     def __init__(self, shared_queue):
         # type: (multiprocessing.Queue) -> None

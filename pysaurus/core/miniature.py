@@ -5,7 +5,7 @@ from pysaurus.core.modules import ImageUtils
 
 
 class Miniature:
-    __slots__ = ('identifier', 'r', 'g', 'b', 'i', 'width', 'height')
+    __slots__ = ("identifier", "r", "g", "b", "i", "width", "height")
 
     def __init__(self, red, green, blue, width, height, identifier=None):
         # type: (bytearray, bytearray, bytearray, int, int, Any) -> None
@@ -28,7 +28,9 @@ class Miniature:
     def __coordinates_around(self, x, y, radius=1):
         coordinates = []
         for local_x in range(max(0, x - radius), min(x + radius, self.width - 1) + 1):
-            for local_y in range(max(0, y - radius), min(y + radius, self.height - 1) + 1):
+            for local_y in range(
+                max(0, y - radius), min(y + radius, self.height - 1) + 1
+            ):
                 coordinates.append((local_x, local_y))
         return coordinates
 
@@ -38,22 +40,24 @@ class Miniature:
 
     def to_dict(self):
         return {
-            'r': base64.b64encode(self.r).decode(),
-            'g': base64.b64encode(self.g).decode(),
-            'b': base64.b64encode(self.b).decode(),
-            'w': self.width,
-            'h': self.height,
-            'i': self.identifier,
+            "r": base64.b64encode(self.r).decode(),
+            "g": base64.b64encode(self.g).decode(),
+            "b": base64.b64encode(self.b).decode(),
+            "w": self.width,
+            "h": self.height,
+            "i": self.identifier,
         }
 
     @staticmethod
     def from_dict(dct):
-        return Miniature(red=base64.b64decode(dct['r']),
-                         green=base64.b64decode(dct['g']),
-                         blue=base64.b64decode(dct['b']),
-                         width=dct['w'],
-                         height=dct['h'],
-                         identifier=dct['i'])
+        return Miniature(
+            red=base64.b64decode(dct["r"]),
+            green=base64.b64decode(dct["g"]),
+            blue=base64.b64decode(dct["b"]),
+            width=dct["w"],
+            height=dct["h"],
+            identifier=dct["i"],
+        )
 
     @staticmethod
     def from_file_name(file_name, dimensions, identifier=None):

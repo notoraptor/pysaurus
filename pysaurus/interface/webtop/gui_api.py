@@ -9,16 +9,16 @@ from pysaurus.core.components import AbsolutePath
 from pysaurus.core.database.database import Database
 from pysaurus.core.database.notifications import DatabaseReady
 from pysaurus.core.database.properties import PropType
-from pysaurus.core.database.video_provider import VideoProvider
 from pysaurus.core.database.video_filtering import SOURCE_TREE
+from pysaurus.core.database.video_provider import VideoProvider
 from pysaurus.core.functions import launch_thread
 from pysaurus.core.notification import Notification
-from pysaurus.interface.webtop.parallel_notifier import ParallelNotifier
 from pysaurus.core.testing import TEST_LIST_FILE_PATH
+from pysaurus.interface.webtop.parallel_notifier import ParallelNotifier
 
 
 class GuiAPI:
-    JSON_INTEGER_MIN = -2 ** 31
+    JSON_INTEGER_MIN = -(2 ** 31)
     JSON_INTEGER_MAX = 2 ** 31 - 1
 
     def __init__(self):
@@ -61,8 +61,17 @@ class GuiAPI:
     def set_sources(self, paths):
         self.provider.set_source(paths)
 
-    def group_videos(self, field, sorting=None, reverse=None, allow_singletons=None, allow_multiple=None):
-        self.provider.set_groups(field, sorting, reverse, allow_singletons, allow_multiple)
+    def group_videos(
+        self,
+        field,
+        sorting=None,
+        reverse=None,
+        allow_singletons=None,
+        allow_multiple=None,
+    ):
+        self.provider.set_groups(
+            field, sorting, reverse, allow_singletons, allow_multiple
+        )
 
     def set_group(self, index):
         self.provider.set_group(index)
@@ -90,28 +99,31 @@ class GuiAPI:
             end = min(start + page_size, nb_videos)
             for index in range(start, end):
                 video = view[index]
-                js = {field: self._to_json_value(getattr(video, field)) for field in fields}
-                js['exists'] = video.exists()
-                js['hasThumbnail'] = video.thumbnail_path.exists()
-                js['local_id'] = index
+                js = {
+                    field: self._to_json_value(getattr(video, field))
+                    for field in fields
+                }
+                js["exists"] = video.exists()
+                js["hasThumbnail"] = video.thumbnail_path.exists()
+                js["local_id"] = index
                 videos.append(js)
         return {
-            'nbVideos': nb_videos,
-            'realNbVideos': self.provider.count(),
-            'nbPages': nb_pages,
-            'validSize': str(self.provider.get_view_file_size(view)),
-            'validLength': str(self.provider.get_view_duration(view)),
-            'nbGroups': self.provider.count_groups(),
-            'notFound': self.provider.all_not_found(),
-            'sources': self.provider.get_sources(),
-            'groupDef': self.provider.get_group_def(),
-            'searchDef': self.provider.get_search_def(),
-            'sorting': self.provider.get_sorting(),
-            'sourceTree': self._get_source_tree(),
-            'videos': videos,
-            'pageNumber': page_number,
-            'properties': self.get_prop_types(),
-            'path': self.provider.classifier_layer.get_path(),
+            "nbVideos": nb_videos,
+            "realNbVideos": self.provider.count(),
+            "nbPages": nb_pages,
+            "validSize": str(self.provider.get_view_file_size(view)),
+            "validLength": str(self.provider.get_view_duration(view)),
+            "nbGroups": self.provider.count_groups(),
+            "notFound": self.provider.all_not_found(),
+            "sources": self.provider.get_sources(),
+            "groupDef": self.provider.get_group_def(),
+            "searchDef": self.provider.get_search_def(),
+            "sorting": self.provider.get_sorting(),
+            "sourceTree": self._get_source_tree(),
+            "videos": videos,
+            "pageNumber": page_number,
+            "properties": self.get_prop_types(),
+            "path": self.provider.classifier_layer.get_path(),
         }
 
     def get_view_indices(self):
@@ -136,7 +148,9 @@ class GuiAPI:
         assert len(video_indices) == nb_videos
         return sorted(value_to_count.items())
 
-    def edit_property_for_videos(self, name, video_indices, values_to_add, values_to_remove):
+    def edit_property_for_videos(
+        self, name, video_indices, values_to_add, values_to_remove
+    ):
         prop_type = self.database.get_prop_type(name)
         nb_videos = 0
         if prop_type.multiple:
@@ -159,9 +173,11 @@ class GuiAPI:
                     elif prop_type.name in video.properties:
                         del video.properties[prop_type.name]
                 else:
-                    if (values_to_remove
-                            and prop_type.name in video.properties
-                            and video.properties[prop_type.name] in values_to_remove):
+                    if (
+                        values_to_remove
+                        and prop_type.name in video.properties
+                        and video.properties[prop_type.name] in values_to_remove
+                    ):
                         del video.properties[prop_type.name]
                     if values_to_add:
                         video.properties[prop_type.name] = values_to_add[0]
@@ -199,16 +215,21 @@ class GuiAPI:
         try:
             self.database.change_video_file_title(video, new_title)
             self.provider.on_properties_modified(
-                ('filename', 'file_title') + (() if video.meta_title else ('meta_title',)))
+                ("filename", "file_title")
+                + (() if video.meta_title else ("meta_title",))
+            )
             self.provider.load()
-            return {'filename': self._to_json_value(video.filename), 'file_title': video.file_title}
+            return {
+                "filename": self._to_json_value(video.filename),
+                "file_title": video.file_title,
+            }
         except OSError as exc:
-            return {'error': str(exc)}
+            return {"error": str(exc)}
 
     # Database properties features.
 
     def add_prop_type(self, prop_name, prop_type, prop_default, prop_multiple):
-        if prop_type == 'float':
+        if prop_type == "float":
             if isinstance(prop_default, list):
                 prop_default = [float(element) for element in prop_default]
             else:
@@ -252,7 +273,7 @@ class GuiAPI:
 
     def delete_property_value(self, name, values):
         assert isinstance(values, list), type(values)
-        print('delete property value', name, values)
+        print("delete property value", name, values)
         values = set(values)
         modified = []
         prop_type = self.database.get_prop_type(name)
@@ -280,7 +301,7 @@ class GuiAPI:
         return modified
 
     def edit_property_value(self, name, old_values, new_value):
-        print('edit property value', name, old_values, new_value)
+        print("edit property value", name, old_values, new_value)
         old_values = set(old_values)
         modified = False
         prop_type = self.database.get_prop_type(name)
@@ -312,7 +333,7 @@ class GuiAPI:
     def move_property_value(self, old_name, values, new_name):
         assert len(values) == 1, values
         value = values[0]
-        print('move property value', old_name, new_name, value)
+        print("move property value", old_name, new_name, value)
         prop_type = self.database.get_prop_type(new_name)
         prop_type.validate([value] if prop_type.multiple else value)
         videos = self.delete_property_value(old_name, [value])
@@ -329,13 +350,15 @@ class GuiAPI:
             self.provider.on_properties_modified((old_name, new_name))
 
     def set_video_properties(self, index, properties):
-        modified = self.database.set_video_properties(self.provider.get_video(index), properties)
+        modified = self.database.set_video_properties(
+            self.provider.get_video(index), properties
+        )
         self.provider.on_properties_modified(modified)
 
     # Property multi-selection and concatenation features.
 
     def classifier_select_group(self, group_id):
-        print('classifier select group', group_id)
+        print("classifier select group", group_id)
         prop_name = self.provider.grouping_layer.get_grouping().field[1:]
         path = self.provider.classifier_layer.get_path()
         value = self.provider.classifier_layer.get_group_value(group_id)
@@ -345,14 +368,14 @@ class GuiAPI:
         self.provider.on_properties_modified([prop_name])
 
     def classifier_select_group_by_value(self, field_value):
-        print('classifier select group by value', field_value)
+        print("classifier select group by value", field_value)
         group_id = self.provider.grouping_layer.get_group_id(field_value)
         self.provider.classifier_layer.set_path([])
         self.provider.classifier_layer.run()
         self.classifier_select_group(group_id)
 
     def classifier_back(self):
-        print('classifier back')
+        print("classifier back")
         prop_name = self.provider.grouping_layer.get_grouping().field[1:]
         path = self.provider.classifier_layer.get_path()
         self.provider.classifier_layer.set_path(path[:-1])
@@ -383,7 +406,7 @@ class GuiAPI:
                     video.properties[from_property] = from_prop_type(new_values)
                     modified.append(video)
 
-        new_value = ' '.join(str(value) for value in path)
+        new_value = " ".join(str(value) for value in path)
         if to_prop_type.multiple:
             for video in modified:
                 new_values = set(video.properties.get(to_property, ()))
@@ -405,7 +428,7 @@ class GuiAPI:
     def _get_source_tree():
         # TODO unreadable videos cannot be displayed yet, as they are incomplete VideoState (not Video) objects.
         tree = SOURCE_TREE.copy()
-        del tree['unreadable']
+        del tree["unreadable"]
         return tree
 
     def _count_videos(self):
@@ -415,7 +438,7 @@ class GuiAPI:
         return (count // page_size) + bool(count % page_size)
 
     def _monitor_notifications(self):
-        print('Monitoring notifications ...')
+        print("Monitoring notifications ...")
         while True:
             if self.threads_stop_flag:
                 break
@@ -427,21 +450,24 @@ class GuiAPI:
             except queue.Empty:
                 time.sleep(1 / 100)
             except Exception as exc:
-                print('Exception while sending notification:')
+                print("Exception while sending notification:")
                 traceback.print_tb(exc.__traceback__)
                 print(type(exc).__name__)
                 print(exc)
         self.monitor_thread = None
-        print('End monitoring.')
+        print("End monitoring.")
 
     def _notify(self, notification):
         # type: (Notification) -> None
         print(notification)
-        self._call_gui_function('__notify', {
-            'name': notification.get_name(),
-            'notification': notification.to_dict(),
-            'message': str(notification)
-        })
+        self._call_gui_function(
+            "__notify",
+            {
+                "name": notification.get_name(),
+                "notification": notification.to_dict(),
+                "message": str(notification),
+            },
+        )
 
     def _call_gui_function(self, function_name, *parameters):
         # to override.
@@ -461,27 +487,33 @@ class GuiAPI:
             update=update,
             notifier=self.notifier,
             ensure_miniatures=True,
-            reset=False
+            reset=False,
         )
         self._load_videos()
         self.notifier.notify(DatabaseReady())
         self.db_loading_thread = None
-        print('End loading database.')
+        print("End loading database.")
 
     def _update_database(self):
         self.database.refresh(ensure_miniatures=True)
         self._load_videos()
         self.notifier.notify(DatabaseReady())
         self.db_loading_thread = None
-        print('End updating database.')
+        print("End updating database.")
 
     def _to_json_value(self, value):
         if isinstance(value, (tuple, list, set)):
             return [self._to_json_value(element) for element in value]
         if isinstance(value, dict):
-            return {self._to_json_value(key): self._to_json_value(element) for key, element in value.items()}
+            return {
+                self._to_json_value(key): self._to_json_value(element)
+                for key, element in value.items()
+            }
         if isinstance(value, (str, float, bool, type(None))):
             return value
-        if isinstance(value, int) and self.JSON_INTEGER_MIN <= value <= self.JSON_INTEGER_MAX:
+        if (
+            isinstance(value, int)
+            and self.JSON_INTEGER_MIN <= value <= self.JSON_INTEGER_MAX
+        ):
             return value
         return str(value)

@@ -42,120 +42,140 @@ class Video(VideoState):
 
     __slots__ = (
         # Video properties
-        'audio_bit_rate',
-        'audio_codec',
-        'audio_codec_description',
-        'channels',
-        'container_format',
-        'device_name',  # private field
-        'duration',
-        'duration_time_base',
-        'frame_rate_den',
-        'frame_rate_num',
-        'height',
-        'meta_title',
-        'properties',
-        'sample_rate',
-        'thumb_name',
-        'video_codec',
-        'video_codec_description',
-        'width',
+        "audio_bit_rate",
+        "audio_codec",
+        "audio_codec_description",
+        "channels",
+        "container_format",
+        "device_name",  # private field
+        "duration",
+        "duration_time_base",
+        "frame_rate_den",
+        "frame_rate_num",
+        "height",
+        "meta_title",
+        "properties",
+        "sample_rate",
+        "thumb_name",
+        "video_codec",
+        "video_codec_description",
+        "width",
         # Runtime attributes
-        'runtime_has_thumbnail',
+        "runtime_has_thumbnail",
     )
 
     # TODO to remove
     STRING_FIELDS = {
-        'audio_codec',
-        'audio_codec_description',
-        'container_format',
-        'day',
-        'disk',
-        'extension',
-        'file_size',
-        'file_title',
-        'filename',
-        'thumbnail_path',
-        'title',
-        'video_codec',
-        'video_codec_description',
-        'meta_title',
+        "audio_codec",
+        "audio_codec_description",
+        "container_format",
+        "day",
+        "disk",
+        "extension",
+        "file_size",
+        "file_title",
+        "filename",
+        "thumbnail_path",
+        "title",
+        "video_codec",
+        "video_codec_description",
+        "meta_title",
     }
 
     # All video properties must be represented here.
     # Runtime attributes should not appear here.
     MIN_TO_LONG = {
-        'A': 'audio_codec_description',
-        'C': 'channels',
-        'V': 'video_codec_description',
-        'a': 'audio_codec',
-        'b': 'device_name',
-        'c': 'container_format',
-        'd': 'duration',
-        'h': 'height',
-        'i': 'thumb_name',
-        'n': 'meta_title',
-        'p': 'properties',
-        'r': 'audio_bit_rate',
-        't': 'duration_time_base',
-        'u': 'sample_rate',
-        'v': 'video_codec',
-        'w': 'width',
-        'x': 'frame_rate_num',
-        'y': 'frame_rate_den',
+        "A": "audio_codec_description",
+        "C": "channels",
+        "V": "video_codec_description",
+        "a": "audio_codec",
+        "b": "device_name",
+        "c": "container_format",
+        "d": "duration",
+        "h": "height",
+        "i": "thumb_name",
+        "n": "meta_title",
+        "p": "properties",
+        "r": "audio_bit_rate",
+        "t": "duration_time_base",
+        "u": "sample_rate",
+        "v": "video_codec",
+        "w": "width",
+        "x": "frame_rate_num",
+        "y": "frame_rate_den",
     }
 
     LONG_TO_MIN = {_long: _min for _min, _long in MIN_TO_LONG.items()}
 
     QUALITY_FIELDS = (
-        ('quality_compression', 6),
-        ('height', 5),
-        ('width', 4),
-        ('raw_seconds', 3),
-        ('frame_rate', 2),
-        ('file_size', 1),
-        ('audio_bit_rate', 0.5),
+        ("quality_compression", 6),
+        ("height", 5),
+        ("width", 4),
+        ("raw_seconds", 3),
+        ("frame_rate", 2),
+        ("file_size", 1),
+        ("audio_bit_rate", 0.5),
     )
 
     # TODO to remove
     ROW_FIELDS = (
-        'audio_bit_rate',
-        'audio_codec',
-        'audio_codec_description',
-        'container_format',
-        'channels',
-        'date',
-        'day',
-        'disk',
-        'extension',
-        'file_size',
-        'file_title',
-        'filename',
-        'frame_rate',
-        'height',
-        'length',
-        'properties',
-        'quality',
-        'sample_rate',
-        'size',
-        'thumbnail_path',
-        'title',
-        'video_codec',
-        'video_codec_description',
-        'video_id',
-        'width',
+        "audio_bit_rate",
+        "audio_codec",
+        "audio_codec_description",
+        "container_format",
+        "channels",
+        "date",
+        "day",
+        "disk",
+        "extension",
+        "file_size",
+        "file_title",
+        "filename",
+        "frame_rate",
+        "height",
+        "length",
+        "properties",
+        "quality",
+        "sample_rate",
+        "size",
+        "thumbnail_path",
+        "title",
+        "video_codec",
+        "video_codec_description",
+        "video_id",
+        "width",
     )
 
-    def __init__(self,
-                 # Runtime arguments
-                 database, from_dictionary=None,
-                 # VideoState optional arguments
-                 filename=None, size=0, errors=(), video_id=None,
-                 # Video optional arguments
-                 audio_bit_rate=0, audio_codec='', audio_codec_description='', channels=2, container_format='',
-                 device_name='', duration=0, duration_time_base=0, frame_rate_den=0, frame_rate_num=0, height=0,
-                 meta_title='', properties=None, sample_rate=0, thumb_name='', video_codec='',
-                 video_codec_description='', width=0):
+    def __init__(
+        self,
+        # Runtime arguments
+        database,
+        from_dictionary=None,
+        # VideoState optional arguments
+        filename=None,
+        size=0,
+        errors=(),
+        video_id=None,
+        # Video optional arguments
+        audio_bit_rate=0,
+        audio_codec="",
+        audio_codec_description="",
+        channels=2,
+        container_format="",
+        device_name="",
+        duration=0,
+        duration_time_base=0,
+        frame_rate_den=0,
+        frame_rate_num=0,
+        height=0,
+        meta_title="",
+        properties=None,
+        sample_rate=0,
+        thumb_name="",
+        video_codec="",
+        video_codec_description="",
+        width=0,
+    ):
         """
         :type database: pysaurus.core.database.database.Database
         :type from_dictionary: dict
@@ -183,28 +203,54 @@ class Video(VideoState):
         :type width: int
         """
         if from_dictionary:
-            audio_bit_rate = from_dictionary.get(self.LONG_TO_MIN['audio_bit_rate'], audio_bit_rate)
-            audio_codec = from_dictionary.get(self.LONG_TO_MIN['audio_codec'], audio_codec)
-            audio_codec_description = from_dictionary.get(self.LONG_TO_MIN['audio_codec_description'],
-                                                          audio_codec_description)
-            channels = from_dictionary.get(self.LONG_TO_MIN['channels'], channels)
-            container_format = from_dictionary.get(self.LONG_TO_MIN['container_format'], container_format)
-            device_name = from_dictionary.get(self.LONG_TO_MIN['device_name'], device_name)
-            duration = from_dictionary.get(self.LONG_TO_MIN['duration'], duration)
-            duration_time_base = from_dictionary.get(self.LONG_TO_MIN['duration_time_base'], duration_time_base)
-            frame_rate_den = from_dictionary.get(self.LONG_TO_MIN['frame_rate_den'], frame_rate_den)
-            frame_rate_num = from_dictionary.get(self.LONG_TO_MIN['frame_rate_num'], frame_rate_num)
-            height = from_dictionary.get(self.LONG_TO_MIN['height'], height)
-            meta_title = from_dictionary.get(self.LONG_TO_MIN['meta_title'], meta_title)
-            properties = from_dictionary.get(self.LONG_TO_MIN['properties'], properties)
-            sample_rate = from_dictionary.get(self.LONG_TO_MIN['sample_rate'], sample_rate)
-            thumb_name = from_dictionary.get(self.LONG_TO_MIN['thumb_name'], thumb_name)
-            video_codec = from_dictionary.get(self.LONG_TO_MIN['video_codec'], video_codec)
-            video_codec_description = from_dictionary.get(self.LONG_TO_MIN['video_codec_description'],
-                                                          video_codec_description)
-            width = from_dictionary.get(self.LONG_TO_MIN['width'], width)
-        super(Video, self).__init__(filename=filename, size=size, errors=errors, video_id=video_id,
-                                    database=database, from_dictionary=from_dictionary)
+            audio_bit_rate = from_dictionary.get(
+                self.LONG_TO_MIN["audio_bit_rate"], audio_bit_rate
+            )
+            audio_codec = from_dictionary.get(
+                self.LONG_TO_MIN["audio_codec"], audio_codec
+            )
+            audio_codec_description = from_dictionary.get(
+                self.LONG_TO_MIN["audio_codec_description"], audio_codec_description
+            )
+            channels = from_dictionary.get(self.LONG_TO_MIN["channels"], channels)
+            container_format = from_dictionary.get(
+                self.LONG_TO_MIN["container_format"], container_format
+            )
+            device_name = from_dictionary.get(
+                self.LONG_TO_MIN["device_name"], device_name
+            )
+            duration = from_dictionary.get(self.LONG_TO_MIN["duration"], duration)
+            duration_time_base = from_dictionary.get(
+                self.LONG_TO_MIN["duration_time_base"], duration_time_base
+            )
+            frame_rate_den = from_dictionary.get(
+                self.LONG_TO_MIN["frame_rate_den"], frame_rate_den
+            )
+            frame_rate_num = from_dictionary.get(
+                self.LONG_TO_MIN["frame_rate_num"], frame_rate_num
+            )
+            height = from_dictionary.get(self.LONG_TO_MIN["height"], height)
+            meta_title = from_dictionary.get(self.LONG_TO_MIN["meta_title"], meta_title)
+            properties = from_dictionary.get(self.LONG_TO_MIN["properties"], properties)
+            sample_rate = from_dictionary.get(
+                self.LONG_TO_MIN["sample_rate"], sample_rate
+            )
+            thumb_name = from_dictionary.get(self.LONG_TO_MIN["thumb_name"], thumb_name)
+            video_codec = from_dictionary.get(
+                self.LONG_TO_MIN["video_codec"], video_codec
+            )
+            video_codec_description = from_dictionary.get(
+                self.LONG_TO_MIN["video_codec_description"], video_codec_description
+            )
+            width = from_dictionary.get(self.LONG_TO_MIN["width"], width)
+        super(Video, self).__init__(
+            filename=filename,
+            size=size,
+            errors=errors,
+            video_id=video_id,
+            database=database,
+            from_dictionary=from_dictionary,
+        )
         self.audio_bit_rate = audio_bit_rate
         self.audio_codec = audio_codec
         self.audio_codec_description = audio_codec_description
@@ -229,23 +275,31 @@ class Video(VideoState):
 
     def __str__(self):
         with StringPrinter() as printer:
-            printer.write('Video %s:' % self.video_id)
+            printer.write("Video %s:" % self.video_id)
             for field in self.ROW_FIELDS:
-                printer.write('\t%s: %s' % (field, getattr(self, field)))
+                printer.write("\t%s: %s" % (field, getattr(self, field)))
             return str(printer)
 
     extension = property(lambda self: self.filename.extension)
     file_title = property(lambda self: self.filename.title)
     frame_rate = property(lambda self: self.frame_rate_num / self.frame_rate_den)
-    length = property(lambda self: Duration(round(self.duration * 1000000 / self.duration_time_base)))
-    title = property(lambda self: self.meta_title if self.meta_title else self.filename.title)
+    length = property(
+        lambda self: Duration(round(self.duration * 1000000 / self.duration_time_base))
+    )
+    title = property(
+        lambda self: self.meta_title if self.meta_title else self.filename.title
+    )
 
     raw_seconds = property(lambda self: self.duration / self.duration_time_base)
-    raw_microseconds = property(lambda self: self.duration * 1000000 / self.duration_time_base)
+    raw_microseconds = property(
+        lambda self: self.duration * 1000000 / self.duration_time_base
+    )
 
     @property
     def thumbnail_path(self):
-        return path_utils.generate_thumb_path(self.database.thumbnail_folder, self.ensure_thumbnail_name())
+        return path_utils.generate_thumb_path(
+            self.database.thumbnail_folder, self.ensure_thumbnail_name()
+        )
 
     @property
     def quality(self):
@@ -298,17 +352,22 @@ class Video(VideoState):
             path=self.filename.path,
             time_start=start,
             clip_seconds=length,
-            unique_id=self.ensure_thumbnail_name()
+            unique_id=self.ensure_thumbnail_name(),
         )
 
     def terms(self, as_set=False):
-        return string_to_pieces(' '.join((
-            self.filename.path,
-            self.meta_title,
-        )), as_set=as_set)
+        return string_to_pieces(
+            " ".join(
+                (
+                    self.filename.path,
+                    self.meta_title,
+                )
+            ),
+            as_set=as_set,
+        )
 
     def has_terms_exact(self, terms):
-        return ' '.join(terms) in ' '.join(self.terms())
+        return " ".join(terms) in " ".join(self.terms())
 
     def has_terms_and(self, terms):
         video_terms = self.terms(as_set=True)
@@ -340,7 +399,7 @@ class Video(VideoState):
     def compare(self, other, sorting):
         # type: (Video, Video, Sequence[str]) -> int
         for sort in sorting:
-            reverse = sort[0] == '-'
+            reverse = sort[0] == "-"
             field = sort[1:]
             f1 = getattr(self, field)
             f2 = getattr(other, field)
@@ -358,7 +417,7 @@ class Video(VideoState):
 
     def set_property(self, name, value):
         if not self.database.has_prop_type(name):
-            print('Unknown property: %s' % name, file=sys.stderr)
+            print("Unknown property: %s" % name, file=sys.stderr)
             return False
         prop_type = self.database.get_prop_type(name)
         value = prop_type(value)

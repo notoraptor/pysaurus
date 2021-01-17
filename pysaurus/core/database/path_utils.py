@@ -20,10 +20,10 @@ def load_list_file(list_file_path):
     strings = []
     list_file_path = AbsolutePath.ensure(list_file_path)
     if list_file_path.isfile():
-        with open(list_file_path.path, 'r') as list_file:
+        with open(list_file_path.path, "r") as list_file:
             for line in list_file:
                 line = line.strip()
-                if line and line[0] != '#':
+                if line and line[0] != "#":
                     strings.append(line)
     return strings
 

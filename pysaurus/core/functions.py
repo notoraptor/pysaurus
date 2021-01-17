@@ -1,52 +1,57 @@
 import bisect
 import concurrent.futures
+import math
 import os
 import re
 import threading
 from datetime import datetime
-import math
 
 from pysaurus.core.constants import VIDEO_SUPPORTED_EXTENSIONS
+
 # Datetime since timestamp 0.
 from pysaurus.core.modules import HTMLStripper
 
 EPOCH = datetime.utcfromtimestamp(0)
 
-REGEX_NO_WORD = re.compile(r'(\W|_)+')
+REGEX_NO_WORD = re.compile(r"(\W|_)+")
 
-REGEX_CONSECUTIVE_UPPER_CASES = re.compile('[A-Z]{2,}')
+REGEX_CONSECUTIVE_UPPER_CASES = re.compile("[A-Z]{2,}")
 
-REGEX_LOWER_THEN_UPPER_CASES = re.compile('([a-z0-9])([A-Z])')
+REGEX_LOWER_THEN_UPPER_CASES = re.compile("([a-z0-9])([A-Z])")
 
-REGEX_WORD_THEN_NUMBER = re.compile(r'([^0-9 ])([0-9])')
-REGEX_NUMBER_THEN_WORD = re.compile(r'([0-9])([^0-9 ])')
+REGEX_WORD_THEN_NUMBER = re.compile(r"([^0-9 ])([0-9])")
+REGEX_NUMBER_THEN_WORD = re.compile(r"([0-9])([^0-9 ])")
 
 
 def split_words_and_numbers(text):
-    text = REGEX_WORD_THEN_NUMBER.sub(r'\1 \2', text)
-    text = REGEX_NUMBER_THEN_WORD.sub(r'\1 \2', text)
+    text = REGEX_WORD_THEN_NUMBER.sub(r"\1 \2", text)
+    text = REGEX_NUMBER_THEN_WORD.sub(r"\1 \2", text)
     return text
 
 
 def camel_case_to_snake_case(name, split_upper_cases=True):
-    """ Convert a string (expected to be in camel case) to snake case.
-        :param name: string to convert.
-        :param split_upper_cases: if True, split consecutives uppercases too (e.g. 'ABC' => 'a_b_c')
-        :return: snake case version of given name.
-        :rtype: str
+    """Convert a string (expected to be in camel case) to snake case.
+    :param name: string to convert.
+    :param split_upper_cases: if True, split consecutives uppercases too (e.g. 'ABC' => 'a_b_c')
+    :return: snake case version of given name.
+    :rtype: str
     """
-    if name == '':
+    if name == "":
         return name
     if split_upper_cases:
-        name = REGEX_CONSECUTIVE_UPPER_CASES.sub(lambda m: '_'.join(c for c in m.group(0)), name)
-    return REGEX_LOWER_THEN_UPPER_CASES.sub(r'\1_\2', name).lower()
+        name = REGEX_CONSECUTIVE_UPPER_CASES.sub(
+            lambda m: "_".join(c for c in m.group(0)), name
+        )
+    return REGEX_LOWER_THEN_UPPER_CASES.sub(r"\1_\2", name).lower()
 
 
 def string_to_pieces(the_string, as_set=False):
     builder = set if as_set else list
     the_string = camel_case_to_snake_case(the_string, split_upper_cases=False)
     the_string = split_words_and_numbers(the_string)
-    return builder(piece.lower() for piece in REGEX_NO_WORD.sub(' ', the_string).split())
+    return builder(
+        piece.lower() for piece in REGEX_NO_WORD.sub(" ", the_string).split()
+    )
 
 
 def is_valid_video_filename(filename):
@@ -56,14 +61,14 @@ def is_valid_video_filename(filename):
 
 def dispatch_tasks(tasks, job_count, extra_args=None):
     # type: (list, int, list) -> list
-    """ Split <tasks> into <job_count> jobs and associate each one
-        with an unique job ID starting from <next_job_id>, so that
-        each job could assign an unique ID to each of his task by
-        incrementing his job ID when managing his tasks.
-        :param tasks: a list of tasks to split.
-        :param job_count: number of jobs.
-        :param extra_args: (optional) list
-        :return: a list of lists each containing (job, job ID, and extra args if provided).
+    """Split <tasks> into <job_count> jobs and associate each one
+    with an unique job ID starting from <next_job_id>, so that
+    each job could assign an unique ID to each of his task by
+    incrementing his job ID when managing his tasks.
+    :param tasks: a list of tasks to split.
+    :param job_count: number of jobs.
+    :param extra_args: (optional) list
+    :return: a list of lists each containing (job, job ID, and extra args if provided).
     """
     if extra_args is None:
         extra_args = []
@@ -75,15 +80,20 @@ def dispatch_tasks(tasks, job_count, extra_args=None):
         for i in range(task_count % job_count):
             job_lengths[i] += 1
     if sum(job_lengths) != task_count:
-        raise ValueError('Programming error when dispatching tasks: total expected %d, got %d.'
-                         % (task_count, sum(job_lengths)))
+        raise ValueError(
+            "Programming error when dispatching tasks: total expected %d, got %d."
+            % (task_count, sum(job_lengths))
+        )
     cursor = 0
     jobs = []
     job_id = 0
     job_count = len(job_lengths)
     for job_len in job_lengths:
         job_id += 1
-        jobs.append([tasks[cursor:(cursor + job_len)], '%d/%d' % (job_id, job_count)] + extra_args)
+        jobs.append(
+            [tasks[cursor : (cursor + job_len)], "%d/%d" % (job_id, job_count)]
+            + extra_args
+        )
         cursor += job_len
     # NB: next_job_id is now next_job_id + len(tasks).
     return jobs
@@ -97,7 +107,7 @@ def permute(values, initial_permutation=()):
         return
     for position in range(len(values)):
         extended_permutation = initial_permutation + [values[position]]
-        remaining_values = values[:position] + values[(position + 1):]
+        remaining_values = values[:position] + values[(position + 1) :]
         for permutation in permute(remaining_values, extended_permutation):
             yield permutation
 
@@ -111,11 +121,11 @@ def to_printable(element):
 
 
 def package_dir():
-    return os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
 
 def bool_type(mixed):
-    """ Convert a value to a boolean, with following rules (in that order):
+    """Convert a value to a boolean, with following rules (in that order):
         None => False
         bool, int, float => False if 0, else True
         "true" (case insensitive) => True
@@ -131,9 +141,9 @@ def bool_type(mixed):
     if isinstance(mixed, (bool, int, float)):
         return bool(mixed)
     if isinstance(mixed, str):
-        if mixed.lower() == 'true':
+        if mixed.lower() == "true":
             return True
-        if not mixed or mixed.lower() == 'false':
+        if not mixed or mixed.lower() == "false":
             return False
         try:
             return bool(int(mixed))
@@ -146,8 +156,8 @@ def bool_type(mixed):
 
 
 def timestamp_microseconds():
-    """ Return current timestamp with microsecond resolution.
-        :return: int
+    """Return current timestamp with microsecond resolution.
+    :return: int
     """
     delta = datetime.now() - EPOCH
     return (delta.days * 24 * 60 * 60 + delta.seconds) * 1000000 + delta.microseconds
@@ -173,7 +183,7 @@ def coordinates_around(x, y, width, height, radius=1):
 
 def get_vector_angle(a, b):
     """Return the angle of vector a->b wrt/ horizontal vector (x = 1, y = 0).
-        a and b must be each a couple of coordinates (x, y).
+    a and b must be each a couple of coordinates (x, y).
     """
     if a == b:
         return 0
@@ -190,14 +200,14 @@ def get_vector_angle(a, b):
 
 def get_file_extension(string):
     # type: (str) -> str
-    index_of_dot = string.rfind('.')
+    index_of_dot = string.rfind(".")
     if index_of_dot >= 0:
-        return string[(index_of_dot + 1):].lower()
-    return ''
+        return string[(index_of_dot + 1) :].lower()
+    return ""
 
 
-def get_plural_suffix(count, suffix='s'):
-    return '' if count == 1 else suffix
+def get_plural_suffix(count, suffix="s"):
+    return "" if count == 1 else suffix
 
 
 def _pgcd(a, b):
@@ -266,39 +276,39 @@ def identity(value):
 
 
 def is_dictionary(dict_to_check):
-    """ Check if given variable is a dictionary-like object.
+    """Check if given variable is a dictionary-like object.
 
-        :param dict_to_check: Dictionary to check.
-        :return: Indicates if the object is a dictionary.
-        :rtype: bool
+    :param dict_to_check: Dictionary to check.
+    :return: Indicates if the object is a dictionary.
+    :rtype: bool
     """
     return isinstance(dict_to_check, dict) or all(
         hasattr(dict_to_check, expected_attribute)
         for expected_attribute in (
-            '__len__',
-            '__contains__',
-            '__bool__',
-            '__iter__',
-            '__getitem__',
-            'keys',
-            'values',
-            'items',
+            "__len__",
+            "__contains__",
+            "__bool__",
+            "__iter__",
+            "__getitem__",
+            "keys",
+            "values",
+            "items",
         )
     )
 
 
 def is_sequence(seq_to_check):
-    """ Check if given variable is a sequence-like object.
-        Note that strings and dictionary-like objects will not be considered as sequences.
+    """Check if given variable is a sequence-like object.
+    Note that strings and dictionary-like objects will not be considered as sequences.
 
-        :param seq_to_check: Sequence-like object to check.
-        :return: Indicates if the object is sequence-like.
-        :rtype: bool
+    :param seq_to_check: Sequence-like object to check.
+    :return: Indicates if the object is sequence-like.
+    :rtype: bool
     """
     # Strings and dicts are not valid sequences.
     if isinstance(seq_to_check, str) or is_dictionary(seq_to_check):
         return False
-    return hasattr(seq_to_check, '__iter__')
+    return hasattr(seq_to_check, "__iter__")
 
 
 def __get_start_index(sorted_content: list, element):

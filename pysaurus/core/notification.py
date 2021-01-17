@@ -12,7 +12,13 @@ ManagerType = Callable[[Notification], None]
 
 
 class Notifier:
-    __slots__ = ('__managers', '__default_manager', '__default_manager_policy', '__log_path', '__log_written')
+    __slots__ = (
+        "__managers",
+        "__default_manager",
+        "__default_manager_policy",
+        "__log_path",
+        "__log_written",
+    )
 
     DM_NO_CALL = 0
     DM_CALL_BEFORE = 1
@@ -36,11 +42,13 @@ class Notifier:
 
     def log(self, notification):
         if self.__log_path:
-            with open(self.__log_path, 'a') as file:
+            with open(self.__log_path, "a") as file:
                 if not self.__log_written:
-                    file.write('\n########## LOG %s ##########\n\n' % DateModified.now())
+                    file.write(
+                        "\n########## LOG %s ##########\n\n" % DateModified.now()
+                    )
                     self.__log_written = True
-                file.write('%s\n' % notification)
+                file.write("%s\n" % notification)
 
     def set_default_manager(self, function):
         # type: (ManagerType) -> None
