@@ -2,6 +2,7 @@ from abc import abstractmethod
 from io import StringIO
 from itertools import chain
 from typing import Any, Generic, List, TypeVar
+import locale
 
 from pysaurus.core.functions import to_printable, pgcd
 
@@ -263,3 +264,28 @@ class NegativeComparator:
 
     def __lt__(self, other):
         return other.value < self.value
+
+
+class Text:
+    __slots__ = ("value",)
+
+    def __init__(self, value=""):
+        self.value = value or ""
+
+    def __bool__(self):
+        return bool(self.value)
+
+    def __str__(self):
+        return self.value
+
+    def __hash__(self):
+        return hash(self.value)
+
+    def __eq__(self, other):
+        return self.value == other.value
+
+    def __lt__(self, other):
+        return (
+            locale.strcoll(self.value.lower(), other.value.lower())
+            or -locale.strcoll(self.value, other.value)
+        ) < 0

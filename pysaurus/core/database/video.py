@@ -16,7 +16,7 @@ import sys
 from io import BytesIO
 from typing import Sequence
 
-from pysaurus.core.classes import StringPrinter
+from pysaurus.core.classes import StringPrinter, Text
 from pysaurus.core.components import AbsolutePath, Duration
 from pysaurus.core.constants import THUMBNAIL_EXTENSION
 from pysaurus.core.database import path_utils
@@ -35,6 +35,10 @@ def compare_text(v1: str, v2: str):
 
 def compare_text_or_data(v1, v2):
     return compare_text(v1, v2) if isinstance(v1, str) else compare_with_lt(v1, v2)
+
+
+def to_dict_value(value):
+    return value.value if isinstance(value, Text) else value
 
 
 class Video(VideoState):
@@ -63,24 +67,6 @@ class Video(VideoState):
         # Runtime attributes
         "runtime_has_thumbnail",
     )
-
-    # TODO to remove
-    STRING_FIELDS = {
-        "audio_codec",
-        "audio_codec_description",
-        "container_format",
-        "day",
-        "disk",
-        "extension",
-        "file_size",
-        "file_title",
-        "filename",
-        "thumbnail_path",
-        "title",
-        "video_codec",
-        "video_codec_description",
-        "meta_title",
-    }
 
     # All video properties must be represented here.
     # Runtime attributes should not appear here.
@@ -252,20 +238,20 @@ class Video(VideoState):
             from_dictionary=from_dictionary,
         )
         self.audio_bit_rate = audio_bit_rate
-        self.audio_codec = audio_codec
-        self.audio_codec_description = audio_codec_description
-        self.container_format = container_format
-        self.device_name = device_name
+        self.audio_codec = Text(audio_codec)
+        self.audio_codec_description = Text(audio_codec_description)
+        self.container_format = Text(container_format)
+        self.device_name = Text(device_name)
         self.duration = duration
         self.duration_time_base = duration_time_base or 1
         self.frame_rate_den = frame_rate_den or 1
         self.frame_rate_num = frame_rate_num
         self.height = height
-        self.meta_title = html_to_title(meta_title)
+        self.meta_title = Text(html_to_title(meta_title))
         self.sample_rate = sample_rate
         self.thumb_name = thumb_name
-        self.video_codec = video_codec
-        self.video_codec_description = video_codec_description
+        self.video_codec = Text(video_codec)
+        self.video_codec_description = Text(video_codec_description)
         self.width = width
         self.channels = channels
         self.properties = {}
@@ -281,13 +267,13 @@ class Video(VideoState):
             return str(printer)
 
     extension = property(lambda self: self.filename.extension)
-    file_title = property(lambda self: self.filename.title)
+    file_title = property(lambda self: Text(self.filename.title))
     frame_rate = property(lambda self: self.frame_rate_num / self.frame_rate_den)
     length = property(
         lambda self: Duration(round(self.duration * 1000000 / self.duration_time_base))
     )
     title = property(
-        lambda self: self.meta_title if self.meta_title else self.filename.title
+        lambda self: self.meta_title if self.meta_title else Text(self.filename.title)
     )
 
     raw_seconds = property(lambda self: self.duration / self.duration_time_base)
@@ -357,12 +343,7 @@ class Video(VideoState):
 
     def terms(self, as_set=False):
         return string_to_pieces(
-            " ".join(
-                (
-                    self.filename.path,
-                    self.meta_title,
-                )
-            ),
+            " ".join((self.filename.path, str(self.meta_title))),
             as_set=as_set,
         )
 
@@ -381,8 +362,7 @@ class Video(VideoState):
         dct = super().to_dict()
         len_before = len(dct)
         for _min, _long in self.MIN_TO_LONG.items():
-            assert _min not in dct, (_min, _long)
-            dct[_min] = getattr(self, _long)
+            dct[_min] = to_dict_value(getattr(self, _long))
         assert len(dct) == len_before + len(self.MIN_TO_LONG)
         return dct
 

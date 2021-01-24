@@ -123,18 +123,19 @@ class GroupDef(ToDict):
                 none_group = group
             else:
                 other_groups.append(group)
-        field_comparator = cls.generate_comparator(field, reverse)
         if sorting == cls.FIELD:
-            key = lambda group: field_comparator(group.field_value)
+            key = lambda group: cls.make_comparable(group.field_value, reverse)
         elif sorting == cls.COUNT:
             key = lambda group: (
-                cls.make_comparable_number(len(group.videos), reverse),
-            ) + field_comparator(group.field_value)
+                cls.make_comparable(len(group.videos), reverse),
+                cls.make_comparable(group.field_value, reverse),
+            )
         else:
             assert sorting == cls.LENGTH
             key = lambda group: (
-                cls.make_comparable_number(len(str(group.field_value)), reverse),
-            ) + field_comparator(group.field_value)
+                cls.make_comparable(len(str(group.field_value)), reverse),
+                cls.make_comparable(group.field_value, reverse),
+            )
         other_groups.sort(key=key)
         return ([none_group] + other_groups) if none_group else other_groups
 
@@ -143,29 +144,8 @@ class GroupDef(ToDict):
         return cls(None)
 
     @classmethod
-    def make_comparable_number(cls, value: Union[int, float], reverse: bool):
-        return -value if reverse else value
-
-    @classmethod
-    def generate_comparator(cls, field, reverse, remaining_tuple=()):
-        if field in Video.STRING_FIELDS:
-            if reverse:
-                return (
-                    lambda value: (
-                        NegativeComparator(value.lower()),
-                        NegativeComparator(value),
-                    )
-                    + remaining_tuple
-                )
-            else:
-                return (
-                    lambda value: (value.lower(), NegativeComparator(value))
-                    + remaining_tuple
-                )
-        elif reverse:
-            return lambda value: (NegativeComparator(value),) + remaining_tuple
-        else:
-            return lambda value: (value,) + remaining_tuple
+    def make_comparable(cls, value, reverse):
+        return NegativeComparator(value) if reverse else value
 
 
 class SearchDef(ToDict):
