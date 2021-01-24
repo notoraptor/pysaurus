@@ -209,7 +209,7 @@ class Database:
     def __set_videos_thumbs_flags(self):
         thumb_names = self.__check_thumbnails_on_disk()
         for video in self.__videos.values():
-            video.runtime_has_thumbnail = video.ensure_thumbnail_name() in thumb_names
+            video.runtime.has_thumbnail = video.ensure_thumbnail_name() in thumb_names
         return thumb_names
 
     def __check_videos_on_disk(self):
@@ -428,7 +428,7 @@ class Database:
         for valid_thumb_name, vds in thumb_to_videos.items():
             if len(vds) == 1:
                 valid_thumb_names.add(valid_thumb_name)
-                vds[0].runtime_has_thumbnail = True
+                vds[0].runtime.has_thumbnail = True
             else:
                 videos_without_thumbs.extend(vds)
         nb_videos_no_thumbs = len(videos_without_thumbs)
@@ -447,7 +447,7 @@ class Database:
                 thumb_name = "%s_%d" % (base_thumb_name, thumb_name_index)
                 thumb_name_index += 1
             video.thumb_name = thumb_name
-            video.runtime_has_thumbnail = True
+            video.runtime.has_thumbnail = True
             valid_thumb_names.add(thumb_name)
         del valid_thumb_names
         self.save()
@@ -502,7 +502,7 @@ class Database:
                     thumb_errors[file_name] = d["e"]
                     video = self.__videos[file_path]
                     video.error_thumbnail = True
-                    video.runtime_has_thumbnail = False
+                    video.runtime.has_thumbnail = False
 
             list_file_path.delete()
             json_file_path.delete()

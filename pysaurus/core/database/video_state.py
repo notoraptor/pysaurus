@@ -7,13 +7,14 @@ from pysaurus.core.modules import System
 
 
 class VideoRuntimeInfo:
-    __slots__ = "is_file", "size", "mtime", "driver_id"
+    __slots__ = "is_file", "size", "mtime", "driver_id", "has_thumbnail"
 
     def __init__(self):
         self.is_file = False
         self.mtime = 0
         self.size = 0
         self.driver_id = None
+        self.has_thumbnail = False
 
 
 class VideoState:

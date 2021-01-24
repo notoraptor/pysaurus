@@ -45,7 +45,6 @@ class Video(VideoState):
     UNREADABLE = False
 
     __slots__ = (
-        # Video properties
         "audio_bit_rate",
         "audio_codec",
         "audio_codec_description",
@@ -64,12 +63,8 @@ class Video(VideoState):
         "video_codec",
         "video_codec_description",
         "width",
-        # Runtime attributes
-        "runtime_has_thumbnail",
     )
 
-    # All video properties must be represented here.
-    # Runtime attributes should not appear here.
     MIN_TO_LONG = {
         "A": "audio_codec_description",
         "C": "channels",
@@ -103,34 +98,15 @@ class Video(VideoState):
         ("audio_bit_rate", 0.5),
     )
 
-    # TODO to remove
-    ROW_FIELDS = (
-        "audio_bit_rate",
-        "audio_codec",
-        "audio_codec_description",
-        "container_format",
-        "channels",
-        "date",
-        "day",
-        "disk",
-        "extension",
-        "file_size",
-        "file_title",
-        "filename",
-        "frame_rate",
-        "height",
-        "length",
-        "properties",
-        "quality",
-        "sample_rate",
-        "size",
-        "thumbnail_path",
-        "title",
-        "video_codec",
-        "video_codec_description",
-        "video_id",
-        "width",
-    )
+    @classmethod
+    def get_unique_fields(cls):
+        fields = {
+            field
+            for field in dir(cls)
+            if "a" <= field[0] <= "z" and not callable(getattr(cls, field))
+        }
+        fields.difference_update(["errors", "properties", "database", "runtime"])
+        return sorted(fields)
 
     def __init__(
         self,
@@ -257,12 +233,11 @@ class Video(VideoState):
         self.properties = {}
 
         self.set_properties(properties or {})
-        self.runtime_has_thumbnail = False
 
     def __str__(self):
         with StringPrinter() as printer:
             printer.write("Video %s:" % self.video_id)
-            for field in self.ROW_FIELDS:
+            for field in VIDEO_UNIQUE_FIELDS:
                 printer.write("\t%s: %s" % (field, getattr(self, field)))
             return str(printer)
 
@@ -321,7 +296,7 @@ class Video(VideoState):
         return self.thumb_name
 
     def thumbnail_is_valid(self):
-        return not self.error_thumbnail and self.runtime_has_thumbnail
+        return not self.error_thumbnail and self.runtime.has_thumbnail
 
     def thumbnail_to_base64(self):
         thumb_path = self.thumbnail_path
@@ -407,3 +382,6 @@ class Video(VideoState):
 
     def remove_property(self, name):
         self.properties.pop(name, None)
+
+
+VIDEO_UNIQUE_FIELDS = Video.get_unique_fields()
