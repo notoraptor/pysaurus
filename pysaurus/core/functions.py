@@ -337,3 +337,13 @@ def flatten_list(data: list):
         else:
             output.append(element)
     return output
+
+
+def class_get_public_attributes(cls: type, exclude=()):
+    fields = {
+        field
+        for field in dir(cls)
+        if "a" <= field[0] <= "z" and not callable(getattr(cls, field))
+    }
+    fields.difference_update(exclude)
+    return sorted(fields)

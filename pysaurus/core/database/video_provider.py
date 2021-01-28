@@ -762,12 +762,7 @@ class SortLayer(Layer):
 
     def filter(self, data: Sequence[Video]) -> VideoArray:
         sorting = self.get_sorting()
-        return VideoArray(
-            sorted(
-                data,
-                key=functools.cmp_to_key(lambda v1, v2: Video.compare(v1, v2, sorting)),
-            )
-        )
+        return VideoArray(sorted(data, key=lambda video: video.to_comparable(sorting)))
 
     def remove_from_cache(self, cache: VideoArray, video: Video):
         if video in cache:

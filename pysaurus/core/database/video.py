@@ -16,25 +16,17 @@ import sys
 from io import BytesIO
 from typing import Sequence
 
-from pysaurus.core.classes import StringPrinter, Text
+from pysaurus.core.classes import StringPrinter, Text, NegativeComparator
 from pysaurus.core.components import AbsolutePath, Duration
 from pysaurus.core.constants import THUMBNAIL_EXTENSION
 from pysaurus.core.database import path_utils
 from pysaurus.core.database.video_state import VideoState
-from pysaurus.core.functions import html_to_title, string_to_pieces
+from pysaurus.core.functions import (
+    html_to_title,
+    string_to_pieces,
+    class_get_public_attributes,
+)
 from pysaurus.core.modules import VideoClipping, ImageUtils
-
-
-def compare_with_lt(v1, v2):
-    return -1 if v1 < v2 else (1 if v2 < v1 else 0)
-
-
-def compare_text(v1: str, v2: str):
-    return compare_with_lt(v1.lower(), v2.lower()) or compare_with_lt(v1, v2)
-
-
-def compare_text_or_data(v1, v2):
-    return compare_text(v1, v2) if isinstance(v1, str) else compare_with_lt(v1, v2)
 
 
 def to_dict_value(value):
@@ -97,16 +89,6 @@ class Video(VideoState):
         ("file_size", 1),
         ("audio_bit_rate", 0.5),
     )
-
-    @classmethod
-    def get_unique_fields(cls):
-        fields = {
-            field
-            for field in dir(cls)
-            if "a" <= field[0] <= "z" and not callable(getattr(cls, field))
-        }
-        fields.difference_update(["errors", "properties", "database", "runtime"])
-        return sorted(fields)
 
     def __init__(
         self,
@@ -216,6 +198,7 @@ class Video(VideoState):
         self.audio_bit_rate = audio_bit_rate
         self.audio_codec = Text(audio_codec)
         self.audio_codec_description = Text(audio_codec_description)
+        self.channels = channels
         self.container_format = Text(container_format)
         self.device_name = Text(device_name)
         self.duration = duration
@@ -224,14 +207,13 @@ class Video(VideoState):
         self.frame_rate_num = frame_rate_num
         self.height = height
         self.meta_title = Text(html_to_title(meta_title))
+        self.properties = {}
         self.sample_rate = sample_rate
         self.thumb_name = thumb_name
         self.video_codec = Text(video_codec)
         self.video_codec_description = Text(video_codec_description)
         self.width = width
-        self.channels = channels
-        self.properties = {}
-
+        # Additional initialization.
         self.set_properties(properties or {})
 
     def __str__(self):
@@ -250,7 +232,6 @@ class Video(VideoState):
     title = property(
         lambda self: self.meta_title if self.meta_title else Text(self.filename.title)
     )
-
     raw_seconds = property(lambda self: self.duration / self.duration_time_base)
     raw_microseconds = property(
         lambda self: self.duration * 1000000 / self.duration_time_base
@@ -350,18 +331,13 @@ class Video(VideoState):
         """
         return cls(database=database, from_dictionary=dct)
 
-    @staticmethod
-    def compare(self, other, sorting):
-        # type: (Video, Video, Sequence[str]) -> int
+    def to_comparable(self, sorting):
+        # type: (Sequence[str]) -> list
+        cmp_list = []
         for sort in sorting:
-            reverse = sort[0] == "-"
-            field = sort[1:]
-            f1 = getattr(self, field)
-            f2 = getattr(other, field)
-            ret = compare_text_or_data(f1, f2)
-            if ret:
-                return -ret if reverse else ret
-        return 0
+            val = getattr(self, sort[1:])
+            cmp_list.append(NegativeComparator(val) if sort[0] == "-" else val)
+        return cmp_list
 
     def set_properties(self, properties: dict):
         modified = set()
@@ -384,4 +360,6 @@ class Video(VideoState):
         self.properties.pop(name, None)
 
 
-VIDEO_UNIQUE_FIELDS = Video.get_unique_fields()
+VIDEO_UNIQUE_FIELDS = class_get_public_attributes(
+    Video, ("errors", "properties", "database", "runtime")
+)
