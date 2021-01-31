@@ -772,8 +772,8 @@ Make sure any video has at most 1 value for this property before making it uniqu
     def get_prop_type(self, name: str) -> PropType:
         return self.__prop_types[name]
 
-    def get_prop_types(self):
-        return list(self.__prop_types.values())
+    def get_prop_types(self) -> Iterable[PropType]:
+        return self.__prop_types.values()
 
     def set_video_properties(self, video: Video, properties):
         modified = video.set_properties(properties)

@@ -430,6 +430,9 @@ class SourceLayer(Layer):
     def videos(self):
         return self._cache.values()
 
+    def update_index(self):
+        self.index = self.__index_videos(self._cache.values())
+
     @classmethod
     def __index_videos(cls, videos: Iterable[Video]) -> Dict[str, Set[Video]]:
         term_to_videos = {}
@@ -951,6 +954,7 @@ class VideoProvider:
         raise RuntimeError("No videos available.")
 
     def on_properties_modified(self, properties: Sequence[str]):
+        self.__source_layer.update_index()
         group_def = self.grouping_layer.get_grouping()
         if group_def:
             field = (

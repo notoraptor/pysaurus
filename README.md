@@ -14,7 +14,6 @@ TODO:
 - Make video indices (video_id) more stable
 - Interface
   - unreadable videos cannot be displayed yet, as they are incomplete VideoState (not Video) objects.
-  - When search terms, check videos properties too
   - Remember last property value edition panel selected (either delete, edit or move panel).
   - Speed-up code, especially database (re)loading.
   - We need to check if video exists only on database (re)loading, but nowhere else.

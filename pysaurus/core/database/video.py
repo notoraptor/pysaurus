@@ -298,10 +298,15 @@ class Video(VideoState):
         )
 
     def terms(self, as_set=False):
-        return string_to_pieces(
-            " ".join((self.filename.path, str(self.meta_title))),
-            as_set=as_set,
-        )
+        term_sources = [self.filename.path, str(self.meta_title)]
+        for prop in self.database.get_prop_types():
+            if prop.type is str and prop.name in self.properties:
+                val = self.properties[prop.name]
+                if prop.multiple:
+                    term_sources.extend(val)
+                else:
+                    term_sources.append(val)
+        return string_to_pieces(" ".join(term_sources), as_set=as_set)
 
     def has_terms_exact(self, terms):
         return " ".join(terms) in " ".join(self.terms())
