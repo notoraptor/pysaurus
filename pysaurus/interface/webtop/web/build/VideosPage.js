@@ -477,7 +477,6 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
         }
 
         updatePage(state, top = true) {
-          // todo what if page size is out of page range ?
           const pageSize = state.pageSize !== undefined ? state.pageSize : this.state.pageSize;
           const pageNumber = state.pageNumber !== undefined ? state.pageNumber : this.state.pageNumber;
           const displayOnlySelected = state.displayOnlySelected !== undefined ? state.displayOnlySelected : this.state.displayOnlySelected;

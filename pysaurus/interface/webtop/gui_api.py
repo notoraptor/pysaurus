@@ -426,7 +426,6 @@ class GuiAPI:
 
     @staticmethod
     def _get_source_tree():
-        # TODO unreadable videos cannot be displayed yet, as they are incomplete VideoState (not Video) objects.
         tree = SOURCE_TREE.copy()
         del tree["unreadable"]
         return tree

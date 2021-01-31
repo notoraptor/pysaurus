@@ -53,7 +53,6 @@ def main():
         "log_severity": cef.LOGSEVERITY_INFO,
         # "log_file": "debug.log",
         "remote_debugging_port": 4000,
-        # todo: cache path should be cleared when program is closed ?
         "cache_path": tempfile.gettempdir(),
     }
     switches = {
