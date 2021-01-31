@@ -1,6 +1,7 @@
 import os
 import sys
 import tempfile
+import traceback
 
 import pyperclip
 from cefpython3 import cefpython as cef
@@ -12,11 +13,6 @@ class Interface(GuiAPI):
     def __init__(self, browser):
         super().__init__()
         self.browser = browser
-        self.name = "from python"
-
-    def close_app(self):
-        super().close_app()
-        print("App closed.")
 
     def clipboard(self, text):
         pyperclip.copy(text)
@@ -25,8 +21,6 @@ class Interface(GuiAPI):
         try:
             resolve.Call(getattr(self, name)(*args))
         except Exception as exc:
-            import traceback
-
             traceback.print_tb(exc.__traceback__)
             print("%s:" % type(exc).__name__, exc, file=sys.stderr)
             reject.Call({"name": type(exc).__name__, "message": str(exc)})

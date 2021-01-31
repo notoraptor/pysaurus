@@ -10,59 +10,35 @@ function backend_error(error) {
 
 class Callbacks {
     constructor() {
+        this.callbacks = new Map();
         this.id = 1;
-        this.mapping = {};
-        this.order = [];
     }
     register(callback) {
         const id = this.id;
-        this.mapping[id] = callback;
-        this.order.push(id);
+        this.callbacks.set(id, callback);
         ++this.id;
         return id;
     }
     unregister(id) {
-        if (this.mapping[id])
-            this.mapping[id] = undefined;
-        const order = [];
-        for (let value of this.order) {
-            if (value !== id)
-                order.push(value);
-        }
-        this.order = order;
+        this.callbacks.delete(id);
     }
-    getCallbacks() {
-        return this.order.map(id => this.mapping[id]);
-    }
-}
-
-class KeyboardManager extends Callbacks {
-    manage(event) {
-        for (let callback of this.getCallbacks()) {
-            const toStop = callback(event);
+    call(value) {
+        for (let callback of this.callbacks.values()) {
+            const toStop = callback(value);
             if (toStop)
                 break;
         }
     }
 }
 
-class NotificationManager extends Callbacks {
-    notify(notification) {
-        for (let callback of this.getCallbacks()) {
-            callback(notification);
-        }
-    }
-}
-
-const KEYBOARD_MANAGER = new KeyboardManager();
-
-const Notifications = new NotificationManager();
+const KEYBOARD_MANAGER = new Callbacks();
+const NOTIFICATION_MANAGER = new Callbacks();
 
 /**
  * Called from Python to send notifications to interface.
  */
 function __notify(notification) {
-    return Notifications.notify(notification);
+    NOTIFICATION_MANAGER.call(notification);
 }
 
 const Utils = {
@@ -132,7 +108,7 @@ window.onload = function() {
     System.import('./build/index.js');
 };
 window.onkeydown = function(event) {
-    KEYBOARD_MANAGER.manage(event);
+    KEYBOARD_MANAGER.call(event);
 };
 document.body.onunload = function() {
     console.info('GUI closed!');

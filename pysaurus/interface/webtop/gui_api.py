@@ -40,6 +40,7 @@ class GuiAPI:
             self.monitor_thread.join()
         if self.db_loading_thread:
             self.db_loading_thread.join()
+        print("App closed.")
 
     def load_database(self, update=True):
         assert not self.monitor_thread

@@ -286,12 +286,12 @@ System.register(["./constants.js"], function (_export, _context) {
         }
 
         componentDidMount() {
-          this.callbackIndex = Notifications.register(this.notify);
+          this.callbackIndex = NOTIFICATION_MANAGER.register(this.notify);
           if (this.props.parameters.update) python_call('update_database');
         }
 
         componentWillUnmount() {
-          Notifications.unregister(this.callbackIndex);
+          NOTIFICATION_MANAGER.unregister(this.callbackIndex);
         }
 
         notify(notification) {
