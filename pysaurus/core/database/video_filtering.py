@@ -171,10 +171,7 @@ WITHOUT_THUMBNAILS = "without_thumbnails"
 SOURCE_TREE = {
     UNREADABLE: {NOT_FOUND: False, FOUND: False},
     READABLE: {
-        NOT_FOUND: {
-            WITH_THUMBNAILS: False,
-            WITHOUT_THUMBNAILS: False,
-        },
+        NOT_FOUND: {WITH_THUMBNAILS: False, WITHOUT_THUMBNAILS: False},
         FOUND: {WITH_THUMBNAILS: False, WITHOUT_THUMBNAILS: False},
     },
 }
@@ -212,3 +209,9 @@ class TreeUtils:
             return TreeUtils.get_source_from_dict(inp[seq[index]], seq, index + 1)
         else:
             return inp
+
+
+def get_usable_source_tree():
+    tree = SOURCE_TREE.copy()
+    del tree["unreadable"]
+    return tree

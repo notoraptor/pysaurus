@@ -4,7 +4,6 @@ Select group
 Search
 Sort
 """
-import functools
 import random
 from abc import abstractmethod
 from copy import copy
@@ -18,7 +17,6 @@ from typing import (
     Any,
     TypeVar,
     Type,
-    Union,
     Iterable,
     Set,
 )

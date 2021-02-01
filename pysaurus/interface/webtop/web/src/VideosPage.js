@@ -521,7 +521,7 @@ export class VideosPage extends React.Component {
             <FormGroup definition={group_def} properties={this.state.properties} onClose={criterion => {
                 onClose();
                 if (criterion) {
-                    python_call('group_videos', criterion.field, criterion.sorting, criterion.reverse, criterion.allowSingletons, criterion.allowMultiple)
+                    python_call('set_groups', criterion.field, criterion.sorting, criterion.reverse, criterion.allowSingletons, criterion.allowMultiple)
                         .then(() => this.updatePage({pageNumber: 0}))
                         .catch(backend_error);
                 }
@@ -529,13 +529,13 @@ export class VideosPage extends React.Component {
         ));
     }
     backendGroupVideos(field, sorting = "count", reverse = true, allowSingletons = true, allowMultiple = true) {
-        python_call('group_videos', field, sorting, reverse, allowSingletons, allowMultiple)
+        python_call('set_groups', field, sorting, reverse, allowSingletons, allowMultiple)
             .then(() => this.updatePage({pageNumber: 0}))
             .catch(backend_error);
     }
     editPropertiesForManyVideos(propertyName) {
         const videos = Array.from(this.state.selection);
-        python_call('get_prop_values', propertyName, videos)
+        python_call('count_prop_values', propertyName, videos)
             .then(valuesAndCounts => this.props.app.loadDialog(
                     `Edit property "${propertyName}" for ${this.state.selection.size} video${this.state.selection.size < 2 ? '' : 's'}`,
                     onClose => (
@@ -582,7 +582,7 @@ export class VideosPage extends React.Component {
         ));
     }
     resetGroup() {
-        python_call('group_videos', '')
+        python_call('set_groups', '')
             .then(() => this.updatePage({pageNumber: 0}))
             .catch(backend_error);
     }
@@ -742,7 +742,7 @@ export class VideosPage extends React.Component {
     }
 
     focusPropertyValue(propertyName, propertyValue) {
-        python_call('group_videos', `:${propertyName}`, "count", true, true, true)
+        python_call('set_groups', `:${propertyName}`, "count", true, true, true)
             .then(() => python_call('classifier_select_group_by_value', propertyValue))
             .then(() => this.updatePage({pageNumber: 0}))
             .catch(backend_error);

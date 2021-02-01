@@ -1,8 +1,8 @@
+import locale
 from abc import abstractmethod
 from io import StringIO
 from itertools import chain
 from typing import Any, Generic, List, TypeVar
-import locale
 
 from pysaurus.core.functions import to_printable, pgcd
 

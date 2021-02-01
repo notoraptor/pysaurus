@@ -7,7 +7,6 @@ import threading
 from datetime import datetime
 
 from pysaurus.core.constants import VIDEO_SUPPORTED_EXTENSIONS
-
 # Datetime since timestamp 0.
 from pysaurus.core.modules import HTMLStripper
 
@@ -347,3 +346,25 @@ def class_get_public_attributes(cls: type, exclude=()):
     }
     fields.difference_update(exclude)
     return sorted(fields)
+
+
+def compute_nb_pages(count, page_size):
+    return (count // page_size) + bool(count % page_size)
+
+
+JSON_INTEGER_MIN = -(2 ** 31)
+JSON_INTEGER_MAX = 2 ** 31 - 1
+
+
+def to_json_value(value):
+    if isinstance(value, (tuple, list, set)):
+        return [to_json_value(element) for element in value]
+    if isinstance(value, dict):
+        return {
+            to_json_value(key): to_json_value(element) for key, element in value.items()
+        }
+    if isinstance(value, (str, float, bool, type(None))):
+        return value
+    if isinstance(value, int) and JSON_INTEGER_MIN <= value <= JSON_INTEGER_MAX:
+        return value
+    return str(value)

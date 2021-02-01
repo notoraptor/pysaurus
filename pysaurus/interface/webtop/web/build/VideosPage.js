@@ -557,7 +557,7 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
               onClose();
 
               if (criterion) {
-                python_call('group_videos', criterion.field, criterion.sorting, criterion.reverse, criterion.allowSingletons, criterion.allowMultiple).then(() => this.updatePage({
+                python_call('set_groups', criterion.field, criterion.sorting, criterion.reverse, criterion.allowSingletons, criterion.allowMultiple).then(() => this.updatePage({
                   pageNumber: 0
                 })).catch(backend_error);
               }
@@ -566,14 +566,14 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
         }
 
         backendGroupVideos(field, sorting = "count", reverse = true, allowSingletons = true, allowMultiple = true) {
-          python_call('group_videos', field, sorting, reverse, allowSingletons, allowMultiple).then(() => this.updatePage({
+          python_call('set_groups', field, sorting, reverse, allowSingletons, allowMultiple).then(() => this.updatePage({
             pageNumber: 0
           })).catch(backend_error);
         }
 
         editPropertiesForManyVideos(propertyName) {
           const videos = Array.from(this.state.selection);
-          python_call('get_prop_values', propertyName, videos).then(valuesAndCounts => this.props.app.loadDialog(`Edit property "${propertyName}" for ${this.state.selection.size} video${this.state.selection.size < 2 ? '' : 's'}`, onClose => /*#__PURE__*/React.createElement(FormPropertyMultiVideo, {
+          python_call('count_prop_values', propertyName, videos).then(valuesAndCounts => this.props.app.loadDialog(`Edit property "${propertyName}" for ${this.state.selection.size} video${this.state.selection.size < 2 ? '' : 's'}`, onClose => /*#__PURE__*/React.createElement(FormPropertyMultiVideo, {
             nbVideos: this.state.selection.size,
             definition: this.state.definitions[propertyName],
             values: valuesAndCounts,
@@ -624,7 +624,7 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
         }
 
         resetGroup() {
-          python_call('group_videos', '').then(() => this.updatePage({
+          python_call('set_groups', '').then(() => this.updatePage({
             pageNumber: 0
           })).catch(backend_error);
         }
@@ -812,7 +812,7 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
         }
 
         focusPropertyValue(propertyName, propertyValue) {
-          python_call('group_videos', `:${propertyName}`, "count", true, true, true).then(() => python_call('classifier_select_group_by_value', propertyValue)).then(() => this.updatePage({
+          python_call('set_groups', `:${propertyName}`, "count", true, true, true).then(() => python_call('classifier_select_group_by_value', propertyValue)).then(() => this.updatePage({
             pageNumber: 0
           })).catch(backend_error);
         }
