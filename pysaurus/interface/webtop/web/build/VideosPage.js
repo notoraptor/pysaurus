@@ -1,7 +1,7 @@
 System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Pagination.js", "./Video.js", "./FormSourceVideo.js", "./FormGroup.js", "./FormSearch.js", "./FormSort.js", "./GroupView.js", "./FormEditPropertyValue.js", "./FormFillKeywords.js", "./FormPropertyMultiVideo.js", "./Stackable.js"], function (_export, _context) {
   "use strict";
 
-  var SettingIcon, Cross, PAGE_SIZES, FIELDS, SEARCH_TYPE_TITLE, MenuPack, MenuItem, Menu, MenuItemCheck, Pagination, Video, FormSourceVideo, FormGroup, FormSearch, FormSort, GroupView, FormEditPropertyValue, FormFillKeywords, FormPropertyMultiVideo, Stackable, Filter, VideosPage, INITIAL_SOURCES, SHORTCUTS, SPECIAL_KEYS;
+  var SettingIcon, Cross, PAGE_SIZES, SEARCH_TYPE_TITLE, MenuPack, MenuItem, Menu, MenuItemCheck, Pagination, Video, FormSourceVideo, FormGroup, FormSearch, FormSort, GroupView, FormEditPropertyValue, FormFillKeywords, FormPropertyMultiVideo, Stackable, Filter, VideosPage, INITIAL_SOURCES, SHORTCUTS, SPECIAL_KEYS;
 
   function compareSources(s1, s2) {
     if (s1.length !== s2.length) return false;
@@ -62,7 +62,6 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
       Cross = _buttonsJs.Cross;
     }, function (_constantsJs) {
       PAGE_SIZES = _constantsJs.PAGE_SIZES;
-      FIELDS = _constantsJs.FIELDS;
       SEARCH_TYPE_TITLE = _constantsJs.SEARCH_TYPE_TITLE;
     }, function (_MenuPackJs) {
       MenuPack = _MenuPackJs.MenuPack;
@@ -481,7 +480,7 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           const pageNumber = state.pageNumber !== undefined ? state.pageNumber : this.state.pageNumber;
           const displayOnlySelected = state.displayOnlySelected !== undefined ? state.displayOnlySelected : this.state.displayOnlySelected;
           const selection = displayOnlySelected ? Array.from(state.selection !== undefined ? state.selection : this.state.selection) : [];
-          python_call('get_info_and_videos', pageSize, pageNumber, FIELDS, selection).then(info => {
+          python_call('get_info_and_videos', pageSize, pageNumber, selection).then(info => {
             this.parametersToState({
               pageSize,
               info

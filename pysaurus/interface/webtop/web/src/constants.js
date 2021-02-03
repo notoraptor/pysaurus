@@ -4,33 +4,6 @@ export const HomeStatus = {
     LOADED: 2
 }
 
-export const FIELDS = [
-    'audio_bit_rate',
-    'audio_codec',
-    'audio_codec_description',
-    'container_format',
-    'date',
-    'day',
-    'disk',
-    'extension',
-    'file_size',
-    'file_title',
-    'filename',
-    'frame_rate',
-    'height',
-    'length',
-    'properties',
-    'quality',
-    'sample_rate',
-    'size',
-    'thumbnail_path',
-    'title',
-    'video_codec',
-    'video_codec_description',
-    'video_id',
-    'width',
-];
-
 export const GroupPermission = {
     FORBIDDEN: 0,
     ONLY_ONE: 1,

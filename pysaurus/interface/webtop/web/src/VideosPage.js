@@ -1,5 +1,5 @@
 import {SettingIcon, Cross} from "./buttons.js";
-import {PAGE_SIZES, FIELDS, SEARCH_TYPE_TITLE} from "./constants.js";
+import {PAGE_SIZES, SEARCH_TYPE_TITLE} from "./constants.js";
 import {MenuPack, MenuItem, Menu, MenuItemCheck} from "./MenuPack.js";
 import {Pagination} from "./Pagination.js";
 import {Video} from "./Video.js";
@@ -463,7 +463,7 @@ export class VideosPage extends React.Component {
         const pageNumber = state.pageNumber !== undefined ? state.pageNumber: this.state.pageNumber;
         const displayOnlySelected = state.displayOnlySelected !== undefined ? state.displayOnlySelected : this.state.displayOnlySelected;
         const selection = displayOnlySelected ? Array.from(state.selection !== undefined ? state.selection : this.state.selection) : [];
-        python_call('get_info_and_videos', pageSize, pageNumber, FIELDS, selection)
+        python_call('get_info_and_videos', pageSize, pageNumber, selection)
             .then(info => {
                 this.parametersToState({pageSize, info}, state);
                 if (top)

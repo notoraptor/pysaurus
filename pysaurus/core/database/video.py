@@ -25,6 +25,7 @@ from pysaurus.core.functions import (
     html_to_title,
     string_to_pieces,
     class_get_public_attributes,
+    to_json_value,
 )
 from pysaurus.core.modules import VideoClipping, ImageUtils
 
@@ -319,31 +320,6 @@ class Video(VideoState):
         video_terms = self.terms(as_set=True)
         return any(term in video_terms for term in terms)
 
-    def to_dict(self):
-        dct = super().to_dict()
-        len_before = len(dct)
-        for _min, _long in self.MIN_TO_LONG.items():
-            dct[_min] = to_dict_value(getattr(self, _long))
-        assert len(dct) == len_before + len(self.MIN_TO_LONG)
-        return dct
-
-    @classmethod
-    def from_dict(cls, dct, database):
-        """
-        :type dct: dict
-        :type database: pysaurus.core.database.database.Database
-        :rtype: Video
-        """
-        return cls(database=database, from_dictionary=dct)
-
-    def to_comparable(self, sorting):
-        # type: (Sequence[str]) -> list
-        cmp_list = []
-        for sort in sorting:
-            val = getattr(self, sort[1:])
-            cmp_list.append(NegativeComparator(val) if sort[0] == "-" else val)
-        return cmp_list
-
     def set_properties(self, properties: dict):
         modified = set()
         for name, value in properties.items():
@@ -363,6 +339,42 @@ class Video(VideoState):
 
     def remove_property(self, name):
         self.properties.pop(name, None)
+
+    def to_comparable(self, sorting):
+        # type: (Sequence[str]) -> list
+        cmp_list = []
+        for sort in sorting:
+            val = getattr(self, sort[1:])
+            cmp_list.append(NegativeComparator(val) if sort[0] == "-" else val)
+        return cmp_list
+
+    def to_json(self, **kwargs):
+        js = {
+            field: to_json_value(getattr(self, field)) for field in VIDEO_UNIQUE_FIELDS
+        }
+        js["errors"] = to_json_value(self.errors)
+        js["properties"] = to_json_value(self.properties)
+        js["exists"] = self.exists()
+        js["hasThumbnail"] = self.thumbnail_path.exists()
+        js.update(kwargs)
+        return js
+
+    def to_dict(self):
+        dct = super().to_dict()
+        len_before = len(dct)
+        for _min, _long in self.MIN_TO_LONG.items():
+            dct[_min] = to_dict_value(getattr(self, _long))
+        assert len(dct) == len_before + len(self.MIN_TO_LONG)
+        return dct
+
+    @classmethod
+    def from_dict(cls, dct, database):
+        """
+        :type dct: dict
+        :type database: pysaurus.core.database.database.Database
+        :rtype: Video
+        """
+        return cls(database=database, from_dictionary=dct)
 
 
 VIDEO_UNIQUE_FIELDS = class_get_public_attributes(

@@ -4,7 +4,7 @@ import {VideosPage} from "./VideosPage.js";
 import {PropertiesPage} from "./PropertiesPage.js";
 import {FancyBox} from "./FancyBox.js";
 
-import {FIELDS, PAGE_SIZES, VIDEO_DEFAULT_PAGE_SIZE, VIDEO_DEFAULT_PAGE_NUMBER} from "./constants.js";
+import {VIDEO_DEFAULT_PAGE_SIZE, VIDEO_DEFAULT_PAGE_NUMBER} from "./constants.js";
 
 export class App extends React.Component {
     constructor(props) {
@@ -92,14 +92,12 @@ export class App extends React.Component {
             throw "a fancy box is already displayed.";
         this.updateApp({fancy: {title: title, onClose: this.onCloseFancyBox, onBuild: onBuild}});
     }
-    loadVideosPage(pageSize = undefined, pageNumber = undefined, videoFields = undefined) {
+    loadVideosPage(pageSize = undefined, pageNumber = undefined) {
         if (pageSize === undefined)
             pageSize = VIDEO_DEFAULT_PAGE_SIZE;
         if (pageNumber === undefined)
             pageNumber = VIDEO_DEFAULT_PAGE_NUMBER;
-        if (videoFields === undefined)
-            videoFields = FIELDS;
-        python_call('get_info_and_videos', pageSize, pageNumber, videoFields)
+        python_call('get_info_and_videos', pageSize, pageNumber)
             .then(info => {
                 this.loadPage("videos", {pageSize: pageSize, pageNumber: pageNumber, info: info});
             })

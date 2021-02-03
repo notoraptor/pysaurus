@@ -39,7 +39,7 @@ class FeatureAPI:
     def set_sorting(self, sorting):
         self.provider.set_sort(sorting)
 
-    def get_info_and_videos(self, page_size, page_number, fields, video_indices=()):
+    def get_info_and_videos(self, page_size, page_number, video_indices=()):
         view = self.provider.get_view()
         if video_indices:
             video_indices = set(video_indices)
@@ -54,13 +54,9 @@ class FeatureAPI:
                 page_number = nb_pages - 1
             start = page_size * page_number
             end = min(start + page_size, nb_videos)
-            for index in range(start, end):
-                video = view[index]
-                js = {field: to_json_value(getattr(video, field)) for field in fields}
-                js["exists"] = video.exists()
-                js["hasThumbnail"] = video.thumbnail_path.exists()
-                js["local_id"] = index
-                videos.append(js)
+            videos = [
+                view[index].to_json(local_id=index) for index in range(start, end)
+            ]
         return {
             "nbVideos": nb_videos,
             "realNbVideos": self.provider.count(),
@@ -109,19 +105,16 @@ class FeatureAPI:
 
     def rename_video(self, index, new_title):
         video = self.provider.get_video(index)
-        try:
-            self.database.change_video_file_title(video, new_title)
-            self.provider.on_properties_modified(
-                ("filename", "file_title")
-                + (() if video.meta_title else ("meta_title",))
-            )
-            self.provider.load()
-            return {
-                "filename": to_json_value(video.filename),
-                "file_title": video.file_title,
-            }
-        except OSError as exc:
-            return {"error": str(exc)}
+        self.database.change_video_file_title(video, new_title)
+        self.provider.on_properties_modified(
+            ("filename", "file_title")
+            + (() if video.meta_title else ("meta_title",))
+        )
+        self.provider.load()
+        return {
+            "filename": to_json_value(video.filename),
+            "file_title": video.file_title,
+        }
 
     def count_prop_values(self, name, video_indices):
         prop_type = self.database.get_prop_type(name)

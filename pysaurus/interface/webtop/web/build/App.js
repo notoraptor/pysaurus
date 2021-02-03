@@ -1,7 +1,7 @@
 System.register(["./Test.js", "./HomePage.js", "./VideosPage.js", "./PropertiesPage.js", "./FancyBox.js", "./constants.js"], function (_export, _context) {
   "use strict";
 
-  var Test, HomePage, VideosPage, PropertiesPage, FancyBox, FIELDS, PAGE_SIZES, VIDEO_DEFAULT_PAGE_SIZE, VIDEO_DEFAULT_PAGE_NUMBER, App;
+  var Test, HomePage, VideosPage, PropertiesPage, FancyBox, VIDEO_DEFAULT_PAGE_SIZE, VIDEO_DEFAULT_PAGE_NUMBER, App;
 
   _export("App", void 0);
 
@@ -17,8 +17,6 @@ System.register(["./Test.js", "./HomePage.js", "./VideosPage.js", "./PropertiesP
     }, function (_FancyBoxJs) {
       FancyBox = _FancyBoxJs.FancyBox;
     }, function (_constantsJs) {
-      FIELDS = _constantsJs.FIELDS;
-      PAGE_SIZES = _constantsJs.PAGE_SIZES;
       VIDEO_DEFAULT_PAGE_SIZE = _constantsJs.VIDEO_DEFAULT_PAGE_SIZE;
       VIDEO_DEFAULT_PAGE_NUMBER = _constantsJs.VIDEO_DEFAULT_PAGE_NUMBER;
     }],
@@ -132,11 +130,10 @@ System.register(["./Test.js", "./HomePage.js", "./VideosPage.js", "./PropertiesP
           });
         }
 
-        loadVideosPage(pageSize = undefined, pageNumber = undefined, videoFields = undefined) {
+        loadVideosPage(pageSize = undefined, pageNumber = undefined) {
           if (pageSize === undefined) pageSize = VIDEO_DEFAULT_PAGE_SIZE;
           if (pageNumber === undefined) pageNumber = VIDEO_DEFAULT_PAGE_NUMBER;
-          if (videoFields === undefined) videoFields = FIELDS;
-          python_call('get_info_and_videos', pageSize, pageNumber, videoFields).then(info => {
+          python_call('get_info_and_videos', pageSize, pageNumber).then(info => {
             this.loadPage("videos", {
               pageSize: pageSize,
               pageNumber: pageNumber,

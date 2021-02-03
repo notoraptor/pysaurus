@@ -1,7 +1,7 @@
 System.register([], function (_export, _context) {
   "use strict";
 
-  var HomeStatus, FIELDS, GroupPermission, FIELDS_GROUP_DEF, STRING_FIELDS, FIELD_TITLES, SORTED_FIELDS_AND_TITLES, SEARCH_TYPE_TITLE, PAGE_SIZES, VIDEO_DEFAULT_PAGE_SIZE, VIDEO_DEFAULT_PAGE_NUMBER;
+  var HomeStatus, GroupPermission, FIELDS_GROUP_DEF, STRING_FIELDS, FIELD_TITLES, SORTED_FIELDS_AND_TITLES, SEARCH_TYPE_TITLE, PAGE_SIZES, VIDEO_DEFAULT_PAGE_SIZE, VIDEO_DEFAULT_PAGE_NUMBER;
   return {
     setters: [],
     execute: function () {
@@ -10,8 +10,6 @@ System.register([], function (_export, _context) {
         LOADING: 1,
         LOADED: 2
       });
-
-      _export("FIELDS", FIELDS = ['audio_bit_rate', 'audio_codec', 'audio_codec_description', 'container_format', 'date', 'day', 'disk', 'extension', 'file_size', 'file_title', 'filename', 'frame_rate', 'height', 'length', 'properties', 'quality', 'sample_rate', 'size', 'thumbnail_path', 'title', 'video_codec', 'video_codec_description', 'video_id', 'width']);
 
       _export("GroupPermission", GroupPermission = {
         FORBIDDEN: 0,
