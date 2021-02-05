@@ -54,7 +54,7 @@ class Database:
     )
 
     def __init__(self, path, folders=None, clear_old_folders=False, notifier=None):
-        # type: (PathType, Optional[Iterable[PathType]], Optional[bool], Optional[Notifier]) -> None
+        # type: (PathType, Iterable[PathType], bool, Notifier) -> None
         path = AbsolutePath.ensure(path)
         if not path.isdir():
             raise exceptions.NotDirectoryError(path)
@@ -167,8 +167,31 @@ class Database:
 
         self.__set_videos_flags()
         if self.__ensure_identifiers():
-            self.save(ensure_identifiers=False)
+            self.__save(ensure_identifiers=False)
         self.__notifier.notify(notifications.DatabaseLoaded(self))
+
+    def __save(self, ensure_identifiers=True):
+        if ensure_identifiers:
+            self.__ensure_identifiers()
+        self.video_interval.update(self.readable)
+        # Save database.
+        json_output = {
+            "date": self.__date.time,
+            "folders": sorted(folder.path for folder in self.__folders),
+            "videos": sorted(
+                (
+                    video.to_dict()
+                    for dct in (self.__videos, self.__unreadable, self.__discarded)
+                    for video in dct.values()
+                ),
+                key=lambda dct: dct["f"],
+            ),
+            "prop_types": [prop.to_dict() for prop in self.__prop_types.values()],
+        }
+        # utils.assert_data_is_serializable(json_output)
+        with open(self.__json_path.path, "w") as output_file:
+            json.dump(json_output, output_file)
+        self.__notifier.notify(notifications.DatabaseSaved(self))
 
     def __set_videos_flags(self):
         self.__set_videos_states_flags()
@@ -262,7 +285,7 @@ class Database:
                 self.add_prop_type(expected)
                 to_save = True
         if to_save:
-            self.save()
+            self.__save()
 
     def __register_special_property_parsers(self):
         self.__special_property_parser["error"] = self._set_video_property_error
@@ -272,29 +295,6 @@ class Database:
         video.properties[SPECIAL_PROPERTY_ERROR] = sorted(video.errors)
 
     # Public methods.
-
-    def save(self, ensure_identifiers=True):
-        if ensure_identifiers:
-            self.__ensure_identifiers()
-        self.video_interval.update(self.readable)
-        # Save database.
-        json_output = {
-            "date": self.__date.time,
-            "folders": sorted(folder.path for folder in self.__folders),
-            "videos": sorted(
-                (
-                    video.to_dict()
-                    for dct in (self.__videos, self.__unreadable, self.__discarded)
-                    for video in dct.values()
-                ),
-                key=lambda dct: dct["f"],
-            ),
-            "prop_types": [prop.to_dict() for prop in self.__prop_types.values()],
-        }
-        # utils.assert_data_is_serializable(json_output)
-        with open(self.__json_path.path, "w") as output_file:
-            json.dump(json_output, output_file)
-        self.__notifier.notify(notifications.DatabaseSaved(self))
 
     def update(self):
 
@@ -389,7 +389,7 @@ class Database:
             self.__unreadable.update(unreadable)
         if videos or unreadable:
             self.__date = current_date
-            self.save()
+            self.__save()
         if unreadable:
             self.__notifier.notify(
                 notifications.VideoInfoErrors(
@@ -450,7 +450,7 @@ class Database:
             video.runtime.has_thumbnail = True
             valid_thumb_names.add(thumb_name)
         del valid_thumb_names
-        self.save()
+        self.__save()
 
         dispatched_thumb_jobs = utils.dispatch_tasks(videos_without_thumbs, cpu_count)
         del videos_without_thumbs
@@ -513,7 +513,7 @@ class Database:
             self.__notifier.notify(notifications.VideoThumbnailErrors(thumb_errors))
 
         self.__notify_missing_thumbnails()
-        self.save()
+        self.__save()
 
     def ensure_miniatures(self, return_miniatures=False):
         # type: (bool) -> Optional[List[Miniature]]
@@ -615,7 +615,7 @@ class Database:
                 del self.__videos[video.filename]
                 self.__videos[new_filename] = video
                 video.filename = new_filename
-                self.save()
+                self.__save()
 
     def remove_videos_not_found(self):
         nb_removed = 0
@@ -625,7 +625,7 @@ class Database:
                 nb_removed += 1
         if nb_removed:
             self.__notifier.notify(notifications.VideosNotFoundRemoved(nb_removed))
-            self.save()
+            self.__save()
 
     def get_video_from_id(self, video_id, required=True):
         # type: (int, bool) -> Optional[Video]
@@ -668,7 +668,7 @@ class Database:
         if isinstance(video, Video):
             video.thumbnail_path.delete()
         if save:
-            self.save()
+            self.__save()
         return video.filename
 
     def get_new_video_paths(self):
@@ -712,7 +712,7 @@ class Database:
             raise ValueError("Property name already exists: %s" % prop.name)
         self.__prop_types[prop.name] = prop
         if save:
-            self.save()
+            self.__save()
 
     def rename_prop_type(self, old_name, new_name):
         if old_name in self.__prop_types:
@@ -724,7 +724,7 @@ class Database:
             for video in self.__videos.values():
                 if old_name in video.properties:
                     video.properties[new_name] = video.properties.pop(old_name)
-            self.save()
+            self.__save()
 
     def convert_prop_to_unique(self, name):
         if name in self.__prop_types:
@@ -746,7 +746,7 @@ Make sure any video has at most 1 value for this property before making it uniqu
                         video.properties[name] = video.properties[name][0]
                     else:
                         del video.properties[name]
-            self.save()
+            self.__save()
 
     def convert_prop_to_multiple(self, name):
         if name in self.__prop_types:
@@ -757,14 +757,14 @@ Make sure any video has at most 1 value for this property before making it uniqu
             for video in self.__videos.values():
                 if name in video.properties:
                     video.properties[name] = [video.properties[name]]
-            self.save()
+            self.__save()
 
     def remove_prop_type(self, name):
         if name in self.__prop_types:
             del self.__prop_types[name]
             for video in self.__videos.values():
                 video.remove_property(name)
-            self.save()
+            self.__save()
 
     def has_prop_type(self, name):
         return name in self.__prop_types
@@ -777,7 +777,7 @@ Make sure any video has at most 1 value for this property before making it uniqu
 
     def set_video_properties(self, video: Video, properties):
         modified = video.set_properties(properties)
-        self.save()
+        self.__save()
         return modified
 
     def refresh(self, ensure_miniatures=False):
@@ -820,7 +820,7 @@ Make sure any video has at most 1 value for this property before making it uniqu
                     del video.properties[name]
                     modified.append(video)
         if modified:
-            self.save()
+            self.__save()
         return modified
 
     def edit_property_value(self, videos, name, old_values, new_value):
@@ -850,7 +850,7 @@ Make sure any video has at most 1 value for this property before making it uniqu
                     video.properties[name] = new_value
                     modified = True
         if modified:
-            self.save()
+            self.__save()
         return modified
 
     def move_property_value(self, videos, old_name, values, new_name):
@@ -869,7 +869,7 @@ Make sure any video has at most 1 value for this property before making it uniqu
             for video in videos:
                 video.properties[new_name] = value
         if videos:
-            self.save()
+            self.__save()
         return videos
 
     def edit_property_for_videos(
@@ -904,7 +904,7 @@ Make sure any video has at most 1 value for this property before making it uniqu
                     del video.properties[prop_type.name]
                 if values_to_add:
                     video.properties[prop_type.name] = values_to_add[0]
-        self.save()
+        self.__save()
 
     def fill_property_with_terms(self, videos, prop_name, only_empty=False):
         # type: (Iterable[Video], str, bool) -> None
@@ -917,7 +917,7 @@ Make sure any video has at most 1 value for this property before making it uniqu
             values = video.terms(as_set=True)
             values.update(video.properties.get(prop_name, ()))
             video.properties[prop_name] = prop_type(values)
-        self.save()
+        self.__save()
 
     def move_concatenated_prop_val(self, videos, path, from_property, to_property):
         # type: (Iterable[Video], List, str, str) -> int
@@ -950,7 +950,7 @@ Make sure any video has at most 1 value for this property before making it uniqu
                 video.properties[to_property] = new_value
 
         if modified:
-            self.save()
+            self.__save()
 
         return len(modified)
 
@@ -984,7 +984,7 @@ Make sure any video has at most 1 value for this property before making it uniqu
     def clean_unused_thumbnails(self):
         used_thumbnails = set()
         for video in self.__videos.values():
-            if video.exists() and video.thumbnail_is_valid():
+            if video.thumbnail_is_valid():
                 used_thumbnails.add(video.ensure_thumbnail_name())
         unused_thumbnails = self.__check_thumbnails_on_disk() - used_thumbnails
         self.__notifier.notify(notifications.UnusedThumbnails(len(unused_thumbnails)))
