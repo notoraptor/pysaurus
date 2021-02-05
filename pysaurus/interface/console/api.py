@@ -110,7 +110,6 @@ class API:
         function_parser.add(
             self.rename_from_filename, arguments={"filename": str, "new_title": str}
         )
-        function_parser.add(self.reset_thumbnail_errors)
         function_parser.add(self.same_sizes)
         function_parser.add(self.unreadable)
         function_parser.add(self.update, arguments={"ensure_miniatures": bool_type})
@@ -491,24 +490,8 @@ class API:
             key=lambda video: video.filename,
         )
 
-    def reset_thumbnail_errors(self):
-        count = 0
-        for video in self.database.readable.found.without_thumbnails:
-            video.error_thumbnail = False
-            count += 1
-        if count:
-            self.database.save()
-
     def update(self, ensure_miniatures=False):
-        with Profiler("Reset thumbnail errors"):
-            self.reset_thumbnail_errors()
-        with Profiler("Update database"):
-            self.database.update()
-        with Profiler("Ensure thumbnails"):
-            self.database.ensure_thumbnails()
-        if ensure_miniatures:
-            with Profiler("Ensure miniatures"):
-                self.database.ensure_miniatures()
+        self.database.refresh(ensure_miniatures)
 
     def list_files(self, output):
         self.database.list_files(output)

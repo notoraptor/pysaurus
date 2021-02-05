@@ -796,6 +796,164 @@ Make sure any video has at most 1 value for this property before making it uniqu
         video_filtering.TreeUtils.check_source_path(video_filtering.SOURCE_TREE, path)
         return list(video_filtering.TreeUtils.get_source_from_object(self, path))
 
+    def delete_property_value(self, videos, name, values):
+        # type: (Iterable[Video], str, List) -> List[Video]
+        values = set(values)
+        modified = []
+        prop_type = self.get_prop_type(name)
+        if prop_type.multiple:
+            prop_type.validate(values)
+            for video in videos:
+                if name in video.properties and video.properties[name]:
+                    new_values = set(video.properties[name])
+                    len_before = len(new_values)
+                    new_values = new_values - values
+                    len_after = len(new_values)
+                    if len_before > len_after:
+                        video.properties[name] = sorted(new_values)
+                        modified.append(video)
+        else:
+            for value in values:
+                prop_type.validate(value)
+            for video in videos:
+                if name in video.properties and video.properties[name] in values:
+                    del video.properties[name]
+                    modified.append(video)
+        if modified:
+            self.save()
+        return modified
+
+    def edit_property_value(self, videos, name, old_values, new_value):
+        # type: (Iterable[Video], str, List, object) -> bool
+        old_values = set(old_values)
+        modified = False
+        prop_type = self.get_prop_type(name)
+        if prop_type.multiple:
+            prop_type.validate(old_values)
+            prop_type.validate([new_value])
+            for video in videos:
+                if name in video.properties and video.properties[name]:
+                    new_values = set(video.properties[name])
+                    len_before = len(new_values)
+                    new_values = new_values - old_values
+                    len_after = len(new_values)
+                    if len_before > len_after:
+                        new_values.add(new_value)
+                        video.properties[name] = sorted(new_values)
+                        modified = True
+        else:
+            for old_value in old_values:
+                prop_type.validate(old_value)
+            prop_type.validate(new_value)
+            for video in videos:
+                if name in video.properties and video.properties[name] in old_values:
+                    video.properties[name] = new_value
+                    modified = True
+        if modified:
+            self.save()
+        return modified
+
+    def move_property_value(self, videos, old_name, values, new_name):
+        # type: (Iterable[Video], str, List, str) -> List[Video]
+        assert len(values) == 1, values
+        value = values[0]
+        prop_type = self.get_prop_type(new_name)
+        prop_type.validate([value] if prop_type.multiple else value)
+        videos = self.delete_property_value(videos, old_name, [value])
+        if prop_type.multiple:
+            for video in videos:
+                new_values = set(video.properties.get(new_name, ()))
+                new_values.add(value)
+                video.properties[new_name] = sorted(new_values)
+        else:
+            for video in videos:
+                video.properties[new_name] = value
+        if videos:
+            self.save()
+        return videos
+
+    def edit_property_for_videos(
+        self, name, video_indices, values_to_add, values_to_remove
+    ):
+        # type: (str, List[int], List, List) -> None
+        prop_type = self.get_prop_type(name)
+        if prop_type.multiple:
+            values_to_add = prop_type(values_to_add)
+            values_to_remove = prop_type(values_to_remove)
+        else:
+            assert len(values_to_add) < 2
+            values_to_add = [prop_type(value) for value in values_to_add]
+            values_to_remove = {prop_type(value) for value in values_to_remove}
+        video_indices = set(video_indices)
+        for video_id in video_indices:
+            video = self.__id_to_video[video_id]
+            if prop_type.multiple:
+                values = set(video.properties.get(prop_type.name, ()))
+                values.difference_update(values_to_remove)
+                values.update(values_to_add)
+                if values:
+                    video.properties[prop_type.name] = sorted(values)
+                elif prop_type.name in video.properties:
+                    del video.properties[prop_type.name]
+            else:
+                if (
+                    values_to_remove
+                    and prop_type.name in video.properties
+                    and video.properties[prop_type.name] in values_to_remove
+                ):
+                    del video.properties[prop_type.name]
+                if values_to_add:
+                    video.properties[prop_type.name] = values_to_add[0]
+        self.save()
+
+    def fill_property_with_terms(self, videos, prop_name, only_empty=False):
+        # type: (Iterable[Video], str, bool) -> None
+        prop_type = self.get_prop_type(prop_name)
+        assert prop_type.multiple
+        assert prop_type.type is str
+        for video in videos:
+            if only_empty and video.properties.get(prop_name, None):
+                continue
+            values = video.terms(as_set=True)
+            values.update(video.properties.get(prop_name, ()))
+            video.properties[prop_name] = prop_type(values)
+        self.save()
+
+    def move_concatenated_prop_val(self, videos, path, from_property, to_property):
+        # type: (Iterable[Video], List, str, str) -> int
+        from_prop_type = self.get_prop_type(from_property)
+        to_prop_type = self.get_prop_type(to_property)
+        assert from_prop_type.multiple
+        assert to_prop_type.type is str
+        from_prop_type.validate(path)
+        new_value = " ".join(str(value) for value in path)
+        to_prop_type.validate([new_value] if to_prop_type.multiple else new_value)
+
+        modified = []
+        path_set = set(path)
+        for video in videos:
+            if from_property in video.properties and video.properties[from_property]:
+                new_values = set(video.properties[from_property])
+                len_before = len(new_values)
+                new_values = new_values - path_set
+                if len_before == len(new_values) + len(path):
+                    video.properties[from_property] = sorted(new_values)
+                    modified.append(video)
+
+        if to_prop_type.multiple:
+            for video in modified:
+                new_values = set(video.properties.get(to_property, ()))
+                new_values.add(new_value)
+                video.properties[to_property] = sorted(new_values)
+        else:
+            for video in modified:
+                video.properties[to_property] = new_value
+
+        if modified:
+            self.save()
+
+        return len(modified)
+
     @classmethod
     def load_from_list_file_path(
         cls,

@@ -20,7 +20,8 @@ from pysaurus.core.database.video_state import VideoState
 from pysaurus.core.functions import (
     html_to_title,
     string_to_pieces,
-    class_get_public_attributes, )
+    class_get_public_attributes,
+)
 
 
 def to_dict_value(value):

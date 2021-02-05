@@ -139,38 +139,9 @@ class FeatureAPI:
     def edit_property_for_videos(
         self, name, video_indices, values_to_add, values_to_remove
     ):
-        prop_type = self.database.get_prop_type(name)
-        nb_videos = 0
-        if prop_type.multiple:
-            values_to_add = prop_type(values_to_add)
-            values_to_remove = prop_type(values_to_remove)
-        else:
-            assert len(values_to_add) < 2
-            values_to_add = [prop_type(value) for value in values_to_add]
-            values_to_remove = {prop_type(value) for value in values_to_remove}
-        video_indices = set(video_indices)
-        for video in self.provider.get_view():
-            if video.video_id in video_indices:
-                nb_videos += 1
-                if prop_type.multiple:
-                    values = set(video.properties.get(prop_type.name, ()))
-                    values.difference_update(values_to_remove)
-                    values.update(values_to_add)
-                    if values:
-                        video.properties[prop_type.name] = prop_type(values)
-                    elif prop_type.name in video.properties:
-                        del video.properties[prop_type.name]
-                else:
-                    if (
-                        values_to_remove
-                        and prop_type.name in video.properties
-                        and video.properties[prop_type.name] in values_to_remove
-                    ):
-                        del video.properties[prop_type.name]
-                    if values_to_add:
-                        video.properties[prop_type.name] = values_to_add[0]
-        assert len(video_indices) == nb_videos
-        self.database.save()
+        self.database.edit_property_for_videos(
+            name, video_indices, values_to_add, values_to_remove
+        )
 
     # Database properties features.
 
@@ -204,101 +175,37 @@ class FeatureAPI:
         return self.get_prop_types()
 
     def fill_property_with_terms(self, prop_name, only_empty=False):
-        prop_type = self.database.get_prop_type(prop_name)
-        assert prop_type.multiple
-        assert prop_type.type is str
-        for video in self.provider.get_all_videos():
-            if only_empty and video.properties.get(prop_name, None):
-                continue
-            values = video.terms(as_set=True)
-            values.update(video.properties.get(prop_name, ()))
-            video.properties[prop_name] = prop_type(values)
-        self.database.save()
+        self.database.fill_property_with_terms(
+            self.provider.get_all_videos(), prop_name, only_empty
+        )
         self.provider.on_properties_modified([prop_name])
 
     def delete_property_value(self, name, values):
-        assert isinstance(values, list), type(values)
-        print("delete property value", name, values)
-        values = set(values)
-        modified = []
-        prop_type = self.database.get_prop_type(name)
-        if prop_type.multiple:
-            prop_type.validate(values)
-            for video in self.provider.get_all_videos():
-                if name in video.properties and video.properties[name]:
-                    new_values = set(video.properties[name])
-                    len_before = len(new_values)
-                    new_values = new_values - values
-                    len_after = len(new_values)
-                    if len_before > len_after:
-                        video.properties[name] = prop_type(new_values)
-                        modified.append(video)
-        else:
-            for value in values:
-                prop_type.validate(value)
-            for video in self.provider.get_all_videos():
-                if name in video.properties and video.properties[name] in values:
-                    del video.properties[name]
-                    modified.append(video)
+        modified = self.database.delete_property_value(
+            self.provider.get_all_videos(), name, values
+        )
         if modified:
-            self.database.save()
             self.provider.on_properties_modified([name])
         return modified
 
     def edit_property_value(self, name, old_values, new_value):
-        print("edit property value", name, old_values, new_value)
-        old_values = set(old_values)
-        modified = False
-        prop_type = self.database.get_prop_type(name)
-        if prop_type.multiple:
-            prop_type.validate(old_values)
-            prop_type.validate([new_value])
-            for video in self.provider.get_all_videos():
-                if name in video.properties and video.properties[name]:
-                    new_values = set(video.properties[name])
-                    len_before = len(new_values)
-                    new_values = new_values - old_values
-                    len_after = len(new_values)
-                    if len_before > len_after:
-                        new_values.add(new_value)
-                        video.properties[name] = prop_type(new_values)
-                        modified = True
-        else:
-            for old_value in old_values:
-                prop_type.validate(old_value)
-            prop_type.validate(new_value)
-            for video in self.provider.get_all_videos():
-                if name in video.properties and video.properties[name] in old_values:
-                    video.properties[name] = new_value
-                    modified = True
-        if modified:
-            self.database.save()
+        if self.database.edit_property_value(
+            self.provider.get_all_videos(), name, old_values, new_value
+        ):
             self.provider.on_properties_modified([name])
 
     def move_property_value(self, old_name, values, new_name):
-        assert len(values) == 1, values
-        value = values[0]
-        print("move property value", old_name, new_name, value)
-        prop_type = self.database.get_prop_type(new_name)
-        prop_type.validate([value] if prop_type.multiple else value)
-        videos = self.delete_property_value(old_name, [value])
-        if prop_type.multiple:
-            for video in videos:
-                new_values = set(video.properties.get(new_name, ()))
-                new_values.add(value)
-                video.properties[new_name] = prop_type(new_values)
-        else:
-            for video in videos:
-                video.properties[new_name] = value
-        if videos:
-            self.database.save()
+        if self.database.move_property_value(
+            self.provider.get_all_videos(), old_name, values, new_name
+        ):
             self.provider.on_properties_modified((old_name, new_name))
 
     def set_video_properties(self, index, properties):
-        modified = self.database.set_video_properties(
-            self.provider.get_video(index), properties
+        self.provider.on_properties_modified(
+            self.database.set_video_properties(
+                self.provider.get_video(index), properties
+            )
         )
-        self.provider.on_properties_modified(modified)
 
     # Property multi-selection and concatenation features.
 
@@ -335,34 +242,9 @@ class FeatureAPI:
     def classifier_concatenate_path(self, to_property):
         path = self.provider.classifier_layer.get_path()
         from_property = self.provider.grouping_layer.get_grouping().field[1:]
-        from_prop_type = self.database.get_prop_type(from_property)
-        to_prop_type = self.database.get_prop_type(to_property)
-        assert from_prop_type.multiple
-        assert to_prop_type.type is str
-        from_prop_type.validate(path)
-        modified = []
-
-        for video in self.provider.get_all_videos():
-            if from_property in video.properties and video.properties[from_property]:
-                new_values = set(video.properties[from_property])
-                len_before = len(new_values)
-                new_values = new_values - set(path)
-                if len_before == len(new_values) + len(path):
-                    video.properties[from_property] = from_prop_type(new_values)
-                    modified.append(video)
-
-        new_value = " ".join(str(value) for value in path)
-        if to_prop_type.multiple:
-            for video in modified:
-                new_values = set(video.properties.get(to_property, ()))
-                new_values.add(new_value)
-                video.properties[to_property] = to_prop_type(new_values)
-        else:
-            for video in modified:
-                video.properties[to_property] = to_prop_type(new_value)
-
-        if modified:
-            self.database.save()
+        if self.database.move_concatenated_prop_val(
+            self.provider.get_all_videos(), path, from_property, to_property
+        ):
             self.provider.classifier_layer.set_path([])
             self.provider.group_layer.set_group_id(0)
             self.provider.on_properties_modified([from_property, to_property])
