@@ -14,19 +14,19 @@ class PropType:
             raise ValueError("Name needed for a property.")
         if isinstance(definition, (bool, int, float, str)):
             prop_type = type(definition)
-            default = definition
             enumeration = set()
+            default = definition
             if prop_type is str:
                 default = default.strip()
         elif isinstance(definition, (list, tuple)):
             enum_type = Enumeration(definition)
             prop_type = enum_type.type
-            default = definition[0]
             enumeration = enum_type.values
+            default = definition[0]
         else:
             raise ValueError(
-                "Invalid prop type definition: should be either a bool, int, float, str, "
-                "or list|tuple of values from a same type to define an enumeration "
+                "Invalid prop type definition: expect a bool, int, float, str, "
+                "or enumeration (list or tuple of values from a same type) "
                 "(first value will be default value)."
             )
         self.name = name
@@ -61,7 +61,7 @@ class PropType:
         if self.multiple:
             if not isinstance(value, (list, tuple, set)):
                 raise ValueError(
-                    "Property %s: expected a list, tuple or set of values for a multiple prop."
+                    "Multiple property %s expects a list, tuple or set of values."
                     % self.name
                 )
             if not isinstance(value, set):
@@ -76,7 +76,7 @@ class PropType:
                 for element in value:
                     if element not in self.enumeration:
                         raise ValueError(
-                            "Property %s: forbidden values (%s), allowed: %s"
+                            "Property %s: forbidden value (%s), allowed: %s"
                             % (
                                 self.name,
                                 element,
@@ -94,10 +94,19 @@ class PropType:
             )
         if self.enumeration and value not in self.enumeration:
             raise ValueError(
-                "Property %s: forbidden values (%s), allowed: %s"
+                "Property %s: forbidden value (%s), allowed: %s"
                 % (self.name, value, ", ".join(str(el) for el in self.enumeration))
             )
         return value
+
+    def to_json(self):
+        return {
+            "name": self.name,
+            "type": self.type.__name__,
+            "enumeration": list(self.enumeration) if self.enumeration else None,
+            "defaultValue": self.new(),
+            "multiple": self.multiple,
+        }
 
     def to_dict(self):
         if self.enumeration:
@@ -105,15 +114,6 @@ class PropType:
         else:
             definition = self.default
         return {"n": self.name, "d": definition, "m": self.multiple}
-
-    def to_json(self):
-        return {
-            "name": self.name,
-            "type": self.type.__name__,
-            "enumeration": list(self.enumeration) if self.enumeration else None,
-            "defaultValue": [] if self.multiple else self.default,
-            "multiple": self.multiple,
-        }
 
     @classmethod
     def from_dict(cls, dct):

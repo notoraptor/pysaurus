@@ -8,6 +8,7 @@ from pysaurus.core.components import AbsolutePath, Duration, FileSize, FilePath
 from pysaurus.core.database import path_utils
 from pysaurus.core.database.database import Database
 from pysaurus.core.database.video import Video, VIDEO_UNIQUE_FIELDS
+from pysaurus.core.database.video_features import VideoFeatures
 from pysaurus.core.database.video_state import VideoState
 from pysaurus.core.function_parser import FunctionParser
 from pysaurus.core.functions import bool_type
@@ -164,11 +165,15 @@ class API:
 
     def download_image(self, video_id):
         # type: (int) -> str
-        return self.database.get_video_from_id(video_id).thumbnail_to_base64()
+        return VideoFeatures.thumbnail_to_base64(
+            self.database.get_video_from_id(video_id)
+        )
 
     def download_image_from_filename(self, filename):
         # type: (str) -> str
-        return self.database.get_video_from_filename(filename).thumbnail_to_base64()
+        return VideoFeatures.thumbnail_to_base64(
+            self.database.get_video_from_filename(filename)
+        )
 
     def open_image(self, video_id):
         return self.database.get_video_from_id(video_id).thumbnail_path.open()
@@ -178,12 +183,14 @@ class API:
 
     def clip(self, video_id, start, length):
         # type: (int, int, int) -> str
-        return self.database.get_video_from_id(video_id).clip_to_base64(start, length)
+        return VideoFeatures.clip_to_base64(
+            self.database.get_video_from_id(video_id), start, length
+        )
 
     def clip_from_filename(self, filename, start, length):
         # type: (str, int, int) -> str
-        return self.database.get_video_from_filename(filename).clip_to_base64(
-            start, length
+        return VideoFeatures.clip_to_base64(
+            self.database.get_video_from_filename(filename), start, length
         )
 
     def open(self, video_id):
@@ -269,7 +276,7 @@ class API:
             )
             file_content = (
                 """<?xml version="1.0" encoding="UTF-8"?>
-<playlist version="1" xmlns="http://xspf.org/ns/0/"><trackList>%s</trackList></playlist>"""
+    <playlist version="1" xmlns="http://xspf.org/ns/0/"><trackList>%s</trackList></playlist>"""
                 % tracks
             )
             temp_file_id = 0

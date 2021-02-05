@@ -3,6 +3,7 @@ from typing import Optional
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.database.database import Database
 from pysaurus.core.database.properties import PropType
+from pysaurus.core.database.video_features import VideoFeatures
 from pysaurus.core.database.video_filtering import get_usable_source_tree
 from pysaurus.core.database.video_provider import VideoProvider
 from pysaurus.core.functions import compute_nb_pages, to_json_value
@@ -55,7 +56,8 @@ class FeatureAPI:
             start = page_size * page_number
             end = min(start + page_size, nb_videos)
             videos = [
-                view[index].to_json(local_id=index) for index in range(start, end)
+                VideoFeatures.to_json(view[index], local_id=index)
+                for index in range(start, end)
             ]
         return {
             "nbVideos": nb_videos,
@@ -107,8 +109,7 @@ class FeatureAPI:
         video = self.provider.get_video(index)
         self.database.change_video_file_title(video, new_title)
         self.provider.on_properties_modified(
-            ("filename", "file_title")
-            + (() if video.meta_title else ("meta_title",))
+            ("filename", "file_title") + (() if video.meta_title else ("meta_title",))
         )
         self.provider.load()
         return {

@@ -102,8 +102,7 @@ class ToDict:
 
     def to_dict(self, **extra):
         dct = {field: getattr(self, field) for field in self.get_slots()}
-        if extra:
-            dct.update(extra)
+        dct.update(extra)
         return dct
 
     def __str__(self):

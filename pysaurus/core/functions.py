@@ -12,15 +12,13 @@ from pysaurus.core.constants import VIDEO_SUPPORTED_EXTENSIONS
 from pysaurus.core.modules import HTMLStripper
 
 EPOCH = datetime.utcfromtimestamp(0)
-
 REGEX_NO_WORD = re.compile(r"(\W|_)+")
-
 REGEX_CONSECUTIVE_UPPER_CASES = re.compile("[A-Z]{2,}")
-
 REGEX_LOWER_THEN_UPPER_CASES = re.compile("([a-z0-9])([A-Z])")
-
 REGEX_WORD_THEN_NUMBER = re.compile(r"([^0-9 ])([0-9])")
 REGEX_NUMBER_THEN_WORD = re.compile(r"([0-9])([^0-9 ])")
+JSON_INTEGER_MIN = -(2 ** 31)
+JSON_INTEGER_MAX = 2 ** 31 - 1
 
 
 def split_words_and_numbers(text):
@@ -110,14 +108,6 @@ def permute(values, initial_permutation=()):
         remaining_values = values[:position] + values[(position + 1) :]
         for permutation in permute(remaining_values, extended_permutation):
             yield permutation
-
-
-def to_printable(element):
-    if isinstance(element, str):
-        if '"' in element:
-            return "'%s'" % element
-        return '"%s"' % element
-    return element
 
 
 def package_dir():
@@ -353,8 +343,10 @@ def compute_nb_pages(count, page_size):
     return (count // page_size) + bool(count % page_size)
 
 
-JSON_INTEGER_MIN = -(2 ** 31)
-JSON_INTEGER_MAX = 2 ** 31 - 1
+def to_printable(element):
+    if isinstance(element, str):
+        return ("'%s'" % element) if '"' in element else ('"%s"' % element)
+    return element
 
 
 def to_json_value(value):

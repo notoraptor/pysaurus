@@ -11,23 +11,16 @@ Video class. Properties:
     (number of seconds) = duration / duration_time_base
 """
 
-import base64
-import sys
-from io import BytesIO
 from typing import Sequence
 
 from pysaurus.core.classes import StringPrinter, Text, NegativeComparator
 from pysaurus.core.components import AbsolutePath, Duration
-from pysaurus.core.constants import THUMBNAIL_EXTENSION
 from pysaurus.core.database import path_utils
 from pysaurus.core.database.video_state import VideoState
 from pysaurus.core.functions import (
     html_to_title,
     string_to_pieces,
-    class_get_public_attributes,
-    to_json_value,
-)
-from pysaurus.core.modules import VideoClipping, ImageUtils
+    class_get_public_attributes, )
 
 
 def to_dict_value(value):
@@ -237,12 +230,19 @@ class Video(VideoState):
     raw_microseconds = property(
         lambda self: self.duration * 1000000 / self.duration_time_base
     )
-
-    @property
-    def thumbnail_path(self):
-        return path_utils.generate_thumb_path(
+    thumbnail_path = property(
+        lambda self: path_utils.generate_thumb_path(
             self.database.thumbnail_folder, self.ensure_thumbnail_name()
         )
+    )
+
+    @property
+    def quality_compression(self):
+        basic_file_size = (
+            self.width * self.height * self.frame_rate * 3
+            + self.sample_rate * self.channels * 2
+        ) * self.raw_seconds
+        return self.file_size / basic_file_size
 
     @property
     def quality(self):
@@ -262,14 +262,6 @@ class Video(VideoState):
             total_level += level
         return sum(qualities.values()) * 100 / total_level
 
-    @property
-    def quality_compression(self):
-        basic_file_size = (
-            self.width * self.height * self.frame_rate * 3
-            + self.sample_rate * self.channels * 2
-        ) * self.raw_seconds
-        return self.file_size / basic_file_size
-
     def ensure_thumbnail_name(self):
         if not self.thumb_name:
             self.thumb_name = path_utils.generate_thumb_name(self.filename)
@@ -279,24 +271,6 @@ class Video(VideoState):
 
     def thumbnail_is_valid(self):
         return not self.error_thumbnail and self.runtime.has_thumbnail
-
-    def thumbnail_to_base64(self):
-        thumb_path = self.thumbnail_path
-        if not thumb_path.isfile():
-            return None
-        image = ImageUtils.open_rgb_image(thumb_path.path)
-        buffered = BytesIO()
-        image.save(buffered, format=THUMBNAIL_EXTENSION)
-        image_string = base64.b64encode(buffered.getvalue())
-        return image_string
-
-    def clip_to_base64(self, start, length):
-        return VideoClipping.video_clip_to_base64(
-            path=self.filename.path,
-            time_start=start,
-            clip_seconds=length,
-            unique_id=self.ensure_thumbnail_name(),
-        )
 
     def terms(self, as_set=False):
         term_sources = [self.filename.path, str(self.meta_title)]
@@ -328,11 +302,7 @@ class Video(VideoState):
         return modified
 
     def set_property(self, name, value):
-        if not self.database.has_prop_type(name):
-            print("Unknown property: %s" % name, file=sys.stderr)
-            return False
-        prop_type = self.database.get_prop_type(name)
-        value = prop_type(value)
+        value = self.database.get_prop_type(name)(value)
         modified = name not in self.properties or self.properties[name] != value
         self.properties[name] = value
         return modified
@@ -347,17 +317,6 @@ class Video(VideoState):
             val = getattr(self, sort[1:])
             cmp_list.append(NegativeComparator(val) if sort[0] == "-" else val)
         return cmp_list
-
-    def to_json(self, **kwargs):
-        js = {
-            field: to_json_value(getattr(self, field)) for field in VIDEO_UNIQUE_FIELDS
-        }
-        js["errors"] = to_json_value(self.errors)
-        js["properties"] = to_json_value(self.properties)
-        js["exists"] = self.exists()
-        js["hasThumbnail"] = self.thumbnail_path.exists()
-        js.update(kwargs)
-        return js
 
     def to_dict(self):
         dct = super().to_dict()
