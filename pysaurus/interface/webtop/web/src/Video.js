@@ -114,14 +114,9 @@ export class Video extends React.Component {
         this.props.parent.focusPropertyValue(propertyName, propertyValue);
     }
     openVideo() {
-        python_call('open_video', this.props.index)
-            .then(result => {
-                if (result)
-                    this.props.parent.updateStatus('Opened: ' + this.props.data.filename);
-                else
-                    this.props.parent.updateStatus('Unable to open: ' + this.props.data.filename);
-            })
-            .catch(backend_error);
+        python_call('open_video', this.props.data.video_id)
+            .then(() => this.props.parent.updateStatus('Opened: ' + this.props.data.filename))
+            .catch(() => this.props.parent.updateStatus('Unable to open: ' + this.props.data.filename));
     }
     editProperties() {
         const data = this.props.data;
@@ -130,7 +125,7 @@ export class Video extends React.Component {
             <FormSetProperties data={data} definitions={definitions} onClose={properties => {
                 onClose();
                 if (properties) {
-                    python_call('set_video_properties', this.props.index, properties)
+                    python_call('set_video_properties', this.props.data.video_id, properties)
                         .then(() => this.props.parent.updateStatus(`Properties updated: ${data.filename}`, true))
                         .catch(backend_error);
                 }
@@ -167,22 +162,14 @@ export class Video extends React.Component {
             this.reallyDeleteVideo();
     }
     reallyDeleteVideo() {
-        python_call('delete_video', this.props.index)
-            .then(result => {
-                if (result)
-                    this.props.parent.updateStatus('Video deleted! ' + this.props.data.filename, true);
-                else
-                    this.props.parent.updateStatus('Unable to delete video! ' + this.props.data.filename, true);
-            })
+        python_call('delete_video', this.props.data.video_id)
+            .then(() => this.props.parent.updateStatus('Video deleted! ' + this.props.data.filename, true))
             .catch(backend_error);
     }
     openContainingFolder() {
-        python_call('open_containing_folder', this.props.index)
+        python_call('open_containing_folder', this.props.data.video_id)
             .then(folder => {
-                if (folder)
-                    this.props.parent.updateStatus('Opened folder: ' + folder);
-                else
-                    this.props.parent.updateStatus('Unable to open containing folder for: ' + this.props.data.filename);
+                this.props.parent.updateStatus(`Opened folder: ${folder}`);
             })
             .catch(backend_error);
     }
@@ -205,7 +192,7 @@ export class Video extends React.Component {
             <FormRenameVideo filename={filename} title={title} onClose={newTitle => {
                 onClose();
                 if (newTitle) {
-                    python_call('rename_video', this.props.index, newTitle)
+                    python_call('rename_video', this.props.data.video_id, newTitle)
                         .then(() => {
                             this.props.parent.updateStatus(`Renamed: ${newTitle}`, true)
                         })

@@ -906,6 +906,23 @@ Make sure any video has at most 1 value for this property before making it uniqu
                     video.properties[prop_type.name] = values_to_add[0]
         self.__save()
 
+    def count_property_values(self, name, video_indices):
+        # type: (str, List[int]) -> Dict[object, int]
+        prop_type = self.get_prop_type(name)
+        value_to_count = {}
+        video_indices = set(video_indices)
+        for video_id in video_indices:
+            video = self.__id_to_video[video_id]
+            if prop_type.multiple:
+                values = video.properties.get(prop_type.name, [])
+            elif prop_type.name in video.properties:
+                values = [video.properties[prop_type.name]]
+            else:
+                values = []
+            for value in values:
+                value_to_count[value] = value_to_count.get(value, 0) + 1
+        return value_to_count
+
     def fill_property_with_terms(self, videos, prop_name, only_empty=False):
         # type: (Iterable[Video], str, bool) -> None
         prop_type = self.get_prop_type(prop_name)

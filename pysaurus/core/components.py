@@ -160,16 +160,27 @@ class AbsolutePath(object):
         return self
 
     def locate_file(self):
-        command = []
         if System.is_windows():
             command = 'explorer /select,"%s"' % self.path
         elif System.is_mac():
+            # TODO not tested
             command = ["open", "-R", self.path]
         elif System.is_linux():
+            # TODO not tested
             command = ["nautilus", self.path]
-        if command and not subprocess.run(command).returncode:
-            return self
-        return False
+        else:
+            raise OSError(f"Unsupported OS: {System.platform()}")
+        process = subprocess.Popen(
+            command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
+        stdout, stderr = process.communicate()
+        if stdout or stderr:
+            return OSError(
+                f"""Unable to locate file: {self.path}
+STDOUT: {stdout.strip()}
+STDERR: {stderr.strip()}"""
+            )
+        return self.get_directory()
 
     def open_containing_folder(self):
         return self.locate_file() or self.get_directory().open()

@@ -854,16 +854,6 @@ class VideoProvider:
     def get_view_duration(self, view):
         return Duration(sum(video.raw_microseconds for video in view))
 
-    def delete_video(self, index):
-        try:
-            video = self.view[index]
-            self.database.delete_video(video)
-            self.__source_layer.delete_video(video)
-            self.view = self.__source_layer.run()
-            return True
-        except OSError:
-            return False
-
     def set_group(self, group_id):
         self.group_layer.set_group_id(group_id)
         self.view = self.__source_layer.run()
@@ -951,6 +941,19 @@ class VideoProvider:
                 return videos[video_index]
         raise RuntimeError("No videos available.")
 
+    def get_all_videos(self):
+        return self.__source_layer.videos()
+
+    def get_view_indices(self):
+        return [video.video_id for video in self.view]
+
+    def get_view(self):
+        return list(self.view)
+
+    def on_video_deleted(self, video):
+        self.__source_layer.delete_video(video)
+        self.view = self.__source_layer.run()
+
     def on_properties_modified(self, properties: Sequence[str]):
         self.__source_layer.update_index()
         group_def = self.grouping_layer.get_grouping()
@@ -962,12 +965,3 @@ class VideoProvider:
                 self.grouping_layer.request_update()
                 self.view = self.__source_layer.run()
                 return True
-
-    def get_all_videos(self):
-        return self.__source_layer.videos()
-
-    def get_view_indices(self):
-        return [video.video_id for video in self.view]
-
-    def get_view(self):
-        return list(self.view)
