@@ -21,8 +21,9 @@ class Notifier:
     )
 
     DM_NO_CALL = 0
-    DM_CALL_BEFORE = 1
-    DM_CALL_AFTER = 2
+    DM_CALL_IF_NO_MANAGER = 1
+    DM_CALL_SOONER = 2
+    DM_CALL_LATER = 3
 
     @staticmethod
     def __default_manager_function(notification):
@@ -31,7 +32,7 @@ class Notifier:
     def __init__(self):
         self.__managers = {}  # type: Dict[type, ManagerType]
         self.__default_manager = None
-        self.__default_manager_policy = Notifier.DM_CALL_BEFORE
+        self.__default_manager_policy = Notifier.DM_CALL_SOONER
         self.__log_path = None
         self.__log_written = False
 
@@ -42,13 +43,14 @@ class Notifier:
 
     def log(self, notification):
         if self.__log_path:
-            with open(self.__log_path, "a") as file:
+            with open(self.__log_path, "a", encoding="utf-8") as file:
                 if not self.__log_written:
                     file.write(
                         "\n########## LOG %s ##########\n\n" % DateModified.now()
                     )
                     self.__log_written = True
-                file.write("%s\n" % notification)
+                line = "%s\n" % notification
+                file.write(line)
 
     def set_default_manager(self, function):
         # type: (ManagerType) -> None
@@ -57,11 +59,14 @@ class Notifier:
     def never_call_default_manager(self):
         self.__default_manager_policy = Notifier.DM_NO_CALL
 
-    def call_default_manager_before(self):
-        self.__default_manager_policy = Notifier.DM_CALL_BEFORE
+    def call_default_if_no_manager(self):
+        self.__default_manager_policy = Notifier.DM_CALL_IF_NO_MANAGER
 
-    def call_default_manager_after(self):
-        self.__default_manager_policy = Notifier.DM_CALL_AFTER
+    def call_default_manager_sooner(self):
+        self.__default_manager_policy = Notifier.DM_CALL_SOONER
+
+    def call_default_manager_later(self):
+        self.__default_manager_policy = Notifier.DM_CALL_LATER
 
     def set_manager(self, notification_class, function):
         # type: (type, ManagerType) -> None
@@ -81,12 +86,14 @@ class Notifier:
         # type: (Notification) -> None
         self.log(notification)
         default_manager = self.get_default_manager()
-        if self.__default_manager_policy == Notifier.DM_CALL_BEFORE:
-            default_manager(notification)
         notification_class = type(notification)
+        if self.__default_manager_policy == Notifier.DM_CALL_SOONER:
+            default_manager(notification)
         if notification_class in self.__managers:
             self.__managers[notification_class](notification)
-        if self.__default_manager_policy == Notifier.DM_CALL_AFTER:
+        elif self.__default_manager_policy == Notifier.DM_CALL_IF_NO_MANAGER:
+            default_manager(notification)
+        if self.__default_manager_policy == Notifier.DM_CALL_LATER:
             default_manager(notification)
 
 

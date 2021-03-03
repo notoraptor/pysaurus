@@ -18,15 +18,13 @@ from pysaurus.interface.webtop.parallel_notifier import ParallelNotifier
 class GuiAPI(FeatureAPI):
     def __init__(self):
         super().__init__()
-
         self.multiprocessing_manager = multiprocessing.Manager()
         self.notifier = ParallelNotifier(self.multiprocessing_manager.Queue())
-
         self.monitor_thread = None  # type: Optional[threading.Thread]
         self.db_loading_thread = None  # type: Optional[threading.Thread]
         self.threads_stop_flag = False
-
         self.__update_on_load = True
+        self.notifier.call_default_if_no_manager()
 
     def load_database(self, update=True):
         assert not self.monitor_thread
@@ -90,6 +88,7 @@ class GuiAPI(FeatureAPI):
         pass
 
     def _load_database(self):
+        self.notifier.clear_managers()
         update = self.__update_on_load
         self.__update_on_load = True
         self.database = Database.load_from_list_file_path(
@@ -105,6 +104,7 @@ class GuiAPI(FeatureAPI):
         print("End loading database.")
 
     def _update_database(self):
+        self.notifier.clear_managers()
         self.database.refresh(ensure_miniatures=True)
         self._load_videos()
         self.notifier.notify(DatabaseReady())
@@ -116,3 +116,4 @@ class GuiAPI(FeatureAPI):
             self.provider.load()
         else:
             self.provider = VideoProvider(self.database)
+        self.provider.register_notifications()

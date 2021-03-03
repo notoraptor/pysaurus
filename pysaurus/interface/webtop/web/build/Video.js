@@ -244,9 +244,7 @@ System.register(["./MenuPack.js", "./FormRenameVideo.js", "./Dialog.js", "./Form
               onClose();
 
               if (newTitle) {
-                python_call('rename_video', this.props.data.video_id, newTitle).then(() => {
-                  this.props.parent.updateStatus(`Renamed: ${newTitle}`, true);
-                }).catch(backend_error);
+                python_call('rename_video', this.props.data.video_id, newTitle).then(() => this.props.parent.updateStatus(`Renamed: ${newTitle}`, true)).catch(backend_error);
               }
             }
           }));

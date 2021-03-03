@@ -193,9 +193,7 @@ export class Video extends React.Component {
                 onClose();
                 if (newTitle) {
                     python_call('rename_video', this.props.data.video_id, newTitle)
-                        .then(() => {
-                            this.props.parent.updateStatus(`Renamed: ${newTitle}`, true)
-                        })
+                        .then(() => this.props.parent.updateStatus(`Renamed: ${newTitle}`, true))
                         .catch(backend_error);
                 }
             }}/>

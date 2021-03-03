@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Iterable
 
 from pysaurus.core.classes import StringPrinter
 from pysaurus.core.notification import Notification
@@ -190,3 +190,22 @@ class Message(Notification):
         with StringPrinter() as printer:
             printer.write(*message)
             self.message = str(printer)
+
+
+# Database changes.
+
+
+class VideoDeleted(Notification):
+    __slots__ = ("video",)
+
+    def __init__(self, video):
+        super().__init__()
+        self.video = video
+
+
+class FieldsModified(Notification):
+    __slots__ = ("fields",)
+
+    def __init__(self, properties: Iterable[str]):
+        super().__init__()
+        self.fields = set(properties)

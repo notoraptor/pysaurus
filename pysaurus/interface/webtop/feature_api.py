@@ -159,55 +159,38 @@ class FeatureAPI:
     def delete_video(self, video_id):
         video = self.database.get_video_from_id(video_id)
         self.database.delete_video(video)
-        self.provider.on_video_deleted(video)
 
     def rename_video(self, video_id, new_title):
-        video = self.database.get_video_from_id(video_id)
-        self.database.change_video_file_title(video, new_title)
-        self.provider.on_properties_modified(
-            ("filename", "file_title") + (() if video.meta_title else ("meta_title",))
+        self.database.change_video_file_title(
+            self.database.get_video_from_id(video_id), new_title
         )
-        self.provider.load()
-        return {
-            "filename": to_json_value(video.filename),
-            "file_title": video.file_title,
-        }
 
     def edit_property_for_videos(self, name, video_indices, to_add, to_remove):
         self.database.edit_property_for_videos(name, video_indices, to_add, to_remove)
-        self.provider.on_properties_modified([name])
+
+    def set_video_properties(self, video_id, properties):
+        self.database.set_video_properties(
+            self.database.get_video_from_id(video_id), properties
+        )
 
     def fill_property_with_terms(self, prop_name, only_empty=False):
         self.database.fill_property_with_terms(
             self.provider.get_all_videos(), prop_name, only_empty
         )
-        self.provider.on_properties_modified([prop_name])
 
     def delete_property_value(self, name, values):
-        modified = self.database.delete_property_value(
+        return self.database.delete_property_value(
             self.provider.get_all_videos(), name, values
         )
-        if modified:
-            self.provider.on_properties_modified([name])
-        return modified
 
     def edit_property_value(self, name, old_values, new_value):
-        if self.database.edit_property_value(
+        self.database.edit_property_value(
             self.provider.get_all_videos(), name, old_values, new_value
-        ):
-            self.provider.on_properties_modified([name])
+        )
 
     def move_property_value(self, old_name, values, new_name):
-        if self.database.move_property_value(
+        self.database.move_property_value(
             self.provider.get_all_videos(), old_name, values, new_name
-        ):
-            self.provider.on_properties_modified((old_name, new_name))
-
-    def set_video_properties(self, video_id, properties):
-        self.provider.on_properties_modified(
-            self.database.set_video_properties(
-                self.database.get_video_from_id(video_id), properties
-            )
         )
 
     def classifier_concatenate_path(self, to_property):
@@ -218,4 +201,3 @@ class FeatureAPI:
         ):
             self.provider.classifier_layer.set_path([])
             self.provider.group_layer.set_group_id(0)
-            self.provider.on_properties_modified([from_property, to_property])

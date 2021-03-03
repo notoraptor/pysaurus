@@ -11,7 +11,7 @@ Video class. Properties:
     (number of seconds) = duration / duration_time_base
 """
 
-from typing import Sequence
+from typing import Sequence, Set
 
 from pysaurus.core.classes import StringPrinter, Text, NegativeComparator
 from pysaurus.core.components import AbsolutePath, Duration
@@ -295,7 +295,7 @@ class Video(VideoState):
         video_terms = self.terms(as_set=True)
         return any(term in video_terms for term in terms)
 
-    def set_properties(self, properties: dict):
+    def set_properties(self, properties: dict) -> Set[str]:
         modified = set()
         for name, value in properties.items():
             if self.set_property(name, value):

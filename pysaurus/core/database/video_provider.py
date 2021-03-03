@@ -27,6 +27,7 @@ from pysaurus.core.components import FileSize, Duration, AbsolutePath
 from pysaurus.core.database.database import Database
 from pysaurus.core.database.video import Video
 from pysaurus.core.database.video_filtering import NOT_FOUND, SOURCE_TREE, TreeUtils
+from pysaurus.core.database import notifications
 
 T = TypeVar("T")
 
@@ -950,18 +951,27 @@ class VideoProvider:
     def get_view(self):
         return list(self.view)
 
-    def on_video_deleted(self, video):
-        self.__source_layer.delete_video(video)
+    def on_video_deleted(self, notification: notifications.VideoDeleted):
+        self.__source_layer.delete_video(notification.video)
         self.view = self.__source_layer.run()
+
+    def on_fields_modified(self, notification: notifications.FieldsModified):
+        self.on_properties_modified(notification.fields)
 
     def on_properties_modified(self, properties: Sequence[str]):
         self.__source_layer.update_index()
-        group_def = self.grouping_layer.get_grouping()
-        if group_def:
-            field = (
-                group_def.field[1:] if group_def.field[0] == ":" else group_def.field
-            )
+        gdef = self.grouping_layer.get_grouping()
+        if gdef:
+            field = gdef.field[1:] if gdef.field[0] == ":" else gdef.field
             if field in properties:
                 self.grouping_layer.request_update()
                 self.view = self.__source_layer.run()
                 return True
+
+    def register_notifications(self):
+        self.database.notifier.set_manager(
+            notifications.VideoDeleted, self.on_video_deleted
+        )
+        self.database.notifier.set_manager(
+            notifications.FieldsModified, self.on_fields_modified
+        )
