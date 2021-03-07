@@ -1,8 +1,10 @@
-import os
 import argparse
-from pysaurus.core.components import AbsolutePath
-from pysaurus.core import functions as utils
+import os
+
 import ujson as json
+
+from pysaurus.core import functions as utils
+from pysaurus.core.components import AbsolutePath
 from pysaurus.core.profiling import Profiler
 
 
@@ -38,34 +40,42 @@ def _f(folder, filenames):
             size = file_path.get_size()
             size_to_files.setdefault(size, []).append(file_path)
         if (i + 1) % 2000 == 0:
-            print('Parsed', i + 1, 'file(s)')
+            print("Parsed", i + 1, "file(s)")
     return size_to_files
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Find duplicate files in a folder.')
-    parser.add_argument('-d', '--directory', required=True, help='Folder to find files (not recursive)')
-    parser.add_argument('-o', '--output', required=True, help='Name of JSON file to save output')
+    parser = argparse.ArgumentParser(description="Find duplicate files in a folder.")
+    parser.add_argument(
+        "-d", "--directory", required=True, help="Folder to find files (not recursive)"
+    )
+    parser.add_argument(
+        "-o", "--output", required=True, help="Name of JSON file to save output"
+    )
     args = parser.parse_args()
     folder = AbsolutePath(args.directory)
     if not folder.isdir():
-        print('Expected a directory, got', folder)
+        print("Expected a directory, got", folder)
         exit(-1)
-    print('Folder:', folder)
-    print('Get filenames')
+    print("Folder:", folder)
+    print("Get filenames")
     filenames = list(folder.listdir())
-    print('Found', len(filenames), 'filename(s)')
-    with Profiler('Group by size'):
+    print("Found", len(filenames), "filename(s)")
+    with Profiler("Group by size"):
         size_to_files = _f(folder, filenames)
-    print('Getting duplicates')
-    duplicates = {size: files for size, files in size_to_files.items() if len(files) > 1}
-    print('Found', len(duplicates), 'duplicate(s)')
-    print('Save results')
-    output = [[size, [str(f) for f in files]] for size, files in sorted(duplicates.items())]
-    with open(args.output, 'w') as file:
+    print("Getting duplicates")
+    duplicates = {
+        size: files for size, files in size_to_files.items() if len(files) > 1
+    }
+    print("Found", len(duplicates), "duplicate(s)")
+    print("Save results")
+    output = [
+        [size, [str(f) for f in files]] for size, files in sorted(duplicates.items())
+    ]
+    with open(args.output, "w") as file:
         json.dump(output, file)
-    print('Saved')
+    print("Saved")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

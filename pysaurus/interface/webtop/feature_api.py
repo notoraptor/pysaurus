@@ -1,12 +1,11 @@
 from typing import Optional
 
-from pysaurus.core.components import AbsolutePath
 from pysaurus.core.database.database import Database
 from pysaurus.core.database.properties import PropType
 from pysaurus.core.database.video_features import VideoFeatures
 from pysaurus.core.database.video_filtering import get_usable_source_tree
 from pysaurus.core.database.video_provider import VideoProvider
-from pysaurus.core.functions import compute_nb_pages, to_json_value
+from pysaurus.core.functions import compute_nb_pages
 
 
 class FeatureAPI:

@@ -24,10 +24,10 @@ from typing import (
 from pysaurus.core import functions
 from pysaurus.core.classes import ToDict, NegativeComparator
 from pysaurus.core.components import FileSize, Duration, AbsolutePath
+from pysaurus.core.database import notifications
 from pysaurus.core.database.database import Database
 from pysaurus.core.database.video import Video
 from pysaurus.core.database.video_filtering import NOT_FOUND, SOURCE_TREE, TreeUtils
-from pysaurus.core.database import notifications
 
 T = TypeVar("T")
 

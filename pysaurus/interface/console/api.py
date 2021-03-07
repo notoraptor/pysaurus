@@ -12,7 +12,6 @@ from pysaurus.core.database.video_features import VideoFeatures
 from pysaurus.core.database.video_state import VideoState
 from pysaurus.core.function_parser import FunctionParser
 from pysaurus.core.functions import bool_type
-from pysaurus.core.profiling import Profiler
 
 TEMP_DIR = tempfile.gettempdir()
 TEMP_PREFIX = tempfile.gettempprefix() + "_pysaurus_"
