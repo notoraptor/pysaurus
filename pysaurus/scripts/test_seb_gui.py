@@ -36,67 +36,91 @@ class Interface:
         .item .title {
             font-size: 0.75rem;
         }
+        """, javascript="""
+        function check() {
+            const form = document.forms["myform"];
+            const keys = Object.keys(form);
+            console.log(`Form content: ${keys.length}`);
+        }
         """)
 
-    def _dup_to_html(self, dup):
+    def _img_to_html(self, dup_id, name, i, file_path):
+        value = f"{dup_id}-{i}"
+        return f"""
+        <div class="item">
+            <div class="image">
+                <label for="{name}-{i}"><img src="{file_path_to_url_path(file_path.path)}" alt="Bad image"/></label>
+            </div>
+            <div class="title">
+                <input id="{name}-{i}" type="radio" name="{name}" value="{value}" {"checked" if i == 0 else ""}/>
+                <label for="{name}-{i}">{file_path.get_basename()}</label>
+            </div>
+        </div>
+        """
+
+    def _dup_to_html(self, dup_id, dup):
         dup_folder, dup_files = dup
         name = dup_folder.title
-        img_strings = []
-        for i, file_path in enumerate(dup_files):
-            img_strings.append(f"""
-            <div class="item">
-                <div class="image">
-                    <label for="{name}-{i}"><img src="{file_path_to_url_path(file_path.path)}" alt="bad image"/></label>
-                </div>
-                <div class="title">
-                    <input id="{name}-{i}" type="radio" name="{name}" value="{file_path}" {"checked" if i == 0 else ""}/>
-                    <label for="{name}-{i}">{file_path.title}.{file_path.extension}</label>
-                </div>
-            </div>
-            """)
+        img_strings = [self._img_to_html(dup_id, name, i, file_path) for i, file_path in enumerate(dup_files)]
+        assert len(img_strings) == len(dup_files)
         return f"""
         <tr>
             <td class="folder">
-            <input id="{name}-none" type="radio" name="{name}" value=""/>
-            <label for="{name}-none">{name}</label>
+                <input id="{name}-none" type="radio" name="{name}" value=""/>
+                <label for="{name}-none">{name}</label>
             </td>
             <td><div class="items">{"".join(img_strings)}</div></td>
         </tr>
         """
 
     def index(self):
+        dup_strings = [self._dup_to_html(i, dup) for i, dup in enumerate(self._duplicates)]
+        assert len(dup_strings) == len(self._duplicates)
         return self._gen(
             f"""
             <h1>{len(self._duplicates)} duplicate(s)</h1>
-            <form action="app://move" method="post">
-                <table><tbody>
-                {"".join(map(self._dup_to_html, self._duplicates))}
-                </tbody></table>
+            <form action="app://move" method="post" name="myform" onsubmit="return check()">
                 <p>
                     Output folder:
                     <input type="text" name="output"/>
                     <input type="submit" value="send"/>
                 </p>
+                <table><tbody>
+                {"".join(dup_strings)}
+                </tbody></table>
             </form>
             """
         )
 
     def move(self, **kwargs):
-        output = None
-        inputs = []
         for k, v in kwargs.items():
-            if v:
-                path = AbsolutePath(v)
-                if path.isfile():
-                    inputs.append(path)
-                else:
-                    assert path.isdir() or not path.exists()
-                    assert k == "output", (k, v, path)
-                    output = path
-            else:
-                print('Skipped', k)
-        assert output
-        return f"Sent {len(inputs)} file(s) to move to: {output}"
+            v = v.strip()
+            print(k, '=', v)
+            continue
+            if not v:
+                continue
+            dup_id, file_id = v.split('-')
+            dup = self._duplicates[int(dup_id)]
+            fil = dup[1][int(file_id)]
+            print(k, '=', dup[0], fil)
+        print('K', len(kwargs), 'D', len(self._duplicates))
+        return "Sent!"
+        # assert len(kwargs) == len(self._duplicates) + 1, (len(kwargs), len(self._duplicates))
+        # output = None
+        # inputs = []
+        # for k, v in kwargs.items():
+        #     if v:
+        #         path = AbsolutePath(v)
+        #         if path.isfile():
+        #             inputs.append(path)
+        #         else:
+        #             assert path.isdir() or not path.exists()
+        #             assert k == "output", (k, v, path)
+        #             output = path
+        #     else:
+        #         print('Skipped', k)
+        # assert output
+        # return f"Sent {len(inputs)} file(s) to move to: {output}"
 
 
 def main():

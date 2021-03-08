@@ -36,8 +36,10 @@ class _RequestHandler:
             page = parsed.netloc
             method = request.GetMethod()
             if method == "POST":
+                post = request.GetPostData()
+                print(url, 'SIZE', len(post))
                 parameters = {
-                    k.decode(): v.decode() for k, v in request.GetPostData().items()
+                    k.decode(): v.decode() for k, v in post.items()
                 }
             else:
                 parameters = {
@@ -54,6 +56,20 @@ class _RequestHandler:
         return False
 
 
+class _CEF:
+    __slots__ = "settings", "switches"
+
+    def __init__(self, settings=None, switches=None):
+        self.settings = settings
+        self.switches = switches
+
+    def __enter__(self):
+        cef.Initialize(settings=self.settings, switches=self.switches)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        cef.Shutdown()
+
+
 class SebGUI:
     def __init__(self, title, interface):
         self.title = title
@@ -65,7 +81,7 @@ class SebGUI:
         # Browser settings
         settings = {
             "debug": False,
-            "log_severity": cef.LOGSEVERITY_WARNING,
+            "log_severity": cef.LOGSEVERITY_INFO,
             # "log_file": "debug.log",
             "remote_debugging_port": 4000,
             "cache_path": tempfile.gettempdir(),
@@ -75,17 +91,16 @@ class SebGUI:
             # prevent local CORS exceptions.
             "disable-web-security": ""
         }
-        # Initialize CEF-Python
-        cef.Initialize(settings=settings, switches=switches)
-        browser = cef.CreateBrowserSync(
-            url=_html_to_url(self.interface.index()), window_title=self.title
-        )
-        # Set Javascript bindings.
-        handler = _RequestHandler(self.interface)
-        browser.SetClientHandler(handler)
-        # Load server.
-        cef.MessageLoop()
-        cef.Shutdown()
+        # run CEF instance
+        with _CEF(settings=settings, switches=switches):
+            browser = cef.CreateBrowserSync(
+                url=_html_to_url(self.interface.index()), window_title=self.title
+            )
+            # Set Javascript bindings.
+            handler = _RequestHandler(self.interface)
+            browser.SetClientHandler(handler)
+            # Load server.
+            cef.MessageLoop()
 
 
 class HTML:
@@ -115,11 +130,11 @@ class HTML:
         <meta charset="utf-8">
         {code_stylesheets}
         {code_css}
+        {code_javascript}
     </head>
     <body>
         {body}
         {code_scripts}
-        {code_javascript}
     </body>
 </html>
 """
