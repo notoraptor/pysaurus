@@ -1,9 +1,5 @@
-bcrypt
 moviepy
 Pillow
-tornado>=5.0
 ujson
-PySciter
-kivy
-cefpython3==66.0
-pyperclip==1.8.0
+pyperclip==1.8.2
+cefpython3==66.1
