@@ -2,4 +2,4 @@ moviepy
 Pillow
 ujson
 pyperclip==1.8.2
-cefpython3==66.1
+cefpython3==66.0

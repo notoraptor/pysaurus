@@ -1,17 +1,21 @@
-from pysaurus.scripts.sebgui import HTML, convert_file_path_to_url
-from pysaurus.scripts.webgui import web_gui
-import os
+from pysaurus.scripts.server_interface import FlaskInterface, run_flask_app, flask_gui
 from pysaurus.core.components import AbsolutePath
+import os
 from typing import List, Tuple
+from pysaurus.scripts.sebgui import HTML
 
 
-class Interface:
+class Interface(FlaskInterface):
     def __init__(self, duplicates: List[Tuple[AbsolutePath, List[AbsolutePath]]]):
         self._duplicates = duplicates
         self.dup_names = {
             dup_path.title: dup_files for dup_path, dup_files in self._duplicates
         }
-        assert "output" not in self.dup_names
+        self.output_name = "output"
+        i = 0
+        while self.output_name in self.dup_names:
+            self.output_name = f"output-{i}"
+            i += 1
         self._gen = HTML(
             css="""
         body {
@@ -49,7 +53,7 @@ class Interface:
         return f"""
         <div class="item">
             <div class="image">
-                <label for="{name}-{i}"><img src="{convert_file_path_to_url(file_path.path)}"/></label>
+                <label for="{name}-{i}"><img src="{self.backend_url(self.file, path=file_path.path)}"/></label>
             </div>
             <div class="title">
                 <input id="{name}-{i}" type="radio" name="{name}" value="{i}" {"checked" if i == 0 else ""}/>
@@ -58,7 +62,7 @@ class Interface:
         </div>
         """
 
-    def _dup_to_html(self, dup):
+    def _dup_to_html(self, dup_id, dup):
         dup_folder, dup_files = dup
         name = dup_folder.title
         return f"""
@@ -73,57 +77,54 @@ class Interface:
 
     def index(self):
         # path = AbsolutePath.join(os.path.dirname(__file__), 'miwa.jpg')
-        html = self._gen(
+        return self._gen(
             f"""
             <h1>{len(self._duplicates)} duplicate(s)</h1>
-            <form method="post" onsubmit="return webview_submit(this)">
+            <form method="post" action="{self.backend_url(self.move)}">
                 <p>
                     Output folder:
-                    <input type="text" name="output" value="G:\donnees\discord\ero-room\images dédoublées\moved"/>
+                    <input type="text" name="{self.output_name}" value="G:\donnees\discord\ero-room\images dédoublées\moved"/>
                     <input type="submit" value="send"/>
                 </p>
                 <table><tbody>
-                {"".join(self._dup_to_html(dup) for i, dup in enumerate(self._duplicates))}
+                {"".join(self._dup_to_html(i, dup) for i, dup in enumerate(self._duplicates))}
                 </tbody></table>
+                <p>
+                    <input type="submit" value="send"/>
+                </p>
             </form>
             """
         )
-        return html
 
-    def move(self, kwargs):
-        assert len(kwargs) == len(self._duplicates) + 1, (
+    def move(self, **kwargs):
+        assert self.output_name in kwargs
+        inputs = []
+        output = kwargs.pop(self.output_name).strip()
+        if not output:
+            return f'No output specified! <a href="{self.backend_url(self.index)}">Back!</a>'
+        output = AbsolutePath(output)
+        if not output.isdir() and output.exists():
+            return f'Not a directory and already exists: {output}. <a href="{self.backend_url(self.index)}">Back!</a>'
+        assert len(kwargs) == len(self._duplicates), (
             len(kwargs),
             len(self._duplicates),
         )
-        output = None
-        inputs = []
-        nb_dups_found = 0
         for k, v in kwargs.items():
-            pass
-        for k, v in kwargs.items():
-            v = v.strip()
-            if k == "output":
-                assert output is None, output
-                if not v:
-                    return "No output provided"
-                output = AbsolutePath(v)
-                assert output.isdir() or not output.exists()
-            else:
-                assert k in self.dup_names, k
-                nb_dups_found += 1
-                index_file = int(v)
-                if index_file != -1:
-                    inputs.append(self.dup_names[k][index_file])
-                    print("Found", k, v, index_file, self.dup_names[k][index_file])
-        assert output
+            assert k in self.dup_names, k
+            index_file = int(v.strip())
+            if index_file != -1:
+                inputs.append(self.dup_names[k][index_file])
+                print("Found", k, index_file, self.dup_names[k][index_file])
         return f"Sent {len(inputs)} file(s) to move to: {output}"
 
 
 def main():
-    folder = AbsolutePath(r"G:\donnees\discord\ero-room\dupplicates")
     # if len(sys.argv) != 2:
     #     raise RuntimeError('Required a folder of duplicates.')
     # folder = AbsolutePath(sys.argv[1])
+    folder = AbsolutePath(r"G:\donnees\discord\ero-room\dupplicates")
+
+    # Load folder of duplicates.
     if not folder.isdir():
         raise RuntimeError(f"Not a folder {folder}")
     duplicates = []
@@ -139,13 +140,14 @@ def main():
             files.append(file_path)
         if len(files) > 1:
             duplicates.append((dup_path, files))
-        if (i + 1) % 10 == 0:
-            break
+        # if (i + 1) % 10 == 0:
+        #     break
         if (i + 1) % 100 == 0:
             print("Loaded", i + 1)
 
-    print(os.getcwd())
-    web_gui("My Software!", Interface(duplicates))
+    # Load interface.
+    interface = Interface(duplicates)
+    flask_gui(interface, title="Duplicates")
 
 
 if __name__ == "__main__":
