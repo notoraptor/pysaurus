@@ -15,10 +15,10 @@ def main():
         raise RuntimeError(f"Not a folder: {folder}")
     if chunk_size < 2:
         raise RuntimeError(f"Useless to split a folder per {chunk_size} files")
-    with Profiler('Collect paths'):
+    with Profiler("Collect paths"):
         paths = [AbsolutePath.join(folder, name) for name in folder.listdir()]
     nb_chunks = (len(paths) // chunk_size) + bool(len(paths) % chunk_size)
-    print('Expected', nb_chunks, 'sub-folders')
+    print("Expected", nb_chunks, "sub-folders")
     chunks = []
     for i in range(nb_chunks):
         start = i * chunk_size
@@ -34,14 +34,14 @@ def main():
             new_folder.mkdir()
         if not new_folder.isdir():
             raise RuntimeError(f"Cannot found or create new folder {new_folder}")
-        print('Moving files to', new_folder.title)
+        print("Moving files to", new_folder.title)
         for i, old_path in enumerate(chunk):
             new_path = AbsolutePath.join(new_folder, old_path.get_basename())
             os.rename(old_path.path, new_path.path)
             assert not old_path.exists()
             assert new_path.exists()
             if (i + 1) % 100 == 0:
-                print(f'\tMoved {i + 1}')
+                print(f"\tMoved {i + 1}")
 
 
 if __name__ == "__main__":

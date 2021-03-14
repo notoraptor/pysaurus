@@ -1,8 +1,9 @@
-from typing import List, Tuple
 import os
+from typing import List, Tuple
+
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.profiling import Profiler
-from pysaurus.scripts.embedded_server import (
+from pysaurus.core.servergui import (
     FlaskInterface,
     flask_gui,
     HTML,
@@ -123,17 +124,17 @@ class Interface(FlaskInterface):
         if not output.isdir():
             output.mkdir()
         movements = []
-        with Profiler('Create movements'):
+        with Profiler("Create movements"):
             for inp in inputs:
                 new_file_path = AbsolutePath.join(output, inp.get_basename())
                 movements.append((inp, new_file_path))
-        with Profiler('Move files'):
+        with Profiler("Move files"):
             for i, (inp, out) in enumerate(movements):
                 os.rename(inp.path, out.path)
                 assert not inp.exists()
                 assert out.isfile()
                 if (i + 1) % 100 == 0:
-                    print('Moved', i + 1)
+                    print("Moved", i + 1)
         return f"Sent {len(inputs)} file(s) to: {output}"
 
 

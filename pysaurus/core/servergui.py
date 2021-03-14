@@ -1,6 +1,22 @@
+from multiprocessing import Process
+
+import webview
 from flask import url_for, send_file, Flask, request
 
 from pysaurus.core.components import AbsolutePath
+
+
+def __function_to_flask(method):
+    def wrapper():
+        if request.method == "POST":
+            parameters = {**request.form}
+        else:
+            assert request.method == "GET", request.method
+            parameters = {**request.args}
+        return method(**parameters)
+
+    wrapper.__name__ = getattr(method, "__name__")
+    return wrapper
 
 
 class HTML:
@@ -34,11 +50,11 @@ class HTML:
                 <meta charset="utf-8">
                 {code_stylesheets}
                 {code_css}
-                {code_javascript}
             </head>
             <body>
                 {body}
                 {code_scripts}
+                {code_javascript}
             </body>
         </html>
         """
@@ -56,20 +72,7 @@ class FlaskInterface:
         return "Hello World!"
 
 
-def __wrap(method):
-    def wrapper():
-        if request.method == "POST":
-            parameters = {**request.form}
-        else:
-            assert request.method == "GET", request.method
-            parameters = {**request.args}
-        return method(**parameters)
-
-    wrapper.__name__ = getattr(method, "__name__")
-    return wrapper
-
-
-def run_flask_app(interface: FlaskInterface, debug=True, use_reloader=True):
+def flask_server(interface: FlaskInterface, debug=True, use_reloader=True):
     assert isinstance(interface, FlaskInterface)
 
     app = Flask(__name__)
@@ -80,7 +83,7 @@ def run_flask_app(interface: FlaskInterface, debug=True, use_reloader=True):
         if not callable(method):
             continue
 
-        wrapper = __wrap(method)
+        wrapper = __function_to_flask(method)
         rule = "/" if name == "index" else f"/{name}"
         app.add_url_rule(rule, None, wrapper, methods=["GET", "POST"])
 
@@ -88,10 +91,7 @@ def run_flask_app(interface: FlaskInterface, debug=True, use_reloader=True):
 
 
 def flask_gui(interface: FlaskInterface, title="", debug=True):
-    import webview
-    from multiprocessing import Process
-
-    server = Process(target=run_flask_app, args=(interface, debug, False))
+    server = Process(target=flask_server, args=(interface, debug, False))
     server.start()
 
     webview.create_window(title, "http://localhost:5000")
