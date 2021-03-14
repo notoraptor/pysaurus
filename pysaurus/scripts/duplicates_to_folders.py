@@ -96,7 +96,6 @@ def main():
                 output_folder, str(size).rjust(len_size_string, "0")
             )
             folders.append(dup_folder_path)
-            len_title_writing = int(math.log10(len(files))) + 1
             for file_no, file_path in enumerate(files):
                 output_file_path = FilePath(
                     dup_folder_path,

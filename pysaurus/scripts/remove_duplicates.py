@@ -1,8 +1,12 @@
-from pysaurus.scripts.server_interface import FlaskInterface, run_flask_app, flask_gui
-from pysaurus.core.components import AbsolutePath
-import os
 from typing import List, Tuple
-from pysaurus.scripts.sebgui import HTML
+import os
+from pysaurus.core.components import AbsolutePath
+from pysaurus.core.profiling import Profiler
+from pysaurus.scripts.embedded_server import (
+    FlaskInterface,
+    flask_gui,
+    HTML,
+)
 
 
 class Interface(FlaskInterface):
@@ -76,7 +80,6 @@ class Interface(FlaskInterface):
         """
 
     def index(self):
-        # path = AbsolutePath.join(os.path.dirname(__file__), 'miwa.jpg')
         return self._gen(
             f"""
             <h1>{len(self._duplicates)} duplicate(s)</h1>
@@ -93,12 +96,13 @@ class Interface(FlaskInterface):
                     <input type="submit" value="send"/>
                 </p>
             </form>
+            <p>&nbsp;</p>
             """
         )
 
     def move(self, **kwargs):
         assert self.output_name in kwargs
-        inputs = []
+        inputs = []  # type: List[AbsolutePath]
         output = kwargs.pop(self.output_name).strip()
         if not output:
             return f'No output specified! <a href="{self.backend_url(self.index)}">Back!</a>'
@@ -115,14 +119,29 @@ class Interface(FlaskInterface):
             if index_file != -1:
                 inputs.append(self.dup_names[k][index_file])
                 print("Found", k, index_file, self.dup_names[k][index_file])
-        return f"Sent {len(inputs)} file(s) to move to: {output}"
+
+        if not output.isdir():
+            output.mkdir()
+        movements = []
+        with Profiler('Create movements'):
+            for inp in inputs:
+                new_file_path = AbsolutePath.join(output, inp.get_basename())
+                movements.append((inp, new_file_path))
+        with Profiler('Move files'):
+            for i, (inp, out) in enumerate(movements):
+                os.rename(inp.path, out.path)
+                assert not inp.exists()
+                assert out.isfile()
+                if (i + 1) % 100 == 0:
+                    print('Moved', i + 1)
+        return f"Sent {len(inputs)} file(s) to: {output}"
 
 
 def main():
     # if len(sys.argv) != 2:
     #     raise RuntimeError('Required a folder of duplicates.')
     # folder = AbsolutePath(sys.argv[1])
-    folder = AbsolutePath(r"G:\donnees\discord\ero-room\dupplicates")
+    folder = AbsolutePath(r"G:\donnees\discord\ero-room\duplicates")
 
     # Load folder of duplicates.
     if not folder.isdir():

@@ -3,7 +3,9 @@ import concurrent.futures
 import math
 import os
 import re
+import tempfile
 import threading
+import urllib.parse
 from datetime import datetime
 
 from pysaurus.core.constants import VIDEO_SUPPORTED_EXTENSIONS
@@ -361,3 +363,18 @@ def to_json_value(value):
     if isinstance(value, int) and JSON_INTEGER_MIN <= value <= JSON_INTEGER_MAX:
         return value
     return str(value)
+
+
+def convert_file_path_to_url(path):
+    entry_path = os.path.normpath(path).replace("\\", "/")
+    return f"file:///{entry_path}"
+
+
+def html_to_url(html):
+    url = f"data:text/html;charset=UTF-8,{urllib.parse.quote(html)}"
+    if len(url) < 2 * 1024 * 1024:
+        return url
+    # Url is too long, we should better save it in a file.
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".html") as tf:
+        tf.write(html)
+        return convert_file_path_to_url(tf.name)
