@@ -1,3 +1,4 @@
+from abc import abstractmethod
 import multiprocessing
 import queue
 import threading
@@ -71,21 +72,10 @@ class GuiAPI(FeatureAPI):
         self.monitor_thread = None
         print("End monitoring.")
 
+    @abstractmethod
     def _notify(self, notification):
         # type: (Notification) -> None
-        print(notification)
-        self._call_gui_function(
-            "__notify",
-            {
-                "name": notification.get_name(),
-                "notification": notification.to_dict(),
-                "message": str(notification),
-            },
-        )
-
-    def _call_gui_function(self, function_name, *parameters):
-        # to override.
-        pass
+        raise NotImplementedError()
 
     def _load_database(self):
         self.notifier.clear_managers()

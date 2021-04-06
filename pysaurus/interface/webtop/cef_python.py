@@ -25,8 +25,16 @@ class Interface(GuiAPI):
             print("%s:" % type(exc).__name__, exc, file=sys.stderr)
             reject.Call({"name": type(exc).__name__, "message": str(exc)})
 
-    def _call_gui_function(self, function_name, *parameters):
-        self.browser.ExecuteFunction(function_name, *parameters)
+    def _notify(self, notification):
+        print(notification)
+        self.browser.ExecuteFunction(
+            "__notify",
+            {
+                "name": notification.get_name(),
+                "notification": notification.to_dict(),
+                "message": str(notification),
+            },
+        )
 
 
 def set_javascript_bindings(browser):
