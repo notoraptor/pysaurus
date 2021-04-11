@@ -124,7 +124,7 @@ class API:
             return self.database.nb_entries
         if query == "discarded":
             return self.database.nb_discarded
-        return len(self.database.get_source(*query.strip().split()))
+        return len(self.database.get_videos(*query.strip().split()))
 
     def nb_pages(self, query, page_size):
         # type: (str, int) -> int
@@ -136,19 +136,13 @@ class API:
     def valid_size(self):
         # type: () -> FileSize
         return FileSize(
-            sum(
-                video.file_size
-                for video in self.database.readable.found.with_thumbnails
-            )
+            sum(video.file_size for video in self.database.get_valid_videos())
         )
 
     def valid_length(self):
         # type: () -> Duration
         return Duration(
-            sum(
-                video.raw_microseconds
-                for video in self.database.readable.found.with_thumbnails
-            )
+            sum(video.raw_microseconds for video in self.database.get_valid_videos())
         )
 
     def clear_not_found(self):
@@ -349,7 +343,7 @@ class API:
     def same_sizes(self):
         # type: () -> Dict[int, List[Video]]
         sizes = {}
-        for video in self.database.readable.found.with_thumbnails:
+        for video in self.database.get_valid_videos():
             sizes.setdefault(video.size, []).append(video)
         return {
             size: elements for (size, elements) in sizes.items() if len(elements) > 1
@@ -360,7 +354,7 @@ class API:
         terms = utils.string_to_pieces(terms)
         return [
             video
-            for video in self.database.readable.found.with_thumbnails
+            for video in self.database.get_valid_videos()
             if all(
                 term in video.title.lower() or term in video.filename.path.lower()
                 for term in terms
@@ -389,18 +383,19 @@ class API:
             field = FieldType(piece)
             sorting.append((field, reverse))
         videos = sorted(
-            self.database.readable.found.with_thumbnails,
+            self.database.get_valid_videos(),
             key=functools.cmp_to_key(lambda v1, v2: compare_videos(v1, v2, sorting)),
         )
         return videos[(page_size * page_number) : (page_size * (page_number + 1))]
 
     def videos(self):
         # type: () -> List[Video]
-        return self.database.readable.found.with_thumbnails
+        return self.database.get_valid_videos()
 
     def not_found(self):
         return sorted(
-            self.database.readable.not_found, key=lambda video: video.filename
+            self.database.get_videos("readable", "not_found"),
+            key=lambda video: video.filename,
         )
 
     def not_found_html(self):
@@ -468,7 +463,7 @@ class API:
         if not folder.isdir():
             return ""
         videos = []
-        for video in self.database.readable.not_found:
+        for video in self.database.get_videos("readable", "not_found"):
             if video.filename.in_directory(
                 folder, is_case_insensitive=self.database.system_is_case_insensitive
             ):
@@ -481,11 +476,14 @@ class API:
             self.delete(video.video_id)
 
     def unreadable(self):
-        return sorted(self.database.unreadable.found, key=lambda video: video.filename)
+        return sorted(
+            self.database.get_videos("unreadable", "found"),
+            key=lambda video: video.filename,
+        )
 
     def missing_thumbnails(self):
         return sorted(
-            self.database.readable.found.without_thumbnails,
+            self.database.get_videos("readable", "found", "without_thumbnails"),
             key=lambda video: video.filename,
         )
 

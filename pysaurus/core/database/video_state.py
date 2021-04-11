@@ -111,6 +111,33 @@ class VideoState:
     def day(self):
         return self.date.day
 
+    @property
+    def unreadable(self):
+        return self.UNREADABLE
+
+    @property
+    def readable(self):
+        return not self.UNREADABLE
+
+    @property
+    def found(self):
+        return self.exists()
+
+    @property
+    def not_found(self):
+        return not self.exists()
+
+    @property
+    def with_thumbnails(self):
+        return self.thumbnail_is_valid()
+
+    @property
+    def without_thumbnails(self):
+        return not self.thumbnail_is_valid()
+
+    def thumbnail_is_valid(self):
+        return False
+
     def exists(self):
         return self.runtime.is_file
 

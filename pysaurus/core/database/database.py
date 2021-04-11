@@ -12,7 +12,7 @@ from pysaurus.core.components import (
     PathInfo,
 )
 from pysaurus.core.constants import THUMBNAIL_EXTENSION
-from pysaurus.core.database import notifications, path_utils, video_filtering
+from pysaurus.core.database import notifications, path_utils
 from pysaurus.core.database.jobs import jobs_python
 from pysaurus.core.database.properties import PropType
 from pysaurus.core.database.video import Video
@@ -82,22 +82,13 @@ class Database:
             self.__db_path.path
         )
         self.__special_property_parser = {}  # type: Dict[str, callable]
-        # Sources:
-        # unreadable.not_found
-        # unreadable.found
-        # readable.not_found.without_thumbnails
-        # readable.not_found.with_thumbnails
-        # readable.found.without_thumbnails
-        # readable.found.with_thumbnails
-        self.unreadable = video_filtering.Unreadable(self, self.__unreadable)
-        self.readable = video_filtering.Readable(self, self.__videos)
         # Load database
         self.__notifier.set_log_path(self.__log_path.path)
         with Profiler("Load database"):
             self.__load(folders, clear_old_folders)
         # Load VideoInterval object to compute videos quality.
         self.video_interval = VideoInterval(t[0] for t in Video.QUALITY_FIELDS)
-        self.video_interval.update(self.readable)
+        self.video_interval.update(self.__videos.values())
         # Set special properties.
         self.__set_special_properties()
         self.__register_special_property_parsers()
@@ -174,7 +165,7 @@ class Database:
     def __save(self, ensure_identifiers=True):
         if ensure_identifiers:
             self.__ensure_identifiers()
-        self.video_interval.update(self.readable)
+        self.video_interval.update(self.__videos.values())
         # Save database.
         json_output = {
             "date": self.__date.time,
@@ -544,10 +535,7 @@ class Database:
 
         tasks = [
             (video.filename, video.thumbnail_path)
-            for source in (
-                self.readable.found.with_thumbnails,
-                self.readable.not_found.with_thumbnails,
-            )
+            for source in (self.get_videos("readable", "with_thumbnails"),)
             for video in source
             if video.filename.path not in identifiers
         ]
@@ -788,7 +776,7 @@ Make sure any video has at most 1 value for this property before making it uniqu
 
     def refresh(self, ensure_miniatures=False):
         with Profiler("Reset thumbnail errors"):
-            for video in self.readable.found.without_thumbnails:
+            for video in self.get_videos("readable", "found", "without_thumbnails"):
                 video.error_thumbnail = False
         with Profiler("Update database"):
             self.update()
@@ -797,10 +785,6 @@ Make sure any video has at most 1 value for this property before making it uniqu
         if ensure_miniatures:
             with Profiler("Ensure miniatures"):
                 self.ensure_miniatures()
-
-    def get_source(self, *path: List[str]):
-        video_filtering.TreeUtils.check_source_path(video_filtering.SOURCE_TREE, path)
-        return list(video_filtering.TreeUtils.get_source_from_object(self, path))
 
     def delete_property_value(self, videos, name, values):
         # type: (Iterable[Video], str, List) -> List[Video]
@@ -1009,6 +993,21 @@ Make sure any video has at most 1 value for this property before making it uniqu
             if update:
                 database.refresh(ensure_miniatures)
         return database
+
+    def get_videos(self, source, *flags):
+        if source == "readable":
+            videos = self.__videos.values()
+        else:
+            assert source == "unreadable"
+            videos = self.__unreadable.values()
+        return (
+            [video for video in videos if all(getattr(video, flag) for flag in flags)]
+            if flags
+            else list(videos)
+        )
+
+    def get_valid_videos(self):
+        return self.get_videos("readable", "found", "with_thumbnails")
 
     # Unused.
 

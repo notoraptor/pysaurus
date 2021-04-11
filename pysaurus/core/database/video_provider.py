@@ -27,7 +27,11 @@ from pysaurus.core.components import FileSize, Duration, AbsolutePath
 from pysaurus.core.database import notifications
 from pysaurus.core.database.database import Database
 from pysaurus.core.database.video import Video
-from pysaurus.core.database.video_filtering import NOT_FOUND, SOURCE_TREE, TreeUtils
+from pysaurus.core.database.video_filtering import (
+    NOT_FOUND,
+    USABLE_SOURCE_TREE,
+    TreeUtils,
+)
 
 T = TypeVar("T")
 
@@ -394,7 +398,7 @@ class SourceLayer(Layer):
         for path in paths:
             path = tuple(path)
             if path not in valid_paths:
-                TreeUtils.check_source_path(SOURCE_TREE, path)
+                TreeUtils.check_source_path(USABLE_SOURCE_TREE, path)
                 valid_paths.add(path)
         if valid_paths:
             self._set_parameters(sources=sorted(valid_paths))
@@ -408,7 +412,7 @@ class SourceLayer(Layer):
     def filter(self, database: Database) -> Dict[AbsolutePath, Video]:
         source = []
         for path in self.get_sources():
-            source.extend(TreeUtils.get_source_from_object(database, path, 0))
+            source.extend(database.get_videos(*path))
         source_dict = {video.filename: video for video in source}
         assert len(source_dict) == len(source), (len(source_dict), len(source))
         self.index = self.__index_videos(source)
@@ -923,7 +927,7 @@ class VideoProvider:
         # Get all full paths from source definition
         all_paths = []
         for path in self.__source_layer.get_sources():
-            desc = TreeUtils.get_source_from_dict(SOURCE_TREE, path)
+            desc = TreeUtils.get_source_from_dict(USABLE_SOURCE_TREE, path)
             if isinstance(desc, dict):
                 TreeUtils.collect_full_paths(desc, all_paths, path)
             else:
@@ -936,7 +940,7 @@ class VideoProvider:
             path_index = random.randrange(len(paths))
             path = paths[path_index]
             del paths[path_index]
-            videos = list(TreeUtils.get_source_from_object(self.database, path))
+            videos = self.database.get_videos(*path)
             if videos:
                 video_index = random.randrange(len(videos))
                 return videos[video_index]

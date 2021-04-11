@@ -102,13 +102,13 @@ class DatabaseLoaded(Notification):
         super().__init__()
         self.entries = database.nb_entries
         self.discarded = database.nb_discarded
-        self.unreadable_not_found = len(database.get_source("unreadable", "not_found"))
-        self.unreadable_found = len(database.get_source("unreadable", "found"))
-        self.readable_not_found = len(database.get_source("readable", "not_found"))
+        self.unreadable_not_found = len(database.get_videos("unreadable", "not_found"))
+        self.unreadable_found = len(database.get_videos("unreadable", "found"))
+        self.readable_not_found = len(database.get_videos("readable", "not_found"))
         self.readable_found_without_thumbnails = len(
-            database.get_source("readable", "found", "without_thumbnails")
+            database.get_videos("readable", "found", "without_thumbnails")
         )
-        self.valid = len(database.get_source("readable", "found", "with_thumbnails"))
+        self.valid = len(database.get_videos("readable", "found", "with_thumbnails"))
 
 
 class DatabaseSaved(DatabaseLoaded):
