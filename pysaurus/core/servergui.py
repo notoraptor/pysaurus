@@ -1,7 +1,7 @@
 from multiprocessing import Process
 
 import webview
-from flask import url_for, send_file, Flask, request
+from flask import Flask, request, send_file, url_for
 
 from pysaurus.core.components import AbsolutePath
 

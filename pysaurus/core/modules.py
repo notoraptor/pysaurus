@@ -7,8 +7,8 @@ from html.parser import HTMLParser
 from typing import Tuple
 
 import ujson as json
-from PIL import Image, ImageTk
 from moviepy.video.io.VideoFileClip import VideoFileClip
+from PIL import Image, ImageTk
 
 from pysaurus.core.exceptions import NoVideoClip
 

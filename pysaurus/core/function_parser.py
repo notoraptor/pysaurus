@@ -1,7 +1,7 @@
 import argparse
 import inspect
 import textwrap
-from typing import Dict, Callable, Optional
+from typing import Callable, Dict, Optional
 
 from pysaurus.core import exceptions
 from pysaurus.core.classes import StringPrinter

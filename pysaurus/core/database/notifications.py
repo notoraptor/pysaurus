@@ -1,4 +1,4 @@
-from typing import Dict, List, Iterable
+from typing import Dict, Iterable, List
 
 from pysaurus.core.classes import StringPrinter
 from pysaurus.core.notification import Notification

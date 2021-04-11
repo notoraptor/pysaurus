@@ -5,7 +5,7 @@ import os
 
 import ujson as json
 
-from pysaurus.core.components import AbsolutePath, FileSize, FilePath
+from pysaurus.core.components import AbsolutePath, FilePath, FileSize
 from pysaurus.core.profiling import Profiler
 
 

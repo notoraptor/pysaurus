@@ -8,22 +8,22 @@ import random
 from abc import abstractmethod
 from copy import copy
 from typing import (
-    Optional,
-    Sequence,
+    Any,
+    Callable,
     Dict,
     Generic,
-    List,
-    Callable,
-    Any,
-    TypeVar,
-    Type,
     Iterable,
+    List,
+    Optional,
+    Sequence,
     Set,
+    Type,
+    TypeVar,
 )
 
 from pysaurus.core import functions
-from pysaurus.core.classes import ToDict, NegativeComparator
-from pysaurus.core.components import FileSize, Duration, AbsolutePath
+from pysaurus.core.classes import NegativeComparator, ToDict
+from pysaurus.core.components import AbsolutePath, Duration, FileSize
 from pysaurus.core.database import notifications
 from pysaurus.core.database.database import Database
 from pysaurus.core.database.video import Video

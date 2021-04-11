@@ -3,13 +3,14 @@ from typing import Dict, Iterable, List, Optional, Set, Union
 
 import ujson as json
 
-from pysaurus.core import exceptions, functions as utils
+from pysaurus.core import exceptions
+from pysaurus.core import functions as utils
 from pysaurus.core.components import (
     AbsolutePath,
     DateModified,
     FilePath,
-    PathType,
     PathInfo,
+    PathType,
 )
 from pysaurus.core.constants import THUMBNAIL_EXTENSION
 from pysaurus.core.database import notifications, path_utils

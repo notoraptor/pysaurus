@@ -1,7 +1,7 @@
 from typing import Iterable
 
 from pysaurus.core.classes import StringPrinter
-from pysaurus.core.components import AbsolutePath, FileSize, DateModified
+from pysaurus.core.components import AbsolutePath, DateModified, FileSize
 from pysaurus.core.constants import PYTHON_ERROR_THUMBNAIL
 from pysaurus.core.modules import System
 

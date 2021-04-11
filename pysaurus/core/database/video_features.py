@@ -2,7 +2,7 @@ import base64
 from io import BytesIO
 
 from pysaurus.core.constants import THUMBNAIL_EXTENSION
-from pysaurus.core.database.video import Video, VIDEO_UNIQUE_FIELDS
+from pysaurus.core.database.video import VIDEO_UNIQUE_FIELDS, Video
 from pysaurus.core.functions import to_json_value
 from pysaurus.core.modules import ImageUtils, VideoClipping
 

@@ -4,7 +4,7 @@ from io import StringIO
 from itertools import chain
 from typing import Any, Generic, List, TypeVar
 
-from pysaurus.core.functions import to_printable, pgcd
+from pysaurus.core.functions import pgcd, to_printable
 
 T = TypeVar("T")
 

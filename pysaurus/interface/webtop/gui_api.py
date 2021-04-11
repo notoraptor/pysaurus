@@ -1,9 +1,9 @@
-from abc import abstractmethod
 import multiprocessing
 import queue
 import threading
 import time
 import traceback
+from abc import abstractmethod
 from typing import Optional
 
 from pysaurus.core.database.database import Database
