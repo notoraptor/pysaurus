@@ -107,7 +107,6 @@ class FeatureAPI:
     # Database actions without modifications.
 
     def open_random_video(self):
-        assert not self.provider.all_not_found()
         return str(self.provider.get_random_found_video().filename.open())
 
     def open_video(self, video_id):

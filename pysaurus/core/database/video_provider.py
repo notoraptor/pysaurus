@@ -924,27 +924,12 @@ class VideoProvider:
 
     def get_random_found_video(self):
         # type: () -> Video
-        # Get all full paths from source definition
-        all_paths = []
+        videos = []
         for path in self.__source_layer.get_sources():
-            desc = TreeUtils.get_source_from_dict(USABLE_SOURCE_TREE, path)
-            if isinstance(desc, dict):
-                TreeUtils.collect_full_paths(desc, all_paths, path)
-            else:
-                all_paths.append(path)
-        # Key paths with found videos
-        paths = [path for path in all_paths if NOT_FOUND not in path]
-        assert paths
-        # Iterate as long as we have paths and we have not pick a video
-        while paths:
-            path_index = random.randrange(len(paths))
-            path = paths[path_index]
-            del paths[path_index]
-            videos = self.database.get_videos(*path)
-            if videos:
-                video_index = random.randrange(len(videos))
-                return videos[video_index]
-        raise RuntimeError("No videos available.")
+            videos.extend(self.database.get_videos(*path, found=True))
+        if not videos:
+            raise RuntimeError("No videos available.")
+        return videos[random.randrange(len(videos))]
 
     def get_all_videos(self):
         return self.__source_layer.videos()

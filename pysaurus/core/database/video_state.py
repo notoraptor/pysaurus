@@ -6,7 +6,7 @@ from pysaurus.core.constants import PYTHON_ERROR_THUMBNAIL
 from pysaurus.core.modules import System
 
 
-class VideoRuntimeInfo:
+class _VideoRuntimeInfo:
     __slots__ = "is_file", "size", "mtime", "driver_id", "has_thumbnail"
 
     def __init__(self):
@@ -58,7 +58,7 @@ class VideoState:
         self.video_id = video_id
 
         self.database = database
-        self.runtime = VideoRuntimeInfo()
+        self.runtime = _VideoRuntimeInfo()
 
     def __str__(self):
         with StringPrinter() as printer:

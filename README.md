@@ -25,3 +25,5 @@ TODO:
   - Add new pages at start to choose/edit/delete/create many databases.
   - Update group panel (bottom left) on property edition if group panel displays edited property.
   - Auto-scroll down database loading panel.
+  - Add an option to execute a command line (example, `sort +date -length`) from interface, as a shortcut instead of multiple interface clicks.
+    - Does that mean interface is not ergonomic ?

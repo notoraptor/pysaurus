@@ -597,6 +597,8 @@ export class VideosPage extends React.Component {
             .catch(backend_error);
     }
     openRandomVideo() {
+        if (this.state.notFound || !this.state.nbVideos)
+            return;
         python_call('open_random_video')
             .then(filename => {
                 this.setState({status: `Randomly opened: ${filename}`});

@@ -284,14 +284,20 @@ class Video(VideoState):
                     term_sources.append(val)
         return string_to_pieces(" ".join(term_sources), as_set=as_set)
 
+    @staticmethod
     def has_terms_exact(self, terms):
+        # type: (Video, Sequence[str]) -> bool
         return " ".join(terms) in " ".join(self.terms())
 
+    @staticmethod
     def has_terms_and(self, terms):
+        # type: (Video, Sequence[str]) -> bool
         video_terms = self.terms(as_set=True)
         return all(term in video_terms for term in terms)
 
+    @staticmethod
     def has_terms_or(self, terms):
+        # type: (Video, Sequence[str]) -> bool
         video_terms = self.terms(as_set=True)
         return any(term in video_terms for term in terms)
 

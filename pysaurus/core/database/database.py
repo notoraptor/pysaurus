@@ -995,15 +995,17 @@ Make sure any video has at most 1 value for this property before making it uniqu
                 database.refresh(ensure_miniatures)
         return database
 
-    def get_videos(self, source, *flags):
+    def get_videos(self, source, *flags, **forced_flags):
         if source == "readable":
             videos = self.__videos.values()
         else:
             assert source == "unreadable"
             videos = self.__unreadable.values()
+        required = {flag: True for flag in flags}
+        required.update(forced_flags)
         return (
-            [video for video in videos if all(getattr(video, flag) for flag in flags)]
-            if flags
+            [video for video in videos if all(getattr(video, flag) is required[flag] for flag in required)]
+            if required
             else list(videos)
         )
 

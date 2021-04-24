@@ -20,8 +20,7 @@ class TreeUtils:
             prefix = list(prefix)
         if tree:
             for key, value in tree.items():
-                entry_name = prefix + [key]
-                TreeUtils.collect_full_paths(value, collection, entry_name)
+                TreeUtils.collect_full_paths(value, collection, prefix + [key])
         elif prefix:
             collection.append(prefix)
 
