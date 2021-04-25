@@ -27,11 +27,7 @@ from pysaurus.core.components import AbsolutePath, Duration, FileSize
 from pysaurus.core.database import notifications
 from pysaurus.core.database.database import Database
 from pysaurus.core.database.video import Video
-from pysaurus.core.database.video_filtering import (
-    NOT_FOUND,
-    USABLE_SOURCE_TREE,
-    TreeUtils,
-)
+from pysaurus.core.database.video_state import VideoState
 
 T = TypeVar("T")
 
@@ -398,7 +394,8 @@ class SourceLayer(Layer):
         for path in paths:
             path = tuple(path)
             if path not in valid_paths:
-                TreeUtils.check_source_path(USABLE_SOURCE_TREE, path)
+                assert len(set(path)) == len(path)
+                assert all(VideoState.is_flag(flag) for flag in path)
                 valid_paths.add(path)
         if valid_paths:
             self._set_parameters(sources=sorted(valid_paths))
@@ -920,7 +917,9 @@ class VideoProvider:
         return self.group_layer.get_group_id()
 
     def all_not_found(self):
-        return all(NOT_FOUND in source for source in self.__source_layer.get_sources())
+        return all(
+            "not_found" in source for source in self.__source_layer.get_sources()
+        )
 
     def get_random_found_video(self):
         # type: () -> Video

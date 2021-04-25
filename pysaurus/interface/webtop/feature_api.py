@@ -3,7 +3,6 @@ from typing import Optional
 from pysaurus.core.database.database import Database
 from pysaurus.core.database.properties import PropType
 from pysaurus.core.database.video_features import VideoFeatures
-from pysaurus.core.database.video_filtering import get_usable_source_tree
 from pysaurus.core.database.video_provider import VideoProvider
 from pysaurus.core.functions import compute_nb_pages
 
@@ -47,7 +46,6 @@ class FeatureAPI:
             "groupDef": self.provider.get_group_def(),
             "searchDef": self.provider.get_search_def(),
             "sorting": self.provider.get_sorting(),
-            "sourceTree": get_usable_source_tree(),
             "videos": videos,
             "pageNumber": page_number,
             "properties": self.get_prop_types(),

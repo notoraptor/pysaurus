@@ -1,5 +1,5 @@
 import {SettingIcon, Cross} from "./buttons.js";
-import {PAGE_SIZES, SEARCH_TYPE_TITLE} from "./constants.js";
+import {PAGE_SIZES, SEARCH_TYPE_TITLE, SOURCE_TREE} from "./constants.js";
 import {MenuPack, MenuItem, Menu, MenuItemCheck} from "./MenuPack.js";
 import {Pagination} from "./Pagination.js";
 import {Video} from "./Video.js";
@@ -416,7 +416,6 @@ export class VideosPage extends React.Component {
         state.searchDef = parameters.info.searchDef;
         state.sources = parameters.info.sources;
         state.sorting = parameters.info.sorting;
-        state.sourceTree = parameters.info.sourceTree;
         state.properties = parameters.info.properties;
         state.videos = parameters.info.videos;
         state.path = parameters.info.path;
@@ -505,7 +504,7 @@ export class VideosPage extends React.Component {
 
     selectVideos() {
         this.props.app.loadDialog('Select Videos', onClose => (
-            <FormSourceVideo tree={this.state.sourceTree} sources={this.state.sources} onClose={sources => {
+            <FormSourceVideo tree={SOURCE_TREE} sources={this.state.sources} onClose={sources => {
                 onClose();
                 if (sources && sources.length) {
                     python_call('set_sources', sources)

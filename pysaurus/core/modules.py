@@ -7,8 +7,8 @@ from html.parser import HTMLParser
 from typing import Tuple
 
 import ujson as json
-from moviepy.video.io.VideoFileClip import VideoFileClip
 from PIL import Image, ImageTk
+from moviepy.video.io.VideoFileClip import VideoFileClip
 
 from pysaurus.core.exceptions import NoVideoClip
 
@@ -252,3 +252,27 @@ class Display:
             tk_images.append(tk_image)
             tk.Label(master=root, image=tk_image).pack(side="left")
         root.mainloop()
+
+
+class TreeUtils:
+    @staticmethod
+    def collect_full_paths(tree: dict, collection: list, prefix=()):
+        if not isinstance(prefix, list):
+            prefix = list(prefix)
+        if tree:
+            for key, value in tree.items():
+                TreeUtils.collect_full_paths(value, collection, prefix + [key])
+        elif prefix:
+            collection.append(prefix)
+
+    @staticmethod
+    def check_source_path(dct, seq, index=0):
+        if index < len(seq):
+            TreeUtils.check_source_path(dct[seq[index]], seq, index + 1)
+
+    @staticmethod
+    def get_source_from_dict(inp, seq, index=0):
+        if index < len(seq):
+            return TreeUtils.get_source_from_dict(inp[seq[index]], seq, index + 1)
+        else:
+            return inp

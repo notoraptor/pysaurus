@@ -3,8 +3,7 @@ from typing import Dict, Iterable, List, Optional, Set, Union
 
 import ujson as json
 
-from pysaurus.core import exceptions
-from pysaurus.core import functions as utils
+from pysaurus.core import exceptions, functions as utils
 from pysaurus.core.components import (
     AbsolutePath,
     DateModified,
@@ -1004,7 +1003,11 @@ Make sure any video has at most 1 value for this property before making it uniqu
         required = {flag: True for flag in flags}
         required.update(forced_flags)
         return (
-            [video for video in videos if all(getattr(video, flag) is required[flag] for flag in required)]
+            [
+                video
+                for video in videos
+                if all(getattr(video, flag) is required[flag] for flag in required)
+            ]
             if required
             else list(videos)
         )

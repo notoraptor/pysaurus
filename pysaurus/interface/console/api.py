@@ -2,8 +2,7 @@ import functools
 import tempfile
 from typing import Dict, List, Tuple, Union
 
-from pysaurus.core import exceptions
-from pysaurus.core import functions as utils
+from pysaurus.core import exceptions, functions as utils
 from pysaurus.core.classes import Enumeration, StringPrinter
 from pysaurus.core.components import AbsolutePath, Duration, FilePath, FileSize
 from pysaurus.core.database import path_utils

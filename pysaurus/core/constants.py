@@ -38,11 +38,11 @@ VIDEO_SUPPORTED_EXTENSIONS = frozenset(
         "rmvb",
         "roq",
         "svi",
+        "vid",
         "vob",
         "webm",
         "wmv",
         "yuv",
-        "vid",
     )
 )
 assert len(VIDEO_SUPPORTED_EXTENSIONS) == 37, (

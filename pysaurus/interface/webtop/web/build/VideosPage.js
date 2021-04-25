@@ -1,7 +1,7 @@
 System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Pagination.js", "./Video.js", "./FormSourceVideo.js", "./FormGroup.js", "./FormSearch.js", "./FormSort.js", "./GroupView.js", "./FormEditPropertyValue.js", "./FormFillKeywords.js", "./FormPropertyMultiVideo.js", "./Stackable.js"], function (_export, _context) {
   "use strict";
 
-  var SettingIcon, Cross, PAGE_SIZES, SEARCH_TYPE_TITLE, MenuPack, MenuItem, Menu, MenuItemCheck, Pagination, Video, FormSourceVideo, FormGroup, FormSearch, FormSort, GroupView, FormEditPropertyValue, FormFillKeywords, FormPropertyMultiVideo, Stackable, Filter, VideosPage, INITIAL_SOURCES, SHORTCUTS, SPECIAL_KEYS;
+  var SettingIcon, Cross, PAGE_SIZES, SEARCH_TYPE_TITLE, SOURCE_TREE, MenuPack, MenuItem, Menu, MenuItemCheck, Pagination, Video, FormSourceVideo, FormGroup, FormSearch, FormSort, GroupView, FormEditPropertyValue, FormFillKeywords, FormPropertyMultiVideo, Stackable, Filter, VideosPage, INITIAL_SOURCES, SHORTCUTS, SPECIAL_KEYS;
 
   function compareSources(s1, s2) {
     if (s1.length !== s2.length) return false;
@@ -63,6 +63,7 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
     }, function (_constantsJs) {
       PAGE_SIZES = _constantsJs.PAGE_SIZES;
       SEARCH_TYPE_TITLE = _constantsJs.SEARCH_TYPE_TITLE;
+      SOURCE_TREE = _constantsJs.SOURCE_TREE;
     }, function (_MenuPackJs) {
       MenuPack = _MenuPackJs.MenuPack;
       MenuItem = _MenuPackJs.MenuItem;
@@ -419,7 +420,6 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
           state.searchDef = parameters.info.searchDef;
           state.sources = parameters.info.sources;
           state.sorting = parameters.info.sorting;
-          state.sourceTree = parameters.info.sourceTree;
           state.properties = parameters.info.properties;
           state.videos = parameters.info.videos;
           state.path = parameters.info.path;
@@ -530,7 +530,7 @@ System.register(["./buttons.js", "./constants.js", "./MenuPack.js", "./Paginatio
 
         selectVideos() {
           this.props.app.loadDialog('Select Videos', onClose => /*#__PURE__*/React.createElement(FormSourceVideo, {
-            tree: this.state.sourceTree,
+            tree: SOURCE_TREE,
             sources: this.state.sources,
             onClose: sources => {
               onClose();

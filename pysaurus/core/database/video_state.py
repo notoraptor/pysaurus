@@ -17,6 +17,10 @@ class _VideoRuntimeInfo:
         self.has_thumbnail = False
 
 
+class classflag(property):
+    pass
+
+
 class VideoState:
     __slots__ = (
         # Video properties
@@ -111,27 +115,27 @@ class VideoState:
     def day(self):
         return self.date.day
 
-    @property
+    @classflag
     def unreadable(self):
         return self.UNREADABLE
 
-    @property
+    @classflag
     def readable(self):
         return not self.UNREADABLE
 
-    @property
+    @classflag
     def found(self):
         return self.exists()
 
-    @property
+    @classflag
     def not_found(self):
         return not self.exists()
 
-    @property
+    @classflag
     def with_thumbnails(self):
         return self.thumbnail_is_valid()
 
-    @property
+    @classflag
     def without_thumbnails(self):
         return not self.thumbnail_is_valid()
 
@@ -164,3 +168,7 @@ class VideoState:
             video_id=dct.get("j", None),
             database=database,
         )
+
+    @classmethod
+    def is_flag(cls, name):
+        return not name.startswith("_") and isinstance(getattr(cls, name), classflag)
