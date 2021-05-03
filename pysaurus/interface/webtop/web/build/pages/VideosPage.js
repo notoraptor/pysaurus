@@ -1,7 +1,7 @@
-System.register(["../utils/constants.js", "../components/MenuPack.js", "../components/Pagination.js", "../pageComponents/Video.js", "../forms/FormSourceVideo.js", "../forms/FormGroup.js", "../forms/FormSearch.js", "../forms/FormSort.js", "../pageComponents/GroupView.js", "../forms/FormEditPropertyValue.js", "../forms/FormFillKeywords.js", "../forms/FormPropertyMultiVideo.js", "../components/Stackable.js", "../components/Cross.js", "../components/SettingIcon.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/Menu.js"], function (_export, _context) {
+System.register(["../utils/constants.js", "../components/MenuPack.js", "../components/Pagination.js", "../pageComponents/Video.js", "../forms/FormSourceVideo.js", "../forms/FormGroup.js", "../forms/FormSearch.js", "../forms/FormSort.js", "../pageComponents/GroupView.js", "../forms/FormEditPropertyValue.js", "../forms/FormFillKeywords.js", "../forms/FormPropertyMultiVideo.js", "../components/Collapsable.js", "../components/Cross.js", "../components/SettingIcon.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/Menu.js"], function (_export, _context) {
   "use strict";
 
-  var PAGE_SIZES, SEARCH_TYPE_TITLE, SOURCE_TREE, MenuPack, Pagination, Video, FormSourceVideo, FormGroup, FormSearch, FormSort, GroupView, FormEditPropertyValue, FormFillKeywords, FormPropertyMultiVideo, Stackable, Cross, SettingIcon, MenuItem, MenuItemCheck, Menu, Filter, VideosPage, INITIAL_SOURCES, SHORTCUTS, SPECIAL_KEYS;
+  var PAGE_SIZES, SEARCH_TYPE_TITLE, SOURCE_TREE, MenuPack, Pagination, Video, FormSourceVideo, FormGroup, FormSearch, FormSort, GroupView, FormEditPropertyValue, FormFillKeywords, FormPropertyMultiVideo, Collapsable, Cross, SettingIcon, MenuItem, MenuItemCheck, Menu, Filter, VideosPage, INITIAL_SOURCES, SHORTCUTS, SPECIAL_KEYS;
 
   function compareSources(s1, s2) {
     if (s1.length !== s2.length) return false;
@@ -83,8 +83,8 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
       FormFillKeywords = _formsFormFillKeywordsJs.FormFillKeywords;
     }, function (_formsFormPropertyMultiVideoJs) {
       FormPropertyMultiVideo = _formsFormPropertyMultiVideoJs.FormPropertyMultiVideo;
-    }, function (_componentsStackableJs) {
-      Stackable = _componentsStackableJs.Stackable;
+    }, function (_componentsCollapsableJs) {
+      Collapsable = _componentsCollapsableJs.Collapsable;
     }, function (_componentsCrossJs) {
       Cross = _componentsCrossJs.Cross;
     }, function (_componentsSettingIconJs) {
@@ -332,12 +332,14 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             className: "content"
           }, /*#__PURE__*/React.createElement("div", {
             className: "side-panel"
-          }, /*#__PURE__*/React.createElement(Stackable, {
+          }, /*#__PURE__*/React.createElement(Collapsable, {
+            lite: false,
             className: "filter",
             title: "Filter"
           }, /*#__PURE__*/React.createElement(Filter, {
             page: this
-          })), this.state.path.length ? /*#__PURE__*/React.createElement(Stackable, {
+          })), this.state.path.length ? /*#__PURE__*/React.createElement(Collapsable, {
+            lite: false,
             className: "filter",
             title: "Classifier path"
           }, stringProperties.length ? /*#__PURE__*/React.createElement("div", {
@@ -361,7 +363,8 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           }, /*#__PURE__*/React.createElement(Cross, {
             title: "unstack",
             action: this.classifierUnstack
-          })) : ''))) : '', groupDef ? /*#__PURE__*/React.createElement(Stackable, {
+          })) : ''))) : '', groupDef ? /*#__PURE__*/React.createElement(Collapsable, {
+            lite: false,
             className: "group",
             title: "Groups"
           }, /*#__PURE__*/React.createElement(GroupView, {

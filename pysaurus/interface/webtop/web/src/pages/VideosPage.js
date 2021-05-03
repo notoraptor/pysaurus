@@ -10,7 +10,7 @@ import {GroupView} from "../pageComponents/GroupView.js";
 import {FormEditPropertyValue} from "../forms/FormEditPropertyValue.js";
 import {FormFillKeywords} from "../forms/FormFillKeywords.js";
 import {FormPropertyMultiVideo} from "../forms/FormPropertyMultiVideo.js";
-import {Stackable} from "../components/Stackable.js";
+import {Collapsable} from "../components/Collapsable.js";
 import {Cross} from "../components/Cross.js";
 import {SettingIcon} from "../components/SettingIcon.js";
 import {MenuItem} from "../components/MenuItem.js";
@@ -325,11 +325,11 @@ export class VideosPage extends React.Component {
                 <div className="frontier"/>
                 <div className="content">
                     <div className="side-panel">
-                        <Stackable className="filter" title="Filter">
+                        <Collapsable lite={false} className="filter" title="Filter">
                             <Filter page={this} />
-                        </Stackable>
+                        </Collapsable>
                         {this.state.path.length ? (
-                            <Stackable className="filter" title="Classifier path">
+                            <Collapsable lite={false} className="filter" title="Classifier path">
                                 {stringProperties.length ? (
                                     <div className="path-menu">
                                         <MenuPack title="Concatenate path into ...">
@@ -353,10 +353,10 @@ export class VideosPage extends React.Component {
                                         ) : ''}
                                     </div>
                                 ))}
-                            </Stackable>
+                            </Collapsable>
                         ) : ''}
                         {groupDef ? (
-                            <Stackable className="group" title="Groups">
+                            <Collapsable lite={false} className="group" title="Groups">
                                 <GroupView key={`${groupDef.field}-${groupDef.groups.length}-${this.state.path.join('-')}`}
                                            groupID={groupDef.group_id}
                                            field={groupDef.field}
@@ -372,7 +372,7 @@ export class VideosPage extends React.Component {
                                                    ? this.classifierSelectGroup
                                                    : null
                                            }/>
-                            </Stackable>
+                            </Collapsable>
                         ) : ''}
                     </div>
                     <div className="main-panel videos">{this.renderVideos()}</div>

@@ -11,7 +11,9 @@ System.register([], function (_export, _context) {
       _export("Collapsable", Collapsable = class Collapsable extends React.Component {
         constructor(props) {
           // title: str
+          // className? str
           // children ...
+          // lite? bool = true
           super(props);
           this.state = {
             stack: false
@@ -20,8 +22,9 @@ System.register([], function (_export, _context) {
         }
 
         render() {
+          const lite = this.props.lite !== undefined ? this.props.lite : true;
           return /*#__PURE__*/React.createElement("div", {
-            className: "collapsable"
+            className: `${lite ? "collapsable" : "stack"} ${this.props.className || {}}`
           }, /*#__PURE__*/React.createElement("div", {
             className: "header horizontal",
             onClick: this.stack
