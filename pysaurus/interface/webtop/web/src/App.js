@@ -1,10 +1,10 @@
-import {Test} from "./Test.js";
-import {HomePage} from "./HomePage.js";
-import {VideosPage} from "./VideosPage.js";
-import {PropertiesPage} from "./PropertiesPage.js";
-import {FancyBox} from "./FancyBox.js";
+import {Test} from "./pages/Test.js";
+import {HomePage} from "./pages/HomePage.js";
+import {VideosPage} from "./pages/VideosPage.js";
+import {PropertiesPage} from "./pages/PropertiesPage.js";
+import {FancyBox} from "./dialogs/FancyBox.js";
 
-import {VIDEO_DEFAULT_PAGE_SIZE, VIDEO_DEFAULT_PAGE_NUMBER} from "./constants.js";
+import {VIDEO_DEFAULT_PAGE_SIZE, VIDEO_DEFAULT_PAGE_NUMBER} from "./utils/constants.js";
 
 export class App extends React.Component {
     constructor(props) {
