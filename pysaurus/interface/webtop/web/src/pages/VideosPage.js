@@ -609,7 +609,7 @@ export class VideosPage extends React.Component {
             .catch(backend_error);
     }
     reloadDatabase() {
-        this.props.app.loadPage("home", {update: true});
+        this.props.app.loadHomePage(true);
     }
     manageProperties() {
         this.props.app.loadPropertiesPage();

@@ -14,12 +14,12 @@ export class App extends React.Component {
             parameters: {},
             fancy: null
         };
+        this.loadDialog = this.loadDialog.bind(this);
+        this.loadPage = this.loadPage.bind(this);
+        this.loadPropertiesPage = this.loadPropertiesPage.bind(this);
+        this.loadVideosPage = this.loadVideosPage.bind(this);
         this.manageFancyBoxView = this.manageFancyBoxView.bind(this);
         this.onCloseFancyBox = this.onCloseFancyBox.bind(this);
-        this.loadPage = this.loadPage.bind(this);
-        this.loadDialog = this.loadDialog.bind(this);
-        this.loadVideosPage = this.loadVideosPage.bind(this);
-        this.loadPropertiesPage = this.loadPropertiesPage.bind(this);
         APP = this;
     }
     render() {
@@ -49,11 +49,9 @@ export class App extends React.Component {
         const fancy = this.state.fancy;
         return <FancyBox title={fancy.title} onBuild={fancy.onBuild} onClose={fancy.onClose}/>;
     }
-
     updateApp(state) {
         this.setState(state, this.manageFancyBoxView);
     }
-
     /**
      * Make sure all active elements are disabled if fancy box is displayed, and re-enabled when fancybox is closed.
      */
@@ -81,16 +79,18 @@ export class App extends React.Component {
     onCloseFancyBox() {
         this.updateApp({fancy: null});
     }
-
-    // Public methods for children components.
     loadPage(pageName, parameters=undefined) {
         parameters = parameters ? parameters : {};
         this.updateApp({page: pageName, parameters: parameters});
     }
+    // Public methods for children components.
     loadDialog(title, onBuild) {
         if (this.state.fancy)
             throw "a fancy box is already displayed.";
         this.updateApp({fancy: {title: title, onClose: this.onCloseFancyBox, onBuild: onBuild}});
+    }
+    loadHomePage(update = false) {
+        this.loadPage("home", {update});
     }
     loadVideosPage(pageSize = undefined, pageNumber = undefined) {
         if (pageSize === undefined)
