@@ -1,3 +1,4 @@
+import functools
 from datetime import datetime
 
 from pysaurus.core.notification import DEFAULT_NOTIFIER, Notification
@@ -61,3 +62,13 @@ class Profiler:
         self.__time_end = datetime.now()
         profiling = _Profile(self.__time_start, self.__time_end)
         self.__notifier.notify(ProfilingEnd(self.__title, profiling))
+
+    @staticmethod
+    def profile(title=None):
+        def decorator_profile(fn):
+            @functools.wraps(fn)
+            def wrapper(*args, **kwargs):
+                with Profiler(title or fn.__name__):
+                    return fn(*args, **kwargs)
+            return wrapper
+        return decorator_profile

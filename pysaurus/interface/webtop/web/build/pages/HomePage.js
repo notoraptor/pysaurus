@@ -12,8 +12,14 @@ System.register(["../utils/constants.js"], function (_export, _context) {
 
     app.setState(updates);
   }
+  /**
+   * @param monitoring {ProgressionMonitoring}
+   * @param i {number}
+   * @returns {JSX.Element}
+   */
 
-  function generateMonitoringMessage(monitoring, name, i) {
+
+  function generateMonitoringMessage(monitoring, i) {
     const total = monitoring.total;
     let current = 0;
 
@@ -22,16 +28,16 @@ System.register(["../utils/constants.js"], function (_export, _context) {
     }
 
     const percent = Math.round(current * 100 / total);
-    const s0 = name + "-job";
-    const s1 = "job horizontal " + s0;
+    const jobClassID = monitoring.name + "-job";
+    const jobClassName = "job horizontal " + jobClassID;
     return /*#__PURE__*/React.createElement("div", {
       key: i,
-      className: s1
+      className: jobClassName
     }, /*#__PURE__*/React.createElement("label", {
-      htmlFor: s0,
+      htmlFor: jobClassID,
       className: "info"
     }, current, " / ", total, " (", percent, " %)"), /*#__PURE__*/React.createElement("progress", {
-      id: s0,
+      id: jobClassID,
       value: current,
       max: total
     }));
@@ -45,13 +51,14 @@ System.register(["../utils/constants.js"], function (_export, _context) {
     }],
     execute: function () {
       ProgressionMonitoring = class ProgressionMonitoring {
-        constructor() {
+        constructor(name) {
+          this.name = name;
           this.total = 0;
           this.jobs = {};
         }
 
         clone(total = undefined, jobs = undefined) {
-          const copy = new ProgressionMonitoring();
+          const copy = new ProgressionMonitoring(this.name);
           copy.total = total ? total : this.total;
           copy.jobs = jobs ? jobs : this.jobs;
           return copy;
@@ -104,13 +111,13 @@ System.register(["../utils/constants.js"], function (_export, _context) {
       };
       NotificationMessenger = {
         VideoJob: function (app, message, i) {
-          return generateMonitoringMessage(app.state.videosMonitoring, 'video', i);
+          return generateMonitoringMessage(app.state.videosMonitoring, i);
         },
         ThumbnailJob: function (app, message, i) {
-          return generateMonitoringMessage(app.state.thumbnailsMonitoring, 'thumb', i);
+          return generateMonitoringMessage(app.state.thumbnailsMonitoring, i);
         },
         MiniatureJob: function (app, message, i) {
-          return generateMonitoringMessage(app.state.miniaturesMonitoring, 'miniature', i);
+          return generateMonitoringMessage(app.state.miniaturesMonitoring, i);
         },
         DatabaseLoaded: function (app, message, i) {
           const data = message.notification;
@@ -215,9 +222,9 @@ System.register(["../utils/constants.js"], function (_export, _context) {
           this.state = {
             status: this.props.parameters.update ? HomeStatus.LOADING : HomeStatus.INITIAL,
             messages: [],
-            videosMonitoring: new ProgressionMonitoring(),
-            thumbnailsMonitoring: new ProgressionMonitoring(),
-            miniaturesMonitoring: new ProgressionMonitoring(),
+            videosMonitoring: new ProgressionMonitoring("video"),
+            thumbnailsMonitoring: new ProgressionMonitoring("thumb"),
+            miniaturesMonitoring: new ProgressionMonitoring("miniature"),
             update: false
           };
           this.callbackIndex = -1;

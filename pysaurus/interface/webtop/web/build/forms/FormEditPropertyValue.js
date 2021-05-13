@@ -1,15 +1,13 @@
-System.register(["../dialogs/Dialog.js", "../components/Cell.js"], function (_export, _context) {
+System.register(["../dialogs/Dialog.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, Cell, FormEditPropertyValue;
+  var Dialog, FormEditPropertyValue;
 
   _export("FormEditPropertyValue", void 0);
 
   return {
     setters: [function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
-    }, function (_componentsCellJs) {
-      Cell = _componentsCellJs.Cell;
     }],
     execute: function () {
       _export("FormEditPropertyValue", FormEditPropertyValue = class FormEditPropertyValue extends React.Component {

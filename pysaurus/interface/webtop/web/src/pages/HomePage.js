@@ -1,12 +1,13 @@
 import {HomeStatus} from "../utils/constants.js";
 
 class ProgressionMonitoring {
-    constructor() {
+    constructor(name) {
+        this.name = name;
         this.total = 0;
         this.jobs = {};
     }
     clone(total = undefined, jobs = undefined) {
-        const copy = new ProgressionMonitoring();
+        const copy = new ProgressionMonitoring(this.name);
         copy.total = total ? total : this.total;
         copy.jobs = jobs ? jobs : this.jobs;
         return copy;
@@ -26,19 +27,24 @@ function collectNotification(app, notification, updates, store = true) {
     app.setState(updates);
 }
 
-function generateMonitoringMessage(monitoring, name, i) {
+/**
+ * @param monitoring {ProgressionMonitoring}
+ * @param i {number}
+ * @returns {JSX.Element}
+ */
+function generateMonitoringMessage(monitoring, i) {
     const total = monitoring.total;
     let current = 0;
     for (let jobId of Object.keys(monitoring.jobs)) {
         current += monitoring.jobs[jobId];
     }
     const percent = Math.round(current * 100 / total);
-    const s0 = name + "-job";
-    const s1 = "job horizontal " + s0;
+    const jobClassID = monitoring.name + "-job";
+    const jobClassName = "job horizontal " + jobClassID;
     return (
-        <div key={i} className={s1}>
-            <label htmlFor={s0} className="info">{current} / {total} ({percent} %)</label>
-            <progress id={s0} value={current} max={total}/>
+        <div key={i} className={jobClassName}>
+            <label htmlFor={jobClassID} className="info">{current} / {total} ({percent} %)</label>
+            <progress id={jobClassID} value={current} max={total}/>
         </div>
     );
 }
@@ -88,13 +94,13 @@ const NotificationCollector = {
 
 const NotificationMessenger = {
     VideoJob: function(app, message, i) {
-        return generateMonitoringMessage(app.state.videosMonitoring, 'video', i);
+        return generateMonitoringMessage(app.state.videosMonitoring, i);
     },
     ThumbnailJob: function(app, message, i) {
-        return generateMonitoringMessage(app.state.thumbnailsMonitoring, 'thumb', i);
+        return generateMonitoringMessage(app.state.thumbnailsMonitoring, i);
     },
     MiniatureJob: function(app, message, i) {
-        return generateMonitoringMessage(app.state.miniaturesMonitoring, 'miniature', i);
+        return generateMonitoringMessage(app.state.miniaturesMonitoring, i);
     },
     DatabaseLoaded: function(app, message, i) {
         const data = message.notification;
@@ -194,9 +200,9 @@ export class HomePage extends React.Component {
         this.state = {
             status: this.props.parameters.update ? HomeStatus.LOADING : HomeStatus.INITIAL,
             messages: [],
-            videosMonitoring: new ProgressionMonitoring(),
-            thumbnailsMonitoring: new ProgressionMonitoring(),
-            miniaturesMonitoring: new ProgressionMonitoring(),
+            videosMonitoring: new ProgressionMonitoring("video"),
+            thumbnailsMonitoring: new ProgressionMonitoring("thumb"),
+            miniaturesMonitoring: new ProgressionMonitoring("miniature"),
             update: false,
         };
         this.callbackIndex = -1;

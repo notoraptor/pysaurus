@@ -57,7 +57,7 @@ System.register(["../dialogs/Dialog.js", "../components/Cell.js"], function (_ex
           });
         }
 
-        onChangeEmpty(element) {
+        onChangeEmpty(event) {
           this.setState({
             onlyEmpty: event.target.checked
           });

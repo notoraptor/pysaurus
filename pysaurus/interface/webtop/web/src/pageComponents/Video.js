@@ -26,7 +26,6 @@ export class Video extends React.Component {
         this.focusPropertyValue = this.focusPropertyValue.bind(this);
     }
     render() {
-        const index = this.props.index;
         const data = this.props.data;
         const audio_bit_rate = Math.round(data.audio_bit_rate / 1000);
         data.extension = data.extension.toUpperCase();
@@ -89,7 +88,7 @@ export class Video extends React.Component {
         return (
             <div className="properties">
                 <div className="edit-properties" onClick={this.editProperties}>PROPERTIES</div>
-                {propDefs.map((def, index) => {
+                {propDefs.map(def => {
                     const name = def.name;
                     const value = props.hasOwnProperty(name) ? props[name] : def.defaultValue;
                     let noValue;

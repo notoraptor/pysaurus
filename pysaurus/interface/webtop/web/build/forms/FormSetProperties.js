@@ -59,7 +59,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js"], function 
             className: "table"
           }, this.props.definitions.map((def, index) => {
             const name = def.name;
-            let input = null;
+            let input;
 
             if (def.multiple) {
               let possibleValues = null;

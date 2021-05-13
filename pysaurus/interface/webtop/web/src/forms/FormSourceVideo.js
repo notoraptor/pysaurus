@@ -128,7 +128,7 @@ export class FormSourceVideo extends React.Component {
     onChangeCheckBox(event) {
         const element = event.target;
         const name = element.name;
-        let paths = null;
+        let paths;
         if (element.checked) {
             paths = addPaths(this.state.paths,[name]);
         } else {

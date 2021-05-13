@@ -35,7 +35,7 @@ export class FormSetProperties extends React.Component {
                         <div className="table">
                             {this.props.definitions.map((def, index) => {
                                 const name = def.name;
-                                let input = null;
+                                let input;
                                 if (def.multiple) {
                                     let possibleValues = null;
                                     if (def.enumeration)

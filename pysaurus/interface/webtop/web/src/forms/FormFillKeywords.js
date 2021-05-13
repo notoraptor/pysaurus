@@ -35,7 +35,7 @@ export class FormFillKeywords extends React.Component {
     onChangeGroupField(event) {
         this.setState({field: event.target.value});
     }
-    onChangeEmpty(element) {
+    onChangeEmpty(event) {
         this.setState({onlyEmpty: event.target.checked});
     }
     onClose(yes) {

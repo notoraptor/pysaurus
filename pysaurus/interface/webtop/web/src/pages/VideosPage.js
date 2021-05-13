@@ -656,14 +656,6 @@ export class VideosPage extends React.Component {
         }
         return properties;
     }
-    getMultipleProperties(definitions) {
-        const properties = [];
-        for (let def of definitions) {
-            if (def.multiple)
-                properties.push(def);
-        }
-        return properties;
-    }
     getStringProperties(definitions) {
         const field = this.state.groupDef ? this.state.groupDef.field : null;
         const properties = [];

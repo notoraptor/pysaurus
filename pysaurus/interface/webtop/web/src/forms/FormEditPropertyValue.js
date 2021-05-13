@@ -1,5 +1,4 @@
 import {Dialog} from "../dialogs/Dialog.js";
-import {Cell} from "../components/Cell.js";
 
 export class FormEditPropertyValue extends React.Component {
     constructor(props) {

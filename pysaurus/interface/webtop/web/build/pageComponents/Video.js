@@ -42,7 +42,6 @@ System.register(["../components/MenuPack.js", "../forms/FormRenameVideo.js", "..
         }
 
         render() {
-          const index = this.props.index;
           const data = this.props.data;
           const audio_bit_rate = Math.round(data.audio_bit_rate / 1000);
           data.extension = data.extension.toUpperCase();
@@ -137,7 +136,7 @@ System.register(["../components/MenuPack.js", "../forms/FormRenameVideo.js", "..
           }, /*#__PURE__*/React.createElement("div", {
             className: "edit-properties",
             onClick: this.editProperties
-          }, "PROPERTIES"), propDefs.map((def, index) => {
+          }, "PROPERTIES"), propDefs.map(def => {
             const name = def.name;
             const value = props.hasOwnProperty(name) ? props[name] : def.defaultValue;
             let noValue;

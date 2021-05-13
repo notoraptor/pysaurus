@@ -84,8 +84,8 @@ class Database:
         self.__special_property_parser = {}  # type: Dict[str, callable]
         # Load database
         self.__notifier.set_log_path(self.__log_path.path)
-        with Profiler("Load database"):
-            self.__load(folders, clear_old_folders)
+
+        self.__load(folders, clear_old_folders)
         # Load VideoInterval object to compute videos quality.
         self.video_interval = VideoInterval(t[0] for t in Video.QUALITY_FIELDS)
         self.video_interval.update(self.__videos.values())
@@ -109,6 +109,7 @@ class Database:
 
     # Private methods.
 
+    @Profiler.profile("Load database!")
     def __load(self, folders=None, clear_old_folders=False):
         # type: (Optional[Iterable[PathType]], Optional[bool]) -> None
 
