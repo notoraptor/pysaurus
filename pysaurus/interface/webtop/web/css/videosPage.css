@@ -40,13 +40,17 @@
 	overflow: auto;
 }
 
+#videos .side-panel .stack {
+	display: flex;
+	flex-direction: column;
+}
 #videos .side-panel .stack.filter {
 	flex-shrink: 0;
 }
 #videos .side-panel .stack.group {
 	flex-grow: 1;
 }
-#videos .side-panel .stack.group .stack-content {
+#videos .side-panel .stack.group > .content {
 	flex-grow: 1;
 	display: flex;
 	flex-direction: column;
