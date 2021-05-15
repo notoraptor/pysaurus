@@ -8,8 +8,8 @@ class ProgressionMonitoring {
     }
     clone(total = undefined, jobs = undefined) {
         const copy = new ProgressionMonitoring(this.name);
-        copy.total = total ? total : this.total;
-        copy.jobs = jobs ? jobs : this.jobs;
+        copy.total = total !== undefined ? total : this.total;
+        copy.jobs = jobs !== undefined ? jobs : this.jobs;
         return copy;
     }
     collectJobNotification(notification) {
@@ -18,21 +18,12 @@ class ProgressionMonitoring {
     }
 }
 
-function collectNotification(app, notification, updates, store = true) {
-    if (store) {
-        const messages = app.state.messages.slice();
-        messages.push(notification);
-        updates.messages = messages;
-    }
-    app.setState(updates);
-}
-
 /**
- * @param monitoring {ProgressionMonitoring}
- * @param i {number}
- * @returns {JSX.Element}
+ * @param props {{monitoring: ProgressionMonitoring, key: number}}
  */
-function generateMonitoringMessage(monitoring, i) {
+function Monitoring(props) {
+    const monitoring = props.monitoring;
+    const i = props.key;
     const total = monitoring.total;
     let current = 0;
     for (let jobId of Object.keys(monitoring.jobs)) {
@@ -40,9 +31,8 @@ function generateMonitoringMessage(monitoring, i) {
     }
     const percent = Math.round(current * 100 / total);
     const jobClassID = monitoring.name + "-job";
-    const jobClassName = "job horizontal " + jobClassID;
     return (
-        <div key={i} className={jobClassName}>
+        <div key={i} className={`job horizontal ${jobClassID}`}>
             <label htmlFor={jobClassID} className="info">{current} / {total} ({percent} %)</label>
             <progress id={jobClassID} value={current} max={total}/>
         </div>
@@ -51,40 +41,40 @@ function generateMonitoringMessage(monitoring, i) {
 
 const NotificationCollector = {
     DatabaseReady: function(app, notification) {
-        collectNotification(
-            app, notification,
+        app.collectNotification(
+            notification,
             {status: HomeStatus.LOADED});
     },
     VideosToLoad: function(app, notification) {
-        collectNotification(
-            app, notification,
+        app.collectNotification(
+            notification,
             {videosMonitoring: app.state.videosMonitoring.clone(notification.notification.total)});
     },
     ThumbnailsToLoad: function(app, notification) {
-        collectNotification(
-            app, notification,
+        app.collectNotification(
+            notification,
             {thumbnailsMonitoring: app.state.thumbnailsMonitoring.clone(notification.notification.total)});
     },
     MiniaturesToLoad: function(app, notification) {
-        collectNotification(
-            app, notification,
+        app.collectNotification(
+            notification,
             {miniaturesMonitoring: app.state.miniaturesMonitoring.clone(notification.notification.total)});
     },
     VideoJob: function(app, notification) {
-        collectNotification(
-            app, notification,
+        app.collectNotification(
+            notification,
             {videosMonitoring: app.state.videosMonitoring.collectJobNotification(notification)},
             !app.state.messages.length || app.state.messages[app.state.messages.length - 1].name !== notification.name);
     },
     ThumbnailJob: function(app, notification) {
-        collectNotification(
-            app, notification,
+        app.collectNotification(
+            notification,
             {thumbnailsMonitoring: app.state.thumbnailsMonitoring.collectJobNotification(notification)},
             !app.state.messages.length || app.state.messages[app.state.messages.length - 1].name !== notification.name);
     },
     MiniatureJob: function(app, notification) {
-        collectNotification(
-            app, notification,
+        app.collectNotification(
+            notification,
             {miniaturesMonitoring: app.state.miniaturesMonitoring.collectJobNotification(notification)},
             !app.state.messages.length || app.state.messages[app.state.messages.length - 1].name !== notification.name);
     },
@@ -92,16 +82,10 @@ const NotificationCollector = {
     ProfilingStart: function(app, notification) {}
 };
 
-const NotificationMessenger = {
-    VideoJob: function(app, message, i) {
-        return generateMonitoringMessage(app.state.videosMonitoring, i);
-    },
-    ThumbnailJob: function(app, message, i) {
-        return generateMonitoringMessage(app.state.thumbnailsMonitoring, i);
-    },
-    MiniatureJob: function(app, message, i) {
-        return generateMonitoringMessage(app.state.miniaturesMonitoring, i);
-    },
+const NotificationRenderer = {
+    VideoJob: (app, message, i) => <Monitoring monitoring={app.state.videosMonitoring} key={i}/>,
+    ThumbnailJob: (app, message, i) => <Monitoring monitoring={app.state.thumbnailsMonitoring} key={i}/>,
+    MiniatureJob: (app, message, i) => <Monitoring monitoring={app.state.miniaturesMonitoring} key={i}/>,
     DatabaseLoaded: function(app, message, i) {
         const data = message.notification;
         return (
@@ -118,7 +102,7 @@ const NotificationMessenger = {
         );
     },
     DatabaseSaved: function(app, message, i) {
-        return NotificationMessenger.DatabaseLoaded(app, message, i);
+        return NotificationRenderer.DatabaseLoaded(app, message, i);
     },
     DatabaseReady: function(app, message, i) {
         return <div key={i}><strong>Database open!</strong></div>;
@@ -164,7 +148,7 @@ const NotificationMessenger = {
         );
     },
     VideoThumbnailErrors: function(app, message, i) {
-        return NotificationMessenger.VideoInfoErrors(app, message, i);
+        return NotificationRenderer.VideoInfoErrors(app, message, i);
     },
     VideosToLoad: function(app, message, i) {
         const labels = {VideosToLoad: 'video', ThumbnailsToLoad: 'thumbnail', MiniaturesToLoad: 'miniature'}
@@ -177,10 +161,10 @@ const NotificationMessenger = {
         }
     },
     ThumbnailsToLoad: function(app, message, i) {
-        return NotificationMessenger.VideosToLoad(app, message, i);
+        return NotificationRenderer.VideosToLoad(app, message, i);
     },
     MiniaturesToLoad: function(app, message, i) {
-        return NotificationMessenger.VideosToLoad(app, message, i);
+        return NotificationRenderer.VideosToLoad(app, message, i);
     },
     NbMiniatures: function(app, message, i) {
         const total = message.notification.total;
@@ -210,11 +194,12 @@ export class HomePage extends React.Component {
         this.loadDatabase = this.loadDatabase.bind(this);
         this.displayVideos = this.displayVideos.bind(this);
         this.onChangeUpdate = this.onChangeUpdate.bind(this);
+        this.collectNotification = this.collectNotification.bind(this);
     }
     render() {
         return (
             <div id="home">
-                <div className="button-initial">
+                <div className="buttons">
                     {this.state.status === HomeStatus.INITIAL ? (
                         <span className="input-update">
                             <input type="checkbox"
@@ -248,8 +233,8 @@ export class HomePage extends React.Component {
             const name = message.name;
             ready = (name === 'DatabaseReady' && i === this.state.messages.length - 1);
             let display = null;
-            if (NotificationMessenger[name]) {
-                display = NotificationMessenger[name](this, message, i);
+            if (NotificationRenderer[name]) {
+                display = NotificationRenderer[name](this, message, i);
                 if (display)
                     output.push(display);
             } else {
@@ -273,7 +258,7 @@ export class HomePage extends React.Component {
         if (NotificationCollector[name])
             return NotificationCollector[name](this, notification);
         else
-            collectNotification(this, notification, {});
+            this.collectNotification(notification);
     }
     loadDatabase() {
         python_call('load_database', this.state.update)
@@ -287,5 +272,22 @@ export class HomePage extends React.Component {
     }
     onChangeUpdate(event) {
         this.setState({update: event.target.checked});
+    }
+
+    /**
+     * Callback to collect notification.
+     * Update component with given updates,
+     * and register notification object if `store` parameter is true.
+     * @param notification {Object} - Notification to store
+     * @param updates {Object} - Object to update component
+     * @param store {boolean} - If true, append notification to internal notification list.
+     */
+    collectNotification(notification, updates= {}, store = true) {
+        if (store) {
+            const messages = this.state.messages.slice();
+            messages.push(notification);
+            updates.messages = messages;
+        }
+        this.setState(updates);
     }
 }

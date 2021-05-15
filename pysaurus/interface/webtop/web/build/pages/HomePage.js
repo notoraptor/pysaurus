@@ -1,25 +1,14 @@
 System.register(["../utils/constants.js"], function (_export, _context) {
   "use strict";
 
-  var HomeStatus, ProgressionMonitoring, HomePage, NotificationCollector, NotificationMessenger;
+  var HomeStatus, ProgressionMonitoring, HomePage, NotificationCollector, NotificationRenderer;
 
-  function collectNotification(app, notification, updates, store = true) {
-    if (store) {
-      const messages = app.state.messages.slice();
-      messages.push(notification);
-      updates.messages = messages;
-    }
-
-    app.setState(updates);
-  }
   /**
-   * @param monitoring {ProgressionMonitoring}
-   * @param i {number}
-   * @returns {JSX.Element}
+   * @param props {{monitoring: ProgressionMonitoring, key: number}}
    */
-
-
-  function generateMonitoringMessage(monitoring, i) {
+  function Monitoring(props) {
+    const monitoring = props.monitoring;
+    const i = props.key;
     const total = monitoring.total;
     let current = 0;
 
@@ -29,10 +18,9 @@ System.register(["../utils/constants.js"], function (_export, _context) {
 
     const percent = Math.round(current * 100 / total);
     const jobClassID = monitoring.name + "-job";
-    const jobClassName = "job horizontal " + jobClassID;
     return /*#__PURE__*/React.createElement("div", {
       key: i,
-      className: jobClassName
+      className: `job horizontal ${jobClassID}`
     }, /*#__PURE__*/React.createElement("label", {
       htmlFor: jobClassID,
       className: "info"
@@ -59,8 +47,8 @@ System.register(["../utils/constants.js"], function (_export, _context) {
 
         clone(total = undefined, jobs = undefined) {
           const copy = new ProgressionMonitoring(this.name);
-          copy.total = total ? total : this.total;
-          copy.jobs = jobs ? jobs : this.jobs;
+          copy.total = total !== undefined ? total : this.total;
+          copy.jobs = jobs !== undefined ? jobs : this.jobs;
           return copy;
         }
 
@@ -72,53 +60,56 @@ System.register(["../utils/constants.js"], function (_export, _context) {
       };
       NotificationCollector = {
         DatabaseReady: function (app, notification) {
-          collectNotification(app, notification, {
+          app.collectNotification(notification, {
             status: HomeStatus.LOADED
           });
         },
         VideosToLoad: function (app, notification) {
-          collectNotification(app, notification, {
+          app.collectNotification(notification, {
             videosMonitoring: app.state.videosMonitoring.clone(notification.notification.total)
           });
         },
         ThumbnailsToLoad: function (app, notification) {
-          collectNotification(app, notification, {
+          app.collectNotification(notification, {
             thumbnailsMonitoring: app.state.thumbnailsMonitoring.clone(notification.notification.total)
           });
         },
         MiniaturesToLoad: function (app, notification) {
-          collectNotification(app, notification, {
+          app.collectNotification(notification, {
             miniaturesMonitoring: app.state.miniaturesMonitoring.clone(notification.notification.total)
           });
         },
         VideoJob: function (app, notification) {
-          collectNotification(app, notification, {
+          app.collectNotification(notification, {
             videosMonitoring: app.state.videosMonitoring.collectJobNotification(notification)
           }, !app.state.messages.length || app.state.messages[app.state.messages.length - 1].name !== notification.name);
         },
         ThumbnailJob: function (app, notification) {
-          collectNotification(app, notification, {
+          app.collectNotification(notification, {
             thumbnailsMonitoring: app.state.thumbnailsMonitoring.collectJobNotification(notification)
           }, !app.state.messages.length || app.state.messages[app.state.messages.length - 1].name !== notification.name);
         },
         MiniatureJob: function (app, notification) {
-          collectNotification(app, notification, {
+          app.collectNotification(notification, {
             miniaturesMonitoring: app.state.miniaturesMonitoring.collectJobNotification(notification)
           }, !app.state.messages.length || app.state.messages[app.state.messages.length - 1].name !== notification.name);
         },
         // notifications ignored.
         ProfilingStart: function (app, notification) {}
       };
-      NotificationMessenger = {
-        VideoJob: function (app, message, i) {
-          return generateMonitoringMessage(app.state.videosMonitoring, i);
-        },
-        ThumbnailJob: function (app, message, i) {
-          return generateMonitoringMessage(app.state.thumbnailsMonitoring, i);
-        },
-        MiniatureJob: function (app, message, i) {
-          return generateMonitoringMessage(app.state.miniaturesMonitoring, i);
-        },
+      NotificationRenderer = {
+        VideoJob: (app, message, i) => /*#__PURE__*/React.createElement(Monitoring, {
+          monitoring: app.state.videosMonitoring,
+          key: i
+        }),
+        ThumbnailJob: (app, message, i) => /*#__PURE__*/React.createElement(Monitoring, {
+          monitoring: app.state.thumbnailsMonitoring,
+          key: i
+        }),
+        MiniatureJob: (app, message, i) => /*#__PURE__*/React.createElement(Monitoring, {
+          monitoring: app.state.miniaturesMonitoring,
+          key: i
+        }),
         DatabaseLoaded: function (app, message, i) {
           const data = message.notification;
           return /*#__PURE__*/React.createElement("div", {
@@ -126,7 +117,7 @@ System.register(["../utils/constants.js"], function (_export, _context) {
           }, /*#__PURE__*/React.createElement("strong", null, "Database ", message.name === 'DatabaseSaved' ? 'saved' : 'loaded'), ":", data.entries, ' ', data.entries > 1 ? 'entries' : 'entry', ",", data.discarded, " discarded,", data.unreadable_not_found, " unreadable not found,", data.unreadable_found, " unreadable found,", data.readable_not_found, " readable not found,", data.readable_found_without_thumbnails, " readable found without thumbnails,", data.valid, " valid");
         },
         DatabaseSaved: function (app, message, i) {
-          return NotificationMessenger.DatabaseLoaded(app, message, i);
+          return NotificationRenderer.DatabaseLoaded(app, message, i);
         },
         DatabaseReady: function (app, message, i) {
           return /*#__PURE__*/React.createElement("div", {
@@ -172,7 +163,7 @@ System.register(["../utils/constants.js"], function (_export, _context) {
           }, /*#__PURE__*/React.createElement("code", null, error))))))));
         },
         VideoThumbnailErrors: function (app, message, i) {
-          return NotificationMessenger.VideoInfoErrors(app, message, i);
+          return NotificationRenderer.VideoInfoErrors(app, message, i);
         },
         VideosToLoad: function (app, message, i) {
           const labels = {
@@ -194,10 +185,10 @@ System.register(["../utils/constants.js"], function (_export, _context) {
           }
         },
         ThumbnailsToLoad: function (app, message, i) {
-          return NotificationMessenger.VideosToLoad(app, message, i);
+          return NotificationRenderer.VideosToLoad(app, message, i);
         },
         MiniaturesToLoad: function (app, message, i) {
-          return NotificationMessenger.VideosToLoad(app, message, i);
+          return NotificationRenderer.VideosToLoad(app, message, i);
         },
         NbMiniatures: function (app, message, i) {
           const total = message.notification.total;
@@ -232,13 +223,14 @@ System.register(["../utils/constants.js"], function (_export, _context) {
           this.loadDatabase = this.loadDatabase.bind(this);
           this.displayVideos = this.displayVideos.bind(this);
           this.onChangeUpdate = this.onChangeUpdate.bind(this);
+          this.collectNotification = this.collectNotification.bind(this);
         }
 
         render() {
           return /*#__PURE__*/React.createElement("div", {
             id: "home"
           }, /*#__PURE__*/React.createElement("div", {
-            className: "button-initial"
+            className: "buttons"
           }, this.state.status === HomeStatus.INITIAL ? /*#__PURE__*/React.createElement("span", {
             className: "input-update"
           }, /*#__PURE__*/React.createElement("input", {
@@ -276,8 +268,8 @@ System.register(["../utils/constants.js"], function (_export, _context) {
             ready = name === 'DatabaseReady' && i === this.state.messages.length - 1;
             let display = null;
 
-            if (NotificationMessenger[name]) {
-              display = NotificationMessenger[name](this, message, i);
+            if (NotificationRenderer[name]) {
+              display = NotificationRenderer[name](this, message, i);
               if (display) output.push(display);
             } else {
               output.push( /*#__PURE__*/React.createElement("div", {
@@ -303,7 +295,7 @@ System.register(["../utils/constants.js"], function (_export, _context) {
 
         notify(notification) {
           const name = notification.name;
-          if (NotificationCollector[name]) return NotificationCollector[name](this, notification);else collectNotification(this, notification, {});
+          if (NotificationCollector[name]) return NotificationCollector[name](this, notification);else this.collectNotification(notification);
         }
 
         loadDatabase() {
@@ -322,6 +314,25 @@ System.register(["../utils/constants.js"], function (_export, _context) {
           this.setState({
             update: event.target.checked
           });
+        }
+        /**
+         * Callback to collect notification.
+         * Update component with given updates,
+         * and register notification object if `store` parameter is true.
+         * @param notification {Object} - Notification to store
+         * @param updates {Object} - Object to update component
+         * @param store {boolean} - If true, append notification to internal notification list.
+         */
+
+
+        collectNotification(notification, updates = {}, store = true) {
+          if (store) {
+            const messages = this.state.messages.slice();
+            messages.push(notification);
+            updates.messages = messages;
+          }
+
+          this.setState(updates);
         }
 
       });
