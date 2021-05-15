@@ -13,6 +13,7 @@ export class FormRenameVideo extends React.Component {
         this.submit = this.submit.bind(this);
         this.onFocusInput = this.onFocusInput.bind(this);
     }
+
     render() {
         return (
             <Dialog yes="rename" no="cancel" onClose={this.onClose}>
@@ -31,23 +32,29 @@ export class FormRenameVideo extends React.Component {
             </Dialog>
         )
     }
+
     componentDidMount() {
         document.querySelector('input#name').focus();
     }
+
     onFocusInput(event) {
         event.target.select();
     }
+
     onChange(event) {
         this.setState({title: event.target.value});
     }
+
     onClose(yes) {
         this.submit(yes);
     }
+
     onKeyDown(event) {
         if (event.key === "Enter") {
             this.submit(true);
         }
     }
+
     submit(yes) {
         let title = null;
         if (yes) {

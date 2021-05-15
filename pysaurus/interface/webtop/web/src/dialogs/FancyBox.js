@@ -7,22 +7,27 @@ export class FancyBox extends React.Component {
         this.callbackIndex = -1;
         this.checkShortcut = this.checkShortcut.bind(this);
     }
+
     render() {
         return (
             <div className="fancybox-wrapper">
                 <div className="fancybox">
                     <div className="fancybox-header horizontal">
                         <div className="fancybox-title">{this.props.title}</div>
-                        <div className="fancybox-close"><button onClick={this.props.onClose}>&times;</button></div>
+                        <div className="fancybox-close">
+                            <button onClick={this.props.onClose}>&times;</button>
+                        </div>
                     </div>
                     <div className="fancybox-content">{this.props.onBuild(this.props.onClose)}</div>
                 </div>
             </div>
         );
     }
+
     componentDidMount() {
         this.callbackIndex = KEYBOARD_MANAGER.register(this.checkShortcut);
     }
+
     componentWillUnmount() {
         KEYBOARD_MANAGER.unregister(this.callbackIndex);
     }

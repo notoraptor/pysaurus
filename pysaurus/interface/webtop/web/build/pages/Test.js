@@ -1,7 +1,7 @@
 System.register(["../components/MenuPack.js", "../utils/constants.js", "../components/SetInput.js", "../dialogs/Dialog.js", "../components/Cross.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/Menu.js"], function (_export, _context) {
   "use strict";
 
-  var MenuPack, PAGE_SIZES, SetInput, ComponentController, Dialog, Cross, MenuItem, MenuItemCheck, Menu, Test;
+  var MenuPack, PAGE_SIZES, ComponentController, SetInput, Dialog, Cross, MenuItem, MenuItemCheck, Menu, Test;
 
   _export("Test", void 0);
 
@@ -11,8 +11,8 @@ System.register(["../components/MenuPack.js", "../utils/constants.js", "../compo
     }, function (_utilsConstantsJs) {
       PAGE_SIZES = _utilsConstantsJs.PAGE_SIZES;
     }, function (_componentsSetInputJs) {
-      SetInput = _componentsSetInputJs.SetInput;
       ComponentController = _componentsSetInputJs.ComponentController;
+      SetInput = _componentsSetInputJs.SetInput;
     }, function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
     }, function (_componentsCrossJs) {

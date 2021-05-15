@@ -59,9 +59,9 @@ export const FIELD_TITLES = {
     'audio_codec': 'audio codec',
     'audio_codec_description': 'audio codec description',
     'container_format': 'container format',
-    'date' : 'date modified',
-    'day' : 'day',
-    'disk' : 'disk',
+    'date': 'date modified',
+    'day': 'day',
+    'disk': 'disk',
     'extension': 'file extension',
     'file_size': 'size (bytes)',
     'file_title': 'file title',
@@ -71,19 +71,19 @@ export const FIELD_TITLES = {
     'length': 'length',
     'properties': 'properties',
     'quality': 'quality',
-    'sample_rate' : 'sample rate',
+    'sample_rate': 'sample rate',
     'size': 'size',
     'thumbnail_path': 'thumbnail path',
     'title': 'title',
     'video_codec': 'video codec',
-    'video_codec_description' : 'video codec description',
+    'video_codec_description': 'video codec description',
     'video_id': 'video ID',
     'width': 'width',
 };
 
 export const SORTED_FIELDS_AND_TITLES = (function (obj) {
     const arr = Object.keys(obj).map(key => [key, obj[key]]);
-    arr.sort(function(t1, t2) {
+    arr.sort(function (t1, t2) {
         let t = t1[1].localeCompare(t2[1]);
         if (t === 0)
             t = t1[0].localeCompare(t2[0]);

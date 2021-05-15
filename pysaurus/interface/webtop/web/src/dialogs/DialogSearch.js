@@ -13,6 +13,7 @@ export class DialogSearch extends React.Component {
         this.onInput = this.onInput.bind(this);
         this.onClose = this.onClose.bind(this);
     }
+
     render() {
         return (
             <Dialog yes={"go"} no={"cancel"} onClose={this.onClose}>
@@ -28,21 +29,26 @@ export class DialogSearch extends React.Component {
             </Dialog>
         );
     }
+
     componentDidMount() {
         document.querySelector('#input-search').focus();
     }
+
     onFocusInput(event) {
         event.target.select();
     }
+
     onChangeInput(event) {
         this.setState({text: event.target.value});
     }
+
     onInput(event) {
         if (event.key === "Enter" && this.state.text.length) {
             this.props.onClose(this.state.text);
             return true;
         }
     }
+
     onClose(yes) {
         this.props.onClose(yes && this.state.text ? this.state.text : null);
     }

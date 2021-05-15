@@ -40,6 +40,7 @@ export class GroupView extends React.Component {
             }
         }
     }
+
     render() {
         const selected = this.props.groupID;
         const isProperty = (this.props.field.charAt(0) === ':');
@@ -110,7 +111,9 @@ export class GroupView extends React.Component {
                                  onClick={() => this.select(index)}>
                                 <div className="column left" {...(isProperty ? {} : {title: entry.value})}>
                                     {buttons}
-                                    <span key="value" {...(isProperty ? {title: entry.value} : {})}>{entry.value === null ? `(none)` : entry.value}</span>
+                                    <span key="value" {...(isProperty ? {title: entry.value} : {})}>
+                                        {entry.value === null ? `(none)` : entry.value}
+                                    </span>
                                 </div>
                                 <div className="column right" title={entry.count}>{entry.count}</div>
                             </div>
@@ -120,6 +123,7 @@ export class GroupView extends React.Component {
             </div>
         );
     }
+
     renderTitle() {
         const field = this.props.field;
         let title = field.charAt(0) === ':' ?
@@ -132,30 +136,37 @@ export class GroupView extends React.Component {
         title = `${title} ${this.props.reverse ? Utils.CHARACTER_ARROW_DOWN : Utils.CHARACTER_ARROW_UP}`;
         return title;
     }
+
     getNbPages() {
         const count = this.props.groups.length;
         return Math.floor(count / this.state.pageSize) + (count % this.state.pageSize ? 1 : 0);
     }
+
     select(value) {
         this.props.onSelect(value);
     }
+
     openPropertyOptions(event, index) {
         event.cancelBubble = true;
         event.stopPropagation();
         this.props.onOptions(new Set([index]));
     }
+
     openPropertyOptionsAll() {
         this.props.onOptions(this.state.selection);
     }
+
     openPropertyPlus(event, index) {
         event.cancelBubble = true;
         event.stopPropagation();
         this.props.onPlus(index);
     }
+
     setPage(pageNumber) {
         if (this.state.pageNumber !== pageNumber)
             this.setState({pageNumber: pageNumber, selection: new Set()});
     }
+
     search(text) {
         for (let index = 0; index < this.props.groups.length; ++index) {
             const value = this.props.groups[index].value;
@@ -165,10 +176,11 @@ export class GroupView extends React.Component {
                 continue;
             const pageNumber = Math.floor(index / this.state.pageSize);
             if (this.state.pageNumber !== pageNumber)
-               this.setState({pageNumber: pageNumber, selection: new Set()}, () => this.select(index));
+                this.setState({pageNumber: pageNumber, selection: new Set()}, () => this.select(index));
             return;
         }
     }
+
     allChecked(start, end) {
         for (let i = start; i < end; ++i) {
             if (!this.state.selection.has(i) && i !== this.nullIndex)
@@ -176,6 +188,7 @@ export class GroupView extends React.Component {
         }
         return true;
     }
+
     onCheckEntry(event, index) {
         const selection = new Set(this.state.selection);
         if (event.target.checked) {
@@ -185,6 +198,7 @@ export class GroupView extends React.Component {
         }
         this.setState({selection});
     }
+
     onCheckAll(event, start, end) {
         const selection = new Set(this.state.selection);
         if (event.target.checked) {

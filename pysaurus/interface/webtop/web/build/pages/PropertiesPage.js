@@ -1,7 +1,7 @@
 System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../components/Cell.js", "../forms/FormRenameProperty.js"], function (_export, _context) {
   "use strict";
 
-  var SetInput, ComponentController, Dialog, Cell, FormRenameProperty, PropertiesPage, DEFAULT_VALUES;
+  var ComponentController, SetInput, Dialog, Cell, FormRenameProperty, PropertiesPage, DEFAULT_VALUES;
 
   function getDefaultValue(propType) {
     return DEFAULT_VALUES[propType].toString();
@@ -11,8 +11,8 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
 
   return {
     setters: [function (_componentsSetInputJs) {
-      SetInput = _componentsSetInputJs.SetInput;
       ComponentController = _componentsSetInputJs.ComponentController;
+      SetInput = _componentsSetInputJs.SetInput;
     }, function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
     }, function (_componentsCellJs) {

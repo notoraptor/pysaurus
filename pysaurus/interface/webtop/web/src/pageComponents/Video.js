@@ -25,6 +25,7 @@ export class Video extends React.Component {
         this.onSelect = this.onSelect.bind(this);
         this.focusPropertyValue = this.focusPropertyValue.bind(this);
     }
+
     render() {
         const data = this.props.data;
         const audio_bit_rate = Math.round(data.audio_bit_rate / 1000);
@@ -49,20 +50,30 @@ export class Video extends React.Component {
                         <div className="name">
                             <div className="options horizontal">
                                 <MenuPack title={`${Utils.CHARACTER_SETTINGS}`}>
-                                    {data.exists ? <MenuItem action={this.openVideo}>Open file</MenuItem> : <div className="not-found">(not found)</div>}
-                                    {data.exists ? <MenuItem action={this.openContainingFolder}>Open containing folder</MenuItem> : ''}
+                                    {data.exists ?
+                                        <MenuItem action={this.openVideo}>Open file</MenuItem> :
+                                        <div className="not-found">(not found)</div>}
+                                    {data.exists ?
+                                        <MenuItem action={this.openContainingFolder}>Open containing
+                                        folder</MenuItem> : ''}
                                     {meta_title ? <MenuItem action={this.copyMetaTitle}>Copy meta title</MenuItem> : ''}
                                     {file_title ? <MenuItem action={this.copyFileTitle}>Copy file title</MenuItem> : ''}
                                     {data.exists ? <MenuItem action={this.renameVideo}>Rename video</MenuItem> : ''}
-                                    <MenuItem className="menu-delete" action={this.deleteVideo}>{data.exists ? 'Delete video' : 'Delete entry'}</MenuItem>
+                                    <MenuItem className="menu-delete" action={this.deleteVideo}>
+                                        {data.exists ? 'Delete video' : 'Delete entry'}
+                                    </MenuItem>
                                 </MenuPack>
                                 <div>
-                                    <input type="checkbox" checked={this.props.selected} id={htmlID} onChange={this.onSelect}/>
+                                    <input type="checkbox"
+                                           checked={this.props.selected}
+                                           id={htmlID}
+                                           onChange={this.onSelect}/>
                                     &nbsp;
                                     <label htmlFor={htmlID}><strong className="title">{data.title}</strong></label>
                                 </div>
                             </div>
-                            {data.title === data.file_title ? '' : <div className="file-title"><em>{data.file_title}</em></div>}
+                            {data.title === data.file_title ? '' :
+                                <div className="file-title"><em>{data.file_title}</em></div>}
                         </div>
                         <div className={'filename-line' + (data.exists ? '' : ' horizontal')}>
                             {data.exists ? '' : <div className="prepend" onClick={this.deleteVideo}><code className="text-not-found">NOT FOUND</code><code className="text-delete">DELETE</code></div>}
@@ -80,6 +91,7 @@ export class Video extends React.Component {
             </div>
         );
     }
+
     renderProperties() {
         const props = this.props.data.properties;
         const propDefs = this.props.parent.state.properties;
@@ -101,7 +113,11 @@ export class Video extends React.Component {
                         <div key={name} className={`property ${props.hasOwnProperty(name) ? "defined" : ""}`}>
                             <Collapsable title={name}>
                                 {!noValue ? (printableValues.map((element, elementIndex) => (
-                                    <span className="value" key={elementIndex} onClick={() => this.focusPropertyValue(name, element)}>{element.toString()}</span>
+                                    <span className="value"
+                                          key={elementIndex}
+                                          onClick={() => this.focusPropertyValue(name, element)}>
+                                        {element.toString()}
+                                    </span>
                                 ))) : <span className="no-value">no value</span>}
                             </Collapsable>
                         </div>
@@ -110,14 +126,17 @@ export class Video extends React.Component {
             </div>
         );
     }
+
     focusPropertyValue(propertyName, propertyValue) {
         this.props.parent.focusPropertyValue(propertyName, propertyValue);
     }
+
     openVideo() {
         python_call('open_video', this.props.data.video_id)
             .then(() => this.props.parent.updateStatus('Opened: ' + this.props.data.filename))
             .catch(() => this.props.parent.updateStatus('Unable to open: ' + this.props.data.filename));
     }
+
     editProperties() {
         const data = this.props.data;
         const definitions = this.props.parent.state.properties;
@@ -129,9 +148,10 @@ export class Video extends React.Component {
                         .then(() => this.props.parent.updateStatus(`Properties updated: ${data.filename}`, true))
                         .catch(backend_error);
                 }
-            }} />
+            }}/>
         ));
     }
+
     confirmDeletion() {
         /*
         return view.dialog({
@@ -155,17 +175,20 @@ export class Video extends React.Component {
             </Dialog>
         ));
     }
+
     deleteVideo() {
         if (this.props.data.exists || this.props.confirmDeletion)
             this.confirmDeletion();
         else
             this.reallyDeleteVideo();
     }
+
     reallyDeleteVideo() {
         python_call('delete_video', this.props.data.video_id)
             .then(() => this.props.parent.updateStatus('Video deleted! ' + this.props.data.filename, true))
             .catch(backend_error);
     }
+
     openContainingFolder() {
         python_call('open_containing_folder', this.props.data.video_id)
             .then(folder => {
@@ -173,18 +196,21 @@ export class Video extends React.Component {
             })
             .catch(backend_error);
     }
+
     copyMetaTitle() {
         const text = this.props.data.title;
         python_call('clipboard', text)
             .then(() => this.props.parent.updateStatus('Copied to clipboard: ' + text))
             .catch(() => this.props.parent.updateStatus(`Cannot copy meta title to clipboard: ${text}`));
     }
+
     copyFileTitle() {
         const text = this.props.data.file_title;
         python_call('clipboard', text)
             .then(() => this.props.parent.updateStatus('Copied to clipboard: ' + text))
             .catch(() => this.props.parent.updateStatus(`Cannot copy file title to clipboard: ${text}`));
     }
+
     renameVideo() {
         const filename = this.props.data.filename;
         const title = this.props.data.file_title;
@@ -199,6 +225,7 @@ export class Video extends React.Component {
             }}/>
         ));
     }
+
     onSelect(event) {
         if (this.props.onSelect) {
             this.props.onSelect(this.props.data.video_id, event.target.checked);

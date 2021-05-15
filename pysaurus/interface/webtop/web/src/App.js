@@ -4,7 +4,7 @@ import {VideosPage} from "./pages/VideosPage.js";
 import {PropertiesPage} from "./pages/PropertiesPage.js";
 import {FancyBox} from "./dialogs/FancyBox.js";
 
-import {VIDEO_DEFAULT_PAGE_SIZE, VIDEO_DEFAULT_PAGE_NUMBER} from "./utils/constants.js";
+import {VIDEO_DEFAULT_PAGE_NUMBER, VIDEO_DEFAULT_PAGE_SIZE} from "./utils/constants.js";
 
 export class App extends React.Component {
     constructor(props) {
@@ -22,6 +22,7 @@ export class App extends React.Component {
         this.onCloseFancyBox = this.onCloseFancyBox.bind(this);
         APP = this;
     }
+
     render() {
         const fancy = this.state.fancy;
         return (
@@ -33,6 +34,7 @@ export class App extends React.Component {
             </div>
         );
     }
+
     renderPage() {
         const parameters = this.state.parameters;
         const page = this.state.page;
@@ -45,13 +47,16 @@ export class App extends React.Component {
         if (page === "properties")
             return <PropertiesPage app={this} parameters={parameters}/>;
     }
+
     renderFancyBox() {
         const fancy = this.state.fancy;
         return <FancyBox title={fancy.title} onBuild={fancy.onBuild} onClose={fancy.onClose}/>;
     }
+
     updateApp(state) {
         this.setState(state, this.manageFancyBoxView);
     }
+
     /**
      * Make sure all active elements are disabled if fancy box is displayed, and re-enabled when fancybox is closed.
      */
@@ -76,22 +81,27 @@ export class App extends React.Component {
             }
         }
     }
+
     onCloseFancyBox() {
         this.updateApp({fancy: null});
     }
-    loadPage(pageName, parameters=undefined) {
+
+    loadPage(pageName, parameters = undefined) {
         parameters = parameters ? parameters : {};
         this.updateApp({page: pageName, parameters: parameters});
     }
+
     // Public methods for children components.
     loadDialog(title, onBuild) {
         if (this.state.fancy)
             throw "a fancy box is already displayed.";
         this.updateApp({fancy: {title: title, onClose: this.onCloseFancyBox, onBuild: onBuild}});
     }
+
     loadHomePage(update = false) {
         this.loadPage("home", {update});
     }
+
     loadVideosPage(pageSize = undefined, pageNumber = undefined) {
         if (pageSize === undefined)
             pageSize = VIDEO_DEFAULT_PAGE_SIZE;
@@ -103,6 +113,7 @@ export class App extends React.Component {
             })
             .catch(backend_error);
     }
+
     loadPropertiesPage() {
         python_call('get_prop_types')
             .then(definitions => this.loadPage("properties", {definitions: definitions}))

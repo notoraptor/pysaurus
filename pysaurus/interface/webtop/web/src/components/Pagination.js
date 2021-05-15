@@ -17,6 +17,7 @@ export class Pagination extends React.Component {
         this.go = this.go.bind(this);
         this.look = this.look.bind(this);
     }
+
     render() {
         const singular = this.props.singular;
         const plural = this.props.plural;
@@ -26,12 +27,14 @@ export class Pagination extends React.Component {
             nbPages ? (
                 <span className="navigation">
                     <button className="first" disabled={pageNumber === 0} onClick={this.onFirst}>&lt;&lt;</button>
-                    <button className="previous" disabled={pageNumber === 0} onClick={this.onPrevious}>&lt;</button>{' '}
-                    <span className="go" onClick={this.props.onSearch ? this.look : this.look}>{Utils.sentence(singular)}</span>
-                    {' '}
-                    <span className="go" onClick={this.go}>{pageNumber + 1}/{nbPages}</span>{' '}
+                    <button className="previous" disabled={pageNumber === 0} onClick={this.onPrevious}>&lt;</button>
+                    <span className="go" onClick={this.props.onSearch ? this.look : this.look}>
+                        {Utils.sentence(singular)}
+                    </span>
+                    <span className="go" onClick={this.go}>{pageNumber + 1}/{nbPages}</span>
                     <button className="next" disabled={pageNumber === nbPages - 1} onClick={this.onNext}>&gt;</button>
-                    <button className="last" disabled={pageNumber === nbPages - 1} onClick={this.onLast}>&gt;&gt;</button>
+                    <button className="last" disabled={pageNumber === nbPages - 1}
+                            onClick={this.onLast}>&gt;&gt;</button>
                 </span>
             ) : (<div className="navigation status"><em>0 {plural}</em></div>)
         )
@@ -42,37 +45,42 @@ export class Pagination extends React.Component {
             this.props.onChange(0);
         }
     }
+
     onPrevious() {
         if (this.props.pageNumber > 0) {
             this.props.onChange(this.props.pageNumber - 1);
         }
     }
+
     onNext() {
         if (this.props.pageNumber < this.props.nbPages - 1) {
             this.props.onChange(this.props.pageNumber + 1);
         }
     }
+
     onLast() {
         if (this.props.pageNumber !== this.props.nbPages - 1) {
             this.props.onChange(this.props.nbPages - 1);
         }
     }
+
     go() {
         APP.loadDialog('Go to page:', onClose => (
             <FormGoToPage nbPages={this.props.nbPages} pageNumber={this.props.pageNumber} onClose={pageNumber => {
                 onClose();
                 if (pageNumber !== this.props.pageNumber)
                     this.props.onChange(pageNumber);
-            }} />
+            }}/>
         ));
     }
+
     look() {
         APP.loadDialog('Search first:', onClose => (
             <DialogSearch onClose={text => {
                 onClose();
                 if (text && text.length)
                     this.props.onSearch(text);
-            }} />
+            }}/>
         ));
     }
 }

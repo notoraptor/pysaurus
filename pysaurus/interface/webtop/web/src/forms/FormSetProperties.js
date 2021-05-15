@@ -16,6 +16,7 @@ export class FormSetProperties extends React.Component {
         this.onClose = this.onClose.bind(this);
         this.onChange = this.onChange.bind(this);
     }
+
     render() {
         const data = this.props.data;
         const hasThumbnail = data.hasThumbnail;
@@ -78,9 +79,11 @@ export class FormSetProperties extends React.Component {
             </Dialog>
         );
     }
+
     onClose(yes) {
-        this.props.onClose(yes ? this.state: null);
+        this.props.onClose(yes ? this.state : null);
     }
+
     onChange(event, def) {
         try {
             this.setState({[def.name]: parsePropValString(def.type, def.enumeration, event.target.value)});

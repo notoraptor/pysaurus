@@ -13,6 +13,7 @@ export class FormGoToPage extends React.Component {
         this.onInput = this.onInput.bind(this);
         this.onClose = this.onClose.bind(this);
     }
+
     render() {
         return (
             <Dialog yes={"go"} no={"cancel"} onClose={this.onClose}>
@@ -30,12 +31,15 @@ export class FormGoToPage extends React.Component {
             </Dialog>
         );
     }
+
     componentDidMount() {
         document.querySelector('#input-go').focus();
     }
+
     onFocusInput(event) {
         event.target.select();
     }
+
     onChange(event) {
         const value = event.target.value;
         let pageNumber = (value || 1) - 1;
@@ -45,11 +49,13 @@ export class FormGoToPage extends React.Component {
             pageNumber = 0;
         this.setState({pageNumber});
     }
+
     onInput(event) {
         if (event.key === "Enter") {
             this.props.onClose(this.state.pageNumber);
         }
     }
+
     onClose(yes) {
         this.props.onClose(yes ? this.state.pageNumber : this.props.pageNumber);
     }

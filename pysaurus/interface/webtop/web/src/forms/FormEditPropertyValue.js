@@ -22,6 +22,7 @@ export class FormEditPropertyValue extends React.Component {
         this.onEditKeyDown = this.onEditKeyDown.bind(this);
         this.valuesToString = this.valuesToString.bind(this);
     }
+
     render() {
         const canMove = this.state.otherDefinitions.length && this.props.values.length === 1;
         return (
@@ -50,6 +51,7 @@ export class FormEditPropertyValue extends React.Component {
             </Dialog>
         );
     }
+
     renderForm() {
         switch (this.state.form) {
             case 'delete':
@@ -64,6 +66,7 @@ export class FormEditPropertyValue extends React.Component {
                 break;
         }
     }
+
     renderDelete() {
         return (
             <div>
@@ -72,6 +75,7 @@ export class FormEditPropertyValue extends React.Component {
             </div>
         );
     }
+
     renderEdit() {
         const name = this.props.name;
         const propVal = this.state.value;
@@ -93,7 +97,10 @@ export class FormEditPropertyValue extends React.Component {
                 </select>
             );
         } else {
-            input = <input type={def.type === "int" ? "number" : "text"} onChange={this.onEdit} value={propVal} onKeyDown={this.onEditKeyDown}/>;
+            input = <input type={def.type === "int" ? "number" : "text"}
+                           onChange={this.onEdit}
+                           value={propVal}
+                           onKeyDown={this.onEditKeyDown}/>;
         }
         return (
             <div>
@@ -102,11 +109,13 @@ export class FormEditPropertyValue extends React.Component {
             </div>
         );
     }
+
     renderMove() {
         const def = this.props.properties[this.props.name];
         return (
             <div>
-                <h3>Move property "{this.props.name}" / {this.valuesToString()} to another property of type "{def.type}".</h3>
+                <h3>Move property "{this.props.name}" / {this.valuesToString()} to another property of type
+                    "{def.type}".</h3>
                 <div>
                     <select value={this.state.move} onChange={this.onMove}>
                         {this.state.otherDefinitions.map((other, index) =>
@@ -116,6 +125,7 @@ export class FormEditPropertyValue extends React.Component {
             </div>
         );
     }
+
     getCompatibleDefinitions() {
         const def = this.props.properties[this.props.name];
         const otherDefinitions = [];
@@ -125,15 +135,19 @@ export class FormEditPropertyValue extends React.Component {
         }
         return otherDefinitions;
     }
+
     setDelete() {
         this.setState({form: 'delete'});
     }
+
     setEdit() {
         this.setState({form: 'edit', value: this.props.value});
     }
+
     setMove() {
         this.setState({form: 'move', move: this.state.otherDefinitions[0].name});
     }
+
     onEdit(event) {
         const def = this.props.properties[this.props.name];
         try {
@@ -142,17 +156,21 @@ export class FormEditPropertyValue extends React.Component {
             window.alert(exception.toString());
         }
     }
+
     onEditKeyDown(event) {
         if (event.key === "Enter") {
             this.onClose(true);
         }
     }
+
     onMove(event) {
         this.setState({move: event.target.value});
     }
+
     onClose(yes) {
         this.props.onClose(yes ? Object.assign({}, this.state) : null);
     }
+
     valuesToString() {
         if (this.props.values.length === 1)
             return this.props.values[0].toString();

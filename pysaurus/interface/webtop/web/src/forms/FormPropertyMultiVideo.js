@@ -33,6 +33,7 @@ export class FormPropertyMultiVideo extends React.Component {
         this.addAll = this.addAll.bind(this);
         this.unAddAll = this.unAddAll.bind(this);
     }
+
     render() {
         return (
             <Dialog yes="edit" no="cancel" onClose={this.onClose}>
@@ -51,7 +52,9 @@ export class FormPropertyMultiVideo extends React.Component {
                         {this.state.remove.length > 1 ? (
                             <div className="horizontal">
                                 <div className="value">all {this.state.remove.length} values</div>
-                                <div><button onClick={this.unRemoveAll}>{Utils.CHARACTER_SMART_ARROW_RIGHT}</button></div>
+                                <div>
+                                    <button onClick={this.unRemoveAll}>{Utils.CHARACTER_SMART_ARROW_RIGHT}</button>
+                                </div>
                             </div>
                         ) : <div/>}
                         {this.state.current.length > 1 ? (
@@ -75,14 +78,18 @@ export class FormPropertyMultiVideo extends React.Component {
             </Dialog>
         )
     }
+
     renderRemove() {
         return this.state.remove.map((value, index) => (
             <div key={index} className="entry horizontal">
                 <div className="value">{value}</div>
-                <div><button onClick={() => this.unRemove(value)}>{Utils.CHARACTER_SMART_ARROW_RIGHT}</button></div>
+                <div>
+                    <button onClick={() => this.unRemove(value)}>{Utils.CHARACTER_SMART_ARROW_RIGHT}</button>
+                </div>
             </div>
         ));
     }
+
     renderCurrent() {
         return this.state.current.map((value, index) => (
             <div key={index} className="entry horizontal">
@@ -92,6 +99,7 @@ export class FormPropertyMultiVideo extends React.Component {
             </div>
         ))
     }
+
     renderAdd() {
         return this.state.add.map((value, index) => (
             <div key={index} className="entry horizontal">
@@ -102,6 +110,7 @@ export class FormPropertyMultiVideo extends React.Component {
             </div>
         ));
     }
+
     renderFormAdd() {
         const def = this.props.definition;
         let input;
@@ -120,7 +129,9 @@ export class FormPropertyMultiVideo extends React.Component {
                 </select>
             );
         } else {
-            input = <input type={def.type === "int" ? "number" : "text"} onChange={this.onEdit} onKeyDown={this.onEditKeyDown}/>;
+            input = <input type={def.type === "int" ? "number" : "text"}
+                           onChange={this.onEdit}
+                           onKeyDown={this.onEditKeyDown}/>;
         }
         return (
             <div className="bar new horizontal">
@@ -133,6 +144,7 @@ export class FormPropertyMultiVideo extends React.Component {
             </div>
         );
     }
+
     onEdit(event) {
         const def = this.props.definition;
         try {
@@ -141,11 +153,13 @@ export class FormPropertyMultiVideo extends React.Component {
             window.alert(exception.toString());
         }
     }
+
     onEditKeyDown(event) {
         if (event.key === "Enter") {
             this.onAddNewValue();
         }
     }
+
     onAddNewValue() {
         if (this.state.value !== null) {
             if (this.props.definition.multiple) {
@@ -163,6 +177,7 @@ export class FormPropertyMultiVideo extends React.Component {
             }
         }
     }
+
     remove(value) {
         const current = new Set(this.state.current);
         const remove = new Set(this.state.remove);
@@ -174,6 +189,7 @@ export class FormPropertyMultiVideo extends React.Component {
         newRemove.sort();
         this.setState({current: newCurrent, remove: newRemove});
     }
+
     removeAll() {
         const remove = new Set(this.state.remove);
         this.state.current.forEach(remove.add, remove);
@@ -182,6 +198,7 @@ export class FormPropertyMultiVideo extends React.Component {
         newRemove.sort();
         this.setState({current: newCurrent, remove: newRemove});
     }
+
     add(value) {
         if (this.props.definition.multiple) {
             const current = new Set(this.state.current);
@@ -202,6 +219,7 @@ export class FormPropertyMultiVideo extends React.Component {
             this.setState({remove, current, add});
         }
     }
+
     addAll() {
         const add = new Set(this.state.add);
         this.state.current.forEach(add.add, add);
@@ -210,6 +228,7 @@ export class FormPropertyMultiVideo extends React.Component {
         newAdd.sort();
         this.setState({current: newCurrent, add: newAdd});
     }
+
     unRemove(value) {
         const current = new Set(this.state.current);
         const remove = new Set(this.state.remove);
@@ -221,6 +240,7 @@ export class FormPropertyMultiVideo extends React.Component {
         newRemove.sort();
         this.setState({current: newCurrent, remove: newRemove});
     }
+
     unRemoveAll() {
         const current = new Set(this.state.current);
         this.state.remove.forEach(current.add, current);
@@ -229,6 +249,7 @@ export class FormPropertyMultiVideo extends React.Component {
         newCurrent.sort();
         this.setState({current: newCurrent, remove: newRemove});
     }
+
     unAdd(value) {
         const add = new Set(this.state.add);
         add.delete(value);
@@ -244,6 +265,7 @@ export class FormPropertyMultiVideo extends React.Component {
             this.setState({add: newAdd});
         }
     }
+
     unAddAll() {
         const current = new Set(this.state.current);
         for (let value of this.state.add) {
@@ -256,6 +278,7 @@ export class FormPropertyMultiVideo extends React.Component {
         newCurrent.sort();
         this.setState({current: newCurrent, add: newAdd});
     }
+
     onClose(yes) {
         this.props.onClose(yes ? {add: this.state.add, remove: this.state.remove} : null);
     }

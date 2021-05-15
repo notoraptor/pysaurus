@@ -1,4 +1,4 @@
-import {SetInput, ComponentController} from "../components/SetInput.js";
+import {ComponentController, SetInput} from "../components/SetInput.js";
 import {Dialog} from "../dialogs/Dialog.js";
 import {Cell} from "../components/Cell.js";
 import {FormRenameProperty} from "../forms/FormRenameProperty.js";
@@ -43,11 +43,14 @@ export class PropertiesPage extends React.Component {
         this.renameProperty = this.renameProperty.bind(this);
         this.getDefaultInputState = this.getDefaultInputState.bind(this);
     }
+
     render() {
         return (
             <div id="properties">
                 <h2 className="horizontal">
-                    <div className="back"><button onClick={this.back}>&#11164;</button></div>
+                    <div className="back">
+                        <button onClick={this.back}>&#11164;</button>
+                    </div>
                     <div className="title">Properties Management</div>
                 </h2>
                 <hr/>
@@ -125,11 +128,17 @@ export class PropertiesPage extends React.Component {
             </div>
         );
     }
+
     renderPropTypes() {
         return (
             <table>
                 <thead>
-                <tr><th>Name</th><th>Type</th><th>Default</th><th>Options</th></tr>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Default</th>
+                    <th>Options</th>
+                </tr>
                 </thead>
                 <tbody>
                 {this.state.definitions.map((def, index) => (
@@ -143,7 +152,7 @@ export class PropertiesPage extends React.Component {
                                 : ''}
                         </td>
                         <td className="default">
-                            {(function() {
+                            {(function () {
                                 if (def.multiple) {
                                     return `{${def.defaultValue.join(', ')}}`;
                                 } else if (def.type === "str") {
@@ -154,12 +163,26 @@ export class PropertiesPage extends React.Component {
                             })()}
                         </td>
                         <td className="options">
-                            <div><button className="delete" onClick={() => this.deleteProperty(def.name)}>delete</button></div>
-                            <div><button className="rename" onClick={() => this.renameProperty(def.name)}>rename</button></div>
+                            <div>
+                                <button className="delete" onClick={() => this.deleteProperty(def.name)}>delete</button>
+                            </div>
+                            <div>
+                                <button className="rename" onClick={() => this.renameProperty(def.name)}>rename</button>
+                            </div>
                             {def.multiple ? (
-                                <div><button className="convert-to-unique" onClick={() => this.convertPropertyToUnique(def.name)}>convert to unique</button></div>
+                                <div>
+                                    <button className="convert-to-unique"
+                                            onClick={() => this.convertPropertyToUnique(def.name)}>
+                                        convert to unique
+                                    </button>
+                                </div>
                             ) : (
-                                <div><button className="convert-to-multiple" onClick={() => this.convertPropertyToMultiple(def.name)}>convert to multiple</button></div>
+                                <div>
+                                    <button className="convert-to-multiple"
+                                            onClick={() => this.convertPropertyToMultiple(def.name)}>
+                                        convert to multiple
+                                    </button>
+                                </div>
                             )}
                         </td>
                     </tr>
@@ -168,6 +191,7 @@ export class PropertiesPage extends React.Component {
             </table>
         );
     }
+
     renderDefaultInput() {
         if (this.state.enumeration) {
             const controller = new ComponentController(
@@ -196,33 +220,41 @@ export class PropertiesPage extends React.Component {
         if (this.state.type !== value)
             this.setState({type: value, enumeration: false, defaultValue: getDefaultValue(value), multiple: false});
     }
+
     back() {
         this.props.app.loadVideosPage();
     }
+
     onChangeName(event) {
         const name = event.target.value;
         if (this.state.name !== name)
             this.setState({name});
     }
+
     onChangeType(event) {
         this.setType(event.target.value);
     }
+
     onChangeDefault(event) {
         const defaultValue = event.target.value;
         if (this.state.defaultValue !== defaultValue)
             this.setState({defaultValue});
     }
+
     onChangeMultiple(event) {
         this.setState({multiple: event.target.checked});
     }
+
     onChangeEnumeration(event) {
         const enumeration = event.target.checked;
         const defaultValue = enumeration ? [] : getDefaultValue(this.state.type);
         this.setState({enumeration, defaultValue});
     }
+
     reset() {
         this.setState(this.getDefaultInputState());
     }
+
     submit() {
         try {
             let definition = this.state.defaultValue;
@@ -239,6 +271,7 @@ export class PropertiesPage extends React.Component {
             window.alert(exception.toString());
         }
     }
+
     deleteProperty(name) {
         this.props.app.loadDialog(`Delete property "${name}"?`, onClose => (
             <Dialog yes={'delete'} no={'cancel'} onClose={yes => {
@@ -259,6 +292,7 @@ export class PropertiesPage extends React.Component {
             </Dialog>
         ));
     }
+
     convertPropertyToUnique(name) {
         this.props.app.loadDialog(`Convert to unique property "${name}"?`, onClose => (
             <Dialog yes={'convert to unique'} no={'cancel'} onClose={yes => {
@@ -279,6 +313,7 @@ export class PropertiesPage extends React.Component {
             </Dialog>
         ));
     }
+
     convertPropertyToMultiple(name) {
         this.props.app.loadDialog(`Convert to multiple property "${name}"?`, onClose => (
             <Dialog yes={'convert to multiple'} no={'cancel'} onClose={yes => {
@@ -299,6 +334,7 @@ export class PropertiesPage extends React.Component {
             </Dialog>
         ));
     }
+
     renameProperty(name) {
         this.props.app.loadDialog(`Rename property "${name}"?`, onClose => (
             <FormRenameProperty title={name} onClose={newName => {
@@ -312,9 +348,10 @@ export class PropertiesPage extends React.Component {
                         })
                         .catch(backend_error);
                 }
-            }} />
+            }}/>
         ));
     }
+
     getDefaultInputState() {
         const defaultType = 'str';
         return {

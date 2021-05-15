@@ -1,7 +1,7 @@
 System.register(["./pages/Test.js", "./pages/HomePage.js", "./pages/VideosPage.js", "./pages/PropertiesPage.js", "./dialogs/FancyBox.js", "./utils/constants.js"], function (_export, _context) {
   "use strict";
 
-  var Test, HomePage, VideosPage, PropertiesPage, FancyBox, VIDEO_DEFAULT_PAGE_SIZE, VIDEO_DEFAULT_PAGE_NUMBER, App;
+  var Test, HomePage, VideosPage, PropertiesPage, FancyBox, VIDEO_DEFAULT_PAGE_NUMBER, VIDEO_DEFAULT_PAGE_SIZE, App;
 
   _export("App", void 0);
 
@@ -17,8 +17,8 @@ System.register(["./pages/Test.js", "./pages/HomePage.js", "./pages/VideosPage.j
     }, function (_dialogsFancyBoxJs) {
       FancyBox = _dialogsFancyBoxJs.FancyBox;
     }, function (_utilsConstantsJs) {
-      VIDEO_DEFAULT_PAGE_SIZE = _utilsConstantsJs.VIDEO_DEFAULT_PAGE_SIZE;
       VIDEO_DEFAULT_PAGE_NUMBER = _utilsConstantsJs.VIDEO_DEFAULT_PAGE_NUMBER;
+      VIDEO_DEFAULT_PAGE_SIZE = _utilsConstantsJs.VIDEO_DEFAULT_PAGE_SIZE;
     }],
     execute: function () {
       _export("App", App = class App extends React.Component {

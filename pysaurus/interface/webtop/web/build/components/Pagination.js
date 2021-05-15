@@ -44,13 +44,13 @@ System.register(["../forms/FormGoToPage.js", "../dialogs/DialogSearch.js"], func
             className: "previous",
             disabled: pageNumber === 0,
             onClick: this.onPrevious
-          }, "<"), ' ', /*#__PURE__*/React.createElement("span", {
+          }, "<"), /*#__PURE__*/React.createElement("span", {
             className: "go",
             onClick: this.props.onSearch ? this.look : this.look
-          }, Utils.sentence(singular)), ' ', /*#__PURE__*/React.createElement("span", {
+          }, Utils.sentence(singular)), /*#__PURE__*/React.createElement("span", {
             className: "go",
             onClick: this.go
-          }, pageNumber + 1, "/", nbPages), ' ', /*#__PURE__*/React.createElement("button", {
+          }, pageNumber + 1, "/", nbPages), /*#__PURE__*/React.createElement("button", {
             className: "next",
             disabled: pageNumber === nbPages - 1,
             onClick: this.onNext

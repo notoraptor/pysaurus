@@ -13,6 +13,7 @@ export class FormSearch extends React.Component {
         this.onChangeCond = this.onChangeCond.bind(this);
         this.onInput = this.onInput.bind(this);
     }
+
     render() {
         return (
             <form className="form-search">
@@ -58,15 +59,19 @@ export class FormSearch extends React.Component {
             </form>
         );
     }
+
     componentDidMount() {
         document.querySelector('#input-search').focus();
     }
+
     onFocusInput(event) {
         event.target.select();
     }
+
     onChangeInput(event) {
         this.setState({text: event.target.value, cond: ''});
     }
+
     onChangeCond(event) {
         const text = this.state.text;
         const cond = event.target.value;
@@ -75,6 +80,7 @@ export class FormSearch extends React.Component {
                 this.props.onClose({text, cond});
         });
     }
+
     onInput(event) {
         if (event.key === "Enter") {
             if (this.state.text.length) {

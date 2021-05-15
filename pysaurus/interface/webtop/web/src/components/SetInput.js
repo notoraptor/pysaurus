@@ -1,10 +1,21 @@
 class SetController {
-    constructor() {}
-    size() {}
-    get(index) {}
-    has(value) {}
-    add(value) {}
-    remove(value) {}
+    constructor() {
+    }
+
+    size() {
+    }
+
+    get(index) {
+    }
+
+    has(value) {
+    }
+
+    add(value) {
+    }
+
+    remove(value) {
+    }
 }
 
 export class ComponentController extends SetController {
@@ -14,17 +25,21 @@ export class ComponentController extends SetController {
         this.field = field;
         this.parser = parser;
     }
+
     size() {
         return this.app.state[this.field].length;
     }
+
     get(index) {
         return this.app.state[this.field][index];
     }
+
     has(value) {
         if (this.parser)
             value = this.parser(value);
         return this.app.state[this.field].indexOf(value) >= 0;
     }
+
     add(value) {
         const arr = this.app.state[this.field].slice();
         if (this.parser)
@@ -32,6 +47,7 @@ export class ComponentController extends SetController {
         arr.push(value);
         this.app.setState({[this.field]: arr});
     }
+
     remove(toRemove) {
         if (this.parser)
             toRemove = this.parser(toRemove);
@@ -57,36 +73,40 @@ export class SetInput extends React.Component {
         this.add = this.add.bind(this);
         this.remove = this.remove.bind(this);
     }
+
     render() {
         return (
             <div className="set-input">
                 <table>
                     <tbody>
-                        {this.renderList()}
-                        <tr className="form">
-                            <td className="input">
-                                {this.props.values ? (
-                                    <select value={this.state.add} onChange={this.onChangeAdd}>
-                                        {this.props.values.map((value, index) => (
-                                            <option key={index} value={value}>{value}</option>
-                                        ))}
-                                    </select>
-                                ) : (
-                                    <input type="text"
-                                           value={this.state.add}
-                                           onChange={this.onChangeAdd}
-                                           onKeyDown={this.onInputAdd}
-                                           size="10"
-                                           {...(this.props.identifier ? {id: this.props.identifier} : {})}/>
-                                )}
-                            </td>
-                            <td className="action"><button className="add" onClick={this.onAdd}>+</button></td>
-                        </tr>
+                    {this.renderList()}
+                    <tr className="form">
+                        <td className="input">
+                            {this.props.values ? (
+                                <select value={this.state.add} onChange={this.onChangeAdd}>
+                                    {this.props.values.map((value, index) => (
+                                        <option key={index} value={value}>{value}</option>
+                                    ))}
+                                </select>
+                            ) : (
+                                <input type="text"
+                                       value={this.state.add}
+                                       onChange={this.onChangeAdd}
+                                       onKeyDown={this.onInputAdd}
+                                       size="10"
+                                       {...(this.props.identifier ? {id: this.props.identifier} : {})}/>
+                            )}
+                        </td>
+                        <td className="action">
+                            <button className="add" onClick={this.onAdd}>+</button>
+                        </td>
+                    </tr>
                     </tbody>
                 </table>
             </div>
         );
     }
+
     renderList() {
         const output = [];
         const controller = this.props.controller;
@@ -96,7 +116,9 @@ export class SetInput extends React.Component {
             output.push(
                 <tr className="item" key={i}>
                     <td className="label">{value.toString()}</td>
-                    <td className="action"><button className="remove" onClick={() => this.remove(value)}>-</button></td>
+                    <td className="action">
+                        <button className="remove" onClick={() => this.remove(value)}>-</button>
+                    </td>
                 </tr>
             );
         }
@@ -106,14 +128,17 @@ export class SetInput extends React.Component {
     onChangeAdd(event) {
         this.setState({add: event.target.value});
     }
+
     onInputAdd(event) {
         if (event.key === "Enter") {
             this.add(this.state.add);
         }
     }
+
     onAdd() {
         this.add(this.state.add);
     }
+
     add(value) {
         if (!value.length)
             return;
@@ -127,6 +152,7 @@ export class SetInput extends React.Component {
             window.alert(exception.toString());
         }
     }
+
     remove(value) {
         const controller = this.props.controller;
         try {

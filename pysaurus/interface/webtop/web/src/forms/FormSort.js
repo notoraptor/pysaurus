@@ -13,6 +13,7 @@ export class FormSort extends React.Component {
         this.removeCriterion = this.removeCriterion.bind(this);
         this.submit = this.submit.bind(this);
     }
+
     render() {
         return (
             <div className="form" id="form-sort">
@@ -29,6 +30,7 @@ export class FormSort extends React.Component {
             </div>
         );
     }
+
     renderSorting() {
         return this.state.sorting.map((def, index) => {
             const direction = def.charAt(0);
@@ -39,34 +41,45 @@ export class FormSort extends React.Component {
                 <p key={index} className="sorting">
                     <button className="button-remove-sort" onClick={() => this.removeCriterion(index)}>-</button>
                     <select value={field} onChange={(event) => this.setField(index, event.target.value)}>
-                        {SORTED_FIELDS_AND_TITLES.map((entry, fieldIndex) => <option key={fieldIndex} value={entry[0]}>{entry[1]}</option>)}
+                        {SORTED_FIELDS_AND_TITLES.map(
+                            (entry, fieldIndex) => (
+                                <option key={fieldIndex} value={entry[0]}>{entry[1]}</option>
+                            ))}
                     </select>
-                    <input type="checkbox" id={reverseID} checked={reverse} onChange={event => this.setReverse(index, event.target.checked)}/>
+                    <input type="checkbox"
+                           id={reverseID}
+                           checked={reverse}
+                           onChange={event => this.setReverse(index, event.target.checked)}/>
                     <label htmlFor={reverseID}>reverse</label>
                 </p>
             );
         })
     };
+
     setField(index, value) {
         const sorting = this.state.sorting.slice();
         sorting[index] = `+${value}`;
         this.setState({sorting});
     }
+
     setReverse(index, checked) {
         const sorting = this.state.sorting.slice();
         sorting[index] = (checked ? '-' : '+') + sorting[index].substr(1);
         this.setState({sorting});
     }
+
     addCriterion() {
         const sorting = this.state.sorting.slice();
         sorting.push('+title');
         this.setState({sorting});
     }
+
     removeCriterion(index) {
         const sorting = this.state.sorting.slice();
         sorting.splice(index, 1);
         this.setState({sorting});
     }
+
     submit() {
         const sorting = [];
         for (let def of this.state.sorting) {

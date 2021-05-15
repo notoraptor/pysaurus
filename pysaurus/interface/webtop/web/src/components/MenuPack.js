@@ -3,6 +3,7 @@ export class MenuPack extends React.Component {
         // title: str
         super(props);
     }
+
     render() {
         return (
             <div className="menu-pack">

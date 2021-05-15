@@ -1,6 +1,6 @@
 import {MenuPack} from "../components/MenuPack.js";
 import {PAGE_SIZES} from "../utils/constants.js";
-import {SetInput, ComponentController} from "../components/SetInput.js";
+import {ComponentController, SetInput} from "../components/SetInput.js";
 import {Dialog} from "../dialogs/Dialog.js";
 import {Cross} from "../components/Cross.js";
 import {MenuItem} from "../components/MenuItem.js";
@@ -16,6 +16,7 @@ export class Test extends React.Component {
             arr: ['a', 'b', 'ccc']
         };
     }
+
     render() {
         const c = new ComponentController(this, 'arr');
         return (
@@ -34,12 +35,15 @@ export class Test extends React.Component {
                         {PAGE_SIZES.map((count, index) => (
                             <MenuItemCheck key={index}
                                            checked={this.state.pageSize === count}
-                                           action={checked => {if (checked) this.setState({pageSize: count});}}>
+                                           action={checked => {
+                                               if (checked) this.setState({pageSize: count});
+                                           }}>
                                 {count} video{count > 1 ? 's' : ''} per page
                             </MenuItemCheck>
                         ))}
                     </Menu>
-                    <MenuItemCheck checked={this.state.confirmDeletion} action={checked => this.setState({confirmDeletion: checked})}>
+                    <MenuItemCheck checked={this.state.confirmDeletion}
+                                   action={checked => this.setState({confirmDeletion: checked})}>
                         confirm deletion for entries not found
                     </MenuItemCheck>
                 </MenuPack>
@@ -50,6 +54,7 @@ export class Test extends React.Component {
             </div>
         );
     }
+
     fancy() {
         this.props.app.loadDialog("Test fancy box!", onClose => (
             <Dialog onClose={yes => {
