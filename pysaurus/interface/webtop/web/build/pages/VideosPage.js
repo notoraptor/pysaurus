@@ -1,58 +1,7 @@
 System.register(["../utils/constants.js", "../components/MenuPack.js", "../components/Pagination.js", "../pageComponents/Video.js", "../forms/FormSourceVideo.js", "../forms/FormGroup.js", "../forms/FormSearch.js", "../forms/FormSort.js", "../pageComponents/GroupView.js", "../forms/FormEditPropertyValue.js", "../forms/FormFillKeywords.js", "../forms/FormPropertyMultiVideo.js", "../components/Collapsable.js", "../components/Cross.js", "../components/SettingIcon.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/Menu.js"], function (_export, _context) {
   "use strict";
 
-  var PAGE_SIZES, SEARCH_TYPE_TITLE, SOURCE_TREE, MenuPack, Pagination, Video, FormSourceVideo, FormGroup, FormSearch, FormSort, GroupView, FormEditPropertyValue, FormFillKeywords, FormPropertyMultiVideo, Collapsable, Cross, SettingIcon, MenuItem, MenuItemCheck, Menu, Filter, VideosPage, INITIAL_SOURCES, SHORTCUTS, SPECIAL_KEYS;
-
-  function compareSources(s1, s2) {
-    if (s1.length !== s2.length) return false;
-
-    for (let i = 0; i < s1.length; ++i) {
-      const l1 = s1[i];
-      const l2 = s2[i];
-      if (l1.length !== l2.length) return false;
-
-      for (let j = 0; j < l1.length; ++j) {
-        if (l1[j] !== l2[j]) return false;
-      }
-    }
-
-    return true;
-  }
-
-  function assertUniqueShortcuts() {
-    const duplicates = {};
-
-    for (let key of Object.keys(SHORTCUTS)) {
-      const value = SHORTCUTS[key];
-      if (duplicates.hasOwnProperty(value)) throw new Error(`Duplicated shortcut ${value} for ${duplicates[value]} and ${key}.`);
-      duplicates[value] = key;
-    }
-  }
-
-  /**
-   * @param event {KeyboardEvent}
-   * @param shortcut {string}
-   */
-  function shortcutPressed(event, shortcut) {
-    const pieces = shortcut.split('+');
-    if (!pieces.length) return false;
-    if (event.key.toLowerCase() !== pieces[pieces.length - 1].toLowerCase()) return false;
-    const specialKeys = new Set();
-
-    for (let i = 0; i < pieces.length - 1; ++i) {
-      const key = pieces[i].toLowerCase();
-      console.log(`key ${key} has ${SPECIAL_KEYS.hasOwnProperty(key)} event ${event[SPECIAL_KEYS[key]]}`);
-      if (!SPECIAL_KEYS.hasOwnProperty(key) || !event[SPECIAL_KEYS[key]]) return false;
-      specialKeys.add(SPECIAL_KEYS[key]);
-    }
-
-    for (let key of Object.keys(SPECIAL_KEYS)) {
-      if (!specialKeys.has(SPECIAL_KEYS[key]) && event[SPECIAL_KEYS[key]]) return false;
-    }
-
-    console.log(pieces);
-    return true;
-  }
+  var PAGE_SIZES, SEARCH_TYPE_TITLE, SOURCE_TREE, MenuPack, Pagination, Video, FormSourceVideo, FormGroup, FormSearch, FormSort, GroupView, FormEditPropertyValue, FormFillKeywords, FormPropertyMultiVideo, Collapsable, Cross, SettingIcon, MenuItem, MenuItemCheck, Menu, Shortcut, Action, Actions, Filter, VideosPage, INITIAL_SOURCES;
 
   _export("VideosPage", void 0);
 
@@ -98,26 +47,100 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
     }],
     execute: function () {
       INITIAL_SOURCES = [];
-      SHORTCUTS = {
-        select: "Ctrl+T",
-        group: "Ctrl+G",
-        search: "Ctrl+F",
-        sort: "Ctrl+S",
-        unselect: "Ctrl+Shift+T",
-        ungroup: "Ctrl+Shift+G",
-        unsearch: "Ctrl+Shift+F",
-        unsort: "Ctrl+Shift+S",
-        reload: "Ctrl+R",
-        manageProperties: "Ctrl+P",
-        openRandomVideo: "Ctrl+O"
+      Shortcut = class Shortcut {
+        /**
+         * Initialize.
+         * @param shortcut {string}
+         */
+        constructor(shortcut) {
+          const pieces = shortcut.split("+").map(piece => piece.toLowerCase());
+          const specialKeys = new Set(pieces.slice(0, pieces.length - 1));
+          this.str = shortcut;
+          this.ctrl = specialKeys.has("ctrl");
+          this.alt = specialKeys.has("alt");
+          this.shift = specialKeys.has("shift") || specialKeys.has("maj");
+          this.key = pieces[pieces.length - 1];
+        }
+        /**
+         * Returns true if event corresponds to shortcut.
+         * @param event {KeyboardEvent}
+         */
+
+
+        isPressed(event) {
+          return this.key === event.key.toLowerCase() && this.ctrl === event.ctrlKey && this.alt === event.altKey && this.shift === event.shiftKey;
+        }
+
       };
-      SPECIAL_KEYS = {
-        ctrl: "ctrlKey",
-        alt: "altKey",
-        shift: "shiftKey",
-        maj: "shiftKey"
+      Action = class Action {
+        /**
+         * Initialize.
+         * @param shortcut {string}
+         * @param title {string}
+         * @param callback {function}
+         */
+        constructor(shortcut, title, callback) {
+          this.shortcut = new Shortcut(shortcut);
+          this.title = title;
+          this.callback = callback;
+        }
+
+        toMenuItem(title = undefined) {
+          return /*#__PURE__*/React.createElement(MenuItem, {
+            shortcut: this.shortcut.str,
+            action: this.callback
+          }, title || this.title);
+        }
+
+        toSettingIcon(title = undefined) {
+          return /*#__PURE__*/React.createElement(SettingIcon, {
+            title: `${title || this.title} (${this.shortcut.str})`,
+            action: this.callback
+          });
+        }
+
+        toCross(title = undefined) {
+          return /*#__PURE__*/React.createElement(Cross, {
+            title: `${title || this.title} (${this.shortcut.str})`,
+            action: this.callback
+          });
+        }
+
       };
-      assertUniqueShortcuts();
+      Actions = class Actions {
+        /**
+         * @param actions {Object.<string, Action>}
+         */
+        constructor(actions) {
+          /** @type {Object.<string, Action>} */
+          this.actions = actions;
+          const shortcutToName = {};
+
+          for (let name of Object.keys(actions)) {
+            const shortcut = actions[name].shortcut.str;
+            if (shortcutToName.hasOwnProperty(shortcut)) throw new Error(`Duplicated shortcut ${shortcut} for ${shortcutToName[shortcut]} and ${name}`);
+            shortcutToName[shortcut] = name;
+          }
+
+          this.onKeyPressed = this.onKeyPressed.bind(this);
+        }
+        /**
+         * Callback to trigger shortcuts on keyboard events.
+         * @param event {KeyboardEvent}
+         * @returns {boolean}
+         */
+
+
+        onKeyPressed(event) {
+          for (let action of Object.values(this.actions)) {
+            if (action.shortcut.isPressed(event)) {
+              setTimeout(() => action.callback(), 0);
+              return true;
+            }
+          }
+        }
+
+      };
       Filter = class Filter extends React.Component {
         constructor(props) {
           // page: VideosPage
@@ -134,41 +157,18 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           const sortingIsDefault = sorting.length === 1 && sorting[0] === '-date';
           const selectionSize = backend.selection.size;
           const selectedAll = backend.realNbVideos === selectionSize;
+          const features = app.features;
           return /*#__PURE__*/React.createElement("table", {
             className: "filter"
           }, /*#__PURE__*/React.createElement("tbody", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, sources.map((source, index) => /*#__PURE__*/React.createElement("div", {
             key: index
-          }, source.join(' ').replace('_', ' ')))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(SettingIcon, {
-            title: `Select sources ... (${SHORTCUTS.select})`,
-            action: app.selectVideos
-          })), INITIAL_SOURCES.length && !compareSources(INITIAL_SOURCES[0], sources) ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Cross, {
-            title: `Reset selection (${SHORTCUTS.unselect})`,
-            action: app.unselectVideos
-          })) : '')), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, groupDef ? /*#__PURE__*/React.createElement("div", null, "Grouped") : /*#__PURE__*/React.createElement("div", {
+          }, source.join(' ').replace('_', ' ')))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, features.actions.select.toSettingIcon()), INITIAL_SOURCES.length && !Filter.compareSources(INITIAL_SOURCES[0], sources) ? /*#__PURE__*/React.createElement("div", null, features.actions.unselect.toCross()) : '')), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, groupDef ? /*#__PURE__*/React.createElement("div", null, "Grouped") : /*#__PURE__*/React.createElement("div", {
             className: "no-filter"
-          }, "Ungrouped")), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(SettingIcon, {
-            title: (groupDef ? 'Edit ...' : 'Group ...') + ` (${SHORTCUTS.group})`,
-            action: app.groupVideos
-          })), groupDef ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Cross, {
-            title: `Reset group (${SHORTCUTS.ungroup})`,
-            action: app.resetGroup
-          })) : '')), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, searchDef ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", null, "Searched ", SEARCH_TYPE_TITLE[searchDef.cond]), /*#__PURE__*/React.createElement("div", null, "\"", /*#__PURE__*/React.createElement("strong", null, searchDef.text), "\"")) : /*#__PURE__*/React.createElement("div", {
+          }, "Ungrouped")), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, features.actions.group.toSettingIcon(groupDef ? 'Edit ...' : 'Group ...')), groupDef ? /*#__PURE__*/React.createElement("div", null, features.actions.ungroup.toCross()) : '')), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, searchDef ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", null, "Searched ", SEARCH_TYPE_TITLE[searchDef.cond]), /*#__PURE__*/React.createElement("div", null, "\"", /*#__PURE__*/React.createElement("strong", null, searchDef.text), "\"")) : /*#__PURE__*/React.createElement("div", {
             className: "no-filter"
-          }, "No search")), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(SettingIcon, {
-            title: (searchDef ? 'Edit ...' : 'Search ...') + ` (${SHORTCUTS.search})`,
-            action: app.searchVideos
-          })), searchDef ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Cross, {
-            title: `reset search (${SHORTCUTS.unsearch})`,
-            action: app.resetSearch
-          })) : '')), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, "Sorted by"), sorting.map((val, i) => /*#__PURE__*/React.createElement("div", {
+          }, "No search")), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, features.actions.search.toSettingIcon(searchDef ? 'Edit ...' : 'Search ...')), searchDef ? /*#__PURE__*/React.createElement("div", null, features.actions.unsearch.toCross()) : '')), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, "Sorted by"), sorting.map((val, i) => /*#__PURE__*/React.createElement("div", {
             key: i
-          }, /*#__PURE__*/React.createElement("strong", null, val.substr(1)), ' ', val[0] === '-' ? /*#__PURE__*/React.createElement("span", null, "\u25BC") : /*#__PURE__*/React.createElement("span", null, "\u25B2")))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(SettingIcon, {
-            title: `Sort ... (${SHORTCUTS.sort})`,
-            action: app.sortVideos
-          })), sortingIsDefault ? '' : /*#__PURE__*/React.createElement(Cross, {
-            title: `reset sorting (${SHORTCUTS.unsort})`,
-            action: app.resetSort
-          }))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, selectionSize ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", null, "Selected"), /*#__PURE__*/React.createElement("div", null, selectedAll ? 'all' : '', " ", selectionSize, " ", selectedAll ? '' : `/ ${backend.nbVideos}`, " video", selectionSize < 2 ? '' : 's'), /*#__PURE__*/React.createElement("div", {
+          }, /*#__PURE__*/React.createElement("strong", null, val.substr(1)), ' ', val[0] === '-' ? /*#__PURE__*/React.createElement("span", null, "\u25BC") : /*#__PURE__*/React.createElement("span", null, "\u25B2")))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, features.actions.sort.toSettingIcon()), sortingIsDefault ? '' : /*#__PURE__*/React.createElement("div", null, features.actions.unsort.toCross()))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, selectionSize ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", null, "Selected"), /*#__PURE__*/React.createElement("div", null, selectedAll ? 'all' : '', " ", selectionSize, " ", selectedAll ? '' : `/ ${backend.nbVideos}`, " video", selectionSize < 2 ? '' : 's'), /*#__PURE__*/React.createElement("div", {
             className: "mb-1"
           }, /*#__PURE__*/React.createElement("button", {
             onClick: app.displayOnlySelected
@@ -189,6 +189,22 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           }) : ''))));
         }
 
+        static compareSources(s1, s2) {
+          if (s1.length !== s2.length) return false;
+
+          for (let i = 0; i < s1.length; ++i) {
+            const l1 = s1[i];
+            const l2 = s2[i];
+            if (l1.length !== l2.length) return false;
+
+            for (let j = 0; j < l1.length; ++j) {
+              if (l1[j] !== l2[j]) return false;
+            }
+          }
+
+          return true;
+        }
+
       };
 
       _export("VideosPage", VideosPage = class VideosPage extends React.Component {
@@ -203,9 +219,9 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             selection: new Set(),
             displayOnlySelected: false
           };
+          this.backendGroupVideos = this.backendGroupVideos.bind(this);
           this.changeGroup = this.changeGroup.bind(this);
           this.changePage = this.changePage.bind(this);
-          this.checkShortcut = this.checkShortcut.bind(this);
           this.classifierConcatenate = this.classifierConcatenate.bind(this);
           this.classifierSelectGroup = this.classifierSelectGroup.bind(this);
           this.classifierUnstack = this.classifierUnstack.bind(this);
@@ -215,6 +231,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           this.editPropertiesForManyVideos = this.editPropertiesForManyVideos.bind(this);
           this.editPropertyValue = this.editPropertyValue.bind(this);
           this.fillWithKeywords = this.fillWithKeywords.bind(this);
+          this.focusPropertyValue = this.focusPropertyValue.bind(this);
           this.groupVideos = this.groupVideos.bind(this);
           this.manageProperties = this.manageProperties.bind(this);
           this.onVideoSelection = this.onVideoSelection.bind(this);
@@ -225,6 +242,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           this.resetSearch = this.resetSearch.bind(this);
           this.resetSort = this.resetSort.bind(this);
           this.resetStatus = this.resetStatus.bind(this);
+          this.reverseClassifierPath = this.reverseClassifierPath.bind(this);
           this.scrollTop = this.scrollTop.bind(this);
           this.searchVideos = this.searchVideos.bind(this);
           this.selectAll = this.selectAll.bind(this);
@@ -235,24 +253,21 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           this.unselectVideos = this.unselectVideos.bind(this);
           this.updatePage = this.updatePage.bind(this);
           this.updateStatus = this.updateStatus.bind(this);
-          this.reverseClassifierPath = this.reverseClassifierPath.bind(this);
-          this.focusPropertyValue = this.focusPropertyValue.bind(this);
-          this.backendGroupVideos = this.backendGroupVideos.bind(this);
           this.parametersToState(this.props.parameters, this.state);
           this.callbackIndex = -1;
-          this.shortcuts = {
-            [SHORTCUTS.select]: this.selectVideos,
-            [SHORTCUTS.group]: this.groupVideos,
-            [SHORTCUTS.search]: this.searchVideos,
-            [SHORTCUTS.unselect]: this.unselectVideos,
-            [SHORTCUTS.ungroup]: this.resetGroup,
-            [SHORTCUTS.unsearch]: this.resetSearch,
-            [SHORTCUTS.unsort]: this.resetSort,
-            [SHORTCUTS.sort]: this.sortVideos,
-            [SHORTCUTS.reload]: this.reloadDatabase,
-            [SHORTCUTS.manageProperties]: this.manageProperties,
-            [SHORTCUTS.openRandomVideo]: this.openRandomVideo
-          };
+          this.features = new Actions({
+            select: new Action("Ctrl+T", "Select videos ...", this.selectVideos),
+            group: new Action("Ctrl+G", "Group ...", this.groupVideos),
+            search: new Action("Ctrl+F", "Search ...", this.searchVideos),
+            sort: new Action("Ctrl+S", "Sort ...", this.sortVideos),
+            unselect: new Action("Ctrl+Shift+T", "Reset selection", this.unselectVideos),
+            ungroup: new Action("Ctrl+Shift+G", "Reset group", this.resetGroup),
+            unsearch: new Action("Ctrl+Shift+F", "Reset search", this.resetSearch),
+            unsort: new Action("Ctrl+Shift+S", "Reset sorting", this.resetSort),
+            reload: new Action("Ctrl+R", "Reload database ...", this.reloadDatabase),
+            manageProperties: new Action("Ctrl+P", "Manage properties ...", this.manageProperties),
+            openRandomVideo: new Action("Ctrl+O", "Open random video", this.openRandomVideo)
+          });
         }
 
         render() {
@@ -273,28 +288,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             title: "Options"
           }, /*#__PURE__*/React.createElement(Menu, {
             title: "Filter videos ..."
-          }, /*#__PURE__*/React.createElement(MenuItem, {
-            shortcut: SHORTCUTS.select,
-            action: this.selectVideos
-          }, "Select videos ..."), /*#__PURE__*/React.createElement(MenuItem, {
-            shortcut: SHORTCUTS.group,
-            action: this.groupVideos
-          }, "Group ..."), /*#__PURE__*/React.createElement(MenuItem, {
-            shortcut: SHORTCUTS.search,
-            action: this.searchVideos
-          }, "Search ..."), /*#__PURE__*/React.createElement(MenuItem, {
-            shortcut: SHORTCUTS.sort,
-            action: this.sortVideos
-          }, "Sort ...")), notFound || !nbVideos ? '' : /*#__PURE__*/React.createElement(MenuItem, {
-            shortcut: SHORTCUTS.openRandomVideo,
-            action: this.openRandomVideo
-          }, "Open random video"), /*#__PURE__*/React.createElement(MenuItem, {
-            shortcut: SHORTCUTS.reload,
-            action: this.reloadDatabase
-          }, "Reload database ..."), /*#__PURE__*/React.createElement(MenuItem, {
-            shortcut: SHORTCUTS.manageProperties,
-            action: this.manageProperties
-          }, "Manage properties ..."), stringSetProperties.length ? /*#__PURE__*/React.createElement(MenuItem, {
+          }, this.features.actions.select.toMenuItem(), this.features.actions.group.toMenuItem(), this.features.actions.search.toMenuItem(), this.features.actions.sort.toMenuItem()), notFound || !nbVideos ? '' : this.features.actions.openRandomVideo.toMenuItem(), this.features.actions.reload.toMenuItem(), this.features.actions.manageProperties.toMenuItem(), stringSetProperties.length ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.fillWithKeywords
           }, "Put keywords into a property ...") : '', /*#__PURE__*/React.createElement(Menu, {
             title: "Page size ..."
@@ -411,7 +405,11 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         }
 
         componentDidMount() {
-          this.callbackIndex = KEYBOARD_MANAGER.register(this.checkShortcut);
+          this.callbackIndex = KEYBOARD_MANAGER.register(this.features.onKeyPressed);
+        }
+
+        componentWillUnmount() {
+          KEYBOARD_MANAGER.unregister(this.callbackIndex);
         }
 
         parametersToState(parameters, state) {
@@ -510,23 +508,6 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
 
         resetStatus() {
           this.updateStatus("Ready.");
-        }
-
-        componentWillUnmount() {
-          KEYBOARD_MANAGER.unregister(this.callbackIndex);
-        }
-        /**
-         * @param event {KeyboardEvent}
-         */
-
-
-        checkShortcut(event) {
-          for (let shortcut of Object.values(SHORTCUTS)) {
-            if (shortcutPressed(event, shortcut)) {
-              setTimeout(() => this.shortcuts[shortcut](), 0);
-              return true;
-            }
-          }
         }
 
         unselectVideos() {

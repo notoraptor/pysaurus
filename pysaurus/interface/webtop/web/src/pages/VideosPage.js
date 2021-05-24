@@ -18,78 +18,90 @@ import {MenuItemCheck} from "../components/MenuItemCheck.js";
 import {Menu} from "../components/Menu.js";
 
 const INITIAL_SOURCES = [];
-const SHORTCUTS = {
-    select: "Ctrl+T",
-    group: "Ctrl+G",
-    search: "Ctrl+F",
-    sort: "Ctrl+S",
-    unselect: "Ctrl+Shift+T",
-    ungroup: "Ctrl+Shift+G",
-    unsearch: "Ctrl+Shift+F",
-    unsort: "Ctrl+Shift+S",
-    reload: "Ctrl+R",
-    manageProperties: "Ctrl+P",
-    openRandomVideo: "Ctrl+O",
-};
-const SPECIAL_KEYS = {
-    ctrl: "ctrlKey",
-    alt: "altKey",
-    shift: "shiftKey",
-    maj: "shiftKey",
+
+class Shortcut {
+    /**
+     * Initialize.
+     * @param shortcut {string}
+     */
+    constructor(shortcut) {
+        const pieces = shortcut.split("+").map(piece => piece.toLowerCase());
+        const specialKeys = new Set(pieces.slice(0, pieces.length - 1));
+        this.str = shortcut;
+        this.ctrl = specialKeys.has("ctrl");
+        this.alt = specialKeys.has("alt");
+        this.shift = specialKeys.has("shift") || specialKeys.has("maj");
+        this.key = pieces[pieces.length - 1];
+    }
+
+    /**
+     * Returns true if event corresponds to shortcut.
+     * @param event {KeyboardEvent}
+     */
+    isPressed(event) {
+        return (
+            this.key === event.key.toLowerCase()
+            && this.ctrl === event.ctrlKey
+            && this.alt === event.altKey
+            && this.shift === event.shiftKey
+        );
+    }
 }
 
-function compareSources(s1, s2) {
-    if (s1.length !== s2.length)
-        return false;
-    for (let i = 0; i < s1.length; ++i) {
-        const l1 = s1[i];
-        const l2 = s2[i];
-        if (l1.length !== l2.length)
-            return false;
-        for (let j = 0; j < l1.length; ++j) {
-            if (l1[j] !== l2[j])
-                return false;
+class Action {
+    /**
+     * Initialize.
+     * @param shortcut {string}
+     * @param title {string}
+     * @param callback {function}
+     */
+    constructor(shortcut, title, callback) {
+        this.shortcut = new Shortcut(shortcut);
+        this.title = title;
+        this.callback = callback;
+    }
+    toMenuItem(title = undefined) {
+        return <MenuItem shortcut={this.shortcut.str} action={this.callback}>{title || this.title}</MenuItem>;
+    }
+    toSettingIcon(title = undefined) {
+        return <SettingIcon title={`${title || this.title} (${this.shortcut.str})`} action={this.callback}/>;
+    }
+    toCross(title = undefined) {
+        return <Cross title={`${title || this.title} (${this.shortcut.str})`} action={this.callback}/>;
+    }
+}
+
+class Actions {
+    /**
+     * @param actions {Object.<string, Action>}
+     */
+    constructor(actions) {
+        /** @type {Object.<string, Action>} */
+        this.actions = actions;
+
+        const shortcutToName = {};
+        for (let name of Object.keys(actions)) {
+            const shortcut = actions[name].shortcut.str;
+            if (shortcutToName.hasOwnProperty(shortcut))
+                throw new Error(`Duplicated shortcut ${shortcut} for ${shortcutToName[shortcut]} and ${name}`);
+            shortcutToName[shortcut] = name;
+        }
+        this.onKeyPressed = this.onKeyPressed.bind(this);
+    }
+
+    /**
+     * Callback to trigger shortcuts on keyboard events.
+     * @param event {KeyboardEvent}
+     * @returns {boolean}
+     */
+    onKeyPressed(event) {
+        for (let action of Object.values(this.actions)) {
+            if (action.shortcut.isPressed(event)) {
+                setTimeout(() => action.callback(), 0);
+                return true;
+            }
         }
     }
-    return true;
-}
-
-function assertUniqueShortcuts() {
-    const duplicates = {};
-    for (let key of Object.keys(SHORTCUTS)) {
-        const value = SHORTCUTS[key];
-        if (duplicates.hasOwnProperty(value))
-            throw new Error(`Duplicated shortcut ${value} for ${duplicates[value]} and ${key}.`);
-        duplicates[value] = key;
-    }
-}
-
-assertUniqueShortcuts();
-
-/**
- * @param event {KeyboardEvent}
- * @param shortcut {string}
- */
-function shortcutPressed(event, shortcut) {
-    const pieces = shortcut.split('+');
-    if (!pieces.length)
-        return false;
-    if (event.key.toLowerCase() !== pieces[pieces.length - 1].toLowerCase())
-        return false;
-    const specialKeys = new Set();
-    for (let i = 0; i < pieces.length - 1; ++i) {
-        const key = pieces[i].toLowerCase();
-        console.log(`key ${key} has ${SPECIAL_KEYS.hasOwnProperty(key)} event ${event[SPECIAL_KEYS[key]]}`);
-        if (!SPECIAL_KEYS.hasOwnProperty(key) || !event[SPECIAL_KEYS[key]])
-            return false;
-        specialKeys.add(SPECIAL_KEYS[key]);
-    }
-    for (let key of Object.keys(SPECIAL_KEYS)) {
-        if (!specialKeys.has(SPECIAL_KEYS[key]) && event[SPECIAL_KEYS[key]])
-            return false;
-    }
-    console.log(pieces);
-    return true;
 }
 
 class Filter extends React.Component {
@@ -108,6 +120,7 @@ class Filter extends React.Component {
         const sortingIsDefault = sorting.length === 1 && sorting[0] === '-date';
         const selectionSize = backend.selection.size;
         const selectedAll = backend.realNbVideos === selectionSize;
+        const features = app.features;
         return (
             <table className="filter">
                 <tbody>
@@ -120,13 +133,9 @@ class Filter extends React.Component {
                         ))}
                     </td>
                     <td>
-                        <div><SettingIcon title={`Select sources ... (${SHORTCUTS.select})`} action={app.selectVideos}/>
-                        </div>
-                        {INITIAL_SOURCES.length && !compareSources(INITIAL_SOURCES[0], sources) ? (
-                            <div>
-                                <Cross title={`Reset selection (${SHORTCUTS.unselect})`} action={app.unselectVideos}/>
-                            </div>
-                        ) : ''}
+                        <div>{features.actions.select.toSettingIcon()}</div>
+                        {INITIAL_SOURCES.length && !Filter.compareSources(INITIAL_SOURCES[0], sources) ?
+                            <div>{features.actions.unselect.toCross()}</div> : ''}
                     </td>
                 </tr>
                 <tr>
@@ -136,13 +145,8 @@ class Filter extends React.Component {
                         ) : <div className="no-filter">Ungrouped</div>}
                     </td>
                     <td>
-                        <div>
-                            <SettingIcon title={(groupDef ? 'Edit ...' : 'Group ...') + ` (${SHORTCUTS.group})`}
-                                         action={app.groupVideos}/>
-                        </div>
-                        {groupDef ?
-                            <div><Cross title={`Reset group (${SHORTCUTS.ungroup})`} action={app.resetGroup}/></div> :
-                            ''}
+                        <div>{features.actions.group.toSettingIcon(groupDef ? 'Edit ...' : 'Group ...')}</div>
+                        {groupDef ? <div>{features.actions.ungroup.toCross()}</div> : ''}
                     </td>
                 </tr>
                 <tr>
@@ -155,13 +159,8 @@ class Filter extends React.Component {
                         ) : <div className="no-filter">No search</div>}
                     </td>
                     <td>
-                        <div>
-                            <SettingIcon title={(searchDef ? 'Edit ...' : 'Search ...') + ` (${SHORTCUTS.search})`}
-                                         action={app.searchVideos}/>
-                        </div>
-                        {searchDef ?
-                            <div><Cross title={`reset search (${SHORTCUTS.unsearch})`} action={app.resetSearch}/>
-                            </div> : ''}
+                        <div>{features.actions.search.toSettingIcon(searchDef ? 'Edit ...' : 'Search ...')}</div>
+                        {searchDef ? <div>{features.actions.unsearch.toCross()}</div> : ''}
                     </td>
                 </tr>
                 <tr>
@@ -174,9 +173,8 @@ class Filter extends React.Component {
                             </div>))}
                     </td>
                     <td>
-                        <div><SettingIcon title={`Sort ... (${SHORTCUTS.sort})`} action={app.sortVideos}/></div>
-                        {sortingIsDefault ? '' :
-                            <Cross title={`reset sorting (${SHORTCUTS.unsort})`} action={app.resetSort}/>}
+                        <div>{features.actions.sort.toSettingIcon()}</div>
+                        {sortingIsDefault ? '' : <div>{features.actions.unsort.toCross()}</div>}
                     </td>
                 </tr>
                 <tr>
@@ -218,6 +216,22 @@ class Filter extends React.Component {
             </table>
         );
     }
+
+    static compareSources(s1, s2) {
+        if (s1.length !== s2.length)
+            return false;
+        for (let i = 0; i < s1.length; ++i) {
+            const l1 = s1[i];
+            const l2 = s2[i];
+            if (l1.length !== l2.length)
+                return false;
+            for (let j = 0; j < l1.length; ++j) {
+                if (l1[j] !== l2[j])
+                    return false;
+            }
+        }
+        return true;
+    }
 }
 
 export class VideosPage extends React.Component {
@@ -232,9 +246,9 @@ export class VideosPage extends React.Component {
             selection: new Set(),
             displayOnlySelected: false,
         };
+        this.backendGroupVideos = this.backendGroupVideos.bind(this);
         this.changeGroup = this.changeGroup.bind(this);
         this.changePage = this.changePage.bind(this);
-        this.checkShortcut = this.checkShortcut.bind(this);
         this.classifierConcatenate = this.classifierConcatenate.bind(this);
         this.classifierSelectGroup = this.classifierSelectGroup.bind(this);
         this.classifierUnstack = this.classifierUnstack.bind(this);
@@ -244,6 +258,7 @@ export class VideosPage extends React.Component {
         this.editPropertiesForManyVideos = this.editPropertiesForManyVideos.bind(this);
         this.editPropertyValue = this.editPropertyValue.bind(this);
         this.fillWithKeywords = this.fillWithKeywords.bind(this);
+        this.focusPropertyValue = this.focusPropertyValue.bind(this);
         this.groupVideos = this.groupVideos.bind(this);
         this.manageProperties = this.manageProperties.bind(this);
         this.onVideoSelection = this.onVideoSelection.bind(this);
@@ -254,6 +269,7 @@ export class VideosPage extends React.Component {
         this.resetSearch = this.resetSearch.bind(this);
         this.resetSort = this.resetSort.bind(this);
         this.resetStatus = this.resetStatus.bind(this);
+        this.reverseClassifierPath = this.reverseClassifierPath.bind(this);
         this.scrollTop = this.scrollTop.bind(this);
         this.searchVideos = this.searchVideos.bind(this);
         this.selectAll = this.selectAll.bind(this);
@@ -264,25 +280,22 @@ export class VideosPage extends React.Component {
         this.unselectVideos = this.unselectVideos.bind(this);
         this.updatePage = this.updatePage.bind(this);
         this.updateStatus = this.updateStatus.bind(this);
-        this.reverseClassifierPath = this.reverseClassifierPath.bind(this);
-        this.focusPropertyValue = this.focusPropertyValue.bind(this);
-        this.backendGroupVideos = this.backendGroupVideos.bind(this);
 
         this.parametersToState(this.props.parameters, this.state);
         this.callbackIndex = -1;
-        this.shortcuts = {
-            [SHORTCUTS.select]: this.selectVideos,
-            [SHORTCUTS.group]: this.groupVideos,
-            [SHORTCUTS.search]: this.searchVideos,
-            [SHORTCUTS.unselect]: this.unselectVideos,
-            [SHORTCUTS.ungroup]: this.resetGroup,
-            [SHORTCUTS.unsearch]: this.resetSearch,
-            [SHORTCUTS.unsort]: this.resetSort,
-            [SHORTCUTS.sort]: this.sortVideos,
-            [SHORTCUTS.reload]: this.reloadDatabase,
-            [SHORTCUTS.manageProperties]: this.manageProperties,
-            [SHORTCUTS.openRandomVideo]: this.openRandomVideo,
-        };
+        this.features = new Actions({
+            select: new Action("Ctrl+T", "Select videos ...", this.selectVideos),
+            group: new Action("Ctrl+G", "Group ...", this.groupVideos),
+            search: new Action("Ctrl+F", "Search ...", this.searchVideos),
+            sort: new Action("Ctrl+S", "Sort ...", this.sortVideos),
+            unselect: new Action("Ctrl+Shift+T", "Reset selection", this.unselectVideos),
+            ungroup: new Action("Ctrl+Shift+G", "Reset group", this.resetGroup),
+            unsearch: new Action("Ctrl+Shift+F", "Reset search", this.resetSearch),
+            unsort: new Action("Ctrl+Shift+S", "Reset sorting", this.resetSort),
+            reload: new Action("Ctrl+R", "Reload database ...", this.reloadDatabase),
+            manageProperties: new Action("Ctrl+P", "Manage properties ...", this.manageProperties),
+            openRandomVideo: new Action("Ctrl+O", "Open random video", this.openRandomVideo),
+        });
     }
 
     render() {
@@ -301,19 +314,15 @@ export class VideosPage extends React.Component {
                 <header className="horizontal">
                     <MenuPack title="Options">
                         <Menu title="Filter videos ...">
-                            <MenuItem shortcut={SHORTCUTS.select} action={this.selectVideos}>Select videos
-                                ...</MenuItem>
-                            <MenuItem shortcut={SHORTCUTS.group} action={this.groupVideos}>Group ...</MenuItem>
-                            <MenuItem shortcut={SHORTCUTS.search} action={this.searchVideos}>Search ...</MenuItem>
-                            <MenuItem shortcut={SHORTCUTS.sort} action={this.sortVideos}>Sort ...</MenuItem>
+                            {this.features.actions.select.toMenuItem()}
+                            {this.features.actions.group.toMenuItem()}
+                            {this.features.actions.search.toMenuItem()}
+                            {this.features.actions.sort.toMenuItem()}
                         </Menu>
                         {notFound || !nbVideos ? '' :
-                            <MenuItem shortcut={SHORTCUTS.openRandomVideo} action={this.openRandomVideo}>Open random
-                                video</MenuItem>}
-                        <MenuItem shortcut={SHORTCUTS.reload} action={this.reloadDatabase}>Reload database
-                            ...</MenuItem>
-                        <MenuItem shortcut={SHORTCUTS.manageProperties} action={this.manageProperties}>Manage properties
-                            ...</MenuItem>
+                            this.features.actions.openRandomVideo.toMenuItem()}
+                        {this.features.actions.reload.toMenuItem()}
+                        {this.features.actions.manageProperties.toMenuItem()}
                         {stringSetProperties.length ?
                             <MenuItem action={this.fillWithKeywords}>Put keywords into a property ...</MenuItem> : ''}
                         <Menu title="Page size ...">
@@ -334,13 +343,16 @@ export class VideosPage extends React.Component {
                             <Menu title="Group videos by property ...">{
                                 this.state.properties.map((def, index) => (
                                     <MenuItem key={index}
-                                              action={() => this.backendGroupVideos(`:${def.name}`)}>{def.name}</MenuItem>
+                                              action={() => this.backendGroupVideos(`:${def.name}`)}>
+                                        {def.name}
+                                    </MenuItem>
                                 ))
                             }</Menu>
                         ) : (
                             this.state.properties.map((def, index) => (
-                                <MenuItem key={index} action={() => this.backendGroupVideos(`:${def.name}`)}>Group
-                                    videos by property: {def.name}</MenuItem>
+                                <MenuItem key={index} action={() => this.backendGroupVideos(`:${def.name}`)}>
+                                    Group videos by property: {def.name}
+                                </MenuItem>
                             ))
                         )}
                     </MenuPack>
@@ -442,7 +454,11 @@ export class VideosPage extends React.Component {
     }
 
     componentDidMount() {
-        this.callbackIndex = KEYBOARD_MANAGER.register(this.checkShortcut);
+        this.callbackIndex = KEYBOARD_MANAGER.register(this.features.onKeyPressed);
+    }
+
+    componentWillUnmount() {
+        KEYBOARD_MANAGER.unregister(this.callbackIndex);
     }
 
     parametersToState(parameters, state) {
@@ -530,22 +546,6 @@ export class VideosPage extends React.Component {
 
     resetStatus() {
         this.updateStatus("Ready.");
-    }
-
-    componentWillUnmount() {
-        KEYBOARD_MANAGER.unregister(this.callbackIndex);
-    }
-
-    /**
-     * @param event {KeyboardEvent}
-     */
-    checkShortcut(event) {
-        for (let shortcut of Object.values(SHORTCUTS)) {
-            if (shortcutPressed(event, shortcut)) {
-                setTimeout(() => this.shortcuts[shortcut](), 0);
-                return true;
-            }
-        }
     }
 
     unselectVideos() {

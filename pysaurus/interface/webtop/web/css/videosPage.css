@@ -59,9 +59,11 @@
 #videos.classifier header > * + * {
 	margin-left: 1em;
 }
+/*unused*/
 #videos header .buttons {
 	vertical-align: middle;
 }
+/*unused*/
 #videos header .buttons button {
 	margin-left: 1em;
 	min-width: 20ex;
