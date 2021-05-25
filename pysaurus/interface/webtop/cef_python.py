@@ -41,6 +41,8 @@ def set_javascript_bindings(browser):
     interface = Interface(browser)
     bindings = cef.JavascriptBindings()
     bindings.SetObject("python", interface)
+    for name, value in interface.get_constants().items():
+        bindings.SetProperty(name, value)
     browser.SetJavascriptBindings(bindings)
 
 

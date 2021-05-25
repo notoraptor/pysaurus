@@ -3,7 +3,7 @@ from typing import Optional
 from pysaurus.core.database.database import Database
 from pysaurus.core.database.properties import PropType
 from pysaurus.core.database.video_features import VideoFeatures
-from pysaurus.core.database.video_provider import VideoProvider
+from pysaurus.core.database.video_provider import VideoProvider, SourceLayer
 from pysaurus.core.functions import compute_nb_pages
 
 
@@ -11,6 +11,14 @@ class FeatureAPI:
     def __init__(self):
         self.database = None  # type: Optional[Database]
         self.provider = None  # type: Optional[VideoProvider]
+
+    # Constant getters.
+
+    @classmethod
+    def get_constants(cls):
+        return {
+            "PYTHON_DEFAULT_SOURCES": SourceLayer.DEFAULT_SOURCE_DEF,
+        }
 
     # Provider getters.
 

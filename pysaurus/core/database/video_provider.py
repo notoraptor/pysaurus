@@ -389,16 +389,19 @@ class SourceLayer(Layer):
         super().__init__(database)
         self.index = {}  # type: Dict[str, Set[Video]]
 
-    def set_sources(self, paths: Sequence[Sequence[str]]):
-        valid_paths = set()
-        for path in paths:
-            path = tuple(path)
-            if path not in valid_paths:
-                assert len(set(path)) == len(path)
-                assert all(VideoState.is_flag(flag) for flag in path)
-                valid_paths.add(path)
-        if valid_paths:
-            self._set_parameters(sources=sorted(valid_paths))
+    def set_sources(self, paths: Sequence[Sequence[str]] = None):
+        if paths is None:
+            self.reset_parameters()
+        else:
+            valid_paths = set()
+            for path in paths:
+                path = tuple(path)
+                if path not in valid_paths:
+                    assert len(set(path)) == len(path)
+                    assert all(VideoState.is_flag(flag) for flag in path)
+                    valid_paths.add(path)
+            if valid_paths:
+                self._set_parameters(sources=sorted(valid_paths))
 
     def get_sources(self):
         return self.get_parameter("sources")

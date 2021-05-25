@@ -17,8 +17,6 @@ import {MenuItem} from "../components/MenuItem.js";
 import {MenuItemCheck} from "../components/MenuItemCheck.js";
 import {Menu} from "../components/Menu.js";
 
-const INITIAL_SOURCES = [];
-
 class Shortcut {
     /**
      * Initialize.
@@ -134,7 +132,7 @@ class Filter extends React.Component {
                     </td>
                     <td>
                         <div>{features.actions.select.toSettingIcon()}</div>
-                        {INITIAL_SOURCES.length && !Filter.compareSources(INITIAL_SOURCES[0], sources) ?
+                        {!Filter.compareSources(window.PYTHON_DEFAULT_SOURCES, sources) ?
                             <div>{features.actions.unselect.toCross()}</div> : ''}
                     </td>
                 </tr>
@@ -217,16 +215,16 @@ class Filter extends React.Component {
         );
     }
 
-    static compareSources(s1, s2) {
-        if (s1.length !== s2.length)
+    static compareSources(sources1, sources2) {
+        if (sources1.length !== sources2.length)
             return false;
-        for (let i = 0; i < s1.length; ++i) {
-            const l1 = s1[i];
-            const l2 = s2[i];
-            if (l1.length !== l2.length)
+        for (let i = 0; i < sources1.length; ++i) {
+            const path1 = sources1[i];
+            const path2 = sources2[i];
+            if (path1.length !== path2.length)
                 return false;
-            for (let j = 0; j < l1.length; ++j) {
-                if (l1[j] !== l2[j])
+            for (let j = 0; j < path1.length; ++j) {
+                if (path1[j] !== path2[j])
                     return false;
             }
         }
@@ -481,8 +479,6 @@ export class VideosPage extends React.Component {
         for (let def of parameters.info.properties) {
             state.definitions[def.name] = def;
         }
-        if (!INITIAL_SOURCES.length)
-            INITIAL_SOURCES.push(state.sources);
     }
 
     onVideoSelection(videoID, selected) {
@@ -549,7 +545,7 @@ export class VideosPage extends React.Component {
     }
 
     unselectVideos() {
-        python_call('set_sources', INITIAL_SOURCES[0])
+        python_call('set_sources', null)
             .then(() => this.updatePage({pageNumber: 0}))
             .catch(backend_error);
     }

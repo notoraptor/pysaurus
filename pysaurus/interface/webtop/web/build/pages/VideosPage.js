@@ -1,7 +1,7 @@
 System.register(["../utils/constants.js", "../components/MenuPack.js", "../components/Pagination.js", "../pageComponents/Video.js", "../forms/FormSourceVideo.js", "../forms/FormGroup.js", "../forms/FormSearch.js", "../forms/FormSort.js", "../pageComponents/GroupView.js", "../forms/FormEditPropertyValue.js", "../forms/FormFillKeywords.js", "../forms/FormPropertyMultiVideo.js", "../components/Collapsable.js", "../components/Cross.js", "../components/SettingIcon.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/Menu.js"], function (_export, _context) {
   "use strict";
 
-  var PAGE_SIZES, SEARCH_TYPE_TITLE, SOURCE_TREE, MenuPack, Pagination, Video, FormSourceVideo, FormGroup, FormSearch, FormSort, GroupView, FormEditPropertyValue, FormFillKeywords, FormPropertyMultiVideo, Collapsable, Cross, SettingIcon, MenuItem, MenuItemCheck, Menu, Shortcut, Action, Actions, Filter, VideosPage, INITIAL_SOURCES;
+  var PAGE_SIZES, SEARCH_TYPE_TITLE, SOURCE_TREE, MenuPack, Pagination, Video, FormSourceVideo, FormGroup, FormSearch, FormSort, GroupView, FormEditPropertyValue, FormFillKeywords, FormPropertyMultiVideo, Collapsable, Cross, SettingIcon, MenuItem, MenuItemCheck, Menu, Shortcut, Action, Actions, Filter, VideosPage;
 
   _export("VideosPage", void 0);
 
@@ -46,7 +46,6 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
       Menu = _componentsMenuJs.Menu;
     }],
     execute: function () {
-      INITIAL_SOURCES = [];
       Shortcut = class Shortcut {
         /**
          * Initialize.
@@ -162,7 +161,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             className: "filter"
           }, /*#__PURE__*/React.createElement("tbody", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, sources.map((source, index) => /*#__PURE__*/React.createElement("div", {
             key: index
-          }, source.join(' ').replace('_', ' ')))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, features.actions.select.toSettingIcon()), INITIAL_SOURCES.length && !Filter.compareSources(INITIAL_SOURCES[0], sources) ? /*#__PURE__*/React.createElement("div", null, features.actions.unselect.toCross()) : '')), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, groupDef ? /*#__PURE__*/React.createElement("div", null, "Grouped") : /*#__PURE__*/React.createElement("div", {
+          }, source.join(' ').replace('_', ' ')))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, features.actions.select.toSettingIcon()), !Filter.compareSources(window.PYTHON_DEFAULT_SOURCES, sources) ? /*#__PURE__*/React.createElement("div", null, features.actions.unselect.toCross()) : '')), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, groupDef ? /*#__PURE__*/React.createElement("div", null, "Grouped") : /*#__PURE__*/React.createElement("div", {
             className: "no-filter"
           }, "Ungrouped")), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, features.actions.group.toSettingIcon(groupDef ? 'Edit ...' : 'Group ...')), groupDef ? /*#__PURE__*/React.createElement("div", null, features.actions.ungroup.toCross()) : '')), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, searchDef ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", null, "Searched ", SEARCH_TYPE_TITLE[searchDef.cond]), /*#__PURE__*/React.createElement("div", null, "\"", /*#__PURE__*/React.createElement("strong", null, searchDef.text), "\"")) : /*#__PURE__*/React.createElement("div", {
             className: "no-filter"
@@ -189,16 +188,16 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           }) : ''))));
         }
 
-        static compareSources(s1, s2) {
-          if (s1.length !== s2.length) return false;
+        static compareSources(sources1, sources2) {
+          if (sources1.length !== sources2.length) return false;
 
-          for (let i = 0; i < s1.length; ++i) {
-            const l1 = s1[i];
-            const l2 = s2[i];
-            if (l1.length !== l2.length) return false;
+          for (let i = 0; i < sources1.length; ++i) {
+            const path1 = sources1[i];
+            const path2 = sources2[i];
+            if (path1.length !== path2.length) return false;
 
-            for (let j = 0; j < l1.length; ++j) {
-              if (l1[j] !== l2[j]) return false;
+            for (let j = 0; j < path1.length; ++j) {
+              if (path1[j] !== path2[j]) return false;
             }
           }
 
@@ -433,8 +432,6 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           for (let def of parameters.info.properties) {
             state.definitions[def.name] = def;
           }
-
-          if (!INITIAL_SOURCES.length) INITIAL_SOURCES.push(state.sources);
         }
 
         onVideoSelection(videoID, selected) {
@@ -511,7 +508,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         }
 
         unselectVideos() {
-          python_call('set_sources', INITIAL_SOURCES[0]).then(() => this.updatePage({
+          python_call('set_sources', null).then(() => this.updatePage({
             pageNumber: 0
           })).catch(backend_error);
         }
