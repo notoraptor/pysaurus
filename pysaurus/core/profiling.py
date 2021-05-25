@@ -65,10 +65,22 @@ class Profiler:
 
     @staticmethod
     def profile(title=None):
+        """Profile a function."""
         def decorator_profile(fn):
             @functools.wraps(fn)
             def wrapper(*args, **kwargs):
                 with Profiler(title or fn.__name__):
                     return fn(*args, **kwargs)
+            return wrapper
+        return decorator_profile
+
+    @staticmethod
+    def profile_method(title=None):
+        """Profile a method from an object providing a `notifier` attribute."""
+        def decorator_profile(fn):
+            @functools.wraps(fn)
+            def wrapper(self, *args, **kwargs):
+                with Profiler(title or fn.__name__, notifier=self.notifier):
+                    return fn(self, *args, **kwargs)
             return wrapper
         return decorator_profile

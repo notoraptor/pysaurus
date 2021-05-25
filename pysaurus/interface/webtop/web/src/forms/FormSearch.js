@@ -16,7 +16,7 @@ export class FormSearch extends React.Component {
 
     render() {
         return (
-            <form className="form-search">
+            <div className="form-search">
                 <p>Type text to search and choose how to search.</p>
                 <p>You can also type text and then press enter to automatically select "AND" as search method.</p>
                 <p>
@@ -56,7 +56,7 @@ export class FormSearch extends React.Component {
                            checked={this.state.cond === 'exact'}/>
                     <label htmlFor="input-search-exact">exact sentence</label>
                 </p>
-            </form>
+            </div>
         );
     }
 

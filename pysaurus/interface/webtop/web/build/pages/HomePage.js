@@ -4,11 +4,10 @@ System.register(["../utils/constants.js"], function (_export, _context) {
   var HomeStatus, ProgressionMonitoring, HomePage, NotificationCollector, NotificationRenderer;
 
   /**
-   * @param props {{monitoring: ProgressionMonitoring, key: number}}
+   * @param props {{monitoring: ProgressionMonitoring}}
    */
   function Monitoring(props) {
     const monitoring = props.monitoring;
-    const i = props.key;
     const total = monitoring.total;
     let current = 0;
 
@@ -19,7 +18,6 @@ System.register(["../utils/constants.js"], function (_export, _context) {
     const percent = Math.round(current * 100 / total);
     const jobClassID = monitoring.name + "-job";
     return /*#__PURE__*/React.createElement("div", {
-      key: i,
       className: `job horizontal ${jobClassID}`
     }, /*#__PURE__*/React.createElement("label", {
       htmlFor: jobClassID,

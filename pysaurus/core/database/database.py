@@ -109,7 +109,7 @@ class Database:
 
     # Private methods.
 
-    @Profiler.profile("Load database!")
+    @Profiler.profile_method()
     def __load(self, folders=None, clear_old_folders=False):
         # type: (Optional[Iterable[PathType]], Optional[bool]) -> None
 
@@ -230,7 +230,7 @@ class Database:
 
     def __check_videos_on_disk(self):
         # type: () -> Dict[AbsolutePath, PathInfo]
-        paths = {}
+        paths = {}  # type: Dict[AbsolutePath, PathInfo]
         cpu_count = os.cpu_count()
         jobs = utils.dispatch_tasks(sorted(self.__folders), cpu_count)
         with Profiler(
@@ -246,14 +246,15 @@ class Database:
         return paths
 
     def __check_thumbnails_on_disk(self):
-        # type: () -> Set[str]
-        thumbs = set()
+        # type: () -> Dict[str, DateModified]
+        thumbs = {}
         with Profiler("Collect thumbnails", self.__notifier):
-            for path_string in self.thumbnail_folder.listdir():
-                if path_string.lower().endswith(".%s" % THUMBNAIL_EXTENSION):
+            for entry in os.scandir(self.thumbnail_folder.path):  # type: os.DirEntry
+                if entry.path.lower().endswith(f".{THUMBNAIL_EXTENSION}"):
+                    name = entry.name
                     if self.system_is_case_insensitive:
-                        path_string = path_string.lower()
-                    thumbs.add(path_string[: -(len(THUMBNAIL_EXTENSION) + 1)])
+                        name = name.lower()
+                    thumbs[name[: -(len(THUMBNAIL_EXTENSION) + 1)]] = DateModified(entry.stat().st_mtime)
         return thumbs
 
     def __notify_missing_thumbnails(self):
@@ -289,6 +290,7 @@ class Database:
 
     # Public methods.
 
+    @Profiler.profile_method()
     def update(self):
 
         self.__set_special_properties()
@@ -393,6 +395,7 @@ class Database:
                 )
             )
 
+    @Profiler.profile_method()
     def ensure_thumbnails(self):
         cpu_count = os.cpu_count()
         valid_thumb_names = set()
@@ -404,26 +407,27 @@ class Database:
         # Collect videos with and without thumbnails.
         existing_thumb_names = self.__check_thumbnails_on_disk()
 
-        for video in self.__videos.values():
-            if video.exists() and not video.error_thumbnail:
-                thumb_name = video.ensure_thumbnail_name()
-                if (
-                    thumb_name in existing_thumb_names
-                    and video.thumbnail_path.get_date_modified()
-                    > video.filename.get_date_modified()
-                ):
-                    thumb_to_videos.setdefault(thumb_name, []).append(video)
-                else:
-                    videos_without_thumbs.append(video)
+        with Profiler("Check videos thumbnails", notifier=self.__notifier):
+            for video in self.__videos.values():
+                if video.exists() and not video.error_thumbnail:
+                    thumb_name = video.ensure_thumbnail_name()
+                    if (
+                        thumb_name in existing_thumb_names
+                        and existing_thumb_names[thumb_name] > video.date
+                    ):
+                        thumb_to_videos.setdefault(thumb_name, []).append(video)
+                    else:
+                        videos_without_thumbs.append(video)
 
         # If a thumbnail name is associated to many videos,
         # consider these videos don't have thumbnails.
-        for valid_thumb_name, vds in thumb_to_videos.items():
-            if len(vds) == 1:
-                valid_thumb_names.add(valid_thumb_name)
-                vds[0].runtime.has_thumbnail = True
-            else:
-                videos_without_thumbs.extend(vds)
+        with Profiler("Check unique thumbnails", notifier=self.__notifier):
+            for valid_thumb_name, vds in thumb_to_videos.items():
+                if len(vds) == 1:
+                    valid_thumb_names.add(valid_thumb_name)
+                    vds[0].runtime.has_thumbnail = True
+                else:
+                    videos_without_thumbs.extend(vds)
         nb_videos_no_thumbs = len(videos_without_thumbs)
         del thumb_to_videos
 
@@ -508,6 +512,7 @@ class Database:
         self.__notify_missing_thumbnails()
         self.__save()
 
+    @Profiler.profile_method()
     def ensure_miniatures(self, return_miniatures=False):
         # type: (bool) -> Optional[List[Miniature]]
 
@@ -779,13 +784,10 @@ Make sure any video has at most 1 value for this property before making it uniqu
         with Profiler("Reset thumbnail errors"):
             for video in self.get_videos("readable", "found", "without_thumbnails"):
                 video.error_thumbnail = False
-        with Profiler("Update database"):
-            self.update()
-        with Profiler("Ensure thumbnails"):
-            self.ensure_thumbnails()
+        self.update()
+        self.ensure_thumbnails()
         if ensure_miniatures:
-            with Profiler("Ensure miniatures"):
-                self.ensure_miniatures()
+            self.ensure_miniatures()
 
     def delete_property_value(self, videos, name, values):
         # type: (Iterable[Video], str, List) -> List[Video]
@@ -971,6 +973,7 @@ Make sure any video has at most 1 value for this property before making it uniqu
         return len(modified)
 
     @classmethod
+    @Profiler.profile()
     def load_from_list_file_path(
         cls,
         list_file_path,
@@ -980,19 +983,18 @@ Make sure any video has at most 1 value for this property before making it uniqu
         reset=False,
         clear_old_folders=False,
     ):
-        with Profiler("Open database."):
-            paths = path_utils.load_path_list_file(list_file_path)
-            database_folder = list_file_path.get_directory()
-            database = cls(
-                path=database_folder,
-                folders=paths,
-                notifier=notifier,
-                clear_old_folders=clear_old_folders,
-            )
-            if reset:
-                database.reset()
-            if update:
-                database.refresh(ensure_miniatures)
+        paths = path_utils.load_path_list_file(list_file_path)
+        database_folder = list_file_path.get_directory()
+        database = cls(
+            path=database_folder,
+            folders=paths,
+            notifier=notifier,
+            clear_old_folders=clear_old_folders,
+        )
+        if reset:
+            database.reset()
+        if update:
+            database.refresh(ensure_miniatures)
         return database
 
     def get_videos(self, source, *flags, **forced_flags):
@@ -1023,7 +1025,7 @@ Make sure any video has at most 1 value for this property before making it uniqu
         for video in self.__videos.values():
             if video.thumbnail_is_valid():
                 used_thumbnails.add(video.ensure_thumbnail_name())
-        unused_thumbnails = self.__check_thumbnails_on_disk() - used_thumbnails
+        unused_thumbnails = set(self.__check_thumbnails_on_disk()) - used_thumbnails
         self.__notifier.notify(notifications.UnusedThumbnails(len(unused_thumbnails)))
         for unused_thumb_name in unused_thumbnails:
             try:

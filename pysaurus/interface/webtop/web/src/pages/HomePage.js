@@ -21,11 +21,10 @@ class ProgressionMonitoring {
 }
 
 /**
- * @param props {{monitoring: ProgressionMonitoring, key: number}}
+ * @param props {{monitoring: ProgressionMonitoring}}
  */
 function Monitoring(props) {
     const monitoring = props.monitoring;
-    const i = props.key;
     const total = monitoring.total;
     let current = 0;
     for (let jobId of Object.keys(monitoring.jobs)) {
@@ -34,7 +33,7 @@ function Monitoring(props) {
     const percent = Math.round(current * 100 / total);
     const jobClassID = monitoring.name + "-job";
     return (
-        <div key={i} className={`job horizontal ${jobClassID}`}>
+        <div className={`job horizontal ${jobClassID}`}>
             <label htmlFor={jobClassID} className="info">{current} / {total} ({percent} %)</label>
             <progress id={jobClassID} value={current} max={total}/>
         </div>
