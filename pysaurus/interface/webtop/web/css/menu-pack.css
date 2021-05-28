@@ -83,6 +83,13 @@
 	background-color: white;
 }
 
+.menu-pack .menu-item.radio > .icon .border {
+	border-radius: 0.45em;
+}
+.menu-pack .menu-item.radio > .icon .border .check {
+	border-radius: 0.45em;
+}
+
 .menu-pack .menu {
 	position: relative;
 }

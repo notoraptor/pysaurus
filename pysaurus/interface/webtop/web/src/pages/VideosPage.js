@@ -15,6 +15,7 @@ import {Cross} from "../components/Cross.js";
 import {SettingIcon} from "../components/SettingIcon.js";
 import {MenuItem} from "../components/MenuItem.js";
 import {MenuItemCheck} from "../components/MenuItemCheck.js";
+import {MenuItemRadio} from "../components/MenuItemRadio.js";
 import {Menu} from "../components/Menu.js";
 
 class Shortcut {
@@ -317,21 +318,19 @@ export class VideosPage extends React.Component {
                             {this.features.actions.search.toMenuItem()}
                             {this.features.actions.sort.toMenuItem()}
                         </Menu>
-                        {notFound || !nbVideos ? '' :
-                            this.features.actions.openRandomVideo.toMenuItem()}
+                        {notFound || !nbVideos ? '' : this.features.actions.openRandomVideo.toMenuItem()}
                         {this.features.actions.reload.toMenuItem()}
                         {this.features.actions.manageProperties.toMenuItem()}
                         {stringSetProperties.length ?
                             <MenuItem action={this.fillWithKeywords}>Put keywords into a property ...</MenuItem> : ''}
                         <Menu title="Page size ...">
                             {PAGE_SIZES.map((count, index) => (
-                                <MenuItemCheck key={index}
+                                <MenuItemRadio key={index}
                                                checked={this.state.pageSize === count}
-                                               action={checked => {
-                                                   if (checked) this.setPageSize(count);
-                                               }}>
+                                               value={count}
+                                               action={this.setPageSize}>
                                     {count} video{count > 1 ? 's' : ''} per page
-                                </MenuItemCheck>
+                                </MenuItemRadio>
                             ))}
                         </Menu>
                         <MenuItemCheck checked={this.state.confirmDeletion} action={this.confirmDeletionForNotFound}>
@@ -340,8 +339,7 @@ export class VideosPage extends React.Component {
                         {this.state.properties.length > 10 ? (
                             <Menu title="Group videos by property ...">{
                                 this.state.properties.map((def, index) => (
-                                    <MenuItem key={index}
-                                              action={() => this.backendGroupVideos(`:${def.name}`)}>
+                                    <MenuItem key={index} action={() => this.backendGroupVideos(`:${def.name}`)}>
                                         {def.name}
                                     </MenuItem>
                                 ))

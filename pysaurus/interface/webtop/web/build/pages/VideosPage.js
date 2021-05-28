@@ -1,7 +1,7 @@
-System.register(["../utils/constants.js", "../components/MenuPack.js", "../components/Pagination.js", "../pageComponents/Video.js", "../forms/FormSourceVideo.js", "../forms/FormGroup.js", "../forms/FormSearch.js", "../forms/FormSort.js", "../pageComponents/GroupView.js", "../forms/FormEditPropertyValue.js", "../forms/FormFillKeywords.js", "../forms/FormPropertyMultiVideo.js", "../components/Collapsable.js", "../components/Cross.js", "../components/SettingIcon.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/Menu.js"], function (_export, _context) {
+System.register(["../utils/constants.js", "../components/MenuPack.js", "../components/Pagination.js", "../pageComponents/Video.js", "../forms/FormSourceVideo.js", "../forms/FormGroup.js", "../forms/FormSearch.js", "../forms/FormSort.js", "../pageComponents/GroupView.js", "../forms/FormEditPropertyValue.js", "../forms/FormFillKeywords.js", "../forms/FormPropertyMultiVideo.js", "../components/Collapsable.js", "../components/Cross.js", "../components/SettingIcon.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/MenuItemRadio.js", "../components/Menu.js"], function (_export, _context) {
   "use strict";
 
-  var PAGE_SIZES, SEARCH_TYPE_TITLE, SOURCE_TREE, MenuPack, Pagination, Video, FormSourceVideo, FormGroup, FormSearch, FormSort, GroupView, FormEditPropertyValue, FormFillKeywords, FormPropertyMultiVideo, Collapsable, Cross, SettingIcon, MenuItem, MenuItemCheck, Menu, Shortcut, Action, Actions, Filter, VideosPage;
+  var PAGE_SIZES, SEARCH_TYPE_TITLE, SOURCE_TREE, MenuPack, Pagination, Video, FormSourceVideo, FormGroup, FormSearch, FormSort, GroupView, FormEditPropertyValue, FormFillKeywords, FormPropertyMultiVideo, Collapsable, Cross, SettingIcon, MenuItem, MenuItemCheck, MenuItemRadio, Menu, Shortcut, Action, Actions, Filter, VideosPage;
 
   _export("VideosPage", void 0);
 
@@ -42,6 +42,8 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
       MenuItem = _componentsMenuItemJs.MenuItem;
     }, function (_componentsMenuItemCheckJs) {
       MenuItemCheck = _componentsMenuItemCheckJs.MenuItemCheck;
+    }, function (_componentsMenuItemRadioJs) {
+      MenuItemRadio = _componentsMenuItemRadioJs.MenuItemRadio;
     }, function (_componentsMenuJs) {
       Menu = _componentsMenuJs.Menu;
     }],
@@ -291,12 +293,11 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             action: this.fillWithKeywords
           }, "Put keywords into a property ...") : '', /*#__PURE__*/React.createElement(Menu, {
             title: "Page size ..."
-          }, PAGE_SIZES.map((count, index) => /*#__PURE__*/React.createElement(MenuItemCheck, {
+          }, PAGE_SIZES.map((count, index) => /*#__PURE__*/React.createElement(MenuItemRadio, {
             key: index,
             checked: this.state.pageSize === count,
-            action: checked => {
-              if (checked) this.setPageSize(count);
-            }
+            value: count,
+            action: this.setPageSize
           }, count, " video", count > 1 ? 's' : '', " per page"))), /*#__PURE__*/React.createElement(MenuItemCheck, {
             checked: this.state.confirmDeletion,
             action: this.confirmDeletionForNotFound
