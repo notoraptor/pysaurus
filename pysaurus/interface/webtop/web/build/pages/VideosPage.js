@@ -363,9 +363,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           const pageNumber = state.pageNumber !== undefined ? state.pageNumber : this.state.pageNumber;
           const displayOnlySelected = state.displayOnlySelected !== undefined ? state.displayOnlySelected : this.state.displayOnlySelected;
           const selector = displayOnlySelected ? (state.selector !== undefined ? state.selector : this.state.selector).toJSON() : null;
-          python_call('get_info_and_videos', pageSize, pageNumber, selector).then(info => {
-            this.setState(Object.assign(state, info), top ? this.scrollTop : undefined);
-          }).catch(backend_error);
+          python_call('get_info_and_videos', pageSize, pageNumber, selector).then(info => this.setState(Object.assign(state, info), top ? this.scrollTop : undefined)).catch(backend_error);
         }
 
         onVideoSelection(videoID, selected) {
