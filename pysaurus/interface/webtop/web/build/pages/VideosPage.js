@@ -375,7 +375,6 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           }, this.state.videos.map(data => /*#__PURE__*/React.createElement(Video, {
             key: data.video_id,
             data: data,
-            index: data.local_id,
             parent: this,
             selected: this.state.selection.has(data.video_id),
             onSelect: this.onVideoSelection,
@@ -404,6 +403,22 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
 
         componentWillUnmount() {
           KEYBOARD_MANAGER.unregister(this.callbackIndex);
+        }
+
+        scrollTop() {
+          const videos = document.querySelector('#videos .videos');
+          videos.scrollTop = 0;
+        }
+
+        updatePage(state, top = true) {
+          const pageSize = state.pageSize !== undefined ? state.pageSize : this.state.pageSize;
+          const pageNumber = state.pageNumber !== undefined ? state.pageNumber : this.state.pageNumber;
+          const displayOnlySelected = state.displayOnlySelected !== undefined ? state.displayOnlySelected : this.state.displayOnlySelected;
+          const selection = displayOnlySelected ? Array.from(state.selection !== undefined ? state.selection : this.state.selection) : [];
+          python_call('get_info_and_videos', pageSize, pageNumber, selection).then(info => {
+            Object.assign(state, info);
+            if (top) this.setState(state, this.scrollTop);else this.setState(state);
+          }).catch(backend_error);
         }
 
         onVideoSelection(videoID, selected) {
@@ -442,22 +457,6 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           this.updatePage({
             displayOnlySelected: !this.state.displayOnlySelected
           });
-        }
-
-        scrollTop() {
-          const videos = document.querySelector('#videos .videos');
-          videos.scrollTop = 0;
-        }
-
-        updatePage(state, top = true) {
-          const pageSize = state.pageSize !== undefined ? state.pageSize : this.state.pageSize;
-          const pageNumber = state.pageNumber !== undefined ? state.pageNumber : this.state.pageNumber;
-          const displayOnlySelected = state.displayOnlySelected !== undefined ? state.displayOnlySelected : this.state.displayOnlySelected;
-          const selection = displayOnlySelected ? Array.from(state.selection !== undefined ? state.selection : this.state.selection) : [];
-          python_call('get_info_and_videos', pageSize, pageNumber, selection).then(info => {
-            Object.assign(state, info);
-            if (top) this.setState(state, this.scrollTop);else this.setState(state);
-          }).catch(backend_error);
         }
 
         updateStatus(status, reload = false, top = false) {
@@ -674,16 +673,6 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           return properties;
         }
 
-        generatePropTable(definitions) {
-          const properties = {};
-
-          for (let def of definitions) {
-            properties[def.name] = def;
-          }
-
-          return properties;
-        }
-
         reverseClassifierPath() {
           python_call('classifier_reverse').then(path => this.setState({
             path
@@ -710,7 +699,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           let title;
           if (values.length === 1) title = `Property "${name}", value "${values[0]}"`;else title = `Property "${name}", ${values.length} values"`;
           this.props.app.loadDialog(title, onClose => /*#__PURE__*/React.createElement(FormEditPropertyValue, {
-            properties: this.generatePropTable(this.state.properties),
+            properties: this.state.definitions,
             name: name,
             values: values,
             onClose: operation => {

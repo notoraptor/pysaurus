@@ -38,10 +38,7 @@ class FeatureAPI:
                 page_number = nb_pages - 1
             start = page_size * page_number
             end = min(start + page_size, nb_videos)
-            videos = [
-                VideoFeatures.to_json(view[index], local_id=index)
-                for index in range(start, end)
-            ]
+            videos = [VideoFeatures.to_json(view[index]) for index in range(start, end)]
         prop_types = self.get_prop_types()
         return {
             "pageSize": page_size,

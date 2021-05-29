@@ -8,7 +8,6 @@ import {MenuItem} from "../components/MenuItem.js";
 export class Video extends React.Component {
     constructor(props) {
         // parent
-        // index
         // data
         // confirmDeletion: bool
         // selected: bool
@@ -36,7 +35,7 @@ export class Video extends React.Component {
         const file_title = data.file_title;
         const meta_title = (title === file_title ? null : title);
         const hasThumbnail = data.hasThumbnail;
-        const htmlID = `video-${this.props.index}`;
+        const htmlID = `video-${data.video_id}`;
         return (
             <div className={'video horizontal' + (data.exists ? ' found' : ' not-found')}>
                 <div className="image">

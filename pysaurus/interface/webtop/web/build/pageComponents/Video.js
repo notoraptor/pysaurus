@@ -23,7 +23,6 @@ System.register(["../components/MenuPack.js", "../forms/FormRenameVideo.js", "..
       _export("Video", Video = class Video extends React.Component {
         constructor(props) {
           // parent
-          // index
           // data
           // confirmDeletion: bool
           // selected: bool
@@ -51,7 +50,7 @@ System.register(["../components/MenuPack.js", "../forms/FormRenameVideo.js", "..
           const file_title = data.file_title;
           const meta_title = title === file_title ? null : title;
           const hasThumbnail = data.hasThumbnail;
-          const htmlID = `video-${this.props.index}`;
+          const htmlID = `video-${data.video_id}`;
           return /*#__PURE__*/React.createElement("div", {
             className: 'video horizontal' + (data.exists ? ' found' : ' not-found')
           }, /*#__PURE__*/React.createElement("div", {
