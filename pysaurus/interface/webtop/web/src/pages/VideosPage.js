@@ -465,11 +465,7 @@ export class VideosPage extends React.Component {
         const selection = displayOnlySelected ? Array.from(state.selection !== undefined ? state.selection : this.state.selection) : [];
         python_call('get_info_and_videos', pageSize, pageNumber, selection)
             .then(info => {
-                Object.assign(state, info);
-                if (top)
-                    this.setState(state, this.scrollTop);
-                else
-                    this.setState(state);
+                this.setState(Object.assign(state, info), top ? this.scrollTop: undefined);
             })
             .catch(backend_error);
     }
