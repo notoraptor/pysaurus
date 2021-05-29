@@ -136,7 +136,7 @@ class Filter extends React.Component {
         const searchDef = backend.searchDef;
         const sorting = backend.sorting;
         const sortingIsDefault = sorting.length === 1 && sorting[0] === '-date';
-        const selectionSize = backend.selection.size;
+        const selectionSize = backend.selector.size(backend.realNbVideos);
         const selectedAll = backend.realNbVideos === selectionSize;
         const features = app.features;
         return (
@@ -200,7 +200,7 @@ class Filter extends React.Component {
                         {selectionSize ? (
                             <div>
                                 <div>Selected</div>
-                                <div>{selectedAll ? 'all' : ''} {selectionSize} {selectedAll ? '' : `/ ${backend.nbVideos}`} video{selectionSize < 2 ? '' : 's'}</div>
+                                <div>{selectedAll ? 'all' : ''} {selectionSize} {selectedAll ? '' : `/ ${backend.realNbVideos}`} video{selectionSize < 2 ? '' : 's'}</div>
                                 <div className="mb-1">
                                     <button onClick={app.displayOnlySelected}>
                                         {backend.displayOnlySelected ?
@@ -236,6 +236,57 @@ class Filter extends React.Component {
     }
 }
 
+class Selector {
+    /**
+     * @param other {Selector}
+     */
+    constructor(other = undefined) {
+        this.all = other ? other.all : false;
+        this.include = new Set(other ? other.include : []);
+        this.exclude = new Set(other ? other.exclude : []);
+    }
+    clone() {
+        return new Selector(this);
+    }
+    toJSON() {
+        return {
+            all: this.all,
+            include: Array.from(this.include),
+            exclude: Array.from(this.exclude),
+        };
+    }
+    size(allSize) {
+        return this.all ? allSize - this.exclude.size : this.include.size;
+    }
+    has(value) {
+        return (this.all && !this.exclude.has(value)) || (!this.all && this.include.has(value));
+    }
+    add(value) {
+        if (this.all) {
+            this.exclude.delete(value);
+        } else {
+            this.include.add(value);
+        }
+    }
+    remove(value) {
+        if (this.all) {
+            this.exclude.add(value);
+        } else {
+            this.include.delete(value);
+        }
+    }
+    clear() {
+        this.all = false;
+        this.include.clear();
+        this.exclude.clear();
+    }
+    fill() {
+        this.all = true;
+        this.include.clear();
+        this.exclude.clear();
+    }
+}
+
 export class VideosPage extends React.Component {
     constructor(props) {
         // parameters: {backend state}
@@ -245,7 +296,7 @@ export class VideosPage extends React.Component {
             status: 'Loaded.',
             confirmDeletion: true,
             path: [],
-            selection: new Set(),
+            selector: new Selector(),
             displayOnlySelected: false,
         }, this.props.parameters);
         this.backendGroupVideos = this.backendGroupVideos.bind(this);
@@ -423,7 +474,7 @@ export class VideosPage extends React.Component {
                         <Video key={data.video_id}
                                data={data}
                                parent={this}
-                               selected={this.state.selection.has(data.video_id)}
+                               selected={this.state.selector.has(data.video_id)}
                                onSelect={this.onVideoSelection}
                                confirmDeletion={this.state.confirmDeletion}/>
                     ))}</div>
@@ -462,8 +513,8 @@ export class VideosPage extends React.Component {
         const pageSize = state.pageSize !== undefined ? state.pageSize : this.state.pageSize;
         const pageNumber = state.pageNumber !== undefined ? state.pageNumber : this.state.pageNumber;
         const displayOnlySelected = state.displayOnlySelected !== undefined ? state.displayOnlySelected : this.state.displayOnlySelected;
-        const selection = displayOnlySelected ? Array.from(state.selection !== undefined ? state.selection : this.state.selection) : [];
-        python_call('get_info_and_videos', pageSize, pageNumber, selection)
+        const selector = displayOnlySelected ? (state.selector !== undefined ? state.selector : this.state.selector).toJSON() : null;
+        python_call('get_info_and_videos', pageSize, pageNumber, selector)
             .then(info => {
                 this.setState(Object.assign(state, info), top ? this.scrollTop: undefined);
             })
@@ -471,29 +522,36 @@ export class VideosPage extends React.Component {
     }
 
     onVideoSelection(videoID, selected) {
-        const selection = new Set(this.state.selection);
+        const selector = this.state.selector.clone();
         if (selected) {
-            selection.add(videoID);
-            this.setState({selection});
-        } else if (selection.has(videoID)) {
-            selection.delete(videoID);
-            const displayOnlySelected = this.state.displayOnlySelected && selection.size;
-            const state = {selection, displayOnlySelected};
+            selector.add(videoID);
+            this.setState({selector});
+        } else {
+            selector.remove(videoID);
             if (this.state.displayOnlySelected)
-                this.updatePage(state);
+                this.updatePage({selector, displayOnlySelected: this.state.displayOnlySelected && selector.size(this.state.realNbVideos)});
             else
-                this.setState(state);
+                this.setState({selector});
         }
     }
 
     deselect() {
-        this.setState({selection: new Set(), displayOnlySelected: false});
+        const selector = this.state.selector.clone();
+        selector.clear();
+        if (this.state.displayOnlySelected)
+            this.updatePage({selector, displayOnlySelected: false});
+        else
+            this.setState({selector});
     }
 
     selectAll() {
-        python_call('get_view_indices')
-            .then(indices => this.setState({selection: new Set(indices)}))
-            .catch(backend_error);
+        // Should not be called if displayOnlySelected is true.
+        const selector = this.state.selector.clone();
+        selector.fill();
+        if (this.state.displayOnlySelected)
+            this.updatePage({selector});
+        else
+            this.setState({selector});
     }
 
     displayOnlySelected() {
@@ -552,19 +610,19 @@ export class VideosPage extends React.Component {
     }
 
     editPropertiesForManyVideos(propertyName) {
-        const videos = Array.from(this.state.selection);
-        python_call('count_prop_values', propertyName, videos)
+        const selectionSize = this.state.selector.size(this.state.realNbVideos);
+        python_call('count_prop_values', propertyName, this.state.selector.toJSON())
             .then(valuesAndCounts => this.props.app.loadDialog(
-                `Edit property "${propertyName}" for ${this.state.selection.size} video${this.state.selection.size < 2 ? '' : 's'}`,
+                `Edit property "${propertyName}" for ${selectionSize} video${selectionSize < 2 ? '' : 's'}`,
                 onClose => (
-                    <FormPropertyMultiVideo nbVideos={this.state.selection.size}
+                    <FormPropertyMultiVideo nbVideos={selectionSize}
                                             definition={this.state.definitions[propertyName]}
                                             values={valuesAndCounts}
                                             onClose={edition => {
                                                 onClose();
                                                 if (edition) {
                                                     python_call('edit_property_for_videos', propertyName, videos, edition.add, edition.remove)
-                                                        .then(() => this.updateStatus(`Edited property "${propertyName}" for ${this.state.selection.size} video${this.state.selection.size < 2 ? '' : 's'}`, true))
+                                                        .then(() => this.updateStatus(`Edited property "${propertyName}" for ${selectionSize} video${selectionSize < 2 ? '' : 's'}`, true))
                                                         .catch(backend_error);
                                                 }
                                             }}/>

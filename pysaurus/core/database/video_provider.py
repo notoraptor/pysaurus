@@ -936,9 +936,6 @@ class VideoProvider:
     def get_all_videos(self):
         return self.__source_layer.videos()
 
-    def get_view_indices(self):
-        return [video.video_id for video in self.view]
-
     def get_view(self):
         return list(self.view)
 

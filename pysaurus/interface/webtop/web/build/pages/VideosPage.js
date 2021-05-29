@@ -1,7 +1,7 @@
 System.register(["../utils/constants.js", "../components/MenuPack.js", "../components/Pagination.js", "../pageComponents/Video.js", "../forms/FormSourceVideo.js", "../forms/FormGroup.js", "../forms/FormSearch.js", "../forms/FormSort.js", "../pageComponents/GroupView.js", "../forms/FormEditPropertyValue.js", "../forms/FormFillKeywords.js", "../forms/FormPropertyMultiVideo.js", "../components/Collapsable.js", "../components/Cross.js", "../components/SettingIcon.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/MenuItemRadio.js", "../components/Menu.js"], function (_export, _context) {
   "use strict";
 
-  var PAGE_SIZES, SEARCH_TYPE_TITLE, SOURCE_TREE, MenuPack, Pagination, Video, FormSourceVideo, FormGroup, FormSearch, FormSort, GroupView, FormEditPropertyValue, FormFillKeywords, FormPropertyMultiVideo, Collapsable, Cross, SettingIcon, MenuItem, MenuItemCheck, MenuItemRadio, Menu, Shortcut, Action, Actions, Filter, VideosPage;
+  var PAGE_SIZES, SEARCH_TYPE_TITLE, SOURCE_TREE, MenuPack, Pagination, Video, FormSourceVideo, FormGroup, FormSearch, FormSort, GroupView, FormEditPropertyValue, FormFillKeywords, FormPropertyMultiVideo, Collapsable, Cross, SettingIcon, MenuItem, MenuItemCheck, MenuItemRadio, Menu, Shortcut, Action, Actions, Filter, Selector, VideosPage;
 
   _export("VideosPage", void 0);
 
@@ -172,7 +172,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           const searchDef = backend.searchDef;
           const sorting = backend.sorting;
           const sortingIsDefault = sorting.length === 1 && sorting[0] === '-date';
-          const selectionSize = backend.selection.size;
+          const selectionSize = backend.selector.size(backend.realNbVideos);
           const selectedAll = backend.realNbVideos === selectionSize;
           const features = app.features;
           return /*#__PURE__*/React.createElement("table", {
@@ -185,7 +185,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             className: "no-filter"
           }, "No search")), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, features.actions.search.toSettingIcon(searchDef ? 'Edit ...' : 'Search ...')), searchDef ? /*#__PURE__*/React.createElement("div", null, features.actions.unsearch.toCross()) : '')), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, "Sorted by"), sorting.map((val, i) => /*#__PURE__*/React.createElement("div", {
             key: i
-          }, /*#__PURE__*/React.createElement("strong", null, val.substr(1)), ' ', val[0] === '-' ? /*#__PURE__*/React.createElement("span", null, "\u25BC") : /*#__PURE__*/React.createElement("span", null, "\u25B2")))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, features.actions.sort.toSettingIcon()), sortingIsDefault ? '' : /*#__PURE__*/React.createElement("div", null, features.actions.unsort.toCross()))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, selectionSize ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", null, "Selected"), /*#__PURE__*/React.createElement("div", null, selectedAll ? 'all' : '', " ", selectionSize, " ", selectedAll ? '' : `/ ${backend.nbVideos}`, " video", selectionSize < 2 ? '' : 's'), /*#__PURE__*/React.createElement("div", {
+          }, /*#__PURE__*/React.createElement("strong", null, val.substr(1)), ' ', val[0] === '-' ? /*#__PURE__*/React.createElement("span", null, "\u25BC") : /*#__PURE__*/React.createElement("span", null, "\u25B2")))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, features.actions.sort.toSettingIcon()), sortingIsDefault ? '' : /*#__PURE__*/React.createElement("div", null, features.actions.unsort.toCross()))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, selectionSize ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", null, "Selected"), /*#__PURE__*/React.createElement("div", null, selectedAll ? 'all' : '', " ", selectionSize, " ", selectedAll ? '' : `/ ${backend.realNbVideos}`, " video", selectionSize < 2 ? '' : 's'), /*#__PURE__*/React.createElement("div", {
             className: "mb-1"
           }, /*#__PURE__*/React.createElement("button", {
             onClick: app.displayOnlySelected
@@ -207,6 +207,65 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         }
 
       };
+      Selector = class Selector {
+        /**
+         * @param other {Selector}
+         */
+        constructor(other = undefined) {
+          this.all = other ? other.all : false;
+          this.include = new Set(other ? other.include : []);
+          this.exclude = new Set(other ? other.exclude : []);
+        }
+
+        clone() {
+          return new Selector(this);
+        }
+
+        toJSON() {
+          return {
+            all: this.all,
+            include: Array.from(this.include),
+            exclude: Array.from(this.exclude)
+          };
+        }
+
+        size(allSize) {
+          return this.all ? allSize - this.exclude.size : this.include.size;
+        }
+
+        has(value) {
+          return this.all && !this.exclude.has(value) || !this.all && this.include.has(value);
+        }
+
+        add(value) {
+          if (this.all) {
+            this.exclude.delete(value);
+          } else {
+            this.include.add(value);
+          }
+        }
+
+        remove(value) {
+          if (this.all) {
+            this.exclude.add(value);
+          } else {
+            this.include.delete(value);
+          }
+        }
+
+        clear() {
+          this.all = false;
+          this.include.clear();
+          this.exclude.clear();
+        }
+
+        fill() {
+          this.all = true;
+          this.include.clear();
+          this.exclude.clear();
+        }
+
+      };
 
       _export("VideosPage", VideosPage = class VideosPage extends React.Component {
         constructor(props) {
@@ -217,7 +276,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             status: 'Loaded.',
             confirmDeletion: true,
             path: [],
-            selection: new Set(),
+            selector: new Selector(),
             displayOnlySelected: false
           }, this.props.parameters);
           this.backendGroupVideos = this.backendGroupVideos.bind(this);
@@ -376,7 +435,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             key: data.video_id,
             data: data,
             parent: this,
-            selected: this.state.selection.has(data.video_id),
+            selected: this.state.selector.has(data.video_id),
             onSelect: this.onVideoSelection,
             confirmDeletion: this.state.confirmDeletion
           })))), /*#__PURE__*/React.createElement("footer", {
@@ -414,42 +473,51 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           const pageSize = state.pageSize !== undefined ? state.pageSize : this.state.pageSize;
           const pageNumber = state.pageNumber !== undefined ? state.pageNumber : this.state.pageNumber;
           const displayOnlySelected = state.displayOnlySelected !== undefined ? state.displayOnlySelected : this.state.displayOnlySelected;
-          const selection = displayOnlySelected ? Array.from(state.selection !== undefined ? state.selection : this.state.selection) : [];
-          python_call('get_info_and_videos', pageSize, pageNumber, selection).then(info => {
+          const selector = displayOnlySelected ? (state.selector !== undefined ? state.selector : this.state.selector).toJSON() : null;
+          python_call('get_info_and_videos', pageSize, pageNumber, selector).then(info => {
             this.setState(Object.assign(state, info), top ? this.scrollTop : undefined);
           }).catch(backend_error);
         }
 
         onVideoSelection(videoID, selected) {
-          const selection = new Set(this.state.selection);
+          const selector = this.state.selector.clone();
 
           if (selected) {
-            selection.add(videoID);
+            selector.add(videoID);
             this.setState({
-              selection
+              selector
             });
-          } else if (selection.has(videoID)) {
-            selection.delete(videoID);
-            const displayOnlySelected = this.state.displayOnlySelected && selection.size;
-            const state = {
-              selection,
-              displayOnlySelected
-            };
-            if (this.state.displayOnlySelected) this.updatePage(state);else this.setState(state);
+          } else {
+            selector.remove(videoID);
+            if (this.state.displayOnlySelected) this.updatePage({
+              selector,
+              displayOnlySelected: this.state.displayOnlySelected && selector.size(this.state.realNbVideos)
+            });else this.setState({
+              selector
+            });
           }
         }
 
         deselect() {
-          this.setState({
-            selection: new Set(),
+          const selector = this.state.selector.clone();
+          selector.clear();
+          if (this.state.displayOnlySelected) this.updatePage({
+            selector,
             displayOnlySelected: false
+          });else this.setState({
+            selector
           });
         }
 
         selectAll() {
-          python_call('get_view_indices').then(indices => this.setState({
-            selection: new Set(indices)
-          })).catch(backend_error);
+          // Should not be called if displayOnlySelected is true.
+          const selector = this.state.selector.clone();
+          selector.fill();
+          if (this.state.displayOnlySelected) this.updatePage({
+            selector
+          });else this.setState({
+            selector
+          });
         }
 
         displayOnlySelected() {
@@ -523,16 +591,16 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         }
 
         editPropertiesForManyVideos(propertyName) {
-          const videos = Array.from(this.state.selection);
-          python_call('count_prop_values', propertyName, videos).then(valuesAndCounts => this.props.app.loadDialog(`Edit property "${propertyName}" for ${this.state.selection.size} video${this.state.selection.size < 2 ? '' : 's'}`, onClose => /*#__PURE__*/React.createElement(FormPropertyMultiVideo, {
-            nbVideos: this.state.selection.size,
+          const selectionSize = this.state.selector.size(this.state.realNbVideos);
+          python_call('count_prop_values', propertyName, this.state.selector.toJSON()).then(valuesAndCounts => this.props.app.loadDialog(`Edit property "${propertyName}" for ${selectionSize} video${selectionSize < 2 ? '' : 's'}`, onClose => /*#__PURE__*/React.createElement(FormPropertyMultiVideo, {
+            nbVideos: selectionSize,
             definition: this.state.definitions[propertyName],
             values: valuesAndCounts,
             onClose: edition => {
               onClose();
 
               if (edition) {
-                python_call('edit_property_for_videos', propertyName, videos, edition.add, edition.remove).then(() => this.updateStatus(`Edited property "${propertyName}" for ${this.state.selection.size} video${this.state.selection.size < 2 ? '' : 's'}`, true)).catch(backend_error);
+                python_call('edit_property_for_videos', propertyName, videos, edition.add, edition.remove).then(() => this.updateStatus(`Edited property "${propertyName}" for ${selectionSize} video${selectionSize < 2 ? '' : 's'}`, true)).catch(backend_error);
               }
             }
           }))).catch(backend_error);

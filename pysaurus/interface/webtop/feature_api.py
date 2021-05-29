@@ -22,12 +22,16 @@ class FeatureAPI:
 
     # Provider getters.
 
-    def get_info_and_videos(self, page_size, page_number, video_indices=()):
+    def get_info_and_videos(self, page_size, page_number, selector=None):
         # Backend state.
         view = self.provider.get_view()
-        if video_indices:
-            video_indices = set(video_indices)
-            view = [video for video in view if video.video_id in video_indices]
+        if selector:
+            if selector["all"]:
+                exclude = set(selector["exclude"])
+                view = [video for video in view if video.video_id not in exclude]
+            else:
+                include = set(selector["include"])
+                view = [video for video in view if video.video_id in include]
         videos = []
         nb_videos = len(view)
         nb_pages = compute_nb_pages(nb_videos, page_size)
@@ -58,9 +62,6 @@ class FeatureAPI:
             "properties": prop_types,
             "definitions": {prop["name"]: prop for prop in prop_types},
         }
-
-    def get_view_indices(self):
-        return self.provider.get_view_indices()
 
     # Provider setters.
 
@@ -126,7 +127,12 @@ class FeatureAPI:
         props = sorted(self.database.get_prop_types(), key=lambda prop: prop.name)
         return [prop.to_json() for prop in props]
 
-    def count_prop_values(self, name, video_indices):
+    def count_prop_values(self, name, selector):
+        if selector["all"]:
+            exclude = set(selector["exclude"])
+            video_indices = [video.video_id for video in self.provider.get_view() if video.video_id not in exclude]
+        else:
+            video_indices = set(selector["include"])
         value_to_count = self.database.count_property_values(name, video_indices)
         return sorted(value_to_count.items())
 
