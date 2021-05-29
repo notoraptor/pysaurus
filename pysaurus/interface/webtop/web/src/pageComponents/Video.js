@@ -22,7 +22,6 @@ export class Video extends React.Component {
         this.renameVideo = this.renameVideo.bind(this);
         this.editProperties = this.editProperties.bind(this);
         this.onSelect = this.onSelect.bind(this);
-        this.focusPropertyValue = this.focusPropertyValue.bind(this);
     }
 
     render() {
@@ -114,7 +113,7 @@ export class Video extends React.Component {
                                 {!noValue ? (printableValues.map((element, elementIndex) => (
                                     <span className="value"
                                           key={elementIndex}
-                                          onClick={() => this.focusPropertyValue(name, element)}>
+                                          onClick={() => this.props.parent.focusPropertyValue(name, element)}>
                                         {element.toString()}
                                     </span>
                                 ))) : <span className="no-value">no value</span>}
@@ -124,10 +123,6 @@ export class Video extends React.Component {
                 })}
             </div>
         );
-    }
-
-    focusPropertyValue(propertyName, propertyValue) {
-        this.props.parent.focusPropertyValue(propertyName, propertyValue);
     }
 
     openVideo() {

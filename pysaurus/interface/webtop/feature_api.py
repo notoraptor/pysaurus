@@ -22,6 +22,12 @@ class FeatureAPI:
 
     # Provider getters.
 
+    def backend(self, callargs, page_size, page_number, selector=None):
+        if callargs:
+            ret = getattr(self, callargs[0])(*callargs[1:])
+            assert ret is None
+        return self.get_info_and_videos(page_size, page_number, selector)
+
     def get_info_and_videos(self, page_size, page_number, selector=None):
         # Backend state.
         view = self.provider.get_view()

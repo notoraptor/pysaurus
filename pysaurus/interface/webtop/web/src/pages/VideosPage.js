@@ -196,8 +196,8 @@ export class VideosPage extends React.Component {
         this.setPageSize = this.setPageSize.bind(this);
         this.sortVideos = this.sortVideos.bind(this);
         this.unselectVideos = this.unselectVideos.bind(this);
-        this.updatePage = this.updatePage.bind(this);
         this.updateStatus = this.updateStatus.bind(this);
+        this.backend = this.backend.bind(this);
 
         this.callbackIndex = -1;
         this.features = new Actions({
@@ -375,12 +375,12 @@ export class VideosPage extends React.Component {
         videos.scrollTop = 0;
     }
 
-    updatePage(state, top = true) {
+    backend(callargs, state, top = true) {
         const pageSize = state.pageSize !== undefined ? state.pageSize : this.state.pageSize;
         const pageNumber = state.pageNumber !== undefined ? state.pageNumber : this.state.pageNumber;
         const displayOnlySelected = state.displayOnlySelected !== undefined ? state.displayOnlySelected : this.state.displayOnlySelected;
         const selector = displayOnlySelected ? (state.selector !== undefined ? state.selector : this.state.selector).toJSON() : null;
-        python_call('get_info_and_videos', pageSize, pageNumber, selector)
+        python_call("backend", callargs, pageSize, pageNumber, selector)
             .then(info => this.setState(Object.assign(state, info), top ? this.scrollTop : undefined))
             .catch(backend_error);
     }
@@ -393,7 +393,7 @@ export class VideosPage extends React.Component {
         } else {
             selector.remove(videoID);
             if (this.state.displayOnlySelected)
-                this.updatePage({
+                this.backend(null, {
                     selector,
                     displayOnlySelected: this.state.displayOnlySelected && selector.size(this.state.realNbVideos)
                 });
@@ -406,7 +406,7 @@ export class VideosPage extends React.Component {
         const selector = this.state.selector.clone();
         selector.clear();
         if (this.state.displayOnlySelected)
-            this.updatePage({selector, displayOnlySelected: false});
+            this.backend(null, {selector, displayOnlySelected: false});
         else
             this.setState({selector});
     }
@@ -416,18 +416,18 @@ export class VideosPage extends React.Component {
         const selector = this.state.selector.clone();
         selector.fill();
         if (this.state.displayOnlySelected)
-            this.updatePage({selector});
+            this.backend(null, {selector});
         else
             this.setState({selector});
     }
 
     displayOnlySelected() {
-        this.updatePage({displayOnlySelected: !this.state.displayOnlySelected});
+        this.backend(null, {displayOnlySelected: !this.state.displayOnlySelected});
     }
 
     updateStatus(status, reload = false, top = false) {
         if (reload) {
-            this.updatePage({status}, top);
+            this.backend(null, {status}, top);
         } else {
             this.setState({status});
         }
@@ -438,20 +438,15 @@ export class VideosPage extends React.Component {
     }
 
     unselectVideos() {
-        python_call('set_sources', null)
-            .then(() => this.updatePage({pageNumber: 0}))
-            .catch(backend_error);
+        this.backend(['set_sources', null], {pageNumber: 0});
     }
 
     selectVideos() {
         this.props.app.loadDialog('Select Videos', onClose => (
             <FormSourceVideo tree={SOURCE_TREE} sources={this.state.sources} onClose={sources => {
                 onClose();
-                if (sources && sources.length) {
-                    python_call('set_sources', sources)
-                        .then(() => this.updatePage({pageNumber: 0}))
-                        .catch(backend_error);
-                }
+                if (sources && sources.length)
+                    this.backend(['set_sources', sources], {pageNumber: 0});
             }}/>
         ));
     }
@@ -461,19 +456,14 @@ export class VideosPage extends React.Component {
         this.props.app.loadDialog('Group videos:', onClose => (
             <FormGroup definition={group_def} properties={this.state.properties} onClose={criterion => {
                 onClose();
-                if (criterion) {
-                    python_call('set_groups', criterion.field, criterion.sorting, criterion.reverse, criterion.allowSingletons, criterion.allowMultiple)
-                        .then(() => this.updatePage({pageNumber: 0}))
-                        .catch(backend_error);
-                }
+                if (criterion)
+                    this.backend(['set_groups', criterion.field, criterion.sorting, criterion.reverse, criterion.allowSingletons, criterion.allowMultiple], {pageNumber: 0});
             }}/>
         ));
     }
 
     backendGroupVideos(field, sorting = "count", reverse = true, allowSingletons = true, allowMultiple = true) {
-        python_call('set_groups', field, sorting, reverse, allowSingletons, allowMultiple)
-            .then(() => this.updatePage({pageNumber: 0}))
-            .catch(backend_error);
+        this.backend(['set_groups', field, sorting, reverse, allowSingletons, allowMultiple], {pageNumber: 0});
     }
 
     editPropertiesForManyVideos(propertyName) {
@@ -505,9 +495,7 @@ export class VideosPage extends React.Component {
             <FormSearch text={search_def.text} cond={search_def.cond} onClose={criterion => {
                 onClose();
                 if (criterion && criterion.text.length && criterion.cond.length) {
-                    python_call('set_search', criterion.text, criterion.cond)
-                        .then(() => this.updatePage({pageNumber: 0}))
-                        .catch(backend_error);
+                    this.backend(['set_search', criterion.text, criterion.cond], {pageNumber: 0});
                 }
             }}/>
         ));
@@ -519,30 +507,22 @@ export class VideosPage extends React.Component {
             <FormSort sorting={sorting} onClose={sorting => {
                 onClose();
                 if (sorting && sorting.length) {
-                    python_call('set_sorting', sorting)
-                        .then(() => this.updatePage({pageNumber: 0}))
-                        .catch(backend_error);
+                    this.backend(['set_sorting', sorting], {pageNumber: 0});
                 }
             }}/>
         ));
     }
 
     resetGroup() {
-        python_call('set_groups', '')
-            .then(() => this.updatePage({pageNumber: 0}))
-            .catch(backend_error);
+        this.backend(['set_groups', ''], {pageNumber: 0});
     }
 
     resetSearch() {
-        python_call('set_search', null, null)
-            .then(() => this.updatePage({pageNumber: 0}))
-            .catch(backend_error);
+        this.backend(['set_search', null, null], {pageNumber: 0});
     }
 
     resetSort() {
-        python_call('set_sorting', [])
-            .then(() => this.updatePage({pageNumber: 0}))
-            .catch(backend_error);
+        this.backend(['set_sorting', null], {pageNumber: 0});
     }
 
     openRandomVideo() {
@@ -579,7 +559,7 @@ export class VideosPage extends React.Component {
 
     setPageSize(count) {
         if (count !== this.state.pageSize)
-            this.updatePage({pageSize: count, pageNumber: 0});
+            this.backend(null, {pageSize: count, pageNumber: 0});
     }
 
     confirmDeletionForNotFound(checked) {
@@ -587,9 +567,7 @@ export class VideosPage extends React.Component {
     }
 
     changeGroup(groupNumber) {
-        python_call('set_group', groupNumber)
-            .then(() => this.updatePage({pageNumber: 0}))
-            .catch(backend_error);
+        this.backend(['set_group', groupNumber], {pageNumber: 0});
     }
 
     selectGroup(value) {
@@ -600,7 +578,7 @@ export class VideosPage extends React.Component {
     }
 
     changePage(pageNumber) {
-        this.updatePage({pageNumber});
+        this.backend(null, {pageNumber});
     }
 
     getStringSetProperties(definitions) {
@@ -677,27 +655,20 @@ export class VideosPage extends React.Component {
     }
 
     classifierSelectGroup(index) {
-        python_call('classifier_select_group', index)
-            .then(() => this.updatePage({pageNumber: 0}))
-            .catch(backend_error);
+        this.backend(['classifier_select_group', index], {pageNumber: 0});
     }
 
     classifierUnstack() {
-        python_call('classifier_back')
-            .then(() => this.updatePage({pageNumber: 0}))
-            .catch(backend_error);
+        this.backend(['classifier_back'], {pageNumber: 0});
     }
 
     classifierConcatenate(outputPropertyName) {
-        python_call('classifier_concatenate_path', outputPropertyName)
-            .then(() => this.updatePage({pageNumber: 0}))
-            .catch(backend_error);
+        this.backend(['classifier_concatenate_path', outputPropertyName], {pageNumber: 0});
     }
 
     focusPropertyValue(propertyName, propertyValue) {
         python_call('set_groups', `:${propertyName}`, "count", true, true, true)
-            .then(() => python_call('classifier_select_group_by_value', propertyValue))
-            .then(() => this.updatePage({pageNumber: 0}))
+            .then(() => this.backend(['classifier_select_group_by_value', propertyValue], {pageNumber: 0}))
             .catch(backend_error);
     }
 }

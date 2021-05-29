@@ -185,8 +185,8 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           this.setPageSize = this.setPageSize.bind(this);
           this.sortVideos = this.sortVideos.bind(this);
           this.unselectVideos = this.unselectVideos.bind(this);
-          this.updatePage = this.updatePage.bind(this);
           this.updateStatus = this.updateStatus.bind(this);
+          this.backend = this.backend.bind(this);
           this.callbackIndex = -1;
           this.features = new Actions({
             select: new Action("Ctrl+T", "Select videos ...", this.selectVideos),
@@ -358,12 +358,12 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           videos.scrollTop = 0;
         }
 
-        updatePage(state, top = true) {
+        backend(callargs, state, top = true) {
           const pageSize = state.pageSize !== undefined ? state.pageSize : this.state.pageSize;
           const pageNumber = state.pageNumber !== undefined ? state.pageNumber : this.state.pageNumber;
           const displayOnlySelected = state.displayOnlySelected !== undefined ? state.displayOnlySelected : this.state.displayOnlySelected;
           const selector = displayOnlySelected ? (state.selector !== undefined ? state.selector : this.state.selector).toJSON() : null;
-          python_call('get_info_and_videos', pageSize, pageNumber, selector).then(info => this.setState(Object.assign(state, info), top ? this.scrollTop : undefined)).catch(backend_error);
+          python_call("backend", callargs, pageSize, pageNumber, selector).then(info => this.setState(Object.assign(state, info), top ? this.scrollTop : undefined)).catch(backend_error);
         }
 
         onVideoSelection(videoID, selected) {
@@ -376,7 +376,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             });
           } else {
             selector.remove(videoID);
-            if (this.state.displayOnlySelected) this.updatePage({
+            if (this.state.displayOnlySelected) this.backend(null, {
               selector,
               displayOnlySelected: this.state.displayOnlySelected && selector.size(this.state.realNbVideos)
             });else this.setState({
@@ -388,7 +388,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         deselect() {
           const selector = this.state.selector.clone();
           selector.clear();
-          if (this.state.displayOnlySelected) this.updatePage({
+          if (this.state.displayOnlySelected) this.backend(null, {
             selector,
             displayOnlySelected: false
           });else this.setState({
@@ -400,7 +400,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           // Should not be called if displayOnlySelected is true.
           const selector = this.state.selector.clone();
           selector.fill();
-          if (this.state.displayOnlySelected) this.updatePage({
+          if (this.state.displayOnlySelected) this.backend(null, {
             selector
           });else this.setState({
             selector
@@ -408,14 +408,14 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         }
 
         displayOnlySelected() {
-          this.updatePage({
+          this.backend(null, {
             displayOnlySelected: !this.state.displayOnlySelected
           });
         }
 
         updateStatus(status, reload = false, top = false) {
           if (reload) {
-            this.updatePage({
+            this.backend(null, {
               status
             }, top);
           } else {
@@ -430,9 +430,9 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         }
 
         unselectVideos() {
-          python_call('set_sources', null).then(() => this.updatePage({
+          this.backend(['set_sources', null], {
             pageNumber: 0
-          })).catch(backend_error);
+          });
         }
 
         selectVideos() {
@@ -441,12 +441,9 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             sources: this.state.sources,
             onClose: sources => {
               onClose();
-
-              if (sources && sources.length) {
-                python_call('set_sources', sources).then(() => this.updatePage({
-                  pageNumber: 0
-                })).catch(backend_error);
-              }
+              if (sources && sources.length) this.backend(['set_sources', sources], {
+                pageNumber: 0
+              });
             }
           }));
         }
@@ -461,20 +458,17 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             properties: this.state.properties,
             onClose: criterion => {
               onClose();
-
-              if (criterion) {
-                python_call('set_groups', criterion.field, criterion.sorting, criterion.reverse, criterion.allowSingletons, criterion.allowMultiple).then(() => this.updatePage({
-                  pageNumber: 0
-                })).catch(backend_error);
-              }
+              if (criterion) this.backend(['set_groups', criterion.field, criterion.sorting, criterion.reverse, criterion.allowSingletons, criterion.allowMultiple], {
+                pageNumber: 0
+              });
             }
           }));
         }
 
         backendGroupVideos(field, sorting = "count", reverse = true, allowSingletons = true, allowMultiple = true) {
-          python_call('set_groups', field, sorting, reverse, allowSingletons, allowMultiple).then(() => this.updatePage({
+          this.backend(['set_groups', field, sorting, reverse, allowSingletons, allowMultiple], {
             pageNumber: 0
-          })).catch(backend_error);
+          });
         }
 
         editPropertiesForManyVideos(propertyName) {
@@ -505,9 +499,9 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
               onClose();
 
               if (criterion && criterion.text.length && criterion.cond.length) {
-                python_call('set_search', criterion.text, criterion.cond).then(() => this.updatePage({
+                this.backend(['set_search', criterion.text, criterion.cond], {
                   pageNumber: 0
-                })).catch(backend_error);
+                });
               }
             }
           }));
@@ -521,30 +515,30 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
               onClose();
 
               if (sorting && sorting.length) {
-                python_call('set_sorting', sorting).then(() => this.updatePage({
+                this.backend(['set_sorting', sorting], {
                   pageNumber: 0
-                })).catch(backend_error);
+                });
               }
             }
           }));
         }
 
         resetGroup() {
-          python_call('set_groups', '').then(() => this.updatePage({
+          this.backend(['set_groups', ''], {
             pageNumber: 0
-          })).catch(backend_error);
+          });
         }
 
         resetSearch() {
-          python_call('set_search', null, null).then(() => this.updatePage({
+          this.backend(['set_search', null, null], {
             pageNumber: 0
-          })).catch(backend_error);
+          });
         }
 
         resetSort() {
-          python_call('set_sorting', []).then(() => this.updatePage({
+          this.backend(['set_sorting', null], {
             pageNumber: 0
-          })).catch(backend_error);
+          });
         }
 
         openRandomVideo() {
@@ -578,7 +572,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         }
 
         setPageSize(count) {
-          if (count !== this.state.pageSize) this.updatePage({
+          if (count !== this.state.pageSize) this.backend(null, {
             pageSize: count,
             pageNumber: 0
           });
@@ -591,9 +585,9 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         }
 
         changeGroup(groupNumber) {
-          python_call('set_group', groupNumber).then(() => this.updatePage({
+          this.backend(['set_group', groupNumber], {
             pageNumber: 0
-          })).catch(backend_error);
+          });
         }
 
         selectGroup(value) {
@@ -601,7 +595,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         }
 
         changePage(pageNumber) {
-          this.updatePage({
+          this.backend(null, {
             pageNumber
           });
         }
@@ -679,25 +673,25 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         }
 
         classifierSelectGroup(index) {
-          python_call('classifier_select_group', index).then(() => this.updatePage({
+          this.backend(['classifier_select_group', index], {
             pageNumber: 0
-          })).catch(backend_error);
+          });
         }
 
         classifierUnstack() {
-          python_call('classifier_back').then(() => this.updatePage({
+          this.backend(['classifier_back'], {
             pageNumber: 0
-          })).catch(backend_error);
+          });
         }
 
         classifierConcatenate(outputPropertyName) {
-          python_call('classifier_concatenate_path', outputPropertyName).then(() => this.updatePage({
+          this.backend(['classifier_concatenate_path', outputPropertyName], {
             pageNumber: 0
-          })).catch(backend_error);
+          });
         }
 
         focusPropertyValue(propertyName, propertyValue) {
-          python_call('set_groups', `:${propertyName}`, "count", true, true, true).then(() => python_call('classifier_select_group_by_value', propertyValue)).then(() => this.updatePage({
+          python_call('set_groups', `:${propertyName}`, "count", true, true, true).then(() => this.backend(['classifier_select_group_by_value', propertyValue], {
             pageNumber: 0
           })).catch(backend_error);
         }

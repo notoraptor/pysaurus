@@ -37,7 +37,6 @@ System.register(["../components/MenuPack.js", "../forms/FormRenameVideo.js", "..
           this.renameVideo = this.renameVideo.bind(this);
           this.editProperties = this.editProperties.bind(this);
           this.onSelect = this.onSelect.bind(this);
-          this.focusPropertyValue = this.focusPropertyValue.bind(this);
         }
 
         render() {
@@ -149,15 +148,11 @@ System.register(["../components/MenuPack.js", "../forms/FormRenameVideo.js", "..
             }, !noValue ? printableValues.map((element, elementIndex) => /*#__PURE__*/React.createElement("span", {
               className: "value",
               key: elementIndex,
-              onClick: () => this.focusPropertyValue(name, element)
+              onClick: () => this.props.parent.focusPropertyValue(name, element)
             }, element.toString())) : /*#__PURE__*/React.createElement("span", {
               className: "no-value"
             }, "no value")));
           }));
-        }
-
-        focusPropertyValue(propertyName, propertyValue) {
-          this.props.parent.focusPropertyValue(propertyName, propertyValue);
         }
 
         openVideo() {
