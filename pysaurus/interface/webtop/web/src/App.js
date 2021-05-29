@@ -92,6 +92,7 @@ export class App extends React.Component {
     }
 
     // Public methods for children components.
+
     loadDialog(title, onBuild) {
         if (this.state.fancy)
             throw "a fancy box is already displayed.";
@@ -108,9 +109,7 @@ export class App extends React.Component {
         if (pageNumber === undefined)
             pageNumber = VIDEO_DEFAULT_PAGE_NUMBER;
         python_call('get_info_and_videos', pageSize, pageNumber)
-            .then(info => {
-                this.loadPage("videos", {pageSize: pageSize, pageNumber: pageNumber, info: info});
-            })
+            .then(info => this.loadPage("videos", info))
             .catch(backend_error);
     }
 

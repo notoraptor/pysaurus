@@ -148,6 +148,22 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           super(props);
         }
 
+        static compareSources(sources1, sources2) {
+          if (sources1.length !== sources2.length) return false;
+
+          for (let i = 0; i < sources1.length; ++i) {
+            const path1 = sources1[i];
+            const path2 = sources2[i];
+            if (path1.length !== path2.length) return false;
+
+            for (let j = 0; j < path1.length; ++j) {
+              if (path1[j] !== path2[j]) return false;
+            }
+          }
+
+          return true;
+        }
+
         render() {
           const app = this.props.page;
           const backend = app.state;
@@ -190,36 +206,20 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           }) : ''))));
         }
 
-        static compareSources(sources1, sources2) {
-          if (sources1.length !== sources2.length) return false;
-
-          for (let i = 0; i < sources1.length; ++i) {
-            const path1 = sources1[i];
-            const path2 = sources2[i];
-            if (path1.length !== path2.length) return false;
-
-            for (let j = 0; j < path1.length; ++j) {
-              if (path1[j] !== path2[j]) return false;
-            }
-          }
-
-          return true;
-        }
-
       };
 
       _export("VideosPage", VideosPage = class VideosPage extends React.Component {
         constructor(props) {
-          // parameters: {pageSize, pageNumber, info}
+          // parameters: {backend state}
           // app: App
           super(props);
-          this.state = {
+          this.state = Object.assign({
             status: 'Loaded.',
             confirmDeletion: true,
             path: [],
             selection: new Set(),
             displayOnlySelected: false
-          };
+          }, this.props.parameters);
           this.backendGroupVideos = this.backendGroupVideos.bind(this);
           this.changeGroup = this.changeGroup.bind(this);
           this.changePage = this.changePage.bind(this);
@@ -237,7 +237,6 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           this.manageProperties = this.manageProperties.bind(this);
           this.onVideoSelection = this.onVideoSelection.bind(this);
           this.openRandomVideo = this.openRandomVideo.bind(this);
-          this.parametersToState = this.parametersToState.bind(this);
           this.reloadDatabase = this.reloadDatabase.bind(this);
           this.resetGroup = this.resetGroup.bind(this);
           this.resetSearch = this.resetSearch.bind(this);
@@ -254,7 +253,6 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           this.unselectVideos = this.unselectVideos.bind(this);
           this.updatePage = this.updatePage.bind(this);
           this.updateStatus = this.updateStatus.bind(this);
-          this.parametersToState(this.props.parameters, this.state);
           this.callbackIndex = -1;
           this.features = new Actions({
             select: new Action("Ctrl+T", "Select videos ...", this.selectVideos),
@@ -374,7 +372,15 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             onPlus: groupDef.field[0] === ':' && this.state.definitions[groupDef.field.substr(1)].multiple ? this.classifierSelectGroup : null
           })) : ''), /*#__PURE__*/React.createElement("div", {
             className: "main-panel videos"
-          }, this.renderVideos())), /*#__PURE__*/React.createElement("footer", {
+          }, this.state.videos.map(data => /*#__PURE__*/React.createElement(Video, {
+            key: data.video_id,
+            data: data,
+            index: data.local_id,
+            parent: this,
+            selected: this.state.selection.has(data.video_id),
+            onSelect: this.onVideoSelection,
+            confirmDeletion: this.state.confirmDeletion
+          })))), /*#__PURE__*/React.createElement("footer", {
             className: "horizontal"
           }, /*#__PURE__*/React.createElement("div", {
             className: "footer-status",
@@ -392,47 +398,12 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           }, validLength))));
         }
 
-        renderVideos() {
-          return this.state.videos.map(data => /*#__PURE__*/React.createElement(Video, {
-            key: data.video_id,
-            data: data,
-            index: data.local_id,
-            parent: this,
-            selected: this.state.selection.has(data.video_id),
-            onSelect: this.onVideoSelection,
-            confirmDeletion: this.state.confirmDeletion
-          }));
-        }
-
         componentDidMount() {
           this.callbackIndex = KEYBOARD_MANAGER.register(this.features.onKeyPressed);
         }
 
         componentWillUnmount() {
           KEYBOARD_MANAGER.unregister(this.callbackIndex);
-        }
-
-        parametersToState(parameters, state) {
-          state.pageSize = parameters.pageSize;
-          state.pageNumber = parameters.info.pageNumber;
-          state.nbVideos = parameters.info.nbVideos;
-          state.realNbVideos = parameters.info.realNbVideos;
-          state.nbPages = parameters.info.nbPages;
-          state.validSize = parameters.info.validSize;
-          state.validLength = parameters.info.validLength;
-          state.notFound = parameters.info.notFound;
-          state.groupDef = parameters.info.groupDef;
-          state.searchDef = parameters.info.searchDef;
-          state.sources = parameters.info.sources;
-          state.sorting = parameters.info.sorting;
-          state.properties = parameters.info.properties;
-          state.videos = parameters.info.videos;
-          state.path = parameters.info.path;
-          state.definitions = {};
-
-          for (let def of parameters.info.properties) {
-            state.definitions[def.name] = def;
-          }
         }
 
         onVideoSelection(videoID, selected) {
@@ -484,10 +455,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           const displayOnlySelected = state.displayOnlySelected !== undefined ? state.displayOnlySelected : this.state.displayOnlySelected;
           const selection = displayOnlySelected ? Array.from(state.selection !== undefined ? state.selection : this.state.selection) : [];
           python_call('get_info_and_videos', pageSize, pageNumber, selection).then(info => {
-            this.parametersToState({
-              pageSize,
-              info
-            }, state);
+            Object.assign(state, info);
             if (top) this.setState(state, this.scrollTop);else this.setState(state);
           }).catch(backend_error);
         }

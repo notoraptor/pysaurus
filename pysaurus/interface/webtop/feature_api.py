@@ -42,22 +42,24 @@ class FeatureAPI:
                 VideoFeatures.to_json(view[index], local_id=index)
                 for index in range(start, end)
             ]
+        prop_types = self.get_prop_types()
         return {
+            "pageSize": page_size,
+            "pageNumber": page_number,
             "nbVideos": nb_videos,
             "realNbVideos": self.provider.count(),
             "nbPages": nb_pages,
             "validSize": str(self.provider.get_view_file_size(view)),
             "validLength": str(self.provider.get_view_duration(view)),
-            "nbGroups": self.provider.count_groups(),
             "notFound": self.provider.all_not_found(),
             "sources": self.provider.get_sources(),
             "groupDef": self.provider.get_group_def(),
             "searchDef": self.provider.get_search_def(),
             "sorting": self.provider.get_sorting(),
             "videos": videos,
-            "pageNumber": page_number,
-            "properties": self.get_prop_types(),
             "path": self.provider.classifier_layer.get_path(),
+            "properties": prop_types,
+            "definitions": {prop["name"]: prop for prop in prop_types},
         }
 
     def get_view_indices(self):
