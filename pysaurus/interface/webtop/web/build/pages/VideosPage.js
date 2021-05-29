@@ -1,7 +1,7 @@
-System.register(["../utils/constants.js", "../components/MenuPack.js", "../components/Pagination.js", "../pageComponents/Video.js", "../forms/FormSourceVideo.js", "../forms/FormGroup.js", "../forms/FormSearch.js", "../forms/FormSort.js", "../pageComponents/GroupView.js", "../forms/FormEditPropertyValue.js", "../forms/FormFillKeywords.js", "../forms/FormPropertyMultiVideo.js", "../components/Collapsable.js", "../components/Cross.js", "../components/SettingIcon.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/MenuItemRadio.js", "../components/Menu.js"], function (_export, _context) {
+System.register(["../utils/constants.js", "../components/MenuPack.js", "../components/Pagination.js", "../pageComponents/Video.js", "../forms/FormSourceVideo.js", "../forms/FormGroup.js", "../forms/FormSearch.js", "../forms/FormSort.js", "../pageComponents/GroupView.js", "../forms/FormEditPropertyValue.js", "../forms/FormFillKeywords.js", "../forms/FormPropertyMultiVideo.js", "../components/Collapsable.js", "../components/Cross.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/MenuItemRadio.js", "../components/Menu.js", "../utils/Selector.js", "../utils/Action.js", "../utils/Actions.js", "../components/ActionToMenuItem.js", "../components/ActionToSettingIcon.js", "../components/ActionToCross.js"], function (_export, _context) {
   "use strict";
 
-  var PAGE_SIZES, SEARCH_TYPE_TITLE, SOURCE_TREE, MenuPack, Pagination, Video, FormSourceVideo, FormGroup, FormSearch, FormSort, GroupView, FormEditPropertyValue, FormFillKeywords, FormPropertyMultiVideo, Collapsable, Cross, SettingIcon, MenuItem, MenuItemCheck, MenuItemRadio, Menu, Shortcut, Action, Actions, Filter, Selector, VideosPage;
+  var PAGE_SIZES, SEARCH_TYPE_TITLE, SOURCE_TREE, MenuPack, Pagination, Video, FormSourceVideo, FormGroup, FormSearch, FormSort, GroupView, FormEditPropertyValue, FormFillKeywords, FormPropertyMultiVideo, Collapsable, Cross, MenuItem, MenuItemCheck, MenuItemRadio, Menu, Selector, Action, Actions, ActionToMenuItem, ActionToSettingIcon, ActionToCross, Filter, VideosPage;
 
   _export("VideosPage", void 0);
 
@@ -36,8 +36,6 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
       Collapsable = _componentsCollapsableJs.Collapsable;
     }, function (_componentsCrossJs) {
       Cross = _componentsCrossJs.Cross;
-    }, function (_componentsSettingIconJs) {
-      SettingIcon = _componentsSettingIconJs.SettingIcon;
     }, function (_componentsMenuItemJs) {
       MenuItem = _componentsMenuItemJs.MenuItem;
     }, function (_componentsMenuItemCheckJs) {
@@ -46,102 +44,20 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
       MenuItemRadio = _componentsMenuItemRadioJs.MenuItemRadio;
     }, function (_componentsMenuJs) {
       Menu = _componentsMenuJs.Menu;
+    }, function (_utilsSelectorJs) {
+      Selector = _utilsSelectorJs.Selector;
+    }, function (_utilsActionJs) {
+      Action = _utilsActionJs.Action;
+    }, function (_utilsActionsJs) {
+      Actions = _utilsActionsJs.Actions;
+    }, function (_componentsActionToMenuItemJs) {
+      ActionToMenuItem = _componentsActionToMenuItemJs.ActionToMenuItem;
+    }, function (_componentsActionToSettingIconJs) {
+      ActionToSettingIcon = _componentsActionToSettingIconJs.ActionToSettingIcon;
+    }, function (_componentsActionToCrossJs) {
+      ActionToCross = _componentsActionToCrossJs.ActionToCross;
     }],
     execute: function () {
-      Shortcut = class Shortcut {
-        /**
-         * Initialize.
-         * @param shortcut {string}
-         */
-        constructor(shortcut) {
-          const pieces = shortcut.split("+").map(piece => piece.toLowerCase());
-          const specialKeys = new Set(pieces.slice(0, pieces.length - 1));
-          this.str = shortcut;
-          this.ctrl = specialKeys.has("ctrl");
-          this.alt = specialKeys.has("alt");
-          this.shift = specialKeys.has("shift") || specialKeys.has("maj");
-          this.key = pieces[pieces.length - 1];
-        }
-        /**
-         * Returns true if event corresponds to shortcut.
-         * @param event {KeyboardEvent}
-         */
-
-
-        isPressed(event) {
-          return this.key === event.key.toLowerCase() && this.ctrl === event.ctrlKey && this.alt === event.altKey && this.shift === event.shiftKey;
-        }
-
-      };
-      Action = class Action {
-        /**
-         * Initialize.
-         * @param shortcut {string}
-         * @param title {string}
-         * @param callback {function}
-         */
-        constructor(shortcut, title, callback) {
-          this.shortcut = new Shortcut(shortcut);
-          this.title = title;
-          this.callback = callback;
-        }
-
-        toMenuItem(title = undefined) {
-          return /*#__PURE__*/React.createElement(MenuItem, {
-            shortcut: this.shortcut.str,
-            action: this.callback
-          }, title || this.title);
-        }
-
-        toSettingIcon(title = undefined) {
-          return /*#__PURE__*/React.createElement(SettingIcon, {
-            title: `${title || this.title} (${this.shortcut.str})`,
-            action: this.callback
-          });
-        }
-
-        toCross(title = undefined) {
-          return /*#__PURE__*/React.createElement(Cross, {
-            title: `${title || this.title} (${this.shortcut.str})`,
-            action: this.callback
-          });
-        }
-
-      };
-      Actions = class Actions {
-        /**
-         * @param actions {Object.<string, Action>}
-         */
-        constructor(actions) {
-          /** @type {Object.<string, Action>} */
-          this.actions = actions;
-          const shortcutToName = {};
-
-          for (let name of Object.keys(actions)) {
-            const shortcut = actions[name].shortcut.str;
-            if (shortcutToName.hasOwnProperty(shortcut)) throw new Error(`Duplicated shortcut ${shortcut} for ${shortcutToName[shortcut]} and ${name}`);
-            shortcutToName[shortcut] = name;
-          }
-
-          this.onKeyPressed = this.onKeyPressed.bind(this);
-        }
-        /**
-         * Callback to trigger shortcuts on keyboard events.
-         * @param event {KeyboardEvent}
-         * @returns {boolean}
-         */
-
-
-        onKeyPressed(event) {
-          for (let action of Object.values(this.actions)) {
-            if (action.shortcut.isPressed(event)) {
-              setTimeout(() => action.callback(), 0);
-              return true;
-            }
-          }
-        }
-
-      };
       Filter = class Filter extends React.Component {
         constructor(props) {
           // page: VideosPage
@@ -174,18 +90,36 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           const sortingIsDefault = sorting.length === 1 && sorting[0] === '-date';
           const selectionSize = backend.selector.size(backend.realNbVideos);
           const selectedAll = backend.realNbVideos === selectionSize;
-          const features = app.features;
+          const actions = app.features.actions;
           return /*#__PURE__*/React.createElement("table", {
             className: "filter"
           }, /*#__PURE__*/React.createElement("tbody", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, sources.map((source, index) => /*#__PURE__*/React.createElement("div", {
             key: index
-          }, source.join(' ').replace('_', ' ')))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, features.actions.select.toSettingIcon()), !Filter.compareSources(window.PYTHON_DEFAULT_SOURCES, sources) ? /*#__PURE__*/React.createElement("div", null, features.actions.unselect.toCross()) : '')), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, groupDef ? /*#__PURE__*/React.createElement("div", null, "Grouped") : /*#__PURE__*/React.createElement("div", {
+          }, source.join(' ').replace('_', ' ')))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToSettingIcon, {
+            action: actions.select
+          })), !Filter.compareSources(window.PYTHON_DEFAULT_SOURCES, sources) ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToCross, {
+            action: actions.unselect
+          })) : '')), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, groupDef ? /*#__PURE__*/React.createElement("div", null, "Grouped") : /*#__PURE__*/React.createElement("div", {
             className: "no-filter"
-          }, "Ungrouped")), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, features.actions.group.toSettingIcon(groupDef ? 'Edit ...' : 'Group ...')), groupDef ? /*#__PURE__*/React.createElement("div", null, features.actions.ungroup.toCross()) : '')), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, searchDef ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", null, "Searched ", SEARCH_TYPE_TITLE[searchDef.cond]), /*#__PURE__*/React.createElement("div", null, "\"", /*#__PURE__*/React.createElement("strong", null, searchDef.text), "\"")) : /*#__PURE__*/React.createElement("div", {
+          }, "Ungrouped")), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToSettingIcon, {
+            action: actions.group,
+            title: groupDef ? 'Edit ...' : 'Group ...'
+          })), groupDef ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToCross, {
+            action: actions.ungroup
+          })) : '')), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, searchDef ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", null, "Searched ", SEARCH_TYPE_TITLE[searchDef.cond]), /*#__PURE__*/React.createElement("div", null, "\"", /*#__PURE__*/React.createElement("strong", null, searchDef.text), "\"")) : /*#__PURE__*/React.createElement("div", {
             className: "no-filter"
-          }, "No search")), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, features.actions.search.toSettingIcon(searchDef ? 'Edit ...' : 'Search ...')), searchDef ? /*#__PURE__*/React.createElement("div", null, features.actions.unsearch.toCross()) : '')), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, "Sorted by"), sorting.map((val, i) => /*#__PURE__*/React.createElement("div", {
+          }, "No search")), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToSettingIcon, {
+            action: actions.search,
+            title: searchDef ? 'Edit ...' : 'Search ...'
+          })), searchDef ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToCross, {
+            action: actions.unsearch
+          })) : '')), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, "Sorted by"), sorting.map((val, i) => /*#__PURE__*/React.createElement("div", {
             key: i
-          }, /*#__PURE__*/React.createElement("strong", null, val.substr(1)), ' ', val[0] === '-' ? /*#__PURE__*/React.createElement("span", null, "\u25BC") : /*#__PURE__*/React.createElement("span", null, "\u25B2")))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, features.actions.sort.toSettingIcon()), sortingIsDefault ? '' : /*#__PURE__*/React.createElement("div", null, features.actions.unsort.toCross()))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, selectionSize ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", null, "Selected"), /*#__PURE__*/React.createElement("div", null, selectedAll ? 'all' : '', " ", selectionSize, " ", selectedAll ? '' : `/ ${backend.realNbVideos}`, " video", selectionSize < 2 ? '' : 's'), /*#__PURE__*/React.createElement("div", {
+          }, /*#__PURE__*/React.createElement("strong", null, val.substr(1)), ' ', val[0] === '-' ? /*#__PURE__*/React.createElement("span", null, "\u25BC") : /*#__PURE__*/React.createElement("span", null, "\u25B2")))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToSettingIcon, {
+            action: actions.sort
+          })), sortingIsDefault ? '' : /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToCross, {
+            action: actions.unsort
+          })))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, selectionSize ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", null, "Selected"), /*#__PURE__*/React.createElement("div", null, selectedAll ? 'all' : '', " ", selectionSize, " ", selectedAll ? '' : `/ ${backend.realNbVideos}`, " video", selectionSize < 2 ? '' : 's'), /*#__PURE__*/React.createElement("div", {
             className: "mb-1"
           }, /*#__PURE__*/React.createElement("button", {
             onClick: app.displayOnlySelected
@@ -204,65 +138,6 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             title: `Deselect all`,
             action: app.deselect
           }) : ''))));
-        }
-
-      };
-      Selector = class Selector {
-        /**
-         * @param other {Selector}
-         */
-        constructor(other = undefined) {
-          this.all = other ? other.all : false;
-          this.include = new Set(other ? other.include : []);
-          this.exclude = new Set(other ? other.exclude : []);
-        }
-
-        clone() {
-          return new Selector(this);
-        }
-
-        toJSON() {
-          return {
-            all: this.all,
-            include: Array.from(this.include),
-            exclude: Array.from(this.exclude)
-          };
-        }
-
-        size(allSize) {
-          return this.all ? allSize - this.exclude.size : this.include.size;
-        }
-
-        has(value) {
-          return this.all && !this.exclude.has(value) || !this.all && this.include.has(value);
-        }
-
-        add(value) {
-          if (this.all) {
-            this.exclude.delete(value);
-          } else {
-            this.include.add(value);
-          }
-        }
-
-        remove(value) {
-          if (this.all) {
-            this.exclude.add(value);
-          } else {
-            this.include.delete(value);
-          }
-        }
-
-        clear() {
-          this.all = false;
-          this.include.clear();
-          this.exclude.clear();
-        }
-
-        fill() {
-          this.all = true;
-          this.include.clear();
-          this.exclude.clear();
         }
 
       };
@@ -346,7 +221,21 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             title: "Options"
           }, /*#__PURE__*/React.createElement(Menu, {
             title: "Filter videos ..."
-          }, this.features.actions.select.toMenuItem(), this.features.actions.group.toMenuItem(), this.features.actions.search.toMenuItem(), this.features.actions.sort.toMenuItem()), notFound || !nbVideos ? '' : this.features.actions.openRandomVideo.toMenuItem(), this.features.actions.reload.toMenuItem(), this.features.actions.manageProperties.toMenuItem(), stringSetProperties.length ? /*#__PURE__*/React.createElement(MenuItem, {
+          }, /*#__PURE__*/React.createElement(ActionToMenuItem, {
+            action: this.features.actions.select
+          }), /*#__PURE__*/React.createElement(ActionToMenuItem, {
+            action: this.features.actions.group
+          }), /*#__PURE__*/React.createElement(ActionToMenuItem, {
+            action: this.features.actions.search
+          }), /*#__PURE__*/React.createElement(ActionToMenuItem, {
+            action: this.features.actions.sort
+          })), notFound || !nbVideos ? '' : /*#__PURE__*/React.createElement(ActionToMenuItem, {
+            action: this.features.actions.openRandomVideo
+          }), /*#__PURE__*/React.createElement(ActionToMenuItem, {
+            action: this.features.actions.reload
+          }), /*#__PURE__*/React.createElement(ActionToMenuItem, {
+            action: this.features.actions.manageProperties
+          }), stringSetProperties.length ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.fillWithKeywords
           }, "Put keywords into a property ...") : '', /*#__PURE__*/React.createElement(Menu, {
             title: "Page size ..."

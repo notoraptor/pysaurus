@@ -12,99 +12,16 @@ import {FormFillKeywords} from "../forms/FormFillKeywords.js";
 import {FormPropertyMultiVideo} from "../forms/FormPropertyMultiVideo.js";
 import {Collapsable} from "../components/Collapsable.js";
 import {Cross} from "../components/Cross.js";
-import {SettingIcon} from "../components/SettingIcon.js";
 import {MenuItem} from "../components/MenuItem.js";
 import {MenuItemCheck} from "../components/MenuItemCheck.js";
 import {MenuItemRadio} from "../components/MenuItemRadio.js";
 import {Menu} from "../components/Menu.js";
-
-class Shortcut {
-    /**
-     * Initialize.
-     * @param shortcut {string}
-     */
-    constructor(shortcut) {
-        const pieces = shortcut.split("+").map(piece => piece.toLowerCase());
-        const specialKeys = new Set(pieces.slice(0, pieces.length - 1));
-        this.str = shortcut;
-        this.ctrl = specialKeys.has("ctrl");
-        this.alt = specialKeys.has("alt");
-        this.shift = specialKeys.has("shift") || specialKeys.has("maj");
-        this.key = pieces[pieces.length - 1];
-    }
-
-    /**
-     * Returns true if event corresponds to shortcut.
-     * @param event {KeyboardEvent}
-     */
-    isPressed(event) {
-        return (
-            this.key === event.key.toLowerCase()
-            && this.ctrl === event.ctrlKey
-            && this.alt === event.altKey
-            && this.shift === event.shiftKey
-        );
-    }
-}
-
-class Action {
-    /**
-     * Initialize.
-     * @param shortcut {string}
-     * @param title {string}
-     * @param callback {function}
-     */
-    constructor(shortcut, title, callback) {
-        this.shortcut = new Shortcut(shortcut);
-        this.title = title;
-        this.callback = callback;
-    }
-
-    toMenuItem(title = undefined) {
-        return <MenuItem shortcut={this.shortcut.str} action={this.callback}>{title || this.title}</MenuItem>;
-    }
-
-    toSettingIcon(title = undefined) {
-        return <SettingIcon title={`${title || this.title} (${this.shortcut.str})`} action={this.callback}/>;
-    }
-
-    toCross(title = undefined) {
-        return <Cross title={`${title || this.title} (${this.shortcut.str})`} action={this.callback}/>;
-    }
-}
-
-class Actions {
-    /**
-     * @param actions {Object.<string, Action>}
-     */
-    constructor(actions) {
-        /** @type {Object.<string, Action>} */
-        this.actions = actions;
-
-        const shortcutToName = {};
-        for (let name of Object.keys(actions)) {
-            const shortcut = actions[name].shortcut.str;
-            if (shortcutToName.hasOwnProperty(shortcut))
-                throw new Error(`Duplicated shortcut ${shortcut} for ${shortcutToName[shortcut]} and ${name}`);
-            shortcutToName[shortcut] = name;
-        }
-        this.onKeyPressed = this.onKeyPressed.bind(this);
-    }
-
-    /**
-     * Callback to trigger shortcuts on keyboard events.
-     * @param event {KeyboardEvent}
-     * @returns {boolean}
-     */
-    onKeyPressed(event) {
-        for (let action of Object.values(this.actions)) {
-            if (action.shortcut.isPressed(event)) {
-                setTimeout(() => action.callback(), 0);
-                return true;
-            }
-        }
-    }
-}
+import {Selector} from "../utils/Selector.js";
+import {Action} from "../utils/Action.js";
+import {Actions} from "../utils/Actions.js";
+import {ActionToMenuItem} from "../components/ActionToMenuItem.js";
+import {ActionToSettingIcon} from "../components/ActionToSettingIcon.js";
+import {ActionToCross} from "../components/ActionToCross.js";
 
 class Filter extends React.Component {
     constructor(props) {
@@ -138,7 +55,7 @@ class Filter extends React.Component {
         const sortingIsDefault = sorting.length === 1 && sorting[0] === '-date';
         const selectionSize = backend.selector.size(backend.realNbVideos);
         const selectedAll = backend.realNbVideos === selectionSize;
-        const features = app.features;
+        const actions = app.features.actions;
         return (
             <table className="filter">
                 <tbody>
@@ -151,9 +68,9 @@ class Filter extends React.Component {
                         ))}
                     </td>
                     <td>
-                        <div>{features.actions.select.toSettingIcon()}</div>
+                        <div><ActionToSettingIcon action={actions.select}/></div>
                         {!Filter.compareSources(window.PYTHON_DEFAULT_SOURCES, sources) ?
-                            <div>{features.actions.unselect.toCross()}</div> : ''}
+                            <div><ActionToCross action={actions.unselect}/></div> : ''}
                     </td>
                 </tr>
                 <tr>
@@ -163,8 +80,8 @@ class Filter extends React.Component {
                         ) : <div className="no-filter">Ungrouped</div>}
                     </td>
                     <td>
-                        <div>{features.actions.group.toSettingIcon(groupDef ? 'Edit ...' : 'Group ...')}</div>
-                        {groupDef ? <div>{features.actions.ungroup.toCross()}</div> : ''}
+                        <div><ActionToSettingIcon action={actions.group} title={groupDef ? 'Edit ...' : 'Group ...'}/></div>
+                        {groupDef ? <div><ActionToCross action={actions.ungroup}/></div> : ''}
                     </td>
                 </tr>
                 <tr>
@@ -177,8 +94,8 @@ class Filter extends React.Component {
                         ) : <div className="no-filter">No search</div>}
                     </td>
                     <td>
-                        <div>{features.actions.search.toSettingIcon(searchDef ? 'Edit ...' : 'Search ...')}</div>
-                        {searchDef ? <div>{features.actions.unsearch.toCross()}</div> : ''}
+                        <div><ActionToSettingIcon action={actions.search} title={searchDef ? 'Edit ...' : 'Search ...'}/></div>
+                        {searchDef ? <div><ActionToCross action={actions.unsearch}/></div> : ''}
                     </td>
                 </tr>
                 <tr>
@@ -191,8 +108,8 @@ class Filter extends React.Component {
                             </div>))}
                     </td>
                     <td>
-                        <div>{features.actions.sort.toSettingIcon()}</div>
-                        {sortingIsDefault ? '' : <div>{features.actions.unsort.toCross()}</div>}
+                        <div><ActionToSettingIcon action={actions.sort}/></div>
+                        {sortingIsDefault ? '' : <div><ActionToCross action={actions.unsort}/></div>}
                     </td>
                 </tr>
                 <tr>
@@ -233,57 +150,6 @@ class Filter extends React.Component {
                 </tbody>
             </table>
         );
-    }
-}
-
-class Selector {
-    /**
-     * @param other {Selector}
-     */
-    constructor(other = undefined) {
-        this.all = other ? other.all : false;
-        this.include = new Set(other ? other.include : []);
-        this.exclude = new Set(other ? other.exclude : []);
-    }
-    clone() {
-        return new Selector(this);
-    }
-    toJSON() {
-        return {
-            all: this.all,
-            include: Array.from(this.include),
-            exclude: Array.from(this.exclude),
-        };
-    }
-    size(allSize) {
-        return this.all ? allSize - this.exclude.size : this.include.size;
-    }
-    has(value) {
-        return (this.all && !this.exclude.has(value)) || (!this.all && this.include.has(value));
-    }
-    add(value) {
-        if (this.all) {
-            this.exclude.delete(value);
-        } else {
-            this.include.add(value);
-        }
-    }
-    remove(value) {
-        if (this.all) {
-            this.exclude.add(value);
-        } else {
-            this.include.delete(value);
-        }
-    }
-    clear() {
-        this.all = false;
-        this.include.clear();
-        this.exclude.clear();
-    }
-    fill() {
-        this.all = true;
-        this.include.clear();
-        this.exclude.clear();
     }
 }
 
@@ -365,14 +231,14 @@ export class VideosPage extends React.Component {
                 <header className="horizontal">
                     <MenuPack title="Options">
                         <Menu title="Filter videos ...">
-                            {this.features.actions.select.toMenuItem()}
-                            {this.features.actions.group.toMenuItem()}
-                            {this.features.actions.search.toMenuItem()}
-                            {this.features.actions.sort.toMenuItem()}
+                            {<ActionToMenuItem action={this.features.actions.select}/>}
+                            {<ActionToMenuItem action={this.features.actions.group}/>}
+                            {<ActionToMenuItem action={this.features.actions.search}/>}
+                            {<ActionToMenuItem action={this.features.actions.sort}/>}
                         </Menu>
-                        {notFound || !nbVideos ? '' : this.features.actions.openRandomVideo.toMenuItem()}
-                        {this.features.actions.reload.toMenuItem()}
-                        {this.features.actions.manageProperties.toMenuItem()}
+                        {notFound || !nbVideos ? '' : <ActionToMenuItem action={this.features.actions.openRandomVideo}/>}
+                        {<ActionToMenuItem action={this.features.actions.reload}/>}
+                        {<ActionToMenuItem action={this.features.actions.manageProperties}/>}
                         {stringSetProperties.length ?
                             <MenuItem action={this.fillWithKeywords}>Put keywords into a property ...</MenuItem> : ''}
                         <Menu title="Page size ...">
@@ -516,7 +382,7 @@ export class VideosPage extends React.Component {
         const selector = displayOnlySelected ? (state.selector !== undefined ? state.selector : this.state.selector).toJSON() : null;
         python_call('get_info_and_videos', pageSize, pageNumber, selector)
             .then(info => {
-                this.setState(Object.assign(state, info), top ? this.scrollTop: undefined);
+                this.setState(Object.assign(state, info), top ? this.scrollTop : undefined);
             })
             .catch(backend_error);
     }
@@ -529,7 +395,10 @@ export class VideosPage extends React.Component {
         } else {
             selector.remove(videoID);
             if (this.state.displayOnlySelected)
-                this.updatePage({selector, displayOnlySelected: this.state.displayOnlySelected && selector.size(this.state.realNbVideos)});
+                this.updatePage({
+                    selector,
+                    displayOnlySelected: this.state.displayOnlySelected && selector.size(this.state.realNbVideos)
+                });
             else
                 this.setState({selector});
         }
