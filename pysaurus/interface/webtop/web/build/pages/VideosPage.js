@@ -354,8 +354,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         }
 
         scrollTop() {
-          const videos = document.querySelector('#videos .videos');
-          videos.scrollTop = 0;
+          document.querySelector('#videos .videos').scrollTop = 0;
         }
 
         backend(callargs, state, top = true) {
@@ -413,20 +412,16 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           });
         }
 
-        updateStatus(status, reload = false, top = false) {
-          if (reload) {
-            this.backend(null, {
-              status
-            }, top);
-          } else {
-            this.setState({
-              status
-            });
-          }
+        updateStatus(status) {
+          this.setState({
+            status
+          });
         }
 
         resetStatus() {
-          this.updateStatus("Ready.");
+          this.setState({
+            status: "Ready."
+          });
         }
 
         unselectVideos() {
@@ -481,7 +476,9 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
               onClose();
 
               if (edition) {
-                python_call('edit_property_for_videos', propertyName, videos, edition.add, edition.remove).then(() => this.updateStatus(`Edited property "${propertyName}" for ${selectionSize} video${selectionSize < 2 ? '' : 's'}`, true)).catch(backend_error);
+                python_call('edit_property_for_videos', propertyName, videos, edition.add, edition.remove).then(() => this.backend(null, {
+                  status: `Edited property "${propertyName}" for ${selectionSize} video${selectionSize < 2 ? '' : 's'}`
+                })).catch(backend_error);
               }
             }
           }))).catch(backend_error);
@@ -565,7 +562,9 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
               onClose();
 
               if (state) {
-                python_call('fill_property_with_terms', state.field, state.onlyEmpty).then(() => this.updateStatus(`Filled property "${state.field}" with video keywords.`, true, true)).catch(backend_error);
+                python_call('fill_property_with_terms', state.field, state.onlyEmpty).then(() => this.backend(null, {
+                  status: `Filled property "${state.field}" with video keywords.`
+                })).catch(backend_error);
               }
             }
           }));
@@ -656,15 +655,21 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
               if (operation) {
                 switch (operation.form) {
                   case 'delete':
-                    python_call('delete_property_value', name, values).then(() => this.updateStatus(`Property value deleted: "${name}" / "${values.join('", "')}"`, true)).catch(backend_error);
+                    this.backend(['delete_property_value', name, values], {
+                      status: `Property value deleted: "${name}" / "${values.join('", "')}"`
+                    });
                     break;
 
                   case 'edit':
-                    python_call('edit_property_value', name, values, operation.value).then(() => this.updateStatus(`Property value edited: "${name}" : "${values.join('", "')}" -> "${operation.value}"`, true)).catch(backend_error);
+                    this.backend(['edit_property_value', name, values, operation.value], {
+                      status: `Property value edited: "${name}" : "${values.join('", "')}" -> "${operation.value}"`
+                    });
                     break;
 
                   case 'move':
-                    python_call('move_property_value', name, values, operation.move).then(() => this.updateStatus(`Property value moved: "${values.join('", "')}" from "${name}" to "${operation.move}"`, true)).catch(backend_error);
+                    this.backend(['move_property_value', name, values, operation.move], {
+                      status: `Property value moved: "${values.join('", "')}" from "${name}" to "${operation.move}"`
+                    });
                     break;
                 }
               }
