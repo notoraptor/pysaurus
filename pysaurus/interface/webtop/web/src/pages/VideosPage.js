@@ -80,7 +80,9 @@ class Filter extends React.Component {
                         ) : <div className="no-filter">Ungrouped</div>}
                     </td>
                     <td>
-                        <div><ActionToSettingIcon action={actions.group} title={groupDef ? 'Edit ...' : 'Group ...'}/></div>
+                        <div>
+                            <ActionToSettingIcon action={actions.group} title={groupDef ? 'Edit ...' : 'Group ...'}/>
+                        </div>
                         {groupDef ? <div><ActionToCross action={actions.ungroup}/></div> : ''}
                     </td>
                 </tr>
@@ -94,7 +96,9 @@ class Filter extends React.Component {
                         ) : <div className="no-filter">No search</div>}
                     </td>
                     <td>
-                        <div><ActionToSettingIcon action={actions.search} title={searchDef ? 'Edit ...' : 'Search ...'}/></div>
+                        <div>
+                            <ActionToSettingIcon action={actions.search} title={searchDef ? 'Edit ...' : 'Search ...'}/>
+                        </div>
                         {searchDef ? <div><ActionToCross action={actions.unsearch}/></div> : ''}
                     </td>
                 </tr>
@@ -225,20 +229,21 @@ export class VideosPage extends React.Component {
         const stringSetProperties = this.getStringSetProperties(this.state.properties);
         const stringProperties = this.getStringProperties(this.state.properties);
         const groupField = groupDef && groupDef.field.charAt(0) === ':' ? groupDef.field.substr(1) : null;
+        const actions = this.features.actions;
 
         return (
             <div id="videos">
                 <header className="horizontal">
                     <MenuPack title="Options">
                         <Menu title="Filter videos ...">
-                            {<ActionToMenuItem action={this.features.actions.select}/>}
-                            {<ActionToMenuItem action={this.features.actions.group}/>}
-                            {<ActionToMenuItem action={this.features.actions.search}/>}
-                            {<ActionToMenuItem action={this.features.actions.sort}/>}
+                            {<ActionToMenuItem action={actions.select}/>}
+                            {<ActionToMenuItem action={actions.group}/>}
+                            {<ActionToMenuItem action={actions.search}/>}
+                            {<ActionToMenuItem action={actions.sort}/>}
                         </Menu>
-                        {notFound || !nbVideos ? '' : <ActionToMenuItem action={this.features.actions.openRandomVideo}/>}
-                        {<ActionToMenuItem action={this.features.actions.reload}/>}
-                        {<ActionToMenuItem action={this.features.actions.manageProperties}/>}
+                        {notFound || !nbVideos ? '' : <ActionToMenuItem action={actions.openRandomVideo}/>}
+                        {<ActionToMenuItem action={actions.reload}/>}
+                        {<ActionToMenuItem action={actions.manageProperties}/>}
                         {stringSetProperties.length ?
                             <MenuItem action={this.fillWithKeywords}>Put keywords into a property ...</MenuItem> : ''}
                         <Menu title="Page size ...">

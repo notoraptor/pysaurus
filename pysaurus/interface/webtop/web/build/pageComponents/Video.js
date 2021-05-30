@@ -114,15 +114,15 @@ System.register(["../components/MenuPack.js", "../forms/FormRenameVideo.js", "..
             className: "prepend"
           }, /*#__PURE__*/React.createElement("code", null, data.extension)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", {
             title: data.file_size
-          }, data.size), " / ", data.container_format, " (", /*#__PURE__*/React.createElement("span", {
+          }, data.size), " / ", data.container_format, " ", "(", /*#__PURE__*/React.createElement("span", {
             title: data.video_codec_description
-          }, data.video_codec), ", ", /*#__PURE__*/React.createElement("span", {
+          }, data.video_codec), ",", " ", /*#__PURE__*/React.createElement("span", {
             title: data.audio_codec_description
           }, data.audio_codec), ")"), /*#__PURE__*/React.createElement("div", {
             className: "prepend"
-          }, /*#__PURE__*/React.createElement("code", null, "Quality")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, /*#__PURE__*/React.createElement("em", null, data.quality)), " %")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, data.width), " x ", /*#__PURE__*/React.createElement("strong", null, data.height), " @ ", data.frame_rate, " fps | ", data.sample_rate, " Hz, ", /*#__PURE__*/React.createElement("span", {
+          }, /*#__PURE__*/React.createElement("code", null, "Quality")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, /*#__PURE__*/React.createElement("em", null, data.quality)), " %")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, data.width), " x ", /*#__PURE__*/React.createElement("strong", null, data.height), " @", " ", data.frame_rate, " fps | ", data.sample_rate, " Hz,", " ", /*#__PURE__*/React.createElement("span", {
             title: data.audio_bit_rate
-          }, audio_bit_rate, " Kb/s"), " | ", /*#__PURE__*/React.createElement("strong", null, data.length), " | ", /*#__PURE__*/React.createElement("code", null, data.date)))));
+          }, audio_bit_rate, " Kb/s"), " |", " ", /*#__PURE__*/React.createElement("strong", null, data.length), " | ", /*#__PURE__*/React.createElement("code", null, data.date)))));
         }
 
         renderProperties() {

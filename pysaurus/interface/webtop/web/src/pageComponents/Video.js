@@ -52,8 +52,9 @@ export class Video extends React.Component {
                                         <MenuItem action={this.openVideo}>Open file</MenuItem> :
                                         <div className="not-found">(not found)</div>}
                                     {data.exists ?
-                                        <MenuItem action={this.openContainingFolder}>Open containing
-                                        folder</MenuItem> : ''}
+                                        <MenuItem action={this.openContainingFolder}>
+                                            Open containing folder
+                                        </MenuItem> : ''}
                                     {meta_title ? <MenuItem action={this.copyMetaTitle}>Copy meta title</MenuItem> : ''}
                                     {file_title ? <MenuItem action={this.copyFileTitle}>Copy file title</MenuItem> : ''}
                                     {data.exists ? <MenuItem action={this.renameVideo}>Rename video</MenuItem> : ''}
@@ -74,16 +75,31 @@ export class Video extends React.Component {
                                 <div className="file-title"><em>{data.file_title}</em></div>}
                         </div>
                         <div className={'filename-line' + (data.exists ? '' : ' horizontal')}>
-                            {data.exists ? '' : <div className="prepend" onClick={this.deleteVideo}><code className="text-not-found">NOT FOUND</code><code className="text-delete">DELETE</code></div>}
-                            <div className="filename"><code {...(data.exists ? {onClick: this.openVideo} : {})}>{data.filename}</code></div>
+                            {data.exists ? '' :
+                                <div className="prepend" onClick={this.deleteVideo}>
+                                    <code className="text-not-found">NOT FOUND</code>
+                                    <code className="text-delete">DELETE</code>
+                                </div>}
+                            <div className="filename">
+                                <code {...(data.exists ? {onClick: this.openVideo} : {})}>{data.filename}</code>
+                            </div>
                         </div>
                         <div className="format horizontal">
                             <div className="prepend"><code>{data.extension}</code></div>
-                            <div><strong title={data.file_size}>{data.size}</strong> / {data.container_format} (<span title={data.video_codec_description}>{data.video_codec}</span>, <span title={data.audio_codec_description}>{data.audio_codec}</span>)</div>
+                            <div>
+                                <strong title={data.file_size}>{data.size}</strong> / {data.container_format}{" "}
+                                (<span title={data.video_codec_description}>{data.video_codec}</span>,{" "}
+                                 <span title={data.audio_codec_description}>{data.audio_codec}</span>)
+                            </div>
                             <div className="prepend"><code>Quality</code></div>
                             <div><strong><em>{data.quality}</em></strong> %</div>
                         </div>
-                        <div><strong>{data.width}</strong> x <strong>{data.height}</strong> @ {data.frame_rate} fps | {data.sample_rate} Hz, <span title={data.audio_bit_rate}>{audio_bit_rate} Kb/s</span> | <strong>{data.length}</strong> | <code>{data.date}</code></div>
+                        <div>
+                            <strong>{data.width}</strong> x <strong>{data.height}</strong> @{" "}
+                            {data.frame_rate} fps | {data.sample_rate} Hz,{" "}
+                            <span title={data.audio_bit_rate}>{audio_bit_rate} Kb/s</span> |{" "}
+                            <strong>{data.length}</strong> | <code>{data.date}</code>
+                        </div>
                     </div>
                 </div>
             </div>

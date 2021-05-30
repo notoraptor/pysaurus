@@ -136,10 +136,12 @@ const NotificationRenderer = {
         keys.sort();
         return (
             <div key={i}>
-                <div><strong>
-                    {errors.length}{' '}{message.name === 'VideoInfoErrors' ? 'video' : 'thumbnail'}
-                    error{errors.length > 1 ? 's' : ''}
-                </strong>:</div>
+                <div>
+                    <strong>
+                        {errors.length}{' '}{message.name === 'VideoInfoErrors' ? 'video' : 'thumbnail'}{" "}
+                        error{errors.length > 1 ? 's' : ''}
+                    </strong>:
+                </div>
                 <ul>{keys.map((name, indexName) => (
                     <li key={indexName}>
                         <div><code>{name}</code></div>
@@ -224,10 +226,11 @@ export class HomePage extends React.Component {
 
     renderInitialButton() {
         const status = this.state.status;
+        const update = this.props.parameters.update;
         if (status === HomeStatus.INITIAL)
             return <button onClick={this.loadDatabase}>Load database</button>;
         if (status === HomeStatus.LOADING)
-            return <button disabled={true}>{this.props.parameters.update ? 'Updating' : 'Loading'} database ...</button>;
+            return <button disabled={true}>{update ? 'Updating' : 'Loading'} database ...</button>;
         if (status === HomeStatus.LOADED)
             return <button onClick={this.displayVideos}>Display videos</button>;
     }

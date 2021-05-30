@@ -126,8 +126,12 @@ System.register(["../utils/constants.js", "../components/Pagination.js", "../com
               }
             }
 
+            const classes = ["line"];
+            if (selected === index) classes.push("selected");
+            classes.push(isProperty ? "property" : "attribute");
+            if (entry.value === null) classes.push("all");
             return /*#__PURE__*/React.createElement("div", {
-              className: `line ${selected === index ? 'selected' : ''} ${isProperty ? 'property' : 'attribute'} ${entry.value === null ? 'all' : ''}`,
+              className: classes.join(" "),
               key: index,
               onClick: () => this.select(index)
             }, /*#__PURE__*/React.createElement("div", _extends({

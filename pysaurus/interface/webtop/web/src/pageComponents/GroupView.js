@@ -105,10 +105,14 @@ export class GroupView extends React.Component {
                                 buttons.push(' ');
                             }
                         }
+                        const classes = ["line"];
+                        if (selected === index)
+                            classes.push("selected");
+                        classes.push(isProperty ? "property" : "attribute");
+                        if (entry.value === null)
+                            classes.push("all");
                         return (
-                            <div className={`line ${selected === index ? 'selected' : ''} ${isProperty ? 'property' : 'attribute'} ${entry.value === null ? 'all' : ''}`}
-                                 key={index}
-                                 onClick={() => this.select(index)}>
+                            <div className={classes.join(" ")} key={index} onClick={() => this.select(index)}>
                                 <div className="column left" {...(isProperty ? {} : {title: entry.value})}>
                                     {buttons}
                                     <span key="value" {...(isProperty ? {title: entry.value} : {})}>

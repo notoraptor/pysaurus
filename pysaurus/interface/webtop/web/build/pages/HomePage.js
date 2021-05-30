@@ -154,7 +154,7 @@ System.register(["../utils/constants.js"], function (_export, _context) {
           keys.sort();
           return /*#__PURE__*/React.createElement("div", {
             key: i
-          }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, errors.length, ' ', message.name === 'VideoInfoErrors' ? 'video' : 'thumbnail', "error", errors.length > 1 ? 's' : ''), ":"), /*#__PURE__*/React.createElement("ul", null, keys.map((name, indexName) => /*#__PURE__*/React.createElement("li", {
+          }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, errors.length, ' ', message.name === 'VideoInfoErrors' ? 'video' : 'thumbnail', " ", "error", errors.length > 1 ? 's' : ''), ":"), /*#__PURE__*/React.createElement("ul", null, keys.map((name, indexName) => /*#__PURE__*/React.createElement("li", {
             key: indexName
           }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("code", null, name)), /*#__PURE__*/React.createElement("ul", null, errors[name].map((error, indexError) => /*#__PURE__*/React.createElement("li", {
             key: indexError
@@ -245,12 +245,13 @@ System.register(["../utils/constants.js"], function (_export, _context) {
 
         renderInitialButton() {
           const status = this.state.status;
+          const update = this.props.parameters.update;
           if (status === HomeStatus.INITIAL) return /*#__PURE__*/React.createElement("button", {
             onClick: this.loadDatabase
           }, "Load database");
           if (status === HomeStatus.LOADING) return /*#__PURE__*/React.createElement("button", {
             disabled: true
-          }, this.props.parameters.update ? 'Updating' : 'Loading', " database ...");
+          }, update ? 'Updating' : 'Loading', " database ...");
           if (status === HomeStatus.LOADED) return /*#__PURE__*/React.createElement("button", {
             onClick: this.displayVideos
           }, "Display videos");

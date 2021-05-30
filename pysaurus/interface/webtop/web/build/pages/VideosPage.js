@@ -213,6 +213,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           const stringSetProperties = this.getStringSetProperties(this.state.properties);
           const stringProperties = this.getStringProperties(this.state.properties);
           const groupField = groupDef && groupDef.field.charAt(0) === ':' ? groupDef.field.substr(1) : null;
+          const actions = this.features.actions;
           return /*#__PURE__*/React.createElement("div", {
             id: "videos"
           }, /*#__PURE__*/React.createElement("header", {
@@ -222,19 +223,19 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           }, /*#__PURE__*/React.createElement(Menu, {
             title: "Filter videos ..."
           }, /*#__PURE__*/React.createElement(ActionToMenuItem, {
-            action: this.features.actions.select
+            action: actions.select
           }), /*#__PURE__*/React.createElement(ActionToMenuItem, {
-            action: this.features.actions.group
+            action: actions.group
           }), /*#__PURE__*/React.createElement(ActionToMenuItem, {
-            action: this.features.actions.search
+            action: actions.search
           }), /*#__PURE__*/React.createElement(ActionToMenuItem, {
-            action: this.features.actions.sort
+            action: actions.sort
           })), notFound || !nbVideos ? '' : /*#__PURE__*/React.createElement(ActionToMenuItem, {
-            action: this.features.actions.openRandomVideo
+            action: actions.openRandomVideo
           }), /*#__PURE__*/React.createElement(ActionToMenuItem, {
-            action: this.features.actions.reload
+            action: actions.reload
           }), /*#__PURE__*/React.createElement(ActionToMenuItem, {
-            action: this.features.actions.manageProperties
+            action: actions.manageProperties
           }), stringSetProperties.length ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.fillWithKeywords
           }, "Put keywords into a property ...") : '', /*#__PURE__*/React.createElement(Menu, {
