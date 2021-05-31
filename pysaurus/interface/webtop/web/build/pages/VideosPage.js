@@ -1,7 +1,23 @@
 System.register(["../utils/constants.js", "../components/MenuPack.js", "../components/Pagination.js", "../pageComponents/Video.js", "../forms/FormSourceVideo.js", "../forms/FormGroup.js", "../forms/FormSearch.js", "../forms/FormSort.js", "../pageComponents/GroupView.js", "../forms/FormEditPropertyValue.js", "../forms/FormFillKeywords.js", "../forms/FormPropertyMultiVideo.js", "../components/Collapsable.js", "../components/Cross.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/MenuItemRadio.js", "../components/Menu.js", "../utils/Selector.js", "../utils/Action.js", "../utils/Actions.js", "../components/ActionToMenuItem.js", "../components/ActionToSettingIcon.js", "../components/ActionToCross.js"], function (_export, _context) {
   "use strict";
 
-  var PAGE_SIZES, SEARCH_TYPE_TITLE, SOURCE_TREE, MenuPack, Pagination, Video, FormSourceVideo, FormGroup, FormSearch, FormSort, GroupView, FormEditPropertyValue, FormFillKeywords, FormPropertyMultiVideo, Collapsable, Cross, MenuItem, MenuItemCheck, MenuItemRadio, Menu, Selector, Action, Actions, ActionToMenuItem, ActionToSettingIcon, ActionToCross, Filter, VideosPage;
+  var PAGE_SIZES, SEARCH_TYPE_TITLE, SOURCE_TREE, MenuPack, Pagination, Video, FormSourceVideo, FormGroup, FormSearch, FormSort, GroupView, FormEditPropertyValue, FormFillKeywords, FormPropertyMultiVideo, Collapsable, Cross, MenuItem, MenuItemCheck, MenuItemRadio, Menu, Selector, Action, Actions, ActionToMenuItem, ActionToSettingIcon, ActionToCross, VideosPage;
+
+  function compareSources(sources1, sources2) {
+    if (sources1.length !== sources2.length) return false;
+
+    for (let i = 0; i < sources1.length; ++i) {
+      const path1 = sources1[i];
+      const path2 = sources2[i];
+      if (path1.length !== path2.length) return false;
+
+      for (let j = 0; j < path1.length; ++j) {
+        if (path1[j] !== path2[j]) return false;
+      }
+    }
+
+    return true;
+  }
 
   _export("VideosPage", void 0);
 
@@ -58,90 +74,6 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
       ActionToCross = _componentsActionToCrossJs.ActionToCross;
     }],
     execute: function () {
-      Filter = class Filter extends React.Component {
-        constructor(props) {
-          // page: VideosPage
-          super(props);
-        }
-
-        static compareSources(sources1, sources2) {
-          if (sources1.length !== sources2.length) return false;
-
-          for (let i = 0; i < sources1.length; ++i) {
-            const path1 = sources1[i];
-            const path2 = sources2[i];
-            if (path1.length !== path2.length) return false;
-
-            for (let j = 0; j < path1.length; ++j) {
-              if (path1[j] !== path2[j]) return false;
-            }
-          }
-
-          return true;
-        }
-
-        render() {
-          const app = this.props.page;
-          const backend = app.state;
-          const sources = backend.sources;
-          const groupDef = backend.groupDef;
-          const searchDef = backend.searchDef;
-          const sorting = backend.sorting;
-          const sortingIsDefault = sorting.length === 1 && sorting[0] === '-date';
-          const selectionSize = backend.selector.size(backend.realNbVideos);
-          const selectedAll = backend.realNbVideos === selectionSize;
-          const actions = app.features.actions;
-          return /*#__PURE__*/React.createElement("table", {
-            className: "filter"
-          }, /*#__PURE__*/React.createElement("tbody", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, sources.map((source, index) => /*#__PURE__*/React.createElement("div", {
-            key: index
-          }, source.join(' ').replace('_', ' ')))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToSettingIcon, {
-            action: actions.select
-          })), !Filter.compareSources(window.PYTHON_DEFAULT_SOURCES, sources) ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToCross, {
-            action: actions.unselect
-          })) : '')), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, groupDef ? /*#__PURE__*/React.createElement("div", null, "Grouped") : /*#__PURE__*/React.createElement("div", {
-            className: "no-filter"
-          }, "Ungrouped")), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToSettingIcon, {
-            action: actions.group,
-            title: groupDef ? 'Edit ...' : 'Group ...'
-          })), groupDef ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToCross, {
-            action: actions.ungroup
-          })) : '')), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, searchDef ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", null, "Searched ", SEARCH_TYPE_TITLE[searchDef.cond]), /*#__PURE__*/React.createElement("div", null, "\"", /*#__PURE__*/React.createElement("strong", null, searchDef.text), "\"")) : /*#__PURE__*/React.createElement("div", {
-            className: "no-filter"
-          }, "No search")), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToSettingIcon, {
-            action: actions.search,
-            title: searchDef ? 'Edit ...' : 'Search ...'
-          })), searchDef ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToCross, {
-            action: actions.unsearch
-          })) : '')), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, "Sorted by"), sorting.map((val, i) => /*#__PURE__*/React.createElement("div", {
-            key: i
-          }, /*#__PURE__*/React.createElement("strong", null, val.substr(1)), ' ', val[0] === '-' ? /*#__PURE__*/React.createElement("span", null, "\u25BC") : /*#__PURE__*/React.createElement("span", null, "\u25B2")))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToSettingIcon, {
-            action: actions.sort
-          })), sortingIsDefault ? '' : /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToCross, {
-            action: actions.unsort
-          })))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, selectionSize ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", null, "Selected"), /*#__PURE__*/React.createElement("div", null, selectedAll ? 'all' : '', " ", selectionSize, " ", selectedAll ? '' : `/ ${backend.realNbVideos}`, " video", selectionSize < 2 ? '' : 's'), /*#__PURE__*/React.createElement("div", {
-            className: "mb-1"
-          }, /*#__PURE__*/React.createElement("button", {
-            onClick: app.displayOnlySelected
-          }, backend.displayOnlySelected ? 'Display all videos' : 'Display only selected videos'))) : /*#__PURE__*/React.createElement("div", null, "No videos selected"), selectedAll ? '' : /*#__PURE__*/React.createElement("div", {
-            className: "mb-1"
-          }, /*#__PURE__*/React.createElement("button", {
-            onClick: app.selectAll
-          }, "select all")), selectionSize ? /*#__PURE__*/React.createElement("div", {
-            className: "mb-1"
-          }, /*#__PURE__*/React.createElement(MenuPack, {
-            title: "Edit property ..."
-          }, backend.properties.map((def, index) => /*#__PURE__*/React.createElement(MenuItem, {
-            key: index,
-            action: () => app.editPropertiesForManyVideos(def.name)
-          }, def.name)))) : ''), /*#__PURE__*/React.createElement("td", null, selectionSize ? /*#__PURE__*/React.createElement(Cross, {
-            title: `Deselect all`,
-            action: app.deselect
-          }) : ''))));
-        }
-
-      };
-
       _export("VideosPage", VideosPage = class VideosPage extends React.Component {
         constructor(props) {
           // parameters: {backend state}
@@ -277,9 +209,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             lite: false,
             className: "filter",
             title: "Filter"
-          }, /*#__PURE__*/React.createElement(Filter, {
-            page: this
-          })), this.state.path.length ? /*#__PURE__*/React.createElement(Collapsable, {
+          }, this.renderFilter()), this.state.path.length ? /*#__PURE__*/React.createElement(Collapsable, {
             lite: false,
             className: "filter",
             title: "Classifier path"
@@ -344,6 +274,65 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           }, validSize), /*#__PURE__*/React.createElement("div", {
             className: "info length"
           }, validLength))));
+        }
+
+        renderFilter() {
+          const actions = this.features.actions;
+          const sources = this.state.sources;
+          const groupDef = this.state.groupDef;
+          const searchDef = this.state.searchDef;
+          const sorting = this.state.sorting;
+          const realNbVideos = this.state.realNbVideos;
+          const selectionSize = this.state.selector.size(realNbVideos);
+          const sortingIsDefault = sorting.length === 1 && sorting[0] === '-date';
+          const selectedAll = realNbVideos === selectionSize;
+          return /*#__PURE__*/React.createElement("table", {
+            className: "filter"
+          }, /*#__PURE__*/React.createElement("tbody", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, sources.map((source, index) => /*#__PURE__*/React.createElement("div", {
+            key: index
+          }, source.join(' ').replace('_', ' ')))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToSettingIcon, {
+            action: actions.select
+          })), !compareSources(window.PYTHON_DEFAULT_SOURCES, sources) ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToCross, {
+            action: actions.unselect
+          })) : '')), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, groupDef ? /*#__PURE__*/React.createElement("div", null, "Grouped") : /*#__PURE__*/React.createElement("div", {
+            className: "no-filter"
+          }, "Ungrouped")), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToSettingIcon, {
+            action: actions.group,
+            title: groupDef ? 'Edit ...' : 'Group ...'
+          })), groupDef ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToCross, {
+            action: actions.ungroup
+          })) : '')), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, searchDef ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", null, "Searched ", SEARCH_TYPE_TITLE[searchDef.cond]), /*#__PURE__*/React.createElement("div", null, "\"", /*#__PURE__*/React.createElement("strong", null, searchDef.text), "\"")) : /*#__PURE__*/React.createElement("div", {
+            className: "no-filter"
+          }, "No search")), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToSettingIcon, {
+            action: actions.search,
+            title: searchDef ? 'Edit ...' : 'Search ...'
+          })), searchDef ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToCross, {
+            action: actions.unsearch
+          })) : '')), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, "Sorted by"), sorting.map((val, i) => /*#__PURE__*/React.createElement("div", {
+            key: i
+          }, /*#__PURE__*/React.createElement("strong", null, val.substr(1)), ' ', val[0] === '-' ? /*#__PURE__*/React.createElement("span", null, "\u25BC") : /*#__PURE__*/React.createElement("span", null, "\u25B2")))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToSettingIcon, {
+            action: actions.sort
+          })), sortingIsDefault ? '' : /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToCross, {
+            action: actions.unsort
+          })))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, selectionSize ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", null, "Selected"), /*#__PURE__*/React.createElement("div", null, selectedAll ? 'all' : '', " ", selectionSize, " ", selectedAll ? '' : `/ ${realNbVideos}`, " ", "video", selectionSize < 2 ? '' : 's'), /*#__PURE__*/React.createElement("div", {
+            className: "mb-1"
+          }, /*#__PURE__*/React.createElement("button", {
+            onClick: this.displayOnlySelected
+          }, this.state.displayOnlySelected ? 'Display all videos' : 'Display only selected videos'))) : /*#__PURE__*/React.createElement("div", null, "No videos selected"), selectedAll ? '' : /*#__PURE__*/React.createElement("div", {
+            className: "mb-1"
+          }, /*#__PURE__*/React.createElement("button", {
+            onClick: this.selectAll
+          }, "select all")), selectionSize ? /*#__PURE__*/React.createElement("div", {
+            className: "mb-1"
+          }, /*#__PURE__*/React.createElement(MenuPack, {
+            title: "Edit property ..."
+          }, this.state.properties.map((def, index) => /*#__PURE__*/React.createElement(MenuItem, {
+            key: index,
+            action: () => this.editPropertiesForManyVideos(def.name)
+          }, def.name)))) : ''), /*#__PURE__*/React.createElement("td", null, selectionSize ? /*#__PURE__*/React.createElement(Cross, {
+            title: `Deselect all`,
+            action: this.deselect
+          }) : ''))));
         }
 
         componentDidMount() {

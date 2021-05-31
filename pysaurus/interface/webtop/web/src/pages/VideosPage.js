@@ -23,138 +23,21 @@ import {ActionToMenuItem} from "../components/ActionToMenuItem.js";
 import {ActionToSettingIcon} from "../components/ActionToSettingIcon.js";
 import {ActionToCross} from "../components/ActionToCross.js";
 
-class Filter extends React.Component {
-    constructor(props) {
-        // page: VideosPage
-        super(props);
-    }
 
-    static compareSources(sources1, sources2) {
-        if (sources1.length !== sources2.length)
+function compareSources(sources1, sources2) {
+    if (sources1.length !== sources2.length)
+        return false;
+    for (let i = 0; i < sources1.length; ++i) {
+        const path1 = sources1[i];
+        const path2 = sources2[i];
+        if (path1.length !== path2.length)
             return false;
-        for (let i = 0; i < sources1.length; ++i) {
-            const path1 = sources1[i];
-            const path2 = sources2[i];
-            if (path1.length !== path2.length)
+        for (let j = 0; j < path1.length; ++j) {
+            if (path1[j] !== path2[j])
                 return false;
-            for (let j = 0; j < path1.length; ++j) {
-                if (path1[j] !== path2[j])
-                    return false;
-            }
         }
-        return true;
     }
-
-    render() {
-        const app = this.props.page;
-        const backend = app.state;
-        const sources = backend.sources;
-        const groupDef = backend.groupDef;
-        const searchDef = backend.searchDef;
-        const sorting = backend.sorting;
-        const sortingIsDefault = sorting.length === 1 && sorting[0] === '-date';
-        const selectionSize = backend.selector.size(backend.realNbVideos);
-        const selectedAll = backend.realNbVideos === selectionSize;
-        const actions = app.features.actions;
-        return (
-            <table className="filter">
-                <tbody>
-                <tr>
-                    <td>
-                        {sources.map((source, index) => (
-                            <div key={index}>
-                                {source.join(' ').replace('_', ' ')}
-                            </div>
-                        ))}
-                    </td>
-                    <td>
-                        <div><ActionToSettingIcon action={actions.select}/></div>
-                        {!Filter.compareSources(window.PYTHON_DEFAULT_SOURCES, sources) ?
-                            <div><ActionToCross action={actions.unselect}/></div> : ''}
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        {groupDef ? (
-                            <div>Grouped</div>
-                        ) : <div className="no-filter">Ungrouped</div>}
-                    </td>
-                    <td>
-                        <div>
-                            <ActionToSettingIcon action={actions.group} title={groupDef ? 'Edit ...' : 'Group ...'}/>
-                        </div>
-                        {groupDef ? <div><ActionToCross action={actions.ungroup}/></div> : ''}
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        {searchDef ? (
-                            <div>
-                                <div>Searched {SEARCH_TYPE_TITLE[searchDef.cond]}</div>
-                                <div>&quot;<strong>{searchDef.text}</strong>&quot;</div>
-                            </div>
-                        ) : <div className="no-filter">No search</div>}
-                    </td>
-                    <td>
-                        <div>
-                            <ActionToSettingIcon action={actions.search} title={searchDef ? 'Edit ...' : 'Search ...'}/>
-                        </div>
-                        {searchDef ? <div><ActionToCross action={actions.unsearch}/></div> : ''}
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <div>Sorted by</div>
-                        {sorting.map((val, i) => (
-                            <div key={i}>
-                                <strong>{val.substr(1)}</strong>{' '}
-                                {val[0] === '-' ? (<span>&#9660;</span>) : (<span>&#9650;</span>)}
-                            </div>))}
-                    </td>
-                    <td>
-                        <div><ActionToSettingIcon action={actions.sort}/></div>
-                        {sortingIsDefault ? '' : <div><ActionToCross action={actions.unsort}/></div>}
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        {selectionSize ? (
-                            <div>
-                                <div>Selected</div>
-                                <div>{selectedAll ? 'all' : ''} {selectionSize} {selectedAll ? '' : `/ ${backend.realNbVideos}`} video{selectionSize < 2 ? '' : 's'}</div>
-                                <div className="mb-1">
-                                    <button onClick={app.displayOnlySelected}>
-                                        {backend.displayOnlySelected ?
-                                            'Display all videos' :
-                                            'Display only selected videos'}
-                                    </button>
-                                </div>
-                            </div>
-                        ) : (
-                            <div>No videos selected</div>
-                        )}
-                        {selectedAll ? '' : <div className="mb-1">
-                            <button onClick={app.selectAll}>select all</button>
-                        </div>}
-                        {selectionSize ? (
-                            <div className="mb-1">
-                                <MenuPack title="Edit property ...">
-                                    {backend.properties.map((def, index) => (
-                                        <MenuItem key={index}
-                                                  action={() => app.editPropertiesForManyVideos(def.name)}>{def.name}</MenuItem>
-                                    ))}
-                                </MenuPack>
-                            </div>
-                        ) : ''}
-                    </td>
-                    <td>
-                        {selectionSize ? <Cross title={`Deselect all`} action={app.deselect}/> : ''}
-                    </td>
-                </tr>
-                </tbody>
-            </table>
-        );
-    }
+    return true;
 }
 
 export class VideosPage extends React.Component {
@@ -289,7 +172,7 @@ export class VideosPage extends React.Component {
                 <div className="content">
                     <div className="side-panel">
                         <Collapsable lite={false} className="filter" title="Filter">
-                            <Filter page={this}/>
+                            {this.renderFilter()}
                         </Collapsable>
                         {this.state.path.length ? (
                             <Collapsable lite={false} className="filter" title="Classifier path">
@@ -364,6 +247,120 @@ export class VideosPage extends React.Component {
                     </div>
                 </footer>
             </div>
+        );
+    }
+
+    renderFilter() {
+        const actions = this.features.actions;
+        const sources = this.state.sources;
+        const groupDef = this.state.groupDef;
+        const searchDef = this.state.searchDef;
+        const sorting = this.state.sorting;
+        const realNbVideos = this.state.realNbVideos;
+        const selectionSize = this.state.selector.size(realNbVideos);
+        const sortingIsDefault = sorting.length === 1 && sorting[0] === '-date';
+        const selectedAll = realNbVideos === selectionSize;
+        return (
+            <table className="filter">
+                <tbody>
+                <tr>
+                    <td>
+                        {sources.map((source, index) => (
+                            <div key={index}>
+                                {source.join(' ').replace('_', ' ')}
+                            </div>
+                        ))}
+                    </td>
+                    <td>
+                        <div><ActionToSettingIcon action={actions.select}/></div>
+                        {!compareSources(window.PYTHON_DEFAULT_SOURCES, sources) ?
+                            <div><ActionToCross action={actions.unselect}/></div> : ''}
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        {groupDef ? (
+                            <div>Grouped</div>
+                        ) : <div className="no-filter">Ungrouped</div>}
+                    </td>
+                    <td>
+                        <div>
+                            <ActionToSettingIcon action={actions.group} title={groupDef ? 'Edit ...' : 'Group ...'}/>
+                        </div>
+                        {groupDef ? <div><ActionToCross action={actions.ungroup}/></div> : ''}
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        {searchDef ? (
+                            <div>
+                                <div>Searched {SEARCH_TYPE_TITLE[searchDef.cond]}</div>
+                                <div>&quot;<strong>{searchDef.text}</strong>&quot;</div>
+                            </div>
+                        ) : <div className="no-filter">No search</div>}
+                    </td>
+                    <td>
+                        <div>
+                            <ActionToSettingIcon action={actions.search} title={searchDef ? 'Edit ...' : 'Search ...'}/>
+                        </div>
+                        {searchDef ? <div><ActionToCross action={actions.unsearch}/></div> : ''}
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div>Sorted by</div>
+                        {sorting.map((val, i) => (
+                            <div key={i}>
+                                <strong>{val.substr(1)}</strong>{' '}
+                                {val[0] === '-' ? (<span>&#9660;</span>) : (<span>&#9650;</span>)}
+                            </div>))}
+                    </td>
+                    <td>
+                        <div><ActionToSettingIcon action={actions.sort}/></div>
+                        {sortingIsDefault ? '' : <div><ActionToCross action={actions.unsort}/></div>}
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        {selectionSize ? (
+                            <div>
+                                <div>Selected</div>
+                                <div>
+                                    {selectedAll ? 'all' : ''}{" "}
+                                    {selectionSize}{" "}
+                                    {selectedAll ? '' : `/ ${realNbVideos}`}{" "}
+                                    video{selectionSize < 2 ? '' : 's'}
+                                </div>
+                                <div className="mb-1">
+                                    <button onClick={this.displayOnlySelected}>
+                                        {this.state.displayOnlySelected ?
+                                            'Display all videos' : 'Display only selected videos'}
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <div>No videos selected</div>
+                        )}
+                        {selectedAll ? '' : <div className="mb-1">
+                            <button onClick={this.selectAll}>select all</button>
+                        </div>}
+                        {selectionSize ? (
+                            <div className="mb-1">
+                                <MenuPack title="Edit property ...">
+                                    {this.state.properties.map((def, index) => (
+                                        <MenuItem key={index}
+                                                  action={() => this.editPropertiesForManyVideos(def.name)}>{def.name}</MenuItem>
+                                    ))}
+                                </MenuPack>
+                            </div>
+                        ) : ''}
+                    </td>
+                    <td>
+                        {selectionSize ? <Cross title={`Deselect all`} action={this.deselect}/> : ''}
+                    </td>
+                </tr>
+                </tbody>
+            </table>
         );
     }
 
