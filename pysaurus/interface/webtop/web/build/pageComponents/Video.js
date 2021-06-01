@@ -1,7 +1,7 @@
-System.register(["../components/MenuPack.js", "../forms/FormRenameVideo.js", "../dialogs/Dialog.js", "../forms/FormSetProperties.js", "../components/Collapsable.js", "../components/MenuItem.js"], function (_export, _context) {
+System.register(["../components/MenuPack.js", "../forms/FormRenameVideo.js", "../dialogs/Dialog.js", "../forms/FormSetProperties.js", "../components/Collapsable.js", "../components/MenuItem.js", "../utils/backend.js", "../utils/constants.js"], function (_export, _context) {
   "use strict";
 
-  var MenuPack, FormRenameVideo, Dialog, FormSetProperties, Collapsable, MenuItem, Video;
+  var MenuPack, FormRenameVideo, Dialog, FormSetProperties, Collapsable, MenuItem, python_call, backend_error, Characters, Video;
 
   _export("Video", void 0);
 
@@ -18,6 +18,11 @@ System.register(["../components/MenuPack.js", "../forms/FormRenameVideo.js", "..
       Collapsable = _componentsCollapsableJs.Collapsable;
     }, function (_componentsMenuItemJs) {
       MenuItem = _componentsMenuItemJs.MenuItem;
+    }, function (_utilsBackendJs) {
+      python_call = _utilsBackendJs.python_call;
+      backend_error = _utilsBackendJs.backend_error;
+    }, function (_utilsConstantsJs) {
+      Characters = _utilsConstantsJs.Characters;
     }],
     execute: function () {
       _export("Video", Video = class Video extends React.Component {
@@ -68,7 +73,7 @@ System.register(["../components/MenuPack.js", "../forms/FormRenameVideo.js", "..
           }, /*#__PURE__*/React.createElement("div", {
             className: "options horizontal"
           }, /*#__PURE__*/React.createElement(MenuPack, {
-            title: `${Utils.CHARACTER_SETTINGS}`
+            title: `${Characters.SETTINGS}`
           }, data.exists ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.openVideo
           }, "Open file") : /*#__PURE__*/React.createElement("div", {

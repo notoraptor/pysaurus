@@ -1,7 +1,7 @@
-System.register(["../components/SetInput.js", "../dialogs/Dialog.js"], function (_export, _context) {
+System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../utils/functions.js"], function (_export, _context) {
   "use strict";
 
-  var ComponentController, SetInput, Dialog, FormSetProperties;
+  var ComponentController, SetInput, Dialog, parsePropValString, FormSetProperties;
 
   _export("FormSetProperties", void 0);
 
@@ -11,6 +11,8 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js"], function 
       SetInput = _componentsSetInputJs.SetInput;
     }, function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
+    }, function (_utilsFunctionsJs) {
+      parsePropValString = _utilsFunctionsJs.parsePropValString;
     }],
     execute: function () {
       _export("FormSetProperties", FormSetProperties = class FormSetProperties extends React.Component {

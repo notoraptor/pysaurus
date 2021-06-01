@@ -1,4 +1,5 @@
 import {Cross} from "./Cross.js";
+import {Characters} from "../utils/constants.js";
 
 export class SettingIcon extends Cross {
     constructor(props) {
@@ -6,6 +7,6 @@ export class SettingIcon extends Cross {
         // title? str
         super(props);
         this.type = "settings";
-        this.content = Utils.CHARACTER_SETTINGS;
+        this.content = Characters.SETTINGS;
     }
 }

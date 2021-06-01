@@ -4,6 +4,8 @@ import {Dialog} from "../dialogs/Dialog.js";
 import {FormSetProperties} from "../forms/FormSetProperties.js";
 import {Collapsable} from "../components/Collapsable.js";
 import {MenuItem} from "../components/MenuItem.js";
+import {python_call, backend_error} from "../utils/backend.js";
+import {Characters} from "../utils/constants.js";
 
 export class Video extends React.Component {
     constructor(props) {
@@ -47,7 +49,7 @@ export class Video extends React.Component {
                     <div className="info">
                         <div className="name">
                             <div className="options horizontal">
-                                <MenuPack title={`${Utils.CHARACTER_SETTINGS}`}>
+                                <MenuPack title={`${Characters.SETTINGS}`}>
                                     {data.exists ?
                                         <MenuItem action={this.openVideo}>Open file</MenuItem> :
                                         <div className="not-found">(not found)</div>}

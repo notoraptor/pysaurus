@@ -1,7 +1,7 @@
-System.register(["../forms/FormGoToPage.js", "../dialogs/DialogSearch.js"], function (_export, _context) {
+System.register(["../forms/FormGoToPage.js", "../dialogs/DialogSearch.js", "../utils/functions.js"], function (_export, _context) {
   "use strict";
 
-  var FormGoToPage, DialogSearch, Pagination;
+  var FormGoToPage, DialogSearch, capitalizeFirstLetter, Pagination;
 
   _export("Pagination", void 0);
 
@@ -10,6 +10,8 @@ System.register(["../forms/FormGoToPage.js", "../dialogs/DialogSearch.js"], func
       FormGoToPage = _formsFormGoToPageJs.FormGoToPage;
     }, function (_dialogsDialogSearchJs) {
       DialogSearch = _dialogsDialogSearchJs.DialogSearch;
+    }, function (_utilsFunctionsJs) {
+      capitalizeFirstLetter = _utilsFunctionsJs.capitalizeFirstLetter;
     }],
     execute: function () {
       _export("Pagination", Pagination = class Pagination extends React.Component {
@@ -47,7 +49,7 @@ System.register(["../forms/FormGoToPage.js", "../dialogs/DialogSearch.js"], func
           }, "<"), /*#__PURE__*/React.createElement("span", {
             className: "go",
             onClick: this.props.onSearch ? this.look : this.look
-          }, Utils.sentence(singular)), /*#__PURE__*/React.createElement("span", {
+          }, capitalizeFirstLetter(singular)), /*#__PURE__*/React.createElement("span", {
             className: "go",
             onClick: this.go
           }, pageNumber + 1, "/", nbPages), /*#__PURE__*/React.createElement("button", {

@@ -1,7 +1,7 @@
 System.register([], function (_export, _context) {
   "use strict";
 
-  var HomeStatus, GroupPermission, FIELDS_GROUP_DEF, STRING_FIELDS, FIELD_TITLES, SORTED_FIELDS_AND_TITLES, SEARCH_TYPE_TITLE, PAGE_SIZES, VIDEO_DEFAULT_PAGE_SIZE, VIDEO_DEFAULT_PAGE_NUMBER, SOURCE_TREE;
+  var HomeStatus, GroupPermission, FIELDS_GROUP_DEF, STRING_FIELDS, FIELD_TITLES, SORTED_FIELDS_AND_TITLES, SEARCH_TYPE_TITLE, PAGE_SIZES, VIDEO_DEFAULT_PAGE_SIZE, VIDEO_DEFAULT_PAGE_NUMBER, SOURCE_TREE, Characters;
   return {
     setters: [],
     execute: function () {
@@ -122,6 +122,15 @@ System.register([], function (_export, _context) {
             without_thumbnails: false
           }
         }
+      });
+
+      _export("Characters", Characters = {
+        CROSS: "\u2715",
+        SETTINGS: "\u2630",
+        ARROW_DOWN: "\u25BC",
+        ARROW_UP: "\u25B2",
+        SMART_ARROW_LEFT: "\u2B9C",
+        SMART_ARROW_RIGHT: "\u2B9E"
       });
     }
   };

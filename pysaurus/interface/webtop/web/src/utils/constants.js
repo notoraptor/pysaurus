@@ -111,3 +111,12 @@ export const SOURCE_TREE = {
         found: {with_thumbnails: false, without_thumbnails: false},
     },
 };
+
+export const Characters = {
+    CROSS: "\u2715",
+    SETTINGS: "\u2630",
+    ARROW_DOWN: "\u25BC",
+    ARROW_UP: "\u25B2",
+    SMART_ARROW_LEFT: "\u2B9C",
+    SMART_ARROW_RIGHT: "\u2B9E",
+}

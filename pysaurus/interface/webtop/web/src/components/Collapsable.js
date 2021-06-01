@@ -1,3 +1,5 @@
+import {Characters} from "../utils/constants.js";
+
 export class Collapsable extends React.Component {
     constructor(props) {
         // title: str
@@ -16,7 +18,7 @@ export class Collapsable extends React.Component {
                 <div className="header horizontal" onClick={this.stack}>
                     <div className="title">{this.props.title}</div>
                     <div className="icon">
-                        {this.state.stack ? Utils.CHARACTER_ARROW_DOWN : Utils.CHARACTER_ARROW_UP}
+                        {this.state.stack ? Characters.ARROW_DOWN : Characters.ARROW_UP}
                     </div>
                 </div>
                 {this.state.stack ? '' : (

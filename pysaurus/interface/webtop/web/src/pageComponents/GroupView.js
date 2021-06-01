@@ -1,7 +1,8 @@
-import {FIELD_TITLES} from "../utils/constants.js";
+import {FIELD_TITLES, Characters} from "../utils/constants.js";
 import {Pagination} from "../components/Pagination.js";
 import {SettingIcon} from "../components/SettingIcon.js";
 import {PlusIcon} from "../components/PlusIcon.js";
+import {capitalizeFirstLetter} from "../utils/functions.js";
 
 export class GroupView extends React.Component {
     constructor(props) {
@@ -131,13 +132,12 @@ export class GroupView extends React.Component {
     renderTitle() {
         const field = this.props.field;
         let title = field.charAt(0) === ':' ?
-            `"${Utils.sentence(field.substr(1))}"` :
-            Utils.sentence(FIELD_TITLES[field]);
+            `"${capitalizeFirstLetter(field.substr(1))}"` : capitalizeFirstLetter(FIELD_TITLES[field]);
         if (this.props.sorting === "length")
             title = `|| ${title} ||`;
         else if (this.props.sorting === "count")
             title = `${title} (#)`;
-        title = `${title} ${this.props.reverse ? Utils.CHARACTER_ARROW_DOWN : Utils.CHARACTER_ARROW_UP}`;
+        title = `${title} ${this.props.reverse ? Characters.ARROW_DOWN : Characters.ARROW_UP}`;
         return title;
     }
 

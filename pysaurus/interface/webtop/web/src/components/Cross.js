@@ -1,10 +1,12 @@
+import {Characters} from "../utils/constants.js";
+
 export class Cross extends React.Component {
     constructor(props) {
         // action ? function()
         // title? str
         super(props);
         this.type = "cross";
-        this.content = Utils.CHARACTER_CROSS;
+        this.content = Characters.CROSS;
     }
 
     render() {

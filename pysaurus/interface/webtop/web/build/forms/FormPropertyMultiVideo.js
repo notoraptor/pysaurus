@@ -1,13 +1,17 @@
-System.register(["../dialogs/Dialog.js"], function (_export, _context) {
+System.register(["../dialogs/Dialog.js", "../utils/functions.js", "../utils/constants.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, FormPropertyMultiVideo;
+  var Dialog, parsePropValString, Characters, FormPropertyMultiVideo;
 
   _export("FormPropertyMultiVideo", void 0);
 
   return {
     setters: [function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
+    }, function (_utilsFunctionsJs) {
+      parsePropValString = _utilsFunctionsJs.parsePropValString;
+    }, function (_utilsConstantsJs) {
+      Characters = _utilsConstantsJs.Characters;
     }],
     execute: function () {
       _export("FormPropertyMultiVideo", FormPropertyMultiVideo = class FormPropertyMultiVideo extends React.Component {
@@ -71,19 +75,19 @@ System.register(["../dialogs/Dialog.js"], function (_export, _context) {
             className: "value"
           }, "all ", this.state.remove.length, " values"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("button", {
             onClick: this.unRemoveAll
-          }, Utils.CHARACTER_SMART_ARROW_RIGHT))) : /*#__PURE__*/React.createElement("div", null), this.state.current.length > 1 ? /*#__PURE__*/React.createElement("div", {
+          }, Characters.SMART_ARROW_RIGHT))) : /*#__PURE__*/React.createElement("div", null), this.state.current.length > 1 ? /*#__PURE__*/React.createElement("div", {
             className: "horizontal"
           }, /*#__PURE__*/React.createElement("button", {
             onClick: this.removeAll
-          }, Utils.CHARACTER_SMART_ARROW_LEFT), /*#__PURE__*/React.createElement("div", {
+          }, Characters.SMART_ARROW_LEFT), /*#__PURE__*/React.createElement("div", {
             className: "value"
           }, "all ", this.state.current.length, " values"), this.props.definition.multiple ? /*#__PURE__*/React.createElement("button", {
             onClick: this.addAll
-          }, Utils.CHARACTER_SMART_ARROW_RIGHT) : '') : /*#__PURE__*/React.createElement("div", null), this.state.add.length > 1 ? /*#__PURE__*/React.createElement("div", {
+          }, Characters.SMART_ARROW_RIGHT) : '') : /*#__PURE__*/React.createElement("div", null), this.state.add.length > 1 ? /*#__PURE__*/React.createElement("div", {
             className: "horizontal"
           }, /*#__PURE__*/React.createElement("button", {
             onClick: this.unAddAll
-          }, Utils.CHARACTER_SMART_ARROW_LEFT), /*#__PURE__*/React.createElement("div", {
+          }, Characters.SMART_ARROW_LEFT), /*#__PURE__*/React.createElement("div", {
             className: "value"
           }, "all ", this.state.add.length, " values")) : /*#__PURE__*/React.createElement("div", null)), this.renderFormAdd()));
         }
@@ -96,7 +100,7 @@ System.register(["../dialogs/Dialog.js"], function (_export, _context) {
             className: "value"
           }, value), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("button", {
             onClick: () => this.unRemove(value)
-          }, Utils.CHARACTER_SMART_ARROW_RIGHT))));
+          }, Characters.SMART_ARROW_RIGHT))));
         }
 
         renderCurrent() {
@@ -105,11 +109,11 @@ System.register(["../dialogs/Dialog.js"], function (_export, _context) {
             className: "entry horizontal"
           }, /*#__PURE__*/React.createElement("button", {
             onClick: () => this.remove(value)
-          }, Utils.CHARACTER_SMART_ARROW_LEFT), /*#__PURE__*/React.createElement("div", {
+          }, Characters.SMART_ARROW_LEFT), /*#__PURE__*/React.createElement("div", {
             className: "value"
           }, value, " ", /*#__PURE__*/React.createElement("em", null, /*#__PURE__*/React.createElement("strong", null, "(", this.state.mapping.get(value), ")"))), /*#__PURE__*/React.createElement("button", {
             onClick: () => this.add(value)
-          }, Utils.CHARACTER_SMART_ARROW_RIGHT)));
+          }, Characters.SMART_ARROW_RIGHT)));
         }
 
         renderAdd() {
@@ -118,7 +122,7 @@ System.register(["../dialogs/Dialog.js"], function (_export, _context) {
             className: "entry horizontal"
           }, /*#__PURE__*/React.createElement("button", {
             onClick: () => this.unAdd(value)
-          }, this.state.mapping.has(value) ? Utils.CHARACTER_SMART_ARROW_LEFT : '-'), /*#__PURE__*/React.createElement("div", {
+          }, this.state.mapping.has(value) ? Characters.SMART_ARROW_LEFT : '-'), /*#__PURE__*/React.createElement("div", {
             className: "value"
           }, value)));
         }

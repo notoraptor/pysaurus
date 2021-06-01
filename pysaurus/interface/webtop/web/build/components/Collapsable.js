@@ -1,12 +1,14 @@
-System.register([], function (_export, _context) {
+System.register(["../utils/constants.js"], function (_export, _context) {
   "use strict";
 
-  var Collapsable;
+  var Characters, Collapsable;
 
   _export("Collapsable", void 0);
 
   return {
-    setters: [],
+    setters: [function (_utilsConstantsJs) {
+      Characters = _utilsConstantsJs.Characters;
+    }],
     execute: function () {
       _export("Collapsable", Collapsable = class Collapsable extends React.Component {
         constructor(props) {
@@ -32,7 +34,7 @@ System.register([], function (_export, _context) {
             className: "title"
           }, this.props.title), /*#__PURE__*/React.createElement("div", {
             className: "icon"
-          }, this.state.stack ? Utils.CHARACTER_ARROW_DOWN : Utils.CHARACTER_ARROW_UP)), this.state.stack ? '' : /*#__PURE__*/React.createElement("div", {
+          }, this.state.stack ? Characters.ARROW_DOWN : Characters.ARROW_UP)), this.state.stack ? '' : /*#__PURE__*/React.createElement("div", {
             className: "content"
           }, this.props.children));
         }

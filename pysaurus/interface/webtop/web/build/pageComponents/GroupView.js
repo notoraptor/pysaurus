@@ -1,7 +1,7 @@
-System.register(["../utils/constants.js", "../components/Pagination.js", "../components/SettingIcon.js", "../components/PlusIcon.js"], function (_export, _context) {
+System.register(["../utils/constants.js", "../components/Pagination.js", "../components/SettingIcon.js", "../components/PlusIcon.js", "../utils/functions.js"], function (_export, _context) {
   "use strict";
 
-  var FIELD_TITLES, Pagination, SettingIcon, PlusIcon, GroupView;
+  var FIELD_TITLES, Characters, Pagination, SettingIcon, PlusIcon, capitalizeFirstLetter, GroupView;
 
   function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
@@ -10,12 +10,15 @@ System.register(["../utils/constants.js", "../components/Pagination.js", "../com
   return {
     setters: [function (_utilsConstantsJs) {
       FIELD_TITLES = _utilsConstantsJs.FIELD_TITLES;
+      Characters = _utilsConstantsJs.Characters;
     }, function (_componentsPaginationJs) {
       Pagination = _componentsPaginationJs.Pagination;
     }, function (_componentsSettingIconJs) {
       SettingIcon = _componentsSettingIconJs.SettingIcon;
     }, function (_componentsPlusIconJs) {
       PlusIcon = _componentsPlusIconJs.PlusIcon;
+    }, function (_utilsFunctionsJs) {
+      capitalizeFirstLetter = _utilsFunctionsJs.capitalizeFirstLetter;
     }],
     execute: function () {
       _export("GroupView", GroupView = class GroupView extends React.Component {
@@ -151,9 +154,9 @@ System.register(["../utils/constants.js", "../components/Pagination.js", "../com
 
         renderTitle() {
           const field = this.props.field;
-          let title = field.charAt(0) === ':' ? `"${Utils.sentence(field.substr(1))}"` : Utils.sentence(FIELD_TITLES[field]);
+          let title = field.charAt(0) === ':' ? `"${capitalizeFirstLetter(field.substr(1))}"` : capitalizeFirstLetter(FIELD_TITLES[field]);
           if (this.props.sorting === "length") title = `|| ${title} ||`;else if (this.props.sorting === "count") title = `${title} (#)`;
-          title = `${title} ${this.props.reverse ? Utils.CHARACTER_ARROW_DOWN : Utils.CHARACTER_ARROW_UP}`;
+          title = `${title} ${this.props.reverse ? Characters.ARROW_DOWN : Characters.ARROW_UP}`;
           return title;
         }
 

@@ -1,5 +1,6 @@
 import {ComponentController, SetInput} from "../components/SetInput.js";
 import {Dialog} from "../dialogs/Dialog.js";
+import {parsePropValString} from "../utils/functions.js";
 
 export class FormSetProperties extends React.Component {
     constructor(props) {

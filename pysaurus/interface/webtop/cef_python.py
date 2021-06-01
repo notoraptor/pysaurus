@@ -28,7 +28,7 @@ class Interface(GuiAPI):
     def _notify(self, notification):
         print(notification)
         self.browser.ExecuteFunction(
-            "__notify",
+            "NOTIFICATION_MANAGER.call",
             {
                 "name": notification.get_name(),
                 "notification": notification.to_dict(),

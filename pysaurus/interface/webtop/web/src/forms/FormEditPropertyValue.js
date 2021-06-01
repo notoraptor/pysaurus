@@ -1,4 +1,5 @@
 import {Dialog} from "../dialogs/Dialog.js";
+import {parsePropValString} from "../utils/functions.js";
 
 export class FormEditPropertyValue extends React.Component {
     constructor(props) {

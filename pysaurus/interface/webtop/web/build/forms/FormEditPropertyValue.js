@@ -1,13 +1,15 @@
-System.register(["../dialogs/Dialog.js"], function (_export, _context) {
+System.register(["../dialogs/Dialog.js", "../utils/functions.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, FormEditPropertyValue;
+  var Dialog, parsePropValString, FormEditPropertyValue;
 
   _export("FormEditPropertyValue", void 0);
 
   return {
     setters: [function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
+    }, function (_utilsFunctionsJs) {
+      parsePropValString = _utilsFunctionsJs.parsePropValString;
     }],
     execute: function () {
       _export("FormEditPropertyValue", FormEditPropertyValue = class FormEditPropertyValue extends React.Component {

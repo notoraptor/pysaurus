@@ -3,6 +3,7 @@ import {HomePage} from "./pages/HomePage.js";
 import {VideosPage} from "./pages/VideosPage.js";
 import {PropertiesPage} from "./pages/PropertiesPage.js";
 import {FancyBox} from "./dialogs/FancyBox.js";
+import {python_call, backend_error} from "./utils/backend.js";
 
 import {VIDEO_DEFAULT_PAGE_NUMBER, VIDEO_DEFAULT_PAGE_SIZE} from "./utils/constants.js";
 

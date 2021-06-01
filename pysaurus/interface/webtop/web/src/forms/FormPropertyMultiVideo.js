@@ -1,4 +1,6 @@
 import {Dialog} from "../dialogs/Dialog.js";
+import {parsePropValString} from "../utils/functions.js";
+import {Characters} from "../utils/constants.js";
 
 export class FormPropertyMultiVideo extends React.Component {
     constructor(props) {
@@ -53,22 +55,22 @@ export class FormPropertyMultiVideo extends React.Component {
                             <div className="horizontal">
                                 <div className="value">all {this.state.remove.length} values</div>
                                 <div>
-                                    <button onClick={this.unRemoveAll}>{Utils.CHARACTER_SMART_ARROW_RIGHT}</button>
+                                    <button onClick={this.unRemoveAll}>{Characters.SMART_ARROW_RIGHT}</button>
                                 </div>
                             </div>
                         ) : <div/>}
                         {this.state.current.length > 1 ? (
                             <div className="horizontal">
-                                <button onClick={this.removeAll}>{Utils.CHARACTER_SMART_ARROW_LEFT}</button>
+                                <button onClick={this.removeAll}>{Characters.SMART_ARROW_LEFT}</button>
                                 <div className="value">all {this.state.current.length} values</div>
                                 {this.props.definition.multiple ? (
-                                    <button onClick={this.addAll}>{Utils.CHARACTER_SMART_ARROW_RIGHT}</button>
+                                    <button onClick={this.addAll}>{Characters.SMART_ARROW_RIGHT}</button>
                                 ) : ''}
                             </div>
                         ) : <div/>}
                         {this.state.add.length > 1 ? (
                             <div className="horizontal">
-                                <button onClick={this.unAddAll}>{Utils.CHARACTER_SMART_ARROW_LEFT}</button>
+                                <button onClick={this.unAddAll}>{Characters.SMART_ARROW_LEFT}</button>
                                 <div className="value">all {this.state.add.length} values</div>
                             </div>
                         ) : <div/>}
@@ -84,7 +86,7 @@ export class FormPropertyMultiVideo extends React.Component {
             <div key={index} className="entry horizontal">
                 <div className="value">{value}</div>
                 <div>
-                    <button onClick={() => this.unRemove(value)}>{Utils.CHARACTER_SMART_ARROW_RIGHT}</button>
+                    <button onClick={() => this.unRemove(value)}>{Characters.SMART_ARROW_RIGHT}</button>
                 </div>
             </div>
         ));
@@ -93,9 +95,9 @@ export class FormPropertyMultiVideo extends React.Component {
     renderCurrent() {
         return this.state.current.map((value, index) => (
             <div key={index} className="entry horizontal">
-                <button onClick={() => this.remove(value)}>{Utils.CHARACTER_SMART_ARROW_LEFT}</button>
+                <button onClick={() => this.remove(value)}>{Characters.SMART_ARROW_LEFT}</button>
                 <div className="value">{value} <em><strong>({this.state.mapping.get(value)})</strong></em></div>
-                <button onClick={() => this.add(value)}>{Utils.CHARACTER_SMART_ARROW_RIGHT}</button>
+                <button onClick={() => this.add(value)}>{Characters.SMART_ARROW_RIGHT}</button>
             </div>
         ))
     }
@@ -104,7 +106,7 @@ export class FormPropertyMultiVideo extends React.Component {
         return this.state.add.map((value, index) => (
             <div key={index} className="entry horizontal">
                 <button onClick={() => this.unAdd(value)}>
-                    {this.state.mapping.has(value) ? Utils.CHARACTER_SMART_ARROW_LEFT : '-'}
+                    {this.state.mapping.has(value) ? Characters.SMART_ARROW_LEFT : '-'}
                 </button>
                 <div className="value">{value}</div>
             </div>

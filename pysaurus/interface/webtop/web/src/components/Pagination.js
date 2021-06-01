@@ -1,5 +1,6 @@
 import {FormGoToPage} from "../forms/FormGoToPage.js";
 import {DialogSearch} from "../dialogs/DialogSearch.js";
+import {capitalizeFirstLetter} from "../utils/functions.js";
 
 export class Pagination extends React.Component {
     constructor(props) {
@@ -29,7 +30,7 @@ export class Pagination extends React.Component {
                     <button className="first" disabled={pageNumber === 0} onClick={this.onFirst}>&lt;&lt;</button>
                     <button className="previous" disabled={pageNumber === 0} onClick={this.onPrevious}>&lt;</button>
                     <span className="go" onClick={this.props.onSearch ? this.look : this.look}>
-                        {Utils.sentence(singular)}
+                        {capitalizeFirstLetter(singular)}
                     </span>
                     <span className="go" onClick={this.go}>{pageNumber + 1}/{nbPages}</span>
                     <button className="next" disabled={pageNumber === nbPages - 1} onClick={this.onNext}>&gt;</button>

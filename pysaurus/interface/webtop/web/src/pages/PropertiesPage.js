@@ -2,6 +2,8 @@ import {ComponentController, SetInput} from "../components/SetInput.js";
 import {Dialog} from "../dialogs/Dialog.js";
 import {Cell} from "../components/Cell.js";
 import {FormRenameProperty} from "../forms/FormRenameProperty.js";
+import {python_call, backend_error} from "../utils/backend.js";
+import {parsePropValString} from "../utils/functions.js";
 
 const DEFAULT_VALUES = {
     bool: false,
@@ -9,7 +11,6 @@ const DEFAULT_VALUES = {
     float: 0.0,
     str: '',
 };
-
 
 function getDefaultValue(propType) {
     return DEFAULT_VALUES[propType].toString();
