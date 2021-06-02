@@ -426,11 +426,10 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         }
 
         selectVideos() {
-          this.props.app.loadDialog('Select Videos', onClose => /*#__PURE__*/React.createElement(FormSourceVideo, {
+          Fancybox.load( /*#__PURE__*/React.createElement(FormSourceVideo, {
             tree: SOURCE_TREE,
             sources: this.state.sources,
             onClose: sources => {
-              onClose();
               if (sources && sources.length) this.backend(['set_sources', sources], {
                 pageNumber: 0
               });
@@ -443,11 +442,10 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             field: null,
             reverse: null
           };
-          this.props.app.loadDialog('Group videos:', onClose => /*#__PURE__*/React.createElement(FormGroup, {
+          Fancybox.load( /*#__PURE__*/React.createElement(FormGroup, {
             definition: group_def,
             properties: this.state.properties,
             onClose: criterion => {
-              onClose();
               if (criterion) this.backend(['set_groups', criterion.field, criterion.sorting, criterion.reverse, criterion.allowSingletons, criterion.allowMultiple], {
                 pageNumber: 0
               });
@@ -463,13 +461,11 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
 
         editPropertiesForManyVideos(propertyName) {
           const selectionSize = this.state.selector.size(this.state.realNbVideos);
-          python_call('count_prop_values', propertyName, this.state.selector.toJSON()).then(valuesAndCounts => this.props.app.loadDialog(`Edit property "${propertyName}" for ${selectionSize} video${selectionSize < 2 ? '' : 's'}`, onClose => /*#__PURE__*/React.createElement(FormPropertyMultiVideo, {
+          python_call('count_prop_values', propertyName, this.state.selector.toJSON()).then(valuesAndCounts => Fancybox.load( /*#__PURE__*/React.createElement(FormPropertyMultiVideo, {
             nbVideos: selectionSize,
             definition: this.state.definitions[propertyName],
             values: valuesAndCounts,
             onClose: edition => {
-              onClose();
-
               if (edition) {
                 python_call('edit_property_for_videos', propertyName, videos, edition.add, edition.remove).then(() => this.backend(null, {
                   status: `Edited property "${propertyName}" for ${selectionSize} video${selectionSize < 2 ? '' : 's'}`
@@ -484,12 +480,10 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             text: null,
             cond: null
           };
-          this.props.app.loadDialog('Search videos', onClose => /*#__PURE__*/React.createElement(FormSearch, {
+          Fancybox.load( /*#__PURE__*/React.createElement(FormSearch, {
             text: search_def.text,
             cond: search_def.cond,
             onClose: criterion => {
-              onClose();
-
               if (criterion && criterion.text.length && criterion.cond.length) {
                 this.backend(['set_search', criterion.text, criterion.cond], {
                   pageNumber: 0
@@ -500,12 +494,9 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         }
 
         sortVideos() {
-          const sorting = this.state.sorting;
-          this.props.app.loadDialog('Sort videos', onClose => /*#__PURE__*/React.createElement(FormSort, {
-            sorting: sorting,
+          Fancybox.load( /*#__PURE__*/React.createElement(FormSort, {
+            sorting: this.state.sorting,
             onClose: sorting => {
-              onClose();
-
               if (sorting && sorting.length) {
                 this.backend(['set_sorting', sorting], {
                   pageNumber: 0
@@ -551,11 +542,9 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         }
 
         fillWithKeywords() {
-          this.props.app.loadDialog(`Fill property`, onClose => /*#__PURE__*/React.createElement(FormFillKeywords, {
+          Fancybox.load( /*#__PURE__*/React.createElement(FormFillKeywords, {
             properties: this.getStringSetProperties(this.state.properties),
             onClose: state => {
-              onClose();
-
               if (state) {
                 python_call('fill_property_with_terms', state.field, state.onlyEmpty).then(() => this.backend(null, {
                   status: `Filled property "${state.field}" with video keywords.`
@@ -638,15 +627,11 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
 
           for (let index of indices) values.push(groupDef.groups[index].value);
 
-          let title;
-          if (values.length === 1) title = `Property "${name}", value "${values[0]}"`;else title = `Property "${name}", ${values.length} values"`;
-          this.props.app.loadDialog(title, onClose => /*#__PURE__*/React.createElement(FormEditPropertyValue, {
+          Fancybox.load( /*#__PURE__*/React.createElement(FormEditPropertyValue, {
             properties: this.state.definitions,
             name: name,
             values: values,
             onClose: operation => {
-              onClose();
-
               if (operation) {
                 switch (operation.form) {
                   case 'delete':

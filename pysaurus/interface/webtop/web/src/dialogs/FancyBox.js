@@ -1,9 +1,10 @@
 export class FancyBox extends React.Component {
+    /**
+     * @param props {{title: str}}
+     */
     constructor(props) {
         // title
-        // onClose()
-        // onBuild? function(onClose)
-        // children?
+        // children
         super(props);
         this.callbackIndex = -1;
         this.checkShortcut = this.checkShortcut.bind(this);
@@ -16,11 +17,11 @@ export class FancyBox extends React.Component {
                     <div className="fancybox-header horizontal">
                         <div className="fancybox-title">{this.props.title}</div>
                         <div className="fancybox-close">
-                            <button onClick={this.props.onClose}>&times;</button>
+                            <button onClick={Fancybox.onClose}>&times;</button>
                         </div>
                     </div>
                     <div className="fancybox-content">
-                        {this.props.onBuild ? this.props.onBuild(this.props.onClose) : this.props.children}
+                        {this.props.children}
                     </div>
                 </div>
             </div>
@@ -40,7 +41,7 @@ export class FancyBox extends React.Component {
      */
     checkShortcut(event) {
         if (event.key === "Escape") {
-            this.props.onClose();
+            Fancybox.onClose();
             return true;
         }
     }

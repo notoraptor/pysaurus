@@ -167,12 +167,10 @@ System.register(["../components/MenuPack.js", "../forms/FormRenameVideo.js", "..
         editProperties() {
           const data = this.props.data;
           const definitions = this.props.parent.state.properties;
-          this.props.parent.props.app.loadDialog('Edit video properties', onClose => /*#__PURE__*/React.createElement(FormSetProperties, {
+          Fancybox.load( /*#__PURE__*/React.createElement(FormSetProperties, {
             data: data,
             definitions: definitions,
             onClose: properties => {
-              onClose();
-
               if (properties) {
                 python_call('set_video_properties', this.props.data.video_id, properties).then(() => this.props.parent.updateStatus(`Properties updated: ${data.filename}`, true)).catch(backend_error);
               }
@@ -189,11 +187,10 @@ System.register(["../components/MenuPack.js", "../forms/FormRenameVideo.js", "..
           */
           const filename = this.props.data.filename;
           const thumbnail_path = this.props.data.thumbnail_path;
-          this.props.parent.props.app.loadDialog('Confirm deletion', onClose => /*#__PURE__*/React.createElement(Dialog, {
+          Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
+            title: "Confirm deletion",
             yes: "delete",
-            no: "cancel",
             onClose: yes => {
-              onClose();
               if (yes) this.reallyDeleteVideo();
             }
           }, /*#__PURE__*/React.createElement("div", {
@@ -236,12 +233,10 @@ System.register(["../components/MenuPack.js", "../forms/FormRenameVideo.js", "..
         renameVideo() {
           const filename = this.props.data.filename;
           const title = this.props.data.file_title;
-          this.props.parent.props.app.loadDialog('Rename', onClose => /*#__PURE__*/React.createElement(FormRenameVideo, {
+          Fancybox.load( /*#__PURE__*/React.createElement(FormRenameVideo, {
             filename: filename,
             title: title,
             onClose: newTitle => {
-              onClose();
-
               if (newTitle) {
                 python_call('rename_video', this.props.data.video_id, newTitle).then(() => this.props.parent.updateStatus(`Renamed: ${newTitle}`, true)).catch(backend_error);
               }

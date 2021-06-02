@@ -13,7 +13,11 @@ System.register(["../components/Cell.js", "./Dialog.js"], function (_export, _co
     }],
     execute: function () {
       _export("DialogSearch", DialogSearch = class DialogSearch extends React.Component {
+        /**
+         * @param props {{title: str, onClose: function}}
+         */
         constructor(props) {
+          // title: str
           // onClose(criterion)
           super(props);
           this.state = {
@@ -27,8 +31,8 @@ System.register(["../components/Cell.js", "./Dialog.js"], function (_export, _co
 
         render() {
           return /*#__PURE__*/React.createElement(Dialog, {
+            title: this.props.title,
             yes: "go",
-            no: "cancel",
             onClose: this.onClose
           }, /*#__PURE__*/React.createElement(Cell, {
             center: true,
@@ -61,6 +65,7 @@ System.register(["../components/Cell.js", "./Dialog.js"], function (_export, _co
 
         onInput(event) {
           if (event.key === "Enter" && this.state.text.length) {
+            Fancybox.onClose();
             this.props.onClose(this.state.text);
             return true;
           }

@@ -14,7 +14,7 @@ export class FormFillKeywords extends React.Component {
 
     render() {
         return (
-            <Dialog yes={"fill"} no={"cancel"} onClose={this.onClose}>
+            <Dialog title="Fill property" yes={"fill"} onClose={this.onClose}>
                 <Cell center={true} full={true} className="text-center">
                     <p>
                         <select value={this.state.field}

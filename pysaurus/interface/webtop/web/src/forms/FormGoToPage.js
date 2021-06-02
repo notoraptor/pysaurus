@@ -16,7 +16,7 @@ export class FormGoToPage extends React.Component {
 
     render() {
         return (
-            <Dialog yes={"go"} no={"cancel"} onClose={this.onClose}>
+            <Dialog title={"Go to page:"} yes={"go"} onClose={this.onClose}>
                 <Cell center={true} full={true} className="text-center">
                     <input type="number"
                            id="input-go"

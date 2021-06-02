@@ -1,13 +1,15 @@
-System.register(["../utils/constants.js"], function (_export, _context) {
+System.register(["../utils/constants.js", "../dialogs/FancyBox.js"], function (_export, _context) {
   "use strict";
 
-  var SORTED_FIELDS_AND_TITLES, FormSort;
+  var SORTED_FIELDS_AND_TITLES, FancyBox, FormSort;
 
   _export("FormSort", void 0);
 
   return {
     setters: [function (_utilsConstantsJs) {
       SORTED_FIELDS_AND_TITLES = _utilsConstantsJs.SORTED_FIELDS_AND_TITLES;
+    }, function (_dialogsFancyBoxJs) {
+      FancyBox = _dialogsFancyBoxJs.FancyBox;
     }],
     execute: function () {
       _export("FormSort", FormSort = class FormSort extends React.Component {
@@ -27,7 +29,9 @@ System.register(["../utils/constants.js"], function (_export, _context) {
         }
 
         render() {
-          return /*#__PURE__*/React.createElement("div", {
+          return /*#__PURE__*/React.createElement(FancyBox, {
+            title: "Sort videos"
+          }, /*#__PURE__*/React.createElement("div", {
             className: "form",
             id: "form-sort"
           }, /*#__PURE__*/React.createElement("div", {
@@ -42,7 +46,7 @@ System.register(["../utils/constants.js"], function (_export, _context) {
           }, "+"), /*#__PURE__*/React.createElement("button", {
             className: "sort",
             onClick: this.submit
-          }, "sort")));
+          }, "sort"))));
         }
 
         renderSorting() {
@@ -113,6 +117,7 @@ System.register(["../utils/constants.js"], function (_export, _context) {
             if (sorting.indexOf(def) < 0) sorting.push(def);
           }
 
+          Fancybox.onClose();
           this.props.onClose(sorting);
         }
 

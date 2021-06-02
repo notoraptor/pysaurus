@@ -45,8 +45,8 @@ System.register(["../utils/constants.js", "../dialogs/Dialog.js"], function (_ex
 
         render() {
           return /*#__PURE__*/React.createElement(Dialog, {
+            title: "Group videos:",
             yes: "group",
-            no: "cancel",
             onClose: this.onClose
           }, /*#__PURE__*/React.createElement("table", {
             className: "form-group"

@@ -1,7 +1,7 @@
-System.register([], function (_export, _context) {
+System.register(["../dialogs/FancyBox.js"], function (_export, _context) {
   "use strict";
 
-  var FormSourceVideo;
+  var FancyBox, FormSourceVideo;
 
   function getSubTree(tree, entryName) {
     const steps = entryName.split('-');
@@ -55,7 +55,9 @@ System.register([], function (_export, _context) {
   _export("FormSourceVideo", void 0);
 
   return {
-    setters: [],
+    setters: [function (_dialogsFancyBoxJs) {
+      FancyBox = _dialogsFancyBoxJs.FancyBox;
+    }],
     execute: function () {
       _export("FormSourceVideo", FormSourceVideo = class FormSourceVideo extends React.Component {
         constructor(props) {
@@ -74,7 +76,9 @@ System.register([], function (_export, _context) {
         }
 
         render() {
-          return /*#__PURE__*/React.createElement("div", {
+          return /*#__PURE__*/React.createElement(FancyBox, {
+            title: "Select Videos"
+          }, /*#__PURE__*/React.createElement("div", {
             className: "form-source-video"
           }, this.renderTree(this.props.tree), /*#__PURE__*/React.createElement("p", null, "Currently selected:", this.state.paths.length ? '' : ' None'), this.state.paths.length ? /*#__PURE__*/React.createElement("ul", null, this.state.paths.map((path, index) => /*#__PURE__*/React.createElement("li", {
             key: index
@@ -83,7 +87,7 @@ System.register([], function (_export, _context) {
           }, /*#__PURE__*/React.createElement("button", {
             className: "submit",
             onClick: this.submit
-          }, "select")));
+          }, "select"))));
         }
 
         renderTree(tree, prefix = '') {
@@ -165,6 +169,7 @@ System.register([], function (_export, _context) {
         }
 
         submit() {
+          Fancybox.onClose();
           this.props.onClose(this.state.paths.map(path => path.split('-')));
         }
 

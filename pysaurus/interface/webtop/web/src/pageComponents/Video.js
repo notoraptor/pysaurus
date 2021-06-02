@@ -152,16 +152,15 @@ export class Video extends React.Component {
     editProperties() {
         const data = this.props.data;
         const definitions = this.props.parent.state.properties;
-        this.props.parent.props.app.loadDialog('Edit video properties', onClose => (
+        Fancybox.load(
             <FormSetProperties data={data} definitions={definitions} onClose={properties => {
-                onClose();
                 if (properties) {
                     python_call('set_video_properties', this.props.data.video_id, properties)
                         .then(() => this.props.parent.updateStatus(`Properties updated: ${data.filename}`, true))
                         .catch(backend_error);
                 }
             }}/>
-        ));
+        );
     }
 
     confirmDeletion() {
@@ -173,11 +172,9 @@ export class Video extends React.Component {
         */
         const filename = this.props.data.filename;
         const thumbnail_path = this.props.data.thumbnail_path;
-        this.props.parent.props.app.loadDialog('Confirm deletion', onClose => (
-            <Dialog yes="delete" no="cancel" onClose={yes => {
-                onClose();
-                if (yes)
-                    this.reallyDeleteVideo();
+        Fancybox.load(
+            <Dialog title="Confirm deletion" yes="delete" onClose={yes => {
+                if (yes) this.reallyDeleteVideo();
             }}>
                 <div className="form-delete-video">
                     <h2>Are you sure you want to <strong>definitely</strong> delete this video?</h2>
@@ -185,7 +182,7 @@ export class Video extends React.Component {
                     <p><img id="thumbnail" alt="No thumbnail available" src={thumbnail_path}/></p>
                 </div>
             </Dialog>
-        ));
+        );
     }
 
     deleteVideo() {
@@ -226,16 +223,15 @@ export class Video extends React.Component {
     renameVideo() {
         const filename = this.props.data.filename;
         const title = this.props.data.file_title;
-        this.props.parent.props.app.loadDialog('Rename', onClose => (
+        Fancybox.load(
             <FormRenameVideo filename={filename} title={title} onClose={newTitle => {
-                onClose();
                 if (newTitle) {
                     python_call('rename_video', this.props.data.video_id, newTitle)
                         .then(() => this.props.parent.updateStatus(`Renamed: ${newTitle}`, true))
                         .catch(backend_error);
                 }
             }}/>
-        ));
+        );
     }
 
     onSelect(event) {

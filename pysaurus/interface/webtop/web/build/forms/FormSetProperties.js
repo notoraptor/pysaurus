@@ -37,8 +37,8 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../utils/
           const data = this.props.data;
           const hasThumbnail = data.hasThumbnail;
           return /*#__PURE__*/React.createElement(Dialog, {
+            title: 'Edit video properties',
             yes: "save",
-            no: "cancel",
             onClose: this.onClose
           }, /*#__PURE__*/React.createElement("div", {
             className: "form-set-properties horizontal"

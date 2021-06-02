@@ -2,7 +2,11 @@ import {Cell} from "../components/Cell.js";
 import {Dialog} from "./Dialog.js";
 
 export class DialogSearch extends React.Component {
+    /**
+     * @param props {{title: str, onClose: function}}
+     */
     constructor(props) {
+        // title: str
         // onClose(criterion)
         super(props);
         this.state = {
@@ -16,7 +20,7 @@ export class DialogSearch extends React.Component {
 
     render() {
         return (
-            <Dialog yes={"go"} no={"cancel"} onClose={this.onClose}>
+            <Dialog title={this.props.title} yes={"go"} onClose={this.onClose}>
                 <Cell center={true} full={true} className="text-center">
                     <input type="text"
                            id="input-search"
@@ -44,6 +48,7 @@ export class DialogSearch extends React.Component {
 
     onInput(event) {
         if (event.key === "Enter" && this.state.text.length) {
+            Fancybox.onClose();
             this.props.onClose(this.state.text);
             return true;
         }

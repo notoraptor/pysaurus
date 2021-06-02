@@ -22,7 +22,7 @@ export class FormSetProperties extends React.Component {
         const data = this.props.data;
         const hasThumbnail = data.hasThumbnail;
         return (
-            <Dialog yes="save" no="cancel" onClose={this.onClose}>
+            <Dialog title={'Edit video properties'} yes="save" onClose={this.onClose}>
                 <div className="form-set-properties horizontal">
                     <div className="info">
                         <div className="image">

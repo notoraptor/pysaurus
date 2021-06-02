@@ -15,7 +15,7 @@ export class FormRenameProperty extends React.Component {
 
     render() {
         return (
-            <Dialog yes="rename" no="cancel" onClose={this.onClose}>
+            <Dialog title={`Rename property "${this.props.title}"?`} yes="rename" onClose={this.onClose}>
                 <div className="form-rename-video">
                     <h1>Rename property</h1>
                     <h2><code id="filename">{this.props.title}</code></h2>
@@ -50,6 +50,7 @@ export class FormRenameProperty extends React.Component {
 
     onKeyDown(event) {
         if (event.key === "Enter") {
+            Fancybox.onClose();
             this.submit(true);
         }
     }

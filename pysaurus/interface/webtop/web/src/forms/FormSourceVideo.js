@@ -1,3 +1,5 @@
+import {FancyBox} from "../dialogs/FancyBox.js";
+
 function getSubTree(tree, entryName) {
     const steps = entryName.split('-');
     let subTree = tree;
@@ -57,20 +59,22 @@ export class FormSourceVideo extends React.Component {
 
     render() {
         return (
-            <div className="form-source-video">
-                {this.renderTree(this.props.tree)}
-                <p>Currently selected:{this.state.paths.length ? '' : ' None'}</p>
-                {this.state.paths.length ? (
-                    <ul>
-                        {this.state.paths.map((path, index) => (
-                            <li key={index}><strong>{path.replace(/-/g, '.')}</strong></li>
-                        ))}
-                    </ul>
-                ) : ''}
-                <p className="submit">
-                    <button className="submit" onClick={this.submit}>select</button>
-                </p>
-            </div>
+            <FancyBox title="Select Videos">
+                <div className="form-source-video">
+                    {this.renderTree(this.props.tree)}
+                    <p>Currently selected:{this.state.paths.length ? '' : ' None'}</p>
+                    {this.state.paths.length ? (
+                        <ul>
+                            {this.state.paths.map((path, index) => (
+                                <li key={index}><strong>{path.replace(/-/g, '.')}</strong></li>
+                            ))}
+                        </ul>
+                    ) : ''}
+                    <p className="submit">
+                        <button className="submit" onClick={this.submit}>select</button>
+                    </p>
+                </div>
+            </FancyBox>
         );
     }
 
@@ -155,6 +159,7 @@ export class FormSourceVideo extends React.Component {
     }
 
     submit() {
+        Fancybox.onClose();
         this.props.onClose(this.state.paths.map(path => path.split('-')));
     }
 }

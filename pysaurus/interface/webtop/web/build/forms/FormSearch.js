@@ -1,12 +1,14 @@
-System.register([], function (_export, _context) {
+System.register(["../dialogs/FancyBox.js"], function (_export, _context) {
   "use strict";
 
-  var FormSearch;
+  var FancyBox, FormSearch;
 
   _export("FormSearch", void 0);
 
   return {
-    setters: [],
+    setters: [function (_dialogsFancyBoxJs) {
+      FancyBox = _dialogsFancyBoxJs.FancyBox;
+    }],
     execute: function () {
       _export("FormSearch", FormSearch = class FormSearch extends React.Component {
         constructor(props) {
@@ -22,10 +24,13 @@ System.register([], function (_export, _context) {
           this.onChangeInput = this.onChangeInput.bind(this);
           this.onChangeCond = this.onChangeCond.bind(this);
           this.onInput = this.onInput.bind(this);
+          this.onClose = this.onClose.bind(this);
         }
 
         render() {
-          return /*#__PURE__*/React.createElement("div", {
+          return /*#__PURE__*/React.createElement(FancyBox, {
+            title: "Search videos"
+          }, /*#__PURE__*/React.createElement("div", {
             className: "form-search"
           }, /*#__PURE__*/React.createElement("p", null, "Type text to search and choose how to search."), /*#__PURE__*/React.createElement("p", null, "You can also type text and then press enter to automatically select \"AND\" as search method."), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("input", {
             type: "text",
@@ -63,7 +68,7 @@ System.register([], function (_export, _context) {
             checked: this.state.cond === 'exact'
           }), /*#__PURE__*/React.createElement("label", {
             htmlFor: "input-search-exact"
-          }, "exact sentence")));
+          }, "exact sentence"))));
         }
 
         componentDidMount() {
@@ -88,7 +93,7 @@ System.register([], function (_export, _context) {
             text,
             cond
           }, () => {
-            if (text.length && cond.length) this.props.onClose({
+            if (text.length && cond.length) this.onClose({
               text,
               cond
             });
@@ -100,13 +105,18 @@ System.register([], function (_export, _context) {
             if (this.state.text.length) {
               const text = this.state.text;
               const cond = 'and';
-              this.props.onClose({
+              this.onClose({
                 text,
                 cond
               });
               return true;
             }
           }
+        }
+
+        onClose(criterion) {
+          Fancybox.onClose();
+          this.props.onClose(criterion);
         }
 
       });

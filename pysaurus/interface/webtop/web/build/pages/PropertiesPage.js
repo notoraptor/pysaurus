@@ -293,12 +293,10 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
         }
 
         deleteProperty(name) {
-          this.props.app.loadDialog(`Delete property "${name}"?`, onClose => /*#__PURE__*/React.createElement(Dialog, {
+          Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
+            title: `Delete property "${name}"?`,
             yes: 'delete',
-            no: 'cancel',
             onClose: yes => {
-              onClose();
-
               if (yes) {
                 python_call('delete_prop_type', name).catch(backend_error).then(definitions => {
                   const state = this.getDefaultInputState();
@@ -315,12 +313,10 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
         }
 
         convertPropertyToUnique(name) {
-          this.props.app.loadDialog(`Convert to unique property "${name}"?`, onClose => /*#__PURE__*/React.createElement(Dialog, {
+          Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
+            title: `Convert to unique property "${name}"?`,
             yes: 'convert to unique',
-            no: 'cancel',
             onClose: yes => {
-              onClose();
-
               if (yes) {
                 python_call('convert_prop_to_unique', name).then(definitions => {
                   const state = this.getDefaultInputState();
@@ -337,12 +333,10 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
         }
 
         convertPropertyToMultiple(name) {
-          this.props.app.loadDialog(`Convert to multiple property "${name}"?`, onClose => /*#__PURE__*/React.createElement(Dialog, {
+          Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
+            title: `Convert to multiple property "${name}"?`,
             yes: 'convert to multiple',
-            no: 'cancel',
             onClose: yes => {
-              onClose();
-
               if (yes) {
                 python_call('convert_prop_to_multiple', name).then(definitions => {
                   const state = this.getDefaultInputState();
@@ -359,11 +353,9 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
         }
 
         renameProperty(name) {
-          this.props.app.loadDialog(`Rename property "${name}"?`, onClose => /*#__PURE__*/React.createElement(FormRenameProperty, {
+          Fancybox.load( /*#__PURE__*/React.createElement(FormRenameProperty, {
             title: name,
             onClose: newName => {
-              onClose();
-
               if (newName) {
                 python_call('rename_property', name, newName).then(definitions => {
                   const state = this.getDefaultInputState();

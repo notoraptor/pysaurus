@@ -1,3 +1,5 @@
+import {FancyBox} from "../dialogs/FancyBox.js";
+
 export class FormSearch extends React.Component {
     constructor(props) {
         // text
@@ -12,51 +14,54 @@ export class FormSearch extends React.Component {
         this.onChangeInput = this.onChangeInput.bind(this);
         this.onChangeCond = this.onChangeCond.bind(this);
         this.onInput = this.onInput.bind(this);
+        this.onClose = this.onClose.bind(this);
     }
 
     render() {
         return (
-            <div className="form-search">
-                <p>Type text to search and choose how to search.</p>
-                <p>You can also type text and then press enter to automatically select "AND" as search method.</p>
-                <p>
-                    <input type="text"
-                           id="input-search"
-                           name="searchText"
-                           placeholder="Search ..."
-                           onFocus={this.onFocusInput}
-                           onChange={this.onChangeInput}
-                           onKeyDown={this.onInput}
-                           value={this.state.text}/>
-                </p>
-                <p>
-                    <input type="radio"
-                           id="input-search-and"
-                           name="searchType"
-                           value="and"
-                           onChange={this.onChangeCond}
-                           checked={this.state.cond === 'and'}/>
-                    <label htmlFor="input-search-and">all terms</label>
-                </p>
-                <p>
-                    <input type="radio"
-                           id="input-search-or"
-                           name="searchType"
-                           value="or"
-                           onChange={this.onChangeCond}
-                           checked={this.state.cond === 'or'}/>
-                    <label htmlFor="input-search-or">any term</label>
-                </p>
-                <p>
-                    <input type="radio"
-                           id="input-search-exact"
-                           name="searchType"
-                           value="exact"
-                           onChange={this.onChangeCond}
-                           checked={this.state.cond === 'exact'}/>
-                    <label htmlFor="input-search-exact">exact sentence</label>
-                </p>
-            </div>
+            <FancyBox title="Search videos">
+                <div className="form-search">
+                    <p>Type text to search and choose how to search.</p>
+                    <p>You can also type text and then press enter to automatically select "AND" as search method.</p>
+                    <p>
+                        <input type="text"
+                               id="input-search"
+                               name="searchText"
+                               placeholder="Search ..."
+                               onFocus={this.onFocusInput}
+                               onChange={this.onChangeInput}
+                               onKeyDown={this.onInput}
+                               value={this.state.text}/>
+                    </p>
+                    <p>
+                        <input type="radio"
+                               id="input-search-and"
+                               name="searchType"
+                               value="and"
+                               onChange={this.onChangeCond}
+                               checked={this.state.cond === 'and'}/>
+                        <label htmlFor="input-search-and">all terms</label>
+                    </p>
+                    <p>
+                        <input type="radio"
+                               id="input-search-or"
+                               name="searchType"
+                               value="or"
+                               onChange={this.onChangeCond}
+                               checked={this.state.cond === 'or'}/>
+                        <label htmlFor="input-search-or">any term</label>
+                    </p>
+                    <p>
+                        <input type="radio"
+                               id="input-search-exact"
+                               name="searchType"
+                               value="exact"
+                               onChange={this.onChangeCond}
+                               checked={this.state.cond === 'exact'}/>
+                        <label htmlFor="input-search-exact">exact sentence</label>
+                    </p>
+                </div>
+            </FancyBox>
         );
     }
 
@@ -77,7 +82,7 @@ export class FormSearch extends React.Component {
         const cond = event.target.value;
         this.setState({text, cond}, () => {
             if (text.length && cond.length)
-                this.props.onClose({text, cond});
+                this.onClose({text, cond});
         });
     }
 
@@ -86,9 +91,14 @@ export class FormSearch extends React.Component {
             if (this.state.text.length) {
                 const text = this.state.text;
                 const cond = 'and';
-                this.props.onClose({text, cond});
+                this.onClose({text, cond});
                 return true;
             }
         }
+    }
+
+    onClose(criterion) {
+        Fancybox.onClose();
+        this.props.onClose(criterion);
     }
 }

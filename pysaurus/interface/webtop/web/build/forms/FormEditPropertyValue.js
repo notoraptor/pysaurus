@@ -37,9 +37,12 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js"], function (_ex
 
         render() {
           const canMove = this.state.otherDefinitions.length && this.props.values.length === 1;
+          const values = this.props.values;
+          let title;
+          if (values.length === 1) title = `Property "${this.props.name}", value "${values[0]}"`;else title = `Property "${this.props.name}", ${values.length} values"`;
           return /*#__PURE__*/React.createElement(Dialog, {
+            title: title,
             yes: this.state.form,
-            no: "cancel",
             onClose: this.onClose
           }, /*#__PURE__*/React.createElement("div", {
             className: "edit-property-value"
@@ -171,6 +174,7 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js"], function (_ex
 
         onEditKeyDown(event) {
           if (event.key === "Enter") {
+            Fancybox.onClose();
             this.onClose(true);
           }
         }

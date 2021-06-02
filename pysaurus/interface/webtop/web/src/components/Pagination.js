@@ -67,24 +67,20 @@ export class Pagination extends React.Component {
     }
 
     go() {
-        Fancybox.load(<FancyBox title={"Go to page:"} onClose={Fancybox.onClose}>
+        Fancybox.load(
             <FormGoToPage nbPages={this.props.nbPages} pageNumber={this.props.pageNumber} onClose={pageNumber => {
-                Fancybox.onClose();
                 if (pageNumber !== this.props.pageNumber)
                     this.props.onChange(pageNumber);
             }}/>
-        </FancyBox>);
+        );
     }
 
     look() {
         Fancybox.load(
-            <FancyBox title={"Search first:"} onClose={Fancybox.onClose}>
-                <DialogSearch onClose={text => {
-                    Fancybox.onClose();
-                    if (text && text.length)
-                        this.props.onSearch(text);
-                }}/>
-            </FancyBox>
+            <DialogSearch title={"Search first:"} onClose={text => {
+                if (text && text.length)
+                    this.props.onSearch(text);
+            }}/>
         );
     }
 }

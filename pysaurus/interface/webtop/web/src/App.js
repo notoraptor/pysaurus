@@ -10,28 +10,15 @@ import {VIDEO_DEFAULT_PAGE_NUMBER, VIDEO_DEFAULT_PAGE_SIZE} from "./utils/consta
 export class App extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {
-            page: "home",
-            parameters: {},
-            fancy: null
-        };
-        this.loadDialog = this.loadDialog.bind(this);
+        this.state = {page: "home", parameters: {}};
         this.loadPage = this.loadPage.bind(this);
         this.loadPropertiesPage = this.loadPropertiesPage.bind(this);
         this.loadVideosPage = this.loadVideosPage.bind(this);
-        this.manageFancyBoxView = this.manageFancyBoxView.bind(this);
-        this.onCloseFancyBox = this.onCloseFancyBox.bind(this);
     }
 
     render() {
-        const fancy = this.state.fancy;
         return (
-            <div className="app">
-                <main>
-                    {this.renderPage()}
-                </main>
-                {fancy ? this.renderFancyBox() : ''}
-            </div>
+            <div className="app"><main>{this.renderPage()}</main></div>
         );
     }
 
@@ -48,56 +35,12 @@ export class App extends React.Component {
             return <PropertiesPage app={this} parameters={parameters}/>;
     }
 
-    renderFancyBox() {
-        const fancy = this.state.fancy;
-        return <FancyBox title={fancy.title} onBuild={fancy.onBuild} onClose={fancy.onClose}/>;
-    }
-
-    updateApp(state) {
-        this.setState(state, this.manageFancyBoxView);
-    }
-
-    /**
-     * Make sure all active elements are disabled if fancy box is displayed, and re-enabled when fancybox is closed.
-     */
-    manageFancyBoxView() {
-        const focusableElements = [...document.querySelector(".app main").querySelectorAll(
-            'a, button, input, textarea, select, details, [tabindex]:not([tabindex="-1"])'
-        )].filter(el => !el.hasAttribute('disabled'));
-        for (let element of focusableElements) {
-            if (this.state.fancy) {
-                // If activated, deactivate and mark as deactivated.
-                if (!element.getAttribute("disabled")) {
-                    const tabIndex = element.tabIndex;
-                    element.tabIndex = "-1";
-                    element.setAttribute("fancy", tabIndex);
-                }
-            } else {
-                // Re-activate elements marked as deactivated.
-                if (element.hasAttribute("fancy")) {
-                    element.tabIndex = element.getAttribute("fancy");
-                    element.removeAttribute("fancy");
-                }
-            }
-        }
-    }
-
-    onCloseFancyBox() {
-        this.updateApp({fancy: null});
-    }
-
     loadPage(pageName, parameters = undefined) {
         parameters = parameters ? parameters : {};
-        this.updateApp({page: pageName, parameters: parameters});
+        this.setState({page: pageName, parameters: parameters});
     }
 
     // Public methods for children components.
-
-    loadDialog(title, onBuild) {
-        if (this.state.fancy)
-            throw "a fancy box is already displayed.";
-        this.updateApp({fancy: {title: title, onClose: this.onCloseFancyBox, onBuild: onBuild}});
-    }
 
     loadHomePage(update = false) {
         this.loadPage("home", {update});

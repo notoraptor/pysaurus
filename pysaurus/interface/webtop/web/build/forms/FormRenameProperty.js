@@ -27,8 +27,8 @@ System.register(["../dialogs/Dialog.js"], function (_export, _context) {
 
         render() {
           return /*#__PURE__*/React.createElement(Dialog, {
+            title: `Rename property "${this.props.title}"?`,
             yes: "rename",
-            no: "cancel",
             onClose: this.onClose
           }, /*#__PURE__*/React.createElement("div", {
             className: "form-rename-video"
@@ -66,6 +66,7 @@ System.register(["../dialogs/Dialog.js"], function (_export, _context) {
 
         onKeyDown(event) {
           if (event.key === "Enter") {
+            Fancybox.onClose();
             this.submit(true);
           }
         }

@@ -92,29 +92,22 @@ System.register(["../forms/FormGoToPage.js", "../dialogs/DialogSearch.js", "../u
         }
 
         go() {
-          Fancybox.load( /*#__PURE__*/React.createElement(FancyBox, {
-            title: "Go to page:",
-            onClose: Fancybox.onClose
-          }, /*#__PURE__*/React.createElement(FormGoToPage, {
+          Fancybox.load( /*#__PURE__*/React.createElement(FormGoToPage, {
             nbPages: this.props.nbPages,
             pageNumber: this.props.pageNumber,
             onClose: pageNumber => {
-              Fancybox.onClose();
               if (pageNumber !== this.props.pageNumber) this.props.onChange(pageNumber);
             }
-          })));
+          }));
         }
 
         look() {
-          Fancybox.load( /*#__PURE__*/React.createElement(FancyBox, {
+          Fancybox.load( /*#__PURE__*/React.createElement(DialogSearch, {
             title: "Search first:",
-            onClose: Fancybox.onClose
-          }, /*#__PURE__*/React.createElement(DialogSearch, {
             onClose: text => {
-              Fancybox.onClose();
               if (text && text.length) this.props.onSearch(text);
             }
-          })));
+          }));
         }
 
       });

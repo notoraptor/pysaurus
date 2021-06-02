@@ -28,8 +28,8 @@ System.register(["../dialogs/Dialog.js", "../components/Cell.js"], function (_ex
 
         render() {
           return /*#__PURE__*/React.createElement(Dialog, {
+            title: "Fill property",
             yes: "fill",
-            no: "cancel",
             onClose: this.onClose
           }, /*#__PURE__*/React.createElement(Cell, {
             center: true,

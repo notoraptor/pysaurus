@@ -9,11 +9,12 @@ System.register([], function (_export, _context) {
     setters: [],
     execute: function () {
       _export("FancyBox", FancyBox = class FancyBox extends React.Component {
+        /**
+         * @param props {{title: str}}
+         */
         constructor(props) {
           // title
-          // onClose()
-          // onBuild? function(onClose)
-          // children?
+          // children
           super(props);
           this.callbackIndex = -1;
           this.checkShortcut = this.checkShortcut.bind(this);
@@ -31,10 +32,10 @@ System.register([], function (_export, _context) {
           }, this.props.title), /*#__PURE__*/React.createElement("div", {
             className: "fancybox-close"
           }, /*#__PURE__*/React.createElement("button", {
-            onClick: this.props.onClose
+            onClick: Fancybox.onClose
           }, "\xD7"))), /*#__PURE__*/React.createElement("div", {
             className: "fancybox-content"
-          }, this.props.onBuild ? this.props.onBuild(this.props.onClose) : this.props.children)));
+          }, this.props.children)));
         }
 
         componentDidMount() {
@@ -51,7 +52,7 @@ System.register([], function (_export, _context) {
 
         checkShortcut(event) {
           if (event.key === "Escape") {
-            this.props.onClose();
+            Fancybox.onClose();
             return true;
           }
         }

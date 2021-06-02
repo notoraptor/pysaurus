@@ -1,4 +1,5 @@
 import {SORTED_FIELDS_AND_TITLES} from "../utils/constants.js";
+import {FancyBox} from "../dialogs/FancyBox.js";
 
 export class FormSort extends React.Component {
     constructor(props) {
@@ -16,18 +17,20 @@ export class FormSort extends React.Component {
 
     render() {
         return (
-            <div className="form" id="form-sort">
-                <div className="help">
-                    <div>Click on "+" to add a new sorting criterion.</div>
-                    <div>Click on "-" to remove a sorting criterion.</div>
-                    <div>Click on "sort" to validate, or close dialog to cancel.</div>
+            <FancyBox title="Sort videos">
+                <div className="form" id="form-sort">
+                    <div className="help">
+                        <div>Click on "+" to add a new sorting criterion.</div>
+                        <div>Click on "-" to remove a sorting criterion.</div>
+                        <div>Click on "sort" to validate, or close dialog to cancel.</div>
+                    </div>
+                    <div id="sorting">{this.renderSorting()}</div>
+                    <p className="buttons horizontal">
+                        <button className="add" onClick={this.addCriterion}>+</button>
+                        <button className="sort" onClick={this.submit}>sort</button>
+                    </p>
                 </div>
-                <div id="sorting">{this.renderSorting()}</div>
-                <p className="buttons horizontal">
-                    <button className="add" onClick={this.addCriterion}>+</button>
-                    <button className="sort" onClick={this.submit}>sort</button>
-                </p>
-            </div>
+            </FancyBox>
         );
     }
 
@@ -86,6 +89,7 @@ export class FormSort extends React.Component {
             if (sorting.indexOf(def) < 0)
                 sorting.push(def);
         }
+        Fancybox.onClose();
         this.props.onClose(sorting);
     }
 }

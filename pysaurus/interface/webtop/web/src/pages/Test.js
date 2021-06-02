@@ -51,17 +51,14 @@ export class Test extends React.Component {
                 Hello! <Cross action={() => console.log('cross!')}/>
                 <a href="https://google.fr">yayayayayaya!</a>
                 <input type="text"/>
-                Hello! <button onClick={() => this.fancy2()}>click here!</button>
+                Hello! <button onClick={() => this.fancy()}>click here!</button>
             </div>
         );
     }
 
-    fancy2() {
-        Fancybox.load(<FancyBox title={"Test Fancy Box 2!"} onClose={Fancybox.onClose}>
-            <Dialog onClose={yes => {
-                Fancybox.onClose();
-                console.log(`Choice: ${yes ? 'yes' : 'no'}`);
-            }}>
+    fancy() {
+        Fancybox.load(
+            <Dialog title={"Test Fancy Box 2!"} onClose={yes => console.log(`Choice: ${yes ? 'yes' : 'no'}`)}>
                 <h1>hello world {this.state.pageSize}</h1>
                 <h1>hello world</h1>
                 <h1>hello world</h1>
@@ -74,27 +71,6 @@ export class Test extends React.Component {
                 <h1>hello world</h1>
                 <h1>hello world</h1>
             </Dialog>
-        </FancyBox>);
-    }
-
-    fancy() {
-        this.props.app.loadDialog("Test fancy box!", onClose => (
-            <Dialog onClose={yes => {
-                onClose();
-                console.log(`Choice: ${yes ? 'yes' : 'no'}`);
-            }}>
-                <h1>hello world</h1>
-                <h1>hello world</h1>
-                <h1>hello world</h1>
-                <h1>hello world</h1>
-                <h1>hello world</h1>
-                <h1>hello world</h1>
-                <h1>hello world</h1>
-                <h1>hello world</h1>
-                <h1>hello world</h1>
-                <h1>hello world</h1>
-                <h1>hello world</h1>
-            </Dialog>
-        ))
+        );
     }
 }

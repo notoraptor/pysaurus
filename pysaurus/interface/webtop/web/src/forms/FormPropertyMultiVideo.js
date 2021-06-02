@@ -38,7 +38,7 @@ export class FormPropertyMultiVideo extends React.Component {
 
     render() {
         return (
-            <Dialog yes="edit" no="cancel" onClose={this.onClose}>
+            <Dialog title={`Edit property "${this.props.definition.name}" for ${this.props.nbVideos} video${this.props.nbVideos < 2 ? '' : 's'}`} yes="edit" onClose={this.onClose}>
                 <div className="form-property-multi-video">
                     <div className="bar titles horizontal">
                         <div>To remove</div>

@@ -1,5 +1,11 @@
+import {FancyBox} from "./FancyBox.js";
+
 export class Dialog extends React.Component {
+    /**
+     * @param props {{title: string, onClose: function?, yes: string?, no: string?}}
+     */
     constructor(props) {
+        // title: str
         // onClose: callback(bool)
         // yes? str
         // no? str
@@ -10,25 +16,31 @@ export class Dialog extends React.Component {
 
     render() {
         return (
-            <div className="dialog">
-                <div className="content">{this.props.children}</div>
-                <div className="buttons horizontal">
-                    <div className="button yes">
-                        <button onClick={this.yes}>{this.props.yes || "yes"}</button>
-                    </div>
-                    <div className="button no">
-                        <button onClick={this.no}>{this.props.no || "no"}</button>
+            <FancyBox title={this.props.title}>
+                <div className="dialog">
+                    <div className="content">{this.props.children}</div>
+                    <div className="buttons horizontal">
+                        <div className="button yes">
+                            <button onClick={this.yes}>{this.props.yes || "yes"}</button>
+                        </div>
+                        <div className="button no">
+                            <button onClick={this.no}>{this.props.no || "cancel"}</button>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </FancyBox>
         );
     }
 
     yes() {
-        this.props.onClose(true);
+        Fancybox.onClose();
+        if (this.props.onClose)
+            this.props.onClose(true);
     }
 
     no() {
-        this.props.onClose(false);
+        Fancybox.onClose();
+        if (this.props.onClose)
+            this.props.onClose(false);
     }
 }

@@ -52,8 +52,8 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js", "../utils/cons
 
         render() {
           return /*#__PURE__*/React.createElement(Dialog, {
+            title: `Edit property "${this.props.definition.name}" for ${this.props.nbVideos} video${this.props.nbVideos < 2 ? '' : 's'}`,
             yes: "edit",
-            no: "cancel",
             onClose: this.onClose
           }, /*#__PURE__*/React.createElement("div", {
             className: "form-property-multi-video"

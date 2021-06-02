@@ -76,29 +76,15 @@ System.register(["../components/MenuPack.js", "../utils/constants.js", "../compo
           }, "yayayayayaya!"), /*#__PURE__*/React.createElement("input", {
             type: "text"
           }), "Hello! ", /*#__PURE__*/React.createElement("button", {
-            onClick: () => this.fancy2()
+            onClick: () => this.fancy()
           }, "click here!"));
         }
 
-        fancy2() {
-          Fancybox.load( /*#__PURE__*/React.createElement(FancyBox, {
-            title: "Test Fancy Box 2!",
-            onClose: Fancybox.onClose
-          }, /*#__PURE__*/React.createElement(Dialog, {
-            onClose: yes => {
-              Fancybox.onClose();
-              console.log(`Choice: ${yes ? 'yes' : 'no'}`);
-            }
-          }, /*#__PURE__*/React.createElement("h1", null, "hello world ", this.state.pageSize), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"))));
-        }
-
         fancy() {
-          this.props.app.loadDialog("Test fancy box!", onClose => /*#__PURE__*/React.createElement(Dialog, {
-            onClose: yes => {
-              onClose();
-              console.log(`Choice: ${yes ? 'yes' : 'no'}`);
-            }
-          }, /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world")));
+          Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
+            title: "Test Fancy Box 2!",
+            onClose: yes => console.log(`Choice: ${yes ? 'yes' : 'no'}`)
+          }, /*#__PURE__*/React.createElement("h1", null, "hello world ", this.state.pageSize), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world")));
         }
 
       });

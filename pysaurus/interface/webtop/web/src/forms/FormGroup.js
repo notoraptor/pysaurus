@@ -30,7 +30,7 @@ export class FormGroup extends React.Component {
 
     render() {
         return (
-            <Dialog yes="group" no="cancel" onClose={this.onClose}>
+            <Dialog title={"Group videos:"} yes="group" onClose={this.onClose}>
                 <table className="form-group">
                     <tbody>
                     <tr>

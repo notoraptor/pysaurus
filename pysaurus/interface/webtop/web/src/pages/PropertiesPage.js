@@ -274,9 +274,8 @@ export class PropertiesPage extends React.Component {
     }
 
     deleteProperty(name) {
-        this.props.app.loadDialog(`Delete property "${name}"?`, onClose => (
-            <Dialog yes={'delete'} no={'cancel'} onClose={yes => {
-                onClose();
+        Fancybox.load(
+            <Dialog title={`Delete property "${name}"?`} yes={'delete'} onClose={yes => {
                 if (yes) {
                     python_call('delete_prop_type', name)
                         .catch(backend_error)
@@ -291,13 +290,12 @@ export class PropertiesPage extends React.Component {
                     <h3>Are you sure you want to delete property "{name}"?</h3>
                 </Cell>
             </Dialog>
-        ));
+        );
     }
 
     convertPropertyToUnique(name) {
-        this.props.app.loadDialog(`Convert to unique property "${name}"?`, onClose => (
-            <Dialog yes={'convert to unique'} no={'cancel'} onClose={yes => {
-                onClose();
+        Fancybox.load(
+            <Dialog title={`Convert to unique property "${name}"?`} yes={'convert to unique'} onClose={yes => {
                 if (yes) {
                     python_call('convert_prop_to_unique', name)
                         .then(definitions => {
@@ -312,13 +310,12 @@ export class PropertiesPage extends React.Component {
                     <h3>Are you sure you want to convert to unique property "{name}"?</h3>
                 </Cell>
             </Dialog>
-        ));
+        );
     }
 
     convertPropertyToMultiple(name) {
-        this.props.app.loadDialog(`Convert to multiple property "${name}"?`, onClose => (
-            <Dialog yes={'convert to multiple'} no={'cancel'} onClose={yes => {
-                onClose();
+        Fancybox.load(
+            <Dialog title={`Convert to multiple property "${name}"?`} yes={'convert to multiple'} onClose={yes => {
                 if (yes) {
                     python_call('convert_prop_to_multiple', name)
                         .then(definitions => {
@@ -333,13 +330,12 @@ export class PropertiesPage extends React.Component {
                     <h3>Are you sure you want to convert to multiple property "{name}"?</h3>
                 </Cell>
             </Dialog>
-        ));
+        );
     }
 
     renameProperty(name) {
-        this.props.app.loadDialog(`Rename property "${name}"?`, onClose => (
+        Fancybox.load(
             <FormRenameProperty title={name} onClose={newName => {
-                onClose();
                 if (newName) {
                     python_call('rename_property', name, newName)
                         .then(definitions => {
@@ -350,7 +346,7 @@ export class PropertiesPage extends React.Component {
                         .catch(backend_error);
                 }
             }}/>
-        ));
+        );
     }
 
     getDefaultInputState() {

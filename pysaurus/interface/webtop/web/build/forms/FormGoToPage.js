@@ -29,8 +29,8 @@ System.register(["../dialogs/Dialog.js", "../components/Cell.js"], function (_ex
 
         render() {
           return /*#__PURE__*/React.createElement(Dialog, {
+            title: "Go to page:",
             yes: "go",
-            no: "cancel",
             onClose: this.onClose
           }, /*#__PURE__*/React.createElement(Cell, {
             center: true,

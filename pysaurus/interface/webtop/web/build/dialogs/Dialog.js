@@ -1,15 +1,21 @@
-System.register([], function (_export, _context) {
+System.register(["./FancyBox.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog;
+  var FancyBox, Dialog;
 
   _export("Dialog", void 0);
 
   return {
-    setters: [],
+    setters: [function (_FancyBoxJs) {
+      FancyBox = _FancyBoxJs.FancyBox;
+    }],
     execute: function () {
       _export("Dialog", Dialog = class Dialog extends React.Component {
+        /**
+         * @param props {{title: string, onClose: function?, yes: string?, no: string?}}
+         */
         constructor(props) {
+          // title: str
           // onClose: callback(bool)
           // yes? str
           // no? str
@@ -19,7 +25,9 @@ System.register([], function (_export, _context) {
         }
 
         render() {
-          return /*#__PURE__*/React.createElement("div", {
+          return /*#__PURE__*/React.createElement(FancyBox, {
+            title: this.props.title
+          }, /*#__PURE__*/React.createElement("div", {
             className: "dialog"
           }, /*#__PURE__*/React.createElement("div", {
             className: "content"
@@ -33,15 +41,17 @@ System.register([], function (_export, _context) {
             className: "button no"
           }, /*#__PURE__*/React.createElement("button", {
             onClick: this.no
-          }, this.props.no || "no"))));
+          }, this.props.no || "cancel")))));
         }
 
         yes() {
-          this.props.onClose(true);
+          Fancybox.onClose();
+          if (this.props.onClose) this.props.onClose(true);
         }
 
         no() {
-          this.props.onClose(false);
+          Fancybox.onClose();
+          if (this.props.onClose) this.props.onClose(false);
         }
 
       });
