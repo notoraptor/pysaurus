@@ -427,8 +427,11 @@ export class VideosPage extends React.Component {
         this.backend(null, {displayOnlySelected: !this.state.displayOnlySelected});
     }
 
-    updateStatus(status) {
-        this.setState({status});
+    updateStatus(status, reload = false, top = false) {
+        if (reload)
+            this.backend(null, {status}, top);
+        else
+            this.setState({status});
     }
 
     resetStatus() {

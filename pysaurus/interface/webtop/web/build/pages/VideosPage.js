@@ -405,8 +405,10 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           });
         }
 
-        updateStatus(status) {
-          this.setState({
+        updateStatus(status, reload = false, top = false) {
+          if (reload) this.backend(null, {
+            status
+          }, top);else this.setState({
             status
           });
         }
