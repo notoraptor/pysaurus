@@ -12,7 +12,8 @@ System.register([], function (_export, _context) {
         constructor(props) {
           // title
           // onClose()
-          // onBuild(onClose)
+          // onBuild? function(onClose)
+          // children?
           super(props);
           this.callbackIndex = -1;
           this.checkShortcut = this.checkShortcut.bind(this);
@@ -33,7 +34,7 @@ System.register([], function (_export, _context) {
             onClick: this.props.onClose
           }, "\xD7"))), /*#__PURE__*/React.createElement("div", {
             className: "fancybox-content"
-          }, this.props.onBuild(this.props.onClose))));
+          }, this.props.onBuild ? this.props.onBuild(this.props.onClose) : this.props.children)));
         }
 
         componentDidMount() {

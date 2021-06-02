@@ -1,7 +1,7 @@
-System.register(["../forms/FormGoToPage.js", "../dialogs/DialogSearch.js", "../utils/functions.js"], function (_export, _context) {
+System.register(["../forms/FormGoToPage.js", "../dialogs/DialogSearch.js", "../utils/functions.js", "../dialogs/FancyBox.js"], function (_export, _context) {
   "use strict";
 
-  var FormGoToPage, DialogSearch, capitalizeFirstLetter, Pagination;
+  var FormGoToPage, DialogSearch, capitalizeFirstLetter, FancyBox, Pagination;
 
   _export("Pagination", void 0);
 
@@ -12,6 +12,8 @@ System.register(["../forms/FormGoToPage.js", "../dialogs/DialogSearch.js", "../u
       DialogSearch = _dialogsDialogSearchJs.DialogSearch;
     }, function (_utilsFunctionsJs) {
       capitalizeFirstLetter = _utilsFunctionsJs.capitalizeFirstLetter;
+    }, function (_dialogsFancyBoxJs) {
+      FancyBox = _dialogsFancyBoxJs.FancyBox;
     }],
     execute: function () {
       _export("Pagination", Pagination = class Pagination extends React.Component {
@@ -46,10 +48,10 @@ System.register(["../forms/FormGoToPage.js", "../dialogs/DialogSearch.js", "../u
             className: "previous",
             disabled: pageNumber === 0,
             onClick: this.onPrevious
-          }, "<"), /*#__PURE__*/React.createElement("span", {
+          }, "<"), /*#__PURE__*/React.createElement("span", this.props.onSearch ? {
             className: "go",
-            onClick: this.props.onSearch ? this.look : this.look
-          }, capitalizeFirstLetter(singular)), /*#__PURE__*/React.createElement("span", {
+            onClick: this.look
+          } : {}, capitalizeFirstLetter(singular)), /*#__PURE__*/React.createElement("span", {
             className: "go",
             onClick: this.go
           }, pageNumber + 1, "/", nbPages), /*#__PURE__*/React.createElement("button", {
@@ -90,23 +92,29 @@ System.register(["../forms/FormGoToPage.js", "../dialogs/DialogSearch.js", "../u
         }
 
         go() {
-          APP.loadDialog('Go to page:', onClose => /*#__PURE__*/React.createElement(FormGoToPage, {
+          Fancybox.load( /*#__PURE__*/React.createElement(FancyBox, {
+            title: "Go to page:",
+            onClose: Fancybox.onClose
+          }, /*#__PURE__*/React.createElement(FormGoToPage, {
             nbPages: this.props.nbPages,
             pageNumber: this.props.pageNumber,
             onClose: pageNumber => {
-              onClose();
+              Fancybox.onClose();
               if (pageNumber !== this.props.pageNumber) this.props.onChange(pageNumber);
             }
-          }));
+          })));
         }
 
         look() {
-          APP.loadDialog('Search first:', onClose => /*#__PURE__*/React.createElement(DialogSearch, {
+          Fancybox.load( /*#__PURE__*/React.createElement(FancyBox, {
+            title: "Search first:",
+            onClose: Fancybox.onClose
+          }, /*#__PURE__*/React.createElement(DialogSearch, {
             onClose: text => {
-              onClose();
+              Fancybox.onClose();
               if (text && text.length) this.props.onSearch(text);
             }
-          }));
+          })));
         }
 
       });

@@ -1,7 +1,7 @@
-System.register(["../components/MenuPack.js", "../utils/constants.js", "../components/SetInput.js", "../dialogs/Dialog.js", "../components/Cross.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/Menu.js"], function (_export, _context) {
+System.register(["../components/MenuPack.js", "../utils/constants.js", "../components/SetInput.js", "../dialogs/Dialog.js", "../components/Cross.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/Menu.js", "../dialogs/FancyBox.js"], function (_export, _context) {
   "use strict";
 
-  var MenuPack, PAGE_SIZES, ComponentController, SetInput, Dialog, Cross, MenuItem, MenuItemCheck, Menu, Test;
+  var MenuPack, PAGE_SIZES, ComponentController, SetInput, Dialog, Cross, MenuItem, MenuItemCheck, Menu, FancyBox, Test;
 
   _export("Test", void 0);
 
@@ -23,6 +23,8 @@ System.register(["../components/MenuPack.js", "../utils/constants.js", "../compo
       MenuItemCheck = _componentsMenuItemCheckJs.MenuItemCheck;
     }, function (_componentsMenuJs) {
       Menu = _componentsMenuJs.Menu;
+    }, function (_dialogsFancyBoxJs) {
+      FancyBox = _dialogsFancyBoxJs.FancyBox;
     }],
     execute: function () {
       _export("Test", Test = class Test extends React.Component {
@@ -74,8 +76,20 @@ System.register(["../components/MenuPack.js", "../utils/constants.js", "../compo
           }, "yayayayayaya!"), /*#__PURE__*/React.createElement("input", {
             type: "text"
           }), "Hello! ", /*#__PURE__*/React.createElement("button", {
-            onClick: () => this.fancy()
+            onClick: () => this.fancy2()
           }, "click here!"));
+        }
+
+        fancy2() {
+          Fancybox.load( /*#__PURE__*/React.createElement(FancyBox, {
+            title: "Test Fancy Box 2!",
+            onClose: Fancybox.onClose
+          }, /*#__PURE__*/React.createElement(Dialog, {
+            onClose: yes => {
+              Fancybox.onClose();
+              console.log(`Choice: ${yes ? 'yes' : 'no'}`);
+            }
+          }, /*#__PURE__*/React.createElement("h1", null, "hello world ", this.state.pageSize), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"))));
         }
 
         fancy() {

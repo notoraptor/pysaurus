@@ -21,7 +21,6 @@ export class App extends React.Component {
         this.loadVideosPage = this.loadVideosPage.bind(this);
         this.manageFancyBoxView = this.manageFancyBoxView.bind(this);
         this.onCloseFancyBox = this.onCloseFancyBox.bind(this);
-        APP = this;
     }
 
     render() {

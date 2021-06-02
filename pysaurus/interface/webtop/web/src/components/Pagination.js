@@ -1,6 +1,7 @@
 import {FormGoToPage} from "../forms/FormGoToPage.js";
 import {DialogSearch} from "../dialogs/DialogSearch.js";
 import {capitalizeFirstLetter} from "../utils/functions.js";
+import {FancyBox} from "../dialogs/FancyBox.js";
 
 export class Pagination extends React.Component {
     constructor(props) {
@@ -29,7 +30,7 @@ export class Pagination extends React.Component {
                 <span className="navigation">
                     <button className="first" disabled={pageNumber === 0} onClick={this.onFirst}>&lt;&lt;</button>
                     <button className="previous" disabled={pageNumber === 0} onClick={this.onPrevious}>&lt;</button>
-                    <span className="go" onClick={this.props.onSearch ? this.look : this.look}>
+                    <span {...(this.props.onSearch ? {className: "go", onClick: this.look} : {})}>
                         {capitalizeFirstLetter(singular)}
                     </span>
                     <span className="go" onClick={this.go}>{pageNumber + 1}/{nbPages}</span>
@@ -66,22 +67,24 @@ export class Pagination extends React.Component {
     }
 
     go() {
-        APP.loadDialog('Go to page:', onClose => (
+        Fancybox.load(<FancyBox title={"Go to page:"} onClose={Fancybox.onClose}>
             <FormGoToPage nbPages={this.props.nbPages} pageNumber={this.props.pageNumber} onClose={pageNumber => {
-                onClose();
+                Fancybox.onClose();
                 if (pageNumber !== this.props.pageNumber)
                     this.props.onChange(pageNumber);
             }}/>
-        ));
+        </FancyBox>);
     }
 
     look() {
-        APP.loadDialog('Search first:', onClose => (
-            <DialogSearch onClose={text => {
-                onClose();
-                if (text && text.length)
-                    this.props.onSearch(text);
-            }}/>
-        ));
+        Fancybox.load(
+            <FancyBox title={"Search first:"} onClose={Fancybox.onClose}>
+                <DialogSearch onClose={text => {
+                    Fancybox.onClose();
+                    if (text && text.length)
+                        this.props.onSearch(text);
+                }}/>
+            </FancyBox>
+        );
     }
 }

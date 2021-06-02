@@ -38,7 +38,6 @@ System.register(["./pages/Test.js", "./pages/HomePage.js", "./pages/VideosPage.j
           this.loadVideosPage = this.loadVideosPage.bind(this);
           this.manageFancyBoxView = this.manageFancyBoxView.bind(this);
           this.onCloseFancyBox = this.onCloseFancyBox.bind(this);
-          APP = this;
         }
 
         render() {

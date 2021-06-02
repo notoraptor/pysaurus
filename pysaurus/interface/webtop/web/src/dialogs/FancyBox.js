@@ -2,7 +2,8 @@ export class FancyBox extends React.Component {
     constructor(props) {
         // title
         // onClose()
-        // onBuild(onClose)
+        // onBuild? function(onClose)
+        // children?
         super(props);
         this.callbackIndex = -1;
         this.checkShortcut = this.checkShortcut.bind(this);
@@ -18,7 +19,9 @@ export class FancyBox extends React.Component {
                             <button onClick={this.props.onClose}>&times;</button>
                         </div>
                     </div>
-                    <div className="fancybox-content">{this.props.onBuild(this.props.onClose)}</div>
+                    <div className="fancybox-content">
+                        {this.props.onBuild ? this.props.onBuild(this.props.onClose) : this.props.children}
+                    </div>
                 </div>
             </div>
         );

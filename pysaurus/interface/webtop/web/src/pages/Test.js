@@ -6,6 +6,7 @@ import {Cross} from "../components/Cross.js";
 import {MenuItem} from "../components/MenuItem.js";
 import {MenuItemCheck} from "../components/MenuItemCheck.js";
 import {Menu} from "../components/Menu.js";
+import {FancyBox} from "../dialogs/FancyBox.js";
 
 export class Test extends React.Component {
     constructor(props) {
@@ -50,9 +51,30 @@ export class Test extends React.Component {
                 Hello! <Cross action={() => console.log('cross!')}/>
                 <a href="https://google.fr">yayayayayaya!</a>
                 <input type="text"/>
-                Hello! <button onClick={() => this.fancy()}>click here!</button>
+                Hello! <button onClick={() => this.fancy2()}>click here!</button>
             </div>
         );
+    }
+
+    fancy2() {
+        Fancybox.load(<FancyBox title={"Test Fancy Box 2!"} onClose={Fancybox.onClose}>
+            <Dialog onClose={yes => {
+                Fancybox.onClose();
+                console.log(`Choice: ${yes ? 'yes' : 'no'}`);
+            }}>
+                <h1>hello world {this.state.pageSize}</h1>
+                <h1>hello world</h1>
+                <h1>hello world</h1>
+                <h1>hello world</h1>
+                <h1>hello world</h1>
+                <h1>hello world</h1>
+                <h1>hello world</h1>
+                <h1>hello world</h1>
+                <h1>hello world</h1>
+                <h1>hello world</h1>
+                <h1>hello world</h1>
+            </Dialog>
+        </FancyBox>);
     }
 
     fancy() {
