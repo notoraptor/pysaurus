@@ -1,4 +1,4 @@
-System.register(["../components/MenuPack.js", "../forms/FormRenameVideo.js", "../dialogs/Dialog.js", "../forms/FormSetProperties.js", "../components/Collapsable.js", "../components/MenuItem.js", "../utils/backend.js", "../utils/constants.js"], function (_export, _context) {
+System.register(["./MenuPack.js", "../forms/FormRenameVideo.js", "../dialogs/Dialog.js", "../forms/FormSetProperties.js", "./Collapsable.js", "./MenuItem.js", "../utils/backend.js", "../utils/constants.js"], function (_export, _context) {
   "use strict";
 
   var MenuPack, FormRenameVideo, Dialog, FormSetProperties, Collapsable, MenuItem, python_call, backend_error, Characters, Video;
@@ -6,18 +6,18 @@ System.register(["../components/MenuPack.js", "../forms/FormRenameVideo.js", "..
   _export("Video", void 0);
 
   return {
-    setters: [function (_componentsMenuPackJs) {
-      MenuPack = _componentsMenuPackJs.MenuPack;
+    setters: [function (_MenuPackJs) {
+      MenuPack = _MenuPackJs.MenuPack;
     }, function (_formsFormRenameVideoJs) {
       FormRenameVideo = _formsFormRenameVideoJs.FormRenameVideo;
     }, function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
     }, function (_formsFormSetPropertiesJs) {
       FormSetProperties = _formsFormSetPropertiesJs.FormSetProperties;
-    }, function (_componentsCollapsableJs) {
-      Collapsable = _componentsCollapsableJs.Collapsable;
-    }, function (_componentsMenuItemJs) {
-      MenuItem = _componentsMenuItemJs.MenuItem;
+    }, function (_CollapsableJs) {
+      Collapsable = _CollapsableJs.Collapsable;
+    }, function (_MenuItemJs) {
+      MenuItem = _MenuItemJs.MenuItem;
     }, function (_utilsBackendJs) {
       python_call = _utilsBackendJs.python_call;
       backend_error = _utilsBackendJs.backend_error;
@@ -27,11 +27,6 @@ System.register(["../components/MenuPack.js", "../forms/FormRenameVideo.js", "..
     execute: function () {
       _export("Video", Video = class Video extends React.Component {
         constructor(props) {
-          // parent
-          // data
-          // confirmDeletion: bool
-          // selected: bool
-          // onSelect(videoID, selected)
           super(props);
           this.openVideo = this.openVideo.bind(this);
           this.confirmDeletion = this.confirmDeletion.bind(this);
@@ -132,7 +127,7 @@ System.register(["../components/MenuPack.js", "../forms/FormRenameVideo.js", "..
 
         renderProperties() {
           const props = this.props.data.properties;
-          const propDefs = this.props.parent.state.properties;
+          const propDefs = this.props.propDefs;
           if (!propDefs.length) return '';
           return /*#__PURE__*/React.createElement("div", {
             className: "properties"
@@ -153,7 +148,7 @@ System.register(["../components/MenuPack.js", "../forms/FormRenameVideo.js", "..
             }, !noValue ? printableValues.map((element, elementIndex) => /*#__PURE__*/React.createElement("span", {
               className: "value",
               key: elementIndex,
-              onClick: () => this.props.parent.focusPropertyValue(name, element)
+              onClick: () => this.props.onSelectPropertyValue(name, element)
             }, element.toString())) : /*#__PURE__*/React.createElement("span", {
               className: "no-value"
             }, "no value")));
@@ -161,30 +156,23 @@ System.register(["../components/MenuPack.js", "../forms/FormRenameVideo.js", "..
         }
 
         openVideo() {
-          python_call('open_video', this.props.data.video_id).then(() => this.props.parent.updateStatus('Opened: ' + this.props.data.filename)).catch(() => this.props.parent.updateStatus('Unable to open: ' + this.props.data.filename));
+          python_call('open_video', this.props.data.video_id).then(() => this.props.onInfo('Opened: ' + this.props.data.filename)).catch(() => this.props.onInfo('Unable to open: ' + this.props.data.filename));
         }
 
         editProperties() {
           const data = this.props.data;
-          const definitions = this.props.parent.state.properties;
           Fancybox.load( /*#__PURE__*/React.createElement(FormSetProperties, {
             data: data,
-            definitions: definitions,
+            definitions: this.props.propDefs,
             onClose: properties => {
               if (properties) {
-                python_call('set_video_properties', this.props.data.video_id, properties).then(() => this.props.parent.updateStatus(`Properties updated: ${data.filename}`, true)).catch(backend_error);
+                python_call('set_video_properties', this.props.data.video_id, properties).then(() => this.props.onInfo(`Properties updated: ${data.filename}`, true)).catch(backend_error);
               }
             }
           }));
         }
 
         confirmDeletion() {
-          /*
-          return view.dialog({
-              url: 'html/delete.html',
-              parameters: {filename: this.props.data.filename, thumbnail_path: this.props.data.thumbnail_path}}
-          );
-          */
           const filename = this.props.data.filename;
           const thumbnail_path = this.props.data.thumbnail_path;
           Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
@@ -211,23 +199,23 @@ System.register(["../components/MenuPack.js", "../forms/FormRenameVideo.js", "..
         }
 
         reallyDeleteVideo() {
-          python_call('delete_video', this.props.data.video_id).then(() => this.props.parent.updateStatus('Video deleted! ' + this.props.data.filename, true)).catch(backend_error);
+          python_call('delete_video', this.props.data.video_id).then(() => this.props.onInfo('Video deleted! ' + this.props.data.filename, true)).catch(backend_error);
         }
 
         openContainingFolder() {
           python_call('open_containing_folder', this.props.data.video_id).then(folder => {
-            this.props.parent.updateStatus(`Opened folder: ${folder}`);
+            this.props.onInfo(`Opened folder: ${folder}`);
           }).catch(backend_error);
         }
 
         copyMetaTitle() {
           const text = this.props.data.title;
-          python_call('clipboard', text).then(() => this.props.parent.updateStatus('Copied to clipboard: ' + text)).catch(() => this.props.parent.updateStatus(`Cannot copy meta title to clipboard: ${text}`));
+          python_call('clipboard', text).then(() => this.props.onInfo('Copied to clipboard: ' + text)).catch(() => this.props.onInfo(`Cannot copy meta title to clipboard: ${text}`));
         }
 
         copyFileTitle() {
           const text = this.props.data.file_title;
-          python_call('clipboard', text).then(() => this.props.parent.updateStatus('Copied to clipboard: ' + text)).catch(() => this.props.parent.updateStatus(`Cannot copy file title to clipboard: ${text}`));
+          python_call('clipboard', text).then(() => this.props.onInfo('Copied to clipboard: ' + text)).catch(() => this.props.onInfo(`Cannot copy file title to clipboard: ${text}`));
         }
 
         renameVideo() {
@@ -238,7 +226,7 @@ System.register(["../components/MenuPack.js", "../forms/FormRenameVideo.js", "..
             title: title,
             onClose: newTitle => {
               if (newTitle) {
-                python_call('rename_video', this.props.data.video_id, newTitle).then(() => this.props.parent.updateStatus(`Renamed: ${newTitle}`, true)).catch(backend_error);
+                python_call('rename_video', this.props.data.video_id, newTitle).then(() => this.props.onInfo(`Renamed: ${newTitle}`, true)).catch(backend_error);
               }
             }
           }));
@@ -251,6 +239,19 @@ System.register(["../components/MenuPack.js", "../forms/FormRenameVideo.js", "..
         }
 
       });
+
+      Video.propTypes = {
+        data: PropTypes.object.isRequired,
+        propDefs: PropTypes.arrayOf(PropTypes.object).isRequired,
+        confirmDeletion: PropTypes.bool,
+        selected: PropTypes.bool,
+        // onSelect(videoID, selected)
+        onSelect: PropTypes.func,
+        // onSelectPropertyValue(propName, propVal)
+        onSelectPropertyValue: PropTypes.func.isRequired,
+        // onInfo(message: str, backendUpdated: bool)
+        onInfo: PropTypes.func.isRequired
+      };
     }
   };
 });

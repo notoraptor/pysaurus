@@ -1,19 +1,14 @@
-import {MenuPack} from "../components/MenuPack.js";
+import {MenuPack} from "./MenuPack.js";
 import {FormRenameVideo} from "../forms/FormRenameVideo.js";
 import {Dialog} from "../dialogs/Dialog.js";
 import {FormSetProperties} from "../forms/FormSetProperties.js";
-import {Collapsable} from "../components/Collapsable.js";
-import {MenuItem} from "../components/MenuItem.js";
+import {Collapsable} from "./Collapsable.js";
+import {MenuItem} from "./MenuItem.js";
 import {python_call, backend_error} from "../utils/backend.js";
 import {Characters} from "../utils/constants.js";
 
 export class Video extends React.Component {
     constructor(props) {
-        // parent
-        // data
-        // confirmDeletion: bool
-        // selected: bool
-        // onSelect(videoID, selected)
         super(props);
         this.openVideo = this.openVideo.bind(this);
         this.confirmDeletion = this.confirmDeletion.bind(this);
@@ -110,7 +105,7 @@ export class Video extends React.Component {
 
     renderProperties() {
         const props = this.props.data.properties;
-        const propDefs = this.props.parent.state.properties;
+        const propDefs = this.props.propDefs;
         if (!propDefs.length)
             return '';
         return (
@@ -131,7 +126,7 @@ export class Video extends React.Component {
                                 {!noValue ? (printableValues.map((element, elementIndex) => (
                                     <span className="value"
                                           key={elementIndex}
-                                          onClick={() => this.props.parent.focusPropertyValue(name, element)}>
+                                          onClick={() => this.props.onSelectPropertyValue(name, element)}>
                                         {element.toString()}
                                     </span>
                                 ))) : <span className="no-value">no value</span>}
@@ -145,18 +140,17 @@ export class Video extends React.Component {
 
     openVideo() {
         python_call('open_video', this.props.data.video_id)
-            .then(() => this.props.parent.updateStatus('Opened: ' + this.props.data.filename))
-            .catch(() => this.props.parent.updateStatus('Unable to open: ' + this.props.data.filename));
+            .then(() => this.props.onInfo('Opened: ' + this.props.data.filename))
+            .catch(() => this.props.onInfo('Unable to open: ' + this.props.data.filename));
     }
 
     editProperties() {
         const data = this.props.data;
-        const definitions = this.props.parent.state.properties;
         Fancybox.load(
-            <FormSetProperties data={data} definitions={definitions} onClose={properties => {
+            <FormSetProperties data={data} definitions={this.props.propDefs} onClose={properties => {
                 if (properties) {
                     python_call('set_video_properties', this.props.data.video_id, properties)
-                        .then(() => this.props.parent.updateStatus(`Properties updated: ${data.filename}`, true))
+                        .then(() => this.props.onInfo(`Properties updated: ${data.filename}`, true))
                         .catch(backend_error);
                 }
             }}/>
@@ -164,12 +158,6 @@ export class Video extends React.Component {
     }
 
     confirmDeletion() {
-        /*
-        return view.dialog({
-            url: 'html/delete.html',
-            parameters: {filename: this.props.data.filename, thumbnail_path: this.props.data.thumbnail_path}}
-        );
-        */
         const filename = this.props.data.filename;
         const thumbnail_path = this.props.data.thumbnail_path;
         Fancybox.load(
@@ -194,14 +182,14 @@ export class Video extends React.Component {
 
     reallyDeleteVideo() {
         python_call('delete_video', this.props.data.video_id)
-            .then(() => this.props.parent.updateStatus('Video deleted! ' + this.props.data.filename, true))
+            .then(() => this.props.onInfo('Video deleted! ' + this.props.data.filename, true))
             .catch(backend_error);
     }
 
     openContainingFolder() {
         python_call('open_containing_folder', this.props.data.video_id)
             .then(folder => {
-                this.props.parent.updateStatus(`Opened folder: ${folder}`);
+                this.props.onInfo(`Opened folder: ${folder}`);
             })
             .catch(backend_error);
     }
@@ -209,15 +197,15 @@ export class Video extends React.Component {
     copyMetaTitle() {
         const text = this.props.data.title;
         python_call('clipboard', text)
-            .then(() => this.props.parent.updateStatus('Copied to clipboard: ' + text))
-            .catch(() => this.props.parent.updateStatus(`Cannot copy meta title to clipboard: ${text}`));
+            .then(() => this.props.onInfo('Copied to clipboard: ' + text))
+            .catch(() => this.props.onInfo(`Cannot copy meta title to clipboard: ${text}`));
     }
 
     copyFileTitle() {
         const text = this.props.data.file_title;
         python_call('clipboard', text)
-            .then(() => this.props.parent.updateStatus('Copied to clipboard: ' + text))
-            .catch(() => this.props.parent.updateStatus(`Cannot copy file title to clipboard: ${text}`));
+            .then(() => this.props.onInfo('Copied to clipboard: ' + text))
+            .catch(() => this.props.onInfo(`Cannot copy file title to clipboard: ${text}`));
     }
 
     renameVideo() {
@@ -227,7 +215,7 @@ export class Video extends React.Component {
             <FormRenameVideo filename={filename} title={title} onClose={newTitle => {
                 if (newTitle) {
                     python_call('rename_video', this.props.data.video_id, newTitle)
-                        .then(() => this.props.parent.updateStatus(`Renamed: ${newTitle}`, true))
+                        .then(() => this.props.onInfo(`Renamed: ${newTitle}`, true))
                         .catch(backend_error);
                 }
             }}/>
@@ -240,3 +228,15 @@ export class Video extends React.Component {
         }
     }
 }
+Video.propTypes = {
+    data: PropTypes.object.isRequired,
+    propDefs: PropTypes.arrayOf(PropTypes.object).isRequired,
+    confirmDeletion: PropTypes.bool,
+    selected: PropTypes.bool,
+    // onSelect(videoID, selected)
+    onSelect: PropTypes.func,
+    // onSelectPropertyValue(propName, propVal)
+    onSelectPropertyValue: PropTypes.func.isRequired,
+    // onInfo(message: str, backendUpdated: bool)
+    onInfo: PropTypes.func.isRequired,
+};

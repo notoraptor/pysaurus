@@ -1,7 +1,7 @@
 import {PAGE_SIZES, SEARCH_TYPE_TITLE, SOURCE_TREE} from "../utils/constants.js";
 import {MenuPack} from "../components/MenuPack.js";
 import {Pagination} from "../components/Pagination.js";
-import {Video} from "../pageComponents/Video.js";
+import {Video} from "../components/Video.js";
 import {FormSourceVideo} from "../forms/FormSourceVideo.js";
 import {FormGroup} from "../forms/FormGroup.js";
 import {FormSearch} from "../forms/FormSearch.js";
@@ -228,9 +228,11 @@ export class VideosPage extends React.Component {
                     <div className="main-panel videos">{this.state.videos.map(data => (
                         <Video key={data.video_id}
                                data={data}
-                               parent={this}
+                               propDefs={this.state.properties}
                                selected={this.state.selector.has(data.video_id)}
                                onSelect={this.onVideoSelection}
+                               onSelectPropertyValue={this.focusPropertyValue}
+                               onInfo={this.updateStatus}
                                confirmDeletion={this.state.confirmDeletion}/>
                     ))}</div>
                 </div>

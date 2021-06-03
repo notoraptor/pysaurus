@@ -1,4 +1,4 @@
-System.register(["../utils/constants.js", "../components/MenuPack.js", "../components/Pagination.js", "../pageComponents/Video.js", "../forms/FormSourceVideo.js", "../forms/FormGroup.js", "../forms/FormSearch.js", "../forms/FormSort.js", "../pageComponents/GroupView.js", "../forms/FormEditPropertyValue.js", "../forms/FormFillKeywords.js", "../forms/FormPropertyMultiVideo.js", "../components/Collapsable.js", "../components/Cross.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/MenuItemRadio.js", "../components/Menu.js", "../utils/Selector.js", "../utils/Action.js", "../utils/Actions.js", "../components/ActionToMenuItem.js", "../components/ActionToSettingIcon.js", "../components/ActionToCross.js", "../utils/backend.js"], function (_export, _context) {
+System.register(["../utils/constants.js", "../components/MenuPack.js", "../components/Pagination.js", "../components/Video.js", "../forms/FormSourceVideo.js", "../forms/FormGroup.js", "../forms/FormSearch.js", "../forms/FormSort.js", "../pageComponents/GroupView.js", "../forms/FormEditPropertyValue.js", "../forms/FormFillKeywords.js", "../forms/FormPropertyMultiVideo.js", "../components/Collapsable.js", "../components/Cross.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/MenuItemRadio.js", "../components/Menu.js", "../utils/Selector.js", "../utils/Action.js", "../utils/Actions.js", "../components/ActionToMenuItem.js", "../components/ActionToSettingIcon.js", "../components/ActionToCross.js", "../utils/backend.js"], function (_export, _context) {
   "use strict";
 
   var PAGE_SIZES, SEARCH_TYPE_TITLE, SOURCE_TREE, MenuPack, Pagination, Video, FormSourceVideo, FormGroup, FormSearch, FormSort, GroupView, FormEditPropertyValue, FormFillKeywords, FormPropertyMultiVideo, Collapsable, Cross, MenuItem, MenuItemCheck, MenuItemRadio, Menu, Selector, Action, Actions, ActionToMenuItem, ActionToSettingIcon, ActionToCross, python_call, backend_error, VideosPage;
@@ -30,8 +30,8 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
       MenuPack = _componentsMenuPackJs.MenuPack;
     }, function (_componentsPaginationJs) {
       Pagination = _componentsPaginationJs.Pagination;
-    }, function (_pageComponentsVideoJs) {
-      Video = _pageComponentsVideoJs.Video;
+    }, function (_componentsVideoJs) {
+      Video = _componentsVideoJs.Video;
     }, function (_formsFormSourceVideoJs) {
       FormSourceVideo = _formsFormSourceVideoJs.FormSourceVideo;
     }, function (_formsFormGroupJs) {
@@ -257,9 +257,11 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           }, this.state.videos.map(data => /*#__PURE__*/React.createElement(Video, {
             key: data.video_id,
             data: data,
-            parent: this,
+            propDefs: this.state.properties,
             selected: this.state.selector.has(data.video_id),
             onSelect: this.onVideoSelection,
+            onSelectPropertyValue: this.focusPropertyValue,
+            onInfo: this.updateStatus,
             confirmDeletion: this.state.confirmDeletion
           })))), /*#__PURE__*/React.createElement("footer", {
             className: "horizontal"
