@@ -1,22 +1,11 @@
 import {FIELD_TITLES, Characters} from "../utils/constants.js";
-import {Pagination} from "../components/Pagination.js";
-import {SettingIcon} from "../components/SettingIcon.js";
-import {PlusIcon} from "../components/PlusIcon.js";
+import {Pagination} from "./Pagination.js";
+import {SettingIcon} from "./SettingIcon.js";
+import {PlusIcon} from "./PlusIcon.js";
 import {capitalizeFirstLetter} from "../utils/functions.js";
 
 export class GroupView extends React.Component {
     constructor(props) {
-        /*
-        groupID
-        field
-        sorting
-        reverse
-        groups
-        inPath?
-        onSelect(index)
-        onOptions? callback(index)
-        onPlus? callback(index)
-        */
         super(props);
         this.state = {
             pageSize: 100,
@@ -32,8 +21,8 @@ export class GroupView extends React.Component {
         this.onCheckEntry = this.onCheckEntry.bind(this);
         this.onCheckAll = this.onCheckAll.bind(this);
         this.nullIndex = -1;
-        for (let i = 0; i < this.props.groups.length; ++i) {
-            if (this.props.groups[i].value === null) {
+        for (let i = 0; i < this.props.groupDef.groups.length; ++i) {
+            if (this.props.groupDef.groups[i].value === null) {
                 if (i !== 0)
                     throw `Group without value at position ${i}, expected 0`;
                 this.nullIndex = i;
@@ -43,12 +32,12 @@ export class GroupView extends React.Component {
     }
 
     render() {
-        const selected = this.props.groupID;
-        const isProperty = (this.props.field.charAt(0) === ':');
+        const selected = this.props.groupDef.group_id;
+        const isProperty = (this.props.groupDef.field.charAt(0) === ':');
         const start = this.state.pageSize * this.state.pageNumber;
-        const end = Math.min(start + this.state.pageSize, this.props.groups.length);
+        const end = Math.min(start + this.state.pageSize, this.props.groupDef.groups.length);
         const allChecked = this.allChecked(start, end);
-        console.log(`Rendering ${this.props.groups.length} group(s).`);
+        console.log(`Rendering ${this.props.groupDef.groups.length} group(s).`);
         return (
             <div className="group-view">
                 <div className="header">
@@ -84,7 +73,7 @@ export class GroupView extends React.Component {
                     ) : ''}
                 </div>
                 <div className="content">
-                    {this.props.groups.slice(start, end).map((entry, index) => {
+                    {this.props.groupDef.groups.slice(start, end).map((entry, index) => {
                         index = start + index;
                         const buttons = [];
                         if (isProperty && entry.value !== null) {
@@ -130,19 +119,19 @@ export class GroupView extends React.Component {
     }
 
     renderTitle() {
-        const field = this.props.field;
+        const field = this.props.groupDef.field;
         let title = field.charAt(0) === ':' ?
             `"${capitalizeFirstLetter(field.substr(1))}"` : capitalizeFirstLetter(FIELD_TITLES[field]);
-        if (this.props.sorting === "length")
+        if (this.props.groupDef.sorting === "length")
             title = `|| ${title} ||`;
-        else if (this.props.sorting === "count")
+        else if (this.props.groupDef.sorting === "count")
             title = `${title} (#)`;
-        title = `${title} ${this.props.reverse ? Characters.ARROW_DOWN : Characters.ARROW_UP}`;
+        title = `${title} ${this.props.groupDef.reverse ? Characters.ARROW_DOWN : Characters.ARROW_UP}`;
         return title;
     }
 
     getNbPages() {
-        const count = this.props.groups.length;
+        const count = this.props.groupDef.groups.length;
         return Math.floor(count / this.state.pageSize) + (count % this.state.pageSize ? 1 : 0);
     }
 
@@ -172,8 +161,8 @@ export class GroupView extends React.Component {
     }
 
     search(text) {
-        for (let index = 0; index < this.props.groups.length; ++index) {
-            const value = this.props.groups[index].value;
+        for (let index = 0; index < this.props.groupDef.groups.length; ++index) {
+            const value = this.props.groupDef.groups[index].value;
             if (value === null)
                 continue;
             if (value.toString().toLowerCase().indexOf(text.trim().toLowerCase()) !== 0)
@@ -217,4 +206,20 @@ export class GroupView extends React.Component {
         selection.delete(this.nullIndex);
         this.setState({selection});
     }
+}
+GroupView.propTypes = {
+    groupDef: PropTypes.shape({
+        group_id: PropTypes.number,
+        field: PropTypes.string,
+        sorting: PropTypes.string,
+        reverse: PropTypes.bool,
+        groups: PropTypes.arrayOf(PropTypes.shape({value: PropTypes.number, count: PropTypes.number}))
+    }).isRequired,
+    inPath: PropTypes.bool.isRequired,
+    // onSelect(index)
+    onSelect: PropTypes.func,
+    // onOptions(index)
+    onOptions: PropTypes.func,
+    // onPlus(index)
+    onPlus: PropTypes.func,
 }

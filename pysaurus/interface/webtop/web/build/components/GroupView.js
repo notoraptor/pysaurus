@@ -1,4 +1,4 @@
-System.register(["../utils/constants.js", "../components/Pagination.js", "../components/SettingIcon.js", "../components/PlusIcon.js", "../utils/functions.js"], function (_export, _context) {
+System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js", "./PlusIcon.js", "../utils/functions.js"], function (_export, _context) {
   "use strict";
 
   var FIELD_TITLES, Characters, Pagination, SettingIcon, PlusIcon, capitalizeFirstLetter, GroupView;
@@ -11,29 +11,18 @@ System.register(["../utils/constants.js", "../components/Pagination.js", "../com
     setters: [function (_utilsConstantsJs) {
       FIELD_TITLES = _utilsConstantsJs.FIELD_TITLES;
       Characters = _utilsConstantsJs.Characters;
-    }, function (_componentsPaginationJs) {
-      Pagination = _componentsPaginationJs.Pagination;
-    }, function (_componentsSettingIconJs) {
-      SettingIcon = _componentsSettingIconJs.SettingIcon;
-    }, function (_componentsPlusIconJs) {
-      PlusIcon = _componentsPlusIconJs.PlusIcon;
+    }, function (_PaginationJs) {
+      Pagination = _PaginationJs.Pagination;
+    }, function (_SettingIconJs) {
+      SettingIcon = _SettingIconJs.SettingIcon;
+    }, function (_PlusIconJs) {
+      PlusIcon = _PlusIconJs.PlusIcon;
     }, function (_utilsFunctionsJs) {
       capitalizeFirstLetter = _utilsFunctionsJs.capitalizeFirstLetter;
     }],
     execute: function () {
       _export("GroupView", GroupView = class GroupView extends React.Component {
         constructor(props) {
-          /*
-          groupID
-          field
-          sorting
-          reverse
-          groups
-          inPath?
-          onSelect(index)
-          onOptions? callback(index)
-          onPlus? callback(index)
-          */
           super(props);
           this.state = {
             pageSize: 100,
@@ -50,8 +39,8 @@ System.register(["../utils/constants.js", "../components/Pagination.js", "../com
           this.onCheckAll = this.onCheckAll.bind(this);
           this.nullIndex = -1;
 
-          for (let i = 0; i < this.props.groups.length; ++i) {
-            if (this.props.groups[i].value === null) {
+          for (let i = 0; i < this.props.groupDef.groups.length; ++i) {
+            if (this.props.groupDef.groups[i].value === null) {
               if (i !== 0) throw `Group without value at position ${i}, expected 0`;
               this.nullIndex = i;
               break;
@@ -60,12 +49,12 @@ System.register(["../utils/constants.js", "../components/Pagination.js", "../com
         }
 
         render() {
-          const selected = this.props.groupID;
-          const isProperty = this.props.field.charAt(0) === ':';
+          const selected = this.props.groupDef.group_id;
+          const isProperty = this.props.groupDef.field.charAt(0) === ':';
           const start = this.state.pageSize * this.state.pageNumber;
-          const end = Math.min(start + this.state.pageSize, this.props.groups.length);
+          const end = Math.min(start + this.state.pageSize, this.props.groupDef.groups.length);
           const allChecked = this.allChecked(start, end);
-          console.log(`Rendering ${this.props.groups.length} group(s).`);
+          console.log(`Rendering ${this.props.groupDef.groups.length} group(s).`);
           return /*#__PURE__*/React.createElement("div", {
             className: "group-view"
           }, /*#__PURE__*/React.createElement("div", {
@@ -96,7 +85,7 @@ System.register(["../utils/constants.js", "../components/Pagination.js", "../com
             action: this.openPropertyOptionsAll
           })) : '')) : ''), /*#__PURE__*/React.createElement("div", {
             className: "content"
-          }, this.props.groups.slice(start, end).map((entry, index) => {
+          }, this.props.groupDef.groups.slice(start, end).map((entry, index) => {
             index = start + index;
             const buttons = [];
 
@@ -153,15 +142,15 @@ System.register(["../utils/constants.js", "../components/Pagination.js", "../com
         }
 
         renderTitle() {
-          const field = this.props.field;
+          const field = this.props.groupDef.field;
           let title = field.charAt(0) === ':' ? `"${capitalizeFirstLetter(field.substr(1))}"` : capitalizeFirstLetter(FIELD_TITLES[field]);
-          if (this.props.sorting === "length") title = `|| ${title} ||`;else if (this.props.sorting === "count") title = `${title} (#)`;
-          title = `${title} ${this.props.reverse ? Characters.ARROW_DOWN : Characters.ARROW_UP}`;
+          if (this.props.groupDef.sorting === "length") title = `|| ${title} ||`;else if (this.props.groupDef.sorting === "count") title = `${title} (#)`;
+          title = `${title} ${this.props.groupDef.reverse ? Characters.ARROW_DOWN : Characters.ARROW_UP}`;
           return title;
         }
 
         getNbPages() {
-          const count = this.props.groups.length;
+          const count = this.props.groupDef.groups.length;
           return Math.floor(count / this.state.pageSize) + (count % this.state.pageSize ? 1 : 0);
         }
 
@@ -193,8 +182,8 @@ System.register(["../utils/constants.js", "../components/Pagination.js", "../com
         }
 
         search(text) {
-          for (let index = 0; index < this.props.groups.length; ++index) {
-            const value = this.props.groups[index].value;
+          for (let index = 0; index < this.props.groupDef.groups.length; ++index) {
+            const value = this.props.groupDef.groups[index].value;
             if (value === null) continue;
             if (value.toString().toLowerCase().indexOf(text.trim().toLowerCase()) !== 0) continue;
             const pageNumber = Math.floor(index / this.state.pageSize);
@@ -248,6 +237,26 @@ System.register(["../utils/constants.js", "../components/Pagination.js", "../com
         }
 
       });
+
+      GroupView.propTypes = {
+        groupDef: PropTypes.shape({
+          group_id: PropTypes.number,
+          field: PropTypes.string,
+          sorting: PropTypes.string,
+          reverse: PropTypes.bool,
+          groups: PropTypes.arrayOf(PropTypes.shape({
+            value: PropTypes.number,
+            count: PropTypes.number
+          }))
+        }).isRequired,
+        inPath: PropTypes.bool.isRequired,
+        // onSelect(index)
+        onSelect: PropTypes.func,
+        // onOptions(index)
+        onOptions: PropTypes.func,
+        // onPlus(index)
+        onPlus: PropTypes.func
+      };
     }
   };
 });

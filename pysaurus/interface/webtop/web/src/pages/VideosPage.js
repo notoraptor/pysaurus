@@ -6,7 +6,7 @@ import {FormSourceVideo} from "../forms/FormSourceVideo.js";
 import {FormGroup} from "../forms/FormGroup.js";
 import {FormSearch} from "../forms/FormSearch.js";
 import {FormSort} from "../forms/FormSort.js";
-import {GroupView} from "../pageComponents/GroupView.js";
+import {GroupView} from "../components/GroupView.js";
 import {FormEditPropertyValue} from "../forms/FormEditPropertyValue.js";
 import {FormFillKeywords} from "../forms/FormFillKeywords.js";
 import {FormPropertyMultiVideo} from "../forms/FormPropertyMultiVideo.js";
@@ -208,11 +208,7 @@ export class VideosPage extends React.Component {
                             <Collapsable lite={false} className="group" title="Groups">
                                 <GroupView
                                     key={`${groupDef.field}-${groupDef.groups.length}-${this.state.path.join('-')}`}
-                                    groupID={groupDef.group_id}
-                                    field={groupDef.field}
-                                    sorting={groupDef.sorting}
-                                    reverse={groupDef.reverse}
-                                    groups={groupDef.groups}
+                                    groupDef={groupDef}
                                     inPath={this.state.path.length}
                                     onSelect={this.selectGroup}
                                     onOptions={this.editPropertyValue}
