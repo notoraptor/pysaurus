@@ -51,8 +51,10 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js", "../utils/cons
         }
 
         render() {
+          const propName = this.props.definition.name;
+          const nbVideos = this.props.nbVideos;
           return /*#__PURE__*/React.createElement(Dialog, {
-            title: `Edit property "${this.props.definition.name}" for ${this.props.nbVideos} video${this.props.nbVideos < 2 ? '' : 's'}`,
+            title: `Edit property "${propName}" for ${nbVideos} video${nbVideos < 2 ? '' : 's'}`,
             yes: "edit",
             onClose: this.onClose
           }, /*#__PURE__*/React.createElement("div", {

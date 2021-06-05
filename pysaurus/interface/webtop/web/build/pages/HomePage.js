@@ -1,7 +1,7 @@
 System.register(["../utils/constants.js", "../utils/backend.js"], function (_export, _context) {
   "use strict";
 
-  var HomeStatus, python_call, backend_error, ProgressionMonitoring, HomePage, NotificationCollector, NotificationRenderer;
+  var HomeStatus, backend_error, python_call, ProgressionMonitoring, HomePage, NotificationCollector, NotificationRenderer;
 
   /**
    * @param props {{monitoring: ProgressionMonitoring}}
@@ -35,8 +35,8 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
     setters: [function (_utilsConstantsJs) {
       HomeStatus = _utilsConstantsJs.HomeStatus;
     }, function (_utilsBackendJs) {
-      python_call = _utilsBackendJs.python_call;
       backend_error = _utilsBackendJs.backend_error;
+      python_call = _utilsBackendJs.python_call;
     }],
     execute: function () {
       ProgressionMonitoring = class ProgressionMonitoring {

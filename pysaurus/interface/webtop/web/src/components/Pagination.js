@@ -1,7 +1,6 @@
 import {FormGoToPage} from "../forms/FormGoToPage.js";
 import {DialogSearch} from "../dialogs/DialogSearch.js";
 import {capitalizeFirstLetter} from "../utils/functions.js";
-import {FancyBox} from "../dialogs/FancyBox.js";
 
 export class Pagination extends React.Component {
     constructor(props) {

@@ -2,8 +2,7 @@ import {Test} from "./pages/Test.js";
 import {HomePage} from "./pages/HomePage.js";
 import {VideosPage} from "./pages/VideosPage.js";
 import {PropertiesPage} from "./pages/PropertiesPage.js";
-import {FancyBox} from "./dialogs/FancyBox.js";
-import {python_call, backend_error} from "./utils/backend.js";
+import {backend_error, python_call} from "./utils/backend.js";
 
 import {VIDEO_DEFAULT_PAGE_NUMBER, VIDEO_DEFAULT_PAGE_SIZE} from "./utils/constants.js";
 
@@ -18,7 +17,9 @@ export class App extends React.Component {
 
     render() {
         return (
-            <div className="app"><main>{this.renderPage()}</main></div>
+            <div className="app">
+                <main>{this.renderPage()}</main>
+            </div>
         );
     }
 

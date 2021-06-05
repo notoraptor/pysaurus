@@ -1,7 +1,7 @@
 System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js", "./PlusIcon.js", "../utils/functions.js"], function (_export, _context) {
   "use strict";
 
-  var FIELD_TITLES, Characters, Pagination, SettingIcon, PlusIcon, capitalizeFirstLetter, GroupView;
+  var Characters, FIELD_TITLES, Pagination, SettingIcon, PlusIcon, capitalizeFirstLetter, GroupView;
 
   function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
@@ -9,8 +9,8 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
 
   return {
     setters: [function (_utilsConstantsJs) {
-      FIELD_TITLES = _utilsConstantsJs.FIELD_TITLES;
       Characters = _utilsConstantsJs.Characters;
+      FIELD_TITLES = _utilsConstantsJs.FIELD_TITLES;
     }, function (_PaginationJs) {
       Pagination = _PaginationJs.Pagination;
     }, function (_SettingIconJs) {

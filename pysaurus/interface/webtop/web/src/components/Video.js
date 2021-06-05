@@ -4,7 +4,7 @@ import {Dialog} from "../dialogs/Dialog.js";
 import {FormSetProperties} from "../forms/FormSetProperties.js";
 import {Collapsable} from "./Collapsable.js";
 import {MenuItem} from "./MenuItem.js";
-import {python_call, backend_error} from "../utils/backend.js";
+import {backend_error, python_call} from "../utils/backend.js";
 import {Characters} from "../utils/constants.js";
 
 export class Video extends React.Component {
@@ -86,7 +86,7 @@ export class Video extends React.Component {
                             <div>
                                 <strong title={data.file_size}>{data.size}</strong> / {data.container_format}{" "}
                                 (<span title={data.video_codec_description}>{data.video_codec}</span>,{" "}
-                                 <span title={data.audio_codec_description}>{data.audio_codec}</span>)
+                                <span title={data.audio_codec_description}>{data.audio_codec}</span>)
                             </div>
                             <div className="prepend"><code>Quality</code></div>
                             <div><strong><em>{data.quality}</em></strong> %</div>
@@ -228,6 +228,7 @@ export class Video extends React.Component {
         }
     }
 }
+
 Video.propTypes = {
     data: PropTypes.object.isRequired,
     propDefs: PropTypes.arrayOf(PropTypes.object).isRequired,

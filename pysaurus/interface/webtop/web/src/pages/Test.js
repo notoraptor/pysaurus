@@ -6,7 +6,6 @@ import {Cross} from "../components/Cross.js";
 import {MenuItem} from "../components/MenuItem.js";
 import {MenuItemCheck} from "../components/MenuItemCheck.js";
 import {Menu} from "../components/Menu.js";
-import {FancyBox} from "../dialogs/FancyBox.js";
 
 export class Test extends React.Component {
     constructor(props) {

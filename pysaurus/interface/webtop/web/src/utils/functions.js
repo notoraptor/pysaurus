@@ -17,7 +17,7 @@ export function parsePropValString(propType, propEnum, value) {
             break;
         case "int":
             parsed = parseInt(value);
-            if(isNaN(parsed))
+            if (isNaN(parsed))
                 throw `Unable to parse integer: ${value}`;
             break;
         case "float":

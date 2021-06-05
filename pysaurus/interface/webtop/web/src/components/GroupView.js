@@ -1,4 +1,4 @@
-import {FIELD_TITLES, Characters} from "../utils/constants.js";
+import {Characters, FIELD_TITLES} from "../utils/constants.js";
 import {Pagination} from "./Pagination.js";
 import {SettingIcon} from "./SettingIcon.js";
 import {PlusIcon} from "./PlusIcon.js";
@@ -207,6 +207,7 @@ export class GroupView extends React.Component {
         this.setState({selection});
     }
 }
+
 GroupView.propTypes = {
     groupDef: PropTypes.shape({
         group_id: PropTypes.number,

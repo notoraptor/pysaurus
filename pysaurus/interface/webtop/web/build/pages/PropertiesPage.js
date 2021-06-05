@@ -1,7 +1,7 @@
 System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../components/Cell.js", "../forms/FormRenameProperty.js", "../utils/backend.js", "../utils/functions.js"], function (_export, _context) {
   "use strict";
 
-  var ComponentController, SetInput, Dialog, Cell, FormRenameProperty, python_call, backend_error, parsePropValString, PropertiesPage, DEFAULT_VALUES;
+  var ComponentController, SetInput, Dialog, Cell, FormRenameProperty, backend_error, python_call, parsePropValString, PropertiesPage, DEFAULT_VALUES;
 
   function getDefaultValue(propType) {
     return DEFAULT_VALUES[propType].toString();
@@ -20,8 +20,8 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
     }, function (_formsFormRenamePropertyJs) {
       FormRenameProperty = _formsFormRenamePropertyJs.FormRenameProperty;
     }, function (_utilsBackendJs) {
-      python_call = _utilsBackendJs.python_call;
       backend_error = _utilsBackendJs.backend_error;
+      python_call = _utilsBackendJs.python_call;
     }, function (_utilsFunctionsJs) {
       parsePropValString = _utilsFunctionsJs.parsePropValString;
     }],

@@ -1,7 +1,7 @@
-System.register(["./pages/Test.js", "./pages/HomePage.js", "./pages/VideosPage.js", "./pages/PropertiesPage.js", "./dialogs/FancyBox.js", "./utils/backend.js", "./utils/constants.js"], function (_export, _context) {
+System.register(["./pages/Test.js", "./pages/HomePage.js", "./pages/VideosPage.js", "./pages/PropertiesPage.js", "./utils/backend.js", "./utils/constants.js"], function (_export, _context) {
   "use strict";
 
-  var Test, HomePage, VideosPage, PropertiesPage, FancyBox, python_call, backend_error, VIDEO_DEFAULT_PAGE_NUMBER, VIDEO_DEFAULT_PAGE_SIZE, App;
+  var Test, HomePage, VideosPage, PropertiesPage, backend_error, python_call, VIDEO_DEFAULT_PAGE_NUMBER, VIDEO_DEFAULT_PAGE_SIZE, App;
 
   _export("App", void 0);
 
@@ -14,11 +14,9 @@ System.register(["./pages/Test.js", "./pages/HomePage.js", "./pages/VideosPage.j
       VideosPage = _pagesVideosPageJs.VideosPage;
     }, function (_pagesPropertiesPageJs) {
       PropertiesPage = _pagesPropertiesPageJs.PropertiesPage;
-    }, function (_dialogsFancyBoxJs) {
-      FancyBox = _dialogsFancyBoxJs.FancyBox;
     }, function (_utilsBackendJs) {
-      python_call = _utilsBackendJs.python_call;
       backend_error = _utilsBackendJs.backend_error;
+      python_call = _utilsBackendJs.python_call;
     }, function (_utilsConstantsJs) {
       VIDEO_DEFAULT_PAGE_NUMBER = _utilsConstantsJs.VIDEO_DEFAULT_PAGE_NUMBER;
       VIDEO_DEFAULT_PAGE_SIZE = _utilsConstantsJs.VIDEO_DEFAULT_PAGE_SIZE;

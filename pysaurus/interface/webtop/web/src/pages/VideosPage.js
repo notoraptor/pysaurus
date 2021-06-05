@@ -22,7 +22,7 @@ import {Actions} from "../utils/Actions.js";
 import {ActionToMenuItem} from "../components/ActionToMenuItem.js";
 import {ActionToSettingIcon} from "../components/ActionToSettingIcon.js";
 import {ActionToCross} from "../components/ActionToCross.js";
-import {python_call, backend_error} from "../utils/backend.js";
+import {backend_error, python_call} from "../utils/backend.js";
 
 
 function compareSources(sources1, sources2) {
@@ -467,16 +467,16 @@ export class VideosPage extends React.Component {
         const selectionSize = this.state.selector.size(this.state.realNbVideos);
         python_call('count_prop_values', propertyName, this.state.selector.toJSON())
             .then(valuesAndCounts => Fancybox.load(
-                    <FormPropertyMultiVideo nbVideos={selectionSize}
-                                            definition={this.state.definitions[propertyName]}
-                                            values={valuesAndCounts}
-                                            onClose={edition => {
-                                                if (edition) {
-                                                    python_call('edit_property_for_videos', propertyName, videos, edition.add, edition.remove)
-                                                        .then(() => this.backend(null, {status: `Edited property "${propertyName}" for ${selectionSize} video${selectionSize < 2 ? '' : 's'}`}))
-                                                        .catch(backend_error);
-                                                }
-                                            }}/>
+                <FormPropertyMultiVideo nbVideos={selectionSize}
+                                        definition={this.state.definitions[propertyName]}
+                                        values={valuesAndCounts}
+                                        onClose={edition => {
+                                            if (edition) {
+                                                python_call('edit_property_for_videos', propertyName, videos, edition.add, edition.remove)
+                                                    .then(() => this.backend(null, {status: `Edited property "${propertyName}" for ${selectionSize} video${selectionSize < 2 ? '' : 's'}`}))
+                                                    .catch(backend_error);
+                                            }
+                                        }}/>
                 )
             )
             .catch(backend_error);

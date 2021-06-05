@@ -1,32 +1,4 @@
-class Callbacks {
-    constructor() {
-        this.callbacks = new Map();
-        this.id = 1;
-    }
-    register(callback) {
-        const id = this.id;
-        this.callbacks.set(id, callback);
-        ++this.id;
-        return id;
-    }
-    unregister(id) {
-        this.callbacks.delete(id);
-    }
-    call(value) {
-        for (let callback of this.callbacks.values()) {
-            const toStop = callback(value);
-            if (toStop)
-                break;
-        }
-    }
-}
-
-const KEYBOARD_MANAGER = new Callbacks();
-
-/** NOTIFICATION_MANAGER.call is called from Python to send notifications to interface. */
-const NOTIFICATION_MANAGER = new Callbacks();
-
-class FancyboxManager {
+export class FancyboxManager {
     constructor(containerID) {
         this.containerID = containerID;
         this.loaded = false;
@@ -34,6 +6,13 @@ class FancyboxManager {
         this.onClose = this.onClose.bind(this);
         this.manageOtherActiveElements = this.manageOtherActiveElements.bind(this);
     }
+
+    static getFocusableElements() {
+        return [...document.querySelector(".app main").querySelectorAll(
+            'a, button, input, textarea, select, details, [tabindex]:not([tabindex="-1"])'
+        )].filter(el => !el.hasAttribute('disabled'));
+    }
+
     load(component) {
         if (this.loaded)
             throw "A fancy box is already displayed.";
@@ -41,16 +20,13 @@ class FancyboxManager {
         this.manageOtherActiveElements();
         ReactDOM.render(component, document.getElementById(this.containerID));
     }
+
     onClose() {
         this.loaded = false;
         this.manageOtherActiveElements();
         ReactDOM.unmountComponentAtNode(document.getElementById(this.containerID));
     }
-    static getFocusableElements() {
-        return [...document.querySelector(".app main").querySelectorAll(
-            'a, button, input, textarea, select, details, [tabindex]:not([tabindex="-1"])'
-        )].filter(el => !el.hasAttribute('disabled'));
-    }
+
     /**
      * Make sure all active elements are disabled if fancy box is displayed, and re-enabled when fancybox is closed.
      */
@@ -75,9 +51,3 @@ class FancyboxManager {
         }
     }
 }
-
-const Fancybox = new FancyboxManager("fancybox");
-
-window.onload = function() {
-    System.import('./build/index.js');
-};

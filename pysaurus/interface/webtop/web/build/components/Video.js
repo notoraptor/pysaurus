@@ -1,7 +1,7 @@
 System.register(["./MenuPack.js", "../forms/FormRenameVideo.js", "../dialogs/Dialog.js", "../forms/FormSetProperties.js", "./Collapsable.js", "./MenuItem.js", "../utils/backend.js", "../utils/constants.js"], function (_export, _context) {
   "use strict";
 
-  var MenuPack, FormRenameVideo, Dialog, FormSetProperties, Collapsable, MenuItem, python_call, backend_error, Characters, Video;
+  var MenuPack, FormRenameVideo, Dialog, FormSetProperties, Collapsable, MenuItem, backend_error, python_call, Characters, Video;
 
   _export("Video", void 0);
 
@@ -19,8 +19,8 @@ System.register(["./MenuPack.js", "../forms/FormRenameVideo.js", "../dialogs/Dia
     }, function (_MenuItemJs) {
       MenuItem = _MenuItemJs.MenuItem;
     }, function (_utilsBackendJs) {
-      python_call = _utilsBackendJs.python_call;
       backend_error = _utilsBackendJs.backend_error;
+      python_call = _utilsBackendJs.python_call;
     }, function (_utilsConstantsJs) {
       Characters = _utilsConstantsJs.Characters;
     }],
