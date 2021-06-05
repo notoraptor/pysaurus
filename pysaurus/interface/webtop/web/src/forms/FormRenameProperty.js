@@ -50,7 +50,7 @@ export class FormRenameProperty extends React.Component {
 
     onKeyDown(event) {
         if (event.key === "Enter") {
-            Fancybox.onClose();
+            Fancybox.close();
             this.submit(true);
         }
     }

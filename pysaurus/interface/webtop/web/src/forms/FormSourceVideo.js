@@ -159,7 +159,7 @@ export class FormSourceVideo extends React.Component {
     }
 
     submit() {
-        Fancybox.onClose();
+        Fancybox.close();
         this.props.onClose(this.state.paths.map(path => path.split('-')));
     }
 }

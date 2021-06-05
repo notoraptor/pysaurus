@@ -98,7 +98,7 @@ export class FormSearch extends React.Component {
     }
 
     onClose(criterion) {
-        Fancybox.onClose();
+        Fancybox.close();
         this.props.onClose(criterion);
     }
 }

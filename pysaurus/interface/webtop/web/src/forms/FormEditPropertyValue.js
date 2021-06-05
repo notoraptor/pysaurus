@@ -166,7 +166,7 @@ export class FormEditPropertyValue extends React.Component {
 
     onEditKeyDown(event) {
         if (event.key === "Enter") {
-            Fancybox.onClose();
+            Fancybox.close();
             this.onClose(true);
         }
     }

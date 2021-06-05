@@ -117,7 +117,7 @@ System.register(["../utils/constants.js", "../dialogs/FancyBox.js"], function (_
             if (sorting.indexOf(def) < 0) sorting.push(def);
           }
 
-          Fancybox.onClose();
+          Fancybox.close();
           this.props.onClose(sorting);
         }
 

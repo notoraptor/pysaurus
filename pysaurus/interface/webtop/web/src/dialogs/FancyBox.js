@@ -17,7 +17,7 @@ export class FancyBox extends React.Component {
                     <div className="fancybox-header horizontal">
                         <div className="fancybox-title">{this.props.title}</div>
                         <div className="fancybox-close">
-                            <button onClick={Fancybox.onClose}>&times;</button>
+                            <button onClick={Fancybox.close}>&times;</button>
                         </div>
                     </div>
                     <div className="fancybox-content">
@@ -41,7 +41,7 @@ export class FancyBox extends React.Component {
      */
     checkShortcut(event) {
         if (event.key === "Escape") {
-            Fancybox.onClose();
+            Fancybox.close();
             return true;
         }
     }

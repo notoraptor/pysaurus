@@ -174,7 +174,7 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js"], function (_ex
 
         onEditKeyDown(event) {
           if (event.key === "Enter") {
-            Fancybox.onClose();
+            Fancybox.close();
             this.onClose(true);
           }
         }

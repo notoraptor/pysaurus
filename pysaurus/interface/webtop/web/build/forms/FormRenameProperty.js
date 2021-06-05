@@ -66,7 +66,7 @@ System.register(["../dialogs/Dialog.js"], function (_export, _context) {
 
         onKeyDown(event) {
           if (event.key === "Enter") {
-            Fancybox.onClose();
+            Fancybox.close();
             this.submit(true);
           }
         }

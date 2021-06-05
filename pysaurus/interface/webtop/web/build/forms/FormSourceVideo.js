@@ -169,7 +169,7 @@ System.register(["../dialogs/FancyBox.js"], function (_export, _context) {
         }
 
         submit() {
-          Fancybox.onClose();
+          Fancybox.close();
           this.props.onClose(this.state.paths.map(path => path.split('-')));
         }
 

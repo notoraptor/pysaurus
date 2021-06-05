@@ -48,7 +48,7 @@ export class DialogSearch extends React.Component {
 
     onInput(event) {
         if (event.key === "Enter" && this.state.text.length) {
-            Fancybox.onClose();
+            Fancybox.close();
             this.props.onClose(this.state.text);
             return true;
         }

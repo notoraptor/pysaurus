@@ -3,7 +3,7 @@ export class FancyboxManager {
         this.containerID = containerID;
         this.loaded = false;
         this.load = this.load.bind(this);
-        this.onClose = this.onClose.bind(this);
+        this.close = this.close.bind(this);
         this.manageOtherActiveElements = this.manageOtherActiveElements.bind(this);
     }
 
@@ -21,7 +21,7 @@ export class FancyboxManager {
         ReactDOM.render(component, document.getElementById(this.containerID));
     }
 
-    onClose() {
+    close() {
         this.loaded = false;
         this.manageOtherActiveElements();
         ReactDOM.unmountComponentAtNode(document.getElementById(this.containerID));

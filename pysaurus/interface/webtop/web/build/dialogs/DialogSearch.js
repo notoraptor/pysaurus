@@ -65,7 +65,7 @@ System.register(["../components/Cell.js", "./Dialog.js"], function (_export, _co
 
         onInput(event) {
           if (event.key === "Enter" && this.state.text.length) {
-            Fancybox.onClose();
+            Fancybox.close();
             this.props.onClose(this.state.text);
             return true;
           }

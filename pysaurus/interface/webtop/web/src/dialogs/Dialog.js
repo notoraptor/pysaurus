@@ -33,13 +33,13 @@ export class Dialog extends React.Component {
     }
 
     yes() {
-        Fancybox.onClose();
+        Fancybox.close();
         if (this.props.onClose)
             this.props.onClose(true);
     }
 
     no() {
-        Fancybox.onClose();
+        Fancybox.close();
         if (this.props.onClose)
             this.props.onClose(false);
     }

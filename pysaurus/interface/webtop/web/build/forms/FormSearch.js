@@ -115,7 +115,7 @@ System.register(["../dialogs/FancyBox.js"], function (_export, _context) {
         }
 
         onClose(criterion) {
-          Fancybox.onClose();
+          Fancybox.close();
           this.props.onClose(criterion);
         }
 
