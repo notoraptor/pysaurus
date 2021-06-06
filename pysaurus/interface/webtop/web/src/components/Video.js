@@ -19,6 +19,7 @@ export class Video extends React.Component {
         this.renameVideo = this.renameVideo.bind(this);
         this.editProperties = this.editProperties.bind(this);
         this.onSelect = this.onSelect.bind(this);
+        this.reallyDeleteVideo = this.reallyDeleteVideo.bind(this);
     }
 
     render() {
@@ -148,11 +149,9 @@ export class Video extends React.Component {
         const data = this.props.data;
         Fancybox.load(
             <FormSetProperties data={data} definitions={this.props.propDefs} onClose={properties => {
-                if (properties) {
-                    python_call('set_video_properties', this.props.data.video_id, properties)
-                        .then(() => this.props.onInfo(`Properties updated: ${data.filename}`, true))
-                        .catch(backend_error);
-                }
+                python_call('set_video_properties', this.props.data.video_id, properties)
+                    .then(() => this.props.onInfo(`Properties updated: ${data.filename}`, true))
+                    .catch(backend_error);
             }}/>
         );
     }
@@ -161,9 +160,7 @@ export class Video extends React.Component {
         const filename = this.props.data.filename;
         const thumbnail_path = this.props.data.thumbnail_path;
         Fancybox.load(
-            <Dialog title="Confirm deletion" yes="delete" onClose={yes => {
-                if (yes) this.reallyDeleteVideo();
-            }}>
+            <Dialog title="Confirm deletion" yes="delete" action={this.reallyDeleteVideo}>
                 <div className="form-delete-video">
                     <h2>Are you sure you want to <strong>definitely</strong> delete this video?</h2>
                     <div className="details"><code id="filename">{filename}</code></div>
@@ -213,11 +210,9 @@ export class Video extends React.Component {
         const title = this.props.data.file_title;
         Fancybox.load(
             <FormRenameVideo filename={filename} title={title} onClose={newTitle => {
-                if (newTitle) {
-                    python_call('rename_video', this.props.data.video_id, newTitle)
-                        .then(() => this.props.onInfo(`Renamed: ${newTitle}`, true))
-                        .catch(backend_error);
-                }
+                python_call('rename_video', this.props.data.video_id, newTitle)
+                    .then(() => this.props.onInfo(`Renamed: ${newTitle}`, true))
+                    .catch(backend_error);
             }}/>
         );
     }

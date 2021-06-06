@@ -47,7 +47,7 @@ System.register(["../utils/constants.js", "../dialogs/Dialog.js"], function (_ex
           return /*#__PURE__*/React.createElement(Dialog, {
             title: "Group videos:",
             yes: "group",
-            onClose: this.onClose
+            action: this.onClose
           }, /*#__PURE__*/React.createElement("table", {
             className: "form-group"
           }, /*#__PURE__*/React.createElement("tbody", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
@@ -185,14 +185,8 @@ System.register(["../utils/constants.js", "../dialogs/Dialog.js"], function (_ex
           });
         }
 
-        onClose(yes) {
-          let definition = null;
-
-          if (yes) {
-            definition = Object.assign({}, this.state);
-          }
-
-          this.props.onClose(definition);
+        onClose() {
+          this.props.onClose(Object.assign({}, this.state));
         }
 
       });

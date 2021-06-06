@@ -14,7 +14,7 @@ export class FormFillKeywords extends React.Component {
 
     render() {
         return (
-            <Dialog title="Fill property" yes={"fill"} onClose={this.onClose}>
+            <Dialog title="Fill property" yes={"fill"} action={this.onClose}>
                 <Cell center={true} full={true} className="text-center">
                     <p>
                         <select value={this.state.field}
@@ -45,7 +45,7 @@ export class FormFillKeywords extends React.Component {
         this.setState({onlyEmpty: event.target.checked});
     }
 
-    onClose(yes) {
-        this.props.onClose(yes ? this.state : null);
+    onClose() {
+        this.props.onClose(this.state);
     }
 }

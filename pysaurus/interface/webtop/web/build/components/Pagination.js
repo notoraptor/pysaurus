@@ -102,9 +102,7 @@ System.register(["../forms/FormGoToPage.js", "../dialogs/DialogSearch.js", "../u
         look() {
           Fancybox.load( /*#__PURE__*/React.createElement(DialogSearch, {
             title: "Search first:",
-            onClose: text => {
-              if (text && text.length) this.props.onSearch(text);
-            }
+            onSearch: this.props.onSearch
           }));
         }
 

@@ -42,7 +42,7 @@ export class FormPropertyMultiVideo extends React.Component {
         return (
             <Dialog title={`Edit property "${propName}" for ${nbVideos} video${nbVideos < 2 ? '' : 's'}`}
                     yes="edit"
-                    onClose={this.onClose}>
+                    action={this.onClose}>
                 <div className="form-property-multi-video">
                     <div className="bar titles horizontal">
                         <div>To remove</div>
@@ -285,7 +285,7 @@ export class FormPropertyMultiVideo extends React.Component {
         this.setState({current: newCurrent, add: newAdd});
     }
 
-    onClose(yes) {
-        this.props.onClose(yes ? {add: this.state.add, remove: this.state.remove} : null);
+    onClose() {
+        this.props.onClose({add: this.state.add, remove: this.state.remove});
     }
 }

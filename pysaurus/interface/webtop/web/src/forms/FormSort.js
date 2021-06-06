@@ -90,6 +90,7 @@ export class FormSort extends React.Component {
                 sorting.push(def);
         }
         Fancybox.close();
-        this.props.onClose(sorting);
+        if (sorting.length)
+            this.props.onClose(sorting);
     }
 }

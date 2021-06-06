@@ -11,17 +11,9 @@ System.register(["./FancyBox.js"], function (_export, _context) {
     }],
     execute: function () {
       _export("Dialog", Dialog = class Dialog extends React.Component {
-        /**
-         * @param props {{title: string, onClose: function?, yes: string?, no: string?}}
-         */
         constructor(props) {
-          // title: str
-          // onClose: callback(bool)
-          // yes? str
-          // no? str
           super(props);
           this.yes = this.yes.bind(this);
-          this.no = this.no.bind(this);
         }
 
         render() {
@@ -40,21 +32,24 @@ System.register(["./FancyBox.js"], function (_export, _context) {
           }, this.props.yes || "yes")), /*#__PURE__*/React.createElement("div", {
             className: "button no"
           }, /*#__PURE__*/React.createElement("button", {
-            onClick: this.no
+            onClick: Fancybox.close
           }, this.props.no || "cancel")))));
         }
 
         yes() {
           Fancybox.close();
-          if (this.props.onClose) this.props.onClose(true);
-        }
-
-        no() {
-          Fancybox.close();
-          if (this.props.onClose) this.props.onClose(false);
+          if (this.props.action) this.props.action();
         }
 
       });
+
+      Dialog.propTypes = {
+        title: PropTypes.string.isRequired,
+        // action()
+        action: PropTypes.func,
+        yes: PropTypes.string,
+        no: PropTypes.string
+      };
     }
   };
 });

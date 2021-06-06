@@ -16,7 +16,7 @@ export class FormGoToPage extends React.Component {
 
     render() {
         return (
-            <Dialog title={"Go to page:"} yes={"go"} onClose={this.onClose}>
+            <Dialog title={"Go to page:"} yes={"go"} action={this.onClose}>
                 <Cell center={true} full={true} className="text-center">
                     <input type="number"
                            id="input-go"
@@ -52,11 +52,12 @@ export class FormGoToPage extends React.Component {
 
     onInput(event) {
         if (event.key === "Enter") {
+            Fancybox.close();
             this.props.onClose(this.state.pageNumber);
         }
     }
 
-    onClose(yes) {
-        this.props.onClose(yes ? this.state.pageNumber : this.props.pageNumber);
+    onClose() {
+        this.props.onClose(this.state.pageNumber);
     }
 }

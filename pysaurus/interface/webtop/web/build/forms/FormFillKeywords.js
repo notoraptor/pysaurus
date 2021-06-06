@@ -30,7 +30,7 @@ System.register(["../dialogs/Dialog.js", "../components/Cell.js"], function (_ex
           return /*#__PURE__*/React.createElement(Dialog, {
             title: "Fill property",
             yes: "fill",
-            onClose: this.onClose
+            action: this.onClose
           }, /*#__PURE__*/React.createElement(Cell, {
             center: true,
             full: true,
@@ -63,8 +63,8 @@ System.register(["../dialogs/Dialog.js", "../components/Cell.js"], function (_ex
           });
         }
 
-        onClose(yes) {
-          this.props.onClose(yes ? this.state : null);
+        onClose() {
+          this.props.onClose(this.state);
         }
 
       });

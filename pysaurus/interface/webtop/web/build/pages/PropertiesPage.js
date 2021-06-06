@@ -296,14 +296,12 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
           Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
             title: `Delete property "${name}"?`,
             yes: 'delete',
-            onClose: yes => {
-              if (yes) {
-                python_call('delete_prop_type', name).catch(backend_error).then(definitions => {
-                  const state = this.getDefaultInputState();
-                  state.definitions = definitions;
-                  this.setState(state);
-                });
-              }
+            action: () => {
+              python_call('delete_prop_type', name).catch(backend_error).then(definitions => {
+                const state = this.getDefaultInputState();
+                state.definitions = definitions;
+                this.setState(state);
+              });
             }
           }, /*#__PURE__*/React.createElement(Cell, {
             className: "text-center",
@@ -316,14 +314,12 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
           Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
             title: `Convert to unique property "${name}"?`,
             yes: 'convert to unique',
-            onClose: yes => {
-              if (yes) {
-                python_call('convert_prop_to_unique', name).then(definitions => {
-                  const state = this.getDefaultInputState();
-                  state.definitions = definitions;
-                  this.setState(state);
-                }).catch(backend_error);
-              }
+            action: () => {
+              python_call('convert_prop_to_unique', name).then(definitions => {
+                const state = this.getDefaultInputState();
+                state.definitions = definitions;
+                this.setState(state);
+              }).catch(backend_error);
             }
           }, /*#__PURE__*/React.createElement(Cell, {
             className: "text-center",
@@ -336,14 +332,12 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
           Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
             title: `Convert to multiple property "${name}"?`,
             yes: 'convert to multiple',
-            onClose: yes => {
-              if (yes) {
-                python_call('convert_prop_to_multiple', name).then(definitions => {
-                  const state = this.getDefaultInputState();
-                  state.definitions = definitions;
-                  this.setState(state);
-                }).catch(backend_error);
-              }
+            action: () => {
+              python_call('convert_prop_to_multiple', name).then(definitions => {
+                const state = this.getDefaultInputState();
+                state.definitions = definitions;
+                this.setState(state);
+              }).catch(backend_error);
             }
           }, /*#__PURE__*/React.createElement(Cell, {
             className: "text-center",
@@ -356,13 +350,11 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
           Fancybox.load( /*#__PURE__*/React.createElement(FormRenameProperty, {
             title: name,
             onClose: newName => {
-              if (newName) {
-                python_call('rename_property', name, newName).then(definitions => {
-                  const state = this.getDefaultInputState();
-                  state.definitions = definitions;
-                  this.setState(state);
-                }).catch(backend_error);
-              }
+              python_call('rename_property', name, newName).then(definitions => {
+                const state = this.getDefaultInputState();
+                state.definitions = definitions;
+                this.setState(state);
+              }).catch(backend_error);
             }
           }));
         }

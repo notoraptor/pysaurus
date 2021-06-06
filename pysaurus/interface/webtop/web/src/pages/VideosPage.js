@@ -443,8 +443,7 @@ export class VideosPage extends React.Component {
     selectVideos() {
         Fancybox.load(
             <FormSourceVideo tree={SOURCE_TREE} sources={this.state.sources} onClose={sources => {
-                if (sources && sources.length)
-                    this.backend(['set_sources', sources], {pageNumber: 0});
+                this.backend(['set_sources', sources], {pageNumber: 0});
             }}/>
         )
     }
@@ -453,8 +452,7 @@ export class VideosPage extends React.Component {
         const group_def = this.state.groupDef || {field: null, reverse: null};
         Fancybox.load(
             <FormGroup definition={group_def} properties={this.state.properties} onClose={criterion => {
-                if (criterion)
-                    this.backend(['set_groups', criterion.field, criterion.sorting, criterion.reverse, criterion.allowSingletons, criterion.allowMultiple], {pageNumber: 0});
+                this.backend(['set_groups', criterion.field, criterion.sorting, criterion.reverse, criterion.allowSingletons, criterion.allowMultiple], {pageNumber: 0});
             }}/>
         )
     }
@@ -471,11 +469,9 @@ export class VideosPage extends React.Component {
                                         definition={this.state.definitions[propertyName]}
                                         values={valuesAndCounts}
                                         onClose={edition => {
-                                            if (edition) {
-                                                python_call('edit_property_for_videos', propertyName, videos, edition.add, edition.remove)
-                                                    .then(() => this.backend(null, {status: `Edited property "${propertyName}" for ${selectionSize} video${selectionSize < 2 ? '' : 's'}`}))
-                                                    .catch(backend_error);
-                                            }
+                                            python_call('edit_property_for_videos', propertyName, videos, edition.add, edition.remove)
+                                                .then(() => this.backend(null, {status: `Edited property "${propertyName}" for ${selectionSize} video${selectionSize < 2 ? '' : 's'}`}))
+                                                .catch(backend_error);
                                         }}/>
                 )
             )
@@ -486,9 +482,7 @@ export class VideosPage extends React.Component {
         const search_def = this.state.searchDef || {text: null, cond: null};
         Fancybox.load(
             <FormSearch text={search_def.text} cond={search_def.cond} onClose={criterion => {
-                if (criterion && criterion.text.length && criterion.cond.length) {
-                    this.backend(['set_search', criterion.text, criterion.cond], {pageNumber: 0});
-                }
+                this.backend(['set_search', criterion.text, criterion.cond], {pageNumber: 0});
             }}/>
         )
     }
@@ -496,9 +490,7 @@ export class VideosPage extends React.Component {
     sortVideos() {
         Fancybox.load(
             <FormSort sorting={this.state.sorting} onClose={sorting => {
-                if (sorting && sorting.length) {
-                    this.backend(['set_sorting', sorting], {pageNumber: 0});
-                }
+                this.backend(['set_sorting', sorting], {pageNumber: 0});
             }}/>
         )
     }
@@ -536,11 +528,9 @@ export class VideosPage extends React.Component {
     fillWithKeywords() {
         Fancybox.load(
             <FormFillKeywords properties={this.getStringSetProperties(this.state.properties)} onClose={state => {
-                if (state) {
-                    python_call('fill_property_with_terms', state.field, state.onlyEmpty)
-                        .then(() => this.backend(null, {status: `Filled property "${state.field}" with video keywords.`}))
-                        .catch(backend_error);
-                }
+                python_call('fill_property_with_terms', state.field, state.onlyEmpty)
+                    .then(() => this.backend(null, {status: `Filled property "${state.field}" with video keywords.`}))
+                    .catch(backend_error);
             }}/>
         )
     }
@@ -613,18 +603,16 @@ export class VideosPage extends React.Component {
                                    name={name}
                                    values={values}
                                    onClose={operation => {
-                                       if (operation) {
-                                           switch (operation.form) {
-                                               case 'delete':
-                                                   this.backend(['delete_property_value', name, values], {status: `Property value deleted: "${name}" / "${values.join('", "')}"`});
-                                                   break;
-                                               case 'edit':
-                                                   this.backend(['edit_property_value', name, values, operation.value], {status: `Property value edited: "${name}" : "${values.join('", "')}" -> "${operation.value}"`});
-                                                   break;
-                                               case 'move':
-                                                   this.backend(['move_property_value', name, values, operation.move], {status: `Property value moved: "${values.join('", "')}" from "${name}" to "${operation.move}"`});
-                                                   break;
-                                           }
+                                       switch (operation.form) {
+                                           case 'delete':
+                                               this.backend(['delete_property_value', name, values], {status: `Property value deleted: "${name}" / "${values.join('", "')}"`});
+                                               break;
+                                           case 'edit':
+                                               this.backend(['edit_property_value', name, values, operation.value], {status: `Property value edited: "${name}" : "${values.join('", "')}" -> "${operation.value}"`});
+                                               break;
+                                           case 'move':
+                                               this.backend(['move_property_value', name, values, operation.move], {status: `Property value moved: "${values.join('", "')}" from "${name}" to "${operation.move}"`});
+                                               break;
                                        }
                                    }}/>
         )

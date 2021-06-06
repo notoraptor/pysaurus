@@ -13,12 +13,7 @@ System.register(["../components/Cell.js", "./Dialog.js"], function (_export, _co
     }],
     execute: function () {
       _export("DialogSearch", DialogSearch = class DialogSearch extends React.Component {
-        /**
-         * @param props {{title: str, onClose: function}}
-         */
         constructor(props) {
-          // title: str
-          // onClose(criterion)
           super(props);
           this.state = {
             text: ''
@@ -33,7 +28,7 @@ System.register(["../components/Cell.js", "./Dialog.js"], function (_export, _co
           return /*#__PURE__*/React.createElement(Dialog, {
             title: this.props.title,
             yes: "go",
-            onClose: this.onClose
+            action: this.onClose
           }, /*#__PURE__*/React.createElement(Cell, {
             center: true,
             full: true,
@@ -64,18 +59,24 @@ System.register(["../components/Cell.js", "./Dialog.js"], function (_export, _co
         }
 
         onInput(event) {
-          if (event.key === "Enter" && this.state.text.length) {
+          if (event.key === "Enter" && this.state.text) {
             Fancybox.close();
-            this.props.onClose(this.state.text);
+            this.props.onSearch(this.state.text);
             return true;
           }
         }
 
-        onClose(yes) {
-          this.props.onClose(yes && this.state.text ? this.state.text : null);
+        onClose() {
+          if (this.state.text) this.props.onSearch(this.state.text);
         }
 
       });
+
+      DialogSearch.propTypes = {
+        title: PropTypes.string.isRequired,
+        // onSearch(str)
+        onSearch: PropTypes.func.isRequired
+      };
     }
   };
 });

@@ -39,7 +39,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../utils/
           return /*#__PURE__*/React.createElement(Dialog, {
             title: 'Edit video properties',
             yes: "save",
-            onClose: this.onClose
+            action: this.onClose
           }, /*#__PURE__*/React.createElement("div", {
             className: "form-set-properties horizontal"
           }, /*#__PURE__*/React.createElement("div", {
@@ -107,8 +107,8 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../utils/
           })))));
         }
 
-        onClose(yes) {
-          this.props.onClose(yes ? this.state : null);
+        onClose() {
+          this.props.onClose(this.state);
         }
 
         onChange(event, def) {

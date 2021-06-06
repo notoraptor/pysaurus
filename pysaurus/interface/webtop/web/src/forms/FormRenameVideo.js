@@ -16,7 +16,7 @@ export class FormRenameVideo extends React.Component {
 
     render() {
         return (
-            <Dialog title={"Rename"} yes="rename" onClose={this.onClose}>
+            <Dialog title={"Rename"} yes="rename" action={this.onClose}>
                 <div className="form-rename-video">
                     <h1>Rename</h1>
                     <h2><code id="filename">{this.props.filename}</code></h2>
@@ -45,23 +45,19 @@ export class FormRenameVideo extends React.Component {
         this.setState({title: event.target.value});
     }
 
-    onClose(yes) {
-        this.submit(yes);
+    onClose() {
+        this.submit();
     }
 
     onKeyDown(event) {
         if (event.key === "Enter") {
-            this.submit(true);
+            Fancybox.close();
+            this.submit();
         }
     }
 
     submit(yes) {
-        let title = null;
-        if (yes) {
-            title = this.state.title;
-            if (!title.length || title === this.props.title)
-                title = null;
-        }
-        this.props.onClose(title);
+        if (this.state.title && this.state.title !== this.props.title)
+            this.props.onClose(this.state.title);
     }
 }

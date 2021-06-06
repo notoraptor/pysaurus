@@ -14,10 +14,6 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js"], function (_ex
     execute: function () {
       _export("FormEditPropertyValue", FormEditPropertyValue = class FormEditPropertyValue extends React.Component {
         constructor(props) {
-          // properties: {name => def}
-          // name: str
-          // values: []
-          // onClose(operation)
           super(props);
           this.state = {
             form: 'edit',
@@ -43,7 +39,7 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js"], function (_ex
           return /*#__PURE__*/React.createElement(Dialog, {
             title: title,
             yes: this.state.form,
-            onClose: this.onClose
+            action: this.onClose
           }, /*#__PURE__*/React.createElement("div", {
             className: "edit-property-value"
           }, /*#__PURE__*/React.createElement("div", {
@@ -175,7 +171,7 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js"], function (_ex
         onEditKeyDown(event) {
           if (event.key === "Enter") {
             Fancybox.close();
-            this.onClose(true);
+            this.onClose();
           }
         }
 
@@ -185,8 +181,8 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js"], function (_ex
           });
         }
 
-        onClose(yes) {
-          this.props.onClose(yes ? Object.assign({}, this.state) : null);
+        onClose() {
+          this.props.onClose(Object.assign({}, this.state));
         }
 
         valuesToString() {
@@ -195,6 +191,14 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js"], function (_ex
         }
 
       });
+
+      FormEditPropertyValue.propTypes = {
+        properties: PropTypes.object.isRequired,
+        name: PropTypes.string.isRequired,
+        values: PropTypes.array.isRequired,
+        // onClose(object)
+        onClose: PropTypes.func.isRequired
+      };
     }
   };
 });

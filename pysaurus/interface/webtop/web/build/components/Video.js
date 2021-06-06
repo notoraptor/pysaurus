@@ -37,6 +37,7 @@ System.register(["./MenuPack.js", "../forms/FormRenameVideo.js", "../dialogs/Dia
           this.renameVideo = this.renameVideo.bind(this);
           this.editProperties = this.editProperties.bind(this);
           this.onSelect = this.onSelect.bind(this);
+          this.reallyDeleteVideo = this.reallyDeleteVideo.bind(this);
         }
 
         render() {
@@ -165,9 +166,7 @@ System.register(["./MenuPack.js", "../forms/FormRenameVideo.js", "../dialogs/Dia
             data: data,
             definitions: this.props.propDefs,
             onClose: properties => {
-              if (properties) {
-                python_call('set_video_properties', this.props.data.video_id, properties).then(() => this.props.onInfo(`Properties updated: ${data.filename}`, true)).catch(backend_error);
-              }
+              python_call('set_video_properties', this.props.data.video_id, properties).then(() => this.props.onInfo(`Properties updated: ${data.filename}`, true)).catch(backend_error);
             }
           }));
         }
@@ -178,9 +177,7 @@ System.register(["./MenuPack.js", "../forms/FormRenameVideo.js", "../dialogs/Dia
           Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
             title: "Confirm deletion",
             yes: "delete",
-            onClose: yes => {
-              if (yes) this.reallyDeleteVideo();
-            }
+            action: this.reallyDeleteVideo
           }, /*#__PURE__*/React.createElement("div", {
             className: "form-delete-video"
           }, /*#__PURE__*/React.createElement("h2", null, "Are you sure you want to ", /*#__PURE__*/React.createElement("strong", null, "definitely"), " delete this video?"), /*#__PURE__*/React.createElement("div", {
@@ -225,9 +222,7 @@ System.register(["./MenuPack.js", "../forms/FormRenameVideo.js", "../dialogs/Dia
             filename: filename,
             title: title,
             onClose: newTitle => {
-              if (newTitle) {
-                python_call('rename_video', this.props.data.video_id, newTitle).then(() => this.props.onInfo(`Renamed: ${newTitle}`, true)).catch(backend_error);
-              }
+              python_call('rename_video', this.props.data.video_id, newTitle).then(() => this.props.onInfo(`Renamed: ${newTitle}`, true)).catch(backend_error);
             }
           }));
         }

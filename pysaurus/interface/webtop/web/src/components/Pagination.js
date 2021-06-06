@@ -75,11 +75,6 @@ export class Pagination extends React.Component {
     }
 
     look() {
-        Fancybox.load(
-            <DialogSearch title={"Search first:"} onClose={text => {
-                if (text && text.length)
-                    this.props.onSearch(text);
-            }}/>
-        );
+        Fancybox.load(<DialogSearch title={"Search first:"} onSearch={this.props.onSearch}/>);
     }
 }

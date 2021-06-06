@@ -29,7 +29,7 @@ System.register(["../dialogs/Dialog.js"], function (_export, _context) {
           return /*#__PURE__*/React.createElement(Dialog, {
             title: `Rename property "${this.props.title}"?`,
             yes: "rename",
-            onClose: this.onClose
+            action: this.onClose
           }, /*#__PURE__*/React.createElement("div", {
             className: "form-rename-video"
           }, /*#__PURE__*/React.createElement("h1", null, "Rename property"), /*#__PURE__*/React.createElement("h2", null, /*#__PURE__*/React.createElement("code", {
@@ -60,26 +60,19 @@ System.register(["../dialogs/Dialog.js"], function (_export, _context) {
           });
         }
 
-        onClose(yes) {
-          this.submit(yes);
+        onClose() {
+          this.submit();
         }
 
         onKeyDown(event) {
           if (event.key === "Enter") {
             Fancybox.close();
-            this.submit(true);
+            this.submit();
           }
         }
 
-        submit(yes) {
-          let title = null;
-
-          if (yes) {
-            title = this.state.title;
-            if (!title.length || title === this.props.title) title = null;
-          }
-
-          this.props.onClose(title);
+        submit() {
+          if (this.state.title && this.state.title !== this.props.title) this.props.onClose(this.state.title);
         }
 
       });

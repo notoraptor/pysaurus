@@ -57,7 +57,7 @@ export class Test extends React.Component {
 
     fancy() {
         Fancybox.load(
-            <Dialog title={"Test Fancy Box 2!"} onClose={yes => console.log(`Choice: ${yes ? 'yes' : 'no'}`)}>
+            <Dialog title={"Test Fancy Box 2!"} action={() => console.log(`Choice: yes!`)}>
                 <h1>hello world {this.state.pageSize}</h1>
                 <h1>hello world</h1>
                 <h1>hello world</h1>

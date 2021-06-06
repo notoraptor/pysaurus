@@ -81,7 +81,7 @@ System.register(["../components/MenuPack.js", "../utils/constants.js", "../compo
         fancy() {
           Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
             title: "Test Fancy Box 2!",
-            onClose: yes => console.log(`Choice: ${yes ? 'yes' : 'no'}`)
+            action: () => console.log(`Choice: yes!`)
           }, /*#__PURE__*/React.createElement("h1", null, "hello world ", this.state.pageSize), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world")));
         }
 

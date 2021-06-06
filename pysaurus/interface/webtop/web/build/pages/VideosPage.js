@@ -428,7 +428,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             tree: SOURCE_TREE,
             sources: this.state.sources,
             onClose: sources => {
-              if (sources && sources.length) this.backend(['set_sources', sources], {
+              this.backend(['set_sources', sources], {
                 pageNumber: 0
               });
             }
@@ -444,7 +444,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             definition: group_def,
             properties: this.state.properties,
             onClose: criterion => {
-              if (criterion) this.backend(['set_groups', criterion.field, criterion.sorting, criterion.reverse, criterion.allowSingletons, criterion.allowMultiple], {
+              this.backend(['set_groups', criterion.field, criterion.sorting, criterion.reverse, criterion.allowSingletons, criterion.allowMultiple], {
                 pageNumber: 0
               });
             }
@@ -464,11 +464,9 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             definition: this.state.definitions[propertyName],
             values: valuesAndCounts,
             onClose: edition => {
-              if (edition) {
-                python_call('edit_property_for_videos', propertyName, videos, edition.add, edition.remove).then(() => this.backend(null, {
-                  status: `Edited property "${propertyName}" for ${selectionSize} video${selectionSize < 2 ? '' : 's'}`
-                })).catch(backend_error);
-              }
+              python_call('edit_property_for_videos', propertyName, videos, edition.add, edition.remove).then(() => this.backend(null, {
+                status: `Edited property "${propertyName}" for ${selectionSize} video${selectionSize < 2 ? '' : 's'}`
+              })).catch(backend_error);
             }
           }))).catch(backend_error);
         }
@@ -482,11 +480,9 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             text: search_def.text,
             cond: search_def.cond,
             onClose: criterion => {
-              if (criterion && criterion.text.length && criterion.cond.length) {
-                this.backend(['set_search', criterion.text, criterion.cond], {
-                  pageNumber: 0
-                });
-              }
+              this.backend(['set_search', criterion.text, criterion.cond], {
+                pageNumber: 0
+              });
             }
           }));
         }
@@ -495,11 +491,9 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           Fancybox.load( /*#__PURE__*/React.createElement(FormSort, {
             sorting: this.state.sorting,
             onClose: sorting => {
-              if (sorting && sorting.length) {
-                this.backend(['set_sorting', sorting], {
-                  pageNumber: 0
-                });
-              }
+              this.backend(['set_sorting', sorting], {
+                pageNumber: 0
+              });
             }
           }));
         }
@@ -543,11 +537,9 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           Fancybox.load( /*#__PURE__*/React.createElement(FormFillKeywords, {
             properties: this.getStringSetProperties(this.state.properties),
             onClose: state => {
-              if (state) {
-                python_call('fill_property_with_terms', state.field, state.onlyEmpty).then(() => this.backend(null, {
-                  status: `Filled property "${state.field}" with video keywords.`
-                })).catch(backend_error);
-              }
+              python_call('fill_property_with_terms', state.field, state.onlyEmpty).then(() => this.backend(null, {
+                status: `Filled property "${state.field}" with video keywords.`
+              })).catch(backend_error);
             }
           }));
         }
@@ -630,26 +622,24 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             name: name,
             values: values,
             onClose: operation => {
-              if (operation) {
-                switch (operation.form) {
-                  case 'delete':
-                    this.backend(['delete_property_value', name, values], {
-                      status: `Property value deleted: "${name}" / "${values.join('", "')}"`
-                    });
-                    break;
+              switch (operation.form) {
+                case 'delete':
+                  this.backend(['delete_property_value', name, values], {
+                    status: `Property value deleted: "${name}" / "${values.join('", "')}"`
+                  });
+                  break;
 
-                  case 'edit':
-                    this.backend(['edit_property_value', name, values, operation.value], {
-                      status: `Property value edited: "${name}" : "${values.join('", "')}" -> "${operation.value}"`
-                    });
-                    break;
+                case 'edit':
+                  this.backend(['edit_property_value', name, values, operation.value], {
+                    status: `Property value edited: "${name}" : "${values.join('", "')}" -> "${operation.value}"`
+                  });
+                  break;
 
-                  case 'move':
-                    this.backend(['move_property_value', name, values, operation.move], {
-                      status: `Property value moved: "${values.join('", "')}" from "${name}" to "${operation.move}"`
-                    });
-                    break;
-                }
+                case 'move':
+                  this.backend(['move_property_value', name, values, operation.move], {
+                    status: `Property value moved: "${values.join('", "')}" from "${name}" to "${operation.move}"`
+                  });
+                  break;
               }
             }
           }));

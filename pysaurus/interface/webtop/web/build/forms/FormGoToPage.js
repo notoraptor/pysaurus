@@ -31,7 +31,7 @@ System.register(["../dialogs/Dialog.js", "../components/Cell.js"], function (_ex
           return /*#__PURE__*/React.createElement(Dialog, {
             title: "Go to page:",
             yes: "go",
-            onClose: this.onClose
+            action: this.onClose
           }, /*#__PURE__*/React.createElement(Cell, {
             center: true,
             full: true,
@@ -69,12 +69,13 @@ System.register(["../dialogs/Dialog.js", "../components/Cell.js"], function (_ex
 
         onInput(event) {
           if (event.key === "Enter") {
+            Fancybox.close();
             this.props.onClose(this.state.pageNumber);
           }
         }
 
-        onClose(yes) {
-          this.props.onClose(yes ? this.state.pageNumber : this.props.pageNumber);
+        onClose() {
+          this.props.onClose(this.state.pageNumber);
         }
 
       });

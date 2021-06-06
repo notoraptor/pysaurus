@@ -56,7 +56,7 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js", "../utils/cons
           return /*#__PURE__*/React.createElement(Dialog, {
             title: `Edit property "${propName}" for ${nbVideos} video${nbVideos < 2 ? '' : 's'}`,
             yes: "edit",
-            onClose: this.onClose
+            action: this.onClose
           }, /*#__PURE__*/React.createElement("div", {
             className: "form-property-multi-video"
           }, /*#__PURE__*/React.createElement("div", {
@@ -342,11 +342,11 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js", "../utils/cons
           });
         }
 
-        onClose(yes) {
-          this.props.onClose(yes ? {
+        onClose() {
+          this.props.onClose({
             add: this.state.add,
             remove: this.state.remove
-          } : null);
+          });
         }
 
       });

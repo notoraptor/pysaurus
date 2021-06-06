@@ -275,16 +275,14 @@ export class PropertiesPage extends React.Component {
 
     deleteProperty(name) {
         Fancybox.load(
-            <Dialog title={`Delete property "${name}"?`} yes={'delete'} onClose={yes => {
-                if (yes) {
-                    python_call('delete_prop_type', name)
-                        .catch(backend_error)
-                        .then(definitions => {
-                            const state = this.getDefaultInputState();
-                            state.definitions = definitions;
-                            this.setState(state);
-                        })
-                }
+            <Dialog title={`Delete property "${name}"?`} yes={'delete'} action={() => {
+                python_call('delete_prop_type', name)
+                    .catch(backend_error)
+                    .then(definitions => {
+                        const state = this.getDefaultInputState();
+                        state.definitions = definitions;
+                        this.setState(state);
+                    })
             }}>
                 <Cell className="text-center" center={true} full={true}>
                     <h3>Are you sure you want to delete property "{name}"?</h3>
@@ -295,16 +293,14 @@ export class PropertiesPage extends React.Component {
 
     convertPropertyToUnique(name) {
         Fancybox.load(
-            <Dialog title={`Convert to unique property "${name}"?`} yes={'convert to unique'} onClose={yes => {
-                if (yes) {
-                    python_call('convert_prop_to_unique', name)
-                        .then(definitions => {
-                            const state = this.getDefaultInputState();
-                            state.definitions = definitions;
-                            this.setState(state);
-                        })
-                        .catch(backend_error)
-                }
+            <Dialog title={`Convert to unique property "${name}"?`} yes={'convert to unique'} action={() => {
+                python_call('convert_prop_to_unique', name)
+                    .then(definitions => {
+                        const state = this.getDefaultInputState();
+                        state.definitions = definitions;
+                        this.setState(state);
+                    })
+                    .catch(backend_error)
             }}>
                 <Cell className="text-center" center={true} full={true}>
                     <h3>Are you sure you want to convert to unique property "{name}"?</h3>
@@ -315,16 +311,14 @@ export class PropertiesPage extends React.Component {
 
     convertPropertyToMultiple(name) {
         Fancybox.load(
-            <Dialog title={`Convert to multiple property "${name}"?`} yes={'convert to multiple'} onClose={yes => {
-                if (yes) {
-                    python_call('convert_prop_to_multiple', name)
-                        .then(definitions => {
-                            const state = this.getDefaultInputState();
-                            state.definitions = definitions;
-                            this.setState(state);
-                        })
-                        .catch(backend_error)
-                }
+            <Dialog title={`Convert to multiple property "${name}"?`} yes={'convert to multiple'} action={() => {
+                python_call('convert_prop_to_multiple', name)
+                    .then(definitions => {
+                        const state = this.getDefaultInputState();
+                        state.definitions = definitions;
+                        this.setState(state);
+                    })
+                    .catch(backend_error)
             }}>
                 <Cell className="text-center" center={true} full={true}>
                     <h3>Are you sure you want to convert to multiple property "{name}"?</h3>
@@ -336,15 +330,13 @@ export class PropertiesPage extends React.Component {
     renameProperty(name) {
         Fancybox.load(
             <FormRenameProperty title={name} onClose={newName => {
-                if (newName) {
-                    python_call('rename_property', name, newName)
-                        .then(definitions => {
-                            const state = this.getDefaultInputState();
-                            state.definitions = definitions;
-                            this.setState(state);
-                        })
-                        .catch(backend_error);
-                }
+                python_call('rename_property', name, newName)
+                    .then(definitions => {
+                        const state = this.getDefaultInputState();
+                        state.definitions = definitions;
+                        this.setState(state);
+                    })
+                    .catch(backend_error);
             }}/>
         );
     }

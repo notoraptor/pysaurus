@@ -3,10 +3,6 @@ import {parsePropValString} from "../utils/functions.js";
 
 export class FormEditPropertyValue extends React.Component {
     constructor(props) {
-        // properties: {name => def}
-        // name: str
-        // values: []
-        // onClose(operation)
         super(props);
         this.state = {
             form: 'edit',
@@ -33,7 +29,7 @@ export class FormEditPropertyValue extends React.Component {
         else
             title = `Property "${this.props.name}", ${values.length} values"`;
         return (
-            <Dialog title={title} yes={this.state.form} onClose={this.onClose}>
+            <Dialog title={title} yes={this.state.form} action={this.onClose}>
                 <div className="edit-property-value">
                     <div className="bar text-center">
                         <button className={`delete ${this.state.form === 'delete' ? 'selected' : ''}`}
@@ -167,7 +163,7 @@ export class FormEditPropertyValue extends React.Component {
     onEditKeyDown(event) {
         if (event.key === "Enter") {
             Fancybox.close();
-            this.onClose(true);
+            this.onClose();
         }
     }
 
@@ -175,8 +171,8 @@ export class FormEditPropertyValue extends React.Component {
         this.setState({move: event.target.value});
     }
 
-    onClose(yes) {
-        this.props.onClose(yes ? Object.assign({}, this.state) : null);
+    onClose() {
+        this.props.onClose(Object.assign({}, this.state));
     }
 
     valuesToString() {
@@ -185,3 +181,11 @@ export class FormEditPropertyValue extends React.Component {
         return `${this.props.values.length} values (${this.props.values[0].toString()} ... ${this.props.values[this.props.values.length - 1].toString()})`;
     }
 }
+
+FormEditPropertyValue.propTypes = {
+    properties: PropTypes.object.isRequired,
+    name: PropTypes.string.isRequired,
+    values: PropTypes.array.isRequired,
+    // onClose(object)
+    onClose: PropTypes.func.isRequired
+};

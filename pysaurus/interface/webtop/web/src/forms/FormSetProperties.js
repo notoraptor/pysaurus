@@ -22,7 +22,7 @@ export class FormSetProperties extends React.Component {
         const data = this.props.data;
         const hasThumbnail = data.hasThumbnail;
         return (
-            <Dialog title={'Edit video properties'} yes="save" onClose={this.onClose}>
+            <Dialog title={'Edit video properties'} yes="save" action={this.onClose}>
                 <div className="form-set-properties horizontal">
                     <div className="info">
                         <div className="image">
@@ -81,8 +81,8 @@ export class FormSetProperties extends React.Component {
         );
     }
 
-    onClose(yes) {
-        this.props.onClose(yes ? this.state : null);
+    onClose() {
+        this.props.onClose(this.state);
     }
 
     onChange(event, def) {

@@ -118,7 +118,7 @@ System.register(["../utils/constants.js", "../dialogs/FancyBox.js"], function (_
           }
 
           Fancybox.close();
-          this.props.onClose(sorting);
+          if (sorting.length) this.props.onClose(sorting);
         }
 
       });

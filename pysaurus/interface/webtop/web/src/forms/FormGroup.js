@@ -30,7 +30,7 @@ export class FormGroup extends React.Component {
 
     render() {
         return (
-            <Dialog title={"Group videos:"} yes="group" onClose={this.onClose}>
+            <Dialog title={"Group videos:"} yes="group" action={this.onClose}>
                 <table className="form-group">
                     <tbody>
                     <tr>
@@ -166,11 +166,7 @@ export class FormGroup extends React.Component {
         this.setState({reverse: event.target.checked});
     }
 
-    onClose(yes) {
-        let definition = null;
-        if (yes) {
-            definition = Object.assign({}, this.state);
-        }
-        this.props.onClose(definition);
+    onClose() {
+        this.props.onClose(Object.assign({}, this.state));
     }
 }
