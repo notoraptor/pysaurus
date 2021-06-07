@@ -214,7 +214,10 @@ GroupView.propTypes = {
         field: PropTypes.string,
         sorting: PropTypes.string,
         reverse: PropTypes.bool,
-        groups: PropTypes.arrayOf(PropTypes.shape({value: PropTypes.number, count: PropTypes.number}))
+        groups: PropTypes.arrayOf(PropTypes.shape({
+            value: PropTypes.oneOf([PropTypes.bool, PropTypes.number, PropTypes.string]),
+            count: PropTypes.number
+        }))
     }).isRequired,
     inPath: PropTypes.bool.isRequired,
     // onSelect(index)

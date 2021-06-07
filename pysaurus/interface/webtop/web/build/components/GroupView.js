@@ -245,7 +245,7 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
           sorting: PropTypes.string,
           reverse: PropTypes.bool,
           groups: PropTypes.arrayOf(PropTypes.shape({
-            value: PropTypes.number,
+            value: PropTypes.oneOf([PropTypes.bool, PropTypes.number, PropTypes.string]),
             count: PropTypes.number
           }))
         }).isRequired,

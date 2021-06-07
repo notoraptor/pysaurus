@@ -223,9 +223,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           }, stringProperties.map((def, i) => /*#__PURE__*/React.createElement(MenuItem, {
             key: i,
             action: () => this.classifierConcatenate(def.name)
-          }, def.name)), /*#__PURE__*/React.createElement(MenuItem, {
-            action: () => this.classifierConcatenate(groupField)
-          }, groupField)), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("button", {
+          }, def.name))), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("button", {
             onClick: this.reverseClassifierPath
           }, "reverse path"))) : '', this.state.path.map((value, index) => /*#__PURE__*/React.createElement("div", {
             key: index,
@@ -244,7 +242,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           }, /*#__PURE__*/React.createElement(GroupView, {
             key: `${groupDef.field}-${groupDef.groups.length}-${this.state.path.join('-')}`,
             groupDef: groupDef,
-            inPath: this.state.path.length,
+            inPath: !!this.state.path.length,
             onSelect: this.selectGroup,
             onOptions: this.editPropertyValue,
             onPlus: groupDef.field[0] === ':' && this.state.definitions[groupDef.field.substr(1)].multiple ? this.classifierSelectGroup : null
@@ -574,24 +572,11 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         }
 
         getStringSetProperties(definitions) {
-          const properties = [];
-
-          for (let def of definitions) {
-            if (def.multiple && def.type === "str") properties.push(def);
-          }
-
-          return properties;
+          return definitions.filter(def => def.multiple && def.type === "str");
         }
 
         getStringProperties(definitions) {
-          const field = this.state.groupDef ? this.state.groupDef.field : null;
-          const properties = [];
-
-          for (let def of definitions) {
-            if (def.type === "str" && (!field || field.charAt(0) !== ':' || def.name !== field.substr(1))) properties.push(def);
-          }
-
-          return properties;
+          return definitions.filter(def => def.type === "str");
         }
 
         reverseClassifierPath() {
@@ -600,7 +585,6 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           })).catch(backend_error);
         }
         /**
-         *
          * @param indicesSet {Set}
          */
 
