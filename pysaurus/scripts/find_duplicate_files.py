@@ -3,7 +3,7 @@ import os
 
 import ujson as json
 
-from pysaurus.core import functions as utils
+from pysaurus.core import functions
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.profiling import Profiler
 
@@ -24,8 +24,8 @@ def job_get_sizes(job):
 def _p(folder, filenames):
     size_to_files = {}
     cpu_count = os.cpu_count()
-    jobs = utils.dispatch_tasks(filenames, cpu_count, [folder])
-    tables = utils.parallelize(job_get_sizes, jobs, cpu_count)
+    jobs = functions.dispatch_tasks(filenames, cpu_count, [folder])
+    tables = functions.parallelize(job_get_sizes, jobs, cpu_count)
     for sizes in tables:
         for size, files in sizes.items():
             size_to_files.setdefault(size, []).extend(files)

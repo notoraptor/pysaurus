@@ -12,7 +12,7 @@ from pysaurus.core.database.viewport.viewtools.video_array import VideoArray
 class SearchLayer(Layer):
     __slots__ = ("term_parser",)
     __props__ = ("search",)
-    DEFAULT_SEARCH_DEF = SearchDef.none()  # str text, str cond
+    DEFAULT_SEARCH_DEF = SearchDef(None, None)  # str text, str cond
 
     def __init__(self, database):
         super().__init__(database)

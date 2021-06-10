@@ -12,7 +12,7 @@ class GroupingLayer(Layer):
     __slots__ = ()
     __props__ = ("grouping",)
     _cache: GroupArray
-    DEFAULT_GROUP_DEF = GroupDef.none()  # str field, bool reverse
+    DEFAULT_GROUP_DEF = GroupDef(None)  # str field, bool reverse
 
     def set_grouping(
         self,

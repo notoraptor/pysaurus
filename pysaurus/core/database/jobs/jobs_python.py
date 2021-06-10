@@ -2,10 +2,9 @@ import os
 import subprocess
 from typing import List, Tuple
 
-from pysaurus.core import functions as utils
+from pysaurus.core import functions
 from pysaurus.core.components import AbsolutePath, PathInfo
 from pysaurus.core.database import notifications
-from pysaurus.core.functions import get_file_extension
 from pysaurus.core.miniature import Miniature
 from pysaurus.core.modules import ImageUtils
 from pysaurus.core.notification import Notifier
@@ -18,12 +17,15 @@ def job_collect_videos(job):
         count_before = len(files)
         for folder, _, file_names in path.walk():
             for file_name in file_names:
-                if get_file_extension(file_name) in utils.VIDEO_SUPPORTED_EXTENSIONS:
+                if (
+                    functions.get_file_extension(file_name)
+                    in functions.VIDEO_SUPPORTED_EXTENSIONS
+                ):
                     files.append(AbsolutePath.join(folder, file_name))
         if (
             len(files) == count_before
             and path.isfile()
-            and path.extension in utils.VIDEO_SUPPORTED_EXTENSIONS
+            and path.extension in functions.VIDEO_SUPPORTED_EXTENSIONS
         ):
             files.append(path)
     return files
@@ -33,7 +35,10 @@ def _collect_videos_info(folder: str, files: List[PathInfo]):
     for entry in os.scandir(folder):  # type: os.DirEntry
         if entry.is_dir():
             _collect_videos_info(entry.path, files)
-        elif get_file_extension(entry.name) in utils.VIDEO_SUPPORTED_EXTENSIONS:
+        elif (
+            functions.get_file_extension(entry.name)
+            in functions.VIDEO_SUPPORTED_EXTENSIONS
+        ):
             stat = entry.stat()
             files.append(
                 PathInfo(
@@ -48,7 +53,7 @@ def job_collect_videos_info(job):
     for path in job[0]:  # type: AbsolutePath
         if path.isdir():
             _collect_videos_info(path.path, files)
-        elif path.extension in utils.VIDEO_SUPPORTED_EXTENSIONS:
+        elif path.extension in functions.VIDEO_SUPPORTED_EXTENSIONS:
             stat = os.stat(path.path)
             files.append(PathInfo(path, stat.st_size, stat.st_mtime, stat.st_dev))
     return files

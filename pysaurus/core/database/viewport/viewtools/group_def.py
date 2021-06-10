@@ -1,6 +1,7 @@
-from typing import Optional
+from typing import Optional, List
 
 from pysaurus.core.classes import ToDict, NegativeComparator
+from pysaurus.core.database.viewport.viewtools.group import Group
 
 
 class GroupDef(ToDict):
@@ -87,10 +88,6 @@ class GroupDef(ToDict):
             )
         other_groups.sort(key=key)
         return ([none_group] + other_groups) if none_group else other_groups
-
-    @classmethod
-    def none(cls):
-        return cls(None)
 
     @classmethod
     def make_comparable(cls, value, reverse):

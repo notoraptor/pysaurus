@@ -346,9 +346,7 @@ def compute_nb_pages(count, page_size):
 
 
 def to_printable(element):
-    if isinstance(element, str):
-        return ("'%s'" % element) if '"' in element else ('"%s"' % element)
-    return element
+    return repr(element) if isinstance(element, str) else element
 
 
 def to_json_value(value):

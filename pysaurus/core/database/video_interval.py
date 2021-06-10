@@ -1,4 +1,6 @@
 class VideoInterval:
+    __slots__ = "fields", "min", "max"
+
     def __init__(self, fields):
         self.fields = tuple(fields)
         self.min = {}

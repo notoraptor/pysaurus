@@ -1,0 +1,54 @@
+from pysaurus.core.functions import pgcd
+
+
+class Fraction:
+    __slots__ = "sign", "num", "den"
+
+    def __init__(self, a, b):
+        # type: (int, int) -> None
+        if b == 0:
+            raise ZeroDivisionError(f"{a}/{b}")
+        if a == 0:
+            self.sign = 1
+            self.num = 0
+            self.den = 1
+            return
+        if a < 0 and b < 0:
+            self.sign = 1
+            self.num = -a
+            self.den = -b
+        elif a > 0 and b > 0:
+            self.sign = 1
+            self.num = a
+            self.den = b
+        else:
+            # a < 0 and b > 0, or a > 0 and b < 0
+            self.sign = -1
+            self.num = abs(a)
+            self.den = abs(b)
+        d = pgcd(self.num, self.den)
+        self.num //= d
+        self.den //= d
+
+    def __float__(self):
+        return self.sign * self.num / self.den
+
+    def __str__(self):
+        if self.den == 0:
+            return "0"
+        if self.den == 1:
+            return "%s%d" % ("-" if self.sign < 0 else "", self.num)
+        return "%s%d/%d" % ("-" if self.sign < 0 else "", self.num, self.den)
+
+    def __hash__(self):
+        return hash((self.sign, self.num, self.den))
+
+    def __eq__(self, other):
+        return (
+            self.sign == other.sign and self.num == other.num and self.den == other.den
+        )
+
+    def __lt__(self, other):
+        if self.sign == other.sign:
+            return self.sign * (self.num * other.den - self.den * other.num) < 0
+        return self.sign < other.sign

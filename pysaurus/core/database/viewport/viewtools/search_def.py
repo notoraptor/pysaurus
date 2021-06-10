@@ -19,7 +19,3 @@ class SearchDef(ToDict):
 
     def __eq__(self, other):
         return self.text == other.text and self.cond == other.cond
-
-    @classmethod
-    def none(cls):
-        return cls(None, None)

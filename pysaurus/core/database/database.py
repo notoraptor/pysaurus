@@ -3,7 +3,7 @@ from typing import Dict, Iterable, List, Optional, Set, Union
 
 import ujson as json
 
-from pysaurus.core import exceptions, functions as utils
+from pysaurus.core import exceptions, functions
 from pysaurus.core.components import (
     AbsolutePath,
     DateModified,
@@ -181,7 +181,7 @@ class Database:
             ),
             "prop_types": [prop.to_dict() for prop in self.__prop_types.values()],
         }
-        # utils.assert_data_is_serializable(json_output)
+        # functions.assert_data_is_serializable(json_output)
         with open(self.__json_path.path, "w") as output_file:
             json.dump(json_output, output_file)
         self.__notifier.notify(notifications.DatabaseSaved(self))
@@ -232,11 +232,11 @@ class Database:
         # type: () -> Dict[AbsolutePath, PathInfo]
         paths = {}  # type: Dict[AbsolutePath, PathInfo]
         cpu_count = os.cpu_count()
-        jobs = utils.dispatch_tasks(sorted(self.__folders), cpu_count)
+        jobs = functions.dispatch_tasks(sorted(self.__folders), cpu_count)
         with Profiler(
             title="Collect videos (%d threads)" % cpu_count, notifier=self.__notifier
         ):
-            results = utils.parallelize(
+            results = functions.parallelize(
                 jobs_python.job_collect_videos_info, jobs, cpu_count
             )
         for local_result in results:  # type: List[PathInfo]
@@ -305,7 +305,7 @@ class Database:
         if not all_file_names:
             return
 
-        pre_jobs = utils.dispatch_tasks(all_file_names, cpu_count)
+        pre_jobs = functions.dispatch_tasks(all_file_names, cpu_count)
         jobs = []
         for index, (file_names, job_id) in enumerate(pre_jobs):
             input_file_path = FilePath(self.__db_path, str(index), "list")
@@ -329,7 +329,7 @@ class Database:
             title="Get videos info from JSON (%d threads)" % len(jobs),
             notifier=self.__notifier,
         ):
-            counts_loaded = utils.parallelize(
+            counts_loaded = functions.parallelize(
                 jobs_python.job_video_to_json, jobs, cpu_count=cpu_count
             )
 
@@ -451,7 +451,9 @@ class Database:
         del valid_thumb_names
         self.__save()
 
-        dispatched_thumb_jobs = utils.dispatch_tasks(videos_without_thumbs, cpu_count)
+        dispatched_thumb_jobs = functions.dispatch_tasks(
+            videos_without_thumbs, cpu_count
+        )
         del videos_without_thumbs
         for index, (job_videos, job_id) in enumerate(dispatched_thumb_jobs):
             input_file_path = FilePath(self.__db_path, str(index), "thumbnails.list")
@@ -480,7 +482,7 @@ class Database:
             title="Get thumbnails from JSON through %d thread(s)" % len(thumb_jobs),
             notifier=self.__notifier,
         ):
-            counts_loaded = utils.parallelize(
+            counts_loaded = functions.parallelize(
                 jobs_python.job_video_thumbnails_to_json,
                 thumb_jobs,
                 cpu_count=cpu_count,
@@ -552,10 +554,12 @@ class Database:
         if tasks:
             have_added = True
             cpu_count = os.cpu_count()
-            jobs = utils.dispatch_tasks(tasks, cpu_count, extra_args=[self.__notifier])
+            jobs = functions.dispatch_tasks(
+                tasks, cpu_count, extra_args=[self.__notifier]
+            )
             del tasks
             with Profiler("Generating miniatures."):
-                results = utils.parallelize(
+                results = functions.parallelize(
                     jobs_python.job_generate_miniatures, jobs, cpu_count
                 )
             del jobs

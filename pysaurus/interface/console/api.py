@@ -2,7 +2,7 @@ import functools
 import tempfile
 from typing import Dict, List, Tuple, Union
 
-from pysaurus.core import exceptions, functions as utils
+from pysaurus.core import exceptions, functions
 from pysaurus.core.classes import Enumeration, StringPrinter
 from pysaurus.core.components import AbsolutePath, Duration, FilePath, FileSize
 from pysaurus.core.database import path_utils
@@ -11,7 +11,6 @@ from pysaurus.core.database.video import VIDEO_UNIQUE_FIELDS, Video
 from pysaurus.core.database.video_features import VideoFeatures
 from pysaurus.core.database.video_state import VideoState
 from pysaurus.core.function_parser import FunctionParser
-from pysaurus.core.functions import bool_type
 
 TEMP_DIR = tempfile.gettempdir()
 TEMP_PREFIX = tempfile.gettempprefix() + "_pysaurus_"
@@ -111,7 +110,9 @@ class API:
         )
         function_parser.add(self.same_sizes)
         function_parser.add(self.unreadable)
-        function_parser.add(self.update, arguments={"ensure_miniatures": bool_type})
+        function_parser.add(
+            self.update, arguments={"ensure_miniatures": functions.bool_type}
+        )
         function_parser.add(self.valid_length)
         function_parser.add(self.valid_size)
         function_parser.add(self.videos)
@@ -268,7 +269,7 @@ class API:
             )
             file_content = (
                 """<?xml version="1.0" encoding="UTF-8"?>
-                <playlist version="1" xmlns="http://xspf.org/ns/0/"><trackList>%s</trackList></playlist>"""
+                        <playlist version="1" xmlns="http://xspf.org/ns/0/"><trackList>%s</trackList></playlist>"""
                 % tracks
             )
             temp_file_id = 0
@@ -351,7 +352,7 @@ class API:
 
     def find(self, terms):
         # type: (str) -> List[Video]
-        terms = utils.string_to_pieces(terms)
+        terms = functions.string_to_pieces(terms)
         return [
             video
             for video in self.database.get_valid_videos()
