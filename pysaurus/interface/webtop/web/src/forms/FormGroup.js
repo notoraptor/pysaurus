@@ -16,8 +16,8 @@ export class FormGroup extends React.Component {
             field: this.props.definition.field || '',
             sorting: this.props.definition.sorting || 'field',
             reverse: this.props.definition.reverse || false,
-            allowSingletons: this.props.definition.allowSingletons || true,
-            allowMultiple: this.props.definition.allowMultiple || true,
+            allowSingletons: this.props.definition.allow_singletons || true,
+            allowMultiple: this.props.definition.allow_multiple || true,
             properties: properties
         };
         this.onChangeAllowSingleton = this.onChangeAllowSingleton.bind(this);

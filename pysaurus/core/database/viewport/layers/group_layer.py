@@ -1,8 +1,8 @@
 from typing import Sequence
 
 from pysaurus.core.database.video import Video
-from pysaurus.core.database.viewport.viewtools.group import Group
 from pysaurus.core.database.viewport.layers.layer import Layer
+from pysaurus.core.database.viewport.viewtools.group import Group
 
 
 class GroupLayer(Layer):

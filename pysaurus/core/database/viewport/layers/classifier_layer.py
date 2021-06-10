@@ -2,11 +2,11 @@ from typing import Iterable, List
 
 from pysaurus.core import functions
 from pysaurus.core.database.video import Video
+from pysaurus.core.database.viewport.layers.grouping_layer import GroupingLayer
+from pysaurus.core.database.viewport.layers.layer import Layer
 from pysaurus.core.database.viewport.viewtools.group import Group
 from pysaurus.core.database.viewport.viewtools.group_array import GroupArray
 from pysaurus.core.database.viewport.viewtools.group_def import GroupDef
-from pysaurus.core.database.viewport.layers.grouping_layer import GroupingLayer
-from pysaurus.core.database.viewport.layers.layer import Layer
 
 
 class ClassifierLayer(Layer):
@@ -99,9 +99,6 @@ class ClassifierLayer(Layer):
 
     def get_group_id(self, value):
         return self._cache.lookup_index(value)
-
-    def count_groups(self):
-        return len(self._cache)
 
     def get_stats(self):
         field = self._cache.field

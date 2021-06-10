@@ -1,4 +1,3 @@
-from copy import copy
 from typing import Generic, Sequence, TypeVar, Type, List, Dict, Any, Callable
 
 T = TypeVar("T")
@@ -24,7 +23,7 @@ class LookupArray(Generic[T]):
         return len(self.__content)
 
     def __getitem__(self, item):
-        return copy(self.__content[item])
+        return self.__content[item]
 
     def __iter__(self):
         return self.__content.__iter__()

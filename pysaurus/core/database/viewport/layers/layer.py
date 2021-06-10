@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from typing import Optional
 
 from pysaurus.core.database.database import Database
 from pysaurus.core.database.video import Video

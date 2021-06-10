@@ -79,6 +79,7 @@ class GuiAPI(FeatureAPI):
 
     def _load_database(self):
         self.notifier.clear_managers()
+        # Load database
         update = self.__update_on_load
         self.__update_on_load = True
         self.database = Database.load_from_list_file_path(
@@ -88,22 +89,23 @@ class GuiAPI(FeatureAPI):
             ensure_miniatures=True,
             reset=False,
         )
-        self._load_videos()
-        self.notifier.notify(DatabaseReady())
-        self.db_loading_thread = None
-        print("End loading database.")
+        # Load videos
+        assert not self.provider
+        self.provider = VideoProvider(self.database)
+        # Finish
+        self._finish_loading("End loading database.")
 
     def _update_database(self):
         self.notifier.clear_managers()
+        # Update database
         self.database.refresh(ensure_miniatures=True)
-        self._load_videos()
+        # Load videos
+        self.provider.refresh()
+        # Finish
+        self._finish_loading("End updating database.")
+
+    def _finish_loading(self, log_message):
+        self.provider.register_notifications()
         self.notifier.notify(DatabaseReady())
         self.db_loading_thread = None
-        print("End updating database.")
-
-    def _load_videos(self):
-        if self.provider:
-            self.provider.load()
-        else:
-            self.provider = VideoProvider(self.database)
-        self.provider.register_notifications()
+        print(log_message)

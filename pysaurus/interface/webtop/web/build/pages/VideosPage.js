@@ -143,7 +143,6 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           const nbPages = this.state.nbPages;
           const validSize = this.state.validSize;
           const validLength = this.state.validLength;
-          const notFound = this.state.notFound;
           const groupDef = this.state.groupDef;
           const stringSetProperties = this.getStringSetProperties(this.state.properties);
           const stringProperties = this.getStringProperties(this.state.properties);
@@ -165,7 +164,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             action: actions.search
           }), /*#__PURE__*/React.createElement(ActionToMenuItem, {
             action: actions.sort
-          })), notFound || !nbVideos ? '' : /*#__PURE__*/React.createElement(ActionToMenuItem, {
+          })), this.state.notFound || !nbVideos ? '' : /*#__PURE__*/React.createElement(ActionToMenuItem, {
             action: actions.openRandomVideo
           }), /*#__PURE__*/React.createElement(ActionToMenuItem, {
             action: actions.reload
@@ -266,7 +265,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             className: "footer-information"
           }, groupDef ? /*#__PURE__*/React.createElement("div", {
             className: "info group"
-          }, "Group ", groupDef.group_id + 1, "/", groupDef.nb_groups) : '', /*#__PURE__*/React.createElement("div", {
+          }, "Group ", groupDef.group_id + 1, "/", groupDef.groups.length) : '', /*#__PURE__*/React.createElement("div", {
             className: "info count"
           }, nbVideos, " video", nbVideos > 1 ? 's' : ''), /*#__PURE__*/React.createElement("div", {
             className: "info size"
@@ -515,7 +514,6 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         }
 
         openRandomVideo() {
-          if (this.state.notFound || !this.state.nbVideos) return;
           python_call('open_random_video').then(filename => {
             this.setState({
               status: `Randomly opened: ${filename}`

@@ -108,7 +108,6 @@ export class VideosPage extends React.Component {
         const nbPages = this.state.nbPages;
         const validSize = this.state.validSize;
         const validLength = this.state.validLength;
-        const notFound = this.state.notFound;
         const groupDef = this.state.groupDef;
         const stringSetProperties = this.getStringSetProperties(this.state.properties);
         const stringProperties = this.getStringProperties(this.state.properties);
@@ -125,7 +124,7 @@ export class VideosPage extends React.Component {
                             {<ActionToMenuItem action={actions.search}/>}
                             {<ActionToMenuItem action={actions.sort}/>}
                         </Menu>
-                        {notFound || !nbVideos ? '' : <ActionToMenuItem action={actions.openRandomVideo}/>}
+                        {this.state.notFound || !nbVideos ? '' : <ActionToMenuItem action={actions.openRandomVideo}/>}
                         {<ActionToMenuItem action={actions.reload}/>}
                         {<ActionToMenuItem action={actions.manageProperties}/>}
                         {stringSetProperties.length ?
@@ -236,7 +235,7 @@ export class VideosPage extends React.Component {
                     <div className="footer-information">
                         {groupDef ? (
                             <div className="info group">
-                                Group {groupDef.group_id + 1}/{groupDef.nb_groups}
+                                Group {groupDef.group_id + 1}/{groupDef.groups.length}
                             </div>
                         ) : ''}
                         <div className="info count">{nbVideos} video{nbVideos > 1 ? 's' : ''}</div>
@@ -508,8 +507,6 @@ export class VideosPage extends React.Component {
     }
 
     openRandomVideo() {
-        if (this.state.notFound || !this.state.nbVideos)
-            return;
         python_call('open_random_video')
             .then(filename => {
                 this.setState({status: `Randomly opened: ${filename}`});

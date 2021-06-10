@@ -48,19 +48,6 @@ class VideoProvider:
         self.group_layer.set_sub_layer(self.search_layer)
         self.search_layer.set_sub_layer(self.sort_layer)
 
-        ##
-        # if self.database.has_prop_type('category'):
-        #     prop_category = self.database.get_prop_type('category')
-        #     if prop_category.type is str and prop_category.multiple:
-        #         self.grouping_layer.set_grouping(
-        #             field=':category',
-        #             sorting='field',
-        #             reverse=False,
-        #             allow_singletons=True,
-        #             allow_multiple=True
-        #         )
-        ##
-
         self.source_layer.set_data(self.database)
         self.view = self.source_layer.run()
         assert isinstance(self.view, VideoArray)
@@ -84,9 +71,13 @@ class VideoProvider:
             allow_singletons=allow_singletons,
             allow_multiple=allow_multiple,
         )
+        self.classifier_layer.reset_parameters()
         self.group_layer.set_group_id(0)
         self.search_layer.reset_parameters()
-        self.classifier_layer.reset_parameters()
+        self.view = self.source_layer.run()
+
+    def set_group(self, group_id):
+        self.group_layer.set_group_id(group_id)
         self.view = self.source_layer.run()
 
     def set_search(self, text: Optional[str], cond: Optional[str]):
@@ -97,46 +88,26 @@ class VideoProvider:
         self.sort_layer.set_sorting(sorting)
         self.view = self.source_layer.run()
 
-    def set_group(self, group_id):
-        self.group_layer.set_group_id(group_id)
+    def refresh(self):
+        self.source_layer.request_update()
         self.view = self.source_layer.run()
 
     def get_group_def(self):
         group_def = self.grouping_layer.get_grouping()
-        if group_def:
-            return {
-                "field": group_def.field,
-                "sorting": group_def.sorting,
-                "reverse": group_def.reverse,
-                "allowSingletons": group_def.allow_singletons,
-                "allowMultiple": group_def.allow_multiple,
-                "group_id": self.group_layer.get_group_id(),
-                "nb_groups": self.classifier_layer.count_groups(),
-                "groups": self.classifier_layer.get_stats(),
-            }
-        return None
+        return (
+            group_def.to_dict(
+                group_id=self.group_layer.get_group_id(),
+                groups=self.classifier_layer.get_stats(),
+            )
+            if group_def
+            else None
+        )
 
     def get_search_def(self):
         search_def = self.search_layer.get_search()
-        if search_def:
-            return {"text": search_def.text, "cond": search_def.cond}
-        return None
+        return search_def.to_dict() if search_def else None
 
-    def get_video(self, index: int) -> Video:
-        return self.view[index]
-
-    def load(self):
-        self.source_layer.request_update()
-        self.view = self.source_layer.run()
-
-    def update_view(self):
-        self.view = self.source_layer.run()
-
-    def all_not_found(self):
-        return all("not_found" in source for source in self.source_layer.get_sources())
-
-    def get_random_found_video(self):
-        # type: () -> Video
+    def get_random_found_video(self) -> Video:
         videos = []
         for path in self.source_layer.get_sources():
             videos.extend(self.database.get_videos(*path, found=True))
@@ -147,8 +118,13 @@ class VideoProvider:
     def get_all_videos(self):
         return self.source_layer.videos()
 
-    def get_view(self):
-        return list(self.view)
+    def register_notifications(self):
+        self.database.notifier.set_manager(
+            notifications.VideoDeleted, self.on_video_deleted
+        )
+        self.database.notifier.set_manager(
+            notifications.FieldsModified, self.on_fields_modified
+        )
 
     def on_video_deleted(self, notification: notifications.VideoDeleted):
         self.source_layer.delete_video(notification.video)
@@ -166,11 +142,3 @@ class VideoProvider:
                 self.grouping_layer.request_update()
                 self.view = self.source_layer.run()
                 return True
-
-    def register_notifications(self):
-        self.database.notifier.set_manager(
-            notifications.VideoDeleted, self.on_video_deleted
-        )
-        self.database.notifier.set_manager(
-            notifications.FieldsModified, self.on_fields_modified
-        )

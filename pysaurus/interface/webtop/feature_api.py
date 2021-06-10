@@ -4,8 +4,8 @@ from pysaurus.core.components import FileSize, Duration
 from pysaurus.core.database.database import Database
 from pysaurus.core.database.properties import PropType
 from pysaurus.core.database.video_features import VideoFeatures
-from pysaurus.core.database.viewport.video_provider import VideoProvider
 from pysaurus.core.database.viewport.layers.source_layer import SourceLayer
+from pysaurus.core.database.viewport.video_provider import VideoProvider
 from pysaurus.core.functions import compute_nb_pages
 
 
@@ -32,7 +32,7 @@ class FeatureAPI:
 
     def get_info_and_videos(self, page_size, page_number, selector=None):
         # Backend state.
-        view = self.provider.get_view()
+        view = self.provider.view
         real_nb_videos = len(view)
         if selector:
             if selector["all"]:
@@ -49,6 +49,7 @@ class FeatureAPI:
             start = page_size * page_number
             end = min(start + page_size, nb_videos)
             videos = [VideoFeatures.to_json(view[index]) for index in range(start, end)]
+        sources = self.provider.source_layer.get_sources()
         prop_types = self.get_prop_types()
         return {
             "pageSize": page_size,
@@ -58,8 +59,8 @@ class FeatureAPI:
             "nbPages": nb_pages,
             "validSize": str(FileSize(sum(video.file_size for video in view))),
             "validLength": str(Duration(sum(video.raw_microseconds for video in view))),
-            "notFound": self.provider.all_not_found(),
-            "sources": self.provider.source_layer.get_sources(),
+            "notFound": all("not_found" in source for source in sources),
+            "sources": sources,
             "groupDef": self.provider.get_group_def(),
             "searchDef": self.provider.get_search_def(),
             "sorting": self.provider.sort_layer.get_sorting(),
@@ -138,7 +139,7 @@ class FeatureAPI:
             exclude = set(selector["exclude"])
             video_indices = [
                 video.video_id
-                for video in self.provider.get_view()
+                for video in self.provider.view
                 if video.video_id not in exclude
             ]
         else:
