@@ -9,7 +9,6 @@ import urllib.parse
 from datetime import datetime
 
 from pysaurus.core.constants import VIDEO_SUPPORTED_EXTENSIONS
-
 # Datetime since timestamp 0.
 from pysaurus.core.modules import HTMLStripper
 
@@ -378,3 +377,20 @@ def html_to_url(html):
     with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".html") as tf:
         tf.write(html)
         return convert_file_path_to_url(tf.name)
+
+
+def deep_equals(value, other):
+    """Compare elements and deeply compare lists,, tuples and dict values."""
+    value_type = type(value)
+    assert value_type is type(other), (value_type, type(other))
+    if value_type in (list, tuple):
+        return len(value) == len(other) and all(
+            deep_equals(value[i], other[i]) for i in range(len(value))
+        )
+    if value_type is set:
+        return len(value) == len(other) and all(element in other for element in value)
+    if value_type is dict:
+        return len(value) == len(other) and all(
+            key in other and deep_equals(value[key], other[key]) for key in value
+        )
+    return value == other

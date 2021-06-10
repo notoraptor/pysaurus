@@ -52,7 +52,7 @@ export class App extends React.Component {
             pageSize = VIDEO_DEFAULT_PAGE_SIZE;
         if (pageNumber === undefined)
             pageNumber = VIDEO_DEFAULT_PAGE_NUMBER;
-        python_call('get_info_and_videos', pageSize, pageNumber)
+        python_call("backend", null, pageSize, pageNumber)
             .then(info => this.loadPage("videos", info))
             .catch(backend_error);
     }

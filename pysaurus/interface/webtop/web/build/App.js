@@ -79,7 +79,7 @@ System.register(["./pages/Test.js", "./pages/HomePage.js", "./pages/VideosPage.j
         loadVideosPage(pageSize = undefined, pageNumber = undefined) {
           if (pageSize === undefined) pageSize = VIDEO_DEFAULT_PAGE_SIZE;
           if (pageNumber === undefined) pageNumber = VIDEO_DEFAULT_PAGE_NUMBER;
-          python_call('get_info_and_videos', pageSize, pageNumber).then(info => this.loadPage("videos", info)).catch(backend_error);
+          python_call("backend", null, pageSize, pageNumber).then(info => this.loadPage("videos", info)).catch(backend_error);
         }
 
         loadPropertiesPage() {

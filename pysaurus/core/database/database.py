@@ -254,7 +254,9 @@ class Database:
                     name = entry.name
                     if self.system_is_case_insensitive:
                         name = name.lower()
-                    thumbs[name[: -(len(THUMBNAIL_EXTENSION) + 1)]] = DateModified(entry.stat().st_mtime)
+                    thumbs[name[: -(len(THUMBNAIL_EXTENSION) + 1)]] = DateModified(
+                        entry.stat().st_mtime
+                    )
         return thumbs
 
     def __notify_missing_thumbnails(self):

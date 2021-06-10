@@ -1,9 +1,11 @@
 from typing import Optional
 
+from pysaurus.core.components import FileSize, Duration
 from pysaurus.core.database.database import Database
 from pysaurus.core.database.properties import PropType
 from pysaurus.core.database.video_features import VideoFeatures
-from pysaurus.core.database.video_provider import VideoProvider, SourceLayer
+from pysaurus.core.database.viewport.video_provider import VideoProvider
+from pysaurus.core.database.viewport.layers.source_layer import SourceLayer
 from pysaurus.core.functions import compute_nb_pages
 
 
@@ -31,6 +33,7 @@ class FeatureAPI:
     def get_info_and_videos(self, page_size, page_number, selector=None):
         # Backend state.
         view = self.provider.get_view()
+        real_nb_videos = len(view)
         if selector:
             if selector["all"]:
                 exclude = set(selector["exclude"])
@@ -38,14 +41,11 @@ class FeatureAPI:
             else:
                 include = set(selector["include"])
                 view = [video for video in view if video.video_id in include]
-        videos = []
         nb_videos = len(view)
         nb_pages = compute_nb_pages(nb_videos, page_size)
+        videos = []
         if nb_videos:
-            if page_number < 0:
-                page_number = 0
-            if page_number >= nb_pages:
-                page_number = nb_pages - 1
+            page_number = min(max(0, page_number), nb_pages - 1)
             start = page_size * page_number
             end = min(start + page_size, nb_videos)
             videos = [VideoFeatures.to_json(view[index]) for index in range(start, end)]
@@ -54,15 +54,15 @@ class FeatureAPI:
             "pageSize": page_size,
             "pageNumber": page_number,
             "nbVideos": nb_videos,
-            "realNbVideos": self.provider.count(),
+            "realNbVideos": real_nb_videos,
             "nbPages": nb_pages,
-            "validSize": str(self.provider.get_view_file_size(view)),
-            "validLength": str(self.provider.get_view_duration(view)),
+            "validSize": str(FileSize(sum(video.file_size for video in view))),
+            "validLength": str(Duration(sum(video.raw_microseconds for video in view))),
             "notFound": self.provider.all_not_found(),
-            "sources": self.provider.get_sources(),
+            "sources": self.provider.source_layer.get_sources(),
             "groupDef": self.provider.get_group_def(),
             "searchDef": self.provider.get_search_def(),
-            "sorting": self.provider.get_sorting(),
+            "sorting": self.provider.sort_layer.get_sorting(),
             "videos": videos,
             "path": self.provider.classifier_layer.get_path(),
             "properties": prop_types,
@@ -136,7 +136,11 @@ class FeatureAPI:
     def count_prop_values(self, name, selector):
         if selector["all"]:
             exclude = set(selector["exclude"])
-            video_indices = [video.video_id for video in self.provider.get_view() if video.video_id not in exclude]
+            video_indices = [
+                video.video_id
+                for video in self.provider.get_view()
+                if video.video_id not in exclude
+            ]
         else:
             video_indices = set(selector["include"])
         value_to_count = self.database.count_property_values(name, video_indices)
