@@ -43,7 +43,7 @@ class SearchLayer(Layer):
     def __filter_from_videos(self, search_def: SearchDef, data: Group) -> VideoArray:
         terms = functions.string_to_pieces(search_def.text)
         video_filter = self.term_parser[search_def.cond]
-        return data.videos.new(
+        return VideoArray(
             video for video in data.videos if video_filter(video, terms)
         )
 
@@ -58,7 +58,7 @@ class SearchLayer(Layer):
             for term in terms:
                 selection_and &= term_to_videos.get(term, set())
             video_filter = self.term_parser[search_def.cond]
-            selection = data.videos.new(
+            selection = (
                 video for video in selection_and if video_filter(video, terms)
             )
         elif search_def.cond == "and":
@@ -70,7 +70,7 @@ class SearchLayer(Layer):
             for term in terms[1:]:
                 selection |= term_to_videos.get(term, set())
             selection &= set(data.videos)
-        return data.videos.new(selection)
+        return VideoArray(selection)
 
     def remove_from_cache(self, cache: VideoArray, video: Video):
         if video in cache:

@@ -1,4 +1,4 @@
-from typing import Generic, Sequence, TypeVar, Type, List, Dict, Any, Callable
+from typing import Generic, Iterable, TypeVar, Type, List, Dict, Any, Callable
 
 T = TypeVar("T")
 
@@ -6,7 +6,7 @@ T = TypeVar("T")
 class LookupArray(Generic[T]):
     __slots__ = "__type", "__content", "__table", "__key_fn"
 
-    def __init__(self, element_type, content: Sequence = (), key: callable = None):
+    def __init__(self, element_type, content: Iterable[T] = (), key: callable = None):
         self.__type = element_type  # type: Type
         self.__content = []  # type: List[T]
         self.__table = {}  # type: Dict[Any, int]
@@ -60,9 +60,7 @@ class LookupArray(Generic[T]):
         self.pop(self.__table[self.__key_fn(value)])
 
     def lookup(self, key) -> T:
-        value = self.__content[self.__table[key]]
-        assert key == self.__key_fn(value)
-        return value
+        return self.__content[self.__table[key]]
 
     def lookup_index(self, key):
         return self.__table[key]
@@ -72,9 +70,6 @@ class LookupArray(Generic[T]):
 
     def keys(self):
         return self.__table.keys()
-
-    def new(self, content=()):
-        return LookupArray(self.__type, content, self.__key_fn)
 
     def clear(self):
         self.__content.clear()
