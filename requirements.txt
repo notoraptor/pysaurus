@@ -1,7 +1,7 @@
-moviepy
-Pillow
-ujson
+cefpython3==66.1
+Flask==2.0.1
+moviepy==1.0.3
+Pillow==8.2.0
 pyperclip==1.8.2
-cefpython3==66.0
-Flask
-pywebview
+pywebview==3.4
+ujson==4.0.2
