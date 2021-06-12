@@ -118,6 +118,11 @@ class ToDict:
             ),
         )
 
+    def __eq__(self, other):
+        return all(
+            getattr(self, field) == getattr(other, field) for field in self.get_slots()
+        )
+
 
 class ToFulLDict(ToDict):
     __slots__ = ()

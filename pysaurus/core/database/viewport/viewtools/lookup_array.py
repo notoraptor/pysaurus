@@ -13,8 +13,7 @@ class LookupArray(Generic[T]):
         self.__key_fn = (
             key if callable(key) else lambda value: value
         )  # type: Callable[[T], Any]
-        for element in content:
-            self.append(element)
+        self.extend(content)
 
     def __str__(self):
         return "%s<%s>%s" % (type(self).__name__, self.__type.__name__, self.__content)

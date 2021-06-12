@@ -29,15 +29,6 @@ class GroupDef(ToFulLDict):
     def __bool__(self):
         return bool(self.field)
 
-    def __eq__(self, other):
-        return (
-            self.field == other.field
-            and self.sorting == other.sorting
-            and self.reverse == other.reverse
-            and self.allow_singletons == other.allow_singletons
-            and self.allow_multiple == other.allow_multiple
-        )
-
     def copy(
         self,
         field=None,
