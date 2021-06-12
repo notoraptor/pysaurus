@@ -96,7 +96,6 @@ class DatabaseLoaded(Notification):
         "valid",
         "readable_found_without_thumbnails",
     )
-    __props__ = __slots__
 
     def __init__(self, database):
         super().__init__()

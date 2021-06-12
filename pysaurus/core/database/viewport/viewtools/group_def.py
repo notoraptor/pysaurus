@@ -1,12 +1,11 @@
 from typing import Optional, List
 
-from pysaurus.core.classes import ToDict, NegativeComparator
+from pysaurus.core.classes import ToFulLDict, NegativeComparator
 from pysaurus.core.database.viewport.viewtools.group import Group
 
 
-class GroupDef(ToDict):
+class GroupDef(ToFulLDict):
     __slots__ = "field", "sorting", "reverse", "allow_singletons", "allow_multiple"
-    __none__ = True
 
     FIELD = "field"
     LENGTH = "length"

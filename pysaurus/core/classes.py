@@ -84,17 +84,18 @@ class Table:
 
 class ToDict:
     __slots__ = ()
-    __none__ = False
+    __print_none__ = False
 
     def get_name(self):
         return type(self).__name__
 
-    def get_slots(self):
-        if hasattr(self, "__props__"):
-            return self.__props__
+    @classmethod
+    def get_slots(cls):
+        if hasattr(cls, "__props__"):
+            return cls.__props__
         return sorted(
             chain.from_iterable(
-                getattr(cls, "__slots__", ()) for cls in type(self).__mro__
+                getattr(typ, "__slots__", ()) for typ in cls.__mro__
             )
         )
 
@@ -107,7 +108,7 @@ class ToDict:
         values = []
         for name in self.get_slots():
             value = getattr(self, name)
-            if self.__none__ or value is not None:
+            if self.__print_none__ or value is not None:
                 values.append((name, value))
         return "%s(%s)" % (
             self.get_name(),
@@ -116,6 +117,11 @@ class ToDict:
                 for name, value in values
             ),
         )
+
+
+class ToFulLDict(ToDict):
+    __slots__ = ()
+    __print_none__ = True
 
 
 class Enumeration:

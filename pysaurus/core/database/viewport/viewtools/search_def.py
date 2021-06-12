@@ -1,12 +1,11 @@
 from typing import Optional
 
-from pysaurus.core.classes import ToDict
+from pysaurus.core.classes import ToFulLDict
 from pysaurus.core.database.video import Video
 
 
-class SearchDef(ToDict):
+class SearchDef(ToFulLDict):
     __slots__ = "text", "cond"
-    __none__ = True
 
     def __init__(self, text: Optional[str], cond: Optional[str]):
         self.text = text.strip() if text else None
