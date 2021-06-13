@@ -28,12 +28,10 @@ class VideoProvider:
         "group_layer",
         "search_layer",
         "sort_layer",
-        "view",
     )
 
     def __init__(self, database: Database):
         self.database = database
-        self.view = []
 
         self.source_layer = SourceLayer(database)
         self.grouping_layer = GroupingLayer(database)
@@ -49,12 +47,9 @@ class VideoProvider:
         self.search_layer.set_sub_layer(self.sort_layer)
 
         self.source_layer.set_data(self.database)
-        self.view = self.source_layer.run()
-        assert isinstance(self.view, VideoArray)
 
     def set_source(self, paths: Sequence[Sequence[str]]):
         self.source_layer.set_sources(paths)
-        self.view = self.source_layer.run()
 
     def set_groups(
         self,
@@ -75,23 +70,18 @@ class VideoProvider:
         self.classifier_layer.reset_parameters()
         self.group_layer.set_group_id(0)
         self.search_layer.reset_parameters()
-        self.view = self.source_layer.run()
 
     def set_group(self, group_id):
         self.group_layer.set_group_id(group_id)
-        self.view = self.source_layer.run()
 
     def set_search(self, text: Optional[str], cond: Optional[str]):
         self.search_layer.set_search(text, cond)
-        self.view = self.source_layer.run()
 
     def set_sort(self, sorting: Sequence[str]):
         self.sort_layer.set_sorting(sorting)
-        self.view = self.source_layer.run()
 
     def refresh(self):
         self.source_layer.request_update()
-        self.view = self.source_layer.run()
 
     def get_group_def(self):
         group_def = self.grouping_layer.get_grouping()
@@ -119,6 +109,9 @@ class VideoProvider:
     def get_all_videos(self):
         return self.source_layer.videos()
 
+    def get_view(self) -> VideoArray:
+        return self.source_layer.run()
+
     def register_notifications(self):
         self.database.notifier.set_manager(
             notifications.VideoDeleted, self.on_video_deleted
@@ -132,7 +125,6 @@ class VideoProvider:
 
     def on_video_deleted(self, notification: notifications.VideoDeleted):
         self.source_layer.delete_video(notification.video)
-        self.view = self.source_layer.run()
 
     def on_fields_modified(self, notification: notifications.FieldsModified):
         self.manage_properties_modified(notification.fields, False)
@@ -149,5 +141,4 @@ class VideoProvider:
             and group_def.field in properties
         ):
             self.grouping_layer.request_update()
-            self.view = self.source_layer.run()
             return True

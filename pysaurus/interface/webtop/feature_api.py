@@ -32,7 +32,7 @@ class FeatureAPI:
 
     def get_info_and_videos(self, page_size, page_number, selector=None):
         # Backend state.
-        view = self.provider.view
+        view = self.provider.get_view()
         real_nb_videos = len(view)
         if selector:
             if selector["all"]:
@@ -147,7 +147,7 @@ class FeatureAPI:
             exclude = set(selector["exclude"])
             video_indices = [
                 video.video_id
-                for video in self.provider.view
+                for video in self.provider.get_view()
                 if video.video_id not in exclude
             ]
         else:
