@@ -12,20 +12,20 @@ class GroupingLayer(Layer):
     __slots__ = ()
     __props__ = ("grouping",)
     _cache: GroupArray
-    DEFAULT_GROUP_DEF = GroupDef(None)  # str field, bool reverse
+    DEFAULT_GROUP_DEF = GroupDef()  # str field, bool reverse
 
     def set_grouping(
         self,
         *,
         field: Optional[str] = None,
+        is_property: Optional[bool] = None,
         sorting: Optional[str] = None,
         reverse: Optional[bool] = None,
         allow_singletons: Optional[bool] = None,
-        allow_multiple: Optional[bool] = None
     ):
         self._set_parameters(
             grouping=self.get_grouping().copy(
-                field, sorting, reverse, allow_singletons, allow_multiple
+                field, is_property, sorting, reverse, allow_singletons
             )
         )
 
@@ -40,20 +40,20 @@ class GroupingLayer(Layer):
         groups = []
         if not group_def:
             groups.append(Group(None, list(data.values())))
-        elif group_def.allow_singletons or group_def.allow_multiple:
+        else:
             grouped_videos = {}
-            if group_def.field[0] == ":":
-                field = group_def.field[1:]
-                prop_type = self.database.get_prop_type(field)
+            if group_def.is_property:
+                prop_type = self.database.get_prop_type(group_def.field)
                 if prop_type.multiple:
                     for video in data.values():
-                        values = video.properties.get(field, None) or [None]
-                        for value in values:
+                        for value in video.properties.get(group_def.field, None) or [
+                            None
+                        ]:
                             grouped_videos.setdefault(value, []).append(video)
                 else:
                     for video in data.values():
                         grouped_videos.setdefault(
-                            video.properties.get(field, prop_type.default), []
+                            video.properties.get(group_def.field, prop_type.default), []
                         ).append(video)
             else:
                 for video in data.values():
@@ -61,31 +61,27 @@ class GroupingLayer(Layer):
                         getattr(video, group_def.field), []
                     ).append(video)
             for field_value, videos in grouped_videos.items():
-                if (
-                    field_value is None
-                    or (group_def.allow_singletons and len(videos) == 1)
-                    or (group_def.allow_multiple and len(videos) > 1)
-                ):
+                if group_def.allow_singletons or len(videos) > 1:
                     groups.append(Group(field_value, videos))
             groups = group_def.sort(groups)
-        return GroupArray(group_def.field, groups)
+        return GroupArray(group_def.field, group_def.is_property, groups)
 
     def remove_from_cache(self, cache: GroupArray, video: Video):
         groups = []
         if len(cache) == 1 and cache[0].field_value is None:
             groups.append(cache[0])
         else:
-            field_name = self.get_grouping().field
-            if field_name[0] == ":":
-                prop_type = self.database.get_prop_type(field_name[1:])
+            group_def = self.get_grouping()
+            if group_def.is_property:
+                prop_type = self.database.get_prop_type(group_def.field)
                 if prop_type.multiple:
-                    field_value = video.properties.get(field_name[1:], [None])
+                    field_value = video.properties.get(group_def.field, None) or [None]
                 else:
                     field_value = [
-                        video.properties.get(field_name[1:], prop_type.default)
+                        video.properties.get(group_def.field, prop_type.default)
                     ]
             else:
-                field_value = [getattr(video, self.get_grouping().field)]
+                field_value = [getattr(video, group_def.field)]
             for value in field_value:
                 if cache.contains_key(value):
                     groups.append(cache.lookup(value))

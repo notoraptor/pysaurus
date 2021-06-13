@@ -94,9 +94,7 @@ class ToDict:
         if hasattr(cls, "__props__"):
             return cls.__props__
         return sorted(
-            chain.from_iterable(
-                getattr(typ, "__slots__", ()) for typ in cls.__mro__
-            )
+            chain.from_iterable(getattr(typ, "__slots__", ()) for typ in cls.__mro__)
         )
 
     def to_dict(self, **extra):
@@ -212,22 +210,6 @@ class ListView(Generic[T]):
 
     def __iter__(self):
         return (self.__seq[i] for i in range(self.__start, self.__end))
-
-
-class NegativeComparator:
-    __slots__ = ("value",)
-
-    def __init__(self, value):
-        self.value = value
-
-    def __hash__(self):
-        return hash(self.value)
-
-    def __eq__(self, other):
-        return self.value == other.value
-
-    def __lt__(self, other):
-        return other.value < self.value
 
 
 class Text:

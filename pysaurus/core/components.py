@@ -148,7 +148,7 @@ class AbsolutePath(object):
         return str(self)
 
     def open(self):
-        """ Open path with default OS program. """
+        """Open path with default OS program."""
         if System.is_linux():
             subprocess.run(["xdg-open", self.path])
         elif System.is_mac():

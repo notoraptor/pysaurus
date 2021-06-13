@@ -12,18 +12,13 @@ class GroupLayer(Layer):
     _cache: Group
 
     def set_group_id(self, group_id: int):
-        if group_id < 0:
-            group_id = 0
-        self._set_parameters(group_id=group_id)
+        self._set_parameters(group_id=max(group_id, 0))
 
     def get_group_id(self) -> int:
         return self.get_parameter("group_id")
 
     def _clip_group_id(self, nb_groups):
-        group_id = self.get_group_id()
-        if group_id >= nb_groups:
-            group_id = nb_groups - 1
-            self.set_group_id(group_id)
+        self.set_group_id(min(self.get_group_id(), nb_groups - 1))
         return self.get_group_id()
 
     def reset_parameters(self):
@@ -37,6 +32,3 @@ class GroupLayer(Layer):
             cache.videos.remove(video)
         if not cache.videos:
             self.request_update()
-
-    def get_field_value(self):
-        return self._cache.field_value

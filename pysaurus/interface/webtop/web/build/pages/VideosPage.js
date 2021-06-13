@@ -95,6 +95,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           this.classifierConcatenate = this.classifierConcatenate.bind(this);
           this.classifierSelectGroup = this.classifierSelectGroup.bind(this);
           this.classifierUnstack = this.classifierUnstack.bind(this);
+          this.classifierReversePath = this.classifierReversePath.bind(this);
           this.confirmDeletionForNotFound = this.confirmDeletionForNotFound.bind(this);
           this.deselect = this.deselect.bind(this);
           this.displayOnlySelected = this.displayOnlySelected.bind(this);
@@ -111,7 +112,6 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           this.resetSearch = this.resetSearch.bind(this);
           this.resetSort = this.resetSort.bind(this);
           this.resetStatus = this.resetStatus.bind(this);
-          this.reverseClassifierPath = this.reverseClassifierPath.bind(this);
           this.scrollTop = this.scrollTop.bind(this);
           this.searchVideos = this.searchVideos.bind(this);
           this.selectAll = this.selectAll.bind(this);
@@ -146,7 +146,6 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           const groupDef = this.state.groupDef;
           const stringSetProperties = this.getStringSetProperties(this.state.properties);
           const stringProperties = this.getStringProperties(this.state.properties);
-          const groupField = groupDef && groupDef.field.charAt(0) === ':' ? groupDef.field.substr(1) : null;
           const actions = this.features.actions;
           return /*#__PURE__*/React.createElement("div", {
             id: "videos"
@@ -186,10 +185,10 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             title: "Group videos by property ..."
           }, this.state.properties.map((def, index) => /*#__PURE__*/React.createElement(MenuItem, {
             key: index,
-            action: () => this.backendGroupVideos(`:${def.name}`)
+            action: () => this.backendGroupVideos(def.name, true)
           }, def.name))) : this.state.properties.map((def, index) => /*#__PURE__*/React.createElement(MenuItem, {
             key: index,
-            action: () => this.backendGroupVideos(`:${def.name}`)
+            action: () => this.backendGroupVideos(def.name, true)
           }, "Group videos by property: ", def.name))), /*#__PURE__*/React.createElement("div", {
             className: "buttons"
           }), /*#__PURE__*/React.createElement("div", {
@@ -223,7 +222,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             key: i,
             action: () => this.classifierConcatenate(def.name)
           }, def.name))), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("button", {
-            onClick: this.reverseClassifierPath
+            onClick: this.classifierReversePath
           }, "reverse path"))) : '', this.state.path.map((value, index) => /*#__PURE__*/React.createElement("div", {
             key: index,
             className: "path-step horizontal"
@@ -241,10 +240,10 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           }, /*#__PURE__*/React.createElement(GroupView, {
             key: `${groupDef.field}-${groupDef.groups.length}-${this.state.path.join('-')}`,
             groupDef: groupDef,
-            inPath: !!this.state.path.length,
+            isClassified: !!this.state.path.length,
             onSelect: this.selectGroup,
             onOptions: this.editPropertyValue,
-            onPlus: groupDef.field[0] === ':' && this.state.definitions[groupDef.field.substr(1)].multiple ? this.classifierSelectGroup : null
+            onPlus: groupDef.is_property && this.state.definitions[groupDef.field].multiple ? this.classifierSelectGroup : null
           })) : ''), /*#__PURE__*/React.createElement("div", {
             className: "main-panel videos"
           }, this.state.videos.map(data => /*#__PURE__*/React.createElement(Video, {
@@ -433,23 +432,25 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         }
 
         groupVideos() {
-          const group_def = this.state.groupDef || {
+          const groupDef = this.state.groupDef || {
             field: null,
+            is_property: null,
             reverse: null
           };
           Fancybox.load( /*#__PURE__*/React.createElement(FormGroup, {
-            definition: group_def,
+            groupDef: groupDef,
             properties: this.state.properties,
+            propertyMap: this.state.definitions,
             onClose: criterion => {
-              this.backend(['set_groups', criterion.field, criterion.sorting, criterion.reverse, criterion.allowSingletons, criterion.allowMultiple], {
+              this.backend(['set_groups', criterion.field, criterion.isProperty, criterion.sorting, criterion.reverse, criterion.allowSingletons], {
                 pageNumber: 0
               });
             }
           }));
         }
 
-        backendGroupVideos(field, sorting = "count", reverse = true, allowSingletons = true, allowMultiple = true) {
-          this.backend(['set_groups', field, sorting, reverse, allowSingletons, allowMultiple], {
+        backendGroupVideos(field, isProperty = false, sorting = "count", reverse = true, allowSingletons = true) {
+          this.backend(['set_groups', field, isProperty, sorting, reverse, allowSingletons], {
             pageNumber: 0
           });
         }
@@ -576,12 +577,6 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         getStringProperties(definitions) {
           return definitions.filter(def => def.type === "str");
         }
-
-        reverseClassifierPath() {
-          python_call('classifier_reverse').then(path => this.setState({
-            path
-          })).catch(backend_error);
-        }
         /**
          * @param indicesSet {Set}
          */
@@ -591,10 +586,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           const groupDef = this.state.groupDef;
           const name = groupDef.field.substr(1);
           const values = [];
-          const indices = [];
-
-          for (let index of indicesSet.values()) indices.push(index);
-
+          const indices = Array.from(indicesSet);
           indices.sort();
 
           for (let index of indices) values.push(groupDef.groups[index].value);
@@ -627,6 +619,12 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           }));
         }
 
+        classifierReversePath() {
+          python_call('classifier_reverse').then(path => this.setState({
+            path
+          })).catch(backend_error);
+        }
+
         classifierSelectGroup(index) {
           this.backend(['classifier_select_group', index], {
             pageNumber: 0
@@ -646,7 +644,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         }
 
         focusPropertyValue(propertyName, propertyValue) {
-          python_call('set_groups', `:${propertyName}`, "count", true, true, true).then(() => this.backend(['classifier_select_group_by_value', propertyValue], {
+          python_call('set_groups', propertyName, true, "count", true, true).then(() => this.backend(['classifier_select_group_by_value', propertyValue], {
             pageNumber: 0
           })).catch(backend_error);
         }

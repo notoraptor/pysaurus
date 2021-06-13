@@ -43,9 +43,7 @@ class SearchLayer(Layer):
     def __filter_from_videos(self, search_def: SearchDef, data: Group) -> VideoArray:
         terms = functions.string_to_pieces(search_def.text)
         video_filter = self.term_parser[search_def.cond]
-        return VideoArray(
-            video for video in data.videos if video_filter(video, terms)
-        )
+        return VideoArray(video for video in data.videos if video_filter(video, terms))
 
     def __filter_from_root_layer(
         self, search_def: SearchDef, source_layer: SourceLayer, data: Group
@@ -58,9 +56,7 @@ class SearchLayer(Layer):
             for term in terms:
                 selection_and &= term_to_videos.get(term, set())
             video_filter = self.term_parser[search_def.cond]
-            selection = (
-                video for video in selection_and if video_filter(video, terms)
-            )
+            selection = (video for video in selection_and if video_filter(video, terms))
         elif search_def.cond == "and":
             selection = set(data.videos)
             for term in terms:

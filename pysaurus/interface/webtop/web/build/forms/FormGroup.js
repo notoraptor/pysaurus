@@ -1,46 +1,43 @@
 System.register(["../utils/constants.js", "../dialogs/Dialog.js"], function (_export, _context) {
   "use strict";
 
-  var FIELDS_GROUP_DEF, GroupPermission, SORTED_FIELDS_AND_TITLES, STRING_FIELDS, Dialog, FormGroup;
+  var FIELD_MAP, Dialog, FormGroup;
 
   _export("FormGroup", void 0);
 
   return {
     setters: [function (_utilsConstantsJs) {
-      FIELDS_GROUP_DEF = _utilsConstantsJs.FIELDS_GROUP_DEF;
-      GroupPermission = _utilsConstantsJs.GroupPermission;
-      SORTED_FIELDS_AND_TITLES = _utilsConstantsJs.SORTED_FIELDS_AND_TITLES;
-      STRING_FIELDS = _utilsConstantsJs.STRING_FIELDS;
+      FIELD_MAP = _utilsConstantsJs.FIELD_MAP;
     }, function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
     }],
     execute: function () {
       _export("FormGroup", FormGroup = class FormGroup extends React.Component {
         constructor(props) {
-          // definition: GroupDef
+          // groupDef: GroupDef
           // properties: [PropDef]
+          // propertyMap: {name: PropDef}
           // onClose(groupDef)
           super(props);
-          const properties = {};
-
-          if (this.props.properties) {
-            for (let def of this.props.properties) properties[`:${def.name}`] = def;
-          }
-
-          this.state = {
-            field: this.props.definition.field || '',
-            sorting: this.props.definition.sorting || 'field',
-            reverse: this.props.definition.reverse || false,
-            allowSingletons: this.props.definition.allow_singletons || true,
-            allowMultiple: this.props.definition.allow_multiple || true,
-            properties: properties
+          this.state = this.props.groupDef.field ? {
+            isProperty: this.props.groupDef.is_property,
+            field: this.props.groupDef.field,
+            sorting: this.props.groupDef.sorting,
+            reverse: this.props.groupDef.reverse,
+            allowSingletons: this.props.groupDef.allow_singletons
+          } : {
+            isProperty: false,
+            field: FIELD_MAP.list[0].name,
+            sorting: "field",
+            reverse: false,
+            allowSingletons: !FIELD_MAP.list[0].isOnlyMany()
           };
-          this.onChangeAllowSingleton = this.onChangeAllowSingleton.bind(this);
-          this.onChangeAllowMultiple = this.onChangeAllowMultiple.bind(this);
+          this.onChangeAllowSingletons = this.onChangeAllowSingletons.bind(this);
           this.onChangeGroupField = this.onChangeGroupField.bind(this);
           this.onChangeSorting = this.onChangeSorting.bind(this);
           this.onChangeGroupReverse = this.onChangeGroupReverse.bind(this);
           this.onClose = this.onClose.bind(this);
+          this.onChangeFieldType = this.onChangeFieldType.bind(this);
         }
 
         render() {
@@ -52,31 +49,46 @@ System.register(["../utils/constants.js", "../dialogs/Dialog.js"], function (_ex
             className: "form-group"
           }, /*#__PURE__*/React.createElement("tbody", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
             className: "label"
+          }, "Field type"), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("input", {
+            id: "field-type-property",
+            type: "radio",
+            value: "true",
+            checked: this.state.isProperty,
+            onChange: this.onChangeFieldType
+          }), " ", /*#__PURE__*/React.createElement("label", {
+            htmlFor: "field-type-property"
+          }, "property"), " ", /*#__PURE__*/React.createElement("input", {
+            id: "field-type-attribute",
+            type: "radio",
+            value: "false",
+            checked: !this.state.isProperty,
+            onChange: this.onChangeFieldType
+          }), " ", /*#__PURE__*/React.createElement("label", {
+            htmlFor: "field-type-attribute"
+          }, "attribute"))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
+            className: "label"
+          }, /*#__PURE__*/React.createElement("label", {
+            htmlFor: "group-field"
+          }, "Field")), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("select", {
+            id: "group-field",
+            value: this.state.field,
+            onChange: this.onChangeGroupField
+          }, this.state.isProperty ? this.props.properties.map((def, index) => /*#__PURE__*/React.createElement("option", {
+            key: index,
+            value: def.name
+          }, def.name)) : FIELD_MAP.list.map((fieldOption, index) => /*#__PURE__*/React.createElement("option", {
+            key: index,
+            value: fieldOption.name
+          }, fieldOption.title))))), this.state.isProperty || !FIELD_MAP.fields[this.state.field].isOnlyMany() ? /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
+            className: "label"
           }, /*#__PURE__*/React.createElement("input", {
             type: "checkbox",
             id: "allow-singletons",
             checked: this.state.allowSingletons,
-            onChange: this.onChangeAllowSingleton
+            onChange: this.onChangeAllowSingletons
           })), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("label", {
             htmlFor: "allow-singletons"
-          }, "Allow singletons (groups with only 1 video)"))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
-            className: "label"
-          }, /*#__PURE__*/React.createElement("input", {
-            type: "checkbox",
-            id: "allow-multiple",
-            checked: this.state.allowMultiple,
-            onChange: this.onChangeAllowMultiple
-          })), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("label", {
-            htmlFor: "allow-multiple"
-          }, "Allow multiple (groups with at least 2 videos)"))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
-            className: "label"
-          }, /*#__PURE__*/React.createElement("label", {
-            htmlFor: "group-field"
-          }, "Field to group (available fields depend on if singletons or multiple groups are allowed)")), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("select", {
-            id: "group-field",
-            value: this.state.field,
-            onChange: this.onChangeGroupField
-          }, this.renderFieldOptions()))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
+          }, "Allow singletons (groups with only 1 video)"))) : '', /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
             className: "label"
           }, /*#__PURE__*/React.createElement("label", {
             htmlFor: "group-sorting"
@@ -86,7 +98,7 @@ System.register(["../utils/constants.js", "../dialogs/Dialog.js"], function (_ex
             onChange: this.onChangeSorting
           }, /*#__PURE__*/React.createElement("option", {
             value: "field"
-          }, "Field value"), STRING_FIELDS.hasOwnProperty(this.state.field) || this.hasStringProperty(this.state.field) ? /*#__PURE__*/React.createElement("option", {
+          }, "Field value"), this.fieldIsString() ? /*#__PURE__*/React.createElement("option", {
             value: "length"
           }, "Field value length") : '', /*#__PURE__*/React.createElement("option", {
             value: "count"
@@ -102,73 +114,42 @@ System.register(["../utils/constants.js", "../dialogs/Dialog.js"], function (_ex
           }, "sort in reverse order"))))));
         }
 
-        hasStringProperty(name) {
-          return name.charAt(0) === ':' && this.state.properties[name].type === "str";
+        fieldIsString() {
+          if (this.state.isProperty) return this.props.propertyMap[this.state.field].type === "str";
+          return FIELD_MAP.fields[this.state.field].isString;
         }
 
-        getDefaultField() {
-          return document.querySelector('#group-field').options[0].value;
-        }
-
-        renderFieldOptions() {
-          const options = [];
-          let i = 0;
-
-          if (this.props.properties) {
-            for (let def of this.props.properties) {
-              options.push( /*#__PURE__*/React.createElement("option", {
-                key: i,
-                value: `:${def.name}`
-              }, "Property: ", def.name));
-              ++i;
-            }
-          }
-
-          for (let entry of SORTED_FIELDS_AND_TITLES) {
-            const [name, title] = entry;
-            const permission = FIELDS_GROUP_DEF[name];
-
-            if (permission === GroupPermission.ALL || permission === GroupPermission.ONLY_ONE && this.state.allowSingletons && !this.state.allowMultiple || permission === GroupPermission.ONLY_MANY && !this.state.allowSingletons && this.state.allowMultiple) {
-              options.push( /*#__PURE__*/React.createElement("option", {
-                key: i,
-                value: name
-              }, title));
-              ++i;
-            }
-          }
-
-          return options;
-        }
-
-        componentDidMount() {
-          if (!this.state.field) this.setState({
-            field: this.getDefaultField()
-          });
-        }
-
-        onChangeAllowSingleton(event) {
+        onChangeFieldType(event) {
+          const isProperty = event.target.value === "true";
+          const field = isProperty ? this.props.properties[0].name : FIELD_MAP.list[0].name;
+          const sorting = "field";
+          const reverse = false;
+          const allowSingletons = isProperty || !FIELD_MAP.list[0].isOnlyMany();
           this.setState({
-            allowSingletons: event.target.checked,
-            field: this.getDefaultField(),
-            sorting: "field",
-            reverse: false
-          });
-        }
-
-        onChangeAllowMultiple(event) {
-          this.setState({
-            allowMultiple: event.target.checked,
-            field: this.getDefaultField(),
-            sorting: "field",
-            reverse: false
+            isProperty,
+            field,
+            sorting,
+            reverse,
+            allowSingletons
           });
         }
 
         onChangeGroupField(event) {
+          const field = event.target.value;
+          const sorting = "field";
+          const reverse = false;
+          const allowSingletons = this.state.isProperty || !FIELD_MAP.fields[field].isOnlyMany();
           this.setState({
-            field: event.target.value,
-            sorting: 'field',
-            reverse: false
+            field,
+            sorting,
+            reverse,
+            allowSingletons
+          });
+        }
+
+        onChangeAllowSingletons(event) {
+          this.setState({
+            allowSingletons: event.target.checked
           });
         }
 

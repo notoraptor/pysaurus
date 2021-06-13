@@ -1,13 +1,13 @@
 System.register(["../utils/constants.js", "../dialogs/FancyBox.js"], function (_export, _context) {
   "use strict";
 
-  var SORTED_FIELDS_AND_TITLES, FancyBox, FormSort;
+  var FIELD_MAP, FancyBox, FormSort;
 
   _export("FormSort", void 0);
 
   return {
     setters: [function (_utilsConstantsJs) {
-      SORTED_FIELDS_AND_TITLES = _utilsConstantsJs.SORTED_FIELDS_AND_TITLES;
+      FIELD_MAP = _utilsConstantsJs.FIELD_MAP;
     }, function (_dialogsFancyBoxJs) {
       FancyBox = _dialogsFancyBoxJs.FancyBox;
     }],
@@ -64,10 +64,10 @@ System.register(["../utils/constants.js", "../dialogs/FancyBox.js"], function (_
             }, "-"), /*#__PURE__*/React.createElement("select", {
               value: field,
               onChange: event => this.setField(index, event.target.value)
-            }, SORTED_FIELDS_AND_TITLES.map((entry, fieldIndex) => /*#__PURE__*/React.createElement("option", {
+            }, FIELD_MAP.list.map((entry, fieldIndex) => /*#__PURE__*/React.createElement("option", {
               key: fieldIndex,
-              value: entry[0]
-            }, entry[1]))), /*#__PURE__*/React.createElement("input", {
+              value: entry.name
+            }, entry.title))), /*#__PURE__*/React.createElement("input", {
               type: "checkbox",
               id: reverseID,
               checked: reverse,

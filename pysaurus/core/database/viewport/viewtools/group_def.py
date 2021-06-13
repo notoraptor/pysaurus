@@ -1,29 +1,31 @@
 from typing import Optional, List
 
-from pysaurus.core.classes import ToFulLDict, NegativeComparator
+from pysaurus.core.classes import ToFulLDict
+from pysaurus.core.compare import to_comparable
 from pysaurus.core.database.viewport.viewtools.group import Group
+from pysaurus.core.functions import get_default
 
 
 class GroupDef(ToFulLDict):
-    __slots__ = "field", "sorting", "reverse", "allow_singletons", "allow_multiple"
+    __slots__ = "field", "is_property", "sorting", "reverse", "allow_singletons"
 
     FIELD = "field"
-    LENGTH = "length"
     COUNT = "count"
+    LENGTH = "length"
 
     def __init__(
         self,
-        field: Optional[str],
+        field: Optional[str] = None,
+        is_property: Optional[bool] = False,
         sorting: Optional[str] = "field",
         reverse: Optional[bool] = False,
-        allow_singletons: Optional[bool] = False,
-        allow_multiple: Optional[bool] = True,
+        allow_singletons: Optional[bool] = True,
     ):
         self.field = field.strip() if field else None
-        self.sorting = sorting.strip() if sorting else None
+        self.is_property = bool(is_property)
+        self.sorting = sorting.strip() if sorting else self.FIELD
         self.reverse = bool(reverse)
         self.allow_singletons = bool(allow_singletons)
-        self.allow_multiple = bool(allow_multiple)
         assert self.sorting in (self.FIELD, self.LENGTH, self.COUNT)
 
     def __bool__(self):
@@ -32,53 +34,31 @@ class GroupDef(ToFulLDict):
     def copy(
         self,
         field=None,
+        is_property=None,
         sorting=None,
         reverse=None,
         allow_singletons=None,
-        allow_multiple=None,
     ):
-        field = field if field is not None else self.field
-        sorting = sorting if sorting is not None else self.sorting
-        reverse = reverse if reverse is not None else self.reverse
-        allow_singletons = (
-            allow_singletons if allow_singletons is not None else self.allow_singletons
+        return GroupDef(
+            field=get_default(field, self.field),
+            is_property=get_default(is_property, self.is_property),
+            sorting=get_default(sorting, self.sorting),
+            reverse=get_default(reverse, self.reverse),
+            allow_singletons=get_default(allow_singletons, self.allow_singletons),
         )
-        allow_multiple = (
-            allow_multiple if allow_multiple is not None else self.allow_multiple
-        )
-        return GroupDef(field, sorting, reverse, allow_singletons, allow_multiple)
 
-    def sort(self, groups):
-        # type: (List[Group]) -> List[Group]
-        return self.sort_groups(groups, self.field, self.sorting, self.reverse)
+    def sort(self, groups: List[Group]):
+        return self.sort_groups(groups, self.sorting, self.reverse)
 
     @classmethod
-    def sort_groups(cls, groups, field, sorting="field", reverse=False):
-        # type: (List[Group], str, str, bool) -> List[Group]
-        none_group = None
-        other_groups = []
-        for group in groups:
-            if group.field_value is None:
-                assert none_group is None
-                none_group = group
-            else:
-                other_groups.append(group)
-        if sorting == cls.FIELD:
-            key = lambda group: cls.make_comparable(group.field_value, reverse)
-        elif sorting == cls.COUNT:
-            key = lambda group: (
-                cls.make_comparable(len(group.videos), reverse),
-                cls.make_comparable(group.field_value, reverse),
-            )
-        else:
-            assert sorting == cls.LENGTH
-            key = lambda group: (
-                cls.make_comparable(len(str(group.field_value)), reverse),
-                cls.make_comparable(group.field_value, reverse),
-            )
-        other_groups.sort(key=key)
-        return ([none_group] + other_groups) if none_group else other_groups
+    def sort_groups(cls, groups: List[Group], sorting="field", reverse=False):
+        return sorted(
+            groups, key=lambda group: cls._comparable_group(group, sorting, reverse)
+        )
 
     @classmethod
-    def make_comparable(cls, value, reverse):
-        return NegativeComparator(value) if reverse else value
+    def _comparable_group(cls, group: Group, sorting: str, reverse: bool):
+        key = [group.is_defined(), to_comparable(getattr(group, sorting), reverse)]
+        if sorting != cls.FIELD:
+            key.append(to_comparable(group.field, reverse))
+        return key

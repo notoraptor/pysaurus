@@ -13,7 +13,8 @@ Video class. Properties:
 
 from typing import Sequence, Set
 
-from pysaurus.core.classes import NegativeComparator, StringPrinter, Text
+from pysaurus.core.classes import StringPrinter, Text
+from pysaurus.core.compare import to_comparable
 from pysaurus.core.components import AbsolutePath, Duration
 from pysaurus.core.database import path_utils
 from pysaurus.core.database.video_state import VideoState
@@ -319,11 +320,9 @@ class Video(VideoState):
 
     def to_comparable(self, sorting):
         # type: (Sequence[str]) -> list
-        cmp_list = []
-        for sort in sorting:
-            val = getattr(self, sort[1:])
-            cmp_list.append(NegativeComparator(val) if sort[0] == "-" else val)
-        return cmp_list
+        return [
+            to_comparable(getattr(self, sort[1:]), sort[0] == "-") for sort in sorting
+        ]
 
     def to_dict(self):
         dct = super().to_dict()

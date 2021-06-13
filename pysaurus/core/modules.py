@@ -24,12 +24,12 @@ class HTMLStripper(HTMLParser):
         pass
 
     def __init__(self):
-        """ Constructor """
+        """Constructor"""
         super(HTMLStripper, self).__init__(convert_charrefs=True)
         self.fed = []
 
     def handle_data(self, data):
-        """ Split text to blank delimiters and store text pieces. """
+        """Split text to blank delimiters and store text pieces."""
         self.fed.extend(data.split())
 
     def get_data(self):
@@ -40,7 +40,7 @@ class HTMLStripper(HTMLParser):
 
     @classmethod
     def strip(cls, msg):
-        """ Remove HTML tags from given message and return stripped message. """
+        """Remove HTML tags from given message and return stripped message."""
         html_stripper = HTMLStripper()
         html_stripper.feed(msg)
         return html_stripper.get_data()

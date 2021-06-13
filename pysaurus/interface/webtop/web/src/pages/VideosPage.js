@@ -59,6 +59,7 @@ export class VideosPage extends React.Component {
         this.classifierConcatenate = this.classifierConcatenate.bind(this);
         this.classifierSelectGroup = this.classifierSelectGroup.bind(this);
         this.classifierUnstack = this.classifierUnstack.bind(this);
+        this.classifierReversePath = this.classifierReversePath.bind(this);
         this.confirmDeletionForNotFound = this.confirmDeletionForNotFound.bind(this);
         this.deselect = this.deselect.bind(this);
         this.displayOnlySelected = this.displayOnlySelected.bind(this);
@@ -75,7 +76,6 @@ export class VideosPage extends React.Component {
         this.resetSearch = this.resetSearch.bind(this);
         this.resetSort = this.resetSort.bind(this);
         this.resetStatus = this.resetStatus.bind(this);
-        this.reverseClassifierPath = this.reverseClassifierPath.bind(this);
         this.scrollTop = this.scrollTop.bind(this);
         this.searchVideos = this.searchVideos.bind(this);
         this.selectAll = this.selectAll.bind(this);
@@ -111,7 +111,6 @@ export class VideosPage extends React.Component {
         const groupDef = this.state.groupDef;
         const stringSetProperties = this.getStringSetProperties(this.state.properties);
         const stringProperties = this.getStringProperties(this.state.properties);
-        const groupField = groupDef && groupDef.field.charAt(0) === ':' ? groupDef.field.substr(1) : null;
         const actions = this.features.actions;
 
         return (
@@ -145,14 +144,14 @@ export class VideosPage extends React.Component {
                         {this.state.properties.length > 10 ? (
                             <Menu title="Group videos by property ...">{
                                 this.state.properties.map((def, index) => (
-                                    <MenuItem key={index} action={() => this.backendGroupVideos(`:${def.name}`)}>
+                                    <MenuItem key={index} action={() => this.backendGroupVideos(def.name, true)}>
                                         {def.name}
                                     </MenuItem>
                                 ))
                             }</Menu>
                         ) : (
                             this.state.properties.map((def, index) => (
-                                <MenuItem key={index} action={() => this.backendGroupVideos(`:${def.name}`)}>
+                                <MenuItem key={index} action={() => this.backendGroupVideos(def.name, true)}>
                                     Group videos by property: {def.name}
                                 </MenuItem>
                             ))
@@ -186,7 +185,7 @@ export class VideosPage extends React.Component {
                                             ))}
                                         </MenuPack>
                                         <p>
-                                            <button onClick={this.reverseClassifierPath}>reverse path</button>
+                                            <button onClick={this.classifierReversePath}>reverse path</button>
                                         </p>
                                     </div>
                                 ) : ''}
@@ -207,14 +206,12 @@ export class VideosPage extends React.Component {
                                 <GroupView
                                     key={`${groupDef.field}-${groupDef.groups.length}-${this.state.path.join('-')}`}
                                     groupDef={groupDef}
-                                    inPath={!!this.state.path.length}
+                                    isClassified={!!this.state.path.length}
                                     onSelect={this.selectGroup}
                                     onOptions={this.editPropertyValue}
                                     onPlus={
-                                        groupDef.field[0] === ':'
-                                        && this.state.definitions[groupDef.field.substr(1)].multiple
-                                            ? this.classifierSelectGroup
-                                            : null
+                                        groupDef.is_property && this.state.definitions[groupDef.field].multiple
+                                            ? this.classifierSelectGroup : null
                                     }/>
                             </Collapsable>
                         ) : ''}
@@ -448,16 +445,19 @@ export class VideosPage extends React.Component {
     }
 
     groupVideos() {
-        const group_def = this.state.groupDef || {field: null, reverse: null};
+        const groupDef = this.state.groupDef || {field: null, is_property: null, reverse: null};
         Fancybox.load(
-            <FormGroup definition={group_def} properties={this.state.properties} onClose={criterion => {
-                this.backend(['set_groups', criterion.field, criterion.sorting, criterion.reverse, criterion.allowSingletons, criterion.allowMultiple], {pageNumber: 0});
-            }}/>
+            <FormGroup groupDef={groupDef}
+                       properties={this.state.properties}
+                       propertyMap={this.state.definitions}
+                       onClose={criterion => {
+                           this.backend(['set_groups', criterion.field, criterion.isProperty, criterion.sorting, criterion.reverse, criterion.allowSingletons], {pageNumber: 0});
+                       }}/>
         )
     }
 
-    backendGroupVideos(field, sorting = "count", reverse = true, allowSingletons = true, allowMultiple = true) {
-        this.backend(['set_groups', field, sorting, reverse, allowSingletons, allowMultiple], {pageNumber: 0});
+    backendGroupVideos(field, isProperty = false, sorting = "count", reverse = true, allowSingletons = true) {
+        this.backend(['set_groups', field, isProperty, sorting, reverse, allowSingletons], {pageNumber: 0});
     }
 
     editPropertiesForManyVideos(propertyName) {
@@ -564,12 +564,6 @@ export class VideosPage extends React.Component {
         return definitions.filter(def => def.type === "str");
     }
 
-    reverseClassifierPath() {
-        python_call('classifier_reverse')
-            .then(path => this.setState({path}))
-            .catch(backend_error);
-    }
-
     /**
      * @param indicesSet {Set}
      */
@@ -577,9 +571,7 @@ export class VideosPage extends React.Component {
         const groupDef = this.state.groupDef;
         const name = groupDef.field.substr(1);
         const values = [];
-        const indices = [];
-        for (let index of indicesSet.values())
-            indices.push(index);
+        const indices = Array.from(indicesSet);
         indices.sort();
         for (let index of indices)
             values.push(groupDef.groups[index].value);
@@ -603,6 +595,12 @@ export class VideosPage extends React.Component {
         )
     }
 
+    classifierReversePath() {
+        python_call('classifier_reverse')
+            .then(path => this.setState({path}))
+            .catch(backend_error);
+    }
+
     classifierSelectGroup(index) {
         this.backend(['classifier_select_group', index], {pageNumber: 0});
     }
@@ -616,7 +614,7 @@ export class VideosPage extends React.Component {
     }
 
     focusPropertyValue(propertyName, propertyValue) {
-        python_call('set_groups', `:${propertyName}`, "count", true, true, true)
+        python_call('set_groups', propertyName, true, "count", true, true)
             .then(() => this.backend(['classifier_select_group_by_value', propertyValue], {pageNumber: 0}))
             .catch(backend_error);
     }

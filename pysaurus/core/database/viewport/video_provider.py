@@ -58,18 +58,19 @@ class VideoProvider:
 
     def set_groups(
         self,
+        *,
         field: Optional[str],
+        is_property: Optional[bool] = None,
         sorting: Optional[str] = None,
         reverse: Optional[bool] = None,
         allow_singletons: Optional[bool] = None,
-        allow_multiple: Optional[bool] = None,
     ):
         self.grouping_layer.set_grouping(
             field=field,
+            is_property=is_property,
             sorting=sorting,
             reverse=reverse,
             allow_singletons=allow_singletons,
-            allow_multiple=allow_multiple,
         )
         self.classifier_layer.reset_parameters()
         self.group_layer.set_group_id(0)
@@ -125,20 +126,28 @@ class VideoProvider:
         self.database.notifier.set_manager(
             notifications.FieldsModified, self.on_fields_modified
         )
+        self.database.notifier.set_manager(
+            notifications.PropertiesModified, self.on_properties_modified
+        )
 
     def on_video_deleted(self, notification: notifications.VideoDeleted):
         self.source_layer.delete_video(notification.video)
         self.view = self.source_layer.run()
 
     def on_fields_modified(self, notification: notifications.FieldsModified):
-        self.on_properties_modified(notification.fields)
+        self.manage_properties_modified(notification.fields, False)
 
-    def on_properties_modified(self, properties: Sequence[str]):
+    def on_properties_modified(self, notification: notifications.PropertiesModified):
+        self.manage_properties_modified(notification.fields, True)
+
+    def manage_properties_modified(self, properties: Sequence[str], is_property=True):
         self.source_layer.update_index()
-        gdef = self.grouping_layer.get_grouping()
-        if gdef:
-            field = gdef.field[1:] if gdef.field[0] == ":" else gdef.field
-            if field in properties:
-                self.grouping_layer.request_update()
-                self.view = self.source_layer.run()
-                return True
+        group_def = self.grouping_layer.get_grouping()
+        if (
+            group_def
+            and group_def.is_property is is_property
+            and group_def.field in properties
+        ):
+            self.grouping_layer.request_update()
+            self.view = self.source_layer.run()
+            return True

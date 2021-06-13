@@ -208,3 +208,7 @@ class FieldsModified(Notification):
     def __init__(self, properties: Iterable[str]):
         super().__init__()
         self.fields = set(properties)
+
+
+class PropertiesModified(FieldsModified):
+    __slots__ = ()

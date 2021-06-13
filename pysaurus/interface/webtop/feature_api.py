@@ -75,8 +75,16 @@ class FeatureAPI:
     def set_sources(self, paths):
         self.provider.set_source(paths)
 
-    def set_groups(self, field, sorting=None, reverse=None, one=None, many=None):
-        self.provider.set_groups(field, sorting, reverse, one, many)
+    def set_groups(
+        self, field, is_property=None, sorting=None, reverse=None, allow_singletons=None
+    ):
+        self.provider.set_groups(
+            field=field,
+            is_property=is_property,
+            sorting=sorting,
+            reverse=reverse,
+            allow_singletons=allow_singletons,
+        )
 
     def set_group(self, group_id):
         self.provider.set_group(group_id)
@@ -89,13 +97,13 @@ class FeatureAPI:
 
     def classifier_select_group(self, group_id):
         print("classifier select group", group_id)
-        prop_name = self.provider.grouping_layer.get_grouping().field[1:]
+        prop_name = self.provider.grouping_layer.get_grouping().field
         path = self.provider.classifier_layer.get_path()
         value = self.provider.classifier_layer.get_group_value(group_id)
         new_path = path + [value]
         self.provider.classifier_layer.set_path(new_path)
         self.provider.group_layer.set_group_id(0)
-        self.provider.on_properties_modified([prop_name])
+        self.provider.manage_properties_modified([prop_name])
 
     def classifier_select_group_by_value(self, field_value):
         print("classifier select group by value", field_value)
@@ -106,11 +114,11 @@ class FeatureAPI:
 
     def classifier_back(self):
         print("classifier back")
-        prop_name = self.provider.grouping_layer.get_grouping().field[1:]
+        prop_name = self.provider.grouping_layer.get_grouping().field
         path = self.provider.classifier_layer.get_path()
         self.provider.classifier_layer.set_path(path[:-1])
         self.provider.group_layer.set_group_id(0)
-        self.provider.on_properties_modified([prop_name])
+        self.provider.manage_properties_modified([prop_name])
 
     def classifier_reverse(self):
         path = list(reversed(self.provider.classifier_layer.get_path()))
@@ -215,9 +223,9 @@ class FeatureAPI:
 
     def classifier_concatenate_path(self, to_property):
         path = self.provider.classifier_layer.get_path()
-        from_property = self.provider.grouping_layer.get_grouping().field[1:]
-        if self.database.move_concatenated_prop_val(
+        from_property = self.provider.grouping_layer.get_grouping().field
+        self.provider.classifier_layer.set_path([])
+        self.provider.group_layer.set_group_id(0)
+        self.database.move_concatenated_prop_val(
             self.provider.get_all_videos(), path, from_property, to_property
-        ):
-            self.provider.classifier_layer.set_path([])
-            self.provider.group_layer.set_group_id(0)
+        )

@@ -1,4 +1,4 @@
-import {SORTED_FIELDS_AND_TITLES} from "../utils/constants.js";
+import {FIELD_MAP} from "../utils/constants.js";
 import {FancyBox} from "../dialogs/FancyBox.js";
 
 export class FormSort extends React.Component {
@@ -44,9 +44,9 @@ export class FormSort extends React.Component {
                 <p key={index} className="sorting">
                     <button className="button-remove-sort" onClick={() => this.removeCriterion(index)}>-</button>
                     <select value={field} onChange={(event) => this.setField(index, event.target.value)}>
-                        {SORTED_FIELDS_AND_TITLES.map(
+                        {FIELD_MAP.list.map(
                             (entry, fieldIndex) => (
-                                <option key={fieldIndex} value={entry[0]}>{entry[1]}</option>
+                                <option key={fieldIndex} value={entry.name}>{entry.title}</option>
                             ))}
                     </select>
                     <input type="checkbox"

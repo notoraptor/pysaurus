@@ -171,4 +171,4 @@ class VideoState:
 
     @classmethod
     def is_flag(cls, name):
-        return not name.startswith("_") and isinstance(getattr(cls, name), classflag)
+        return isinstance(getattr(cls, name), classflag)

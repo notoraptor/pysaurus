@@ -783,7 +783,7 @@ Make sure any video has at most 1 value for this property before making it uniqu
     def set_video_properties(self, video: Video, properties):
         modified = video.set_properties(properties)
         self.__save()
-        self.__notifier.notify(notifications.FieldsModified(modified))
+        self.__notifier.notify(notifications.PropertiesModified(modified))
         return modified
 
     def refresh(self, ensure_miniatures=False):
@@ -820,7 +820,7 @@ Make sure any video has at most 1 value for this property before making it uniqu
                     modified.append(video)
         if modified:
             self.__save()
-            self.__notifier.notify(notifications.FieldsModified([name]))
+            self.__notifier.notify(notifications.PropertiesModified([name]))
         return modified
 
     def edit_property_value(self, videos, name, old_values, new_value):
@@ -851,7 +851,7 @@ Make sure any video has at most 1 value for this property before making it uniqu
                     modified = True
         if modified:
             self.__save()
-            self.__notifier.notify(notifications.FieldsModified([name]))
+            self.__notifier.notify(notifications.PropertiesModified([name]))
         return modified
 
     def move_property_value(self, videos, old_name, values, new_name):
@@ -871,7 +871,9 @@ Make sure any video has at most 1 value for this property before making it uniqu
                 video.properties[new_name] = value
         if videos:
             self.__save()
-            self.__notifier.notify(notifications.FieldsModified([old_name, new_name]))
+            self.__notifier.notify(
+                notifications.PropertiesModified([old_name, new_name])
+            )
         return videos
 
     def edit_property_for_videos(
@@ -907,7 +909,7 @@ Make sure any video has at most 1 value for this property before making it uniqu
                 if values_to_add:
                     video.properties[prop_type.name] = values_to_add[0]
         self.__save()
-        self.__notifier.notify(notifications.FieldsModified([name]))
+        self.__notifier.notify(notifications.PropertiesModified([name]))
 
     def count_property_values(self, name, video_indices):
         # type: (str, List[int]) -> Dict[object, int]
@@ -938,7 +940,7 @@ Make sure any video has at most 1 value for this property before making it uniqu
             values.update(video.properties.get(prop_name, ()))
             video.properties[prop_name] = prop_type(values)
         self.__save()
-        self.__notifier.notify(notifications.FieldsModified([prop_name]))
+        self.__notifier.notify(notifications.PropertiesModified([prop_name]))
 
     def move_concatenated_prop_val(self, videos, path, from_property, to_property):
         # type: (Iterable[Video], List, str, str) -> int
@@ -973,7 +975,7 @@ Make sure any video has at most 1 value for this property before making it uniqu
         if modified:
             self.__save()
             self.__notifier.notify(
-                notifications.FieldsModified([from_property, to_property])
+                notifications.PropertiesModified([from_property, to_property])
             )
 
         return len(modified)

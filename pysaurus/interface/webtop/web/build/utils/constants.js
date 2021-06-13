@@ -1,7 +1,7 @@
 System.register([], function (_export, _context) {
   "use strict";
 
-  var HomeStatus, GroupPermission, FIELDS_GROUP_DEF, STRING_FIELDS, FIELD_TITLES, SORTED_FIELDS_AND_TITLES, SEARCH_TYPE_TITLE, PAGE_SIZES, VIDEO_DEFAULT_PAGE_SIZE, VIDEO_DEFAULT_PAGE_NUMBER, SOURCE_TREE, Characters;
+  var FieldInfo, FieldMap, HomeStatus, GroupPermission, FIELD_MAP, SEARCH_TYPE_TITLE, PAGE_SIZES, VIDEO_DEFAULT_PAGE_SIZE, VIDEO_DEFAULT_PAGE_NUMBER, SOURCE_TREE, Characters;
   return {
     setters: [],
     execute: function () {
@@ -13,90 +13,56 @@ System.register([], function (_export, _context) {
 
       _export("GroupPermission", GroupPermission = {
         FORBIDDEN: 0,
-        ONLY_ONE: 1,
-        ONLY_MANY: 2,
-        ALL: 3
+        ONLY_MANY: 1,
+        ALL: 2
       });
 
-      _export("FIELDS_GROUP_DEF", FIELDS_GROUP_DEF = {
-        'audio_bit_rate': GroupPermission.ALL,
-        'audio_codec': GroupPermission.ALL,
-        'audio_codec_description': GroupPermission.ALL,
-        'container_format': GroupPermission.ALL,
-        'date': GroupPermission.FORBIDDEN,
-        'day': GroupPermission.ALL,
-        'disk': GroupPermission.ALL,
-        'extension': GroupPermission.ALL,
-        'file_size': GroupPermission.ONLY_MANY,
-        'file_title': GroupPermission.ONLY_MANY,
-        'filename': GroupPermission.ONLY_MANY,
-        'frame_rate': GroupPermission.ALL,
-        'height': GroupPermission.ALL,
-        'length': GroupPermission.ONLY_MANY,
-        'properties': GroupPermission.FORBIDDEN,
-        'quality': GroupPermission.FORBIDDEN,
-        'sample_rate': GroupPermission.ALL,
-        'size': GroupPermission.ONLY_MANY,
-        'thumbnail_path': GroupPermission.FORBIDDEN,
-        'title': GroupPermission.ONLY_MANY,
-        'video_codec': GroupPermission.ALL,
-        'video_codec_description': GroupPermission.ALL,
-        'video_id': GroupPermission.FORBIDDEN,
-        'width': GroupPermission.ALL
-      });
+      FieldInfo = class FieldInfo {
+        /**
+         * @param name {string}
+         * @param title {string}
+         * @param groupPermission {number}
+         * @param isString {boolean}
+         */
+        constructor(name, title, groupPermission, isString) {
+          this.name = name;
+          this.title = title ? title : name.replace(/_/g, " ");
+          this.groupPermission = groupPermission;
+          this.isString = isString;
+        }
 
-      _export("STRING_FIELDS", STRING_FIELDS = {
-        'audio_codec': true,
-        'audio_codec_description': true,
-        'container_format': true,
-        'day': true,
-        'disk': true,
-        'extension': true,
-        'file_size': true,
-        'file_title': true,
-        'filename': true,
-        'thumbnail_path': true,
-        'title': true,
-        'video_codec': true,
-        'video_codec_description': true
-      });
+        isForbidden() {
+          return this.groupPermission === GroupPermission.FORBIDDEN;
+        }
 
-      _export("FIELD_TITLES", FIELD_TITLES = {
-        'audio_bit_rate': 'audio bit rate',
-        'audio_codec': 'audio codec',
-        'audio_codec_description': 'audio codec description',
-        'container_format': 'container format',
-        'date': 'date modified',
-        'day': 'day',
-        'disk': 'disk',
-        'extension': 'file extension',
-        'file_size': 'size (bytes)',
-        'file_title': 'file title',
-        'filename': 'file path',
-        'frame_rate': 'frame rate',
-        'height': 'height',
-        'length': 'length',
-        'properties': 'properties',
-        'quality': 'quality',
-        'sample_rate': 'sample rate',
-        'size': 'size',
-        'thumbnail_path': 'thumbnail path',
-        'title': 'title',
-        'video_codec': 'video codec',
-        'video_codec_description': 'video codec description',
-        'video_id': 'video ID',
-        'width': 'width'
-      });
+        isOnlyMany() {
+          return this.groupPermission === GroupPermission.ONLY_MANY;
+        }
 
-      _export("SORTED_FIELDS_AND_TITLES", SORTED_FIELDS_AND_TITLES = function (obj) {
-        const arr = Object.keys(obj).map(key => [key, obj[key]]);
-        arr.sort(function (t1, t2) {
-          let t = t1[1].localeCompare(t2[1]);
-          if (t === 0) t = t1[0].localeCompare(t2[0]);
-          return t;
-        });
-        return arr;
-      }(FIELD_TITLES));
+        isAll() {
+          return this.groupPermission === GroupPermission.ALL;
+        }
+
+      };
+      FieldMap = class FieldMap {
+        /**
+         * @param fieldInfoList {Array.<FieldInfo>}
+         */
+        constructor(fieldInfoList) {
+          this.list = fieldInfoList;
+          this.fields = {};
+
+          for (let fieldInfo of fieldInfoList) {
+            if (this.fields.hasOwnProperty(fieldInfo.name)) throw new Error(`Duplicated field: ${fieldInfo.name}`);
+            this.fields[fieldInfo.name] = fieldInfo;
+          }
+
+          this.list.sort((f1, f2) => f1.title.localeCompare(f2.title) || f1.name.localeCompare(f2.name));
+        }
+
+      };
+
+      _export("FIELD_MAP", FIELD_MAP = new FieldMap([new FieldInfo('audio_bit_rate', '', GroupPermission.ALL, false), new FieldInfo('audio_codec', '', GroupPermission.ALL, true), new FieldInfo('audio_codec_description', '', GroupPermission.ALL, true), new FieldInfo('container_format', '', GroupPermission.ALL, true), new FieldInfo('date', 'date modified', GroupPermission.FORBIDDEN, true), new FieldInfo('day', '', GroupPermission.ALL, true), new FieldInfo('disk', '', GroupPermission.ALL, true), new FieldInfo('extension', 'file extension', GroupPermission.ALL, true), new FieldInfo('file_size', 'file size (bytes)', GroupPermission.ONLY_MANY, true), new FieldInfo('file_title', '', GroupPermission.ONLY_MANY, true), new FieldInfo('filename', 'file path', GroupPermission.ONLY_MANY, true), new FieldInfo('frame_rate', '', GroupPermission.ALL, false), new FieldInfo('height', '', GroupPermission.ALL, false), new FieldInfo('length', '', GroupPermission.ONLY_MANY, false), new FieldInfo('properties', '', GroupPermission.FORBIDDEN, false), new FieldInfo('quality', '', GroupPermission.FORBIDDEN, false), new FieldInfo('sample_rate', '', GroupPermission.ALL, false), new FieldInfo('size', '', GroupPermission.ONLY_MANY, false), new FieldInfo('thumbnail_path', '', GroupPermission.FORBIDDEN, true), new FieldInfo('title', '', GroupPermission.ONLY_MANY, true), new FieldInfo('video_codec', '', GroupPermission.ALL, true), new FieldInfo('video_codec_description', '', GroupPermission.ALL, true), new FieldInfo('video_id', 'video ID', GroupPermission.FORBIDDEN, false), new FieldInfo('width', '', GroupPermission.ALL, false)]));
 
       _export("SEARCH_TYPE_TITLE", SEARCH_TYPE_TITLE = {
         exact: 'exactly',

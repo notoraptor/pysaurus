@@ -1,4 +1,4 @@
-import {Characters, FIELD_TITLES} from "../utils/constants.js";
+import {Characters, FIELD_MAP} from "../utils/constants.js";
 import {Pagination} from "./Pagination.js";
 import {SettingIcon} from "./SettingIcon.js";
 import {PlusIcon} from "./PlusIcon.js";
@@ -33,7 +33,7 @@ export class GroupView extends React.Component {
 
     render() {
         const selected = this.props.groupDef.group_id;
-        const isProperty = (this.props.groupDef.field.charAt(0) === ':');
+        const isProperty = this.props.groupDef.is_property;
         const start = this.state.pageSize * this.state.pageNumber;
         const end = Math.min(start + this.state.pageSize, this.props.groupDef.groups.length);
         const allChecked = this.allChecked(start, end);
@@ -50,7 +50,7 @@ export class GroupView extends React.Component {
                                     onChange={this.setPage}
                                     onSearch={this.search}/>
                     </div>
-                    {isProperty && !this.props.inPath ? (
+                    {isProperty && !this.props.isClassified ? (
                         <div className="selection line">
                             <div className="column">
                                 <input id="group-view-select-all"
@@ -77,32 +77,31 @@ export class GroupView extends React.Component {
                         index = start + index;
                         const buttons = [];
                         if (isProperty && entry.value !== null) {
-                            if (!this.props.inPath) {
+                            if (!this.props.isClassified) {
                                 buttons.push(<input type="checkbox" checked={this.state.selection.has(index)}
                                                     onChange={event => this.onCheckEntry(event, index)}/>)
                                 buttons.push(' ');
+                                if (!this.state.selection.size) {
+                                    buttons.push(<SettingIcon key="options"
+                                                              title={`Options ...`}
+                                                              action={(event) => this.openPropertyOptions(event, index)}/>);
+                                    buttons.push(' ');
+                                }
                             }
-                            if (this.props.onOptions && !this.state.selection.size && !this.props.inPath) {
-                                buttons.push(<SettingIcon key="options"
-                                                          title={`Options ...`}
-                                                          action={(event) => this.openPropertyOptions(event, index)}/>);
-                                buttons.push(' ');
-                            }
-                            if (this.props.onPlus && !this.state.selection.size) {
+                            if (!this.state.selection.size) {
                                 buttons.push(<PlusIcon key="add"
                                                        title={`Add ...`}
                                                        action={(event) => this.openPropertyPlus(event, index)}/>);
                                 buttons.push(' ');
                             }
                         }
-                        const classes = ["line"];
+                        const classes = ["line", isProperty ? "property" : "attribute"];
                         if (selected === index)
                             classes.push("selected");
-                        classes.push(isProperty ? "property" : "attribute");
                         if (entry.value === null)
                             classes.push("all");
                         return (
-                            <div className={classes.join(" ")} key={index} onClick={() => this.select(index)}>
+                            <div className={classes.join(" ")} key={index} onClick={() => this.props.onSelect(index)}>
                                 <div className="column left" {...(isProperty ? {} : {title: entry.value})}>
                                     {buttons}
                                     <span key="value" {...(isProperty ? {title: entry.value} : {})}>
@@ -120,8 +119,8 @@ export class GroupView extends React.Component {
 
     renderTitle() {
         const field = this.props.groupDef.field;
-        let title = field.charAt(0) === ':' ?
-            `"${capitalizeFirstLetter(field.substr(1))}"` : capitalizeFirstLetter(FIELD_TITLES[field]);
+        let title = this.props.groupDef.is_property ?
+            `"${capitalizeFirstLetter(field)}"` : capitalizeFirstLetter(FIELD_MAP.fields[field].title);
         if (this.props.groupDef.sorting === "length")
             title = `|| ${title} ||`;
         else if (this.props.groupDef.sorting === "count")
@@ -133,10 +132,6 @@ export class GroupView extends React.Component {
     getNbPages() {
         const count = this.props.groupDef.groups.length;
         return Math.floor(count / this.state.pageSize) + (count % this.state.pageSize ? 1 : 0);
-    }
-
-    select(value) {
-        this.props.onSelect(value);
     }
 
     openPropertyOptions(event, index) {
@@ -152,7 +147,8 @@ export class GroupView extends React.Component {
     openPropertyPlus(event, index) {
         event.cancelBubble = true;
         event.stopPropagation();
-        this.props.onPlus(index);
+        if (this.props.onPlus)
+            this.props.onPlus(index);
     }
 
     setPage(pageNumber) {
@@ -169,7 +165,7 @@ export class GroupView extends React.Component {
                 continue;
             const pageNumber = Math.floor(index / this.state.pageSize);
             if (this.state.pageNumber !== pageNumber)
-                this.setState({pageNumber: pageNumber, selection: new Set()}, () => this.select(index));
+                this.setState({pageNumber: pageNumber, selection: new Set()}, () => this.props.onSelect(index));
             return;
         }
     }
@@ -210,17 +206,18 @@ export class GroupView extends React.Component {
 
 GroupView.propTypes = {
     groupDef: PropTypes.shape({
-        group_id: PropTypes.number,
-        field: PropTypes.string,
-        sorting: PropTypes.string,
-        reverse: PropTypes.bool,
-        groups: PropTypes.arrayOf(PropTypes.shape({value: PropTypes.any, count: PropTypes.number}))
+        group_id: PropTypes.number.isRequired,
+        field: PropTypes.string.isRequired,
+        is_property: PropTypes.bool.isRequired,
+        sorting: PropTypes.string.isRequired,
+        reverse: PropTypes.bool.isRequired,
+        groups: PropTypes.arrayOf(PropTypes.shape({value: PropTypes.any, count: PropTypes.number})).isRequired
     }).isRequired,
-    inPath: PropTypes.bool.isRequired,
+    isClassified: PropTypes.bool.isRequired,
     // onSelect(index)
-    onSelect: PropTypes.func,
+    onSelect: PropTypes.func.isRequired,
     // onOptions(index)
-    onOptions: PropTypes.func,
+    onOptions: PropTypes.func.isRequired,
     // onPlus(index)
     onPlus: PropTypes.func,
 }

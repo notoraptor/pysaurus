@@ -100,7 +100,7 @@ def dispatch_tasks(tasks, job_count, extra_args=None):
 
 
 def permute(values, initial_permutation=()):
-    """ Generate a sequence of permutations from given values list. """
+    """Generate a sequence of permutations from given values list."""
     initial_permutation = list(initial_permutation)
     if not values:
         yield initial_permutation
@@ -209,7 +209,7 @@ def _pgcd(a, b):
 
 def pgcd(a, b):
     # type: (int, int) -> int
-    """ "Plus grand commun diviseur" (Greatest Common Divider) """
+    """ "Plus grand commun diviseur" (Greatest Common Divider)"""
     if a < 0:
         a = -a
     if b < 0:
@@ -393,3 +393,7 @@ def deep_equals(value, other):
             key in other and deep_equals(value[key], other[key]) for key in value
         )
     return value == other
+
+
+def get_default(value, default):
+    return default if value is None else value

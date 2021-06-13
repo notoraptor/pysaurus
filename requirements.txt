@@ -5,3 +5,4 @@ Pillow==8.2.0
 pyperclip==1.8.2
 pywebview==3.4
 ujson==4.0.2
+black==21.6b0
