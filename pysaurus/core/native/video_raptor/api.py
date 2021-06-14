@@ -8,7 +8,8 @@ from pysaurus.core.native.video_raptor import symbols
 
 if System.is_linux():
     # Trying to prevent this warning on Ubuntu:
-    # Failed to open VDPAU backend libvdpau_.so: cannot open shared object file: No such file or directory
+    # Failed to open VDPAU backend libvdpau_.so:
+    # cannot open shared object file: No such file or directory
     os.environ["VDPAU_DRIVER"] = "va_gl"
 
 

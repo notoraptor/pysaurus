@@ -94,7 +94,7 @@ export class Video extends React.Component {
                         </div>
                         <div>
                             <strong>{data.width}</strong> x <strong>{data.height}</strong> @{" "}
-                            {data.frame_rate} fps | {data.sample_rate} Hz,{" "}
+                            {data.frame_rate} fps, {data.bit_depth} bits | {data.sample_rate} Hz,{" "}
                             <span title={data.audio_bit_rate}>{audio_bit_rate} Kb/s</span> |{" "}
                             <strong>{data.length}</strong> | <code>{data.date}</code>
                         </div>

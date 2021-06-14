@@ -300,6 +300,7 @@ class Database:
         cpu_count = os.cpu_count()
         current_date = DateModified.now()
         all_file_names = self.get_new_video_paths()
+        # all_file_names = sorted(self.__set_videos_states_flags())
 
         self.__notifier.notify(notifications.VideosToLoad(len(all_file_names)))
         if not all_file_names:

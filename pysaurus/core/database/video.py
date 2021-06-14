@@ -36,6 +36,7 @@ class Video(VideoState):
         "audio_bit_rate",
         "audio_codec",
         "audio_codec_description",
+        "bit_depth",
         "channels",
         "container_format",
         "device_name",  # private field
@@ -56,6 +57,7 @@ class Video(VideoState):
     MIN_TO_LONG = {
         "A": "audio_codec_description",
         "C": "channels",
+        "D": "bit_depth",
         "V": "video_codec_description",
         "a": "audio_codec",
         "b": "device_name",
@@ -75,6 +77,7 @@ class Video(VideoState):
     }
 
     LONG_TO_MIN = {_long: _min for _min, _long in MIN_TO_LONG.items()}
+    assert len(LONG_TO_MIN) == len(MIN_TO_LONG)
 
     QUALITY_FIELDS = (
         ("quality_compression", 6),
@@ -100,6 +103,7 @@ class Video(VideoState):
         audio_bit_rate=0,
         audio_codec="",
         audio_codec_description="",
+        bit_depth=0,
         channels=2,
         container_format="",
         device_name="",
@@ -126,6 +130,7 @@ class Video(VideoState):
         :type audio_bit_rate: int
         :type audio_codec: str
         :type audio_codec_description: str
+        :type bit_depth: int
         :type channels: int
         :type container_format: str
         :type device_name: str
@@ -152,6 +157,7 @@ class Video(VideoState):
             audio_codec_description = from_dictionary.get(
                 self.LONG_TO_MIN["audio_codec_description"], audio_codec_description
             )
+            bit_depth = from_dictionary.get(self.LONG_TO_MIN["bit_depth"], bit_depth)
             channels = from_dictionary.get(self.LONG_TO_MIN["channels"], channels)
             container_format = from_dictionary.get(
                 self.LONG_TO_MIN["container_format"], container_format
@@ -194,6 +200,7 @@ class Video(VideoState):
         self.audio_bit_rate = audio_bit_rate
         self.audio_codec = Text(audio_codec)
         self.audio_codec_description = Text(audio_codec_description)
+        self.bit_depth = bit_depth
         self.channels = channels
         self.container_format = Text(container_format)
         self.device_name = Text(device_name)

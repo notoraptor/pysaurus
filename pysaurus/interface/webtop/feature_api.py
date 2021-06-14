@@ -7,6 +7,7 @@ from pysaurus.core.database.video_features import VideoFeatures
 from pysaurus.core.database.viewport.layers.source_layer import SourceLayer
 from pysaurus.core.database.viewport.video_provider import VideoProvider
 from pysaurus.core.functions import compute_nb_pages
+from pysaurus.core.database import notifications
 
 
 class FeatureAPI:
@@ -103,7 +104,7 @@ class FeatureAPI:
         new_path = path + [value]
         self.provider.classifier_layer.set_path(new_path)
         self.provider.group_layer.set_group_id(0)
-        self.provider.manage_properties_modified([prop_name])
+        self.database.notifier.notify(notifications.PropertiesModified([prop_name]))
 
     def classifier_select_group_by_value(self, field_value):
         print("classifier select group by value", field_value)
@@ -118,7 +119,7 @@ class FeatureAPI:
         path = self.provider.classifier_layer.get_path()
         self.provider.classifier_layer.set_path(path[:-1])
         self.provider.group_layer.set_group_id(0)
-        self.provider.manage_properties_modified([prop_name])
+        self.database.notifier.notify(notifications.PropertiesModified([prop_name]))
 
     def classifier_reverse(self):
         path = list(reversed(self.provider.classifier_layer.get_path()))

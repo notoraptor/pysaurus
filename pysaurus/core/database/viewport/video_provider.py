@@ -17,6 +17,7 @@ from pysaurus.core.database.viewport.layers.search_layer import SearchLayer
 from pysaurus.core.database.viewport.layers.sort_layer import SortLayer
 from pysaurus.core.database.viewport.layers.source_layer import SourceLayer
 from pysaurus.core.database.viewport.viewtools.video_array import VideoArray
+from pysaurus.core.database.viewport.viewtools.group_def import GroupDef
 
 
 class VideoProvider:
@@ -51,22 +52,8 @@ class VideoProvider:
     def set_source(self, paths: Sequence[Sequence[str]]):
         self.source_layer.set_sources(paths)
 
-    def set_groups(
-        self,
-        *,
-        field: Optional[str],
-        is_property: Optional[bool] = None,
-        sorting: Optional[str] = None,
-        reverse: Optional[bool] = None,
-        allow_singletons: Optional[bool] = None,
-    ):
-        self.grouping_layer.set_grouping(
-            field=field,
-            is_property=is_property,
-            sorting=sorting,
-            reverse=reverse,
-            allow_singletons=allow_singletons,
-        )
+    def set_groups(self, **group_def_args):
+        self.grouping_layer.set_grouping(**GroupDef.get_args_from(group_def_args))
         self.classifier_layer.reset_parameters()
         self.group_layer.set_group_id(0)
         self.search_layer.reset_parameters()
@@ -127,12 +114,12 @@ class VideoProvider:
         self.source_layer.delete_video(notification.video)
 
     def on_fields_modified(self, notification: notifications.FieldsModified):
-        self.manage_properties_modified(notification.fields, False)
+        self._manage_attributes_modified(notification.fields, False)
 
     def on_properties_modified(self, notification: notifications.PropertiesModified):
-        self.manage_properties_modified(notification.fields, True)
+        self._manage_attributes_modified(notification.fields, True)
 
-    def manage_properties_modified(self, properties: Sequence[str], is_property=True):
+    def _manage_attributes_modified(self, properties: Sequence[str], is_property=True):
         self.source_layer.update_index()
         group_def = self.grouping_layer.get_grouping()
         if (

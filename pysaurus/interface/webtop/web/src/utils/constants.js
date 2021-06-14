@@ -60,6 +60,7 @@ export const FIELD_MAP = new FieldMap([
     new FieldInfo('audio_bit_rate', '', GroupPermission.ALL, false),
     new FieldInfo('audio_codec', '', GroupPermission.ALL, true),
     new FieldInfo('audio_codec_description', '', GroupPermission.ALL, true),
+    new FieldInfo('bit_depth', '', GroupPermission.ALL, false),
     new FieldInfo('container_format', '', GroupPermission.ALL, true),
     new FieldInfo('date', 'date modified', GroupPermission.FORBIDDEN, true),
     new FieldInfo('day', '', GroupPermission.ALL, true),

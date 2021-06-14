@@ -97,6 +97,10 @@ class ToDict:
             chain.from_iterable(getattr(typ, "__slots__", ()) for typ in cls.__mro__)
         )
 
+    @classmethod
+    def get_args_from(cls, dictionary: dict):
+        return {field: dictionary[field] for field in cls.get_slots()}
+
     def to_dict(self, **extra):
         dct = {field: getattr(self, field) for field in self.get_slots()}
         dct.update(extra)
