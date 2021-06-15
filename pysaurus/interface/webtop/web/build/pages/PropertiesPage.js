@@ -1,7 +1,7 @@
-System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../components/Cell.js", "../forms/FormRenameProperty.js", "../utils/backend.js", "../utils/functions.js"], function (_export, _context) {
+System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../components/Cell.js", "../forms/FormPropertyRename.js", "../utils/backend.js", "../utils/functions.js"], function (_export, _context) {
   "use strict";
 
-  var ComponentController, SetInput, Dialog, Cell, FormRenameProperty, backend_error, python_call, parsePropValString, PropertiesPage, DEFAULT_VALUES;
+  var ComponentController, SetInput, Dialog, Cell, FormPropertyRename, backend_error, python_call, parsePropValString, PropertiesPage, DEFAULT_VALUES;
 
   function getDefaultValue(propType) {
     return DEFAULT_VALUES[propType].toString();
@@ -17,8 +17,8 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
       Dialog = _dialogsDialogJs.Dialog;
     }, function (_componentsCellJs) {
       Cell = _componentsCellJs.Cell;
-    }, function (_formsFormRenamePropertyJs) {
-      FormRenameProperty = _formsFormRenamePropertyJs.FormRenameProperty;
+    }, function (_formsFormPropertyRenameJs) {
+      FormPropertyRename = _formsFormPropertyRenameJs.FormPropertyRename;
     }, function (_utilsBackendJs) {
       backend_error = _utilsBackendJs.backend_error;
       python_call = _utilsBackendJs.python_call;
@@ -347,7 +347,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
         }
 
         renameProperty(name) {
-          Fancybox.load( /*#__PURE__*/React.createElement(FormRenameProperty, {
+          Fancybox.load( /*#__PURE__*/React.createElement(FormPropertyRename, {
             title: name,
             onClose: newName => {
               python_call('rename_property', name, newName).then(definitions => {

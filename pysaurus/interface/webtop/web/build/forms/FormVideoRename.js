@@ -1,16 +1,16 @@
 System.register(["../dialogs/Dialog.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, FormRenameVideo;
+  var Dialog, FormVideoRename;
 
-  _export("FormRenameVideo", void 0);
+  _export("FormVideoRename", void 0);
 
   return {
     setters: [function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
     }],
     execute: function () {
-      _export("FormRenameVideo", FormRenameVideo = class FormRenameVideo extends React.Component {
+      _export("FormVideoRename", FormVideoRename = class FormVideoRename extends React.Component {
         constructor(props) {
           // filename: str
           // title: str

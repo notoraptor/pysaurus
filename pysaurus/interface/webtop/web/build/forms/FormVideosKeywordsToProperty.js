@@ -1,9 +1,9 @@
 System.register(["../dialogs/Dialog.js", "../components/Cell.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, Cell, FormFillKeywords;
+  var Dialog, Cell, FormVideosKeywordsToProperty;
 
-  _export("FormFillKeywords", void 0);
+  _export("FormVideosKeywordsToProperty", void 0);
 
   return {
     setters: [function (_dialogsDialogJs) {
@@ -12,7 +12,7 @@ System.register(["../dialogs/Dialog.js", "../components/Cell.js"], function (_ex
       Cell = _componentsCellJs.Cell;
     }],
     execute: function () {
-      _export("FormFillKeywords", FormFillKeywords = class FormFillKeywords extends React.Component {
+      _export("FormVideosKeywordsToProperty", FormVideosKeywordsToProperty = class FormVideosKeywordsToProperty extends React.Component {
         constructor(props) {
           // properties: PropertyDefinition[]
           // onClose(name)

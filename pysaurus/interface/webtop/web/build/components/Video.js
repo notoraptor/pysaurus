@@ -1,19 +1,19 @@
-System.register(["./MenuPack.js", "../forms/FormRenameVideo.js", "../dialogs/Dialog.js", "../forms/FormSetProperties.js", "./Collapsable.js", "./MenuItem.js", "../utils/backend.js", "../utils/constants.js"], function (_export, _context) {
+System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dialog.js", "../forms/FormVideoProperties.js", "./Collapsable.js", "./MenuItem.js", "../utils/backend.js", "../utils/constants.js"], function (_export, _context) {
   "use strict";
 
-  var MenuPack, FormRenameVideo, Dialog, FormSetProperties, Collapsable, MenuItem, backend_error, python_call, Characters, Video;
+  var MenuPack, FormVideoRename, Dialog, FormVideoProperties, Collapsable, MenuItem, backend_error, python_call, Characters, Video;
 
   _export("Video", void 0);
 
   return {
     setters: [function (_MenuPackJs) {
       MenuPack = _MenuPackJs.MenuPack;
-    }, function (_formsFormRenameVideoJs) {
-      FormRenameVideo = _formsFormRenameVideoJs.FormRenameVideo;
+    }, function (_formsFormVideoRenameJs) {
+      FormVideoRename = _formsFormVideoRenameJs.FormVideoRename;
     }, function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
-    }, function (_formsFormSetPropertiesJs) {
-      FormSetProperties = _formsFormSetPropertiesJs.FormSetProperties;
+    }, function (_formsFormVideoPropertiesJs) {
+      FormVideoProperties = _formsFormVideoPropertiesJs.FormVideoProperties;
     }, function (_CollapsableJs) {
       Collapsable = _CollapsableJs.Collapsable;
     }, function (_MenuItemJs) {
@@ -162,7 +162,7 @@ System.register(["./MenuPack.js", "../forms/FormRenameVideo.js", "../dialogs/Dia
 
         editProperties() {
           const data = this.props.data;
-          Fancybox.load( /*#__PURE__*/React.createElement(FormSetProperties, {
+          Fancybox.load( /*#__PURE__*/React.createElement(FormVideoProperties, {
             data: data,
             definitions: this.props.propDefs,
             onClose: properties => {
@@ -218,7 +218,7 @@ System.register(["./MenuPack.js", "../forms/FormRenameVideo.js", "../dialogs/Dia
         renameVideo() {
           const filename = this.props.data.filename;
           const title = this.props.data.file_title;
-          Fancybox.load( /*#__PURE__*/React.createElement(FormRenameVideo, {
+          Fancybox.load( /*#__PURE__*/React.createElement(FormVideoRename, {
             filename: filename,
             title: title,
             onClose: newTitle => {

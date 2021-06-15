@@ -1,7 +1,7 @@
 import {Dialog} from "../dialogs/Dialog.js";
 import {Cell} from "../components/Cell.js";
 
-export class FormGoToPage extends React.Component {
+export class FormPaginationGoTo extends React.Component {
     constructor(props) {
         // nbPages
         // pageNumber

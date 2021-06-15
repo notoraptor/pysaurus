@@ -2,7 +2,7 @@ import {Dialog} from "../dialogs/Dialog.js";
 import {parsePropValString} from "../utils/functions.js";
 import {Characters} from "../utils/constants.js";
 
-export class FormPropertyMultiVideo extends React.Component {
+export class FormSelectedVideosProperty extends React.Component {
     constructor(props) {
         // nbVideos
         // definition: property definition

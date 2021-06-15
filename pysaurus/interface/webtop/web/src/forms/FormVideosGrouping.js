@@ -1,7 +1,7 @@
 import {FIELD_MAP} from "../utils/constants.js";
 import {Dialog} from "../dialogs/Dialog.js";
 
-export class FormGroup extends React.Component {
+export class FormVideosGrouping extends React.Component {
     constructor(props) {
         // groupDef: GroupDef
         // properties: [PropDef]

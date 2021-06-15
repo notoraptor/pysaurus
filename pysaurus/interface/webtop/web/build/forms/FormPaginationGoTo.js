@@ -1,9 +1,9 @@
 System.register(["../dialogs/Dialog.js", "../components/Cell.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, Cell, FormGoToPage;
+  var Dialog, Cell, FormPaginationGoTo;
 
-  _export("FormGoToPage", void 0);
+  _export("FormPaginationGoTo", void 0);
 
   return {
     setters: [function (_dialogsDialogJs) {
@@ -12,7 +12,7 @@ System.register(["../dialogs/Dialog.js", "../components/Cell.js"], function (_ex
       Cell = _componentsCellJs.Cell;
     }],
     execute: function () {
-      _export("FormGoToPage", FormGoToPage = class FormGoToPage extends React.Component {
+      _export("FormPaginationGoTo", FormPaginationGoTo = class FormPaginationGoTo extends React.Component {
         constructor(props) {
           // nbPages
           // pageNumber

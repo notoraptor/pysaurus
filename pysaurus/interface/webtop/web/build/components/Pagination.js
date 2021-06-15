@@ -1,13 +1,13 @@
-System.register(["../forms/FormGoToPage.js", "../dialogs/DialogSearch.js", "../utils/functions.js"], function (_export, _context) {
+System.register(["../forms/FormPaginationGoTo.js", "../dialogs/DialogSearch.js", "../utils/functions.js"], function (_export, _context) {
   "use strict";
 
-  var FormGoToPage, DialogSearch, capitalizeFirstLetter, Pagination;
+  var FormPaginationGoTo, DialogSearch, capitalizeFirstLetter, Pagination;
 
   _export("Pagination", void 0);
 
   return {
-    setters: [function (_formsFormGoToPageJs) {
-      FormGoToPage = _formsFormGoToPageJs.FormGoToPage;
+    setters: [function (_formsFormPaginationGoToJs) {
+      FormPaginationGoTo = _formsFormPaginationGoToJs.FormPaginationGoTo;
     }, function (_dialogsDialogSearchJs) {
       DialogSearch = _dialogsDialogSearchJs.DialogSearch;
     }, function (_utilsFunctionsJs) {
@@ -90,7 +90,7 @@ System.register(["../forms/FormGoToPage.js", "../dialogs/DialogSearch.js", "../u
         }
 
         go() {
-          Fancybox.load( /*#__PURE__*/React.createElement(FormGoToPage, {
+          Fancybox.load( /*#__PURE__*/React.createElement(FormPaginationGoTo, {
             nbPages: this.props.nbPages,
             pageNumber: this.props.pageNumber,
             onClose: pageNumber => {

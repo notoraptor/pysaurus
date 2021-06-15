@@ -1,9 +1,9 @@
 System.register(["../utils/constants.js", "../dialogs/FancyBox.js"], function (_export, _context) {
   "use strict";
 
-  var FIELD_MAP, FancyBox, FormSort;
+  var FIELD_MAP, FancyBox, FormVideosSort;
 
-  _export("FormSort", void 0);
+  _export("FormVideosSort", void 0);
 
   return {
     setters: [function (_utilsConstantsJs) {
@@ -12,7 +12,7 @@ System.register(["../utils/constants.js", "../dialogs/FancyBox.js"], function (_
       FancyBox = _dialogsFancyBoxJs.FancyBox;
     }],
     execute: function () {
-      _export("FormSort", FormSort = class FormSort extends React.Component {
+      _export("FormVideosSort", FormVideosSort = class FormVideosSort extends React.Component {
         constructor(props) {
           // sorting
           // onClose(sorting)

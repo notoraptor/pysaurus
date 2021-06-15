@@ -1,7 +1,7 @@
 import {Dialog} from "../dialogs/Dialog.js";
 import {Cell} from "../components/Cell.js";
 
-export class FormFillKeywords extends React.Component {
+export class FormVideosKeywordsToProperty extends React.Component {
     constructor(props) {
         // properties: PropertyDefinition[]
         // onClose(name)

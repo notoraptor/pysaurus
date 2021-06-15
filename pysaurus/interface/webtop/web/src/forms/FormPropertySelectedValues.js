@@ -1,7 +1,7 @@
 import {Dialog} from "../dialogs/Dialog.js";
 import {parsePropValString} from "../utils/functions.js";
 
-export class FormEditPropertyValue extends React.Component {
+export class FormPropertySelectedValues extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -182,7 +182,7 @@ export class FormEditPropertyValue extends React.Component {
     }
 }
 
-FormEditPropertyValue.propTypes = {
+FormPropertySelectedValues.propTypes = {
     properties: PropTypes.object.isRequired,
     name: PropTypes.string.isRequired,
     values: PropTypes.array.isRequired,

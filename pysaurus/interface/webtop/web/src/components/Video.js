@@ -1,7 +1,7 @@
 import {MenuPack} from "./MenuPack.js";
-import {FormRenameVideo} from "../forms/FormRenameVideo.js";
+import {FormVideoRename} from "../forms/FormVideoRename.js";
 import {Dialog} from "../dialogs/Dialog.js";
-import {FormSetProperties} from "../forms/FormSetProperties.js";
+import {FormVideoProperties} from "../forms/FormVideoProperties.js";
 import {Collapsable} from "./Collapsable.js";
 import {MenuItem} from "./MenuItem.js";
 import {backend_error, python_call} from "../utils/backend.js";
@@ -148,7 +148,7 @@ export class Video extends React.Component {
     editProperties() {
         const data = this.props.data;
         Fancybox.load(
-            <FormSetProperties data={data} definitions={this.props.propDefs} onClose={properties => {
+            <FormVideoProperties data={data} definitions={this.props.propDefs} onClose={properties => {
                 python_call('set_video_properties', this.props.data.video_id, properties)
                     .then(() => this.props.onInfo(`Properties updated: ${data.filename}`, true))
                     .catch(backend_error);
@@ -209,7 +209,7 @@ export class Video extends React.Component {
         const filename = this.props.data.filename;
         const title = this.props.data.file_title;
         Fancybox.load(
-            <FormRenameVideo filename={filename} title={title} onClose={newTitle => {
+            <FormVideoRename filename={filename} title={title} onClose={newTitle => {
                 python_call('rename_video', this.props.data.video_id, newTitle)
                     .then(() => this.props.onInfo(`Renamed: ${newTitle}`, true))
                     .catch(backend_error);

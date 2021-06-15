@@ -1,7 +1,7 @@
 import {ComponentController, SetInput} from "../components/SetInput.js";
 import {Dialog} from "../dialogs/Dialog.js";
 import {Cell} from "../components/Cell.js";
-import {FormRenameProperty} from "../forms/FormRenameProperty.js";
+import {FormPropertyRename} from "../forms/FormPropertyRename.js";
 import {backend_error, python_call} from "../utils/backend.js";
 import {parsePropValString} from "../utils/functions.js";
 
@@ -329,7 +329,7 @@ export class PropertiesPage extends React.Component {
 
     renameProperty(name) {
         Fancybox.load(
-            <FormRenameProperty title={name} onClose={newName => {
+            <FormPropertyRename title={name} onClose={newName => {
                 python_call('rename_property', name, newName)
                     .then(definitions => {
                         const state = this.getDefaultInputState();

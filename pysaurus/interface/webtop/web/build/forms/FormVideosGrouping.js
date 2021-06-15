@@ -1,9 +1,9 @@
 System.register(["../utils/constants.js", "../dialogs/Dialog.js"], function (_export, _context) {
   "use strict";
 
-  var FIELD_MAP, Dialog, FormGroup;
+  var FIELD_MAP, Dialog, FormVideosGrouping;
 
-  _export("FormGroup", void 0);
+  _export("FormVideosGrouping", void 0);
 
   return {
     setters: [function (_utilsConstantsJs) {
@@ -12,7 +12,7 @@ System.register(["../utils/constants.js", "../dialogs/Dialog.js"], function (_ex
       Dialog = _dialogsDialogJs.Dialog;
     }],
     execute: function () {
-      _export("FormGroup", FormGroup = class FormGroup extends React.Component {
+      _export("FormVideosGrouping", FormVideosGrouping = class FormVideosGrouping extends React.Component {
         constructor(props) {
           // groupDef: GroupDef
           // properties: [PropDef]

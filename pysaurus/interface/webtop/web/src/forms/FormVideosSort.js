@@ -1,7 +1,7 @@
 import {FIELD_MAP} from "../utils/constants.js";
 import {FancyBox} from "../dialogs/FancyBox.js";
 
-export class FormSort extends React.Component {
+export class FormVideosSort extends React.Component {
     constructor(props) {
         // sorting
         // onClose(sorting)

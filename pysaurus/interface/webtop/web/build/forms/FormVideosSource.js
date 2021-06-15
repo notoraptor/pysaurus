@@ -1,7 +1,7 @@
 System.register(["../dialogs/FancyBox.js"], function (_export, _context) {
   "use strict";
 
-  var FancyBox, FormSourceVideo;
+  var FancyBox, FormVideosSource;
 
   function getSubTree(tree, entryName) {
     const steps = entryName.split('-');
@@ -52,14 +52,14 @@ System.register(["../dialogs/FancyBox.js"], function (_export, _context) {
     return newPaths;
   }
 
-  _export("FormSourceVideo", void 0);
+  _export("FormVideosSource", void 0);
 
   return {
     setters: [function (_dialogsFancyBoxJs) {
       FancyBox = _dialogsFancyBoxJs.FancyBox;
     }],
     execute: function () {
-      _export("FormSourceVideo", FormSourceVideo = class FormSourceVideo extends React.Component {
+      _export("FormVideosSource", FormVideosSource = class FormVideosSource extends React.Component {
         constructor(props) {
           // tree
           // sources

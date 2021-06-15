@@ -2,14 +2,14 @@ import {PAGE_SIZES, SEARCH_TYPE_TITLE, SOURCE_TREE} from "../utils/constants.js"
 import {MenuPack} from "../components/MenuPack.js";
 import {Pagination} from "../components/Pagination.js";
 import {Video} from "../components/Video.js";
-import {FormSourceVideo} from "../forms/FormSourceVideo.js";
-import {FormGroup} from "../forms/FormGroup.js";
-import {FormSearch} from "../forms/FormSearch.js";
-import {FormSort} from "../forms/FormSort.js";
+import {FormVideosSource} from "../forms/FormVideosSource.js";
+import {FormVideosGrouping} from "../forms/FormVideosGrouping.js";
+import {FormVideosSearch} from "../forms/FormVideosSearch.js";
+import {FormVideosSort} from "../forms/FormVideosSort.js";
 import {GroupView} from "../components/GroupView.js";
-import {FormEditPropertyValue} from "../forms/FormEditPropertyValue.js";
-import {FormFillKeywords} from "../forms/FormFillKeywords.js";
-import {FormPropertyMultiVideo} from "../forms/FormPropertyMultiVideo.js";
+import {FormPropertySelectedValues} from "../forms/FormPropertySelectedValues.js";
+import {FormVideosKeywordsToProperty} from "../forms/FormVideosKeywordsToProperty.js";
+import {FormSelectedVideosProperty} from "../forms/FormSelectedVideosProperty.js";
 import {Collapsable} from "../components/Collapsable.js";
 import {Cross} from "../components/Cross.js";
 import {MenuItem} from "../components/MenuItem.js";
@@ -438,7 +438,7 @@ export class VideosPage extends React.Component {
 
     selectVideos() {
         Fancybox.load(
-            <FormSourceVideo tree={SOURCE_TREE} sources={this.state.sources} onClose={sources => {
+            <FormVideosSource tree={SOURCE_TREE} sources={this.state.sources} onClose={sources => {
                 this.backend(['set_sources', sources], {pageNumber: 0});
             }}/>
         )
@@ -447,10 +447,10 @@ export class VideosPage extends React.Component {
     groupVideos() {
         const groupDef = this.state.groupDef || {field: null, is_property: null, reverse: null};
         Fancybox.load(
-            <FormGroup groupDef={groupDef}
-                       properties={this.state.properties}
-                       propertyMap={this.state.definitions}
-                       onClose={criterion => {
+            <FormVideosGrouping groupDef={groupDef}
+                                properties={this.state.properties}
+                                propertyMap={this.state.definitions}
+                                onClose={criterion => {
                            this.backend(['set_groups', criterion.field, criterion.isProperty, criterion.sorting, criterion.reverse, criterion.allowSingletons], {pageNumber: 0});
                        }}/>
         )
@@ -464,10 +464,10 @@ export class VideosPage extends React.Component {
         const selectionSize = this.state.selector.size(this.state.realNbVideos);
         python_call('count_prop_values', propertyName, this.state.selector.toJSON())
             .then(valuesAndCounts => Fancybox.load(
-                <FormPropertyMultiVideo nbVideos={selectionSize}
-                                        definition={this.state.definitions[propertyName]}
-                                        values={valuesAndCounts}
-                                        onClose={edition => {
+                <FormSelectedVideosProperty nbVideos={selectionSize}
+                                            definition={this.state.definitions[propertyName]}
+                                            values={valuesAndCounts}
+                                            onClose={edition => {
                                             python_call('edit_property_for_videos', propertyName, videos, edition.add, edition.remove)
                                                 .then(() => this.backend(null, {status: `Edited property "${propertyName}" for ${selectionSize} video${selectionSize < 2 ? '' : 's'}`}))
                                                 .catch(backend_error);
@@ -480,7 +480,7 @@ export class VideosPage extends React.Component {
     searchVideos() {
         const search_def = this.state.searchDef || {text: null, cond: null};
         Fancybox.load(
-            <FormSearch text={search_def.text} cond={search_def.cond} onClose={criterion => {
+            <FormVideosSearch text={search_def.text} cond={search_def.cond} onClose={criterion => {
                 this.backend(['set_search', criterion.text, criterion.cond], {pageNumber: 0});
             }}/>
         )
@@ -488,7 +488,7 @@ export class VideosPage extends React.Component {
 
     sortVideos() {
         Fancybox.load(
-            <FormSort sorting={this.state.sorting} onClose={sorting => {
+            <FormVideosSort sorting={this.state.sorting} onClose={sorting => {
                 this.backend(['set_sorting', sorting], {pageNumber: 0});
             }}/>
         )
@@ -524,7 +524,7 @@ export class VideosPage extends React.Component {
 
     fillWithKeywords() {
         Fancybox.load(
-            <FormFillKeywords properties={this.getStringSetProperties(this.state.properties)} onClose={state => {
+            <FormVideosKeywordsToProperty properties={this.getStringSetProperties(this.state.properties)} onClose={state => {
                 python_call('fill_property_with_terms', state.field, state.onlyEmpty)
                     .then(() => this.backend(null, {status: `Filled property "${state.field}" with video keywords.`}))
                     .catch(backend_error);
@@ -576,10 +576,10 @@ export class VideosPage extends React.Component {
         for (let index of indices)
             values.push(groupDef.groups[index].value);
         Fancybox.load(
-            <FormEditPropertyValue properties={this.state.definitions}
-                                   name={name}
-                                   values={values}
-                                   onClose={operation => {
+            <FormPropertySelectedValues properties={this.state.definitions}
+                                        name={name}
+                                        values={values}
+                                        onClose={operation => {
                                        switch (operation.form) {
                                            case 'delete':
                                                this.backend(['delete_property_value', name, values], {status: `Property value deleted: "${name}" / "${values.join('", "')}"`});

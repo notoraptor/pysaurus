@@ -1,16 +1,16 @@
 System.register(["../dialogs/FancyBox.js"], function (_export, _context) {
   "use strict";
 
-  var FancyBox, FormSearch;
+  var FancyBox, FormVideosSearch;
 
-  _export("FormSearch", void 0);
+  _export("FormVideosSearch", void 0);
 
   return {
     setters: [function (_dialogsFancyBoxJs) {
       FancyBox = _dialogsFancyBoxJs.FancyBox;
     }],
     execute: function () {
-      _export("FormSearch", FormSearch = class FormSearch extends React.Component {
+      _export("FormVideosSearch", FormVideosSearch = class FormVideosSearch extends React.Component {
         constructor(props) {
           // text
           // cond

@@ -1,6 +1,6 @@
 import {FancyBox} from "../dialogs/FancyBox.js";
 
-export class FormSearch extends React.Component {
+export class FormVideosSearch extends React.Component {
     constructor(props) {
         // text
         // cond

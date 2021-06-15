@@ -1,7 +1,7 @@
-System.register(["../utils/constants.js", "../components/MenuPack.js", "../components/Pagination.js", "../components/Video.js", "../forms/FormSourceVideo.js", "../forms/FormGroup.js", "../forms/FormSearch.js", "../forms/FormSort.js", "../components/GroupView.js", "../forms/FormEditPropertyValue.js", "../forms/FormFillKeywords.js", "../forms/FormPropertyMultiVideo.js", "../components/Collapsable.js", "../components/Cross.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/MenuItemRadio.js", "../components/Menu.js", "../utils/Selector.js", "../utils/Action.js", "../utils/Actions.js", "../components/ActionToMenuItem.js", "../components/ActionToSettingIcon.js", "../components/ActionToCross.js", "../utils/backend.js"], function (_export, _context) {
+System.register(["../utils/constants.js", "../components/MenuPack.js", "../components/Pagination.js", "../components/Video.js", "../forms/FormVideosSource.js", "../forms/FormVideosGrouping.js", "../forms/FormVideosSearch.js", "../forms/FormVideosSort.js", "../components/GroupView.js", "../forms/FormPropertySelectedValues.js", "../forms/FormVideosKeywordsToProperty.js", "../forms/FormSelectedVideosProperty.js", "../components/Collapsable.js", "../components/Cross.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/MenuItemRadio.js", "../components/Menu.js", "../utils/Selector.js", "../utils/Action.js", "../utils/Actions.js", "../components/ActionToMenuItem.js", "../components/ActionToSettingIcon.js", "../components/ActionToCross.js", "../utils/backend.js"], function (_export, _context) {
   "use strict";
 
-  var PAGE_SIZES, SEARCH_TYPE_TITLE, SOURCE_TREE, MenuPack, Pagination, Video, FormSourceVideo, FormGroup, FormSearch, FormSort, GroupView, FormEditPropertyValue, FormFillKeywords, FormPropertyMultiVideo, Collapsable, Cross, MenuItem, MenuItemCheck, MenuItemRadio, Menu, Selector, Action, Actions, ActionToMenuItem, ActionToSettingIcon, ActionToCross, backend_error, python_call, VideosPage;
+  var PAGE_SIZES, SEARCH_TYPE_TITLE, SOURCE_TREE, MenuPack, Pagination, Video, FormVideosSource, FormVideosGrouping, FormVideosSearch, FormVideosSort, GroupView, FormPropertySelectedValues, FormVideosKeywordsToProperty, FormSelectedVideosProperty, Collapsable, Cross, MenuItem, MenuItemCheck, MenuItemRadio, Menu, Selector, Action, Actions, ActionToMenuItem, ActionToSettingIcon, ActionToCross, backend_error, python_call, VideosPage;
 
   function compareSources(sources1, sources2) {
     if (sources1.length !== sources2.length) return false;
@@ -32,22 +32,22 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
       Pagination = _componentsPaginationJs.Pagination;
     }, function (_componentsVideoJs) {
       Video = _componentsVideoJs.Video;
-    }, function (_formsFormSourceVideoJs) {
-      FormSourceVideo = _formsFormSourceVideoJs.FormSourceVideo;
-    }, function (_formsFormGroupJs) {
-      FormGroup = _formsFormGroupJs.FormGroup;
-    }, function (_formsFormSearchJs) {
-      FormSearch = _formsFormSearchJs.FormSearch;
-    }, function (_formsFormSortJs) {
-      FormSort = _formsFormSortJs.FormSort;
+    }, function (_formsFormVideosSourceJs) {
+      FormVideosSource = _formsFormVideosSourceJs.FormVideosSource;
+    }, function (_formsFormVideosGroupingJs) {
+      FormVideosGrouping = _formsFormVideosGroupingJs.FormVideosGrouping;
+    }, function (_formsFormVideosSearchJs) {
+      FormVideosSearch = _formsFormVideosSearchJs.FormVideosSearch;
+    }, function (_formsFormVideosSortJs) {
+      FormVideosSort = _formsFormVideosSortJs.FormVideosSort;
     }, function (_componentsGroupViewJs) {
       GroupView = _componentsGroupViewJs.GroupView;
-    }, function (_formsFormEditPropertyValueJs) {
-      FormEditPropertyValue = _formsFormEditPropertyValueJs.FormEditPropertyValue;
-    }, function (_formsFormFillKeywordsJs) {
-      FormFillKeywords = _formsFormFillKeywordsJs.FormFillKeywords;
-    }, function (_formsFormPropertyMultiVideoJs) {
-      FormPropertyMultiVideo = _formsFormPropertyMultiVideoJs.FormPropertyMultiVideo;
+    }, function (_formsFormPropertySelectedValuesJs) {
+      FormPropertySelectedValues = _formsFormPropertySelectedValuesJs.FormPropertySelectedValues;
+    }, function (_formsFormVideosKeywordsToPropertyJs) {
+      FormVideosKeywordsToProperty = _formsFormVideosKeywordsToPropertyJs.FormVideosKeywordsToProperty;
+    }, function (_formsFormSelectedVideosPropertyJs) {
+      FormSelectedVideosProperty = _formsFormSelectedVideosPropertyJs.FormSelectedVideosProperty;
     }, function (_componentsCollapsableJs) {
       Collapsable = _componentsCollapsableJs.Collapsable;
     }, function (_componentsCrossJs) {
@@ -420,7 +420,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         }
 
         selectVideos() {
-          Fancybox.load( /*#__PURE__*/React.createElement(FormSourceVideo, {
+          Fancybox.load( /*#__PURE__*/React.createElement(FormVideosSource, {
             tree: SOURCE_TREE,
             sources: this.state.sources,
             onClose: sources => {
@@ -437,7 +437,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             is_property: null,
             reverse: null
           };
-          Fancybox.load( /*#__PURE__*/React.createElement(FormGroup, {
+          Fancybox.load( /*#__PURE__*/React.createElement(FormVideosGrouping, {
             groupDef: groupDef,
             properties: this.state.properties,
             propertyMap: this.state.definitions,
@@ -457,7 +457,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
 
         editPropertiesForManyVideos(propertyName) {
           const selectionSize = this.state.selector.size(this.state.realNbVideos);
-          python_call('count_prop_values', propertyName, this.state.selector.toJSON()).then(valuesAndCounts => Fancybox.load( /*#__PURE__*/React.createElement(FormPropertyMultiVideo, {
+          python_call('count_prop_values', propertyName, this.state.selector.toJSON()).then(valuesAndCounts => Fancybox.load( /*#__PURE__*/React.createElement(FormSelectedVideosProperty, {
             nbVideos: selectionSize,
             definition: this.state.definitions[propertyName],
             values: valuesAndCounts,
@@ -474,7 +474,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             text: null,
             cond: null
           };
-          Fancybox.load( /*#__PURE__*/React.createElement(FormSearch, {
+          Fancybox.load( /*#__PURE__*/React.createElement(FormVideosSearch, {
             text: search_def.text,
             cond: search_def.cond,
             onClose: criterion => {
@@ -486,7 +486,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         }
 
         sortVideos() {
-          Fancybox.load( /*#__PURE__*/React.createElement(FormSort, {
+          Fancybox.load( /*#__PURE__*/React.createElement(FormVideosSort, {
             sorting: this.state.sorting,
             onClose: sorting => {
               this.backend(['set_sorting', sorting], {
@@ -531,7 +531,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         }
 
         fillWithKeywords() {
-          Fancybox.load( /*#__PURE__*/React.createElement(FormFillKeywords, {
+          Fancybox.load( /*#__PURE__*/React.createElement(FormVideosKeywordsToProperty, {
             properties: this.getStringSetProperties(this.state.properties),
             onClose: state => {
               python_call('fill_property_with_terms', state.field, state.onlyEmpty).then(() => this.backend(null, {
@@ -591,7 +591,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
 
           for (let index of indices) values.push(groupDef.groups[index].value);
 
-          Fancybox.load( /*#__PURE__*/React.createElement(FormEditPropertyValue, {
+          Fancybox.load( /*#__PURE__*/React.createElement(FormPropertySelectedValues, {
             properties: this.state.definitions,
             name: name,
             values: values,

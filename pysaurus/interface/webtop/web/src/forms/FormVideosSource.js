@@ -43,7 +43,7 @@ function removePaths(oldPaths, paths) {
     return newPaths;
 }
 
-export class FormSourceVideo extends React.Component {
+export class FormVideosSource extends React.Component {
     constructor(props) {
         // tree
         // sources

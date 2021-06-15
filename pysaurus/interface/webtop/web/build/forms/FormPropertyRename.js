@@ -1,16 +1,16 @@
 System.register(["../dialogs/Dialog.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, FormRenameProperty;
+  var Dialog, FormPropertyRename;
 
-  _export("FormRenameProperty", void 0);
+  _export("FormPropertyRename", void 0);
 
   return {
     setters: [function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
     }],
     execute: function () {
-      _export("FormRenameProperty", FormRenameProperty = class FormRenameProperty extends React.Component {
+      _export("FormPropertyRename", FormPropertyRename = class FormPropertyRename extends React.Component {
         constructor(props) {
           // title: str
           // onClose(newTitle)

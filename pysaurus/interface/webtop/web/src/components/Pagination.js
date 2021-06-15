@@ -1,4 +1,4 @@
-import {FormGoToPage} from "../forms/FormGoToPage.js";
+import {FormPaginationGoTo} from "../forms/FormPaginationGoTo.js";
 import {DialogSearch} from "../dialogs/DialogSearch.js";
 import {capitalizeFirstLetter} from "../utils/functions.js";
 
@@ -67,7 +67,7 @@ export class Pagination extends React.Component {
 
     go() {
         Fancybox.load(
-            <FormGoToPage nbPages={this.props.nbPages} pageNumber={this.props.pageNumber} onClose={pageNumber => {
+            <FormPaginationGoTo nbPages={this.props.nbPages} pageNumber={this.props.pageNumber} onClose={pageNumber => {
                 if (pageNumber !== this.props.pageNumber)
                     this.props.onChange(pageNumber);
             }}/>
