@@ -23,11 +23,8 @@ from pysaurus.core.notification import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
 
-SPECIAL_PROPERTY_ERROR = "<error>"
-SPECIAL_PROPERTY_DEFINITIONS = {
-    # name : (definition, is_multiple)
-    SPECIAL_PROPERTY_ERROR: ("", True)
-}
+
+SPECIAL_PROPERTIES = [PropType("<error>", "", True)]
 
 
 class Database:
@@ -49,7 +46,7 @@ class Database:
         "video_interval",
         "unreadable",
         "readable",
-        "__special_property_parser",
+        "__prop_parser",
     )
 
     def __init__(self, path, folders=None, clear_old_folders=False, notifier=None):
@@ -80,7 +77,7 @@ class Database:
         self.system_is_case_insensitive = System.is_case_insensitive(
             self.__db_path.path
         )
-        self.__special_property_parser = {}  # type: Dict[str, callable]
+        self.__prop_parser = {}  # type: Dict[str, callable]
         # Load database
         self.__notifier.set_log_path(self.__log_path.path)
 
@@ -267,27 +264,22 @@ class Database:
 
     def __set_special_properties(self):
         to_save = False
-        for prop_name, prop_def in SPECIAL_PROPERTY_DEFINITIONS.items():
-            already_defined = False
-            expected = PropType(prop_name, *prop_def)
-            if self.has_prop_type(prop_name):
-                prop_type = self.get_prop_type(prop_name)
-                if prop_type == expected:
-                    already_defined = True
-                else:
-                    self.remove_prop_type(prop_name)
-            if not already_defined:
+        for expected in SPECIAL_PROPERTIES:
+            if (not self.has_prop_type(expected.name)
+                    or self.get_prop_type(expected.name) != expected):
+                self.remove_prop_type(expected.name)
                 self.add_prop_type(expected)
                 to_save = True
         if to_save:
             self.__save()
 
     def __register_special_property_parsers(self):
-        self.__special_property_parser["error"] = self._set_video_property_error
+        for prop in SPECIAL_PROPERTIES:
+            self.__prop_parser[prop.name] = getattr(self, f"_set_v_prop_{prop.name[1:-1]}")
 
     @staticmethod
-    def _set_video_property_error(video: Video):
-        video.properties[SPECIAL_PROPERTY_ERROR] = sorted(video.errors)
+    def _set_v_prop_error(video: Video, prop: PropType):
+        video.properties[prop.name] = sorted(video.errors)
 
     # Public methods.
 
@@ -363,10 +355,8 @@ class Database:
                         )
 
                     # Set special properties
-                    for special_prop in SPECIAL_PROPERTY_DEFINITIONS:
-                        name = special_prop[1:-1]
-                        if name in self.__special_property_parser:
-                            self.__special_property_parser[name](video_state)
+                    for prop in SPECIAL_PROPERTIES:
+                        self.__prop_parser[prop.name](video_state, prop)
 
                     videos[file_path] = video_state
                     self.__unreadable.pop(file_path, None)
@@ -685,10 +675,7 @@ class Database:
             video_state = None
             if file_name in self.__videos:
                 video = self.__videos[file_name]
-                if all(
-                    special_prop in video.properties
-                    for special_prop in SPECIAL_PROPERTY_DEFINITIONS
-                ):
+                if all(prop.name in video.properties for prop in SPECIAL_PROPERTIES):
                     video_state = video
             elif file_name in self.__unreadable:
                 video_state = self.__unreadable[file_name]
