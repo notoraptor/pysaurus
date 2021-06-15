@@ -12,8 +12,7 @@ from pysaurus.core.components import (
     PathType,
 )
 from pysaurus.core.constants import THUMBNAIL_EXTENSION
-from pysaurus.core.database import notifications, path_utils
-from pysaurus.core.database.jobs import jobs_python
+from pysaurus.core.database import notifications, path_utils, jobs_python
 from pysaurus.core.database.properties import PropType
 from pysaurus.core.database.video import Video
 from pysaurus.core.database.video_interval import VideoInterval

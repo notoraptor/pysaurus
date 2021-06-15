@@ -10,27 +10,6 @@ from pysaurus.core.modules import ImageUtils
 from pysaurus.core.notification import Notifier
 
 
-def job_collect_videos(job):
-    # type: (list) -> List[AbsolutePath]
-    files = []
-    for path in job[0]:  # type: AbsolutePath
-        count_before = len(files)
-        for folder, _, file_names in path.walk():
-            for file_name in file_names:
-                if (
-                    functions.get_file_extension(file_name)
-                    in functions.VIDEO_SUPPORTED_EXTENSIONS
-                ):
-                    files.append(AbsolutePath.join(folder, file_name))
-        if (
-            len(files) == count_before
-            and path.isfile()
-            and path.extension in functions.VIDEO_SUPPORTED_EXTENSIONS
-        ):
-            files.append(path)
-    return files
-
-
 def _collect_videos_info(folder: str, files: List[PathInfo]):
     for entry in os.scandir(folder):  # type: os.DirEntry
         if entry.is_dir():
