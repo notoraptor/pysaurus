@@ -466,7 +466,7 @@ class API:
         videos = []
         for video in self.database.get_videos("readable", "not_found"):
             if video.filename.in_directory(
-                folder, is_case_insensitive=self.database.system_is_case_insensitive
+                folder, is_case_insensitive=self.database.sys_is_case_insensitive
             ):
                 videos.append(video)
         videos.sort(key=lambda video: video.filename)

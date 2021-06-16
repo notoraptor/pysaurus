@@ -7,7 +7,7 @@ from typing import Union
 
 from pysaurus.core import constants
 from pysaurus.core.constants import WINDOWS_PATH_PREFIX
-from pysaurus.core.exceptions import UnsupportedOS
+from pysaurus.core.exceptions import UnsupportedOS, NotDirectoryError
 from pysaurus.core.modules import System
 
 
@@ -189,6 +189,13 @@ STDERR: {stderr.strip()}"""
     def ensure(path):
         # type: (Union[str, AbsolutePath]) -> AbsolutePath
         return path if isinstance(path, AbsolutePath) else AbsolutePath(str(path))
+
+    @staticmethod
+    def ensure_directory(path):
+        path = AbsolutePath.ensure(path)
+        if not path.isdir():
+            raise NotDirectoryError(path)
+        return path
 
     @classmethod
     def join(cls, *args):

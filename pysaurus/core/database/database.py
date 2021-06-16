@@ -27,9 +27,17 @@ from pysaurus.core.profiling import Profiler
 SPECIAL_PROPERTIES = [PropType("<error>", "", True)]
 
 
+def new_sub_file(folder: AbsolutePath, extension: str):
+    return FilePath(folder, folder.title, extension)
+
+
+def new_sub_folder(folder: AbsolutePath, suffix: str, sep="."):
+    return AbsolutePath.join(folder, f"{folder.title}{sep}{suffix}")
+
+
 class Database:
     __slots__ = (
-        "__db_path",
+        "__db_folder",
         "__thumb_folder",
         "__json_path",
         "__miniatures_path",
@@ -42,7 +50,7 @@ class Database:
         "__prop_types",
         "__notifier",
         "__id_to_video",
-        "system_is_case_insensitive",
+        "sys_is_case_insensitive",
         "video_interval",
         "unreadable",
         "readable",
@@ -51,19 +59,12 @@ class Database:
 
     def __init__(self, path, folders=None, clear_old_folders=False, notifier=None):
         # type: (PathType, Iterable[PathType], bool, Notifier) -> None
-        path = AbsolutePath.ensure(path)
-        if not path.isdir():
-            raise exceptions.NotDirectoryError(path)
         # Paths
-        self.__db_path = path
-        self.__thumb_folder = AbsolutePath.join(
-            self.__db_path, "%s.thumbnails" % self.__db_path.title
-        )
-        self.__json_path = FilePath(self.__db_path, self.__db_path.title, "json")
-        self.__miniatures_path = FilePath(
-            self.__db_path, "%s.miniatures" % self.__db_path.title, "json"
-        )
-        self.__log_path = FilePath(self.__db_path, self.__db_path.title, "log")
+        self.__db_folder = AbsolutePath.ensure_directory(path)
+        self.__thumb_folder = new_sub_folder(self.__db_folder, "thumbnails")
+        self.__json_path = new_sub_file(self.__db_folder, "json")
+        self.__miniatures_path = new_sub_file(self.__db_folder, "miniatures.json")
+        self.__log_path = new_sub_file(self.__db_folder, "log")
         # Database data
         self.__date = DateModified.now()
         self.__folders = set()  # type: Set[AbsolutePath]
@@ -74,9 +75,7 @@ class Database:
         # RAM data
         self.__notifier = notifier or DEFAULT_NOTIFIER
         self.__id_to_video = {}  # type: Dict[int, Union[VideoState, Video]]
-        self.system_is_case_insensitive = System.is_case_insensitive(
-            self.__db_path.path
-        )
+        self.sys_is_case_insensitive = System.is_case_insensitive(self.__db_folder.path)
         self.__prop_parser = {}  # type: Dict[str, callable]
         # Load database
         self.__notifier.set_log_path(self.__log_path.path)
@@ -95,7 +94,7 @@ class Database:
         lambda self: len(self.__videos) + len(self.__unreadable) + len(self.__discarded)
     )
     nb_discarded = property(lambda self: len(self.__discarded))
-    folder = property(lambda self: self.__db_path)
+    folder = property(lambda self: self.__db_folder)
     thumbnail_folder = property(
         lambda self: self.__thumb_folder
         if self.__thumb_folder.isdir()
@@ -248,7 +247,7 @@ class Database:
             for entry in os.scandir(self.thumbnail_folder.path):  # type: os.DirEntry
                 if entry.path.lower().endswith(f".{THUMBNAIL_EXTENSION}"):
                     name = entry.name
-                    if self.system_is_case_insensitive:
+                    if self.sys_is_case_insensitive:
                         name = name.lower()
                     thumbs[name[: -(len(THUMBNAIL_EXTENSION) + 1)]] = DateModified(
                         entry.stat().st_mtime
@@ -300,8 +299,8 @@ class Database:
         pre_jobs = functions.dispatch_tasks(all_file_names, cpu_count)
         jobs = []
         for index, (file_names, job_id) in enumerate(pre_jobs):
-            input_file_path = FilePath(self.__db_path, str(index), "list")
-            output_file_path = FilePath(self.__db_path, str(index), "json")
+            input_file_path = FilePath(self.__db_folder, str(index), "list")
+            output_file_path = FilePath(self.__db_folder, str(index), "json")
 
             with open(input_file_path.path, "wb") as file:
                 for file_name in file_names:
@@ -446,8 +445,8 @@ class Database:
         )
         del videos_without_thumbs
         for index, (job_videos, job_id) in enumerate(dispatched_thumb_jobs):
-            input_file_path = FilePath(self.__db_path, str(index), "thumbnails.list")
-            output_file_path = FilePath(self.__db_path, str(index), "thumbnails.json")
+            input_file_path = FilePath(self.__db_folder, str(index), "thumbnails.list")
+            output_file_path = FilePath(self.__db_folder, str(index), "thumbnails.json")
 
             with open(input_file_path.path, "wb") as file:
                 for video in job_videos:

@@ -274,7 +274,7 @@ class Video(VideoState):
     def ensure_thumbnail_name(self):
         if not self.thumb_name:
             self.thumb_name = path_utils.generate_thumb_name(self.filename)
-            if self.database.system_is_case_insensitive:
+            if self.database.sys_is_case_insensitive:
                 self.thumb_name = self.thumb_name.lower()
         return self.thumb_name
 
