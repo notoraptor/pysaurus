@@ -3,18 +3,8 @@ from typing import Iterable
 from pysaurus.core.classes import StringPrinter
 from pysaurus.core.components import AbsolutePath, DateModified, FileSize
 from pysaurus.core.constants import PYTHON_ERROR_THUMBNAIL
+from pysaurus.core.database.video_runtime_info import VideoRuntimeInfo
 from pysaurus.core.modules import System
-
-
-class _VideoRuntimeInfo:
-    __slots__ = "is_file", "size", "mtime", "driver_id", "has_thumbnail"
-
-    def __init__(self):
-        self.is_file = False
-        self.mtime = 0
-        self.size = 0
-        self.driver_id = None
-        self.has_thumbnail = False
 
 
 class classflag(property):
@@ -62,7 +52,7 @@ class VideoState:
         self.video_id = video_id
 
         self.database = database
-        self.runtime = _VideoRuntimeInfo()
+        self.runtime = VideoRuntimeInfo()
 
     def __str__(self):
         with StringPrinter() as printer:

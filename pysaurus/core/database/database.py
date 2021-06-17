@@ -8,7 +8,6 @@ from pysaurus.core.components import (
     AbsolutePath,
     DateModified,
     FilePath,
-    PathInfo,
     PathType,
 )
 from pysaurus.core.constants import THUMBNAIL_EXTENSION
@@ -16,13 +15,13 @@ from pysaurus.core.database import notifications, path_utils, jobs_python
 from pysaurus.core.database.properties import PropType
 from pysaurus.core.database.video import Video
 from pysaurus.core.database.video_interval import VideoInterval
+from pysaurus.core.database.video_runtime_info import VideoRuntimeInfo
 from pysaurus.core.database.video_state import VideoState
 from pysaurus.core.miniature import Miniature
 from pysaurus.core.modules import ImageUtils, System
 from pysaurus.core.notification import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
-
 
 SPECIAL_PROPERTIES = [PropType("<error>", "", True)]
 
@@ -95,11 +94,7 @@ class Database:
     )
     nb_discarded = property(lambda self: len(self.__discarded))
     folder = property(lambda self: self.__db_folder)
-    thumbnail_folder = property(
-        lambda self: self.__thumb_folder
-        if self.__thumb_folder.isdir()
-        else self.__thumb_folder.mkdir()
-    )
+    thumbnail_folder = property(lambda self: self.__thumb_folder.mkdir())
     notifier = property(lambda self: self.__notifier)
 
     # Private methods.
@@ -132,9 +127,7 @@ class Database:
             for path in folders:
                 self.__folders.add(AbsolutePath.ensure(path))
 
-        folders_tree = PathTree()
-        for f in self.__folders:
-            folders_tree.add(f)
+        folders_tree = PathTree(self.__folders)
 
         # Parsing video property types.
         for prop_dict in json_dict.get("prop_types", ()):
@@ -181,10 +174,6 @@ class Database:
             json.dump(json_output, output_file)
         self.__notifier.notify(notifications.DatabaseSaved(self))
 
-    def __set_videos_flags(self):
-        self.__set_videos_states_flags()
-        self.__set_videos_thumbs_flags()
-
     def __ensure_identifiers(self):
         id_to_video = {}  # type: Dict[int, Union[VideoState, Video]]
         without_identifiers = []
@@ -205,6 +194,10 @@ class Database:
         self.__id_to_video = id_to_video
         return len(without_identifiers)
 
+    def __set_videos_flags(self):
+        self.__set_videos_states_flags()
+        self.__set_videos_thumbs_flags()
+
     def __set_videos_states_flags(self):
         file_paths = self.__check_videos_on_disk()
         for dictionaries in (self.__videos, self.__unreadable):
@@ -224,8 +217,8 @@ class Database:
         return thumb_names
 
     def __check_videos_on_disk(self):
-        # type: () -> Dict[AbsolutePath, PathInfo]
-        paths = {}  # type: Dict[AbsolutePath, PathInfo]
+        # type: () -> Dict[AbsolutePath, VideoRuntimeInfo]
+        paths = {}  # type: Dict[AbsolutePath, VideoRuntimeInfo]
         cpu_count = os.cpu_count()
         jobs = functions.dispatch_tasks(sorted(self.__folders), cpu_count)
         with Profiler(
@@ -234,9 +227,8 @@ class Database:
             results = functions.parallelize(
                 jobs_python.job_collect_videos_info, jobs, cpu_count
             )
-        for local_result in results:  # type: List[PathInfo]
-            for info in local_result:
-                paths[info.path] = info
+        for local_result in results:  # type: Dict[AbsolutePath, VideoRuntimeInfo]
+            paths.update(local_result)
         self.__notifier.notify(notifications.FinishedCollectingVideos(paths))
         return paths
 
@@ -264,8 +256,10 @@ class Database:
     def __set_special_properties(self):
         to_save = False
         for expected in SPECIAL_PROPERTIES:
-            if (not self.has_prop_type(expected.name)
-                    or self.get_prop_type(expected.name) != expected):
+            if (
+                not self.has_prop_type(expected.name)
+                or self.get_prop_type(expected.name) != expected
+            ):
                 self.remove_prop_type(expected.name)
                 self.add_prop_type(expected)
                 to_save = True
@@ -274,7 +268,9 @@ class Database:
 
     def __register_special_property_parsers(self):
         for prop in SPECIAL_PROPERTIES:
-            self.__prop_parser[prop.name] = getattr(self, f"_set_v_prop_{prop.name[1:-1]}")
+            self.__prop_parser[prop.name] = getattr(
+                self, f"_set_v_prop_{prop.name[1:-1]}"
+            )
 
     @staticmethod
     def _set_v_prop_error(video: Video, prop: PropType):
@@ -334,7 +330,6 @@ class Database:
                 arr = json.load(file)
             for d in arr:
                 file_path = AbsolutePath.ensure(d["f"])
-                stat = os.stat(file_path.path)
                 if len(d) == 2:
                     video_state = VideoState(
                         filename=file_path,
@@ -359,9 +354,10 @@ class Database:
 
                     videos[file_path] = video_state
                     self.__unreadable.pop(file_path, None)
+                stat = os.stat(file_path.path)
                 video_state.runtime.is_file = True
-                video_state.runtime.size = stat.st_size
                 video_state.runtime.mtime = stat.st_mtime
+                video_state.runtime.size = stat.st_size
                 video_state.runtime.driver_id = stat.st_dev
 
             list_file_path.delete()
@@ -391,7 +387,7 @@ class Database:
         cpu_count = os.cpu_count()
         valid_thumb_names = set()
         videos_without_thumbs = []
-        thumb_to_videos = {}
+        thumb_to_videos = {}  # type: Dict[str, List[Video]]
         thumb_errors = {}
         thumb_jobs = []
 

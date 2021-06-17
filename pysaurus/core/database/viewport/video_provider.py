@@ -16,8 +16,8 @@ from pysaurus.core.database.viewport.layers.grouping_layer import GroupingLayer
 from pysaurus.core.database.viewport.layers.search_layer import SearchLayer
 from pysaurus.core.database.viewport.layers.sort_layer import SortLayer
 from pysaurus.core.database.viewport.layers.source_layer import SourceLayer
-from pysaurus.core.database.viewport.viewtools.video_array import VideoArray
 from pysaurus.core.database.viewport.viewtools.group_def import GroupDef
+from pysaurus.core.database.viewport.viewtools.video_array import VideoArray
 
 
 class VideoProvider:

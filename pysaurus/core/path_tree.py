@@ -15,13 +15,14 @@ class PathTreeNode:
 class PathTree(PathTreeNode):
     __slots__ = ()
 
-    def __init__(self):
+    def __init__(self, folders=()):
         super().__init__("")
+        for folder in folders:
+            self.add(folder)
 
     def add(self, path: AbsolutePath):
-        pieces = path.standard_path.split(os.sep)
         children = self.children
-        for i, piece in enumerate(pieces):
+        for piece in path.standard_path.split(os.sep):
             if piece in children:
                 node = children[piece]
             else:
@@ -39,10 +40,9 @@ class PathTree(PathTreeNode):
                 return i > 0 and not children
         return True
 
-    def _debug(self, children, indent):
+    def debug(self, children=None, indent=""):
+        if children is None:
+            children = self.children
         for name in sorted(children):
             print("%s%s" % (indent, name))
-            self._debug(children[name].children, indent + "\t")
-
-    def debug(self):
-        self._debug(self.children, "")
+            self.debug(children[name].children, indent + "\t")

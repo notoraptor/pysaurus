@@ -1,16 +1,17 @@
 import os
 import subprocess
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 
 from pysaurus.core import functions
-from pysaurus.core.components import AbsolutePath, PathInfo
+from pysaurus.core.components import AbsolutePath
 from pysaurus.core.database import notifications
+from pysaurus.core.database.video_runtime_info import VideoRuntimeInfo
 from pysaurus.core.miniature import Miniature
 from pysaurus.core.modules import ImageUtils
 from pysaurus.core.notification import Notifier
 
 
-def _collect_videos_info(folder: str, files: List[PathInfo]):
+def _collect_videos_info(folder: str, files: Dict[AbsolutePath, VideoRuntimeInfo]):
     for entry in os.scandir(folder):  # type: os.DirEntry
         if entry.is_dir():
             _collect_videos_info(entry.path, files)
@@ -19,22 +20,22 @@ def _collect_videos_info(folder: str, files: List[PathInfo]):
             in functions.VIDEO_SUPPORTED_EXTENSIONS
         ):
             stat = entry.stat()
-            files.append(
-                PathInfo(
-                    AbsolutePath(entry.path), stat.st_size, stat.st_mtime, stat.st_dev
-                )
+            files[AbsolutePath(entry.path)] = VideoRuntimeInfo(
+                stat.st_size, stat.st_mtime, stat.st_dev, is_file=True
             )
 
 
 def job_collect_videos_info(job):
-    # type: (List) -> List[PathInfo]
-    files = []
+    # type: (List) -> Dict[AbsolutePath, VideoRuntimeInfo]
+    files = {}  # type: Dict[AbsolutePath, VideoRuntimeInfo]
     for path in job[0]:  # type: AbsolutePath
         if path.isdir():
             _collect_videos_info(path.path, files)
         elif path.extension in functions.VIDEO_SUPPORTED_EXTENSIONS:
             stat = os.stat(path.path)
-            files.append(PathInfo(path, stat.st_size, stat.st_mtime, stat.st_dev))
+            files[path] = VideoRuntimeInfo(
+                stat.st_size, stat.st_mtime, stat.st_dev, is_file=True
+            )
     return files
 
 
