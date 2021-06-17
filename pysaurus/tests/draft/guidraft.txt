@@ -1,0 +1,68 @@
+=========
+HTML tags
+=========
+
+<!--...--> 	Defines a comment
+
+<b> 	Defines bold text
+<i> 	Defines a part of text in an alternate voice or mood
+<u> 	Defines text that should be stylistically different from normal text
+<s> 	Defines text that is no longer correct
+<sub> 	Defines subscripted text
+<sup> 	Defines superscripted text
+<code> 	Defines a piece of computer code
+<span> 	Defines a section in a document text
+<br/> 	Defines a single line break
+<a> 	Defines a hyperlink
+
+<html> 	Defines the root of an HTML document
+<head> 	Defines information about the document
+<title> 	Defines a title for the document
+<body> 	Defines the document's body
+<nav> 	Defines navigation links
+
+<button> 	Defines a clickable button
+<input> 	Defines an input control
+<label> 	Defines a label for an <input> element
+<select> 	Defines a drop-down list
+<option> 	Defines an option in a drop-down list
+<textarea> 	Defines a multiline input control (text area)
+
+<div> 	Defines a section in a document
+<p> 	Defines a paragraph
+<h1> to <h6> 	Defines HTML headings
+<pre> 	Defines preformatted text
+
+<ul> 	Defines an unordered list
+<ol> 	Defines an ordered list
+<li> 	Defines a list item
+
+<form> 	Defines an HTML form for user input
+
+<hr/> 	Defines a thematic change in the content
+
+<img/> 	Defines an image
+<meter/> 	Defines a scalar measurement within a known range (a gauge)
+<progress/> 	Represents the progress of a task
+
+<script> 	Defines a client-side script
+
+<table> 	Defines a table
+<thead> 	Groups the header content in a table
+<th> 	Defines a header cell in a table
+<tbody> 	Groups the body content in a table
+<td> 	Defines a cell in a table
+<tr> 	Defines a row in a table
+
+======================
+HTML Global Attributes
+======================
+
+accesskey 	Specifies a shortcut key to activate/focus an element
+class 	Specifies one or more classnames for an element (refers to a class in a style sheet)
+data-* 	Used to store custom data private to the page or application
+hidden 	Specifies that an element is not yet, or is no longer, relevant
+id 	Specifies a unique id for an element
+style 	Specifies an inline CSS style for an element
+tabindex 	Specifies the tabbing order of an element
+title 	Specifies extra information about an element
