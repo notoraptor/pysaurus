@@ -38,7 +38,7 @@ class SpacedPoints:
         342: 2
     """
 
-    __slots__ = 'd',
+    __slots__ = ("d",)
     _MAP_POINTS = {}
 
     def __init__(self, length=256, nb_points=6):

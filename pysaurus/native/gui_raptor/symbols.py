@@ -10,7 +10,7 @@ from ctypes import (
     c_void_p,
 )
 
-from pysaurus.core.native.clibrary import CLibrary
+from pysaurus.native.clibrary import CLibrary
 
 FloatPtr = POINTER(c_float)
 
@@ -104,25 +104,21 @@ PatternImagePtr = POINTER(PatternImage)
 PatternRectanglePtr = POINTER(PatternRectangle)
 PatternTextInfoPtr = POINTER(PatternTextInfo)
 
-_gui_raptor = CLibrary("guiRaptor")
+_lib = CLibrary("guiRaptor")
 
-WindowNew = _gui_raptor.prototype("WindowNew", WindowPtr, [c_uint, c_uint, c_char_p])
-WindowDelete = _gui_raptor.prototype("WindowDelete", None, [WindowPtr])
-WindowIsOpen = _gui_raptor.prototype("WindowIsOpen", c_bool, [WindowPtr])
-WindowNextEvent = _gui_raptor.prototype(
-    "WindowNextEvent", c_bool, [WindowPtr, EventPtr]
-)
-WindowClose = _gui_raptor.prototype("WindowClose", None, [WindowPtr])
-WindowDraw = _gui_raptor.prototype(
-    "WindowDraw", None, [WindowPtr, PatternPtrPtr, c_uint]
-)
-EventNew = _gui_raptor.prototype("EventNew", EventPtr, None)
-EventDelete = _gui_raptor.prototype("EventDelete", None, [EventPtr])
-EventClosed = _gui_raptor.prototype("EventClosed", c_bool, [EventPtr])
-PatternTextInfoNew = _gui_raptor.prototype(
+WindowNew = _lib.prototype("WindowNew", WindowPtr, [c_uint, c_uint, c_char_p])
+WindowDelete = _lib.prototype("WindowDelete", None, [WindowPtr])
+WindowIsOpen = _lib.prototype("WindowIsOpen", c_bool, [WindowPtr])
+WindowNextEvent = _lib.prototype("WindowNextEvent", c_bool, [WindowPtr, EventPtr])
+WindowClose = _lib.prototype("WindowClose", None, [WindowPtr])
+WindowDraw = _lib.prototype("WindowDraw", None, [WindowPtr, PatternPtrPtr, c_uint])
+EventNew = _lib.prototype("EventNew", EventPtr, None)
+EventDelete = _lib.prototype("EventDelete", None, [EventPtr])
+EventClosed = _lib.prototype("EventClosed", c_bool, [EventPtr])
+PatternTextInfoNew = _lib.prototype(
     "PatternTextInfoNew", PatternTextInfoPtr, [PatternTextPtr]
 )
-PatternTextInfoDelete = _gui_raptor.prototype(
+PatternTextInfoDelete = _lib.prototype(
     "PatternTextInfoDelete", None, [PatternTextInfoPtr]
 )
 

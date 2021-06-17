@@ -27,7 +27,6 @@ def dilate_miniature_data(data: list, width: int, height: int):
 
 
 class Draw:
-
     def __init__(self, width, height, background=(0, 0, 0)):
         self.surface = [background] * width * height
         self.width = width
@@ -41,7 +40,8 @@ class Draw:
         for x in range(end_x):
             for y in range(end_y):
                 new_surface[functions.coord_to_flat(x, y, width)] = self.surface[
-                    functions.coord_to_flat(x, y, self.width)]
+                    functions.coord_to_flat(x, y, self.width)
+                ]
         self.surface = new_surface
         self.width = width
         self.height = height
@@ -53,7 +53,8 @@ class Draw:
         for i in range(x, end_x):
             for j in range(y, end_y):
                 self.surface[functions.coord_to_flat(i, j, self.width)] = data[
-                    functions.coord_to_flat(i - x, j - y, width)]
+                    functions.coord_to_flat(i - x, j - y, width)
+                ]
 
     def draw_image(self, image, x, y):
         assert image.mode == ImageUtils.IMAGE_RGB_MODE

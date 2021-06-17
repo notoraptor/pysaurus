@@ -176,7 +176,7 @@ class Context:
 
     def __getattribute__(self, item):
         if not object.__getattribute__(self, "_context"):
-            raise RuntimeError("%s object not used as a context" % type(self).__name__)
+            raise RuntimeError(f"{type(self).__name__} object not used as a context")
         return object.__getattribute__(self, item)
 
     @abstractmethod
@@ -188,8 +188,9 @@ class Context:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.on_exit()
+        ret = self.on_exit()
         self._context = False
+        return ret
 
 
 class ListView(Generic[T]):

@@ -9,17 +9,17 @@ class Test(Context):
         self.value = 33
 
     def on_exit(self):
-        print('exited', file=sys.stderr)
+        print("exited", file=sys.stderr)
 
 
 def main():
     test = Test()
     with test:
         value = test.value
-        print('value is', value, file=sys.stderr)
-    print('OK', file=sys.stderr)
+        print("value is", value, file=sys.stderr)
+    print("OK", file=sys.stderr)
     print(test.value)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

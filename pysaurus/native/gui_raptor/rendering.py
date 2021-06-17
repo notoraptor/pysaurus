@@ -1,7 +1,7 @@
 from ctypes import Structure, c_char_p, c_void_p, cast, pointer
 from typing import Iterable, List, Optional
 
-from pysaurus.core.native.gui_raptor import symbols, scheme
+from pysaurus.native.gui_raptor import symbols, scheme
 
 
 def get_ctypes(cls):
@@ -14,8 +14,8 @@ class Pattern:
     __pattern__ = symbols.NoPattern
     __ctypes__ = get_ctypes(symbols.NoPattern)
 
-    def __init__(self, drawing_type, native_structure):
-        # type: (int, Structure) -> None
+    def __init__(self, drawing_type):
+        # type: (int) -> None
         self.__type = drawing_type
         self.__native = self.__pattern__()
         self.__pattern = symbols.Pattern(
@@ -23,16 +23,10 @@ class Pattern:
         )
         self.__pointer = pointer(self.__pattern)
 
-    def get(self, field):
-        value = getattr(self.__native, field)
-
-    def set(self, field, value):
-        pass
-
     def __update(self):
         for field, _ in self.__native._fields_:
             if hasattr(self, "get_native_%s" % field):
-                value = getattr(self, "get_native_%s" % field)()
+                value = getattr(self, f"get_native_{field}")()
             else:
                 value = getattr(self, field)
                 if isinstance(value, str):
@@ -64,6 +58,7 @@ class PatternText(Pattern):
         "strike",
     )
     __scheme__ = scheme.Text
+    __pattern__ = symbols.PatternText
 
     def __init__(
         self,
@@ -80,7 +75,7 @@ class PatternText(Pattern):
         underline=False,
         strike=False,
     ):
-        super().__init__(symbols.DRAWING_TYPE_TEXT, symbols.PatternText())
+        super().__init__(symbols.DRAWING_TYPE_TEXT)
         self.x = x
         self.y = y
         self.font = font
@@ -101,10 +96,11 @@ class PatternText(Pattern):
 class PatternFrame(Pattern):
     __slots__ = ("x", "y", "width", "height", "patterns")
     __scheme__ = scheme.Frame
+    __pattern__ = symbols.PatternFrame
 
     def __init__(self, x=0, y=0, width=0, height=0, patterns=None):
         # type: (float, float, int, int, Optional[Iterable[Pattern]]) -> None
-        super().__init__(symbols.DRAWING_TYPE_SURFACE, symbols.PatternFrame())
+        super().__init__(symbols.DRAWING_TYPE_SURFACE)
         self.x = x
         self.y = y
         self.width = width
@@ -123,10 +119,11 @@ class PatternFrame(Pattern):
 class PatternImage(Pattern):
     __slots__ = ("x", "y", "width", "height", "src")
     __scheme__ = scheme.Image
+    __pattern__ = symbols.PatternImage
 
     def __init__(self, x=0, y=0, width=-1, height=-1, src=None):
         # type: (float, float, float, float, str) -> None
-        super().__init__(symbols.DRAWING_TYPE_IMAGE, symbols.PatternImage())
+        super().__init__(symbols.DRAWING_TYPE_IMAGE)
         self.x = x
         self.y = y
         self.width = width
@@ -137,12 +134,13 @@ class PatternImage(Pattern):
 class PatternRectangle(Pattern):
     __slots__ = ("x", "y", "width", "height", "outline", "color", "outline_color")
     __scheme__ = scheme.Rectangle
+    __pattern__ = symbols.PatternRectangle
 
     def __init__(
         self, x=0, y=0, width=0, height=0, outline=0, color=None, outline_color=None
     ):
         # type: (float, float, float, float, float, str, str) -> None
-        super().__init__(symbols.DRAWING_TYPE_RECTANGLE, symbols.PatternRectangle())
+        super().__init__(symbols.DRAWING_TYPE_RECTANGLE)
         self.x = x
         self.y = y
         self.width = width

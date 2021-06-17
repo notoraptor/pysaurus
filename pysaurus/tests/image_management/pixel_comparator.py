@@ -20,7 +20,7 @@ class AbstractPixelComparator:
 
 
 class DistancePixelComparator(AbstractPixelComparator):
-    __slots__ = 'threshold', 'limit'
+    __slots__ = "threshold", "limit"
 
     def __init__(self, similarity_percent: Union[int, float]):
         self.threshold = (100 - similarity_percent) / 100
@@ -32,7 +32,9 @@ class DistancePixelComparator(AbstractPixelComparator):
     def pixels_are_close(self, data, i, j, width):
         r1, g1, b1 = data[i]
         r2, g2, b2 = data[j]
-        distance = math.sqrt((r1 - r2) * (r1 - r2) + (g1 - g2) * (g1 - g2) + (b1 - b2) * (b1 - b2))
+        distance = math.sqrt(
+            (r1 - r2) * (r1 - r2) + (g1 - g2) * (g1 - g2) + (b1 - b2) * (b1 - b2)
+        )
         return distance <= self.limit
 
     def common_color(self, data, indices, width):
@@ -49,14 +51,12 @@ class DistancePixelComparator(AbstractPixelComparator):
 
 
 class ColorClassPixelComparator(AbstractPixelComparator):
-
     def __init__(self, interval_length: int):
         self.interval_length = interval_length
 
     def _map_pixel(self, pixel: Tuple[int, int, int]) -> Tuple:
         return tuple(
-            int(v // self.interval_length) * self.interval_length
-            for v in pixel
+            int(v // self.interval_length) * self.interval_length for v in pixel
         )
 
     def normalize_data(self, data, width):

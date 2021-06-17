@@ -22,7 +22,11 @@ def equalize(data):
         index = gray_to_index[gray]
         new_gray = new_grays[index]
         distance = new_gray - gray
-        new_color = _clip_color(r + distance), _clip_color(g + distance), _clip_color(b + distance)
+        new_color = (
+            _clip_color(r + distance),
+            _clip_color(g + distance),
+            _clip_color(b + distance),
+        )
         # assert int(sum(new_color) / 3) == new_gray, (int(sum(new_color) / 3), new_gray, gray, new_color, pixel)
         output.append(new_color)
     return output

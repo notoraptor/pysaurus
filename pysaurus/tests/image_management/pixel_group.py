@@ -24,9 +24,15 @@ def categorize_sub_value(x, step):
 
 
 class PixelGroup:
-    __slots__ = 'color', 'image_width', 'identifier', 'members'
+    __slots__ = "color", "image_width", "identifier", "members"
 
-    def __init__(self, color: Tuple[float, float, float], image_width: int, identifier: int, members: Set[int]):
+    def __init__(
+        self,
+        color: Tuple[float, float, float],
+        image_width: int,
+        identifier: int,
+        members: Set[int],
+    ):
         self.color = color
         self.image_width = image_width
         self.identifier = identifier
@@ -46,7 +52,12 @@ class PixelGroup:
     def __eq__(self, other):
         return self.identifier == other.identifier
 
-    def to_basic_group(self, spaced_color: SpacedPoints, spaced_position: SpacedPoints, spaced_size: SpacedPoints):
+    def to_basic_group(
+        self,
+        spaced_color: SpacedPoints,
+        spaced_position: SpacedPoints,
+        spaced_size: SpacedPoints,
+    ):
         color = tuple(spaced_color.nearest_point(value) for value in self.color)
         center = tuple(spaced_position.nearest_point(value) for value in self.center)
         size = spaced_size.nearest_point(len(self.members))
@@ -55,13 +66,19 @@ class PixelGroup:
     def to_basic_group_raw(self):
         return BasicGroup(self.color, self.center, len(self.members))
 
-    def to_basic_group_intervals(self, nb_color_points, nb_position_points, nb_size_points):
-        color = tuple(categorize_value(value, 256 // nb_color_points) for value in self.color)
+    def to_basic_group_intervals(
+        self, nb_color_points, nb_position_points, nb_size_points
+    ):
+        color = tuple(
+            categorize_value(value, 256 // nb_color_points) for value in self.color
+        )
         center = categorize_position(*self.center, 32, 32 // nb_position_points)
         size = categorize_value(len(self.members), 1024 // nb_size_points)
         return BasicGroup(color, center, size)
 
-    def to_basic_group_intervals_alt(self, nb_color_points, nb_position_points, nb_size_points):
+    def to_basic_group_intervals_alt(
+        self, nb_color_points, nb_position_points, nb_size_points
+    ):
         cil = 256 // nb_color_points
         pil = 32 // nb_position_points
         sil = 1024 // nb_size_points
@@ -70,8 +87,12 @@ class PixelGroup:
         size = int(len(self.members) // sil) * sil
         return BasicGroup(color, center, size)
 
-    def to_basic_group_sub_intervals(self, nb_color_points, nb_position_points, nb_size_points):
-        color = tuple(categorize_sub_value(value, 256 // nb_color_points) for value in self.color)
+    def to_basic_group_sub_intervals(
+        self, nb_color_points, nb_position_points, nb_size_points
+    ):
+        color = tuple(
+            categorize_sub_value(value, 256 // nb_color_points) for value in self.color
+        )
         center = categorize_sub_position(*self.center, 32, 32 // nb_position_points)
         size = categorize_sub_value(len(self.members), 1024 // nb_size_points)
         return BasicGroup(color, center, size)

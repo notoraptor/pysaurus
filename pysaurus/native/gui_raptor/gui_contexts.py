@@ -1,7 +1,7 @@
 from typing import List
 
 from pysaurus.core.classes import Context
-from pysaurus.core.native.gui_raptor import rendering, symbols
+from pysaurus.native.gui_raptor import symbols, rendering
 
 
 class TextInfo(Context):

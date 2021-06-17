@@ -1,4 +1,5 @@
 from typing import Dict, List
+
 from pysaurus.core.database.database import Database
 from pysaurus.core.database.video import Video
 from pysaurus.core.miniature import Miniature
@@ -6,8 +7,15 @@ from pysaurus.core.testing import TEST_LIST_FILE_PATH
 
 
 class TestAPI:
-
-    __slots__ = ('files', 'database', 'videos', 'videos_dict', 'vid_to_v', 'min_dict', 'miniatures')
+    __slots__ = (
+        "files",
+        "database",
+        "videos",
+        "videos_dict",
+        "vid_to_v",
+        "min_dict",
+        "miniatures",
+    )
 
     def __init__(self, update=False, video_filenames=()):
         database = Database.load_from_list_file_path(TEST_LIST_FILE_PATH, update=update)
@@ -19,10 +27,13 @@ class TestAPI:
                 videos.append(video)
         else:
             videos = list(database.readable.found.with_thumbnails) + list(
-                database.readable.not_found.with_thumbnails)
+                database.readable.not_found.with_thumbnails
+            )
         videos_dict = {v.filename.path: v for v in videos}
         vid_to_v = {v.video_id: v for v in videos}
-        min_dict = {m.identifier: m for m in database.ensure_miniatures(return_miniatures=True)}
+        min_dict = {
+            m.identifier: m for m in database.ensure_miniatures(return_miniatures=True)
+        }
         miniatures = [min_dict[video.filename.path] for video in videos]
         self.files = video_filenames
         self.database = database  # type: Database

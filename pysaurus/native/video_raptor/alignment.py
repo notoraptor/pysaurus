@@ -3,14 +3,14 @@ from typing import Iterable, List
 
 from pysaurus.core.constants import VIDEO_BATCH_SIZE
 from pysaurus.core.miniature import Miniature
-from pysaurus.core.native.video_raptor.symbols import (
+from pysaurus.core.profiling import Profiler
+from pysaurus.native.video_raptor.symbols import (
     PtrPtrSequence,
     PtrSequence,
     fn_classifySimilarities,
     Sequence,
     c_int_p,
 )
-from pysaurus.core.profiling import Profiler
 
 
 def miniature_to_c_sequence(self, score=0.0, classification=-1):

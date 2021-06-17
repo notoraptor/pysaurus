@@ -15,11 +15,15 @@ from pysaurus.core.database.video import Video
 from pysaurus.core.miniature import Miniature
 from pysaurus.core.notification import DEFAULT_NOTIFIER
 from pysaurus.core.profiling import Profiler
+from pysaurus.core.testing import TEST_LIST_FILE_PATH
 from pysaurus.tests.image_management.graph import Graph
 from pysaurus.tests.image_management.group_computer import GroupComputer
-from pysaurus.tests.image_management.pixel_group import categorize_position, categorize_value, \
-    categorize_sub_position, categorize_sub_value
-from pysaurus.core.testing import TEST_LIST_FILE_PATH
+from pysaurus.tests.image_management.pixel_group import (
+    categorize_position,
+    categorize_value,
+    categorize_sub_position,
+    categorize_sub_value,
+)
 from pysaurus.tests.image_management.spaced_points import SpacedPoints
 
 
@@ -35,7 +39,16 @@ class SpacedPoints32To64(SpacedPoints):
 
 
 def job_find_similarities_(job):
-    tasks, job_id, threshold, min_count, vid_to_len, gid_to_vid_s, vid_to_b_to_s, notifier = job
+    (
+        tasks,
+        job_id,
+        threshold,
+        min_count,
+        vid_to_len,
+        gid_to_vid_s,
+        vid_to_b_to_s,
+        notifier,
+    ) = job
     job_count = len(tasks)
     similarities = {}
     for i, (vid, gid_s) in enumerate(tasks):
@@ -54,7 +67,16 @@ def job_find_similarities_(job):
 
 
 def job_find_similarities(job):
-    tasks, job_id, threshold, min_count, vid_to_len, gid_to_vid_s, vid_to_b_to_s, notifier = job
+    (
+        tasks,
+        job_id,
+        threshold,
+        min_count,
+        vid_to_len,
+        gid_to_vid_s,
+        vid_to_b_to_s,
+        notifier,
+    ) = job
     job_count = len(tasks)
     similarities = {}
     for i, (vid, gid_s) in enumerate(tasks):
@@ -108,14 +130,16 @@ def separate(
     group_to_videos: Dict[int, List[int]],
     video_to_group_to_len: Dict[int, Dict[int, int]],
 ):
-    print('Nb videos before', len(video_to_groups))
-    print('Nb groups before', len(group_to_videos))
+    print("Nb videos before", len(video_to_groups))
+    print("Nb groups before", len(group_to_videos))
     old_video_to_groups = video_to_groups
     old_group_to_videos = group_to_videos
     old_video_to_group_to_len = video_to_group_to_len
 
     # Keep only videos with groups.
-    video_to_groups = {video: groups for video, groups in video_to_groups.items() if groups}
+    video_to_groups = {
+        video: groups for video, groups in video_to_groups.items() if groups
+    }
     new_group_to_videos = {}
     common_groups = []
     for group, videos in group_to_videos.items():
@@ -127,78 +151,91 @@ def separate(
 
     group_to_min_len = {}
     for group, videos in group_to_videos.items():
-        group_to_min_len[group] = min(video_to_group_to_len[video][group] for video in videos)
+        group_to_min_len[group] = min(
+            video_to_group_to_len[video][group] for video in videos
+        )
     min_len, min_groups = get_min_val_keys(group_to_min_len)
     max_len, max_groups = get_max_val_keys(group_to_min_len)
-    print('Nb common', len(common_groups))
-    print('Nb videos', len(video_to_groups))
-    print('Nb groups', len(group_to_videos))
-    print('Group len interval', min_len, max_len)
+    print("Nb common", len(common_groups))
+    print("Nb videos", len(video_to_groups))
+    print("Nb groups", len(group_to_videos))
+    print("Group len interval", min_len, max_len)
     exit(1)
 
 
-
 def run(
-        database: Database,
-        videos: List[Video],
-        videos_dict: Dict[str, Video],
-        vid_to_v: Dict[int, Video],
-        miniatures: List[Miniature],
-        threshold=0.5,
-        min_count=5,
-        nb_color_points=6,
-        nb_position_points=8,
-        nb_size_points=32,
-        group_min_size=4,
-        pixel_distance_radius=2,
-        debug=True,
-        display_extremums=False,
-        duration_diff_seconds=None,
-        group_classifier=None,
-        just_display_groups=False,
-        return_groups=False,
-        watch=None
+    database: Database,
+    videos: List[Video],
+    videos_dict: Dict[str, Video],
+    vid_to_v: Dict[int, Video],
+    miniatures: List[Miniature],
+    threshold=0.5,
+    min_count=5,
+    nb_color_points=6,
+    nb_position_points=8,
+    nb_size_points=32,
+    group_min_size=4,
+    pixel_distance_radius=2,
+    debug=True,
+    display_extremums=False,
+    duration_diff_seconds=None,
+    group_classifier=None,
+    just_display_groups=False,
+    return_groups=False,
+    watch=None,
 ):
     if group_classifier is None:
-        group_classifier = ('default',)
+        group_classifier = ("default",)
     elif isinstance(group_classifier, str):
         group_classifier = (group_classifier,)
     else:
-        assert isinstance(group_classifier, (list, tuple, set)), f'Group classifier must be an optional (sequence of) string, got {group_classifier}'
+        assert isinstance(
+            group_classifier, (list, tuple, set)
+        ), f"Group classifier must be an optional (sequence of) string, got {group_classifier}"
 
-    similarity_percent = ((255 - pixel_distance_radius) * 100 / 255)
+    similarity_percent = (255 - pixel_distance_radius) * 100 / 255
 
     cpu_count = max(1, os.cpu_count() - 2)
     group_computer = GroupComputer(
         group_min_size=group_min_size,
         similarity_percent=similarity_percent,
-        print_step=PRINT_STEP
+        print_step=PRINT_STEP,
     )
 
-    tasks = [(i, m, len(miniatures), DEFAULT_NOTIFIER) for i, m in enumerate(miniatures)]
-    with Profiler(f'Segment {len(tasks)} videos.'):
+    tasks = [
+        (i, m, len(miniatures), DEFAULT_NOTIFIER) for i, m in enumerate(miniatures)
+    ]
+    with Profiler(f"Segment {len(tasks)} videos."):
         with Pool(cpu_count) as p:
             raw_output = list(p.imap(group_computer.async_compute, tasks))
-    DEFAULT_NOTIFIER.notify(notifications.VideoJob('', len(miniatures), len(miniatures)))
+    DEFAULT_NOTIFIER.notify(
+        notifications.VideoJob("", len(miniatures), len(miniatures))
+    )
 
     results = []
 
     for classifier in group_classifier:
-        print('Classifier', classifier)
+        print("Classifier", classifier)
 
-        if classifier == 'default':
+        if classifier == "default":
             spaced_color = SpacedPoints(256, nb_color_points)
             spaced_position = SpacedPoints32To64(nb_position_points)
             spaced_size = SpacedPoints(1024, nb_size_points)
-            callback = lambda g: g.to_basic_group(spaced_color, spaced_position, spaced_size)
-        elif classifier == 'intervals':
-            callback = lambda g: g.to_basic_group_intervals(nb_color_points, nb_position_points, nb_size_points)
-        elif classifier == 'sub_intervals':
-            callback = lambda sg: g.to_basic_group_sub_intervals(nb_color_points, nb_position_points, nb_size_points)
-        elif classifier == 'raw':
+            callback = lambda g: g.to_basic_group(
+                spaced_color, spaced_position, spaced_size
+            )
+        elif classifier == "intervals":
+            callback = lambda g: g.to_basic_group_intervals(
+                nb_color_points, nb_position_points, nb_size_points
+            )
+        elif classifier == "sub_intervals":
+            callback = lambda sg: g.to_basic_group_sub_intervals(
+                nb_color_points, nb_position_points, nb_size_points
+            )
+        elif classifier == "raw":
             callback = lambda g: g.to_basic_group_raw()
         else:
-            raise ValueError(f'Unknown group classifier option: {classifier}')
+            raise ValueError(f"Unknown group classifier option: {classifier}")
 
         output = []
         vid_to_b_to_s = {}
@@ -217,16 +254,16 @@ def run(
             for p, gs in output:
                 tmp[p] = set(gs)
             ps = sorted(tmp)
-            print('Nb. Groups:')
+            print("Nb. Groups:")
             for p in ps:
-                print(f'\t{len(tmp[p])}\t{p}')
-            print('Common groups:')
+                print(f"\t{len(tmp[p])}\t{p}")
+            print("Common groups:")
             for i in range(len(ps)):
                 for j in range(i + 1, len(ps)):
                     common = tmp[ps[i]] & tmp[ps[j]]
-                    print(f'\t{len(tmp[ps[i]])}\t{ps[i]}')
-                    print(f'\t{len(tmp[ps[j]])}\t{ps[j]}')
-                    print(f'\t\t{len(common)}')
+                    print(f"\t{len(tmp[ps[i]])}\t{ps[i]}")
+                    print(f"\t{len(tmp[ps[j]])}\t{ps[j]}")
+                    print(f"\t\t{len(common)}")
             return
 
         if watch:
@@ -236,16 +273,16 @@ def run(
             for p, gs in to_watch:
                 tmp[p] = set(gs)
             ps = sorted(tmp)
-            print(f'[{classifier}] Nb. Groups:')
+            print(f"[{classifier}] Nb. Groups:")
             for p in ps:
-                print(f'\t{len(tmp[p])}\t{p}')
-            print(f'[{classifier}] Common groups:')
+                print(f"\t{len(tmp[p])}\t{p}")
+            print(f"[{classifier}] Common groups:")
             for i in range(len(ps)):
                 for j in range(i + 1, len(ps)):
                     common = tmp[ps[i]] & tmp[ps[j]]
-                    print(f'\t{len(tmp[ps[i]])}\t{ps[i]}')
-                    print(f'\t{len(tmp[ps[j]])}\t{ps[j]}')
-                    print(f'\t\t{len(common)}')
+                    print(f"\t{len(tmp[ps[i]])}\t{ps[i]}")
+                    print(f"\t{len(tmp[ps[j]])}\t{ps[j]}")
+                    print(f"\t\t{len(common)}")
 
         it_output = iter(output)
         p, ig = next(it_output)
@@ -268,20 +305,27 @@ def run(
         all_groups = list(all_groups)
         assert len(video_to_groups) == len(videos)
         assert len(group_to_videos) == len(all_groups)
-        print(f'Groups count: total {len(all_groups)} min {min_g} max {max_g} average {nb_total_groups / len(output)}')
+        print(
+            f"Groups count: total {len(all_groups)} min {min_g} max {max_g} average {nb_total_groups / len(output)}"
+        )
 
         if display_extremums:
             for path, groups in video_to_groups.items():
                 if len(groups) == min_g:
-                    print('Min', path)
+                    print("Min", path)
                 if len(groups) == max_g:
-                    print('Max', path)
+                    print("Max", path)
 
-        with Profiler('Compress data'):
+        with Profiler("Compress data"):
             group_to_gid = {g: i for i, g in enumerate(all_groups)}
-            vid_to_gid_s = {videos_dict[path].video_id: [group_to_gid[g] for g in groups]
-                            for path, groups in video_to_groups.items()}
-            gid_to_vid_s = {group_to_gid[g]: [videos_dict[p].video_id for p in ps] for g, ps in group_to_videos.items()}
+            vid_to_gid_s = {
+                videos_dict[path].video_id: [group_to_gid[g] for g in groups]
+                for path, groups in video_to_groups.items()
+            }
+            gid_to_vid_s = {
+                group_to_gid[g]: [videos_dict[p].video_id for p in ps]
+                for g, ps in group_to_videos.items()
+            }
 
         vid_to_gid_to_s = {}
         for vid, b_to_s in vid_to_b_to_s.items():
@@ -293,8 +337,18 @@ def run(
         tasks = [(v, g) for v, g in vid_to_gid_s.items() if len(g)]
         vid_to_len = {v: len(g) for v, g in vid_to_gid_s.items()}
         jobs = functions.dispatch_tasks(
-            tasks, cpu_count, [threshold, min_count, vid_to_len, gid_to_vid_s, vid_to_gid_to_s, DEFAULT_NOTIFIER])
-        with Profiler('Async find similarities'):
+            tasks,
+            cpu_count,
+            [
+                threshold,
+                min_count,
+                vid_to_len,
+                gid_to_vid_s,
+                vid_to_gid_to_s,
+                DEFAULT_NOTIFIER,
+            ],
+        )
+        with Profiler("Async find similarities"):
             sub_results = functions.parallelize(job_find_similarities, jobs, cpu_count)
         results += sub_results
 
@@ -310,7 +364,7 @@ def run(
                 else:
                     weights[key] = (a, b)
 
-    with Profiler('filter weights'):
+    with Profiler("filter weights"):
         filtered_weights = {}
         for video_id, other_id in weights:
             if (other_id, video_id) in weights:
@@ -346,7 +400,7 @@ def run(
                 vs.update(sim_graph.edges.pop(ov))
         sim_groups.append(list(g))
 
-    with Profiler('Refine similar groups'):
+    with Profiler("Refine similar groups"):
         refined_sim_groups = []
         for sim_group in sim_groups:
             if len(sim_group) == 2:
@@ -370,22 +424,29 @@ def run(
                     if len(sub_group) > 1:
                         refined_sim_groups.append(sub_group)
                     indices_to_validate = other_indices
-        print('Before', len(sim_groups), sum(len(g) for g in sim_groups))
-        print('After', len(refined_sim_groups), sum(len(g) for g in refined_sim_groups))
+        print("Before", len(sim_groups), sum(len(g) for g in sim_groups))
+        print("After", len(refined_sim_groups), sum(len(g) for g in refined_sim_groups))
         sim_groups = refined_sim_groups
 
     sim_groups.sort(key=lambda g: len(g), reverse=True)
     sim_vids = set()
     for gs in sim_groups:
         sim_vids.update(gs)
-    assert len(sim_vids) == sum(len(sg) for sg in sim_groups), (len(sim_vids), sum(len(sg) for sg in sim_groups))
+    assert len(sim_vids) == sum(len(sg) for sg in sim_groups), (
+        len(sim_vids),
+        sum(len(sg) for sg in sim_groups),
+    )
 
     if not debug:
-        special_property = '__image__'
-        DEFAULT_NOTIFIER.notify(notifications.Message('Create video property', special_property))
+        special_property = "__image__"
+        DEFAULT_NOTIFIER.notify(
+            notifications.Message("Create video property", special_property)
+        )
         if not database.has_prop_type(special_property):
-            database.add_prop_type(PropType(special_property, '', True))
-        DEFAULT_NOTIFIER.notify(notifications.Message('Clear video property', special_property))
+            database.add_prop_type(PropType(special_property, "", True))
+        DEFAULT_NOTIFIER.notify(
+            notifications.Message("Clear video property", special_property)
+        )
         for video in videos:
             video.properties[special_property] = []
 
@@ -403,13 +464,20 @@ def run(
                             sir.append((similarity, a, b))
             tag = f'{str(tag_id + 1).rjust(s, "0")} {" ".join(f"{s}({a}/{b})" for s, a, b in sorted(set(sir)))}'
             for video_id in similar_video_indices:
-                vid_to_v[video_id].properties[special_property].extend([tag, '(similar)'])
+                vid_to_v[video_id].properties[special_property].extend(
+                    [tag, "(similar)"]
+                )
         for video in videos:
-            video.properties[special_property] = sorted(set(video.properties[special_property]))
+            video.properties[special_property] = sorted(
+                set(video.properties[special_property])
+            )
         database.save()
 
     DEFAULT_NOTIFIER.notify(
-        notifications.Message(f'Similar groups: {len(sim_groups)}, similar videos: {len(sim_vids)}, ratio {len(sim_vids) / len(sim_groups)}'))
+        notifications.Message(
+            f"Similar groups: {len(sim_groups)}, similar videos: {len(sim_vids)}, ratio {len(sim_vids) / len(sim_groups)}"
+        )
+    )
     if return_groups:
         return sim_groups
     return len(sim_groups), len(sim_vids)
@@ -432,18 +500,21 @@ def main(files=None, expected_groups=None):
     group_min_sizes = (1,)
     px_dst_radius = (8,)
 
-    cases = list(itertools.product(
-        reversed(thresholds),
-        reversed(min_counts),
-        reversed(color_points),
-        reversed(position_points),
-        reversed(size_points),
-        reversed(group_min_sizes),
-        reversed(px_dst_radius),
-    ))
+    cases = list(
+        itertools.product(
+            reversed(thresholds),
+            reversed(min_counts),
+            reversed(color_points),
+            reversed(position_points),
+            reversed(size_points),
+            reversed(group_min_sizes),
+            reversed(px_dst_radius),
+        )
+    )
     from pysaurus.core.components import Duration
-    print('Nb. of cases:', len(cases))
-    print('Estimated total time:', Duration.from_minutes(len(cases) * 1.5))
+
+    print("Nb. of cases:", len(cases))
+    print("Estimated total time:", Duration.from_minutes(len(cases) * 1.5))
     # exit(0)
 
     database = Database.load_from_list_file_path(TEST_LIST_FILE_PATH, update=False)
@@ -455,10 +526,13 @@ def main(files=None, expected_groups=None):
             videos.append(video)
     else:
         videos = list(database.readable.found.with_thumbnails) + list(
-            database.readable.not_found.with_thumbnails)  # type: List[Video]
+            database.readable.not_found.with_thumbnails
+        )  # type: List[Video]
     videos_dict = {v.filename.path: v for v in videos}  # type: Dict[str, Video]
     vid_to_v = {v.video_id: v for v in videos}  # type: Dict[int, Video]
-    min_dict = {m.identifier: m for m in database.ensure_miniatures(return_miniatures=True)}
+    min_dict = {
+        m.identifier: m for m in database.ensure_miniatures(return_miniatures=True)
+    }
     miniatures = [min_dict[video.filename.path] for video in videos]
     results = []
     assert expected_groups
@@ -466,9 +540,21 @@ def main(files=None, expected_groups=None):
     curr_case = None
     curr_ratio = None
     for index_case, case in enumerate(cases):
-        threshold, min_count, nb_color_points, nb_position_points, nb_size_points, group_min_size, pixel_distance_radius = case
+        (
+            threshold,
+            min_count,
+            nb_color_points,
+            nb_position_points,
+            nb_size_points,
+            group_min_size,
+            pixel_distance_radius,
+        ) = case
         sim_groups = run(
-            database, videos, videos_dict, vid_to_v, miniatures,
+            database,
+            videos,
+            videos_dict,
+            vid_to_v,
+            miniatures,
             threshold=threshold,
             min_count=min_count,
             nb_color_points=nb_color_points,
@@ -476,8 +562,8 @@ def main(files=None, expected_groups=None):
             nb_size_points=nb_size_points,
             group_min_size=group_min_size,
             pixel_distance_radius=pixel_distance_radius,
-            group_classifier=('intervals', 'sub_intervals'),
-            return_groups=True
+            group_classifier=("intervals", "sub_intervals"),
+            return_groups=True,
         )
         sim_vids = set()
         path_to_group = {}
@@ -497,41 +583,67 @@ def main(files=None, expected_groups=None):
                 nb_found += 1
             else:
                 nb_not_found += 1
-        print('Found', nb_found, 'not found', nb_not_found, (nb_found * 100) / (nb_found + nb_not_found), '%')
+        print(
+            "Found",
+            nb_found,
+            "not found",
+            nb_not_found,
+            (nb_found * 100) / (nb_found + nb_not_found),
+            "%",
+        )
         if curr_nb_found is None:
             curr_nb_found = nb_found
             curr_case = case
             curr_ratio = ratio
-            print('Initialized', nb_found, ratio, case)
+            print("Initialized", nb_found, ratio, case)
         elif nb_found > curr_nb_found:
             curr_nb_found = nb_found
             curr_case = case
             curr_ratio = ratio
-            print('Better', nb_found, ratio, case)
+            print("Better", nb_found, ratio, case)
         else:
-            print('Previous still better', curr_nb_found, curr_ratio, curr_case)
+            print("Previous still better", curr_nb_found, curr_ratio, curr_case)
         results.append((ratio, len(sim_groups), len(sim_vids), nb_found, case))
         # if (index_case + 1) % 5 == 0:
         #     break
 
     results.sort()
-    print('Final results:')
+    print("Final results:")
     for i, r in enumerate(results):
         ratio, nb_groups, nb_videos, nb_found, case = r
-        print(f'[{i}] Ratio {ratio} Groups {nb_groups} Videos {nb_videos} Found {nb_found} Case {case}')
+        print(
+            f"[{i}] Ratio {ratio} Groups {nb_groups} Videos {nb_videos} Found {nb_found} Case {case}"
+        )
 
 
-def unique_run(threshold, min_count, nb_color_points, nb_position_points, nb_size_points, group_min_size,
-               pixel_distance_radius, group_classifier=None, expected_groups=None, watch=None):
+def unique_run(
+    threshold,
+    min_count,
+    nb_color_points,
+    nb_position_points,
+    nb_size_points,
+    group_min_size,
+    pixel_distance_radius,
+    group_classifier=None,
+    expected_groups=None,
+    watch=None,
+):
     database = Database.load_from_list_file_path(TEST_LIST_FILE_PATH, update=False)
     videos = list(database.readable.found.with_thumbnails) + list(
-        database.readable.not_found.with_thumbnails)  # type: List[Video]
+        database.readable.not_found.with_thumbnails
+    )  # type: List[Video]
     videos_dict = {v.filename.path: v for v in videos}  # type: Dict[str, Video]
     vid_to_v = {v.video_id: v for v in videos}  # type: Dict[int, Video]
-    min_dict = {m.identifier: m for m in database.ensure_miniatures(return_miniatures=True)}
+    min_dict = {
+        m.identifier: m for m in database.ensure_miniatures(return_miniatures=True)
+    }
     miniatures = [min_dict[video.filename.path] for video in videos]
     sim_groups = run(
-        database, videos, videos_dict, vid_to_v, miniatures,
+        database,
+        videos,
+        videos_dict,
+        vid_to_v,
+        miniatures,
         threshold=threshold,
         min_count=min_count,
         nb_color_points=nb_color_points,
@@ -542,7 +654,7 @@ def unique_run(threshold, min_count, nb_color_points, nb_position_points, nb_siz
         debug=False,
         group_classifier=group_classifier,
         return_groups=True,
-        watch=watch
+        watch=watch,
     )
     if expected_groups:
         path_to_group = {}
@@ -565,21 +677,28 @@ def unique_run(threshold, min_count, nb_color_points, nb_position_points, nb_siz
                 # for gid, ps in found.items():
                 #     for p in ps:
                 #         print(f'\t{gid}\t{p}')
-        print('Found', nb_found, 'not found', nb_not_found, (nb_found * 100) / (nb_found + nb_not_found), '%')
+        print(
+            "Found",
+            nb_found,
+            "not found",
+            nb_not_found,
+            (nb_found * 100) / (nb_found + nb_not_found),
+            "%",
+        )
 
 
 def observe(
-        threshold,
-        min_count,
-        nb_color_points,
-        nb_position_points,
-        nb_size_points,
-        group_min_size,
-        pixel_distance_radius,
-        files,
-        *,
-        group_classifier: Optional[str] = 'intervals',
-        just_display_groups=True,
+    threshold,
+    min_count,
+    nb_color_points,
+    nb_position_points,
+    nb_size_points,
+    group_min_size,
+    pixel_distance_radius,
+    files,
+    *,
+    group_classifier: Optional[str] = "intervals",
+    just_display_groups=True,
 ):
     database = Database.load_from_list_file_path(TEST_LIST_FILE_PATH, update=False)
 
@@ -591,11 +710,17 @@ def observe(
 
     videos_dict = {v.filename.path: v for v in videos}  # type: Dict[str, Video]
     vid_to_v = {v.video_id: v for v in videos}  # type: Dict[int, Video]
-    min_dict = {m.identifier: m for m in database.ensure_miniatures(return_miniatures=True)}
+    min_dict = {
+        m.identifier: m for m in database.ensure_miniatures(return_miniatures=True)
+    }
     miniatures = [min_dict[video.filename.path] for video in videos]
 
     run(
-        database, videos, videos_dict, vid_to_v, miniatures,
+        database,
+        videos,
+        videos_dict,
+        vid_to_v,
+        miniatures,
         threshold=threshold,
         min_count=min_count,
         nb_color_points=nb_color_points,
@@ -613,27 +738,27 @@ def _main():
     step = 8
     for y in range(32):
         for x in range(32):
-            print(categorize_position(x, y, width, step), end=' ')
+            print(categorize_position(x, y, width, step), end=" ")
         print()
     print()
     for y in range(32):
         for x in range(32):
-            print(categorize_sub_position(x, y, width, step), end=' ')
+            print(categorize_sub_position(x, y, width, step), end=" ")
         print()
     print()
     for x in range(32):
-        print(categorize_value(x, step), end=' ')
+        print(categorize_value(x, step), end=" ")
     print()
     for x in range(32):
-        print(categorize_sub_value(x, step), end=' ')
+        print(categorize_sub_value(x, step), end=" ")
     print()
     exit(0)
 
 
 PRINT_STEP = 100
-if __name__ == '__main__':
+if __name__ == "__main__":
     # _main()
-    with Profiler('Main function.'):
+    with Profiler("Main function."):
         example_files = [
             r"J:\donnees\divers\autres\p\[HD, 1920x1080p] Fucked and Oiled Up - Susy Gala  HD-Porn.me.mp4",
             r"Q:\donnees\autres\p\Susy Gala - Fucked And Oiled Up - Ready Or Not Here I Cum #bigtits.mp4",
@@ -658,7 +783,13 @@ if __name__ == '__main__':
             if len(local_files) > 1:
                 groups.append(local_files)
                 files.extend(local_files)
-        print('Expected similarities', len(groups), 'Files', len(files), len(files) / len(groups))
+        print(
+            "Expected similarities",
+            len(groups),
+            "Files",
+            len(files),
+            len(files) / len(groups),
+        )
         # main(expected_groups=groups)
         # unique_run(0.5, 5, 4, 4, 32, 4, 4, group_classifier=('intervals', 'sub_intervals'))
         # observe(0.5, 5, 4, 4, 34, 4, 4, files=files, group_classifier=None, just_display_groups=False)
@@ -684,8 +815,14 @@ if __name__ == '__main__':
             nb_size_points=4,
             pixel_distance_radius=6,
             #
-            group_classifier=('intervals', 'sub_intervals'),
+            group_classifier=("intervals", "sub_intervals"),
             expected_groups=groups,
             # watch=watch
         )
-        print('Expected similarities', len(groups), 'Files', len(files), len(files) / len(groups))
+        print(
+            "Expected similarities",
+            len(groups),
+            "Files",
+            len(files),
+            len(files) / len(groups),
+        )

@@ -2,7 +2,7 @@ from typing import Tuple
 
 
 class BasicGroup:
-    __slots__ = 'color', 'center', 'size'
+    __slots__ = "color", "center", "size"
 
     def __init__(self, color: Tuple, center: Tuple, size: int):
         self.color = color

@@ -1,7 +1,7 @@
 from typing import Tuple, List, Optional
 
-from pysaurus.core.fraction import Fraction
 from pysaurus.core.database.database import Database
+from pysaurus.core.fraction import Fraction
 from pysaurus.core.functions import pgcd, flat_to_coord
 from pysaurus.core.miniature import Miniature
 from pysaurus.core.profiling import Profiler
@@ -21,7 +21,9 @@ def compute_fraction(a, b):
 
 def global_intensity(miniature):
     # type: (Miniature) -> Fraction
-    return Fraction(sum(miniature.r) + sum(miniature.g) + sum(miniature.b), 3 * miniature.size)
+    return Fraction(
+        sum(miniature.r) + sum(miniature.g) + sum(miniature.b), 3 * miniature.size
+    )
 
 
 TOP_LEFT = 0
@@ -40,19 +42,19 @@ ZONE_TO_POS = [TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT]
 
 
 class Zone:
-    __slots__ = 'zone',
+    __slots__ = ("zone",)
     TO_STRING = [
-        'top left',
-        'cross left',
-        'top center',
-        'cross right',
-        'top right',
-        'center right',
-        'bottom right',
-        'bottom center',
-        'bottom left',
-        'center left',
-        'center',
+        "top left",
+        "cross left",
+        "top center",
+        "cross right",
+        "top right",
+        "center right",
+        "bottom right",
+        "bottom center",
+        "bottom left",
+        "center left",
+        "center",
     ]
 
     def __init__(self, zone):
@@ -86,32 +88,45 @@ def whitest_region(miniature):
         return ZONE_TO_POS[intensities[max(zones)][0]]
     max_nb_zones = max(len(local_zones) for local_zones in intensities.values())
     max_intensity = max(
-        intensity for intensity in intensities if len(intensities[intensity]) == max_nb_zones)
+        intensity
+        for intensity in intensities
+        if len(intensities[intensity]) == max_nb_zones
+    )
     max_zones = intensities[max_intensity]
     if len(max_zones) == 1:
         return ZONE_TO_POS[max_zones[0]]
     if len(max_zones) == 2:
         couple = tuple(sorted(max_zones))
-        if couple == (0, 1): return TOP_CENTER
-        if couple == (0, 2): return CENTER_LEFT
-        if couple == (0, 3): return CROSS_LEFT
-        if couple == (1, 2): return CROSS_RIGHT
-        if couple == (1, 3): return CENTER_RIGHT
-        if couple == (2, 3): return BOTTOM_CENTER
+        if couple == (0, 1):
+            return TOP_CENTER
+        if couple == (0, 2):
+            return CENTER_LEFT
+        if couple == (0, 3):
+            return CROSS_LEFT
+        if couple == (1, 2):
+            return CROSS_RIGHT
+        if couple == (1, 3):
+            return CENTER_RIGHT
+        if couple == (2, 3):
+            return BOTTOM_CENTER
         raise ValueError(couple)
     if len(max_zones) == 3:
         triple = tuple(sorted(max_zones))
-        if triple == (0, 1, 2): return TOP_LEFT
-        if triple == (0, 1, 3): return TOP_RIGHT
-        if triple == (1, 2, 3): return BOTTOM_LEFT
-        if triple == (0, 2, 3): return BOTTOM_RIGHT
+        if triple == (0, 1, 2):
+            return TOP_LEFT
+        if triple == (0, 1, 3):
+            return TOP_RIGHT
+        if triple == (1, 2, 3):
+            return BOTTOM_LEFT
+        if triple == (0, 2, 3):
+            return BOTTOM_RIGHT
         raise ValueError(triple)
     if len(max_zones) == 4:
         return CENTER_CENTER
 
 
 class SuperMiniature:
-    __slots__ = 'miniature', 'intensity', 'zone'
+    __slots__ = "miniature", "intensity", "zone"
 
     def __init__(self, miniature):
         self.miniature = miniature
@@ -134,36 +149,37 @@ class SuperMiniature:
 
 def main():
     database = Database.load_from_list_file_path(TEST_LIST_FILE_PATH)
-    with Profiler('Getting miniatures:'):
+    with Profiler("Getting miniatures:"):
         miniatures_dict = database.ensure_miniatures()
-    print(len(miniatures_dict), 'miniature(s)')
+    print(len(miniatures_dict), "miniature(s)")
     miniatures = list(miniatures_dict.values())
     intensities = []
     for i, miniature in enumerate(miniatures):
         intensities.append(SuperMiniature(miniature))
         if (i + 1) % 1000 == 0:
-            print(i + 1, '...')
+            print(i + 1, "...")
     intensities.sort()
     count_inequalities = 0
     for i in range(1, len(intensities)):
         if intensities[i - 1].comparator != intensities[i].comparator:
             count_inequalities += 1
             print(
-                'Different here',
+                "Different here",
                 intensities[i].intensity,
                 float(intensities[i].intensity),
                 Zone(intensities[i].zone),
                 intensities[i].miniature.identifier,
             )
             thumb_path = database.get_video_from_filename(
-                intensities[i].miniature.identifier).thumbnail_path
-            print('file://%s' % thumb_path)
-            print('xdg-open', thumb_path)
+                intensities[i].miniature.identifier
+            ).thumbnail_path
+            print("file://%s" % thumb_path)
+            print("xdg-open", thumb_path)
             print()
-    print(count_inequalities, '/', len(intensities) - 1, 'inequalities.')
+    print(count_inequalities, "/", len(intensities) - 1, "inequalities.")
     print(intensities[0].intensity, float(intensities[0].intensity))
     print(intensities[-1].intensity, float(intensities[-1].intensity))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

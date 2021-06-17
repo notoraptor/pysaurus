@@ -1,5 +1,8 @@
+from typing import Dict, Any, Set
+
+
 class Graph:
-    __slots__ = 'edges',
+    __slots__ = ("edges",)
 
     def __init__(self):
         self.edges = {}  # type: Dict[Any, Set[Any]]
