@@ -1,90 +1,53 @@
 from typing import List
 
-from pysaurus.core.classes import Context
 from pysaurus.native.gui_raptor import symbols, rendering
 
 
-class TextInfo(Context):
-    __slots__ = ["native"]
+class Event:
+    @staticmethod
+    def new():
+        return symbols.EventNew()
 
-    def __init__(self, pattern_text):
-        # type: (rendering.PatternText) -> None
-        super().__init__()
-        self.native = symbols.PatternTextInfoNew(pattern_text.native_pointer())
+    @staticmethod
+    def destroy(event):
+        symbols.EventDelete(event)
 
-    def on_exit(self):
-        symbols.PatternTextInfoDelete(self.native)
-
-    @property
-    def length(self):
-        return self.native.contents.length
-
-    @property
-    def width(self):
-        return self.native.contents.width
-
-    @property
-    def height(self):
-        return self.native.contents.height
-
-    @property
-    def left(self):
-        return self.native.contents.left
-
-    @property
-    def top(self):
-        return self.native.contents.top
-
-    @property
-    def coordinates(self):
-        return [
-            (
-                self.native.contents.coordinates[2 * i],
-                self.native.contents.coordinates[2 * i + 1],
-            )
-            for i in range(self.native.contents.length)
-        ]
+    @staticmethod
+    def is_closed(event):
+        return symbols.EventClosed(event)
 
 
-class Event(Context):
-    __slots__ = ["event"]
+class Window:
+    @staticmethod
+    def new(width, height, title=None):
+        return symbols.WindowNew(width, height, title)
 
-    def __init__(self):
-        super().__init__()
-        self.event = symbols.EventNew()
+    @staticmethod
+    def destroy(window):
+        if Window.is_open(window):
+            Window.close(window)
+        assert not Window.is_open(window)
+        symbols.WindowDelete(window)
 
-    def on_exit(self):
-        symbols.EventDelete(self.event)
+    @staticmethod
+    def is_open(window):
+        # type: (object) -> bool
+        return symbols.WindowIsOpen(window)
 
-    def is_closed(self):
-        return symbols.EventClosed(self.event)
+    @staticmethod
+    def close(window):
+        symbols.WindowClose(window)
 
+    @staticmethod
+    def next_event(window, event):
+        # type: (object, Event) -> bool
+        return symbols.WindowNextEvent(window, event)
 
-class Window(Context):
-    __slots__ = ["window"]
-
-    def __init__(self, width, height, title=None):
-        super().__init__()
-        self.window = symbols.WindowNew(width, height, title)
-
-    def on_exit(self):
-        symbols.WindowDelete(self.window)
-
-    def is_open(self):
-        # type: () -> bool
-        return symbols.WindowIsOpen(self.window)
-
-    def close(self):
-        symbols.WindowClose(self.window)
-
-    def next_event(self, event):
-        # type: (Event) -> bool
-        return symbols.WindowNextEvent(self.window, event.event)
-
-    def draw(self, patterns):
-        # type: (List[rendering.Pattern]) -> None
-        pointers = [pattern.pointer() for pattern in patterns]
-        count = len(pointers)
+    @staticmethod
+    def draw(window, patterns):
+        # type: (object, List[rendering.Pattern]) -> None
+        count = len(patterns)
         array_type = symbols.PatternPtr * count
-        array_object = array_type(*pointers)
-        return symbols.WindowDraw(self.window, array_object, count)
+        return symbols.WindowDraw(
+            window, array_type(*[pattern.pointer() for pattern in patterns]), count
+        )

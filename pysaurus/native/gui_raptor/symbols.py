@@ -15,10 +15,6 @@ from pysaurus.native.clibrary import CLibrary
 FloatPtr = POINTER(c_float)
 
 
-class Window(Structure):
-    _fields_ = [("handle", c_void_p)]
-
-
 class Event(Structure):
     _fields_ = [("handle", c_void_p)]
 
@@ -96,7 +92,6 @@ class PatternRectangle(Structure):
     ]
 
 
-WindowPtr = POINTER(Window)
 EventPtr = POINTER(Event)
 PatternTextPtr = POINTER(PatternText)
 PatternFramePtr = POINTER(PatternFrame)
@@ -106,12 +101,12 @@ PatternTextInfoPtr = POINTER(PatternTextInfo)
 
 _lib = CLibrary("guiRaptor")
 
-WindowNew = _lib.prototype("WindowNew", WindowPtr, [c_uint, c_uint, c_char_p])
-WindowDelete = _lib.prototype("WindowDelete", None, [WindowPtr])
-WindowIsOpen = _lib.prototype("WindowIsOpen", c_bool, [WindowPtr])
-WindowNextEvent = _lib.prototype("WindowNextEvent", c_bool, [WindowPtr, EventPtr])
-WindowClose = _lib.prototype("WindowClose", None, [WindowPtr])
-WindowDraw = _lib.prototype("WindowDraw", None, [WindowPtr, PatternPtrPtr, c_uint])
+WindowNew = _lib.prototype("WindowNew", c_void_p, [c_uint, c_uint, c_char_p])
+WindowDelete = _lib.prototype("WindowDelete", None, [c_void_p])
+WindowIsOpen = _lib.prototype("WindowIsOpen", c_bool, [c_void_p])
+WindowNextEvent = _lib.prototype("WindowNextEvent", c_bool, [c_void_p, EventPtr])
+WindowClose = _lib.prototype("WindowClose", None, [c_void_p])
+WindowDraw = _lib.prototype("WindowDraw", None, [c_void_p, PatternPtrPtr, c_uint])
 EventNew = _lib.prototype("EventNew", EventPtr, None)
 EventDelete = _lib.prototype("EventDelete", None, [EventPtr])
 EventClosed = _lib.prototype("EventClosed", c_bool, [EventPtr])

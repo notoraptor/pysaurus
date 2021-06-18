@@ -1,45 +1,33 @@
-from ctypes import Structure, c_char_p, c_void_p, cast, pointer
+from ctypes import c_char_p, c_void_p, cast, pointer
 from typing import Iterable, List, Optional
 
-from pysaurus.native.gui_raptor import symbols, scheme
-
-
-def get_ctypes(cls):
-    return {name: c_type for name, c_type in cls._fields_}
+from pysaurus.native.gui_raptor import symbols
 
 
 class Pattern:
-    __slots__ = ["__type", "__native", "__pattern", "__pointer"]
-    __scheme__ = scheme.Scheme
+    __slots__ = ()
     __pattern__ = symbols.NoPattern
-    __ctypes__ = get_ctypes(symbols.NoPattern)
+    __type__ = None
 
-    def __init__(self, drawing_type):
-        # type: (int) -> None
-        self.__type = drawing_type
-        self.__native = self.__pattern__()
-        self.__pattern = symbols.Pattern(
-            self.__type, cast(pointer(self.__native), c_void_p)
-        )
-        self.__pointer = pointer(self.__pattern)
-
-    def __update(self):
-        for field, _ in self.__native._fields_:
+    def __new_native(self):
+        native = self.__pattern__()
+        for field, _ in self.__pattern__._fields_:
             if hasattr(self, "get_native_%s" % field):
                 value = getattr(self, f"get_native_{field}")()
             else:
                 value = getattr(self, field)
                 if isinstance(value, str):
                     value = c_char_p(value.encode())
-            setattr(self.__native, field, value)
+            setattr(native, field, value)
+        return native
 
     def pointer(self):
-        self.__update()
-        return self.__pointer
+        return pointer(
+            symbols.Pattern(self.__type__, cast(pointer(self.__new_native()), c_void_p))
+        )
 
     def native_pointer(self):
-        self.__update()
-        return pointer(self.__native)
+        return pointer(self.__new_native())
 
 
 class PatternText(Pattern):
@@ -57,8 +45,8 @@ class PatternText(Pattern):
         "underline",
         "strike",
     )
-    __scheme__ = scheme.Text
     __pattern__ = symbols.PatternText
+    __type__ = symbols.DRAWING_TYPE_TEXT
 
     def __init__(
         self,
@@ -75,7 +63,6 @@ class PatternText(Pattern):
         underline=False,
         strike=False,
     ):
-        super().__init__(symbols.DRAWING_TYPE_TEXT)
         self.x = x
         self.y = y
         self.font = font
@@ -95,12 +82,11 @@ class PatternText(Pattern):
 
 class PatternFrame(Pattern):
     __slots__ = ("x", "y", "width", "height", "patterns")
-    __scheme__ = scheme.Frame
     __pattern__ = symbols.PatternFrame
+    __type__ = symbols.DRAWING_TYPE_SURFACE
 
     def __init__(self, x=0, y=0, width=0, height=0, patterns=None):
         # type: (float, float, int, int, Optional[Iterable[Pattern]]) -> None
-        super().__init__(symbols.DRAWING_TYPE_SURFACE)
         self.x = x
         self.y = y
         self.width = width
@@ -111,19 +97,17 @@ class PatternFrame(Pattern):
         return len(self.patterns)
 
     def get_native_patterns(self):
-        array = [pattern.pointer() for pattern in self.patterns]
         array_type = symbols.PatternPtr * len(self.patterns)
-        return array_type(*array)
+        return array_type(*[pattern.pointer() for pattern in self.patterns])
 
 
 class PatternImage(Pattern):
     __slots__ = ("x", "y", "width", "height", "src")
-    __scheme__ = scheme.Image
     __pattern__ = symbols.PatternImage
+    __type__ = symbols.DRAWING_TYPE_IMAGE
 
     def __init__(self, x=0, y=0, width=-1, height=-1, src=None):
         # type: (float, float, float, float, str) -> None
-        super().__init__(symbols.DRAWING_TYPE_IMAGE)
         self.x = x
         self.y = y
         self.width = width
@@ -133,14 +117,13 @@ class PatternImage(Pattern):
 
 class PatternRectangle(Pattern):
     __slots__ = ("x", "y", "width", "height", "outline", "color", "outline_color")
-    __scheme__ = scheme.Rectangle
     __pattern__ = symbols.PatternRectangle
+    __type__ = symbols.DRAWING_TYPE_RECTANGLE
 
     def __init__(
         self, x=0, y=0, width=0, height=0, outline=0, color=None, outline_color=None
     ):
         # type: (float, float, float, float, float, str, str) -> None
-        super().__init__(symbols.DRAWING_TYPE_RECTANGLE)
         self.x = x
         self.y = y
         self.width = width

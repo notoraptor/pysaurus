@@ -1,26 +1,19 @@
 import os
+
 from pysaurus.core.components import AbsolutePath
-from pysaurus.core.functions import package_dir
 from pysaurus.native.gui_raptor import rendering
-from pysaurus.native.gui_raptor.api import Event, TextInfo, Window
+from pysaurus.native.gui_raptor.gui_contexts import Event, Window
+from pysaurus.native.gui_raptor.text_info import TextInfo
 
 
 def main():
     image_folder = AbsolutePath(os.path.dirname(__file__))
     path_image_1 = AbsolutePath.join(image_folder, "tigre.jpg")
     path_image_2 = AbsolutePath.join(image_folder, "Tigerramki.jpg")
-    assert path_image_1.isfile()
-    assert path_image_2.isfile()
+
     text = rendering.PatternText(content="Hello World! 漢字漢字 漢字! See you soon!", size=50)
-    with TextInfo(text) as text_info:
-        print(text_info.length)
-        print(text_info.width)
-        print(text_info.height)
-        print(text_info.left)
-        print(text_info.top)
-        print(text_info.coordinates)
     frame = rendering.PatternFrame(
-        x=100,
+        x=300,
         y=100,
         width=400,
         height=500,
@@ -33,16 +26,26 @@ def main():
             text,
         ],
     )
-    window = Window(1200, 800, "Hello tigers")
-    event = Event()
-    with window, event:
-        while window.is_open():
-            while window.next_event(event):
-                if event.is_closed():
-                    window.close()
-            if window.is_open():
-                # window.draw(elements)
-                window.draw([frame])
+
+    with TextInfo(text) as text_info:
+        print(text_info.length)
+        print(text_info.width)
+        print(text_info.height)
+        print(text_info.left)
+        print(text_info.top)
+        print(text_info.coordinates)
+
+    window = Window.new(1200, 800, "Hello tigers")
+    event = Event.new()
+    while Window.is_open(window):
+        while Window.next_event(window, event):
+            if Event.is_closed(event):
+                Window.close(window)
+        if Window.is_open(window):
+            Window.draw(window, [frame])
+    Event.destroy(event)
+    Window.destroy(window)
+    print("End./.")
 
 
 if __name__ == "__main__":
