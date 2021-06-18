@@ -10,7 +10,7 @@ from pysaurus.core.database.database import Database
 from pysaurus.core.functions import timestamp_microseconds
 from pysaurus.core.miniature import Miniature
 from pysaurus.core.testing import TEST_LIST_FILE_PATH
-from pysaurus.native.video_raptor import alignment as native_alignment
+from pysaurus.other.native.video_raptor import alignment as native_alignment
 
 PRINT_STEP = 500
 SIM_LIMIT = 0.9

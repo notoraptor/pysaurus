@@ -1,9 +1,9 @@
 import os
 
 from pysaurus.core.components import AbsolutePath
-from pysaurus.native.gui_raptor import rendering
-from pysaurus.native.gui_raptor.gui_contexts import Event, Window
-from pysaurus.native.gui_raptor.text_info import TextInfo
+from pysaurus.other.native.gui_raptor import rendering
+from pysaurus.other.native.gui_raptor.gui_contexts import Event, Window
+from pysaurus.other.native.gui_raptor.text_info import TextInfo
 
 
 def main():

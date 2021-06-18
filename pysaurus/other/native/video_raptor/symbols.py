@@ -12,7 +12,7 @@ from ctypes import (
     c_void_p,
 )
 
-from pysaurus.native.clibrary import CLibrary
+from pysaurus.other.native.clibrary import CLibrary
 
 ERROR_DETAIL_MAX_LENGTH = 64
 

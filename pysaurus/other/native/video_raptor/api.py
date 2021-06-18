@@ -4,7 +4,7 @@ from typing import List, Optional
 
 from pysaurus.core.classes import ListView
 from pysaurus.core.modules import System
-from pysaurus.native.video_raptor import symbols
+from pysaurus.other.native.video_raptor import symbols
 
 if System.is_linux():
     # Trying to prevent this warning on Ubuntu:

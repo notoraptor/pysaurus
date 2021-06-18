@@ -16,15 +16,15 @@ from pysaurus.core.miniature import Miniature
 from pysaurus.core.notification import DEFAULT_NOTIFIER
 from pysaurus.core.profiling import Profiler
 from pysaurus.core.testing import TEST_LIST_FILE_PATH
-from pysaurus.tests.image_management.graph import Graph
-from pysaurus.tests.image_management.group_computer import GroupComputer
-from pysaurus.tests.image_management.pixel_group import (
+from pysaurus.other.tests.image_management.graph import Graph
+from pysaurus.other.tests.image_management.group_computer import GroupComputer
+from pysaurus.other.tests.image_management.pixel_group import (
     categorize_position,
     categorize_value,
     categorize_sub_position,
     categorize_sub_value,
 )
-from pysaurus.tests.image_management.spaced_points import SpacedPoints
+from pysaurus.other.tests.image_management.spaced_points import SpacedPoints
 
 
 class SpacedPoints32To64(SpacedPoints):

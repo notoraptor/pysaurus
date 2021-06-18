@@ -1,6 +1,7 @@
 from typing import List
 
-from pysaurus.native.gui_raptor import symbols, rendering
+from pysaurus.other.native.gui_raptor import symbols
+from pysaurus.other.native.gui_raptor import rendering
 
 
 class Event:

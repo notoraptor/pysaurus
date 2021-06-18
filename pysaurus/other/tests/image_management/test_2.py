@@ -4,11 +4,11 @@ from typing import Dict, Tuple, List, Union
 from pysaurus.core import functions
 from pysaurus.core.classes import StringPrinter
 from pysaurus.core.miniature import Miniature
-from pysaurus.tests.image_management.basic_group import BasicGroup
-from pysaurus.tests.image_management.draw import Draw, dilate_miniature_data
-from pysaurus.tests.image_management.group_computer import GroupComputer
-from pysaurus.tests.image_management.pixel_group import PixelGroup
-from pysaurus.tests.test_utils import TestAPI
+from pysaurus.other.tests.image_management.basic_group import BasicGroup
+from pysaurus.other.tests.image_management.draw import Draw, dilate_miniature_data
+from pysaurus.other.tests.image_management.group_computer import GroupComputer
+from pysaurus.other.tests.image_management.pixel_group import PixelGroup
+from pysaurus.other.tests.test_utils import TestAPI
 
 
 class PixelMapper:

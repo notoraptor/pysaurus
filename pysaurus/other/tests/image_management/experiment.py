@@ -2,11 +2,11 @@ from typing import List
 
 from pysaurus.core.classes import Table
 from pysaurus.core.miniature import Miniature
-from pysaurus.tests.image_management.draw import Draw, dilate_miniature_data
-from pysaurus.tests.image_management.group_computer import GroupComputer
-from pysaurus.tests.image_management.spaced_points import SpacedPoints
-from pysaurus.tests.image_management.test_images import SpacedPoints32To64
-from pysaurus.tests.test_utils import TestAPI
+from pysaurus.other.tests.image_management.draw import Draw, dilate_miniature_data
+from pysaurus.other.tests.image_management.group_computer import GroupComputer
+from pysaurus.other.tests.image_management.spaced_points import SpacedPoints
+from pysaurus.other.tests.image_management.test_images import SpacedPoints32To64
+from pysaurus.other.tests.test_utils import TestAPI
 
 
 class ColorIterator:

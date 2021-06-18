@@ -1,8 +1,8 @@
 from typing import Tuple, Set
 
 from pysaurus.core import functions
-from pysaurus.tests.image_management.basic_group import BasicGroup
-from pysaurus.tests.image_management.spaced_points import SpacedPoints
+from pysaurus.other.tests.image_management.basic_group import BasicGroup
+from pysaurus.other.tests.image_management.spaced_points import SpacedPoints
 
 
 def categorize_position(x, y, width, step):
