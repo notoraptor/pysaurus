@@ -10,16 +10,17 @@ class Pattern:
     __type__ = None
 
     def __new_native(self):
-        native = self.__pattern__()
+        values = []
         for field, _ in self.__pattern__._fields_:
-            if hasattr(self, "get_native_%s" % field):
-                value = getattr(self, f"get_native_{field}")()
+            getter_name = f"get_native_{field}"
+            if hasattr(self, getter_name):
+                value = getattr(self, getter_name)()
             else:
                 value = getattr(self, field)
-                if isinstance(value, str):
-                    value = c_char_p(value.encode())
-            setattr(native, field, value)
-        return native
+            if isinstance(value, str):
+                value = c_char_p(value.encode())
+            values.append(value)
+        return self.__pattern__(*values)
 
     def pointer(self):
         return pointer(
