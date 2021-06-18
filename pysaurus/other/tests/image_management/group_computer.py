@@ -2,7 +2,9 @@ from typing import List
 
 from pysaurus.core.database import notifications
 from pysaurus.other.tests.image_management.graph import Graph
-from pysaurus.other.tests.image_management.pixel_comparator import DistancePixelComparator
+from pysaurus.other.tests.image_management.pixel_comparator import (
+    DistancePixelComparator,
+)
 from pysaurus.other.tests.image_management.pixel_group import PixelGroup
 
 

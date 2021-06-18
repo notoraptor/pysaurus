@@ -10,7 +10,7 @@ from ctypes import (
     c_void_p,
 )
 
-from pysaurus.other.native.clibrary import CLibrary
+from pysaurus.core.clibrary import CLibrary
 
 FloatPtr = POINTER(c_float)
 

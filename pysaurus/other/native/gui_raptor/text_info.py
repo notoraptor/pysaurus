@@ -1,5 +1,5 @@
 from pysaurus.core.classes import Context
-from pysaurus.other.native.gui_raptor import symbols, rendering
+from . import symbols, rendering
 
 
 class TextInfo(Context):

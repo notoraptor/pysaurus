@@ -1,7 +1,7 @@
 from ctypes import c_char_p, c_void_p, cast, pointer
 from typing import Iterable, List, Optional
 
-from pysaurus.other.native.gui_raptor import symbols
+from . import symbols
 
 
 class Pattern:
