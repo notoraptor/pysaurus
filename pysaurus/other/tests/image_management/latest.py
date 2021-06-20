@@ -20,52 +20,47 @@ def load_default_database() -> Database:
     )
 
 
-def _print_stats(decomposed_miniatures: List[DecomposedMiniature]):
-    nb_min_groups = min(len(dm.pixel_groups) for dm in decomposed_miniatures)
-    nb_max_groups = max(len(dm.pixel_groups) for dm in decomposed_miniatures)
-    nb_min_size = min(
-        len(g.members) for dm in decomposed_miniatures for g in dm.pixel_groups
-    )
-    nb_max_size = max(
-        len(g.members) for dm in decomposed_miniatures for g in dm.pixel_groups
-    )
-    print("Nb groups", nb_min_groups, "to", nb_max_groups)
-    print("Group size", nb_min_size, "to", nb_max_size)
+def _print_stats(dec_mins: List[DecomposedMiniature]):
+    nb_min_groups = min(len(dm.pixel_groups) for dm in dec_mins)
+    nb_max_groups = max(len(dm.pixel_groups) for dm in dec_mins)
+    nb_min_size = min(len(g.members) for dm in dec_mins for g in dm.pixel_groups)
+    nb_max_size = max(len(g.members) for dm in dec_mins for g in dm.pixel_groups)
+    print("Nb  groups from", nb_min_groups, "to", nb_max_groups)
+    print("Group size from", nb_min_size, "to", nb_max_size)
 
 
 @Profiler.profile()
 def main():
+    nb_groups = 4
+    group_computer = GroupComputer.from_pixel_distance_radius(
+        pixel_distance_radius=8, group_min_size=0, print_step=2000
+    )
+    spaced_color = SpacedPoints(256, 6)
+    spaced_position = SpacedPoints32To64(2)
+    # spaced_size = SpacedPoints(1024, 2)
+
     db = load_default_database()
     min_dict = {m.identifier: m for m in db.ensure_miniatures(return_miniatures=True)}
     videos = db.get_videos("readable", "with_thumbnails")
     miniatures = [min_dict[v.filename.path] for v in videos]
-    group_computer = GroupComputer.from_pixel_distance_radius(
-        pixel_distance_radius=8, group_min_size=0, print_step=1000
-    )
-    decomposed_miniatures = group_computer.batch_compute_groups(miniatures)
+    dec_mins = group_computer.batch_compute_groups(miniatures)
     selection = []
-    for decomped_miniature in decomposed_miniatures:
-        groups = decomped_miniature.pixel_groups
-        if len(groups) < 4:
+    for dec_min in dec_mins:
+        groups = dec_min.pixel_groups
+        if len(groups) < nb_groups:
             continue
         sorted_groups = sorted(groups, key=lambda g: len(g.members), reverse=True)
-        selected_groups = sorted_groups[:4]
-        assert len(selected_groups) == 4
         selection.append(
-            DecomposedMiniature(
-                decomped_miniature.miniature_identifier, selected_groups
-            )
+            DecomposedMiniature(dec_min.miniature_identifier, sorted_groups[:nb_groups])
         )
-    print(len(miniatures), "videos(s).")
+    print(len(videos), "videos(s).")
     print("Similarity", group_computer.similarity)
-    print("Before", len(decomposed_miniatures))
-    _print_stats(decomposed_miniatures)
+    print("Before", len(dec_mins))
+    _print_stats(dec_mins)
     print("After", len(selection))
     _print_stats(selection)
 
     with Profiler("Sign"):
-        spaced_color = SpacedPoints(256, 6)
-        spaced_position = SpacedPoints32To64(2)
         signature_to_identifiers = {}
         for i, dm in enumerate(selection):
             video_signature = []
@@ -81,29 +76,21 @@ def main():
             signature_to_identifiers.setdefault(video_signature, []).append(
                 dm.miniature_identifier
             )
-            if (i + 1) % 1000 == 0:
+            if (i + 1) % group_computer.print_step == 0:
                 print(i + 1, "/", len(selection))
         similarities = {
             s: ids for s, ids in signature_to_identifiers.items() if len(ids) > 1
         }
-        print(
-            "Found",
-            len(similarities),
-            "similaritie(s) on",
-            len(selection),
-            "video(s) selected over",
-            len(decomposed_miniatures),
-        )
+        print("Found", len(similarities), "similarities.")
 
     with Profiler("Save"):
         special_property = "<similarity>"
-        prop_type = PropType(special_property, "", True)
         if not db.has_prop_type(special_property):
-            db.add_prop_type(prop_type, False)
+            db.add_prop_type(PropType(special_property, "", True), False)
         vid_dict = {v.filename.path: v for v in videos}
         for video in videos:
             video.properties[special_property] = []
-        for i, (sim, ids) in enumerate(similarities.items()):
+        for i, (_, ids) in enumerate(similarities.items()):
             for p in ids:
                 vid_dict[p].properties[special_property].append(str(i))
         db.save()

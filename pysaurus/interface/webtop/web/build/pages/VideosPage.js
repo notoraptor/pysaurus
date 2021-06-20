@@ -644,9 +644,9 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         }
 
         focusPropertyValue(propertyName, propertyValue) {
-          python_call('set_groups', propertyName, true, "count", true, true).then(() => this.backend(['classifier_select_group_by_value', propertyValue], {
+          this.backend(['classifier_focus_prop_val', propertyName, propertyValue], {
             pageNumber: 0
-          })).catch(backend_error);
+          });
         }
 
       });

@@ -106,7 +106,9 @@ class FeatureAPI:
         self.provider.group_layer.set_group_id(0)
         self.database.notifier.notify(notifications.PropertiesModified([prop_name]))
 
-    def classifier_select_group_by_value(self, field_value):
+    def classifier_focus_prop_val(self, prop_name, field_value):
+        self.set_groups(prop_name, True, "count", True, True)
+        self.provider.get_view()
         print("classifier select group by value", field_value)
         group_id = self.provider.grouping_layer.get_group_id(field_value)
         self.provider.classifier_layer.set_path([])

@@ -614,8 +614,6 @@ export class VideosPage extends React.Component {
     }
 
     focusPropertyValue(propertyName, propertyValue) {
-        python_call('set_groups', propertyName, true, "count", true, true)
-            .then(() => this.backend(['classifier_select_group_by_value', propertyValue], {pageNumber: 0}))
-            .catch(backend_error);
+        this.backend(['classifier_focus_prop_val', propertyName, propertyValue], {pageNumber: 0});
     }
 }
