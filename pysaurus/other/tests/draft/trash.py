@@ -2,7 +2,7 @@ import math
 from typing import Union, List
 
 from pysaurus.core.miniature import Miniature
-from pysaurus.other.tests.image_management.spaced_points import SpacedPoints
+from pysaurus.other.tests.image_management.elements.spaced_points import SpacedPoints
 
 
 class LinearFunction:

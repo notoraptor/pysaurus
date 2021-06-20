@@ -1,12 +1,18 @@
 from typing import List
 
+from pysaurus.other.tests.image_management.test_utils import Tester
+
 from pysaurus.core.classes import Table
 from pysaurus.core.miniature import Miniature
-from pysaurus.other.tests.image_management.draw import Draw, dilate_miniature_data
-from pysaurus.other.tests.image_management.group_computer import GroupComputer
-from pysaurus.other.tests.image_management.spaced_points import SpacedPoints
-from pysaurus.other.tests.image_management.test_images import SpacedPoints32To64
-from pysaurus.other.tests.test_utils import TestAPI
+from pysaurus.other.tests.image_management.elements.draw import (
+    Draw,
+    dilate_miniature_data,
+)
+from pysaurus.other.tests.image_management.elements.group_computer import GroupComputer
+from pysaurus.other.tests.image_management.elements.spaced_points import (
+    SpacedPoints,
+    SpacedPoints32To64,
+)
 
 
 class ColorIterator:
@@ -72,7 +78,7 @@ CLASSIFIER_SUB_INTERVALS = "sub_intervals"
 CLASSIFIER_RAW = "raw"
 
 
-class Run(TestAPI):
+class Run(Tester):
     __slots__ = ()
 
     def __init__(self, files: List[str]):

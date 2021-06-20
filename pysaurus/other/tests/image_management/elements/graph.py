@@ -11,6 +11,9 @@ class Graph:
         self.edges.setdefault(a, set()).add(b)
         self.edges.setdefault(b, set()).add(a)
 
-    def remove(self, a):
+    # Unused
+    def __remove(self, a):
         for b in self.edges.pop(a):
             self.edges[b].remove(a)
+            if not self.edges[b]:
+                del self.edges[b]

@@ -51,8 +51,6 @@ class Database:
         "__id_to_video",
         "sys_is_case_insensitive",
         "video_interval",
-        "unreadable",
-        "readable",
         "__prop_parser",
     )
 
@@ -173,6 +171,9 @@ class Database:
         with open(self.__json_path.path, "w") as output_file:
             json.dump(json_output, output_file)
         self.__notifier.notify(notifications.DatabaseSaved(self))
+
+    def save(self):
+        self.__save()
 
     def __ensure_identifiers(self):
         id_to_video = {}  # type: Dict[int, Union[VideoState, Video]]

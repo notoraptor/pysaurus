@@ -6,7 +6,7 @@ from pysaurus.core.miniature import Miniature
 from pysaurus.core.testing import TEST_LIST_FILE_PATH
 
 
-class TestAPI:
+class Tester:
     __slots__ = (
         "files",
         "database",

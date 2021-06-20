@@ -1,14 +1,18 @@
 from collections import Counter
 from typing import Dict, Tuple, List, Union
 
+from pysaurus.other.tests.image_management.test_utils import Tester
+
 from pysaurus.core import functions
 from pysaurus.core.classes import StringPrinter
 from pysaurus.core.miniature import Miniature
-from pysaurus.other.tests.image_management.basic_group import BasicGroup
-from pysaurus.other.tests.image_management.draw import Draw, dilate_miniature_data
-from pysaurus.other.tests.image_management.group_computer import GroupComputer
-from pysaurus.other.tests.image_management.pixel_group import PixelGroup
-from pysaurus.other.tests.test_utils import TestAPI
+from pysaurus.other.tests.image_management.elements.basic_group import BasicGroup
+from pysaurus.other.tests.image_management.elements.draw import (
+    Draw,
+    dilate_miniature_data,
+)
+from pysaurus.other.tests.image_management.elements.group_computer import GroupComputer
+from pysaurus.other.tests.image_management.elements.pixel_group import PixelGroup
 
 
 class PixelMapper:
@@ -259,7 +263,7 @@ class Space:
                     exit(-1)
 
 
-class Run(TestAPI):
+class Run(Tester):
     __slots__ = (
         "mapped_files",
         "nb_color_points",

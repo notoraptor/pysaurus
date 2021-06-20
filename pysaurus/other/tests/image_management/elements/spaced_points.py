@@ -3,7 +3,7 @@ from typing import Union
 
 class SpacedPoints:
     """
-    Number of points and related interval size for some lengths:
+    Number of points and related interval size for available lengths:
     Length 32:
         2: 30
     Length 64:
@@ -45,7 +45,7 @@ class SpacedPoints:
         if length not in self._MAP_POINTS:
             self._MAP_POINTS[length] = self.available_points_and_spaces(length)
         points = self._MAP_POINTS[length]
-        assert nb_points in points, tuple(points)
+        assert nb_points in points
         self.d = points[nb_points] + 1
 
     def nearest_point(self, value: Union[int, float]):
@@ -72,3 +72,15 @@ class SpacedPoints:
             if il:
                 pt_to_il[pt] = il
         return pt_to_il
+
+
+class SpacedPoints32To64(SpacedPoints):
+    # Positions are in interval [0; 32].
+    # We want to put it on interval [0; 64] for a better resolution.
+    # So, we multiply position value by 2.
+
+    def __init__(self, nb_points):
+        super().__init__(64, nb_points)
+
+    def nearest_point(self, value: Union[int, float]):
+        return super().nearest_point(2 * value)

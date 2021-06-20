@@ -16,26 +16,18 @@ from pysaurus.core.miniature import Miniature
 from pysaurus.core.notification import DEFAULT_NOTIFIER
 from pysaurus.core.profiling import Profiler
 from pysaurus.core.testing import TEST_LIST_FILE_PATH
-from pysaurus.other.tests.image_management.graph import Graph
-from pysaurus.other.tests.image_management.group_computer import GroupComputer
-from pysaurus.other.tests.image_management.pixel_group import (
+from pysaurus.other.tests.image_management.elements.graph import Graph
+from pysaurus.other.tests.image_management.elements.group_computer import GroupComputer
+from pysaurus.other.tests.image_management.elements.pixel_group import (
     categorize_position,
     categorize_value,
     categorize_sub_position,
     categorize_sub_value,
 )
-from pysaurus.other.tests.image_management.spaced_points import SpacedPoints
-
-
-class SpacedPoints32To64(SpacedPoints):
-    # Positions are in interval [0; 32]. We want to put it on interval [0; 64] for a better resolution.
-    # So, we multiply position value by 2.
-
-    def __init__(self, nb_points):
-        super().__init__(64, nb_points)
-
-    def nearest_point(self, value: Union[int, float]):
-        return super().nearest_point(2 * value)
+from pysaurus.other.tests.image_management.elements.spaced_points import (
+    SpacedPoints,
+    SpacedPoints32To64,
+)
 
 
 def job_find_similarities_(job):
@@ -790,21 +782,6 @@ if __name__ == "__main__":
             len(files),
             len(files) / len(groups),
         )
-        # main(expected_groups=groups)
-        # unique_run(0.5, 5, 4, 4, 32, 4, 4, group_classifier=('intervals', 'sub_intervals'))
-        # observe(0.5, 5, 4, 4, 34, 4, 4, files=files, group_classifier=None, just_display_groups=False)
-        # ?
-        # unique_run(0.5, 5, 8, 4, 8, 4, 4, group_classifier=('intervals', 'sub_intervals'))
-        # good
-        # unique_run(0.5, 5, 8, 4, 8, 4, 4, group_classifier=('intervals', 'sub_intervals'))
-        # unique_run(0.5, 5, 8, 4, 32, 4, 2, group_classifier=('intervals', 'sub_intervals'))
-
-        # watch = [
-        #     r"E:\donnees\autres\p\busty-asian-real-estate-agent-gets-her-pussy-destroyed_1080p.mp4",
-        #     r"J:\donnees\divers\autres\p\Mena Li and a big black cock__p720.mp4",
-        #     r"M:\donnees\autres\p\mena li - Asian pussy gets destroyed with a BBC__p720.mp4",
-        #     r"R:\donnees\autres\p\mena li - Scene 2 From Chocolate Desires - 1080p.mp4",
-        # ]
         unique_run(
             threshold=0.5,
             min_count=0,
