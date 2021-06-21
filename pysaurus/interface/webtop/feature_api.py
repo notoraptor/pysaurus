@@ -1,3 +1,4 @@
+import sys
 from typing import Optional
 
 from pysaurus.core.components import FileSize, Duration
@@ -28,7 +29,9 @@ class FeatureAPI:
     def backend(self, callargs, page_size, page_number, selector=None):
         if callargs:
             ret = getattr(self, callargs[0])(*callargs[1:])
-            assert ret is None
+            if ret is not None:
+                print("Ignored value returned by", callargs, file=sys.stderr)
+                print(ret, file=sys.stderr)
         return self.get_info_and_videos(page_size, page_number, selector)
 
     def get_info_and_videos(self, page_size, page_number, selector=None):

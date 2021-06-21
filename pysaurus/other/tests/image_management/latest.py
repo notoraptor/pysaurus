@@ -4,6 +4,8 @@ from pysaurus.core.database.database import Database
 from pysaurus.core.database.properties import PropType
 from pysaurus.core.profiling import Profiler
 from pysaurus.core.testing import TEST_LIST_FILE_PATH
+from pysaurus.other.tests.image_management.elements.color_dominance import \
+    get_color_signature
 from pysaurus.other.tests.image_management.elements.decomposed_miniature import (
     DecomposedMiniature,
 )
@@ -37,7 +39,7 @@ def main():
     )
     spaced_color = SpacedPoints(256, 6)
     spaced_position = SpacedPoints32To64(2)
-    # spaced_size = SpacedPoints(1024, 2)
+    spaced_size = SpacedPoints(1024, 4)
 
     db = load_default_database()
     min_dict = {m.identifier: m for m in db.ensure_miniatures(return_miniatures=True)}
@@ -93,6 +95,12 @@ def main():
         for i, (_, ids) in enumerate(similarities.items()):
             for p in ids:
                 vid_dict[p].properties[special_property].append(str(i))
+                props = vid_dict[p].properties
+                identifiers = props.get("identifier", [])
+                ns = get_color_signature(min_dict[p], spaced_color).key
+                ns = tuple(spaced_size.nearest_point(x - 1) + 1 for x in ns)
+                identifiers = [i for i in identifiers if not i.startswith("(")] + [str(ns)]
+                props["identifier"] = identifiers
         db.save()
 
 

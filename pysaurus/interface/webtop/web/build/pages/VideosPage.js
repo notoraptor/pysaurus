@@ -584,7 +584,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
 
         editPropertyValue(indicesSet) {
           const groupDef = this.state.groupDef;
-          const name = groupDef.field.substr(1);
+          const name = groupDef.field;
           const values = [];
           const indices = Array.from(indicesSet);
           indices.sort();
