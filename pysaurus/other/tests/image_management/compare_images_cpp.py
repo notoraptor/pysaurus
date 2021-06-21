@@ -60,23 +60,16 @@ def similar_group_to_html_file(
         html.write(
             """
         <style>
-        body {
-            font-family: Verdana, Geneva, sans-serif;
-        }
-        .thumbnail {
-            display: inline-block;
-        }
-        .image {
-        }
+        body {font-family: Verdana, Geneva, sans-serif;}
+        .thumbnail {display: inline-block;}
+        .image {}
         img {
             max-width: 100%;
             height: auto;
             display: block;
             margin: auto;
         }
-        td {
-            vertical-align: top;
-        }
+        td {vertical-align: top;}
         .score {
             text-align: center;
             font-weight: bold;
@@ -186,14 +179,12 @@ def main():
         AbsolutePath.ensure(sys.argv[1]) if len(sys.argv) > 1 else TEST_LIST_FILE_PATH
     )
     database = Database.load_from_list_file_path(
-        list_file_path=list_file_path, update=False
+        list_file_path=list_file_path, update=False, ensure_miniatures=False
     )
     miniatures = sorted(
         database.ensure_miniatures(return_miniatures=True), key=lambda m: m.identifier
     )
-    print(
-        "Extracted miniatures from %d/%d videos." % (len(miniatures), database.nb_valid)
-    )
+    print(f"Extracted {len(miniatures)} miniatures.")
 
     sim_groups = find_similar_images(miniatures)
     print("Finally found", len(sim_groups), "similarity groups.")
@@ -205,9 +196,9 @@ def main():
     )
     sim_groups.sort(key=lambda group: len(group))
 
-    html_dir = AbsolutePath(".html")
-    unique_id = timestamp_microseconds()
     if sim_groups:
+        unique_id = timestamp_microseconds()
+        html_dir = AbsolutePath(".html")
         if html_dir.isdir():
             for file_name in html_dir.listdir():
                 if file_name.endswith(".html"):
@@ -217,8 +208,10 @@ def main():
         else:
             os.makedirs(html_dir.path, exist_ok=True)
 
-    for i, g in enumerate(sim_groups):
-        similar_group_to_html_file(i + 1, g, miniatures, database, html_dir, unique_id)
+        for i, g in enumerate(sim_groups):
+            similar_group_to_html_file(
+                i + 1, g, miniatures, database, html_dir, unique_id
+            )
 
     json_groups = [
         {
@@ -231,12 +224,10 @@ def main():
         }
         for group in sim_groups
     ]
-
     json_output_file_name = "similarities.json"
     with open(json_output_file_name, "w") as file:
         json.dump(json_groups, file)
-
-    print("Similarities saved in", json_output_file_name)
+    print("End./.")
 
 
 if __name__ == "__main__":
