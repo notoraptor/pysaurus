@@ -112,7 +112,7 @@ class GroupComputer:
     def async_compute(self, context) -> DecomposedMiniature:
         index_task, miniature, nb_all_tasks, notifier = context
         if (index_task + 1) % self.print_step == 0:
-            notifier.notify(notifications.VideoJob("", index_task + 1, nb_all_tasks))
+            notifier.notify(notifications.VideoJob(None, index_task + 1, nb_all_tasks))
         return DecomposedMiniature(miniature.identifier, self.compute_groups(miniature))
 
     def batch_compute_groups(

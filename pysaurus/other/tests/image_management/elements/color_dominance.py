@@ -31,6 +31,6 @@ def get_color_signature(m: Miniature, spaced_color: SpacedPoints) -> ColorDomina
         color_dom_sum.add_dom(
             spaced_color.nearest_point(pixel[0]),
             spaced_color.nearest_point(pixel[1]),
-            spaced_color.nearest_point(pixel[2])
+            spaced_color.nearest_point(pixel[2]),
         )
     return color_dom_sum
