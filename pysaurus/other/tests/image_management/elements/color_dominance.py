@@ -24,13 +24,18 @@ class ColorDominance:
         self.gb += g == b > r
         self.rgb += r == g == b
 
+    def get_dominance_order(self):
+        couples = sorted(((getattr(self, c), i) for i, c in enumerate(self.__slots__)), reverse=True)
+        key = sorted((i, r) for r, (v, i) in enumerate(couples))
+        return tuple(r for i, r in key)
 
-def get_color_signature(m: Miniature, spaced_color: SpacedPoints) -> ColorDominance:
-    color_dom_sum = ColorDominance()
-    for pixel in m.data():
-        color_dom_sum.add_dom(
-            spaced_color.nearest_point(pixel[0]),
-            spaced_color.nearest_point(pixel[1]),
-            spaced_color.nearest_point(pixel[2]),
-        )
-    return color_dom_sum
+    @classmethod
+    def key_from_pixels(cls, data, spaced_color: SpacedPoints):
+        color_dom_sum = cls()
+        for pixel in data:
+            color_dom_sum.add_dom(
+                spaced_color.nearest_point(pixel[0]),
+                spaced_color.nearest_point(pixel[1]),
+                spaced_color.nearest_point(pixel[2]),
+            )
+        return color_dom_sum.get_dominance_order()
