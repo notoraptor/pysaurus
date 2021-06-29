@@ -1,9 +1,11 @@
+import itertools
+
 from pysaurus.core.functions import compute_nb_couples
 from pysaurus.other.tests.image_management.latest import load_default_database
 from pysaurus.core.profiling import Profiler
-from typing import List
-from pysaurus.other.tests.image_management.elements.corner_group_computer import (
-    CornerGroupComputer,
+from typing import List, Tuple, Any
+from pysaurus.other.tests.image_management.elements.group_computer import (
+    GroupComputer,
 )
 from pysaurus.other.tests.image_management.elements.spaced_points import (
     SpacedPoints,
@@ -13,6 +15,17 @@ from pysaurus.other.tests.image_management.elements import miniature_utils
 import matplotlib.pyplot as plt
 from pysaurus.other.tests.image_management.compare_images_cpp import SIM_LIMIT
 from pysaurus.other.tests.image_management.elements.raw_similarities import RawSimilarities
+from pysaurus.other.tests.image_management.elements.db_tester import DbTester
+from pysaurus.core.miniature import Miniature
+
+
+def min_and_max(values):
+    iterable_values = iter(values)
+    min_value = max_value = next(iterable_values)
+    for value in iterable_values:
+        min_value = min(min_value, value)
+        max_value = max(max_value, value)
+    return min_value, max_value
 
 
 def draw_intensity(colors: List[float], counts: List[float]):
@@ -23,69 +36,106 @@ def draw_intensity(colors: List[float], counts: List[float]):
     plt.show()
 
 
-def main():
-    group_computer = CornerGroupComputer.from_pixel_distance_radius(
+class MiniaturesPerKey:
+    __slots__ = "keys", "groups"
+    keys: List
+    groups: List
+
+    def __init__(self, keys: List[Any], groups: List[List[str]]):
+        self.keys = keys
+        self.groups = groups
+
+    def __len__(self):
+        return len(self.keys)
+
+
+class MiniaturesPerNbGroups(MiniaturesPerKey):
+    __slots__ = ()
+
+
+class MiniaturesPerGray(MiniaturesPerKey):
+    __slots__ = ()
+
+
+class Comparisons:
+    __slots__ = "miniatures_per_key", "sim_limit"
+
+    def __init__(self, miniatures_per_key: MiniaturesPerKey, sim_limit):
+        self.miniatures_per_key = miniatures_per_key
+        self.sim_limit = sim_limit
+
+    def cross_comparisons(self):
+        n = len(self.miniatures_per_key.keys)
+        for i in range(n):
+            gray_i = float(self.miniatures_per_key.keys[i])
+            for j in range(i + 1, n):
+                if (255 - abs(gray_i - float(self.miniatures_per_key.keys[j]))) / 255 < self.sim_limit:
+                    break
+                yield i, j
+            if (i + 1) % 1000 == 0:
+                print(i + 1, "/", n)
+
+    def count_inner_comparisons(self):
+        return sum(compute_nb_couples(len(ic)) for ic in self.miniatures_per_key.groups)
+
+    def inner_couples(self):
+        for ic in self.miniatures_per_key.groups:
+            yield from itertools.combinations(ic, 2)
+
+    def cross_couples(self):
+        for r, c in self.cross_comparisons():
+            yield from itertools.product(self.miniatures_per_key.groups[r], self.miniatures_per_key.groups[c])
+
+
+@Profiler.profile()
+def count_miniatures_groups(miniatures: List[Miniature]):
+    group_computer = GroupComputer.from_pixel_distance_radius(
         pixel_distance_radius=6, group_min_size=0, print_step=2000
     )
-    spaced_color = SpacedPoints(256, 6)
-    spaced_position = SpacedPoints32To64(2)
-    rs = RawSimilarities.new()
+    nb_groups_to_mins = {}
+    for dm in group_computer.batch_compute_groups(miniatures):
+        nb_groups_to_mins.setdefault(len(dm.pixel_groups), []).append(dm.miniature_identifier)
+    g_ms = sorted(nb_groups_to_mins.items(), key=lambda item: item[0])
+    print("Number of group counts", len(g_ms))
+    print("Nb groups", min(c for c, _ in g_ms), max(c for c, _ in g_ms))
+    print("Nb videos", min(len(g) for _, g in g_ms), max(len(g) for _, g in g_ms))
+    return MiniaturesPerNbGroups([c for c, _ in g_ms], [g for _, g in g_ms])
 
-    db = load_default_database()
-    videos = db.get_videos("readable", "with_thumbnails")
-    min_dict = {m.identifier: m for m in db.ensure_miniatures(return_miniatures=True)}
-    vid_dict = {v.filename.path: v for v in videos}
-    miniatures = [min_dict[v.filename.path] for v in videos]
-    # dec_mins = group_computer.batch_compute_groups(miniatures)
+
+@Profiler.profile()
+def get_miniature_grays(miniatures: List[Miniature]):
     gray_to_miniatures = {}
     for m in miniatures:
-        gray_to_miniatures.setdefault(miniature_utils.global_intensity(m), []).append(m)
-    gray_and_miniatures = sorted(gray_to_miniatures.items(), key=lambda item: item[0])
-    colors = []
-    counts = []
-    for color, mins in gray_and_miniatures:
-        colors.append(float(color))
-        counts.append(len(mins))
-    assert sum(counts) == len(miniatures)
-    print("Number of colors", len(colors))
-    print("Colors", min(colors), max(colors))
-    print("Counts", min(counts), max(counts))
-    with Profiler("Collect expected comparisons"):
-        nb_comparisons = sum(compute_nb_couples(n) for n in counts)
-        nb_connected = 0
-        for i in range(len(gray_and_miniatures)):
-            gray_i, mins_i = gray_and_miniatures[i]
-            gray_i = float(gray_i)
-            for x in range(len(mins_i)):
-                for y in range(x + 1, len(mins_i)):
-                    nb_connected += rs.are_connected(mins_i[x].identifier, mins_i[y].identifier)
-            for j in range(i + 1, len(gray_and_miniatures)):
-                gray_j, mins_j = gray_and_miniatures[j]
-                if (255 - abs(gray_i - float(gray_j))) / 255 < SIM_LIMIT:
-                    break
-                nb_comparisons += len(mins_i) * len(mins_j)
-                for m_i in mins_i:
-                    for m_j in mins_j:
-                        nb_connected += rs.are_connected(m_i.identifier, m_j.identifier)
-            if (i + 1) % 500 == 0:
-                print(i + 1, "/", len(gray_and_miniatures))
-    # with Profiler("Compute nb. expected comparisons"):
-    #     nb_comparisons = sum(compute_nb_couples(n) for n in counts)
-    #     for i in range(len(colors)):
-    #         for j in range(i + 1, len(colors)):
-    #             if (255 - abs(colors[i] - colors[j])) / 255 < SIM_LIMIT:
-    #                 break
-    #             nb_comparisons += counts[i] * counts[j]
-    #         if (i + 1) % 1000 == 0:
-    #             print(i + 1, "/", len(colors))
-    nb_max_comparisons = compute_nb_couples(len(miniatures))
-    print("Nb. videos", len(miniatures))
+        gray_to_miniatures.setdefault(miniature_utils.global_intensity(m), []).append(m.identifier)
+    g_ms = sorted(gray_to_miniatures.items(), key=lambda item: item[0])
+    print("Number of colors", len(g_ms))
+    print("Colors", float(min(c for c, _ in g_ms)), float(max(c for c, _ in g_ms)))
+    print("Counts", min(len(g) for _, g in g_ms), max(len(g) for _, g in g_ms))
+    return MiniaturesPerGray([c for c, _ in g_ms], [g for _, g in g_ms])
+
+
+@Profiler.profile()
+def main():
+    rs = RawSimilarities.new()
+    tester = DbTester()
+    # gc_to_ids = count_miniatures_groups(tester.miniatures)
+    gr_to_ids = get_miniature_grays(tester.miniatures)
+    comparisons = Comparisons(gr_to_ids, SIM_LIMIT)
+    nb_comparisons = comparisons.count_inner_comparisons()
+    nb_connected = 0
+    with Profiler("Count and check comparisons"):
+        for couple in comparisons.inner_couples():
+            nb_connected += rs.are_connected(*couple)
+        for couple in comparisons.cross_couples():
+            nb_comparisons += 1
+            nb_connected += rs.are_connected(*couple)
+    nb_max_comparisons = compute_nb_couples(len(tester.miniatures))
+    print("Nb. videos", len(tester.miniatures))
     print("Nb. expected comparisons", nb_comparisons)
     print("Nb. max comparisons", nb_max_comparisons)
     print("ratio", nb_comparisons * 100 / nb_max_comparisons, "%")
     print("Nb connected", nb_connected)
     print("Expected connected", rs.count_couples())
-
 
 
 if __name__ == '__main__':

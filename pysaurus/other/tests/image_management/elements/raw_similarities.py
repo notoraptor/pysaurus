@@ -19,9 +19,11 @@ class RawSimilarities:
     def count_couples(self):
         return sum(compute_nb_couples(len(group)) for group in self.group_to_paths)
 
-    def are_connected(self, *paths):
-        groups = {self.path_to_group.get(path, -1) for path in paths}
-        return -1 not in groups and len(groups) == 1
+    def are_connected(self, path, *paths):
+        return (
+            (g := self.path_to_group.get(path, -1)) != -1
+            and all(g == self.path_to_group.get(p, -1) for p in paths)
+        )
 
     def get_groups(self, paths):
         group_to_paths = {}
