@@ -6,6 +6,8 @@ from pysaurus.core.functions import pgcd, flat_to_coord
 from pysaurus.core.miniature import Miniature
 from pysaurus.core.profiling import Profiler
 from pysaurus.core.testing import TEST_LIST_FILE_PATH
+from pysaurus.other.tests.image_management.elements.miniature_utils import \
+    global_intensity
 
 
 def simplify_fraction(a, b):
@@ -17,13 +19,6 @@ def simplify_fraction(a, b):
 def compute_fraction(a, b):
     # type: (int, int) -> float
     return a / b
-
-
-def global_intensity(miniature):
-    # type: (Miniature) -> Fraction
-    return Fraction(
-        sum(miniature.r) + sum(miniature.g) + sum(miniature.b), 3 * miniature.size
-    )
 
 
 TOP_LEFT = 0

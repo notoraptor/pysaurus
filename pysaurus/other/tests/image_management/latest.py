@@ -1,8 +1,5 @@
 from typing import List
 
-import ujson as json
-
-from pysaurus.core.components import AbsolutePath
 from pysaurus.core.database.database import Database
 from pysaurus.core.database.properties import PropType
 from pysaurus.core.miniature import Miniature
@@ -15,6 +12,8 @@ from pysaurus.other.tests.image_management.elements.decomposed_miniature import 
     DecomposedMiniature,
 )
 from pysaurus.other.tests.image_management.elements.group_computer import GroupComputer
+from pysaurus.other.tests.image_management.elements.raw_similarities import \
+    RawSimilarities
 from pysaurus.other.tests.image_management.elements.spaced_points import (
     SpacedPoints,
     SpacedPoints32To64,
@@ -54,35 +53,6 @@ def quad_sign(m: Miniature, spaced_color: SpacedPoints):
         spaced_color.nearest_point(sum(average_pixel(zone)) / 3)
         for zone in (corners.tl, corners.tr, corners.bl, corners.br)
     )
-
-
-class RawSim:
-    def __init__(self, group_to_paths: List[List[str]]):
-        self.group_to_paths = group_to_paths
-        self.path_to_group = {
-            p: i for i, ps in enumerate(self.group_to_paths) for p in ps
-        }
-
-    def __bool__(self):
-        return bool(self.group_to_paths)
-
-    def get_groups(self, paths):
-        group_to_paths = {}
-        for p in paths:
-            group_to_paths.setdefault(self.path_to_group.get(p, -1), []).append(p)
-        return [
-            sub_paths
-            for group_id, sub_paths in group_to_paths.items()
-            if group_id > -1 and len(sub_paths) > 1
-        ]
-
-
-def get_raw_similarities(path=None):
-    path = AbsolutePath.ensure(path or r"C:\data\git\.local\.html\similarities.json")
-    if path.isfile():
-        with open(path.path) as file:
-            return RawSim(json.load(file))
-    return None
 
 
 @Profiler.profile()
@@ -145,7 +115,7 @@ def main():
 
     sim_list = list(similarities.values())
     sim_list.sort(key=lambda g: len(g))
-    raw_sim = get_raw_similarities()
+    raw_sim = RawSimilarities.new()
     if raw_sim:
         ok = []
         na = []

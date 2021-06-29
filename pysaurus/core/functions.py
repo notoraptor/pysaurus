@@ -397,3 +397,7 @@ def deep_equals(value, other):
 
 def get_default(value, default):
     return default if value is None else value
+
+
+def compute_nb_couples(n: int):
+    return (n * (n - 1)) // 2 if n > 1 else 0

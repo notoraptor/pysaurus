@@ -1,4 +1,6 @@
-from pysaurus.other.tests.image_management.latest import load_default_database, get_raw_similarities
+from pysaurus.other.tests.image_management.latest import load_default_database
+from pysaurus.other.tests.image_management.elements.raw_similarities import \
+    RawSimilarities
 from pysaurus.other.tests.image_management.elements.color_dominance import ColorDominance
 from pysaurus.other.tests.image_management.elements.spaced_points import SpacedPoints
 from pysaurus.core.profiling import Profiler
@@ -61,7 +63,7 @@ def main():
             for i, ms in enumerate(classifiers[key_name].values()):
                 for m in ms:
                     vid_dict[m.identifier].properties[special_property].append(f"{key_name}_{i}")
-        rs = get_raw_similarities()
+        rs = RawSimilarities.new()
         if rs:
             for i, ps in enumerate(rs.group_to_paths):
                 ps = [p for p in ps if p in vid_dict]
