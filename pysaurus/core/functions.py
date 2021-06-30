@@ -401,3 +401,12 @@ def get_default(value, default):
 
 def compute_nb_couples(n: int):
     return (n * (n - 1)) // 2 if n > 1 else 0
+
+
+def min_and_max(values):
+    iterable_values = iter(values)
+    min_value = max_value = next(iterable_values)
+    for value in iterable_values:
+        min_value = min(min_value, value)
+        max_value = max(max_value, value)
+    return min_value, max_value

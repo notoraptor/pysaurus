@@ -20,10 +20,12 @@ class RawSimilarities:
         return sum(compute_nb_couples(len(group)) for group in self.group_to_paths)
 
     def are_connected(self, path, *paths):
-        return (
-            (g := self.path_to_group.get(path, -1)) != -1
-            and all(g == self.path_to_group.get(p, -1) for p in paths)
+        return (g := self.path_to_group.get(path, -1)) != -1 and all(
+            g == self.path_to_group.get(p, -1) for p in paths
         )
+
+    def couple_is_connected(self, p1, p2):
+        return self.path_to_group.get(p1, -1) == self.path_to_group.get(p2, -1) != -1
 
     def get_groups(self, paths):
         group_to_paths = {}
@@ -37,7 +39,9 @@ class RawSimilarities:
 
     @classmethod
     def new(cls, path=None):
-        path = AbsolutePath.ensure(path or r"C:\data\git\.local\.html\similarities.json")
+        path = AbsolutePath.ensure(
+            path or r"C:\data\git\.local\.html\similarities.json"
+        )
         if path.isfile():
             with open(path.path) as file:
                 return cls(json.load(file))

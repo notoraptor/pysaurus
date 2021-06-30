@@ -11,9 +11,15 @@ from pysaurus.core.functions import timestamp_microseconds
 from pysaurus.core.miniature import Miniature
 from pysaurus.core.testing import TEST_LIST_FILE_PATH
 from pysaurus.other.native.video_raptor import alignment as native_alignment
+from pysaurus.core.fraction import Fraction
+
+
+FRAC_SIM_LIMIT = Fraction(90, 100)
+FRAC_DST_LIMIT = Fraction(1) - FRAC_SIM_LIMIT
 
 PRINT_STEP = 500
-SIM_LIMIT = 0.9
+SIM_LIMIT = float(FRAC_SIM_LIMIT)
+DST_LIMIT = float(FRAC_DST_LIMIT)
 MIN_VAL = 0
 MAX_VAL = 255
 GAP_SCORE = -1

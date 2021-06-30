@@ -4,7 +4,7 @@ from pysaurus.core.functions import pgcd
 class Fraction:
     __slots__ = "sign", "num", "den"
 
-    def __init__(self, a, b):
+    def __init__(self, a, b=1):
         # type: (int, int) -> None
         if b == 0:
             raise ZeroDivisionError(f"{a}/{b}")
@@ -52,3 +52,30 @@ class Fraction:
         if self.sign == other.sign:
             return self.sign * (self.num * other.den - self.den * other.num) < 0
         return self.sign < other.sign
+
+    def __add__(self, other):
+        return Fraction(
+            self.sign * self.num * other.den + other.sign * other.num * self.den,
+            self.den * other.den
+        )
+
+    def __sub__(self, other):
+        return Fraction(
+            self.sign * self.num * other.den - other.sign * other.num * self.den,
+            self.den * other.den
+        )
+
+    def __mul__(self, other):
+        return Fraction(
+            self.sign * self.num * other.sign * other.num,
+            self.den * other.den
+        )
+
+    def __truediv__(self, other):
+        return Fraction(
+            self.sign * self.num * other.den,
+            self.den * other.sign * other.num
+        )
+
+    def __pow__(self, power):
+        return Fraction(self.sign * self.num ** power, self.den ** power)

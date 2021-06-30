@@ -1,4 +1,3 @@
-from pysaurus.core.miniature import Miniature
 from pysaurus.other.tests.image_management.elements.spaced_points import SpacedPoints
 
 
@@ -25,7 +24,9 @@ class ColorDominance:
         self.rgb += r == g == b
 
     def get_dominance_order(self):
-        couples = sorted(((getattr(self, c), i) for i, c in enumerate(self.__slots__)), reverse=True)
+        couples = sorted(
+            ((getattr(self, c), i) for i, c in enumerate(self.__slots__)), reverse=True
+        )
         key = sorted((i, r) for r, (v, i) in enumerate(couples))
         return tuple(r for i, r in key)
 

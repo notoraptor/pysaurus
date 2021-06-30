@@ -12,8 +12,9 @@ from pysaurus.other.tests.image_management.elements.decomposed_miniature import 
     DecomposedMiniature,
 )
 from pysaurus.other.tests.image_management.elements.group_computer import GroupComputer
-from pysaurus.other.tests.image_management.elements.raw_similarities import \
-    RawSimilarities
+from pysaurus.other.tests.image_management.elements.raw_similarities import (
+    RawSimilarities,
+)
 from pysaurus.other.tests.image_management.elements.spaced_points import (
     SpacedPoints,
     SpacedPoints32To64,

@@ -1,13 +1,16 @@
-from pysaurus.other.tests.image_management.latest import load_default_database
-from pysaurus.other.tests.image_management.elements.raw_similarities import \
-    RawSimilarities
-from pysaurus.other.tests.image_management.elements.color_dominance import ColorDominance
-from pysaurus.other.tests.image_management.elements.spaced_points import SpacedPoints
-from pysaurus.core.profiling import Profiler
-from pysaurus.core.miniature import Miniature
 from typing import List
-from pysaurus.core.database.properties import PropType
 
+from pysaurus.core.database.properties import PropType
+from pysaurus.core.miniature import Miniature
+from pysaurus.core.profiling import Profiler
+from pysaurus.other.tests.image_management.elements.color_dominance import (
+    ColorDominance,
+)
+from pysaurus.other.tests.image_management.elements.raw_similarities import (
+    RawSimilarities,
+)
+from pysaurus.other.tests.image_management.elements.spaced_points import SpacedPoints
+from pysaurus.other.tests.image_management.latest import load_default_database
 
 KEY_TL = "tl"
 KEY_TR = "tr"
@@ -46,9 +49,18 @@ def main():
                 print(i + 1, "/", len(miniatures))
     for key_name in KEY_NAMES:
         print("====", key_name, "====")
-        classifiers[key_name] = {k: ms for k, ms in classifiers[key_name].items() if len(ms) > 1}
+        classifiers[key_name] = {
+            k: ms for k, ms in classifiers[key_name].items() if len(ms) > 1
+        }
         nb_videos = sum(len(vs) for vs in classifiers[key_name].values())
-        print(len(classifiers[key_name]), "keys,", nb_videos, "videos,", nb_videos / len(classifiers[key_name]), "per key")
+        print(
+            len(classifiers[key_name]),
+            "keys,",
+            nb_videos,
+            "videos,",
+            nb_videos / len(classifiers[key_name]),
+            "per key",
+        )
         print("min", min(len(vs) for vs in classifiers[key_name].values()))
         print("max", max(len(vs) for vs in classifiers[key_name].values()))
 
@@ -62,7 +74,9 @@ def main():
         for key_name in KEY_NAMES:
             for i, ms in enumerate(classifiers[key_name].values()):
                 for m in ms:
-                    vid_dict[m.identifier].properties[special_property].append(f"{key_name}_{i}")
+                    vid_dict[m.identifier].properties[special_property].append(
+                        f"{key_name}_{i}"
+                    )
         rs = RawSimilarities.new()
         if rs:
             for i, ps in enumerate(rs.group_to_paths):
@@ -74,5 +88,5 @@ def main():
         db.save()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

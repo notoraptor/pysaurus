@@ -268,8 +268,7 @@ class API:
                 for video in videos
             )
             file_content = (
-                """<?xml version="1.0" encoding="UTF-8"?>
-                                            <playlist version="1" xmlns="http://xspf.org/ns/0/"><trackList>%s</trackList></playlist>"""
+                """<?xml version="1.0" encoding="UTF-8"?><playlist version="1" xmlns="http://xspf.org/ns/0/"><trackList>%s</trackList></playlist>"""
                 % tracks
             )
             temp_file_id = 0
