@@ -17,17 +17,11 @@ from pysaurus.other.tests.image_management.elements.db_tester import DbTester
 
 
 class NbGroupsClassifier:
-    __slots__ = "counts", "groups", "id_to_nb_groups"
+    __slots__ = "counts", "groups"
 
     def __init__(self, counts: List[int], groups: List[List[int]]):
         self.counts = counts
         self.groups = groups
-        self.id_to_nb_groups = {
-            identifier: nb_groups
-            for nb_groups, group in zip(counts, groups)
-            for identifier in group
-        }
-        assert len(self.id_to_nb_groups) == sum(len(group) for group in groups)
 
     @classmethod
     def classify(cls, miniatures: List[Miniature], indices: List[int]):
