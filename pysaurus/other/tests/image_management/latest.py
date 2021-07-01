@@ -61,7 +61,7 @@ def main():
     nb_groups = 4
     compute_corners = False
     gc_cls = CornerGroupComputer if compute_corners else GroupComputer
-    group_computer = gc_cls.from_pixel_distance_radius(
+    group_computer = gc_cls(
         pixel_distance_radius=6, group_min_size=0, print_step=2000
     )
     spaced_color = SpacedPoints(256, 6)

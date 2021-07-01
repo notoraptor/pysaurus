@@ -19,40 +19,27 @@ class CornerZones:
         self.br = br
 
 
-class Matrix:
-    def __init__(self, data: list, width: int, height: int):
-        self.data = data
-        self.width = width
-        self.height = height
+class GroupSignature:
+    __slots__ = "r", "m", "n"
+
+    def __init__(self, pixel_distance_radius: int, group_min_size: int, nb_groups: int):
+        self.r = pixel_distance_radius
+        self.m = group_min_size
+        self.n = nb_groups
+
+    def to_dict(self):
+        return self.r, self.m, self.n
 
     @classmethod
-    def standardize(cls, value: int, max_size: int, default: int):
-        if value is None:
-            value = default
-        elif value < 0:
-            value = max_size - value
-        assert 0 <= value < max_size, (value, max_size)
-        return value
-
-    def get(self, row_from, row_end, row_step, col_from, col_end, col_step):
-        row_from = self.standardize(row_from, self.height, 0)
-        row_end = self.standardize(row_end, self.height + 1, self.height)
-        row_step = self.standardize(row_step, self.height, 1)
-        col_from = self.standardize(col_from, self.width, 0)
-        col_end = self.standardize(col_end, self.width + 1, self.width)
-        col_step = self.standardize(col_step, self.width, 1)
-        return [
-            self.data[functions.coord_to_flat(x, y, self.width)]
-            for y in range(row_from, row_end, row_step)
-            for x in range(col_from, col_end, col_step)
-        ]
+    def from_dict(cls, d):
+        return cls(*d)
 
 
 class Miniature:
-    __slots__ = ("identifier", "r", "g", "b", "i", "width", "height")
+    __slots__ = ("identifier", "r", "g", "b", "i", "width", "height", "group_signature")
 
-    def __init__(self, red, green, blue, width, height, identifier=None):
-        # type: (Bytes, Bytes, Bytes, int, int, Any) -> None
+    def __init__(self, red, green, blue, width, height, identifier=None, group_signature=None):
+        # type: (Bytes, Bytes, Bytes, int, int, Any, GroupSignature) -> None
         self.r = red
         self.g = green
         self.b = blue
@@ -60,6 +47,17 @@ class Miniature:
         self.width = width
         self.height = height
         self.identifier = identifier
+        self.group_signature = group_signature
+
+    def has_group_signature(self, pixel_distance_radius: int, group_min_size: int):
+        return (
+            self.group_signature
+            and self.group_signature.r == pixel_distance_radius
+            and self.group_signature.m == group_min_size
+        )
+
+    def set_group_signature(self, pixel_distance_radius, group_min_size: int, nb_groups: int):
+        self.group_signature = GroupSignature(pixel_distance_radius, group_min_size, nb_groups)
 
     @property
     def size(self):
@@ -81,16 +79,6 @@ class Miniature:
     def data(self):
         for i in range(len(self.r)):
             yield self.r[i], self.g[i], self.b[i]
-
-    def to_dict(self):
-        return {
-            "r": base64.b64encode(self.r).decode(),
-            "g": base64.b64encode(self.g).decode(),
-            "b": base64.b64encode(self.b).decode(),
-            "w": self.width,
-            "h": self.height,
-            "i": self.identifier,
-        }
 
     def get_corner_zones(self) -> CornerZones:
         z_tr = []
@@ -116,9 +104,6 @@ class Miniature:
             br=z_br,
         )
 
-    def to_matrix(self):
-        return Matrix(list(self.data()), self.width, self.height)
-
     @staticmethod
     def from_matrix(data, width, height, identifier=None):
         channel_r = []
@@ -138,8 +123,20 @@ class Miniature:
             identifier,
         )
 
+    def to_dict(self):
+        return {
+            "r": base64.b64encode(self.r).decode(),
+            "g": base64.b64encode(self.g).decode(),
+            "b": base64.b64encode(self.b).decode(),
+            "w": self.width,
+            "h": self.height,
+            "i": self.identifier,
+            "s": self.group_signature.to_dict() if self.group_signature else None
+        }
+
     @staticmethod
-    def from_dict(dct):
+    def from_dict(dct: dict):
+        gs = dct.get("s", None)
         return Miniature(
             red=base64.b64decode(dct["r"]),
             green=base64.b64decode(dct["g"]),
@@ -147,6 +144,7 @@ class Miniature:
             width=dct["w"],
             height=dct["h"],
             identifier=dct["i"],
+            group_signature=(gs if gs is None else GroupSignature.from_dict(gs))
         )
 
     @staticmethod

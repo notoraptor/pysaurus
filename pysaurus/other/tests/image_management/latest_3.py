@@ -1,5 +1,5 @@
 import itertools
-from typing import List, Any, Tuple
+from typing import List, Any, Tuple, Dict
 
 import matplotlib.pyplot as plt
 
@@ -15,18 +15,11 @@ from pysaurus.other.tests.image_management.elements.group_computer import (
 from pysaurus.other.tests.image_management.elements.raw_similarities import (
     RawSimilarities,
 )
+from pysaurus.other.tests.image_management import compare_images_cpp as cpp
 from pysaurus.core.fraction import Fraction
 
 
-def draw_intensity(colors: List[float], counts: List[float]):
-    plt.plot(colors, counts)
-    plt.xlabel("Colors")
-    plt.ylabel("# videos")
-    plt.title("Number of videos per video gray average")
-    plt.show()
-
-
-class MiniaturesPerKey:
+class ListMap:
     __slots__ = "keys", "groups", "value_to_key"
     keys: List
     groups: List
@@ -45,11 +38,11 @@ class MiniaturesPerKey:
         return len(self.keys)
 
 
-class MiniaturesPerNbGroups(MiniaturesPerKey):
+class NbGroupsToPaths(ListMap):
     __slots__ = ()
 
 
-class MiniaturesPerGray(MiniaturesPerKey):
+class GrayToPaths(ListMap):
     __slots__ = ("j_limit",)
 
     def __init__(self, keys, groups, dst_limit: Fraction = FRAC_DST_LIMIT):
@@ -95,24 +88,19 @@ class MiniaturesPerGray(MiniaturesPerKey):
 
 
 @Profiler.profile()
-def count_miniatures_groups(miniatures: List[Miniature]) -> MiniaturesPerNbGroups:
-    group_computer = GroupComputer.from_pixel_distance_radius(
-        pixel_distance_radius=6, group_min_size=0, print_step=2000
-    )
+def count_miniatures_groups(miniatures: List[Miniature]) -> NbGroupsToPaths:
     nb_groups_to_mins = {}
-    for dm in group_computer.batch_compute_groups(miniatures):
-        nb_groups_to_mins.setdefault(len(dm.pixel_groups), []).append(
-            dm.miniature_identifier
-        )
+    for m in miniatures:
+        nb_groups_to_mins.setdefault(m.group_signature.n, []).append(m.identifier)
     g_ms = sorted(nb_groups_to_mins.items(), key=lambda item: item[0])
     print("Number of group counts", len(g_ms))
     print("Nb groups", min(c for c, _ in g_ms), max(c for c, _ in g_ms))
     print("Nb videos", min(len(g) for _, g in g_ms), max(len(g) for _, g in g_ms))
-    return MiniaturesPerNbGroups([c for c, _ in g_ms], [g for _, g in g_ms])
+    return NbGroupsToPaths([c for c, _ in g_ms], [g for _, g in g_ms])
 
 
 @Profiler.profile()
-def get_miniature_grays(miniatures: List[Miniature]) -> MiniaturesPerGray:
+def get_miniature_grays(miniatures: List[Miniature]) -> GrayToPaths:
     gray_to_miniatures = {}
     for m in miniatures:
         gray_to_miniatures.setdefault(miniature_utils.global_intensity(m), []).append(
@@ -122,60 +110,48 @@ def get_miniature_grays(miniatures: List[Miniature]) -> MiniaturesPerGray:
     print("Number of colors", len(g_ms))
     print("Colors", float(min(c for c, _ in g_ms)), float(max(c for c, _ in g_ms)))
     print("Counts", min(len(g) for _, g in g_ms), max(len(g) for _, g in g_ms))
-    return MiniaturesPerGray([float(c) for c, _ in g_ms], [g for _, g in g_ms])
-
-
-@Profiler.profile()
-def count_nb_inner_connected(comparisons: MiniaturesPerGray, rs: RawSimilarities):
-    return sum(
-        rs.couple_is_connected(*couple) for couple in comparisons.inner_couples()
-    )
-
-
-@Profiler.profile()
-def count_nb_cross_connected(comparisons: MiniaturesPerGray, rs: RawSimilarities):
-    nb_comparisons = 0
-    nb_connected = 0
-    for couple in comparisons.cross_couples():
-        nb_comparisons += 1
-        nb_connected += rs.couple_is_connected(*couple)
-    return nb_comparisons, nb_connected
+    return GrayToPaths([float(c) for c, _ in g_ms], [g for _, g in g_ms])
 
 
 def separate_by_nb_groups(
-    paths: List[str], gc_to_ids: MiniaturesPerNbGroups
-) -> List[Tuple[int, List[str]]]:
+    paths: List[str], gc_to_ids: NbGroupsToPaths, path_to_id: Dict[str, int]
+) -> List[Tuple[int, List[int]]]:
     gc_to_paths = {}
     for path in paths:
-        gc_to_paths.setdefault(gc_to_ids.value_to_key[path], []).append(path)
+        gc_to_paths.setdefault(gc_to_ids.value_to_key[path], []).append(path_to_id[path])
+    for paths in gc_to_paths.values():
+        paths.sort()
     gc_ps = sorted(gc_to_paths.items(), key=lambda item: item[0])
     return gc_ps
 
 
 @Profiler.profile()
 def main():
-    rs = RawSimilarities.new()
+    # rs = RawSimilarities.new()
     tester = DbTester()
+    nb_miniatures = len(tester.miniatures)
     nb_max_comparisons = compute_nb_couples(len(tester.miniatures))
 
-    gc_to_ids = count_miniatures_groups(
-        tester.miniatures
-    )  # type: MiniaturesPerNbGroups
-    gr_to_ids = get_miniature_grays(tester.miniatures)  # type: MiniaturesPerGray
+    gc_to_ids = count_miniatures_groups(tester.miniatures)  # type: NbGroupsToPaths
+    gr_to_ids = get_miniature_grays(tester.miniatures)  # type: GrayToPaths
+    path_to_id = {m.identifier: i for i, m in enumerate(tester.miniatures)}
     ligr_l_gc_ids = [
-        separate_by_nb_groups(group, gc_to_ids) for group in gr_to_ids.groups
-    ]  # type: List[List[Tuple[int, List[str]]]]
+        separate_by_nb_groups(group, gc_to_ids, path_to_id) for group in gr_to_ids.groups
+    ]  # type: List[List[Tuple[int, List[int]]]]
+
+    from ctypes import c_double
+    arr_cls = c_double * (nb_miniatures * nb_miniatures)
+    cmp_map = arr_cls()
     nb_cmp = sum(
         compute_nb_couples(len(ids))
         for l_gc_ids in ligr_l_gc_ids
         for _, ids in l_gc_ids
     )
-    nb_cn = sum(
-        rs.are_connected(a, b)
-        for l_gc_ids in ligr_l_gc_ids
-        for _, ids in l_gc_ids
-        for a, b in itertools.combinations(ids, 2)
-    )
+    for l_gc_ids in ligr_l_gc_ids:
+        for _, ids in l_gc_ids:
+            for i, j in itertools.combinations(ids, 2):
+                cmp_map[i * nb_miniatures + j] = -1
+
     for r, c in gr_to_ids.cross_comparisons():
         lr = ligr_l_gc_ids[r]
         lc = ligr_l_gc_ids[c]
@@ -185,16 +161,23 @@ def main():
                 if abs(gc_i - lc[j][0]) > 40:
                     break
                 nb_cmp += len(ids_i) * len(lc[j][1])
-                nb_cn += sum(
-                    rs.are_connected(a, b)
-                    for a, b in itertools.product(ids_i, lc[j][1])
-                )
-    print("Nb. videos", len(tester.miniatures))
+                for a, b in itertools.product(ids_i, lc[j][1]):
+                    if a > b:
+                        a, b = b, a
+                    cmp_map[a * nb_miniatures + b] = -1
+
+    print("Nb. videos", nb_miniatures)
     print("Nb. expected comparisons", nb_cmp)
     print("Nb. max comparisons", nb_max_comparisons)
     print("ratio", nb_cmp * 100 / nb_max_comparisons, "%")
-    print("Nb connected", nb_cn)
-    print("Expected connected", rs.count_couples())
+    sim_groups = cpp.find_similar_images_2(tester.miniatures, cmp_map)
+    print("Finally found", len(sim_groups), "similarity groups.")
+    print(
+        sum(len(g) for g in sim_groups),
+        "similar images from",
+        nb_miniatures,
+        "total images.",
+    )
 
 
 if __name__ == "__main__":

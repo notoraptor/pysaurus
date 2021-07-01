@@ -17,24 +17,18 @@ from pysaurus.other.tests.image_management.elements.pixel_group import PixelGrou
 
 
 class GroupComputer:
-    __slots__ = "group_min_size", "pixel_comparator", "print_step", "similarity"
+    __slots__ = "group_min_size", "pixel_comparator", "print_step", "similarity", "radius"
 
     @classmethod
     def compute_similarity_percent(cls, pixel_distance_radius: int) -> float:
         return (255 - pixel_distance_radius) * 100 / 255
 
-    @classmethod
-    def from_pixel_distance_radius(
-        cls, *, group_min_size, pixel_distance_radius, print_step=500
-    ):
-        return cls(
-            group_min_size=group_min_size,
-            similarity_percent=cls.compute_similarity_percent(pixel_distance_radius),
-            print_step=print_step,
-        )
-
-    def __init__(self, *, group_min_size, similarity_percent, print_step=500):
+    def __init__(self, *, group_min_size, similarity_percent=None, pixel_distance_radius: int = None, print_step=2000):
+        assert (similarity_percent is None) ^ (pixel_distance_radius is None)
+        if pixel_distance_radius is not None:
+            similarity_percent = self.compute_similarity_percent(pixel_distance_radius)
         self.similarity = similarity_percent
+        self.radius = pixel_distance_radius
         self.group_min_size = group_min_size
         self.pixel_comparator = DistancePixelComparator(similarity_percent)
         self.print_step = print_step
@@ -112,7 +106,7 @@ class GroupComputer:
     def async_compute(self, context) -> DecomposedMiniature:
         index_task, miniature, nb_all_tasks, notifier = context
         if (index_task + 1) % self.print_step == 0:
-            notifier.notify(notifications.VideoJob(None, index_task + 1, nb_all_tasks))
+            notifier.notify(notifications.MiniatureGroupComputerJob(None, index_task + 1, nb_all_tasks))
         return DecomposedMiniature(miniature.identifier, self.compute_groups(miniature))
 
     def batch_compute_groups(

@@ -22,6 +22,8 @@ from pysaurus.core.modules import ImageUtils, System
 from pysaurus.core.notification import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
+from pysaurus.other.tests.image_management.elements.group_computer import GroupComputer
+
 
 SPECIAL_PROPERTIES = [PropType("<error>", "", True)]
 
@@ -34,6 +36,31 @@ def new_sub_folder(folder: AbsolutePath, suffix: str, sep="."):
     return AbsolutePath.join(folder, f"{folder.title}{sep}{suffix}")
 
 
+class DbSettings:
+    __slots__ = (
+        "miniature_pixel_distance_radius",
+        "miniature_group_min_size"
+    )
+
+    def __init__(self):
+        self.miniature_pixel_distance_radius = 6
+        self.miniature_group_min_size = 0
+
+    def update(self, dct: dict):
+        for key in self.__slots__:
+            if key in dct:
+                setattr(self, key, dct[key])
+
+    def to_dict(self):
+        return {key: getattr(self, key) for key in self.__slots__}
+
+    @classmethod
+    def from_dict(cls, dct: dict):
+        settings = cls()
+        settings.update(dct)
+        return settings
+
+
 class Database:
     __slots__ = (
         "__db_folder",
@@ -41,6 +68,7 @@ class Database:
         "__json_path",
         "__miniatures_path",
         "__log_path",
+        "__settings",
         "__date",
         "__folders",
         "__videos",
@@ -63,6 +91,7 @@ class Database:
         self.__miniatures_path = new_sub_file(self.__db_folder, "miniatures.json")
         self.__log_path = new_sub_file(self.__db_folder, "log")
         # Database data
+        self.__settings = DbSettings()
         self.__date = DateModified.now()
         self.__folders = set()  # type: Set[AbsolutePath]
         self.__videos = {}  # type: Dict[AbsolutePath, Video]
@@ -113,6 +142,9 @@ class Database:
         else:
             json_dict = {}
 
+        # Parsing settings.
+        self.__settings.update(json_dict.get("settings", {}))
+
         # Parsing date.
         if "date" in json_dict:
             self.__date = DateModified(json_dict["date"])
@@ -155,6 +187,7 @@ class Database:
         self.video_interval.update(self.__videos.values())
         # Save database.
         json_output = {
+            "settings": self.__settings.to_dict(),
             "date": self.__date.time,
             "folders": sorted(folder.path for folder in self.__folders),
             "videos": sorted(
@@ -553,21 +586,48 @@ class Database:
                 added_miniatures.extend(local_array)
             del results
 
+        valid_miniatures = [Miniature.from_dict(d) for d in valid_dictionaries]
+        m_no_groups = [
+            m for m in valid_miniatures
+            if not m.has_group_signature(
+                self.__settings.miniature_pixel_distance_radius,
+                self.__settings.miniature_group_min_size
+            )
+        ] + added_miniatures
+        if m_no_groups:
+            m_dict = {m.identifier: m for m in m_no_groups}  # type: Dict[str, Miniature]
+            group_computer = GroupComputer(
+                group_min_size=self.__settings.miniature_group_min_size,
+                pixel_distance_radius=self.__settings.miniature_pixel_distance_radius,
+            )
+            for dm in group_computer.batch_compute_groups(m_no_groups):
+                m_dict[dm.miniature_identifier].set_group_signature(
+                    self.__settings.miniature_pixel_distance_radius,
+                    self.__settings.miniature_group_min_size,
+                    len(dm.pixel_groups)
+                )
+
         if have_removed or have_added:
             with open(self.__miniatures_path.path, "w") as output_file:
                 json.dump(
-                    valid_dictionaries + [m.to_dict() for m in added_miniatures],
+                    [
+                        m.to_dict()
+                        for ms in (valid_miniatures, added_miniatures)
+                        for m in ms
+                    ],
                     output_file,
                 )
 
         self.__notifier.notify(
-            notifications.NbMiniatures(len(valid_dictionaries) + len(added_miniatures))
+            notifications.NbMiniatures(len(valid_miniatures) + len(added_miniatures))
         )
 
         if return_miniatures:
-            return [
-                Miniature.from_dict(d) for d in valid_dictionaries
-            ] + added_miniatures
+            return valid_miniatures + added_miniatures
+
+    def save_miniatures(self, miniatures: List[Miniature]):
+        with open(self.__miniatures_path.path, "w") as output_file:
+            json.dump([m.to_dict() for m in miniatures], output_file)
 
     def list_files(self, output_name):
         with open(output_name, "wb") as file:

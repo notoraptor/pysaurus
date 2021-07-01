@@ -1,4 +1,4 @@
-from typing import Dict, Iterable, List
+from typing import Dict, Iterable, List, Optional
 
 from pysaurus.core.classes import StringPrinter
 from pysaurus.core.notification import Notification
@@ -71,7 +71,7 @@ class VideoJob(Notification):
     __slots__ = ["index", "parsed", "total"]
 
     def __init__(self, job_id, step, total):
-        # type: (str, int, int) -> None
+        # type: (Optional[str], int, int) -> None
         super().__init__()
         self.index = job_id
         self.parsed = step
@@ -83,6 +83,10 @@ class ThumbnailJob(VideoJob):
 
 
 class MiniatureJob(VideoJob):
+    __slots__ = ()
+
+
+class MiniatureGroupComputerJob(VideoJob):
     __slots__ = ()
 
 

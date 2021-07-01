@@ -154,3 +154,11 @@ fn_classifySimilarities = _dll_video_raptor.prototype(
     None,
     [PtrPtrSequence, c_int, c_int, c_int, c_int, c_int, c_double_p],
 )
+fn_classifySimilaritiesDirected = _dll_video_raptor.prototype(
+    "classifySimilaritiesDirected",
+    None,
+    [PtrPtrSequence, c_int, c_int, c_int, c_int, c_int, c_double_p],
+)
+fn_compareMatrix = _dll_video_raptor.prototype("compareMatrix", None, [
+    PtrPtrSequence, c_int, c_int, c_int, c_int, c_double_p
+])

@@ -180,6 +180,34 @@ def find_similar_images(miniatures):
     return [group for group in groups if len(group) > 1]
 
 
+def find_similar_images_2(miniatures, edges):
+    # type: (List[Miniature], List[float]) -> List[List[Node]]
+    native_alignment.classify_similarities_directed(miniatures, edges)
+    graph = {}
+    nb_miniatures = len(miniatures)
+    for i in range(len(miniatures)):
+        for j in range(i + 1, len(miniatures)):
+            score = edges[i * nb_miniatures + j]
+            if score >= SIM_LIMIT:
+                graph.setdefault(i, []).append((j, score))
+                graph.setdefault(j, []).append((i, score))
+    groups = extract_linked_nodes(graph)
+    return [group for group in groups if len(group) > 1]
+
+
+def compare_cross_miniatures(line: List, nb_rows, nb_cols, width, height):
+    edges = native_alignment.compare_matrix(line, nb_rows, nb_cols, width, height)
+    graph = {}
+    for index, score in enumerate(edges):
+        if score >= SIM_LIMIT:
+            r = index // nb_cols
+            c = index % nb_cols
+            graph.setdefault(r, []).append((nb_rows + c, score))
+            graph.setdefault(nb_rows + c, []).append((r, score))
+    groups = extract_linked_nodes(graph)
+    return [group for group in groups if len(group) > 1]
+
+
 def main():
     list_file_path = (
         AbsolutePath.ensure(sys.argv[1]) if len(sys.argv) > 1 else TEST_LIST_FILE_PATH

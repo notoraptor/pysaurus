@@ -8,9 +8,12 @@ from .symbols import (
     PtrPtrSequence,
     PtrSequence,
     fn_classifySimilarities,
+    fn_classifySimilaritiesDirected,
+    fn_compareMatrix,
     Sequence,
     c_int_p,
 )
+import array
 
 
 def miniature_to_c_sequence(self, score=0.0, classification=-1):
@@ -25,8 +28,8 @@ def miniature_to_c_sequence(self, score=0.0, classification=-1):
     )
 
 
-def classify_similarities(miniatures):
-    # type: (List[Miniature]) -> Iterable[float]
+def classify_similarities(miniatures, step=False):
+    # type: (List[Miniature], bool) -> Iterable[float]
     nb_sequences = len(miniatures)
     native_sequences = [
         miniature_to_c_sequence(sequence) for i, sequence in enumerate(miniatures)
@@ -41,7 +44,8 @@ def classify_similarities(miniatures):
         while cursor < nb_sequences:
             i_from = cursor
             i_to = cursor + VIDEO_BATCH_SIZE
-            print("[%s;%s[/%s" % (i_from, i_to, nb_sequences))
+            if step:
+                print("[%s;%s[/%s" % (i_from, i_to, nb_sequences))
             fn_classifySimilarities(
                 PtrPtrSequence(pointer_array_type(*native_sequence_pointers)),
                 nb_sequences,
@@ -52,4 +56,47 @@ def classify_similarities(miniatures):
                 native_edges,
             )
             cursor = i_to
+    return native_edges
+
+
+def classify_similarities_directed(miniatures: List[Miniature], edges):
+    nb_sequences = len(miniatures)
+    native_sequences = [
+        miniature_to_c_sequence(sequence) for i, sequence in enumerate(miniatures)
+    ]
+    native_sequence_pointers = [pointer(sequence) for sequence in native_sequences]
+    pointer_array_type = PtrSequence * nb_sequences
+    # memset(native_edges, 0, sizeof(native_edges))
+    # assert all(s.classification == -1 for s in native_sequences)
+    with Profiler("Finding similar images using simpler NATIVE comparison."):
+        cursor = 0
+        while cursor < nb_sequences:
+            i_from = cursor
+            i_to = cursor + VIDEO_BATCH_SIZE
+            print("[%s;%s[/%s" % (i_from, i_to, nb_sequences))
+            fn_classifySimilaritiesDirected(
+                PtrPtrSequence(pointer_array_type(*native_sequence_pointers)),
+                nb_sequences,
+                i_from,
+                i_to,
+                miniatures[0].width,
+                miniatures[0].height,
+                edges,
+            )
+            cursor = i_to
+
+
+def compare_matrix(native_sequences: List[Sequence], nb_rows, nb_cols, width: int, height: int) -> Iterable[float]:
+    native_sequence_pointers = [pointer(sequence) for sequence in native_sequences]
+    pointer_array_type = PtrSequence * len(native_sequences)
+    native_edges = (c_double * (nb_rows * nb_cols))()
+    # memset(native_edges, 0, sizeof(native_edges))
+    fn_compareMatrix(
+        PtrPtrSequence(pointer_array_type(*native_sequence_pointers)),
+        nb_rows,
+        nb_cols,
+        width,
+        height,
+        native_edges
+    )
     return native_edges
