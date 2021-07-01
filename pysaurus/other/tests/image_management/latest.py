@@ -2,16 +2,16 @@ from typing import List
 
 from pysaurus.core.database.database import Database
 from pysaurus.core.database.properties import PropType
-from pysaurus.core.miniature import Miniature
+from pysaurus.core.miniature_tools.decomposed_miniature import (
+    DecomposedMiniature,
+)
+from pysaurus.core.miniature_tools.group_computer import GroupComputer
+from pysaurus.core.miniature_tools.miniature import Miniature
 from pysaurus.core.profiling import Profiler
 from pysaurus.core.testing import TEST_LIST_FILE_PATH
 from pysaurus.other.tests.image_management.elements.corner_group_computer import (
     CornerGroupComputer,
 )
-from pysaurus.other.tests.image_management.elements.decomposed_miniature import (
-    DecomposedMiniature,
-)
-from pysaurus.other.tests.image_management.elements.group_computer import GroupComputer
 from pysaurus.other.tests.image_management.elements.raw_similarities import (
     RawSimilarities,
 )
@@ -61,9 +61,7 @@ def main():
     nb_groups = 4
     compute_corners = False
     gc_cls = CornerGroupComputer if compute_corners else GroupComputer
-    group_computer = gc_cls(
-        pixel_distance_radius=6, group_min_size=0, print_step=2000
-    )
+    group_computer = gc_cls(pixel_distance_radius=6, group_min_size=0, print_step=2000)
     spaced_color = SpacedPoints(256, 6)
     sc2 = SpacedPoints(256, 6)
     spaced_position = SpacedPoints32To64(2)

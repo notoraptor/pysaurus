@@ -1,7 +1,6 @@
 import base64
 from typing import Any, Optional, Tuple, Union
 
-from pysaurus.core import functions
 from pysaurus.core.modules import ImageUtils
 
 Bytes = Union[bytes, bytearray]
@@ -38,7 +37,9 @@ class GroupSignature:
 class Miniature:
     __slots__ = ("identifier", "r", "g", "b", "i", "width", "height", "group_signature")
 
-    def __init__(self, red, green, blue, width, height, identifier=None, group_signature=None):
+    def __init__(
+        self, red, green, blue, width, height, identifier=None, group_signature=None
+    ):
         # type: (Bytes, Bytes, Bytes, int, int, Any, GroupSignature) -> None
         self.r = red
         self.g = green
@@ -56,8 +57,12 @@ class Miniature:
             and self.group_signature.m == group_min_size
         )
 
-    def set_group_signature(self, pixel_distance_radius, group_min_size: int, nb_groups: int):
-        self.group_signature = GroupSignature(pixel_distance_radius, group_min_size, nb_groups)
+    def set_group_signature(
+        self, pixel_distance_radius, group_min_size: int, nb_groups: int
+    ):
+        self.group_signature = GroupSignature(
+            pixel_distance_radius, group_min_size, nb_groups
+        )
 
     @property
     def size(self):
@@ -131,7 +136,7 @@ class Miniature:
             "w": self.width,
             "h": self.height,
             "i": self.identifier,
-            "s": self.group_signature.to_dict() if self.group_signature else None
+            "s": self.group_signature.to_dict() if self.group_signature else None,
         }
 
     @staticmethod
@@ -144,7 +149,7 @@ class Miniature:
             width=dct["w"],
             height=dct["h"],
             identifier=dct["i"],
-            group_signature=(gs if gs is None else GroupSignature.from_dict(gs))
+            group_signature=(gs if gs is None else GroupSignature.from_dict(gs)),
         )
 
     @staticmethod

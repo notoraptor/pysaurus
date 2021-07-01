@@ -12,11 +12,10 @@ from ctypes import (
     c_void_p,
 )
 
-from pysaurus.core.clibrary import CLibrary
+from pysaurus.core.native.clibrary import CLibrary, c_int_p, c_double_p
 
 ERROR_DETAIL_MAX_LENGTH = 64
 
-c_double_p = POINTER(c_double)
 c_char_array = POINTER(c_char_p)
 
 
@@ -83,7 +82,6 @@ class VideoThumbnail(Structure):
 PtrVideoThumbnail = POINTER(VideoThumbnail)
 PtrPtrVideoInfo = POINTER(PtrVideoInfo)
 PtrPtrVideoThumbnail = POINTER(PtrVideoThumbnail)
-c_int_p = POINTER(c_int)
 PtrPtrInt = POINTER(c_int_p)
 
 
@@ -159,6 +157,3 @@ fn_classifySimilaritiesDirected = _dll_video_raptor.prototype(
     None,
     [PtrPtrSequence, c_int, c_int, c_int, c_int, c_int, c_double_p],
 )
-fn_compareMatrix = _dll_video_raptor.prototype("compareMatrix", None, [
-    PtrPtrSequence, c_int, c_int, c_int, c_int, c_double_p
-])

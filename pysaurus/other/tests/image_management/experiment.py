@@ -1,18 +1,25 @@
 from typing import List
 
-from pysaurus.other.tests.image_management.test_utils import Tester
-
 from pysaurus.core.classes import Table
-from pysaurus.core.miniature import Miniature
+from pysaurus.core.miniature_tools.group_computer import GroupComputer
+from pysaurus.core.miniature_tools.miniature import Miniature
+from pysaurus.core.miniature_tools.pixel_group import PixelGroup
+from pysaurus.other.tests.image_management.elements.basic_group import (
+    BasicGroup,
+    categorize_position,
+    categorize_value,
+    categorize_sub_position,
+    categorize_sub_value,
+)
 from pysaurus.other.tests.image_management.elements.draw import (
     Draw,
     dilate_miniature_data,
 )
-from pysaurus.other.tests.image_management.elements.group_computer import GroupComputer
 from pysaurus.other.tests.image_management.elements.spaced_points import (
     SpacedPoints,
     SpacedPoints32To64,
 )
+from pysaurus.other.tests.image_management.elements.tester import Tester
 
 
 class ColorIterator:
@@ -48,7 +55,7 @@ def simplify_images(
     group_computer = GroupComputer(
         group_min_size=group_min_size, similarity_percent=similarity_percent
     )
-    group_packs = [group_computer.compute_groups(m) for m in miniatures]
+    group_packs = [group_computer.group_pixels(m) for m in miniatures]
     simplified_data = []
     for i in range(len(miniatures)):
         miniature = miniatures[i]
@@ -78,6 +85,56 @@ CLASSIFIER_SUB_INTERVALS = "sub_intervals"
 CLASSIFIER_RAW = "raw"
 
 
+def to_basic_group(
+    self: PixelGroup,
+    spaced_color: SpacedPoints,
+    spaced_position: SpacedPoints,
+    spaced_size: SpacedPoints,
+):
+    color = tuple(spaced_color.nearest_point(value) for value in self.color)
+    center = tuple(spaced_position.nearest_point(value) for value in self.center)
+    size = spaced_size.nearest_point(len(self.members))
+    return BasicGroup(color, center, size)
+
+
+def to_basic_group_intervals(
+    self: PixelGroup, nb_color_points, nb_position_points, nb_size_points
+):
+    color = tuple(
+        categorize_value(value, 256 // nb_color_points) for value in self.color
+    )
+    center = categorize_position(*self.center, 32, 32 // nb_position_points)
+    size = categorize_value(len(self.members), 1024 // nb_size_points)
+    return BasicGroup(color, center, size)
+
+
+def to_basic_group_sub_intervals(
+    self: PixelGroup, nb_color_points, nb_position_points, nb_size_points
+):
+    color = tuple(
+        categorize_sub_value(value, 256 // nb_color_points) for value in self.color
+    )
+    center = categorize_sub_position(*self.center, 32, 32 // nb_position_points)
+    size = categorize_sub_value(len(self.members), 1024 // nb_size_points)
+    return BasicGroup(color, center, size)
+
+
+def to_basic_group_raw(self: PixelGroup):
+    return BasicGroup(self.color, self.center, len(self.members))
+
+
+def to_basic_group_intervals_alt(
+    self: PixelGroup, nb_color_points, nb_position_points, nb_size_points
+):
+    cil = 256 // nb_color_points
+    pil = 32 // nb_position_points
+    sil = 1024 // nb_size_points
+    color = tuple(int(value // cil) * cil for value in self.color)
+    center = tuple(int(value // pil) * pil for value in self.center)
+    size = int(len(self.members) // sil) * sil
+    return BasicGroup(color, center, size)
+
+
 class Run(Tester):
     __slots__ = ()
 
@@ -104,19 +161,19 @@ class Run(Tester):
             spaced_color = SpacedPoints(256, nb_color_points)
             spaced_position = SpacedPoints32To64(nb_position_points)
             spaced_size = SpacedPoints(1024, nb_size_points)
-            callback = lambda g: g.to_basic_group(
-                spaced_color, spaced_position, spaced_size
+            callback = lambda g: to_basic_group(
+                g, spaced_color, spaced_position, spaced_size
             )
         elif classifier == CLASSIFIER_INTERVALS:
-            callback = lambda g: g.to_basic_group_intervals(
-                nb_color_points, nb_position_points, nb_size_points
+            callback = lambda g: to_basic_group_intervals(
+                g, nb_color_points, nb_position_points, nb_size_points
             )
         elif classifier == CLASSIFIER_SUB_INTERVALS:
-            callback = lambda g: g.to_basic_group_sub_intervals(
-                nb_color_points, nb_position_points, nb_size_points
+            callback = lambda g: to_basic_group_sub_intervals(
+                g, nb_color_points, nb_position_points, nb_size_points
             )
         elif classifier == CLASSIFIER_RAW:
-            callback = lambda g: g.to_basic_group_raw()
+            callback = lambda g: to_basic_group_raw(g)
         else:
             raise ValueError(f"Unknown group classifier option: {classifier}")
 

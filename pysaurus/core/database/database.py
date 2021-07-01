@@ -17,13 +17,12 @@ from pysaurus.core.database.video import Video
 from pysaurus.core.database.video_interval import VideoInterval
 from pysaurus.core.database.video_runtime_info import VideoRuntimeInfo
 from pysaurus.core.database.video_state import VideoState
-from pysaurus.core.miniature import Miniature
+from pysaurus.core.miniature_tools.group_computer import GroupComputer
+from pysaurus.core.miniature_tools.miniature import Miniature
 from pysaurus.core.modules import ImageUtils, System
 from pysaurus.core.notification import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
-from pysaurus.other.tests.image_management.elements.group_computer import GroupComputer
-
 
 SPECIAL_PROPERTIES = [PropType("<error>", "", True)]
 
@@ -37,10 +36,7 @@ def new_sub_folder(folder: AbsolutePath, suffix: str, sep="."):
 
 
 class DbSettings:
-    __slots__ = (
-        "miniature_pixel_distance_radius",
-        "miniature_group_min_size"
-    )
+    __slots__ = ("miniature_pixel_distance_radius", "miniature_group_min_size")
 
     def __init__(self):
         self.miniature_pixel_distance_radius = 6
@@ -588,14 +584,17 @@ class Database:
 
         valid_miniatures = [Miniature.from_dict(d) for d in valid_dictionaries]
         m_no_groups = [
-            m for m in valid_miniatures
+            m
+            for m in valid_miniatures
             if not m.has_group_signature(
                 self.__settings.miniature_pixel_distance_radius,
-                self.__settings.miniature_group_min_size
+                self.__settings.miniature_group_min_size,
             )
         ] + added_miniatures
         if m_no_groups:
-            m_dict = {m.identifier: m for m in m_no_groups}  # type: Dict[str, Miniature]
+            m_dict = {
+                m.identifier: m for m in m_no_groups
+            }  # type: Dict[str, Miniature]
             group_computer = GroupComputer(
                 group_min_size=self.__settings.miniature_group_min_size,
                 pixel_distance_radius=self.__settings.miniature_pixel_distance_radius,
@@ -604,7 +603,7 @@ class Database:
                 m_dict[dm.miniature_identifier].set_group_signature(
                     self.__settings.miniature_pixel_distance_radius,
                     self.__settings.miniature_group_min_size,
-                    len(dm.pixel_groups)
+                    len(dm.pixel_groups),
                 )
 
         if have_removed or have_added:

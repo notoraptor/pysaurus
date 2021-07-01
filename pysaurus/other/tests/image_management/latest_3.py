@@ -1,22 +1,19 @@
 import itertools
-from typing import List, Any, Tuple, Dict
+from ctypes import Array, c_double
+from typing import List, Any, Tuple, Dict, Set
 
-import matplotlib.pyplot as plt
-
+from pysaurus.core.fraction import Fraction
 from pysaurus.core.functions import compute_nb_couples, get_end_index
-from pysaurus.core.miniature import Miniature
+from pysaurus.core.miniature_tools.graph import Graph
+from pysaurus.core.miniature_tools.miniature import Miniature
+from pysaurus.core.native.alignment_raptor import alignment as native_alignment
 from pysaurus.core.profiling import Profiler
-from pysaurus.other.tests.image_management.compare_images_cpp import FRAC_DST_LIMIT
+from pysaurus.other.tests.image_management.compare_images_cpp import (
+    FRAC_DST_LIMIT,
+    SIM_LIMIT,
+)
 from pysaurus.other.tests.image_management.elements import miniature_utils
 from pysaurus.other.tests.image_management.elements.db_tester import DbTester
-from pysaurus.other.tests.image_management.elements.group_computer import (
-    GroupComputer,
-)
-from pysaurus.other.tests.image_management.elements.raw_similarities import (
-    RawSimilarities,
-)
-from pysaurus.other.tests.image_management import compare_images_cpp as cpp
-from pysaurus.core.fraction import Fraction
 
 
 class ListMap:
@@ -118,11 +115,25 @@ def separate_by_nb_groups(
 ) -> List[Tuple[int, List[int]]]:
     gc_to_paths = {}
     for path in paths:
-        gc_to_paths.setdefault(gc_to_ids.value_to_key[path], []).append(path_to_id[path])
+        gc_to_paths.setdefault(gc_to_ids.value_to_key[path], []).append(
+            path_to_id[path]
+        )
     for paths in gc_to_paths.values():
         paths.sort()
     gc_ps = sorted(gc_to_paths.items(), key=lambda item: item[0])
     return gc_ps
+
+
+def find_similar_images_2(miniatures, edges):
+    # type: (List[Miniature], Array[c_double]) -> List[Set[int]]
+    native_alignment.classify_similarities_directed(miniatures, edges)
+    graph = Graph()
+    nb_miniatures = len(miniatures)
+    for i in range(len(miniatures)):
+        for j in range(i + 1, len(miniatures)):
+            if edges[i * nb_miniatures + j] >= SIM_LIMIT:
+                graph.connect(i, j)
+    return [group for group in graph.pop_groups() if len(group) > 1]
 
 
 @Profiler.profile()
@@ -136,10 +147,12 @@ def main():
     gr_to_ids = get_miniature_grays(tester.miniatures)  # type: GrayToPaths
     path_to_id = {m.identifier: i for i, m in enumerate(tester.miniatures)}
     ligr_l_gc_ids = [
-        separate_by_nb_groups(group, gc_to_ids, path_to_id) for group in gr_to_ids.groups
+        separate_by_nb_groups(group, gc_to_ids, path_to_id)
+        for group in gr_to_ids.groups
     ]  # type: List[List[Tuple[int, List[int]]]]
 
     from ctypes import c_double
+
     arr_cls = c_double * (nb_miniatures * nb_miniatures)
     cmp_map = arr_cls()
     nb_cmp = sum(
@@ -170,7 +183,7 @@ def main():
     print("Nb. expected comparisons", nb_cmp)
     print("Nb. max comparisons", nb_max_comparisons)
     print("ratio", nb_cmp * 100 / nb_max_comparisons, "%")
-    sim_groups = cpp.find_similar_images_2(tester.miniatures, cmp_map)
+    sim_groups = find_similar_images_2(tester.miniatures, cmp_map)
     print("Finally found", len(sim_groups), "similarity groups.")
     print(
         sum(len(g) for g in sim_groups),

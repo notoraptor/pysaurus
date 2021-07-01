@@ -1,7 +1,7 @@
 import math
 from typing import Union, List
 
-from pysaurus.core.miniature import Miniature
+from pysaurus.core.miniature_tools.miniature import Miniature
 from pysaurus.other.tests.image_management.elements.spaced_points import SpacedPoints
 
 

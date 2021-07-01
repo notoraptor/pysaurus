@@ -1,8 +1,8 @@
 from typing import List
 
-from pysaurus.core.miniature import Miniature
-from .group_computer import GroupComputer
-from .pixel_group import PixelGroup
+from pysaurus.core.miniature_tools.group_computer import GroupComputer
+from pysaurus.core.miniature_tools.miniature import Miniature
+from pysaurus.core.miniature_tools.pixel_group import PixelGroup
 
 
 class CornerGroupComputer(GroupComputer):

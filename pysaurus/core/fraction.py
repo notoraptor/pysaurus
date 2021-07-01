@@ -56,25 +56,23 @@ class Fraction:
     def __add__(self, other):
         return Fraction(
             self.sign * self.num * other.den + other.sign * other.num * self.den,
-            self.den * other.den
+            self.den * other.den,
         )
 
     def __sub__(self, other):
         return Fraction(
             self.sign * self.num * other.den - other.sign * other.num * self.den,
-            self.den * other.den
+            self.den * other.den,
         )
 
     def __mul__(self, other):
         return Fraction(
-            self.sign * self.num * other.sign * other.num,
-            self.den * other.den
+            self.sign * self.num * other.sign * other.num, self.den * other.den
         )
 
     def __truediv__(self, other):
         return Fraction(
-            self.sign * self.num * other.den,
-            self.den * other.sign * other.num
+            self.sign * self.num * other.den, self.den * other.sign * other.num
         )
 
     def __pow__(self, power):

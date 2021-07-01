@@ -2,18 +2,16 @@ from ctypes import c_double, memset, pointer, sizeof, c_int
 from typing import Iterable, List
 
 from pysaurus.core.constants import VIDEO_BATCH_SIZE
-from pysaurus.core.miniature import Miniature
+from pysaurus.core.miniature_tools.miniature import Miniature
+from pysaurus.core.native.clibrary import c_int_p
 from pysaurus.core.profiling import Profiler
 from .symbols import (
     PtrPtrSequence,
     PtrSequence,
     fn_classifySimilarities,
     fn_classifySimilaritiesDirected,
-    fn_compareMatrix,
     Sequence,
-    c_int_p,
 )
-import array
 
 
 def miniature_to_c_sequence(self, score=0.0, classification=-1):
@@ -61,13 +59,9 @@ def classify_similarities(miniatures, step=False):
 
 def classify_similarities_directed(miniatures: List[Miniature], edges):
     nb_sequences = len(miniatures)
-    native_sequences = [
-        miniature_to_c_sequence(sequence) for i, sequence in enumerate(miniatures)
-    ]
+    native_sequences = [miniature_to_c_sequence(sequence) for sequence in miniatures]
     native_sequence_pointers = [pointer(sequence) for sequence in native_sequences]
     pointer_array_type = PtrSequence * nb_sequences
-    # memset(native_edges, 0, sizeof(native_edges))
-    # assert all(s.classification == -1 for s in native_sequences)
     with Profiler("Finding similar images using simpler NATIVE comparison."):
         cursor = 0
         while cursor < nb_sequences:
@@ -84,19 +78,3 @@ def classify_similarities_directed(miniatures: List[Miniature], edges):
                 edges,
             )
             cursor = i_to
-
-
-def compare_matrix(native_sequences: List[Sequence], nb_rows, nb_cols, width: int, height: int) -> Iterable[float]:
-    native_sequence_pointers = [pointer(sequence) for sequence in native_sequences]
-    pointer_array_type = PtrSequence * len(native_sequences)
-    native_edges = (c_double * (nb_rows * nb_cols))()
-    # memset(native_edges, 0, sizeof(native_edges))
-    fn_compareMatrix(
-        PtrPtrSequence(pointer_array_type(*native_sequence_pointers)),
-        nb_rows,
-        nb_cols,
-        width,
-        height,
-        native_edges
-    )
-    return native_edges

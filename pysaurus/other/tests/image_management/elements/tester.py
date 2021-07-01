@@ -2,7 +2,7 @@ from typing import Dict, List
 
 from pysaurus.core.database.database import Database
 from pysaurus.core.database.video import Video
-from pysaurus.core.miniature import Miniature
+from pysaurus.core.miniature_tools.miniature import Miniature
 from pysaurus.core.testing import TEST_LIST_FILE_PATH
 
 

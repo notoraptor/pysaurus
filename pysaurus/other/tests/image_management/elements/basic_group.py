@@ -25,3 +25,21 @@ class BasicGroup:
 
     def __lt__(self, other):
         return self.key < other.key
+
+
+def categorize_position(x, y, width, step):
+    return int(y // step) * (width // step) + int(x // step)
+
+
+def categorize_value(x, step):
+    return int(x // step)
+
+
+def categorize_sub_position(x, y, width, step):
+    p_x = categorize_sub_value(x, step)
+    p_y = categorize_sub_value(y, step)
+    return p_y * (1 + width // step) + p_x
+
+
+def categorize_sub_value(x, step):
+    return int((int(x // (step // 2)) + 1) // 2)

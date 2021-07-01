@@ -7,12 +7,11 @@ import ujson as json
 from pysaurus.core.classes import StringPrinter
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.database.database import Database
-from pysaurus.core.functions import timestamp_microseconds
-from pysaurus.core.miniature import Miniature
-from pysaurus.core.testing import TEST_LIST_FILE_PATH
-from pysaurus.other.native.video_raptor import alignment as native_alignment
 from pysaurus.core.fraction import Fraction
-
+from pysaurus.core.functions import timestamp_microseconds
+from pysaurus.core.miniature_tools.miniature import Miniature
+from pysaurus.core.native.alignment_raptor import alignment as native_alignment
+from pysaurus.core.testing import TEST_LIST_FILE_PATH
 
 FRAC_SIM_LIMIT = Fraction(90, 100)
 FRAC_DST_LIMIT = Fraction(1) - FRAC_SIM_LIMIT
@@ -176,34 +175,6 @@ def find_similar_images(miniatures):
             max_score = score if max_score is None else max(max_score, score)
     print("Min score", min_score)
     print("Max score", max_score)
-    groups = extract_linked_nodes(graph)
-    return [group for group in groups if len(group) > 1]
-
-
-def find_similar_images_2(miniatures, edges):
-    # type: (List[Miniature], List[float]) -> List[List[Node]]
-    native_alignment.classify_similarities_directed(miniatures, edges)
-    graph = {}
-    nb_miniatures = len(miniatures)
-    for i in range(len(miniatures)):
-        for j in range(i + 1, len(miniatures)):
-            score = edges[i * nb_miniatures + j]
-            if score >= SIM_LIMIT:
-                graph.setdefault(i, []).append((j, score))
-                graph.setdefault(j, []).append((i, score))
-    groups = extract_linked_nodes(graph)
-    return [group for group in groups if len(group) > 1]
-
-
-def compare_cross_miniatures(line: List, nb_rows, nb_cols, width, height):
-    edges = native_alignment.compare_matrix(line, nb_rows, nb_cols, width, height)
-    graph = {}
-    for index, score in enumerate(edges):
-        if score >= SIM_LIMIT:
-            r = index // nb_cols
-            c = index % nb_cols
-            graph.setdefault(r, []).append((nb_rows + c, score))
-            graph.setdefault(nb_rows + c, []).append((r, score))
     groups = extract_linked_nodes(graph)
     return [group for group in groups if len(group) > 1]
 

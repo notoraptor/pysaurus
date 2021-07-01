@@ -1,7 +1,7 @@
 from typing import List
 
 from pysaurus.core.database.properties import PropType
-from pysaurus.core.miniature import Miniature
+from pysaurus.core.miniature_tools.miniature import Miniature
 from pysaurus.core.profiling import Profiler
 from pysaurus.other.tests.image_management.elements.color_dominance import (
     ColorDominance,

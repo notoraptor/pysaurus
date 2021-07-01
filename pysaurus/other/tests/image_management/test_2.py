@@ -1,18 +1,20 @@
 from collections import Counter
 from typing import Dict, Tuple, List, Union
 
-from pysaurus.other.tests.image_management.test_utils import Tester
-
 from pysaurus.core import functions
 from pysaurus.core.classes import StringPrinter
-from pysaurus.core.miniature import Miniature
+from pysaurus.core.miniature_tools.group_computer import GroupComputer
+from pysaurus.core.miniature_tools.miniature import Miniature
+from pysaurus.core.miniature_tools.pixel_group import PixelGroup
 from pysaurus.other.tests.image_management.elements.basic_group import BasicGroup
 from pysaurus.other.tests.image_management.elements.draw import (
     Draw,
     dilate_miniature_data,
 )
-from pysaurus.other.tests.image_management.elements.group_computer import GroupComputer
-from pysaurus.other.tests.image_management.elements.pixel_group import PixelGroup
+from pysaurus.other.tests.image_management.elements.tester import Tester
+from pysaurus.other.tests.image_management.experiment import (
+    to_basic_group_intervals_alt,
+)
 
 
 class PixelMapper:
@@ -287,9 +289,9 @@ class Run(Tester):
 
     def miniature_to_groups(self, group_computer: GroupComputer, miniature: Miniature):
         bg_to_pg = {}
-        for pg in group_computer.compute_groups(miniature):
-            bg = pg.to_basic_group_intervals_alt(
-                self.nb_color_points, self.nb_position_points, self.nb_size_points
+        for pg in group_computer.group_pixels(miniature):
+            bg = to_basic_group_intervals_alt(
+                pg, self.nb_color_points, self.nb_position_points, self.nb_size_points
             )
             bg_to_pg.setdefault(bg, []).append(pg)
         return bg_to_pg
@@ -304,10 +306,13 @@ class Run(Tester):
         img_to_basic_groups = []
         all_basic_groups = set()
         for m in self.miniatures:
-            pixel_groups = group_computer.compute_groups(m)
+            pixel_groups = group_computer.group_pixels(m)
             basic_groups = [
-                pg.to_basic_group_intervals_alt(
-                    self.nb_color_points, self.nb_position_points, self.nb_size_points
+                to_basic_group_intervals_alt(
+                    pg,
+                    self.nb_color_points,
+                    self.nb_position_points,
+                    self.nb_size_points,
                 )
                 for pg in pixel_groups
             ]

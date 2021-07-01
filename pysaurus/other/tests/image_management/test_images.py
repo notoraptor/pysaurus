@@ -12,13 +12,13 @@ from pysaurus.core.database import notifications
 from pysaurus.core.database.database import Database
 from pysaurus.core.database.properties import PropType
 from pysaurus.core.database.video import Video
-from pysaurus.core.miniature import Miniature
+from pysaurus.core.miniature_tools.graph import Graph
+from pysaurus.core.miniature_tools.group_computer import GroupComputer
+from pysaurus.core.miniature_tools.miniature import Miniature
 from pysaurus.core.notification import DEFAULT_NOTIFIER
 from pysaurus.core.profiling import Profiler
 from pysaurus.core.testing import TEST_LIST_FILE_PATH
-from pysaurus.other.tests.image_management.elements.graph import Graph
-from pysaurus.other.tests.image_management.elements.group_computer import GroupComputer
-from pysaurus.other.tests.image_management.elements.pixel_group import (
+from pysaurus.other.tests.image_management.elements.basic_group import (
     categorize_position,
     categorize_value,
     categorize_sub_position,
@@ -27,6 +27,12 @@ from pysaurus.other.tests.image_management.elements.pixel_group import (
 from pysaurus.other.tests.image_management.elements.spaced_points import (
     SpacedPoints,
     SpacedPoints32To64,
+)
+from pysaurus.other.tests.image_management.experiment import (
+    to_basic_group,
+    to_basic_group_intervals,
+    to_basic_group_raw,
+    to_basic_group_sub_intervals,
 )
 
 
@@ -213,19 +219,19 @@ def run(
             spaced_color = SpacedPoints(256, nb_color_points)
             spaced_position = SpacedPoints32To64(nb_position_points)
             spaced_size = SpacedPoints(1024, nb_size_points)
-            callback = lambda g: g.to_basic_group(
-                spaced_color, spaced_position, spaced_size
+            callback = lambda g: to_basic_group(
+                g, spaced_color, spaced_position, spaced_size
             )
         elif classifier == "intervals":
-            callback = lambda g: g.to_basic_group_intervals(
-                nb_color_points, nb_position_points, nb_size_points
+            callback = lambda g: to_basic_group_intervals(
+                g, nb_color_points, nb_position_points, nb_size_points
             )
         elif classifier == "sub_intervals":
-            callback = lambda sg: g.to_basic_group_sub_intervals(
-                nb_color_points, nb_position_points, nb_size_points
+            callback = lambda sg: to_basic_group_sub_intervals(
+                g, nb_color_points, nb_position_points, nb_size_points
             )
         elif classifier == "raw":
-            callback = lambda g: g.to_basic_group_raw()
+            callback = lambda g: to_basic_group_raw(g)
         else:
             raise ValueError(f"Unknown group classifier option: {classifier}")
 

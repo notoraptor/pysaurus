@@ -1,5 +1,5 @@
 from pysaurus.core.fraction import Fraction
-from pysaurus.core.miniature import Miniature
+from pysaurus.core.miniature_tools.miniature import Miniature
 
 
 def global_intensity(miniature):
