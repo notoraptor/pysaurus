@@ -14,8 +14,6 @@ from pysaurus.other.tests.image_management.compare_images_cpp import (
 )
 from pysaurus.other.tests.image_management.elements import miniature_utils
 from pysaurus.other.tests.image_management.elements.db_tester import DbTester
-from pysaurus.core.native.clibrary import c_double_p, c_int_p
-import numpy as np
 
 
 class NbGroupsClassifier:
@@ -59,7 +57,6 @@ class GrayClassifier:
                 yield i, j
             if (i + 1) % 1000 == 0:
                 print(i + 1, "/", n)
-                # return
 
     @classmethod
     def classify(cls, miniatures: List[Miniature]):
@@ -81,18 +78,16 @@ class GrayClassifier:
         )
 
 
-def find_similar_images(miniatures, native_edges, original_map):
-    # type: (List[Miniature], Array[c_double], np.ndarray) -> List[Set[int]]
-    native_alignment.classify_similarities_selected(miniatures, native_edges, SIM_LIMIT)
+def find_similar_images(miniatures, edges):
+    # type: (List[Miniature], Array[c_double]) -> List[Set[int]]
+    native_alignment.classify_similarities_directed(miniatures, edges)
     graph = Graph()
     nb_miniatures = len(miniatures)
-    with Profiler("Getting connections."):
-        for i in range(nb_miniatures):
-            for j in range(1, original_map[i, 0]):
-                if original_map[i, j]:
-                    graph.connect(i, original_map[i, j])
-    with Profiler(f"Popping groups from {len(graph.edges)} connections."):
-        return [group for group in graph.pop_groups() if len(group) > 1]
+    for i in range(len(miniatures)):
+        for j in range(i + 1, len(miniatures)):
+            if edges[i * nb_miniatures + j] >= SIM_LIMIT:
+                graph.connect(i, j)
+    return [group for group in graph.pop_groups() if len(group) > 1]
 
 
 @Profiler.profile()
@@ -102,13 +97,7 @@ def main():
     nb_miniatures = len(tester.miniatures)
     nb_max_comparisons = compute_nb_couples(len(tester.miniatures))
     classifier = GrayClassifier.classify(tester.miniatures)
-
-    with Profiler("Generate maps."):
-        # cmp_map = (c_double * (nb_miniatures * nb_miniatures))()
-        # guide_map = [[0] * nb_miniatures for _ in range(nb_miniatures)]
-        original_map = np.zeros((nb_miniatures, nb_miniatures), dtype=np.int32)
-        for i in range(nb_miniatures):
-            original_map[i, 0] = nb_miniatures
+    cmp_map = (c_double * (nb_miniatures * nb_miniatures))()
 
     nb_cmp = sum(
         compute_nb_couples(len(group))
@@ -119,8 +108,8 @@ def main():
         for clf in classifier.classifiers:
             for indices in clf.groups:
                 for i, j in itertools.combinations(indices, 2):
-                    # cmp_map[i * nb_miniatures + j] = -1
-                    original_map[i, j] = j
+                    cmp_map[i * nb_miniatures + j] = -1
+
         for clf in classifier.classifiers:
             nb_groups = len(clf.groups)
             for i in range(nb_groups):
@@ -134,7 +123,7 @@ def main():
                     for a, b in itertools.product(group_i, group_j):
                         if a > b:
                             a, b = b, a
-                        original_map[a, b] = b
+                        cmp_map[a * nb_miniatures + b] = -1
 
         for r, c in classifier.cross_comparisons():
             clr = classifier.classifiers[r]
@@ -150,23 +139,13 @@ def main():
                     for i, j in itertools.product(group_r, group_c):
                         if i > j:
                             i, j = j, i
-                        # cmp_map[i * nb_miniatures + j] = -1
-                        original_map[i, j] = j
-
-    with Profiler("Update maps."):
-        original_map.sort()
-        original_map = np.fliplr(original_map)
-        original_map[:, 0] = np.sum(original_map.astype(np.bool), axis=1)
-        print(original_map)
-        if not original_map.flags["C_CONTIGUOUS"]:
-            original_map = np.ascontiguousarray(original_map)
-        native_edges = original_map.ctypes.data_as(c_int_p)
+                        cmp_map[i * nb_miniatures + j] = -1
 
     print("Nb. videos", nb_miniatures)
     print("Nb. expected comparisons", nb_cmp)
     print("Nb. max comparisons", nb_max_comparisons)
     print("ratio", nb_cmp * 100 / nb_max_comparisons, "%")
-    sim_groups = find_similar_images(tester.miniatures, native_edges, original_map)
+    sim_groups = find_similar_images(tester.miniatures, cmp_map)
     print("Finally found", len(sim_groups), "similarity groups.")
     print(
         sum(len(g) for g in sim_groups),
