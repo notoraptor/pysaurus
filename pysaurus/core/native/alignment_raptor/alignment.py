@@ -10,6 +10,7 @@ from .symbols import (
     PtrSequence,
     fn_classifySimilarities,
     fn_classifySimilaritiesDirected,
+    fn_classifySimilaritiesSelected,
     Sequence,
 )
 
@@ -75,6 +76,30 @@ def classify_similarities_directed(miniatures: List[Miniature], edges):
                 i_to,
                 miniatures[0].width,
                 miniatures[0].height,
+                edges,
+            )
+            cursor = i_to
+
+
+def classify_similarities_selected(miniatures: List[Miniature], edges, sim_limit):
+    nb_sequences = len(miniatures)
+    native_sequences = [miniature_to_c_sequence(sequence) for sequence in miniatures]
+    native_sequence_pointers = [pointer(sequence) for sequence in native_sequences]
+    pointer_array_type = PtrSequence * nb_sequences
+    with Profiler("Finding similar images using simpler NATIVE comparison."):
+        cursor = 0
+        while cursor < nb_sequences:
+            i_from = cursor
+            i_to = cursor + VIDEO_BATCH_SIZE
+            print("[%s;%s[/%s" % (i_from, i_to, nb_sequences))
+            fn_classifySimilaritiesSelected(
+                PtrPtrSequence(pointer_array_type(*native_sequence_pointers)),
+                nb_sequences,
+                i_from,
+                i_to,
+                miniatures[0].width,
+                miniatures[0].height,
+                sim_limit,
                 edges,
             )
             cursor = i_to

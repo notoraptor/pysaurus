@@ -29,3 +29,9 @@ fn_classifySimilaritiesDirected = _dll_video_raptor.prototype(
     None,
     [PtrPtrSequence, c_int, c_int, c_int, c_int, c_int, c_double_p],
 )
+
+fn_classifySimilaritiesSelected = _dll_video_raptor.prototype(
+    "classifySimilaritiesSelected",
+    None,
+    [PtrPtrSequence, c_int, c_int, c_int, c_int, c_int, c_double, c_int_p],
+)
