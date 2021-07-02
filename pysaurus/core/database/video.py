@@ -48,6 +48,7 @@ class Video(VideoState):
         "meta_title",
         "properties",
         "sample_rate",
+        "similarity_id",
         "thumb_name",
         "video_codec",
         "video_codec_description",
@@ -58,6 +59,7 @@ class Video(VideoState):
         "A": "audio_codec_description",
         "C": "channels",
         "D": "bit_depth",
+        "S": "similarity_id",
         "V": "video_codec_description",
         "a": "audio_codec",
         "b": "device_name",
@@ -115,6 +117,7 @@ class Video(VideoState):
         meta_title="",
         properties=None,
         sample_rate=0,
+        similarity_id=None,
         thumb_name="",
         video_codec="",
         video_codec_description="",
@@ -142,6 +145,7 @@ class Video(VideoState):
         :type meta_title: str
         :type properties: dict
         :type sample_rate: float
+        :type similarity_id: int, optional
         :type thumb_name: str
         :type video_codec: str
         :type video_codec_description: str
@@ -181,6 +185,9 @@ class Video(VideoState):
             sample_rate = from_dictionary.get(
                 self.LONG_TO_MIN["sample_rate"], sample_rate
             )
+            similarity_id = from_dictionary.get(
+                self.LONG_TO_MIN["similarity_id"], similarity_id
+            )
             thumb_name = from_dictionary.get(self.LONG_TO_MIN["thumb_name"], thumb_name)
             video_codec = from_dictionary.get(
                 self.LONG_TO_MIN["video_codec"], video_codec
@@ -212,6 +219,7 @@ class Video(VideoState):
         self.meta_title = Text(html_to_title(meta_title))
         self.properties = {}
         self.sample_rate = sample_rate
+        self.similarity_id = similarity_id
         self.thumb_name = thumb_name
         self.video_codec = Text(video_codec)
         self.video_codec_description = Text(video_codec_description)

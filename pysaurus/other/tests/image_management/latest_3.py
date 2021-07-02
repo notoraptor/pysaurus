@@ -1,5 +1,5 @@
 import itertools
-from ctypes import Array, c_double
+from ctypes import Array, c_double, c_bool
 from typing import List, Set
 
 from pysaurus.core.fraction import Fraction
@@ -79,25 +79,25 @@ class GrayClassifier:
 
 
 def find_similar_images(miniatures, edges):
-    # type: (List[Miniature], Array[c_double]) -> List[Set[int]]
-    native_alignment.classify_similarities_directed(miniatures, edges)
+    # type: (List[Miniature], Array[c_bool]) -> List[Set[int]]
+    native_alignment.classify_similarities_directed(miniatures, edges, SIM_LIMIT)
     graph = Graph()
     nb_miniatures = len(miniatures)
     for i in range(len(miniatures)):
         for j in range(i + 1, len(miniatures)):
-            if edges[i * nb_miniatures + j] >= SIM_LIMIT:
+            if edges[i * nb_miniatures + j]:
                 graph.connect(i, j)
     return [group for group in graph.pop_groups() if len(group) > 1]
 
 
 @Profiler.profile()
 def main():
-    # rs = RawSimilarities.new()
     tester = DbTester()
-    nb_miniatures = len(tester.miniatures)
-    nb_max_comparisons = compute_nb_couples(len(tester.miniatures))
-    classifier = GrayClassifier.classify(tester.miniatures)
-    cmp_map = (c_double * (nb_miniatures * nb_miniatures))()
+    miniatures = tester.miniatures
+    nb_miniatures = len(miniatures)
+    nb_max_comparisons = compute_nb_couples(len(miniatures))
+    classifier = GrayClassifier.classify(miniatures)
+    cmp_map = (c_bool * (nb_miniatures * nb_miniatures))()
 
     nb_cmp = sum(
         compute_nb_couples(len(group))
@@ -108,7 +108,7 @@ def main():
         for clf in classifier.classifiers:
             for indices in clf.groups:
                 for i, j in itertools.combinations(indices, 2):
-                    cmp_map[i * nb_miniatures + j] = -1
+                    cmp_map[i * nb_miniatures + j] = 1
 
         for clf in classifier.classifiers:
             nb_groups = len(clf.groups)
@@ -123,7 +123,7 @@ def main():
                     for a, b in itertools.product(group_i, group_j):
                         if a > b:
                             a, b = b, a
-                        cmp_map[a * nb_miniatures + b] = -1
+                        cmp_map[a * nb_miniatures + b] = 1
 
         for r, c in classifier.cross_comparisons():
             clr = classifier.classifiers[r]
@@ -139,19 +139,32 @@ def main():
                     for i, j in itertools.product(group_r, group_c):
                         if i > j:
                             i, j = j, i
-                        cmp_map[i * nb_miniatures + j] = -1
+                        cmp_map[i * nb_miniatures + j] = 1
 
     print("Nb. videos", nb_miniatures)
     print("Nb. expected comparisons", nb_cmp)
     print("Nb. max comparisons", nb_max_comparisons)
     print("ratio", nb_cmp * 100 / nb_max_comparisons, "%")
-    sim_groups = find_similar_images(tester.miniatures, cmp_map)
+    sim_groups = find_similar_images(miniatures, cmp_map)
     print("Finally found", len(sim_groups), "similarity groups.")
     print(
         sum(len(g) for g in sim_groups),
         "similar images from",
         nb_miniatures,
         "total images.",
+    )
+    for m in miniatures:
+        tester.vid_dict[m.identifier].similarity_id = -1
+    sim_groups.sort(key=lambda s: (len(s), min(tester.vid_dict[miniatures[i].identifier].length for i in s)))
+    for sim_id, indices in enumerate(sim_groups):
+        for i in indices:
+            tester.vid_dict[miniatures[i].identifier].similarity_id = sim_id
+    tester.db.save()
+
+    from pysaurus.other.tests.image_management.elements.raw_similarities import RawSimilarities
+    rs = RawSimilarities.new()
+    rs.report(
+        [[miniatures[index].identifier for index in indices] for indices in sim_groups]
     )
 
 

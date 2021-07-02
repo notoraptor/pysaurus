@@ -58,7 +58,7 @@ def classify_similarities(miniatures, step=False):
     return native_edges
 
 
-def classify_similarities_directed(miniatures: List[Miniature], edges):
+def classify_similarities_directed(miniatures: List[Miniature], edges, sim_limit):
     nb_sequences = len(miniatures)
     native_sequences = [miniature_to_c_sequence(sequence) for sequence in miniatures]
     native_sequence_pointers = [pointer(sequence) for sequence in native_sequences]
@@ -77,6 +77,7 @@ def classify_similarities_directed(miniatures: List[Miniature], edges):
                 miniatures[0].width,
                 miniatures[0].height,
                 edges,
+                sim_limit
             )
             cursor = i_to
 

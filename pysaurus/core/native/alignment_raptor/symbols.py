@@ -1,6 +1,6 @@
 from ctypes import POINTER, Structure, c_double, c_int
 
-from pysaurus.core.native.clibrary import CLibrary, c_int_p, c_double_p
+from pysaurus.core.native.clibrary import CLibrary, c_int_p, c_double_p, c_bool_p
 
 
 class Sequence(Structure):
@@ -27,7 +27,7 @@ fn_classifySimilarities = _dll_video_raptor.prototype(
 fn_classifySimilaritiesDirected = _dll_video_raptor.prototype(
     "classifySimilaritiesDirected",
     None,
-    [PtrPtrSequence, c_int, c_int, c_int, c_int, c_int, c_double_p],
+    [PtrPtrSequence, c_int, c_int, c_int, c_int, c_int, c_bool_p, c_double],
 )
 
 fn_classifySimilaritiesSelected = _dll_video_raptor.prototype(

@@ -1,8 +1,9 @@
 import sys
-from ctypes import c_char_p, cdll, POINTER, c_int, c_double
+from ctypes import c_char_p, cdll, POINTER, c_int, c_double, c_bool
 
 c_int_p = POINTER(c_int)
 c_double_p = POINTER(c_double)
+c_bool_p = POINTER(c_bool)
 
 
 def c_library(name):

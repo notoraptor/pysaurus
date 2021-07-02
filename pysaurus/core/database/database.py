@@ -99,12 +99,12 @@ class Database:
         self.__id_to_video = {}  # type: Dict[int, Union[VideoState, Video]]
         self.sys_is_case_insensitive = System.is_case_insensitive(self.__db_folder.path)
         self.__prop_parser = {}  # type: Dict[str, callable]
+        self.video_interval = VideoInterval(t[0] for t in Video.QUALITY_FIELDS)
         # Load database
         self.__notifier.set_log_path(self.__log_path.path)
 
         self.__load(folders, clear_old_folders)
         # Load VideoInterval object to compute videos quality.
-        self.video_interval = VideoInterval(t[0] for t in Video.QUALITY_FIELDS)
         self.video_interval.update(self.__videos.values())
         # Set special properties.
         self.__set_special_properties()
