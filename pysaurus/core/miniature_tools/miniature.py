@@ -1,21 +1,11 @@
 import base64
 from typing import Any, Optional, Tuple, Union
 
+from pysaurus.core.classes import AbstractMatrix
+from pysaurus.core.fraction import Fraction
 from pysaurus.core.modules import ImageUtils
 
 Bytes = Union[bytes, bytearray]
-
-
-class CornerZones:
-    __slots__ = "w", "h", "tl", "tr", "bl", "br"
-
-    def __init__(self, width, height, *, tl, tr, bl, br):
-        self.w = width
-        self.h = height
-        self.tl = tl
-        self.tr = tr
-        self.bl = bl
-        self.br = br
 
 
 class GroupSignature:
@@ -34,19 +24,18 @@ class GroupSignature:
         return cls(*d)
 
 
-class Miniature:
-    __slots__ = ("identifier", "r", "g", "b", "i", "width", "height", "group_signature")
+class Miniature(AbstractMatrix):
+    __slots__ = ("identifier", "r", "g", "b", "i", "group_signature")
 
     def __init__(
         self, red, green, blue, width, height, identifier=None, group_signature=None
     ):
         # type: (Bytes, Bytes, Bytes, int, int, Any, GroupSignature) -> None
+        super().__init__(width, height)
         self.r = red
         self.g = green
         self.b = blue
         self.i = None
-        self.width = width
-        self.height = height
         self.identifier = identifier
         self.group_signature = group_signature
 
@@ -72,61 +61,9 @@ class Miniature:
     def nb_pixels(self):
         return len(self.r)
 
-    def __coordinates_around(self, x, y, radius=1):
-        coordinates = []
-        for local_x in range(max(0, x - radius), min(x + radius, self.width - 1) + 1):
-            for local_y in range(
-                max(0, y - radius), min(y + radius, self.height - 1) + 1
-            ):
-                coordinates.append((local_x, local_y))
-        return coordinates
-
     def data(self):
         for i in range(len(self.r)):
             yield self.r[i], self.g[i], self.b[i]
-
-    def get_corner_zones(self) -> CornerZones:
-        z_tr = []
-        z_tl = []
-        z_br = []
-        z_bl = []
-        t = list(self.data())
-        half_len = len(t) // 2
-        width = self.width
-        for y in range(0, self.height // 2):
-            z_tl += t[(y * width) : (y * width + width // 2)]
-            z_tr += t[(y * width + width // 2) : ((y + 1) * width)]
-            z_bl += t[(half_len + y * width) : (half_len + y * width + width // 2)]
-            z_br += t[
-                (half_len + y * width + width // 2) : (half_len + (y + 1) * width)
-            ]
-        return CornerZones(
-            width=self.width // 2,
-            height=self.height // 2,
-            tl=z_tl,
-            tr=z_tr,
-            bl=z_bl,
-            br=z_br,
-        )
-
-    @staticmethod
-    def from_matrix(data, width, height, identifier=None):
-        channel_r = []
-        channel_g = []
-        channel_b = []
-        for r, g, b in data:
-            channel_r.append(r)
-            channel_g.append(g)
-            channel_b.append(b)
-        assert len(channel_r) == width * height
-        return Miniature(
-            bytearray(channel_r),
-            bytearray(channel_g),
-            bytearray(channel_b),
-            width,
-            height,
-            identifier,
-        )
 
     def to_dict(self):
         return {
@@ -138,6 +75,11 @@ class Miniature:
             "i": self.identifier,
             "s": self.group_signature.to_dict() if self.group_signature else None,
         }
+
+    def global_intensity(self) -> Fraction:
+        return Fraction(
+            sum(self.r) + sum(self.g) + sum(self.b), 3 * self.size
+        )
 
     @staticmethod
     def from_dict(dct: dict):

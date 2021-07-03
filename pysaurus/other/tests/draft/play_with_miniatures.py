@@ -6,9 +6,6 @@ from pysaurus.core.functions import pgcd, flat_to_coord
 from pysaurus.core.miniature_tools.miniature import Miniature
 from pysaurus.core.profiling import Profiler
 from pysaurus.core.testing import TEST_LIST_FILE_PATH
-from pysaurus.other.tests.image_management.elements.miniature_utils import (
-    global_intensity,
-)
 
 
 def simplify_fraction(a, b):
@@ -126,7 +123,7 @@ class SuperMiniature:
 
     def __init__(self, miniature):
         self.miniature = miniature
-        self.intensity = global_intensity(miniature)
+        self.intensity = miniature.global_intensity()
         self.zone = whitest_region(miniature)
 
     @property

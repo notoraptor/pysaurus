@@ -21,6 +21,7 @@ class VideoState:
         # Runtime attributes
         "database",
         "runtime",
+        "miniature",
     )
     UNREADABLE = True
 
@@ -53,6 +54,7 @@ class VideoState:
 
         self.database = database
         self.runtime = VideoRuntimeInfo()
+        self.miniature = None
 
     def __str__(self):
         with StringPrinter() as printer:

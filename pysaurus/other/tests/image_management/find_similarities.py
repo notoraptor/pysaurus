@@ -2,18 +2,20 @@ import itertools
 from ctypes import Array, c_bool
 from typing import List, Set
 
+from pysaurus.core.database.database import Database
 from pysaurus.core.fraction import Fraction
 from pysaurus.core.functions import compute_nb_couples, get_end_index
 from pysaurus.core.miniature_tools.graph import Graph
 from pysaurus.core.miniature_tools.miniature import Miniature
 from pysaurus.core.native.alignment_raptor import alignment as native_alignment
 from pysaurus.core.profiling import Profiler
-from pysaurus.other.tests.image_management.compare_images_cpp import (
-    FRAC_DST_LIMIT,
-    SIM_LIMIT,
-)
-from pysaurus.other.tests.image_management.elements import miniature_utils
-from pysaurus.other.tests.image_management.elements.db_tester import DbTester
+from pysaurus.core.testing import TEST_LIST_FILE_PATH
+
+
+FRAC_SIM_LIMIT = Fraction(90, 100)
+FRAC_DST_LIMIT = Fraction(1) - FRAC_SIM_LIMIT
+SIM_LIMIT = float(FRAC_SIM_LIMIT)
+DST_LIMIT = float(FRAC_DST_LIMIT)
 
 
 class NbGroupsClassifier:
@@ -62,9 +64,7 @@ class GrayClassifier:
     def classify(cls, miniatures: List[Miniature]):
         gray_to_identifiers = {}
         for i, m in enumerate(miniatures):
-            gray_to_identifiers.setdefault(
-                miniature_utils.global_intensity(m), []
-            ).append(i)
+            gray_to_identifiers.setdefault(m.global_intensity(), []).append(i)
         gray_to_classifier = {
             gray: NbGroupsClassifier.classify(miniatures, indices)
             for gray, indices in gray_to_identifiers.items()
@@ -90,10 +90,17 @@ def find_similar_images(miniatures, edges):
     return [group for group in graph.pop_groups() if len(group) > 1]
 
 
+def load_default_database() -> Database:
+    return Database.load_from_list_file_path(
+        TEST_LIST_FILE_PATH, update=False, ensure_miniatures=False
+    )
+
+
 @Profiler.profile()
 def main():
-    tester = DbTester()
-    miniatures = tester.miniatures
+    db = load_default_database()
+    videos = db.ensure_miniatures(returns=True)
+    miniatures = [video.miniature for video in videos]
     nb_miniatures = len(miniatures)
     nb_max_comparisons = compute_nb_couples(len(miniatures))
     classifier = GrayClassifier.classify(miniatures)
@@ -153,18 +160,13 @@ def main():
         nb_miniatures,
         "total images.",
     )
-    for m in miniatures:
-        tester.vid_dict[m.identifier].similarity_id = -1
-    sim_groups.sort(
-        key=lambda s: (
-            len(s),
-            min(tester.vid_dict[miniatures[i].identifier].length for i in s),
-        )
-    )
+    for v in videos:
+        v.similarity_id = -1
+    sim_groups.sort(key=lambda s: (len(s), min(videos[i].length for i in s)))
     for sim_id, indices in enumerate(sim_groups):
         for i in indices:
-            tester.vid_dict[miniatures[i].identifier].similarity_id = sim_id
-    tester.db.save()
+            videos[i].similarity_id = sim_id
+    db.save()
 
 
 if __name__ == "__main__":

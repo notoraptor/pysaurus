@@ -8,6 +8,7 @@ from pysaurus.core.miniature_tools.decomposed_miniature import (
 )
 from pysaurus.core.miniature_tools.graph import Graph
 from pysaurus.core.miniature_tools.miniature import Miniature
+from pysaurus.core.classes import AbstractMatrix
 from pysaurus.core.miniature_tools.pixel_comparator import (
     DistancePixelComparator,
 )
@@ -46,7 +47,7 @@ class GroupComputer:
         self.pixel_comparator = DistancePixelComparator(similarity_percent)
         self.print_step = print_step
 
-    def group_pixels(self, miniature: Miniature) -> List[PixelGroup]:
+    def group_pixels(self, miniature: AbstractMatrix) -> List[PixelGroup]:
         width = miniature.width
         data = self.pixel_comparator.normalize_data(miniature.data(), width)
         graph = Graph()

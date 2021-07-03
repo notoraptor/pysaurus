@@ -532,10 +532,10 @@ class Database:
         self.__save()
 
     @Profiler.profile_method()
-    def ensure_miniatures(self, return_miniatures=False):
-        # type: (bool) -> Optional[List[Miniature]]
+    def ensure_miniatures(self, returns=False):
+        # type: (bool) -> Optional[List[Video]]
 
-        identifiers = set()
+        identifiers = set()  # type: Set[AbsolutePath]
         valid_dictionaries = []
         added_miniatures = []
         have_removed = False
@@ -551,18 +551,18 @@ class Database:
                     "Miniatures file does not contain a list."
                 )
             for dct in json_array:
-                video = self.get_video_from_filename(dct["i"], required=False)
-                if video and ImageUtils.DEFAULT_THUMBNAIL_SIZE == (dct["w"], dct["h"]):
-                    identifiers.add(video.filename.path)
+                identifier = AbsolutePath(dct["i"])
+                if identifier in self.__videos and ImageUtils.DEFAULT_THUMBNAIL_SIZE == (dct["w"], dct["h"]):
+                    identifiers.add(identifier)
                     valid_dictionaries.append(dct)
             have_removed = len(valid_dictionaries) != len(json_array)
             del json_array
 
+        available_videos = self.get_videos("readable", "with_thumbnails")
         tasks = [
             (video.filename, video.thumbnail_path)
-            for source in (self.get_videos("readable", "with_thumbnails"),)
-            for video in source
-            if video.filename.path not in identifiers
+            for video in available_videos
+            if video.filename not in identifiers
         ]
         self.__notifier.notify(notifications.MiniaturesToLoad(len(tasks)))
 
@@ -583,6 +583,9 @@ class Database:
             del results
 
         valid_miniatures = [Miniature.from_dict(d) for d in valid_dictionaries]
+        available_miniatures = valid_miniatures + added_miniatures
+        m_dict = {m.identifier: m for m in available_miniatures}
+
         m_no_groups = [
             m
             for m in valid_miniatures
@@ -592,9 +595,6 @@ class Database:
             )
         ] + added_miniatures
         if m_no_groups:
-            m_dict = {
-                m.identifier: m for m in m_no_groups
-            }  # type: Dict[str, Miniature]
             group_computer = GroupComputer(
                 group_min_size=self.__settings.miniature_group_min_size,
                 pixel_distance_radius=self.__settings.miniature_pixel_distance_radius,
@@ -608,21 +608,14 @@ class Database:
 
         if have_removed or have_added:
             with open(self.__miniatures_path.path, "w") as output_file:
-                json.dump(
-                    [
-                        m.to_dict()
-                        for ms in (valid_miniatures, added_miniatures)
-                        for m in ms
-                    ],
-                    output_file,
-                )
+                json.dump([m.to_dict() for m in available_miniatures], output_file)
 
-        self.__notifier.notify(
-            notifications.NbMiniatures(len(valid_miniatures) + len(added_miniatures))
-        )
+        self.__notifier.notify(notifications.NbMiniatures(len(available_miniatures)))
 
-        if return_miniatures:
-            return valid_miniatures + added_miniatures
+        if returns:
+            for video in available_videos:
+                video.miniature = m_dict[video.filename.path]
+            return available_videos
 
     def save_miniatures(self, miniatures: List[Miniature]):
         with open(self.__miniatures_path.path, "w") as output_file:

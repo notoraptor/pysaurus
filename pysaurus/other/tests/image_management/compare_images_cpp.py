@@ -7,18 +7,13 @@ import ujson as json
 from pysaurus.core.classes import StringPrinter
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.database.database import Database
-from pysaurus.core.fraction import Fraction
 from pysaurus.core.functions import timestamp_microseconds
 from pysaurus.core.miniature_tools.miniature import Miniature
 from pysaurus.core.native.alignment_raptor import alignment as native_alignment
 from pysaurus.core.testing import TEST_LIST_FILE_PATH
-
-FRAC_SIM_LIMIT = Fraction(90, 100)
-FRAC_DST_LIMIT = Fraction(1) - FRAC_SIM_LIMIT
+from pysaurus.other.tests.image_management.find_similarities import SIM_LIMIT
 
 PRINT_STEP = 500
-SIM_LIMIT = float(FRAC_SIM_LIMIT)
-DST_LIMIT = float(FRAC_DST_LIMIT)
 MIN_VAL = 0
 MAX_VAL = 255
 GAP_SCORE = -1

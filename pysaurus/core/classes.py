@@ -240,3 +240,15 @@ class Text:
             locale.strcoll(self.value.lower(), other.value.lower())
             or -locale.strcoll(self.value, other.value)
         ) < 0
+
+
+class AbstractMatrix:
+    __slots__ = ("width", "height")
+
+    def __init__(self, width: int, height: int):
+        self.width = width
+        self.height = height
+
+    @abstractmethod
+    def data(self):
+        raise NotImplementedError()
