@@ -457,14 +457,16 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
 
         editPropertiesForManyVideos(propertyName) {
           const selectionSize = this.state.selector.size(this.state.realNbVideos);
-          python_call('count_prop_values', propertyName, this.state.selector.toJSON()).then(valuesAndCounts => Fancybox.load( /*#__PURE__*/React.createElement(FormSelectedVideosProperty, {
+          const videoIndices = this.state.selector.toJSON();
+          python_call('count_prop_values', propertyName, videoIndices).then(valuesAndCounts => Fancybox.load( /*#__PURE__*/React.createElement(FormSelectedVideosProperty, {
             nbVideos: selectionSize,
             definition: this.state.definitions[propertyName],
             values: valuesAndCounts,
             onClose: edition => {
-              python_call('edit_property_for_videos', propertyName, videos, edition.add, edition.remove).then(() => this.backend(null, {
+              this.backend(['edit_property_for_videos', propertyName, videoIndices, edition.add, edition.remove], {
+                pageNumber: 0,
                 status: `Edited property "${propertyName}" for ${selectionSize} video${selectionSize < 2 ? '' : 's'}`
-              })).catch(backend_error);
+              });
             }
           }))).catch(backend_error);
         }

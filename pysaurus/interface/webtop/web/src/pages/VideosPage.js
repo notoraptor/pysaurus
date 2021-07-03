@@ -451,7 +451,7 @@ export class VideosPage extends React.Component {
                                 properties={this.state.properties}
                                 propertyMap={this.state.definitions}
                                 onClose={criterion => {
-                           this.backend(['set_groups', criterion.field, criterion.isProperty, criterion.sorting, criterion.reverse, criterion.allowSingletons], {pageNumber: 0});
+                            this.backend(['set_groups', criterion.field, criterion.isProperty, criterion.sorting, criterion.reverse, criterion.allowSingletons], {pageNumber: 0});
                        }}/>
         )
     }
@@ -462,15 +462,17 @@ export class VideosPage extends React.Component {
 
     editPropertiesForManyVideos(propertyName) {
         const selectionSize = this.state.selector.size(this.state.realNbVideos);
-        python_call('count_prop_values', propertyName, this.state.selector.toJSON())
+        const videoIndices = this.state.selector.toJSON();
+        python_call('count_prop_values', propertyName, videoIndices)
             .then(valuesAndCounts => Fancybox.load(
                 <FormSelectedVideosProperty nbVideos={selectionSize}
                                             definition={this.state.definitions[propertyName]}
                                             values={valuesAndCounts}
                                             onClose={edition => {
-                                            python_call('edit_property_for_videos', propertyName, videos, edition.add, edition.remove)
-                                                .then(() => this.backend(null, {status: `Edited property "${propertyName}" for ${selectionSize} video${selectionSize < 2 ? '' : 's'}`}))
-                                                .catch(backend_error);
+                                                this.backend(
+                                                    ['edit_property_for_videos', propertyName, videoIndices, edition.add, edition.remove],
+                                                    {pageNumber: 0, status: `Edited property "${propertyName}" for ${selectionSize} video${selectionSize < 2 ? '' : 's'}`}
+                                                );
                                         }}/>
                 )
             )

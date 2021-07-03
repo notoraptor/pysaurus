@@ -16,6 +16,37 @@ class FeatureAPI:
         self.database = None  # type: Optional[Database]
         self.provider = None  # type: Optional[VideoProvider]
 
+    # Utilities.
+
+    def _selector_to_indices(self, selector: dict):
+        if selector["all"]:
+            exclude = set(selector["exclude"])
+            video_indices = [
+                video.video_id
+                for video in self.provider.get_view()
+                if video.video_id not in exclude
+            ]
+        else:
+            video_indices = set(selector["include"])
+        return video_indices
+
+    def _selector_to_videos(self, selector: dict):
+        if selector["all"]:
+            exclude = set(selector["exclude"])
+            videos = [
+                video
+                for video in self.provider.get_view()
+                if video.video_id not in exclude
+            ]
+        else:
+            include = set(selector["include"])
+            videos = [
+                video
+                for video in self.provider.get_view()
+                if video.video_id in include
+            ]
+        return videos
+
     # Constant getters.
 
     @classmethod
@@ -36,15 +67,11 @@ class FeatureAPI:
 
     def get_info_and_videos(self, page_size, page_number, selector=None):
         # Backend state.
-        view = self.provider.get_view()
-        real_nb_videos = len(view)
+        real_nb_videos = len(self.provider.get_view())
         if selector:
-            if selector["all"]:
-                exclude = set(selector["exclude"])
-                view = [video for video in view if video.video_id not in exclude]
-            else:
-                include = set(selector["include"])
-                view = [video for video in view if video.video_id in include]
+            view = self._selector_to_videos(selector)
+        else:
+            view = self.provider.get_view()
         nb_videos = len(view)
         nb_pages = compute_nb_pages(nb_videos, page_size)
         videos = []
@@ -149,16 +176,7 @@ class FeatureAPI:
         return [prop.to_json() for prop in props]
 
     def count_prop_values(self, name, selector):
-        if selector["all"]:
-            exclude = set(selector["exclude"])
-            video_indices = [
-                video.video_id
-                for video in self.provider.get_view()
-                if video.video_id not in exclude
-            ]
-        else:
-            video_indices = set(selector["include"])
-        value_to_count = self.database.count_property_values(name, video_indices)
+        value_to_count = self.database.count_property_values(name, self._selector_to_indices(selector))
         return sorted(value_to_count.items())
 
     # Database setters.
@@ -199,8 +217,8 @@ class FeatureAPI:
             self.database.get_video_from_id(video_id), new_title
         )
 
-    def edit_property_for_videos(self, name, video_indices, to_add, to_remove):
-        self.database.edit_property_for_videos(name, video_indices, to_add, to_remove)
+    def edit_property_for_videos(self, name, selector, to_add, to_remove):
+        self.database.edit_property_for_videos(name, self._selector_to_indices(selector), to_add, to_remove)
 
     def set_video_properties(self, video_id, properties):
         self.database.set_video_properties(

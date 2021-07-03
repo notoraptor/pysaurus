@@ -1,5 +1,5 @@
 import itertools
-from ctypes import Array, c_double, c_bool
+from ctypes import Array, c_bool
 from typing import List, Set
 
 from pysaurus.core.fraction import Fraction
@@ -155,17 +155,16 @@ def main():
     )
     for m in miniatures:
         tester.vid_dict[m.identifier].similarity_id = -1
-    sim_groups.sort(key=lambda s: (len(s), min(tester.vid_dict[miniatures[i].identifier].length for i in s)))
+    sim_groups.sort(
+        key=lambda s: (
+            len(s),
+            min(tester.vid_dict[miniatures[i].identifier].length for i in s),
+        )
+    )
     for sim_id, indices in enumerate(sim_groups):
         for i in indices:
             tester.vid_dict[miniatures[i].identifier].similarity_id = sim_id
     tester.db.save()
-
-    from pysaurus.other.tests.image_management.elements.raw_similarities import RawSimilarities
-    rs = RawSimilarities.new()
-    rs.report(
-        [[miniatures[index].identifier for index in indices] for indices in sim_groups]
-    )
 
 
 if __name__ == "__main__":

@@ -75,7 +75,7 @@ export const FIELD_MAP = new FieldMap([
     new FieldInfo('properties', '', GroupPermission.FORBIDDEN, false),
     new FieldInfo('quality', '', GroupPermission.FORBIDDEN, false),
     new FieldInfo('sample_rate', '', GroupPermission.ALL, false),
-    new FieldInfo('similarity_id', 'similarity', GroupPermission.ALL, false),
+    new FieldInfo('similarity_id', 'similarity', GroupPermission.ONLY_MANY, false),
     new FieldInfo('size', '', GroupPermission.ONLY_MANY, false),
     new FieldInfo('thumbnail_path', '', GroupPermission.FORBIDDEN, true),
     new FieldInfo('title', '', GroupPermission.ONLY_MANY, true),
