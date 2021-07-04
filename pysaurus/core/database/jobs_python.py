@@ -2,13 +2,12 @@ import os
 import subprocess
 from typing import List, Tuple, Dict
 
-from pysaurus.core import functions
+from pysaurus.core import functions, notifications
 from pysaurus.core.components import AbsolutePath
-from pysaurus.core.database import notifications
 from pysaurus.core.database.video_runtime_info import VideoRuntimeInfo
 from pysaurus.core.miniature_tools.miniature import Miniature
 from pysaurus.core.modules import ImageUtils
-from pysaurus.core.notification import Notifier
+from pysaurus.core.notifier import Notifier
 
 
 def _collect_videos_info(folder: str, files: Dict[AbsolutePath, VideoRuntimeInfo]):

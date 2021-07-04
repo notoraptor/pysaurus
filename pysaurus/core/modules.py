@@ -100,9 +100,7 @@ class VideoClipping:
             path = os.path.abspath(path)
             unique_id = FNV64.hash(path)
         output_name = "%s_%s_%s.mp4" % (unique_id, time_start, clip_seconds)
-        print(
-            "Taking clip from %s to %s sec in: %s" % (time_start, time_end, output_name)
-        )
+        print("Clip from %s to %s sec in: %s" % (time_start, time_end, output_name))
         sub_clip = clip.subclip(time_start, time_end)
         sub_clip.write_videofile(output_name)
         sub_clip.close()

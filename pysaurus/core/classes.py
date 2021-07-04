@@ -7,7 +7,7 @@ from typing import Any, Generic, List, TypeVar
 T = TypeVar("T")
 
 
-class StringPrinter(object):
+class StringPrinter:
     __slots__ = "__string_buffer", "__strip_right"
 
     def __init__(self, strip_right=True):

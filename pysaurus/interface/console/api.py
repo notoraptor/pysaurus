@@ -10,7 +10,7 @@ from pysaurus.core.database.database import Database
 from pysaurus.core.database.video import VIDEO_UNIQUE_FIELDS, Video
 from pysaurus.core.database.video_features import VideoFeatures
 from pysaurus.core.database.video_state import VideoState
-from pysaurus.core.function_parser import FunctionParser
+from pysaurus.interface.console.function_parser import FunctionParser
 
 TEMP_DIR = tempfile.gettempdir()
 TEMP_PREFIX = tempfile.gettempprefix() + "_pysaurus_"

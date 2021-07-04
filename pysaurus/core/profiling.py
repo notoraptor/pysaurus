@@ -1,7 +1,8 @@
 import functools
 from datetime import datetime
 
-from pysaurus.core.notification import DEFAULT_NOTIFIER, Notification
+from pysaurus.core.notifications import Notification
+from pysaurus.core.notifier import DEFAULT_NOTIFIER
 
 
 class ProfilingStart(Notification):

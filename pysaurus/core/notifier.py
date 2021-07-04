@@ -1,12 +1,7 @@
-from typing import Callable, Dict, Optional
+from typing import Optional, Callable, Dict
 
-from pysaurus.core.classes import ToDict
 from pysaurus.core.components import DateModified
-
-
-class Notification(ToDict):
-    __slots__ = ()
-
+from pysaurus.core.notifications import Notification
 
 ManagerType = Callable[[Notification], None]
 
@@ -25,8 +20,7 @@ class Notifier:
     DM_CALL_SOONER = 2
     DM_CALL_LATER = 3
 
-    @staticmethod
-    def __default_manager_function(notification):
+    def manage(self, notification):
         print(notification)
 
     def __init__(self):
@@ -80,7 +74,7 @@ class Notifier:
         self.__managers.clear()
 
     def get_default_manager(self):
-        return self.__default_manager or Notifier.__default_manager_function
+        return self.__default_manager or self.manage
 
     def notify(self, notification):
         # type: (Notification) -> None

@@ -1,6 +1,7 @@
 import os
 from typing import Dict
 
+from pysaurus.core.classes import StringPrinter
 from pysaurus.core.components import AbsolutePath
 
 
@@ -40,9 +41,12 @@ class PathTree(PathTreeNode):
                 return i > 0 and not children
         return True
 
-    def debug(self, children=None, indent=""):
-        if children is None:
-            children = self.children
+    def __debug(self, output: StringPrinter, children, indent=""):
         for name in sorted(children):
-            print("%s%s" % (indent, name))
-            self.debug(children[name].children, indent + "\t")
+            output.write(f"{indent}{name}")
+            self.__debug(output, children[name].children, indent + "\t")
+
+    def __str__(self):
+        printer = StringPrinter()
+        self.__debug(printer, self.children)
+        return str(printer)

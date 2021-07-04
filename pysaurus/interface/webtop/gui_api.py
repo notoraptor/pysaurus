@@ -7,10 +7,9 @@ from abc import abstractmethod
 from typing import Optional
 
 from pysaurus.core.database.database import Database
-from pysaurus.core.database.notifications import DatabaseReady
 from pysaurus.core.database.viewport.video_provider import VideoProvider
 from pysaurus.core.functions import launch_thread
-from pysaurus.core.notification import Notification
+from pysaurus.core.notifications import Notification, DatabaseReady
 from pysaurus.core.testing import TEST_LIST_FILE_PATH
 from pysaurus.interface.webtop.feature_api import FeatureAPI
 from pysaurus.interface.webtop.parallel_notifier import ParallelNotifier

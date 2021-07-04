@@ -1,9 +1,9 @@
-from pysaurus.core.miniature_tools.miniature import Miniature
 from pysaurus.core.classes import AbstractMatrix
+from pysaurus.core.miniature_tools.miniature import Miniature
 
 
 class Matrix(AbstractMatrix):
-    __slots__ = "array",
+    __slots__ = ("array",)
 
     def __init__(self, array: list, width: int, height: int):
         super().__init__(width, height)
@@ -34,12 +34,10 @@ def get_corner_zones(self: Miniature) -> CornerZones:
     half_len = len(t) // 2
     width = self.width
     for y in range(0, self.height // 2):
-        z_tl += t[(y * width): (y * width + width // 2)]
-        z_tr += t[(y * width + width // 2): ((y + 1) * width)]
-        z_bl += t[(half_len + y * width): (half_len + y * width + width // 2)]
-        z_br += t[
-                (half_len + y * width + width // 2): (half_len + (y + 1) * width)
-                ]
+        z_tl += t[(y * width) : (y * width + width // 2)]
+        z_tr += t[(y * width + width // 2) : ((y + 1) * width)]
+        z_bl += t[(half_len + y * width) : (half_len + y * width + width // 2)]
+        z_br += t[(half_len + y * width + width // 2) : (half_len + (y + 1) * width)]
     return CornerZones(
         width=self.width // 2,
         height=self.height // 2,
@@ -53,9 +51,7 @@ def get_corner_zones(self: Miniature) -> CornerZones:
 def coordinates_around(self: Miniature, x, y, radius=1):
     coordinates = []
     for local_x in range(max(0, x - radius), min(x + radius, self.width - 1) + 1):
-        for local_y in range(
-            max(0, y - radius), min(y + radius, self.height - 1) + 1
-        ):
+        for local_y in range(max(0, y - radius), min(y + radius, self.height - 1) + 1):
             coordinates.append((local_x, local_y))
     return coordinates
 

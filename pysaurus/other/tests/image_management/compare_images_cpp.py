@@ -3,6 +3,7 @@ import sys
 from typing import Any, List
 
 import ujson as json
+from pysaurus.core.database.find_similarities import SIM_LIMIT
 
 from pysaurus.core.classes import StringPrinter
 from pysaurus.core.components import AbsolutePath
@@ -11,7 +12,6 @@ from pysaurus.core.functions import timestamp_microseconds
 from pysaurus.core.miniature_tools.miniature import Miniature
 from pysaurus.core.native.alignment_raptor import alignment as native_alignment
 from pysaurus.core.testing import TEST_LIST_FILE_PATH
-from pysaurus.other.tests.image_management.find_similarities import SIM_LIMIT
 
 PRINT_STEP = 500
 MIN_VAL = 0

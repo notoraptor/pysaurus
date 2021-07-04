@@ -3,7 +3,7 @@ from typing import Dict, Iterable, List, Optional, Set, Union
 
 import ujson as json
 
-from pysaurus.core import exceptions, functions
+from pysaurus.core import exceptions, functions, notifications
 from pysaurus.core.components import (
     AbsolutePath,
     DateModified,
@@ -11,7 +11,7 @@ from pysaurus.core.components import (
     PathType,
 )
 from pysaurus.core.constants import THUMBNAIL_EXTENSION
-from pysaurus.core.database import notifications, path_utils, jobs_python
+from pysaurus.core.database import path_utils, jobs_python
 from pysaurus.core.database.properties import PropType
 from pysaurus.core.database.video import Video
 from pysaurus.core.database.video_interval import VideoInterval
@@ -20,7 +20,7 @@ from pysaurus.core.database.video_state import VideoState
 from pysaurus.core.miniature_tools.group_computer import GroupComputer
 from pysaurus.core.miniature_tools.miniature import Miniature
 from pysaurus.core.modules import ImageUtils, System
-from pysaurus.core.notification import DEFAULT_NOTIFIER, Notifier
+from pysaurus.core.notifier import Notifier, DEFAULT_NOTIFIER
 from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
 
@@ -552,7 +552,10 @@ class Database:
                 )
             for dct in json_array:
                 identifier = AbsolutePath(dct["i"])
-                if identifier in self.__videos and ImageUtils.DEFAULT_THUMBNAIL_SIZE == (dct["w"], dct["h"]):
+                if (
+                    identifier in self.__videos
+                    and ImageUtils.DEFAULT_THUMBNAIL_SIZE == (dct["w"], dct["h"])
+                ):
                     identifiers.add(identifier)
                     valid_dictionaries.append(dct)
             have_removed = len(valid_dictionaries) != len(json_array)

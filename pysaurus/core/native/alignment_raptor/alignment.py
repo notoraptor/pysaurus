@@ -77,7 +77,7 @@ def classify_similarities_directed(miniatures: List[Miniature], edges, sim_limit
                 miniatures[0].width,
                 miniatures[0].height,
                 edges,
-                sim_limit
+                sim_limit,
             )
             cursor = i_to
 

@@ -77,9 +77,7 @@ class Miniature(AbstractMatrix):
         }
 
     def global_intensity(self) -> Fraction:
-        return Fraction(
-            sum(self.r) + sum(self.g) + sum(self.b), 3 * self.size
-        )
+        return Fraction(sum(self.r) + sum(self.g) + sum(self.b), 3 * self.size)
 
     @staticmethod
     def from_dict(dct: dict):

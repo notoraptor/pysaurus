@@ -3,7 +3,7 @@ from typing import List, Tuple
 
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.profiling import Profiler
-from pysaurus.core.servergui import HTML, FlaskInterface, flask_gui
+from pysaurus.other.utils.servergui import HTML, FlaskInterface, flask_gui
 
 
 class Interface(FlaskInterface):

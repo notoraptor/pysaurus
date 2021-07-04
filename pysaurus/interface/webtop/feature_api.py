@@ -1,8 +1,8 @@
 import sys
 from typing import Optional
 
+from pysaurus.core import notifications
 from pysaurus.core.components import FileSize, Duration
-from pysaurus.core.database import notifications
 from pysaurus.core.database.database import Database
 from pysaurus.core.database.properties import PropType
 from pysaurus.core.database.video_features import VideoFeatures
@@ -41,9 +41,7 @@ class FeatureAPI:
         else:
             include = set(selector["include"])
             videos = [
-                video
-                for video in self.provider.get_view()
-                if video.video_id in include
+                video for video in self.provider.get_view() if video.video_id in include
             ]
         return videos
 
@@ -127,7 +125,6 @@ class FeatureAPI:
         self.provider.set_sort(sorting)
 
     def classifier_select_group(self, group_id):
-        print("classifier select group", group_id)
         prop_name = self.provider.grouping_layer.get_grouping().field
         path = self.provider.classifier_layer.get_path()
         value = self.provider.classifier_layer.get_group_value(group_id)
@@ -139,14 +136,12 @@ class FeatureAPI:
     def classifier_focus_prop_val(self, prop_name, field_value):
         self.set_groups(prop_name, True, "count", True, True)
         self.provider.get_view()
-        print("classifier select group by value", field_value)
         group_id = self.provider.grouping_layer.get_group_id(field_value)
         self.provider.classifier_layer.set_path([])
         self.provider.classifier_layer.run()
         self.classifier_select_group(group_id)
 
     def classifier_back(self):
-        print("classifier back")
         prop_name = self.provider.grouping_layer.get_grouping().field
         path = self.provider.classifier_layer.get_path()
         self.provider.classifier_layer.set_path(path[:-1])
@@ -176,7 +171,9 @@ class FeatureAPI:
         return [prop.to_json() for prop in props]
 
     def count_prop_values(self, name, selector):
-        value_to_count = self.database.count_property_values(name, self._selector_to_indices(selector))
+        value_to_count = self.database.count_property_values(
+            name, self._selector_to_indices(selector)
+        )
         return sorted(value_to_count.items())
 
     # Database setters.
@@ -218,7 +215,9 @@ class FeatureAPI:
         )
 
     def edit_property_for_videos(self, name, selector, to_add, to_remove):
-        self.database.edit_property_for_videos(name, self._selector_to_indices(selector), to_add, to_remove)
+        self.database.edit_property_for_videos(
+            name, self._selector_to_indices(selector), to_add, to_remove
+        )
 
     def set_video_properties(self, video_id, properties):
         self.database.set_video_properties(

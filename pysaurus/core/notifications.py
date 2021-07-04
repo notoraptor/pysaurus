@@ -1,7 +1,10 @@
-from typing import Dict, Iterable, List, Optional
+from typing import Dict, List, Iterable, Optional
 
-from pysaurus.core.classes import StringPrinter
-from pysaurus.core.notification import Notification
+from pysaurus.core.classes import ToDict, StringPrinter
+
+
+class Notification(ToDict):
+    __slots__ = ()
 
 
 class UnusedThumbnails(Notification):
@@ -14,7 +17,7 @@ class UnusedThumbnails(Notification):
 
 
 class VideosNotFoundRemoved(UnusedThumbnails):
-    __slots__ = []
+    __slots__ = ()
 
 
 class CollectingFiles(Notification):
@@ -26,11 +29,11 @@ class CollectingFiles(Notification):
 
 
 class FolderNotFound(CollectingFiles):
-    __slots__ = []
+    __slots__ = ()
 
 
 class PathIgnored(CollectingFiles):
-    __slots__ = []
+    __slots__ = ()
 
 
 class CollectedFiles(Notification):
@@ -79,14 +82,22 @@ class VideoJob(Notification):
 
 
 class ThumbnailJob(VideoJob):
-    __slots__ = []
+    __slots__ = ()
 
 
 class MiniatureJob(VideoJob):
     __slots__ = ()
 
 
-class MiniatureGroupComputerJob(VideoJob):
+class GroupComputerJob(VideoJob):
+    __slots__ = ()
+
+
+class GrayCrossComparisonJob(VideoJob):
+    __slots__ = ()
+
+
+class NewCrossComparisonJob(VideoJob):
     __slots__ = ()
 
 
@@ -115,7 +126,7 @@ class DatabaseLoaded(Notification):
 
 
 class DatabaseSaved(DatabaseLoaded):
-    __slots__ = []
+    __slots__ = ()
 
 
 class VideosToLoad(Notification):
@@ -127,7 +138,7 @@ class VideosToLoad(Notification):
 
 
 class ThumbnailsToLoad(VideosToLoad):
-    __slots__ = []
+    __slots__ = ()
 
 
 class MiniaturesToLoad(VideosToLoad):
@@ -139,6 +150,8 @@ class NbMiniatures(VideosToLoad):
 
 
 # Unused, sub-classed.
+
+
 class MissingVideos(Notification):
     __slots__ = ["names"]
 
@@ -155,7 +168,7 @@ class MissingVideos(Notification):
 
 
 class MissingThumbnails(MissingVideos):
-    __slots__ = []
+    __slots__ = ()
 
 
 class VideoInfoErrors(Notification):
@@ -178,7 +191,7 @@ class VideoInfoErrors(Notification):
 
 
 class VideoThumbnailErrors(VideoInfoErrors):
-    __slots__ = []
+    __slots__ = ()
 
 
 class DatabaseReady(Notification):

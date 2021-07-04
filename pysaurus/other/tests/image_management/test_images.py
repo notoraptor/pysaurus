@@ -6,16 +6,15 @@ from typing import List, Dict, Union, Optional, Any
 
 import ujson as json
 
-from pysaurus.core import functions
+from pysaurus.core import functions, notifications
 from pysaurus.core.components import AbsolutePath
-from pysaurus.core.database import notifications
 from pysaurus.core.database.database import Database
 from pysaurus.core.database.properties import PropType
 from pysaurus.core.database.video import Video
 from pysaurus.core.miniature_tools.graph import Graph
 from pysaurus.core.miniature_tools.group_computer import GroupComputer
 from pysaurus.core.miniature_tools.miniature import Miniature
-from pysaurus.core.notification import DEFAULT_NOTIFIER
+from pysaurus.core.notifier import DEFAULT_NOTIFIER
 from pysaurus.core.profiling import Profiler
 from pysaurus.core.testing import TEST_LIST_FILE_PATH
 from pysaurus.other.tests.image_management.elements.basic_group import (

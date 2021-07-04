@@ -22,7 +22,7 @@ class Interface(GuiAPI):
             resolve.Call(getattr(self, name)(*args))
         except Exception as exc:
             traceback.print_tb(exc.__traceback__)
-            print("%s:" % type(exc).__name__, exc, file=sys.stderr)
+            print(f"{type(exc).__name__}:", exc, file=sys.stderr)
             reject.Call({"name": type(exc).__name__, "message": str(exc)})
 
     def _notify(self, notification):

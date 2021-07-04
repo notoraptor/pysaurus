@@ -2,18 +2,18 @@ import os
 from multiprocessing import Pool
 from typing import List
 
-from pysaurus.core.database import notifications
+from pysaurus.core import notifications
+from pysaurus.core.classes import AbstractMatrix
 from pysaurus.core.miniature_tools.decomposed_miniature import (
     DecomposedMiniature,
 )
 from pysaurus.core.miniature_tools.graph import Graph
 from pysaurus.core.miniature_tools.miniature import Miniature
-from pysaurus.core.classes import AbstractMatrix
 from pysaurus.core.miniature_tools.pixel_comparator import (
     DistancePixelComparator,
 )
 from pysaurus.core.miniature_tools.pixel_group import PixelGroup
-from pysaurus.core.notification import DEFAULT_NOTIFIER
+from pysaurus.core.notifier import DEFAULT_NOTIFIER
 from pysaurus.core.profiling import Profiler
 
 
@@ -101,9 +101,7 @@ class GroupComputer:
         index_task, miniature, nb_all_tasks, notifier = context
         if (index_task + 1) % self.print_step == 0:
             notifier.notify(
-                notifications.MiniatureGroupComputerJob(
-                    None, index_task + 1, nb_all_tasks
-                )
+                notifications.GroupComputerJob(None, index_task + 1, nb_all_tasks)
             )
         return DecomposedMiniature(miniature.identifier, self.group_pixels(miniature))
 

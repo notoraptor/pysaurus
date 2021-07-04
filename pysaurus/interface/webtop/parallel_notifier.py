@@ -1,6 +1,7 @@
 import multiprocessing
 
-from pysaurus.core.notification import Notification, Notifier
+from pysaurus.core.notifications import Notification
+from pysaurus.core.notifier import Notifier
 
 
 class ParallelNotifier(Notifier):
@@ -10,8 +11,7 @@ class ParallelNotifier(Notifier):
         # type: (multiprocessing.Queue) -> None
         super(ParallelNotifier, self).__init__()
         self.queue = shared_queue
-        self.set_default_manager(self.collect)
 
-    def collect(self, notification):
+    def manage(self, notification):
         # type: (Notification) -> None
         self.queue.put_nowait(notification)

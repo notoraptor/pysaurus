@@ -2,17 +2,17 @@ import shlex
 import sys
 import traceback
 
-from pysaurus.core.function_parser import FunctionDefinition
 from pysaurus.core.testing import TEST_LIST_FILE_PATH
 from pysaurus.interface.console.console_parser import ConsoleParser
+from pysaurus.interface.console.function_parser import FunctionDefinition
 
 
 def main():
     console_parser = ConsoleParser(TEST_LIST_FILE_PATH)
 
-    print()
     print(
-        '[CONSOLE INTERFACE] ("exit", "e", "quit", "q" or Ctrl+C to exit, "help" or "h" to print help)'
+        "\n[CONSOLE INTERFACE] "
+        '("exit", "e", "quit", "q" or Ctrl+C to exit, "help" or "h" to print help)'
     )
 
     while True:

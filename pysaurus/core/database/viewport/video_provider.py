@@ -7,7 +7,7 @@ Sort
 import random
 from typing import Optional, Sequence
 
-from pysaurus.core.database import notifications
+from pysaurus.core import notifications
 from pysaurus.core.database.database import Database
 from pysaurus.core.database.video import Video
 from pysaurus.core.database.viewport.layers.classifier_layer import ClassifierLayer

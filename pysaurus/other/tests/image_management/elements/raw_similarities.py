@@ -22,7 +22,14 @@ class RawSimilarities:
             common_groups = {self.path_to_group.get(path, -1) for path in paths}
             if -1 not in common_groups and len(common_groups) == 1:
                 confirmed[i] = next(iter(common_groups))
-        print("Similarities", len(similarities), "confirmed", sum(c != -1 for c in confirmed), "expected", len(self.group_to_paths))
+        print(
+            "Similarities",
+            len(similarities),
+            "confirmed",
+            sum(c != -1 for c in confirmed),
+            "expected",
+            len(self.group_to_paths),
+        )
 
     def count_couples(self):
         return sum(compute_nb_couples(len(group)) for group in self.group_to_paths)
