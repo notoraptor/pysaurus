@@ -173,9 +173,11 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             action: actions.manageProperties
           }), /*#__PURE__*/React.createElement(MenuItem, {
             action: this.findSimilarVideos
-          }, "Search similar videos"), /*#__PURE__*/React.createElement(MenuItem, {
+          }, "Search similar videos"), /*#__PURE__*/React.createElement(Menu, {
+            title: "Search similar videos (longer) ..."
+          }, /*#__PURE__*/React.createElement(MenuItem, {
             action: this.findSimilarVideosIgnoreCache
-          }, "Search similar videos ", /*#__PURE__*/React.createElement("strong", null, "(ignore cache)")), stringSetProperties.length ? /*#__PURE__*/React.createElement(MenuItem, {
+          }, /*#__PURE__*/React.createElement("strong", null, "Ignore cache"))), stringSetProperties.length ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.fillWithKeywords
           }, "Put keywords into a property ...") : '', /*#__PURE__*/React.createElement(Menu, {
             title: "Page size ..."

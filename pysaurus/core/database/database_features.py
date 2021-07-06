@@ -191,10 +191,11 @@ class DatabaseFeatures:
         )
         graph = Graph()
         nb_miniatures = len(miniatures)
-        for i in range(len(miniatures)):
-            for j in range(i + 1, len(miniatures)):
-                if edges[i * nb_miniatures + j]:
-                    graph.connect(i, j)
+        with Profiler("Link videos.", notifier):
+            for i in range(len(miniatures)):
+                for j in range(i + 1, len(miniatures)):
+                    if edges[i * nb_miniatures + j]:
+                        graph.connect(i, j)
         return [group for group in graph.pop_groups() if len(group) > 1]
 
     @classmethod

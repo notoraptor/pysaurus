@@ -129,7 +129,9 @@ export class VideosPage extends React.Component {
                         {<ActionToMenuItem action={actions.reload}/>}
                         {<ActionToMenuItem action={actions.manageProperties}/>}
                         <MenuItem action={this.findSimilarVideos}>Search similar videos</MenuItem>
-                        <MenuItem action={this.findSimilarVideosIgnoreCache}>Search similar videos <strong>(ignore cache)</strong></MenuItem>
+                        <Menu title="Search similar videos (longer) ...">
+                            <MenuItem action={this.findSimilarVideosIgnoreCache}><strong>Ignore cache</strong></MenuItem>
+                        </Menu>
                         {stringSetProperties.length ?
                             <MenuItem action={this.fillWithKeywords}>Put keywords into a property ...</MenuItem> : ''}
                         <Menu title="Page size ...">

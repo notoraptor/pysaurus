@@ -181,7 +181,7 @@ class Database:
         if ensure_identifiers:
             self.__ensure_identifiers()
         self.video_interval.update(self.__videos.values())
-        return
+        # return
         # Save database.
         json_output = {
             "settings": self.__settings.to_dict(),
