@@ -11,8 +11,8 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
     const total = monitoring.total;
     let current = 0;
 
-    for (let jobId of Object.keys(monitoring.jobs)) {
-      current += monitoring.jobs[jobId];
+    for (let step of monitoring.jobs.values()) {
+      current += step;
     }
 
     const percent = Math.round(current * 100 / total);
@@ -40,22 +40,14 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
     }],
     execute: function () {
       ProgressionMonitoring = class ProgressionMonitoring {
-        constructor(name) {
+        constructor(name, total) {
           this.name = name;
-          this.total = 0;
-          this.jobs = {};
+          this.total = total;
+          this.jobs = new Map();
         }
 
-        clone(total = undefined, jobs = undefined) {
-          const copy = new ProgressionMonitoring(this.name);
-          copy.total = total !== undefined ? total : this.total;
-          copy.jobs = jobs !== undefined ? jobs : this.jobs;
-          return copy;
-        }
-
-        collectJobNotification(notification) {
-          this.jobs[notification.notification.index] = notification.notification.parsed;
-          return this.clone();
+        collectJobStep(notification) {
+          this.jobs.set(notification.notification.channel, notification.notification.step);
         }
 
       };
@@ -65,50 +57,30 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
             status: HomeStatus.LOADED
           });
         },
-        VideosToLoad: function (app, notification) {
+        JobToDo: function (app, notification) {
+          const name = notification.notification.name;
+          const total = notification.notification.total;
+          const jobMap = new Map(app.state.jobMap);
+          jobMap.set(name, new ProgressionMonitoring(name, total));
           app.collectNotification(notification, {
-            videosMonitoring: app.state.videosMonitoring.clone(notification.notification.total)
+            jobMap
           });
         },
-        ThumbnailsToLoad: function (app, notification) {
+        JobStep: function (app, notification) {
+          const lastIndex = app.state.messages.length - 1;
+          const jobIsBeingCollected = lastIndex > -1 && app.state.messages[lastIndex].name === notification.name && app.state.messages[lastIndex].notification.name === notification.notification.name;
+          const jobMap = new Map(app.state.jobMap);
+          jobMap.get(notification.notification.name).collectJobStep(notification);
           app.collectNotification(notification, {
-            thumbnailsMonitoring: app.state.thumbnailsMonitoring.clone(notification.notification.total)
-          });
-        },
-        MiniaturesToLoad: function (app, notification) {
-          app.collectNotification(notification, {
-            miniaturesMonitoring: app.state.miniaturesMonitoring.clone(notification.notification.total)
-          });
-        },
-        VideoJob: function (app, notification) {
-          app.collectNotification(notification, {
-            videosMonitoring: app.state.videosMonitoring.collectJobNotification(notification)
-          }, !app.state.messages.length || app.state.messages[app.state.messages.length - 1].name !== notification.name);
-        },
-        ThumbnailJob: function (app, notification) {
-          app.collectNotification(notification, {
-            thumbnailsMonitoring: app.state.thumbnailsMonitoring.collectJobNotification(notification)
-          }, !app.state.messages.length || app.state.messages[app.state.messages.length - 1].name !== notification.name);
-        },
-        MiniatureJob: function (app, notification) {
-          app.collectNotification(notification, {
-            miniaturesMonitoring: app.state.miniaturesMonitoring.collectJobNotification(notification)
-          }, !app.state.messages.length || app.state.messages[app.state.messages.length - 1].name !== notification.name);
+            jobMap
+          }, !jobIsBeingCollected);
         },
         // notifications ignored.
         ProfilingStart: function (app, notification) {}
       };
       NotificationRenderer = {
-        VideoJob: (app, message, i) => /*#__PURE__*/React.createElement(Monitoring, {
-          monitoring: app.state.videosMonitoring,
-          key: i
-        }),
-        ThumbnailJob: (app, message, i) => /*#__PURE__*/React.createElement(Monitoring, {
-          monitoring: app.state.thumbnailsMonitoring,
-          key: i
-        }),
-        MiniatureJob: (app, message, i) => /*#__PURE__*/React.createElement(Monitoring, {
-          monitoring: app.state.miniaturesMonitoring,
+        JobStep: (app, message, i) => /*#__PURE__*/React.createElement(Monitoring, {
+          monitoring: app.state.jobMap.get(message.notification.name),
           key: i
         }),
         DatabaseLoaded: function (app, message, i) {
@@ -146,10 +118,7 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
             }, /*#__PURE__*/React.createElement("em", null, "No missing thumbnails!"));
           }
         },
-        ProfilingEnd: function (app, message, i) {
-          if (i > 0 && ['VideoJob', 'ThumbnailJob', 'MiniatureJob'].indexOf(app.state.messages[i - 1].name) !== -1) return /*#__PURE__*/React.createElement("div", {
-            key: i
-          }, /*#__PURE__*/React.createElement("strong", null, "Loaded"), " in ", message.notification.time);
+        ProfilingEnd: function (app, message, i) {// return (<div key={i}><strong>Loaded</strong> in {message.notification.time}</div>);
         },
         VideoInfoErrors: function (app, message, i) {
           const errors = message.notification.video_errors;
@@ -166,14 +135,9 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
         VideoThumbnailErrors: function (app, message, i) {
           return NotificationRenderer.VideoInfoErrors(app, message, i);
         },
-        VideosToLoad: function (app, message, i) {
-          const labels = {
-            VideosToLoad: 'video',
-            ThumbnailsToLoad: 'thumbnail',
-            MiniaturesToLoad: 'miniature'
-          };
+        JobToDo: function (app, message, i) {
           const total = message.notification.total;
-          const label = labels[message.name];
+          const label = message.notification.name;
 
           if (total) {
             return /*#__PURE__*/React.createElement("div", {
@@ -184,12 +148,6 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
               key: i
             }, /*#__PURE__*/React.createElement("em", null, "No ", label, "s to load!"));
           }
-        },
-        ThumbnailsToLoad: function (app, message, i) {
-          return NotificationRenderer.VideosToLoad(app, message, i);
-        },
-        MiniaturesToLoad: function (app, message, i) {
-          return NotificationRenderer.VideosToLoad(app, message, i);
         },
         NbMiniatures: function (app, message, i) {
           const total = message.notification.total;
@@ -214,9 +172,7 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
           this.state = {
             status: this.props.parameters.update ? HomeStatus.LOADING : HomeStatus.INITIAL,
             messages: [],
-            videosMonitoring: new ProgressionMonitoring("video"),
-            thumbnailsMonitoring: new ProgressionMonitoring("thumb"),
-            miniaturesMonitoring: new ProgressionMonitoring("miniature"),
+            jobMap: new Map(),
             update: false
           };
           this.callbackIndex = -1;
@@ -262,16 +218,14 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
 
         renderMessages() {
           const output = [];
-          let ready = false;
+          const lastIndex = this.state.messages.length - 1;
 
           for (let i = 0; i < this.state.messages.length; ++i) {
             const message = this.state.messages[i];
             const name = message.name;
-            ready = name === 'DatabaseReady' && i === this.state.messages.length - 1;
-            let display = null;
 
             if (NotificationRenderer[name]) {
-              display = NotificationRenderer[name](this, message, i);
+              const display = NotificationRenderer[name](this, message, i);
               if (display) output.push(display);
             } else {
               output.push( /*#__PURE__*/React.createElement("div", {
@@ -280,6 +234,7 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
             }
           }
 
+          const ready = lastIndex > -1 && this.state.messages[lastIndex].name === "DatabaseReady";
           if (!ready && this.status === HomeStatus.LOADING) output.push( /*#__PURE__*/React.createElement("div", {
             key: this.state.messages.length
           }, "..."));

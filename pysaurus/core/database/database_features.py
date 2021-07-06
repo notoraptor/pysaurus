@@ -51,12 +51,13 @@ class GrayClassifier:
         """Return sequence of couples of indices of classifiers to cross compare."""
         n = len(self.grays)
         t = self.j_limit
+        jobn = notifications.Jobs.gray_comparisons(n, notifier)
         for i in range(n):
             for j in range(i + 1, t[i]):
                 yield i, j
             if (i + 1) % 1000 == 0:
-                notifier.notify(notifications.GrayCrossComparisonJob(None, i + 1, n))
-        notifier.notify(notifications.GrayCrossComparisonJob(None, n, n))
+                jobn.progress(None, i + 1, n)
+        jobn.progress(None, n, n)
 
     @classmethod
     def classify(cls, miniatures: List[Miniature], miniature_indices: List[int] = None):
@@ -143,6 +144,8 @@ class DatabaseFeatures:
         nb_miniatures: int,
         notifier: Notifier,
     ):
+        n = len(classifier_left.grays)
+        jobn = notifications.Jobs.new_comparisons(n, notifier)
         with Profiler("Cross compare classifiers."):
             nb_cmp = 0
             for i_gray_left, gray_left in enumerate(classifier_left.grays):
@@ -176,22 +179,16 @@ class DatabaseFeatures:
                                     a, b = b, a
                                 cmp_map[a * nb_miniatures + b] = 1
                 if (i_gray_left + 1) % 10 == 0:
-                    notifier.notify(
-                        notifications.NewCrossComparisonJob(
-                            None, i_gray_left + 1, len(classifier_left.grays)
-                        )
-                    )
-            notifier.notify(
-                notifications.NewCrossComparisonJob(
-                    None, len(classifier_left.grays), len(classifier_left.grays)
-                )
-            )
+                    jobn.progress(None, i_gray_left + 1, n)
+            jobn.progress(None, n, n)
             return nb_cmp
 
     @classmethod
-    def _find_similar_miniatures(cls, miniatures, edges):
-        # type: (List[Miniature], Array[c_bool]) -> List[Set[int]]
-        native_alignment.classify_similarities_directed(miniatures, edges, SIM_LIMIT)
+    def _find_similar_miniatures(cls, miniatures, edges, notifier):
+        # type: (List[Miniature], Array[c_bool], Notifier) -> List[Set[int]]
+        native_alignment.classify_similarities_directed(
+            miniatures, edges, SIM_LIMIT, notifier
+        )
         graph = Graph()
         nb_miniatures = len(miniatures)
         for i in range(len(miniatures)):
@@ -234,7 +231,7 @@ class DatabaseFeatures:
                 )
             )
 
-            sim_groups = cls._find_similar_miniatures(miniatures, cmp_map)
+            sim_groups = cls._find_similar_miniatures(miniatures, cmp_map, db.notifier)
 
             db.notifier.notify(
                 notifications.Message(

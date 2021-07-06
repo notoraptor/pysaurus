@@ -1,9 +1,11 @@
 from ctypes import c_double, memset, pointer, sizeof, c_int
 from typing import Iterable, List
 
+from pysaurus.core import notifications
 from pysaurus.core.constants import VIDEO_BATCH_SIZE
 from pysaurus.core.miniature_tools.miniature import Miniature
 from pysaurus.core.native.clibrary import c_int_p
+from pysaurus.core.notifier import Notifier
 from pysaurus.core.profiling import Profiler
 from .symbols import (
     PtrPtrSequence,
@@ -58,17 +60,19 @@ def classify_similarities(miniatures, step=False):
     return native_edges
 
 
-def classify_similarities_directed(miniatures: List[Miniature], edges, sim_limit):
+def classify_similarities_directed(
+    miniatures: List[Miniature], edges, sim_limit, notifier: Notifier
+):
     nb_sequences = len(miniatures)
     native_sequences = [miniature_to_c_sequence(sequence) for sequence in miniatures]
     native_sequence_pointers = [pointer(sequence) for sequence in native_sequences]
     pointer_array_type = PtrSequence * nb_sequences
+    jobn = notifications.Jobs.native_comparisons(nb_sequences, notifier)
     with Profiler("Finding similar images using simpler NATIVE comparison."):
         cursor = 0
         while cursor < nb_sequences:
             i_from = cursor
             i_to = cursor + VIDEO_BATCH_SIZE
-            print("[%s;%s[/%s" % (i_from, i_to, nb_sequences))
             fn_classifySimilaritiesDirected(
                 PtrPtrSequence(pointer_array_type(*native_sequence_pointers)),
                 nb_sequences,
@@ -79,7 +83,9 @@ def classify_similarities_directed(miniatures: List[Miniature], edges, sim_limit
                 edges,
                 sim_limit,
             )
+            jobn.progress(None, min(i_to, nb_sequences), nb_sequences)
             cursor = i_to
+        jobn.progress(None, nb_sequences, nb_sequences)
 
 
 def classify_similarities_selected(miniatures: List[Miniature], edges, sim_limit):

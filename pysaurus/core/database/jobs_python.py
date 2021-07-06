@@ -1,13 +1,13 @@
 import os
 import subprocess
-from typing import List, Tuple, Dict
+from typing import List, Dict
 
-from pysaurus.core import functions, notifications
+from pysaurus.core import functions
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.database.video_runtime_info import VideoRuntimeInfo
 from pysaurus.core.miniature_tools.miniature import Miniature
 from pysaurus.core.modules import ImageUtils
-from pysaurus.core.notifier import Notifier
+from pysaurus.core.notifications import JobNotifications
 
 
 def _collect_videos_info(folder: str, files: Dict[AbsolutePath, VideoRuntimeInfo]):
@@ -39,7 +39,8 @@ def job_collect_videos_info(job):
 
 
 def job_video_to_json(job):
-    input_file_name, output_file_name, job_count, job_id, notifier = job
+    jobn: JobNotifications
+    input_file_name, output_file_name, job_count, job_id, jobn = job
 
     nb_read = 0
     nb_loaded = 0
@@ -69,17 +70,18 @@ def job_video_to_json(job):
                     end = True
             else:
                 step = int(line)
-                notifier.notify(notifications.VideoJob(job_id, step, job_count))
+                jobn.progress(job_id, step, job_count)
     program_errors = process.stderr.read().decode().strip()
     if not end and program_errors:
         raise Exception("Video-to-JSON error: " + program_errors)
     assert nb_read == job_count
-    notifier.notify(notifications.VideoJob(job_id, job_count, job_count))
+    jobn.progress(job_id, job_count, job_count)
     return nb_loaded
 
 
 def job_video_thumbnails_to_json(job):
-    input_file_name, output_file_name, job_count, job_id, notifier = job
+    jobn: JobNotifications
+    input_file_name, output_file_name, job_count, job_id, jobn = job
 
     nb_read = 0
     nb_loaded = 0
@@ -109,29 +111,27 @@ def job_video_thumbnails_to_json(job):
                     end = True
             else:
                 step = int(line)
-                notifier.notify(notifications.ThumbnailJob(job_id, step, job_count))
+                jobn.progress(job_id, step, job_count)
     program_errors = process.stderr.read().decode().strip()
     if not end and program_errors:
         raise Exception("Videos-thumbnails-to-JSON error: " + program_errors)
     assert nb_read == job_count
-    notifier.notify(notifications.ThumbnailJob(job_id, job_count, job_count))
+    jobn.progress(job_id, job_count, job_count)
     return nb_loaded
 
 
-def job_generate_miniatures(job):
-    # type: (Tuple[list, str, Notifier]) -> List[Miniature]
-    thumbnails, job_id, notifier = job
+def job_generate_miniatures(job) -> List[Miniature]:
+    jobn: JobNotifications
+    thumbnails, job_id, jobn = job
     nb_videos = len(thumbnails)
     miniatures = []
-    count = 0
-    for file_name, thumbnail_path in thumbnails:
+    for i, (file_name, thumbnail_path) in enumerate(thumbnails):
         miniatures.append(
             Miniature.from_file_name(
                 thumbnail_path.path, ImageUtils.DEFAULT_THUMBNAIL_SIZE, file_name.path
             )
         )
-        count += 1
-        if count % 500 == 0:
-            notifier.notify(notifications.MiniatureJob(job_id, count, nb_videos))
-    notifier.notify(notifications.MiniatureJob(job_id, count, nb_videos))
+        if (i + 1) % 500 == 0:
+            jobn.progress(job_id, i + 1, nb_videos)
+    jobn.progress(job_id, nb_videos, nb_videos)
     return miniatures

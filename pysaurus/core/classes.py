@@ -84,6 +84,7 @@ class Table:
 
 class ToDict:
     __slots__ = ()
+    __slot_sorter__ = sorted
     __print_none__ = False
 
     def get_name(self):
@@ -93,7 +94,7 @@ class ToDict:
     def get_slots(cls):
         if hasattr(cls, "__props__"):
             return cls.__props__
-        return sorted(
+        return cls.__slot_sorter__(
             chain.from_iterable(getattr(typ, "__slots__", ()) for typ in cls.__mro__)
         )
 

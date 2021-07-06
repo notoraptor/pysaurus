@@ -70,35 +70,11 @@ class FinishedCollectingVideos(Notification):
         self.count = len(paths)
 
 
-class VideoJob(Notification):
-    __slots__ = ["index", "parsed", "total"]
+class NbMiniatures(Notification):
+    __slots__ = ("total",)
 
-    def __init__(self, job_id, step, total):
-        # type: (Optional[str], int, int) -> None
-        super().__init__()
-        self.index = job_id
-        self.parsed = step
+    def __init__(self, total):
         self.total = total
-
-
-class ThumbnailJob(VideoJob):
-    __slots__ = ()
-
-
-class MiniatureJob(VideoJob):
-    __slots__ = ()
-
-
-class GroupComputerJob(VideoJob):
-    __slots__ = ()
-
-
-class GrayCrossComparisonJob(VideoJob):
-    __slots__ = ()
-
-
-class NewCrossComparisonJob(VideoJob):
-    __slots__ = ()
 
 
 class DatabaseLoaded(Notification):
@@ -126,26 +102,6 @@ class DatabaseLoaded(Notification):
 
 
 class DatabaseSaved(DatabaseLoaded):
-    __slots__ = ()
-
-
-class VideosToLoad(Notification):
-    __slots__ = ["total"]
-
-    def __init__(self, total):
-        super().__init__()
-        self.total = total
-
-
-class ThumbnailsToLoad(VideosToLoad):
-    __slots__ = ()
-
-
-class MiniaturesToLoad(VideosToLoad):
-    __slots__ = ()
-
-
-class NbMiniatures(VideosToLoad):
     __slots__ = ()
 
 
@@ -229,3 +185,71 @@ class FieldsModified(Notification):
 
 class PropertiesModified(FieldsModified):
     __slots__ = ()
+
+
+class JobToDo(Notification):
+    __slots__ = "name", "total"
+
+    def __init__(self, name: str, total: int):
+        self.name = name
+        self.total = total
+
+
+class JobStep(Notification):
+    __slots__ = "name", "channel", "step", "total"
+    __slot_sorter__ = list
+
+    def __init__(self, name: str, channel: Optional[str], step: int, total: int):
+        self.name = name
+        self.channel = channel
+        self.step = step
+        self.total = total
+
+
+class JobNotifications:
+    __slots__ = "name", "total", "notifier"
+
+    def __init__(self, name: str, total: int, notifier):
+        self.name = name
+        self.total = total
+        self.notifier = notifier
+        self.todo()
+        self.started()
+
+    def todo(self):
+        self.notifier.notify(JobToDo(self.name, self.total))
+
+    def started(self):
+        if self.total:
+            self.notifier.notify(JobStep(self.name, None, 0, self.total))
+
+    def progress(self, channel: Optional[str], channel_step: int, channel_size: int):
+        self.notifier.notify(JobStep(self.name, channel, channel_step, channel_size))
+
+    def __enter__(self):
+        self.todo()
+        self.started()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
+
+
+class _JobNotificationsFactory:
+    __slots__ = ("name",)
+
+    def __init__(self, name: str):
+        self.name = name
+
+    def __call__(self, total, notifier) -> JobNotifications:
+        return JobNotifications(self.name, total, notifier)
+
+
+class Jobs:
+    videos = _JobNotificationsFactory("video")
+    thumbnails = _JobNotificationsFactory("thumbnail")
+    miniatures = _JobNotificationsFactory("miniature")
+    group_computer = _JobNotificationsFactory("miniature group")
+    gray_comparisons = _JobNotificationsFactory("miniature gray comparison")
+    new_comparisons = _JobNotificationsFactory("new miniature comparison")
+    native_comparisons = _JobNotificationsFactory("native comparison")

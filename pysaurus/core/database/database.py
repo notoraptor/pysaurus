@@ -181,6 +181,7 @@ class Database:
         if ensure_identifiers:
             self.__ensure_identifiers()
         self.video_interval.update(self.__videos.values())
+        return
         # Save database.
         json_output = {
             "settings": self.__settings.to_dict(),
@@ -318,13 +319,13 @@ class Database:
         all_file_names = self.get_new_video_paths()
         # all_file_names = sorted(self.__set_videos_states_flags())
 
-        self.__notifier.notify(notifications.VideosToLoad(len(all_file_names)))
+        jobn = notifications.Jobs.videos(len(all_file_names), self.__notifier)
         if not all_file_names:
             return
-
-        pre_jobs = functions.dispatch_tasks(all_file_names, cpu_count)
         jobs = []
-        for index, (file_names, job_id) in enumerate(pre_jobs):
+        for index, (file_names, job_id) in enumerate(
+            functions.dispatch_tasks(all_file_names, cpu_count)
+        ):
             input_file_path = FilePath(self.__db_folder, str(index), "list")
             output_file_path = FilePath(self.__db_folder, str(index), "json")
 
@@ -338,7 +339,7 @@ class Database:
                     output_file_path.path,
                     len(file_names),
                     job_id,
-                    self.__notifier,
+                    jobn,
                 )
             )
 
@@ -448,7 +449,7 @@ class Database:
         nb_videos_no_thumbs = len(videos_without_thumbs)
         del thumb_to_videos
 
-        self.__notifier.notify(notifications.ThumbnailsToLoad(nb_videos_no_thumbs))
+        jobn = notifications.Jobs.thumbnails(nb_videos_no_thumbs, self.__notifier)
         if not videos_without_thumbs:
             self.__notify_missing_thumbnails()
             return
@@ -489,7 +490,7 @@ class Database:
                     output_file_path.path,
                     len(job_videos),
                     job_id,
-                    self.__notifier,
+                    jobn,
                 )
             )
 
@@ -567,14 +568,12 @@ class Database:
             for video in available_videos
             if video.filename not in identifiers
         ]
-        self.__notifier.notify(notifications.MiniaturesToLoad(len(tasks)))
 
+        jobn = notifications.Jobs.miniatures(len(tasks), self.__notifier)
         if tasks:
             have_added = True
             cpu_count = os.cpu_count()
-            jobs = functions.dispatch_tasks(
-                tasks, cpu_count, extra_args=[self.__notifier]
-            )
+            jobs = functions.dispatch_tasks(tasks, cpu_count, extra_args=[jobn])
             del tasks
             with Profiler("Generating miniatures."):
                 results = functions.parallelize(
@@ -602,7 +601,9 @@ class Database:
                 group_min_size=self.__settings.miniature_group_min_size,
                 pixel_distance_radius=self.__settings.miniature_pixel_distance_radius,
             )
-            for dm in group_computer.batch_compute_groups(m_no_groups):
+            for dm in group_computer.batch_compute_groups(
+                m_no_groups, notifier=self.__notifier
+            ):
                 m_dict[dm.miniature_identifier].set_group_signature(
                     self.__settings.miniature_pixel_distance_radius,
                     self.__settings.miniature_group_min_size,

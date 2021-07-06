@@ -36,7 +36,7 @@ class GroupComputer:
         group_min_size,
         similarity_percent=None,
         pixel_distance_radius: int = None,
-        print_step=2000,
+        print_step=500,
     ):
         assert (similarity_percent is None) ^ (pixel_distance_radius is None)
         if pixel_distance_radius is not None:
@@ -98,11 +98,10 @@ class GroupComputer:
         ]
 
     def async_compute(self, context) -> DecomposedMiniature:
-        index_task, miniature, nb_all_tasks, notifier = context
+        jobn: notifications.JobNotifications
+        index_task, miniature, nb_all_tasks, jobn = context
         if (index_task + 1) % self.print_step == 0:
-            notifier.notify(
-                notifications.GroupComputerJob(None, index_task + 1, nb_all_tasks)
-            )
+            jobn.progress(None, index_task + 1, nb_all_tasks)
         return DecomposedMiniature(miniature.identifier, self.group_pixels(miniature))
 
     def batch_compute_groups(
@@ -110,8 +109,10 @@ class GroupComputer:
     ) -> List[DecomposedMiniature]:
         cpu_count = cpu_count or max(1, os.cpu_count() - 2)
         notifier = notifier or DEFAULT_NOTIFIER
-        tasks = [(i, m, len(miniatures), notifier) for i, m in enumerate(miniatures)]
+        jobn = notifications.Jobs.group_computer(len(miniatures), notifier)
+        tasks = [(i, m, len(miniatures), jobn) for i, m in enumerate(miniatures)]
         with Profiler(f"batch_compute_groups(n={len(tasks)}, cpu={cpu_count})"):
             with Pool(cpu_count) as p:
                 raw_output = list(p.imap(self.async_compute, tasks))
+        jobn.progress(None, len(miniatures), len(miniatures))
         return raw_output
