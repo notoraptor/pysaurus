@@ -27,3 +27,8 @@ export class MenuItem extends React.Component {
             this.props.action();
     }
 }
+MenuItem.propTypes = {
+    className: PropTypes.string,
+    shortcut: PropTypes.string,
+    action: PropTypes.func.isRequired, // action()
+};

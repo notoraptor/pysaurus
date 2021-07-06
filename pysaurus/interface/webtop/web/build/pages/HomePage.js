@@ -1,7 +1,7 @@
 System.register(["../utils/constants.js", "../utils/backend.js"], function (_export, _context) {
   "use strict";
 
-  var HomeStatus, backend_error, python_call, ProgressionMonitoring, HomePage, NotificationCollector, NotificationRenderer;
+  var Characters, HomeStatus, backend_error, python_call, ProgressionMonitoring, HomePage, NotificationCollector, NotificationRenderer, ACTIONS;
 
   /**
    * @param props {{monitoring: ProgressionMonitoring}}
@@ -33,6 +33,7 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
 
   return {
     setters: [function (_utilsConstantsJs) {
+      Characters = _utilsConstantsJs.Characters;
       HomeStatus = _utilsConstantsJs.HomeStatus;
     }, function (_utilsBackendJs) {
       backend_error = _utilsBackendJs.backend_error;
@@ -68,15 +69,27 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
         },
         JobStep: function (app, notification) {
           const lastIndex = app.state.messages.length - 1;
-          const jobIsBeingCollected = lastIndex > -1 && app.state.messages[lastIndex].name === notification.name && app.state.messages[lastIndex].notification.name === notification.notification.name;
+          const jobsAreAlreadyCollected = app.state.jobMap.get(notification.notification.name).jobs.size;
           const jobMap = new Map(app.state.jobMap);
           jobMap.get(notification.notification.name).collectJobStep(notification);
           app.collectNotification(notification, {
             jobMap
-          }, !jobIsBeingCollected);
+          }, !jobsAreAlreadyCollected);
         },
-        // notifications ignored.
-        ProfilingStart: function (app, notification) {}
+        ProfilingEnd: function (app, notification) {
+          const messages = app.state.messages.slice();
+          const lastIndex = messages.length - 1;
+
+          if (messages.length && messages[lastIndex].name === "ProfilingStart" && messages[lastIndex].notification.name === notification.notification.name) {
+            messages.pop();
+            notification.notification.inplace = true;
+          }
+
+          messages.push(notification);
+          app.setState({
+            messages
+          });
+        }
       };
       NotificationRenderer = {
         JobStep: (app, message, i) => /*#__PURE__*/React.createElement(Monitoring, {
@@ -118,7 +131,21 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
             }, /*#__PURE__*/React.createElement("em", null, "No missing thumbnails!"));
           }
         },
-        ProfilingEnd: function (app, message, i) {// return (<div key={i}><strong>Loaded</strong> in {message.notification.time}</div>);
+        ProfilingStart: function (app, message, i) {
+          return /*#__PURE__*/React.createElement("div", {
+            key: i
+          }, /*#__PURE__*/React.createElement("span", {
+            className: "span-profiled"
+          }, "PROFILING"), " ", message.notification.name);
+        },
+        ProfilingEnd: function (app, message, i) {
+          return /*#__PURE__*/React.createElement("div", {
+            key: i
+          }, /*#__PURE__*/React.createElement("span", {
+            className: "span-profiled"
+          }, message.notification.inplace ? `PROFILING / ` : ``, "PROFILED"), " ", message.notification.name, " ", /*#__PURE__*/React.createElement("span", {
+            className: "span-profiled"
+          }, "TIME"), " ", message.notification.time);
         },
         VideoInfoErrors: function (app, message, i) {
           const errors = message.notification.video_errors;
@@ -161,19 +188,39 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
               key: i
             }, /*#__PURE__*/React.createElement("em", null, "No miniatures saved!"));
           }
+        },
+        Message: function (app, message, i) {
+          return /*#__PURE__*/React.createElement("div", {
+            key: i
+          }, /*#__PURE__*/React.createElement("strong", null, Characters.WARNING_SIGN), " ", message.notification.message);
+        }
+      };
+      ACTIONS = {
+        update: {
+          title: "Update database",
+          name: "update_database"
+        },
+        similarities: {
+          title: "Find similarities",
+          name: "find_similar_videos"
+        },
+        similaritiesNoCache: {
+          title: "Find similarities (ignore cache)",
+          name: "find_similar_videos_ignore_cache"
         }
       };
 
       _export("HomePage", HomePage = class HomePage extends React.Component {
         constructor(props) {
-          // parameters: {update: bool = false}
+          // parameters: {action: string = undefined}
           // app: App
           super(props);
           this.state = {
-            status: this.props.parameters.update ? HomeStatus.LOADING : HomeStatus.INITIAL,
+            status: this.props.parameters.action ? HomeStatus.LOADING : HomeStatus.INITIAL,
             messages: [],
             jobMap: new Map(),
-            update: false
+            update: false,
+            action: null
           };
           this.callbackIndex = -1;
           this.notify = this.notify.bind(this);
@@ -204,13 +251,13 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
 
         renderInitialButton() {
           const status = this.state.status;
-          const update = this.props.parameters.update;
+          const action = this.props.parameters.action;
           if (status === HomeStatus.INITIAL) return /*#__PURE__*/React.createElement("button", {
             onClick: this.loadDatabase
           }, "Load database");
           if (status === HomeStatus.LOADING) return /*#__PURE__*/React.createElement("button", {
             disabled: true
-          }, update ? 'Updating' : 'Loading', " database ...");
+          }, action ? ACTIONS[action].title : `Loading database`, " ...");
           if (status === HomeStatus.LOADED) return /*#__PURE__*/React.createElement("button", {
             onClick: this.displayVideos
           }, "Display videos");
@@ -243,7 +290,11 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
 
         componentDidMount() {
           this.callbackIndex = NOTIFICATION_MANAGER.register(this.notify);
-          if (this.props.parameters.update) python_call('update_database');
+          const action = this.props.parameters.action;
+
+          if (action && ACTIONS.hasOwnProperty(action)) {
+            python_call(ACTIONS[action].name);
+          }
         }
 
         componentWillUnmount() {
@@ -293,6 +344,12 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
         }
 
       });
+
+      HomePage.propTypes = {
+        parameters: PropTypes.shape({
+          action: PropTypes.string
+        })
+      };
     }
   };
 });

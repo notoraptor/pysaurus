@@ -7,6 +7,7 @@ from abc import abstractmethod
 from typing import Optional
 
 from pysaurus.core.database.database import Database
+from pysaurus.core.database.database_features import DatabaseFeatures
 from pysaurus.core.database.viewport.video_provider import VideoProvider
 from pysaurus.core.functions import launch_thread
 from pysaurus.core.notifications import Notification, DatabaseReady
@@ -40,6 +41,18 @@ class GuiAPI(FeatureAPI):
         assert not self.db_loading_thread
         self.monitor_thread = launch_thread(self._monitor_notifications)
         self.db_loading_thread = launch_thread(self._update_database)
+
+    def find_similar_videos(self):
+        assert not self.monitor_thread
+        assert not self.db_loading_thread
+        self.monitor_thread = launch_thread(self._monitor_notifications)
+        self.db_loading_thread = launch_thread(self._find_similarities)
+
+    def find_similar_videos_ignore_cache(self):
+        assert not self.monitor_thread
+        assert not self.db_loading_thread
+        self.monitor_thread = launch_thread(self._monitor_notifications)
+        self.db_loading_thread = launch_thread(self._find_similarities_ignore_cache)
 
     def close_app(self):
         self.threads_stop_flag = True
@@ -102,6 +115,32 @@ class GuiAPI(FeatureAPI):
         self.provider.refresh()
         # Finish
         self._finish_loading("End updating database.")
+
+    def _find_similarities(self):
+        self.notifier.clear_managers()
+        DatabaseFeatures.find_similar_videos(self.database)
+        self.provider.set_groups(
+            field="similarity_id",
+            is_property=False,
+            sorting="field",
+            reverse=False,
+            allow_singletons=False,
+        )
+        self.provider.refresh()
+        self._finish_loading("End finding similarities.")
+
+    def _find_similarities_ignore_cache(self):
+        self.notifier.clear_managers()
+        DatabaseFeatures.find_similar_videos_ignore_cache(self.database)
+        self.provider.set_groups(
+            field="similarity_id",
+            is_property=False,
+            sorting="field",
+            reverse=False,
+            allow_singletons=False,
+        )
+        self.provider.refresh()
+        self._finish_loading("End finding similarities (cache ignored).")
 
     def _finish_loading(self, log_message):
         self.provider.register_notifications()

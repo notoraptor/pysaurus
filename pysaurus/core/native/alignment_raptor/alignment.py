@@ -68,7 +68,7 @@ def classify_similarities_directed(
     native_sequence_pointers = [pointer(sequence) for sequence in native_sequences]
     pointer_array_type = PtrSequence * nb_sequences
     jobn = notifications.Jobs.native_comparisons(nb_sequences, notifier)
-    with Profiler("Finding similar images using simpler NATIVE comparison."):
+    with Profiler("Finding similar images using simpler NATIVE comparison.", notifier):
         cursor = 0
         while cursor < nb_sequences:
             i_from = cursor

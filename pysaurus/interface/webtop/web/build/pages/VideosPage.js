@@ -122,6 +122,8 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           this.unselectVideos = this.unselectVideos.bind(this);
           this.updateStatus = this.updateStatus.bind(this);
           this.backend = this.backend.bind(this);
+          this.findSimilarVideos = this.findSimilarVideos.bind(this);
+          this.findSimilarVideosIgnoreCache = this.findSimilarVideosIgnoreCache.bind(this);
           this.callbackIndex = -1;
           this.features = new Actions({
             select: new Action("Ctrl+T", "Select videos ...", this.selectVideos),
@@ -169,7 +171,11 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             action: actions.reload
           }), /*#__PURE__*/React.createElement(ActionToMenuItem, {
             action: actions.manageProperties
-          }), stringSetProperties.length ? /*#__PURE__*/React.createElement(MenuItem, {
+          }), /*#__PURE__*/React.createElement(MenuItem, {
+            action: this.findSimilarVideos
+          }, "Search similar videos"), /*#__PURE__*/React.createElement(MenuItem, {
+            action: this.findSimilarVideosIgnoreCache
+          }, "Search similar videos ", /*#__PURE__*/React.createElement("strong", null, "(ignore cache)")), stringSetProperties.length ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.fillWithKeywords
           }, "Put keywords into a property ...") : '', /*#__PURE__*/React.createElement(Menu, {
             title: "Page size ..."
@@ -525,7 +531,15 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         }
 
         reloadDatabase() {
-          this.props.app.loadHomePage(true);
+          this.props.app.dbUpdate();
+        }
+
+        findSimilarVideos() {
+          this.props.app.dbFindSimilarities();
+        }
+
+        findSimilarVideosIgnoreCache() {
+          this.props.app.dbFindSimilaritiesIgnoreCache();
         }
 
         manageProperties() {

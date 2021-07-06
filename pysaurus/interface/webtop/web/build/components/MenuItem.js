@@ -39,6 +39,13 @@ System.register([], function (_export, _context) {
         }
 
       });
+
+      MenuItem.propTypes = {
+        className: PropTypes.string,
+        shortcut: PropTypes.string,
+        action: PropTypes.func.isRequired // action()
+
+      };
     }
   };
 });

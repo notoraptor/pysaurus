@@ -1,4 +1,4 @@
-import {HomeStatus} from "../utils/constants.js";
+import {Characters, HomeStatus} from "../utils/constants.js";
 import {backend_error, python_call} from "../utils/backend.js";
 
 class ProgressionMonitoring {
@@ -48,17 +48,25 @@ const NotificationCollector = {
     },
     JobStep: function (app, notification) {
         const lastIndex = app.state.messages.length - 1;
-        const jobIsBeingCollected = (
-            lastIndex > -1
-            && app.state.messages[lastIndex].name === notification.name
-            && app.state.messages[lastIndex].notification.name === notification.notification.name
-        );
+        const jobsAreAlreadyCollected = app.state.jobMap.get(notification.notification.name).jobs.size;
         const jobMap = new Map(app.state.jobMap);
         jobMap.get(notification.notification.name).collectJobStep(notification);
-        app.collectNotification(notification, {jobMap}, !jobIsBeingCollected);
+        app.collectNotification(notification, {jobMap}, !jobsAreAlreadyCollected);
     },
-    // notifications ignored.
-    ProfilingStart: function (app, notification) {}
+    ProfilingEnd: function (app, notification) {
+        const messages = app.state.messages.slice();
+        const lastIndex = messages.length - 1;
+        if (
+            messages.length
+            && messages[lastIndex].name === "ProfilingStart"
+            && messages[lastIndex].notification.name === notification.notification.name
+        ) {
+            messages.pop();
+            notification.notification.inplace = true;
+        }
+        messages.push(notification);
+        app.setState({messages});
+    }
 };
 
 const NotificationRenderer = {
@@ -101,8 +109,20 @@ const NotificationRenderer = {
             return (<div key={i}><em>No missing thumbnails!</em></div>);
         }
     },
+    ProfilingStart: function (app, message, i) {
+        return (
+            <div key={i}><span className="span-profiled">PROFILING</span> {message.notification.name}</div>
+        );
+    },
     ProfilingEnd: function (app, message, i) {
-        // return (<div key={i}><strong>Loaded</strong> in {message.notification.time}</div>);
+        return (
+            <div key={i}>
+                <span className="span-profiled">{message.notification.inplace ? `PROFILING / ` : ``}PROFILED</span>{" "}
+                {message.notification.name}{" "}
+                <span className="span-profiled">TIME</span>{" "}
+                {message.notification.time}
+            </div>
+        );
     },
     VideoInfoErrors: function (app, message, i) {
         const errors = message.notification.video_errors;
@@ -147,18 +167,37 @@ const NotificationRenderer = {
             return (<div key={i}><em>No miniatures saved!</em></div>);
         }
     },
+    Message: function (app, message, i) {
+        return <div key={i}><strong>{Characters.WARNING_SIGN}</strong> {message.notification.message}</div>;
+    }
+};
+
+const ACTIONS = {
+    update: {
+        title: "Update database",
+        name: "update_database",
+    },
+    similarities: {
+        title: "Find similarities",
+        name: "find_similar_videos"
+    },
+    similaritiesNoCache: {
+        title: "Find similarities (ignore cache)",
+        name: "find_similar_videos_ignore_cache"
+    }
 };
 
 export class HomePage extends React.Component {
     constructor(props) {
-        // parameters: {update: bool = false}
+        // parameters: {action: string = undefined}
         // app: App
         super(props);
         this.state = {
-            status: this.props.parameters.update ? HomeStatus.LOADING : HomeStatus.INITIAL,
+            status: this.props.parameters.action ? HomeStatus.LOADING : HomeStatus.INITIAL,
             messages: [],
             jobMap: new Map(),
             update: false,
+            action: null,
         };
         this.callbackIndex = -1;
         this.notify = this.notify.bind(this);
@@ -191,11 +230,11 @@ export class HomePage extends React.Component {
 
     renderInitialButton() {
         const status = this.state.status;
-        const update = this.props.parameters.update;
+        const action = this.props.parameters.action;
         if (status === HomeStatus.INITIAL)
             return <button onClick={this.loadDatabase}>Load database</button>;
         if (status === HomeStatus.LOADING)
-            return <button disabled={true}>{update ? 'Updating' : 'Loading'} database ...</button>;
+            return <button disabled={true}>{action ? ACTIONS[action].title : `Loading database`} ...</button>;
         if (status === HomeStatus.LOADED)
             return <button onClick={this.displayVideos}>Display videos</button>;
     }
@@ -222,8 +261,10 @@ export class HomePage extends React.Component {
 
     componentDidMount() {
         this.callbackIndex = NOTIFICATION_MANAGER.register(this.notify);
-        if (this.props.parameters.update)
-            python_call('update_database');
+        const action = this.props.parameters.action;
+        if (action && ACTIONS.hasOwnProperty(action)) {
+            python_call(ACTIONS[action].name);
+        }
     }
 
     componentWillUnmount() {
@@ -271,3 +312,8 @@ export class HomePage extends React.Component {
         this.setState(updates);
     }
 }
+HomePage.propTypes = {
+    parameters: PropTypes.shape({
+        action: PropTypes.string
+    })
+};

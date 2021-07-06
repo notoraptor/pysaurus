@@ -70,9 +70,21 @@ System.register(["./pages/Test.js", "./pages/HomePage.js", "./pages/VideosPage.j
         } // Public methods for children components.
 
 
-        loadHomePage(update = false) {
+        dbUpdate() {
           this.loadPage("home", {
-            update
+            action: "update"
+          });
+        }
+
+        dbFindSimilarities() {
+          this.loadPage("home", {
+            action: "similarities"
+          });
+        }
+
+        dbFindSimilaritiesIgnoreCache() {
+          this.loadPage("home", {
+            action: "similaritiesNoCache"
           });
         }
 

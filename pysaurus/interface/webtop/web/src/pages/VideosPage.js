@@ -86,6 +86,8 @@ export class VideosPage extends React.Component {
         this.unselectVideos = this.unselectVideos.bind(this);
         this.updateStatus = this.updateStatus.bind(this);
         this.backend = this.backend.bind(this);
+        this.findSimilarVideos = this.findSimilarVideos.bind(this);
+        this.findSimilarVideosIgnoreCache = this.findSimilarVideosIgnoreCache.bind(this);
 
         this.callbackIndex = -1;
         this.features = new Actions({
@@ -126,6 +128,8 @@ export class VideosPage extends React.Component {
                         {this.state.notFound || !nbVideos ? '' : <ActionToMenuItem action={actions.openRandomVideo}/>}
                         {<ActionToMenuItem action={actions.reload}/>}
                         {<ActionToMenuItem action={actions.manageProperties}/>}
+                        <MenuItem action={this.findSimilarVideos}>Search similar videos</MenuItem>
+                        <MenuItem action={this.findSimilarVideosIgnoreCache}>Search similar videos <strong>(ignore cache)</strong></MenuItem>
                         {stringSetProperties.length ?
                             <MenuItem action={this.fillWithKeywords}>Put keywords into a property ...</MenuItem> : ''}
                         <Menu title="Page size ...">
@@ -517,7 +521,14 @@ export class VideosPage extends React.Component {
     }
 
     reloadDatabase() {
-        this.props.app.loadHomePage(true);
+        this.props.app.dbUpdate();
+    }
+
+    findSimilarVideos() {
+        this.props.app.dbFindSimilarities();
+    }
+    findSimilarVideosIgnoreCache() {
+        this.props.app.dbFindSimilaritiesIgnoreCache();
     }
 
     manageProperties() {

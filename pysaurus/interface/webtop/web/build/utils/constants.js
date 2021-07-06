@@ -96,7 +96,9 @@ System.register([], function (_export, _context) {
         ARROW_DOWN: "\u25BC",
         ARROW_UP: "\u25B2",
         SMART_ARROW_LEFT: "\u2B9C",
-        SMART_ARROW_RIGHT: "\u2B9E"
+        SMART_ARROW_RIGHT: "\u2B9E",
+        WARNING_SIGN: "\u26A0" // ⚠
+
       });
     }
   };

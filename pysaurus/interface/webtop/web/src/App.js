@@ -43,8 +43,14 @@ export class App extends React.Component {
 
     // Public methods for children components.
 
-    loadHomePage(update = false) {
-        this.loadPage("home", {update});
+    dbUpdate() {
+        this.loadPage("home", {action: "update"});
+    }
+    dbFindSimilarities() {
+        this.loadPage("home", {action: "similarities"});
+    }
+    dbFindSimilaritiesIgnoreCache() {
+        this.loadPage("home", {action: "similaritiesNoCache"});
     }
 
     loadVideosPage(pageSize = undefined, pageNumber = undefined) {
