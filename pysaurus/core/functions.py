@@ -338,6 +338,7 @@ def class_get_public_attributes(cls: type, exclude=()):
         if "a" <= field[0] <= "z" and not callable(getattr(cls, field))
     }
     fields.difference_update(exclude)
+    fields.difference_update(getattr(cls, "__protected__", ()))
     return sorted(fields)
 
 

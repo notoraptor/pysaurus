@@ -5,6 +5,7 @@ from pysaurus.core import notifications
 from pysaurus.core.components import FileSize, Duration
 from pysaurus.core.database.database import Database
 from pysaurus.core.database.properties import PropType
+from pysaurus.core.database.video import Video
 from pysaurus.core.database.video_features import VideoFeatures
 from pysaurus.core.database.viewport.layers.source_layer import SourceLayer
 from pysaurus.core.database.viewport.video_provider import VideoProvider
@@ -87,7 +88,15 @@ class FeatureAPI:
             "realNbVideos": real_nb_videos,
             "nbPages": nb_pages,
             "validSize": str(FileSize(sum(video.file_size for video in view))),
-            "validLength": str(Duration(sum(video.raw_microseconds for video in view))),
+            "validLength": str(
+                Duration(
+                    sum(
+                        video.raw_microseconds
+                        for video in view
+                        if isinstance(video, Video)
+                    )
+                )
+            ),
             "notFound": all("not_found" in source for source in sources),
             "sources": sources,
             "groupDef": self.provider.get_group_def(),
@@ -159,10 +168,10 @@ class FeatureAPI:
         return str(self.provider.get_random_found_video().filename.open())
 
     def open_video(self, video_id):
-        self.database.get_video_from_id(video_id).filename.open()
+        self.database.get_from_id(video_id).filename.open()
 
     def open_containing_folder(self, video_id):
-        return str(self.database.get_video_from_id(video_id).filename.locate_file())
+        return str(self.database.get_from_id(video_id).filename.locate_file())
 
     # Database getters.
 
@@ -206,13 +215,13 @@ class FeatureAPI:
     # Database setters + provider updated.
 
     def delete_video(self, video_id):
-        video = self.database.get_video_from_id(video_id)
-        self.database.delete_video(video)
+        self.database.delete_video(self.database.get_from_id(video_id))
 
     def rename_video(self, video_id, new_title):
         self.database.change_video_file_title(
-            self.database.get_video_from_id(video_id), new_title
+            self.database.get_from_id(video_id), new_title
         )
+        self.provider.refresh()
 
     def edit_property_for_videos(self, name, selector, to_add, to_remove):
         self.database.edit_property_for_videos(

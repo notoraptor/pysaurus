@@ -35,7 +35,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../utils/
 
         render() {
           const data = this.props.data;
-          const hasThumbnail = data.hasThumbnail;
+          const hasThumbnail = data.has_thumbnail;
           return /*#__PURE__*/React.createElement(Dialog, {
             title: 'Edit video properties',
             yes: "save",

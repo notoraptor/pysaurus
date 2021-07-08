@@ -77,7 +77,10 @@ System.register([], function (_export, _context) {
       _export("VIDEO_DEFAULT_PAGE_NUMBER", VIDEO_DEFAULT_PAGE_NUMBER = 0);
 
       _export("SOURCE_TREE", SOURCE_TREE = {
-        // unreadable: {not_found: false, found: false},
+        unreadable: {
+          not_found: false,
+          found: false
+        },
         readable: {
           not_found: {
             with_thumbnails: false,

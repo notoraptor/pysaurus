@@ -2,8 +2,8 @@ import base64
 from io import BytesIO
 
 from pysaurus.core.constants import THUMBNAIL_EXTENSION
-from pysaurus.core.database.video import VIDEO_UNIQUE_FIELDS, Video
-from pysaurus.core.functions import to_json_value
+from pysaurus.core.database.video import Video
+from pysaurus.core.functions import to_json_value, class_get_public_attributes
 from pysaurus.core.modules import ImageUtils, VideoClipping
 
 
@@ -31,11 +31,8 @@ class VideoFeatures:
     @staticmethod
     def to_json(self, **kwargs):
         js = {
-            field: to_json_value(getattr(self, field)) for field in VIDEO_UNIQUE_FIELDS
+            field: to_json_value(getattr(self, field))
+            for field in class_get_public_attributes(type(self))
         }
-        js["errors"] = to_json_value(self.errors)
-        js["properties"] = to_json_value(self.properties)
-        js["exists"] = self.exists()
-        js["hasThumbnail"] = self.thumbnail_path.exists()
         js.update(kwargs)
         return js

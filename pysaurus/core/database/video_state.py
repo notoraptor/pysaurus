@@ -1,9 +1,11 @@
-from typing import Iterable
+from typing import Iterable, Sequence
 
-from pysaurus.core.classes import StringPrinter
+from pysaurus.core.classes import StringPrinter, Text
+from pysaurus.core.compare import to_comparable
 from pysaurus.core.components import AbsolutePath, DateModified, FileSize
 from pysaurus.core.constants import PYTHON_ERROR_THUMBNAIL
 from pysaurus.core.database.video_runtime_info import VideoRuntimeInfo
+from pysaurus.core.functions import string_to_pieces
 from pysaurus.core.modules import System
 
 
@@ -23,6 +25,7 @@ class VideoState:
         "runtime",
         "miniature",
     )
+    __protected__ = ("database", "runtime", "miniature")
     UNREADABLE = True
 
     def __init__(
@@ -77,6 +80,9 @@ class VideoState:
     def __lt__(self, other):
         return self.filename < other.filename
 
+    extension = property(lambda self: self.filename.extension)
+    file_title = property(lambda self: Text(self.filename.title))
+
     @property
     def error_thumbnail(self):
         return PYTHON_ERROR_THUMBNAIL in self.errors
@@ -117,11 +123,11 @@ class VideoState:
 
     @classflag
     def found(self):
-        return self.exists()
+        return self.exists
 
     @classflag
     def not_found(self):
-        return not self.exists()
+        return not self.exists
 
     @classflag
     def with_thumbnails(self):
@@ -134,8 +140,18 @@ class VideoState:
     def thumbnail_is_valid(self):
         return False
 
+    @property
     def exists(self):
         return self.runtime.is_file
+
+    def terms(self, as_set=False):
+        return string_to_pieces(self.filename.path, as_set=as_set)
+
+    def to_comparable(self, sorting):
+        # type: (Sequence[str]) -> list
+        return [
+            to_comparable(getattr(self, sort[1:]), sort[0] == "-") for sort in sorting
+        ]
 
     def to_dict(self):
         return {

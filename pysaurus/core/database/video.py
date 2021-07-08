@@ -14,7 +14,6 @@ Video class. Properties:
 from typing import Sequence, Set
 
 from pysaurus.core.classes import StringPrinter, Text
-from pysaurus.core.compare import to_comparable
 from pysaurus.core.components import AbsolutePath, Duration
 from pysaurus.core.database import path_utils
 from pysaurus.core.database.video_state import VideoState
@@ -230,12 +229,10 @@ class Video(VideoState):
     def __str__(self):
         with StringPrinter() as printer:
             printer.write("Video %s:" % self.video_id)
-            for field in VIDEO_UNIQUE_FIELDS:
+            for field in VIDEO_FIELDS:
                 printer.write("\t%s: %s" % (field, getattr(self, field)))
             return str(printer)
 
-    extension = property(lambda self: self.filename.extension)
-    file_title = property(lambda self: Text(self.filename.title))
     frame_rate = property(lambda self: self.frame_rate_num / self.frame_rate_den)
     length = property(
         lambda self: Duration(round(self.duration * 1000000 / self.duration_time_base))
@@ -252,6 +249,7 @@ class Video(VideoState):
             self.database.thumbnail_folder, self.ensure_thumbnail_name()
         )
     )
+    has_thumbnail = property(lambda self: self.thumbnail_path.exists())
 
     @property
     def quality_compression(self):
@@ -333,12 +331,6 @@ class Video(VideoState):
     def remove_property(self, name):
         self.properties.pop(name, None)
 
-    def to_comparable(self, sorting):
-        # type: (Sequence[str]) -> list
-        return [
-            to_comparable(getattr(self, sort[1:]), sort[0] == "-") for sort in sorting
-        ]
-
     def to_dict(self):
         dct = super().to_dict()
         len_before = len(dct)
@@ -357,6 +349,7 @@ class Video(VideoState):
         return cls(database=database, from_dictionary=dct)
 
 
+VIDEO_FIELDS = class_get_public_attributes(Video, ("database", "runtime", "miniature"))
 VIDEO_UNIQUE_FIELDS = class_get_public_attributes(
-    Video, ("errors", "properties", "database", "runtime")
+    Video, ("database", "runtime", "miniature", "errors", "properties")
 )

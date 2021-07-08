@@ -280,7 +280,7 @@ class Database:
     def __notify_missing_thumbnails(self):
         remaining_thumb_videos = []
         for video in self.__videos.values():
-            if video.exists() and not video.thumbnail_is_valid():
+            if video.exists and not video.thumbnail_is_valid():
                 remaining_thumb_videos.append(video.filename.path)
         self.__notifier.notify(notifications.MissingThumbnails(remaining_thumb_videos))
 
@@ -427,7 +427,7 @@ class Database:
 
         with Profiler("Check videos thumbnails", notifier=self.__notifier):
             for video in self.__videos.values():
-                if video.exists() and not video.error_thumbnail:
+                if video.exists and not video.error_thumbnail:
                     thumb_name = video.ensure_thumbnail_name()
                     if (
                         thumb_name in existing_thumb_names
@@ -648,7 +648,7 @@ class Database:
             self.__thumb_folder.delete()
 
     def change_video_file_title(self, video, new_title):
-        # type: (Video, str) -> None
+        # type: (VideoState, str) -> None
         discarded_characters = r"@#\\/?$"
         if video.filename.title != new_title:
             if any(c in new_title for c in discarded_characters):
@@ -657,11 +657,14 @@ class Database:
             if video.filename in self.__videos:
                 del self.__videos[video.filename]
                 self.__videos[new_filename] = video
-                video.filename = new_filename
-                self.__save()
-                self.__notifier.notify(
-                    notifications.FieldsModified(("filename", "file_title", "title"))
-                )
+            elif video.filename in self.__unreadable:
+                del self.__unreadable[video.filename]
+                self.__unreadable[new_filename] = video
+            video.filename = new_filename
+            self.__save()
+            self.__notifier.notify(
+                notifications.FieldsModified(("filename", "file_title", "title"))
+            )
 
     def remove_videos_not_found(self):
         nb_removed = 0
@@ -690,6 +693,14 @@ class Database:
             video_id in self.__id_to_video
             and self.__id_to_video[video_id].filename in self.__unreadable
         ):
+            return self.__id_to_video[video_id]
+        if required:
+            raise exceptions.UnknownVideoID(video_id)
+        return None
+
+    def get_from_id(self, video_id, required=True):
+        # type: (int, bool) -> Optional[VideoState]
+        if video_id in self.__id_to_video:
             return self.__id_to_video[video_id]
         if required:
             raise exceptions.UnknownVideoID(video_id)

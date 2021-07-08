@@ -20,7 +20,7 @@ export class FormVideoProperties extends React.Component {
 
     render() {
         const data = this.props.data;
-        const hasThumbnail = data.hasThumbnail;
+        const hasThumbnail = data.has_thumbnail;
         return (
             <Dialog title={'Edit video properties'} yes="save" action={this.onClose}>
                 <div className="form-set-properties horizontal">

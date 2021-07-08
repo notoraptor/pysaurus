@@ -98,7 +98,7 @@ export const VIDEO_DEFAULT_PAGE_SIZE = PAGE_SIZES[PAGE_SIZES.length - 1];
 export const VIDEO_DEFAULT_PAGE_NUMBER = 0;
 
 export const SOURCE_TREE = {
-    // unreadable: {not_found: false, found: false},
+    unreadable: {not_found: false, found: false},
     readable: {
         not_found: {with_thumbnails: false, without_thumbnails: false},
         found: {with_thumbnails: false, without_thumbnails: false},

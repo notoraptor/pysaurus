@@ -41,6 +41,10 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
         }
 
         render() {
+          return this.props.data.readable ? this.renderVideo() : this.renderVideoState();
+        }
+
+        renderVideo() {
           const data = this.props.data;
           const audio_bit_rate = Math.round(data.audio_bit_rate / 1000);
           data.extension = data.extension.toUpperCase();
@@ -49,7 +53,7 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
           const title = data.title;
           const file_title = data.file_title;
           const meta_title = title === file_title ? null : title;
-          const hasThumbnail = data.hasThumbnail;
+          const hasThumbnail = data.has_thumbnail;
           const htmlID = `video-${data.video_id}`;
           const alreadyOpened = APP_STATE.videoHistory.has(data.filename);
           return /*#__PURE__*/React.createElement("div", {
@@ -127,6 +131,71 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
           }, audio_bit_rate, " Kb/s"), " |", " ", /*#__PURE__*/React.createElement("strong", null, data.length), " | ", /*#__PURE__*/React.createElement("code", null, data.date)))));
         }
 
+        renderVideoState() {
+          const data = this.props.data;
+          const errors = data.errors.slice();
+          errors.sort();
+          const alreadyOpened = APP_STATE.videoHistory.has(data.filename);
+          return /*#__PURE__*/React.createElement("div", {
+            className: 'video horizontal' + (data.exists ? ' found' : ' not-found')
+          }, /*#__PURE__*/React.createElement("div", {
+            className: "image"
+          }, /*#__PURE__*/React.createElement("div", {
+            className: "no-thumbnail"
+          }, "no thumbnail")), /*#__PURE__*/React.createElement("div", {
+            className: "video-details horizontal"
+          }, /*#__PURE__*/React.createElement("div", {
+            className: "info"
+          }, /*#__PURE__*/React.createElement("div", {
+            className: "name"
+          }, /*#__PURE__*/React.createElement("div", {
+            className: "options horizontal"
+          }, /*#__PURE__*/React.createElement(MenuPack, {
+            title: `${Characters.SETTINGS}`
+          }, data.exists ? /*#__PURE__*/React.createElement(MenuItem, {
+            action: this.openVideo
+          }, "Open file") : /*#__PURE__*/React.createElement("div", {
+            className: "not-found"
+          }, "(not found)"), data.exists ? /*#__PURE__*/React.createElement(MenuItem, {
+            action: this.openContainingFolder
+          }, "Open containing folder") : '', /*#__PURE__*/React.createElement(MenuItem, {
+            action: this.copyFileTitle
+          }, "Copy file title"), data.exists ? /*#__PURE__*/React.createElement(MenuItem, {
+            action: this.renameVideo
+          }, "Rename video") : '', /*#__PURE__*/React.createElement(MenuItem, {
+            className: "menu-delete",
+            action: this.deleteVideo
+          }, data.exists ? 'Delete video' : 'Delete entry')), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", {
+            className: "title"
+          }, data.file_title)))), /*#__PURE__*/React.createElement("div", {
+            className: 'filename-line' + (data.exists ? '' : ' horizontal')
+          }, data.exists ? '' : /*#__PURE__*/React.createElement("div", {
+            className: "prepend",
+            onClick: this.deleteVideo
+          }, /*#__PURE__*/React.createElement("code", {
+            className: "text-not-found"
+          }, "NOT FOUND"), /*#__PURE__*/React.createElement("code", {
+            className: "text-delete"
+          }, "DELETE")), /*#__PURE__*/React.createElement("div", {
+            className: `filename ${alreadyOpened ? "already-opened" : ""}`
+          }, /*#__PURE__*/React.createElement("code", data.exists ? {
+            onClick: this.openVideo
+          } : {}, data.filename))), /*#__PURE__*/React.createElement("div", {
+            className: "format horizontal"
+          }, /*#__PURE__*/React.createElement("div", {
+            className: "prepend"
+          }, /*#__PURE__*/React.createElement("code", null, data.extension)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", {
+            title: data.file_size
+          }, data.size)), " | ", /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("code", null, data.date))), /*#__PURE__*/React.createElement("div", {
+            className: "horizontal"
+          }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, "Video unreadable:")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+            className: "property"
+          }, errors.map((element, elementIndex) => /*#__PURE__*/React.createElement("span", {
+            className: "value",
+            key: elementIndex
+          }, element.toString()))))))));
+        }
+
         renderProperties() {
           const props = this.props.data.properties;
           const propDefs = this.props.propDefs;
@@ -188,11 +257,13 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
             className: "details"
           }, /*#__PURE__*/React.createElement("code", {
             id: "filename"
-          }, filename)), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("img", {
+          }, filename)), /*#__PURE__*/React.createElement("p", null, this.props.data.has_thumbnail ? /*#__PURE__*/React.createElement("img", {
             id: "thumbnail",
             alt: "No thumbnail available",
             src: thumbnail_path
-          })))));
+          }) : /*#__PURE__*/React.createElement("div", {
+            className: "no-thumbnail"
+          }, "no thumbnail")))));
         }
 
         deleteVideo() {

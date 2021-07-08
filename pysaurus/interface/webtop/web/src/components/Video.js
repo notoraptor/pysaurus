@@ -23,6 +23,10 @@ export class Video extends React.Component {
     }
 
     render() {
+        return this.props.data.readable ? this.renderVideo() : this.renderVideoState();
+    }
+
+    renderVideo() {
         const data = this.props.data;
         const audio_bit_rate = Math.round(data.audio_bit_rate / 1000);
         data.extension = data.extension.toUpperCase();
@@ -31,7 +35,7 @@ export class Video extends React.Component {
         const title = data.title;
         const file_title = data.file_title;
         const meta_title = (title === file_title ? null : title);
-        const hasThumbnail = data.hasThumbnail;
+        const hasThumbnail = data.has_thumbnail;
         const htmlID = `video-${data.video_id}`;
         const alreadyOpened = APP_STATE.videoHistory.has(data.filename);
         return (
@@ -105,6 +109,68 @@ export class Video extends React.Component {
         );
     }
 
+    renderVideoState() {
+        const data = this.props.data;
+        const errors = data.errors.slice();
+        errors.sort();
+        const alreadyOpened = APP_STATE.videoHistory.has(data.filename);
+        return (
+            <div className={'video horizontal' + (data.exists ? ' found' : ' not-found')}>
+                <div className="image"><div className="no-thumbnail">no thumbnail</div></div>
+                <div className="video-details horizontal">
+                    <div className="info">
+                        <div className="name">
+                            <div className="options horizontal">
+                                <MenuPack title={`${Characters.SETTINGS}`}>
+                                    {data.exists ?
+                                        <MenuItem action={this.openVideo}>Open file</MenuItem> :
+                                        <div className="not-found">(not found)</div>}
+                                    {data.exists ?
+                                        <MenuItem action={this.openContainingFolder}>
+                                            Open containing folder
+                                        </MenuItem> : ''}
+                                    <MenuItem action={this.copyFileTitle}>Copy file title</MenuItem>
+                                    {data.exists ? <MenuItem action={this.renameVideo}>Rename video</MenuItem> : ''}
+                                    <MenuItem className="menu-delete" action={this.deleteVideo}>
+                                        {data.exists ? 'Delete video' : 'Delete entry'}
+                                    </MenuItem>
+                                </MenuPack>
+                                <div><strong className="title">{data.file_title}</strong></div>
+                            </div>
+                        </div>
+                        <div className={'filename-line' + (data.exists ? '' : ' horizontal')}>
+                            {data.exists ? '' :
+                                <div className="prepend" onClick={this.deleteVideo}>
+                                    <code className="text-not-found">NOT FOUND</code>
+                                    <code className="text-delete">DELETE</code>
+                                </div>}
+                            <div className={`filename ${alreadyOpened ? "already-opened" : ""}`}>
+                                <code {...(data.exists ? {onClick: this.openVideo} : {})}>{data.filename}</code>
+                            </div>
+                        </div>
+                        <div className="format horizontal">
+                            <div className="prepend"><code>{data.extension}</code></div>
+                            <div><strong title={data.file_size}>{data.size}</strong></div>{" | "}
+                            <div><code>{data.date}</code></div>
+                        </div>
+                        <div className="horizontal">
+                            <div>
+                                <strong>Video unreadable:</strong>
+                            </div>
+                            <div>
+                                <div className="property">
+                                    {errors.map((element, elementIndex) => (
+                                        <span className="value" key={elementIndex}>{element.toString()}</span>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     renderProperties() {
         const props = this.props.data.properties;
         const propDefs = this.props.propDefs;
@@ -168,7 +234,13 @@ export class Video extends React.Component {
                 <div className="form-delete-video">
                     <h2>Are you sure you want to <strong>definitely</strong> delete this video?</h2>
                     <div className="details"><code id="filename">{filename}</code></div>
-                    <p><img id="thumbnail" alt="No thumbnail available" src={thumbnail_path}/></p>
+                    <p>
+                        {this.props.data.has_thumbnail ? (
+                            <img id="thumbnail" alt="No thumbnail available" src={thumbnail_path}/>
+                        ) : (
+                            <div className="no-thumbnail">no thumbnail</div>
+                        )}
+                    </p>
                 </div>
             </Dialog>
         );
