@@ -284,9 +284,6 @@ class Video(VideoState):
                 self.thumb_name = self.thumb_name.lower()
         return self.thumb_name
 
-    def thumbnail_is_valid(self):
-        return not self.error_thumbnail and self.runtime.has_thumbnail
-
     def terms(self, as_set=False):
         term_sources = [self.filename.path, str(self.meta_title)]
         for prop in self.database.get_prop_types():

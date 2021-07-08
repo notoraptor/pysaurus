@@ -34,17 +34,9 @@ class VideoState:
         filename=None,
         size=0,
         errors=(),
-        video_id=None,
-        from_dictionary=None,
+        video_id: int = None,
+        from_dictionary: dict = None,
     ):
-        """
-        :type filename: AbsolutePath
-        :type size: int
-        :type errors: Iterable[str]
-        :type video_id: Optional[int]
-        :type database: pysaurus.core.database.database.Database
-        :type from_dictionary: dict
-        """
         if from_dictionary:
             filename = from_dictionary.get("f", filename)
             size = from_dictionary.get("s", size)
@@ -82,6 +74,19 @@ class VideoState:
 
     extension = property(lambda self: self.filename.extension)
     file_title = property(lambda self: Text(self.filename.title))
+    size = property(lambda self: FileSize(self.file_size))
+    # runtime date
+    date = property(lambda self: DateModified(self.runtime.mtime))
+    day = property(lambda self: self.date.day)
+    # runtime exists
+    exists = property(lambda self: self.runtime.is_file)
+
+    readable = classflag(lambda self: not self.UNREADABLE)
+    unreadable = classflag(lambda self: self.UNREADABLE)
+    found = classflag(lambda self: self.exists)
+    not_found = classflag(lambda self: not self.exists)
+    with_thumbnails = classflag(lambda self: self.thumbnail_is_valid())
+    without_thumbnails = classflag(lambda self: not self.thumbnail_is_valid())
 
     @property
     def error_thumbnail(self):
@@ -95,54 +100,13 @@ class VideoState:
             self.errors.remove(PYTHON_ERROR_THUMBNAIL)
 
     @property
-    def size(self):
-        return FileSize(self.file_size)
-
-    @property
-    def date(self):
-        # runtime date
-        return DateModified(self.runtime.mtime)
-
-    @property
     def disk(self):
         if System.is_windows():
             return "%s:\\" % (self.filename.standard_path.split(":")[0])
         return self.runtime.driver_id
 
-    @property
-    def day(self):
-        return self.date.day
-
-    @classflag
-    def unreadable(self):
-        return self.UNREADABLE
-
-    @classflag
-    def readable(self):
-        return not self.UNREADABLE
-
-    @classflag
-    def found(self):
-        return self.exists
-
-    @classflag
-    def not_found(self):
-        return not self.exists
-
-    @classflag
-    def with_thumbnails(self):
-        return self.thumbnail_is_valid()
-
-    @classflag
-    def without_thumbnails(self):
-        return not self.thumbnail_is_valid()
-
     def thumbnail_is_valid(self):
-        return False
-
-    @property
-    def exists(self):
-        return self.runtime.is_file
+        return not self.error_thumbnail and self.runtime.has_thumbnail
 
     def terms(self, as_set=False):
         return string_to_pieces(self.filename.path, as_set=as_set)
@@ -164,11 +128,6 @@ class VideoState:
 
     @classmethod
     def from_dict(cls, dct, database):
-        """
-        :type dct: dict
-        :type database: pysaurus.core.database.database.Database
-        :rtype: VideoState
-        """
         return cls(
             filename=dct["f"],
             size=dct["s"],
