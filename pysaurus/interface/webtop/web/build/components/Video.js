@@ -51,6 +51,7 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
           const meta_title = title === file_title ? null : title;
           const hasThumbnail = data.hasThumbnail;
           const htmlID = `video-${data.video_id}`;
+          const alreadyOpened = APP_STATE.videoHistory.has(data.filename);
           return /*#__PURE__*/React.createElement("div", {
             className: 'video horizontal' + (data.exists ? ' found' : ' not-found')
           }, /*#__PURE__*/React.createElement("div", {
@@ -106,7 +107,7 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
           }, "NOT FOUND"), /*#__PURE__*/React.createElement("code", {
             className: "text-delete"
           }, "DELETE")), /*#__PURE__*/React.createElement("div", {
-            className: "filename"
+            className: `filename ${alreadyOpened ? "already-opened" : ""}`
           }, /*#__PURE__*/React.createElement("code", data.exists ? {
             onClick: this.openVideo
           } : {}, data.filename))), /*#__PURE__*/React.createElement("div", {
@@ -157,7 +158,10 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
         }
 
         openVideo() {
-          python_call('open_video', this.props.data.video_id).then(() => this.props.onInfo('Opened: ' + this.props.data.filename)).catch(() => this.props.onInfo('Unable to open: ' + this.props.data.filename));
+          python_call('open_video', this.props.data.video_id).then(() => {
+            APP_STATE.videoHistory.add(this.props.data.filename);
+            this.props.onInfo('Opened: ' + this.props.data.filename);
+          }).catch(() => this.props.onInfo('Unable to open: ' + this.props.data.filename));
         }
 
         editProperties() {

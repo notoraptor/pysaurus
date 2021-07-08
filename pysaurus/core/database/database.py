@@ -575,7 +575,7 @@ class Database:
             cpu_count = os.cpu_count()
             jobs = functions.dispatch_tasks(tasks, cpu_count, extra_args=[jobn])
             del tasks
-            with Profiler("Generating miniatures."):
+            with Profiler("Generating miniatures.", self.__notifier):
                 results = functions.parallelize(
                     jobs_python.job_generate_miniatures, jobs, cpu_count
                 )

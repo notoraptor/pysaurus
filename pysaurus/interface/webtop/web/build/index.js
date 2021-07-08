@@ -21,6 +21,11 @@ System.register(["./App.js", "./utils/FancyboxManager.js", "./utils/Callbacks.js
       /** Global keyboard manager. Used to react on shortcuts. */
 
       window.KEYBOARD_MANAGER = new Callbacks();
+      /** Global state. **/
+
+      window.APP_STATE = {
+        videoHistory: new Set()
+      };
 
       window.onkeydown = function (event) {
         KEYBOARD_MANAGER.call(event);

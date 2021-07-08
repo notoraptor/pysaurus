@@ -102,10 +102,17 @@
 	background-color: rgb(250, 250, 250);
 	padding: 0.2em;
 }
+.video.found .info .filename.already-opened {
+	font-style: italic;
+	color: gray;
+}
 .video.found .info .filename code:hover {
 	text-decoration: underline;
 	cursor: pointer;
 	color: blue;
+}
+.video.found .info .filename.already-opened code:hover {
+	color: rgb(60, 60, 60);
 }
 .video.not-found .info .filename {
 	color: rgb(250, 140, 140);

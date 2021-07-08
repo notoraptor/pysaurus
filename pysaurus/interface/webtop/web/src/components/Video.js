@@ -33,6 +33,7 @@ export class Video extends React.Component {
         const meta_title = (title === file_title ? null : title);
         const hasThumbnail = data.hasThumbnail;
         const htmlID = `video-${data.video_id}`;
+        const alreadyOpened = APP_STATE.videoHistory.has(data.filename);
         return (
             <div className={'video horizontal' + (data.exists ? ' found' : ' not-found')}>
                 <div className="image">
@@ -78,7 +79,7 @@ export class Video extends React.Component {
                                     <code className="text-not-found">NOT FOUND</code>
                                     <code className="text-delete">DELETE</code>
                                 </div>}
-                            <div className="filename">
+                            <div className={`filename ${alreadyOpened ? "already-opened" : ""}`}>
                                 <code {...(data.exists ? {onClick: this.openVideo} : {})}>{data.filename}</code>
                             </div>
                         </div>
@@ -141,7 +142,10 @@ export class Video extends React.Component {
 
     openVideo() {
         python_call('open_video', this.props.data.video_id)
-            .then(() => this.props.onInfo('Opened: ' + this.props.data.filename))
+            .then(() => {
+                APP_STATE.videoHistory.add(this.props.data.filename);
+                this.props.onInfo('Opened: ' + this.props.data.filename)
+            })
             .catch(() => this.props.onInfo('Unable to open: ' + this.props.data.filename));
     }
 
