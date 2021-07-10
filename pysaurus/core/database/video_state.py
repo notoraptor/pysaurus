@@ -35,6 +35,7 @@ class VideoState:
         size=0,
         errors=(),
         video_id: int = None,
+        runtime: VideoRuntimeInfo = None,
         from_dictionary: dict = None,
     ):
         if from_dictionary:
@@ -42,13 +43,14 @@ class VideoState:
             size = from_dictionary.get("s", size)
             errors = from_dictionary.get("e", errors)
             video_id = from_dictionary.get("j", video_id)
+            runtime = from_dictionary.get("R", runtime)
         self.filename = AbsolutePath.ensure(filename)
         self.file_size = size
         self.errors = set(errors)
         self.video_id = video_id
 
         self.database = database
-        self.runtime = VideoRuntimeInfo()
+        self.runtime = VideoRuntimeInfo.ensure(runtime)
         self.miniature = None
 
     def __str__(self):
@@ -124,6 +126,7 @@ class VideoState:
             "j": self.video_id,
             "s": self.file_size,
             "U": self.UNREADABLE,
+            "R": self.runtime.to_dict(),
         }
 
     @classmethod
@@ -133,6 +136,7 @@ class VideoState:
             size=dct["s"],
             errors=dct["e"],
             video_id=dct.get("j", None),
+            runtime=dct.get("R", None),
             database=database,
         )
 

@@ -172,7 +172,6 @@ class Database:
             else:
                 self.__discarded[video_state.filename] = video_state
 
-        self.__set_videos_flags()
         if self.__ensure_identifiers():
             self.__save(ensure_identifiers=False)
         self.__notifier.notify(notifications.DatabaseLoaded(self))
@@ -225,10 +224,6 @@ class Database:
         self.__id_to_video = id_to_video
         return len(without_identifiers)
 
-    def __set_videos_flags(self):
-        self.__set_videos_states_flags()
-        self.__set_videos_thumbs_flags()
-
     def __set_videos_states_flags(self):
         file_paths = self.__check_videos_on_disk()
         for dictionaries in (self.__videos, self.__unreadable):
@@ -240,12 +235,6 @@ class Database:
                     video_state.runtime.size = info.size
                     video_state.runtime.driver_id = info.driver_id
         return file_paths
-
-    def __set_videos_thumbs_flags(self):
-        thumb_names = self.__check_thumbnails_on_disk()
-        for video in self.__videos.values():
-            video.runtime.has_thumbnail = video.ensure_thumbnail_name() in thumb_names
-        return thumb_names
 
     def __check_videos_on_disk(self):
         # type: () -> Dict[AbsolutePath, VideoRuntimeInfo]
@@ -317,7 +306,6 @@ class Database:
         cpu_count = os.cpu_count()
         current_date = DateModified.now()
         all_file_names = self.get_new_video_paths()
-        # all_file_names = sorted(self.__set_videos_states_flags())
 
         jobn = notifications.Jobs.videos(len(all_file_names), self.__notifier)
         if not all_file_names:
@@ -1075,20 +1063,3 @@ Make sure any video has at most 1 value for this property before making it uniqu
 
     def get_valid_videos(self):
         return self.get_videos("readable", "found", "with_thumbnails")
-
-    # Unused.
-
-    def clean_unused_thumbnails(self):
-        used_thumbnails = set()
-        for video in self.__videos.values():
-            if video.thumbnail_is_valid():
-                used_thumbnails.add(video.ensure_thumbnail_name())
-        unused_thumbnails = set(self.__check_thumbnails_on_disk()) - used_thumbnails
-        self.__notifier.notify(notifications.UnusedThumbnails(len(unused_thumbnails)))
-        for unused_thumb_name in unused_thumbnails:
-            try:
-                FilePath(
-                    self.__thumb_folder, unused_thumb_name, THUMBNAIL_EXTENSION
-                ).delete()
-            except OSError:
-                pass
