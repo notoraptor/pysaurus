@@ -21,7 +21,7 @@ DST_LIMIT = float(FRAC_DST_LIMIT)
 GRAY_DEC = float(Fraction(255) * FRAC_DST_LIMIT)
 
 
-class NbGroupsClassifier:
+class _NbGroupsClassifier:
     __slots__ = "counts", "groups"
 
     def __init__(self, counts: List[int], groups: List[List[int]]):
@@ -37,10 +37,10 @@ class NbGroupsClassifier:
         return cls([count for count, _ in nb_then_ids], [ids for _, ids in nb_then_ids])
 
 
-class GrayClassifier:
+class _GrayClassifier:
     __slots__ = "grays", "classifiers", "j_limit"
 
-    def __init__(self, grays: List[float], classifiers: List[NbGroupsClassifier]):
+    def __init__(self, grays: List[float], classifiers: List[_NbGroupsClassifier]):
         self.grays = grays
         self.classifiers = classifiers
         self.j_limit = [
@@ -70,7 +70,7 @@ class GrayClassifier:
                 i
             )
         gray_to_classifier = {
-            gray: NbGroupsClassifier.classify(miniatures, indices)
+            gray: _NbGroupsClassifier.classify(miniatures, indices)
             for gray, indices in gray_to_identifiers.items()
         }
         gray_then_classifier = sorted(
@@ -86,7 +86,7 @@ class DatabaseFeatures:
     @classmethod
     def _collect_comparisons(
         cls,
-        classifier: GrayClassifier,
+        classifier: _GrayClassifier,
         cmp_map: Array,
         nb_miniatures: int,
         notifier: Notifier,
@@ -138,8 +138,8 @@ class DatabaseFeatures:
     @classmethod
     def _cross_compare_classifiers(
         cls,
-        classifier_left: GrayClassifier,
-        classifier_right: GrayClassifier,
+        classifier_left: _GrayClassifier,
+        classifier_right: _GrayClassifier,
         cmp_map: Array,
         nb_miniatures: int,
         notifier: Notifier,
@@ -217,10 +217,10 @@ class DatabaseFeatures:
             if new_miniature_indices:
                 nb_max_comparisons = compute_nb_couples(nb_videos)
                 cmp_map = (c_bool * (nb_videos * nb_videos))()
-                classifier_new = GrayClassifier.classify(
+                classifier_new = _GrayClassifier.classify(
                     miniatures, new_miniature_indices
                 )
-                classifier_old = GrayClassifier.classify(
+                classifier_old = _GrayClassifier.classify(
                     miniatures, old_miniature_indices
                 )
 
@@ -286,15 +286,3 @@ class DatabaseFeatures:
             for i, video in enumerate(videos):
                 video.similarity_id = previous_sim[i]
             raise
-
-
-@Profiler.profile()
-def main():
-    db = Database.load_from_list_file_path(
-        TEST_LIST_FILE_PATH, update=True, ensure_miniatures=False
-    )
-    DatabaseFeatures.find_similar_videos(db)
-
-
-if __name__ == "__main__":
-    main()

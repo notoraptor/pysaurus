@@ -276,30 +276,38 @@ class TreeUtils:
             return inp
 
 
+def _silent(*args, **kwargs):
+    pass
+
+
+# _print = print
+_print = _silent
+
+
 class _FileSystemPath:
     @classmethod
     def exists(cls, path: str):
-        print("FILESYSTEM PATH EXISTS", path)
+        _print("FILESYSTEM PATH EXISTS", path)
         return os.path.exists(path)
 
     @classmethod
     def isfile(cls, path: str):
-        print("FILESYSTEM PATH.ISFILE", path)
+        _print("FILESYSTEM PATH.ISFILE", path)
         return os.path.isfile(path)
 
     @classmethod
     def isdir(cls, path: str):
-        print("FILESYSTEM PATH ISDIR", path)
+        _print("FILESYSTEM PATH ISDIR", path)
         return os.path.isdir(path)
 
     @classmethod
     def getmtime(cls, path: str):
-        print("FILESYSTEM PATH GETMTIME")
+        _print("FILESYSTEM PATH GETMTIME")
         return os.path.getmtime(path)
 
     @classmethod
     def getsize(cls, path: str):
-        print("FILESYSTEM PATH GETSIZE")
+        _print("FILESYSTEM PATH GETSIZE")
         return os.path.getsize(path)
 
 
@@ -308,42 +316,42 @@ class _FileSystem:
 
     @classmethod
     def scandir(cls, path: str):
-        print("FILESYSTEM SCANDIR")
+        _print("FILESYSTEM SCANDIR")
         return os.scandir(path)
 
     @classmethod
     def stat(cls, path: str):
-        print("FILESYSTEM STAT")
+        _print("FILESYSTEM STAT")
         return os.stat(path)
 
     @classmethod
     def listdir(cls, path: str):
-        print("FILESYSTEM LISTDIR")
+        _print("FILESYSTEM LISTDIR")
         return os.listdir(path)
 
     @classmethod
     def walk(cls, path: str):
-        print("FILESYSTEM WALK")
+        _print("FILESYSTEM WALK")
         return os.walk(path)
 
     @classmethod
     def makedirs(cls, *args, **kwargs):
-        print("FILESYSTEM MAKEDIRS", *args, kwargs)
+        _print("FILESYSTEM MAKEDIRS", *args, kwargs)
         return os.makedirs(*args, **kwargs)
 
     @classmethod
     def unlink(cls, path: str):
-        print("FILESYSTEM UNLINK", path)
+        _print("FILESYSTEM UNLINK", path)
         return os.unlink(path)
 
     @classmethod
     def rename(cls, old_path: str, new_path: str):
-        print("FILESYSTEM RENAME")
+        _print("FILESYSTEM RENAME")
         return os.rename(old_path, new_path)
 
     @classmethod
     def startfile(cls, path: str):
-        print("FILESYSTEM STARTFILE")
+        _print("FILESYSTEM STARTFILE")
         return os.startfile(path)
 
 

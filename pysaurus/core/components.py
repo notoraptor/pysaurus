@@ -163,24 +163,30 @@ class AbsolutePath(object):
     def open(self):
         """Open path with default OS program."""
         if System.is_linux():
-            subprocess.run(["xdg-open", self.path])
+            subprocess.run(["xdg-open", self.__path])
         elif System.is_mac():
-            subprocess.run(["open", self.path])
+            subprocess.run(["open", self.__path])
         elif System.is_windows():
-            FileSystem.startfile(self.path)
+            if self.__path.startswith(WINDOWS_PATH_PREFIX):
+                from pysaurus.core.native.windows import get_short_path_name
+                path = get_short_path_name(self.standard_path)
+                print("[Opening Windows short path]", path)
+            else:
+                path = self.__path
+            FileSystem.startfile(path)
         else:
             raise UnsupportedOS(System.platform())
         return self
 
     def locate_file(self):
         if System.is_windows():
-            command = 'explorer /select,"%s"' % self.path
+            command = 'explorer /select,"%s"' % self.__path
         elif System.is_mac():
             # TODO not tested
-            command = ["open", "-R", self.path]
+            command = ["open", "-R", self.__path]
         elif System.is_linux():
             # TODO not tested
-            command = ["nautilus", self.path]
+            command = ["nautilus", self.__path]
         else:
             raise OSError(f"Unsupported OS: {System.platform()}")
         process = subprocess.Popen(
@@ -189,7 +195,7 @@ class AbsolutePath(object):
         stdout, stderr = process.communicate()
         if stdout or stderr:
             return OSError(
-                f"""Unable to locate file: {self.path}
+                f"""Unable to locate file: {self.__path}
 STDOUT: {stdout.strip()}
 STDERR: {stderr.strip()}"""
             )
