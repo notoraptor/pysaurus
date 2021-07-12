@@ -270,7 +270,7 @@ class Database:
     def __notify_missing_thumbnails(self):
         remaining_thumb_videos = []
         for video in self.__videos.values():
-            if video.exists and not video.thumbnail_is_valid():
+            if video.exists and not video.has_thumbnail:
                 remaining_thumb_videos.append(video.filename.path)
         self.__notifier.notify(notifications.MissingThumbnails(remaining_thumb_videos))
 
