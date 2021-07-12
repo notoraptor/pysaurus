@@ -6,12 +6,13 @@ from pysaurus.core import functions
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.database.video_runtime_info import VideoRuntimeInfo
 from pysaurus.core.miniature_tools.miniature import Miniature
-from pysaurus.core.modules import ImageUtils
+from pysaurus.core.modules import FileSystem, ImageUtils
 from pysaurus.core.notifications import JobNotifications
 
 
 def _collect_videos_info(folder: str, files: Dict[AbsolutePath, VideoRuntimeInfo]):
-    for entry in os.scandir(folder):  # type: os.DirEntry
+    entry: os.DirEntry
+    for entry in FileSystem.scandir(folder):
         if entry.is_dir():
             _collect_videos_info(entry.path, files)
         elif (
@@ -31,7 +32,7 @@ def job_collect_videos_info(job):
         if path.isdir():
             _collect_videos_info(path.path, files)
         elif path.extension in functions.VIDEO_SUPPORTED_EXTENSIONS:
-            stat = os.stat(path.path)
+            stat = FileSystem.stat(path.path)
             files[path] = VideoRuntimeInfo(
                 stat.st_size, stat.st_mtime, stat.st_dev, is_file=True
             )

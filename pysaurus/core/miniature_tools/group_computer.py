@@ -1,9 +1,9 @@
-import os
 from multiprocessing import Pool
 from typing import List
 
 from pysaurus.core import notifications
 from pysaurus.core.classes import AbstractMatrix
+from pysaurus.core.constants import CPU_COUNT
 from pysaurus.core.miniature_tools.decomposed_miniature import (
     DecomposedMiniature,
 )
@@ -107,7 +107,7 @@ class GroupComputer:
     def batch_compute_groups(
         self, miniatures: List[Miniature], *, notifier=None, cpu_count=None
     ) -> List[DecomposedMiniature]:
-        cpu_count = cpu_count or max(1, os.cpu_count() - 2)
+        cpu_count = cpu_count or max(1, CPU_COUNT - 2)
         notifier = notifier or DEFAULT_NOTIFIER
         jobn = notifications.Jobs.group_computer(len(miniatures), notifier)
         tasks = [(i, m, len(miniatures), jobn) for i, m in enumerate(miniatures)]

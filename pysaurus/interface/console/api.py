@@ -338,7 +338,7 @@ class API:
             raise exceptions.MissingVideoNewTitle()
         video = self.database.get_video_from_filename(filename)  # type: Video
         self.database.change_video_file_title(video, str(new_title))
-        return video.filename.path, video.filename.title
+        return video.filename.path, video.filename.file_title
 
     def same_sizes(self):
         # type: () -> Dict[int, List[Video]]

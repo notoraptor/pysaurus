@@ -1,3 +1,5 @@
+import os
+
 WINDOWS_PATH_PREFIX = "\\\\?\\"
 VIDEO_BATCH_SIZE = 250
 VIDEO_THUMB_SIZE = VIDEO_BATCH_SIZE
@@ -62,3 +64,4 @@ SIZE_UNIT_TO_STRING = {
     GIGA_BYTES: "Gb",
     TERA_BYTES: "Tb",
 }
+CPU_COUNT = os.cpu_count()

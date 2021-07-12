@@ -8,7 +8,7 @@ from typing import Union
 from pysaurus.core import constants
 from pysaurus.core.constants import WINDOWS_PATH_PREFIX
 from pysaurus.core.exceptions import UnsupportedOS, NotDirectoryError
-from pysaurus.core.modules import System
+from pysaurus.core.modules import FileSystem, System
 
 
 class AbsolutePath(object):
@@ -46,9 +46,22 @@ class AbsolutePath(object):
 
     @property
     def title(self):
+        """Get path title.
+
+        For a directory, returns basename.
+        For a file named `.ext`, returns `ext`.
+        For a classic file `title.ext`, return `title`.
+        """
+        return os.path.basename(self.__path) if self.isdir() else self.file_title
+
+    @property
+    def file_title(self):
+        """Get title for a file path.
+
+        You can use it instead of `self.title` if you are already sure that
+        this path leads to a file and not a directory.
+        """
         basename = os.path.basename(self.__path)
-        if self.isdir():
-            return basename
         index_dot = basename.rfind(".")
         if index_dot == 0:
             return basename[1:]
@@ -75,19 +88,19 @@ class AbsolutePath(object):
         return self.standard_path < other.standard_path
 
     def exists(self):
-        return os.path.exists(self.__path)
+        return FileSystem.path.exists(self.__path)
 
     def isfile(self):
-        return os.path.isfile(self.__path)
+        return FileSystem.path.isfile(self.__path)
 
     def isdir(self):
-        return os.path.isdir(self.__path)
+        return FileSystem.path.isdir(self.__path)
 
     def listdir(self):
-        return os.listdir(self.__path)
+        return FileSystem.listdir(self.__path)
 
     def walk(self):
-        return os.walk(self.__path)
+        return FileSystem.walk(self.__path)
 
     def get_basename(self):
         return os.path.basename(self.__path)
@@ -111,22 +124,22 @@ class AbsolutePath(object):
         )
 
     def get_date_modified(self):
-        return DateModified(os.path.getmtime(self.__path))
+        return DateModified(FileSystem.path.getmtime(self.__path))
 
     # not tested.
     def get_size(self):
-        return os.path.getsize(self.__path)
+        return FileSystem.path.getsize(self.__path)
 
     # not tested.
     def mkdir(self):
-        os.makedirs(self.__path, exist_ok=True)
-        if not os.path.isdir(self.__path):
+        FileSystem.makedirs(self.__path, exist_ok=True)
+        if not FileSystem.path.isdir(self.__path):
             raise OSError("Unable to create a folder at path %s" % self.__path)
         return self
 
     def delete(self):
         if self.isfile():
-            os.unlink(self.__path)
+            FileSystem.unlink(self.__path)
         elif self.isdir():
             shutil.rmtree(self.__path)
         if self.exists():
@@ -137,7 +150,7 @@ class AbsolutePath(object):
         new_path = FilePath(self.get_directory(), title, self.extension)
         if new_path.exists():
             raise OSError("Unable to rename (destination already exists) to", new_path)
-        os.rename(self.__path, new_path.path)
+        FileSystem.rename(self.__path, new_path.path)
         if self.exists():
             raise OSError("Unable to rename: source still exists:", self.__path)
         if not new_path.exists():
@@ -154,7 +167,7 @@ class AbsolutePath(object):
         elif System.is_mac():
             subprocess.run(["open", self.path])
         elif System.is_windows():
-            os.startfile(self.path)
+            FileSystem.startfile(self.path)
         else:
             raise UnsupportedOS(System.platform())
         return self

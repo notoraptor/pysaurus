@@ -1,4 +1,4 @@
-from typing import Iterable, Sequence
+from typing import Sequence
 
 from pysaurus.core.classes import StringPrinter, Text
 from pysaurus.core.compare import to_comparable
@@ -75,7 +75,7 @@ class VideoState:
         return self.filename < other.filename
 
     extension = property(lambda self: self.filename.extension)
-    file_title = property(lambda self: Text(self.filename.title))
+    file_title = property(lambda self: Text(self.filename.file_title))
     size = property(lambda self: FileSize(self.file_size))
     # runtime date
     date = property(lambda self: DateModified(self.runtime.mtime))
@@ -87,8 +87,8 @@ class VideoState:
     unreadable = classflag(lambda self: self.UNREADABLE)
     found = classflag(lambda self: self.exists)
     not_found = classflag(lambda self: not self.exists)
-    with_thumbnails = classflag(lambda self: self.thumbnail_is_valid())
-    without_thumbnails = classflag(lambda self: not self.thumbnail_is_valid())
+    with_thumbnails = classflag(lambda self: self.has_thumbnail)
+    without_thumbnails = classflag(lambda self: not self.has_thumbnail)
 
     @property
     def error_thumbnail(self):
@@ -107,7 +107,8 @@ class VideoState:
             return "%s:\\" % (self.filename.standard_path.split(":")[0])
         return self.runtime.driver_id
 
-    def thumbnail_is_valid(self):
+    @property
+    def has_thumbnail(self):
         return not self.error_thumbnail and self.runtime.has_thumbnail
 
     def terms(self, as_set=False):

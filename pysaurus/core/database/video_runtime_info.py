@@ -21,7 +21,7 @@ class VideoRuntimeInfo:
             "m": self.mtime,
             "d": self.driver_id,
             "f": self.is_file,
-            "t": self.has_thumbnail
+            "t": self.has_thumbnail,
         }
 
     @classmethod

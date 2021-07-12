@@ -238,7 +238,7 @@ class Video(VideoState):
         lambda self: Duration(round(self.duration * 1000000 / self.duration_time_base))
     )
     title = property(
-        lambda self: self.meta_title if self.meta_title else Text(self.filename.title)
+        lambda self: self.meta_title if self.meta_title else Text(self.filename.file_title)
     )
     raw_seconds = property(lambda self: self.duration / self.duration_time_base)
     raw_microseconds = property(
@@ -249,7 +249,6 @@ class Video(VideoState):
             self.database.thumbnail_folder, self.ensure_thumbnail_name()
         )
     )
-    has_thumbnail = property(lambda self: self.thumbnail_path.exists())
 
     @property
     def quality_compression(self):

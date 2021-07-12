@@ -411,3 +411,8 @@ def min_and_max(values):
         min_value = min(min_value, value)
         max_value = max(max_value, value)
     return min_value, max_value
+
+
+def assert_str(value):
+    assert isinstance(value, str)
+    return value

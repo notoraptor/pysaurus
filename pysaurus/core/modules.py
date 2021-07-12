@@ -69,13 +69,13 @@ class System:
         count = 0
         while True:
             test_name = "%s%d" % (base_name, count)
-            if os.path.exists(test_name):
+            if FileSystem.path.exists(test_name):
                 count += 1
             else:
                 break
         with open(test_name, "w+"):
-            is_insensitive = os.path.exists(test_name.upper())
-        os.unlink(test_name)
+            is_insensitive = FileSystem.path.exists(test_name.upper())
+        FileSystem.unlink(test_name)
         return is_insensitive
 
 
@@ -118,7 +118,7 @@ class VideoClipping:
             content = file.read()
         encoded = base64.b64encode(content)
         print(len(encoded) / len(content))
-        os.unlink(output_path)
+        FileSystem.unlink(output_path)
         return encoded
 
 
@@ -274,3 +274,77 @@ class TreeUtils:
             return TreeUtils.get_source_from_dict(inp[seq[index]], seq, index + 1)
         else:
             return inp
+
+
+class _FileSystemPath:
+    @classmethod
+    def exists(cls, path: str):
+        print("FILESYSTEM PATH EXISTS", path)
+        return os.path.exists(path)
+
+    @classmethod
+    def isfile(cls, path: str):
+        print("FILESYSTEM PATH.ISFILE", path)
+        return os.path.isfile(path)
+
+    @classmethod
+    def isdir(cls, path: str):
+        print("FILESYSTEM PATH ISDIR", path)
+        return os.path.isdir(path)
+
+    @classmethod
+    def getmtime(cls, path: str):
+        print("FILESYSTEM PATH GETMTIME")
+        return os.path.getmtime(path)
+
+    @classmethod
+    def getsize(cls, path: str):
+        print("FILESYSTEM PATH GETSIZE")
+        return os.path.getsize(path)
+
+
+class _FileSystem:
+    path = _FileSystemPath
+
+    @classmethod
+    def scandir(cls, path: str):
+        print("FILESYSTEM SCANDIR")
+        return os.scandir(path)
+
+    @classmethod
+    def stat(cls, path: str):
+        print("FILESYSTEM STAT")
+        return os.stat(path)
+
+    @classmethod
+    def listdir(cls, path: str):
+        print("FILESYSTEM LISTDIR")
+        return os.listdir(path)
+
+    @classmethod
+    def walk(cls, path: str):
+        print("FILESYSTEM WALK")
+        return os.walk(path)
+
+    @classmethod
+    def makedirs(cls, *args, **kwargs):
+        print("FILESYSTEM MAKEDIRS", *args, kwargs)
+        return os.makedirs(*args, **kwargs)
+
+    @classmethod
+    def unlink(cls, path: str):
+        print("FILESYSTEM UNLINK", path)
+        return os.unlink(path)
+
+    @classmethod
+    def rename(cls, old_path: str, new_path: str):
+        print("FILESYSTEM RENAME")
+        return os.rename(old_path, new_path)
+
+    @classmethod
+    def startfile(cls, path: str):
+        print("FILESYSTEM STARTFILE")
+        return os.startfile(path)
+
+
+FileSystem = _FileSystem

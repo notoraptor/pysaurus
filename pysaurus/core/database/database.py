@@ -10,7 +10,7 @@ from pysaurus.core.components import (
     FilePath,
     PathType,
 )
-from pysaurus.core.constants import THUMBNAIL_EXTENSION
+from pysaurus.core.constants import THUMBNAIL_EXTENSION, CPU_COUNT
 from pysaurus.core.database import path_utils, jobs_python
 from pysaurus.core.database.properties import PropType
 from pysaurus.core.database.video import Video
@@ -19,7 +19,7 @@ from pysaurus.core.database.video_runtime_info import VideoRuntimeInfo
 from pysaurus.core.database.video_state import VideoState
 from pysaurus.core.miniature_tools.group_computer import GroupComputer
 from pysaurus.core.miniature_tools.miniature import Miniature
-from pysaurus.core.modules import ImageUtils, System
+from pysaurus.core.modules import ImageUtils, System, FileSystem
 from pysaurus.core.notifier import Notifier, DEFAULT_NOTIFIER
 from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
@@ -82,7 +82,7 @@ class Database:
         # type: (PathType, Iterable[PathType], bool, Notifier) -> None
         # Paths
         self.__db_folder = AbsolutePath.ensure_directory(path)
-        self.__thumb_folder = new_sub_folder(self.__db_folder, "thumbnails")
+        self.__thumb_folder = new_sub_folder(self.__db_folder, "thumbnails").mkdir()
         self.__json_path = new_sub_file(self.__db_folder, "json")
         self.__miniatures_path = new_sub_file(self.__db_folder, "miniatures.json")
         self.__log_path = new_sub_file(self.__db_folder, "log")
@@ -117,7 +117,7 @@ class Database:
     )
     nb_discarded = property(lambda self: len(self.__discarded))
     folder = property(lambda self: self.__db_folder)
-    thumbnail_folder = property(lambda self: self.__thumb_folder.mkdir())
+    thumbnail_folder = property(lambda self: self.__thumb_folder)
     notifier = property(lambda self: self.__notifier)
 
     # Private methods.
@@ -239,13 +239,12 @@ class Database:
     def __check_videos_on_disk(self):
         # type: () -> Dict[AbsolutePath, VideoRuntimeInfo]
         paths = {}  # type: Dict[AbsolutePath, VideoRuntimeInfo]
-        cpu_count = os.cpu_count()
-        jobs = functions.dispatch_tasks(sorted(self.__folders), cpu_count)
+        jobs = functions.dispatch_tasks(sorted(self.__folders), CPU_COUNT)
         with Profiler(
-            title="Collect videos (%d threads)" % cpu_count, notifier=self.__notifier
+            title=f"Collect videos ({CPU_COUNT} threads)", notifier=self.__notifier
         ):
             results = functions.parallelize(
-                jobs_python.job_collect_videos_info, jobs, cpu_count
+                jobs_python.job_collect_videos_info, jobs, CPU_COUNT
             )
         for local_result in results:  # type: Dict[AbsolutePath, VideoRuntimeInfo]
             paths.update(local_result)
@@ -256,7 +255,9 @@ class Database:
         # type: () -> Dict[str, DateModified]
         thumbs = {}
         with Profiler("Collect thumbnails", self.__notifier):
-            for entry in os.scandir(self.thumbnail_folder.path):  # type: os.DirEntry
+            for entry in FileSystem.scandir(
+                self.thumbnail_folder.path
+            ):  # type: os.DirEntry
                 if entry.path.lower().endswith(f".{THUMBNAIL_EXTENSION}"):
                     name = entry.name
                     if self.sys_is_case_insensitive:
@@ -303,7 +304,6 @@ class Database:
 
         self.__set_special_properties()
 
-        cpu_count = os.cpu_count()
         current_date = DateModified.now()
         all_file_names = self.get_new_video_paths()
 
@@ -312,7 +312,7 @@ class Database:
             return
         jobs = []
         for index, (file_names, job_id) in enumerate(
-            functions.dispatch_tasks(all_file_names, cpu_count)
+            functions.dispatch_tasks(all_file_names, CPU_COUNT)
         ):
             input_file_path = FilePath(self.__db_folder, str(index), "list")
             output_file_path = FilePath(self.__db_folder, str(index), "json")
@@ -336,7 +336,7 @@ class Database:
             notifier=self.__notifier,
         ):
             counts_loaded = functions.parallelize(
-                jobs_python.job_video_to_json, jobs, cpu_count=cpu_count
+                jobs_python.job_video_to_json, jobs, cpu_count=CPU_COUNT
             )
 
         videos = {}
@@ -373,7 +373,7 @@ class Database:
 
                     videos[file_path] = video_state
                     self.__unreadable.pop(file_path, None)
-                stat = os.stat(file_path.path)
+                stat = FileSystem.stat(file_path.path)
                 video_state.runtime.is_file = True
                 video_state.runtime.mtime = stat.st_mtime
                 video_state.runtime.size = stat.st_size
@@ -403,7 +403,6 @@ class Database:
 
     @Profiler.profile_method()
     def ensure_thumbnails(self):
-        cpu_count = os.cpu_count()
         valid_thumb_names = set()
         videos_without_thumbs = []
         thumb_to_videos = {}  # type: Dict[str, List[Video]]
@@ -456,7 +455,7 @@ class Database:
         self.__save()
 
         dispatched_thumb_jobs = functions.dispatch_tasks(
-            videos_without_thumbs, cpu_count
+            videos_without_thumbs, CPU_COUNT
         )
         del videos_without_thumbs
         for index, (job_videos, job_id) in enumerate(dispatched_thumb_jobs):
@@ -489,7 +488,7 @@ class Database:
             counts_loaded = functions.parallelize(
                 jobs_python.job_video_thumbnails_to_json,
                 thumb_jobs,
-                cpu_count=cpu_count,
+                cpu_count=CPU_COUNT,
             )
 
         for job in thumb_jobs:
@@ -560,12 +559,11 @@ class Database:
         jobn = notifications.Jobs.miniatures(len(tasks), self.__notifier)
         if tasks:
             have_added = True
-            cpu_count = os.cpu_count()
-            jobs = functions.dispatch_tasks(tasks, cpu_count, extra_args=[jobn])
+            jobs = functions.dispatch_tasks(tasks, CPU_COUNT, extra_args=[jobn])
             del tasks
             with Profiler("Generating miniatures.", self.__notifier):
                 results = functions.parallelize(
-                    jobs_python.job_generate_miniatures, jobs, cpu_count
+                    jobs_python.job_generate_miniatures, jobs, CPU_COUNT
                 )
             del jobs
             for local_array in results:
@@ -638,11 +636,12 @@ class Database:
     def change_video_file_title(self, video, new_title):
         # type: (VideoState, str) -> None
         discarded_characters = r"@#\\/?$"
-        if video.filename.title != new_title:
+        if video.filename.file_title != new_title:
             if any(c in new_title for c in discarded_characters):
                 raise OSError("Characters not allowed: %s" % discarded_characters)
             new_filename = video.filename.new_title(new_title)
             if video.filename in self.__videos:
+                video: Video
                 del self.__videos[video.filename]
                 self.__videos[new_filename] = video
             elif video.filename in self.__unreadable:
