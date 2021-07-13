@@ -1,37 +1,27 @@
-.dialog {
-    display: flex;
-    flex-direction: column;
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-}
+.dialog {}
 .dialog > .content {
-    flex-grow: 1;
-    position: relative;
-    overflow: auto;
-    padding: 0.5em;
-    display: flex;
-    flex-direction: column;
+	flex-grow: 1;
+	position: relative;
+	overflow: auto;
+	padding: 0.5em;
 }
 .dialog > .buttons {
-    border-top: 1px solid gray;
-    flex-shrink: 0;
+	border-top: 1px solid gray;
+	flex-shrink: 0;
 }
 .dialog > .buttons .button {
-    flex-grow: 1;
-    padding: 0.5em;
+	flex-grow: 1;
+	padding: 0.5em;
 }
 .dialog > .buttons .button button {
-    display: block;
-    width: 100%;
-    font-weight: bold;
-    text-transform: uppercase;
+	display: block;
+	width: 100%;
+	font-weight: bold;
+	text-transform: uppercase;
 }
 .dialog > .buttons .button.yes button {
-    color: green;
+	color: green;
 }
 .dialog > .buttons .button.no button {
-    color: red;
+	color: red;
 }

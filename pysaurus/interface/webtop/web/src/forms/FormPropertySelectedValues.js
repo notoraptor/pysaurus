@@ -30,7 +30,7 @@ export class FormPropertySelectedValues extends React.Component {
             title = `Property "${this.props.name}", ${values.length} values"`;
         return (
             <Dialog title={title} yes={this.state.form} action={this.onClose}>
-                <div className="edit-property-value">
+                <div className="edit-property-value vertical">
                     <div className="bar text-center">
                         <button className={`delete ${this.state.form === 'delete' ? 'selected' : ''}`}
                                 onClick={this.setDelete}>

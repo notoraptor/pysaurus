@@ -41,7 +41,7 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js"], function (_ex
             yes: this.state.form,
             action: this.onClose
           }, /*#__PURE__*/React.createElement("div", {
-            className: "edit-property-value"
+            className: "edit-property-value vertical"
           }, /*#__PURE__*/React.createElement("div", {
             className: "bar text-center"
           }, /*#__PURE__*/React.createElement("button", {

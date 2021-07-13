@@ -1,8 +1,6 @@
 /** Videos page **/
 #videos {
 	flex-grow: 1;
-	display: flex;
-	flex-direction: column;
 	padding: 1em;
 }
 #videos header {
@@ -20,8 +18,6 @@
 	flex-grow: 1;
 	border-top: 1px solid rgb(220, 220, 220);
 	position: relative;
-	display: flex;
-	flex-direction: row;
 }
 #videos > .content .side-panel {
 	width: 15%;
@@ -29,8 +25,6 @@
 	background-color: gray;
 	border-top: 1px solid gray;
 	border-left: 1px solid gray;
-	display: flex;
-	flex-direction: column;
 }
 #videos > .content .main-panel {
 	width: 85%;

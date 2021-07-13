@@ -1,6 +1,4 @@
 .group-view {
-    display: flex;
-    flex-direction: column;
     flex-grow: 1;
 }
 .group-view .header {
@@ -17,27 +15,11 @@
     padding-bottom: 0.5em;
     font-weight: bold;
 }
-.group-view .form {
-    flex-shrink: 0;
-    vertical-align: middle;
-    display: flex;
-    flex-direction: row;
-}
-.group-view .form > * {
-    display: block;
-    flex-grow: 1;
-}
-.group-view .form > button {
-    margin-left: 1rem;
-}
 .group-view .content {
     flex-grow: 1;
     overflow: auto;
 }
-.group-view .line {
-    display: flex;
-    flex-direction: row;
-}
+.group-view .line {}
 .group-view .line .column {
     white-space: nowrap;
     overflow: hidden;

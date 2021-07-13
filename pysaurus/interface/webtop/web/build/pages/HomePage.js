@@ -232,7 +232,8 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
 
         render() {
           return /*#__PURE__*/React.createElement("div", {
-            id: "home"
+            id: "home",
+            className: "vertical"
           }, /*#__PURE__*/React.createElement("div", {
             className: "buttons"
           }, this.state.status === HomeStatus.INITIAL ? /*#__PURE__*/React.createElement("span", {

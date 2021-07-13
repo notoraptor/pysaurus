@@ -1,15 +1,8 @@
 /**Fancy box.**/
 .fancybox-wrapper {
 	background-color: rgba(245, 250, 255, 0.2);
-	position: absolute;
-	top: 0;
-	left: 0;
-	bottom: 0;
-	right: 0;
 }
 .fancybox {
-	display: flex;
-	flex-direction: column;
 	position: absolute;
 	top: 25%;
 	bottom: 25%;

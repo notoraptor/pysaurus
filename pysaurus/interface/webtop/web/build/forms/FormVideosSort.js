@@ -32,7 +32,7 @@ System.register(["../utils/constants.js", "../dialogs/FancyBox.js"], function (_
           return /*#__PURE__*/React.createElement(FancyBox, {
             title: "Sort videos"
           }, /*#__PURE__*/React.createElement("div", {
-            className: "form",
+            className: "form vertical",
             id: "form-sort"
           }, /*#__PURE__*/React.createElement("div", {
             className: "help"

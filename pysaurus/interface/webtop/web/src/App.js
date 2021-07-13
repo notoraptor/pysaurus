@@ -17,8 +17,8 @@ export class App extends React.Component {
 
     render() {
         return (
-            <div className="app">
-                <main>{this.renderPage()}</main>
+            <div className="app vertical">
+                <main className="vertical">{this.renderPage()}</main>
             </div>
         );
     }

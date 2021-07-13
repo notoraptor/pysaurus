@@ -20,9 +20,9 @@ System.register(["./FancyBox.js"], function (_export, _context) {
           return /*#__PURE__*/React.createElement(FancyBox, {
             title: this.props.title
           }, /*#__PURE__*/React.createElement("div", {
-            className: "dialog"
+            className: "dialog absolute-plain vertical"
           }, /*#__PURE__*/React.createElement("div", {
-            className: "content"
+            className: "content vertical"
           }, this.props.children), /*#__PURE__*/React.createElement("div", {
             className: "buttons horizontal"
           }, /*#__PURE__*/React.createElement("div", {

@@ -9,8 +9,8 @@ export class Dialog extends React.Component {
     render() {
         return (
             <FancyBox title={this.props.title}>
-                <div className="dialog">
-                    <div className="content">{this.props.children}</div>
+                <div className="dialog absolute-plain vertical">
+                    <div className="content vertical">{this.props.children}</div>
                     <div className="buttons horizontal">
                         <div className="button yes">
                             <button onClick={this.yes}>{this.props.yes || "yes"}</button>

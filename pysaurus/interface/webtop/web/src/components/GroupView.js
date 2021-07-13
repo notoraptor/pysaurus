@@ -39,7 +39,7 @@ export class GroupView extends React.Component {
         const allChecked = this.allChecked(start, end);
         console.log(`Rendering ${this.props.groupDef.groups.length} group(s).`);
         return (
-            <div className="group-view">
+            <div className="group-view vertical">
                 <div className="header">
                     <div className="title">{this.renderTitle()}</div>
                     <div>
@@ -51,7 +51,7 @@ export class GroupView extends React.Component {
                                     onSearch={this.search}/>
                     </div>
                     {isProperty && !this.props.isClassified ? (
-                        <div className="selection line">
+                        <div className="selection line horizontal">
                             <div className="column">
                                 <input id="group-view-select-all"
                                        type="checkbox"
@@ -95,7 +95,7 @@ export class GroupView extends React.Component {
                                 buttons.push(' ');
                             }
                         }
-                        const classes = ["line", isProperty ? "property" : "attribute"];
+                        const classes = ["line horizontal", isProperty ? "property" : "attribute"];
                         if (selected === index)
                             classes.push("selected");
                         if (entry.value === null)

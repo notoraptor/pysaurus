@@ -43,7 +43,7 @@ export class FormSelectedVideosProperty extends React.Component {
             <Dialog title={`Edit property "${propName}" for ${nbVideos} video${nbVideos < 2 ? '' : 's'}`}
                     yes="edit"
                     action={this.onClose}>
-                <div className="form-property-multi-video">
+                <div className="form-property-multi-video vertical">
                     <div className="bar titles horizontal">
                         <div>To remove</div>
                         <div>Current</div>

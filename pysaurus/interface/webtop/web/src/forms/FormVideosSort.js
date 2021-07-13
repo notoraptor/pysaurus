@@ -18,7 +18,7 @@ export class FormVideosSort extends React.Component {
     render() {
         return (
             <FancyBox title="Sort videos">
-                <div className="form" id="form-sort">
+                <div className="form vertical" id="form-sort">
                     <div className="help">
                         <div>Click on "+" to add a new sorting criterion.</div>
                         <div>Click on "-" to remove a sorting criterion.</div>

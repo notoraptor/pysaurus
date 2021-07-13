@@ -56,7 +56,7 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
           const allChecked = this.allChecked(start, end);
           console.log(`Rendering ${this.props.groupDef.groups.length} group(s).`);
           return /*#__PURE__*/React.createElement("div", {
-            className: "group-view"
+            className: "group-view vertical"
           }, /*#__PURE__*/React.createElement("div", {
             className: "header"
           }, /*#__PURE__*/React.createElement("div", {
@@ -69,7 +69,7 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
             onChange: this.setPage,
             onSearch: this.search
           })), isProperty && !this.props.isClassified ? /*#__PURE__*/React.createElement("div", {
-            className: "selection line"
+            className: "selection line horizontal"
           }, /*#__PURE__*/React.createElement("div", {
             className: "column"
           }, /*#__PURE__*/React.createElement("input", {
@@ -118,7 +118,7 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
               }
             }
 
-            const classes = ["line", isProperty ? "property" : "attribute"];
+            const classes = ["line horizontal", isProperty ? "property" : "attribute"];
             if (selected === index) classes.push("selected");
             if (entry.value === null) classes.push("all");
             return /*#__PURE__*/React.createElement("div", {

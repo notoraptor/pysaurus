@@ -12,8 +12,8 @@ export class FancyBox extends React.Component {
 
     render() {
         return (
-            <div className="fancybox-wrapper">
-                <div className="fancybox">
+            <div className="fancybox-wrapper absolute-plain">
+                <div className="fancybox vertical">
                     <div className="fancybox-header horizontal">
                         <div className="fancybox-title">{this.props.title}</div>
                         <div className="fancybox-close">

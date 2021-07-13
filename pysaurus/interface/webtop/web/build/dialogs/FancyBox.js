@@ -22,9 +22,9 @@ System.register([], function (_export, _context) {
 
         render() {
           return /*#__PURE__*/React.createElement("div", {
-            className: "fancybox-wrapper"
+            className: "fancybox-wrapper absolute-plain"
           }, /*#__PURE__*/React.createElement("div", {
-            className: "fancybox"
+            className: "fancybox vertical"
           }, /*#__PURE__*/React.createElement("div", {
             className: "fancybox-header horizontal"
           }, /*#__PURE__*/React.createElement("div", {

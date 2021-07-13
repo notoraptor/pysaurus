@@ -82,7 +82,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
           }, /*#__PURE__*/React.createElement("h3", null, "Add a new property"), /*#__PURE__*/React.createElement("div", {
             className: "entries"
           }, /*#__PURE__*/React.createElement("div", {
-            className: "entry"
+            className: "entry horizontal"
           }, /*#__PURE__*/React.createElement("div", {
             className: "label"
           }, /*#__PURE__*/React.createElement("label", {
@@ -95,7 +95,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             value: this.state.name,
             onChange: this.onChangeName
           }))), /*#__PURE__*/React.createElement("div", {
-            className: "entry"
+            className: "entry horizontal"
           }, /*#__PURE__*/React.createElement("div", {
             className: "label"
           }, /*#__PURE__*/React.createElement("label", {
@@ -115,7 +115,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
           }, "floating number"), /*#__PURE__*/React.createElement("option", {
             value: "str"
           }, "text")))), /*#__PURE__*/React.createElement("div", {
-            className: "entry"
+            className: "entry horizontal"
           }, /*#__PURE__*/React.createElement("div", {
             className: "label"
           }, /*#__PURE__*/React.createElement("input", {
@@ -128,7 +128,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
           }, /*#__PURE__*/React.createElement("label", {
             htmlFor: "prop-multiple"
           }, "accept many values"))), /*#__PURE__*/React.createElement("div", {
-            className: "entry"
+            className: "entry horizontal"
           }, /*#__PURE__*/React.createElement("div", {
             className: "label"
           }, /*#__PURE__*/React.createElement("input", {
@@ -141,7 +141,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
           }, /*#__PURE__*/React.createElement("label", {
             htmlFor: "prop-enumeration"
           }, "Is enumeration"))), this.state.multiple && !this.state.enumeration ? '' : /*#__PURE__*/React.createElement("div", {
-            className: "entry"
+            className: "entry horizontal"
           }, /*#__PURE__*/React.createElement("div", {
             className: "label"
           }, /*#__PURE__*/React.createElement("label", {
@@ -149,7 +149,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
           }, this.state.enumeration ? 'Enumeration values' + (this.state.multiple ? '' : ' (first is default)') : 'Default value')), /*#__PURE__*/React.createElement("div", {
             className: "input"
           }, this.renderDefaultInput())), /*#__PURE__*/React.createElement("div", {
-            className: "entry buttons"
+            className: "entry horizontal buttons"
           }, /*#__PURE__*/React.createElement("div", {
             className: "label"
           }, /*#__PURE__*/React.createElement("button", {

@@ -36,8 +36,10 @@ System.register(["./pages/Test.js", "./pages/HomePage.js", "./pages/VideosPage.j
 
         render() {
           return /*#__PURE__*/React.createElement("div", {
-            className: "app"
-          }, /*#__PURE__*/React.createElement("main", null, this.renderPage()));
+            className: "app vertical"
+          }, /*#__PURE__*/React.createElement("main", {
+            className: "vertical"
+          }, this.renderPage()));
         }
 
         renderPage() {

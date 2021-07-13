@@ -150,7 +150,8 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           const stringProperties = this.getStringProperties(this.state.properties);
           const actions = this.features.actions;
           return /*#__PURE__*/React.createElement("div", {
-            id: "videos"
+            id: "videos",
+            className: "vertical"
           }, /*#__PURE__*/React.createElement("header", {
             className: "horizontal"
           }, /*#__PURE__*/React.createElement(MenuPack, {
@@ -211,9 +212,9 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           }))), /*#__PURE__*/React.createElement("div", {
             className: "frontier"
           }), /*#__PURE__*/React.createElement("div", {
-            className: "content"
+            className: "content horizontal"
           }, /*#__PURE__*/React.createElement("div", {
-            className: "side-panel"
+            className: "side-panel vertical"
           }, /*#__PURE__*/React.createElement(Collapsable, {
             lite: false,
             className: "filter",

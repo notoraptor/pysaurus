@@ -58,7 +58,7 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js", "../utils/cons
             yes: "edit",
             action: this.onClose
           }, /*#__PURE__*/React.createElement("div", {
-            className: "form-property-multi-video"
+            className: "form-property-multi-video vertical"
           }, /*#__PURE__*/React.createElement("div", {
             className: "bar titles horizontal"
           }, /*#__PURE__*/React.createElement("div", null, "To remove"), /*#__PURE__*/React.createElement("div", null, "Current"), /*#__PURE__*/React.createElement("div", null, "To add")), /*#__PURE__*/React.createElement("div", {

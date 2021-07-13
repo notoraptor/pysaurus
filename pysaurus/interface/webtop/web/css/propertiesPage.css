@@ -59,10 +59,7 @@
 	width: 50%;
 	padding: 1.5em;
 }
-#properties .new .entry {
-	display: flex;
-	flex-direction: row;
-}
+#properties .new .entry {}
 #properties .new .entry .label {
 }
 #properties .new .entry .label label {

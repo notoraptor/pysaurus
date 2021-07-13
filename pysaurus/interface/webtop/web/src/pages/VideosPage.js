@@ -116,7 +116,7 @@ export class VideosPage extends React.Component {
         const actions = this.features.actions;
 
         return (
-            <div id="videos">
+            <div id="videos" className="vertical">
                 <header className="horizontal">
                     <MenuPack title="Options">
                         <Menu title="Filter videos ...">
@@ -174,8 +174,8 @@ export class VideosPage extends React.Component {
                     </div>
                 </header>
                 <div className="frontier"/>
-                <div className="content">
-                    <div className="side-panel">
+                <div className="content horizontal">
+                    <div className="side-panel vertical">
                         <Collapsable lite={false} className="filter" title="Filter">
                             {this.renderFilter()}
                         </Collapsable>

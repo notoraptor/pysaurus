@@ -15,7 +15,12 @@ System.register([], function (_export, _context) {
         render() {
           const classNames = ['cell-wrapper'];
           if (this.props.className) classNames.push(this.props.className);
-          if (this.props.center) classNames.push('cell-center');
+
+          if (this.props.center) {
+            classNames.push('cell-center');
+            classNames.push('horizontal');
+          }
+
           if (this.props.full) classNames.push('cell-full');
           return /*#__PURE__*/React.createElement("div", {
             className: classNames.join(' ')

@@ -63,7 +63,7 @@ export class PropertiesPage extends React.Component {
                     <div className="new">
                         <h3>Add a new property</h3>
                         <div className="entries">
-                            <div className="entry">
+                            <div className="entry horizontal">
                                 <div className="label"><label htmlFor="prop-name">Name:</label></div>
                                 <div className="input">
                                     <input type="text"
@@ -72,7 +72,7 @@ export class PropertiesPage extends React.Component {
                                            onChange={this.onChangeName}/>
                                 </div>
                             </div>
-                            <div className="entry">
+                            <div className="entry horizontal">
                                 <div className="label"><label htmlFor="prop-type">Type:</label></div>
                                 <div className="input">
                                     <select id="prop-type"
@@ -85,7 +85,7 @@ export class PropertiesPage extends React.Component {
                                     </select>
                                 </div>
                             </div>
-                            <div className="entry">
+                            <div className="entry horizontal">
                                 <div className="label">
                                     <input type="checkbox"
                                            id="prop-multiple"
@@ -94,7 +94,7 @@ export class PropertiesPage extends React.Component {
                                 </div>
                                 <div className="input"><label htmlFor="prop-multiple">accept many values</label></div>
                             </div>
-                            <div className="entry">
+                            <div className="entry horizontal">
                                 <div className="label">
                                     <input type="checkbox"
                                            id="prop-enumeration"
@@ -104,7 +104,7 @@ export class PropertiesPage extends React.Component {
                                 <div className="input"><label htmlFor="prop-enumeration">Is enumeration</label></div>
                             </div>
                             {this.state.multiple && !this.state.enumeration ? '' : (
-                                <div className="entry">
+                                <div className="entry horizontal">
                                     <div className="label">
                                         <label htmlFor={'prop-default-' + this.state.type}>
                                             {this.state.enumeration ?
@@ -115,7 +115,7 @@ export class PropertiesPage extends React.Component {
                                     <div className="input">{this.renderDefaultInput()}</div>
                                 </div>
                             )}
-                            <div className="entry buttons">
+                            <div className="entry horizontal buttons">
                                 <div className="label">
                                     <button className="reset" onClick={this.reset}>reset</button>
                                 </div>

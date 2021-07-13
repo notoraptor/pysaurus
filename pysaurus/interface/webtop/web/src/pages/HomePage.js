@@ -209,7 +209,7 @@ export class HomePage extends React.Component {
 
     render() {
         return (
-            <div id="home">
+            <div id="home" className="vertical">
                 <div className="buttons">
                     {this.state.status === HomeStatus.INITIAL ? (
                         <span className="input-update">

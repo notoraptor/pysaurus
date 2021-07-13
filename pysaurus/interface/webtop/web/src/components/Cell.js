@@ -6,8 +6,10 @@ export class Cell extends React.Component {
         const classNames = ['cell-wrapper'];
         if (this.props.className)
             classNames.push(this.props.className);
-        if (this.props.center)
+        if (this.props.center) {
             classNames.push('cell-center');
+            classNames.push('horizontal');
+        }
         if (this.props.full)
             classNames.push('cell-full');
         return (
