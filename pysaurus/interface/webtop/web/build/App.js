@@ -1,7 +1,7 @@
-System.register(["./pages/Test.js", "./pages/HomePage.js", "./pages/VideosPage.js", "./pages/PropertiesPage.js", "./utils/backend.js", "./utils/constants.js"], function (_export, _context) {
+System.register(["./pages/Test.js", "./pages/HomePage.js", "./pages/VideosPage.js", "./pages/PropertiesPage.js", "./utils/backend.js", "./pages/DatabasesPage.js", "./utils/constants.js"], function (_export, _context) {
   "use strict";
 
-  var Test, HomePage, VideosPage, PropertiesPage, backend_error, python_call, VIDEO_DEFAULT_PAGE_NUMBER, VIDEO_DEFAULT_PAGE_SIZE, App;
+  var Test, HomePage, VideosPage, PropertiesPage, backend_error, python_call, DatabasesPage, VIDEO_DEFAULT_PAGE_NUMBER, VIDEO_DEFAULT_PAGE_SIZE, App;
 
   _export("App", void 0);
 
@@ -17,6 +17,8 @@ System.register(["./pages/Test.js", "./pages/HomePage.js", "./pages/VideosPage.j
     }, function (_utilsBackendJs) {
       backend_error = _utilsBackendJs.backend_error;
       python_call = _utilsBackendJs.python_call;
+    }, function (_pagesDatabasesPageJs) {
+      DatabasesPage = _pagesDatabasesPageJs.DatabasesPage;
     }, function (_utilsConstantsJs) {
       VIDEO_DEFAULT_PAGE_NUMBER = _utilsConstantsJs.VIDEO_DEFAULT_PAGE_NUMBER;
       VIDEO_DEFAULT_PAGE_SIZE = _utilsConstantsJs.VIDEO_DEFAULT_PAGE_SIZE;
@@ -26,7 +28,7 @@ System.register(["./pages/Test.js", "./pages/HomePage.js", "./pages/VideosPage.j
         constructor(props) {
           super(props);
           this.state = {
-            page: "home",
+            page: null,
             parameters: {}
           };
           this.loadPage = this.loadPage.bind(this);
@@ -45,7 +47,12 @@ System.register(["./pages/Test.js", "./pages/HomePage.js", "./pages/VideosPage.j
         renderPage() {
           const parameters = this.state.parameters;
           const page = this.state.page;
+          if (!page) return "Opening ...";
           if (page === "test") return /*#__PURE__*/React.createElement(Test, {
+            app: this,
+            parameters: parameters
+          });
+          if (page === "databases") return /*#__PURE__*/React.createElement(DatabasesPage, {
             app: this,
             parameters: parameters
           });
@@ -63,6 +70,16 @@ System.register(["./pages/Test.js", "./pages/HomePage.js", "./pages/VideosPage.j
           });
         }
 
+        componentDidMount() {
+          if (!this.state.page) {
+            python_call("list_databases").then(databases => {
+              this.loadPage("databases", {
+                databases
+              });
+            }).catch(backend_error);
+          }
+        }
+
         loadPage(pageName, parameters = undefined) {
           parameters = parameters ? parameters : {};
           this.setState({
@@ -71,6 +88,14 @@ System.register(["./pages/Test.js", "./pages/HomePage.js", "./pages/VideosPage.j
           });
         } // Public methods for children components.
 
+
+        dbHome() {
+          this.loadPage("databases");
+        }
+
+        dbLoad() {
+          this.loadPage("home");
+        }
 
         dbUpdate() {
           this.loadPage("home", {

@@ -23,6 +23,7 @@ class Application:
         return sorted(self.databases.keys())
 
     def open_database(self, path: AbsolutePath) -> Database:
+        path = AbsolutePath.ensure(path)
         assert path in self.databases
         if not self.databases[path]:
             self.databases[path] = Database(path, notifier=self.notifier)

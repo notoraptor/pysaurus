@@ -3,13 +3,14 @@ import {HomePage} from "./pages/HomePage.js";
 import {VideosPage} from "./pages/VideosPage.js";
 import {PropertiesPage} from "./pages/PropertiesPage.js";
 import {backend_error, python_call} from "./utils/backend.js";
+import {DatabasesPage} from "./pages/DatabasesPage.js";
 
 import {VIDEO_DEFAULT_PAGE_NUMBER, VIDEO_DEFAULT_PAGE_SIZE} from "./utils/constants.js";
 
 export class App extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {page: "home", parameters: {}};
+        this.state = {page: null, parameters: {}};
         this.loadPage = this.loadPage.bind(this);
         this.loadPropertiesPage = this.loadPropertiesPage.bind(this);
         this.loadVideosPage = this.loadVideosPage.bind(this);
@@ -26,14 +27,28 @@ export class App extends React.Component {
     renderPage() {
         const parameters = this.state.parameters;
         const page = this.state.page;
+        if (!page)
+            return "Opening ...";
         if (page === "test")
             return <Test app={this} parameters={parameters}/>;
+        if (page === "databases")
+            return <DatabasesPage app={this} parameters={parameters}/>;
         if (page === "home")
             return <HomePage app={this} parameters={parameters}/>;
         if (page === "videos")
             return <VideosPage app={this} parameters={parameters}/>;
         if (page === "properties")
             return <PropertiesPage app={this} parameters={parameters}/>;
+    }
+
+    componentDidMount() {
+        if (!this.state.page) {
+            python_call("list_databases")
+                .then(databases => {
+                    this.loadPage("databases", {databases});
+                })
+                .catch(backend_error);
+        }
     }
 
     loadPage(pageName, parameters = undefined) {
@@ -43,6 +58,12 @@ export class App extends React.Component {
 
     // Public methods for children components.
 
+    dbHome() {
+        this.loadPage("databases");
+    }
+    dbLoad() {
+        this.loadPage("home");
+    }
     dbUpdate() {
         this.loadPage("home", {action: "update"});
     }

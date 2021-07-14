@@ -1,0 +1,22 @@
+#databases {
+    text-align: center;
+}
+#databases table,
+#databases input[type="text"] {
+    width: 100%;
+}
+#databases table {
+    table-layout: fixed;
+}
+#databases td,
+#databases .create-database {
+    padding: 0.25rem;
+}
+#databases > table > tr > td {
+    vertical-align: top;
+    width: 50%;
+}
+#databases button {
+    display: block;
+    width: 100%;
+}

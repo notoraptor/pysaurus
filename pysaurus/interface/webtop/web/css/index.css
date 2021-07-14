@@ -40,3 +40,6 @@ table.second-td-text-right td:first-child + td {
 	left: 0;
 	right: 0;
 }
+.padding {
+	padding: 0.25rem;
+}

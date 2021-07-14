@@ -10,10 +10,14 @@ from pysaurus.core.database.video_features import VideoFeatures
 from pysaurus.core.database.viewport.layers.source_layer import SourceLayer
 from pysaurus.core.database.viewport.video_provider import VideoProvider
 from pysaurus.core.functions import compute_nb_pages
+from pysaurus.interface.webtop import iutils
+from pysaurus.application import Application
 
 
 class FeatureAPI:
-    def __init__(self):
+    def __init__(self, notifier=None):
+        self.notifier = notifier
+        self.application = Application(self.notifier)
         self.database = None  # type: Optional[Database]
         self.provider = None  # type: Optional[VideoProvider]
 
@@ -46,13 +50,27 @@ class FeatureAPI:
             ]
         return videos
 
+    # Tk dialog boxes.
+
+    def select_directory(self):
+        return iutils.select_directory()
+
+    def select_files(self):
+        return iutils.select_many_files_to_open()
+
+    def select_file(self):
+        return iutils.select_file_to_open()
+
     # Constant getters.
 
-    @classmethod
-    def get_constants(cls):
+    def get_constants(self):
         return {
             "PYTHON_DEFAULT_SOURCES": SourceLayer.DEFAULT_SOURCE_DEF,
+            "PYTHON_APP_NAME": self.application.app_name,
         }
+
+    def list_databases(self):
+        return [{"name": path.title, "path": str(path)} for path in self.application.get_database_paths()]
 
     # Provider getters.
 

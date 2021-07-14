@@ -4,7 +4,7 @@ import threading
 import time
 import traceback
 from abc import abstractmethod
-from typing import Optional
+from typing import Optional, Callable
 
 from pysaurus.core.database.database import Database
 from pysaurus.core.database.database_features import DatabaseFeatures
@@ -18,41 +18,56 @@ from pysaurus.interface.webtop.parallel_notifier import ParallelNotifier
 
 class GuiAPI(FeatureAPI):
     def __init__(self):
-        super().__init__()
         self.multiprocessing_manager = multiprocessing.Manager()
-        self.notifier = ParallelNotifier(self.multiprocessing_manager.Queue())
+        super().__init__(ParallelNotifier(self.multiprocessing_manager.Queue()))
         self.monitor_thread = None  # type: Optional[threading.Thread]
         self.db_loading_thread = None  # type: Optional[threading.Thread]
         self.threads_stop_flag = False
         self.__update_on_load = True
+        self.__update_job = None
         self.notifier.call_default_if_no_manager()
 
-    def load_database(self, update=True):
+    def _launch(self, function: Callable[[], None]):
+        print("Running", function.__name__)
         assert not self.monitor_thread
         assert not self.db_loading_thread
-        self.__update_on_load = update
+        self.notifier.clear_managers()
+
+        def run():
+            function()
+            self._finish_loading(f"Finished running: {function.__name__}")
+
         # Launch monitor thread.
         self.monitor_thread = launch_thread(self._monitor_notifications)
-        # Then launch database loading thread.
-        self.db_loading_thread = launch_thread(self._load_database)
+        # Then launch function.
+        self.db_loading_thread = launch_thread(run)
+
+    def _finish_loading(self, log_message):
+        self.provider.register_notifications()
+        self.notifier.notify(DatabaseReady())
+        self.db_loading_thread = None
+        print(log_message)
+
+    def create_database(self, name, folders, update):
+        self.__update_job = ("create", (name, folders))
+        self.__update_on_load = update
+
+    def open_database(self, path, update):
+        self.__update_job = ("open", (path,))
+        self.__update_on_load = update
+
+    def load_database(self, update=True):
+        self.__update_on_load = update
+        self._launch(self._load_database)
 
     def update_database(self):
-        assert not self.monitor_thread
-        assert not self.db_loading_thread
-        self.monitor_thread = launch_thread(self._monitor_notifications)
-        self.db_loading_thread = launch_thread(self._update_database)
+        self._launch(self._update_database)
 
     def find_similar_videos(self):
-        assert not self.monitor_thread
-        assert not self.db_loading_thread
-        self.monitor_thread = launch_thread(self._monitor_notifications)
-        self.db_loading_thread = launch_thread(self._find_similarities)
+        self._launch(self._find_similarities)
 
     def find_similar_videos_ignore_cache(self):
-        assert not self.monitor_thread
-        assert not self.db_loading_thread
-        self.monitor_thread = launch_thread(self._monitor_notifications)
-        self.db_loading_thread = launch_thread(self._find_similarities_ignore_cache)
+        self._launch(self._find_similarities_ignore_cache)
 
     def close_app(self):
         self.threads_stop_flag = True
@@ -89,9 +104,18 @@ class GuiAPI(FeatureAPI):
         # type: (Notification) -> None
         raise NotImplementedError()
 
+    def _create_database(self, name, folders):
+        self.database = self.application.new_database(name, folders)
+        self.provider = VideoProvider(self.database)
+
+    def _open_database(self, path):
+        self.database = self.application.open_database(path)
+        self.provider = VideoProvider(self.database)
+
     def _load_database(self):
-        self.notifier.clear_managers()
         # Load database
+        assert not self.database
+        assert not self.provider
         update = self.__update_on_load
         self.__update_on_load = True
         self.database = Database.load_from_list_file_path(
@@ -101,23 +125,28 @@ class GuiAPI(FeatureAPI):
             ensure_miniatures=True,
             reset=False,
         )
-        # Load videos
-        assert not self.provider
         self.provider = VideoProvider(self.database)
-        # Finish
-        self._finish_loading("End loading database.")
 
     def _update_database(self):
-        self.notifier.clear_managers()
-        # Update database
-        self.database.refresh(ensure_miniatures=True)
-        # Load videos
-        self.provider.refresh()
-        # Finish
-        self._finish_loading("End updating database.")
+        update = self.__update_on_load
+        job = self.__update_job
+        self.__update_on_load = True
+        self.__update_job = None
+        if job:
+            job_name, job_params = job
+            if job_name == "create":
+                print("RUN: Creating database")
+                self._create_database(*job_params)
+            else:
+                assert job_name == "open"
+                print("RUN: Opening database")
+                self._open_database(*job_params)
+        if update:
+            print("RUN: Updating existing database")
+            self.database.refresh(ensure_miniatures=True)
+            self.provider.refresh()
 
     def _find_similarities(self):
-        self.notifier.clear_managers()
         DatabaseFeatures.find_similar_videos(self.database)
         self.provider.set_groups(
             field="similarity_id",
@@ -127,10 +156,8 @@ class GuiAPI(FeatureAPI):
             allow_singletons=False,
         )
         self.provider.refresh()
-        self._finish_loading("End finding similarities.")
 
     def _find_similarities_ignore_cache(self):
-        self.notifier.clear_managers()
         DatabaseFeatures.find_similar_videos_ignore_cache(self.database)
         self.provider.set_groups(
             field="similarity_id",
@@ -140,10 +167,3 @@ class GuiAPI(FeatureAPI):
             allow_singletons=False,
         )
         self.provider.refresh()
-        self._finish_loading("End finding similarities (cache ignored).")
-
-    def _finish_loading(self, log_message):
-        self.provider.register_notifications()
-        self.notifier.notify(DatabaseReady())
-        self.db_loading_thread = None
-        print(log_message)
