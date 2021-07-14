@@ -16,7 +16,7 @@ export class FormPropertyRename extends React.Component {
     render() {
         return (
             <Dialog title={`Rename property "${this.props.title}"?`} yes="rename" action={this.onClose}>
-                <div className="form-rename-video">
+                <div className="form-rename">
                     <h1>Rename property</h1>
                     <h2><code id="filename">{this.props.title}</code></h2>
                     <p className="form">

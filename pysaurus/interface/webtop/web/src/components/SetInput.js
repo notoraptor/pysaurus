@@ -77,11 +77,11 @@ export class SetInput extends React.Component {
     render() {
         return (
             <div className="set-input">
-                <table>
+                <table className="first-td-text-right">
                     <tbody>
                     {this.renderList()}
                     <tr className="form">
-                        <td className="input">
+                        <td>
                             {this.props.values ? (
                                 <select value={this.state.add} onChange={this.onChangeAdd}>
                                     {this.props.values.map((value, index) => (
@@ -97,9 +97,7 @@ export class SetInput extends React.Component {
                                        {...(this.props.identifier ? {id: this.props.identifier} : {})}/>
                             )}
                         </td>
-                        <td className="action">
-                            <button className="add" onClick={this.onAdd}>+</button>
-                        </td>
+                        <td><button className="add" onClick={this.onAdd}>+</button></td>
                     </tr>
                     </tbody>
                 </table>
@@ -115,10 +113,8 @@ export class SetInput extends React.Component {
             const value = controller.get(i);
             output.push(
                 <tr className="item" key={i}>
-                    <td className="label">{value.toString()}</td>
-                    <td className="action">
-                        <button className="remove" onClick={() => this.remove(value)}>-</button>
-                    </td>
+                    <td>{value.toString()}</td>
+                    <td><button className="remove" onClick={() => this.remove(value)}>-</button></td>
                 </tr>
             );
         }

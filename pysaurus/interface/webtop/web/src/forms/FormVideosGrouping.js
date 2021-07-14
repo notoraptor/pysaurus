@@ -32,7 +32,7 @@ export class FormVideosGrouping extends React.Component {
     render() {
         return (
             <Dialog title={"Group videos:"} yes="group" action={this.onClose}>
-                <table className="form-group">
+                <table className="form-group first-td-text-right">
                     <tbody>
                     <tr>
                         <td className="label">Field type</td>

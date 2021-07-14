@@ -201,7 +201,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           }, "Group videos by property: ", def.name))), /*#__PURE__*/React.createElement("div", {
             className: "buttons"
           }), /*#__PURE__*/React.createElement("div", {
-            className: "pagination"
+            className: "pagination text-right"
           }, /*#__PURE__*/React.createElement(Pagination, {
             singular: "page",
             plural: "pages",
@@ -270,7 +270,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             className: "footer-status",
             onClick: this.resetStatus
           }, this.state.status), /*#__PURE__*/React.createElement("div", {
-            className: "footer-information"
+            className: "footer-information text-right"
           }, groupDef ? /*#__PURE__*/React.createElement("div", {
             className: "info group"
           }, "Group ", groupDef.group_id + 1, "/", groupDef.groups.length) : '', /*#__PURE__*/React.createElement("div", {

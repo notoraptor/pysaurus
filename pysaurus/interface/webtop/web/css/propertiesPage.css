@@ -59,32 +59,23 @@
 	width: 50%;
 	padding: 1.5em;
 }
-#properties .new .entry {}
-#properties .new .entry .label {
+#properties .new > table {
+	width: 100%;
 }
-#properties .new .entry .label label {
-}
-#properties .new .entry > .label,
-#properties .new .entry > .input {
+#properties .new > table > tr > td {
 	width: 50%;
 	padding: 0.5em;
 }
-#properties .new .input > input,
-#properties .new .input > select,
-#properties .new .input > .set-input {
+#properties .new > table > tr > td:first-child + td > input,
+#properties .new > table > tr > td:first-child + td > select,
+#properties .new > table > tr > td:first-child + td > .set-input {
 	display: block;
 	width: 100%;
 }
-#properties .new .buttons button {
+#properties .new > table > tr.buttons button {
 	display: block;
 	width: 100%;
 }
-#properties .new .buttons button.submit {
+#properties .new > table > tr.buttons button.submit {
 	font-weight: bold;
-}
-#properties .new .label {
-	text-align: right;
-}
-#properties .new .input {
-	text-align: left;
 }

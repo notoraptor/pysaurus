@@ -79,30 +79,18 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             className: "list"
           }, /*#__PURE__*/React.createElement("h3", null, "Current properties"), this.renderPropTypes()), /*#__PURE__*/React.createElement("div", {
             className: "new"
-          }, /*#__PURE__*/React.createElement("h3", null, "Add a new property"), /*#__PURE__*/React.createElement("div", {
-            className: "entries"
-          }, /*#__PURE__*/React.createElement("div", {
-            className: "entry horizontal"
-          }, /*#__PURE__*/React.createElement("div", {
-            className: "label"
-          }, /*#__PURE__*/React.createElement("label", {
+          }, /*#__PURE__*/React.createElement("h3", null, "Add a new property"), /*#__PURE__*/React.createElement("table", {
+            className: "first-td-text-right"
+          }, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("label", {
             htmlFor: "prop-name"
-          }, "Name:")), /*#__PURE__*/React.createElement("div", {
-            className: "input"
-          }, /*#__PURE__*/React.createElement("input", {
+          }, "Name:")), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("input", {
             type: "text",
             id: "prop-name",
             value: this.state.name,
             onChange: this.onChangeName
-          }))), /*#__PURE__*/React.createElement("div", {
-            className: "entry horizontal"
-          }, /*#__PURE__*/React.createElement("div", {
-            className: "label"
-          }, /*#__PURE__*/React.createElement("label", {
+          }))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("label", {
             htmlFor: "prop-type"
-          }, "Type:")), /*#__PURE__*/React.createElement("div", {
-            className: "input"
-          }, /*#__PURE__*/React.createElement("select", {
+          }, "Type:")), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("select", {
             id: "prop-type",
             value: this.state.type,
             onChange: this.onChangeType
@@ -114,50 +102,28 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             value: "float"
           }, "floating number"), /*#__PURE__*/React.createElement("option", {
             value: "str"
-          }, "text")))), /*#__PURE__*/React.createElement("div", {
-            className: "entry horizontal"
-          }, /*#__PURE__*/React.createElement("div", {
-            className: "label"
-          }, /*#__PURE__*/React.createElement("input", {
+          }, "text")))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("input", {
             type: "checkbox",
             id: "prop-multiple",
             checked: this.state.multiple,
             onChange: this.onChangeMultiple
-          })), /*#__PURE__*/React.createElement("div", {
-            className: "input"
-          }, /*#__PURE__*/React.createElement("label", {
+          })), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("label", {
             htmlFor: "prop-multiple"
-          }, "accept many values"))), /*#__PURE__*/React.createElement("div", {
-            className: "entry horizontal"
-          }, /*#__PURE__*/React.createElement("div", {
-            className: "label"
-          }, /*#__PURE__*/React.createElement("input", {
+          }, "accept many values"))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("input", {
             type: "checkbox",
             id: "prop-enumeration",
             checked: this.state.enumeration,
             onChange: this.onChangeEnumeration
-          })), /*#__PURE__*/React.createElement("div", {
-            className: "input"
-          }, /*#__PURE__*/React.createElement("label", {
+          })), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("label", {
             htmlFor: "prop-enumeration"
-          }, "Is enumeration"))), this.state.multiple && !this.state.enumeration ? '' : /*#__PURE__*/React.createElement("div", {
-            className: "entry horizontal"
-          }, /*#__PURE__*/React.createElement("div", {
-            className: "label"
-          }, /*#__PURE__*/React.createElement("label", {
+          }, "Is enumeration"))), this.state.multiple && !this.state.enumeration ? '' : /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("label", {
             htmlFor: 'prop-default-' + this.state.type
-          }, this.state.enumeration ? 'Enumeration values' + (this.state.multiple ? '' : ' (first is default)') : 'Default value')), /*#__PURE__*/React.createElement("div", {
-            className: "input"
-          }, this.renderDefaultInput())), /*#__PURE__*/React.createElement("div", {
-            className: "entry horizontal buttons"
-          }, /*#__PURE__*/React.createElement("div", {
-            className: "label"
-          }, /*#__PURE__*/React.createElement("button", {
+          }, this.state.enumeration ? 'Enumeration values' + (this.state.multiple ? '' : ' (first is default)') : 'Default value')), /*#__PURE__*/React.createElement("td", null, this.renderDefaultInput())), /*#__PURE__*/React.createElement("tr", {
+            className: "buttons"
+          }, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
             className: "reset",
             onClick: this.reset
-          }, "reset")), /*#__PURE__*/React.createElement("div", {
-            className: "input"
-          }, /*#__PURE__*/React.createElement("button", {
+          }, "reset")), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
             className: "submit",
             onClick: this.submit
           }, "add")))))));

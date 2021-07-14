@@ -31,7 +31,7 @@ System.register(["../dialogs/Dialog.js"], function (_export, _context) {
             yes: "rename",
             action: this.onClose
           }, /*#__PURE__*/React.createElement("div", {
-            className: "form-rename-video"
+            className: "form-rename"
           }, /*#__PURE__*/React.createElement("h1", null, "Rename property"), /*#__PURE__*/React.createElement("h2", null, /*#__PURE__*/React.createElement("code", {
             id: "filename"
           }, this.props.title)), /*#__PURE__*/React.createElement("p", {

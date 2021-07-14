@@ -52,13 +52,13 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../utils/
           }) : /*#__PURE__*/React.createElement("div", {
             className: "no-thumbnail"
           }, "no thumbnail")), /*#__PURE__*/React.createElement("div", {
-            className: "filename"
+            className: "filename mb-1"
           }, /*#__PURE__*/React.createElement("code", null, data.filename)), data.title === data.file_title ? '' : /*#__PURE__*/React.createElement("div", {
-            className: "title"
+            className: "title mb-1"
           }, /*#__PURE__*/React.createElement("em", null, data.title))), /*#__PURE__*/React.createElement("div", {
             className: "properties"
-          }, /*#__PURE__*/React.createElement("div", {
-            className: "table"
+          }, /*#__PURE__*/React.createElement("table", {
+            className: "first-td-text-right"
           }, this.props.definitions.map((def, index) => {
             const name = def.name;
             let input;
@@ -96,13 +96,12 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../utils/
               });
             }
 
-            return /*#__PURE__*/React.createElement("div", {
-              className: "table-row",
+            return /*#__PURE__*/React.createElement("tr", {
               key: index
-            }, /*#__PURE__*/React.createElement("div", {
-              className: "table-cell label"
-            }, /*#__PURE__*/React.createElement("strong", null, name)), /*#__PURE__*/React.createElement("div", {
-              className: "table-cell input"
+            }, /*#__PURE__*/React.createElement("td", {
+              className: "label"
+            }, /*#__PURE__*/React.createElement("strong", null, name)), /*#__PURE__*/React.createElement("td", {
+              className: "input"
             }, input));
           })))));
         }

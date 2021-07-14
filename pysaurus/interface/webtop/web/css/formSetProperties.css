@@ -1,36 +1,32 @@
-.form-set-properties .properties {
-    flex-grow: 1;
-}
 .form-set-properties .info {
     padding-right: 1em;
     width: 300px;
     text-align: center;
     word-break: break-word;
 }
+.form-set-properties .properties {
+    flex-grow: 1;
+}
 .form-set-properties .filename {
     border: 1px solid black;
     padding: 0.25em;
 }
-.form-set-properties .filename,
-.form-set-properties .title {
-    margin-bottom: 0.25em;
-}
-.form-set-properties .table {
+
+.form-set-properties > .properties > table {
     width: 100%;
 }
-.form-set-properties .table-cell {
+.form-set-properties > .properties > table > tr > td {
     vertical-align: top;
     padding: 0.25em;
 }
-.form-set-properties .table-cell.label {
+.form-set-properties > .properties > table > tr > td.label {
     width: 40%;
-    text-align: right;
 }
-.form-set-properties .table-cell.input {
+.form-set-properties > .properties > table > tr > td.input {
     width: 60%;
 }
-.form-set-properties .table-cell.input input,
-.form-set-properties .table-cell.input select,
-.form-set-properties .table-cell.input .set-input {
+.form-set-properties > .properties > table > tr > td.input > input,
+.form-set-properties > .properties > table > tr > td.input > select,
+.form-set-properties > .properties > table > tr > td.input > .set-input {
     width: 100%;
 }

@@ -64,7 +64,6 @@
 }
 #videos header .pagination {
 	flex-grow: 1;
-	text-align: right;
 }
 #videos header .pagination .navigation {
 	margin-left: 2em;
@@ -116,9 +115,6 @@
 }
 #videos .footer-status:hover {
 	color: gray;
-}
-#videos .footer-information {
-	text-align: right;
 }
 #videos .footer-information .info {
 	display: inline-block;

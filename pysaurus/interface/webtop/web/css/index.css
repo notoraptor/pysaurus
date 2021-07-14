@@ -2,7 +2,6 @@
 body {
 	font-family: "Trebuchet MS", Helvetica, sans-serif;
 }
-#root {}
 table, th, td {
 	border-collapse: collapse;
 }
@@ -14,33 +13,16 @@ table, th, td {
 	display: flex;
 	flex-direction: column;
 }
-.text-right {
+.text-right,
+table.first-td-text-right td:first-child,
+table.second-td-text-right td:first-child + td {
 	text-align: right;
 }
 .mb-1 {
 	margin-bottom: 0.25em;
 }
-.table {
-	display: table;
-}
-.table-row {
-	display: table-row;
-}
-.table-cell {
-	display: table-cell;
-}
 .text-center {
 	text-align: center;
-}
-.form-rename-video {
-	text-align: center;
-}
-.form-rename-video input#name {
-	display: block;
-	width: 100%;
-}
-.form-rename-video h2 {
-	word-break: break-all;
 }
 .span-profiled {
 	color: gray;

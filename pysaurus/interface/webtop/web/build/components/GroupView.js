@@ -85,6 +85,8 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
             action: this.openPropertyOptionsAll
           })) : '')) : ''), /*#__PURE__*/React.createElement("div", {
             className: "content"
+          }, /*#__PURE__*/React.createElement("table", {
+            className: "second-td-text-right"
           }, this.props.groupDef.groups.slice(start, end).map((entry, index) => {
             index = start + index;
             const buttons = [];
@@ -118,26 +120,23 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
               }
             }
 
-            const classes = ["line horizontal", isProperty ? "property" : "attribute"];
+            const classes = [isProperty ? "property" : "attribute"];
             if (selected === index) classes.push("selected");
             if (entry.value === null) classes.push("all");
-            return /*#__PURE__*/React.createElement("div", {
+            return /*#__PURE__*/React.createElement("tr", {
               className: classes.join(" "),
               key: index,
               onClick: () => this.props.onSelect(index)
-            }, /*#__PURE__*/React.createElement("div", _extends({
-              className: "column left"
-            }, isProperty ? {} : {
+            }, /*#__PURE__*/React.createElement("td", isProperty ? {} : {
               title: entry.value
-            }), buttons, /*#__PURE__*/React.createElement("span", _extends({
+            }, buttons, /*#__PURE__*/React.createElement("span", _extends({
               key: "value"
             }, isProperty ? {
               title: entry.value
-            } : {}), entry.value === null ? `(none)` : entry.value)), /*#__PURE__*/React.createElement("div", {
-              className: "column right",
+            } : {}), entry.value === null ? `(none)` : entry.value)), /*#__PURE__*/React.createElement("td", {
               title: entry.count
             }, entry.count));
-          })));
+          }))));
         }
 
         renderTitle() {

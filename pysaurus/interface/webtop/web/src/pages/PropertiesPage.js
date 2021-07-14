@@ -62,19 +62,19 @@ export class PropertiesPage extends React.Component {
                     </div>
                     <div className="new">
                         <h3>Add a new property</h3>
-                        <div className="entries">
-                            <div className="entry horizontal">
-                                <div className="label"><label htmlFor="prop-name">Name:</label></div>
-                                <div className="input">
+                        <table className="first-td-text-right">
+                            <tr>
+                                <td><label htmlFor="prop-name">Name:</label></td>
+                                <td>
                                     <input type="text"
                                            id="prop-name"
                                            value={this.state.name}
                                            onChange={this.onChangeName}/>
-                                </div>
-                            </div>
-                            <div className="entry horizontal">
-                                <div className="label"><label htmlFor="prop-type">Type:</label></div>
-                                <div className="input">
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><label htmlFor="prop-type">Type:</label></td>
+                                <td>
                                     <select id="prop-type"
                                             value={this.state.type}
                                             onChange={this.onChangeType}>
@@ -83,47 +83,47 @@ export class PropertiesPage extends React.Component {
                                         <option value="float">floating number</option>
                                         <option value="str">text</option>
                                     </select>
-                                </div>
-                            </div>
-                            <div className="entry horizontal">
-                                <div className="label">
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
                                     <input type="checkbox"
                                            id="prop-multiple"
                                            checked={this.state.multiple}
                                            onChange={this.onChangeMultiple}/>
-                                </div>
-                                <div className="input"><label htmlFor="prop-multiple">accept many values</label></div>
-                            </div>
-                            <div className="entry horizontal">
-                                <div className="label">
+                                </td>
+                                <td><label htmlFor="prop-multiple">accept many values</label></td>
+                            </tr>
+                            <tr>
+                                <td>
                                     <input type="checkbox"
                                            id="prop-enumeration"
                                            checked={this.state.enumeration}
                                            onChange={this.onChangeEnumeration}/>
-                                </div>
-                                <div className="input"><label htmlFor="prop-enumeration">Is enumeration</label></div>
-                            </div>
+                                </td>
+                                <td><label htmlFor="prop-enumeration">Is enumeration</label></td>
+                            </tr>
                             {this.state.multiple && !this.state.enumeration ? '' : (
-                                <div className="entry horizontal">
-                                    <div className="label">
+                                <tr>
+                                    <td>
                                         <label htmlFor={'prop-default-' + this.state.type}>
                                             {this.state.enumeration ?
                                                 'Enumeration values' + (this.state.multiple ? '' : ' (first is default)')
                                                 : 'Default value'}
                                         </label>
-                                    </div>
-                                    <div className="input">{this.renderDefaultInput()}</div>
-                                </div>
+                                    </td>
+                                    <td>{this.renderDefaultInput()}</td>
+                                </tr>
                             )}
-                            <div className="entry horizontal buttons">
-                                <div className="label">
+                            <tr className="buttons">
+                                <td>
                                     <button className="reset" onClick={this.reset}>reset</button>
-                                </div>
-                                <div className="input">
+                                </td>
+                                <td>
                                     <button className="submit" onClick={this.submit}>add</button>
-                                </div>
-                            </div>
-                        </div>
+                                </td>
+                            </tr>
+                        </table>
                     </div>
                 </div>
             </div>

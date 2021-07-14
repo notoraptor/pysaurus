@@ -1,0 +1,10 @@
+.form-rename {
+    text-align: center;
+}
+.form-rename input#name {
+    display: block;
+    width: 100%;
+}
+.form-rename h2 {
+    word-break: break-all;
+}

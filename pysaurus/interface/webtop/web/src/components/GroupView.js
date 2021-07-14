@@ -73,6 +73,7 @@ export class GroupView extends React.Component {
                     ) : ''}
                 </div>
                 <div className="content">
+                    <table className="second-td-text-right">
                     {this.props.groupDef.groups.slice(start, end).map((entry, index) => {
                         index = start + index;
                         const buttons = [];
@@ -95,23 +96,24 @@ export class GroupView extends React.Component {
                                 buttons.push(' ');
                             }
                         }
-                        const classes = ["line horizontal", isProperty ? "property" : "attribute"];
+                        const classes = [isProperty ? "property" : "attribute"];
                         if (selected === index)
                             classes.push("selected");
                         if (entry.value === null)
                             classes.push("all");
                         return (
-                            <div className={classes.join(" ")} key={index} onClick={() => this.props.onSelect(index)}>
-                                <div className="column left" {...(isProperty ? {} : {title: entry.value})}>
+                            <tr className={classes.join(" ")} key={index} onClick={() => this.props.onSelect(index)}>
+                                <td {...(isProperty ? {} : {title: entry.value})}>
                                     {buttons}
                                     <span key="value" {...(isProperty ? {title: entry.value} : {})}>
                                         {entry.value === null ? `(none)` : entry.value}
                                     </span>
-                                </div>
-                                <div className="column right" title={entry.count}>{entry.count}</div>
-                            </div>
+                                </td>
+                                <td title={entry.count}>{entry.count}</td>
+                            </tr>
                         );
                     })}
+                    </table>
                 </div>
             </div>
         );

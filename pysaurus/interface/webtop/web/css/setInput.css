@@ -10,9 +10,7 @@
 .set-input td {
 	padding: 0.1em;
 }
-.set-input td.label,
-.set-input td.input {
-	text-align: right;
+.set-input td:first-child {
 	padding-right: 0.5em;
 }
 .set-input td button {
@@ -24,4 +22,7 @@
 }
 .set-input td button.remove {
 	color: red;
+}
+.set-input td input {
+	width: 100%;
 }

@@ -46,7 +46,7 @@ System.register(["../utils/constants.js", "../dialogs/Dialog.js"], function (_ex
             yes: "group",
             action: this.onClose
           }, /*#__PURE__*/React.createElement("table", {
-            className: "form-group"
+            className: "form-group first-td-text-right"
           }, /*#__PURE__*/React.createElement("tbody", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
             className: "label"
           }, "Field type"), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("input", {

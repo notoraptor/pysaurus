@@ -164,7 +164,7 @@ export class VideosPage extends React.Component {
                         )}
                     </MenuPack>
                     <div className="buttons"/>
-                    <div className="pagination">
+                    <div className="pagination text-right">
                         <Pagination singular="page"
                                     plural="pages"
                                     nbPages={nbPages}
@@ -235,7 +235,7 @@ export class VideosPage extends React.Component {
                 </div>
                 <footer className="horizontal">
                     <div className="footer-status" onClick={this.resetStatus}>{this.state.status}</div>
-                    <div className="footer-information">
+                    <div className="footer-information text-right">
                         {groupDef ? (
                             <div className="info group">
                                 Group {groupDef.group_id + 1}/{groupDef.groups.length}

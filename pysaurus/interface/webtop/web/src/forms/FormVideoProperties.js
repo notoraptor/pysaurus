@@ -30,11 +30,11 @@ export class FormVideoProperties extends React.Component {
                                 <img alt={data.title} src={data.thumbnail_path}/> :
                                 <div className="no-thumbnail">no thumbnail</div>}
                         </div>
-                        <div className="filename"><code>{data.filename}</code></div>
-                        {data.title === data.file_title ? '' : <div className="title"><em>{data.title}</em></div>}
+                        <div className="filename mb-1"><code>{data.filename}</code></div>
+                        {data.title === data.file_title ? '' : <div className="title mb-1"><em>{data.title}</em></div>}
                     </div>
                     <div className="properties">
-                        <div className="table">
+                        <table className="first-td-text-right">
                             {this.props.definitions.map((def, index) => {
                                 const name = def.name;
                                 let input;
@@ -68,13 +68,13 @@ export class FormVideoProperties extends React.Component {
                                                    value={this.state[name]}/>;
                                 }
                                 return (
-                                    <div className="table-row" key={index}>
-                                        <div className="table-cell label"><strong>{name}</strong></div>
-                                        <div className="table-cell input">{input}</div>
-                                    </div>
+                                    <tr key={index}>
+                                        <td className="label"><strong>{name}</strong></td>
+                                        <td className="input">{input}</td>
+                                    </tr>
                                 );
                             })}
-                        </div>
+                        </table>
                     </div>
                 </div>
             </Dialog>

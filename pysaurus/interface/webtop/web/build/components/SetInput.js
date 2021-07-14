@@ -92,11 +92,11 @@ System.register([], function (_export, _context) {
         render() {
           return /*#__PURE__*/React.createElement("div", {
             className: "set-input"
-          }, /*#__PURE__*/React.createElement("table", null, /*#__PURE__*/React.createElement("tbody", null, this.renderList(), /*#__PURE__*/React.createElement("tr", {
+          }, /*#__PURE__*/React.createElement("table", {
+            className: "first-td-text-right"
+          }, /*#__PURE__*/React.createElement("tbody", null, this.renderList(), /*#__PURE__*/React.createElement("tr", {
             className: "form"
-          }, /*#__PURE__*/React.createElement("td", {
-            className: "input"
-          }, this.props.values ? /*#__PURE__*/React.createElement("select", {
+          }, /*#__PURE__*/React.createElement("td", null, this.props.values ? /*#__PURE__*/React.createElement("select", {
             value: this.state.add,
             onChange: this.onChangeAdd
           }, this.props.values.map((value, index) => /*#__PURE__*/React.createElement("option", {
@@ -110,9 +110,7 @@ System.register([], function (_export, _context) {
             size: "10"
           }, this.props.identifier ? {
             id: this.props.identifier
-          } : {}))), /*#__PURE__*/React.createElement("td", {
-            className: "action"
-          }, /*#__PURE__*/React.createElement("button", {
+          } : {}))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
             className: "add",
             onClick: this.onAdd
           }, "+"))))));
@@ -128,11 +126,7 @@ System.register([], function (_export, _context) {
             output.push( /*#__PURE__*/React.createElement("tr", {
               className: "item",
               key: i
-            }, /*#__PURE__*/React.createElement("td", {
-              className: "label"
-            }, value.toString()), /*#__PURE__*/React.createElement("td", {
-              className: "action"
-            }, /*#__PURE__*/React.createElement("button", {
+            }, /*#__PURE__*/React.createElement("td", null, value.toString()), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
               className: "remove",
               onClick: () => this.remove(value)
             }, "-"))));
