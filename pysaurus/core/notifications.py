@@ -169,7 +169,7 @@ class Message(Notification):
 
 class VideoDeleted(Notification):
     __slots__ = ("video", "filename")
-    __props__ = "filename",
+    __props__ = ("filename",)
 
     def __init__(self, video):
         super().__init__()

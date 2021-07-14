@@ -1,9 +1,8 @@
 from tkinter import Tk, filedialog
 
-
 _root = Tk()
 _root.withdraw()
-_root.attributes('-topmost', True)
+_root.attributes("-topmost", True)
 
 
 def select_directory():

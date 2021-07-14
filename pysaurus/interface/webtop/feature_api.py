@@ -1,6 +1,7 @@
 import sys
 from typing import Optional
 
+from pysaurus.application import Application
 from pysaurus.core import notifications
 from pysaurus.core.components import FileSize, Duration
 from pysaurus.core.database.database import Database
@@ -11,7 +12,6 @@ from pysaurus.core.database.viewport.layers.source_layer import SourceLayer
 from pysaurus.core.database.viewport.video_provider import VideoProvider
 from pysaurus.core.functions import compute_nb_pages
 from pysaurus.interface.webtop import iutils
-from pysaurus.application import Application
 
 
 class FeatureAPI:
@@ -70,7 +70,10 @@ class FeatureAPI:
         }
 
     def list_databases(self):
-        return [{"name": path.title, "path": str(path)} for path in self.application.get_database_paths()]
+        return [
+            {"name": path.title, "path": str(path)}
+            for path in self.application.get_database_paths()
+        ]
 
     # Provider getters.
 

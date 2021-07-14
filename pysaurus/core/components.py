@@ -169,6 +169,7 @@ class AbsolutePath(object):
         elif System.is_windows():
             if self.__path.startswith(WINDOWS_PATH_PREFIX):
                 from pysaurus.core.native.windows import get_short_path_name
+
                 path = get_short_path_name(self.standard_path)
                 print("[Opening Windows short path]", path)
             else:

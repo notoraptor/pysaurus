@@ -12,7 +12,6 @@ from pysaurus.core.miniature_tools.miniature import Miniature
 from pysaurus.core.native.alignment_raptor import alignment as native_alignment
 from pysaurus.core.notifier import Notifier
 from pysaurus.core.profiling import Profiler
-from pysaurus.core.testing import TEST_LIST_FILE_PATH
 
 FRAC_SIM_LIMIT = Fraction(90, 100)
 FRAC_DST_LIMIT = Fraction(1) - FRAC_SIM_LIMIT

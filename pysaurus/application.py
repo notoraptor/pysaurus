@@ -1,10 +1,11 @@
+import os
 from pathlib import Path
+from typing import Dict, Optional, List, Iterable
+
 from pysaurus.core.components import AbsolutePath
+from pysaurus.core.database.database import Database
 from pysaurus.core.modules import FileSystem
 from pysaurus.core.notifier import DEFAULT_NOTIFIER
-from pysaurus.core.database.database import Database
-from typing import Dict, Optional, List, Sequence, Iterable
-import os
 
 
 class Application:
