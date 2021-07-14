@@ -124,6 +124,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           this.backend = this.backend.bind(this);
           this.findSimilarVideos = this.findSimilarVideos.bind(this);
           this.findSimilarVideosIgnoreCache = this.findSimilarVideosIgnoreCache.bind(this);
+          this.closeDatabase = this.closeDatabase.bind(this);
           this.callbackIndex = -1;
           this.features = new Actions({
             select: new Action("Ctrl+T", "Select videos ...", this.selectVideos),
@@ -198,7 +199,11 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           }, def.name))) : this.state.properties.map((def, index) => /*#__PURE__*/React.createElement(MenuItem, {
             key: index,
             action: () => this.backendGroupVideos(def.name, true)
-          }, "Group videos by property: ", def.name))), /*#__PURE__*/React.createElement("div", {
+          }, "Group videos by property: ", def.name)), /*#__PURE__*/React.createElement(Menu, {
+            title: "Close database ..."
+          }, /*#__PURE__*/React.createElement(MenuItem, {
+            action: this.closeDatabase
+          }, /*#__PURE__*/React.createElement("strong", null, "Close database")))), /*#__PURE__*/React.createElement("div", {
             className: "buttons"
           }), /*#__PURE__*/React.createElement("div", {
             className: "pagination text-right"
@@ -666,6 +671,10 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           this.backend(['classifier_focus_prop_val', propertyName, propertyValue], {
             pageNumber: 0
           });
+        }
+
+        closeDatabase() {
+          python_call("close_database").then(databases => this.props.app.dbHome(databases)).catch(backend_error);
         }
 
       });

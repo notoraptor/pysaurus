@@ -44,9 +44,7 @@ export class App extends React.Component {
     componentDidMount() {
         if (!this.state.page) {
             python_call("list_databases")
-                .then(databases => {
-                    this.loadPage("databases", {databases});
-                })
+                .then(databases => this.dbHome(databases))
                 .catch(backend_error);
         }
     }
@@ -58,8 +56,8 @@ export class App extends React.Component {
 
     // Public methods for children components.
 
-    dbHome() {
-        this.loadPage("databases");
+    dbHome(databases=undefined) {
+        this.loadPage("databases", databases === undefined ? databases : {databases});
     }
     dbLoad() {
         this.loadPage("home");

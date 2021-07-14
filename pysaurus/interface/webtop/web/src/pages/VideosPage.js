@@ -88,6 +88,7 @@ export class VideosPage extends React.Component {
         this.backend = this.backend.bind(this);
         this.findSimilarVideos = this.findSimilarVideos.bind(this);
         this.findSimilarVideosIgnoreCache = this.findSimilarVideosIgnoreCache.bind(this);
+        this.closeDatabase = this.closeDatabase.bind(this);
 
         this.callbackIndex = -1;
         this.features = new Actions({
@@ -162,6 +163,9 @@ export class VideosPage extends React.Component {
                                 </MenuItem>
                             ))
                         )}
+                        <Menu title="Close database ...">
+                            <MenuItem action={this.closeDatabase}><strong>Close database</strong></MenuItem>
+                        </Menu>
                     </MenuPack>
                     <div className="buttons"/>
                     <div className="pagination text-right">
@@ -630,5 +634,11 @@ export class VideosPage extends React.Component {
 
     focusPropertyValue(propertyName, propertyValue) {
         this.backend(['classifier_focus_prop_val', propertyName, propertyValue], {pageNumber: 0});
+    }
+
+    closeDatabase() {
+        python_call("close_database")
+            .then(databases => this.props.app.dbHome(databases))
+            .catch(backend_error);
     }
 }

@@ -72,11 +72,7 @@ System.register(["./pages/Test.js", "./pages/HomePage.js", "./pages/VideosPage.j
 
         componentDidMount() {
           if (!this.state.page) {
-            python_call("list_databases").then(databases => {
-              this.loadPage("databases", {
-                databases
-              });
-            }).catch(backend_error);
+            python_call("list_databases").then(databases => this.dbHome(databases)).catch(backend_error);
           }
         }
 
@@ -89,8 +85,10 @@ System.register(["./pages/Test.js", "./pages/HomePage.js", "./pages/VideosPage.j
         } // Public methods for children components.
 
 
-        dbHome() {
-          this.loadPage("databases");
+        dbHome(databases = undefined) {
+          this.loadPage("databases", databases === undefined ? databases : {
+            databases
+          });
         }
 
         dbLoad() {

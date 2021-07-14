@@ -56,6 +56,11 @@ class GuiAPI(FeatureAPI):
         self.__update_job = ("open", (path,))
         self.__update_on_load = update
 
+    def close_database(self):
+        self.database = None
+        self.provider = None
+        return self.list_databases()
+
     def load_database(self, update=True):
         self.__update_on_load = update
         self._launch(self._load_database)
