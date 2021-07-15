@@ -246,6 +246,7 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
           }), ' ', /*#__PURE__*/React.createElement("label", {
             htmlFor: "update"
           }, "Update on load")) : '', this.renderInitialButton()), /*#__PURE__*/React.createElement("div", {
+            id: "notifications",
             className: "notifications"
           }, this.renderMessages()));
         }
@@ -296,6 +297,11 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
           if (action && ACTIONS.hasOwnProperty(action)) {
             python_call(ACTIONS[action].name);
           }
+        }
+
+        componentDidUpdate(prevProps, prevState, snapshot) {
+          const divNotifs = document.getElementById("notifications");
+          divNotifs.scrollTop = divNotifs.scrollHeight;
         }
 
         componentWillUnmount() {

@@ -223,7 +223,7 @@ export class HomePage extends React.Component {
                     ) : ''}
                     {this.renderInitialButton()}
                 </div>
-                <div className="notifications">{this.renderMessages()}</div>
+                <div id="notifications" className="notifications">{this.renderMessages()}</div>
             </div>
         );
     }
@@ -265,6 +265,11 @@ export class HomePage extends React.Component {
         if (action && ACTIONS.hasOwnProperty(action)) {
             python_call(ACTIONS[action].name);
         }
+    }
+
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        const divNotifs = document.getElementById("notifications");
+        divNotifs.scrollTop = divNotifs.scrollHeight;
     }
 
     componentWillUnmount() {
