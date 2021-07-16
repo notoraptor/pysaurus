@@ -1,4 +1,4 @@
-import {PAGE_SIZES, SEARCH_TYPE_TITLE, SOURCE_TREE} from "../utils/constants.js";
+import {PAGE_SIZES, SEARCH_TYPE_TITLE, SOURCE_TREE, FIELD_MAP} from "../utils/constants.js";
 import {MenuPack} from "../components/MenuPack.js";
 import {Pagination} from "../components/Pagination.js";
 import {Video} from "../components/Video.js";
@@ -319,7 +319,7 @@ export class VideosPage extends React.Component {
                         <div>Sorted by</div>
                         {sorting.map((val, i) => (
                             <div key={i}>
-                                <strong>{val.substr(1)}</strong>{' '}
+                                <strong>{FIELD_MAP.fields[val.substr(1)].title}</strong>{' '}
                                 {val[0] === '-' ? (<span>&#9660;</span>) : (<span>&#9650;</span>)}
                             </div>))}
                     </td>
