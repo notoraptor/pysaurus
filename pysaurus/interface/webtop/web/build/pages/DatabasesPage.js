@@ -44,7 +44,7 @@ System.register(["../utils/backend.js"], function (_export, _context) {
             placeholder: "Database name."
           })), /*#__PURE__*/React.createElement("h3", null, "Database folders and files"), /*#__PURE__*/React.createElement("table", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
             onClick: this.addFolder
-          }, "Add folder"), " "), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
+          }, "Add folder")), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
             onClick: this.addFile
           }, "Add file")))), /*#__PURE__*/React.createElement("table", null, paths.map((path, index) => /*#__PURE__*/React.createElement("tr", {
             key: index

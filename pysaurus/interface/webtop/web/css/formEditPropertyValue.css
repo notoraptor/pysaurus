@@ -1,25 +1,30 @@
 .edit-property-value {
-    flex-grow: 1;
+	flex-grow: 1;
 }
+
 .edit-property-value .bar {
-    border-bottom: 1px solid lightgrey;
-    flex-shrink: 0;
+	border-bottom: 1px solid lightgrey;
+	flex-shrink: 0;
 }
+
 .edit-property-value .bar button {
-    margin: 0 0.5em 0.5em 0.5em;
-    min-width: 10em;
+	margin: 0 0.5em 0.5em 0.5em;
+	min-width: 10em;
 }
+
 .edit-property-value .bar button.selected {
-    font-weight: bolder;
-    text-transform: uppercase;
+	font-weight: bolder;
+	text-transform: uppercase;
 }
+
 .edit-property-value .form {
-    flex-grow: 1;
-    position: relative;
-    display: flex;
-    align-items: center;
-    text-align: center;
+	flex-grow: 1;
+	position: relative;
+	display: flex;
+	align-items: center;
+	text-align: center;
 }
+
 .edit-property-value .form > * {
-    flex-grow: 1;
+	flex-grow: 1;
 }

@@ -74,45 +74,47 @@ export class GroupView extends React.Component {
                 </div>
                 <div className="content">
                     <table className="second-td-text-right">
-                    {this.props.groupDef.groups.slice(start, end).map((entry, index) => {
-                        index = start + index;
-                        const buttons = [];
-                        if (isProperty && entry.value !== null) {
-                            if (!this.props.isClassified) {
-                                buttons.push(<input type="checkbox" checked={this.state.selection.has(index)}
-                                                    onChange={event => this.onCheckEntry(event, index)}/>)
-                                buttons.push(' ');
+                        {this.props.groupDef.groups.slice(start, end).map((entry, index) => {
+                            index = start + index;
+                            const buttons = [];
+                            if (isProperty && entry.value !== null) {
+                                if (!this.props.isClassified) {
+                                    buttons.push(<input type="checkbox" checked={this.state.selection.has(index)}
+                                                        onChange={event => this.onCheckEntry(event, index)}/>)
+                                    buttons.push(' ');
+                                    if (!this.state.selection.size) {
+                                        buttons.push(<SettingIcon key="options"
+                                                                  title={`Options ...`}
+                                                                  action={(event) => this.openPropertyOptions(event, index)}/>);
+                                        buttons.push(' ');
+                                    }
+                                }
                                 if (!this.state.selection.size) {
-                                    buttons.push(<SettingIcon key="options"
-                                                              title={`Options ...`}
-                                                              action={(event) => this.openPropertyOptions(event, index)}/>);
+                                    buttons.push(<PlusIcon key="add"
+                                                           title={`Add ...`}
+                                                           action={(event) => this.openPropertyPlus(event, index)}/>);
                                     buttons.push(' ');
                                 }
                             }
-                            if (!this.state.selection.size) {
-                                buttons.push(<PlusIcon key="add"
-                                                       title={`Add ...`}
-                                                       action={(event) => this.openPropertyPlus(event, index)}/>);
-                                buttons.push(' ');
-                            }
-                        }
-                        const classes = [isProperty ? "property" : "attribute"];
-                        if (selected === index)
-                            classes.push("selected");
-                        if (entry.value === null)
-                            classes.push("all");
-                        return (
-                            <tr className={classes.join(" ")} key={index} onClick={() => this.props.onSelect(index)}>
-                                <td {...(isProperty ? {} : {title: entry.value})}>
-                                    {buttons}
-                                    <span key="value" {...(isProperty ? {title: entry.value} : {})}>
+                            const classes = [isProperty ? "property" : "attribute"];
+                            if (selected === index)
+                                classes.push("selected");
+                            if (entry.value === null)
+                                classes.push("all");
+                            return (
+                                <tr className={classes.join(" ")}
+                                    key={index}
+                                    onClick={() => this.props.onSelect(index)}>
+                                    <td {...(isProperty ? {} : {title: entry.value})}>
+                                        {buttons}
+                                        <span key="value" {...(isProperty ? {title: entry.value} : {})}>
                                         {entry.value === null ? `(none)` : entry.value}
                                     </span>
-                                </td>
-                                <td title={entry.count}>{entry.count}</td>
-                            </tr>
-                        );
-                    })}
+                                    </td>
+                                    <td title={entry.count}>{entry.count}</td>
+                                </tr>
+                            );
+                        })}
                     </table>
                 </div>
             </div>

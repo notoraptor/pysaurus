@@ -56,18 +56,22 @@ export class App extends React.Component {
 
     // Public methods for children components.
 
-    dbHome(databases=undefined) {
+    dbHome(databases = undefined) {
         this.loadPage("databases", databases === undefined ? databases : {databases});
     }
+
     dbLoad() {
         this.loadPage("home");
     }
+
     dbUpdate() {
         this.loadPage("home", {action: "update"});
     }
+
     dbFindSimilarities() {
         this.loadPage("home", {action: "similarities"});
     }
+
     dbFindSimilaritiesIgnoreCache() {
         this.loadPage("home", {action: "similaritiesNoCache"});
     }

@@ -4,18 +4,22 @@
 	cursor: pointer;
 	white-space: nowrap;
 }
+
 .menu-pack > .title {
 	background-color: rgb(250, 250, 250);
 	color: rgb(90, 90, 90);
 	border: 1px solid transparent;
 }
+
 .menu-pack > .title:hover {
 	color: black;
 	border-color: rgb(230, 230, 230);
 }
+
 .menu-pack > .title .text {
 	padding: 0.5em 1em 0.5em 1em;
 }
+
 .menu-pack > .content {
 	box-shadow: 0 0 10px black;
 	position: absolute;
@@ -23,31 +27,39 @@
 	display: none;
 	z-index: 1;
 }
+
 .menu-pack:hover > .content {
 	display: block;
 }
 
-.menu-pack .menu-item {}
+.menu-pack .menu-item {
+}
+
 .menu-pack .menu-item:hover {
 	background-color: rgb(140, 140, 140);
 	color: white;
 }
+
 .menu-pack .menu-item > .icon {
 	width: 2em;
 	position: relative;
 }
+
 .menu-pack .menu-item > .text {
 	padding: 0.25em 1em 0.25em 0;
 	flex-grow: 1;
 }
+
 .menu-pack .menu-item > .text .title {
 	flex-grow: 1;
 }
+
 .menu-pack .menu-item > .text .shortcut {
 	color: gray;
 	font-style: italic;
 	margin-left: 1em;
 }
+
 .menu-pack .menu-item:hover > .text .shortcut {
 	color: lightgrey;
 }
@@ -62,6 +74,7 @@
 	left: 50%;
 	transform: translate(-50%, -50%);
 }
+
 .menu-pack .menu-item > .icon .border .check {
 	position: absolute;
 	top: 1px;
@@ -70,15 +83,19 @@
 	right: 1px;
 	border: 1px solid black;
 }
+
 .menu-pack .menu-item > .icon .border .check.checked {
 	background-color: black;
 }
+
 .menu-pack .menu-item:hover > .icon .border {
 	border-color: white;
 }
+
 .menu-pack .menu-item:hover > .icon .border .check {
 	border-color: white;
 }
+
 .menu-pack .menu-item:hover > .icon .border .check.checked {
 	background-color: white;
 }
@@ -86,6 +103,7 @@
 .menu-pack .menu-item.radio > .icon .border {
 	border-radius: 0.45em;
 }
+
 .menu-pack .menu-item.radio > .icon .border .check {
 	border-radius: 0.45em;
 }
@@ -93,17 +111,21 @@
 .menu-pack .menu {
 	position: relative;
 }
+
 .menu-pack .menu > .title {
 	padding: 0.25em 0.5em 0.25em 2em;
 }
+
 .menu-pack .menu > .title:hover {
 	background-color: rgb(140, 140, 140);
 	color: white;
 }
+
 .menu-pack .menu > .title .text {
 	padding-right: 1em;
 	flex-grow: 1;
 }
+
 .menu-pack .menu > .content {
 	box-shadow: 0 0 10px black;
 	background-color: white;
@@ -112,6 +134,7 @@
 	left: 100%;
 	display: none;
 }
+
 .menu-pack .menu:hover > .content {
 	display: block;
 }

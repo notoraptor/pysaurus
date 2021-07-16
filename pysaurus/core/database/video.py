@@ -13,7 +13,7 @@ Video class. Properties:
 
 from typing import Sequence, Set
 
-from pysaurus.core.classes import StringPrinter, Text
+from pysaurus.core.classes import StringPrinter, Text, TextWithNumbers
 from pysaurus.core.components import AbsolutePath, Duration
 from pysaurus.core.database import path_utils
 from pysaurus.core.database.video_state import VideoState
@@ -242,6 +242,12 @@ class Video(VideoState):
         if self.meta_title
         else Text(self.filename.file_title)
     )
+    title_numeric = property(
+        lambda self: self.meta_title_numeric
+        if self.meta_title
+        else self.file_title_numeric
+    )
+    meta_title_numeric = property(lambda self: TextWithNumbers(self.meta_title.value))
     raw_seconds = property(lambda self: self.duration / self.duration_time_base)
     raw_microseconds = property(
         lambda self: self.duration * 1000000 / self.duration_time_base
@@ -262,21 +268,18 @@ class Video(VideoState):
 
     @property
     def quality(self):
-        total_level = 0
-        qualities = {}
-        for field, level in self.QUALITY_FIELDS:
-            value = getattr(self, field)
-            min_value = self.database.video_interval.min[field]
-            max_value = self.database.video_interval.max[field]
-            if min_value == max_value:
-                assert value == min_value, (value, min_value)
-                quality = 0
-            else:
-                quality = (value - min_value) / (max_value - min_value)
-                assert 0 <= quality <= 1, (quality, field, value, min_value, max_value)
-            qualities[field] = quality * level
-            total_level += level
-        return sum(qualities.values()) * 100 / total_level
+        return self.database.quality_attribute(self)
+
+    @property
+    def move_id(self):
+        return self.database.moves_attribute(self)[0]
+
+    @property
+    def moves(self):
+        return [
+            {"video_id": video.video_id, "filename": video.filename}
+            for video in self.database.moves_attribute(self)[1]
+        ]
 
     def ensure_thumbnail_name(self):
         if not self.thumb_name:

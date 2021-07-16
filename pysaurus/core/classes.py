@@ -243,6 +243,19 @@ class Text:
         ) < 0
 
 
+class TextWithNumbers(Text):
+    __slots__ = ("comparable",)
+
+    def __init__(self, value=""):
+        super().__init__(value)
+        from pysaurus.core.functions import separate_text_and_numbers
+
+        self.comparable = separate_text_and_numbers(self.value)
+
+    def __lt__(self, other):
+        return self.comparable < other.comparable
+
+
 class AbstractMatrix:
     __slots__ = ("width", "height")
 

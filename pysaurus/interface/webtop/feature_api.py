@@ -282,3 +282,20 @@ class FeatureAPI:
         self.database.move_concatenated_prop_val(
             self.provider.get_all_videos(), path, from_property, to_property
         )
+
+    def move_video(self, from_id, to_id):
+        from_video = self.database.get_video_from_id(from_id)
+        to_video = self.database.get_video_from_id(to_id)
+        assert not from_video.exists
+        assert to_video.exists
+        transferred_properties = {}
+        for prop_name, prop_val in from_video.properties.items():
+            prop_type = self.database.get_prop_type(prop_name)
+            if prop_type.multiple:
+                transferred_properties[prop_name] = prop_type(
+                    prop_val + to_video.properties.get(prop_name, [])
+                )
+            else:
+                transferred_properties[prop_name] = prop_val
+        to_video.properties.update(transferred_properties)
+        self.database.delete_video(from_video)

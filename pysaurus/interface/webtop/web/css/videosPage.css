@@ -3,10 +3,12 @@
 	flex-grow: 1;
 	padding: 1em;
 }
+
 #videos header {
 	align-items: center;
 	flex-shrink: 0;
 }
+
 #videos .frontier {
 	display: block;
 	width: 100%;
@@ -14,11 +16,13 @@
 	background: linear-gradient(white, rgb(220, 220, 220));
 	flex-shrink: 0;
 }
+
 #videos > .content {
 	flex-grow: 1;
 	border-top: 1px solid rgb(220, 220, 220);
 	position: relative;
 }
+
 #videos > .content .side-panel {
 	width: 15%;
 	min-width: 15em;
@@ -26,6 +30,7 @@
 	border-top: 1px solid gray;
 	border-left: 1px solid gray;
 }
+
 #videos > .content .main-panel {
 	width: 85%;
 	border-top: 1px solid gray;
@@ -38,12 +43,15 @@
 	display: flex;
 	flex-direction: column;
 }
+
 #videos .side-panel .stack.filter {
 	flex-shrink: 0;
 }
+
 #videos .side-panel .stack.group {
 	flex-grow: 1;
 }
+
 #videos .side-panel .stack.group > .content {
 	flex-grow: 1;
 	display: flex;
@@ -53,18 +61,22 @@
 #videos.classifier header > * + * {
 	margin-left: 1em;
 }
+
 /*unused*/
 #videos header .buttons {
 	vertical-align: middle;
 }
+
 /*unused*/
 #videos header .buttons button {
 	margin-left: 1em;
 	min-width: 20ex;
 }
+
 #videos header .pagination {
 	flex-grow: 1;
 }
+
 #videos header .pagination .navigation {
 	margin-left: 2em;
 }
@@ -73,24 +85,30 @@
 	background-color: white;
 	width: 100%;
 }
+
 #videos table.filter td {
 	padding: 0.4em;
 	text-align: center;
 }
+
 #videos table.filter td:last-child div + div {
 	margin-top: 0.4em;
 }
+
 #videos table.filter .no-filter {
 	font-style: italic;
 	color: gray;
 }
+
 #videos table.filter tr:hover {
 	background-color: rgb(140, 140, 140);
 	color: white;
 }
+
 #videos table.filter tr:hover .menu-pack {
 	color: initial;
 }
+
 #videos table.filter tr:hover .no-filter {
 	color: white;
 }
@@ -100,6 +118,7 @@
 	font-size: 0.9em;
 	flex-shrink: 0;
 }
+
 #videos footer > .footer-status,
 #videos footer > .footer-information {
 	/*flex-grow: 1;*/
@@ -109,16 +128,20 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
+
 #videos .footer-status {
 	border-right: 1px solid gray;
 	cursor: pointer;
 }
+
 #videos .footer-status:hover {
 	color: gray;
 }
+
 #videos .footer-information .info {
 	display: inline-block;
 }
+
 #videos .footer-information .info + .info {
 	margin-left: 1em;
 	border-left: 1px solid black;

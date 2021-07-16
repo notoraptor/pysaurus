@@ -317,6 +317,7 @@ export class HomePage extends React.Component {
         this.setState(updates);
     }
 }
+
 HomePage.propTypes = {
     parameters: PropTypes.shape({
         action: PropTypes.string

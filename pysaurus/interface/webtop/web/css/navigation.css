@@ -5,12 +5,15 @@
 	padding-top: 0.25em;
 	padding-bottom: 0.25em;
 }
+
 .navigation > * + * {
 	margin-left: 0.5em;
 }
+
 .navigation .go {
 	cursor: pointer;
 }
+
 .navigation .go:hover {
 	color: gray;
 	text-decoration: underline;

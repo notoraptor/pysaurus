@@ -1,3 +1,4 @@
+import itertools
 import os
 from typing import Dict, Iterable, List, Optional, Set, Union
 
@@ -12,9 +13,13 @@ from pysaurus.core.components import (
 )
 from pysaurus.core.constants import THUMBNAIL_EXTENSION, CPU_COUNT
 from pysaurus.core.database import path_utils, jobs_python
+from pysaurus.core.database.db_settings import DbSettings
+from pysaurus.core.database.db_video_attribute import (
+    QualityAttribute,
+    PotentialMoveAttribute,
+)
 from pysaurus.core.database.properties import PropType
 from pysaurus.core.database.video import Video
-from pysaurus.core.database.video_interval import VideoInterval
 from pysaurus.core.database.video_runtime_info import VideoRuntimeInfo
 from pysaurus.core.database.video_state import VideoState
 from pysaurus.core.miniature_tools.group_computer import GroupComputer
@@ -35,28 +40,6 @@ def new_sub_folder(folder: AbsolutePath, suffix: str, sep="."):
     return AbsolutePath.join(folder, f"{folder.title}{sep}{suffix}")
 
 
-class DbSettings:
-    __slots__ = ("miniature_pixel_distance_radius", "miniature_group_min_size")
-
-    def __init__(self):
-        self.miniature_pixel_distance_radius = 6
-        self.miniature_group_min_size = 0
-
-    def update(self, dct: dict):
-        for key in self.__slots__:
-            if key in dct:
-                setattr(self, key, dct[key])
-
-    def to_dict(self):
-        return {key: getattr(self, key) for key in self.__slots__}
-
-    @classmethod
-    def from_dict(cls, dct: dict):
-        settings = cls()
-        settings.update(dct)
-        return settings
-
-
 class Database:
     __slots__ = (
         "__db_folder",
@@ -74,8 +57,10 @@ class Database:
         "__notifier",
         "__id_to_video",
         "sys_is_case_insensitive",
-        "video_interval",
+        "quality_attribute",
+        "moves_attribute",
         "__prop_parser",
+        "__save_id",
     )
 
     def __init__(self, path, folders=None, clear_old_folders=False, notifier=None):
@@ -99,13 +84,14 @@ class Database:
         self.__id_to_video = {}  # type: Dict[int, Union[VideoState, Video]]
         self.sys_is_case_insensitive = System.is_case_insensitive(self.__db_folder.path)
         self.__prop_parser = {}  # type: Dict[str, callable]
-        self.video_interval = VideoInterval(t[0] for t in Video.QUALITY_FIELDS)
+        self.__save_id = 0
+        self.quality_attribute = QualityAttribute(self)
+        self.moves_attribute = PotentialMoveAttribute(self)
         # Load database
         self.__notifier.set_log_path(self.__log_path.path)
 
         self.__load(folders, clear_old_folders)
         # Load VideoInterval object to compute videos quality.
-        self.video_interval.update(self.__videos.values())
         # Set special properties.
         self.__set_special_properties()
         self.__register_special_property_parsers()
@@ -119,6 +105,7 @@ class Database:
     folder = property(lambda self: self.__db_folder)
     thumbnail_folder = property(lambda self: self.__thumb_folder)
     notifier = property(lambda self: self.__notifier)
+    iteration = property(lambda self: self.__save_id)
 
     # Private methods.
 
@@ -179,7 +166,6 @@ class Database:
     def __save(self, ensure_identifiers=True):
         if ensure_identifiers:
             self.__ensure_identifiers()
-        self.video_interval.update(self.__videos.values())
         # return
         # Save database.
         json_output = {
@@ -199,6 +185,7 @@ class Database:
         # functions.assert_data_is_serializable(json_output)
         with open(self.__json_path.path, "w") as output_file:
             json.dump(json_output, output_file)
+        self.__save_id += 1
         self.__notifier.notify(notifications.DatabaseSaved(self))
 
     def save(self):
@@ -1062,3 +1049,9 @@ Make sure any video has at most 1 value for this property before making it uniqu
 
     def get_valid_videos(self):
         return self.get_videos("readable", "found", "with_thumbnails")
+
+    def get_readable_videos(self) -> Iterable[Video]:
+        return self.__videos.values()
+
+    def get_all_videos(self):
+        return itertools.chain(self.__videos.values(), self.__unreadable.values())

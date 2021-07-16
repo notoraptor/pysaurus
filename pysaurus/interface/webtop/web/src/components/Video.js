@@ -4,6 +4,7 @@ import {Dialog} from "../dialogs/Dialog.js";
 import {FormVideoProperties} from "../forms/FormVideoProperties.js";
 import {Collapsable} from "./Collapsable.js";
 import {MenuItem} from "./MenuItem.js";
+import {Menu} from "./Menu.js";
 import {backend_error, python_call} from "../utils/backend.js";
 import {Characters} from "../utils/constants.js";
 
@@ -20,6 +21,7 @@ export class Video extends React.Component {
         this.editProperties = this.editProperties.bind(this);
         this.onSelect = this.onSelect.bind(this);
         this.reallyDeleteVideo = this.reallyDeleteVideo.bind(this);
+        this.confirmMove = this.confirmMove.bind(this);
     }
 
     render() {
@@ -64,6 +66,17 @@ export class Video extends React.Component {
                                     <MenuItem className="menu-delete" action={this.deleteVideo}>
                                         {data.exists ? 'Delete video' : 'Delete entry'}
                                     </MenuItem>
+                                    {this.props.groupedByMoves && data.moves.length ? (
+                                        <Menu title="Confirm move to ...">
+                                            {data.moves.map((dst, index) => (
+                                                <MenuItem key={index}
+                                                          className="confirm-move"
+                                                          action={() => this.confirmMove(data.video_id, dst.video_id)}>
+                                                    <code>{dst.filename}</code>
+                                                </MenuItem>
+                                            ))}
+                                        </Menu>
+                                    ) : ""}
                                 </MenuPack>
                                 <div>
                                     <input type="checkbox"
@@ -116,7 +129,9 @@ export class Video extends React.Component {
         const alreadyOpened = APP_STATE.videoHistory.has(data.filename);
         return (
             <div className={'video horizontal' + (data.exists ? ' found' : ' not-found')}>
-                <div className="image"><div className="no-thumbnail">no thumbnail</div></div>
+                <div className="image">
+                    <div className="no-thumbnail">no thumbnail</div>
+                </div>
                 <div className="video-details horizontal">
                     <div className="info">
                         <div className="name">
@@ -150,7 +165,8 @@ export class Video extends React.Component {
                         </div>
                         <div className="format horizontal">
                             <div className="prepend"><code>{data.extension}</code></div>
-                            <div><strong title={data.file_size}>{data.size}</strong></div>{" | "}
+                            <div><strong title={data.file_size}>{data.size}</strong></div>
+                            {" | "}
                             <div><code>{data.date}</code></div>
                         </div>
                         <div className="horizontal">
@@ -281,6 +297,12 @@ export class Video extends React.Component {
             .catch(() => this.props.onInfo(`Cannot copy file title to clipboard: ${text}`));
     }
 
+    confirmMove(srcID, dstID) {
+        python_call("move_video", srcID, dstID)
+            .then(() => this.props.onInfo(`Moved: ${this.props.data.filename}`, true))
+            .catch(backend_error);
+    }
+
     renameVideo() {
         const filename = this.props.data.filename;
         const title = this.props.data.file_title;
@@ -304,6 +326,7 @@ Video.propTypes = {
     data: PropTypes.object.isRequired,
     propDefs: PropTypes.arrayOf(PropTypes.object).isRequired,
     confirmDeletion: PropTypes.bool,
+    groupedByMoves: PropTypes.bool,
     selected: PropTypes.bool,
     // onSelect(videoID, selected)
     onSelect: PropTypes.func,

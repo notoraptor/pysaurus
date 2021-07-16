@@ -1,10 +1,12 @@
 .form-rename {
-    text-align: center;
+	text-align: center;
 }
+
 .form-rename input#name {
-    display: block;
-    width: 100%;
+	display: block;
+	width: 100%;
 }
+
 .form-rename h2 {
-    word-break: break-all;
+	word-break: break-all;
 }

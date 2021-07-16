@@ -112,6 +112,7 @@ export class VideosPage extends React.Component {
         const validSize = this.state.validSize;
         const validLength = this.state.validLength;
         const groupDef = this.state.groupDef;
+        const groupedByMoves = groupDef && groupDef.field === "move_id";
         const stringSetProperties = this.getStringSetProperties(this.state.properties);
         const stringProperties = this.getStringProperties(this.state.properties);
         const actions = this.features.actions;
@@ -131,7 +132,9 @@ export class VideosPage extends React.Component {
                         {<ActionToMenuItem action={actions.manageProperties}/>}
                         <MenuItem action={this.findSimilarVideos}>Search similar videos</MenuItem>
                         <Menu title="Search similar videos (longer) ...">
-                            <MenuItem action={this.findSimilarVideosIgnoreCache}><strong>Ignore cache</strong></MenuItem>
+                            <MenuItem action={this.findSimilarVideosIgnoreCache}>
+                                <strong>Ignore cache</strong>
+                            </MenuItem>
                         </Menu>
                         {stringSetProperties.length ?
                             <MenuItem action={this.fillWithKeywords}>Put keywords into a property ...</MenuItem> : ''}
@@ -234,7 +237,8 @@ export class VideosPage extends React.Component {
                                onSelect={this.onVideoSelection}
                                onSelectPropertyValue={this.focusPropertyValue}
                                onInfo={this.updateStatus}
-                               confirmDeletion={this.state.confirmDeletion}/>
+                               confirmDeletion={this.state.confirmDeletion}
+                               groupedByMoves={groupedByMoves}/>
                     ))}</div>
                 </div>
                 <footer className="horizontal">
@@ -461,8 +465,8 @@ export class VideosPage extends React.Component {
                                 properties={this.state.properties}
                                 propertyMap={this.state.definitions}
                                 onClose={criterion => {
-                            this.backend(['set_groups', criterion.field, criterion.isProperty, criterion.sorting, criterion.reverse, criterion.allowSingletons], {pageNumber: 0});
-                       }}/>
+                                    this.backend(['set_groups', criterion.field, criterion.isProperty, criterion.sorting, criterion.reverse, criterion.allowSingletons], {pageNumber: 0});
+                                }}/>
         )
     }
 
@@ -481,9 +485,12 @@ export class VideosPage extends React.Component {
                                             onClose={edition => {
                                                 this.backend(
                                                     ['edit_property_for_videos', propertyName, videoIndices, edition.add, edition.remove],
-                                                    {pageNumber: 0, status: `Edited property "${propertyName}" for ${selectionSize} video${selectionSize < 2 ? '' : 's'}`}
+                                                    {
+                                                        pageNumber: 0,
+                                                        status: `Edited property "${propertyName}" for ${selectionSize} video${selectionSize < 2 ? '' : 's'}`
+                                                    }
                                                 );
-                                        }}/>
+                                            }}/>
                 )
             )
             .catch(backend_error);
@@ -533,6 +540,7 @@ export class VideosPage extends React.Component {
     findSimilarVideos() {
         this.props.app.dbFindSimilarities();
     }
+
     findSimilarVideosIgnoreCache() {
         this.props.app.dbFindSimilaritiesIgnoreCache();
     }
@@ -543,11 +551,12 @@ export class VideosPage extends React.Component {
 
     fillWithKeywords() {
         Fancybox.load(
-            <FormVideosKeywordsToProperty properties={this.getStringSetProperties(this.state.properties)} onClose={state => {
-                python_call('fill_property_with_terms', state.field, state.onlyEmpty)
-                    .then(() => this.backend(null, {status: `Filled property "${state.field}" with video keywords.`}))
-                    .catch(backend_error);
-            }}/>
+            <FormVideosKeywordsToProperty properties={this.getStringSetProperties(this.state.properties)}
+                                          onClose={state => {
+                                              python_call('fill_property_with_terms', state.field, state.onlyEmpty)
+                                                  .then(() => this.backend(null, {status: `Filled property "${state.field}" with video keywords.`}))
+                                                  .catch(backend_error);
+                                          }}/>
         )
     }
 
@@ -599,18 +608,18 @@ export class VideosPage extends React.Component {
                                         name={name}
                                         values={values}
                                         onClose={operation => {
-                                       switch (operation.form) {
-                                           case 'delete':
-                                               this.backend(['delete_property_value', name, values], {status: `Property value deleted: "${name}" / "${values.join('", "')}"`});
-                                               break;
-                                           case 'edit':
-                                               this.backend(['edit_property_value', name, values, operation.value], {status: `Property value edited: "${name}" : "${values.join('", "')}" -> "${operation.value}"`});
-                                               break;
-                                           case 'move':
-                                               this.backend(['move_property_value', name, values, operation.move], {status: `Property value moved: "${values.join('", "')}" from "${name}" to "${operation.move}"`});
-                                               break;
-                                       }
-                                   }}/>
+                                            switch (operation.form) {
+                                                case 'delete':
+                                                    this.backend(['delete_property_value', name, values], {status: `Property value deleted: "${name}" / "${values.join('", "')}"`});
+                                                    break;
+                                                case 'edit':
+                                                    this.backend(['edit_property_value', name, values, operation.value], {status: `Property value edited: "${name}" : "${values.join('", "')}" -> "${operation.value}"`});
+                                                    break;
+                                                case 'move':
+                                                    this.backend(['move_property_value', name, values, operation.move], {status: `Property value moved: "${values.join('", "')}" from "${name}" to "${operation.move}"`});
+                                                    break;
+                                            }
+                                        }}/>
         )
     }
 

@@ -1,12 +1,14 @@
 /** form group **/
 .form-group {
-    width: 100%;
+	width: 100%;
 }
+
 .form-group select {
-    display: block;
-    width: 100%;
+	display: block;
+	width: 100%;
 }
+
 .form-group td {
-    padding: 0.5em;
-    width: 50%;
+	padding: 0.5em;
+	width: 50%;
 }

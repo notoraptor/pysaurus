@@ -29,6 +29,10 @@ System.register([], function (_export, _context) {
         }
 
       });
+
+      Menu.propTypes = {
+        title: PropTypes.string.isRequired
+      };
     }
   };
 });

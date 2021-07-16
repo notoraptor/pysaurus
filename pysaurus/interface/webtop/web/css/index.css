@@ -2,28 +2,35 @@
 body {
 	font-family: "Trebuchet MS", Helvetica, sans-serif;
 }
+
 table, th, td {
 	border-collapse: collapse;
 }
+
 .horizontal {
 	display: flex;
 	flex-direction: row;
 }
+
 .vertical {
 	display: flex;
 	flex-direction: column;
 }
+
 .text-right,
 table.first-td-text-right td:first-child,
 table.second-td-text-right td:first-child + td {
 	text-align: right;
 }
+
 .mb-1 {
 	margin-bottom: 0.25em;
 }
+
 .text-center {
 	text-align: center;
 }
+
 .span-profiled {
 	color: gray;
 	background-color: white;
@@ -33,6 +40,7 @@ table.second-td-text-right td:first-child + td {
 	font-size: 0.75em;
 	font-weight: bold;
 }
+
 .absolute-plain {
 	position: absolute;
 	top: 0;
@@ -40,6 +48,7 @@ table.second-td-text-right td:first-child + td {
 	left: 0;
 	right: 0;
 }
+
 .padding {
 	padding: 0.25rem;
 }

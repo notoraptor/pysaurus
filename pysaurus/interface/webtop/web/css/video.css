@@ -2,35 +2,45 @@
 .video {
 	/*white-space: nowrap;*/
 }
+
 .video.found:nth-child(even) {
 	background-color: rgb(240, 240, 240);
 }
+
 .video.not-found:nth-child(even) {
 	background-color: rgb(250, 250, 140);
 }
+
 .video.not-found:nth-child(odd) {
 	background-color: rgb(250, 250, 200);
 }
+
 .video.not-found .info .name > .title {
 	color: rgb(100, 100, 80);
 }
+
 .video .image {
 	padding: 0.5em;
 }
+
 .video .video-details {
 	flex-grow: 1;
 }
+
 .video .info {
 	padding: 0.5em;
 	/*flex-grow: 1;*/
 	width: 80%;
 }
+
 .video .info > div {
 	margin-bottom: 0.5em;
 }
+
 .video .info .name > div {
 	margin-bottom: 0.25em;
 }
+
 .video .info .prepend {
 	background-color: black;
 	color: white;
@@ -42,6 +52,7 @@
 	width: 10ex;
 	min-width: 10ex;
 }
+
 * + .prepend {
 	margin-left: 0.5em;
 }
@@ -57,17 +68,21 @@
 	width: 10ex;
 	border: none;
 }
+
 .video .info .name .options .menu-pack div.not-found {
 	text-align: center;
 	font-weight: bold;
 }
+
 .video .info .name .options .menu-pack > .title .text {
 	padding: 0;
 }
+
 .video .info .name .options .menu-pack > .title:hover {
 	background-color: green;
 	color: yellow;
 }
+
 .video .menu-delete {
 	color: red;
 	font-weight: bold;
@@ -76,16 +91,20 @@
 .video.not-found .filename-line.horizontal {
 	align-items: baseline;
 }
+
 .video.not-found .filename-line .prepend .text-delete {
 	display: none;
 }
+
 .video.not-found .filename-line .prepend:hover {
 	background-color: red;
 	cursor: pointer;
 }
+
 .video.not-found .filename-line .prepend:hover .text-delete {
 	display: inline;
 }
+
 .video.not-found .filename-line .prepend:hover .text-not-found {
 	display: none;
 }
@@ -93,38 +112,47 @@
 .video .info .name .options label {
 	word-break: break-word;
 }
+
 .video .info .filename {
 	word-break: break-word;
 }
+
 .video.found .info .filename {
 	color: rgb(140, 140, 250);
 	border: 1px solid rgb(240, 240, 250);
 	background-color: rgb(250, 250, 250);
 	padding: 0.2em;
 }
+
 .video.found .info .filename.already-opened {
 	font-style: italic;
 	color: gray;
 }
+
 .video.found .info .filename code:hover {
 	text-decoration: underline;
 	cursor: pointer;
 	color: blue;
 }
+
 .video.found .info .filename.already-opened code:hover {
 	color: rgb(60, 60, 60);
 }
+
 .video.not-found .info .filename {
 	color: rgb(250, 140, 140);
 }
+
 .video li.delete-file {
 	font-weight: bold;
 	color: red;
 }
+
 .video caption.not-found {
 	text-align: center;
 	font-weight: bold;
 }
+
 div.no-thumbnail {
 	width: 300px;
 	height: 168.75px;
@@ -135,6 +163,7 @@ div.no-thumbnail {
 	color: gray;
 	display: inline-block;
 }
+
 .video div.no-thumbnail {
 	display: block;
 }
@@ -145,10 +174,12 @@ div.no-thumbnail {
 	width: 20%;
 	/*margin-bottom: 0;*/
 }
+
 .video .properties .collapsable .content {
 	text-align: center;
 	white-space: normal;
 }
+
 .video .properties .property .no-value {
 	font-style: italic;
 	font-weight: lighter;
@@ -163,6 +194,7 @@ div.no-thumbnail {
 	padding-left: 0.5em;
 	padding-right: 0.5em;
 }
+
 .video .properties .property .value {
 	cursor: pointer;
 }
@@ -174,12 +206,15 @@ div.no-thumbnail {
 .video .properties .property.defined .collapsable .title {
 	color: royalblue;
 }
+
 .video .properties .property-value {
 	white-space: normal;
 }
+
 .video.found:nth-child(odd) .properties .property-value .value {
 	border-color: rgb(235, 235, 235);
 }
+
 .video .properties .property-value .value + .value {
 	margin-left: 0.5em;
 }
@@ -193,7 +228,16 @@ div.no-thumbnail {
 	margin-bottom: 0.5em;
 	cursor: pointer;
 }
+
 .video .properties .edit-properties:hover {
 	background-color: green;
 	color: yellow;
+}
+
+.video .menu-item.confirm-move .text .title {
+	min-width: 10rem;
+	max-width: 15rem;
+	white-space: normal;
+	word-break: break-all;
+	padding-right: 0.15em;
 }

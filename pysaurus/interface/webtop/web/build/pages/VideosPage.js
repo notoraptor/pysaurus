@@ -147,6 +147,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           const validSize = this.state.validSize;
           const validLength = this.state.validLength;
           const groupDef = this.state.groupDef;
+          const groupedByMoves = groupDef && groupDef.field === "move_id";
           const stringSetProperties = this.getStringSetProperties(this.state.properties);
           const stringProperties = this.getStringProperties(this.state.properties);
           const actions = this.features.actions;
@@ -268,7 +269,8 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             onSelect: this.onVideoSelection,
             onSelectPropertyValue: this.focusPropertyValue,
             onInfo: this.updateStatus,
-            confirmDeletion: this.state.confirmDeletion
+            confirmDeletion: this.state.confirmDeletion,
+            groupedByMoves: groupedByMoves
           })))), /*#__PURE__*/React.createElement("footer", {
             className: "horizontal"
           }, /*#__PURE__*/React.createElement("div", {

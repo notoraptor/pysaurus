@@ -4,25 +4,32 @@
 	border: 1px solid rgb(220, 220, 220);
 	box-shadow: 0 0 5px gray;
 }
+
 .set-input table {
 	width: 100%;
 }
+
 .set-input td {
 	padding: 0.1em;
 }
+
 .set-input td:first-child {
 	padding-right: 0.5em;
 }
+
 .set-input td button {
 	display: block;
 	width: 100%;
 }
+
 .set-input td button.add {
 	color: green;
 }
+
 .set-input td button.remove {
 	color: red;
 }
+
 .set-input td input {
 	width: 100%;
 }

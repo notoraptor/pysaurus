@@ -1,32 +1,38 @@
 .form-set-properties .info {
-    padding-right: 1em;
-    width: 300px;
-    text-align: center;
-    word-break: break-word;
+	padding-right: 1em;
+	width: 300px;
+	text-align: center;
+	word-break: break-word;
 }
+
 .form-set-properties .properties {
-    flex-grow: 1;
+	flex-grow: 1;
 }
+
 .form-set-properties .filename {
-    border: 1px solid black;
-    padding: 0.25em;
+	border: 1px solid black;
+	padding: 0.25em;
 }
 
 .form-set-properties > .properties > table {
-    width: 100%;
+	width: 100%;
 }
+
 .form-set-properties > .properties > table > tr > td {
-    vertical-align: top;
-    padding: 0.25em;
+	vertical-align: top;
+	padding: 0.25em;
 }
+
 .form-set-properties > .properties > table > tr > td.label {
-    width: 40%;
+	width: 40%;
 }
+
 .form-set-properties > .properties > table > tr > td.input {
-    width: 60%;
+	width: 60%;
 }
+
 .form-set-properties > .properties > table > tr > td.input > input,
 .form-set-properties > .properties > table > tr > td.input > select,
 .form-set-properties > .properties > table > tr > td.input > .set-input {
-    width: 100%;
+	width: 100%;
 }

@@ -9,18 +9,25 @@ import urllib.parse
 from datetime import datetime
 
 from pysaurus.core.constants import VIDEO_SUPPORTED_EXTENSIONS
-
-# Datetime since timestamp 0.
 from pysaurus.core.modules import HTMLStripper
 
+# Datetime since timestamp 0.
 EPOCH = datetime.utcfromtimestamp(0)
 REGEX_NO_WORD = re.compile(r"(\W|_)+")
 REGEX_CONSECUTIVE_UPPER_CASES = re.compile("[A-Z]{2,}")
 REGEX_LOWER_THEN_UPPER_CASES = re.compile("([a-z0-9])([A-Z])")
 REGEX_WORD_THEN_NUMBER = re.compile(r"([^0-9 ])([0-9])")
 REGEX_NUMBER_THEN_WORD = re.compile(r"([0-9])([^0-9 ])")
+REGEX_NUMBER = re.compile(r"([0-9]+)")
 JSON_INTEGER_MIN = -(2 ** 31)
 JSON_INTEGER_MAX = 2 ** 31 - 1
+
+
+def separate_text_and_numbers(text: str):
+    pieces = REGEX_NUMBER.split(text)
+    for i in range(1, len(pieces), 2):
+        pieces[i] = int(pieces[i])
+    return tuple(pieces)
 
 
 def split_words_and_numbers(text):

@@ -1,6 +1,6 @@
 from typing import Sequence
 
-from pysaurus.core.classes import StringPrinter, Text
+from pysaurus.core.classes import StringPrinter, Text, TextWithNumbers
 from pysaurus.core.compare import to_comparable
 from pysaurus.core.components import AbsolutePath, DateModified, FileSize
 from pysaurus.core.constants import PYTHON_ERROR_THUMBNAIL
@@ -76,6 +76,9 @@ class VideoState:
 
     extension = property(lambda self: self.filename.extension)
     file_title = property(lambda self: Text(self.filename.file_title))
+    file_title_numeric = property(
+        lambda self: TextWithNumbers(self.filename.file_title)
+    )
     size = property(lambda self: FileSize(self.file_size))
     # runtime date
     date = property(lambda self: DateModified(self.runtime.mtime))

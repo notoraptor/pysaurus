@@ -168,13 +168,14 @@ class Message(Notification):
 
 
 class VideoDeleted(Notification):
-    __slots__ = ("video", "filename")
-    __props__ = ("filename",)
+    __slots__ = ("video",)
 
     def __init__(self, video):
         super().__init__()
         self.video = video
-        self.filename = video.filename
+
+    def __str__(self):
+        return f"{type(self).__name__}({self.video.filename})"
 
 
 class FieldsModified(Notification):

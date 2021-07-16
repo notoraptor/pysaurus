@@ -16,3 +16,7 @@ export class Menu extends React.Component {
         );
     }
 }
+
+Menu.propTypes = {
+    title: PropTypes.string.isRequired
+}

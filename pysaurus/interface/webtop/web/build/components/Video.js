@@ -1,7 +1,7 @@
-System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dialog.js", "../forms/FormVideoProperties.js", "./Collapsable.js", "./MenuItem.js", "../utils/backend.js", "../utils/constants.js"], function (_export, _context) {
+System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dialog.js", "../forms/FormVideoProperties.js", "./Collapsable.js", "./MenuItem.js", "./Menu.js", "../utils/backend.js", "../utils/constants.js"], function (_export, _context) {
   "use strict";
 
-  var MenuPack, FormVideoRename, Dialog, FormVideoProperties, Collapsable, MenuItem, backend_error, python_call, Characters, Video;
+  var MenuPack, FormVideoRename, Dialog, FormVideoProperties, Collapsable, MenuItem, Menu, backend_error, python_call, Characters, Video;
 
   _export("Video", void 0);
 
@@ -18,6 +18,8 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
       Collapsable = _CollapsableJs.Collapsable;
     }, function (_MenuItemJs) {
       MenuItem = _MenuItemJs.MenuItem;
+    }, function (_MenuJs) {
+      Menu = _MenuJs.Menu;
     }, function (_utilsBackendJs) {
       backend_error = _utilsBackendJs.backend_error;
       python_call = _utilsBackendJs.python_call;
@@ -38,6 +40,7 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
           this.editProperties = this.editProperties.bind(this);
           this.onSelect = this.onSelect.bind(this);
           this.reallyDeleteVideo = this.reallyDeleteVideo.bind(this);
+          this.confirmMove = this.confirmMove.bind(this);
         }
 
         render() {
@@ -90,7 +93,13 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
           }, "Rename video") : '', /*#__PURE__*/React.createElement(MenuItem, {
             className: "menu-delete",
             action: this.deleteVideo
-          }, data.exists ? 'Delete video' : 'Delete entry')), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("input", {
+          }, data.exists ? 'Delete video' : 'Delete entry'), this.props.groupedByMoves && data.moves.length ? /*#__PURE__*/React.createElement(Menu, {
+            title: "Confirm move to ..."
+          }, data.moves.map((dst, index) => /*#__PURE__*/React.createElement(MenuItem, {
+            key: index,
+            className: "confirm-move",
+            action: () => this.confirmMove(data.video_id, dst.video_id)
+          }, /*#__PURE__*/React.createElement("code", null, dst.filename)))) : ""), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("input", {
             type: "checkbox",
             checked: this.props.selected,
             id: htmlID,
@@ -290,6 +299,10 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
           python_call('clipboard', text).then(() => this.props.onInfo('Copied to clipboard: ' + text)).catch(() => this.props.onInfo(`Cannot copy file title to clipboard: ${text}`));
         }
 
+        confirmMove(srcID, dstID) {
+          python_call("move_video", srcID, dstID).then(() => this.props.onInfo(`Moved: ${this.props.data.filename}`, true)).catch(backend_error);
+        }
+
         renameVideo() {
           const filename = this.props.data.filename;
           const title = this.props.data.file_title;
@@ -314,6 +327,7 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
         data: PropTypes.object.isRequired,
         propDefs: PropTypes.arrayOf(PropTypes.object).isRequired,
         confirmDeletion: PropTypes.bool,
+        groupedByMoves: PropTypes.bool,
         selected: PropTypes.bool,
         // onSelect(videoID, selected)
         onSelect: PropTypes.func,
