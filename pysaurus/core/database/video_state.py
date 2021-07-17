@@ -94,11 +94,11 @@ class VideoState:
     without_thumbnails = classflag(lambda self: not self.has_thumbnail)
 
     @property
-    def error_thumbnail(self):
+    def unreadable_thumbnail(self):
         return PYTHON_ERROR_THUMBNAIL in self.errors
 
-    @error_thumbnail.setter
-    def error_thumbnail(self, has_error):
+    @unreadable_thumbnail.setter
+    def unreadable_thumbnail(self, has_error):
         if has_error:
             self.errors.add(PYTHON_ERROR_THUMBNAIL)
         elif PYTHON_ERROR_THUMBNAIL in self.errors:
@@ -112,7 +112,7 @@ class VideoState:
 
     @property
     def has_thumbnail(self):
-        return not self.error_thumbnail and self.runtime.has_thumbnail
+        return not self.unreadable_thumbnail and self.runtime.has_thumbnail
 
     def terms(self, as_set=False):
         return string_to_pieces(self.filename.path, as_set=as_set)

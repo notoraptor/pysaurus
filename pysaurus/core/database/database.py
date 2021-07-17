@@ -401,8 +401,10 @@ class Database:
 
         with Profiler("Check videos thumbnails", notifier=self.__notifier):
             for video in self.__videos.values():
-                if video.exists and not video.error_thumbnail:
-                    thumb_name = video.ensure_thumbnail_name()
+                thumb_name = video.ensure_thumbnail_name()
+                if not video.exists:
+                    video.runtime.has_thumbnail = thumb_name in existing_thumb_names
+                elif not video.unreadable_thumbnail:
                     if (
                         thumb_name in existing_thumb_names
                         and existing_thumb_names[thumb_name] > video.date
@@ -492,7 +494,7 @@ class Database:
                     file_path = AbsolutePath.ensure(file_name)
                     thumb_errors[file_name] = d["e"]
                     video = self.__videos[file_path]
-                    video.error_thumbnail = True
+                    video.unreadable_thumbnail = True
                     video.runtime.has_thumbnail = False
 
             list_file_path.delete()
@@ -813,7 +815,7 @@ Make sure any video has at most 1 value for this property before making it uniqu
     def refresh(self, ensure_miniatures=False):
         with Profiler("Reset thumbnail errors"):
             for video in self.get_videos("readable", "found", "without_thumbnails"):
-                video.error_thumbnail = False
+                video.unreadable_thumbnail = False
         self.update()
         self.ensure_thumbnails()
         if ensure_miniatures:

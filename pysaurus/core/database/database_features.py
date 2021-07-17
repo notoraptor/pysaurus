@@ -247,29 +247,77 @@ class DatabaseFeatures:
                         f"with {sum(len(g) for g in sim_groups)} images."
                     )
                 )
-
-                # TODO New similarities are not correctly merged into old ones.
-
-                for i in new_miniature_indices:
-                    videos[i].similarity_id = -1
+                # Sort new similarity groups by size then smallest duration.
                 sim_groups.sort(
                     key=lambda s: (len(s), min(videos[i].length for i in s))
                 )
+                # Get next similarity id to use.
                 next_sim_id = (
                     max(v.similarity_id for v in videos if v.similarity_id is not None)
                     + 1
                 )
-                for indices in sim_groups:
-                    new_sim_id = next_sim_id
-                    next_sim_id += 1
-                    for i in indices:
-                        videos[i].similarity_id = new_sim_id
+                with Profiler("Merge new similarities with old ones.", db.notifier):
+                    sim_id_to_vid_ids = {}
+                    for i in old_miniature_indices:
+                        sim_id_to_vid_ids.setdefault(
+                            videos[i].similarity_id, []
+                        ).append(i)
+                    sim_id_to_vid_ids.pop(-1, None)
+                    db.notifier.notify(
+                        notifications.Message(
+                            "Found",
+                            sum(1 for g in sim_id_to_vid_ids.values() if len(g) > 1),
+                            "old similarities."
+                        )
+                    )
+                    graph = Graph()
+                    for linked_videos in sim_id_to_vid_ids.values():
+                        for i in range(1, len(linked_videos)):
+                            graph.connect(linked_videos[i - 1], linked_videos[i])
+                    for linked_videos in sim_groups:
+                        linked_videos = list(linked_videos)
+                        for i in range(1, len(linked_videos)):
+                            graph.connect(linked_videos[i - 1], linked_videos[i])
+                    new_sim_groups = [
+                        group for group in graph.pop_groups() if len(group) > 1
+                    ]
+                    db.notifier.notify(
+                        notifications.Message(
+                            "Found",
+                            len(new_sim_groups),
+                            "total similarities after merging."
+                        )
+                    )
+                    new_sim_indices = []
+                    nb_new_indices = 0
+                    for new_sim_group in new_sim_groups:
+                        old_indices = {videos[i].similarity_id for i in new_sim_group}
+                        if -1 in old_indices:
+                            old_indices.remove(-1)
+                        if None in old_indices:
+                            old_indices.remove(None)
+                        if not old_indices:
+                            new_id = next_sim_id
+                            next_sim_id += 1
+                            nb_new_indices += 1
+                        else:
+                            new_id = min(old_indices)
+                        new_sim_indices.append(new_id)
+                    db.notifier.notify(
+                        notifications.Message(
+                            f"Found {nb_new_indices} pure new similarities."
+                        )
+                    )
+
+                    for i in new_miniature_indices:
+                        videos[i].similarity_id = -1
+                    for pos in range(len(new_sim_groups)):
+                        new_id = new_sim_indices[pos]
+                        for i in new_sim_groups[pos]:
+                            videos[i].similarity_id = new_id
+                # Save.
                 db.save()
             else:
-                sim_groups = {}
-                for video in videos:
-                    if video.similarity_id is not None and video.similarity_id > -1:
-                        sim_groups.setdefault(video.similarity_id, []).append(video)
                 db.notifier.notify(notifications.Message(f"No new videos to check."))
 
     @classmethod
