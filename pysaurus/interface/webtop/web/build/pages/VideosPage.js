@@ -281,7 +281,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             className: "footer-information text-right"
           }, groupDef ? /*#__PURE__*/React.createElement("div", {
             className: "info group"
-          }, "Group ", groupDef.group_id + 1, "/", groupDef.groups.length) : '', /*#__PURE__*/React.createElement("div", {
+          }, groupDef.groups.length ? `Group ${groupDef.group_id + 1}/${groupDef.groups.length}` : "No groups") : '', /*#__PURE__*/React.createElement("div", {
             className: "info count"
           }, nbVideos, " video", nbVideos > 1 ? 's' : ''), /*#__PURE__*/React.createElement("div", {
             className: "info size"

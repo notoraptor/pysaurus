@@ -85,7 +85,7 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
             action: this.openPropertyOptionsAll
           })) : '')) : ''), /*#__PURE__*/React.createElement("div", {
             className: "content"
-          }, /*#__PURE__*/React.createElement("table", {
+          }, this.props.groupDef.groups.length ? /*#__PURE__*/React.createElement("table", {
             className: "second-td-text-right"
           }, this.props.groupDef.groups.slice(start, end).map((entry, index) => {
             index = start + index;
@@ -136,7 +136,9 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
             } : {}), entry.value === null ? `(none)` : entry.value)), /*#__PURE__*/React.createElement("td", {
               title: entry.count
             }, entry.count));
-          }))));
+          })) : /*#__PURE__*/React.createElement("div", {
+            className: "absolute-plain no-groups vertical"
+          }, /*#__PURE__*/React.createElement("strong", null, /*#__PURE__*/React.createElement("em", null, "No groups")))));
         }
 
         renderTitle() {

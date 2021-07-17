@@ -75,7 +75,7 @@ class Layer:
         return self.__args[key]
 
     def run(self):
-        if not self.__data:
+        if self.__data is None:
             self.__log("run no data")
             return ()
         if self.__to_update:

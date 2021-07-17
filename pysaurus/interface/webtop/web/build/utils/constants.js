@@ -46,23 +46,37 @@ System.register([], function (_export, _context) {
       };
       FieldMap = class FieldMap {
         /**
+         * Comparigon method for FieldInfo class.
+         * @param f1 {FieldInfo}
+         * @param f2 {FieldInfo}
+         * @returns {number}
+         */
+        static compareFieldInfo(f1, f2) {
+          return f1.title.localeCompare(f2.title) || f1.name.localeCompare(f2.name);
+        }
+        /**
          * @param fieldInfoList {Array.<FieldInfo>}
          */
+
+
         constructor(fieldInfoList) {
           this.list = fieldInfoList;
+          this.allowed = [];
           this.fields = {};
 
           for (let fieldInfo of fieldInfoList) {
             if (this.fields.hasOwnProperty(fieldInfo.name)) throw new Error(`Duplicated field: ${fieldInfo.name}`);
             this.fields[fieldInfo.name] = fieldInfo;
+            if (!fieldInfo.isForbidden()) this.allowed.push(fieldInfo);
           }
 
-          this.list.sort((f1, f2) => f1.title.localeCompare(f2.title) || f1.name.localeCompare(f2.name));
+          this.list.sort(FieldMap.compareFieldInfo);
+          this.allowed.sort(FieldMap.compareFieldInfo);
         }
 
       };
 
-      _export("FIELD_MAP", FIELD_MAP = new FieldMap([new FieldInfo('audio_bit_rate', '', GroupPermission.ALL, false), new FieldInfo('audio_codec', '', GroupPermission.ALL, true), new FieldInfo('audio_codec_description', '', GroupPermission.ALL, true), new FieldInfo('bit_depth', '', GroupPermission.ALL, false), new FieldInfo('container_format', '', GroupPermission.ALL, true), new FieldInfo('date', 'date modified', GroupPermission.FORBIDDEN, true), new FieldInfo('day', '', GroupPermission.ALL, true), new FieldInfo('disk', '', GroupPermission.ALL, true), new FieldInfo('extension', 'file extension', GroupPermission.ALL, true), new FieldInfo('file_size', 'file size (bytes)', GroupPermission.ONLY_MANY, true), new FieldInfo('file_title', '', GroupPermission.ONLY_MANY, true), new FieldInfo('file_title_numeric', 'file title (with numbers)', GroupPermission.ONLY_MANY, true), new FieldInfo('filename', 'file path', GroupPermission.ONLY_MANY, true), new FieldInfo('frame_rate', '', GroupPermission.ALL, false), new FieldInfo('height', '', GroupPermission.ALL, false), new FieldInfo('length', '', GroupPermission.ONLY_MANY, false), new FieldInfo('move_id', 'moved files (potentially)', GroupPermission.ONLY_MANY, false), new FieldInfo('properties', '', GroupPermission.FORBIDDEN, false), new FieldInfo('quality', '', GroupPermission.FORBIDDEN, false), new FieldInfo('sample_rate', '', GroupPermission.ALL, false), new FieldInfo('similarity_id', 'similarity', GroupPermission.ONLY_MANY, false), new FieldInfo('size', '', GroupPermission.ONLY_MANY, false), new FieldInfo('thumbnail_path', '', GroupPermission.FORBIDDEN, true), new FieldInfo('title', '', GroupPermission.ONLY_MANY, true), new FieldInfo('title_numeric', 'title (with numbers)', GroupPermission.ONLY_MANY, true), new FieldInfo('video_codec', '', GroupPermission.ALL, true), new FieldInfo('video_codec_description', '', GroupPermission.ALL, true), new FieldInfo('video_id', 'video ID', GroupPermission.FORBIDDEN, false), new FieldInfo('width', '', GroupPermission.ALL, false)]));
+      _export("FIELD_MAP", FIELD_MAP = new FieldMap([new FieldInfo('audio_bit_rate', '', GroupPermission.ALL, false), new FieldInfo('audio_codec', '', GroupPermission.ALL, true), new FieldInfo('audio_codec_description', '', GroupPermission.ALL, true), new FieldInfo('bit_depth', '', GroupPermission.ALL, false), new FieldInfo('container_format', '', GroupPermission.ALL, true), new FieldInfo('date', 'date modified', GroupPermission.ONLY_MANY, false), new FieldInfo('day', '', GroupPermission.ALL, true), new FieldInfo('disk', '', GroupPermission.ALL, true), new FieldInfo('extension', 'file extension', GroupPermission.ALL, true), new FieldInfo('file_size', 'file size (bytes)', GroupPermission.ONLY_MANY, false), new FieldInfo('file_title', '', GroupPermission.ONLY_MANY, true), new FieldInfo('file_title_numeric', 'file title (with numbers)', GroupPermission.ONLY_MANY, false), new FieldInfo('filename', 'file path', GroupPermission.ONLY_MANY, true), new FieldInfo('frame_rate', '', GroupPermission.ALL, false), new FieldInfo('height', '', GroupPermission.ALL, false), new FieldInfo('length', '', GroupPermission.ONLY_MANY, false), new FieldInfo('move_id', 'moved files (potentially)', GroupPermission.ONLY_MANY, false), new FieldInfo('properties', '', GroupPermission.FORBIDDEN, false), new FieldInfo('quality', '', GroupPermission.ONLY_MANY, false), new FieldInfo('sample_rate', '', GroupPermission.ALL, false), new FieldInfo('similarity_id', 'similarity', GroupPermission.ONLY_MANY, false), new FieldInfo('size', '', GroupPermission.ONLY_MANY, false), new FieldInfo('thumbnail_path', '', GroupPermission.FORBIDDEN, true), new FieldInfo('title', '', GroupPermission.ONLY_MANY, true), new FieldInfo('title_numeric', 'title (with numbers)', GroupPermission.ONLY_MANY, false), new FieldInfo('video_codec', '', GroupPermission.ALL, true), new FieldInfo('video_codec_description', '', GroupPermission.ALL, true), new FieldInfo('video_id', 'video ID', GroupPermission.FORBIDDEN, false), new FieldInfo('width', '', GroupPermission.ALL, false)]));
 
       _export("SEARCH_TYPE_TITLE", SEARCH_TYPE_TITLE = {
         exact: 'exactly',

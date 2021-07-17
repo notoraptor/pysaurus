@@ -246,7 +246,9 @@ export class VideosPage extends React.Component {
                     <div className="footer-information text-right">
                         {groupDef ? (
                             <div className="info group">
-                                Group {groupDef.group_id + 1}/{groupDef.groups.length}
+                                {groupDef.groups.length ?
+                                    `Group ${groupDef.group_id + 1}/${groupDef.groups.length}`
+                                    : "No groups"}
                             </div>
                         ) : ''}
                         <div className="info count">{nbVideos} video{nbVideos > 1 ? 's' : ''}</div>

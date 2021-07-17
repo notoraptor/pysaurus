@@ -16,10 +16,10 @@ export class FormVideosGrouping extends React.Component {
             allowSingletons: this.props.groupDef.allow_singletons,
         } : {
             isProperty: false,
-            field: FIELD_MAP.list[0].name,
+            field: FIELD_MAP.allowed[0].name,
             sorting: "field",
             reverse: false,
-            allowSingletons: !FIELD_MAP.list[0].isOnlyMany(),
+            allowSingletons: !FIELD_MAP.allowed[0].isOnlyMany(),
         };
         this.onChangeAllowSingletons = this.onChangeAllowSingletons.bind(this);
         this.onChangeGroupField = this.onChangeGroupField.bind(this);
@@ -63,7 +63,7 @@ export class FormVideosGrouping extends React.Component {
                                         <option key={index} value={def.name}>{def.name}</option>
                                     ))
                                 ) : (
-                                    FIELD_MAP.list.map((fieldOption, index) => (
+                                    FIELD_MAP.allowed.map((fieldOption, index) => (
                                         <option key={index} value={fieldOption.name}>{fieldOption.title}</option>
                                     ))
                                 )}
@@ -82,7 +82,12 @@ export class FormVideosGrouping extends React.Component {
                                 <label htmlFor="allow-singletons">Allow singletons (groups with only 1 video)</label>
                             </td>
                         </tr>
-                    ) : ''}
+                    ) : (
+                        <tr>
+                            <td>&nbsp;</td>
+                            <td><em>Will look for groups with at least 2 videos.</em></td>
+                        </tr>
+                    )}
                     <tr>
                         <td className="label">
                             <label htmlFor="group-sorting">Sort using:</label>
@@ -120,10 +125,10 @@ export class FormVideosGrouping extends React.Component {
 
     onChangeFieldType(event) {
         const isProperty = event.target.value === "true";
-        const field = isProperty ? this.props.properties[0].name : FIELD_MAP.list[0].name;
+        const field = isProperty ? this.props.properties[0].name : FIELD_MAP.allowed[0].name;
         const sorting = "field";
         const reverse = false;
-        const allowSingletons = isProperty || !FIELD_MAP.list[0].isOnlyMany();
+        const allowSingletons = isProperty || !FIELD_MAP.allowed[0].isOnlyMany();
         this.setState({isProperty, field, sorting, reverse, allowSingletons});
     }
 

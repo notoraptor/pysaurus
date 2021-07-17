@@ -25,7 +25,7 @@ class GroupLayer(Layer):
         self.set_group_id(0)
 
     def filter(self, data: Sequence[Group]) -> Group:
-        return data[self._clip_group_id(len(data))]
+        return data[self._clip_group_id(len(data))] if data else Group()
 
     def remove_from_cache(self, cache: Group, video: Video):
         if video in cache.videos:

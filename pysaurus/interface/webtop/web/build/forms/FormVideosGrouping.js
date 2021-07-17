@@ -27,10 +27,10 @@ System.register(["../utils/constants.js", "../dialogs/Dialog.js"], function (_ex
             allowSingletons: this.props.groupDef.allow_singletons
           } : {
             isProperty: false,
-            field: FIELD_MAP.list[0].name,
+            field: FIELD_MAP.allowed[0].name,
             sorting: "field",
             reverse: false,
-            allowSingletons: !FIELD_MAP.list[0].isOnlyMany()
+            allowSingletons: !FIELD_MAP.allowed[0].isOnlyMany()
           };
           this.onChangeAllowSingletons = this.onChangeAllowSingletons.bind(this);
           this.onChangeGroupField = this.onChangeGroupField.bind(this);
@@ -76,7 +76,7 @@ System.register(["../utils/constants.js", "../dialogs/Dialog.js"], function (_ex
           }, this.state.isProperty ? this.props.properties.map((def, index) => /*#__PURE__*/React.createElement("option", {
             key: index,
             value: def.name
-          }, def.name)) : FIELD_MAP.list.map((fieldOption, index) => /*#__PURE__*/React.createElement("option", {
+          }, def.name)) : FIELD_MAP.allowed.map((fieldOption, index) => /*#__PURE__*/React.createElement("option", {
             key: index,
             value: fieldOption.name
           }, fieldOption.title))))), this.state.isProperty || !FIELD_MAP.fields[this.state.field].isOnlyMany() ? /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
@@ -88,7 +88,7 @@ System.register(["../utils/constants.js", "../dialogs/Dialog.js"], function (_ex
             onChange: this.onChangeAllowSingletons
           })), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("label", {
             htmlFor: "allow-singletons"
-          }, "Allow singletons (groups with only 1 video)"))) : '', /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
+          }, "Allow singletons (groups with only 1 video)"))) : /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, "\xA0"), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("em", null, "Will look for groups with at least 2 videos."))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
             className: "label"
           }, /*#__PURE__*/React.createElement("label", {
             htmlFor: "group-sorting"
@@ -121,10 +121,10 @@ System.register(["../utils/constants.js", "../dialogs/Dialog.js"], function (_ex
 
         onChangeFieldType(event) {
           const isProperty = event.target.value === "true";
-          const field = isProperty ? this.props.properties[0].name : FIELD_MAP.list[0].name;
+          const field = isProperty ? this.props.properties[0].name : FIELD_MAP.allowed[0].name;
           const sorting = "field";
           const reverse = false;
-          const allowSingletons = isProperty || !FIELD_MAP.list[0].isOnlyMany();
+          const allowSingletons = isProperty || !FIELD_MAP.allowed[0].isOnlyMany();
           this.setState({
             isProperty,
             field,

@@ -64,7 +64,7 @@ System.register(["../utils/constants.js", "../dialogs/FancyBox.js"], function (_
             }, "-"), /*#__PURE__*/React.createElement("select", {
               value: field,
               onChange: event => this.setField(index, event.target.value)
-            }, FIELD_MAP.list.map((entry, fieldIndex) => /*#__PURE__*/React.createElement("option", {
+            }, FIELD_MAP.allowed.map((entry, fieldIndex) => /*#__PURE__*/React.createElement("option", {
               key: fieldIndex,
               value: entry.name
             }, entry.title))), /*#__PURE__*/React.createElement("input", {

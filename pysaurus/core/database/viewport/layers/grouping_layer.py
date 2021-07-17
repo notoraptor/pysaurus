@@ -1,7 +1,7 @@
 from typing import Optional, Dict
 
 from pysaurus.core.components import AbsolutePath
-from pysaurus.core.database.video import Video
+from pysaurus.core.database.video_state import VideoState
 from pysaurus.core.database.viewport.layers.layer import Layer
 from pysaurus.core.database.viewport.viewtools.group import Group
 from pysaurus.core.database.viewport.viewtools.group_array import GroupArray
@@ -35,7 +35,15 @@ class GroupingLayer(Layer):
     def reset_parameters(self):
         self._set_parameters(grouping=self.DEFAULT_GROUP_DEF)
 
-    def filter(self, data: Dict[AbsolutePath, Video]) -> GroupArray:
+    def _get_prop_vals(self, prop_type, video_state):
+        if video_state.unreadable:
+            return [None if prop_type.multiple else prop_type.default]
+        elif prop_type.multiple:
+            return video_state.properties.get(prop_type.name, None) or [None]
+        else:
+            return [video_state.properties.get(prop_type.name, prop_type.default)]
+
+    def filter(self, data: Dict[AbsolutePath, VideoState]) -> GroupArray:
         group_def = self.get_grouping()
         groups = []
         if not group_def:
@@ -44,21 +52,13 @@ class GroupingLayer(Layer):
             grouped_videos = {}
             if group_def.is_property:
                 prop_type = self.database.get_prop_type(group_def.field)
-                if prop_type.multiple:
-                    for video in data.values():
-                        for value in video.properties.get(group_def.field, None) or [
-                            None
-                        ]:
-                            grouped_videos.setdefault(value, []).append(video)
-                else:
-                    for video in data.values():
-                        grouped_videos.setdefault(
-                            video.properties.get(group_def.field, prop_type.default), []
-                        ).append(video)
+                for video in data.values():
+                    for value in self._get_prop_vals(prop_type, video):
+                        grouped_videos.setdefault(value, []).append(video)
             else:
                 for video in data.values():
                     grouped_videos.setdefault(
-                        getattr(video, group_def.field), []
+                        getattr(video, group_def.field, None), []
                     ).append(video)
             for field_value, videos in grouped_videos.items():
                 if group_def.allow_singletons or len(videos) > 1:
@@ -66,22 +66,18 @@ class GroupingLayer(Layer):
             groups = group_def.sort(groups)
         return GroupArray(group_def.field, group_def.is_property, groups)
 
-    def remove_from_cache(self, cache: GroupArray, video: Video):
+    def remove_from_cache(self, cache: GroupArray, video: VideoState):
         groups = []
         if len(cache) == 1 and cache[0].field_value is None:
             groups.append(cache[0])
         else:
             group_def = self.get_grouping()
             if group_def.is_property:
-                prop_type = self.database.get_prop_type(group_def.field)
-                if prop_type.multiple:
-                    field_value = video.properties.get(group_def.field, None) or [None]
-                else:
-                    field_value = [
-                        video.properties.get(group_def.field, prop_type.default)
-                    ]
+                field_value = self._get_prop_vals(
+                    self.database.get_prop_type(group_def.field), video
+                )
             else:
-                field_value = [getattr(video, group_def.field)]
+                field_value = [getattr(video, group_def.field, None)]
             for value in field_value:
                 if cache.contains_key(value):
                     groups.append(cache.lookup(value))

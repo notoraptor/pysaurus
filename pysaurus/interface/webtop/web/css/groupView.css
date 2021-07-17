@@ -22,6 +22,7 @@
 .group-view .content {
 	flex-grow: 1;
 	overflow: auto;
+	position: relative;
 }
 
 .group-view .content > table {
@@ -74,4 +75,10 @@
 
 .group-view .header .navigation > * + * {
 	margin-left: 1px;
+}
+
+.group-view .no-groups {
+	text-align: center;
+	justify-content: center;
+	color: lightgray;
 }
