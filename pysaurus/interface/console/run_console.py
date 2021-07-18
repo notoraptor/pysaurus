@@ -4,7 +4,6 @@ import traceback
 
 from pysaurus.core.testing import TEST_LIST_FILE_PATH
 from pysaurus.interface.console.console_parser import ConsoleParser
-from pysaurus.interface.console.function_parser import FunctionDefinition
 
 
 def main():
@@ -35,9 +34,7 @@ def main():
             if function_name not in console_parser.definitions:
                 print(r"\unknown")
                 continue
-            function_definition = console_parser.definitions[
-                function_name
-            ]  # type: FunctionDefinition
+            function_definition = console_parser.definitions[function_name]
             kwargs = {}
             if function_arg:
                 nb_args = len(function_definition.arguments)

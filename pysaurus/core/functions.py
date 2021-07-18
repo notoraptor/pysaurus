@@ -423,3 +423,8 @@ def min_and_max(values):
 def assert_str(value):
     assert isinstance(value, str)
     return value
+
+
+def is_instance_from_module(module, obj):
+    typ = obj if isinstance(obj, type) else type(obj)
+    return any(cls.__module__ == module.__name__ for cls in typ.__mro__)

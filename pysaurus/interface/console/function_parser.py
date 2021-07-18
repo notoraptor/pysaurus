@@ -1,10 +1,13 @@
 import argparse
 import inspect
 import textwrap
+import typing
 from typing import Callable, Dict, Optional
+from types import MethodType
 
 from pysaurus.core import exceptions
 from pysaurus.core.classes import StringPrinter
+from pysaurus.core.functions import is_instance_from_module
 
 
 class _ArgumentParserError(Exception):
@@ -141,10 +144,31 @@ class FunctionParser:
     def __init__(self):
         self.definitions = {}  # type: Dict[str, FunctionDefinition]
 
+    @staticmethod
+    def _is_fdef(obj):
+        return callable(obj) and hasattr(obj, "__parsers__")
+
+    def import_from(self, obj):
+        for name, function in inspect.getmembers(obj, predicate=self._is_fdef):
+            signature = inspect.signature(function)
+            parsers = function.__parsers__
+            if not parsers:
+                parsers = []
+                for parameter in signature.parameters.values():
+                    assert parameter.annotation != inspect.Parameter.empty, parameter.name
+                    assert callable(parameter.annotation)
+                    assert not is_instance_from_module(typing, parameter.annotation)
+                    parsers.append(parameter.annotation)
+            assert len(signature.parameters) == len(parsers)
+            self.add(function, name, arguments={
+                arg_name: parsers[i]
+                for i, arg_name in enumerate(signature.parameters)
+            })
+
     def add(self, function, name=None, arguments=None, description=None):
         # type: (callable, str, Dict[str, Callable], str) -> None
         function_definition = FunctionDefinition(function, name, arguments, description)
-        assert function_definition.name not in self.definitions
+        assert function_definition.name not in self.definitions, function_definition.name
         self.definitions[function_definition.name] = function_definition
 
     def get_definition(self, function):
@@ -162,8 +186,10 @@ class FunctionParser:
 
     def help(self, name=None):
         if name is None:
+            print("\listing", len(self.definitions), "definitions")
             for fn_name in sorted(self.definitions):
                 print(self.definitions[fn_name])
+            print("\listed", len(self.definitions), "definitions")
         elif name in self.definitions:
             print(self.definitions[name])
 
@@ -182,3 +208,16 @@ class FunctionParser:
                 raise exceptions.MissingQueryArg(argument_name)
             kwargs[argument_name] = argument_parser(function_args[argument_name])
         return function_definition.function(**kwargs)
+
+
+def fdef(*parsers):
+    assert all(callable(p) for p in parsers)
+    def decorator(fn):
+        fn.__parsers__ = parsers
+        return fn
+    return decorator
+
+
+def fsigned(fn):
+    fn.__parsers__ = None
+    return fn

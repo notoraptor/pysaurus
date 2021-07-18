@@ -11,9 +11,9 @@ class ConsoleParser(FunctionParser):
     def __init__(self, list_file_path):
         super(ConsoleParser, self).__init__()
         # Load API.
-        self.api = API(Database.load_from_list_file_path(list_file_path, reset=False))
+        self.api = API(Database.load_from_list_file_path(list_file_path, update=False))
         # Update parser from API.
-        self.api.export_api(self)
+        self.import_from(self.api)
         # Update parser with wrapped functions.
         self.override_definition(self.find)
         self.override_definition(self.find_batch)
@@ -28,6 +28,7 @@ class ConsoleParser(FunctionParser):
         self.remove_definition(self.api.download_image)
         self.remove_definition(self.api.download_image_from_filename)
         self.remove_definition(self.api.videos)
+        # Current: 31 API calls.
 
     def find(self, terms):
         found = self.api.find(terms)

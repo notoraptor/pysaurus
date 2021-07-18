@@ -4,6 +4,7 @@ from pysaurus.core.components import AbsolutePath
 from pysaurus.core.database.database import Database
 from pysaurus.core.database.video_state import VideoState
 from pysaurus.core.database.viewport.layers.layer import Layer
+from pysaurus.core.profiling import Profiler
 
 
 class SourceLayer(Layer):
@@ -64,6 +65,7 @@ class SourceLayer(Layer):
         self.index = self.__index_videos(self._cache.values())
 
     @classmethod
+    @Profiler.profile()
     def __index_videos(cls, videos: Iterable[VideoState]) -> Dict[str, Set[VideoState]]:
         term_to_videos = {}
         for video in videos:

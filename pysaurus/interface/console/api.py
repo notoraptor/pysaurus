@@ -10,7 +10,7 @@ from pysaurus.core.database.database import Database
 from pysaurus.core.database.video import VIDEO_UNIQUE_FIELDS, Video
 from pysaurus.core.database.video_features import VideoFeatures
 from pysaurus.core.database.video_state import VideoState
-from pysaurus.interface.console.function_parser import FunctionParser
+from pysaurus.interface.console.function_parser import fdef, fsigned
 
 TEMP_DIR = tempfile.gettempdir()
 TEMP_PREFIX = tempfile.gettempprefix() + "_pysaurus_"
@@ -61,136 +61,81 @@ class API:
     def __init__(self, database: Database):
         self.database = database
 
-    def export_api(self, function_parser):
-        # type: (FunctionParser) -> None
-        function_parser.add(self.clear_not_found)
-        function_parser.add(
-            self.clip, arguments={"video_id": int, "start": int, "length": int}
-        )
-        function_parser.add(
-            self.clip_from_filename,
-            arguments={"filename": str, "start": int, "length": int},
-        )
-        function_parser.add(self.delete, arguments={"video_id": int})
-        function_parser.add(self.delete_from_filename, arguments={"filename": str})
-        function_parser.add(
-            self.delete_not_found_from_folder, arguments={"folder": str}
-        )
-        function_parser.add(self.delete_unreadable, arguments={"video_id": int})
-        function_parser.add(
-            self.delete_unreadable_from_filename, arguments={"filename": str}
-        )
-        function_parser.add(self.download_image, arguments={"video_id": int})
-        function_parser.add(
-            self.download_image_from_filename, arguments={"filename": str}
-        )
-        function_parser.add(self.field_names)
-        function_parser.add(self.find, arguments={"terms": str})
-        function_parser.add(self.find_batch, arguments={"path": str})
-        function_parser.add(self.images, arguments={"indices": str})
-        function_parser.add(self.info, arguments={"video_id": int})
-        function_parser.add(
-            self.list, arguments={"fields": str, "page_size": int, "page_number": int}
-        )
-        function_parser.add(self.list_files, arguments={"output": str})
-        function_parser.add(self.missing_thumbnails)
-        function_parser.add(self.nb, arguments={"query": str})
-        function_parser.add(self.nb_pages, arguments={"query": str, "page_size": int})
-        function_parser.add(self.not_found)
-        function_parser.add(self.not_found_html)
-        function_parser.add(self.not_found_from_folder, arguments={"folder": str})
-        function_parser.add(self.open, arguments={"video_id": int})
-        function_parser.add(self.open_from_filename, arguments={"filename": str})
-        function_parser.add(self.open_image, arguments={"video_id": int})
-        function_parser.add(self.open_image_from_filename, arguments={"filename": str})
-        function_parser.add(self.playlist, arguments={"indices": str})
-        function_parser.add(self.rename, arguments={"video_id": int, "new_title": str})
-        function_parser.add(
-            self.rename_from_filename, arguments={"filename": str, "new_title": str}
-        )
-        function_parser.add(self.same_sizes)
-        function_parser.add(self.unreadable)
-        function_parser.add(
-            self.update, arguments={"ensure_miniatures": functions.bool_type}
-        )
-        function_parser.add(self.valid_length)
-        function_parser.add(self.valid_size)
-        function_parser.add(self.videos)
-
-    # ------------------------------------------------------------------------------------------------------------------
-
-    def nb(self, query):
-        # type: (str) -> int
+    @fsigned
+    def nb(self, query: str) -> int:
         if query == "entries":
             return self.database.nb_entries
         if query == "discarded":
             return self.database.nb_discarded
         return len(self.database.get_videos(*query.strip().split()))
 
-    def nb_pages(self, query, page_size):
-        # type: (str, int) -> int
+    @fsigned
+    def nb_pages(self, query: str, page_size: int) -> int:
         if page_size <= 0:
             raise exceptions.InvalidPageSize(page_size)
         count = self.nb(query)
         return (count // page_size) + bool(count % page_size)
 
-    def valid_size(self):
-        # type: () -> FileSize
+    @fsigned
+    def valid_size(self) -> FileSize:
         return FileSize(
             sum(video.file_size for video in self.database.get_valid_videos())
         )
 
-    def valid_length(self):
-        # type: () -> Duration
+    @fsigned
+    def valid_length(self) -> Duration:
         return Duration(
             sum(video.raw_microseconds for video in self.database.get_valid_videos())
         )
 
+    @fsigned
     def clear_not_found(self):
-        # type: () -> None
         self.database.remove_videos_not_found()
 
-    def info(self, video_id):
-        # type: (int) -> Union[Video, VideoState]
+    @fsigned
+    def info(self, video_id: int) -> Union[Video, VideoState]:
         return self.database.get_video_from_id(
             video_id, required=False
         ) or self.database.get_unreadable_from_id(video_id, required=False)
 
-    def download_image(self, video_id):
-        # type: (int) -> str
+    @fsigned
+    def download_image(self, video_id: int) -> str:
         return VideoFeatures.thumbnail_to_base64(
             self.database.get_video_from_id(video_id)
         )
 
-    def download_image_from_filename(self, filename):
-        # type: (str) -> str
+    @fsigned
+    def download_image_from_filename(self, filename: str) -> str:
         return VideoFeatures.thumbnail_to_base64(
             self.database.get_video_from_filename(filename)
         )
 
-    def open_image(self, video_id):
+    @fsigned
+    def open_image(self, video_id: int):
         return self.database.get_video_from_id(video_id).thumbnail_path.open()
 
-    def open_image_from_filename(self, filename):
+    @fsigned
+    def open_image_from_filename(self, filename: str):
         return self.database.get_video_from_filename(filename).thumbnail_path.open()
 
-    def clip(self, video_id, start, length):
-        # type: (int, int, int) -> str
+    @fsigned
+    def clip(self, video_id: int, start: int, length: int) -> str:
         return VideoFeatures.clip_to_base64(
             self.database.get_video_from_id(video_id), start, length
         )
 
-    def clip_from_filename(self, filename, start, length):
-        # type: (str, int, int) -> str
+    @fsigned
+    def clip_from_filename(self, filename: str, start: int, length: int) -> str:
         return VideoFeatures.clip_to_base64(
             self.database.get_video_from_filename(filename), start, length
         )
 
-    def open(self, video_id):
-        # type: (int) -> AbsolutePath
+    @fsigned
+    def open(self, video_id: int) -> AbsolutePath:
         return self.database.get_video_from_id(video_id).filename.open()
 
-    def images(self, indices):
+    @fsigned
+    def images(self, indices: str):
         videos = []
         errors = []
         unknown = []
@@ -244,8 +189,8 @@ class API:
                 printer.write("Output:", temp_file_path)
             return str(printer)
 
-    def playlist(self, indices):
-        # type: (str) -> str
+    @fsigned
+    def playlist(self, indices: str) -> str:
         videos = []
         errors = []
         unknown = []
@@ -300,48 +245,50 @@ class API:
                 printer.write("Output:", temp_file_path)
             return str(printer)
 
-    def open_from_filename(self, filename):
-        # type: (str) -> AbsolutePath
+    @fsigned
+    def open_from_filename(self, filename: str) -> AbsolutePath:
         return self.database.get_video_from_filename(filename).filename.open()
 
-    def delete(self, video_id):
-        # type: (int) -> AbsolutePath
+    @fsigned
+    def delete(self, video_id: int) -> AbsolutePath:
         return self.database.delete_video(self.database.get_video_from_id(video_id))
 
-    def delete_unreadable(self, video_id):
+    @fsigned
+    def delete_unreadable(self, video_id: int):
         return self.database.delete_video(
             self.database.get_unreadable_from_id(video_id)
         )
 
-    def delete_unreadable_from_filename(self, filename):
+    @fsigned
+    def delete_unreadable_from_filename(self, filename: str):
         return self.database.delete_video(
             self.database.get_unreadable_from_filename(filename)
         )
 
-    def delete_from_filename(self, filename):
-        # type: (str) -> AbsolutePath
+    @fsigned
+    def delete_from_filename(self, filename: str) -> AbsolutePath:
         return self.database.delete_video(
             self.database.get_video_from_filename(filename)
         )
 
-    def rename(self, video_id, new_title):
-        # type: (int, str) -> int
+    @fsigned
+    def rename(self, video_id: int, new_title: str) -> int:
         if new_title is None or not str(new_title):
             raise exceptions.MissingVideoNewTitle()
         video = self.database.get_video_from_id(video_id)  # type: Video
         self.database.change_video_file_title(video, str(new_title))
         return video.video_id
 
-    def rename_from_filename(self, filename, new_title):
-        # type: (str, str) -> (str, str)
+    @fsigned
+    def rename_from_filename(self, filename: str, new_title: str) -> (str, str):
         if new_title is None or not str(new_title):
             raise exceptions.MissingVideoNewTitle()
         video = self.database.get_video_from_filename(filename)  # type: Video
         self.database.change_video_file_title(video, str(new_title))
         return video.filename.path, video.filename.file_title
 
-    def same_sizes(self):
-        # type: () -> Dict[int, List[Video]]
+    @fsigned
+    def same_sizes(self) -> Dict[int, List[Video]]:
         sizes = {}
         for video in self.database.get_valid_videos():
             sizes.setdefault(video.size, []).append(video)
@@ -349,8 +296,8 @@ class API:
             size: elements for (size, elements) in sizes.items() if len(elements) > 1
         }
 
-    def find(self, terms):
-        # type: (str) -> List[Video]
+    @fsigned
+    def find(self, terms: str) -> List[Video]:
         terms = functions.string_to_pieces(terms)
         return [
             video
@@ -361,15 +308,15 @@ class API:
             )
         ]
 
-    def find_batch(self, path):
-        # type: (str) -> List[Tuple[str, List[Video]]]
+    @fsigned
+    def find_batch(self, path: str) -> List[Tuple[str, List[Video]]]:
         results = []
         for sentence in path_utils.load_list_file(path):
             results.append((sentence, self.find(sentence)))
         return results
 
-    def list(self, fields, page_size, page_number):
-        # type: (str, int, int) -> List[Video]
+    @fsigned
+    def list(self, fields: str, page_size: int, page_number: int) -> List[Video]:
         if page_size <= 0:
             raise exceptions.InvalidPageSize(page_size)
         sorting = []
@@ -388,16 +335,18 @@ class API:
         )
         return videos[(page_size * page_number) : (page_size * (page_number + 1))]
 
-    def videos(self):
-        # type: () -> List[Video]
+    @fsigned
+    def videos(self) -> List[Video]:
         return self.database.get_valid_videos()
 
+    @fsigned
     def not_found(self):
         return sorted(
             self.database.get_videos("readable", "not_found"),
             key=lambda video: video.filename,
         )
 
+    @fsigned
     def not_found_html(self):
         videos = self.not_found()
         if not videos:
@@ -458,7 +407,8 @@ class API:
         temp_file_path.open()
         return str(temp_file_path)
 
-    def not_found_from_folder(self, folder):
+    @fsigned
+    def not_found_from_folder(self, folder: str):
         folder = AbsolutePath.ensure(folder)
         if not folder.isdir():
             return ""
@@ -471,31 +421,37 @@ class API:
         videos.sort(key=lambda video: video.filename)
         return videos
 
-    def delete_not_found_from_folder(self, folder):
+    @fsigned
+    def delete_not_found_from_folder(self, folder: str):
         for video in self.not_found_from_folder(folder):
             self.delete(video.video_id)
 
+    @fsigned
     def unreadable(self):
         return sorted(
             self.database.get_videos("unreadable", "found"),
             key=lambda video: video.filename,
         )
 
+    @fsigned
     def missing_thumbnails(self):
         return sorted(
             self.database.get_videos("readable", "found", "without_thumbnails"),
             key=lambda video: video.filename,
         )
 
+    @fdef(functions.bool_type)
     def update(self, ensure_miniatures=False):
         self.database.refresh(ensure_miniatures)
 
-    def list_files(self, output):
+    @fsigned
+    def list_files(self, output: str):
         self.database.list_files(output)
         output_path = AbsolutePath(output)
         if not output_path.isfile():
             raise OSError("Unable to output videos file names in %s" % output_path)
         return str(output_path)
 
+    @fsigned
     def field_names(self):
         return list(VIDEO_UNIQUE_FIELDS)

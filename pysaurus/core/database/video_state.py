@@ -80,11 +80,11 @@ class VideoState:
         lambda self: TextWithNumbers(self.filename.file_title)
     )
     size = property(lambda self: FileSize(self.file_size))
-    # runtime date
-    date = property(lambda self: DateModified(self.runtime.mtime))
     day = property(lambda self: self.date.day)
-    # runtime exists
+    # runtime attributes
+    date = property(lambda self: DateModified(self.runtime.mtime))
     exists = property(lambda self: self.runtime.is_file)
+    has_thumbnail = property(lambda self: not self.unreadable_thumbnail and self.runtime.has_thumbnail)
 
     readable = classflag(lambda self: not self.UNREADABLE)
     unreadable = classflag(lambda self: self.UNREADABLE)
@@ -109,10 +109,6 @@ class VideoState:
         if System.is_windows():
             return "%s:\\" % (self.filename.standard_path.split(":")[0])
         return self.runtime.driver_id
-
-    @property
-    def has_thumbnail(self):
-        return not self.unreadable_thumbnail and self.runtime.has_thumbnail
 
     def terms(self, as_set=False):
         return string_to_pieces(self.filename.path, as_set=as_set)
