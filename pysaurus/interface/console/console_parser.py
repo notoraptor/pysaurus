@@ -2,7 +2,7 @@ from pysaurus.core.classes import StringPrinter, Table
 from pysaurus.core.components import FileSize
 from pysaurus.core.database.database import Database
 from pysaurus.interface.console.api import API, parse_fields
-from pysaurus.interface.console.function_parser import FunctionParser
+from pysaurus.interface.console.function_parser import FunctionParser, fdef, fsigned
 
 
 class ConsoleParser(FunctionParser):
@@ -15,19 +15,14 @@ class ConsoleParser(FunctionParser):
         # Update parser from API.
         self.import_from(self.api)
         # Update parser with wrapped functions.
-        self.override_definition(self.find)
-        self.override_definition(self.find_batch)
-        self.override_definition(self.list)
-        self.override_definition(self.missing_thumbnails)
-        self.override_definition(self.not_found)
-        self.override_definition(self.not_found_from_folder)
-        self.override_definition(self.same_sizes)
-        self.override_definition(self.unreadable)
-        self.remove_definition(self.api.clip)
-        self.remove_definition(self.api.clip_from_filename)
-        self.remove_definition(self.api.download_image)
-        self.remove_definition(self.api.download_image_from_filename)
-        self.remove_definition(self.api.videos)
+        self.override_from(self)
+        self.remove_definitions(
+            self.api.clip,
+            self.api.clip_from_filename,
+            self.api.download_image,
+            self.api.download_image_from_filename,
+            self.api.videos
+        )
         # Current: 31 API calls.
 
     def find(self, terms):

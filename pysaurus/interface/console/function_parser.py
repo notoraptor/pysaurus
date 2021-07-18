@@ -165,6 +165,23 @@ class FunctionParser:
                 for i, arg_name in enumerate(signature.parameters)
             })
 
+    def override_from(self, obj):
+        nb_overrides = 0
+        for func_def in self.definitions.values():
+            overrider = getattr(obj, func_def.name, None)
+            if not callable(overrider):
+                continue
+            signature = inspect.signature(overrider)
+            assert len(func_def.arguments) == len(signature.parameters)
+            assert all(p in func_def.arguments for p in signature.parameters)
+            func_def.function = overrider
+            nb_overrides += 1
+        print("Overridden", nb_overrides)
+
+    def remove_definitions(self, *removals):
+        for removal in removals:
+            self.remove_definition(removal)
+
     def add(self, function, name=None, arguments=None, description=None):
         # type: (callable, str, Dict[str, Callable], str) -> None
         function_definition = FunctionDefinition(function, name, arguments, description)
