@@ -298,15 +298,7 @@ class API:
 
     @fsigned
     def find(self, terms: str) -> List[Video]:
-        terms = functions.string_to_pieces(terms)
-        return [
-            video
-            for video in self.database.get_valid_videos()
-            if all(
-                term in video.title.lower() or term in video.filename.path.lower()
-                for term in terms
-            )
-        ]
+        return list(VideoFeatures.find_text(terms, self.database.get_valid_videos()))
 
     @fsigned
     def find_batch(self, path: str) -> List[Tuple[str, List[Video]]]:

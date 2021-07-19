@@ -7,6 +7,7 @@ from pysaurus.core.database.viewport.layers.source_layer import SourceLayer
 from pysaurus.core.database.viewport.viewtools.group import Group
 from pysaurus.core.database.viewport.viewtools.search_def import SearchDef
 from pysaurus.core.database.viewport.viewtools.video_array import VideoArray
+from pysaurus.core.database.video_features import VideoFeatures
 
 
 class SearchLayer(Layer):
@@ -37,13 +38,8 @@ class SearchLayer(Layer):
             root = self.get_root()
             if isinstance(root, SourceLayer):
                 return self.__filter_from_root_layer(search_def, root, data)
-            return self.__filter_from_videos(search_def, data)
+            return VideoArray(VideoFeatures.find(search_def, data.videos))
         return data.videos
-
-    def __filter_from_videos(self, search_def: SearchDef, data: Group) -> VideoArray:
-        terms = functions.string_to_pieces(search_def.text)
-        video_filter = self.term_parser[search_def.cond]
-        return VideoArray(video for video in data.videos if video_filter(video, terms))
 
     def __filter_from_root_layer(
         self, search_def: SearchDef, source_layer: SourceLayer, data: Group
