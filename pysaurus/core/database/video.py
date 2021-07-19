@@ -229,7 +229,7 @@ class Video(VideoState):
     def __str__(self):
         with StringPrinter() as printer:
             printer.write("Video %s:" % self.video_id)
-            for field in VIDEO_FIELDS:
+            for field in class_get_public_attributes(Video):
                 printer.write("\t%s: %s" % (field, getattr(self, field)))
             return str(printer)
 
@@ -348,9 +348,3 @@ class Video(VideoState):
         :rtype: Video
         """
         return cls(database=database, from_dictionary=dct)
-
-
-VIDEO_FIELDS = class_get_public_attributes(Video, ("database", "runtime", "miniature"))
-VIDEO_UNIQUE_FIELDS = class_get_public_attributes(
-    Video, ("database", "runtime", "miniature", "errors", "properties")
-)

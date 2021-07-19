@@ -7,7 +7,7 @@ from pysaurus.core.classes import Enumeration, StringPrinter
 from pysaurus.core.components import AbsolutePath, Duration, FilePath, FileSize
 from pysaurus.core.database import path_utils
 from pysaurus.core.database.database import Database
-from pysaurus.core.database.video import VIDEO_UNIQUE_FIELDS, Video
+from pysaurus.core.database.video import Video
 from pysaurus.core.database.video_features import VideoFeatures
 from pysaurus.core.database.video_state import VideoState
 from pysaurus.interface.console.function_parser import fdef, fsigned
@@ -15,7 +15,7 @@ from pysaurus.interface.console.function_parser import fdef, fsigned
 TEMP_DIR = tempfile.gettempdir()
 TEMP_PREFIX = tempfile.gettempprefix() + "_pysaurus_"
 
-FieldType = Enumeration(VIDEO_UNIQUE_FIELDS)
+FieldType = Enumeration(functions.class_get_public_attributes(Video, ("errors", "properties")))
 
 
 def generate_temp_file_path(extension):
@@ -454,4 +454,4 @@ class API:
 
     @fsigned
     def field_names(self):
-        return list(VIDEO_UNIQUE_FIELDS)
+        return sorted(FieldType.values)
