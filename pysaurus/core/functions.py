@@ -349,6 +349,16 @@ def class_get_public_attributes(cls: type, exclude=()):
     return sorted(fields)
 
 
+def class_get_field_title(cls: type, field: str, lowercase=False):
+    title = getattr(cls, "__titles__", {}).get(field, None)
+    if not title:
+        pieces = field.split("_")
+        if not lowercase:
+            pieces[0] = pieces[0].title()
+        return " ".join(pieces)
+    return title
+
+
 def compute_nb_pages(count, page_size):
     return (count // page_size) + bool(count % page_size)
 

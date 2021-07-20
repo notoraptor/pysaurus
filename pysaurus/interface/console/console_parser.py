@@ -1,8 +1,8 @@
-from pysaurus.core.classes import StringPrinter, Table
-from pysaurus.core.components import FileSize
 from pysaurus.core.database.database import Database
+from pysaurus.core.database.video import Video
+from pysaurus.core.table import to_table, to_lines
 from pysaurus.interface.console.api import API, parse_fields
-from pysaurus.interface.console.function_parser import FunctionParser, fdef, fsigned
+from pysaurus.interface.console.function_parser import FunctionParser
 
 
 class ConsoleParser(FunctionParser):
@@ -21,114 +21,61 @@ class ConsoleParser(FunctionParser):
             self.api.clip_from_filename,
             self.api.download_image,
             self.api.download_image_from_filename,
-            self.api.videos
+            self.api.videos,
         )
-        # Current: 31 API calls.
+        # Current state check.
+        assert len(self.definitions) == 31, len(self.definitions)
 
     def find(self, terms):
-        found = self.api.find(terms)
-        if found:
-            found.sort(key=lambda v: v.filename.get_date_modified().time, reverse=True)
-            headers = ["Date modified", "ID", "Size", "Path"]
-            lines = []
-            for video in found:
-                lines.append(
-                    [
-                        video.filename.get_date_modified(),
-                        video.video_id,
-                        video.size,
-                        video.filename,
-                    ]
-                )
-            return Table(headers=headers, lines=lines)
+        return to_table(
+            self.api.find(terms), Video, ("date", "video_id", "size", "filename")
+        )
+
+    def list(self, fields, page_size, page_number):
+        return to_table(
+            self.api.list(fields, page_size, page_number),
+            Video,
+            ["video_id"] + parse_fields(fields) + ["filename"],
+        )
+
+    def missing_thumbnails(self):
+        return to_table(
+            self.api.missing_thumbnails(), Video, ("video_id", "size", "filename")
+        )
+
+    def not_found(self):
+        return to_table(self.api.not_found(), Video, ("video_id", "filename"))
+
+    def not_found_from_folder(self, folder):
+        return to_table(
+            self.api.not_found_from_folder(folder), Video, ("video_id", "filename")
+        )
+
+    def unreadable(self):
+        return to_table(self.api.unreadable(), Video, ("video_id", "size", "filename"))
 
     def find_batch(self, path):
         batch_results = self.api.find_batch(path)
-        headers = ["", "Date modified", "ID", "Size", "Path"]
-        with StringPrinter() as printer:
-            for sentence, found in batch_results:
-                printer.write(sentence)
-                if found:
-                    lines = []
-                    for video in found:
-                        lines.append(
-                            [
-                                "",
-                                video.filename.get_date_modified(),
-                                video.video_id,
-                                video.size,
-                                video.filename,
-                            ]
-                        )
-                    printer.write(Table(headers, lines))
-                else:
-                    printer.write("\t(nothing)")
-            return str(printer)
-
-    def list(self, fields, page_size, page_number):
-        selected_videos = self.api.list(fields, page_size, page_number)
-        fields = parse_fields(fields)
-        headers = ["ID"]
-        for field in fields:
-            headers.append(field.upper())
-        headers.append("Path")
         lines = []
-        for i, video in enumerate(selected_videos):
-            line = [video.video_id]
-            for field in fields:
-                line.append(getattr(video, field))
-            line.append(video.filename)
-            lines.append(line)
-        return Table(headers=headers, lines=lines)
-
-    def missing_thumbnails(self):
-        headers = ["ID", "Size", "Filename"]
-        lines = [
-            [video.video_id, FileSize(video.filename.get_size()), video.filename]
-            for video in self.api.missing_thumbnails()
-        ]
-        return Table(headers, lines)
-
-    def not_found(self):
-        headers = ["ID", "Filename"]
-        lines = [[video.video_id, video.filename] for video in self.api.not_found()]
-        return Table(headers, lines)
-
-    def not_found_from_folder(self, folder):
-        headers = ["ID", "Filename"]
-        lines = [
-            [video.video_id, video.filename]
-            for video in self.api.not_found_from_folder(folder)
-        ]
-        return Table(headers, lines)
+        for sentence, found in batch_results:
+            lines.append(sentence)
+            lines.append(
+                to_table(found, Video, ("", "date", "video_id", "size", "filename"))
+                if found
+                else "\t(nothing)"
+            )
+        return to_lines(lines)
 
     def same_sizes(self):
         duplicated_sizes = self.api.same_sizes()
-        if duplicated_sizes:
-            headers = ["Size", "ID", "Path"]
-            lines = []
-            for size in sorted(duplicated_sizes.keys()):
-                elements = duplicated_sizes[size]  # type: list
-                elements.sort(key=lambda v: v.filename)
-                indices = []
-                for video in elements:
-                    lines.append([size, video.video_id, '"%s"' % video.filename])
-                    indices.append(video.video_id)
-                lines.append(
-                    [
-                        "",
-                        "",
-                        "playlist %s"
-                        % (" ".join(str(video_id) for video_id in indices)),
-                    ]
-                )
-                lines.append([])
-            return Table(headers=headers, lines=lines)
-
-    def unreadable(self):
-        headers = ["ID", "Size", "Filename"]
-        lines = [
-            [video.video_id, FileSize(video.filename.get_size()), video.filename]
-            for video in self.api.unreadable()
-        ]
-        return Table(headers, lines)
+        lines = []
+        for size, elements in duplicated_sizes.items():
+            table = to_table(elements, Video, ("size", "video_id", "filename"))
+            table.append(
+                "",
+                "",
+                "playlist %s" % (" ".join(str(video.video_id) for video in elements)),
+            )
+            lines.append(table)
+            lines.append("")
+        return to_lines(lines)

@@ -2,7 +2,7 @@ import locale
 from abc import abstractmethod
 from io import StringIO
 from itertools import chain
-from typing import Any, Generic, List, TypeVar
+from typing import Generic, List, TypeVar
 
 T = TypeVar("T")
 
@@ -40,46 +40,6 @@ class StringPrinter:
         self.write(message)
         if down:
             self.write(line)
-
-
-class Table:
-    __slots__ = ("headers", "lines")
-
-    def __init__(self, headers, lines):
-        # type: (List[str], List[List[Any]]) -> None
-        self.headers = headers
-        self.lines = lines
-
-    def __str__(self):
-        header_sizes = [
-            max(
-                len(str(self.headers[i])),
-                max([len(str(line[i])) for line in self.lines if line] + [0]),
-            )
-            + 2
-            for i in range(len(self.headers))
-        ]
-        with StringPrinter() as printer:
-            printer.write(
-                "".join(
-                    str(self.headers[i]).ljust(header_sizes[i])
-                    for i in range(len(self.headers))
-                )
-            )
-            for line in self.lines:
-                if line:
-                    printer.write(
-                        "".join(
-                            str(line[i]).ljust(header_sizes[i])
-                            for i in range(len(self.headers))
-                        )
-                    )
-                else:
-                    printer.write()
-            return str(printer)
-
-    def to_json(self):
-        return [self.headers] + self.lines
 
 
 class ToDict:

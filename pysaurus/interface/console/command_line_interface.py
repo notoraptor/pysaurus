@@ -51,7 +51,6 @@ def command_line_interface(console_parser: FunctionParser):
                         argument_name: getattr(args, argument_name)
                         for argument_name in function_definition.arguments
                     }
-                    print(kwargs)
             else:
                 for (
                     argument_name,

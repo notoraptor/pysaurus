@@ -298,7 +298,7 @@ class API:
 
     @fsigned
     def find(self, terms: str) -> List[Video]:
-        return list(VideoFeatures.find_text(terms, self.database.get_valid_videos()))
+        return sorted(VideoFeatures.find_text(terms, self.database.get_valid_videos()), key=lambda video: video.date, reverse=True)
 
     @fsigned
     def find_batch(self, path: str) -> List[Tuple[str, List[Video]]]:
