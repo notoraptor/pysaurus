@@ -4,6 +4,7 @@ from pysaurus.core.database.video_state import VideoState
 from pysaurus.core.database.viewport.layers.layer import Layer
 from pysaurus.core.database.viewport.layers.source_layer import SourceLayer
 from pysaurus.core.database.viewport.viewtools.video_array import VideoArray
+from pysaurus.core.database.video_sorting import VideoSorting
 
 
 class SortLayer(Layer):
@@ -49,7 +50,7 @@ class SortLayer(Layer):
 
     def filter_all(self, data: Sequence[VideoState]) -> VideoArray:
         print("Sort all")
-        sorting = self.get_sorting()
+        sorting = VideoSorting(self.get_sorting())
         return VideoArray(sorted(data, key=lambda video: video.to_comparable(sorting)))
 
     def filter_separate(self, data: Sequence[VideoState]) -> VideoArray:
@@ -57,7 +58,7 @@ class SortLayer(Layer):
         readable_unreadable = [[], []]  # type: List[List[VideoState]]
         for video_state in data:
             readable_unreadable[video_state.unreadable].append(video_state)
-        sorting = self.get_sorting()
+        sorting = VideoSorting(self.get_sorting())
         readable_unreadable[0].sort(key=lambda video: video.to_comparable(sorting))
         return VideoArray(readable_unreadable[0] + readable_unreadable[1])
 

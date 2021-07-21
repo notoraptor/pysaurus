@@ -1,13 +1,13 @@
 import base64
-from typing import Iterable
 from io import BytesIO
+from typing import Iterable
 
 from pysaurus.core import functions
 from pysaurus.core.constants import THUMBNAIL_EXTENSION
 from pysaurus.core.database.video import Video
+from pysaurus.core.database.viewport.viewtools.search_def import SearchDef
 from pysaurus.core.functions import to_json_value, class_get_public_attributes
 from pysaurus.core.modules import ImageUtils, VideoClipping
-from pysaurus.core.database.viewport.viewtools.search_def import SearchDef
 
 
 class VideoFeatures:

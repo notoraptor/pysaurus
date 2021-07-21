@@ -2,7 +2,6 @@ from typing import Optional
 
 from pysaurus.core.classes import ToFulLDict, Enumeration
 
-
 _Cond = Enumeration(("and", "or", "exact"))
 
 

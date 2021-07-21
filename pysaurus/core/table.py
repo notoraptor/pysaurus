@@ -1,4 +1,5 @@
 from typing import List, Any, Sequence, Iterable
+
 from pysaurus.core.classes import StringPrinter
 from pysaurus.core.functions import class_get_field_title
 
@@ -59,8 +60,13 @@ class Lines:
 
 
 def to_table(elements: Iterable, element_type: type, fields: Sequence[str]) -> Table:
-    headers = [class_get_field_title(element_type, field) if field else "" for field in fields]
-    lines = [[getattr(element, field) if field else "" for field in fields] for element in elements]
+    headers = [
+        class_get_field_title(element_type, field) if field else "" for field in fields
+    ]
+    lines = [
+        [getattr(element, field) if field else "" for field in fields]
+        for element in elements
+    ]
     return Table(headers, lines)
 
 

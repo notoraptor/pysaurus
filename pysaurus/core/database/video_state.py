@@ -7,6 +7,7 @@ from pysaurus.core.constants import PYTHON_ERROR_THUMBNAIL
 from pysaurus.core.database.video_runtime_info import VideoRuntimeInfo
 from pysaurus.core.functions import string_to_pieces
 from pysaurus.core.modules import System
+from pysaurus.core.database.video_sorting import VideoSorting
 
 
 class classflag(property):
@@ -84,7 +85,9 @@ class VideoState:
     # runtime attributes
     date = property(lambda self: DateModified(self.runtime.mtime))
     exists = property(lambda self: self.runtime.is_file)
-    has_thumbnail = property(lambda self: not self.unreadable_thumbnail and self.runtime.has_thumbnail)
+    has_thumbnail = property(
+        lambda self: not self.unreadable_thumbnail and self.runtime.has_thumbnail
+    )
 
     readable = classflag(lambda self: not self.UNREADABLE)
     unreadable = classflag(lambda self: self.UNREADABLE)
@@ -113,10 +116,9 @@ class VideoState:
     def terms(self, as_set=False):
         return string_to_pieces(self.filename.path, as_set=as_set)
 
-    def to_comparable(self, sorting):
-        # type: (Sequence[str]) -> list
+    def to_comparable(self, sorting: VideoSorting) -> list:
         return [
-            to_comparable(getattr(self, sort[1:]), sort[0] == "-") for sort in sorting
+            to_comparable(getattr(self, field), reverse) for field, reverse in sorting
         ]
 
     def to_dict(self):

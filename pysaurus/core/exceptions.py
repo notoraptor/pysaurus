@@ -43,6 +43,10 @@ class InvalidPageSize(PysaurusError):
     pass
 
 
+class InvalidPageNumber(PysaurusError):
+    pass
+
+
 class FunctionParsingError(Exception):
     pass
 
@@ -60,4 +64,8 @@ class MissingQueryArg(FunctionParsingError):
 
 
 class NoVideoClip(PysaurusError):
+    pass
+
+
+class InvalidVideoField(PysaurusError):
     pass

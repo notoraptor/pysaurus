@@ -1,58 +1,21 @@
-import functools
-import tempfile
 from typing import Dict, List, Tuple, Union
 
 from pysaurus.core import exceptions, functions
 from pysaurus.core.classes import Enumeration, StringPrinter
-from pysaurus.core.components import AbsolutePath, Duration, FilePath, FileSize
+from pysaurus.core.components import AbsolutePath, Duration, FileSize
 from pysaurus.core.database import path_utils
 from pysaurus.core.database.database import Database
 from pysaurus.core.database.video import Video
 from pysaurus.core.database.video_features import VideoFeatures
 from pysaurus.core.database.video_state import VideoState
+from pysaurus.core.functions import generate_temp_file_path
 from pysaurus.interface.console.function_parser import fdef, fsigned
-
-TEMP_DIR = tempfile.gettempdir()
-TEMP_PREFIX = tempfile.gettempprefix() + "_pysaurus_"
-
-FieldType = Enumeration(functions.class_get_public_attributes(Video, ("errors", "properties")))
+from pysaurus.core.database.video_sorting import VideoSorting
 
 
-def generate_temp_file_path(extension):
-    temp_file_id = 0
-    while True:
-        temp_file_path = FilePath(
-            TEMP_DIR, "%s%s" % (TEMP_PREFIX, temp_file_id), extension
-        )
-        if temp_file_path.exists():
-            temp_file_id += 1
-        else:
-            break
-    return temp_file_path
-
-
-def compare_videos(v1: Video, v2: Video, sorting: List[Tuple[str, bool]]):
-    for field, reverse in sorting:
-        f1 = getattr(v1, field)
-        f2 = getattr(v2, field)
-        ret = 0
-        if f1 < f2:
-            ret = -1
-        elif f2 < f1:
-            ret = 1
-        if ret:
-            return -ret if reverse else ret
-    return 0
-
-
-def parse_fields(fields: str):
-    real_fields = []
-    pieces = fields.split()
-    for piece in pieces:
-        if piece[0] in "-+":
-            piece = piece[1:]
-        real_fields.append(FieldType(piece))
-    return real_fields
+FieldType = Enumeration(
+    functions.class_get_public_attributes(Video, ("errors", "properties"))
+)
 
 
 class API:
@@ -155,20 +118,14 @@ class API:
         if videos:
             file_content = """<html><body>%s</body></html>""" % (
                 "".join(
-                    '<div><div><img alt="%s" src="file://%s"/></div><div><strong>%s</strong></div></div>'
-                    % (video.filename, video.thumbnail_path, video.filename)
-                    for video in videos
+                    f"<div><div>"
+                    f'<img alt="{v.filename}" src="file://{v.thumbnail_path}"/>'
+                    f"</div><div><strong>{v.filename}</strong>"
+                    f"</div></div>"
+                    for v in videos
                 )
             )
-            temp_file_id = 0
-            while True:
-                temp_file_path = FilePath(
-                    TEMP_DIR, "%s%s" % (TEMP_PREFIX, temp_file_id), "html"
-                )
-                if temp_file_path.exists():
-                    temp_file_id += 1
-                else:
-                    break
+            temp_file_path = generate_temp_file_path("html")
             with open(temp_file_path.path, "w") as file:
                 file.write(file_content)
             temp_file_path.open()
@@ -213,18 +170,12 @@ class API:
                 for video in videos
             )
             file_content = (
-                """<?xml version="1.0" encoding="UTF-8"?><playlist version="1" xmlns="http://xspf.org/ns/0/"><trackList>%s</trackList></playlist>"""
-                % tracks
+                f'<?xml version="1.0" encoding="UTF-8"?>'
+                f'<playlist version="1" xmlns="http://xspf.org/ns/0/">'
+                f"<trackList>{tracks}</trackList>"
+                f"</playlist>"
             )
-            temp_file_id = 0
-            while True:
-                temp_file_path = FilePath(
-                    TEMP_DIR, "%s%s" % (TEMP_PREFIX, temp_file_id), "xspf"
-                )
-                if temp_file_path.exists():
-                    temp_file_id += 1
-                else:
-                    break
+            temp_file_path = generate_temp_file_path("xspf")
             with open(temp_file_path.path, "w") as file:
                 file.write(file_content)
             temp_file_path.open()
@@ -298,7 +249,11 @@ class API:
 
     @fsigned
     def find(self, terms: str) -> List[Video]:
-        return sorted(VideoFeatures.find_text(terms, self.database.get_valid_videos()), key=lambda video: video.date, reverse=True)
+        return sorted(
+            VideoFeatures.find_text(terms, self.database.get_valid_videos()),
+            key=lambda video: video.date,
+            reverse=True,
+        )
 
     @fsigned
     def find_batch(self, path: str) -> List[Tuple[str, List[Video]]]:
@@ -311,19 +266,12 @@ class API:
     def list(self, fields: str, page_size: int, page_number: int) -> List[Video]:
         if page_size <= 0:
             raise exceptions.InvalidPageSize(page_size)
-        sorting = []
-        pieces = fields.split()
-        for piece in pieces:
-            if piece[0] in "-+":
-                reverse = piece[0] == "-"
-                piece = piece[1:]
-            else:
-                reverse = False
-            field = FieldType(piece)
-            sorting.append((field, reverse))
+        if page_number < 0:
+            raise exceptions.InvalidPageNumber(page_number)
+        sorting = VideoSorting(fields)
         videos = sorted(
             self.database.get_valid_videos(),
-            key=functools.cmp_to_key(lambda v1, v2: compare_videos(v1, v2, sorting)),
+            key=lambda video: video.to_comparable(sorting),
         )
         return videos[(page_size * page_number) : (page_size * (page_number + 1))]
 
@@ -376,7 +324,10 @@ class API:
                         <div><strong><u>%(meta_title)s</u></strong></div>
                         <div><strong><em/>%(file_title)s</em></strong></div>
                         <div><code>%(filename)s</code></div>
-                        <div><strong><code>%(size)s</code></strong> | <strong class="duration">%(duration)s</strong></div>
+                        <div>
+                            <strong><code>%(size)s</code></strong> | 
+                            <strong class="duration">%(duration)s</strong>
+                        </div>
                     </td>
                 </tr>
                 """

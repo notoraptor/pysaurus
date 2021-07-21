@@ -8,6 +8,7 @@ import threading
 import urllib.parse
 from datetime import datetime
 
+from pysaurus.core.components import FilePath
 from pysaurus.core.constants import VIDEO_SUPPORTED_EXTENSIONS
 from pysaurus.core.modules import HTMLStripper
 
@@ -21,6 +22,9 @@ REGEX_NUMBER_THEN_WORD = re.compile(r"([0-9])([^0-9 ])")
 REGEX_NUMBER = re.compile(r"([0-9]+)")
 JSON_INTEGER_MIN = -(2 ** 31)
 JSON_INTEGER_MAX = 2 ** 31 - 1
+
+TEMP_DIR = tempfile.gettempdir()
+TEMP_PREFIX = tempfile.gettempprefix() + "_pysaurus_"
 
 
 def separate_text_and_numbers(text: str):
@@ -338,7 +342,7 @@ def flatten_list(data: list):
     return output
 
 
-def class_get_public_attributes(cls: type, exclude=()):
+def class_get_public_attributes(cls: type, exclude=(), to_set=False):
     fields = {
         field
         for field in dir(cls)
@@ -346,7 +350,7 @@ def class_get_public_attributes(cls: type, exclude=()):
     }
     fields.difference_update(exclude)
     fields.difference_update(getattr(cls, "__protected__", ()))
-    return sorted(fields)
+    return fields if to_set else sorted(fields)
 
 
 def class_get_field_title(cls: type, field: str, lowercase=False):
@@ -438,3 +442,16 @@ def assert_str(value):
 def is_instance_from_module(module, obj):
     typ = obj if isinstance(obj, type) else type(obj)
     return any(cls.__module__ == module.__name__ for cls in typ.__mro__)
+
+
+def generate_temp_file_path(extension):
+    temp_file_id = 0
+    while True:
+        temp_file_path = FilePath(
+            TEMP_DIR, "%s%s" % (TEMP_PREFIX, temp_file_id), extension
+        )
+        if temp_file_path.exists():
+            temp_file_id += 1
+        else:
+            break
+    return temp_file_path

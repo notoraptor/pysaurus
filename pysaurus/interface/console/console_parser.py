@@ -1,7 +1,8 @@
 from pysaurus.core.database.database import Database
 from pysaurus.core.database.video import Video
+from pysaurus.core.database.video_sorting import VideoSorting
 from pysaurus.core.table import to_table, to_lines
-from pysaurus.interface.console.api import API, parse_fields
+from pysaurus.interface.console.api import API
 from pysaurus.interface.console.function_parser import FunctionParser
 
 
@@ -32,10 +33,11 @@ class ConsoleParser(FunctionParser):
         )
 
     def list(self, fields, page_size, page_number):
+        sorting = VideoSorting(fields)
         return to_table(
             self.api.list(fields, page_size, page_number),
             Video,
-            ["video_id"] + parse_fields(fields) + ["filename"],
+            ["video_id"] + sorting.fields + ["filename"],
         )
 
     def missing_thumbnails(self):

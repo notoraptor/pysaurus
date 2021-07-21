@@ -7,5 +7,5 @@ def main():
     command_line_interface(ConsoleParser(TEST_LIST_FILE_PATH))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

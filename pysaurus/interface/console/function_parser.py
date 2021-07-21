@@ -3,7 +3,6 @@ import inspect
 import textwrap
 import typing
 from typing import Callable, Dict, Optional
-from types import MethodType
 
 from pysaurus.core import exceptions
 from pysaurus.core.classes import StringPrinter
@@ -155,15 +154,21 @@ class FunctionParser:
             if not parsers:
                 parsers = []
                 for parameter in signature.parameters.values():
-                    assert parameter.annotation != inspect.Parameter.empty, parameter.name
+                    assert (
+                        parameter.annotation != inspect.Parameter.empty
+                    ), parameter.name
                     assert callable(parameter.annotation)
                     assert not is_instance_from_module(typing, parameter.annotation)
                     parsers.append(parameter.annotation)
             assert len(signature.parameters) == len(parsers)
-            self.add(function, name, arguments={
-                arg_name: parsers[i]
-                for i, arg_name in enumerate(signature.parameters)
-            })
+            self.add(
+                function,
+                name,
+                arguments={
+                    arg_name: parsers[i]
+                    for i, arg_name in enumerate(signature.parameters)
+                },
+            )
 
     def override_from(self, obj):
         nb_overrides = 0
@@ -185,7 +190,9 @@ class FunctionParser:
     def add(self, function, name=None, arguments=None, description=None):
         # type: (callable, str, Dict[str, Callable], str) -> None
         function_definition = FunctionDefinition(function, name, arguments, description)
-        assert function_definition.name not in self.definitions, function_definition.name
+        assert (
+            function_definition.name not in self.definitions
+        ), function_definition.name
         self.definitions[function_definition.name] = function_definition
 
     def get_definition(self, function):
@@ -229,9 +236,11 @@ class FunctionParser:
 
 def fdef(*parsers):
     assert all(callable(p) for p in parsers)
+
     def decorator(fn):
         fn.__parsers__ = parsers
         return fn
+
     return decorator
 
 

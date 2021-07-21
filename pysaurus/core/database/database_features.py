@@ -190,7 +190,7 @@ class DatabaseFeatures:
         )
         graph = Graph()
         nb_miniatures = len(miniatures)
-        with Profiler("Link videos.", notifier):
+        with Profiler("Link videos ...", notifier):
             for i in range(len(miniatures)):
                 for j in range(i + 1, len(miniatures)):
                     if edges[i * nb_miniatures + j]:
@@ -267,7 +267,7 @@ class DatabaseFeatures:
                         notifications.Message(
                             "Found",
                             sum(1 for g in sim_id_to_vid_ids.values() if len(g) > 1),
-                            "old similarities."
+                            "old similarities.",
                         )
                     )
                     graph = Graph()
@@ -285,7 +285,7 @@ class DatabaseFeatures:
                         notifications.Message(
                             "Found",
                             len(new_sim_groups),
-                            "total similarities after merging."
+                            "total similarities after merging.",
                         )
                     )
                     new_sim_indices = []
