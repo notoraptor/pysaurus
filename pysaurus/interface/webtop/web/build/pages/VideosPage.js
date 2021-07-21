@@ -542,15 +542,15 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         }
 
         reloadDatabase() {
-          this.props.app.dbUpdate();
+          this.props.app.dbUpdate("update_database");
         }
 
         findSimilarVideos() {
-          this.props.app.dbFindSimilarities();
+          this.props.app.dbUpdate("find_similar_videos");
         }
 
         findSimilarVideosIgnoreCache() {
-          this.props.app.dbFindSimilaritiesIgnoreCache();
+          this.props.app.dbUpdate("find_similar_videos_ignore_cache");
         }
 
         manageProperties() {

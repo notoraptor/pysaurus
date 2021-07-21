@@ -1,7 +1,7 @@
 System.register(["../utils/constants.js", "../utils/backend.js"], function (_export, _context) {
   "use strict";
 
-  var Characters, HomeStatus, backend_error, python_call, ProgressionMonitoring, HomePage, NotificationCollector, NotificationRenderer, ACTIONS;
+  var Characters, backend_error, python_call, ProgressionMonitoring, HomePage, NotificationCollector, NotificationRenderer, ACTIONS;
 
   /**
    * @param props {{monitoring: ProgressionMonitoring}}
@@ -34,7 +34,6 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
   return {
     setters: [function (_utilsConstantsJs) {
       Characters = _utilsConstantsJs.Characters;
-      HomeStatus = _utilsConstantsJs.HomeStatus;
     }, function (_utilsBackendJs) {
       backend_error = _utilsBackendJs.backend_error;
       python_call = _utilsBackendJs.python_call;
@@ -55,7 +54,7 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
       NotificationCollector = {
         DatabaseReady: function (app, notification) {
           app.collectNotification(notification, {
-            status: HomeStatus.LOADED
+            loaded: true
           });
         },
         JobToDo: function (app, notification) {
@@ -196,37 +195,26 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
         }
       };
       ACTIONS = {
-        update: {
-          title: "Update database",
-          name: "update_database"
-        },
-        similarities: {
-          title: "Find similarities",
-          name: "find_similar_videos"
-        },
-        similaritiesNoCache: {
-          title: "Find similarities (ignore cache)",
-          name: "find_similar_videos_ignore_cache"
-        }
+        update_database: "Update database",
+        find_similar_videos: "Find similarities",
+        find_similar_videos_ignore_cache: "Find similarities (ignore cache)",
+        create_database: "Create database",
+        open_database: "Open database"
       };
 
       _export("HomePage", HomePage = class HomePage extends React.Component {
         constructor(props) {
-          // parameters: {action: string = undefined}
+          // parameters: {command: [name, ...args]}
           // app: App
           super(props);
           this.state = {
-            status: this.props.parameters.action ? HomeStatus.LOADING : HomeStatus.INITIAL,
+            loaded: false,
             messages: [],
-            jobMap: new Map(),
-            update: false,
-            action: null
+            jobMap: new Map()
           };
           this.callbackIndex = -1;
           this.notify = this.notify.bind(this);
-          this.loadDatabase = this.loadDatabase.bind(this);
           this.displayVideos = this.displayVideos.bind(this);
-          this.onChangeUpdate = this.onChangeUpdate.bind(this);
           this.collectNotification = this.collectNotification.bind(this);
         }
 
@@ -236,33 +224,18 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
             className: "vertical"
           }, /*#__PURE__*/React.createElement("div", {
             className: "buttons"
-          }, this.state.status === HomeStatus.INITIAL ? /*#__PURE__*/React.createElement("span", {
-            className: "input-update"
-          }, /*#__PURE__*/React.createElement("input", {
-            type: "checkbox",
-            id: "update",
-            checked: this.state.update,
-            onChange: this.onChangeUpdate
-          }), ' ', /*#__PURE__*/React.createElement("label", {
-            htmlFor: "update"
-          }, "Update on load")) : '', this.renderInitialButton()), /*#__PURE__*/React.createElement("div", {
+          }, this.renderInitialButton()), /*#__PURE__*/React.createElement("div", {
             id: "notifications",
             className: "notifications"
           }, this.renderMessages()));
         }
 
         renderInitialButton() {
-          const status = this.state.status;
-          const action = this.props.parameters.action;
-          if (status === HomeStatus.INITIAL) return /*#__PURE__*/React.createElement("button", {
-            onClick: this.loadDatabase
-          }, "Load database");
-          if (status === HomeStatus.LOADING) return /*#__PURE__*/React.createElement("button", {
-            disabled: true
-          }, action ? ACTIONS[action].title : `Loading database`, " ...");
-          if (status === HomeStatus.LOADED) return /*#__PURE__*/React.createElement("button", {
+          if (this.state.loaded) return /*#__PURE__*/React.createElement("button", {
             onClick: this.displayVideos
-          }, "Display videos");
+          }, "Display videos");else return /*#__PURE__*/React.createElement("button", {
+            disabled: true
+          }, ACTIONS[this.props.parameters.command[0]], " ...");
         }
 
         renderMessages() {
@@ -283,8 +256,7 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
             }
           }
 
-          const ready = lastIndex > -1 && this.state.messages[lastIndex].name === "DatabaseReady";
-          if (!ready && this.status === HomeStatus.LOADING) output.push( /*#__PURE__*/React.createElement("div", {
+          if (!this.state.loaded) output.push( /*#__PURE__*/React.createElement("div", {
             key: this.state.messages.length
           }, "..."));
           return output;
@@ -292,11 +264,7 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
 
         componentDidMount() {
           this.callbackIndex = NOTIFICATION_MANAGER.register(this.notify);
-          const action = this.props.parameters.action;
-
-          if (action && ACTIONS.hasOwnProperty(action)) {
-            python_call(ACTIONS[action].name);
-          }
+          python_call(...this.props.parameters.command).catch(backend_error);
         }
 
         componentDidUpdate(prevProps, prevState, snapshot) {
@@ -313,22 +281,8 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
           if (NotificationCollector[name]) return NotificationCollector[name](this, notification);else this.collectNotification(notification);
         }
 
-        loadDatabase() {
-          python_call('load_database', this.state.update).then(() => {
-            this.setState({
-              status: HomeStatus.LOADING
-            });
-          }).catch(backend_error);
-        }
-
         displayVideos() {
           this.props.app.loadVideosPage();
-        }
-
-        onChangeUpdate(event) {
-          this.setState({
-            update: event.target.checked
-          });
         }
         /**
          * Callback to collect notification.
@@ -353,8 +307,9 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
       });
 
       HomePage.propTypes = {
+        app: PropTypes.object.isRequired,
         parameters: PropTypes.shape({
-          action: PropTypes.string
+          command: PropTypes.array.isRequired
         })
       };
     }

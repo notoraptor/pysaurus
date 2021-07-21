@@ -8,7 +8,7 @@ class Table:
     __slots__ = ("headers", "lines")
 
     def __init__(self, headers, lines):
-        # type: (List[str], List[List[Any]]) -> None
+        # type: (List[str], List[Sequence[Any]]) -> None
         self.headers = headers
         self.lines = lines
 
@@ -44,22 +44,16 @@ class Table:
                     printer.write()
             return str(printer)
 
-    def to_json(self):
-        return [self.headers] + self.lines
 
-
-class Lines:
-    def __init__(self, lines):
-        self.lines = lines
-
+class Column(list):
     def __str__(self):
         with StringPrinter() as printer:
-            for line in self.lines:
+            for line in self:
                 printer.write(line)
             return str(printer)
 
 
-def to_table(elements: Iterable, element_type: type, fields: Sequence[str]) -> Table:
+def to_table(elements: Iterable, element_type: type, fields: Sequence[str]):
     headers = [
         class_get_field_title(element_type, field) if field else "" for field in fields
     ]
@@ -70,5 +64,5 @@ def to_table(elements: Iterable, element_type: type, fields: Sequence[str]) -> T
     return Table(headers, lines)
 
 
-def to_lines(lines: Iterable):
-    return Lines(lines)
+def to_column(lines: Iterable):
+    return Column(lines)

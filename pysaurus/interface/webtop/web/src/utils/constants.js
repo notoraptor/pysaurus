@@ -1,9 +1,3 @@
-export const HomeStatus = {
-    INITIAL: 0,
-    LOADING: 1,
-    LOADED: 2
-}
-
 export const GroupPermission = {
     FORBIDDEN: 0,
     ONLY_MANY: 1,

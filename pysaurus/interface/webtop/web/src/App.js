@@ -60,20 +60,8 @@ export class App extends React.Component {
         this.loadPage("databases", databases === undefined ? databases : {databases});
     }
 
-    dbLoad() {
-        this.loadPage("home");
-    }
-
-    dbUpdate() {
-        this.loadPage("home", {action: "update"});
-    }
-
-    dbFindSimilarities() {
-        this.loadPage("home", {action: "similarities"});
-    }
-
-    dbFindSimilaritiesIgnoreCache() {
-        this.loadPage("home", {action: "similaritiesNoCache"});
+    dbUpdate(...command) {
+        this.loadPage("home", {command});
     }
 
     loadVideosPage(pageSize = undefined, pageNumber = undefined) {

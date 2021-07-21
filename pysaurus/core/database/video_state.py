@@ -1,13 +1,11 @@
-from typing import Sequence
-
 from pysaurus.core.classes import StringPrinter, Text, TextWithNumbers
 from pysaurus.core.compare import to_comparable
 from pysaurus.core.components import AbsolutePath, DateModified, FileSize
 from pysaurus.core.constants import PYTHON_ERROR_THUMBNAIL
 from pysaurus.core.database.video_runtime_info import VideoRuntimeInfo
+from pysaurus.core.database.video_sorting import VideoSorting
 from pysaurus.core.functions import string_to_pieces
 from pysaurus.core.modules import System
-from pysaurus.core.database.video_sorting import VideoSorting
 
 
 class classflag(property):

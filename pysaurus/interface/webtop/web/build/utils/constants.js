@@ -1,16 +1,10 @@
 System.register([], function (_export, _context) {
   "use strict";
 
-  var FieldInfo, FieldMap, HomeStatus, GroupPermission, FIELD_MAP, SEARCH_TYPE_TITLE, PAGE_SIZES, VIDEO_DEFAULT_PAGE_SIZE, VIDEO_DEFAULT_PAGE_NUMBER, SOURCE_TREE, Characters;
+  var FieldInfo, FieldMap, GroupPermission, FIELD_MAP, SEARCH_TYPE_TITLE, PAGE_SIZES, VIDEO_DEFAULT_PAGE_SIZE, VIDEO_DEFAULT_PAGE_NUMBER, SOURCE_TREE, Characters;
   return {
     setters: [],
     execute: function () {
-      _export("HomeStatus", HomeStatus = {
-        INITIAL: 0,
-        LOADING: 1,
-        LOADED: 2
-      });
-
       _export("GroupPermission", GroupPermission = {
         FORBIDDEN: 0,
         ONLY_MANY: 1,

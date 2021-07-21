@@ -1,7 +1,7 @@
 from pysaurus.core.database.database import Database
 from pysaurus.core.database.video import Video
 from pysaurus.core.database.video_sorting import VideoSorting
-from pysaurus.core.table import to_table, to_lines
+from pysaurus.core.printable import to_table, to_column
 from pysaurus.interface.console.api import API
 from pysaurus.interface.console.function_parser import FunctionParser
 
@@ -66,7 +66,7 @@ class ConsoleParser(FunctionParser):
                 if found
                 else "\t(nothing)"
             )
-        return to_lines(lines)
+        return to_column(lines)
 
     def same_sizes(self):
         duplicated_sizes = self.api.same_sizes()
@@ -80,4 +80,4 @@ class ConsoleParser(FunctionParser):
             )
             lines.append(table)
             lines.append("")
-        return to_lines(lines)
+        return to_column(lines)

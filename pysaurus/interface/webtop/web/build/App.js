@@ -91,25 +91,9 @@ System.register(["./pages/Test.js", "./pages/HomePage.js", "./pages/VideosPage.j
           });
         }
 
-        dbLoad() {
-          this.loadPage("home");
-        }
-
-        dbUpdate() {
+        dbUpdate(...command) {
           this.loadPage("home", {
-            action: "update"
-          });
-        }
-
-        dbFindSimilarities() {
-          this.loadPage("home", {
-            action: "similarities"
-          });
-        }
-
-        dbFindSimilaritiesIgnoreCache() {
-          this.loadPage("home", {
-            action: "similaritiesNoCache"
+            command
           });
         }
 

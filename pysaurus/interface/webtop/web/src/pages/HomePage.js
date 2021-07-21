@@ -1,4 +1,4 @@
-import {Characters, HomeStatus} from "../utils/constants.js";
+import {Characters} from "../utils/constants.js";
 import {backend_error, python_call} from "../utils/backend.js";
 
 class ProgressionMonitoring {
@@ -35,9 +35,7 @@ function Monitoring(props) {
 
 const NotificationCollector = {
     DatabaseReady: function (app, notification) {
-        app.collectNotification(
-            notification,
-            {status: HomeStatus.LOADED});
+        app.collectNotification(notification, {loaded: true});
     },
     JobToDo: function (app, notification) {
         const name = notification.notification.name;
@@ -173,70 +171,43 @@ const NotificationRenderer = {
 };
 
 const ACTIONS = {
-    update: {
-        title: "Update database",
-        name: "update_database",
-    },
-    similarities: {
-        title: "Find similarities",
-        name: "find_similar_videos"
-    },
-    similaritiesNoCache: {
-        title: "Find similarities (ignore cache)",
-        name: "find_similar_videos_ignore_cache"
-    }
+    update_database: "Update database",
+    find_similar_videos: "Find similarities",
+    find_similar_videos_ignore_cache: "Find similarities (ignore cache)",
+    create_database: "Create database",
+    open_database: "Open database",
 };
 
 export class HomePage extends React.Component {
     constructor(props) {
-        // parameters: {action: string = undefined}
+        // parameters: {command: [name, ...args]}
         // app: App
         super(props);
         this.state = {
-            status: this.props.parameters.action ? HomeStatus.LOADING : HomeStatus.INITIAL,
+            loaded: false,
             messages: [],
             jobMap: new Map(),
-            update: false,
-            action: null,
         };
         this.callbackIndex = -1;
         this.notify = this.notify.bind(this);
-        this.loadDatabase = this.loadDatabase.bind(this);
         this.displayVideos = this.displayVideos.bind(this);
-        this.onChangeUpdate = this.onChangeUpdate.bind(this);
         this.collectNotification = this.collectNotification.bind(this);
     }
 
     render() {
         return (
             <div id="home" className="vertical">
-                <div className="buttons">
-                    {this.state.status === HomeStatus.INITIAL ? (
-                        <span className="input-update">
-                            <input type="checkbox"
-                                   id="update"
-                                   checked={this.state.update}
-                                   onChange={this.onChangeUpdate}/>
-                            {' '}
-                            <label htmlFor="update">Update on load</label>
-                        </span>
-                    ) : ''}
-                    {this.renderInitialButton()}
-                </div>
+                <div className="buttons">{this.renderInitialButton()}</div>
                 <div id="notifications" className="notifications">{this.renderMessages()}</div>
             </div>
         );
     }
 
     renderInitialButton() {
-        const status = this.state.status;
-        const action = this.props.parameters.action;
-        if (status === HomeStatus.INITIAL)
-            return <button onClick={this.loadDatabase}>Load database</button>;
-        if (status === HomeStatus.LOADING)
-            return <button disabled={true}>{action ? ACTIONS[action].title : `Loading database`} ...</button>;
-        if (status === HomeStatus.LOADED)
+        if (this.state.loaded)
             return <button onClick={this.displayVideos}>Display videos</button>;
+        else
+            return <button disabled={true}>{ACTIONS[this.props.parameters.command[0]]} ...</button>;
     }
 
     renderMessages() {
@@ -253,18 +224,15 @@ export class HomePage extends React.Component {
                 output.push(<div key={i}><em>unknown</em>: {message.message}</div>);
             }
         }
-        const ready = lastIndex > -1 && this.state.messages[lastIndex].name === "DatabaseReady";
-        if (!ready && this.status === HomeStatus.LOADING)
+        if (!this.state.loaded)
             output.push(<div key={this.state.messages.length}>...</div>);
         return output;
     }
 
     componentDidMount() {
         this.callbackIndex = NOTIFICATION_MANAGER.register(this.notify);
-        const action = this.props.parameters.action;
-        if (action && ACTIONS.hasOwnProperty(action)) {
-            python_call(ACTIONS[action].name);
-        }
+        python_call(...this.props.parameters.command)
+            .catch(backend_error);
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
@@ -284,20 +252,8 @@ export class HomePage extends React.Component {
             this.collectNotification(notification);
     }
 
-    loadDatabase() {
-        python_call('load_database', this.state.update)
-            .then(() => {
-                this.setState({status: HomeStatus.LOADING});
-            })
-            .catch(backend_error);
-    }
-
     displayVideos() {
         this.props.app.loadVideosPage();
-    }
-
-    onChangeUpdate(event) {
-        this.setState({update: event.target.checked});
     }
 
     /**
@@ -319,7 +275,8 @@ export class HomePage extends React.Component {
 }
 
 HomePage.propTypes = {
+    app: PropTypes.object.isRequired,
     parameters: PropTypes.shape({
-        action: PropTypes.string
+        command: PropTypes.array.isRequired
     })
 };

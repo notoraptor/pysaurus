@@ -119,14 +119,10 @@ export class DatabasesPage extends React.Component {
     }
 
     createDatabase() {
-        python_call("create_database", this.state.name, Array.from(this.state.paths), this.state.update)
-            .then(() => this.props.app.dbUpdate())
-            .catch(backend_error);
+        this.props.app.dbUpdate("create_database", this.state.name, Array.from(this.state.paths), this.state.update)
     }
 
     openDatabase(path) {
-        python_call("open_database", path, this.state.update)
-            .then(() => this.props.app.dbUpdate())
-            .catch(backend_error);
+        this.props.app.dbUpdate("open_database", path, this.state.update);
     }
 }

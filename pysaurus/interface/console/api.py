@@ -1,21 +1,16 @@
 from typing import Dict, List, Tuple, Union
 
 from pysaurus.core import exceptions, functions
-from pysaurus.core.classes import Enumeration, StringPrinter
+from pysaurus.core.classes import StringPrinter
 from pysaurus.core.components import AbsolutePath, Duration, FileSize
 from pysaurus.core.database import path_utils
 from pysaurus.core.database.database import Database
 from pysaurus.core.database.video import Video
 from pysaurus.core.database.video_features import VideoFeatures
+from pysaurus.core.database.video_sorting import VideoSorting
 from pysaurus.core.database.video_state import VideoState
 from pysaurus.core.functions import generate_temp_file_path
 from pysaurus.interface.console.function_parser import fdef, fsigned
-from pysaurus.core.database.video_sorting import VideoSorting
-
-
-FieldType = Enumeration(
-    functions.class_get_public_attributes(Video, ("errors", "properties"))
-)
 
 
 class API:
@@ -397,4 +392,4 @@ class API:
 
     @fsigned
     def field_names(self):
-        return sorted(FieldType.values)
+        return functions.class_get_public_attributes(Video, ("errors", "properties"))
