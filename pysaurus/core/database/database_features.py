@@ -315,8 +315,6 @@ class DatabaseFeatures:
                         new_id = new_sim_indices[pos]
                         for i in new_sim_groups[pos]:
                             videos[i].similarity_id = new_id
-                # Save.
-                db.save()
             else:
                 db.notifier.notify(notifications.Message(f"No new videos to check."))
 

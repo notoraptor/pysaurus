@@ -14,4 +14,5 @@ class ParallelNotifier(Notifier):
 
     def manage(self, notification):
         # type: (Notification) -> None
+        print(notification)
         self.queue.put_nowait(notification)

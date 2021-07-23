@@ -1,3 +1,4 @@
+import atexit
 import os
 from pathlib import Path
 from typing import Dict, Optional, List, Iterable
@@ -19,6 +20,15 @@ class Application:
         for entry in FileSystem.scandir(self.dbs_dir.path):  # type: os.DirEntry
             if entry.is_dir():
                 self.databases[AbsolutePath(entry.path)] = None
+        atexit.register(self._close)
+
+    def _close(self):
+        print(f"Closing {self.app_name}, saving databases.")
+        for path, database in self.databases.items():
+            if database:
+                print("Saving", path.file_title)
+                database.save()
+        print(f"Closed {self.app_name}.")
 
     def get_database_paths(self) -> List[AbsolutePath]:
         return sorted(self.databases.keys())

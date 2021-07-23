@@ -26,7 +26,6 @@ class Interface(GuiAPI):
             reject.Call({"name": type(exc).__name__, "message": str(exc)})
 
     def _notify(self, notification):
-        print(notification)
         self.browser.ExecuteFunction(
             "NOTIFICATION_MANAGER.call",
             {
