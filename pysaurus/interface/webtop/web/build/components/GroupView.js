@@ -1,7 +1,7 @@
-System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js", "./PlusIcon.js", "../utils/functions.js"], function (_export, _context) {
+System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js", "./PlusIcon.js", "../utils/functions.js", "../utils/Actions.js", "../utils/Action.js"], function (_export, _context) {
   "use strict";
 
-  var Characters, FIELD_MAP, Pagination, SettingIcon, PlusIcon, capitalizeFirstLetter, GroupView;
+  var Characters, FIELD_MAP, Pagination, SettingIcon, PlusIcon, capitalizeFirstLetter, Actions, Action, GroupView;
 
   function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
@@ -19,6 +19,10 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
       PlusIcon = _PlusIconJs.PlusIcon;
     }, function (_utilsFunctionsJs) {
       capitalizeFirstLetter = _utilsFunctionsJs.capitalizeFirstLetter;
+    }, function (_utilsActionsJs) {
+      Actions = _utilsActionsJs.Actions;
+    }, function (_utilsActionJs) {
+      Action = _utilsActionJs.Action;
     }],
     execute: function () {
       _export("GroupView", GroupView = class GroupView extends React.Component {
@@ -33,6 +37,8 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
           this.openPropertyOptionsAll = this.openPropertyOptionsAll.bind(this);
           this.openPropertyPlus = this.openPropertyPlus.bind(this);
           this.setPage = this.setPage.bind(this);
+          this.previousGroup = this.previousGroup.bind(this);
+          this.nextGroup = this.nextGroup.bind(this);
           this.search = this.search.bind(this);
           this.allChecked = this.allChecked.bind(this);
           this.onCheckEntry = this.onCheckEntry.bind(this);
@@ -46,6 +52,12 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
               break;
             }
           }
+
+          this.callbackIndex = -1;
+          this.features = new Actions({
+            previous: new Action("Ctrl+ArrowUp", "Go to previous group", this.previousGroup),
+            next: new Action("Ctrl+ArrowDown", "Go to next group", this.nextGroup)
+          });
         }
 
         render() {
@@ -149,6 +161,14 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
           return title;
         }
 
+        componentDidMount() {
+          this.callbackIndex = KEYBOARD_MANAGER.register(this.features.onKeyPressed);
+        }
+
+        componentWillUnmount() {
+          KEYBOARD_MANAGER.unregister(this.callbackIndex);
+        }
+
         getNbPages() {
           const count = this.props.groupDef.groups.length;
           return Math.floor(count / this.state.pageSize) + (count % this.state.pageSize ? 1 : 0);
@@ -175,6 +195,16 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
             pageNumber: pageNumber,
             selection: new Set()
           });
+        }
+
+        previousGroup() {
+          const groupID = this.props.groupDef.group_id;
+          if (groupID > 0) this.props.onSelect(groupID - 1);
+        }
+
+        nextGroup() {
+          const groupID = this.props.groupDef.group_id;
+          if (groupID < this.props.groupDef.groups.length - 1) this.props.onSelect(groupID + 1);
         }
 
         search(text) {

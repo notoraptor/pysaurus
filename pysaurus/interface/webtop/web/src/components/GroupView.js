@@ -3,6 +3,8 @@ import {Pagination} from "./Pagination.js";
 import {SettingIcon} from "./SettingIcon.js";
 import {PlusIcon} from "./PlusIcon.js";
 import {capitalizeFirstLetter} from "../utils/functions.js";
+import {Actions} from "../utils/Actions.js";
+import {Action} from "../utils/Action.js";
 
 export class GroupView extends React.Component {
     constructor(props) {
@@ -16,6 +18,8 @@ export class GroupView extends React.Component {
         this.openPropertyOptionsAll = this.openPropertyOptionsAll.bind(this);
         this.openPropertyPlus = this.openPropertyPlus.bind(this);
         this.setPage = this.setPage.bind(this);
+        this.previousGroup = this.previousGroup.bind(this);
+        this.nextGroup = this.nextGroup.bind(this);
         this.search = this.search.bind(this);
         this.allChecked = this.allChecked.bind(this);
         this.onCheckEntry = this.onCheckEntry.bind(this);
@@ -29,6 +33,11 @@ export class GroupView extends React.Component {
                 break;
             }
         }
+        this.callbackIndex = -1;
+        this.features = new Actions({
+            previous: new Action("Ctrl+ArrowUp", "Go to previous group", this.previousGroup),
+            next: new Action("Ctrl+ArrowDown", "Go to next group", this.nextGroup)
+        });
     }
 
     render() {
@@ -135,6 +144,14 @@ export class GroupView extends React.Component {
         return title;
     }
 
+    componentDidMount() {
+        this.callbackIndex = KEYBOARD_MANAGER.register(this.features.onKeyPressed);
+    }
+
+    componentWillUnmount() {
+        KEYBOARD_MANAGER.unregister(this.callbackIndex);
+    }
+
     getNbPages() {
         const count = this.props.groupDef.groups.length;
         return Math.floor(count / this.state.pageSize) + (count % this.state.pageSize ? 1 : 0);
@@ -160,6 +177,18 @@ export class GroupView extends React.Component {
     setPage(pageNumber) {
         if (this.state.pageNumber !== pageNumber)
             this.setState({pageNumber: pageNumber, selection: new Set()});
+    }
+
+    previousGroup() {
+        const groupID = this.props.groupDef.group_id;
+        if (groupID > 0)
+            this.props.onSelect(groupID - 1);
+    }
+
+    nextGroup() {
+        const groupID = this.props.groupDef.group_id;
+        if (groupID < this.props.groupDef.groups.length - 1)
+            this.props.onSelect(groupID + 1);
     }
 
     search(text) {
