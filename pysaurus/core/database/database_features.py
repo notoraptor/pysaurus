@@ -190,11 +190,13 @@ class DatabaseFeatures:
         )
         graph = Graph()
         nb_miniatures = len(miniatures)
+        job_n = notifications.Jobs.link_videos(nb_miniatures, notifier)
         with Profiler("Link videos ...", notifier):
-            for i in range(len(miniatures)):
-                for j in range(i + 1, len(miniatures)):
+            for i in range(nb_miniatures):
+                for j in range(i + 1, nb_miniatures):
                     if edges[i * nb_miniatures + j]:
                         graph.connect(i, j)
+                job_n.progress(None, i + 1, nb_miniatures)
         return [group for group in graph.pop_groups() if len(group) > 1]
 
     @classmethod
@@ -315,6 +317,8 @@ class DatabaseFeatures:
                         new_id = new_sim_indices[pos]
                         for i in new_sim_groups[pos]:
                             videos[i].similarity_id = new_id
+                # Save.
+                db.save()
             else:
                 db.notifier.notify(notifications.Message(f"No new videos to check."))
 

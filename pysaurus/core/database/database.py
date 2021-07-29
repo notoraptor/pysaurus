@@ -159,12 +159,15 @@ class Database:
             else:
                 self.__discarded[video_state.filename] = video_state
 
-        self.__to_save()
+        if self.__ensure_identifiers():
+            self.__to_save(ensure_identifiers=False)
         self.__notifier.notify(notifications.DatabaseLoaded(self))
 
-    def __to_save(self):
-        self.__ensure_identifiers()
+    def __to_save(self, ensure_identifiers=True):
+        if ensure_identifiers:
+            self.__ensure_identifiers()
         self.__save_id += 1
+        self.save()
 
     def save(self):
         # Save database.

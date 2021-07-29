@@ -5,11 +5,11 @@ class Graph:
     __slots__ = ("edges",)
 
     def __init__(self):
-        self.edges = {}  # type: Dict[Any, Set[Any]]
+        self.edges = {}  # type: Dict[Any, List[Any]]
 
     def connect(self, a, b):
-        self.edges.setdefault(a, set()).add(b)
-        self.edges.setdefault(b, set()).add(a)
+        self.edges.setdefault(a, []).append(b)
+        self.edges.setdefault(b, []).append(a)
 
     def pop_groups(self) -> List[Set[Any]]:
         groups = []
@@ -20,7 +20,7 @@ class Graph:
                 other_index = other_indices.pop()
                 if other_index not in group:
                     group.add(other_index)
-                    other_indices.update(self.edges.pop(other_index))
+                    other_indices.extend(self.edges.pop(other_index))
             groups.append(group)
         return groups
 

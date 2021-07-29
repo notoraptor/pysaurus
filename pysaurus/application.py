@@ -1,4 +1,4 @@
-import atexit
+# import atexit
 import os
 from pathlib import Path
 from typing import Dict, Optional, List, Iterable
@@ -20,7 +20,7 @@ class Application:
         for entry in FileSystem.scandir(self.dbs_dir.path):  # type: os.DirEntry
             if entry.is_dir():
                 self.databases[AbsolutePath(entry.path)] = None
-        atexit.register(self._close)
+        # atexit.register(self._close)
 
     def _close(self):
         print(f"Closing {self.app_name}, saving databases.")
