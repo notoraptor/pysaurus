@@ -13,11 +13,11 @@ System.register([], function (_export, _context) {
          * @param props {{title: str}}
          */
         constructor(props) {
-          // title
-          // children
+          // title, onClose() ?, children
           super(props);
           this.callbackIndex = -1;
           this.checkShortcut = this.checkShortcut.bind(this);
+          this.onClose = this.onClose.bind(this);
         }
 
         render() {
@@ -32,7 +32,7 @@ System.register([], function (_export, _context) {
           }, this.props.title), /*#__PURE__*/React.createElement("div", {
             className: "fancybox-close"
           }, /*#__PURE__*/React.createElement("button", {
-            onClick: Fancybox.close
+            onClick: this.onClose
           }, "\xD7"))), /*#__PURE__*/React.createElement("div", {
             className: "fancybox-content"
           }, this.props.children)));
@@ -52,12 +52,22 @@ System.register([], function (_export, _context) {
 
         checkShortcut(event) {
           if (event.key === "Escape") {
-            Fancybox.close();
+            this.onClose();
             return true;
           }
         }
 
+        onClose() {
+          if (!this.props.onClose || this.props.onClose()) Fancybox.close();
+        }
+
       });
+
+      FancyBox.propTypes = {
+        title: PropTypes.string.isRequired,
+        // onClose()
+        onClose: PropTypes.func
+      };
     }
   };
 });
