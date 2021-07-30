@@ -6,10 +6,12 @@ import traceback
 from abc import abstractmethod
 from typing import Optional, Callable
 
+from pysaurus.core.components import AbsolutePath, FilePath
 from pysaurus.core.database.database_features import DatabaseFeatures
 from pysaurus.core.database.viewport.video_provider import VideoProvider
+from pysaurus.core.file_copier import FileCopier
 from pysaurus.core.functions import launch_thread
-from pysaurus.core.notifications import Notification, DatabaseReady
+from pysaurus.core.notifications import Notification, End, DatabaseReady
 from pysaurus.interface.webtop.feature_api import FeatureAPI
 from pysaurus.interface.webtop.parallel_notifier import ParallelNotifier
 
@@ -21,6 +23,7 @@ class GuiAPI(FeatureAPI):
         self.monitor_thread = None  # type: Optional[threading.Thread]
         self.db_loading_thread = None  # type: Optional[threading.Thread]
         self.threads_stop_flag = False
+        self.copy_work: Optional[FileCopier] = None
         self.notifier.call_default_if_no_manager()
 
     def create_database(self, name, folders, update):
@@ -50,6 +53,17 @@ class GuiAPI(FeatureAPI):
     def find_similar_videos_ignore_cache(self):
         self._launch(self._find_similarities_ignore_cache)
 
+    def move_video_file(self, video_id, directory):
+        def run():
+            self._move_video_file(video_id, directory)
+
+        run.__name__ = "move_video_file"
+        self._launch(run, finish=False)
+
+    def cancel_copy(self):
+        if self.copy_work is not None:
+            self.copy_work.cancel = True
+
     def close_database(self):
         self.database = None
         self.provider = None
@@ -65,15 +79,19 @@ class GuiAPI(FeatureAPI):
 
     # Private methods.
 
-    def _launch(self, function: Callable[[], None]):
+    def _launch(self, function: Callable[[], None], finish=True):
         print("Running", function.__name__)
         assert not self.monitor_thread
         assert not self.db_loading_thread
         self.notifier.clear_managers()
+        self._consume_notifications()
 
-        def run():
-            function()
-            self._finish_loading(f"Finished running: {function.__name__}")
+        if finish:
+            def run():
+                function()
+                self._finish_loading(f"Finished running: {function.__name__}")
+        else:
+            run = function
 
         # Launch monitor thread.
         self.monitor_thread = launch_thread(self._monitor_notifications)
@@ -81,10 +99,20 @@ class GuiAPI(FeatureAPI):
         self.db_loading_thread = launch_thread(run)
 
     def _finish_loading(self, log_message):
-        self.provider.register_notifications()
+        if self.provider:
+            self.provider.register_notifications()
         self.notifier.notify(DatabaseReady())
         self.db_loading_thread = None
         print(log_message)
+
+    def _consume_notifications(self):
+        if self.notifier.queue.qsize():
+            while True:
+                try:
+                    self.notifier.queue.get_nowait()
+                except queue.Empty:
+                    break
+        assert not self.notifier.queue.qsize()
 
     def _monitor_notifications(self):
         print("Monitoring notifications ...")
@@ -94,7 +122,7 @@ class GuiAPI(FeatureAPI):
             try:
                 notification = self.notifier.queue.get_nowait()
                 self._notify(notification)
-                if isinstance(notification, DatabaseReady):
+                if isinstance(notification, End):
                     break
             except queue.Empty:
                 time.sleep(1 / 100)
@@ -144,3 +172,18 @@ class GuiAPI(FeatureAPI):
             allow_singletons=False,
         )
         self.provider.refresh()
+
+    def _move_video_file(self, video_id, directory):
+        video = self.database.get_video_from_id(video_id)
+        directory = AbsolutePath.ensure_directory(directory)
+        dst = FilePath(directory, video.filename.file_title, video.filename.extension)
+        self.copy_work = FileCopier(video.filename, dst, notifier=self.notifier)
+        done = self.copy_work.copy()
+        self.copy_work = None
+        self.provider.register_notifications()
+        if done:
+            old_path = self.database.change_video_path(video, dst)
+            assert old_path != video.filename
+            old_path.delete()
+            self.provider.refresh()
+        self.db_loading_thread = None

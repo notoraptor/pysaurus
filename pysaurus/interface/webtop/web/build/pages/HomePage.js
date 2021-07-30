@@ -22,7 +22,7 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
     }, /*#__PURE__*/React.createElement("label", {
       htmlFor: jobClassID,
       className: "info"
-    }, current, " / ", total, " (", percent, " %)"), /*#__PURE__*/React.createElement("progress", {
+    }, current, " done (", percent, " %)"), /*#__PURE__*/React.createElement("progress", {
       id: jobClassID,
       value: current,
       max: total
@@ -54,7 +54,19 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
       NotificationCollector = {
         DatabaseReady: function (app, notification) {
           app.collectNotification(notification, {
-            loaded: true
+            loaded: 1
+          });
+        },
+        Done: function (app, notification) {
+          app.collectNotification(notification, {
+            loaded: 1,
+            status: "Done!"
+          });
+        },
+        Cancelled: function (app, notification) {
+          app.collectNotification(notification, {
+            loaded: -1,
+            status: "Cancelled."
           });
         },
         JobToDo: function (app, notification) {
@@ -108,6 +120,16 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
           return /*#__PURE__*/React.createElement("div", {
             key: i
           }, /*#__PURE__*/React.createElement("strong", null, "Database open!"));
+        },
+        Done: function (app, message, i) {
+          return /*#__PURE__*/React.createElement("div", {
+            key: i
+          }, /*#__PURE__*/React.createElement("strong", null, "Done!"));
+        },
+        Cancelled: function (app, message, i) {
+          return /*#__PURE__*/React.createElement("div", {
+            key: i
+          }, /*#__PURE__*/React.createElement("strong", null, "Cancelled."));
         },
         FinishedCollectingVideos: function (app, message, i) {
           const count = message.notification.count;
@@ -164,8 +186,13 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
         JobToDo: function (app, message, i) {
           const total = message.notification.total;
           const label = message.notification.name;
+          const title = message.notification.title;
 
-          if (total) {
+          if (title) {
+            return /*#__PURE__*/React.createElement("div", {
+              key: i
+            }, /*#__PURE__*/React.createElement("strong", null, title));
+          } else if (total) {
             return /*#__PURE__*/React.createElement("div", {
               key: i
             }, /*#__PURE__*/React.createElement("strong", null, total, ' ', label, total > 1 ? 's' : '', " to load."));
@@ -199,7 +226,8 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
         find_similar_videos: "Find similarities",
         find_similar_videos_ignore_cache: "Find similarities (ignore cache)",
         create_database: "Create database",
-        open_database: "Open database"
+        open_database: "Open database",
+        move_video_file: "Move video file"
       };
 
       _export("HomePage", HomePage = class HomePage extends React.Component {
@@ -209,6 +237,7 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
           super(props);
           this.state = {
             loaded: false,
+            status: null,
             messages: [],
             jobMap: new Map()
           };
@@ -231,7 +260,7 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
         }
 
         renderInitialButton() {
-          if (this.state.loaded) return /*#__PURE__*/React.createElement("button", {
+          if (this.props.parameters.onReady) return /*#__PURE__*/React.createElement("strong", null, this.state.status || ACTIONS[this.props.parameters.command[0]] + " ...");else if (this.state.loaded) return /*#__PURE__*/React.createElement("button", {
             onClick: this.displayVideos
           }, "Display videos");else return /*#__PURE__*/React.createElement("button", {
             disabled: true
@@ -240,7 +269,6 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
 
         renderMessages() {
           const output = [];
-          const lastIndex = this.state.messages.length - 1;
 
           for (let i = 0; i < this.state.messages.length; ++i) {
             const message = this.state.messages[i];
@@ -270,6 +298,10 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
         componentDidUpdate(prevProps, prevState, snapshot) {
           const divNotifs = document.getElementById("notifications");
           divNotifs.scrollTop = divNotifs.scrollHeight;
+
+          if (this.props.parameters.onReady && this.state.loaded) {
+            setTimeout(() => this.props.parameters.onReady(this.state.loaded), 500);
+          }
         }
 
         componentWillUnmount() {
@@ -309,7 +341,9 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
       HomePage.propTypes = {
         app: PropTypes.object.isRequired,
         parameters: PropTypes.shape({
-          command: PropTypes.array.isRequired
+          command: PropTypes.array.isRequired,
+          // onReady(status in {-1 for cancelled, 1 for done/ready})
+          onReady: PropTypes.func
         })
       };
     }

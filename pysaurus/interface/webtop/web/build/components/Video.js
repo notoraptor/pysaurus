@@ -27,6 +27,8 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
       Characters = _utilsConstantsJs.Characters;
     }],
     execute: function () {
+      window.LATEST_MOVE_FOLDER = null;
+
       _export("Video", Video = class Video extends React.Component {
         constructor(props) {
           super(props);
@@ -41,6 +43,7 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
           this.onSelect = this.onSelect.bind(this);
           this.reallyDeleteVideo = this.reallyDeleteVideo.bind(this);
           this.confirmMove = this.confirmMove.bind(this);
+          this.moveVideo = this.moveVideo.bind(this);
         }
 
         render() {
@@ -90,7 +93,9 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
             action: this.copyFileTitle
           }, "Copy file title") : '', data.exists ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.renameVideo
-          }, "Rename video") : '', /*#__PURE__*/React.createElement(MenuItem, {
+          }, "Rename video") : '', data.exists ? /*#__PURE__*/React.createElement(MenuItem, {
+            action: this.moveVideo
+          }, "Move video to another folder ...") : "", /*#__PURE__*/React.createElement(MenuItem, {
             className: "menu-delete",
             action: this.deleteVideo
           }, data.exists ? 'Delete video' : 'Delete entry'), this.props.groupedByMoves && data.moves.length ? /*#__PURE__*/React.createElement(Menu, {
@@ -315,6 +320,15 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
           }));
         }
 
+        moveVideo() {
+          python_call("select_directory", window.LATEST_MOVE_FOLDER).then(directory => {
+            if (directory) {
+              window.LATEST_MOVE_FOLDER = directory;
+              this.props.onMove(this.props.data.video_id, directory);
+            }
+          }).catch(backend_error);
+        }
+
         onSelect(event) {
           if (this.props.onSelect) {
             this.props.onSelect(this.props.data.video_id, event.target.checked);
@@ -334,7 +348,9 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
         // onSelectPropertyValue(propName, propVal)
         onSelectPropertyValue: PropTypes.func.isRequired,
         // onInfo(message: str, backendUpdated: bool)
-        onInfo: PropTypes.func.isRequired
+        onInfo: PropTypes.func.isRequired,
+        // onMove(videoID, directory)
+        onMove: PropTypes.func.isRequired
       };
     }
   };

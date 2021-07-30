@@ -5,8 +5,8 @@ _root.withdraw()
 _root.attributes("-topmost", True)
 
 
-def select_directory():
-    return filedialog.askdirectory()
+def select_directory(default=None):
+    return filedialog.askdirectory(mustexist=True, initialdir=default)
 
 
 def select_file_to_open():

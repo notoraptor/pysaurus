@@ -8,6 +8,8 @@ import {Menu} from "./Menu.js";
 import {backend_error, python_call} from "../utils/backend.js";
 import {Characters} from "../utils/constants.js";
 
+window.LATEST_MOVE_FOLDER = null;
+
 export class Video extends React.Component {
     constructor(props) {
         super(props);
@@ -22,6 +24,7 @@ export class Video extends React.Component {
         this.onSelect = this.onSelect.bind(this);
         this.reallyDeleteVideo = this.reallyDeleteVideo.bind(this);
         this.confirmMove = this.confirmMove.bind(this);
+        this.moveVideo = this.moveVideo.bind(this);
     }
 
     render() {
@@ -63,6 +66,7 @@ export class Video extends React.Component {
                                     {meta_title ? <MenuItem action={this.copyMetaTitle}>Copy meta title</MenuItem> : ''}
                                     {file_title ? <MenuItem action={this.copyFileTitle}>Copy file title</MenuItem> : ''}
                                     {data.exists ? <MenuItem action={this.renameVideo}>Rename video</MenuItem> : ''}
+                                    {data.exists ? <MenuItem action={this.moveVideo}>Move video to another folder ...</MenuItem> : ""}
                                     <MenuItem className="menu-delete" action={this.deleteVideo}>
                                         {data.exists ? 'Delete video' : 'Delete entry'}
                                     </MenuItem>
@@ -315,6 +319,17 @@ export class Video extends React.Component {
         );
     }
 
+    moveVideo() {
+        python_call("select_directory", window.LATEST_MOVE_FOLDER)
+            .then(directory => {
+                if (directory) {
+                    window.LATEST_MOVE_FOLDER = directory;
+                    this.props.onMove(this.props.data.video_id, directory);
+                }
+            })
+            .catch(backend_error);
+    }
+
     onSelect(event) {
         if (this.props.onSelect) {
             this.props.onSelect(this.props.data.video_id, event.target.checked);
@@ -334,4 +349,6 @@ Video.propTypes = {
     onSelectPropertyValue: PropTypes.func.isRequired,
     // onInfo(message: str, backendUpdated: bool)
     onInfo: PropTypes.func.isRequired,
+    // onMove(videoID, directory)
+    onMove: PropTypes.func.isRequired,
 };

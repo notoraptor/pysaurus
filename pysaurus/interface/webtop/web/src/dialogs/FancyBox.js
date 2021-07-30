@@ -15,7 +15,7 @@ export class FancyBox extends React.Component {
             <div className="fancybox-wrapper absolute-plain">
                 <div className="fancybox vertical">
                     <div className="fancybox-header horizontal">
-                        <div className="fancybox-title">{this.props.title}</div>
+                        <div className="fancybox-title" title={this.props.title}>{this.props.title}</div>
                         <div className="fancybox-close">
                             <button onClick={this.onClose}>&times;</button>
                         </div>

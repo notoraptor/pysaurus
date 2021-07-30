@@ -23,6 +23,8 @@ import {ActionToMenuItem} from "../components/ActionToMenuItem.js";
 import {ActionToSettingIcon} from "../components/ActionToSettingIcon.js";
 import {ActionToCross} from "../components/ActionToCross.js";
 import {backend_error, python_call} from "../utils/backend.js";
+import {FancyBox} from "../dialogs/FancyBox.js";
+import {HomePage} from "./HomePage.js";
 
 
 function compareSources(sources1, sources2) {
@@ -89,6 +91,7 @@ export class VideosPage extends React.Component {
         this.findSimilarVideos = this.findSimilarVideos.bind(this);
         this.findSimilarVideosIgnoreCache = this.findSimilarVideosIgnoreCache.bind(this);
         this.closeDatabase = this.closeDatabase.bind(this);
+        this.moveVideo = this.moveVideo.bind(this);
 
         this.callbackIndex = -1;
         this.features = new Actions({
@@ -235,6 +238,7 @@ export class VideosPage extends React.Component {
                                propDefs={this.state.properties}
                                selected={this.state.selector.has(data.video_id)}
                                onSelect={this.onVideoSelection}
+                               onMove={this.moveVideo}
                                onSelectPropertyValue={this.focusPropertyValue}
                                onInfo={this.updateStatus}
                                confirmDeletion={this.state.confirmDeletion}
@@ -412,6 +416,29 @@ export class VideosPage extends React.Component {
             else
                 this.setState({selector});
         }
+    }
+
+    moveVideo(videoID, directory) {
+        Fancybox.load(
+            <FancyBox title={`Move file to ${directory}`} onClose={() => {
+                python_call("cancel_copy");
+            }}>
+                <div className="absolute-plain vertical">
+                    <HomePage key={window.ID_GENERATOR.next()}
+                              app={this.props.app}
+                              parameters={{
+                                  command: ["move_video_file", videoID, directory],
+                                  onReady: (status) => {
+                                      if (status < 0)
+                                          this.updateStatus(`Video not moved.`);
+                                      else
+                                          this.updateStatus(`Video moved to ${directory}`, true);
+                                      Fancybox.close();
+                                  }
+                              }}/>
+                </div>
+            </FancyBox>
+        )
     }
 
     deselect() {

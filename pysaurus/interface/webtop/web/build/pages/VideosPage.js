@@ -1,7 +1,7 @@
-System.register(["../utils/constants.js", "../components/MenuPack.js", "../components/Pagination.js", "../components/Video.js", "../forms/FormVideosSource.js", "../forms/FormVideosGrouping.js", "../forms/FormVideosSearch.js", "../forms/FormVideosSort.js", "../components/GroupView.js", "../forms/FormPropertySelectedValues.js", "../forms/FormVideosKeywordsToProperty.js", "../forms/FormSelectedVideosProperty.js", "../components/Collapsable.js", "../components/Cross.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/MenuItemRadio.js", "../components/Menu.js", "../utils/Selector.js", "../utils/Action.js", "../utils/Actions.js", "../components/ActionToMenuItem.js", "../components/ActionToSettingIcon.js", "../components/ActionToCross.js", "../utils/backend.js"], function (_export, _context) {
+System.register(["../utils/constants.js", "../components/MenuPack.js", "../components/Pagination.js", "../components/Video.js", "../forms/FormVideosSource.js", "../forms/FormVideosGrouping.js", "../forms/FormVideosSearch.js", "../forms/FormVideosSort.js", "../components/GroupView.js", "../forms/FormPropertySelectedValues.js", "../forms/FormVideosKeywordsToProperty.js", "../forms/FormSelectedVideosProperty.js", "../components/Collapsable.js", "../components/Cross.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/MenuItemRadio.js", "../components/Menu.js", "../utils/Selector.js", "../utils/Action.js", "../utils/Actions.js", "../components/ActionToMenuItem.js", "../components/ActionToSettingIcon.js", "../components/ActionToCross.js", "../utils/backend.js", "../dialogs/FancyBox.js", "./HomePage.js"], function (_export, _context) {
   "use strict";
 
-  var PAGE_SIZES, SEARCH_TYPE_TITLE, SOURCE_TREE, FIELD_MAP, MenuPack, Pagination, Video, FormVideosSource, FormVideosGrouping, FormVideosSearch, FormVideosSort, GroupView, FormPropertySelectedValues, FormVideosKeywordsToProperty, FormSelectedVideosProperty, Collapsable, Cross, MenuItem, MenuItemCheck, MenuItemRadio, Menu, Selector, Action, Actions, ActionToMenuItem, ActionToSettingIcon, ActionToCross, backend_error, python_call, VideosPage;
+  var PAGE_SIZES, SEARCH_TYPE_TITLE, SOURCE_TREE, FIELD_MAP, MenuPack, Pagination, Video, FormVideosSource, FormVideosGrouping, FormVideosSearch, FormVideosSort, GroupView, FormPropertySelectedValues, FormVideosKeywordsToProperty, FormSelectedVideosProperty, Collapsable, Cross, MenuItem, MenuItemCheck, MenuItemRadio, Menu, Selector, Action, Actions, ActionToMenuItem, ActionToSettingIcon, ActionToCross, backend_error, python_call, FancyBox, HomePage, VideosPage;
 
   function compareSources(sources1, sources2) {
     if (sources1.length !== sources2.length) return false;
@@ -76,6 +76,10 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
     }, function (_utilsBackendJs) {
       backend_error = _utilsBackendJs.backend_error;
       python_call = _utilsBackendJs.python_call;
+    }, function (_dialogsFancyBoxJs) {
+      FancyBox = _dialogsFancyBoxJs.FancyBox;
+    }, function (_HomePageJs) {
+      HomePage = _HomePageJs.HomePage;
     }],
     execute: function () {
       _export("VideosPage", VideosPage = class VideosPage extends React.Component {
@@ -126,6 +130,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           this.findSimilarVideos = this.findSimilarVideos.bind(this);
           this.findSimilarVideosIgnoreCache = this.findSimilarVideosIgnoreCache.bind(this);
           this.closeDatabase = this.closeDatabase.bind(this);
+          this.moveVideo = this.moveVideo.bind(this);
           this.callbackIndex = -1;
           this.features = new Actions({
             select: new Action("Ctrl+T", "Select videos ...", this.selectVideos),
@@ -268,6 +273,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             propDefs: this.state.properties,
             selected: this.state.selector.has(data.video_id),
             onSelect: this.onVideoSelection,
+            onMove: this.moveVideo,
             onSelectPropertyValue: this.focusPropertyValue,
             onInfo: this.updateStatus,
             confirmDeletion: this.state.confirmDeletion,
@@ -386,6 +392,27 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
               selector
             });
           }
+        }
+
+        moveVideo(videoID, directory) {
+          Fancybox.load( /*#__PURE__*/React.createElement(FancyBox, {
+            title: `Move file to ${directory}`,
+            onClose: () => {
+              python_call("cancel_copy");
+            }
+          }, /*#__PURE__*/React.createElement("div", {
+            className: "absolute-plain vertical"
+          }, /*#__PURE__*/React.createElement(HomePage, {
+            key: window.ID_GENERATOR.next(),
+            app: this.props.app,
+            parameters: {
+              command: ["move_video_file", videoID, directory],
+              onReady: status => {
+                if (status < 0) this.updateStatus(`Video not moved.`);else this.updateStatus(`Video moved to ${directory}`, true);
+                Fancybox.close();
+              }
+            }
+          }))));
         }
 
         deselect() {

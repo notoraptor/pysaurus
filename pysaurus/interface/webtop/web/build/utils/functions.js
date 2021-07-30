@@ -1,6 +1,8 @@
 System.register([], function (_export, _context) {
   "use strict";
 
+  var IdGenerator;
+
   /**
    * @param propType {string}
    * @param propEnum {Array}
@@ -45,11 +47,23 @@ System.register([], function (_export, _context) {
 
   _export({
     parsePropValString: parsePropValString,
-    capitalizeFirstLetter: capitalizeFirstLetter
+    capitalizeFirstLetter: capitalizeFirstLetter,
+    IdGenerator: void 0
   });
 
   return {
     setters: [],
-    execute: function () {}
+    execute: function () {
+      _export("IdGenerator", IdGenerator = class IdGenerator {
+        constructor() {
+          this.id = 0;
+        }
+
+        next() {
+          return ++this.id;
+        }
+
+      });
+    }
   };
 });

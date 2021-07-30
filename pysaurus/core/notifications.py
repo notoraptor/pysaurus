@@ -105,9 +105,6 @@ class DatabaseSaved(DatabaseLoaded):
     __slots__ = ()
 
 
-# Unused, sub-classed.
-
-
 class MissingVideos(Notification):
     __slots__ = ["names"]
 
@@ -150,18 +147,31 @@ class VideoThumbnailErrors(VideoInfoErrors):
     __slots__ = ()
 
 
-class DatabaseReady(Notification):
-    __slots__ = ()
-
-
 class Message(Notification):
     __slots__ = ("message",)
 
     def __init__(self, *message):
         super().__init__()
         with StringPrinter() as printer:
-            printer.write(*message)
+            if message:
+                printer.write(*message)
             self.message = str(printer)
+
+
+class End(Message):
+    __slots__ = ()
+
+
+class Done(End):
+    __slots__ = ()
+
+
+class Cancelled(End):
+    __slots__ = ()
+
+
+class DatabaseReady(End):
+    __slots__ = ()
 
 
 # Database changes.
@@ -180,6 +190,9 @@ class VideoDeleted(Notification):
 
 class FieldsModified(Notification):
     __slots__ = ("fields",)
+    __props__ = "modified",
+
+    modified = property(lambda self: sorted(self.fields))
 
     def __init__(self, properties: Iterable[str]):
         super().__init__()
@@ -191,11 +204,12 @@ class PropertiesModified(FieldsModified):
 
 
 class JobToDo(Notification):
-    __slots__ = "name", "total"
+    __slots__ = "name", "total", "title"
 
-    def __init__(self, name: str, total: int):
+    def __init__(self, name: str, total: int, title: str = None):
         self.name = name
         self.total = total
+        self.title = title
 
 
 class JobStep(Notification):
@@ -210,32 +224,17 @@ class JobStep(Notification):
 
 
 class JobNotifications:
-    __slots__ = "name", "total", "notifier"
+    __slots__ = "name", "notifier"
 
-    def __init__(self, name: str, total: int, notifier):
+    def __init__(self, name: str, total: int, notifier, title: str = None):
         self.name = name
-        self.total = total
         self.notifier = notifier
-        self.todo()
-        self.started()
-
-    def todo(self):
-        self.notifier.notify(JobToDo(self.name, self.total))
-
-    def started(self):
-        if self.total:
-            self.notifier.notify(JobStep(self.name, None, 0, self.total))
+        self.notifier.notify(JobToDo(self.name, total, title))
+        if total:
+            self.notifier.notify(JobStep(self.name, None, 0, total))
 
     def progress(self, channel: Optional[str], channel_step: int, channel_size: int):
         self.notifier.notify(JobStep(self.name, channel, channel_step, channel_size))
-
-    def __enter__(self):
-        self.todo()
-        self.started()
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
 
 
 class _JobNotificationsFactory:
@@ -244,8 +243,8 @@ class _JobNotificationsFactory:
     def __init__(self, name: str):
         self.name = name
 
-    def __call__(self, total, notifier) -> JobNotifications:
-        return JobNotifications(self.name, total, notifier)
+    def __call__(self, total, notifier, title=None) -> JobNotifications:
+        return JobNotifications(self.name, total, notifier, title)
 
 
 class Jobs:
@@ -256,3 +255,5 @@ class Jobs:
     gray_comparisons = _JobNotificationsFactory("miniature gray comparison")
     new_comparisons = _JobNotificationsFactory("new miniature comparison")
     native_comparisons = _JobNotificationsFactory("native comparison")
+    copy_file = _JobNotificationsFactory("byte")
+    link_videos = _JobNotificationsFactory("videos relation")

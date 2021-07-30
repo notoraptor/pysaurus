@@ -40,6 +40,16 @@ def new_sub_folder(folder: AbsolutePath, suffix: str, sep="."):
     return AbsolutePath.join(folder, f"{folder.title}{sep}{suffix}")
 
 
+FILENAME_RELATED_FIELDS = (
+    "title",
+    "title_numeric",
+    "file_title",
+    "file_title_numeric",
+    "disk",
+    "filename",
+)
+
+
 class Database:
     __slots__ = (
         "__db_folder",
@@ -638,8 +648,26 @@ class Database:
             video.filename = new_filename
             self.__to_save()
             self.__notifier.notify(
-                notifications.FieldsModified(("filename", "file_title", "title"))
+                notifications.FieldsModified(FILENAME_RELATED_FIELDS)
             )
+
+    def change_video_path(self, video: Video, path: AbsolutePath) -> AbsolutePath:
+        # TODO What if new path does not belong to allowed DB folders ?
+        path = AbsolutePath.ensure(path)
+        assert video.filename != path
+        assert path.isfile()
+        for dct in (self.__videos, self.__unreadable, self.__discarded):
+            if video.filename in dct:
+                old_filename = video.filename
+                del dct[video.filename]
+                dct[path] = video
+                video.filename = path
+                # TODO DB update will always recheck this video, as path mtime changed.
+                self.__to_save()
+                self.__notifier.notify(
+                    notifications.FieldsModified(FILENAME_RELATED_FIELDS)
+                )
+                return old_filename
 
     def remove_videos_not_found(self):
         nb_removed = 0
@@ -651,8 +679,7 @@ class Database:
             self.__notifier.notify(notifications.VideosNotFoundRemoved(nb_removed))
             self.__to_save()
 
-    def get_video_from_id(self, video_id, required=True):
-        # type: (int, bool) -> Optional[Video]
+    def get_video_from_id(self, video_id: int, required=True) -> Optional[Video]:
         if (
             video_id in self.__id_to_video
             and self.__id_to_video[video_id].filename in self.__videos

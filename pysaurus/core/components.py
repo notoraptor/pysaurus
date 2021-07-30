@@ -124,7 +124,10 @@ class AbsolutePath(object):
         )
 
     def get_date_modified(self):
-        return DateModified(FileSystem.path.getmtime(self.__path))
+        return DateModified(self.get_mtime())
+
+    def get_mtime(self):
+        return FileSystem.path.getmtime(self.__path)
 
     # not tested.
     def get_size(self):

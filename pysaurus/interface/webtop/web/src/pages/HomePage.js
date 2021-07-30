@@ -27,7 +27,7 @@ function Monitoring(props) {
     const jobClassID = monitoring.name + "-job";
     return (
         <div className={`job horizontal ${jobClassID}`}>
-            <label htmlFor={jobClassID} className="info">{current} / {total} ({percent} %)</label>
+            <label htmlFor={jobClassID} className="info">{current} done ({percent} %)</label>
             <progress id={jobClassID} value={current} max={total}/>
         </div>
     );
@@ -35,7 +35,13 @@ function Monitoring(props) {
 
 const NotificationCollector = {
     DatabaseReady: function (app, notification) {
-        app.collectNotification(notification, {loaded: true});
+        app.collectNotification(notification, {loaded: 1});
+    },
+    Done: function (app, notification) {
+        app.collectNotification(notification, {loaded: 1, status: "Done!"});
+    },
+    Cancelled: function (app, notification) {
+        app.collectNotification(notification, {loaded: -1, status: "Cancelled."});
     },
     JobToDo: function (app, notification) {
         const name = notification.notification.name;
@@ -89,6 +95,12 @@ const NotificationRenderer = {
     },
     DatabaseReady: function (app, message, i) {
         return <div key={i}><strong>Database open!</strong></div>;
+    },
+    Done: function (app, message, i) {
+        return <div key={i}><strong>Done!</strong></div>;
+    },
+    Cancelled: function (app, message, i) {
+        return <div key={i}><strong>Cancelled.</strong></div>;
     },
     FinishedCollectingVideos: function (app, message, i) {
         const count = message.notification.count;
@@ -151,7 +163,10 @@ const NotificationRenderer = {
     JobToDo: function (app, message, i) {
         const total = message.notification.total;
         const label = message.notification.name;
-        if (total) {
+        const title = message.notification.title;
+        if (title) {
+            return <div key={i}><strong>{title}</strong></div>;
+        } else if (total) {
             return (<div key={i}><strong>{total}{' '}{label}{total > 1 ? 's' : ''} to load.</strong></div>);
         } else {
             return (<div key={i}><em>No {label}s to load!</em></div>);
@@ -176,6 +191,7 @@ const ACTIONS = {
     find_similar_videos_ignore_cache: "Find similarities (ignore cache)",
     create_database: "Create database",
     open_database: "Open database",
+    move_video_file: "Move video file",
 };
 
 export class HomePage extends React.Component {
@@ -185,6 +201,7 @@ export class HomePage extends React.Component {
         super(props);
         this.state = {
             loaded: false,
+            status: null,
             messages: [],
             jobMap: new Map(),
         };
@@ -204,7 +221,9 @@ export class HomePage extends React.Component {
     }
 
     renderInitialButton() {
-        if (this.state.loaded)
+        if (this.props.parameters.onReady)
+            return <strong>{this.state.status || (ACTIONS[this.props.parameters.command[0]] + " ...")}</strong>;
+        else if (this.state.loaded)
             return <button onClick={this.displayVideos}>Display videos</button>;
         else
             return <button disabled={true}>{ACTIONS[this.props.parameters.command[0]]} ...</button>;
@@ -212,7 +231,6 @@ export class HomePage extends React.Component {
 
     renderMessages() {
         const output = [];
-        const lastIndex = this.state.messages.length - 1;
         for (let i = 0; i < this.state.messages.length; ++i) {
             const message = this.state.messages[i];
             const name = message.name;
@@ -238,6 +256,9 @@ export class HomePage extends React.Component {
     componentDidUpdate(prevProps, prevState, snapshot) {
         const divNotifs = document.getElementById("notifications");
         divNotifs.scrollTop = divNotifs.scrollHeight;
+        if (this.props.parameters.onReady && this.state.loaded) {
+            setTimeout(() => this.props.parameters.onReady(this.state.loaded), 500);
+        }
     }
 
     componentWillUnmount() {
@@ -277,6 +298,8 @@ export class HomePage extends React.Component {
 HomePage.propTypes = {
     app: PropTypes.object.isRequired,
     parameters: PropTypes.shape({
-        command: PropTypes.array.isRequired
+        command: PropTypes.array.isRequired,
+        // onReady(status in {-1 for cancelled, 1 for done/ready})
+        onReady: PropTypes.func
     })
 };

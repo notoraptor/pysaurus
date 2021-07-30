@@ -2,6 +2,10 @@ import {App} from "./App.js";
 import {FancyboxManager} from "./utils/FancyboxManager.js";
 import {Callbacks} from "./utils/Callbacks.js";
 import {python_call} from "./utils/backend.js";
+import {IdGenerator} from "./utils/functions.js";
+
+
+window.ID_GENERATOR = new IdGenerator();
 
 /** Global fancybox manager. Used to open/close a fancybox.s */
 window.Fancybox = new FancyboxManager("fancybox");

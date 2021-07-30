@@ -43,3 +43,13 @@ export function capitalizeFirstLetter(str) {
         return str.toUpperCase();
     return str.substr(0, 1).toUpperCase() + str.substr(1);
 }
+
+
+export class IdGenerator {
+    constructor() {
+        this.id = 0;
+    }
+    next() {
+        return ++this.id;
+    }
+}

@@ -28,7 +28,8 @@ System.register([], function (_export, _context) {
           }, /*#__PURE__*/React.createElement("div", {
             className: "fancybox-header horizontal"
           }, /*#__PURE__*/React.createElement("div", {
-            className: "fancybox-title"
+            className: "fancybox-title",
+            title: this.props.title
           }, this.props.title), /*#__PURE__*/React.createElement("div", {
             className: "fancybox-close"
           }, /*#__PURE__*/React.createElement("button", {

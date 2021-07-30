@@ -1,7 +1,7 @@
-System.register(["./App.js", "./utils/FancyboxManager.js", "./utils/Callbacks.js", "./utils/backend.js"], function (_export, _context) {
+System.register(["./App.js", "./utils/FancyboxManager.js", "./utils/Callbacks.js", "./utils/backend.js", "./utils/functions.js"], function (_export, _context) {
   "use strict";
 
-  var App, FancyboxManager, Callbacks, python_call;
+  var App, FancyboxManager, Callbacks, python_call, IdGenerator;
   return {
     setters: [function (_AppJs) {
       App = _AppJs.App;
@@ -11,9 +11,13 @@ System.register(["./App.js", "./utils/FancyboxManager.js", "./utils/Callbacks.js
       Callbacks = _utilsCallbacksJs.Callbacks;
     }, function (_utilsBackendJs) {
       python_call = _utilsBackendJs.python_call;
+    }, function (_utilsFunctionsJs) {
+      IdGenerator = _utilsFunctionsJs.IdGenerator;
     }],
     execute: function () {
+      window.ID_GENERATOR = new IdGenerator();
       /** Global fancybox manager. Used to open/close a fancybox.s */
+
       window.Fancybox = new FancyboxManager("fancybox");
       /** NOTIFICATION_MANAGER.call is called from Python to send notifications to interface. */
 
