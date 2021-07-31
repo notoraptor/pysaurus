@@ -5,7 +5,6 @@ from pysaurus.core.constants import PYTHON_ERROR_THUMBNAIL
 from pysaurus.core.database.video_runtime_info import VideoRuntimeInfo
 from pysaurus.core.database.video_sorting import VideoSorting
 from pysaurus.core.functions import string_to_pieces
-from pysaurus.core.modules import System
 
 
 class classflag(property):
@@ -107,9 +106,8 @@ class VideoState:
 
     @property
     def disk(self):
-        if System.is_windows():
-            return "%s:\\" % (self.filename.standard_path.split(":")[0])
-        return self.runtime.driver_id
+        disk = self.filename.get_drive_name()
+        return disk or self.runtime.driver_id
 
     def terms(self, as_set=False):
         return string_to_pieces(self.filename.path, as_set=as_set)

@@ -129,6 +129,12 @@ class AbsolutePath(object):
     def get_mtime(self):
         return FileSystem.path.getmtime(self.__path)
 
+    def get_drive_name(self):
+        drive_name = os.path.splitdrive(self.standard_path)[0]
+        if drive_name and not drive_name.endswith(os.path.sep):
+            drive_name = f"{drive_name}{os.path.sep}"
+        return drive_name
+
     # not tested.
     def get_size(self):
         return FileSystem.path.getsize(self.__path)
