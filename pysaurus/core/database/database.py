@@ -116,6 +116,7 @@ class Database:
     thumbnail_folder = property(lambda self: self.__thumb_folder)
     notifier = property(lambda self: self.__notifier)
     iteration = property(lambda self: self.__save_id)
+    video_folders = property(lambda self: PathTree(self.__folders))
 
     # Private methods.
 
@@ -652,7 +653,6 @@ class Database:
             )
 
     def change_video_path(self, video: Video, path: AbsolutePath) -> AbsolutePath:
-        # TODO What if new path does not belong to allowed DB folders ?
         path = AbsolutePath.ensure(path)
         assert video.filename != path
         assert path.isfile()

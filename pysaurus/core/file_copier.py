@@ -1,3 +1,4 @@
+import os
 import shutil
 
 from pysaurus.core import notifications, functions
@@ -44,6 +45,20 @@ class FileCopier:
         self.buffer_size = buffer_size
         self.notifier = notifier
         self.cancel = False
+
+    def move(self):
+        src_drive = self.src.get_drive_name()
+        dst_drive = self.dst.get_drive_name()
+        if src_drive and dst_drive and src_drive == dst_drive:
+            os.rename(self.src.path, self.dst.path)
+            if self.src.exists():
+                raise OSError("Move failed on same disk.")
+            if not self.dst.isfile():
+                raise OSError("Destination file not found after moving on same disk.")
+            self.notifier.notify(notifications.Done())
+            return True
+        else:
+            return self.copy()
 
     def copy(self):
         job_notifier = notifications.Jobs.copy_file(

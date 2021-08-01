@@ -6,11 +6,12 @@ from pysaurus.core.components import AbsolutePath
 
 
 class PathTreeNode:
-    __slots__ = ("name", "children")
+    __slots__ = ("name", "children", "termination")
 
     def __init__(self, name: str):
         self.name = name
         self.children = {}  # type: Dict[str, PathTreeNode]
+        self.termination = False
 
 
 class PathTree(PathTreeNode):
@@ -22,24 +23,25 @@ class PathTree(PathTreeNode):
             self.add(folder)
 
     def add(self, path: AbsolutePath):
-        children = self.children
+        current = self
         for piece in path.standard_path.split(os.sep):
-            if piece in children:
-                node = children[piece]
+            if piece in current.children:
+                node = current.children[piece]
             else:
                 node = PathTreeNode(piece)
-                children[node.name] = node
-            children = node.children
+                current.children[node.name] = node
+            current = node
+        current.termination = True
 
     def in_folders(self, path: AbsolutePath):
         pieces = path.standard_path.split(os.sep)
-        children = self.children
+        current = self
         for i, piece in enumerate(pieces):
-            if piece in children:
-                children = children[piece].children
+            if piece in current.children:
+                current = current.children[piece]
             else:
-                return i > 0 and not children
-        return True
+                break
+        return current.name and current.termination
 
     def __debug(self, output: StringPrinter, children, indent=""):
         for name in sorted(children):

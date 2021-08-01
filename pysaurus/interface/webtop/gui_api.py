@@ -11,7 +11,13 @@ from pysaurus.core.database.database_features import DatabaseFeatures
 from pysaurus.core.database.viewport.video_provider import VideoProvider
 from pysaurus.core.file_copier import FileCopier
 from pysaurus.core.functions import launch_thread
-from pysaurus.core.notifications import Notification, End, DatabaseReady
+from pysaurus.core.notifications import (
+    Notification,
+    End,
+    Terminated,
+    Cancelled,
+    DatabaseReady,
+)
 from pysaurus.interface.webtop.feature_api import FeatureAPI
 from pysaurus.interface.webtop.parallel_notifier import ParallelNotifier
 
@@ -63,6 +69,8 @@ class GuiAPI(FeatureAPI):
     def cancel_copy(self):
         if self.copy_work is not None:
             self.copy_work.cancel = True
+        else:
+            self.database.notifier.notify(Cancelled())
 
     def close_database(self):
         self.database = None
@@ -87,9 +95,11 @@ class GuiAPI(FeatureAPI):
         self._consume_notifications()
 
         if finish:
+
             def run():
                 function()
                 self._finish_loading(f"Finished running: {function.__name__}")
+
         else:
             run = function
 
@@ -122,7 +132,7 @@ class GuiAPI(FeatureAPI):
             try:
                 notification = self.notifier.queue.get_nowait()
                 self._notify(notification)
-                if isinstance(notification, End):
+                if isinstance(notification, Terminated):
                     break
             except queue.Empty:
                 time.sleep(1 / 100)
@@ -174,16 +184,26 @@ class GuiAPI(FeatureAPI):
         self.provider.refresh()
 
     def _move_video_file(self, video_id, directory):
-        video = self.database.get_video_from_id(video_id)
-        directory = AbsolutePath.ensure_directory(directory)
-        dst = FilePath(directory, video.filename.file_title, video.filename.extension)
-        self.copy_work = FileCopier(video.filename, dst, notifier=self.notifier)
-        done = self.copy_work.copy()
-        self.copy_work = None
         self.provider.register_notifications()
-        if done:
-            old_path = self.database.change_video_path(video, dst)
-            assert old_path != video.filename
-            old_path.delete()
-            self.provider.refresh()
-        self.db_loading_thread = None
+        try:
+            video = self.database.get_video_from_id(video_id)
+            directory = AbsolutePath.ensure_directory(directory)
+            if not self.database.video_folders.in_folders(directory):
+                raise ValueError(
+                    "Directory is not in allowed video folders for this database."
+                )
+            dst = FilePath(
+                directory, video.filename.file_title, video.filename.extension
+            )
+            self.copy_work = FileCopier(video.filename, dst, notifier=self.notifier)
+            done = self.copy_work.move()
+            self.copy_work = None
+            if done:
+                old_path = self.database.change_video_path(video, dst)
+                if old_path:
+                    old_path.delete()
+                self.provider.refresh()
+        except Exception as exc:
+            self.database.notifier.notify(End(f"Error: {exc}"))
+        finally:
+            self.db_loading_thread = None

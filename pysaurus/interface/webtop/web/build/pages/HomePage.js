@@ -1,7 +1,7 @@
 System.register(["../utils/constants.js", "../utils/backend.js"], function (_export, _context) {
   "use strict";
 
-  var Characters, backend_error, python_call, ProgressionMonitoring, HomePage, NotificationCollector, NotificationRenderer, ACTIONS;
+  var Characters, backend_error, python_call, ProgressionMonitoring, HomePage, EndStatus, EndReady, NotificationCollector, NotificationRenderer, ACTIONS;
 
   /**
    * @param props {{monitoring: ProgressionMonitoring}}
@@ -29,6 +29,15 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
     }));
   }
 
+  function collectEndNotification(app, notification) {
+    const name = notification.name;
+    app.collectNotification(notification, {
+      loaded: name,
+      status: EndStatus[name],
+      ready: EndReady[name]
+    });
+  }
+
   _export("HomePage", void 0);
 
   return {
@@ -51,24 +60,23 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
         }
 
       };
+      EndStatus = {
+        DatabaseReady: null,
+        Done: "Done!",
+        Cancelled: "Cancelled.",
+        End: "Ended."
+      };
+      EndReady = {
+        DatabaseReady: true,
+        Done: true,
+        Cancelled: true,
+        End: false
+      };
       NotificationCollector = {
-        DatabaseReady: function (app, notification) {
-          app.collectNotification(notification, {
-            loaded: 1
-          });
-        },
-        Done: function (app, notification) {
-          app.collectNotification(notification, {
-            loaded: 1,
-            status: "Done!"
-          });
-        },
-        Cancelled: function (app, notification) {
-          app.collectNotification(notification, {
-            loaded: -1,
-            status: "Cancelled."
-          });
-        },
+        DatabaseReady: collectEndNotification,
+        Done: collectEndNotification,
+        Cancelled: collectEndNotification,
+        End: collectEndNotification,
         JobToDo: function (app, notification) {
           const name = notification.notification.name;
           const total = notification.notification.total;
@@ -130,6 +138,12 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
           return /*#__PURE__*/React.createElement("div", {
             key: i
           }, /*#__PURE__*/React.createElement("strong", null, "Cancelled."));
+        },
+        End: function (app, message, i) {
+          const info = message.notification.message;
+          return /*#__PURE__*/React.createElement("div", {
+            key: i
+          }, /*#__PURE__*/React.createElement("strong", null, "Ended.", info ? ` ${info}` : ""));
         },
         FinishedCollectingVideos: function (app, message, i) {
           const count = message.notification.count;
@@ -237,6 +251,7 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
           super(props);
           this.state = {
             loaded: false,
+            ready: false,
             status: null,
             messages: [],
             jobMap: new Map()
@@ -299,7 +314,7 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
           const divNotifs = document.getElementById("notifications");
           divNotifs.scrollTop = divNotifs.scrollHeight;
 
-          if (this.props.parameters.onReady && this.state.loaded) {
+          if (this.props.parameters.onReady && this.state.ready) {
             setTimeout(() => this.props.parameters.onReady(this.state.loaded), 500);
           }
         }
@@ -342,7 +357,7 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
         app: PropTypes.object.isRequired,
         parameters: PropTypes.shape({
           command: PropTypes.array.isRequired,
-          // onReady(status in {-1 for cancelled, 1 for done/ready})
+          // onReady(notificationName)
           onReady: PropTypes.func
         })
       };

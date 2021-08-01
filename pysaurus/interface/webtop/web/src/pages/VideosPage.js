@@ -429,11 +429,11 @@ export class VideosPage extends React.Component {
                               parameters={{
                                   command: ["move_video_file", videoID, directory],
                                   onReady: (status) => {
-                                      if (status < 0)
+                                      Fancybox.close();
+                                      if (status === "Cancelled")
                                           this.updateStatus(`Video not moved.`);
                                       else
                                           this.updateStatus(`Video moved to ${directory}`, true);
-                                      Fancybox.close();
                                   }
                               }}/>
                 </div>

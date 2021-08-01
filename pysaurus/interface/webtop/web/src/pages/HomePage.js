@@ -33,16 +33,29 @@ function Monitoring(props) {
     );
 }
 
+const EndStatus = {
+    DatabaseReady: null,
+    Done: "Done!",
+    Cancelled: "Cancelled.",
+    End: "Ended.",
+}
+const EndReady = {
+    DatabaseReady: true,
+    Done: true,
+    Cancelled: true,
+    End: false,
+}
+
+function collectEndNotification(app, notification) {
+    const name = notification.name;
+    app.collectNotification(notification, {loaded: name, status: EndStatus[name], ready: EndReady[name]});
+}
+
 const NotificationCollector = {
-    DatabaseReady: function (app, notification) {
-        app.collectNotification(notification, {loaded: 1});
-    },
-    Done: function (app, notification) {
-        app.collectNotification(notification, {loaded: 1, status: "Done!"});
-    },
-    Cancelled: function (app, notification) {
-        app.collectNotification(notification, {loaded: -1, status: "Cancelled."});
-    },
+    DatabaseReady: collectEndNotification,
+    Done: collectEndNotification,
+    Cancelled: collectEndNotification,
+    End: collectEndNotification,
     JobToDo: function (app, notification) {
         const name = notification.notification.name;
         const total = notification.notification.total;
@@ -101,6 +114,10 @@ const NotificationRenderer = {
     },
     Cancelled: function (app, message, i) {
         return <div key={i}><strong>Cancelled.</strong></div>;
+    },
+    End: function (app, message, i) {
+        const info = message.notification.message;
+        return <div key={i}><strong>Ended.{info ? ` ${info}` : ""}</strong></div>;
     },
     FinishedCollectingVideos: function (app, message, i) {
         const count = message.notification.count;
@@ -201,6 +218,7 @@ export class HomePage extends React.Component {
         super(props);
         this.state = {
             loaded: false,
+            ready: false,
             status: null,
             messages: [],
             jobMap: new Map(),
@@ -256,7 +274,7 @@ export class HomePage extends React.Component {
     componentDidUpdate(prevProps, prevState, snapshot) {
         const divNotifs = document.getElementById("notifications");
         divNotifs.scrollTop = divNotifs.scrollHeight;
-        if (this.props.parameters.onReady && this.state.loaded) {
+        if (this.props.parameters.onReady && this.state.ready) {
             setTimeout(() => this.props.parameters.onReady(this.state.loaded), 500);
         }
     }
@@ -299,7 +317,7 @@ HomePage.propTypes = {
     app: PropTypes.object.isRequired,
     parameters: PropTypes.shape({
         command: PropTypes.array.isRequired,
-        // onReady(status in {-1 for cancelled, 1 for done/ready})
+        // onReady(notificationName)
         onReady: PropTypes.func
     })
 };
