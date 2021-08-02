@@ -142,7 +142,10 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
             className: "prepend"
           }, /*#__PURE__*/React.createElement("code", null, "Quality")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, /*#__PURE__*/React.createElement("em", null, data.quality)), " %")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, data.width), " x ", /*#__PURE__*/React.createElement("strong", null, data.height), " @", " ", data.frame_rate, " fps, ", data.bit_depth, " bits | ", data.sample_rate, " Hz,", " ", /*#__PURE__*/React.createElement("span", {
             title: data.audio_bit_rate
-          }, audio_bit_rate, " Kb/s"), " |", " ", /*#__PURE__*/React.createElement("strong", null, data.length), " | ", /*#__PURE__*/React.createElement("code", null, data.date)))));
+          }, audio_bit_rate, " Kb/s"), " |", " ", /*#__PURE__*/React.createElement("strong", null, data.length), " | ", /*#__PURE__*/React.createElement("code", null, data.date)), this.props.groupedByMoves && data.moves.length === 1 ? /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("button", {
+            className: "block",
+            onClick: () => this.confirmMove(data.video_id, data.moves[0].video_id)
+          }, /*#__PURE__*/React.createElement("strong", null, "Confirm move to:"), /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("code", null, data.moves[0].filename))) : "")));
         }
 
         renderVideoState() {

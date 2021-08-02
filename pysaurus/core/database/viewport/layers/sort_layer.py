@@ -10,7 +10,7 @@ from pysaurus.core.database.viewport.viewtools.video_array import VideoArray
 class SortLayer(Layer):
     __slots__ = ("__filter",)
     __props__ = ("sorting",)
-    DEFAULT_SORT_DEF = ["+size"]
+    DEFAULT_SORT_DEF = ["-date"]
     __video_state_attributes__ = dir(VideoState)
 
     def __init__(self, database):

@@ -120,6 +120,14 @@ export class Video extends React.Component {
                             <span title={data.audio_bit_rate}>{audio_bit_rate} Kb/s</span> |{" "}
                             <strong>{data.length}</strong> | <code>{data.date}</code>
                         </div>
+                        {this.props.groupedByMoves && data.moves.length === 1 ? (
+                            <p>
+                                <button className="block"
+                                        onClick={() => this.confirmMove(data.video_id, data.moves[0].video_id)}>
+                                    <strong>Confirm move to:</strong><br/><code>{data.moves[0].filename}</code>
+                                </button>
+                            </p>
+                        ) : ""}
                     </div>
                 </div>
             </div>
