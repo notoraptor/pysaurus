@@ -227,6 +227,60 @@ class Database:
         self.__discarded = discarded
         self.__to_save()
 
+    def rename(self, new_name):
+        old_db_folder = self.__db_folder
+        old_thumb_folder = self.__thumb_folder
+        old_json_path = self.__json_path
+        old_miniature_path = self.__miniatures_path
+        old_log_path = self.__log_path
+
+        new_name = new_name.strip()
+        if new_name == self.__db_folder.title:
+            return
+        if functions.has_discarded_characters(new_name):
+            raise OSError(f"Characters not allowed: {new_name}")
+
+        new_db_folder = AbsolutePath.join(old_db_folder.get_directory(), new_name)
+        if new_db_folder.exists():
+            raise OSError(f"New database path already exists: {new_db_folder}")
+        os.rename(old_db_folder.path, new_db_folder.path)
+        assert not old_db_folder.exists()
+        assert new_db_folder.isdir()
+
+        self.__db_folder = new_db_folder
+        self.__thumb_folder = self._transfer_db_path(
+            old_thumb_folder, old_db_folder, new_db_folder
+        )
+        self.__json_path = self._transfer_db_path(
+            old_json_path, old_db_folder, new_db_folder
+        )
+        self.__miniatures_path = self._transfer_db_path(
+            old_miniature_path, old_db_folder, new_db_folder
+        )
+        self.__log_path = self._transfer_db_path(
+            old_log_path, old_db_folder, new_db_folder
+        )
+
+        self.__notifier.set_log_path(self.__log_path.path)
+
+    def _transfer_db_path(
+        self, path: AbsolutePath, old_folder: AbsolutePath, new_folder: AbsolutePath
+    ):
+        old_name = old_folder.title
+        old_basename = path.get_basename()
+        assert old_basename.startswith(old_name)
+        new_basename = f"{new_folder.title}{old_basename[(len(old_name)):]}"
+        new_path = AbsolutePath.join(new_folder, new_basename)
+        re_path = AbsolutePath.join(new_folder, old_basename)
+        if re_path.exists():
+            print("Renaming", re_path)
+            if new_path.exists():
+                raise OSError(f"New path already exists: {new_path}")
+            os.rename(re_path.path, new_path.path)
+            assert not re_path.exists()
+            assert new_path.exists()
+        return new_path
+
     def __ensure_identifiers(self):
         id_to_video = {}  # type: Dict[int, Union[VideoState, Video]]
         without_identifiers = []
@@ -660,9 +714,9 @@ class Database:
 
     def change_video_file_title(self, video, new_title):
         # type: (VideoState, str) -> None
-        discarded_characters = r"@#\\/?$"
+        discarded_characters = r"@#\\/?$:"
         if video.filename.file_title != new_title:
-            if any(c in new_title for c in discarded_characters):
+            if functions.has_discarded_characters(new_title):
                 raise OSError("Characters not allowed: %s" % discarded_characters)
             new_filename = video.filename.new_title(new_title)
             if video.filename in self.__videos:

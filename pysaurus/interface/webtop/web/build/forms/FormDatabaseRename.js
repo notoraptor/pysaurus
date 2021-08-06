@@ -1,18 +1,17 @@
 System.register(["../dialogs/Dialog.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, FormVideoRename;
+  var Dialog, FormDatabaseRename;
 
-  _export("FormVideoRename", void 0);
+  _export("FormDatabaseRename", void 0);
 
   return {
     setters: [function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
     }],
     execute: function () {
-      _export("FormVideoRename", FormVideoRename = class FormVideoRename extends React.Component {
+      _export("FormDatabaseRename", FormDatabaseRename = class FormDatabaseRename extends React.Component {
         constructor(props) {
-          // filename: str
           // title: str
           // onClose(newTitle)
           super(props);
@@ -28,14 +27,14 @@ System.register(["../dialogs/Dialog.js"], function (_export, _context) {
 
         render() {
           return /*#__PURE__*/React.createElement(Dialog, {
-            title: "Rename",
+            title: `Rename database "${this.props.title}"`,
             yes: "rename",
             action: this.onClose
           }, /*#__PURE__*/React.createElement("div", {
             className: "form-rename"
-          }, /*#__PURE__*/React.createElement("h1", null, "Rename video"), /*#__PURE__*/React.createElement("h2", null, /*#__PURE__*/React.createElement("code", {
+          }, /*#__PURE__*/React.createElement("h1", null, "Rename database"), /*#__PURE__*/React.createElement("h2", null, /*#__PURE__*/React.createElement("code", {
             id: "filename"
-          }, this.props.filename)), /*#__PURE__*/React.createElement("p", {
+          }, this.props.title)), /*#__PURE__*/React.createElement("p", {
             className: "form"
           }, /*#__PURE__*/React.createElement("input", {
             type: "text",
@@ -72,7 +71,7 @@ System.register(["../dialogs/Dialog.js"], function (_export, _context) {
           }
         }
 
-        submit(yes) {
+        submit() {
           if (this.state.title && this.state.title !== this.props.title) this.props.onClose(this.state.title);
         }
 

@@ -1,8 +1,7 @@
 import {Dialog} from "../dialogs/Dialog.js";
 
-export class FormVideoRename extends React.Component {
+export class FormDatabaseRename extends React.Component {
     constructor(props) {
-        // filename: str
         // title: str
         // onClose(newTitle)
         super(props);
@@ -16,10 +15,10 @@ export class FormVideoRename extends React.Component {
 
     render() {
         return (
-            <Dialog title={"Rename"} yes="rename" action={this.onClose}>
+            <Dialog title={`Rename database "${this.props.title}"`} yes="rename" action={this.onClose}>
                 <div className="form-rename">
-                    <h1>Rename video</h1>
-                    <h2><code id="filename">{this.props.filename}</code></h2>
+                    <h1>Rename database</h1>
+                    <h2><code id="filename">{this.props.title}</code></h2>
                     <p className="form">
                         <input type="text"
                                id="name"
@@ -56,7 +55,7 @@ export class FormVideoRename extends React.Component {
         }
     }
 
-    submit(yes) {
+    submit() {
         if (this.state.title && this.state.title !== this.props.title)
             this.props.onClose(this.state.title);
     }

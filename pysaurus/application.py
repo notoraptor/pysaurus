@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 from typing import Dict, Optional, List, Iterable
 
+from pysaurus.core import functions
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.database.database import Database
 from pysaurus.core.modules import FileSystem
@@ -41,6 +42,8 @@ class Application:
         return self.databases[path]
 
     def new_database(self, name, folders: Iterable[AbsolutePath]):
+        if functions.has_discarded_characters(name):
+            raise OSError(f"Characters not allowed: {name}")
         path = AbsolutePath.join(self.dbs_dir, name)
         if path.title != name:
             raise OSError(

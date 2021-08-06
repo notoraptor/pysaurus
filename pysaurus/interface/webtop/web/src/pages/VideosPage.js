@@ -26,6 +26,7 @@ import {backend_error, python_call} from "../utils/backend.js";
 import {FancyBox} from "../dialogs/FancyBox.js";
 import {HomePage} from "./HomePage.js";
 import {FormDatabaseFolders} from "../forms/FormDatabaseFolders.js";
+import {FormDatabaseRename} from "../forms/FormDatabaseRename.js";
 
 
 function compareSources(sources1, sources2) {
@@ -94,6 +95,7 @@ export class VideosPage extends React.Component {
         this.closeDatabase = this.closeDatabase.bind(this);
         this.moveVideo = this.moveVideo.bind(this);
         this.editDatabaseFolders = this.editDatabaseFolders.bind(this);
+        this.renameDatabase = this.renameDatabase.bind(this);
 
         this.callbackIndex = -1;
         this.features = new Actions({
@@ -175,6 +177,7 @@ export class VideosPage extends React.Component {
                             <MenuItem action={this.closeDatabase}><strong>Close database</strong></MenuItem>
                         </Menu>
                         <MenuItem action={this.editDatabaseFolders}>Edit {this.state.database.folders.length} database folders ...</MenuItem>
+                        <MenuItem action={this.renameDatabase}>Rename database "{this.state.database.name}"</MenuItem>
                     </MenuPack>
                     <div className="buttons"/>
                     <div className="pagination text-right">
@@ -556,6 +559,14 @@ export class VideosPage extends React.Component {
                 python_call("set_video_folders", paths)
                     .then(() => this.props.app.dbUpdate("update_database"))
                     .catch(backend_error);
+            }}/>
+        )
+    }
+
+    renameDatabase() {
+        Fancybox.load(
+            <FormDatabaseRename title={this.state.database.name} onClose={name => {
+                this.backend(["rename_database", name], {pageNumber: 0});
             }}/>
         )
     }

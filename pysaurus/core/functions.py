@@ -26,6 +26,12 @@ JSON_INTEGER_MAX = 2 ** 31 - 1
 TEMP_DIR = tempfile.gettempdir()
 TEMP_PREFIX = tempfile.gettempprefix() + "_pysaurus_"
 
+DISCARDED_CHARACTERS = r"@#\\/?$:!"
+
+
+def has_discarded_characters(txt: str):
+    return any(c in txt for c in DISCARDED_CHARACTERS)
+
 
 def separate_text_and_numbers(text: str):
     pieces = REGEX_NUMBER.split(text)

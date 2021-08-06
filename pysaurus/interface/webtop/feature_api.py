@@ -213,6 +213,9 @@ class FeatureAPI:
         self.database.set_folders(paths)
         self.provider.refresh()
 
+    def rename_database(self, name):
+        self.database.rename(name)
+
     def add_prop_type(self, prop_name, prop_type, prop_default, prop_multiple):
         if prop_type == "float":
             if isinstance(prop_default, list):
