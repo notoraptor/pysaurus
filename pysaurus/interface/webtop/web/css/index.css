@@ -56,3 +56,7 @@ table.second-td-text-right td:first-child + td {
 	display: block;
 	width: 100%;
 }
+
+.word-break-all {
+	word-break: break-word;
+}

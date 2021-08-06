@@ -277,6 +277,7 @@ export class VideosPage extends React.Component {
         return (
             <table className="filter">
                 <tbody>
+                {/** Sources **/}
                 <tr>
                     <td>
                         {sources.map((source, index) => (
@@ -291,6 +292,7 @@ export class VideosPage extends React.Component {
                             <div><ActionToCross action={actions.unselect}/></div> : ''}
                     </td>
                 </tr>
+                {/** Grouping **/}
                 <tr>
                     <td>
                         {groupDef ? (
@@ -304,12 +306,13 @@ export class VideosPage extends React.Component {
                         {groupDef ? <div><ActionToCross action={actions.ungroup}/></div> : ''}
                     </td>
                 </tr>
+                {/** Search **/}
                 <tr>
                     <td>
                         {searchDef ? (
                             <div>
                                 <div>Searched {SEARCH_TYPE_TITLE[searchDef.cond]}</div>
-                                <div>&quot;<strong>{searchDef.text}</strong>&quot;</div>
+                                <div className="word-break-all">&quot;<strong>{searchDef.text}</strong>&quot;</div>
                             </div>
                         ) : <div className="no-filter">No search</div>}
                     </td>
@@ -320,6 +323,7 @@ export class VideosPage extends React.Component {
                         {searchDef ? <div><ActionToCross action={actions.unsearch}/></div> : ''}
                     </td>
                 </tr>
+                {/** Sort **/}
                 <tr>
                     <td>
                         <div>Sorted by</div>
@@ -334,6 +338,7 @@ export class VideosPage extends React.Component {
                         {sortingIsDefault ? '' : <div><ActionToCross action={actions.unsort}/></div>}
                     </td>
                 </tr>
+                {/** Selection **/}
                 <tr>
                     <td>
                         {selectionSize ? (
