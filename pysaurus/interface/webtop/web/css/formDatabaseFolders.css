@@ -1,0 +1,23 @@
+.path-edition {
+	flex-grow: 1;
+}
+.path-edition table {
+	width: 50%;
+	margin: auto;
+	table-layout: fixed;
+}
+.path-edition table td {
+	padding: 0.25rem;
+	width: 50%;
+	vertical-align: top;
+}
+.path-edition button {
+	display: block;
+	width: 100%;
+}
+.path-edition .paths {
+	flex-grow: 1;
+	border: 1px solid gray;
+	background-color: lightgrey;
+	overflow: auto;
+}

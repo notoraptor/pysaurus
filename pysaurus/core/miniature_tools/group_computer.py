@@ -111,7 +111,9 @@ class GroupComputer:
         notifier = notifier or DEFAULT_NOTIFIER
         jobn = notifications.Jobs.group_computer(len(miniatures), notifier)
         tasks = [(i, m, len(miniatures), jobn) for i, m in enumerate(miniatures)]
-        with Profiler(f"batch_compute_groups(n={len(tasks)}, cpu={cpu_count})"):
+        with Profiler(
+            f"batch_compute_groups(n={len(tasks)}, cpu={cpu_count})", notifier
+        ):
             with Pool(cpu_count) as p:
                 raw_output = list(p.imap(self.async_compute, tasks))
         jobn.progress(None, len(miniatures), len(miniatures))

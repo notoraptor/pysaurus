@@ -1,15 +1,12 @@
 import sys
-from typing import Optional
 
 from pysaurus.application import Application
 from pysaurus.core import notifications
 from pysaurus.core.components import FileSize, Duration
-from pysaurus.core.database.database import Database
 from pysaurus.core.database.properties import PropType
 from pysaurus.core.database.video import Video
 from pysaurus.core.database.video_features import VideoFeatures
 from pysaurus.core.database.viewport.layers.source_layer import SourceLayer
-from pysaurus.core.database.viewport.video_provider import VideoProvider
 from pysaurus.core.functions import compute_nb_pages
 from pysaurus.interface.webtop import iutils
 
@@ -127,6 +124,10 @@ class FeatureAPI:
             "path": self.provider.classifier_layer.get_path(),
             "properties": prop_types,
             "definitions": {prop["name"]: prop for prop in prop_types},
+            "database": {
+                "name": self.database.folder.title,
+                "folders": [str(path) for path in sorted(self.database.video_folders)],
+            },
         }
 
     # Provider setters.
@@ -207,6 +208,10 @@ class FeatureAPI:
         return sorted(value_to_count.items())
 
     # Database setters.
+
+    def set_video_folders(self, paths):
+        self.database.set_folders(paths)
+        self.provider.refresh()
 
     def add_prop_type(self, prop_name, prop_type, prop_default, prop_multiple):
         if prop_type == "float":

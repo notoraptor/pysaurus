@@ -194,7 +194,7 @@ class VideoDeleted(Notification):
 
 class FieldsModified(Notification):
     __slots__ = ("fields",)
-    __props__ = "modified",
+    __props__ = ("modified",)
 
     modified = property(lambda self: sorted(self.fields))
 

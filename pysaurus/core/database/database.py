@@ -113,10 +113,10 @@ class Database:
     )
     nb_discarded = property(lambda self: len(self.__discarded))
     folder = property(lambda self: self.__db_folder)
+    video_folders = property(lambda self: list(self.__folders))
     thumbnail_folder = property(lambda self: self.__thumb_folder)
     notifier = property(lambda self: self.__notifier)
     iteration = property(lambda self: self.__save_id)
-    video_folders = property(lambda self: PathTree(self.__folders))
 
     # Private methods.
 
@@ -200,6 +200,32 @@ class Database:
         with open(self.__json_path.path, "w") as output_file:
             json.dump(json_output, output_file)
         self.__notifier.notify(notifications.DatabaseSaved(self))
+
+    def set_folders(self, folders):
+        folders = sorted(AbsolutePath.ensure(folder) for folder in folders)
+        if folders == sorted(self.__folders):
+            return
+        folders_tree = PathTree(folders)
+        videos = {}
+        unreadable = {}
+        discarded = {}
+        for video in itertools.chain(
+            self.__videos.values(),
+            self.__unreadable.values(),
+            self.__discarded.values(),
+        ):
+            if folders_tree.in_folders(video.filename):
+                if video.unreadable:
+                    unreadable[video.filename] = video
+                else:
+                    videos[video.filename] = video
+            else:
+                discarded[video.filename] = video
+        self.__folders = set(folders)
+        self.__videos = videos
+        self.__unreadable = unreadable
+        self.__discarded = discarded
+        self.__to_save()
 
     def __ensure_identifiers(self):
         id_to_video = {}  # type: Dict[int, Union[VideoState, Video]]

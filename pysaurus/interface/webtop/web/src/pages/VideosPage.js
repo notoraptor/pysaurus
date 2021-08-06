@@ -25,6 +25,7 @@ import {ActionToCross} from "../components/ActionToCross.js";
 import {backend_error, python_call} from "../utils/backend.js";
 import {FancyBox} from "../dialogs/FancyBox.js";
 import {HomePage} from "./HomePage.js";
+import {FormDatabaseFolders} from "../forms/FormDatabaseFolders.js";
 
 
 function compareSources(sources1, sources2) {
@@ -92,6 +93,7 @@ export class VideosPage extends React.Component {
         this.findSimilarVideosIgnoreCache = this.findSimilarVideosIgnoreCache.bind(this);
         this.closeDatabase = this.closeDatabase.bind(this);
         this.moveVideo = this.moveVideo.bind(this);
+        this.editDatabaseFolders = this.editDatabaseFolders.bind(this);
 
         this.callbackIndex = -1;
         this.features = new Actions({
@@ -154,7 +156,7 @@ export class VideosPage extends React.Component {
                         <MenuItemCheck checked={this.state.confirmDeletion} action={this.confirmDeletionForNotFound}>
                             confirm deletion for entries not found
                         </MenuItemCheck>
-                        {this.state.properties.length > 10 ? (
+                        {this.state.properties.length > 5 ? (
                             <Menu title="Group videos by property ...">{
                                 this.state.properties.map((def, index) => (
                                     <MenuItem key={index} action={() => this.backendGroupVideos(def.name, true)}>
@@ -172,6 +174,7 @@ export class VideosPage extends React.Component {
                         <Menu title="Close database ...">
                             <MenuItem action={this.closeDatabase}><strong>Close database</strong></MenuItem>
                         </Menu>
+                        <MenuItem action={this.editDatabaseFolders}>Edit {this.state.database.folders.length} database folders ...</MenuItem>
                     </MenuPack>
                     <div className="buttons"/>
                     <div className="pagination text-right">
@@ -543,6 +546,16 @@ export class VideosPage extends React.Component {
         Fancybox.load(
             <FormVideosSort sorting={this.state.sorting} onClose={sorting => {
                 this.backend(['set_sorting', sorting], {pageNumber: 0});
+            }}/>
+        )
+    }
+
+    editDatabaseFolders() {
+        Fancybox.load(
+            <FormDatabaseFolders database={this.state.database} onClose={paths => {
+                python_call("set_video_folders", paths)
+                    .then(() => this.props.app.dbUpdate("update_database"))
+                    .catch(backend_error);
             }}/>
         )
     }

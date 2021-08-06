@@ -18,6 +18,7 @@ from pysaurus.core.notifications import (
     Cancelled,
     DatabaseReady,
 )
+from pysaurus.core.path_tree import PathTree
 from pysaurus.interface.webtop.feature_api import FeatureAPI
 from pysaurus.interface.webtop.parallel_notifier import ParallelNotifier
 
@@ -158,7 +159,7 @@ class GuiAPI(FeatureAPI):
         self.provider = VideoProvider(self.database)
 
     def _update_database(self):
-        self.database.refresh(ensure_miniatures=True)
+        self.database.refresh(ensure_miniatures=False)
         self.provider.refresh()
 
     def _find_similarities(self):
@@ -188,7 +189,7 @@ class GuiAPI(FeatureAPI):
         try:
             video = self.database.get_video_from_id(video_id)
             directory = AbsolutePath.ensure_directory(directory)
-            if not self.database.video_folders.in_folders(directory):
+            if not PathTree(self.database.video_folders).in_folders(directory):
                 raise ValueError(
                     "Directory is not in allowed video folders for this database."
                 )

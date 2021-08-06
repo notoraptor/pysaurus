@@ -1,7 +1,7 @@
-System.register(["../utils/constants.js", "../components/MenuPack.js", "../components/Pagination.js", "../components/Video.js", "../forms/FormVideosSource.js", "../forms/FormVideosGrouping.js", "../forms/FormVideosSearch.js", "../forms/FormVideosSort.js", "../components/GroupView.js", "../forms/FormPropertySelectedValues.js", "../forms/FormVideosKeywordsToProperty.js", "../forms/FormSelectedVideosProperty.js", "../components/Collapsable.js", "../components/Cross.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/MenuItemRadio.js", "../components/Menu.js", "../utils/Selector.js", "../utils/Action.js", "../utils/Actions.js", "../components/ActionToMenuItem.js", "../components/ActionToSettingIcon.js", "../components/ActionToCross.js", "../utils/backend.js", "../dialogs/FancyBox.js", "./HomePage.js"], function (_export, _context) {
+System.register(["../utils/constants.js", "../components/MenuPack.js", "../components/Pagination.js", "../components/Video.js", "../forms/FormVideosSource.js", "../forms/FormVideosGrouping.js", "../forms/FormVideosSearch.js", "../forms/FormVideosSort.js", "../components/GroupView.js", "../forms/FormPropertySelectedValues.js", "../forms/FormVideosKeywordsToProperty.js", "../forms/FormSelectedVideosProperty.js", "../components/Collapsable.js", "../components/Cross.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/MenuItemRadio.js", "../components/Menu.js", "../utils/Selector.js", "../utils/Action.js", "../utils/Actions.js", "../components/ActionToMenuItem.js", "../components/ActionToSettingIcon.js", "../components/ActionToCross.js", "../utils/backend.js", "../dialogs/FancyBox.js", "./HomePage.js", "../forms/FormDatabaseFolders.js"], function (_export, _context) {
   "use strict";
 
-  var PAGE_SIZES, SEARCH_TYPE_TITLE, SOURCE_TREE, FIELD_MAP, MenuPack, Pagination, Video, FormVideosSource, FormVideosGrouping, FormVideosSearch, FormVideosSort, GroupView, FormPropertySelectedValues, FormVideosKeywordsToProperty, FormSelectedVideosProperty, Collapsable, Cross, MenuItem, MenuItemCheck, MenuItemRadio, Menu, Selector, Action, Actions, ActionToMenuItem, ActionToSettingIcon, ActionToCross, backend_error, python_call, FancyBox, HomePage, VideosPage;
+  var PAGE_SIZES, SEARCH_TYPE_TITLE, SOURCE_TREE, FIELD_MAP, MenuPack, Pagination, Video, FormVideosSource, FormVideosGrouping, FormVideosSearch, FormVideosSort, GroupView, FormPropertySelectedValues, FormVideosKeywordsToProperty, FormSelectedVideosProperty, Collapsable, Cross, MenuItem, MenuItemCheck, MenuItemRadio, Menu, Selector, Action, Actions, ActionToMenuItem, ActionToSettingIcon, ActionToCross, backend_error, python_call, FancyBox, HomePage, FormDatabaseFolders, VideosPage;
 
   function compareSources(sources1, sources2) {
     if (sources1.length !== sources2.length) return false;
@@ -80,6 +80,8 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
       FancyBox = _dialogsFancyBoxJs.FancyBox;
     }, function (_HomePageJs) {
       HomePage = _HomePageJs.HomePage;
+    }, function (_formsFormDatabaseFoldersJs) {
+      FormDatabaseFolders = _formsFormDatabaseFoldersJs.FormDatabaseFolders;
     }],
     execute: function () {
       _export("VideosPage", VideosPage = class VideosPage extends React.Component {
@@ -131,6 +133,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           this.findSimilarVideosIgnoreCache = this.findSimilarVideosIgnoreCache.bind(this);
           this.closeDatabase = this.closeDatabase.bind(this);
           this.moveVideo = this.moveVideo.bind(this);
+          this.editDatabaseFolders = this.editDatabaseFolders.bind(this);
           this.callbackIndex = -1;
           this.features = new Actions({
             select: new Action("Ctrl+T", "Select videos ...", this.selectVideos),
@@ -198,7 +201,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           }, count, " video", count > 1 ? 's' : '', " per page"))), /*#__PURE__*/React.createElement(MenuItemCheck, {
             checked: this.state.confirmDeletion,
             action: this.confirmDeletionForNotFound
-          }, "confirm deletion for entries not found"), this.state.properties.length > 10 ? /*#__PURE__*/React.createElement(Menu, {
+          }, "confirm deletion for entries not found"), this.state.properties.length > 5 ? /*#__PURE__*/React.createElement(Menu, {
             title: "Group videos by property ..."
           }, this.state.properties.map((def, index) => /*#__PURE__*/React.createElement(MenuItem, {
             key: index,
@@ -210,7 +213,9 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             title: "Close database ..."
           }, /*#__PURE__*/React.createElement(MenuItem, {
             action: this.closeDatabase
-          }, /*#__PURE__*/React.createElement("strong", null, "Close database")))), /*#__PURE__*/React.createElement("div", {
+          }, /*#__PURE__*/React.createElement("strong", null, "Close database"))), /*#__PURE__*/React.createElement(MenuItem, {
+            action: this.editDatabaseFolders
+          }, "Edit ", this.state.database.folders.length, " database folders ...")), /*#__PURE__*/React.createElement("div", {
             className: "buttons"
           }), /*#__PURE__*/React.createElement("div", {
             className: "pagination text-right"
@@ -540,6 +545,15 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
               this.backend(['set_sorting', sorting], {
                 pageNumber: 0
               });
+            }
+          }));
+        }
+
+        editDatabaseFolders() {
+          Fancybox.load( /*#__PURE__*/React.createElement(FormDatabaseFolders, {
+            database: this.state.database,
+            onClose: paths => {
+              python_call("set_video_folders", paths).then(() => this.props.app.dbUpdate("update_database")).catch(backend_error);
             }
           }));
         }
