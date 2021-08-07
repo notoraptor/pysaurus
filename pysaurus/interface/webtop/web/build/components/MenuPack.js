@@ -27,6 +27,10 @@ System.register([], function (_export, _context) {
         }
 
       });
+
+      MenuPack.propTypes = {
+        title: PropTypes.string.isRequired
+      };
     }
   };
 });

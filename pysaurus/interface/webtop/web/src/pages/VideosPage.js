@@ -127,37 +127,17 @@ export class VideosPage extends React.Component {
         return (
             <div id="videos" className="vertical">
                 <header className="horizontal">
-                    <MenuPack title="Options">
-                        <Menu title="Filter videos ...">
-                            {<ActionToMenuItem action={actions.select}/>}
-                            {<ActionToMenuItem action={actions.group}/>}
-                            {<ActionToMenuItem action={actions.search}/>}
-                            {<ActionToMenuItem action={actions.sort}/>}
-                        </Menu>
-                        {this.state.notFound || !nbVideos ? '' : <ActionToMenuItem action={actions.openRandomVideo}/>}
+                    <MenuPack title="Database ...">
+                        <MenuItem action={this.renameDatabase}>Rename database "{this.state.database.name}" ...</MenuItem>
+                        <MenuItem action={this.editDatabaseFolders}>Edit {this.state.database.folders.length} database folders ...</MenuItem>
                         {<ActionToMenuItem action={actions.reload}/>}
+                        <Menu title="Close database ...">
+                            <MenuItem action={this.closeDatabase}><strong>Close database</strong></MenuItem>
+                        </Menu>
+                    </MenuPack>
+                    <MenuPack title="Properties ...">
+                        {stringSetProperties.length ? <MenuItem action={this.fillWithKeywords}>Put keywords into a property ...</MenuItem> : ''}
                         {<ActionToMenuItem action={actions.manageProperties}/>}
-                        <MenuItem action={this.findSimilarVideos}>Search similar videos</MenuItem>
-                        <Menu title="Search similar videos (longer) ...">
-                            <MenuItem action={this.findSimilarVideosIgnoreCache}>
-                                <strong>Ignore cache</strong>
-                            </MenuItem>
-                        </Menu>
-                        {stringSetProperties.length ?
-                            <MenuItem action={this.fillWithKeywords}>Put keywords into a property ...</MenuItem> : ''}
-                        <Menu title="Page size ...">
-                            {PAGE_SIZES.map((count, index) => (
-                                <MenuItemRadio key={index}
-                                               checked={this.state.pageSize === count}
-                                               value={count}
-                                               action={this.setPageSize}>
-                                    {count} video{count > 1 ? 's' : ''} per page
-                                </MenuItemRadio>
-                            ))}
-                        </Menu>
-                        <MenuItemCheck checked={this.state.confirmDeletion} action={this.confirmDeletionForNotFound}>
-                            confirm deletion for entries not found
-                        </MenuItemCheck>
                         {this.state.properties.length > 5 ? (
                             <Menu title="Group videos by property ...">{
                                 this.state.properties.map((def, index) => (
@@ -173,11 +153,36 @@ export class VideosPage extends React.Component {
                                 </MenuItem>
                             ))
                         )}
-                        <Menu title="Close database ...">
-                            <MenuItem action={this.closeDatabase}><strong>Close database</strong></MenuItem>
+                    </MenuPack>
+                    <MenuPack title="Videos ...">
+                        <Menu title="Filter videos ...">
+                            {<ActionToMenuItem action={actions.select}/>}
+                            {<ActionToMenuItem action={actions.group}/>}
+                            {<ActionToMenuItem action={actions.search}/>}
+                            {<ActionToMenuItem action={actions.sort}/>}
                         </Menu>
-                        <MenuItem action={this.editDatabaseFolders}>Edit {this.state.database.folders.length} database folders ...</MenuItem>
-                        <MenuItem action={this.renameDatabase}>Rename database "{this.state.database.name}"</MenuItem>
+                        {this.state.notFound || !nbVideos ? '' : <ActionToMenuItem action={actions.openRandomVideo}/>}
+                        <MenuItem action={this.findSimilarVideos}>Search similar videos</MenuItem>
+                        <Menu title="Search similar videos (longer) ...">
+                            <MenuItem action={this.findSimilarVideosIgnoreCache}>
+                                <strong>Ignore cache</strong>
+                            </MenuItem>
+                        </Menu>
+                    </MenuPack>
+                    <MenuPack title="Options">
+                        <Menu title="Page size ...">
+                            {PAGE_SIZES.map((count, index) => (
+                                <MenuItemRadio key={index}
+                                               checked={this.state.pageSize === count}
+                                               value={count}
+                                               action={this.setPageSize}>
+                                    {count} video{count > 1 ? 's' : ''} per page
+                                </MenuItemRadio>
+                            ))}
+                        </Menu>
+                        <MenuItemCheck checked={this.state.confirmDeletion} action={this.confirmDeletionForNotFound}>
+                            confirm deletion for entries not found
+                        </MenuItemCheck>
                     </MenuPack>
                     <div className="buttons"/>
                     <div className="pagination text-right">

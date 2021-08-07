@@ -169,7 +169,33 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           }, /*#__PURE__*/React.createElement("header", {
             className: "horizontal"
           }, /*#__PURE__*/React.createElement(MenuPack, {
-            title: "Options"
+            title: "Database ..."
+          }, /*#__PURE__*/React.createElement(MenuItem, {
+            action: this.renameDatabase
+          }, "Rename database \"", this.state.database.name, "\" ..."), /*#__PURE__*/React.createElement(MenuItem, {
+            action: this.editDatabaseFolders
+          }, "Edit ", this.state.database.folders.length, " database folders ..."), /*#__PURE__*/React.createElement(ActionToMenuItem, {
+            action: actions.reload
+          }), /*#__PURE__*/React.createElement(Menu, {
+            title: "Close database ..."
+          }, /*#__PURE__*/React.createElement(MenuItem, {
+            action: this.closeDatabase
+          }, /*#__PURE__*/React.createElement("strong", null, "Close database")))), /*#__PURE__*/React.createElement(MenuPack, {
+            title: "Properties ..."
+          }, stringSetProperties.length ? /*#__PURE__*/React.createElement(MenuItem, {
+            action: this.fillWithKeywords
+          }, "Put keywords into a property ...") : '', /*#__PURE__*/React.createElement(ActionToMenuItem, {
+            action: actions.manageProperties
+          }), this.state.properties.length > 5 ? /*#__PURE__*/React.createElement(Menu, {
+            title: "Group videos by property ..."
+          }, this.state.properties.map((def, index) => /*#__PURE__*/React.createElement(MenuItem, {
+            key: index,
+            action: () => this.backendGroupVideos(def.name, true)
+          }, def.name))) : this.state.properties.map((def, index) => /*#__PURE__*/React.createElement(MenuItem, {
+            key: index,
+            action: () => this.backendGroupVideos(def.name, true)
+          }, "Group videos by property: ", def.name))), /*#__PURE__*/React.createElement(MenuPack, {
+            title: "Videos ..."
           }, /*#__PURE__*/React.createElement(Menu, {
             title: "Filter videos ..."
           }, /*#__PURE__*/React.createElement(ActionToMenuItem, {
@@ -182,19 +208,15 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             action: actions.sort
           })), this.state.notFound || !nbVideos ? '' : /*#__PURE__*/React.createElement(ActionToMenuItem, {
             action: actions.openRandomVideo
-          }), /*#__PURE__*/React.createElement(ActionToMenuItem, {
-            action: actions.reload
-          }), /*#__PURE__*/React.createElement(ActionToMenuItem, {
-            action: actions.manageProperties
           }), /*#__PURE__*/React.createElement(MenuItem, {
             action: this.findSimilarVideos
           }, "Search similar videos"), /*#__PURE__*/React.createElement(Menu, {
             title: "Search similar videos (longer) ..."
           }, /*#__PURE__*/React.createElement(MenuItem, {
             action: this.findSimilarVideosIgnoreCache
-          }, /*#__PURE__*/React.createElement("strong", null, "Ignore cache"))), stringSetProperties.length ? /*#__PURE__*/React.createElement(MenuItem, {
-            action: this.fillWithKeywords
-          }, "Put keywords into a property ...") : '', /*#__PURE__*/React.createElement(Menu, {
+          }, /*#__PURE__*/React.createElement("strong", null, "Ignore cache")))), /*#__PURE__*/React.createElement(MenuPack, {
+            title: "Options"
+          }, /*#__PURE__*/React.createElement(Menu, {
             title: "Page size ..."
           }, PAGE_SIZES.map((count, index) => /*#__PURE__*/React.createElement(MenuItemRadio, {
             key: index,
@@ -204,23 +226,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           }, count, " video", count > 1 ? 's' : '', " per page"))), /*#__PURE__*/React.createElement(MenuItemCheck, {
             checked: this.state.confirmDeletion,
             action: this.confirmDeletionForNotFound
-          }, "confirm deletion for entries not found"), this.state.properties.length > 5 ? /*#__PURE__*/React.createElement(Menu, {
-            title: "Group videos by property ..."
-          }, this.state.properties.map((def, index) => /*#__PURE__*/React.createElement(MenuItem, {
-            key: index,
-            action: () => this.backendGroupVideos(def.name, true)
-          }, def.name))) : this.state.properties.map((def, index) => /*#__PURE__*/React.createElement(MenuItem, {
-            key: index,
-            action: () => this.backendGroupVideos(def.name, true)
-          }, "Group videos by property: ", def.name)), /*#__PURE__*/React.createElement(Menu, {
-            title: "Close database ..."
-          }, /*#__PURE__*/React.createElement(MenuItem, {
-            action: this.closeDatabase
-          }, /*#__PURE__*/React.createElement("strong", null, "Close database"))), /*#__PURE__*/React.createElement(MenuItem, {
-            action: this.editDatabaseFolders
-          }, "Edit ", this.state.database.folders.length, " database folders ..."), /*#__PURE__*/React.createElement(MenuItem, {
-            action: this.renameDatabase
-          }, "Rename database \"", this.state.database.name, "\"")), /*#__PURE__*/React.createElement("div", {
+          }, "confirm deletion for entries not found")), /*#__PURE__*/React.createElement("div", {
             className: "buttons"
           }), /*#__PURE__*/React.createElement("div", {
             className: "pagination text-right"

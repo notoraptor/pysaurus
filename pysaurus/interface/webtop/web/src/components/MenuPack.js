@@ -17,3 +17,6 @@ export class MenuPack extends React.Component {
         );
     }
 }
+MenuPack.propTypes = {
+    title: PropTypes.string.isRequired
+};
