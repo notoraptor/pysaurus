@@ -1,5 +1,4 @@
-import sys
-from ctypes import c_char_p, cdll, POINTER, c_int, c_double, c_bool
+from ctypes import c_char_p, POINTER, c_int, c_double, c_bool, util, CDLL
 
 c_int_p = POINTER(c_int)
 c_double_p = POINTER(c_double)
@@ -7,11 +6,10 @@ c_bool_p = POINTER(c_bool)
 
 
 def c_library(name):
-    if sys.platform == "linux":
-        dll = cdll.LoadLibrary("%s.so" % name)
-    else:
-        dll = getattr(cdll, name)
-    return dll
+    lib_path = util.find_library(name)
+    if not lib_path:
+        raise FileNotFoundError(f"Cannot find library: {name}")
+    return CDLL(lib_path)
 
 
 def c_prototype(dll, name, res_type, arg_types):
