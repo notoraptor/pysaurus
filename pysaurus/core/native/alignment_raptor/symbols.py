@@ -17,7 +17,7 @@ class Sequence(Structure):
 PtrSequence = POINTER(Sequence)
 PtrPtrSequence = POINTER(PtrSequence)
 
-_dll_video_raptor = CLibrary("videoRaptorBatch")
+_dll_video_raptor = CLibrary("alignmentRaptor")
 
 fn_classifySimilarities = _dll_video_raptor.prototype(
     "classifySimilarities",
