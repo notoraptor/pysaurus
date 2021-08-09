@@ -1,7 +1,7 @@
-System.register(["../utils/constants.js", "../components/MenuPack.js", "../components/Pagination.js", "../components/Video.js", "../forms/FormVideosSource.js", "../forms/FormVideosGrouping.js", "../forms/FormVideosSearch.js", "../forms/FormVideosSort.js", "../components/GroupView.js", "../forms/FormPropertySelectedValues.js", "../forms/FormVideosKeywordsToProperty.js", "../forms/FormSelectedVideosProperty.js", "../components/Collapsable.js", "../components/Cross.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/MenuItemRadio.js", "../components/Menu.js", "../utils/Selector.js", "../utils/Action.js", "../utils/Actions.js", "../components/ActionToMenuItem.js", "../components/ActionToSettingIcon.js", "../components/ActionToCross.js", "../utils/backend.js", "../dialogs/FancyBox.js", "./HomePage.js", "../forms/FormDatabaseFolders.js", "../forms/FormDatabaseRename.js"], function (_export, _context) {
+System.register(["../utils/constants.js", "../components/MenuPack.js", "../components/Pagination.js", "../components/Video.js", "../forms/FormVideosSource.js", "../forms/FormVideosGrouping.js", "../forms/FormVideosSearch.js", "../forms/FormVideosSort.js", "../components/GroupView.js", "../forms/FormPropertySelectedValues.js", "../forms/FormVideosKeywordsToProperty.js", "../forms/FormSelectedVideosProperty.js", "../components/Collapsable.js", "../components/Cross.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/MenuItemRadio.js", "../components/Menu.js", "../utils/Selector.js", "../utils/Action.js", "../utils/Actions.js", "../components/ActionToMenuItem.js", "../components/ActionToSettingIcon.js", "../components/ActionToCross.js", "../utils/backend.js", "../dialogs/FancyBox.js", "./HomePage.js", "../forms/FormDatabaseFolders.js", "../forms/FormDatabaseRename.js", "../dialogs/Dialog.js", "../components/Cell.js"], function (_export, _context) {
   "use strict";
 
-  var PAGE_SIZES, SEARCH_TYPE_TITLE, SOURCE_TREE, FIELD_MAP, MenuPack, Pagination, Video, FormVideosSource, FormVideosGrouping, FormVideosSearch, FormVideosSort, GroupView, FormPropertySelectedValues, FormVideosKeywordsToProperty, FormSelectedVideosProperty, Collapsable, Cross, MenuItem, MenuItemCheck, MenuItemRadio, Menu, Selector, Action, Actions, ActionToMenuItem, ActionToSettingIcon, ActionToCross, backend_error, python_call, FancyBox, HomePage, FormDatabaseFolders, FormDatabaseRename, VideosPage;
+  var PAGE_SIZES, SEARCH_TYPE_TITLE, SOURCE_TREE, FIELD_MAP, MenuPack, Pagination, Video, FormVideosSource, FormVideosGrouping, FormVideosSearch, FormVideosSort, GroupView, FormPropertySelectedValues, FormVideosKeywordsToProperty, FormSelectedVideosProperty, Collapsable, Cross, MenuItem, MenuItemCheck, MenuItemRadio, Menu, Selector, Action, Actions, ActionToMenuItem, ActionToSettingIcon, ActionToCross, backend_error, python_call, FancyBox, HomePage, FormDatabaseFolders, FormDatabaseRename, Dialog, Cell, VideosPage;
 
   function compareSources(sources1, sources2) {
     if (sources1.length !== sources2.length) return false;
@@ -84,6 +84,10 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
       FormDatabaseFolders = _formsFormDatabaseFoldersJs.FormDatabaseFolders;
     }, function (_formsFormDatabaseRenameJs) {
       FormDatabaseRename = _formsFormDatabaseRenameJs.FormDatabaseRename;
+    }, function (_dialogsDialogJs) {
+      Dialog = _dialogsDialogJs.Dialog;
+    }, function (_componentsCellJs) {
+      Cell = _componentsCellJs.Cell;
     }],
     execute: function () {
       _export("VideosPage", VideosPage = class VideosPage extends React.Component {
@@ -137,6 +141,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           this.moveVideo = this.moveVideo.bind(this);
           this.editDatabaseFolders = this.editDatabaseFolders.bind(this);
           this.renameDatabase = this.renameDatabase.bind(this);
+          this.deleteDatabase = this.deleteDatabase.bind(this);
           this.callbackIndex = -1;
           this.features = new Actions({
             select: new Action("Ctrl+T", "Select videos ...", this.selectVideos),
@@ -180,7 +185,10 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             title: "Close database ..."
           }, /*#__PURE__*/React.createElement(MenuItem, {
             action: this.closeDatabase
-          }, /*#__PURE__*/React.createElement("strong", null, "Close database")))), /*#__PURE__*/React.createElement(MenuPack, {
+          }, /*#__PURE__*/React.createElement("strong", null, "Close database"))), /*#__PURE__*/React.createElement(MenuItem, {
+            className: "red-flag",
+            action: this.deleteDatabase
+          }, "Delete database ...")), /*#__PURE__*/React.createElement(MenuPack, {
             title: "Properties ..."
           }, stringSetProperties.length ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.fillWithKeywords
@@ -578,6 +586,22 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
               });
             }
           }));
+        }
+
+        deleteDatabase() {
+          Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
+            title: `Delete dabase ${this.state.database.name}`,
+            yes: "DELETE",
+            action: () => {
+              python_call("delete_database").then(databases => this.props.app.dbHome(databases)).catch(backend_error);
+            }
+          }, /*#__PURE__*/React.createElement(Cell, {
+            center: true,
+            full: true,
+            className: "text-center"
+          }, /*#__PURE__*/React.createElement("h2", null, "Are you sure you want to delete database"), /*#__PURE__*/React.createElement("h1", null, /*#__PURE__*/React.createElement("span", {
+            className: "red-flag"
+          }, this.state.database.name), " ?"), /*#__PURE__*/React.createElement("h3", null, "Database entries and thumbnails will be deleted."), /*#__PURE__*/React.createElement("h3", null, "Video files won't be touched."))));
         }
 
         resetGroup() {

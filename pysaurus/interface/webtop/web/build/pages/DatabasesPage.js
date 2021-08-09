@@ -35,7 +35,7 @@ System.register(["../utils/backend.js"], function (_export, _context) {
           paths.sort();
           return /*#__PURE__*/React.createElement("div", {
             id: "databases"
-          }, /*#__PURE__*/React.createElement("h1", null, "Welcome to ", window.PYTHON_APP_NAME), /*#__PURE__*/React.createElement("table", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("h2", null, "Create a new database"), /*#__PURE__*/React.createElement("div", {
+          }, /*#__PURE__*/React.createElement("h1", null, "Welcome to ", window.PYTHON_APP_NAME), /*#__PURE__*/React.createElement("table", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("h2", null, "Create a database"), /*#__PURE__*/React.createElement("div", {
             className: "padding"
           }, /*#__PURE__*/React.createElement("input", {
             type: "text",
@@ -54,7 +54,7 @@ System.register(["../utils/backend.js"], function (_export, _context) {
             className: "padding"
           }, /*#__PURE__*/React.createElement("button", {
             onClick: this.createDatabase
-          }, "create database"))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("h2", null, "Open an existing database"), /*#__PURE__*/React.createElement("div", {
+          }, "create database"))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("h2", null, "Open a database (", this.props.parameters.databases.length, " available)"), /*#__PURE__*/React.createElement("div", {
             className: "padding"
           }, /*#__PURE__*/React.createElement("input", {
             type: "checkbox",

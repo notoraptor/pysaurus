@@ -78,6 +78,12 @@ class GuiAPI(FeatureAPI):
         self.provider = None
         return self.list_databases()
 
+    def delete_database(self):
+        assert self.application.delete_database(self.database.folder)
+        self.database = None
+        self.provider = None
+        return self.list_databases()
+
     def close_app(self):
         self.threads_stop_flag = True
         if self.monitor_thread:

@@ -30,6 +30,12 @@ System.register([], function (_export, _context) {
         }
 
       });
+
+      Cell.propTypes = {
+        className: PropTypes.string,
+        center: PropTypes.bool,
+        full: PropTypes.bool
+      };
     }
   };
 });

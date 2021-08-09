@@ -66,3 +66,4 @@ class Application:
         if path in self.databases:
             path.delete()
             del self.databases[path]
+            return True

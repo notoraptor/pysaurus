@@ -67,7 +67,7 @@ export class Video extends React.Component {
                                     {file_title ? <MenuItem action={this.copyFileTitle}>Copy file title</MenuItem> : ''}
                                     {data.exists ? <MenuItem action={this.renameVideo}>Rename video</MenuItem> : ''}
                                     {data.exists ? <MenuItem action={this.moveVideo}>Move video to another folder ...</MenuItem> : ""}
-                                    <MenuItem className="menu-delete" action={this.deleteVideo}>
+                                    <MenuItem className="red-flag" action={this.deleteVideo}>
                                         {data.exists ? 'Delete video' : 'Delete entry'}
                                     </MenuItem>
                                     {this.props.groupedByMoves && data.moves.length ? (
@@ -158,7 +158,7 @@ export class Video extends React.Component {
                                         </MenuItem> : ''}
                                     <MenuItem action={this.copyFileTitle}>Copy file title</MenuItem>
                                     {data.exists ? <MenuItem action={this.renameVideo}>Rename video</MenuItem> : ''}
-                                    <MenuItem className="menu-delete" action={this.deleteVideo}>
+                                    <MenuItem className="red-flag" action={this.deleteVideo}>
                                         {data.exists ? 'Delete video' : 'Delete entry'}
                                     </MenuItem>
                                 </MenuPack>

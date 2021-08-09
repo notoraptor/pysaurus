@@ -28,7 +28,7 @@ export class DatabasesPage extends React.Component {
                 <table>
                     <tr>
                         <td>
-                            <h2>Create a new database</h2>
+                            <h2>Create a database</h2>
                             <div className="padding">
                                 <input type="text"
                                        value={this.state.name}
@@ -55,7 +55,7 @@ export class DatabasesPage extends React.Component {
                             </div>
                         </td>
                         <td>
-                            <h2>Open an existing database</h2>
+                            <h2>Open a database ({this.props.parameters.databases.length} available)</h2>
                             <div className="padding">
                                 <input type="checkbox"
                                        id="update"

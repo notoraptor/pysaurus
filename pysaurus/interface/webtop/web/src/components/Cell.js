@@ -21,3 +21,8 @@ export class Cell extends React.Component {
         );
     }
 }
+Cell.propTypes = {
+    className: PropTypes.string,
+    center: PropTypes.bool,
+    full: PropTypes.bool,
+}

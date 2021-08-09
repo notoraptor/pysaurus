@@ -96,7 +96,7 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
           }, "Rename video") : '', data.exists ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.moveVideo
           }, "Move video to another folder ...") : "", /*#__PURE__*/React.createElement(MenuItem, {
-            className: "menu-delete",
+            className: "red-flag",
             action: this.deleteVideo
           }, data.exists ? 'Delete video' : 'Delete entry'), this.props.groupedByMoves && data.moves.length ? /*#__PURE__*/React.createElement(Menu, {
             title: "Confirm move to ..."
@@ -180,7 +180,7 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
           }, "Copy file title"), data.exists ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.renameVideo
           }, "Rename video") : '', /*#__PURE__*/React.createElement(MenuItem, {
-            className: "menu-delete",
+            className: "red-flag",
             action: this.deleteVideo
           }, data.exists ? 'Delete video' : 'Delete entry')), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", {
             className: "title"

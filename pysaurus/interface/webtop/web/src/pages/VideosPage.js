@@ -27,6 +27,8 @@ import {FancyBox} from "../dialogs/FancyBox.js";
 import {HomePage} from "./HomePage.js";
 import {FormDatabaseFolders} from "../forms/FormDatabaseFolders.js";
 import {FormDatabaseRename} from "../forms/FormDatabaseRename.js";
+import {Dialog} from "../dialogs/Dialog.js";
+import {Cell} from "../components/Cell.js";
 
 
 function compareSources(sources1, sources2) {
@@ -96,6 +98,7 @@ export class VideosPage extends React.Component {
         this.moveVideo = this.moveVideo.bind(this);
         this.editDatabaseFolders = this.editDatabaseFolders.bind(this);
         this.renameDatabase = this.renameDatabase.bind(this);
+        this.deleteDatabase = this.deleteDatabase.bind(this);
 
         this.callbackIndex = -1;
         this.features = new Actions({
@@ -134,6 +137,7 @@ export class VideosPage extends React.Component {
                         <Menu title="Close database ...">
                             <MenuItem action={this.closeDatabase}><strong>Close database</strong></MenuItem>
                         </Menu>
+                        <MenuItem className="red-flag" action={this.deleteDatabase}>Delete database ...</MenuItem>
                     </MenuPack>
                     <MenuPack title="Properties ...">
                         {stringSetProperties.length ? <MenuItem action={this.fillWithKeywords}>Put keywords into a property ...</MenuItem> : ''}
@@ -573,6 +577,23 @@ export class VideosPage extends React.Component {
             <FormDatabaseRename title={this.state.database.name} onClose={name => {
                 this.backend(["rename_database", name], {pageNumber: 0});
             }}/>
+        )
+    }
+
+    deleteDatabase() {
+        Fancybox.load(
+            <Dialog title={`Delete dabase ${this.state.database.name}`} yes="DELETE" action={() => {
+                python_call("delete_database")
+                    .then(databases => this.props.app.dbHome(databases))
+                    .catch(backend_error);
+            }}>
+                <Cell center={true} full={true} className="text-center">
+                    <h2>Are you sure you want to delete database</h2>
+                    <h1><span className="red-flag">{this.state.database.name}</span> ?</h1>
+                    <h3>Database entries and thumbnails will be deleted.</h3>
+                    <h3>Video files won't be touched.</h3>
+                </Cell>
+            </Dialog>
         )
     }
 

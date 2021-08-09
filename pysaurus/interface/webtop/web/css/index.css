@@ -60,3 +60,8 @@ table.second-td-text-right td:first-child + td {
 .word-break-all {
 	word-break: break-word;
 }
+
+.red-flag {
+	color: red;
+	font-weight: bolder;
+}
