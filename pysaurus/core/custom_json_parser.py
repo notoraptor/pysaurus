@@ -3,14 +3,14 @@ from typing import Iterator
 __nothing__ = object()
 
 EMPTY_CHARACTERS = b" \t\v\r\n"
-ARRAY_START = ord('[')
-ARRAY_END = ord(']')
-OBJECT_START = ord('{')
-OBJECT_END = ord('}')
+ARRAY_START = ord("[")
+ARRAY_END = ord("]")
+OBJECT_START = ord("{")
+OBJECT_END = ord("}")
 QUOTE = ord('"')
-COMMA = ord(',')
-ESCAPE = ord('\\')
-COLON = ord(':')
+COMMA = ord(",")
+ESCAPE = ord("\\")
+COLON = ord(":")
 
 OBJ_STEP_KEY = 0
 OBJ_STEP_VAL = 1
@@ -107,7 +107,7 @@ def start_object(iterable: Iterator[int]):
             if step != OBJ_STEP_VAL:
                 raise ValueError("Comma not following a value.")
             if val:
-                value, = flush_acc(val)
+                (value,) = flush_acc(val)
                 assert key is not None
                 assert key not in parsed
                 parsed[key] = value
@@ -142,7 +142,7 @@ def start_object(iterable: Iterator[int]):
             if step != OBJ_STEP_VAL:
                 raise ValueError("Value not preceding object end.")
             if val:
-                value, = flush_acc(val)
+                (value,) = flush_acc(val)
                 assert key is not None
                 assert key not in parsed
                 parsed[key] = value

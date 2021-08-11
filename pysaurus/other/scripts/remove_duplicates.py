@@ -81,9 +81,9 @@ class Interface(FlaskInterface):
             <td>
                 <div class="items">
                     {"".join(
-                        self._img_to_html(name, i, file_path) 
-                        for i, file_path in enumerate(dup_files)
-                    )}
+            self._img_to_html(name, i, file_path)
+            for i, file_path in enumerate(dup_files)
+        )}
                 </div>
             </td>
         </tr>
@@ -103,8 +103,8 @@ class Interface(FlaskInterface):
                 </p>
                 <table><tbody>
                 {"".join(
-                    self._dup_to_html(i, dup) for i, dup in enumerate(self._duplicates)
-                )}
+                self._dup_to_html(i, dup) for i, dup in enumerate(self._duplicates)
+            )}
                 </tbody></table>
                 <p>
                     <input type="submit" value="send"/>
@@ -120,14 +120,14 @@ class Interface(FlaskInterface):
         output = kwargs.pop(self.output_name).strip()
         if not output:
             return (
-                f'No output specified! '
+                f"No output specified! "
                 f'<a href="{self.backend_url(self.index)}">Back!</a>'
             )
         output = AbsolutePath(output)
         if not output.isdir() and output.exists():
             return (
-               f'Not a directory and already exists: {output}. '
-               f'<a href="{self.backend_url(self.index)}">Back!</a>'
+                f"Not a directory and already exists: {output}. "
+                f'<a href="{self.backend_url(self.index)}">Back!</a>'
             )
         assert len(kwargs) == len(self._duplicates), (
             len(kwargs),

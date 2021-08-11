@@ -255,7 +255,10 @@ class DatabaseFeatures:
                 )
                 # Get next similarity id to use.
                 next_sim_id = (
-                    max([v.similarity_id for v in videos if v.similarity_id is not None] + [0])
+                    max(
+                        [v.similarity_id for v in videos if v.similarity_id is not None]
+                        + [0]
+                    )
                     + 1
                 )
                 with Profiler("Merge new similarities with old ones.", db.notifier):
@@ -320,7 +323,7 @@ class DatabaseFeatures:
                 # Save.
                 db.save()
             else:
-                db.notifier.notify(notifications.Message(f"No new videos to check."))
+                db.notifier.notify(notifications.Message("No new videos to check."))
 
     @classmethod
     def find_similar_videos_ignore_cache(cls, db: Database):
