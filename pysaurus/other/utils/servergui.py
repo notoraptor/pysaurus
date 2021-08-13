@@ -1,3 +1,9 @@
+"""
+Requirements:
+Flask==2.0.1
+pywebview==3.5
+"""
+
 from multiprocessing import Process
 
 import webview
