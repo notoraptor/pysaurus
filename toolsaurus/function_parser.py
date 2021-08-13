@@ -4,7 +4,6 @@ import textwrap
 import typing
 from typing import Callable, Dict, Optional
 
-from pysaurus.core import exceptions
 from pysaurus.core.classes import StringPrinter
 from pysaurus.core.functions import is_instance_from_module
 
@@ -16,6 +15,22 @@ class _ArgumentParserError(Exception):
 class _ThrowingArgumentParser(argparse.ArgumentParser):
     def error(self, message):
         raise _ArgumentParserError(message)
+
+
+class _FunctionParsingError(Exception):
+    pass
+
+
+class UnknownQuery(_FunctionParsingError):
+    pass
+
+
+class InvalidQueryArgCount(_FunctionParsingError):
+    pass
+
+
+class MissingQueryArg(_FunctionParsingError):
+    pass
 
 
 class FunctionDefinition:
@@ -222,14 +237,14 @@ class FunctionParser:
 
     def call(self, function_name, function_args=None):
         if function_name not in self.definitions:
-            raise exceptions.UnknownQuery(function_name)
+            raise UnknownQuery(function_name)
         function_definition = self.definitions[function_name]
         if len(function_args) != len(function_definition.arguments):
-            raise exceptions.InvalidQueryArgCount()
+            raise InvalidQueryArgCount()
         kwargs = {}
         for argument_name, argument_parser in function_definition.arguments.items():
             if argument_name not in function_args:
-                raise exceptions.MissingQueryArg(argument_name)
+                raise MissingQueryArg(argument_name)
             kwargs[argument_name] = argument_parser(function_args[argument_name])
         return function_definition.function(**kwargs)
 
