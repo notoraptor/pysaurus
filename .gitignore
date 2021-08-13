@@ -1,7 +1,6 @@
 /.html*/
 /*.jpg
 /*.png
-*.dll
 *.log
 *.pyc
 *.csv

@@ -5,7 +5,7 @@ import subprocess
 from datetime import datetime
 from typing import Union
 
-from pysaurus.core import constants
+from pysaurus.core import constants, exceptions
 from pysaurus.core.constants import WINDOWS_PATH_PREFIX
 from pysaurus.core.exceptions import UnsupportedOS, NotDirectoryError
 from pysaurus.core.modules import FileSystem, System
@@ -213,6 +213,16 @@ STDERR: {stderr.strip()}"""
 
     def open_containing_folder(self):
         return self.locate_file() or self.get_directory().open()
+
+    def assert_dir(self):
+        if not self.isdir():
+            raise exceptions.NotDirectoryError(self)
+        return self
+
+    def assert_file(self):
+        if not self.isfile():
+            raise exceptions.NotFileError(self)
+        return self
 
     @staticmethod
     def ensure(path):

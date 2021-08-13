@@ -1,3 +1,4 @@
+import os.path
 from ctypes import c_char_p, POINTER, c_int, c_double, c_bool, util, CDLL
 
 c_int_p = POINTER(c_int)
@@ -6,7 +7,10 @@ c_bool_p = POINTER(c_bool)
 
 
 def c_library(name):
-    lib_path = util.find_library(name)
+    if os.path.isabs(name):
+        lib_path = name
+    else:
+        lib_path = util.find_library(name)
     if not lib_path:
         raise FileNotFoundError(f"Cannot find library: {name}")
     return CDLL(lib_path)

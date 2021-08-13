@@ -1,5 +1,6 @@
 import base64
 import os
+import platform
 import sys
 from html.parser import HTMLParser
 
@@ -73,6 +74,38 @@ class System:
             is_insensitive = FileSystem.path.exists(test_name.upper())
         FileSystem.unlink(test_name)
         return is_insensitive
+
+    @staticmethod
+    def get_identifier():
+        bits_info = platform.architecture()[0]
+        if bits_info == "32bit":
+            bits = 32
+        elif bits_info == "64bit":
+            bits = 64
+        else:
+            raise OSError(F"Unknown architecture: {bits_info}")
+        if System.is_windows():
+            name = "win"
+        elif System.is_linux():
+            name = "lin"
+        elif System.is_mac():
+            name = "mac"
+        else:
+            raise OSError(f"Unsupported operating system: {System.platform()}")
+        return f"{name}{bits}"
+
+    @staticmethod
+    def get_lib_basename(name):
+        if System.is_windows():
+            return f"{name}.dll"
+        else:
+            raise OSError(f"System not yet supported: {System.platform()}")
+
+    @staticmethod
+    def get_exe_basename(name):
+        if System.is_windows():
+            return f"{name}.exe"
+        return name
 
 
 class VideoClipping:

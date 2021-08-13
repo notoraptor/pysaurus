@@ -2,6 +2,7 @@ import os
 import subprocess
 from typing import List, Dict
 
+from pysaurus.bin.symbols import RUN_VIDEO_RAPTOR_BATCH, RUN_VIDEO_RAPTOR_THUMBNAILS
 from pysaurus.core import functions
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.database.video_runtime_info import VideoRuntimeInfo
@@ -53,7 +54,7 @@ def job_video_to_json(job):
         output_file_path.delete()
 
     process = subprocess.Popen(
-        ["runVideoRaptorBatch", input_file_name, output_file_name],
+        [RUN_VIDEO_RAPTOR_BATCH.path, input_file_name, output_file_name],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )
@@ -94,7 +95,7 @@ def job_video_thumbnails_to_json(job):
         output_file_path.delete()
 
     process = subprocess.Popen(
-        ["runVideoRaptorThumbnails", input_file_name, output_file_name],
+        [RUN_VIDEO_RAPTOR_THUMBNAILS.path, input_file_name, output_file_name],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )

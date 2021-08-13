@@ -1,5 +1,6 @@
 from ctypes import POINTER, Structure, c_double, c_int
 
+from pysaurus.bin.symbols import ALIGNMENT_RAPTOR
 from pysaurus.core.native.clibrary import CLibrary, c_int_p, c_double_p, c_bool_p
 
 
@@ -17,7 +18,7 @@ class Sequence(Structure):
 PtrSequence = POINTER(Sequence)
 PtrPtrSequence = POINTER(PtrSequence)
 
-_dll_video_raptor = CLibrary("alignmentRaptor")
+_dll_video_raptor = CLibrary(ALIGNMENT_RAPTOR.path)
 
 fn_classifySimilarities = _dll_video_raptor.prototype(
     "classifySimilarities",
