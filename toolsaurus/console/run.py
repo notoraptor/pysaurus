@@ -11,9 +11,9 @@ from pysaurus.core.database.video_features import VideoFeatures
 from pysaurus.core.database.video_sorting import VideoSorting
 from pysaurus.core.database.video_state import VideoState
 from pysaurus.core.functions import generate_temp_file_path
-from pysaurus.core.printable import to_table, to_column
 from toolsaurus.command_line_interface import command_line_interface
 from toolsaurus.function_parser import FunctionParser, fsigned, fdef
+from toolsaurus.printable import to_table, to_column
 
 TEST_LIST_FILE_PATH = AbsolutePath(
     os.path.join(
