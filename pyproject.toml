@@ -3,6 +3,7 @@ name = "pysaurus"
 version = "0.1.0"
 description = "Video collection manager"
 authors = ["notoraptor"]
+readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.8"
