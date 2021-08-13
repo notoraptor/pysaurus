@@ -107,7 +107,7 @@ class FunctionDefinition:
                         break
             if not added:
                 raise ValueError(
-                    "Unable to get command-line arg short name for function %s and arg %s"
+                    "Unable to get command-line arg short name: function %s, arg %s"
                     % (self.name, arg_name)
                 )
         long_names = {}
@@ -210,10 +210,10 @@ class FunctionParser:
 
     def help(self, name=None):
         if name is None:
-            print("\listing", len(self.definitions), "definitions")
+            print(r"\listing", len(self.definitions), "definitions")
             for fn_name in sorted(self.definitions):
                 print(self.definitions[fn_name])
-            print("\listed", len(self.definitions), "definitions")
+            print(r"\listed", len(self.definitions), "definitions")
         elif name in self.definitions:
             print(self.definitions[name])
 

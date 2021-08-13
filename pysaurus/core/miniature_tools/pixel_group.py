@@ -20,9 +20,9 @@ class PixelGroup:
 
     def __str__(self):
         return (
-            f"PixelGroup({self.identifier + 1} "
+            f"PixelGroup({self.identifier + 1}, "
             f"{self.color}, "
-            f"{len(self.members)} member{functions.get_plural_suffix(len(self.members))}, "
+            f"{len(self.members)} member(s), "
             f"center {self.center})"
         )
 

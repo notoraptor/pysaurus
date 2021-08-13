@@ -251,7 +251,7 @@ class DatabaseFeatures:
                 )
                 # Sort new similarity groups by size then smallest duration.
                 sim_groups.sort(
-                    key=lambda s: (len(s), min(videos[i].length for i in s))
+                    key=lambda s: (len(s), min(videos[x].length for x in s))
                 )
                 # Get next similarity id to use.
                 next_sim_id = (

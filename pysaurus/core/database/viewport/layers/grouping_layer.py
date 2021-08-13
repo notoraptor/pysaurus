@@ -35,7 +35,8 @@ class GroupingLayer(Layer):
     def reset_parameters(self):
         self._set_parameters(grouping=self.DEFAULT_GROUP_DEF)
 
-    def _get_prop_vals(self, prop_type, video_state):
+    @staticmethod
+    def _get_prop_vals(prop_type, video_state):
         if video_state.unreadable:
             return [None if prop_type.multiple else prop_type.default]
         elif prop_type.multiple:

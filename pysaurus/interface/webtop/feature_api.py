@@ -52,13 +52,16 @@ class FeatureAPI:
 
     # Tk dialog boxes.
 
-    def select_directory(self, default=None):
+    @staticmethod
+    def select_directory(default=None):
         return iutils.select_directory(default)
 
-    def select_files(self):
+    @staticmethod
+    def select_files():
         return iutils.select_many_files_to_open()
 
-    def select_file(self):
+    @staticmethod
+    def select_file():
         return iutils.select_file_to_open()
 
     # Constant getters.

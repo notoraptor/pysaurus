@@ -25,7 +25,7 @@ class Notifier:
 
     def __init__(self):
         self.__managers = {}  # type: Dict[type, ManagerType]
-        self.__default_manager = None
+        self.__default_manager = None  # type: Optional[Callable[[Notification], None]]
         self.__default_manager_policy = Notifier.DM_CALL_SOONER
         self.__log_path = None
         self.__log_written = False

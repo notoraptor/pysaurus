@@ -49,7 +49,8 @@ def split_words_and_numbers(text):
 def camel_case_to_snake_case(name, split_upper_cases=True):
     """Convert a string (expected to be in camel case) to snake case.
     :param name: string to convert.
-    :param split_upper_cases: if True, split consecutives uppercases too (e.g. 'ABC' => 'a_b_c')
+    :param split_upper_cases: if True, split consecutive uppercases too
+        (e.g. 'ABC' => 'a_b_c')
     :return: snake case version of given name.
     :rtype: str
     """
@@ -135,32 +136,22 @@ def package_dir():
 
 def bool_type(mixed):
     """Convert a value to a boolean, with following rules (in that order):
-        None => False
-        bool, int, float => False if 0, else True
-        "true" (case insensitive) => True
-        "false" (case insensitive) => False
-        "" (empty string) => False
-        integer or floating string => boolean value of converted number (False if 0, else True)
-        bool(mixed) otherwise.
-    :param mixed:
-    :return:
+    - "true" (case insensitive) => True
+    - "false" (case insensitive) => False
+    - "" (empty string) => False
+    - integer or floating string => boolean value of converted number
+    - bool(mixed) otherwise.
     """
-    if mixed is None:
-        return False
-    if isinstance(mixed, (bool, int, float)):
-        return bool(mixed)
     if isinstance(mixed, str):
-        if mixed.lower() == "true":
-            return True
-        if not mixed or mixed.lower() == "false":
+        mixed = mixed.strip()
+        if not mixed:
             return False
-        try:
-            return bool(int(mixed))
-        except ValueError:
-            try:
-                return bool(float(mixed))
-            except ValueError:
-                pass
+        elif mixed.lower() == "true":
+            return True
+        elif mixed.lower() == "false":
+            return False
+        else:
+            return bool(float(mixed))
     return bool(mixed)
 
 

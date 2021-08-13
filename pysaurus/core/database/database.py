@@ -274,8 +274,9 @@ class Database:
 
         self.__notifier.set_log_path(self.__log_path.path)
 
+    @staticmethod
     def _transfer_db_path(
-        self, path: AbsolutePath, old_folder: AbsolutePath, new_folder: AbsolutePath
+        path: AbsolutePath, old_folder: AbsolutePath, new_folder: AbsolutePath
     ):
         old_name = old_folder.title
         old_basename = path.get_basename()

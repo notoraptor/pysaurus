@@ -356,7 +356,7 @@ class API:
                 folder, is_case_insensitive=self.database.sys_is_case_insensitive
             ):
                 videos.append(video)
-        videos.sort(key=lambda video: video.filename)
+        videos.sort(key=lambda v: v.filename)
         return videos
 
     @fsigned

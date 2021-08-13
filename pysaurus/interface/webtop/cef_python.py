@@ -14,7 +14,8 @@ class Interface(GuiAPI):
         super().__init__()
         self.browser = browser
 
-    def clipboard(self, text):
+    @staticmethod
+    def clipboard(text):
         pyperclip.copy(text)
 
     def call(self, name, args, resolve, reject):

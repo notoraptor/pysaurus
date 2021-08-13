@@ -7,7 +7,7 @@ from pysaurus.core.database.video_sorting import VideoSorting
 from pysaurus.core.functions import string_to_pieces
 
 
-class classflag(property):
+class ClassFlag(property):
     pass
 
 
@@ -86,12 +86,12 @@ class VideoState:
         lambda self: not self.unreadable_thumbnail and self.runtime.has_thumbnail
     )
 
-    readable = classflag(lambda self: not self.UNREADABLE)
-    unreadable = classflag(lambda self: self.UNREADABLE)
-    found = classflag(lambda self: self.exists)
-    not_found = classflag(lambda self: not self.exists)
-    with_thumbnails = classflag(lambda self: self.has_thumbnail)
-    without_thumbnails = classflag(lambda self: not self.has_thumbnail)
+    readable = ClassFlag(lambda self: not self.UNREADABLE)
+    unreadable = ClassFlag(lambda self: self.UNREADABLE)
+    found = ClassFlag(lambda self: self.exists)
+    not_found = ClassFlag(lambda self: not self.exists)
+    with_thumbnails = ClassFlag(lambda self: self.has_thumbnail)
+    without_thumbnails = ClassFlag(lambda self: not self.has_thumbnail)
 
     @property
     def unreadable_thumbnail(self):
@@ -140,4 +140,4 @@ class VideoState:
 
     @classmethod
     def is_flag(cls, name):
-        return isinstance(getattr(cls, name), classflag)
+        return isinstance(getattr(cls, name), ClassFlag)
