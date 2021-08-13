@@ -1,3 +1,34 @@
+[tool.poetry]
+name = "pysaurus"
+version = "0.1.0"
+description = "Video collection manager"
+authors = ["notoraptor"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+cefpython3 = "^66.1"
+moviepy = "^1.0.3"
+Pillow = "^8.3.1"
+pyperclip = "^1.8.2"
+ujson = "^4.0.2"
+
+[tool.poetry.dev-dependencies]
+black = "^21.7b0"
+flake8 = "^3.9.2"
+pytest = "^6.2.4"
+pytest-cov = "^2.12.1"
+isort = "^5.9.3"
+
+[tool.black]
+line-length = 88
+
+[tool.isort]
+known_first_party = "pysaurus"
+known_third_party = ""
+multi_line_output = 3
+include_trailing_comma = true
+combine_as_imports = true
+
 [build-system]
-requires = ["setuptools>=42", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
