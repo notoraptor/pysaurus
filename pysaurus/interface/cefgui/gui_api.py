@@ -19,8 +19,8 @@ from pysaurus.core.notifications import (
     DatabaseReady,
 )
 from pysaurus.core.path_tree import PathTree
-from pysaurus.interface.webtop.feature_api import FeatureAPI
-from pysaurus.interface.webtop.parallel_notifier import ParallelNotifier
+from pysaurus.interface.cefgui.feature_api import FeatureAPI
+from pysaurus.interface.cefgui.parallel_notifier import ParallelNotifier
 
 
 class GuiAPI(FeatureAPI):

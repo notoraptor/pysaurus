@@ -11,7 +11,7 @@ from pysaurus.core.database.video_features import VideoFeatures
 from pysaurus.core.database.viewport.layers.source_layer import SourceLayer
 from pysaurus.core.database.viewport.video_provider import VideoProvider
 from pysaurus.core.functions import compute_nb_pages
-from pysaurus.interface.webtop import iutils
+from pysaurus.interface.cefgui import tk_utils
 
 
 class FeatureAPI:
@@ -54,15 +54,15 @@ class FeatureAPI:
 
     @staticmethod
     def select_directory(default=None):
-        return iutils.select_directory(default)
+        return tk_utils.select_directory(default)
 
     @staticmethod
     def select_files():
-        return iutils.select_many_files_to_open()
+        return tk_utils.select_many_files_to_open()
 
     @staticmethod
     def select_file():
-        return iutils.select_file_to_open()
+        return tk_utils.select_file_to_open()
 
     # Constant getters.
 

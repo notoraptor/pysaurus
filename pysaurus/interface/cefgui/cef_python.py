@@ -6,7 +6,7 @@ import traceback
 import pyperclip
 from cefpython3 import cefpython as cef
 
-from pysaurus.interface.webtop.gui_api import GuiAPI
+from pysaurus.interface.cefgui.gui_api import GuiAPI
 
 
 class Interface(GuiAPI):
