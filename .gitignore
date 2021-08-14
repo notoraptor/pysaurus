@@ -13,3 +13,5 @@ pysaurus/interface/web/blob_storage/
 pysaurus/interface/web/webrtc_event_logs/
 webrtc_event_logs/
 /dist
+/build
+/.*
