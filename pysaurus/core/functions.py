@@ -452,3 +452,14 @@ def generate_temp_file_path(extension):
         else:
             break
     return temp_file_path
+
+
+def generate_non_existing_path(directory, name, extension):
+    file_id = 0
+    while True:
+        file_path = FilePath(directory, f"{name}{file_id}", extension)
+        if file_path.exists():
+            file_id += 1
+        else:
+            break
+    return file_path

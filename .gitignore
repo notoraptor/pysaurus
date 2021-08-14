@@ -1,6 +1,7 @@
 /.html*/
 /*.jpg
 /*.png
+/*.zip
 *.log
 *.pyc
 *.csv
