@@ -1,8 +1,9 @@
 import os
 import shutil
 
-from pysaurus.core import notifications, functions
-from pysaurus.core.components import AbsolutePath, FilePath, FileSize
+from pysaurus.core import notifications
+from pysaurus.core.components import AbsolutePath, FileSize
+from pysaurus.core.modules import FileSystem
 from pysaurus.core.notifier import Notifier, DEFAULT_NOTIFIER
 from pysaurus.core.profiling import Profiler
 
@@ -56,9 +57,13 @@ class FileCopier:
             if not self.dst.isfile():
                 raise OSError("Destination file not found after moving on same disk.")
             self.notifier.notify(notifications.Done())
-            return True
+            ret = True
         else:
-            return self.copy()
+            ret = self.copy()
+        if ret:
+            src_stat = FileSystem.stat(self.src.path)
+            FileSystem.utime(self.dst.path, (src_stat.st_atime, src_stat.st_mtime))
+        return ret
 
     def copy(self):
         job_notifier = notifications.Jobs.copy_file(
@@ -90,20 +95,3 @@ class FileCopier:
         else:
             self.notifier.notify(notifications.Done())
         return not self.cancel
-
-
-def test(notifier=DEFAULT_NOTIFIER, run_shutil=True):
-    src = AbsolutePath.join(functions.package_dir(), "..", ".local", "huge.txt")
-    assert src.isfile()
-    dst1 = FilePath(src.get_directory(), src.file_title, f"1.{src.extension}")
-    dst2 = FilePath(src.get_directory(), src.file_title, f"2.{src.extension}")
-    dst1.delete()
-    dst2.delete()
-    if run_shutil:
-        with Profiler("shutil", notifier=notifier):
-            shutil.copy(src.path, dst1.path)
-    FileCopier(src, dst2, notifier=notifier).copy()
-
-
-if __name__ == "__main__":
-    test()

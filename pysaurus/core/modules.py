@@ -260,6 +260,11 @@ class _FileSystem:
         return os.stat(path)
 
     @classmethod
+    def utime(cls, path: str, times: tuple):
+        _print("FILESYSTEM UTIME")
+        return os.utime(path, times)
+
+    @classmethod
     def listdir(cls, path: str):
         _print("FILESYSTEM LISTDIR")
         return os.listdir(path)
