@@ -18,7 +18,7 @@ echo Deactivate conda environment
 call conda deactivate || goto :error
 
 echo Generate ZIP file "pysaurus.zip"
-call python -c "import shutil; shutil.make_archive('pysaurus', 'zip', 'exedir')" || goto :error
+call python scripts\compress.py pysaurus exedir || goto :error
 move pysaurus.zip dist\
 
 echo Cleanup
