@@ -4,7 +4,9 @@ import threading
 import time
 import traceback
 from abc import abstractmethod
-from typing import Optional, Callable
+from typing import Optional, Callable, Sequence, Dict
+
+import pyperclip
 
 from pysaurus.core.components import AbsolutePath, FilePath
 from pysaurus.core.database.database_features import DatabaseFeatures
@@ -19,6 +21,7 @@ from pysaurus.core.notifications import (
     DatabaseReady,
 )
 from pysaurus.core.path_tree import PathTree
+from pysaurus.interface.cefgui import tk_utils
 from pysaurus.interface.cefgui.feature_api import FeatureAPI
 from pysaurus.interface.cefgui.parallel_notifier import ParallelNotifier
 
@@ -34,22 +37,10 @@ class GuiAPI(FeatureAPI):
         self.notifier.call_default_if_no_manager()
 
     def create_database(self, name, folders, update):
-        def run():
-            self._create_database(name, folders)
-            if update:
-                self._update_database()
-
-        run.__name__ = "create_database"
-        self._launch(run)
+        self._launch(self._create_database, args=(name, folders, update))
 
     def open_database(self, path, update):
-        def run():
-            self._open_database(path)
-            if update:
-                self._update_database()
-
-        run.__name__ = "open_database"
-        self._launch(run)
+        self._launch(self._open_database, args=(path, update))
 
     def update_database(self):
         self._launch(self._update_database)
@@ -61,11 +52,7 @@ class GuiAPI(FeatureAPI):
         self._launch(self._find_similarities_ignore_cache)
 
     def move_video_file(self, video_id, directory):
-        def run():
-            self._move_video_file(video_id, directory)
-
-        run.__name__ = "move_video_file"
-        self._launch(run, finish=False)
+        self._launch(self._move_video_file, args=(video_id, directory), finish=False)
 
     def cancel_copy(self):
         if self.copy_work is not None:
@@ -94,8 +81,16 @@ class GuiAPI(FeatureAPI):
 
     # Private methods.
 
-    def _launch(self, function: Callable[[], None], finish=True):
+    def _launch(
+        self,
+        function: Callable,
+        args: Sequence = None,
+        kwargs: Dict = None,
+        finish=True,
+    ):
         print("Running", function.__name__)
+        args = args or ()
+        kwargs = kwargs or {}
         assert not self.monitor_thread
         assert not self.db_loading_thread
         self.notifier.clear_managers()
@@ -103,8 +98,8 @@ class GuiAPI(FeatureAPI):
 
         if finish:
 
-            def run():
-                function()
+            def run(*a, **k):
+                function(*a, **k)
                 self._finish_loading(f"Finished running: {function.__name__}")
 
         else:
@@ -113,7 +108,7 @@ class GuiAPI(FeatureAPI):
         # Launch monitor thread.
         self.monitor_thread = launch_thread(self._monitor_notifications)
         # Then launch function.
-        self.db_loading_thread = launch_thread(run)
+        self.db_loading_thread = launch_thread(run, *args, **kwargs)
 
     def _finish_loading(self, log_message):
         if self.provider:
@@ -123,12 +118,11 @@ class GuiAPI(FeatureAPI):
         print(log_message)
 
     def _consume_notifications(self):
-        if self.notifier.queue.qsize():
-            while True:
-                try:
-                    self.notifier.queue.get_nowait()
-                except queue.Empty:
-                    break
+        while True:
+            try:
+                self.notifier.queue.get_nowait()
+            except queue.Empty:
+                break
         assert not self.notifier.queue.qsize()
 
     def _monitor_notifications(self):
@@ -156,13 +150,17 @@ class GuiAPI(FeatureAPI):
         # type: (Notification) -> None
         raise NotImplementedError()
 
-    def _create_database(self, name, folders):
+    def _create_database(self, name: str, folders: Sequence[str], update: bool):
         self.database = self.application.new_database(name, folders)
         self.provider = VideoProvider(self.database)
+        if update:
+            self._update_database()
 
-    def _open_database(self, path):
+    def _open_database(self, path: str, update: bool):
         self.database = self.application.open_database(path)
         self.provider = VideoProvider(self.database)
+        if update:
+            self._update_database()
 
     def _update_database(self):
         self.database.refresh(ensure_miniatures=False)
@@ -214,3 +212,19 @@ class GuiAPI(FeatureAPI):
             self.database.notifier.notify(End(f"Error: {exc}"))
         finally:
             self.db_loading_thread = None
+
+    @staticmethod
+    def clipboard(text):
+        pyperclip.copy(text)
+
+    @staticmethod
+    def select_directory(default=None):
+        return tk_utils.select_directory(default)
+
+    @staticmethod
+    def select_files():
+        return tk_utils.select_many_files_to_open()
+
+    @staticmethod
+    def select_file():
+        return tk_utils.select_file_to_open()

@@ -11,11 +11,10 @@ from pysaurus.core.database.video_features import VideoFeatures
 from pysaurus.core.database.viewport.layers.source_layer import SourceLayer
 from pysaurus.core.database.viewport.video_provider import VideoProvider
 from pysaurus.core.functions import compute_nb_pages
-from pysaurus.interface.cefgui import tk_utils
 
 
 class FeatureAPI:
-    def __init__(self, notifier=None):
+    def __init__(self, notifier):
         self.notifier = notifier
         self.application = Application(self.notifier)
         self.database = None  # type: Optional[Database]
@@ -51,18 +50,6 @@ class FeatureAPI:
         return videos
 
     # Tk dialog boxes.
-
-    @staticmethod
-    def select_directory(default=None):
-        return tk_utils.select_directory(default)
-
-    @staticmethod
-    def select_files():
-        return tk_utils.select_many_files_to_open()
-
-    @staticmethod
-    def select_file():
-        return tk_utils.select_file_to_open()
 
     # Constant getters.
 
