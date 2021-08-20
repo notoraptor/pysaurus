@@ -1,15 +1,15 @@
 import pytest
 import ujson as json
 
-from pysaurus.core.custom_json_parser import json_parse_string
+from pysaurus.core.custom_json_parser import custom_json_parse_string
 
 
 def run(data):
     if isinstance(data, str):
-        json_parse_string(data)
+        custom_json_parse_string(data)
     else:
         jsn = json.dumps(data)
-        prs = json_parse_string(jsn)
+        prs = custom_json_parse_string(jsn)
         assert data == prs
 
 

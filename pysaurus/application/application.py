@@ -1,26 +1,57 @@
 # import atexit
+import json
 import os
 from pathlib import Path
 from typing import Dict, Optional, List, Iterable
 
+from pysaurus.application.config import Config
+from pysaurus.application.default_language import DefaultLanguage
+from pysaurus.application.language import Language
 from pysaurus.core import functions
 from pysaurus.core.components import AbsolutePath
+from pysaurus.core.custom_json_parser import parse_json
 from pysaurus.core.database.database import Database
 from pysaurus.core.modules import FileSystem
 from pysaurus.core.notifier import DEFAULT_NOTIFIER
 
 
 class Application:
+    lang = None
+
     def __init__(self, notifier=DEFAULT_NOTIFIER):
         self.app_name = "Pysaurus"
         self.home_dir = AbsolutePath(str(Path.home()))
         self.app_dir = AbsolutePath.join(self.home_dir, f".{self.app_name}").mkdir()
         self.dbs_dir = AbsolutePath.join(self.app_dir, "databases").mkdir()
+        self.lang_dir = AbsolutePath.join(self.app_dir, "languages").mkdir()
+        self.config_path = AbsolutePath.join(self.app_dir, "config.json")
+        self.config = Config()
         self.databases = {}  # type: Dict[AbsolutePath, Optional[Database]]
         self.notifier = notifier
+        # Load database names.
         for entry in FileSystem.scandir(self.dbs_dir.path):  # type: os.DirEntry
             if entry.is_dir():
                 self.databases[AbsolutePath(entry.path)] = None
+        # Load config file.
+        if self.config_path.exists():
+            assert self.config_path.isfile()
+            config_dct = parse_json(self.config_path)
+            assert isinstance(config_dct, dict)
+            self.config.update(config_dct)
+        # Load language.
+        lang_path = AbsolutePath.join(self.lang_dir, f"{self.config.language}.json")
+        if lang_path.exists():
+            assert lang_path.isfile()
+        elif self.config.language == DefaultLanguage.__language__:
+            default_dct = {
+                key: getattr(DefaultLanguage, key)
+                for key in functions.class_get_public_attributes(DefaultLanguage)
+            }
+            with open(lang_path.path, "w") as file:
+                json.dump(default_dct, file, indent="\t")
+        else:
+            raise OSError(f"No file for language: {self.config.language}")
+        self.lang = Language(parse_json(lang_path))
         # atexit.register(self._close)
 
     def _close(self):

@@ -1,7 +1,7 @@
 import sys
 from typing import Optional
 
-from pysaurus.application import Application
+from pysaurus.application.application import Application
 from pysaurus.core import notifications
 from pysaurus.core.components import FileSize, Duration
 from pysaurus.core.database.database import Database

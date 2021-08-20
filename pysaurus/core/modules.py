@@ -83,7 +83,7 @@ class System:
         elif bits_info == "64bit":
             bits = 64
         else:
-            raise OSError(F"Unknown architecture: {bits_info}")
+            raise OSError(f"Unknown architecture: {bits_info}")
         if System.is_windows():
             name = "win"
         elif System.is_linux():

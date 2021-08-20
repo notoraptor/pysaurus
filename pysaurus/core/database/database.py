@@ -12,7 +12,7 @@ from pysaurus.core.components import (
     PathType,
 )
 from pysaurus.core.constants import THUMBNAIL_EXTENSION, CPU_COUNT
-from pysaurus.core.custom_json_parser import json_parse_file
+from pysaurus.core.custom_json_parser import parse_json
 from pysaurus.core.database import path_utils, jobs_python
 from pysaurus.core.database.db_settings import DbSettings
 from pysaurus.core.database.db_video_attribute import (
@@ -39,16 +39,6 @@ def new_sub_file(folder: AbsolutePath, extension: str):
 
 def new_sub_folder(folder: AbsolutePath, suffix: str, sep="."):
     return AbsolutePath.join(folder, f"{folder.title}{sep}{suffix}")
-
-
-def parse_json(path: AbsolutePath):
-    try:
-        with open(path.path, encoding="utf-8") as file:
-            return json.load(file)
-    except UnicodeDecodeError:
-        print("JSON: falling back to custom parser.")
-        with open(path.path, "rb") as file:
-            return json_parse_file(file)
 
 
 FILENAME_RELATED_FIELDS = (

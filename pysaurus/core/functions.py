@@ -339,7 +339,7 @@ def flatten_list(data: list):
     return output
 
 
-def class_get_public_attributes(cls: type, exclude=(), to_set=False):
+def class_get_public_attributes(cls: type, exclude=(), wrapper=sorted):
     fields = {
         field
         for field in dir(cls)
@@ -347,7 +347,7 @@ def class_get_public_attributes(cls: type, exclude=(), to_set=False):
     }
     fields.difference_update(exclude)
     fields.difference_update(getattr(cls, "__protected__", ()))
-    return fields if to_set else sorted(fields)
+    return fields if wrapper is set else wrapper(fields)
 
 
 def class_get_field_title(cls: type, field: str, lowercase=False):

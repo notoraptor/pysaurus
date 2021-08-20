@@ -16,9 +16,9 @@ def check_version():
     expected_version = [8, 6]
     current_version = [int(v) for v in Tcl().eval("info patchlevel").split(".")]
     assert current_version >= expected_version
-    assert Tcl().eval('set tcl_platform(threaded)'), (
-        "This build of Tkinter does not support threading."
-    )
+    assert Tcl().eval(
+        "set tcl_platform(threaded)"
+    ), "This build of Tkinter does not support threading."
 
 
 def tk_help(widget: Widget):
@@ -75,7 +75,9 @@ class FeetToMeters:
                 print("remove")
                 self.el.grid_remove()
 
-        c = ttk.Checkbutton(main_frame, text="togglen", command=on_toggle, variable=self.cb)
+        c = ttk.Checkbutton(
+            main_frame, text="togglen", command=on_toggle, variable=self.cb
+        )
         c.grid(column=2, row=3)
 
         for child in main_frame.winfo_children():
