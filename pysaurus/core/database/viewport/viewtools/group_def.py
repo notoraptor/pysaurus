@@ -1,13 +1,14 @@
 from typing import Optional, List
 
-from pysaurus.core.classes import ToFulLDict
+from pysaurus.core.classes import ToDict
 from pysaurus.core.compare import to_comparable
 from pysaurus.core.database.viewport.viewtools.group import Group
 from pysaurus.core.functions import get_default
 
 
-class GroupDef(ToFulLDict):
+class GroupDef(ToDict):
     __slots__ = "field", "is_property", "sorting", "reverse", "allow_singletons"
+    __print_none__ = True
 
     FIELD = "field"
     COUNT = "count"

@@ -21,7 +21,7 @@ class CefAPI(GuiAPI):
         self.browser.ExecuteFunction(
             "NOTIFICATION_MANAGER.call",
             {
-                "name": notification.get_name(),
+                "name": type(notification).__name__,
                 "notification": notification.to_dict(),
                 "message": str(notification),
             },

@@ -44,15 +44,13 @@ class StringPrinter:
 
 class ToDict:
     __slots__ = ()
+    __props__ = None
     __slot_sorter__ = sorted
     __print_none__ = False
 
-    def get_name(self):
-        return type(self).__name__
-
     @classmethod
     def get_slots(cls):
-        if hasattr(cls, "__props__"):
+        if cls.__props__ is not None:
             return cls.__props__
         return cls.__slot_sorter__(
             chain.from_iterable(getattr(typ, "__slots__", ()) for typ in cls.__mro__)
@@ -74,7 +72,7 @@ class ToDict:
             if self.__print_none__ or value is not None:
                 values.append((name, value))
         return "%s(%s)" % (
-            self.get_name(),
+            type(self).__name__,
             ", ".join(
                 "%s=%s" % (name, repr(value) if isinstance(value, str) else value)
                 for name, value in values
@@ -82,14 +80,24 @@ class ToDict:
         )
 
     def __eq__(self, other):
-        return all(
+        return type(self) is type(other) and all(
             getattr(self, field) == getattr(other, field) for field in self.get_slots()
         )
 
 
-class ToFulLDict(ToDict):
+class AbstractSettings(ToDict):
     __slots__ = ()
-    __print_none__ = True
+
+    def update(self, dct: dict):
+        for key in self.get_slots():
+            if key in dct:
+                setattr(self, key, dct[key])
+
+    @classmethod
+    def from_dict(cls, dct: dict):
+        settings = cls()
+        settings.update(dct)
+        return settings
 
 
 class Enumeration:
