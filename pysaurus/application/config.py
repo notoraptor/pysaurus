@@ -1,8 +1,5 @@
-from pysaurus.core.classes import AbstractSettings
+from pysaurus.core.jsonable import Jsonable
 
 
-class Config(AbstractSettings):
-    __slots__ = ("language",)
-
-    def __init__(self):
-        self.language = "english"
+class Config(Jsonable):
+    language = "english"

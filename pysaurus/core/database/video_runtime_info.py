@@ -1,38 +1,19 @@
-class VideoRuntimeInfo:
-    __slots__ = "is_file", "size", "mtime", "driver_id", "has_thumbnail"
+from pysaurus.core.jsonable import Jsonable
 
-    def __init__(
-        self,
-        size: int = 0,
-        mtime: float = 0,
-        driver_id: int = None,
-        is_file: bool = False,
-        has_thumbnail: bool = False,
-    ):
-        self.size = size
-        self.mtime = mtime
-        self.driver_id = driver_id
-        self.is_file = is_file
-        self.has_thumbnail = has_thumbnail
 
-    def to_dict(self):
-        return {
-            "s": self.size,
-            "m": self.mtime,
-            "d": self.driver_id,
-            "f": self.is_file,
-            "t": self.has_thumbnail,
-        }
-
-    @classmethod
-    def from_dict(cls, dct: dict):
-        return cls(
-            size=dct.get("s", 0),
-            mtime=dct.get("m", 0),
-            driver_id=dct.get("d", None),
-            is_file=dct.get("f", False),
-            has_thumbnail=dct.get("t", False),
-        )
+class VideoRuntimeInfo(Jsonable):
+    __short__ = {
+        "size": "s",
+        "mtime": "m",
+        "driver_id": "d",
+        "is_file": "f",
+        "has_thumbnail": "t",
+    }
+    size: int = 0
+    mtime: float = 0
+    driver_id: int = None
+    is_file: bool = False
+    has_thumbnail: bool = False
 
     @classmethod
     def ensure(cls, d):

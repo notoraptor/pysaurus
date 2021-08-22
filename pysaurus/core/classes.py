@@ -85,21 +85,6 @@ class ToDict:
         )
 
 
-class AbstractSettings(ToDict):
-    __slots__ = ()
-
-    def update(self, dct: dict):
-        for key in self.get_slots():
-            if key in dct:
-                setattr(self, key, dct[key])
-
-    @classmethod
-    def from_dict(cls, dct: dict):
-        settings = cls()
-        settings.update(dct)
-        return settings
-
-
 class Enumeration:
     __slots__ = "values", "type"
 

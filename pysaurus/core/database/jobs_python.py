@@ -22,7 +22,7 @@ def _collect_videos_info(folder: str, files: Dict[AbsolutePath, VideoRuntimeInfo
         ):
             stat = entry.stat()
             files[AbsolutePath(entry.path)] = VideoRuntimeInfo(
-                stat.st_size, stat.st_mtime, stat.st_dev, is_file=True
+                size=stat.st_size, mtime=stat.st_mtime, driver_id=stat.st_dev, is_file=True
             )
 
 
@@ -35,7 +35,7 @@ def job_collect_videos_info(job):
         elif path.extension in functions.VIDEO_SUPPORTED_EXTENSIONS:
             stat = FileSystem.stat(path.path)
             files[path] = VideoRuntimeInfo(
-                stat.st_size, stat.st_mtime, stat.st_dev, is_file=True
+                size=stat.st_size, mtime=stat.st_mtime, driver_id=stat.st_dev, is_file=True
             )
     return files
 
