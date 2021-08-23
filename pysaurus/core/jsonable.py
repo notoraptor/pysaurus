@@ -1,7 +1,8 @@
 import re
 import types
-from abc import abstractmethod
 from typing import Sequence, Dict
+
+from pysaurus.core.override import Override
 
 REGEX_ATTRIBUTE = re.compile(r"^[a-zA-Z][a-zA-Z0-9_]*$")
 
@@ -22,39 +23,39 @@ def is_attribute(key, value):
 class _Checker:
     __slots__ = ("default",)
 
-    def __init__(self, *args):
-        if args:
-            (arg,) = args
-            default = None if arg is None else (arg,)
-        else:
-            default = ()
-        self.default = default
+    __init__ = Override("_Checker.__init__")
 
-    def __call__(self, *args):
-        if self.default is None:
-            # Allowed to have a None value.
-            if args:
-                (value,) = args
-                if value is None:
-                    return None
-                else:
-                    return self.validate(value)
-            else:
-                return None
-        else:
-            if args:
-                (value,) = args
-                return self.validate(value)
-            else:
-                return self.validate(*self.default)
+    @__init__.override
+    def __init__(self):
+        self.default = ()
+
+    @__init__.override
+    def __init__(self, value: object):
+        self.default = None if value is None else (value,)
+
+    __call__ = Override("_Checker.__call__")
+
+    @__call__.override
+    def __call__(self):
+        return None if self.default is None else self.validate(*self.default)
+
+    @__call__.override
+    def __call__(self, value: object):
+        return None if value is self.default is None else self.validate(value)
 
     def __str__(self):
         return f"${type(self).__name__}" f"({', '.join(str(d) for d in self.default)})"
 
     __repr__ = __str__
 
-    @abstractmethod
-    def validate(self, *args):
+    validate = Override("_Checker.validate")
+
+    @validate.override
+    def validate(self):
+        raise NotImplementedError()
+
+    @validate.override
+    def validate(self, value: object):
         raise NotImplementedError()
 
     def to_json(self, value):
@@ -69,12 +70,13 @@ class _ClassChecker(_Checker):
         super().__init__(*args)
         self.cls = cls
 
-    def validate(self, *args):
-        if args:
-            (value,) = args
-            return value if isinstance(value, self.cls) else self.cls(value)
-        else:
-            return self.cls()
+    @_Checker.validate.override
+    def validate(self):
+        return self.cls()
+
+    @_Checker.validate.override
+    def validate(self, value: object):
+        return value if isinstance(value, self.cls) else self.cls(value)
 
 
 class _JsonableChecker(_Checker):
@@ -93,13 +95,9 @@ class _JsonableChecker(_Checker):
         super().__init__(default)
         self.cls = cls
 
-    def validate(self, *args):
-        (value,) = args
-        if isinstance(value, self.cls):
-            return value
-        else:
-            assert isinstance(value, dict)
-            return self.cls.from_json(value)
+    @_Checker.validate.override
+    def validate(self, value: object):
+        return value if isinstance(value, self.cls) else self.cls.from_json(value)
 
     def to_json(self, value):
         return value.to_json()
