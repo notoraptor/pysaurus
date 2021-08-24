@@ -1,6 +1,7 @@
 import os
 import sys
 import tempfile
+import threading
 
 from cefpython3 import cefpython as cef
 
@@ -16,8 +17,17 @@ def set_javascript_bindings(browser):
     browser.SetJavascriptBindings(bindings)
 
 
+def thread_excepthook(arg):
+    print("Error occurring in thread:", arg.thread.name)
+    cef.PostTask(
+        cef.TID_UI, cef.ExceptHook, arg.exc_type, arg.exc_value, arg.exc_traceback
+    )
+
+
 def main():
-    sys.excepthook = cef.ExceptHook  # To shutdown all CEF processes on error
+    # Use cef.ExceptHook to shutdown all CEF processes on error.
+    sys.excepthook = cef.ExceptHook
+    threading.excepthook = thread_excepthook
     entry_path = os.path.normpath(
         os.path.join(os.path.dirname(__file__), "web/index.html")
     ).replace("\\", "/")

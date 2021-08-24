@@ -2,7 +2,6 @@ import multiprocessing
 import queue
 import threading
 import time
-import traceback
 from abc import abstractmethod
 from typing import Optional, Callable, Sequence, Dict
 
@@ -10,8 +9,6 @@ import pyperclip
 
 from pysaurus.application import exceptions
 from pysaurus.core.components import AbsolutePath
-from pysaurus.database.database_features import DatabaseFeatures
-from pysaurus.database.viewport.video_provider import VideoProvider
 from pysaurus.core.file_copier import FileCopier
 from pysaurus.core.functions import launch_thread
 from pysaurus.core.notifications import (
@@ -22,6 +19,8 @@ from pysaurus.core.notifications import (
     DatabaseReady,
 )
 from pysaurus.core.path_tree import PathTree
+from pysaurus.database.database_features import DatabaseFeatures
+from pysaurus.database.viewport.video_provider import VideoProvider
 from pysaurus.interface.cefgui import tk_utils
 from pysaurus.interface.cefgui.feature_api import FeatureAPI
 from pysaurus.interface.cefgui.parallel_notifier import ParallelNotifier
@@ -138,11 +137,6 @@ class GuiAPI(FeatureAPI):
                     break
             except queue.Empty:
                 time.sleep(1 / 100)
-            except Exception as exc:
-                print("Exception while sending notification:")
-                traceback.print_tb(exc.__traceback__)
-                print(type(exc).__name__)
-                print(exc)
         self.monitor_thread = None
         print("End monitoring.")
 

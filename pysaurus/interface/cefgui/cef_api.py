@@ -1,6 +1,7 @@
 import sys
 import traceback
 
+from pysaurus.application import exceptions
 from pysaurus.interface.cefgui.gui_api import GuiAPI
 
 
@@ -12,7 +13,7 @@ class CefAPI(GuiAPI):
     def call(self, name, args, resolve, reject):
         try:
             resolve.Call(getattr(self, name)(*args))
-        except Exception as exc:
+        except exceptions.PysaurusError as exc:
             traceback.print_tb(exc.__traceback__)
             print(f"{type(exc).__name__}:", exc, file=sys.stderr)
             reject.Call({"name": type(exc).__name__, "message": str(exc)})
