@@ -35,9 +35,7 @@ class Application:
         # Load config file.
         if self.config_path.exists():
             assert self.config_path.isfile()
-            config_dct = parse_json(self.config_path)
-            assert isinstance(config_dct, dict)
-            self.config.update(config_dct)
+            self.config.update(parse_json(self.config_path))
         # Load language.
         lang_path = AbsolutePath.join(self.lang_dir, f"{self.config.language}.json")
         if lang_path.exists():
@@ -52,15 +50,6 @@ class Application:
         else:
             raise OSError(f"No file for language: {self.config.language}")
         self.lang = Language(parse_json(lang_path))
-        # atexit.register(self._close)
-
-    def _close(self):
-        print(f"Closing {self.app_name}, saving databases.")
-        for path, database in self.databases.items():
-            if database:
-                print("Saving", path.file_title)
-                database.save()
-        print(f"Closed {self.app_name}.")
 
     def get_database_paths(self) -> List[AbsolutePath]:
         return sorted(self.databases.keys())

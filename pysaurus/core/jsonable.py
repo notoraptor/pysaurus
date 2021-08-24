@@ -209,6 +209,7 @@ class Jsonable(metaclass=_MetaJSON):
     __repr__ = __str__
 
     def update(self, dct: dict):
+        assert isinstance(dct, dict)
         for key, checker in self.__definitions__.items():
             if key in dct:
                 setattr(self, key, checker(dct[key]))

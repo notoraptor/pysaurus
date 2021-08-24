@@ -14,4 +14,4 @@ class Language:
             else:
                 value = key
             setattr(self, key, value)
-        assert not dct
+        assert not dct, dct
