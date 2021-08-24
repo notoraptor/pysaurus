@@ -15,8 +15,8 @@ from typing import Sequence, Set
 
 from pysaurus.core.classes import StringPrinter, Text, TextWithNumbers
 from pysaurus.core.components import AbsolutePath, Duration
-from pysaurus.core.database import path_utils
-from pysaurus.core.database.video_state import VideoState
+from pysaurus.database import path_utils
+from pysaurus.database.video_state import VideoState
 from pysaurus.core.functions import (
     class_get_public_attributes,
     html_to_title,

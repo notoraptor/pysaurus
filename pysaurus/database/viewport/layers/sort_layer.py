@@ -1,10 +1,10 @@
 from typing import Sequence, List
 
-from pysaurus.core.database.video_sorting import VideoSorting
-from pysaurus.core.database.video_state import VideoState
-from pysaurus.core.database.viewport.layers.layer import Layer
-from pysaurus.core.database.viewport.layers.source_layer import SourceLayer
-from pysaurus.core.database.viewport.viewtools.video_array import VideoArray
+from pysaurus.database.video_sorting import VideoSorting
+from pysaurus.database.video_state import VideoState
+from pysaurus.database.viewport.layers.layer import Layer
+from pysaurus.database.viewport.layers.source_layer import SourceLayer
+from pysaurus.database.viewport.viewtools.video_array import VideoArray
 
 
 class SortLayer(Layer):

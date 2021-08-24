@@ -1,5 +1,5 @@
-from pysaurus.core.database.video_state import VideoState
-from pysaurus.core.database.viewport.viewtools.lookup_array import LookupArray
+from pysaurus.database.video_state import VideoState
+from pysaurus.database.viewport.viewtools.lookup_array import LookupArray
 
 
 class VideoArray(LookupArray[VideoState]):

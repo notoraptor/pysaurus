@@ -4,15 +4,15 @@ from typing import List
 from pysaurus.core import notifications
 from pysaurus.core.classes import AbstractMatrix
 from pysaurus.core.constants import CPU_COUNT
-from pysaurus.core.miniature_tools.decomposed_miniature import (
+from pysaurus.database.miniature_tools.decomposed_miniature import (
     DecomposedMiniature,
 )
-from pysaurus.core.miniature_tools.graph import Graph
-from pysaurus.core.miniature_tools.miniature import Miniature
-from pysaurus.core.miniature_tools.pixel_comparator import (
+from pysaurus.database.miniature_tools.graph import Graph
+from pysaurus.database.miniature_tools.miniature import Miniature
+from pysaurus.database.miniature_tools.pixel_comparator import (
     DistancePixelComparator,
 )
-from pysaurus.core.miniature_tools.pixel_group import PixelGroup
+from pysaurus.database.miniature_tools.pixel_group import PixelGroup
 from pysaurus.core.notifier import DEFAULT_NOTIFIER
 from pysaurus.core.profiling import Profiler
 

@@ -10,8 +10,8 @@ import pyperclip
 
 from pysaurus.application import exceptions
 from pysaurus.core.components import AbsolutePath
-from pysaurus.core.database.database_features import DatabaseFeatures
-from pysaurus.core.database.viewport.video_provider import VideoProvider
+from pysaurus.database.database_features import DatabaseFeatures
+from pysaurus.database.viewport.video_provider import VideoProvider
 from pysaurus.core.file_copier import FileCopier
 from pysaurus.core.functions import launch_thread
 from pysaurus.core.notifications import (

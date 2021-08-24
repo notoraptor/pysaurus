@@ -1,7 +1,7 @@
 from typing import Iterable
 
-from pysaurus.core.database.viewport.viewtools.group import Group
-from pysaurus.core.database.viewport.viewtools.lookup_array import LookupArray
+from pysaurus.database.viewport.viewtools.group import Group
+from pysaurus.database.viewport.viewtools.lookup_array import LookupArray
 
 
 class GroupArray(LookupArray[Group]):

@@ -6,12 +6,12 @@ from pysaurus.application import exceptions
 from pysaurus.core import functions
 from pysaurus.core.classes import StringPrinter
 from pysaurus.core.components import FileSize, Duration, AbsolutePath
-from pysaurus.core.database import path_utils
-from pysaurus.core.database.database import Database
-from pysaurus.core.database.video import Video
-from pysaurus.core.database.video_features import VideoFeatures
-from pysaurus.core.database.video_sorting import VideoSorting
-from pysaurus.core.database.video_state import VideoState
+from pysaurus.database import path_utils
+from pysaurus.database.database import Database
+from pysaurus.database.video import Video
+from pysaurus.database.video_features import VideoFeatures
+from pysaurus.database.video_sorting import VideoSorting
+from pysaurus.database.video_state import VideoState
 from toolsaurus.command_line_interface import command_line_interface
 from toolsaurus.function_parser import FunctionParser, fsigned, fdef
 from toolsaurus.functions import generate_temp_file_path

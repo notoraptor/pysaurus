@@ -3,13 +3,13 @@ from ctypes import Array, c_bool
 from typing import List, Set
 
 from pysaurus.core import notifications
-from pysaurus.core.database.database import Database
-from pysaurus.core.database.video import Video
+from pysaurus.database.alignment_raptor import alignment as native_alignment
+from pysaurus.database.database import Database
+from pysaurus.database.miniature_tools.graph import Graph
+from pysaurus.database.miniature_tools.miniature import Miniature
+from pysaurus.database.video import Video
 from pysaurus.core.fraction import Fraction
 from pysaurus.core.functions import compute_nb_couples, get_start_index, get_end_index
-from pysaurus.core.miniature_tools.graph import Graph
-from pysaurus.core.miniature_tools.miniature import Miniature
-from pysaurus.core.native.alignment_raptor import alignment as native_alignment
 from pysaurus.core.notifier import Notifier
 from pysaurus.core.profiling import Profiler
 

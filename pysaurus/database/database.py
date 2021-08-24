@@ -13,18 +13,18 @@ from pysaurus.core.components import (
 )
 from pysaurus.core.constants import THUMBNAIL_EXTENSION, CPU_COUNT
 from pysaurus.core.custom_json_parser import parse_json
-from pysaurus.core.database import path_utils, jobs_python
-from pysaurus.core.database.db_settings import DbSettings
-from pysaurus.core.database.db_video_attribute import (
+from pysaurus.database import path_utils, jobs_python
+from pysaurus.database.db_settings import DbSettings
+from pysaurus.database.db_video_attribute import (
     QualityAttribute,
     PotentialMoveAttribute,
 )
-from pysaurus.core.database.properties import PropType
-from pysaurus.core.database.video import Video
-from pysaurus.core.database.video_runtime_info import VideoRuntimeInfo
-from pysaurus.core.database.video_state import VideoState
-from pysaurus.core.miniature_tools.group_computer import GroupComputer
-from pysaurus.core.miniature_tools.miniature import Miniature
+from pysaurus.database.miniature_tools.group_computer import GroupComputer
+from pysaurus.database.miniature_tools.miniature import Miniature
+from pysaurus.database.properties import PropType
+from pysaurus.database.video import Video
+from pysaurus.database.video_runtime_info import VideoRuntimeInfo
+from pysaurus.database.video_state import VideoState
 from pysaurus.core.modules import ImageUtils, System, FileSystem
 from pysaurus.core.notifier import Notifier, DEFAULT_NOTIFIER
 from pysaurus.core.path_tree import PathTree

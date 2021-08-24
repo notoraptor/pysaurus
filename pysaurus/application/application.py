@@ -11,7 +11,7 @@ from pysaurus.application.language import Language
 from pysaurus.core import functions
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.custom_json_parser import parse_json
-from pysaurus.core.database.database import Database
+from pysaurus.database.database import Database
 from pysaurus.core.modules import FileSystem
 from pysaurus.core.notifier import DEFAULT_NOTIFIER
 

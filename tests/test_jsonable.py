@@ -14,11 +14,11 @@ class B(A):
     z = [1, 2]
 
 
-class B_(Jsonable):
+class B2(Jsonable):
     pass
 
 
-class _B(Jsonable):
+class B3(Jsonable):
     m = -5
     __short__ = {"m": "holala"}
 
@@ -28,9 +28,9 @@ class C(Jsonable):
     c: A
     b = 2
     f = 1
-    e: B_ = {}
-    d = _B(m=-4)
-    g: _B = {"holala": 100}
+    e: B2 = {}
+    d = B3(m=-4)
+    g: B3 = {"holala": 100}
 
 
 class D(Jsonable):
@@ -41,13 +41,13 @@ class D(Jsonable):
 def test_jsonable():
     a = A()
     b = B(z=[2])
-    b_ = B_()
+    b_ = B2()
     c = C()
     assert str(a) == "A(a=5, b=3, x=0.0, y='')"
     assert str(b) == "B(a=-1.0, b=3, e=True, x=0.0, y='', z=[2])"
-    assert str(b_) == "B_()"
+    assert str(b_) == "B2()"
     assert str(c) == (
-        "C(a=0, b=2, c=A(a=5, b=3, x=0.0, y=''), d=_B(m=-4), e=B_(), f=1, g=_B(m=100))"
+        "C(a=0, b=2, c=A(a=5, b=3, x=0.0, y=''), d=B3(m=-4), e=B2(), f=1, g=B3(m=100))"
     )
     assert a == A.from_dict(a.to_dict())
     assert b == B.from_dict(b.to_dict())
@@ -55,11 +55,11 @@ def test_jsonable():
 
 
 def test_shorten():
-    b = _B()
+    b = B3()
     assert b.m == -5
     assert b.to_dict() == {"holala": -5}
-    assert str(b) == "_B(m=-5)"
-    assert b == _B.from_dict(b.to_dict())
+    assert str(b) == "B3(m=-5)"
+    assert b == B3.from_dict(b.to_dict())
 
 
 def test_none():

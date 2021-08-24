@@ -58,7 +58,7 @@ def test_f():
     assert f(3) == 6
 
 
-def test_B():
+def test_class_b():
     b = B()
     assert b.f() == -1
     assert b.f(1.0) == -1
@@ -66,7 +66,7 @@ def test_B():
     assert b.f(None) == "type is NoneType"
 
 
-def test_A():
+def test_class_a():
     a = A(100)
     assert a.f() == 100
     assert a.f(3) == 300

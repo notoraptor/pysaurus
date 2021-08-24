@@ -1,11 +1,11 @@
 from typing import Set, List
 
 from pysaurus.core import functions
-from pysaurus.core.database.video import Video
-from pysaurus.core.database.viewport.layers.grouping_layer import GroupingLayer
-from pysaurus.core.database.viewport.layers.layer import Layer
-from pysaurus.core.database.viewport.viewtools.group import Group
-from pysaurus.core.database.viewport.viewtools.group_array import GroupArray
+from pysaurus.database.video import Video
+from pysaurus.database.viewport.layers.grouping_layer import GroupingLayer
+from pysaurus.database.viewport.layers.layer import Layer
+from pysaurus.database.viewport.viewtools.group import Group
+from pysaurus.database.viewport.viewtools.group_array import GroupArray
 
 
 class ClassifierLayer(Layer):

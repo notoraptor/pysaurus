@@ -3,7 +3,7 @@ from typing import Iterable, List
 
 from pysaurus.core import notifications
 from pysaurus.core.constants import VIDEO_BATCH_SIZE
-from pysaurus.core.miniature_tools.miniature import Miniature
+from pysaurus.database.miniature_tools.miniature import Miniature
 from pysaurus.core.native.clibrary import c_int_p
 from pysaurus.core.notifier import Notifier
 from pysaurus.core.profiling import Profiler

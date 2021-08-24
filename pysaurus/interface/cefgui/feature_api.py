@@ -4,13 +4,13 @@ from typing import Optional
 from pysaurus.application.application import Application
 from pysaurus.core import notifications
 from pysaurus.core.components import FileSize, Duration
-from pysaurus.core.database.database import Database
-from pysaurus.core.database.properties import PropType
-from pysaurus.core.database.video import Video
-from pysaurus.core.database.video_features import VideoFeatures
-from pysaurus.core.database.viewport.layers.source_layer import SourceLayer
-from pysaurus.core.database.viewport.video_provider import VideoProvider
 from pysaurus.core.functions import compute_nb_pages
+from pysaurus.database.database import Database
+from pysaurus.database.properties import PropType
+from pysaurus.database.video import Video
+from pysaurus.database.video_features import VideoFeatures
+from pysaurus.database.viewport.layers.source_layer import SourceLayer
+from pysaurus.database.viewport.video_provider import VideoProvider
 
 
 class FeatureAPI:

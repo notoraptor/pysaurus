@@ -1,4 +1,4 @@
-from pysaurus.core.database.viewport.viewtools.video_array import VideoArray
+from pysaurus.database.viewport.viewtools.video_array import VideoArray
 
 
 class Group:

@@ -9,16 +9,16 @@ from typing import Optional, Sequence
 
 from pysaurus.application import exceptions
 from pysaurus.core import notifications
-from pysaurus.core.database.database import Database
-from pysaurus.core.database.video import Video
-from pysaurus.core.database.viewport.layers.classifier_layer import ClassifierLayer
-from pysaurus.core.database.viewport.layers.group_layer import GroupLayer
-from pysaurus.core.database.viewport.layers.grouping_layer import GroupingLayer
-from pysaurus.core.database.viewport.layers.search_layer import SearchLayer
-from pysaurus.core.database.viewport.layers.sort_layer import SortLayer
-from pysaurus.core.database.viewport.layers.source_layer import SourceLayer
-from pysaurus.core.database.viewport.viewtools.group_def import GroupDef
-from pysaurus.core.database.viewport.viewtools.video_array import VideoArray
+from pysaurus.database.database import Database
+from pysaurus.database.video import Video
+from pysaurus.database.viewport.layers.classifier_layer import ClassifierLayer
+from pysaurus.database.viewport.layers.group_layer import GroupLayer
+from pysaurus.database.viewport.layers.grouping_layer import GroupingLayer
+from pysaurus.database.viewport.layers.search_layer import SearchLayer
+from pysaurus.database.viewport.layers.sort_layer import SortLayer
+from pysaurus.database.viewport.layers.source_layer import SourceLayer
+from pysaurus.database.viewport.viewtools.group_def import GroupDef
+from pysaurus.database.viewport.viewtools.video_array import VideoArray
 
 
 class VideoProvider:

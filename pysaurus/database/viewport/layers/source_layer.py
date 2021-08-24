@@ -1,9 +1,9 @@
 from typing import Dict, Sequence, Iterable, Set
 
 from pysaurus.core.components import AbsolutePath
-from pysaurus.core.database.database import Database
-from pysaurus.core.database.video_state import VideoState
-from pysaurus.core.database.viewport.layers.layer import Layer
+from pysaurus.database.database import Database
+from pysaurus.database.video_state import VideoState
+from pysaurus.database.viewport.layers.layer import Layer
 from pysaurus.core.profiling import Profiler
 
 

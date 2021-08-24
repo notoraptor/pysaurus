@@ -1,11 +1,11 @@
 from typing import Optional, Dict
 
 from pysaurus.core.components import AbsolutePath
-from pysaurus.core.database.video_state import VideoState
-from pysaurus.core.database.viewport.layers.layer import Layer
-from pysaurus.core.database.viewport.viewtools.group import Group
-from pysaurus.core.database.viewport.viewtools.group_array import GroupArray
-from pysaurus.core.database.viewport.viewtools.group_def import GroupDef
+from pysaurus.database.video_state import VideoState
+from pysaurus.database.viewport.layers.layer import Layer
+from pysaurus.database.viewport.viewtools.group import Group
+from pysaurus.database.viewport.viewtools.group_array import GroupArray
+from pysaurus.database.viewport.viewtools.group_def import GroupDef
 
 
 class GroupingLayer(Layer):

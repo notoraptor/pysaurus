@@ -1,8 +1,8 @@
 from abc import abstractmethod
 from typing import Optional
 
-from pysaurus.core.database.database import Database
-from pysaurus.core.database.video import Video
+from pysaurus.database.database import Database
+from pysaurus.database.video import Video
 from pysaurus.core.functions import deep_equals
 
 
