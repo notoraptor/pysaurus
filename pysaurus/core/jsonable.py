@@ -139,7 +139,7 @@ class NoShortFunctor:
 
 
 class _MetaJSON(type):
-    def __init__(self, name, bases, namespace, **kwargs):
+    def __init__(cls, name, bases, namespace, **kwargs):
         assert "__definitions__" not in namespace, "Reserved attribute: __definitions__"
         super().__init__(name, bases, namespace, **kwargs)
         annotations = namespace.get("__annotations__", {})
@@ -148,7 +148,7 @@ class _MetaJSON(type):
         }
         definitions = {}
         for base in bases:
-            if type(base) is type(self):
+            if type(base) is type(cls):
                 definitions.update(base.__definitions__)
         for key, value in attributes.items():
             if isinstance(value, _Checker):
@@ -168,8 +168,8 @@ class _MetaJSON(type):
         shortener = (
             ShortFunctor(tuple(definitions), short) if short else NoShortFunctor()
         )
-        self.__definitions__ = {key: definitions[key] for key in sorted(definitions)}
-        self.__shortener__ = shortener
+        cls.__definitions__ = {key: definitions[key] for key in sorted(definitions)}
+        cls.__shortener__ = shortener
 
 
 class Jsonable(metaclass=_MetaJSON):

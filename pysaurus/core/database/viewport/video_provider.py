@@ -7,6 +7,7 @@ Sort
 import random
 from typing import Optional, Sequence
 
+from pysaurus.application import exceptions
 from pysaurus.core import notifications
 from pysaurus.core.database.database import Database
 from pysaurus.core.database.video import Video
@@ -90,7 +91,7 @@ class VideoProvider:
         for path in self.source_layer.get_sources():
             videos.extend(self.database.get_videos(*path, found=True))
         if not videos:
-            raise RuntimeError("No videos available.")
+            raise exceptions.NoVideos()
         return videos[random.randrange(len(videos))]
 
     def get_all_videos(self):

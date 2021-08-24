@@ -8,7 +8,8 @@ from typing import Optional, Callable, Sequence, Dict
 
 import pyperclip
 
-from pysaurus.core.components import AbsolutePath, FilePath
+from pysaurus.application import exceptions
+from pysaurus.core.components import AbsolutePath
 from pysaurus.core.database.database_features import DatabaseFeatures
 from pysaurus.core.database.viewport.video_provider import VideoProvider
 from pysaurus.core.file_copier import FileCopier
@@ -194,10 +195,10 @@ class GuiAPI(FeatureAPI):
             video = self.database.get_video_from_id(video_id)
             directory = AbsolutePath.ensure_directory(directory)
             if not PathTree(self.database.video_folders).in_folders(directory):
-                raise ValueError(
-                    "Directory is not in allowed video folders for this database."
+                raise exceptions.ForbiddenVideoFolder(
+                    directory, self.database.video_folders
                 )
-            dst = FilePath(
+            dst = AbsolutePath.file_path(
                 directory, video.filename.file_title, video.filename.extension
             )
             self.copy_work = FileCopier(video.filename, dst, notifier=self.notifier)

@@ -110,4 +110,4 @@ class Layer:
 
     @abstractmethod
     def remove_from_cache(self, cache, video: Video):
-        raise NotImplementedError
+        raise NotImplementedError()

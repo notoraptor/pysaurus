@@ -1,7 +1,7 @@
 from typing import List, Any, Sequence, Iterable
 
 from pysaurus.core.classes import StringPrinter
-from pysaurus.core.functions import class_get_field_title
+from toolsaurus.functions import class_get_field_title
 
 
 class Table:

@@ -2,8 +2,9 @@ import os
 import subprocess
 from typing import List, Dict
 
+from pysaurus.application import exceptions
 from pysaurus.bin.symbols import RUN_VIDEO_RAPTOR_BATCH, RUN_VIDEO_RAPTOR_THUMBNAILS
-from pysaurus.core import functions
+from pysaurus.core import functions, constants
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.database.video_runtime_info import VideoRuntimeInfo
 from pysaurus.core.miniature_tools.miniature import Miniature
@@ -18,11 +19,14 @@ def _collect_videos_info(folder: str, files: Dict[AbsolutePath, VideoRuntimeInfo
             _collect_videos_info(entry.path, files)
         elif (
             functions.get_file_extension(entry.name)
-            in functions.VIDEO_SUPPORTED_EXTENSIONS
+            in constants.VIDEO_SUPPORTED_EXTENSIONS
         ):
             stat = entry.stat()
             files[AbsolutePath(entry.path)] = VideoRuntimeInfo(
-                size=stat.st_size, mtime=stat.st_mtime, driver_id=stat.st_dev, is_file=True
+                size=stat.st_size,
+                mtime=stat.st_mtime,
+                driver_id=stat.st_dev,
+                is_file=True,
             )
 
 
@@ -32,10 +36,13 @@ def job_collect_videos_info(job):
     for path in job[0]:  # type: AbsolutePath
         if path.isdir():
             _collect_videos_info(path.path, files)
-        elif path.extension in functions.VIDEO_SUPPORTED_EXTENSIONS:
+        elif path.extension in constants.VIDEO_SUPPORTED_EXTENSIONS:
             stat = FileSystem.stat(path.path)
             files[path] = VideoRuntimeInfo(
-                size=stat.st_size, mtime=stat.st_mtime, driver_id=stat.st_dev, is_file=True
+                size=stat.st_size,
+                mtime=stat.st_mtime,
+                driver_id=stat.st_dev,
+                is_file=True,
             )
     return files
 
@@ -75,7 +82,7 @@ def job_video_to_json(job):
                 jobn.progress(job_id, step, job_count)
     program_errors = process.stderr.read().decode().strip()
     if not end and program_errors:
-        raise Exception("Video-to-JSON error: " + program_errors)
+        raise exceptions.VideoToJsonError(program_errors)
     assert nb_read == job_count
     jobn.progress(job_id, job_count, job_count)
     return nb_loaded
@@ -116,7 +123,7 @@ def job_video_thumbnails_to_json(job):
                 jobn.progress(job_id, step, job_count)
     program_errors = process.stderr.read().decode().strip()
     if not end and program_errors:
-        raise Exception("Videos-thumbnails-to-JSON error: " + program_errors)
+        raise exceptions.VideoThumbnailsToJsonError(program_errors)
     assert nb_read == job_count
     jobn.progress(job_id, job_count, job_count)
     return nb_loaded

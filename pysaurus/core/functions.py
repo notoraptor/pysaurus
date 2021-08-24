@@ -1,19 +1,12 @@
 import bisect
 import concurrent.futures
-import math
 import os
 import re
-import tempfile
 import threading
-import urllib.parse
-from datetime import datetime
 
-from pysaurus.core.components import FilePath
-from pysaurus.core.constants import VIDEO_SUPPORTED_EXTENSIONS
 from pysaurus.core.modules import HTMLStripper
 
 # Datetime since timestamp 0.
-EPOCH = datetime.utcfromtimestamp(0)
 REGEX_NO_WORD = re.compile(r"(\W|_)+")
 REGEX_CONSECUTIVE_UPPER_CASES = re.compile("[A-Z]{2,}")
 REGEX_LOWER_THEN_UPPER_CASES = re.compile("([a-z0-9])([A-Z])")
@@ -22,9 +15,6 @@ REGEX_NUMBER_THEN_WORD = re.compile(r"([0-9])([^0-9 ])")
 REGEX_NUMBER = re.compile(r"([0-9]+)")
 JSON_INTEGER_MIN = -(2 ** 31)
 JSON_INTEGER_MAX = 2 ** 31 - 1
-
-TEMP_DIR = tempfile.gettempdir()
-TEMP_PREFIX = tempfile.gettempprefix() + "_pysaurus_"
 
 DISCARDED_CHARACTERS = r"@#\\/?$:!"
 
@@ -72,11 +62,6 @@ def string_to_pieces(the_string, as_set=False):
     )
 
 
-def is_valid_video_filename(filename):
-    _, extension = os.path.splitext(filename)
-    return extension and extension[1:].lower() in VIDEO_SUPPORTED_EXTENSIONS
-
-
 def dispatch_tasks(tasks, job_count, extra_args=None):
     # type: (list, int, list) -> list
     """Split <tasks> into <job_count> jobs and associate each one
@@ -97,11 +82,7 @@ def dispatch_tasks(tasks, job_count, extra_args=None):
         job_lengths = [task_count // job_count] * job_count
         for i in range(task_count % job_count):
             job_lengths[i] += 1
-    if sum(job_lengths) != task_count:
-        raise ValueError(
-            "Programming error when dispatching tasks: total expected %d, got %d."
-            % (task_count, sum(job_lengths))
-        )
+    assert sum(job_lengths) == task_count
     cursor = 0
     jobs = []
     job_id = 0
@@ -117,50 +98,8 @@ def dispatch_tasks(tasks, job_count, extra_args=None):
     return jobs
 
 
-def permute(values, initial_permutation=()):
-    """Generate a sequence of permutations from given values list."""
-    initial_permutation = list(initial_permutation)
-    if not values:
-        yield initial_permutation
-        return
-    for position in range(len(values)):
-        extended_permutation = initial_permutation + [values[position]]
-        remaining_values = values[:position] + values[(position + 1) :]
-        for permutation in permute(remaining_values, extended_permutation):
-            yield permutation
-
-
 def package_dir():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-
-
-def bool_type(mixed):
-    """Convert a value to a boolean, with following rules (in that order):
-    - "true" (case insensitive) => True
-    - "false" (case insensitive) => False
-    - "" (empty string) => False
-    - integer or floating string => boolean value of converted number
-    - bool(mixed) otherwise.
-    """
-    if isinstance(mixed, str):
-        mixed = mixed.strip()
-        if not mixed:
-            return False
-        elif mixed.lower() == "true":
-            return True
-        elif mixed.lower() == "false":
-            return False
-        else:
-            return bool(float(mixed))
-    return bool(mixed)
-
-
-def timestamp_microseconds():
-    """Return current timestamp with microsecond resolution.
-    :return: int
-    """
-    delta = datetime.now() - EPOCH
-    return (delta.days * 24 * 60 * 60 + delta.seconds) * 1000000 + delta.microseconds
 
 
 def flat_to_coord(index, width):
@@ -173,41 +112,12 @@ def coord_to_flat(x, y, width):
     return y * width + x
 
 
-def coordinates_around(x, y, width, height, radius=1):
-    coordinates = []
-    for local_x in range(max(0, x - radius), min(x + radius, width - 1) + 1):
-        for local_y in range(max(0, y - radius), min(y + radius, height - 1) + 1):
-            coordinates.append((local_x, local_y))
-    return coordinates
-
-
-def get_vector_angle(a, b):
-    """Return the angle of vector a->b wrt/ horizontal vector (x = 1, y = 0).
-    a and b must be each a couple of coordinates (x, y).
-    """
-    if a == b:
-        return 0
-    x_a, y_a = a
-    x_b, y_b = b
-    sin_theta = (y_b - y_a) / math.sqrt((x_b - x_a) ** 2 + (y_b - y_a) ** 2)
-    deg = 180 * math.asin(sin_theta) / math.pi
-    if (x_b - x_a) < 0:
-        deg = 180 - deg
-    elif sin_theta < 0:
-        deg = 360 + deg
-    return deg
-
-
 def get_file_extension(string):
     # type: (str) -> str
     index_of_dot = string.rfind(".")
     if index_of_dot >= 0:
         return string[(index_of_dot + 1) :].lower()
     return ""
-
-
-def get_plural_suffix(count, suffix="s"):
-    return "" if count == 1 else suffix
 
 
 def _pgcd(a, b):
@@ -258,19 +168,6 @@ def html_to_title(title):
     return title
 
 
-def assert_data_is_serializable(data, path=()):
-    if isinstance(data, list):
-        for index, element in enumerate(data):
-            assert_data_is_serializable(element, path + (index,))
-    elif isinstance(data, dict):
-        for key, value in data.items():
-            current_path = path + (key,)
-            assert isinstance(key, str), current_path
-            assert_data_is_serializable(value, current_path)
-    else:
-        assert isinstance(data, (bool, int, float, str)), (path, data)
-
-
 def identity(value):
     return value
 
@@ -311,32 +208,8 @@ def is_sequence(seq_to_check):
     return hasattr(seq_to_check, "__iter__")
 
 
-def __get_start_index(sorted_content: list, element):
-    # a[i:] >= x
-    return bisect.bisect_left(sorted_content, element)
-    # position = bisect.bisect_left(sorted_content, element)
-    # if position != len(sorted_content):
-    #     return position
-    # return None
-
-
-def __get_end_index(sorted_content: list, element):
-    # a[i:] > x
-    return bisect.bisect_right(sorted_content, element)
-
-
 get_start_index = bisect.bisect_left
 get_end_index = bisect.bisect_right
-
-
-def flatten_list(data: list):
-    output = []
-    for element in data:
-        if isinstance(element, list):
-            output.extend(flatten_list(element))
-        else:
-            output.append(element)
-    return output
 
 
 def class_get_public_attributes(cls: type, exclude=(), wrapper=sorted):
@@ -348,16 +221,6 @@ def class_get_public_attributes(cls: type, exclude=(), wrapper=sorted):
     fields.difference_update(exclude)
     fields.difference_update(getattr(cls, "__protected__", ()))
     return fields if wrapper is set else wrapper(fields)
-
-
-def class_get_field_title(cls: type, field: str, lowercase=False):
-    title = getattr(cls, "__titles__", {}).get(field, None)
-    if not title:
-        pieces = field.split("_")
-        if not lowercase:
-            pieces[0] = pieces[0].title()
-        return " ".join(pieces)
-    return title
 
 
 def compute_nb_pages(count, page_size):
@@ -380,21 +243,6 @@ def to_json_value(value):
     if isinstance(value, int) and JSON_INTEGER_MIN <= value <= JSON_INTEGER_MAX:
         return value
     return str(value)
-
-
-def convert_file_path_to_url(path):
-    entry_path = os.path.normpath(path).replace("\\", "/")
-    return f"file:///{entry_path}"
-
-
-def html_to_url(html):
-    url = f"data:text/html;charset=UTF-8,{urllib.parse.quote(html)}"
-    if len(url) < 2 * 1024 * 1024:
-        return url
-    # Url is too long, we should better save it in a file.
-    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".html") as tf:
-        tf.write(html)
-        return convert_file_path_to_url(tf.name)
 
 
 def deep_equals(value, other):
@@ -420,46 +268,3 @@ def get_default(value, default):
 
 def compute_nb_couples(n: int):
     return (n * (n - 1)) // 2 if n > 1 else 0
-
-
-def min_and_max(values):
-    iterable_values = iter(values)
-    min_value = max_value = next(iterable_values)
-    for value in iterable_values:
-        min_value = min(min_value, value)
-        max_value = max(max_value, value)
-    return min_value, max_value
-
-
-def assert_str(value):
-    assert isinstance(value, str)
-    return value
-
-
-def is_instance_from_module(module, obj):
-    typ = obj if isinstance(obj, type) else type(obj)
-    return any(cls.__module__ == module.__name__ for cls in typ.__mro__)
-
-
-def generate_temp_file_path(extension):
-    temp_file_id = 0
-    while True:
-        temp_file_path = FilePath(
-            TEMP_DIR, "%s%s" % (TEMP_PREFIX, temp_file_id), extension
-        )
-        if temp_file_path.exists():
-            temp_file_id += 1
-        else:
-            break
-    return temp_file_path
-
-
-def generate_non_existing_path(directory, name, extension):
-    file_id = 0
-    while True:
-        file_path = FilePath(directory, f"{name}{file_id}", extension)
-        if file_path.exists():
-            file_id += 1
-        else:
-            break
-    return file_path

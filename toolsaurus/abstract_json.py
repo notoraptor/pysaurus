@@ -1,7 +1,7 @@
 import typing
 
 from pysaurus.core import classes
-from pysaurus.core.functions import assert_str
+from toolsaurus.functions import assert_str
 
 
 class Object:

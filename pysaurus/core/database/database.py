@@ -4,11 +4,11 @@ from typing import Dict, Iterable, List, Optional, Set, Union
 
 import ujson as json
 
-from pysaurus.core import exceptions, functions, notifications
+from pysaurus.application import exceptions
+from pysaurus.core import functions, notifications
 from pysaurus.core.components import (
     AbsolutePath,
     DateModified,
-    FilePath,
     PathType,
 )
 from pysaurus.core.constants import THUMBNAIL_EXTENSION, CPU_COUNT
@@ -34,7 +34,7 @@ SPECIAL_PROPERTIES = [PropType("<error>", "", True)]
 
 
 def new_sub_file(folder: AbsolutePath, extension: str):
-    return FilePath(folder, folder.title, extension)
+    return AbsolutePath.file_path(folder, folder.title, extension)
 
 
 def new_sub_folder(folder: AbsolutePath, suffix: str, sep="."):
@@ -126,14 +126,10 @@ class Database:
         # type: (Optional[Iterable[PathType]], Optional[bool]) -> None
 
         if self.__json_path.exists():
-            if not self.__json_path.isfile():
-                raise exceptions.NotFileError(self.__json_path)
-            with open(self.__json_path.path, "r") as output_file:
+            with open(self.__json_path.assert_file().path, "r") as output_file:
                 json_dict = json.load(output_file)
             if not isinstance(json_dict, dict):
-                raise exceptions.PysaurusError(
-                    "Database file does not contain a dictionary."
-                )
+                raise exceptions.InvalidDatabaseJSON(self.__json_path)
         else:
             json_dict = {}
 
@@ -239,11 +235,11 @@ class Database:
         if new_name == self.__db_folder.title:
             return
         if functions.has_discarded_characters(new_name):
-            raise OSError(f"Characters not allowed: {new_name}")
+            raise exceptions.InvalidDatabaseName(new_name)
 
         new_db_folder = AbsolutePath.join(old_db_folder.get_directory(), new_name)
         if new_db_folder.exists():
-            raise OSError(f"New database path already exists: {new_db_folder}")
+            raise exceptions.DatabaseAlreadyExists(new_db_folder)
         os.rename(old_db_folder.path, new_db_folder.path)
         assert not old_db_folder.exists()
         assert new_db_folder.isdir()
@@ -277,7 +273,7 @@ class Database:
         if re_path.exists():
             print("Renaming", re_path)
             if new_path.exists():
-                raise OSError(f"New path already exists: {new_path}")
+                raise exceptions.PathAlreadyExists(new_path)
             os.rename(re_path.path, new_path.path)
             assert not re_path.exists()
             assert new_path.exists()
@@ -393,8 +389,12 @@ class Database:
         for index, (file_names, job_id) in enumerate(
             functions.dispatch_tasks(all_file_names, CPU_COUNT)
         ):
-            input_file_path = FilePath(self.__db_folder, str(index), "list")
-            output_file_path = FilePath(self.__db_folder, str(index), "json")
+            input_file_path = AbsolutePath.file_path(
+                self.__db_folder, str(index), "list"
+            )
+            output_file_path = AbsolutePath.file_path(
+                self.__db_folder, str(index), "json"
+            )
 
             with open(input_file_path.path, "wb") as file:
                 for file_name in file_names:
@@ -539,8 +539,12 @@ class Database:
         )
         del videos_without_thumbs
         for index, (job_videos, job_id) in enumerate(dispatched_thumb_jobs):
-            input_file_path = FilePath(self.__db_folder, str(index), "thumbnails.list")
-            output_file_path = FilePath(self.__db_folder, str(index), "thumbnails.json")
+            input_file_path = AbsolutePath.file_path(
+                self.__db_folder, str(index), "thumbnails.list"
+            )
+            output_file_path = AbsolutePath.file_path(
+                self.__db_folder, str(index), "thumbnails.json"
+            )
 
             with open(input_file_path.path, "wb") as file:
                 for video in job_videos:
@@ -610,14 +614,10 @@ class Database:
         have_added = False
 
         if self.__miniatures_path.exists():
-            if not self.__miniatures_path.isfile():
-                raise exceptions.NotFileError(self.__miniatures_path)
-            with open(self.__miniatures_path.path, "r") as miniatures_file:
+            with open(self.__miniatures_path.assert_file().path) as miniatures_file:
                 json_array = json.load(miniatures_file)
             if not isinstance(json_array, list):
-                raise exceptions.PysaurusError(
-                    "Miniatures file does not contain a list."
-                )
+                raise exceptions.InvalidMiniaturesJSON(self.__miniatures_path)
             for dct in json_array:
                 identifier = AbsolutePath(dct["i"])
                 if (
@@ -715,10 +715,9 @@ class Database:
 
     def change_video_file_title(self, video, new_title):
         # type: (VideoState, str) -> None
-        discarded_characters = r"@#\\/?$:"
         if video.filename.file_title != new_title:
             if functions.has_discarded_characters(new_title):
-                raise OSError("Characters not allowed: %s" % discarded_characters)
+                raise exceptions.InvalidFileName(new_title)
             new_filename = video.filename.new_title(new_title)
             if video.filename in self.__videos:
                 video: Video
@@ -847,7 +846,7 @@ class Database:
 
     def add_prop_type(self, prop: PropType, save: bool = True):
         if prop.name in self.__prop_types:
-            raise ValueError("Property name already exists: %s" % prop.name)
+            raise exceptions.PropertyAlreadyExists(prop.name)
         self.__prop_types[prop.name] = prop
         if save:
             self.__to_save()
@@ -855,7 +854,7 @@ class Database:
     def rename_prop_type(self, old_name, new_name):
         if old_name in self.__prop_types:
             if new_name in self.__prop_types:
-                raise ValueError(f"Property new name already exists: {new_name}")
+                raise exceptions.PropertyAlreadyExists(new_name)
             prop_type = self.__prop_types.pop(old_name)
             prop_type.name = new_name
             self.__prop_types[new_name] = prop_type
@@ -868,15 +867,10 @@ class Database:
         if name in self.__prop_types:
             prop_type = self.__prop_types[name]
             if not prop_type.multiple:
-                raise ValueError(f'"{name}" is already a unique property')
+                raise exceptions.PropertyAlreadyUnique(name)
             for video in self.__videos.values():
                 if name in video.properties and len(video.properties[name]) > 1:
-                    raise ValueError(
-                        f"""A video has multiple values for this property.
-Video: {video.filename}
-Values: {', '.join(str(v) for v in video.properties[name])}
-Make sure any video has at most 1 value for this property before making it unique."""
-                    )
+                    raise exceptions.PropertyToUniqueError(name, video)
             prop_type.multiple = False
             for video in self.__videos.values():
                 if name in video.properties:
@@ -890,7 +884,7 @@ Make sure any video has at most 1 value for this property before making it uniqu
         if name in self.__prop_types:
             prop_type = self.__prop_types[name]
             if prop_type.multiple:
-                raise ValueError(f'"{name}" is already a multiple property')
+                raise exceptions.PropertyAlreadyMultiple(name)
             prop_type.multiple = True
             for video in self.__videos.values():
                 if name in video.properties:

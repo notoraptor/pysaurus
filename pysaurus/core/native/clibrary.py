@@ -6,13 +6,17 @@ c_double_p = POINTER(c_double)
 c_bool_p = POINTER(c_bool)
 
 
+class SharedLibraryNotFoundError(FileNotFoundError):
+    pass
+
+
 def c_library(name):
     if os.path.isabs(name):
         lib_path = name
     else:
         lib_path = util.find_library(name)
     if not lib_path:
-        raise FileNotFoundError(f"Cannot find library: {name}")
+        raise SharedLibraryNotFoundError(name)
     return CDLL(lib_path)
 
 

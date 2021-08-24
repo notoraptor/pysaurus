@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 from typing import Dict, Optional, List, Iterable
 
+from pysaurus.application import exceptions
 from pysaurus.application.config import Config
 from pysaurus.application.default_language import DefaultLanguage
 from pysaurus.application.language import Language
@@ -48,7 +49,7 @@ class Application:
             with open(lang_path.path, "w") as file:
                 json.dump(default_dct, file, indent="\t")
         else:
-            raise OSError(f"No file for language: {self.config.language}")
+            raise exceptions.MissingLanguageFile(self.config.language)
         self.lang = Language(parse_json(lang_path))
 
     def get_database_paths(self) -> List[AbsolutePath]:
@@ -63,20 +64,14 @@ class Application:
 
     def new_database(self, name, folders: Iterable[AbsolutePath]):
         if functions.has_discarded_characters(name):
-            raise OSError(f"Characters not allowed: {name}")
+            raise exceptions.InvalidDatabaseName(name)
         path = AbsolutePath.join(self.dbs_dir, name)
         if path.title != name:
-            raise OSError(
-                f"Bad database name: {name}\n"
-                f"Please do not use punctuations and special characters."
-            )
+            raise exceptions.InvalidDatabaseName(name)
         if path in self.databases:
-            raise OSError(f"Database with same name already exists: {name}")
+            raise exceptions.DatabaseAlreadyExists(path)
         if path.exists():
-            raise OSError(
-                f"Path already exists but is not a database: {path}\n"
-                f"Consider remove it manually before creating the database."
-            )
+            raise exceptions.DatabasePathUnavailable(path)
         self.databases[path] = Database(
             path.mkdir(), folders=folders, notifier=self.notifier
         )

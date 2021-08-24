@@ -16,6 +16,46 @@ OBJ_STEP_KEY = 0
 OBJ_STEP_VAL = 1
 
 
+class JsonError(Exception):
+    pass
+
+
+class JsonByteStartError(JsonError):
+    pass
+
+
+class JsonByteEndError(JsonError):
+    pass
+
+
+class JsonCommaCountError(JsonError):
+    pass
+
+
+class JsonCommaNotAfterValueError(JsonError):
+    pass
+
+
+class JsonColonNotAfterKeyError(JsonError):
+    pass
+
+
+class JsonObjectEndNotAfterValueError(JsonError):
+    pass
+
+
+class JsonUnfinishedError(JsonError):
+    pass
+
+
+class JsonInvalidKeyError(JsonError):
+    pass
+
+
+class JsonEmptyError(JsonError):
+    pass
+
+
 def _start_sequence(sequence: bytes):
     parsed = None
     iterable = iter(sequence)
@@ -31,9 +71,9 @@ def _start_sequence(sequence: bytes):
         elif byte == OBJECT_START:
             parsed = _start_object(iterable)
         else:
-            raise ValueError(f"Unexpected byte at JSON start: {byte}")
+            raise JsonByteStartError(byte)
     if parsed is None:
-        raise ValueError("No object or array found in JSON.")
+        raise JsonEmptyError()
     while True:
         try:
             byte = next(iterable)
@@ -41,7 +81,7 @@ def _start_sequence(sequence: bytes):
             break
         if byte in EMPTY_CHARACTERS:
             continue
-        raise ValueError(f"Unexpected byte at JSON end: {byte}")
+        raise JsonByteEndError(byte)
     return parsed
 
 
@@ -53,7 +93,7 @@ def _start_array(iterable: Iterator[int]):
         try:
             byte = next(iterable)
         except StopIteration:
-            raise ValueError("List parsing not finished.")
+            raise JsonUnfinishedError(list)
         if byte in EMPTY_CHARACTERS:
             continue
         if byte == QUOTE:
@@ -68,19 +108,13 @@ def _start_array(iterable: Iterator[int]):
         elif byte == ARRAY_END:
             parsed.extend(_flush_acc(acc))
             if len(parsed) != nb_commas + 1:
-                raise ValueError(
-                    f"List: final comma count ({nb_commas}) "
-                    f"is not parsed count - 1 ({len(parsed)})"
-                )
+                raise JsonCommaCountError(nb_commas, len(parsed))
             break
         elif byte == COMMA:
             parsed.extend(_flush_acc(acc))
             nb_commas += 1
             if len(parsed) != nb_commas:
-                raise ValueError(
-                    f"List: commas count ({nb_commas}) "
-                    f"does not match parsed count ({len(parsed)})"
-                )
+                raise JsonCommaCountError(nb_commas, len(parsed))
         else:
             acc.append(byte)
     return parsed
@@ -96,16 +130,16 @@ def _start_object(iterable: Iterator[int]):
         try:
             byte = next(iterable)
         except StopIteration:
-            raise ValueError("Object parsing not finished.")
+            raise JsonUnfinishedError(object)
         if byte in EMPTY_CHARACTERS:
             continue
         if byte == COLON:
             if step != OBJ_STEP_KEY:
-                raise ValueError("Colon not following a key.")
+                raise JsonColonNotAfterKeyError()
             step = OBJ_STEP_VAL
         elif byte == COMMA:
             if step != OBJ_STEP_VAL:
-                raise ValueError("Comma not following a value.")
+                raise JsonCommaNotAfterValueError()
             if val:
                 (value,) = _flush_acc(val)
                 assert key is not None
@@ -113,10 +147,7 @@ def _start_object(iterable: Iterator[int]):
                 parsed[key] = value
             nb_commas += 1
             if nb_commas != len(parsed):
-                raise ValueError(
-                    f"Object: comma count ({nb_commas}) "
-                    f"does not match parsed count({len(parsed)})"
-                )
+                raise JsonCommaCountError(nb_commas, len(parsed))
             step = OBJ_STEP_KEY
         elif byte == QUOTE:
             element = _start_string(iterable)
@@ -128,33 +159,30 @@ def _start_object(iterable: Iterator[int]):
                 parsed[key] = element
         elif byte == ARRAY_START:
             if step == OBJ_STEP_KEY:
-                raise ValueError("Object: array not allowed as key.")
+                raise JsonInvalidKeyError(list)
             assert key is not None
             assert key not in parsed
             parsed[key] = _start_array(iterable)
         elif byte == OBJECT_START:
             if step == OBJ_STEP_KEY:
-                raise ValueError("Object: object not allowed as key.")
+                raise JsonInvalidKeyError(object)
             assert key is not None
             assert key not in parsed
             parsed[key] = _start_object(iterable)
         elif byte == OBJECT_END:
             if step != OBJ_STEP_VAL:
-                raise ValueError("Value not preceding object end.")
+                raise JsonObjectEndNotAfterValueError()
             if val:
                 (value,) = _flush_acc(val)
                 assert key is not None
                 assert key not in parsed
                 parsed[key] = value
             if len(parsed) != nb_commas + 1:
-                raise ValueError(
-                    f"Object: final comma count ({nb_commas}) "
-                    f"is not parsed count - 1 ({len(parsed)})"
-                )
+                raise JsonCommaCountError(nb_commas, len(parsed))
             break
         else:
             if step == OBJ_STEP_KEY:
-                raise ValueError("Object: non-string not allowed as key.")
+                raise JsonInvalidKeyError()
             val.append(byte)
     return parsed
 
@@ -165,7 +193,7 @@ def _start_string(iterable: Iterator[int]):
         try:
             byte = next(iterable)
         except StopIteration:
-            raise ValueError("String parsing not finished.")
+            raise JsonUnfinishedError(str)
         if byte == QUOTE:
             if acc and acc[-1] == ESCAPE:
                 acc.append(byte)

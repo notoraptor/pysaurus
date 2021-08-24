@@ -5,9 +5,8 @@ import subprocess
 from datetime import datetime
 from typing import Union
 
-from pysaurus.core import constants, exceptions
+from pysaurus.core import constants, core_exceptions
 from pysaurus.core.constants import WINDOWS_PATH_PREFIX
-from pysaurus.core.exceptions import UnsupportedOS, NotDirectoryError
 from pysaurus.core.modules import FileSystem, System
 
 
@@ -143,7 +142,7 @@ class AbsolutePath(object):
     def mkdir(self):
         FileSystem.makedirs(self.__path, exist_ok=True)
         if not FileSystem.path.isdir(self.__path):
-            raise OSError("Unable to create a folder at path %s" % self.__path)
+            raise NotADirectoryError(self.__path)
         return self
 
     def delete(self):
@@ -152,18 +151,18 @@ class AbsolutePath(object):
         elif self.isdir():
             shutil.rmtree(self.__path)
         if self.exists():
-            raise OSError("Unable to delete path %s" % self.__path)
+            raise FileExistsError(self.__path)
 
     def new_title(self, title):
         # type: (str) -> AbsolutePath
-        new_path = FilePath(self.get_directory(), title, self.extension)
+        new_path = AbsolutePath.file_path(self.get_directory(), title, self.extension)
         if new_path.exists():
-            raise OSError("Unable to rename (destination already exists) to", new_path)
+            raise FileExistsError(new_path)
         FileSystem.rename(self.__path, new_path.path)
         if self.exists():
-            raise OSError("Unable to rename: source still exists:", self.__path)
+            raise FileExistsError(self.__path)
         if not new_path.exists():
-            raise OSError("Unable to rename to", new_path)
+            raise core_exceptions.NotAFileError(new_path)
         return new_path
 
     def to_json(self):
@@ -185,7 +184,7 @@ class AbsolutePath(object):
                 path = self.__path
             FileSystem.startfile(path)
         else:
-            raise UnsupportedOS(System.platform())
+            raise core_exceptions.UnsupportedSystemError(System.platform())
         return self
 
     def locate_file(self):
@@ -198,7 +197,7 @@ class AbsolutePath(object):
             # TODO not tested
             command = ["nautilus", self.__path]
         else:
-            raise OSError(f"Unsupported OS: {System.platform()}")
+            raise core_exceptions.UnsupportedSystemError(System.platform())
         process = subprocess.Popen(
             command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
@@ -216,12 +215,12 @@ STDERR: {stderr.strip()}"""
 
     def assert_dir(self):
         if not self.isdir():
-            raise exceptions.NotDirectoryError(self)
+            raise NotADirectoryError(self)
         return self
 
     def assert_file(self):
         if not self.isfile():
-            raise exceptions.NotFileError(self)
+            raise core_exceptions.NotAFileError(self)
         return self
 
     @staticmethod
@@ -233,7 +232,7 @@ STDERR: {stderr.strip()}"""
     def ensure_directory(path):
         path = AbsolutePath.ensure(path)
         if not path.isdir():
-            raise NotDirectoryError(path)
+            raise NotADirectoryError(path)
         return path
 
     @classmethod
@@ -245,22 +244,18 @@ STDERR: {stderr.strip()}"""
         """
         return AbsolutePath(os.path.join(*(str(piece) for piece in args)))
 
-
-PathType = Union[AbsolutePath, str]
-
-
-class FilePath(AbsolutePath):
-    def __init__(self, folder_path, file_title, file_extension):
-        # type: (PathType, str, str) -> None
+    @classmethod
+    def file_path(cls, folder_path, file_title, file_extension):
         """Create a new file path with a folder, a file title and a file extension.
             Each piece will be converted to a string.
         :param folder_path: folder path.
         :param file_title: file title.
         :param file_extension: file extension.
         """
-        super().__init__(
-            os.path.join(str(folder_path), "%s.%s" % (file_title, file_extension))
-        )
+        return cls(os.path.join(str(folder_path), f"{file_title}.{file_extension}"))
+
+
+PathType = Union[AbsolutePath, str]
 
 
 class DateModified:

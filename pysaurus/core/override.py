@@ -14,9 +14,7 @@ class Override:
         signatures = list(self.mapping) + list(self.with_any)
         if signatures:
             return (
-                f"{self.name}{{\n"
-                + ("\n".join(str(sig) for sig in signatures))
-                + "\n}"
+                f"{self.name}{{\n" + ("\n".join(str(sig) for sig in signatures)) + "\n}"
             )
         else:
             return f"{self.name}{{no signature}}"
@@ -68,8 +66,7 @@ class Override:
             assert cls_seq[-1] is object
             remaining_identifier = tuple(initial_identifier[1:])
             identifiers = [
-                (mro_cls.__name__,) + remaining_identifier
-                for mro_cls in cls_seq[:-1]
+                (mro_cls.__name__,) + remaining_identifier for mro_cls in cls_seq[:-1]
             ]
         else:
             identifiers = [tuple(initial_identifier)]

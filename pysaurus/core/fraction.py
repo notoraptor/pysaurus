@@ -7,7 +7,7 @@ class Fraction:
     def __init__(self, a, b=1):
         # type: (int, int) -> None
         if b == 0:
-            raise ZeroDivisionError(f"{a}/{b}")
+            raise ZeroDivisionError()
         if a == 0:
             self.sign = 1
             self.num = 0

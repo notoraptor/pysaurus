@@ -1,6 +1,7 @@
 from typing import Optional
 
-from pysaurus.core.classes import Enumeration, ToDict
+from pysaurus.core.classes import ToDict
+from pysaurus.core.enumeration import Enumeration
 
 _Cond = Enumeration(("and", "or", "exact"))
 

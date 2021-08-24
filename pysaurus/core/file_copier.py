@@ -1,7 +1,7 @@
 import os
 import shutil
 
-from pysaurus.core import notifications
+from pysaurus.core import notifications, core_exceptions
 from pysaurus.core.components import AbsolutePath, FileSize
 from pysaurus.core.modules import FileSystem
 from pysaurus.core.notifier import Notifier, DEFAULT_NOTIFIER
@@ -24,21 +24,17 @@ class FileCopier:
         buffer_size = buffer_size or 32 * 1024 * 1024
         assert buffer_size > 0
         if not src.isfile():
-            raise OSError(f"Source path does not exist: {src}")
+            raise core_exceptions.NotAFileError(src)
         if dst.exists():
-            raise OSError(f"Destination path already exists: {dst}")
+            raise FileExistsError(dst)
 
         dst_dir = dst.get_directory()
         if not dst_dir.isdir():
-            raise OSError(f"Destination folder does not exists: {dst_dir}")
+            raise NotADirectoryError(dst_dir)
         disk_usage = shutil.disk_usage(dst_dir.path)
         total = src.get_size()
         if total >= disk_usage.free:
-            raise OSError(
-                f"No enough free space on destination disk. "
-                f"Required {FileSize(total)} ({total} o), "
-                f"available {FileSize(disk_usage.free)} ({disk_usage.free} o)"
-            )
+            raise core_exceptions.DiskSpaceError(total, disk_usage.free)
 
         self.src = src
         self.dst = dst
@@ -53,9 +49,9 @@ class FileCopier:
         if src_drive and dst_drive and src_drive == dst_drive:
             os.rename(self.src.path, self.dst.path)
             if self.src.exists():
-                raise OSError("Move failed on same disk.")
+                raise FileExistsError(self.src)
             if not self.dst.isfile():
-                raise OSError("Destination file not found after moving on same disk.")
+                raise core_exceptions.NotAFileError(self.dst)
             self.notifier.notify(notifications.Done())
             ret = True
         else:

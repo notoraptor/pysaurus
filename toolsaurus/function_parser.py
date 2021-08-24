@@ -5,7 +5,7 @@ import typing
 from typing import Callable, Dict, Optional
 
 from pysaurus.core.classes import StringPrinter
-from pysaurus.core.functions import is_instance_from_module
+from toolsaurus.functions import is_instance_from_module
 
 
 class _ArgumentParserError(Exception):

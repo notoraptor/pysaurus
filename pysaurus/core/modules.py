@@ -7,7 +7,7 @@ from html.parser import HTMLParser
 from PIL import Image
 from moviepy.video.io.VideoFileClip import VideoFileClip
 
-from pysaurus.core.exceptions import NoVideoClip
+from pysaurus.core import core_exceptions
 
 
 class HTMLStripper(HTMLParser):
@@ -83,7 +83,7 @@ class System:
         elif bits_info == "64bit":
             bits = 64
         else:
-            raise OSError(f"Unknown architecture: {bits_info}")
+            raise core_exceptions.UnsupportedSystemError(System.platform(), bits_info)
         if System.is_windows():
             name = "win"
         elif System.is_linux():
@@ -91,7 +91,7 @@ class System:
         elif System.is_mac():
             name = "mac"
         else:
-            raise OSError(f"Unsupported operating system: {System.platform()}")
+            raise core_exceptions.UnsupportedSystemError(System.platform())
         return f"{name}{bits}"
 
     @staticmethod
@@ -99,7 +99,7 @@ class System:
         if System.is_windows():
             return f"{name}.dll"
         else:
-            raise OSError(f"System not yet supported: {System.platform()}")
+            raise core_exceptions.UnsupportedSystemError(System.platform())
 
     @staticmethod
     def get_exe_basename(name):
@@ -124,7 +124,7 @@ class VideoClipping:
         if time_end > clip.duration:
             time_end = clip.duration
         if time_start - time_end == 0:
-            raise NoVideoClip()
+            raise core_exceptions.ZeroLengthError()
         if unique_id is None:
             path = os.path.abspath(path)
             unique_id = FNV64.hash(path)

@@ -1,7 +1,9 @@
 import os
 from typing import Union, Dict, List, Tuple
 
-from pysaurus.core import exceptions, functions
+import toolsaurus.functions
+from pysaurus.application import exceptions
+from pysaurus.core import functions
 from pysaurus.core.classes import StringPrinter
 from pysaurus.core.components import FileSize, Duration, AbsolutePath
 from pysaurus.core.database import path_utils
@@ -10,9 +12,9 @@ from pysaurus.core.database.video import Video
 from pysaurus.core.database.video_features import VideoFeatures
 from pysaurus.core.database.video_sorting import VideoSorting
 from pysaurus.core.database.video_state import VideoState
-from pysaurus.core.functions import generate_temp_file_path
 from toolsaurus.command_line_interface import command_line_interface
 from toolsaurus.function_parser import FunctionParser, fsigned, fdef
+from toolsaurus.functions import generate_temp_file_path
 from toolsaurus.printable import to_table, to_column
 
 TEST_LIST_FILE_PATH = AbsolutePath(
@@ -392,7 +394,7 @@ class API:
             key=lambda video: video.filename,
         )
 
-    @fdef(functions.bool_type)
+    @fdef(toolsaurus.functions.bool_type)
     def update(self, ensure_miniatures=False):
         self.database.refresh(ensure_miniatures)
 

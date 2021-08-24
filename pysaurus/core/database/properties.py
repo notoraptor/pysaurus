@@ -1,6 +1,7 @@
 from typing import Union
 
-from pysaurus.core.classes import Enumeration
+from pysaurus.application import exceptions
+from pysaurus.core.enumeration import Enumeration
 
 DefType = Union[bool, int, float, str, list, tuple]
 
@@ -11,7 +12,7 @@ class PropType:
     def __init__(self, name: str, definition: DefType, multiple: bool = False):
         name = name.strip()
         if not name:
-            raise ValueError("Name needed for a property.")
+            raise exceptions.MissingPropertyName()
         if isinstance(definition, (bool, int, float, str)):
             prop_type = type(definition)
             enumeration = set()
@@ -24,11 +25,7 @@ class PropType:
             enumeration = enum_type.values
             default = definition[0]
         else:
-            raise ValueError(
-                "Invalid prop type definition: expect a bool, int, float, str, "
-                "or enumeration (list or tuple of values from a same type) "
-                "(first value will be default value)."
-            )
+            raise exceptions.InvalidPropertyDefinition(definition)
         self.name = name
         self.type = prop_type
         self.enumeration = enumeration
@@ -60,43 +57,24 @@ class PropType:
     def validate(self, value):
         if self.multiple:
             if not isinstance(value, (list, tuple, set)):
-                raise ValueError(
-                    "Multiple property %s expects a list, tuple or set of values."
-                    % self.name
-                )
+                raise exceptions.InvalidMultiplePropertyValue(self, value)
             if not isinstance(value, set):
                 value = set(value)
             for element in value:
                 if not isinstance(element, self.type):
-                    raise ValueError(
-                        "Property %s: expected type %s, got %s"
-                        % (self.name, self.type, type(element))
-                    )
+                    raise exceptions.InvalidPropertyValue(self, element)
             if self.enumeration:
                 for element in value:
                     if element not in self.enumeration:
-                        raise ValueError(
-                            "Property %s: forbidden value (%s), allowed: %s"
-                            % (
-                                self.name,
-                                element,
-                                ", ".join(str(el) for el in self.enumeration),
-                            )
-                        )
+                        raise exceptions.InvalidPropertyValue(self, element)
             return sorted(value)
 
         if self.type is float and isinstance(value, int):
             value = float(value)
         if not isinstance(value, self.type):
-            raise ValueError(
-                "Property %s: expected type %s, got %s"
-                % (self.name, self.type, type(value))
-            )
+            raise exceptions.InvalidPropertyValue(self, value)
         if self.enumeration and value not in self.enumeration:
-            raise ValueError(
-                "Property %s: forbidden value (%s), allowed: %s"
-                % (self.name, value, ", ".join(str(el) for el in self.enumeration))
-            )
+            raise exceptions.InvalidPropertyValue(self, value)
         return value
 
     def to_json(self):
