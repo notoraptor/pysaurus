@@ -1,11 +1,3 @@
-/**
- * @callback MenuItemRadioCallback
- * @param {Object} value
- */
-
-/**
- * @param props {{value: Object, checked: boolean, action: MenuItemRadioCallback, children: Object}}
- */
 export function MenuItemRadio(props) {
     return (
         <div className="menu-item radio horizontal" onClick={() => props.action(props.value)}>
@@ -17,4 +9,10 @@ export function MenuItemRadio(props) {
             <div className="text">{props.children}</div>
         </div>
     );
+}
+MenuItemRadio.propTypes = {
+    value: PropTypes.object,
+    checked: PropTypes.bool,
+    // action(value)
+    action: PropTypes.func,
 }

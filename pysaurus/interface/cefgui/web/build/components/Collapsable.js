@@ -12,10 +12,6 @@ System.register(["../utils/constants.js"], function (_export, _context) {
     execute: function () {
       _export("Collapsable", Collapsable = class Collapsable extends React.Component {
         constructor(props) {
-          // title: str
-          // className? str
-          // children ...
-          // lite? bool = true
           super(props);
           this.state = {
             stack: false
@@ -46,6 +42,12 @@ System.register(["../utils/constants.js"], function (_export, _context) {
         }
 
       });
+
+      Collapsable.propTypes = {
+        title: PropTypes.string,
+        className: PropTypes.string,
+        lite: PropTypes.bool
+      };
     }
   };
 });

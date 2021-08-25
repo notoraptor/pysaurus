@@ -1,11 +1,9 @@
-import {Cross} from "./Cross.js";
+import {MicroButton} from "./MicroButton.js";
 
-export class PlusIcon extends Cross {
-    constructor(props) {
-        // action ? function()
-        // title? str
-        super(props);
-        this.type = "plus";
-        this.content = "\u271A";
-    }
+export function PlusIcon(props) {
+    return <MicroButton type="plus" content={"\u271A"} title={props.title} action={props.action}/>;
 }
+PlusIcon.propTypes = {
+    title: PropTypes.string,
+    action: PropTypes.func
+};

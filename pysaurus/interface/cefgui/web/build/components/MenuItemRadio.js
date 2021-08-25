@@ -1,14 +1,6 @@
 System.register([], function (_export, _context) {
   "use strict";
 
-  /**
-   * @callback MenuItemRadioCallback
-   * @param {Object} value
-   */
-
-  /**
-   * @param props {{value: Object, checked: boolean, action: MenuItemRadioCallback, children: Object}}
-   */
   function MenuItemRadio(props) {
     return /*#__PURE__*/React.createElement("div", {
       className: "menu-item radio horizontal",
@@ -28,6 +20,13 @@ System.register([], function (_export, _context) {
 
   return {
     setters: [],
-    execute: function () {}
+    execute: function () {
+      MenuItemRadio.propTypes = {
+        value: PropTypes.object,
+        checked: PropTypes.bool,
+        // action(value)
+        action: PropTypes.func
+      };
+    }
   };
 });

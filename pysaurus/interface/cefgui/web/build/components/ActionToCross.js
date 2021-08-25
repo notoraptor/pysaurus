@@ -1,11 +1,8 @@
-System.register(["./Cross.js"], function (_export, _context) {
+System.register(["./Cross.js", "../utils/Action.js"], function (_export, _context) {
   "use strict";
 
-  var Cross;
+  var Cross, Action;
 
-  /**
-   * @param props {{action: Action, title: str?}}
-   */
   function ActionToCross(props) {
     const {
       action,
@@ -22,7 +19,14 @@ System.register(["./Cross.js"], function (_export, _context) {
   return {
     setters: [function (_CrossJs) {
       Cross = _CrossJs.Cross;
+    }, function (_utilsActionJs) {
+      Action = _utilsActionJs.Action;
     }],
-    execute: function () {}
+    execute: function () {
+      ActionToCross.propTypes = {
+        action: PropTypes.instanceOf(Action),
+        title: PropTypes.string
+      };
+    }
   };
 });

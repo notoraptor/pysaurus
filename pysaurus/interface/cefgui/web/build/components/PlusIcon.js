@@ -1,25 +1,28 @@
-System.register(["./Cross.js"], function (_export, _context) {
+System.register(["./MicroButton.js"], function (_export, _context) {
   "use strict";
 
-  var Cross, PlusIcon;
+  var MicroButton;
 
-  _export("PlusIcon", void 0);
+  function PlusIcon(props) {
+    return /*#__PURE__*/React.createElement(MicroButton, {
+      type: "plus",
+      content: "\u271A",
+      title: props.title,
+      action: props.action
+    });
+  }
+
+  _export("PlusIcon", PlusIcon);
 
   return {
-    setters: [function (_CrossJs) {
-      Cross = _CrossJs.Cross;
+    setters: [function (_MicroButtonJs) {
+      MicroButton = _MicroButtonJs.MicroButton;
     }],
     execute: function () {
-      _export("PlusIcon", PlusIcon = class PlusIcon extends Cross {
-        constructor(props) {
-          // action ? function()
-          // title? str
-          super(props);
-          this.type = "plus";
-          this.content = "\u271A";
-        }
-
-      });
+      PlusIcon.propTypes = {
+        title: PropTypes.string,
+        action: PropTypes.func
+      };
     }
   };
 });

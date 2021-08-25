@@ -1,11 +1,8 @@
-System.register(["./SettingIcon.js"], function (_export, _context) {
+System.register(["./SettingIcon.js", "../utils/Action.js"], function (_export, _context) {
   "use strict";
 
-  var SettingIcon;
+  var SettingIcon, Action;
 
-  /**
-   * @param props {{action: Action, title: str?}}
-   */
   function ActionToSettingIcon(props) {
     const {
       action,
@@ -22,7 +19,14 @@ System.register(["./SettingIcon.js"], function (_export, _context) {
   return {
     setters: [function (_SettingIconJs) {
       SettingIcon = _SettingIconJs.SettingIcon;
+    }, function (_utilsActionJs) {
+      Action = _utilsActionJs.Action;
     }],
-    execute: function () {}
+    execute: function () {
+      ActionToSettingIcon.propTypes = {
+        action: PropTypes.instanceOf(Action),
+        title: PropTypes.string
+      };
+    }
   };
 });

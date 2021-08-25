@@ -10,9 +10,6 @@ System.register([], function (_export, _context) {
     execute: function () {
       _export("MenuItem", MenuItem = class MenuItem extends React.Component {
         constructor(props) {
-          // className? str
-          // shortcut? str
-          // action? function()
           super(props);
           this.onClick = this.onClick.bind(this);
         }

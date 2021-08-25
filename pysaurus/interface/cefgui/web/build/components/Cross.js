@@ -1,37 +1,30 @@
-System.register(["../utils/constants.js"], function (_export, _context) {
+System.register(["../utils/constants.js", "./MicroButton.js"], function (_export, _context) {
   "use strict";
 
-  var Characters, Cross;
+  var Characters, MicroButton;
 
-  function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
+  function Cross(props) {
+    return /*#__PURE__*/React.createElement(MicroButton, {
+      type: "cross",
+      content: Characters.CROSS,
+      title: props.title,
+      action: props.action
+    });
+  }
 
-  _export("Cross", void 0);
+  _export("Cross", Cross);
 
   return {
     setters: [function (_utilsConstantsJs) {
       Characters = _utilsConstantsJs.Characters;
+    }, function (_MicroButtonJs) {
+      MicroButton = _MicroButtonJs.MicroButton;
     }],
     execute: function () {
-      _export("Cross", Cross = class Cross extends React.Component {
-        constructor(props) {
-          // action ? function()
-          // title? str
-          super(props);
-          this.type = "cross";
-          this.content = Characters.CROSS;
-        }
-
-        render() {
-          return /*#__PURE__*/React.createElement("div", _extends({
-            className: "small-button " + this.type
-          }, this.props.title ? {
-            title: this.props.title
-          } : {}, this.props.action ? {
-            onClick: this.props.action
-          } : {}), this.content);
-        }
-
-      });
+      Cross.propTypes = {
+        title: PropTypes.string,
+        action: PropTypes.func
+      };
     }
   };
 });

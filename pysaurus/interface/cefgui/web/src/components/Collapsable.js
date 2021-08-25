@@ -2,10 +2,6 @@ import {Characters} from "../utils/constants.js";
 
 export class Collapsable extends React.Component {
     constructor(props) {
-        // title: str
-        // className? str
-        // children ...
-        // lite? bool = true
         super(props);
         this.state = {stack: false};
         this.stack = this.stack.bind(this);
@@ -32,3 +28,8 @@ export class Collapsable extends React.Component {
         this.setState({stack: !this.state.stack});
     }
 }
+Collapsable.propTypes = {
+    title: PropTypes.string,
+    className: PropTypes.string,
+    lite: PropTypes.bool
+};

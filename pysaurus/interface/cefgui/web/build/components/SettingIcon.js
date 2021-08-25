@@ -1,27 +1,30 @@
-System.register(["./Cross.js", "../utils/constants.js"], function (_export, _context) {
+System.register(["../utils/constants.js", "./MicroButton.js"], function (_export, _context) {
   "use strict";
 
-  var Cross, Characters, SettingIcon;
+  var Characters, MicroButton;
 
-  _export("SettingIcon", void 0);
+  function SettingIcon(props) {
+    return /*#__PURE__*/React.createElement(MicroButton, {
+      type: "settings",
+      content: Characters.SETTINGS,
+      title: props.title,
+      action: props.action
+    });
+  }
+
+  _export("SettingIcon", SettingIcon);
 
   return {
-    setters: [function (_CrossJs) {
-      Cross = _CrossJs.Cross;
-    }, function (_utilsConstantsJs) {
+    setters: [function (_utilsConstantsJs) {
       Characters = _utilsConstantsJs.Characters;
+    }, function (_MicroButtonJs) {
+      MicroButton = _MicroButtonJs.MicroButton;
     }],
     execute: function () {
-      _export("SettingIcon", SettingIcon = class SettingIcon extends Cross {
-        constructor(props) {
-          // action ? function()
-          // title? str
-          super(props);
-          this.type = "settings";
-          this.content = Characters.SETTINGS;
-        }
-
-      });
+      SettingIcon.propTypes = {
+        title: PropTypes.string,
+        action: PropTypes.func
+      };
     }
   };
 });

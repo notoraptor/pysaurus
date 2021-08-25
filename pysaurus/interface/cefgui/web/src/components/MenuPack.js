@@ -1,21 +1,12 @@
-export class MenuPack extends React.Component {
-    constructor(props) {
-        // title: str
-        super(props);
-    }
-
-    render() {
-        return (
-            <div className="menu-pack">
-                <div className="title">
-                    <div className="text">
-                        {this.props.title}
-                    </div>
-                </div>
-                <div className="content">{this.props.children}</div>
+export function MenuPack(props) {
+    return (
+        <div className="menu-pack">
+            <div className="title">
+                <div className="text">{props.title}</div>
             </div>
-        );
-    }
+            <div className="content">{props.children}</div>
+        </div>
+    );
 }
 MenuPack.propTypes = {
     title: PropTypes.string.isRequired

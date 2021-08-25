@@ -1,8 +1,5 @@
 export class MenuItem extends React.Component {
     constructor(props) {
-        // className? str
-        // shortcut? str
-        // action? function()
         super(props);
         this.onClick = this.onClick.bind(this);
     }
