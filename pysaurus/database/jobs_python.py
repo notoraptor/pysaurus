@@ -6,10 +6,10 @@ from pysaurus.application import exceptions
 from pysaurus.bin.symbols import RUN_VIDEO_RAPTOR_BATCH, RUN_VIDEO_RAPTOR_THUMBNAILS
 from pysaurus.core import functions, constants
 from pysaurus.core.components import AbsolutePath
-from pysaurus.database.miniature_tools.miniature import Miniature
-from pysaurus.database.video_runtime_info import VideoRuntimeInfo
 from pysaurus.core.modules import FileSystem, ImageUtils
 from pysaurus.core.notifications import JobNotifications
+from pysaurus.database.miniature_tools.miniature import Miniature
+from pysaurus.database.video_runtime_info import VideoRuntimeInfo
 
 
 def _collect_videos_info(folder: str, files: Dict[AbsolutePath, VideoRuntimeInfo]):

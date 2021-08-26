@@ -2,8 +2,8 @@ from typing import Optional, List
 
 from pysaurus.core.classes import ToDict
 from pysaurus.core.compare import to_comparable
-from pysaurus.database.viewport.viewtools.group import Group
 from pysaurus.core.functions import get_default
+from pysaurus.database.viewport.viewtools.group import Group
 
 
 class GroupDef(ToDict):

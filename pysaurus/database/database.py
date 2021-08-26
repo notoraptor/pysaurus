@@ -13,6 +13,10 @@ from pysaurus.core.components import (
 )
 from pysaurus.core.constants import THUMBNAIL_EXTENSION, CPU_COUNT
 from pysaurus.core.custom_json_parser import parse_json
+from pysaurus.core.modules import ImageUtils, System, FileSystem
+from pysaurus.core.notifier import Notifier, DEFAULT_NOTIFIER
+from pysaurus.core.path_tree import PathTree
+from pysaurus.core.profiling import Profiler
 from pysaurus.database import path_utils, jobs_python
 from pysaurus.database.db_settings import DbSettings
 from pysaurus.database.db_video_attribute import (
@@ -25,10 +29,6 @@ from pysaurus.database.properties import PropType
 from pysaurus.database.video import Video
 from pysaurus.database.video_runtime_info import VideoRuntimeInfo
 from pysaurus.database.video_state import VideoState
-from pysaurus.core.modules import ImageUtils, System, FileSystem
-from pysaurus.core.notifier import Notifier, DEFAULT_NOTIFIER
-from pysaurus.core.path_tree import PathTree
-from pysaurus.core.profiling import Profiler
 
 SPECIAL_PROPERTIES = [PropType("<error>", "", True)]
 
@@ -742,7 +742,6 @@ class Database:
                 del dct[video.filename]
                 dct[path] = video
                 video.filename = path
-                # TODO DB update will always recheck this video, as path mtime changed.
                 self.__to_save()
                 self.__notifier.notify(
                     notifications.FieldsModified(FILENAME_RELATED_FIELDS)

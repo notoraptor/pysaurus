@@ -15,13 +15,13 @@ from typing import Sequence, Set
 
 from pysaurus.core.classes import StringPrinter, Text, TextWithNumbers
 from pysaurus.core.components import AbsolutePath, Duration
-from pysaurus.database import path_utils
-from pysaurus.database.video_state import VideoState
 from pysaurus.core.functions import (
     class_get_public_attributes,
     html_to_title,
     string_to_pieces,
 )
+from pysaurus.database import path_utils
+from pysaurus.database.video_state import VideoState
 
 
 def to_dict_value(value):

@@ -9,7 +9,7 @@ from pysaurus.core.profiling import Profiler
 
 
 class FileCopier:
-    __slots__ = "cancel", "src", "dst", "buffer_size", "notifier", "total"
+    __slots__ = "cancel", "src", "dst", "buffer_size", "notifier", "total", "notify_end"
 
     def __init__(
         self,
@@ -18,6 +18,7 @@ class FileCopier:
         *,
         buffer_size: int = 0,
         notifier: Notifier = DEFAULT_NOTIFIER,
+        notify_end: bool = True,
     ):
         src = AbsolutePath.ensure(src)
         dst = AbsolutePath.ensure(dst)
@@ -42,6 +43,7 @@ class FileCopier:
         self.buffer_size = buffer_size
         self.notifier = notifier
         self.cancel = False
+        self.notify_end = notify_end
 
     def move(self):
         src_drive = self.src.get_drive_name()
@@ -52,7 +54,8 @@ class FileCopier:
                 raise FileExistsError(self.src)
             if not self.dst.isfile():
                 raise core_exceptions.NotAFileError(self.dst)
-            self.notifier.notify(notifications.Done())
+            if self.notify_end:
+                self.notifier.notify(notifications.Done())
             ret = True
         else:
             ret = self.copy()
@@ -86,8 +89,9 @@ class FileCopier:
             except Exception:
                 self.dst.delete()
                 raise
-        if self.cancel:
-            self.notifier.notify(notifications.Cancelled())
-        else:
-            self.notifier.notify(notifications.Done())
+        if self.notify_end:
+            if self.cancel:
+                self.notifier.notify(notifications.Cancelled())
+            else:
+                self.notifier.notify(notifications.Done())
         return not self.cancel

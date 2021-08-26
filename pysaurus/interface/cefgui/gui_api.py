@@ -14,6 +14,7 @@ from pysaurus.core.functions import launch_thread
 from pysaurus.core.notifications import (
     Notification,
     End,
+    Done,
     Terminated,
     Cancelled,
     DatabaseReady,
@@ -195,7 +196,9 @@ class GuiAPI(FeatureAPI):
             dst = AbsolutePath.file_path(
                 directory, video.filename.file_title, video.filename.extension
             )
-            self.copy_work = FileCopier(video.filename, dst, notifier=self.notifier)
+            self.copy_work = FileCopier(
+                video.filename, dst, notifier=self.notifier, notify_end=False
+            )
             done = self.copy_work.move()
             self.copy_work = None
             if done:
@@ -203,8 +206,11 @@ class GuiAPI(FeatureAPI):
                 if old_path:
                     old_path.delete()
                 self.provider.refresh()
+                self.notifier.notify(Done())
+            else:
+                self.notifier.notify(Cancelled())
         except Exception as exc:
-            self.database.notifier.notify(End(f"Error: {exc}"))
+            self.database.notifier.notify(End(f"Error {type(exc).__name__}: {exc}"))
         finally:
             self.db_loading_thread = None
 

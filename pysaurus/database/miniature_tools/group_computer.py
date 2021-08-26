@@ -4,6 +4,8 @@ from typing import List
 from pysaurus.core import notifications
 from pysaurus.core.classes import AbstractMatrix
 from pysaurus.core.constants import CPU_COUNT
+from pysaurus.core.notifier import DEFAULT_NOTIFIER
+from pysaurus.core.profiling import Profiler
 from pysaurus.database.miniature_tools.decomposed_miniature import (
     DecomposedMiniature,
 )
@@ -13,8 +15,6 @@ from pysaurus.database.miniature_tools.pixel_comparator import (
     DistancePixelComparator,
 )
 from pysaurus.database.miniature_tools.pixel_group import PixelGroup
-from pysaurus.core.notifier import DEFAULT_NOTIFIER
-from pysaurus.core.profiling import Profiler
 
 
 class GroupComputer:

@@ -12,6 +12,5 @@ TODO:
   - Using SQL instead of JSON could it make code faster and easier to maintain ?
   - Redesign using bootstrap ?
   - Suggest existing values on property edition.
-  - Update group panel (bottom left) on property edition if group panel displays edited property.
   - Add an option to execute a command line (example, `sort +date -length`) from interface, as a shortcut instead of multiple interface clicks.
     - Does that mean interface is not ergonomic ?
