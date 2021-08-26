@@ -24,9 +24,9 @@ function Monitoring(props) {
         current += step;
     }
     const percent = Math.round(current * 100 / total);
-    const jobClassID = monitoring.name + "-job";
+    const jobClassID = "job " + monitoring.name;
     return (
-        <div className={`job horizontal ${jobClassID}`}>
+        <div className="job horizontal">
             <label htmlFor={jobClassID} className="info">{current} done ({percent} %)</label>
             <progress id={jobClassID} value={current} max={total}/>
         </div>

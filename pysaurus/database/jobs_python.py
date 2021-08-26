@@ -30,10 +30,11 @@ def _collect_videos_info(folder: str, files: Dict[AbsolutePath, VideoRuntimeInfo
             )
 
 
-def job_collect_videos_info(job):
-    # type: (List) -> Dict[AbsolutePath, VideoRuntimeInfo]
+def job_collect_videos_info(job: list) -> Dict[AbsolutePath, VideoRuntimeInfo]:
+    jobn: JobNotifications
+    paths, job_id, jobn = job
     files = {}  # type: Dict[AbsolutePath, VideoRuntimeInfo]
-    for path in job[0]:  # type: AbsolutePath
+    for i, path in enumerate(paths):  # type: (int, AbsolutePath)
         if path.isdir():
             _collect_videos_info(path.path, files)
         elif path.extension in constants.VIDEO_SUPPORTED_EXTENSIONS:
@@ -44,6 +45,8 @@ def job_collect_videos_info(job):
                 driver_id=stat.st_dev,
                 is_file=True,
             )
+        jobn.progress(job_id, i, len(paths))
+    jobn.progress(job_id, len(paths), len(paths))
     return files
 
 

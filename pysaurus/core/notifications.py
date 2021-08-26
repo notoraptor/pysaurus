@@ -252,6 +252,7 @@ class _JobNotificationsFactory:
 
 
 class Jobs:
+    video_folders = _JobNotificationsFactory("video folder")
     videos = _JobNotificationsFactory("video")
     thumbnails = _JobNotificationsFactory("thumbnail")
     miniatures = _JobNotificationsFactory("miniature")

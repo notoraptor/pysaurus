@@ -314,12 +314,20 @@ class Database:
     def __check_videos_on_disk(self):
         # type: () -> Dict[AbsolutePath, VideoRuntimeInfo]
         paths = {}  # type: Dict[AbsolutePath, VideoRuntimeInfo]
-        jobs = functions.dispatch_tasks(sorted(self.__folders), CPU_COUNT)
+        disk_to_folders = {}
+        for path in self.__folders:
+            disk_to_folders.setdefault(path.get_drive_name(), []).append(path)
+        job_count = len(disk_to_folders)
+        jobn = notifications.Jobs.video_folders(job_count, self.__notifier)
+        jobs = [
+            (disk_to_folders[disk], i, jobn)
+            for i, disk in enumerate(sorted(disk_to_folders))
+        ]
         with Profiler(
-            title=f"Collect videos ({CPU_COUNT} threads)", notifier=self.__notifier
+            title=f"Collect videos ({job_count} threads)", notifier=self.__notifier
         ):
             results = functions.parallelize(
-                jobs_python.job_collect_videos_info, jobs, CPU_COUNT
+                jobs_python.job_collect_videos_info, jobs, job_count
             )
         for local_result in results:  # type: Dict[AbsolutePath, VideoRuntimeInfo]
             paths.update(local_result)

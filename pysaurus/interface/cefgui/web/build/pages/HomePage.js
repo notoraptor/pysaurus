@@ -16,9 +16,9 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
     }
 
     const percent = Math.round(current * 100 / total);
-    const jobClassID = monitoring.name + "-job";
+    const jobClassID = "job " + monitoring.name;
     return /*#__PURE__*/React.createElement("div", {
-      className: `job horizontal ${jobClassID}`
+      className: "job horizontal"
     }, /*#__PURE__*/React.createElement("label", {
       htmlFor: jobClassID,
       className: "info"
