@@ -7,40 +7,28 @@ DefType = Union[bool, int, float, str, list, tuple]
 
 
 class PropType:
-    __slots__ = ("name", "type", "enumeration", "default", "multiple")
+    __slots__ = ("name", "definition", "multiple")
 
     def __init__(self, name: str, definition: DefType, multiple: bool = False):
         name = name.strip()
         if not name:
             raise exceptions.MissingPropertyName()
-        if isinstance(definition, (bool, int, float, str)):
-            prop_type = type(definition)
-            enumeration = set()
-            default = definition
-            if prop_type is str:
-                default = default.strip()
+        if not isinstance(definition, (bool, int, float, str, list, tuple)):
+            raise exceptions.InvalidPropertyDefinition(definition)
+        if isinstance(definition, str):
+            definition = definition.strip()
         elif isinstance(definition, (list, tuple)):
             enum_type = Enumeration(definition)
-            prop_type = enum_type.type
-            enumeration = enum_type.values
-            default = definition[0]
-        else:
-            raise exceptions.InvalidPropertyDefinition(definition)
+            definition = [definition[0]] + sorted(enum_type.values - {definition[0]})
         self.name = name
-        self.type = prop_type
-        self.enumeration = enumeration
-        self.default = default
+        self.definition = definition
         self.multiple = multiple
 
-    @property
-    def key(self):
-        return (
-            self.name,
-            self.type,
-            self.default,
-            self.multiple,
-            tuple(sorted(self.enumeration)),
-        )
+    default = property(
+        lambda self: self.definition[0] if self.is_enum() else self.definition
+    )
+    type = property(lambda self: type(self.default))
+    key = property(lambda self: (self.name, self.definition, self.multiple))
 
     def __hash__(self):
         return hash(self.key)
@@ -50,6 +38,9 @@ class PropType:
 
     def __call__(self, value=None):
         return self.new() if value is None else self.validate(value)
+
+    def is_enum(self):
+        return isinstance(self.definition, list)
 
     def new(self):
         return [] if self.multiple else self.default
@@ -63,9 +54,10 @@ class PropType:
             for element in value:
                 if not isinstance(element, self.type):
                     raise exceptions.InvalidPropertyValue(self, element)
-            if self.enumeration:
+            if self.is_enum():
+                enumeration = set(self.definition)
                 for element in value:
-                    if element not in self.enumeration:
+                    if element not in enumeration:
                         raise exceptions.InvalidPropertyValue(self, element)
             return sorted(value)
 
@@ -73,25 +65,21 @@ class PropType:
             value = float(value)
         if not isinstance(value, self.type):
             raise exceptions.InvalidPropertyValue(self, value)
-        if self.enumeration and value not in self.enumeration:
+        if self.is_enum() and value not in set(self.definition):
             raise exceptions.InvalidPropertyValue(self, value)
         return value
 
-    def to_json(self):
+    def describe(self):
         return {
             "name": self.name,
             "type": self.type.__name__,
-            "enumeration": list(self.enumeration) if self.enumeration else None,
+            "enumeration": self.definition if self.is_enum() else None,
             "defaultValue": self.new(),
             "multiple": self.multiple,
         }
 
     def to_dict(self):
-        if self.enumeration:
-            definition = [self.default] + list(self.enumeration - {self.default})
-        else:
-            definition = self.default
-        return {"n": self.name, "d": definition, "m": self.multiple}
+        return {"n": self.name, "d": self.definition, "m": self.multiple}
 
     @classmethod
     def from_dict(cls, dct):

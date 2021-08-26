@@ -192,7 +192,7 @@ class FeatureAPI:
 
     def get_prop_types(self):
         props = sorted(self.database.get_prop_types(), key=lambda prop: prop.name)
-        return [prop.to_json() for prop in props]
+        return [prop.describe() for prop in props]
 
     def count_prop_values(self, name, selector):
         value_to_count = self.database.count_property_values(

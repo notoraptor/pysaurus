@@ -32,5 +32,4 @@ class Enumeration:
     def __str__(self):
         return "{%s}" % (", ".join(sorted(self.values)))
 
-    def __repr__(self):
-        return str(self)
+    __repr__ = __str__
