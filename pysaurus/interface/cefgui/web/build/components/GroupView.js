@@ -28,11 +28,6 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
       _export("GroupView", GroupView = class GroupView extends React.Component {
         constructor(props) {
           super(props);
-          this.state = {
-            pageSize: 100,
-            pageNumber: 0,
-            selection: new Set()
-          };
           this.openPropertyOptions = this.openPropertyOptions.bind(this);
           this.openPropertyOptionsAll = this.openPropertyOptionsAll.bind(this);
           this.openPropertyPlus = this.openPropertyPlus.bind(this);
@@ -43,16 +38,6 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
           this.allChecked = this.allChecked.bind(this);
           this.onCheckEntry = this.onCheckEntry.bind(this);
           this.onCheckAll = this.onCheckAll.bind(this);
-          this.nullIndex = -1;
-
-          for (let i = 0; i < this.props.groupDef.groups.length; ++i) {
-            if (this.props.groupDef.groups[i].value === null) {
-              if (i !== 0) throw `Group without value at position ${i}, expected 0`;
-              this.nullIndex = i;
-              break;
-            }
-          }
-
           this.callbackIndex = -1;
           this.features = new Actions({
             previous: new Action("Ctrl+ArrowUp", "Go to previous group", this.previousGroup),
@@ -61,10 +46,11 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
         }
 
         render() {
+          const selection = this.props.selection;
           const selected = this.props.groupDef.group_id;
           const isProperty = this.props.groupDef.is_property;
-          const start = this.state.pageSize * this.state.pageNumber;
-          const end = Math.min(start + this.state.pageSize, this.props.groupDef.groups.length);
+          const start = this.props.pageSize * this.props.pageNumber;
+          const end = Math.min(start + this.props.pageSize, this.props.groupDef.groups.length);
           const allChecked = this.allChecked(start, end);
           console.log(`Rendering ${this.props.groupDef.groups.length} group(s).`);
           return /*#__PURE__*/React.createElement("div", {
@@ -77,7 +63,7 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
             singular: "page",
             plural: "pages",
             nbPages: this.getNbPages(),
-            pageNumber: this.state.pageNumber,
+            pageNumber: this.props.pageNumber,
             onChange: this.setPage,
             onSearch: this.search
           })), isProperty && !this.props.isClassified ? /*#__PURE__*/React.createElement("div", {
@@ -91,7 +77,7 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
             onChange: event => this.onCheckAll(event, start, end)
           }), ' ', /*#__PURE__*/React.createElement("label", {
             htmlFor: "group-view-select-all"
-          }, allChecked ? 'All ' : '', this.state.selection.size, " selected"), this.state.selection.size ? /*#__PURE__*/React.createElement("span", null, "\xA0", /*#__PURE__*/React.createElement(SettingIcon, {
+          }, allChecked ? 'All ' : '', selection.size, " selected"), selection.size ? /*#__PURE__*/React.createElement("span", null, "\xA0", /*#__PURE__*/React.createElement(SettingIcon, {
             key: "options-for-selected",
             title: `Options for selected...`,
             action: this.openPropertyOptionsAll
@@ -107,12 +93,12 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
               if (!this.props.isClassified) {
                 buttons.push( /*#__PURE__*/React.createElement("input", {
                   type: "checkbox",
-                  checked: this.state.selection.has(index),
+                  checked: selection.has(index),
                   onChange: event => this.onCheckEntry(event, index)
                 }));
                 buttons.push(' ');
 
-                if (!this.state.selection.size) {
+                if (!selection.size) {
                   buttons.push( /*#__PURE__*/React.createElement(SettingIcon, {
                     key: "options",
                     title: `Options ...`,
@@ -122,7 +108,7 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
                 }
               }
 
-              if (!this.state.selection.size) {
+              if (!selection.size) {
                 buttons.push( /*#__PURE__*/React.createElement(PlusIcon, {
                   key: "add",
                   title: `Add ...`,
@@ -138,7 +124,9 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
             return /*#__PURE__*/React.createElement("tr", {
               className: classes.join(" "),
               key: index,
-              onClick: () => this.props.onSelect(index)
+              onClick: () => this.props.onGroupViewState({
+                groupID: index
+              })
             }, /*#__PURE__*/React.createElement("td", isProperty ? {} : {
               title: entry.value
             }, buttons, /*#__PURE__*/React.createElement("span", _extends({
@@ -169,9 +157,13 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
           KEYBOARD_MANAGER.unregister(this.callbackIndex);
         }
 
+        getNullIndex() {
+          return this.props.groupDef.groups.length && this.props.groupDef.groups[0].value === null ? 0 : -1;
+        }
+
         getNbPages() {
           const count = this.props.groupDef.groups.length;
-          return Math.floor(count / this.state.pageSize) + (count % this.state.pageSize ? 1 : 0);
+          return Math.floor(count / this.props.pageSize) + (count % this.props.pageSize ? 1 : 0);
         }
 
         openPropertyOptions(event, index) {
@@ -181,7 +173,7 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
         }
 
         openPropertyOptionsAll() {
-          this.props.onOptions(this.state.selection);
+          this.props.onOptions(this.props.selection);
         }
 
         openPropertyPlus(event, index) {
@@ -191,7 +183,7 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
         }
 
         setPage(pageNumber) {
-          if (this.state.pageNumber !== pageNumber) this.setState({
+          if (this.props.pageNumber !== pageNumber) this.props.onGroupViewState({
             pageNumber: pageNumber,
             selection: new Set()
           });
@@ -199,12 +191,16 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
 
         previousGroup() {
           const groupID = this.props.groupDef.group_id;
-          if (groupID > 0) this.props.onSelect(groupID - 1);
+          if (groupID > 0) this.props.onGroupViewState({
+            groupID: groupID - 1
+          });
         }
 
         nextGroup() {
           const groupID = this.props.groupDef.group_id;
-          if (groupID < this.props.groupDef.groups.length - 1) this.props.onSelect(groupID + 1);
+          if (groupID < this.props.groupDef.groups.length - 1) this.props.onGroupViewState({
+            groupID: groupID + 1
+          });
         }
 
         search(text) {
@@ -212,25 +208,28 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
             const value = this.props.groupDef.groups[index].value;
             if (value === null) continue;
             if (value.toString().toLowerCase().indexOf(text.trim().toLowerCase()) !== 0) continue;
-            const pageNumber = Math.floor(index / this.state.pageSize);
-            if (this.state.pageNumber !== pageNumber) this.setState({
+            const pageNumber = Math.floor(index / this.props.pageSize);
+            if (this.props.pageNumber !== pageNumber) this.props.onGroupViewState({
               pageNumber: pageNumber,
-              selection: new Set()
-            }, () => this.props.onSelect(index));
+              selection: new Set(),
+              groupID: index
+            });
             return;
           }
         }
 
         allChecked(start, end) {
+          const nullGroupIndex = this.getNullIndex();
+
           for (let i = start; i < end; ++i) {
-            if (!this.state.selection.has(i) && i !== this.nullIndex) return false;
+            if (!this.props.selection.has(i) && i !== nullGroupIndex) return false;
           }
 
           return true;
         }
 
         onCheckEntry(event, index) {
-          const selection = new Set(this.state.selection);
+          const selection = new Set(this.props.selection);
 
           if (event.target.checked) {
             selection.add(index);
@@ -238,13 +237,13 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
             selection.delete(index);
           }
 
-          this.setState({
+          this.props.onGroupViewState({
             selection
           });
         }
 
         onCheckAll(event, start, end) {
-          const selection = new Set(this.state.selection);
+          const selection = new Set(this.props.selection);
 
           if (event.target.checked) {
             for (let i = start; i < end; ++i) {
@@ -256,8 +255,8 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
             }
           }
 
-          selection.delete(this.nullIndex);
-          this.setState({
+          selection.delete(this.getNullIndex());
+          this.props.onGroupViewState({
             selection
           });
         }
@@ -277,12 +276,17 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
           })).isRequired
         }).isRequired,
         isClassified: PropTypes.bool.isRequired,
-        // onSelect(index)
-        onSelect: PropTypes.func.isRequired,
         // onOptions(index)
         onOptions: PropTypes.func.isRequired,
         // onPlus(index)
-        onPlus: PropTypes.func
+        onPlus: PropTypes.func,
+        // state
+        pageSize: PropTypes.number.isRequired,
+        pageNumber: PropTypes.number.isRequired,
+        selection: PropTypes.instanceOf(Set).isRequired,
+        // state change
+        onGroupViewState: PropTypes.func.isRequired // onGroupViewState({pageSize?, pageNumber?, selection?, groupID? => onSelect})
+
       };
     }
   };

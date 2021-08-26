@@ -100,7 +100,10 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             confirmDeletion: true,
             path: [],
             selector: new Selector(),
-            displayOnlySelected: false
+            displayOnlySelected: false,
+            groupPageSize: 100,
+            groupPageNumber: 0,
+            groupSelection: new Set()
           }, this.props.parameters);
           this.backendGroupVideos = this.backendGroupVideos.bind(this);
           this.changeGroup = this.changeGroup.bind(this);
@@ -142,6 +145,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           this.editDatabaseFolders = this.editDatabaseFolders.bind(this);
           this.renameDatabase = this.renameDatabase.bind(this);
           this.deleteDatabase = this.deleteDatabase.bind(this);
+          this.onGroupViewState = this.onGroupViewState.bind(this);
           this.callbackIndex = -1;
           this.features = new Actions({
             select: new Action("Ctrl+T", "Select videos ...", this.selectVideos),
@@ -283,10 +287,12 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             className: "group",
             title: "Groups"
           }, /*#__PURE__*/React.createElement(GroupView, {
-            key: `${groupDef.field}-${groupDef.groups.length}-${this.state.path.join('-')}`,
             groupDef: groupDef,
             isClassified: !!this.state.path.length,
-            onSelect: this.selectGroup,
+            pageSize: this.state.groupPageSize,
+            pageNumber: this.state.groupPageNumber,
+            selection: this.state.groupSelection,
+            onGroupViewState: this.onGroupViewState,
             onOptions: this.editPropertyValue,
             onPlus: groupDef.is_property && this.state.definitions[groupDef.field].multiple ? this.classifierSelectGroup : null
           })) : ''), /*#__PURE__*/React.createElement("div", {
@@ -387,6 +393,15 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
 
         componentWillUnmount() {
           KEYBOARD_MANAGER.unregister(this.callbackIndex);
+        }
+
+        onGroupViewState(groupState) {
+          const state = {};
+          if (groupState.hasOwnProperty("pageSize")) state.groupPageSize = groupState.pageSize;
+          if (groupState.hasOwnProperty("pageNumber")) state.groupPageNumber = groupState.pageNumber;
+          if (groupState.hasOwnProperty("selection")) state.groupSelection = groupState.selection;
+          const groupID = groupState.hasOwnProperty("groupID") ? groupState.groupID : null;
+          this.setState(state, groupID === null ? undefined : () => this.selectGroup(groupID));
         }
 
         scrollTop() {
@@ -715,18 +730,21 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
               switch (operation.form) {
                 case 'delete':
                   this.backend(['delete_property_value', name, values], {
+                    groupSelection: new Set(),
                     status: `Property value deleted: "${name}" / "${values.join('", "')}"`
                   });
                   break;
 
                 case 'edit':
                   this.backend(['edit_property_value', name, values, operation.value], {
+                    groupSelection: new Set(),
                     status: `Property value edited: "${name}" : "${values.join('", "')}" -> "${operation.value}"`
                   });
                   break;
 
                 case 'move':
                   this.backend(['move_property_value', name, values, operation.move], {
+                    groupSelection: new Set(),
                     status: `Property value moved: "${values.join('", "')}" from "${name}" to "${operation.move}"`
                   });
                   break;

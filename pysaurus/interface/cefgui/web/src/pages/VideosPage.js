@@ -58,6 +58,9 @@ export class VideosPage extends React.Component {
             path: [],
             selector: new Selector(),
             displayOnlySelected: false,
+            groupPageSize: 100,
+            groupPageNumber: 0,
+            groupSelection: new Set(),
         }, this.props.parameters);
         this.backendGroupVideos = this.backendGroupVideos.bind(this);
         this.changeGroup = this.changeGroup.bind(this);
@@ -99,6 +102,7 @@ export class VideosPage extends React.Component {
         this.editDatabaseFolders = this.editDatabaseFolders.bind(this);
         this.renameDatabase = this.renameDatabase.bind(this);
         this.deleteDatabase = this.deleteDatabase.bind(this);
+        this.onGroupViewState = this.onGroupViewState.bind(this);
 
         this.callbackIndex = -1;
         this.features = new Actions({
@@ -235,10 +239,12 @@ export class VideosPage extends React.Component {
                         {groupDef ? (
                             <Collapsable lite={false} className="group" title="Groups">
                                 <GroupView
-                                    key={`${groupDef.field}-${groupDef.groups.length}-${this.state.path.join('-')}`}
                                     groupDef={groupDef}
                                     isClassified={!!this.state.path.length}
-                                    onSelect={this.selectGroup}
+                                    pageSize={this.state.groupPageSize}
+                                    pageNumber={this.state.groupPageNumber}
+                                    selection={this.state.groupSelection}
+                                    onGroupViewState={this.onGroupViewState}
                                     onOptions={this.editPropertyValue}
                                     onPlus={
                                         groupDef.is_property && this.state.definitions[groupDef.field].multiple
@@ -405,6 +411,18 @@ export class VideosPage extends React.Component {
 
     componentWillUnmount() {
         KEYBOARD_MANAGER.unregister(this.callbackIndex);
+    }
+
+    onGroupViewState(groupState) {
+        const state = {};
+        if (groupState.hasOwnProperty("pageSize"))
+            state.groupPageSize = groupState.pageSize;
+        if (groupState.hasOwnProperty("pageNumber"))
+            state.groupPageNumber = groupState.pageNumber;
+        if (groupState.hasOwnProperty("selection"))
+            state.groupSelection = groupState.selection;
+        const groupID = groupState.hasOwnProperty("groupID") ? groupState.groupID : null;
+        this.setState(state, groupID === null ? undefined : () => this.selectGroup(groupID));
     }
 
     scrollTop() {
@@ -694,13 +712,13 @@ export class VideosPage extends React.Component {
                                         onClose={operation => {
                                             switch (operation.form) {
                                                 case 'delete':
-                                                    this.backend(['delete_property_value', name, values], {status: `Property value deleted: "${name}" / "${values.join('", "')}"`});
+                                                    this.backend(['delete_property_value', name, values], {groupSelection: new Set(), status: `Property value deleted: "${name}" / "${values.join('", "')}"`});
                                                     break;
                                                 case 'edit':
-                                                    this.backend(['edit_property_value', name, values, operation.value], {status: `Property value edited: "${name}" : "${values.join('", "')}" -> "${operation.value}"`});
+                                                    this.backend(['edit_property_value', name, values, operation.value], {groupSelection: new Set(), status: `Property value edited: "${name}" : "${values.join('", "')}" -> "${operation.value}"`});
                                                     break;
                                                 case 'move':
-                                                    this.backend(['move_property_value', name, values, operation.move], {status: `Property value moved: "${values.join('", "')}" from "${name}" to "${operation.move}"`});
+                                                    this.backend(['move_property_value', name, values, operation.move], {groupSelection: new Set(), status: `Property value moved: "${values.join('", "')}" from "${name}" to "${operation.move}"`});
                                                     break;
                                             }
                                         }}/>

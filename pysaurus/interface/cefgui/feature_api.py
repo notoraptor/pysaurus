@@ -72,7 +72,7 @@ class FeatureAPI:
             ret = getattr(self, callargs[0])(*callargs[1:])
             if ret is not None:
                 print("Ignored value returned by", callargs, file=sys.stderr)
-                print(ret, file=sys.stderr)
+                print(type(ret), file=sys.stderr)
         return self.get_info_and_videos(page_size, page_number, selector)
 
     def get_info_and_videos(self, page_size, page_number, selector=None):
