@@ -1,7 +1,7 @@
-System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dialog.js", "../forms/FormVideoProperties.js", "./Collapsable.js", "./MenuItem.js", "./Menu.js", "../utils/backend.js", "../utils/constants.js"], function (_export, _context) {
+System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dialog.js", "../forms/FormVideoEditProperties.js", "./Collapsable.js", "./MenuItem.js", "./Menu.js", "../utils/backend.js", "../utils/constants.js"], function (_export, _context) {
   "use strict";
 
-  var MenuPack, FormVideoRename, Dialog, FormVideoProperties, Collapsable, MenuItem, Menu, backend_error, python_call, Characters, Video;
+  var MenuPack, FormVideoRename, Dialog, FormVideoEditProperties, Collapsable, MenuItem, Menu, backend_error, python_call, Characters, Video;
 
   _export("Video", void 0);
 
@@ -12,8 +12,8 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
       FormVideoRename = _formsFormVideoRenameJs.FormVideoRename;
     }, function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
-    }, function (_formsFormVideoPropertiesJs) {
-      FormVideoProperties = _formsFormVideoPropertiesJs.FormVideoProperties;
+    }, function (_formsFormVideoEditPropertiesJs) {
+      FormVideoEditProperties = _formsFormVideoEditPropertiesJs.FormVideoEditProperties;
     }, function (_CollapsableJs) {
       Collapsable = _CollapsableJs.Collapsable;
     }, function (_MenuItemJs) {
@@ -252,7 +252,7 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
 
         editProperties() {
           const data = this.props.data;
-          Fancybox.load( /*#__PURE__*/React.createElement(FormVideoProperties, {
+          Fancybox.load( /*#__PURE__*/React.createElement(FormVideoEditProperties, {
             data: data,
             definitions: this.props.propDefs,
             onClose: properties => {

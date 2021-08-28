@@ -1,9 +1,9 @@
 System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../utils/functions.js"], function (_export, _context) {
   "use strict";
 
-  var ComponentController, SetInput, Dialog, parsePropValString, FormVideoProperties;
+  var ComponentController, SetInput, Dialog, parsePropValString, FormVideoEditProperties;
 
-  _export("FormVideoProperties", void 0);
+  _export("FormVideoEditProperties", void 0);
 
   return {
     setters: [function (_componentsSetInputJs) {
@@ -15,7 +15,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../utils/
       parsePropValString = _utilsFunctionsJs.parsePropValString;
     }],
     execute: function () {
-      _export("FormVideoProperties", FormVideoProperties = class FormVideoProperties extends React.Component {
+      _export("FormVideoEditProperties", FormVideoEditProperties = class FormVideoEditProperties extends React.Component {
         constructor(props) {
           // data
           // definitions

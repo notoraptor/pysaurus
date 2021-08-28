@@ -1,9 +1,9 @@
 System.register(["../dialogs/Dialog.js", "../utils/functions.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, parsePropValString, FormPropertySelectedValues;
+  var Dialog, parsePropValString, FormPropertyEditSelectedValues;
 
-  _export("FormPropertySelectedValues", void 0);
+  _export("FormPropertyEditSelectedValues", void 0);
 
   return {
     setters: [function (_dialogsDialogJs) {
@@ -12,7 +12,7 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js"], function (_ex
       parsePropValString = _utilsFunctionsJs.parsePropValString;
     }],
     execute: function () {
-      _export("FormPropertySelectedValues", FormPropertySelectedValues = class FormPropertySelectedValues extends React.Component {
+      _export("FormPropertyEditSelectedValues", FormPropertyEditSelectedValues = class FormPropertyEditSelectedValues extends React.Component {
         constructor(props) {
           super(props);
           this.state = {
@@ -192,7 +192,7 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js"], function (_ex
 
       });
 
-      FormPropertySelectedValues.propTypes = {
+      FormPropertyEditSelectedValues.propTypes = {
         properties: PropTypes.object.isRequired,
         name: PropTypes.string.isRequired,
         values: PropTypes.array.isRequired,

@@ -7,9 +7,9 @@ import {FormVideosGrouping} from "../forms/FormVideosGrouping.js";
 import {FormVideosSearch} from "../forms/FormVideosSearch.js";
 import {FormVideosSort} from "../forms/FormVideosSort.js";
 import {GroupView} from "../components/GroupView.js";
-import {FormPropertySelectedValues} from "../forms/FormPropertySelectedValues.js";
+import {FormPropertyEditSelectedValues} from "../forms/FormPropertyEditSelectedValues.js";
 import {FormVideosKeywordsToProperty} from "../forms/FormVideosKeywordsToProperty.js";
-import {FormSelectedVideosProperty} from "../forms/FormSelectedVideosProperty.js";
+import {FormSelectedVideosEditProperty} from "../forms/FormSelectedVideosEditProperty.js";
 import {Collapsable} from "../components/Collapsable.js";
 import {Cross} from "../components/Cross.js";
 import {MenuItem} from "../components/MenuItem.js";
@@ -25,7 +25,7 @@ import {ActionToCross} from "../components/ActionToCross.js";
 import {backend_error, python_call} from "../utils/backend.js";
 import {FancyBox} from "../dialogs/FancyBox.js";
 import {HomePage} from "./HomePage.js";
-import {FormDatabaseFolders} from "../forms/FormDatabaseFolders.js";
+import {FormDatabaseEditFolders} from "../forms/FormDatabaseEditFolders.js";
 import {FormDatabaseRename} from "../forms/FormDatabaseRename.js";
 import {Dialog} from "../dialogs/Dialog.js";
 import {Cell} from "../components/Cell.js";
@@ -546,10 +546,10 @@ export class VideosPage extends React.Component {
         const videoIndices = this.state.selector.toJSON();
         python_call('count_prop_values', propertyName, videoIndices)
             .then(valuesAndCounts => Fancybox.load(
-                <FormSelectedVideosProperty nbVideos={selectionSize}
-                                            definition={this.state.definitions[propertyName]}
-                                            values={valuesAndCounts}
-                                            onClose={edition => {
+                <FormSelectedVideosEditProperty nbVideos={selectionSize}
+                                                definition={this.state.definitions[propertyName]}
+                                                values={valuesAndCounts}
+                                                onClose={edition => {
                                                 this.backend(
                                                     ['edit_property_for_videos', propertyName, videoIndices, edition.add, edition.remove],
                                                     {
@@ -582,7 +582,7 @@ export class VideosPage extends React.Component {
 
     editDatabaseFolders() {
         Fancybox.load(
-            <FormDatabaseFolders database={this.state.database} onClose={paths => {
+            <FormDatabaseEditFolders database={this.state.database} onClose={paths => {
                 python_call("set_video_folders", paths)
                     .then(() => this.props.app.dbUpdate("update_database"))
                     .catch(backend_error);
@@ -706,10 +706,10 @@ export class VideosPage extends React.Component {
         for (let index of indices)
             values.push(groupDef.groups[index].value);
         Fancybox.load(
-            <FormPropertySelectedValues properties={this.state.definitions}
-                                        name={name}
-                                        values={values}
-                                        onClose={operation => {
+            <FormPropertyEditSelectedValues properties={this.state.definitions}
+                                            name={name}
+                                            values={values}
+                                            onClose={operation => {
                                             switch (operation.form) {
                                                 case 'delete':
                                                     this.backend(['delete_property_value', name, values], {groupSelection: new Set(), status: `Property value deleted: "${name}" / "${values.join('", "')}"`});

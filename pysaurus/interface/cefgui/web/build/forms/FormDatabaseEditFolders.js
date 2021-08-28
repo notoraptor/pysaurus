@@ -1,9 +1,9 @@
 System.register(["../dialogs/Dialog.js", "../utils/backend.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, backend_error, python_call, FormDatabaseFolders;
+  var Dialog, backend_error, python_call, FormDatabaseEditFolders;
 
-  _export("FormDatabaseFolders", void 0);
+  _export("FormDatabaseEditFolders", void 0);
 
   return {
     setters: [function (_dialogsDialogJs) {
@@ -13,7 +13,7 @@ System.register(["../dialogs/Dialog.js", "../utils/backend.js"], function (_expo
       python_call = _utilsBackendJs.python_call;
     }],
     execute: function () {
-      _export("FormDatabaseFolders", FormDatabaseFolders = class FormDatabaseFolders extends React.Component {
+      _export("FormDatabaseEditFolders", FormDatabaseEditFolders = class FormDatabaseEditFolders extends React.Component {
         constructor(props) {
           // database: {name: str, folders: [str]}
           // onClose(paths)
@@ -88,7 +88,7 @@ System.register(["../dialogs/Dialog.js", "../utils/backend.js"], function (_expo
 
       });
 
-      FormDatabaseFolders.propTypes = {
+      FormDatabaseEditFolders.propTypes = {
         database: PropTypes.shape({
           name: PropTypes.string.isRequired,
           folders: PropTypes.arrayOf(PropTypes.string)

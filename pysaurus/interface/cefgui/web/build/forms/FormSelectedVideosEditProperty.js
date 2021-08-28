@@ -1,9 +1,9 @@
 System.register(["../dialogs/Dialog.js", "../utils/functions.js", "../utils/constants.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, parsePropValString, Characters, FormSelectedVideosProperty;
+  var Dialog, parsePropValString, Characters, FormSelectedVideosEditProperty;
 
-  _export("FormSelectedVideosProperty", void 0);
+  _export("FormSelectedVideosEditProperty", void 0);
 
   return {
     setters: [function (_dialogsDialogJs) {
@@ -14,7 +14,7 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js", "../utils/cons
       Characters = _utilsConstantsJs.Characters;
     }],
     execute: function () {
-      _export("FormSelectedVideosProperty", FormSelectedVideosProperty = class FormSelectedVideosProperty extends React.Component {
+      _export("FormSelectedVideosEditProperty", FormSelectedVideosEditProperty = class FormSelectedVideosEditProperty extends React.Component {
         constructor(props) {
           // nbVideos
           // definition: property definition

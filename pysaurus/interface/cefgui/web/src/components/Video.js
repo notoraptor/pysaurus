@@ -1,7 +1,7 @@
 import {MenuPack} from "./MenuPack.js";
 import {FormVideoRename} from "../forms/FormVideoRename.js";
 import {Dialog} from "../dialogs/Dialog.js";
-import {FormVideoProperties} from "../forms/FormVideoProperties.js";
+import {FormVideoEditProperties} from "../forms/FormVideoEditProperties.js";
 import {Collapsable} from "./Collapsable.js";
 import {MenuItem} from "./MenuItem.js";
 import {Menu} from "./Menu.js";
@@ -246,7 +246,7 @@ export class Video extends React.Component {
     editProperties() {
         const data = this.props.data;
         Fancybox.load(
-            <FormVideoProperties data={data} definitions={this.props.propDefs} onClose={properties => {
+            <FormVideoEditProperties data={data} definitions={this.props.propDefs} onClose={properties => {
                 python_call('set_video_properties', this.props.data.video_id, properties)
                     .then(() => this.props.onInfo(`Properties updated: ${data.filename}`, true))
                     .catch(backend_error);

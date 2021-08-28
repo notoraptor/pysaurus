@@ -1,7 +1,7 @@
-System.register(["../utils/constants.js", "../components/MenuPack.js", "../components/Pagination.js", "../components/Video.js", "../forms/FormVideosSource.js", "../forms/FormVideosGrouping.js", "../forms/FormVideosSearch.js", "../forms/FormVideosSort.js", "../components/GroupView.js", "../forms/FormPropertySelectedValues.js", "../forms/FormVideosKeywordsToProperty.js", "../forms/FormSelectedVideosProperty.js", "../components/Collapsable.js", "../components/Cross.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/MenuItemRadio.js", "../components/Menu.js", "../utils/Selector.js", "../utils/Action.js", "../utils/Actions.js", "../components/ActionToMenuItem.js", "../components/ActionToSettingIcon.js", "../components/ActionToCross.js", "../utils/backend.js", "../dialogs/FancyBox.js", "./HomePage.js", "../forms/FormDatabaseFolders.js", "../forms/FormDatabaseRename.js", "../dialogs/Dialog.js", "../components/Cell.js"], function (_export, _context) {
+System.register(["../utils/constants.js", "../components/MenuPack.js", "../components/Pagination.js", "../components/Video.js", "../forms/FormVideosSource.js", "../forms/FormVideosGrouping.js", "../forms/FormVideosSearch.js", "../forms/FormVideosSort.js", "../components/GroupView.js", "../forms/FormPropertyEditSelectedValues.js", "../forms/FormVideosKeywordsToProperty.js", "../forms/FormSelectedVideosEditProperty.js", "../components/Collapsable.js", "../components/Cross.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/MenuItemRadio.js", "../components/Menu.js", "../utils/Selector.js", "../utils/Action.js", "../utils/Actions.js", "../components/ActionToMenuItem.js", "../components/ActionToSettingIcon.js", "../components/ActionToCross.js", "../utils/backend.js", "../dialogs/FancyBox.js", "./HomePage.js", "../forms/FormDatabaseEditFolders.js", "../forms/FormDatabaseRename.js", "../dialogs/Dialog.js", "../components/Cell.js"], function (_export, _context) {
   "use strict";
 
-  var PAGE_SIZES, SEARCH_TYPE_TITLE, SOURCE_TREE, FIELD_MAP, MenuPack, Pagination, Video, FormVideosSource, FormVideosGrouping, FormVideosSearch, FormVideosSort, GroupView, FormPropertySelectedValues, FormVideosKeywordsToProperty, FormSelectedVideosProperty, Collapsable, Cross, MenuItem, MenuItemCheck, MenuItemRadio, Menu, Selector, Action, Actions, ActionToMenuItem, ActionToSettingIcon, ActionToCross, backend_error, python_call, FancyBox, HomePage, FormDatabaseFolders, FormDatabaseRename, Dialog, Cell, VideosPage;
+  var PAGE_SIZES, SEARCH_TYPE_TITLE, SOURCE_TREE, FIELD_MAP, MenuPack, Pagination, Video, FormVideosSource, FormVideosGrouping, FormVideosSearch, FormVideosSort, GroupView, FormPropertyEditSelectedValues, FormVideosKeywordsToProperty, FormSelectedVideosEditProperty, Collapsable, Cross, MenuItem, MenuItemCheck, MenuItemRadio, Menu, Selector, Action, Actions, ActionToMenuItem, ActionToSettingIcon, ActionToCross, backend_error, python_call, FancyBox, HomePage, FormDatabaseEditFolders, FormDatabaseRename, Dialog, Cell, VideosPage;
 
   function compareSources(sources1, sources2) {
     if (sources1.length !== sources2.length) return false;
@@ -43,12 +43,12 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
       FormVideosSort = _formsFormVideosSortJs.FormVideosSort;
     }, function (_componentsGroupViewJs) {
       GroupView = _componentsGroupViewJs.GroupView;
-    }, function (_formsFormPropertySelectedValuesJs) {
-      FormPropertySelectedValues = _formsFormPropertySelectedValuesJs.FormPropertySelectedValues;
+    }, function (_formsFormPropertyEditSelectedValuesJs) {
+      FormPropertyEditSelectedValues = _formsFormPropertyEditSelectedValuesJs.FormPropertyEditSelectedValues;
     }, function (_formsFormVideosKeywordsToPropertyJs) {
       FormVideosKeywordsToProperty = _formsFormVideosKeywordsToPropertyJs.FormVideosKeywordsToProperty;
-    }, function (_formsFormSelectedVideosPropertyJs) {
-      FormSelectedVideosProperty = _formsFormSelectedVideosPropertyJs.FormSelectedVideosProperty;
+    }, function (_formsFormSelectedVideosEditPropertyJs) {
+      FormSelectedVideosEditProperty = _formsFormSelectedVideosEditPropertyJs.FormSelectedVideosEditProperty;
     }, function (_componentsCollapsableJs) {
       Collapsable = _componentsCollapsableJs.Collapsable;
     }, function (_componentsCrossJs) {
@@ -80,8 +80,8 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
       FancyBox = _dialogsFancyBoxJs.FancyBox;
     }, function (_HomePageJs) {
       HomePage = _HomePageJs.HomePage;
-    }, function (_formsFormDatabaseFoldersJs) {
-      FormDatabaseFolders = _formsFormDatabaseFoldersJs.FormDatabaseFolders;
+    }, function (_formsFormDatabaseEditFoldersJs) {
+      FormDatabaseEditFolders = _formsFormDatabaseEditFoldersJs.FormDatabaseEditFolders;
     }, function (_formsFormDatabaseRenameJs) {
       FormDatabaseRename = _formsFormDatabaseRenameJs.FormDatabaseRename;
     }, function (_dialogsDialogJs) {
@@ -543,7 +543,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         editPropertiesForManyVideos(propertyName) {
           const selectionSize = this.state.selector.size(this.state.realNbVideos);
           const videoIndices = this.state.selector.toJSON();
-          python_call('count_prop_values', propertyName, videoIndices).then(valuesAndCounts => Fancybox.load( /*#__PURE__*/React.createElement(FormSelectedVideosProperty, {
+          python_call('count_prop_values', propertyName, videoIndices).then(valuesAndCounts => Fancybox.load( /*#__PURE__*/React.createElement(FormSelectedVideosEditProperty, {
             nbVideos: selectionSize,
             definition: this.state.definitions[propertyName],
             values: valuesAndCounts,
@@ -584,7 +584,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         }
 
         editDatabaseFolders() {
-          Fancybox.load( /*#__PURE__*/React.createElement(FormDatabaseFolders, {
+          Fancybox.load( /*#__PURE__*/React.createElement(FormDatabaseEditFolders, {
             database: this.state.database,
             onClose: paths => {
               python_call("set_video_folders", paths).then(() => this.props.app.dbUpdate("update_database")).catch(backend_error);
@@ -722,7 +722,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
 
           for (let index of indices) values.push(groupDef.groups[index].value);
 
-          Fancybox.load( /*#__PURE__*/React.createElement(FormPropertySelectedValues, {
+          Fancybox.load( /*#__PURE__*/React.createElement(FormPropertyEditSelectedValues, {
             properties: this.state.definitions,
             name: name,
             values: values,

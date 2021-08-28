@@ -48,7 +48,6 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             defaultValue: getDefaultValue(defaultType),
             multiple: false
           };
-          this.setType = this.setType.bind(this);
           this.back = this.back.bind(this);
           this.onChangeName = this.onChangeName.bind(this);
           this.onChangeType = this.onChangeType.bind(this);
@@ -116,9 +115,9 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             onChange: this.onChangeEnumeration
           })), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("label", {
             htmlFor: "prop-enumeration"
-          }, "Is enumeration"))), this.state.multiple && !this.state.enumeration ? '' : /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("label", {
+          }, "Is enumeration"))), !this.state.multiple || this.state.enumeration ? /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("label", {
             htmlFor: 'prop-default-' + this.state.type
-          }, this.state.enumeration ? 'Enumeration values' + (this.state.multiple ? '' : ' (first is default)') : 'Default value')), /*#__PURE__*/React.createElement("td", null, this.renderDefaultInput())), /*#__PURE__*/React.createElement("tr", {
+          }, this.state.enumeration ? 'Enumeration values' + (this.state.multiple ? '' : ' (first is default)') : 'Default value')), /*#__PURE__*/React.createElement("td", null, this.renderDefaultInput())) : "", /*#__PURE__*/React.createElement("tr", {
             className: "buttons"
           }, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
             className: "reset",
@@ -194,15 +193,6 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
           });
         }
 
-        setType(value) {
-          if (this.state.type !== value) this.setState({
-            type: value,
-            enumeration: false,
-            defaultValue: getDefaultValue(value),
-            multiple: false
-          });
-        }
-
         back() {
           this.props.app.loadVideosPage();
         }
@@ -215,7 +205,13 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
         }
 
         onChangeType(event) {
-          this.setType(event.target.value);
+          const value = event.target.value;
+          if (this.state.type !== value) this.setState({
+            type: value,
+            enumeration: false,
+            defaultValue: getDefaultValue(value),
+            multiple: false
+          });
         }
 
         onChangeDefault(event) {

@@ -31,7 +31,6 @@ export class PropertiesPage extends React.Component {
             defaultValue: getDefaultValue(defaultType),
             multiple: false,
         };
-        this.setType = this.setType.bind(this);
         this.back = this.back.bind(this);
         this.onChangeName = this.onChangeName.bind(this);
         this.onChangeType = this.onChangeType.bind(this);
@@ -49,9 +48,7 @@ export class PropertiesPage extends React.Component {
         return (
             <div id="properties">
                 <h2 className="horizontal">
-                    <div className="back">
-                        <button onClick={this.back}>&#11164;</button>
-                    </div>
+                    <div className="back"><button onClick={this.back}>&#11164;</button></div>
                     <div className="title">Properties Management</div>
                 </h2>
                 <hr/>
@@ -75,9 +72,7 @@ export class PropertiesPage extends React.Component {
                             <tr>
                                 <td><label htmlFor="prop-type">Type:</label></td>
                                 <td>
-                                    <select id="prop-type"
-                                            value={this.state.type}
-                                            onChange={this.onChangeType}>
+                                    <select id="prop-type" value={this.state.type} onChange={this.onChangeType}>
                                         <option value="bool">boolean</option>
                                         <option value="int">integer</option>
                                         <option value="float">floating number</option>
@@ -103,7 +98,7 @@ export class PropertiesPage extends React.Component {
                                 </td>
                                 <td><label htmlFor="prop-enumeration">Is enumeration</label></td>
                             </tr>
-                            {this.state.multiple && !this.state.enumeration ? '' : (
+                            {!this.state.multiple || this.state.enumeration ? (
                                 <tr>
                                     <td>
                                         <label htmlFor={'prop-default-' + this.state.type}>
@@ -114,14 +109,10 @@ export class PropertiesPage extends React.Component {
                                     </td>
                                     <td>{this.renderDefaultInput()}</td>
                                 </tr>
-                            )}
+                            ) : ""}
                             <tr className="buttons">
-                                <td>
-                                    <button className="reset" onClick={this.reset}>reset</button>
-                                </td>
-                                <td>
-                                    <button className="submit" onClick={this.submit}>add</button>
-                                </td>
+                                <td><button className="reset" onClick={this.reset}>reset</button></td>
+                                <td><button className="submit" onClick={this.submit}>add</button></td>
                             </tr>
                         </table>
                     </div>
@@ -217,11 +208,6 @@ export class PropertiesPage extends React.Component {
                       value={this.state.defaultValue}/>;
     }
 
-    setType(value) {
-        if (this.state.type !== value)
-            this.setState({type: value, enumeration: false, defaultValue: getDefaultValue(value), multiple: false});
-    }
-
     back() {
         this.props.app.loadVideosPage();
     }
@@ -233,7 +219,9 @@ export class PropertiesPage extends React.Component {
     }
 
     onChangeType(event) {
-        this.setType(event.target.value);
+        const value = event.target.value;
+        if (this.state.type !== value)
+            this.setState({type: value, enumeration: false, defaultValue: getDefaultValue(value), multiple: false});
     }
 
     onChangeDefault(event) {

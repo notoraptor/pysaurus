@@ -1,7 +1,7 @@
 import {Dialog} from "../dialogs/Dialog.js";
 import {backend_error, python_call} from "../utils/backend.js";
 
-export class FormDatabaseFolders extends React.Component {
+export class FormDatabaseEditFolders extends React.Component {
     constructor(props) {
         // database: {name: str, folders: [str]}
         // onClose(paths)
@@ -73,7 +73,7 @@ export class FormDatabaseFolders extends React.Component {
     }
 }
 
-FormDatabaseFolders.propTypes = {
+FormDatabaseEditFolders.propTypes = {
     database: PropTypes.shape({
         name: PropTypes.string.isRequired,
         folders: PropTypes.arrayOf(PropTypes.string),
