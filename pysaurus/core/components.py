@@ -134,11 +134,9 @@ class AbsolutePath(object):
             drive_name = f"{drive_name}{os.path.sep}"
         return drive_name
 
-    # not tested.
     def get_size(self):
         return FileSystem.path.getsize(self.__path)
 
-    # not tested.
     def mkdir(self):
         FileSystem.makedirs(self.__path, exist_ok=True)
         if not FileSystem.path.isdir(self.__path):
