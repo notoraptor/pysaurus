@@ -73,11 +73,17 @@ class GuiAPI(FeatureAPI):
         return self.list_databases()
 
     def close_app(self):
+        # Close threads.
         self.threads_stop_flag = True
         if self.monitor_thread:
             self.monitor_thread.join()
         if self.db_loading_thread:
             self.db_loading_thread.join()
+        # Close manager.
+        self.notifier.queue = None
+        self.notifier = None
+        self.multiprocessing_manager = None
+        # App closed.
         print("App closed.")
 
     # Private methods.

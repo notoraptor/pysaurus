@@ -95,9 +95,11 @@ class System:
         return f"{name}{bits}"
 
     @staticmethod
-    def get_lib_basename(name):
+    def get_lib_basename(name, prefix="lib"):
         if System.is_windows():
             return f"{name}.dll"
+        elif System.is_linux():
+            return f"{prefix}{name}.so"
         else:
             raise core_exceptions.UnsupportedSystemError(System.platform())
 

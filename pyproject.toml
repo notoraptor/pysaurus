@@ -6,8 +6,8 @@ authors = ["notoraptor"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.8"
-cefpython3 = "^66.1"
+python = "^3.7"
+cefpython3 = "66.0"
 moviepy = "^1.0.3"
 Pillow = "^8.3.1"
 pyperclip = "^1.8.2"

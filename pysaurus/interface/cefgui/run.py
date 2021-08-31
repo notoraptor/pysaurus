@@ -31,7 +31,7 @@ def main():
     entry_path = os.path.normpath(
         os.path.join(os.path.dirname(__file__), "web/index.html")
     ).replace("\\", "/")
-    url = "file:///" + entry_path
+    url = "file:///" + os.path.abspath(entry_path)
     settings = {
         "debug": False,
         "log_severity": cef.LOGSEVERITY_INFO,
@@ -48,6 +48,7 @@ def main():
     set_javascript_bindings(browser)
     cef.MessageLoop()
     cef.Shutdown()
+    print("Exit.")
 
 
 if __name__ == "__main__":
