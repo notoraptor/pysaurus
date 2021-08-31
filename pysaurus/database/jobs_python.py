@@ -64,7 +64,6 @@ def job_video_to_json(job):
         output_file_path.delete()
 
     env = os.environ.copy()
-    print(env["PATH"])
     process = subprocess.Popen(
         [RUN_VIDEO_RAPTOR_BATCH.path, input_file_name, output_file_name],
         env=env,
@@ -107,8 +106,10 @@ def job_video_thumbnails_to_json(job):
     if output_file_path.exists():
         output_file_path.delete()
 
+    env = os.environ.copy()
     process = subprocess.Popen(
         [RUN_VIDEO_RAPTOR_THUMBNAILS.path, input_file_name, output_file_name],
+        env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )

@@ -220,7 +220,6 @@ class GuiAPI(FeatureAPI):
 
     @staticmethod
     def clipboard(text):
-        # pyperclip.copy(text)
         tk_utils.clipboard_set(text)
 
     def clipboard_video_path(self, video_id):
