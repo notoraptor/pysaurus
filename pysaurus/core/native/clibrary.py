@@ -17,8 +17,6 @@ def c_library(name):
         lib_path = util.find_library(name)
     if not lib_path:
         raise SharedLibraryNotFoundError(name)
-    paths = os.environ["PATH"]
-    os.environ["PATH"] = f"{paths}{os.pathsep}{os.path.dirname(lib_path)}"
     return CDLL(lib_path)
 
 

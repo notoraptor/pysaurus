@@ -19,6 +19,7 @@ export class Video extends React.Component {
         this.openContainingFolder = this.openContainingFolder.bind(this);
         this.copyMetaTitle = this.copyMetaTitle.bind(this);
         this.copyFileTitle = this.copyFileTitle.bind(this);
+        this.copyFilePath = this.copyFilePath.bind(this);
         this.renameVideo = this.renameVideo.bind(this);
         this.editProperties = this.editProperties.bind(this);
         this.onSelect = this.onSelect.bind(this);
@@ -65,6 +66,7 @@ export class Video extends React.Component {
                                         </MenuItem> : ''}
                                     {meta_title ? <MenuItem action={this.copyMetaTitle}>Copy meta title</MenuItem> : ''}
                                     {file_title ? <MenuItem action={this.copyFileTitle}>Copy file title</MenuItem> : ''}
+                                    <MenuItem action={this.copyFilePath}>Copy path</MenuItem>
                                     {data.exists ? <MenuItem action={this.renameVideo}>Rename video</MenuItem> : ''}
                                     {data.exists ? <MenuItem action={this.moveVideo}>Move video to another folder ...</MenuItem> : ""}
                                     <MenuItem className="red-flag" action={this.deleteVideo}>
@@ -120,6 +122,11 @@ export class Video extends React.Component {
                             <span title={data.audio_bit_rate}>{audio_bit_rate} Kb/s</span> |{" "}
                             <strong>{data.length}</strong> | <code>{data.date}</code>
                         </div>
+                        {data.similarity_id !== null && data.similarity_id > -1 ? (
+                            <div>
+                                <strong>Similarity ID:</strong> <code>{data.similarity_id}</code>
+                            </div>
+                        ) : ""}
                         {this.props.groupedByMoves && data.moves.length === 1 ? (
                             <p>
                                 <button className="block"
@@ -157,6 +164,7 @@ export class Video extends React.Component {
                                             Open containing folder
                                         </MenuItem> : ''}
                                     <MenuItem action={this.copyFileTitle}>Copy file title</MenuItem>
+                                    <MenuItem action={this.copyFilePath}>Copy path</MenuItem>
                                     {data.exists ? <MenuItem action={this.renameVideo}>Rename video</MenuItem> : ''}
                                     <MenuItem className="red-flag" action={this.deleteVideo}>
                                         {data.exists ? 'Delete video' : 'Delete entry'}
@@ -307,6 +315,12 @@ export class Video extends React.Component {
         python_call('clipboard', text)
             .then(() => this.props.onInfo('Copied to clipboard: ' + text))
             .catch(() => this.props.onInfo(`Cannot copy file title to clipboard: ${text}`));
+    }
+
+    copyFilePath() {
+        python_call('clipboard_video_path', this.props.data.video_id)
+            .then(() => this.props.onInfo('Copied to clipboard: ' + this.props.data.filename))
+            .catch(() => this.props.onInfo(`Cannot copy file title to clipboard: ${this.props.data.filename}`));
     }
 
     confirmMove(srcID, dstID) {

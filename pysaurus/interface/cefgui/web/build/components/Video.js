@@ -38,6 +38,7 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
           this.openContainingFolder = this.openContainingFolder.bind(this);
           this.copyMetaTitle = this.copyMetaTitle.bind(this);
           this.copyFileTitle = this.copyFileTitle.bind(this);
+          this.copyFilePath = this.copyFilePath.bind(this);
           this.renameVideo = this.renameVideo.bind(this);
           this.editProperties = this.editProperties.bind(this);
           this.onSelect = this.onSelect.bind(this);
@@ -91,7 +92,9 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
             action: this.copyMetaTitle
           }, "Copy meta title") : '', file_title ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.copyFileTitle
-          }, "Copy file title") : '', data.exists ? /*#__PURE__*/React.createElement(MenuItem, {
+          }, "Copy file title") : '', /*#__PURE__*/React.createElement(MenuItem, {
+            action: this.copyFilePath
+          }, "Copy path"), data.exists ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.renameVideo
           }, "Rename video") : '', data.exists ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.moveVideo
@@ -142,7 +145,7 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
             className: "prepend"
           }, /*#__PURE__*/React.createElement("code", null, "Quality")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, /*#__PURE__*/React.createElement("em", null, data.quality)), " %")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, data.width), " x ", /*#__PURE__*/React.createElement("strong", null, data.height), " @", " ", data.frame_rate, " fps, ", data.bit_depth, " bits | ", data.sample_rate, " Hz,", " ", /*#__PURE__*/React.createElement("span", {
             title: data.audio_bit_rate
-          }, audio_bit_rate, " Kb/s"), " |", " ", /*#__PURE__*/React.createElement("strong", null, data.length), " | ", /*#__PURE__*/React.createElement("code", null, data.date)), this.props.groupedByMoves && data.moves.length === 1 ? /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("button", {
+          }, audio_bit_rate, " Kb/s"), " |", " ", /*#__PURE__*/React.createElement("strong", null, data.length), " | ", /*#__PURE__*/React.createElement("code", null, data.date)), data.similarity_id !== null && data.similarity_id > -1 ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, "Similarity ID:"), " ", /*#__PURE__*/React.createElement("code", null, data.similarity_id)) : "", this.props.groupedByMoves && data.moves.length === 1 ? /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("button", {
             className: "block",
             onClick: () => this.confirmMove(data.video_id, data.moves[0].video_id)
           }, /*#__PURE__*/React.createElement("strong", null, "Confirm move to:"), /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("code", null, data.moves[0].filename))) : "")));
@@ -177,7 +180,9 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
             action: this.openContainingFolder
           }, "Open containing folder") : '', /*#__PURE__*/React.createElement(MenuItem, {
             action: this.copyFileTitle
-          }, "Copy file title"), data.exists ? /*#__PURE__*/React.createElement(MenuItem, {
+          }, "Copy file title"), /*#__PURE__*/React.createElement(MenuItem, {
+            action: this.copyFilePath
+          }, "Copy path"), data.exists ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.renameVideo
           }, "Rename video") : '', /*#__PURE__*/React.createElement(MenuItem, {
             className: "red-flag",
@@ -305,6 +310,10 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
         copyFileTitle() {
           const text = this.props.data.file_title;
           python_call('clipboard', text).then(() => this.props.onInfo('Copied to clipboard: ' + text)).catch(() => this.props.onInfo(`Cannot copy file title to clipboard: ${text}`));
+        }
+
+        copyFilePath() {
+          python_call('clipboard_video_path', this.props.data.video_id).then(() => this.props.onInfo('Copied to clipboard: ' + this.props.data.filename)).catch(() => this.props.onInfo(`Cannot copy file title to clipboard: ${this.props.data.filename}`));
         }
 
         confirmMove(srcID, dstID) {

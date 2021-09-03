@@ -5,8 +5,6 @@ import time
 from abc import abstractmethod
 from typing import Optional, Callable, Sequence, Dict
 
-import pyperclip
-
 from pysaurus.application import exceptions
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.file_copier import FileCopier
@@ -222,7 +220,11 @@ class GuiAPI(FeatureAPI):
 
     @staticmethod
     def clipboard(text):
-        pyperclip.copy(text)
+        # pyperclip.copy(text)
+        tk_utils.clipboard_set(text)
+
+    def clipboard_video_path(self, video_id):
+        tk_utils.clipboard_set(self.database.get_from_id(video_id).filename.path)
 
     @staticmethod
     def select_directory(default=None):
