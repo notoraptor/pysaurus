@@ -1,7 +1,5 @@
 export function python_call(name, ...args) {
-    return new Promise((resolve, reject) => {
-        python.call(name, args, resolve, reject);
-    });
+    return window.backend_call(name, args);
 }
 
 export function backend_error(error) {

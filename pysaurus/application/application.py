@@ -18,9 +18,9 @@ from pysaurus.database.database import Database
 
 class Application:
     lang = None
+    app_name = "Pysaurus"
 
     def __init__(self, notifier=DEFAULT_NOTIFIER):
-        self.app_name = "Pysaurus"
         self.home_dir = AbsolutePath(str(Path.home()))
         self.app_dir = AbsolutePath.join(self.home_dir, f".{self.app_name}").mkdir()
         self.dbs_dir = AbsolutePath.join(self.app_dir, "databases").mkdir()

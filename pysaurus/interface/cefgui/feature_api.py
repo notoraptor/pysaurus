@@ -53,10 +53,11 @@ class FeatureAPI:
 
     # Constant getters.
 
-    def get_constants(self):
+    @staticmethod
+    def get_constants():
         return {
             "PYTHON_DEFAULT_SOURCES": SourceLayer.DEFAULT_SOURCE_DEF,
-            "PYTHON_APP_NAME": self.application.app_name,
+            "PYTHON_APP_NAME": Application.app_name,
         }
 
     def list_databases(self):

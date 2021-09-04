@@ -4,7 +4,7 @@ from pysaurus.interface.server.connection_handler import ConnectionHandler
 
 
 class ConnectionManager:
-    __slots__ = ('__id_to_connection', '__connection_to_id', '__next_id')
+    __slots__ = ("__id_to_connection", "__connection_to_id", "__next_id")
     __id_to_connection: Dict[int, ConnectionHandler]
     __connection_to_id: Dict[ConnectionHandler, int]
     __next_id: int
@@ -15,11 +15,12 @@ class ConnectionManager:
         self.__next_id = 0
 
     def _add_connection(self, connection_handler):
-        # type: (ConnectionHandler) -> None
+        # type: (ConnectionHandler) -> int
         if connection_handler not in self.__connection_to_id:
             self.__connection_to_id[connection_handler] = self.__next_id
             self.__id_to_connection[self.__next_id] = connection_handler
             self.__next_id += 1
+        return self.__connection_to_id[connection_handler]
 
     def _remove_connection(self, connection_handler):
         # type: (ConnectionHandler) -> None

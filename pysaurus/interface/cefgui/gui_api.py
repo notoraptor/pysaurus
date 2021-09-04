@@ -26,7 +26,7 @@ from pysaurus.interface.cefgui.parallel_notifier import ParallelNotifier
 
 
 class GuiAPI(FeatureAPI):
-    def __init__(self):
+    def __init__(self, monitor_notifications=True):
         self.multiprocessing_manager = multiprocessing.Manager()
         super().__init__(ParallelNotifier(self.multiprocessing_manager.Queue()))
         self.monitor_thread = None  # type: Optional[threading.Thread]
@@ -34,6 +34,7 @@ class GuiAPI(FeatureAPI):
         self.threads_stop_flag = False
         self.copy_work: Optional[FileCopier] = None
         self.notifier.call_default_if_no_manager()
+        self.monitor_notifications = monitor_notifications
 
     def create_database(self, name, folders, update):
         self._launch(self._create_database, args=(name, folders, update))
@@ -111,7 +112,8 @@ class GuiAPI(FeatureAPI):
             run = function
 
         # Launch monitor thread.
-        self.monitor_thread = launch_thread(self._monitor_notifications)
+        if self.monitor_notifications:
+            self.monitor_thread = launch_thread(self._monitor_notifications)
         # Then launch function.
         self.db_loading_thread = launch_thread(run, *args, **kwargs)
 
