@@ -1,5 +1,3 @@
-console.log("Hwllo world.");
-
 /* pywebview backend. */
 window.addEventListener('pywebviewready', function() {
     console.log("Pywebview loaded.");
