@@ -83,7 +83,7 @@ class PotentialMoveAttribute(DbVideoAttribute):
         self.potential_moves.clear()
         groups = {}
         for video in self.database.get_readable_videos():
-            key = (video.filename.get_basename(), video.file_size)
+            key = (video.file_size, video.duration, video.duration_time_base)
             groups.setdefault(key, ([], []))[video.exists].append(video)
         move_id = 0
         for not_found, found in groups.values():
