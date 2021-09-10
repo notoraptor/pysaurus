@@ -75,9 +75,6 @@ System.register([], function (_export, _context) {
 
       _export("SetInput", SetInput = class SetInput extends React.Component {
         constructor(props) {
-          // controller: SetController
-          // identifier? str
-          // values
           super(props);
           this.state = {
             add: this.props.values ? this.props.values[0] : ''
@@ -91,7 +88,7 @@ System.register([], function (_export, _context) {
 
         render() {
           return /*#__PURE__*/React.createElement("div", {
-            className: "set-input"
+            className: `set-input ${this.props.className || ''}`
           }, /*#__PURE__*/React.createElement("table", {
             className: "first-td-text-right"
           }, /*#__PURE__*/React.createElement("tbody", null, this.renderList(), /*#__PURE__*/React.createElement("tr", {
@@ -111,7 +108,7 @@ System.register([], function (_export, _context) {
           }, this.props.identifier ? {
             id: this.props.identifier
           } : {}))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
-            className: "add",
+            className: "add block",
             onClick: this.onAdd
           }, "+"))))));
         }
@@ -127,7 +124,7 @@ System.register([], function (_export, _context) {
               className: "item",
               key: i
             }, /*#__PURE__*/React.createElement("td", null, value.toString()), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
-              className: "remove",
+              className: "remove block",
               onClick: () => this.remove(value)
             }, "-"))));
           }
@@ -175,6 +172,13 @@ System.register([], function (_export, _context) {
         }
 
       });
+
+      SetInput.propTypes = {
+        controller: PropTypes.instanceOf(SetController),
+        identifier: PropTypes.string,
+        values: PropTypes.array,
+        className: PropTypes.string
+      };
     }
   };
 });

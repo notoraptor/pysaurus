@@ -3,7 +3,7 @@ System.register([], function (_export, _context) {
 
   function Menu(props) {
     return /*#__PURE__*/React.createElement("div", {
-      className: "menu"
+      className: "menu position-relative"
     }, /*#__PURE__*/React.createElement("div", {
       className: "title horizontal"
     }, /*#__PURE__*/React.createElement("div", {

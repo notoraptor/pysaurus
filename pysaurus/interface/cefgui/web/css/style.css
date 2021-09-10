@@ -1,0 +1,105 @@
+/* Cell. */
+
+.cell-center {
+	align-items: center;
+}
+
+/* Properties classification path. */
+
+.path-step {
+	background-color: white;
+}
+
+.path-menu {
+	background-color: gray;
+}
+
+/* Dialog. */
+
+.dialog > .buttons {
+	border-top: 1px solid gray;
+}
+
+.dialog > .buttons .button button {
+	text-transform: uppercase;
+}
+
+.dialog > .buttons .button.yes button {
+	color: green;
+}
+
+.dialog > .buttons .button.no button {
+	color: red;
+}
+
+/** Fancy box. **/
+
+.fancybox-wrapper {
+	background-color: rgba(245, 250, 255, 0.2);
+}
+
+.fancybox {
+	position: absolute;
+	top: 25%;
+	bottom: 25%;
+	left: 25%;
+	right: 25%;
+	border: 1px solid gray;
+	box-shadow: 0 0 25px black;
+	background-color: white;
+}
+
+.fancybox-header {
+	border-bottom: 1px solid gray;
+}
+
+.fancybox-title {
+	vertical-align: middle;
+}
+
+/** Navigation. **/
+
+.navigation {
+	white-space: nowrap;
+}
+
+.navigation > * + * {
+	margin-left: 0.5rem;
+}
+
+.navigation .go:hover {
+	color: gray;
+	text-decoration: underline;
+}
+
+/** SetInput. **/
+
+.set-input {
+	display: inline-block;
+	border: 1px solid rgb(220, 220, 220);
+	box-shadow: 0 0 5px gray;
+}
+
+.set-input table {
+	width: 100%;
+}
+
+.set-input td {
+	padding: 0.1rem;
+}
+
+.set-input td:first-child {
+	padding-right: 0.5rem;
+}
+
+.set-input td button.add {
+	color: green;
+}
+
+.set-input td button.remove {
+	color: red;
+}
+
+.set-input td input {
+	width: 100%;
+}

@@ -3,7 +3,7 @@ System.register([], function (_export, _context) {
 
   function MenuPack(props) {
     return /*#__PURE__*/React.createElement("div", {
-      className: "menu-pack"
+      className: "menu-pack clickable position-relative"
     }, /*#__PURE__*/React.createElement("div", {
       className: "title"
     }, /*#__PURE__*/React.createElement("div", {

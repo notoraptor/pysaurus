@@ -16,12 +16,13 @@ export class FormDatabaseRename extends React.Component {
     render() {
         return (
             <Dialog title={`Rename database "${this.props.title}"`} yes="rename" action={this.onClose}>
-                <div className="form-rename">
+                <div className="form-rename text-center">
                     <h1>Rename database</h1>
                     <h2><code id="filename">{this.props.title}</code></h2>
                     <p className="form">
                         <input type="text"
                                id="name"
+                               className="block"
                                value={this.state.title}
                                onChange={this.onChange}
                                onKeyDown={this.onKeyDown}

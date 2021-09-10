@@ -60,20 +60,18 @@ export class FormVideosSource extends React.Component {
     render() {
         return (
             <FancyBox title="Select Videos">
-                <div className="form-source-video">
-                    {this.renderTree(this.props.tree)}
-                    <p>Currently selected:{this.state.paths.length ? '' : ' None'}</p>
-                    {this.state.paths.length ? (
-                        <ul>
-                            {this.state.paths.map((path, index) => (
-                                <li key={index}><strong>{path.replace(/-/g, '.')}</strong></li>
-                            ))}
-                        </ul>
-                    ) : ''}
-                    <p className="submit">
-                        <button className="submit" onClick={this.submit}>select</button>
-                    </p>
-                </div>
+                {this.renderTree(this.props.tree)}
+                <p>Currently selected:{this.state.paths.length ? '' : ' None'}</p>
+                {this.state.paths.length ? (
+                    <ul>
+                        {this.state.paths.map((path, index) => (
+                            <li key={index}><strong>{path.replace(/-/g, '.')}</strong></li>
+                        ))}
+                    </ul>
+                ) : ''}
+                <p className="submit mx-1 my-4">
+                    <button className="submit block" onClick={this.submit}>select</button>
+                </p>
             </FancyBox>
         );
     }

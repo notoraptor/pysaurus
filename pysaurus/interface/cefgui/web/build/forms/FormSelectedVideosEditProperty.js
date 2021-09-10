@@ -58,11 +58,11 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js", "../utils/cons
             yes: "edit",
             action: this.onClose
           }, /*#__PURE__*/React.createElement("div", {
-            className: "form-property-multi-video vertical"
+            className: "form-selected-videos-edit-property vertical flex-grow-1 text-center"
           }, /*#__PURE__*/React.createElement("div", {
-            className: "bar titles horizontal"
+            className: "bar titles flex-shrink-0 horizontal bold"
           }, /*#__PURE__*/React.createElement("div", null, "To remove"), /*#__PURE__*/React.createElement("div", null, "Current"), /*#__PURE__*/React.createElement("div", null, "To add")), /*#__PURE__*/React.createElement("div", {
-            className: "bar panels horizontal"
+            className: "bar panels horizontal flex-grow-1"
           }, /*#__PURE__*/React.createElement("div", {
             className: "remove"
           }, this.renderRemove()), /*#__PURE__*/React.createElement("div", {
@@ -70,14 +70,14 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js", "../utils/cons
           }, this.renderCurrent()), /*#__PURE__*/React.createElement("div", {
             className: "add"
           }, this.renderAdd())), /*#__PURE__*/React.createElement("div", {
-            className: "bar new all horizontal"
+            className: "bar new flex-shrink-0 all horizontal"
           }, this.state.remove.length > 1 ? /*#__PURE__*/React.createElement("div", {
             className: "horizontal"
           }, /*#__PURE__*/React.createElement("div", {
             className: "value"
-          }, "all ", this.state.remove.length, " values"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("button", {
+          }, "all ", this.state.remove.length, " values"), /*#__PURE__*/React.createElement("button", {
             onClick: this.unRemoveAll
-          }, Characters.SMART_ARROW_RIGHT))) : /*#__PURE__*/React.createElement("div", null), this.state.current.length > 1 ? /*#__PURE__*/React.createElement("div", {
+          }, Characters.SMART_ARROW_RIGHT)) : /*#__PURE__*/React.createElement("div", null), this.state.current.length > 1 ? /*#__PURE__*/React.createElement("div", {
             className: "horizontal"
           }, /*#__PURE__*/React.createElement("button", {
             onClick: this.removeAll
@@ -100,9 +100,9 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js", "../utils/cons
             className: "entry horizontal"
           }, /*#__PURE__*/React.createElement("div", {
             className: "value"
-          }, value), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("button", {
+          }, value), /*#__PURE__*/React.createElement("button", {
             onClick: () => this.unRemove(value)
-          }, Characters.SMART_ARROW_RIGHT))));
+          }, Characters.SMART_ARROW_RIGHT)));
         }
 
         renderCurrent() {
@@ -157,11 +157,11 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js", "../utils/cons
           }
 
           return /*#__PURE__*/React.createElement("div", {
-            className: "bar new horizontal"
+            className: "bar new flex-shrink-0 horizontal"
           }, /*#__PURE__*/React.createElement("div", null), /*#__PURE__*/React.createElement("div", null), /*#__PURE__*/React.createElement("div", {
             className: "horizontal"
           }, /*#__PURE__*/React.createElement("div", null, input), /*#__PURE__*/React.createElement("button", {
-            className: "add-new-value",
+            className: "add-new-value flex-grow-1 ml-1",
             onClick: this.onAddNewValue
           }, "add")));
         }

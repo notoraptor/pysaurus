@@ -46,7 +46,7 @@ System.register(["../utils/constants.js", "../dialogs/Dialog.js"], function (_ex
             yes: "group",
             action: this.onClose
           }, /*#__PURE__*/React.createElement("table", {
-            className: "form-group first-td-text-right"
+            className: "from-videos-grouping first-td-text-right w-100"
           }, /*#__PURE__*/React.createElement("tbody", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
             className: "label"
           }, "Field type"), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("input", {
@@ -70,6 +70,7 @@ System.register(["../utils/constants.js", "../dialogs/Dialog.js"], function (_ex
           }, /*#__PURE__*/React.createElement("label", {
             htmlFor: "group-field"
           }, "Field")), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("select", {
+            className: "block",
             id: "group-field",
             value: this.state.field,
             onChange: this.onChangeGroupField
@@ -93,6 +94,7 @@ System.register(["../utils/constants.js", "../dialogs/Dialog.js"], function (_ex
           }, /*#__PURE__*/React.createElement("label", {
             htmlFor: "group-sorting"
           }, "Sort using:")), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("select", {
+            className: "block",
             id: "group-sorting",
             value: this.state.sorting,
             onChange: this.onChangeSorting

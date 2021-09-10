@@ -22,9 +22,9 @@ System.register(["../utils/constants.js"], function (_export, _context) {
         render() {
           const lite = this.props.lite !== undefined ? this.props.lite : true;
           return /*#__PURE__*/React.createElement("div", {
-            className: `${lite ? "collapsable" : "stack"} ${this.props.className || {}}`
+            className: `abstract-collapsable ${lite ? "collapsable" : "stack"} ${this.props.className || ''}`
           }, /*#__PURE__*/React.createElement("div", {
-            className: "header horizontal",
+            className: "header clickable horizontal",
             onClick: this.stack
           }, /*#__PURE__*/React.createElement("div", {
             className: "title"

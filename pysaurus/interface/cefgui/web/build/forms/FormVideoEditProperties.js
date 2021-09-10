@@ -41,7 +41,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../utils/
             yes: "save",
             action: this.onClose
           }, /*#__PURE__*/React.createElement("div", {
-            className: "form-set-properties horizontal"
+            className: "form-video-edit-properties horizontal"
           }, /*#__PURE__*/React.createElement("div", {
             className: "info"
           }, /*#__PURE__*/React.createElement("div", {
@@ -52,13 +52,13 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../utils/
           }) : /*#__PURE__*/React.createElement("div", {
             className: "no-thumbnail"
           }, "no thumbnail")), /*#__PURE__*/React.createElement("div", {
-            className: "filename mb-1"
+            className: "filename p-1 mb-1"
           }, /*#__PURE__*/React.createElement("code", null, data.filename)), data.title === data.file_title ? '' : /*#__PURE__*/React.createElement("div", {
             className: "title mb-1"
           }, /*#__PURE__*/React.createElement("em", null, data.title))), /*#__PURE__*/React.createElement("div", {
-            className: "properties"
+            className: "properties flex-grow-1"
           }, /*#__PURE__*/React.createElement("table", {
-            className: "first-td-text-right"
+            className: "first-td-text-right w-100"
           }, this.props.definitions.map((def, index) => {
             const name = def.name;
             let input;

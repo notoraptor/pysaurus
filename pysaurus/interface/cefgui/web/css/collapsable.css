@@ -1,12 +1,16 @@
-.collapsable {
+.abstract-collapsable > .header > .title {
+	flex-grow: 1;
+}
+
+.abstract-collapsable > .header > .icon {
+	font-size: 0.8rem;
 }
 
 .collapsable > .header {
-	cursor: pointer;
 	border: 1px solid rgba(240, 240, 240, 0.5);
 	background: linear-gradient(rgba(240, 240, 240, 0.5), rgba(240, 240, 240, 0.5), rgba(220, 220, 220, 0.5));
-	padding-left: 0.2em;
-	padding-right: 0.2em;
+	padding-left: 0.2rem;
+	padding-right: 0.2rem;
 }
 
 .collapsable > .header:hover {
@@ -16,23 +20,14 @@
 .collapsable > .header > .title {
 	font-weight: bold;
 	text-align: center;
-	flex-grow: 1;
-}
-
-.collapsable > .header > .icon {
-	font-size: 0.8em;
 }
 
 .collapsable > .content {
-	padding-top: 0.5em;
-	padding-bottom: 0.5em;
-}
-
-.stack {
+	padding-top: 0.5rem;
+	padding-bottom: 0.5rem;
 }
 
 .stack > .header {
-	cursor: pointer;
 	border-top: 1px solid rgb(210, 210, 210);
 	border-bottom: 1px solid rgb(210, 210, 210);
 	background: linear-gradient(rgb(240, 240, 240), rgb(240, 240, 240), rgb(220, 220, 220));
@@ -45,15 +40,7 @@
 }
 
 .stack > .header > div {
-	padding: 0.2em;
-}
-
-.stack > .header > .title {
-	flex-grow: 1;
-}
-
-.stack > .header > .icon {
-	font-size: 0.8em;
+	padding: 0.2rem;
 }
 
 .stack > .content {

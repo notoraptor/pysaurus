@@ -62,9 +62,6 @@ export class ComponentController extends SetController {
 
 export class SetInput extends React.Component {
     constructor(props) {
-        // controller: SetController
-        // identifier? str
-        // values
         super(props);
         this.state = {add: this.props.values ? this.props.values[0] : ''};
         this.onChangeAdd = this.onChangeAdd.bind(this);
@@ -76,7 +73,7 @@ export class SetInput extends React.Component {
 
     render() {
         return (
-            <div className="set-input">
+            <div className={`set-input ${this.props.className || ''}`}>
                 <table className="first-td-text-right">
                     <tbody>
                     {this.renderList()}
@@ -97,7 +94,7 @@ export class SetInput extends React.Component {
                                        {...(this.props.identifier ? {id: this.props.identifier} : {})}/>
                             )}
                         </td>
-                        <td><button className="add" onClick={this.onAdd}>+</button></td>
+                        <td><button className="add block" onClick={this.onAdd}>+</button></td>
                     </tr>
                     </tbody>
                 </table>
@@ -114,7 +111,7 @@ export class SetInput extends React.Component {
             output.push(
                 <tr className="item" key={i}>
                     <td>{value.toString()}</td>
-                    <td><button className="remove" onClick={() => this.remove(value)}>-</button></td>
+                    <td><button className="remove block" onClick={() => this.remove(value)}>-</button></td>
                 </tr>
             );
         }
@@ -158,4 +155,10 @@ export class SetInput extends React.Component {
             window.alert(e.toString());
         }
     }
+}
+SetInput.propTypes = {
+    controller: PropTypes.instanceOf(SetController),
+    identifier: PropTypes.string,
+    values: PropTypes.array,
+    className: PropTypes.string
 }

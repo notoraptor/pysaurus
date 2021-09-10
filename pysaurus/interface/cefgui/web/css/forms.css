@@ -1,0 +1,121 @@
+.form-rename h2 {
+	word-break: break-all;
+}
+
+.form-database-edit-folders table {
+	width: 50%;
+	margin: auto;
+}
+
+.form-database-edit-folders table td {
+	padding: 0.25rem;
+	width: 50%;
+	vertical-align: top;
+}
+
+.form-database-edit-folders .paths {
+	border: 1px solid gray;
+	background-color: lightgrey;
+}
+
+.form-delete-video .details {
+	word-break: break-all;
+	color: rgb(250, 140, 140);
+	border: 1px solid rgb(250, 240, 240);
+	background-color: rgb(250, 250, 250);
+	vertical-align: middle;
+	font-size: 1.25rem;
+}
+
+.form-property-edit-selected-values .bar {
+	border-bottom: 1px solid lightgrey;
+}
+
+.form-property-edit-selected-values .bar button {
+	margin: 0 0.5rem 0.5rem 0.5rem;
+	min-width: 10rem;
+}
+
+.form-property-edit-selected-values .bar button.selected {
+	text-transform: uppercase;
+}
+
+.form-property-edit-selected-values .form {
+	display: flex;
+	align-items: center;
+}
+
+.form-selected-videos-edit-property .bar {
+	justify-content: center;
+}
+
+.form-selected-videos-edit-property .bar > div {
+	width: 30%;
+	margin: 0.25rem;
+	overflow: auto;
+	border: 1px solid transparent;
+}
+
+.form-selected-videos-edit-property .panels > div {
+	border-color: lightgrey;
+}
+
+.form-selected-videos-edit-property .panels .entry + .entry {
+	margin-top: 0.1rem;
+}
+
+.form-selected-videos-edit-property .panels .value,
+.form-selected-videos-edit-property .all .value {
+	flex-grow: 1;
+}
+
+.form-video-edit-properties .info {
+	padding-right: 1rem;
+	width: 300px;
+	text-align: center;
+	word-break: break-word;
+}
+
+.form-video-edit-properties .filename {
+	border: 1px solid black;
+}
+
+.form-video-edit-properties > .properties > table > tr > td {
+	vertical-align: top;
+	padding: 0.25rem;
+}
+
+.form-video-edit-properties > .properties > table > tr > td.label {
+	width: 40%;
+}
+
+.form-video-edit-properties > .properties > table > tr > td.input {
+	width: 60%;
+}
+
+.form-video-edit-properties > .properties > table > tr > td.input > input,
+.form-video-edit-properties > .properties > table > tr > td.input > select,
+.form-video-edit-properties > .properties > table > tr > td.input > .set-input {
+	width: 100%;
+}
+
+.from-videos-grouping td {
+	padding: 0.5rem;
+	width: 50%;
+}
+
+.form-videos-search label {
+	display: inline-block;
+	padding-left: 0.5rem;
+}
+
+#form-videos-sort > *,
+#form-videos-sort #sorting .sorting > * {
+	margin-left: 0.25rem;
+	margin-right: 0.25rem;
+}
+
+#form-videos-sort #sorting {
+	border: 1px solid gray;
+	padding: 0.125rem;
+}

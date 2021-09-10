@@ -23,40 +23,41 @@ export class DatabasesPage extends React.Component {
         const paths = Array.from(this.state.paths);
         paths.sort();
         return (
-            <div id="databases">
+            <div id="databases" className="text-center">
                 <h1>Welcome to {window.PYTHON_APP_NAME}</h1>
-                <table>
+                <table className="w-100 table-layout-fixed">
                     <tr>
                         <td>
                             <h2>Create a database</h2>
-                            <div className="padding">
+                            <div className="p-1">
                                 <input type="text"
+                                       className="w-100"
                                        value={this.state.name}
                                        onChange={this.onChangeName}
                                        placeholder="Database name."/>
                             </div>
                             <h3>Database folders and files</h3>
-                            <table>
+                            <table className="w-100 table-layout-fixed">
                                 <tr>
-                                    <td><button onClick={this.addFolder}>Add folder</button></td>
-                                    <td><button onClick={this.addFile}>Add file</button></td>
+                                    <td><button className="block" onClick={this.addFolder}>Add folder</button></td>
+                                    <td><button className="block" onClick={this.addFile}>Add file</button></td>
                                 </tr>
                             </table>
-                            <table>{paths.map((path, index) => (
+                            <table className="w-100 table-layout-fixed">{paths.map((path, index) => (
                                 <tr key={index}>
                                     <td><code>{path}</code></td>
                                     <td>
-                                        <button onClick={() => this.removePath(path)}>-</button>
+                                        <button className="block" onClick={() => this.removePath(path)}>-</button>
                                     </td>
                                 </tr>
                             ))}</table>
-                            <div className="padding">
-                                <button onClick={this.createDatabase}>create database</button>
+                            <div className="p-1">
+                                <button className="block" onClick={this.createDatabase}>create database</button>
                             </div>
                         </td>
                         <td>
                             <h2>Open a database ({this.props.parameters.databases.length} available)</h2>
-                            <div className="padding">
+                            <div className="p-1">
                                 <input type="checkbox"
                                        id="update"
                                        checked={this.state.update}
@@ -66,8 +67,8 @@ export class DatabasesPage extends React.Component {
                             </div>
                             <h3>Click on a database to open it</h3>
                             {this.props.parameters.databases.map((database, index) => (
-                                <div className="padding" key={index}>
-                                    <button onClick={() => this.openDatabase(database.path)}>{database.name}</button>
+                                <div className="p-1" key={index}>
+                                    <button className="block" onClick={() => this.openDatabase(database.path)}>{database.name}</button>
                                 </div>
                             ))}
                         </td>

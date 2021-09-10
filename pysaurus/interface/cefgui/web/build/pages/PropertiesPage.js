@@ -3,8 +3,8 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
 
   var ComponentController, SetInput, Dialog, Cell, FormPropertyRename, backend_error, python_call, parsePropValString, PropertiesPage, DEFAULT_VALUES;
 
-  function getDefaultValue(propType) {
-    return DEFAULT_VALUES[propType].toString();
+  function getDefaultValue(propType, isEnum) {
+    return isEnum ? [] : DEFAULT_VALUES[propType].toString();
   }
 
   _export("PropertiesPage", void 0);
@@ -45,7 +45,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             name: '',
             type: defaultType,
             enumeration: true,
-            defaultValue: getDefaultValue(defaultType),
+            defaultValue: getDefaultValue(defaultType, true),
             multiple: false
           };
           this.back = this.back.bind(this);
@@ -65,32 +65,39 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
           return /*#__PURE__*/React.createElement("div", {
             id: "properties"
           }, /*#__PURE__*/React.createElement("h2", {
-            className: "horizontal"
+            className: "horizontal ml-1 mr-1"
           }, /*#__PURE__*/React.createElement("div", {
-            className: "back"
+            className: "back position-relative"
           }, /*#__PURE__*/React.createElement("button", {
+            className: "block bold h-100 px-4",
             onClick: this.back
           }, "\u2B9C")), /*#__PURE__*/React.createElement("div", {
-            className: "title"
+            className: "text-center flex-grow-1"
           }, "Properties Management")), /*#__PURE__*/React.createElement("hr", null), /*#__PURE__*/React.createElement("div", {
             className: "content horizontal"
           }, /*#__PURE__*/React.createElement("div", {
-            className: "list"
-          }, /*#__PURE__*/React.createElement("h3", null, "Current properties"), this.renderPropTypes()), /*#__PURE__*/React.createElement("div", {
+            className: "list text-center"
+          }, /*#__PURE__*/React.createElement("h3", {
+            className: "text-center"
+          }, "Current properties"), this.renderPropTypes()), /*#__PURE__*/React.createElement("div", {
             className: "new"
-          }, /*#__PURE__*/React.createElement("h3", null, "Add a new property"), /*#__PURE__*/React.createElement("table", {
-            className: "first-td-text-right"
+          }, /*#__PURE__*/React.createElement("h3", {
+            className: "text-center"
+          }, "Add a new property"), /*#__PURE__*/React.createElement("table", {
+            className: "first-td-text-right w-100"
           }, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("label", {
             htmlFor: "prop-name"
           }, "Name:")), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("input", {
             type: "text",
             id: "prop-name",
+            className: "block",
             value: this.state.name,
             onChange: this.onChangeName
           }))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("label", {
             htmlFor: "prop-type"
           }, "Type:")), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("select", {
             id: "prop-type",
+            className: "block",
             value: this.state.type,
             onChange: this.onChangeType
           }, /*#__PURE__*/React.createElement("option", {
@@ -120,19 +127,23 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
           }, this.state.enumeration ? 'Enumeration values' + (this.state.multiple ? '' : ' (first is default)') : 'Default value')), /*#__PURE__*/React.createElement("td", null, this.renderDefaultInput())) : "", /*#__PURE__*/React.createElement("tr", {
             className: "buttons"
           }, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
-            className: "reset",
+            className: "reset block",
             onClick: this.reset
           }, "reset")), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
-            className: "submit",
+            className: "submit bold block",
             onClick: this.submit
           }, "add")))))));
         }
 
         renderPropTypes() {
-          return /*#__PURE__*/React.createElement("table", null, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Name"), /*#__PURE__*/React.createElement("th", null, "Type"), /*#__PURE__*/React.createElement("th", null, "Default"), /*#__PURE__*/React.createElement("th", null, "Options"))), /*#__PURE__*/React.createElement("tbody", null, this.state.definitions.map((def, index) => /*#__PURE__*/React.createElement("tr", {
+          return /*#__PURE__*/React.createElement("table", {
+            className: "w-100"
+          }, /*#__PURE__*/React.createElement("thead", {
+            className: "bold"
+          }, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Name"), /*#__PURE__*/React.createElement("th", null, "Type"), /*#__PURE__*/React.createElement("th", null, "Default"), /*#__PURE__*/React.createElement("th", null, "Options"))), /*#__PURE__*/React.createElement("tbody", null, this.state.definitions.map((def, index) => /*#__PURE__*/React.createElement("tr", {
             key: index
           }, /*#__PURE__*/React.createElement("td", {
-            className: "name"
+            className: "name bold"
           }, def.name), /*#__PURE__*/React.createElement("td", {
             className: "type"
           }, def.multiple ? /*#__PURE__*/React.createElement("span", null, "one or many\xA0") : '', /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("code", null, def.type), " value", def.multiple ? 's' : ''), def.enumeration ? /*#__PURE__*/React.createElement("span", null, "\xA0in ", '{', def.enumeration.join(', '), '}') : ''), /*#__PURE__*/React.createElement("td", {
@@ -148,7 +159,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
           }()), /*#__PURE__*/React.createElement("td", {
             className: "options"
           }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("button", {
-            className: "delete",
+            className: "delete red-flag",
             onClick: () => this.deleteProperty(def.name)
           }, "delete")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("button", {
             className: "rename",
@@ -166,6 +177,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
           if (this.state.enumeration) {
             const controller = new ComponentController(this, 'defaultValue', value => parsePropValString(this.state.type, null, value));
             return /*#__PURE__*/React.createElement(SetInput, {
+              className: "block",
               identifier: 'prop-default-' + this.state.type,
               controller: controller
             });
@@ -173,7 +185,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
 
           if (this.state.type === 'bool') {
             return /*#__PURE__*/React.createElement("select", {
-              className: "prop-default",
+              className: "prop-default block",
               id: "prop-default-bool",
               value: this.state.defaultValue,
               onChange: this.onChangeDefault
@@ -186,7 +198,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
 
           return /*#__PURE__*/React.createElement("input", {
             type: this.state.type === "int" ? "number" : "text",
-            className: "prop-default",
+            className: "prop-default block",
             id: 'prop-default-' + this.state.type,
             onChange: this.onChangeDefault,
             value: this.state.defaultValue
@@ -229,7 +241,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
 
         onChangeEnumeration(event) {
           const enumeration = event.target.checked;
-          const defaultValue = enumeration ? [] : getDefaultValue(this.state.type);
+          const defaultValue = getDefaultValue(this.state.type, enumeration);
           this.setState({
             enumeration,
             defaultValue

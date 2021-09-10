@@ -33,7 +33,7 @@ class FieldInfo {
 
 class FieldMap {
     /**
-     * Comparigon method for FieldInfo class.
+     * Comparison method for FieldInfo class.
      * @param f1 {FieldInfo}
      * @param f2 {FieldInfo}
      * @returns {number}

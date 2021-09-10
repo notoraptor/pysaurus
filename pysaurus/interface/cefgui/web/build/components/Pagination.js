@@ -37,7 +37,7 @@ System.register(["../forms/FormPaginationGoTo.js", "../dialogs/DialogSearch.js",
           const nbPages = this.props.nbPages;
           const pageNumber = this.props.pageNumber;
           return nbPages ? /*#__PURE__*/React.createElement("span", {
-            className: "navigation"
+            className: "navigation py-1 text-center"
           }, /*#__PURE__*/React.createElement("button", {
             className: "first",
             disabled: pageNumber === 0,
@@ -50,7 +50,7 @@ System.register(["../forms/FormPaginationGoTo.js", "../dialogs/DialogSearch.js",
             className: "go",
             onClick: this.look
           } : {}, capitalizeFirstLetter(singular)), /*#__PURE__*/React.createElement("span", {
-            className: "go",
+            className: "go clickable",
             onClick: this.go
           }, pageNumber + 1, "/", nbPages), /*#__PURE__*/React.createElement("button", {
             className: "next",
@@ -60,8 +60,8 @@ System.register(["../forms/FormPaginationGoTo.js", "../dialogs/DialogSearch.js",
             className: "last",
             disabled: pageNumber === nbPages - 1,
             onClick: this.onLast
-          }, ">>")) : /*#__PURE__*/React.createElement("div", {
-            className: "navigation status"
+          }, ">>")) : /*#__PURE__*/React.createElement("span", {
+            className: "navigation py-1 text-center"
           }, /*#__PURE__*/React.createElement("em", null, "0 ", plural));
         }
 

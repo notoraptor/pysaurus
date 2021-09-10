@@ -1,7 +1,7 @@
-System.register(["./pages/Test.js", "./pages/HomePage.js", "./pages/VideosPage.js", "./pages/PropertiesPage.js", "./utils/backend.js", "./pages/DatabasesPage.js", "./utils/constants.js"], function (_export, _context) {
+System.register(["./pages/Test.js", "./pages/HomePage.js", "./pages/VideosPage.js", "./pages/PropertiesPage.js", "./pages/DatabasesPage.js", "./utils/backend.js", "./utils/constants.js"], function (_export, _context) {
   "use strict";
 
-  var Test, HomePage, VideosPage, PropertiesPage, backend_error, python_call, DatabasesPage, VIDEO_DEFAULT_PAGE_NUMBER, VIDEO_DEFAULT_PAGE_SIZE, App;
+  var Test, HomePage, VideosPage, PropertiesPage, DatabasesPage, backend_error, python_call, VIDEO_DEFAULT_PAGE_NUMBER, VIDEO_DEFAULT_PAGE_SIZE, App;
 
   _export("App", void 0);
 
@@ -14,11 +14,11 @@ System.register(["./pages/Test.js", "./pages/HomePage.js", "./pages/VideosPage.j
       VideosPage = _pagesVideosPageJs.VideosPage;
     }, function (_pagesPropertiesPageJs) {
       PropertiesPage = _pagesPropertiesPageJs.PropertiesPage;
+    }, function (_pagesDatabasesPageJs) {
+      DatabasesPage = _pagesDatabasesPageJs.DatabasesPage;
     }, function (_utilsBackendJs) {
       backend_error = _utilsBackendJs.backend_error;
       python_call = _utilsBackendJs.python_call;
-    }, function (_pagesDatabasesPageJs) {
-      DatabasesPage = _pagesDatabasesPageJs.DatabasesPage;
     }, function (_utilsConstantsJs) {
       VIDEO_DEFAULT_PAGE_NUMBER = _utilsConstantsJs.VIDEO_DEFAULT_PAGE_NUMBER;
       VIDEO_DEFAULT_PAGE_SIZE = _utilsConstantsJs.VIDEO_DEFAULT_PAGE_SIZE;
@@ -38,9 +38,9 @@ System.register(["./pages/Test.js", "./pages/HomePage.js", "./pages/VideosPage.j
 
         render() {
           return /*#__PURE__*/React.createElement("div", {
-            className: "app vertical"
+            className: "flex-grow-1 vertical"
           }, /*#__PURE__*/React.createElement("main", {
-            className: "vertical"
+            className: "flex-grow-1 vertical"
           }, this.renderPage()));
         }
 

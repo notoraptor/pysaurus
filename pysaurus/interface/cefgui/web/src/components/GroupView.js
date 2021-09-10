@@ -35,9 +35,9 @@ export class GroupView extends React.Component {
         const allChecked = this.allChecked(start, end);
         console.log(`Rendering ${this.props.groupDef.groups.length} group(s).`);
         return (
-            <div className="group-view vertical">
-                <div className="header">
-                    <div className="title">{this.renderTitle()}</div>
+            <div className="group-view flex-grow-1 vertical">
+                <div className="header flex-shrink-0 text-center pt-2">
+                    <div className="title bold pb-2">{this.renderTitle()}</div>
                     <div>
                         <Pagination singular="page"
                                     plural="pages"
@@ -47,7 +47,7 @@ export class GroupView extends React.Component {
                                     onSearch={this.search}/>
                     </div>
                     {isProperty && !this.props.isClassified ? (
-                        <div className="selection line horizontal">
+                        <div className="selection line flex-shrink-0 horizontal">
                             <div className="column">
                                 <input id="group-view-select-all"
                                        type="checkbox"
@@ -68,9 +68,9 @@ export class GroupView extends React.Component {
                         </div>
                     ) : ''}
                 </div>
-                <div className="content">
+                <div className="content position-relative flex-grow-1 overflow-auto">
                     {this.props.groupDef.groups.length ? (
-                        <table className="second-td-text-right">
+                        <table className="second-td-text-right w-100 table-layout-fixed">
                             {this.props.groupDef.groups.slice(start, end).map((entry, index) => {
                                 index = start + index;
                                 const buttons = [];
@@ -94,10 +94,15 @@ export class GroupView extends React.Component {
                                     }
                                 }
                                 const classes = [isProperty ? "property" : "attribute"];
-                                if (selected === index)
+                                classes.push("clickable");
+                                if (selected === index) {
                                     classes.push("selected");
-                                if (entry.value === null)
+                                    classes.push("bold");
+                                }
+                                if (entry.value === null) {
                                     classes.push("all");
+                                    classes.push("bolder");
+                                }
                                 return (
                                     <tr className={classes.join(" ")}
                                         key={index}
@@ -113,7 +118,7 @@ export class GroupView extends React.Component {
                                 );
                             })}
                         </table>
-                    ) : <div className="absolute-plain no-groups vertical"><strong><em>No groups</em></strong></div>}
+                    ) : <div className="absolute-plain no-groups text-center vertical"><strong><em>No groups</em></strong></div>}
                 </div>
             </div>
         );

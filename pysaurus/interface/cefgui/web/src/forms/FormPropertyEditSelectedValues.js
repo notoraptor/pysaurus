@@ -30,24 +30,24 @@ export class FormPropertyEditSelectedValues extends React.Component {
             title = `Property "${this.props.name}", ${values.length} values"`;
         return (
             <Dialog title={title} yes={this.state.form} action={this.onClose}>
-                <div className="edit-property-value vertical">
-                    <div className="bar text-center">
-                        <button className={`delete ${this.state.form === 'delete' ? 'selected' : ''}`}
+                <div className="form-property-edit-selected-values vertical flex-grow-1">
+                    <div className="bar flex-shrink-0 text-center">
+                        <button className={`delete ${this.state.form === 'delete' ? 'selected bolder' : ''}`}
                                 onClick={this.setDelete}>
                             delete
                         </button>
-                        <button className={`edit ${this.state.form === 'edit' ? 'selected' : ''}`}
+                        <button className={`edit ${this.state.form === 'edit' ? 'selected bolder' : ''}`}
                                 onClick={this.setEdit}>
                             edit
                         </button>
                         {canMove ? (
-                            <button className={`move ${this.state.form === 'move' ? 'selected' : ''}`}
+                            <button className={`move ${this.state.form === 'move' ? 'selected bolder' : ''}`}
                                     onClick={this.setMove}>
                                 move
                             </button>
                         ) : ''}
                     </div>
-                    <div className={`form ${this.state.form}`}>
+                    <div className={`form position-relative flex-grow-1 text-center ${this.state.form}`}>
                         {this.renderForm()}
                     </div>
                 </div>
@@ -72,7 +72,7 @@ export class FormPropertyEditSelectedValues extends React.Component {
 
     renderDelete() {
         return (
-            <div>
+            <div className="flex-grow-1">
                 <h3>Are you sure you want to delete property value</h3>
                 <h3>"{this.props.name}" / {this.valuesToString()} ?</h3>
             </div>
@@ -106,7 +106,7 @@ export class FormPropertyEditSelectedValues extends React.Component {
                            onKeyDown={this.onEditKeyDown}/>;
         }
         return (
-            <div>
+            <div className="flex-grow-1">
                 <h3>Edit property "{this.props.name}" / {this.valuesToString()}</h3>
                 <div>{input}</div>
             </div>
@@ -116,7 +116,7 @@ export class FormPropertyEditSelectedValues extends React.Component {
     renderMove() {
         const def = this.props.properties[this.props.name];
         return (
-            <div>
+            <div className="flex-grow-1">
                 <h3>Move property "{this.props.name}" / {this.valuesToString()} to another property of type
                     "{def.type}".</h3>
                 <div>

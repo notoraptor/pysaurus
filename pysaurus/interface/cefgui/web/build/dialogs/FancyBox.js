@@ -26,16 +26,16 @@ System.register([], function (_export, _context) {
           }, /*#__PURE__*/React.createElement("div", {
             className: "fancybox vertical"
           }, /*#__PURE__*/React.createElement("div", {
-            className: "fancybox-header horizontal"
+            className: "fancybox-header flex-shrink-0 horizontal p-2"
           }, /*#__PURE__*/React.createElement("div", {
-            className: "fancybox-title",
+            className: "fancybox-title bold flex-grow-1 text-center",
             title: this.props.title
           }, this.props.title), /*#__PURE__*/React.createElement("div", {
-            className: "fancybox-close"
+            className: "pl-2"
           }, /*#__PURE__*/React.createElement("button", {
             onClick: this.onClose
           }, "\xD7"))), /*#__PURE__*/React.createElement("div", {
-            className: "fancybox-content"
+            className: "fancybox-content position-relative overflow-auto flex-grow-1 p-2"
           }, this.props.children)));
         }
 

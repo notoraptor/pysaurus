@@ -1,6 +1,6 @@
 export function MicroButton(props) {
     return (
-        <div className={"small-button " + props.type}
+        <div className={"small-button clickable bold text-center " + props.type}
              {...(props.title ? {title: props.title} : {})}
              {...(props.action ? {onClick: props.action} : {})}>
             {props.content}

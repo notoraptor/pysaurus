@@ -32,7 +32,7 @@ System.register(["../dialogs/Dialog.js"], function (_export, _context) {
             yes: "rename",
             action: this.onClose
           }, /*#__PURE__*/React.createElement("div", {
-            className: "form-rename"
+            className: "form-rename text-center"
           }, /*#__PURE__*/React.createElement("h1", null, "Rename video"), /*#__PURE__*/React.createElement("h2", null, /*#__PURE__*/React.createElement("code", {
             id: "filename"
           }, this.props.filename)), /*#__PURE__*/React.createElement("p", {
@@ -40,6 +40,7 @@ System.register(["../dialogs/Dialog.js"], function (_export, _context) {
           }, /*#__PURE__*/React.createElement("input", {
             type: "text",
             id: "name",
+            className: "block",
             value: this.state.title,
             onChange: this.onChange,
             onKeyDown: this.onKeyDown,

@@ -36,16 +36,23 @@ System.register(["../dialogs/Dialog.js", "../utils/backend.js"], function (_expo
             yes: "save",
             action: this.onClose
           }, /*#__PURE__*/React.createElement("div", {
-            className: "path-edition vertical"
-          }, /*#__PURE__*/React.createElement("table", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
+            className: "form-database-edit-folders vertical flex-grow-1"
+          }, /*#__PURE__*/React.createElement("table", {
+            className: "table-layout-fixed"
+          }, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
+            className: "block",
             onClick: this.addFolder
           }, "Add folder")), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
+            className: "block",
             onClick: this.addFile
           }, "Add file")))), /*#__PURE__*/React.createElement("div", {
-            className: "paths"
-          }, /*#__PURE__*/React.createElement("table", null, paths.map((path, index) => /*#__PURE__*/React.createElement("tr", {
+            className: "paths flex-grow-1 overflow-auto"
+          }, /*#__PURE__*/React.createElement("table", {
+            className: "table-layout-fixed"
+          }, paths.map((path, index) => /*#__PURE__*/React.createElement("tr", {
             key: index
           }, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("code", null, path)), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
+            className: "block",
             onClick: () => this.removePath(path)
           }, "-"))))))));
         }

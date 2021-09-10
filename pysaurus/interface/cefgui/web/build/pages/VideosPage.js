@@ -174,9 +174,9 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           const actions = this.features.actions;
           return /*#__PURE__*/React.createElement("div", {
             id: "videos",
-            className: "vertical"
+            className: "vertical flex-grow-1 p-4"
           }, /*#__PURE__*/React.createElement("header", {
-            className: "horizontal"
+            className: "horizontal flex-shrink-0"
           }, /*#__PURE__*/React.createElement(MenuPack, {
             title: "Database ..."
           }, /*#__PURE__*/React.createElement(MenuItem, {
@@ -194,11 +194,11 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             action: this.deleteDatabase
           }, "Delete database ...")), /*#__PURE__*/React.createElement(MenuPack, {
             title: "Properties ..."
-          }, stringSetProperties.length ? /*#__PURE__*/React.createElement(MenuItem, {
-            action: this.fillWithKeywords
-          }, "Put keywords into a property ...") : '', /*#__PURE__*/React.createElement(ActionToMenuItem, {
+          }, /*#__PURE__*/React.createElement(ActionToMenuItem, {
             action: actions.manageProperties
-          }), this.state.properties.length > 5 ? /*#__PURE__*/React.createElement(Menu, {
+          }), stringSetProperties.length ? /*#__PURE__*/React.createElement(MenuItem, {
+            action: this.fillWithKeywords
+          }, "Put keywords into a property ...") : '', this.state.properties.length > 5 ? /*#__PURE__*/React.createElement(Menu, {
             title: "Group videos by property ..."
           }, this.state.properties.map((def, index) => /*#__PURE__*/React.createElement(MenuItem, {
             key: index,
@@ -239,8 +239,6 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             checked: this.state.confirmDeletion,
             action: this.confirmDeletionForNotFound
           }, "confirm deletion for entries not found")), /*#__PURE__*/React.createElement("div", {
-            className: "buttons"
-          }), /*#__PURE__*/React.createElement("div", {
             className: "pagination text-right"
           }, /*#__PURE__*/React.createElement(Pagination, {
             singular: "page",
@@ -250,33 +248,36 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             key: this.state.pageNumber,
             onChange: this.changePage
           }))), /*#__PURE__*/React.createElement("div", {
-            className: "frontier"
+            className: "frontier block flex-shrink-0"
           }), /*#__PURE__*/React.createElement("div", {
-            className: "content horizontal"
+            className: "content position-relative horizontal flex-grow-1"
           }, /*#__PURE__*/React.createElement("div", {
             className: "side-panel vertical"
           }, /*#__PURE__*/React.createElement(Collapsable, {
             lite: false,
-            className: "filter",
+            className: "filter flex-shrink-0",
             title: "Filter"
           }, this.renderFilter()), this.state.path.length ? /*#__PURE__*/React.createElement(Collapsable, {
             lite: false,
-            className: "filter",
+            className: "filter flex-shrink-0",
             title: "Classifier path"
           }, stringProperties.length ? /*#__PURE__*/React.createElement("div", {
-            className: "path-menu"
+            className: "path-menu text-center p-2"
           }, /*#__PURE__*/React.createElement(MenuPack, {
             title: "Concatenate path into ..."
           }, stringProperties.map((def, i) => /*#__PURE__*/React.createElement(MenuItem, {
             key: i,
             action: () => this.classifierConcatenate(def.name)
-          }, def.name))), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("button", {
+          }, def.name))), /*#__PURE__*/React.createElement("div", {
+            className: "pt-2"
+          }, /*#__PURE__*/React.createElement("button", {
+            className: "block",
             onClick: this.classifierReversePath
           }, "reverse path"))) : '', this.state.path.map((value, index) => /*#__PURE__*/React.createElement("div", {
             key: index,
-            className: "path-step horizontal"
+            className: "path-step horizontal px-2 py-1"
           }, /*#__PURE__*/React.createElement("div", {
-            className: "title"
+            className: "flex-grow-1"
           }, value.toString()), index === this.state.path.length - 1 ? /*#__PURE__*/React.createElement("div", {
             className: "icon"
           }, /*#__PURE__*/React.createElement(Cross, {
@@ -284,7 +285,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             action: this.classifierUnstack
           })) : ''))) : '', groupDef ? /*#__PURE__*/React.createElement(Collapsable, {
             lite: false,
-            className: "group",
+            className: "group flex-grow-1",
             title: "Groups"
           }, /*#__PURE__*/React.createElement(GroupView, {
             groupDef: groupDef,
@@ -296,7 +297,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             onOptions: this.editPropertyValue,
             onPlus: groupDef.is_property && this.state.definitions[groupDef.field].multiple ? this.classifierSelectGroup : null
           })) : ''), /*#__PURE__*/React.createElement("div", {
-            className: "main-panel videos"
+            className: "main-panel videos overflow-auto"
           }, this.state.videos.map(data => /*#__PURE__*/React.createElement(Video, {
             key: data.video_id,
             data: data,
@@ -309,9 +310,9 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             confirmDeletion: this.state.confirmDeletion,
             groupedByMoves: groupedByMoves
           })))), /*#__PURE__*/React.createElement("footer", {
-            className: "horizontal"
+            className: "horizontal flex-shrink-0"
           }, /*#__PURE__*/React.createElement("div", {
-            className: "footer-status",
+            className: "footer-status clickable",
             onClick: this.resetStatus
           }, this.state.status), /*#__PURE__*/React.createElement("div", {
             className: "footer-information text-right"
@@ -337,7 +338,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           const sortingIsDefault = sorting.length === 1 && sorting[0] === '-date';
           const selectedAll = realNbVideos === selectionSize;
           return /*#__PURE__*/React.createElement("table", {
-            className: "filter"
+            className: "filter w-100"
           }, /*#__PURE__*/React.createElement("tbody", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, sources.map((source, index) => /*#__PURE__*/React.createElement("div", {
             key: index
           }, source.join(' ').replace('_', ' ')))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToSettingIcon, {
@@ -605,7 +606,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
 
         deleteDatabase() {
           Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
-            title: `Delete dabase ${this.state.database.name}`,
+            title: `Delete database ${this.state.database.name}`,
             yes: "DELETE",
             action: () => {
               python_call("delete_database").then(databases => this.props.app.dbHome(databases)).catch(backend_error);

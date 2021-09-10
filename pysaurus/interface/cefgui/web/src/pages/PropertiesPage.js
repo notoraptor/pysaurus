@@ -12,8 +12,8 @@ const DEFAULT_VALUES = {
     str: '',
 };
 
-function getDefaultValue(propType) {
-    return DEFAULT_VALUES[propType].toString();
+function getDefaultValue(propType, isEnum) {
+    return isEnum ? [] : DEFAULT_VALUES[propType].toString();
 }
 
 export class PropertiesPage extends React.Component {
@@ -28,7 +28,7 @@ export class PropertiesPage extends React.Component {
             name: '',
             type: defaultType,
             enumeration: true,
-            defaultValue: getDefaultValue(defaultType),
+            defaultValue: getDefaultValue(defaultType, true),
             multiple: false,
         };
         this.back = this.back.bind(this);
@@ -47,24 +47,25 @@ export class PropertiesPage extends React.Component {
     render() {
         return (
             <div id="properties">
-                <h2 className="horizontal">
-                    <div className="back"><button onClick={this.back}>&#11164;</button></div>
-                    <div className="title">Properties Management</div>
+                <h2 className="horizontal ml-1 mr-1">
+                    <div className="back position-relative"><button className="block bold h-100 px-4" onClick={this.back}>&#11164;</button></div>
+                    <div className="text-center flex-grow-1">Properties Management</div>
                 </h2>
                 <hr/>
                 <div className="content horizontal">
-                    <div className="list">
-                        <h3>Current properties</h3>
+                    <div className="list text-center">
+                        <h3 className="text-center">Current properties</h3>
                         {this.renderPropTypes()}
                     </div>
                     <div className="new">
-                        <h3>Add a new property</h3>
-                        <table className="first-td-text-right">
+                        <h3 className="text-center">Add a new property</h3>
+                        <table className="first-td-text-right w-100">
                             <tr>
                                 <td><label htmlFor="prop-name">Name:</label></td>
                                 <td>
                                     <input type="text"
                                            id="prop-name"
+                                           className="block"
                                            value={this.state.name}
                                            onChange={this.onChangeName}/>
                                 </td>
@@ -72,7 +73,7 @@ export class PropertiesPage extends React.Component {
                             <tr>
                                 <td><label htmlFor="prop-type">Type:</label></td>
                                 <td>
-                                    <select id="prop-type" value={this.state.type} onChange={this.onChangeType}>
+                                    <select id="prop-type" className="block" value={this.state.type} onChange={this.onChangeType}>
                                         <option value="bool">boolean</option>
                                         <option value="int">integer</option>
                                         <option value="float">floating number</option>
@@ -111,8 +112,8 @@ export class PropertiesPage extends React.Component {
                                 </tr>
                             ) : ""}
                             <tr className="buttons">
-                                <td><button className="reset" onClick={this.reset}>reset</button></td>
-                                <td><button className="submit" onClick={this.submit}>add</button></td>
+                                <td><button className="reset block" onClick={this.reset}>reset</button></td>
+                                <td><button className="submit bold block" onClick={this.submit}>add</button></td>
                             </tr>
                         </table>
                     </div>
@@ -123,8 +124,8 @@ export class PropertiesPage extends React.Component {
 
     renderPropTypes() {
         return (
-            <table>
-                <thead>
+            <table className="w-100">
+                <thead className="bold">
                 <tr>
                     <th>Name</th>
                     <th>Type</th>
@@ -135,7 +136,7 @@ export class PropertiesPage extends React.Component {
                 <tbody>
                 {this.state.definitions.map((def, index) => (
                     <tr key={index}>
-                        <td className="name">{def.name}</td>
+                        <td className="name bold">{def.name}</td>
                         <td className="type">
                             {def.multiple ? <span>one or many&nbsp;</span> : ''}
                             <span><code>{def.type}</code> value{def.multiple ? 's' : ''}</span>
@@ -156,7 +157,7 @@ export class PropertiesPage extends React.Component {
                         </td>
                         <td className="options">
                             <div>
-                                <button className="delete" onClick={() => this.deleteProperty(def.name)}>delete</button>
+                                <button className="delete red-flag" onClick={() => this.deleteProperty(def.name)}>delete</button>
                             </div>
                             <div>
                                 <button className="rename" onClick={() => this.renameProperty(def.name)}>rename</button>
@@ -188,11 +189,11 @@ export class PropertiesPage extends React.Component {
         if (this.state.enumeration) {
             const controller = new ComponentController(
                 this, 'defaultValue', value => parsePropValString(this.state.type, null, value));
-            return <SetInput identifier={'prop-default-' + this.state.type} controller={controller}/>;
+            return <SetInput className="block" identifier={'prop-default-' + this.state.type} controller={controller}/>;
         }
         if (this.state.type === 'bool') {
             return (
-                <select className="prop-default"
+                <select className="prop-default block"
                         id="prop-default-bool"
                         value={this.state.defaultValue}
                         onChange={this.onChangeDefault}>
@@ -202,7 +203,7 @@ export class PropertiesPage extends React.Component {
             );
         }
         return <input type={this.state.type === "int" ? "number" : "text"}
-                      className="prop-default"
+                      className="prop-default block"
                       id={'prop-default-' + this.state.type}
                       onChange={this.onChangeDefault}
                       value={this.state.defaultValue}/>;
@@ -236,7 +237,7 @@ export class PropertiesPage extends React.Component {
 
     onChangeEnumeration(event) {
         const enumeration = event.target.checked;
-        const defaultValue = enumeration ? [] : getDefaultValue(this.state.type);
+        const defaultValue = getDefaultValue(this.state.type, enumeration);
         this.setState({enumeration, defaultValue});
     }
 

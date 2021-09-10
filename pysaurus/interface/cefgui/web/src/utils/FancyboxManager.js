@@ -8,7 +8,7 @@ export class FancyboxManager {
     }
 
     static getFocusableElements() {
-        return [...document.querySelector(".app main").querySelectorAll(
+        return [...document.querySelector("main").querySelectorAll(
             'a, button, input, textarea, select, details, [tabindex]:not([tabindex="-1"])'
         )].filter(el => !el.hasAttribute('disabled'));
     }

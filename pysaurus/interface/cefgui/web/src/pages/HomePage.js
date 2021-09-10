@@ -27,8 +27,8 @@ function Monitoring(props) {
     const jobClassID = "job " + monitoring.name;
     return (
         <div className="job horizontal">
-            <label htmlFor={jobClassID} className="info">{current} done ({percent} %)</label>
-            <progress id={jobClassID} value={current} max={total}/>
+            <label htmlFor={jobClassID} className="pr-2">{current} done ({percent} %)</label>
+            <progress className="flex-grow-1" id={jobClassID} value={current} max={total}/>
         </div>
     );
 }
@@ -231,9 +231,9 @@ export class HomePage extends React.Component {
 
     render() {
         return (
-            <div id="home" className="vertical">
-                <div className="buttons">{this.renderInitialButton()}</div>
-                <div id="notifications" className="notifications">{this.renderMessages()}</div>
+            <div id="home" className="flex-grow-1 p-4 vertical">
+                <div className="text-center p-2">{this.renderInitialButton()}</div>
+                <div id="notifications" className="notifications flex-grow-1 overflow-auto">{this.renderMessages()}</div>
             </div>
         );
     }

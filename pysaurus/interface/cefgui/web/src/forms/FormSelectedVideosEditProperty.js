@@ -43,24 +43,22 @@ export class FormSelectedVideosEditProperty extends React.Component {
             <Dialog title={`Edit property "${propName}" for ${nbVideos} video${nbVideos < 2 ? '' : 's'}`}
                     yes="edit"
                     action={this.onClose}>
-                <div className="form-property-multi-video vertical">
-                    <div className="bar titles horizontal">
+                <div className="form-selected-videos-edit-property vertical flex-grow-1 text-center">
+                    <div className="bar titles flex-shrink-0 horizontal bold">
                         <div>To remove</div>
                         <div>Current</div>
                         <div>To add</div>
                     </div>
-                    <div className="bar panels horizontal">
+                    <div className="bar panels horizontal flex-grow-1">
                         <div className="remove">{this.renderRemove()}</div>
                         <div className="current">{this.renderCurrent()}</div>
                         <div className="add">{this.renderAdd()}</div>
                     </div>
-                    <div className="bar new all horizontal">
+                    <div className="bar new flex-shrink-0 all horizontal">
                         {this.state.remove.length > 1 ? (
                             <div className="horizontal">
                                 <div className="value">all {this.state.remove.length} values</div>
-                                <div>
-                                    <button onClick={this.unRemoveAll}>{Characters.SMART_ARROW_RIGHT}</button>
-                                </div>
+                                <button onClick={this.unRemoveAll}>{Characters.SMART_ARROW_RIGHT}</button>
                             </div>
                         ) : <div/>}
                         {this.state.current.length > 1 ? (
@@ -89,9 +87,7 @@ export class FormSelectedVideosEditProperty extends React.Component {
         return this.state.remove.map((value, index) => (
             <div key={index} className="entry horizontal">
                 <div className="value">{value}</div>
-                <div>
-                    <button onClick={() => this.unRemove(value)}>{Characters.SMART_ARROW_RIGHT}</button>
-                </div>
+                <button onClick={() => this.unRemove(value)}>{Characters.SMART_ARROW_RIGHT}</button>
             </div>
         ));
     }
@@ -140,12 +136,12 @@ export class FormSelectedVideosEditProperty extends React.Component {
                            onKeyDown={this.onEditKeyDown}/>;
         }
         return (
-            <div className="bar new horizontal">
+            <div className="bar new flex-shrink-0 horizontal">
                 <div/>
                 <div/>
                 <div className="horizontal">
                     <div>{input}</div>
-                    <button className="add-new-value" onClick={this.onAddNewValue}>add</button>
+                    <button className="add-new-value flex-grow-1 ml-1" onClick={this.onAddNewValue}>add</button>
                 </div>
             </div>
         );

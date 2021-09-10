@@ -41,20 +41,20 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js"], function (_ex
             yes: this.state.form,
             action: this.onClose
           }, /*#__PURE__*/React.createElement("div", {
-            className: "edit-property-value vertical"
+            className: "form-property-edit-selected-values vertical flex-grow-1"
           }, /*#__PURE__*/React.createElement("div", {
-            className: "bar text-center"
+            className: "bar flex-shrink-0 text-center"
           }, /*#__PURE__*/React.createElement("button", {
-            className: `delete ${this.state.form === 'delete' ? 'selected' : ''}`,
+            className: `delete ${this.state.form === 'delete' ? 'selected bolder' : ''}`,
             onClick: this.setDelete
           }, "delete"), /*#__PURE__*/React.createElement("button", {
-            className: `edit ${this.state.form === 'edit' ? 'selected' : ''}`,
+            className: `edit ${this.state.form === 'edit' ? 'selected bolder' : ''}`,
             onClick: this.setEdit
           }, "edit"), canMove ? /*#__PURE__*/React.createElement("button", {
-            className: `move ${this.state.form === 'move' ? 'selected' : ''}`,
+            className: `move ${this.state.form === 'move' ? 'selected bolder' : ''}`,
             onClick: this.setMove
           }, "move") : ''), /*#__PURE__*/React.createElement("div", {
-            className: `form ${this.state.form}`
+            className: `form position-relative flex-grow-1 text-center ${this.state.form}`
           }, this.renderForm())));
         }
 
@@ -76,7 +76,9 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js"], function (_ex
         }
 
         renderDelete() {
-          return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h3", null, "Are you sure you want to delete property value"), /*#__PURE__*/React.createElement("h3", null, "\"", this.props.name, "\" / ", this.valuesToString(), " ?"));
+          return /*#__PURE__*/React.createElement("div", {
+            className: "flex-grow-1"
+          }, /*#__PURE__*/React.createElement("h3", null, "Are you sure you want to delete property value"), /*#__PURE__*/React.createElement("h3", null, "\"", this.props.name, "\" / ", this.valuesToString(), " ?"));
         }
 
         renderEdit() {
@@ -111,12 +113,16 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js"], function (_ex
             });
           }
 
-          return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h3", null, "Edit property \"", this.props.name, "\" / ", this.valuesToString()), /*#__PURE__*/React.createElement("div", null, input));
+          return /*#__PURE__*/React.createElement("div", {
+            className: "flex-grow-1"
+          }, /*#__PURE__*/React.createElement("h3", null, "Edit property \"", this.props.name, "\" / ", this.valuesToString()), /*#__PURE__*/React.createElement("div", null, input));
         }
 
         renderMove() {
           const def = this.props.properties[this.props.name];
-          return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h3", null, "Move property \"", this.props.name, "\" / ", this.valuesToString(), " to another property of type \"", def.type, "\"."), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("select", {
+          return /*#__PURE__*/React.createElement("div", {
+            className: "flex-grow-1"
+          }, /*#__PURE__*/React.createElement("h3", null, "Move property \"", this.props.name, "\" / ", this.valuesToString(), " to another property of type \"", def.type, "\"."), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("select", {
             value: this.state.move,
             onChange: this.onMove
           }, this.state.otherDefinitions.map((other, index) => /*#__PURE__*/React.createElement("option", {

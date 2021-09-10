@@ -132,8 +132,8 @@ export class VideosPage extends React.Component {
         const actions = this.features.actions;
 
         return (
-            <div id="videos" className="vertical">
-                <header className="horizontal">
+            <div id="videos" className="vertical flex-grow-1 p-4">
+                <header className="horizontal flex-shrink-0">
                     <MenuPack title="Database ...">
                         <MenuItem action={this.renameDatabase}>Rename database "{this.state.database.name}" ...</MenuItem>
                         <MenuItem action={this.editDatabaseFolders}>Edit {this.state.database.folders.length} database folders ...</MenuItem>
@@ -144,8 +144,8 @@ export class VideosPage extends React.Component {
                         <MenuItem className="red-flag" action={this.deleteDatabase}>Delete database ...</MenuItem>
                     </MenuPack>
                     <MenuPack title="Properties ...">
-                        {stringSetProperties.length ? <MenuItem action={this.fillWithKeywords}>Put keywords into a property ...</MenuItem> : ''}
                         {<ActionToMenuItem action={actions.manageProperties}/>}
+                        {stringSetProperties.length ? <MenuItem action={this.fillWithKeywords}>Put keywords into a property ...</MenuItem> : ''}
                         {this.state.properties.length > 5 ? (
                             <Menu title="Group videos by property ...">{
                                 this.state.properties.map((def, index) => (
@@ -192,7 +192,6 @@ export class VideosPage extends React.Component {
                             confirm deletion for entries not found
                         </MenuItemCheck>
                     </MenuPack>
-                    <div className="buttons"/>
                     <div className="pagination text-right">
                         <Pagination singular="page"
                                     plural="pages"
@@ -202,16 +201,16 @@ export class VideosPage extends React.Component {
                                     onChange={this.changePage}/>
                     </div>
                 </header>
-                <div className="frontier"/>
-                <div className="content horizontal">
+                <div className="frontier block flex-shrink-0"/>
+                <div className="content position-relative horizontal flex-grow-1">
                     <div className="side-panel vertical">
-                        <Collapsable lite={false} className="filter" title="Filter">
+                        <Collapsable lite={false} className="filter flex-shrink-0" title="Filter">
                             {this.renderFilter()}
                         </Collapsable>
                         {this.state.path.length ? (
-                            <Collapsable lite={false} className="filter" title="Classifier path">
+                            <Collapsable lite={false} className="filter flex-shrink-0" title="Classifier path">
                                 {stringProperties.length ? (
-                                    <div className="path-menu">
+                                    <div className="path-menu text-center p-2">
                                         <MenuPack title="Concatenate path into ...">
                                             {stringProperties.map((def, i) => (
                                                 <MenuItem key={i} action={() => this.classifierConcatenate(def.name)}>
@@ -219,14 +218,14 @@ export class VideosPage extends React.Component {
                                                 </MenuItem>
                                             ))}
                                         </MenuPack>
-                                        <p>
-                                            <button onClick={this.classifierReversePath}>reverse path</button>
-                                        </p>
+                                        <div className="pt-2">
+                                            <button className="block" onClick={this.classifierReversePath}>reverse path</button>
+                                        </div>
                                     </div>
                                 ) : ''}
                                 {this.state.path.map((value, index) => (
-                                    <div key={index} className="path-step horizontal">
-                                        <div className="title">{value.toString()}</div>
+                                    <div key={index} className="path-step horizontal px-2 py-1">
+                                        <div className="flex-grow-1">{value.toString()}</div>
                                         {index === this.state.path.length - 1 ? (
                                             <div className="icon">
                                                 <Cross title="unstack" action={this.classifierUnstack}/>
@@ -237,7 +236,7 @@ export class VideosPage extends React.Component {
                             </Collapsable>
                         ) : ''}
                         {groupDef ? (
-                            <Collapsable lite={false} className="group" title="Groups">
+                            <Collapsable lite={false} className="group flex-grow-1" title="Groups">
                                 <GroupView
                                     groupDef={groupDef}
                                     isClassified={!!this.state.path.length}
@@ -253,7 +252,7 @@ export class VideosPage extends React.Component {
                             </Collapsable>
                         ) : ''}
                     </div>
-                    <div className="main-panel videos">{this.state.videos.map(data => (
+                    <div className="main-panel videos overflow-auto">{this.state.videos.map(data => (
                         <Video key={data.video_id}
                                data={data}
                                propDefs={this.state.properties}
@@ -266,8 +265,8 @@ export class VideosPage extends React.Component {
                                groupedByMoves={groupedByMoves}/>
                     ))}</div>
                 </div>
-                <footer className="horizontal">
-                    <div className="footer-status" onClick={this.resetStatus}>{this.state.status}</div>
+                <footer className="horizontal flex-shrink-0">
+                    <div className="footer-status clickable" onClick={this.resetStatus}>{this.state.status}</div>
                     <div className="footer-information text-right">
                         {groupDef ? (
                             <div className="info group">
@@ -296,7 +295,7 @@ export class VideosPage extends React.Component {
         const sortingIsDefault = sorting.length === 1 && sorting[0] === '-date';
         const selectedAll = realNbVideos === selectionSize;
         return (
-            <table className="filter">
+            <table className="filter w-100">
                 <tbody>
                 {/** Sources **/}
                 <tr>
@@ -600,7 +599,7 @@ export class VideosPage extends React.Component {
 
     deleteDatabase() {
         Fancybox.load(
-            <Dialog title={`Delete dabase ${this.state.database.name}`} yes="DELETE" action={() => {
+            <Dialog title={`Delete database ${this.state.database.name}`} yes="DELETE" action={() => {
                 python_call("delete_database")
                     .then(databases => this.props.app.dbHome(databases))
                     .catch(backend_error);

@@ -1,6 +1,6 @@
 export function MenuPack(props) {
     return (
-        <div className="menu-pack">
+        <div className="menu-pack clickable position-relative">
             <div className="title">
                 <div className="text">{props.title}</div>
             </div>

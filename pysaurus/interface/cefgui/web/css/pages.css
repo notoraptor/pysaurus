@@ -1,31 +1,80 @@
-/** Videos page **/
-#videos {
-	flex-grow: 1;
-	padding: 1em;
+#databases td {
+	padding: 0.25rem;
+}
+
+#databases > table > tr > td {
+	vertical-align: top;
+	width: 50%;
+}
+
+#home > .notifications {
+	border: 1px solid gray;
+	background-color: aliceblue;
+}
+
+#home > .notifications > div {
+	padding: 0.25rem 0.5rem;
+}
+
+#properties h2 .back {
+	vertical-align: middle;
+}
+
+#properties .content {
+	background-color: rgb(250, 250, 250);
+}
+
+#properties .content > .list {
+	border-right: 1px solid rgb(182, 182, 182);
+	width: 50%;
+	padding: 1.5rem;
+}
+
+#properties .list table {
+	margin: auto;
+}
+
+#properties .list table thead {
+	background-color: rgb(220, 220, 220);
+}
+
+#properties .list table thead th {
+	padding: 0.25rem 0.5rem 0.25rem 0.5rem;
+}
+
+#properties .list table tbody td {
+	border-bottom: 1px solid rgb(220, 220, 220);
+	padding: 0.25rem 0.5rem 0.25rem 0.5rem;
+}
+
+#properties .new {
+	border-left: 1px solid rgb(182, 182, 182);
+	margin-left: -1px;
+	width: 50%;
+	padding: 1.5rem;
+}
+
+#properties .new > table > tr > td {
+	width: 50%;
+	padding: 0.5rem;
 }
 
 #videos header {
 	align-items: center;
-	flex-shrink: 0;
 }
 
 #videos .frontier {
-	display: block;
-	width: 100%;
-	height: 0.5em;
+	height: 0.5rem;
 	background: linear-gradient(white, rgb(220, 220, 220));
-	flex-shrink: 0;
 }
 
 #videos > .content {
-	flex-grow: 1;
 	border-top: 1px solid rgb(220, 220, 220);
-	position: relative;
 }
 
 #videos > .content .side-panel {
 	width: 15%;
-	min-width: 15em;
+	min-width: 15rem;
 	background-color: gray;
 	border-top: 1px solid gray;
 	border-left: 1px solid gray;
@@ -36,20 +85,11 @@
 	border-top: 1px solid gray;
 	border-left: 1px solid gray;
 	border-right: 1px solid gray;
-	overflow: auto;
 }
 
 #videos .side-panel .stack {
 	display: flex;
 	flex-direction: column;
-}
-
-#videos .side-panel .stack.filter {
-	flex-shrink: 0;
-}
-
-#videos .side-panel .stack.group {
-	flex-grow: 1;
 }
 
 #videos .side-panel .stack.group > .content {
@@ -59,18 +99,7 @@
 }
 
 #videos.classifier header > * + * {
-	margin-left: 1em;
-}
-
-/*unused*/
-#videos header .buttons {
-	vertical-align: middle;
-}
-
-/*unused*/
-#videos header .buttons button {
-	margin-left: 1em;
-	min-width: 20ex;
+	margin-left: 1rem;
 }
 
 #videos header .pagination {
@@ -78,21 +107,20 @@
 }
 
 #videos header .pagination .navigation {
-	margin-left: 2em;
+	margin-left: 2rem;
 }
 
 #videos table.filter {
 	background-color: white;
-	width: 100%;
 }
 
 #videos table.filter td {
-	padding: 0.4em;
+	padding: 0.4rem;
 	text-align: center;
 }
 
 #videos table.filter td:last-child div + div {
-	margin-top: 0.4em;
+	margin-top: 0.4rem;
 }
 
 #videos table.filter .no-filter {
@@ -115,15 +143,13 @@
 
 #videos footer {
 	border-top: 1px solid gray;
-	font-size: 0.9em;
-	flex-shrink: 0;
+	font-size: 0.9rem;
 }
 
 #videos footer > .footer-status,
 #videos footer > .footer-information {
-	/*flex-grow: 1;*/
 	width: 50%;
-	padding: 0.4em;
+	padding: 0.4rem;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -131,7 +157,6 @@
 
 #videos .footer-status {
 	border-right: 1px solid gray;
-	cursor: pointer;
 }
 
 #videos .footer-status:hover {
@@ -143,7 +168,7 @@
 }
 
 #videos .footer-information .info + .info {
-	margin-left: 1em;
+	margin-left: 1rem;
 	border-left: 1px solid black;
-	padding-left: 1em;
+	padding-left: 1rem;
 }

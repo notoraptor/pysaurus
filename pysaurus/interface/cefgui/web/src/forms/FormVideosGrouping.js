@@ -32,7 +32,7 @@ export class FormVideosGrouping extends React.Component {
     render() {
         return (
             <Dialog title={"Group videos:"} yes="group" action={this.onClose}>
-                <table className="form-group first-td-text-right">
+                <table className="from-videos-grouping first-td-text-right w-100">
                     <tbody>
                     <tr>
                         <td className="label">Field type</td>
@@ -57,7 +57,7 @@ export class FormVideosGrouping extends React.Component {
                     <tr>
                         <td className="label"><label htmlFor="group-field">Field</label></td>
                         <td>
-                            <select id="group-field" value={this.state.field} onChange={this.onChangeGroupField}>
+                            <select className="block" id="group-field" value={this.state.field} onChange={this.onChangeGroupField}>
                                 {this.state.isProperty ? (
                                     this.props.properties.map((def, index) => (
                                         <option key={index} value={def.name}>{def.name}</option>
@@ -93,7 +93,7 @@ export class FormVideosGrouping extends React.Component {
                             <label htmlFor="group-sorting">Sort using:</label>
                         </td>
                         <td>
-                            <select id="group-sorting" value={this.state.sorting} onChange={this.onChangeSorting}>
+                            <select className="block" id="group-sorting" value={this.state.sorting} onChange={this.onChangeSorting}>
                                 <option value="field">Field value</option>
                                 {this.fieldIsString() ? <option value="length">Field value length</option> : ''}
                                 <option value="count">Group size</option>

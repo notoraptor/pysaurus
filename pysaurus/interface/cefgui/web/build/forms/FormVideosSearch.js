@@ -31,10 +31,11 @@ System.register(["../dialogs/FancyBox.js"], function (_export, _context) {
           return /*#__PURE__*/React.createElement(FancyBox, {
             title: "Search videos"
           }, /*#__PURE__*/React.createElement("div", {
-            className: "form-search"
+            className: "form-videos-search text-center"
           }, /*#__PURE__*/React.createElement("p", null, "Type text to search and choose how to search."), /*#__PURE__*/React.createElement("p", null, "You can also type text and then press enter to automatically select \"AND\" as search method."), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("input", {
             type: "text",
             id: "input-search",
+            className: "block mb-2",
             name: "searchText",
             placeholder: "Search ...",
             onFocus: this.onFocusInput,

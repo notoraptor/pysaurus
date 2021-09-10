@@ -1,16 +1,20 @@
 export function Cell(props) {
-    const classNames = ['cell-wrapper'];
+    const classNames = [];
     if (props.className)
         classNames.push(props.className);
     if (props.center) {
         classNames.push('cell-center');
         classNames.push('horizontal');
     }
-    if (props.full)
-        classNames.push('cell-full');
+    if (props.full) {
+        classNames.push('position-relative');
+        classNames.push("w-100");
+        classNames.push("h-100");
+        classNames.push("flex-grow-1");
+    }
     return (
         <div className={classNames.join(' ')}>
-            <div className="cell">
+            <div className="w-100">
                 {props.children}
             </div>
         </div>

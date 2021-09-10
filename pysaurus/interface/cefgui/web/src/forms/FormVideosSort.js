@@ -18,16 +18,16 @@ export class FormVideosSort extends React.Component {
     render() {
         return (
             <FancyBox title="Sort videos">
-                <div className="form vertical" id="form-sort">
-                    <div className="help">
+                <div id="form-videos-sort" className="form absolute-plain vertical text-center p-2">
+                    <div className="help mb-4">
                         <div>Click on "+" to add a new sorting criterion.</div>
                         <div>Click on "-" to remove a sorting criterion.</div>
                         <div>Click on "sort" to validate, or close dialog to cancel.</div>
                     </div>
-                    <div id="sorting">{this.renderSorting()}</div>
-                    <p className="buttons horizontal">
-                        <button className="add" onClick={this.addCriterion}>+</button>
-                        <button className="sort" onClick={this.submit}>sort</button>
+                    <div id="sorting" className="flex-grow-1 overflow-auto">{this.renderSorting()}</div>
+                    <p className="buttons flex-shrink-0 horizontal">
+                        <button className="add flex-grow-1 mr-1" onClick={this.addCriterion}>+</button>
+                        <button className="sort flex-grow-1 bold ml-2" onClick={this.submit}>sort</button>
                     </p>
                 </div>
             </FancyBox>

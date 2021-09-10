@@ -2,8 +2,8 @@ import {Test} from "./pages/Test.js";
 import {HomePage} from "./pages/HomePage.js";
 import {VideosPage} from "./pages/VideosPage.js";
 import {PropertiesPage} from "./pages/PropertiesPage.js";
-import {backend_error, python_call} from "./utils/backend.js";
 import {DatabasesPage} from "./pages/DatabasesPage.js";
+import {backend_error, python_call} from "./utils/backend.js";
 
 import {VIDEO_DEFAULT_PAGE_NUMBER, VIDEO_DEFAULT_PAGE_SIZE} from "./utils/constants.js";
 
@@ -18,8 +18,8 @@ export class App extends React.Component {
 
     render() {
         return (
-            <div className="app vertical">
-                <main className="vertical">{this.renderPage()}</main>
+            <div className="flex-grow-1 vertical">
+                <main className="flex-grow-1 vertical">{this.renderPage()}</main>
             </div>
         );
     }

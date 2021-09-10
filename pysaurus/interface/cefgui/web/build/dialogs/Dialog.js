@@ -22,16 +22,18 @@ System.register(["./FancyBox.js"], function (_export, _context) {
           }, /*#__PURE__*/React.createElement("div", {
             className: "dialog absolute-plain vertical"
           }, /*#__PURE__*/React.createElement("div", {
-            className: "content vertical"
+            className: "position-relative flex-grow-1 overflow-auto p-2 vertical"
           }, this.props.children), /*#__PURE__*/React.createElement("div", {
-            className: "buttons horizontal"
+            className: "buttons flex-shrink-0 horizontal"
           }, /*#__PURE__*/React.createElement("div", {
-            className: "button yes"
+            className: "button flex-grow-1 p-2 yes"
           }, /*#__PURE__*/React.createElement("button", {
+            className: "block bold",
             onClick: this.yes
           }, this.props.yes || "yes")), /*#__PURE__*/React.createElement("div", {
-            className: "button no"
+            className: "button flex-grow-1 p-2 no"
           }, /*#__PURE__*/React.createElement("button", {
+            className: "block bold",
             onClick: Fancybox.close
           }, this.props.no || "cancel")))));
         }

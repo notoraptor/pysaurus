@@ -21,8 +21,9 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
       className: "job horizontal"
     }, /*#__PURE__*/React.createElement("label", {
       htmlFor: jobClassID,
-      className: "info"
+      className: "pr-2"
     }, current, " done (", percent, " %)"), /*#__PURE__*/React.createElement("progress", {
+      className: "flex-grow-1",
       id: jobClassID,
       value: current,
       max: total
@@ -265,12 +266,12 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
         render() {
           return /*#__PURE__*/React.createElement("div", {
             id: "home",
-            className: "vertical"
+            className: "flex-grow-1 p-4 vertical"
           }, /*#__PURE__*/React.createElement("div", {
-            className: "buttons"
+            className: "text-center p-2"
           }, this.renderInitialButton()), /*#__PURE__*/React.createElement("div", {
             id: "notifications",
-            className: "notifications"
+            className: "notifications flex-grow-1 overflow-auto"
           }, this.renderMessages()));
         }
 

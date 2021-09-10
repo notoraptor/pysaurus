@@ -32,19 +32,20 @@ System.register(["../utils/constants.js", "../dialogs/FancyBox.js"], function (_
           return /*#__PURE__*/React.createElement(FancyBox, {
             title: "Sort videos"
           }, /*#__PURE__*/React.createElement("div", {
-            className: "form vertical",
-            id: "form-sort"
+            id: "form-videos-sort",
+            className: "form absolute-plain vertical text-center p-2"
           }, /*#__PURE__*/React.createElement("div", {
-            className: "help"
+            className: "help mb-4"
           }, /*#__PURE__*/React.createElement("div", null, "Click on \"+\" to add a new sorting criterion."), /*#__PURE__*/React.createElement("div", null, "Click on \"-\" to remove a sorting criterion."), /*#__PURE__*/React.createElement("div", null, "Click on \"sort\" to validate, or close dialog to cancel.")), /*#__PURE__*/React.createElement("div", {
-            id: "sorting"
+            id: "sorting",
+            className: "flex-grow-1 overflow-auto"
           }, this.renderSorting()), /*#__PURE__*/React.createElement("p", {
-            className: "buttons horizontal"
+            className: "buttons flex-shrink-0 horizontal"
           }, /*#__PURE__*/React.createElement("button", {
-            className: "add",
+            className: "add flex-grow-1 mr-1",
             onClick: this.addCriterion
           }, "+"), /*#__PURE__*/React.createElement("button", {
-            className: "sort",
+            className: "sort flex-grow-1 bold ml-2",
             onClick: this.submit
           }, "sort"))));
         }

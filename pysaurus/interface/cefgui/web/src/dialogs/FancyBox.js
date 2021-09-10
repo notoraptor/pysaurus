@@ -14,13 +14,13 @@ export class FancyBox extends React.Component {
         return (
             <div className="fancybox-wrapper absolute-plain">
                 <div className="fancybox vertical">
-                    <div className="fancybox-header horizontal">
-                        <div className="fancybox-title" title={this.props.title}>{this.props.title}</div>
-                        <div className="fancybox-close">
+                    <div className="fancybox-header flex-shrink-0 horizontal p-2">
+                        <div className="fancybox-title bold flex-grow-1 text-center" title={this.props.title}>{this.props.title}</div>
+                        <div className="pl-2">
                             <button onClick={this.onClose}>&times;</button>
                         </div>
                     </div>
-                    <div className="fancybox-content">
+                    <div className="fancybox-content position-relative overflow-auto flex-grow-1 p-2">
                         {this.props.children}
                     </div>
                 </div>

@@ -5,7 +5,7 @@ System.register([], function (_export, _context) {
 
   function MicroButton(props) {
     return /*#__PURE__*/React.createElement("div", _extends({
-      className: "small-button " + props.type
+      className: "small-button clickable bold text-center " + props.type
     }, props.title ? {
       title: props.title
     } : {}, props.action ? {

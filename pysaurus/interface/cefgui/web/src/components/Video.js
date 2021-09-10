@@ -46,20 +46,20 @@ export class Video extends React.Component {
         const alreadyOpened = APP_STATE.videoHistory.has(data.filename);
         return (
             <div className={'video horizontal' + (data.exists ? ' found' : ' not-found')}>
-                <div className="image">
+                <div className="image p-2">
                     {hasThumbnail ?
                         <img alt={data.title} src={data.thumbnail_path}/> :
                         <div className="no-thumbnail">no thumbnail</div>}
                 </div>
-                <div className="video-details horizontal">
+                <div className="video-details horizontal flex-grow-1">
                     {this.renderProperties()}
-                    <div className="info">
+                    <div className="info p-2">
                         <div className="name">
                             <div className="options horizontal">
                                 <MenuPack title={`${Characters.SETTINGS}`}>
                                     {data.exists ?
                                         <MenuItem action={this.openVideo}>Open file</MenuItem> :
-                                        <div className="not-found">(not found)</div>}
+                                        <div className="text-center bold">(not found)</div>}
                                     {data.exists ?
                                         <MenuItem action={this.openContainingFolder}>
                                             Open containing folder
@@ -98,12 +98,12 @@ export class Video extends React.Component {
                         </div>
                         <div className={'filename-line' + (data.exists ? '' : ' horizontal')}>
                             {data.exists ? '' :
-                                <div className="prepend" onClick={this.deleteVideo}>
+                                <div className="prepend clickable" onClick={this.deleteVideo}>
                                     <code className="text-not-found">NOT FOUND</code>
                                     <code className="text-delete">DELETE</code>
                                 </div>}
                             <div className={`filename ${alreadyOpened ? "already-opened" : ""}`}>
-                                <code {...(data.exists ? {onClick: this.openVideo} : {})}>{data.filename}</code>
+                                <code {...(data.exists ? {className: "clickable"} : {})} {...(data.exists ? {onClick: this.openVideo} : {})}>{data.filename}</code>
                             </div>
                         </div>
                         <div className="format horizontal">
@@ -148,17 +148,17 @@ export class Video extends React.Component {
         const alreadyOpened = APP_STATE.videoHistory.has(data.filename);
         return (
             <div className={'video horizontal' + (data.exists ? ' found' : ' not-found')}>
-                <div className="image">
+                <div className="image p-2">
                     <div className="no-thumbnail">no thumbnail</div>
                 </div>
-                <div className="video-details horizontal">
-                    <div className="info">
+                <div className="video-details horizontal flex-grow-1">
+                    <div className="info p-2">
                         <div className="name">
                             <div className="options horizontal">
                                 <MenuPack title={`${Characters.SETTINGS}`}>
                                     {data.exists ?
                                         <MenuItem action={this.openVideo}>Open file</MenuItem> :
-                                        <div className="not-found">(not found)</div>}
+                                        <div className="text-center bold">(not found)</div>}
                                     {data.exists ?
                                         <MenuItem action={this.openContainingFolder}>
                                             Open containing folder
@@ -175,12 +175,12 @@ export class Video extends React.Component {
                         </div>
                         <div className={'filename-line' + (data.exists ? '' : ' horizontal')}>
                             {data.exists ? '' :
-                                <div className="prepend" onClick={this.deleteVideo}>
+                                <div className="prepend clickable" onClick={this.deleteVideo}>
                                     <code className="text-not-found">NOT FOUND</code>
                                     <code className="text-delete">DELETE</code>
                                 </div>}
                             <div className={`filename ${alreadyOpened ? "already-opened" : ""}`}>
-                                <code {...(data.exists ? {onClick: this.openVideo} : {})}>{data.filename}</code>
+                                <code {...(data.exists ? {className: "clickable"} : {})} {...(data.exists ? {onClick: this.openVideo} : {})}>{data.filename}</code>
                             </div>
                         </div>
                         <div className="format horizontal">
@@ -213,8 +213,8 @@ export class Video extends React.Component {
         if (!propDefs.length)
             return '';
         return (
-            <div className="properties">
-                <div className="edit-properties" onClick={this.editProperties}>PROPERTIES</div>
+            <div className="properties p-2">
+                <div className="edit-properties clickable text-center mb-2" onClick={this.editProperties}>PROPERTIES</div>
                 {propDefs.map(def => {
                     const name = def.name;
                     const value = props.hasOwnProperty(name) ? props[name] : def.defaultValue;
@@ -228,7 +228,7 @@ export class Video extends React.Component {
                         <div key={name} className={`property ${props.hasOwnProperty(name) ? "defined" : ""}`}>
                             <Collapsable title={name}>
                                 {!noValue ? (printableValues.map((element, elementIndex) => (
-                                    <span className="value"
+                                    <span className="value clickable"
                                           key={elementIndex}
                                           onClick={() => this.props.onSelectPropertyValue(name, element)}>
                                         {element.toString()}
@@ -267,9 +267,9 @@ export class Video extends React.Component {
         const thumbnail_path = this.props.data.thumbnail_path;
         Fancybox.load(
             <Dialog title="Confirm deletion" yes="delete" action={this.reallyDeleteVideo}>
-                <div className="form-delete-video">
-                    <h2>Are you sure you want to <strong>definitely</strong> delete this video?</h2>
-                    <div className="details"><code id="filename">{filename}</code></div>
+                <div className="form-delete-video text-center bold">
+                    <h2>Are you sure you want to <strong className="red-flag">definitely</strong> delete this video?</h2>
+                    <div className="details overflow-auto px-2 py-1"><code id="filename">{filename}</code></div>
                     <p>
                         {this.props.data.has_thumbnail ? (
                             <img id="thumbnail" alt="No thumbnail available" src={thumbnail_path}/>

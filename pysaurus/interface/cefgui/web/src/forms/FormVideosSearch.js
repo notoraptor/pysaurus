@@ -20,12 +20,13 @@ export class FormVideosSearch extends React.Component {
     render() {
         return (
             <FancyBox title="Search videos">
-                <div className="form-search">
+                <div className="form-videos-search text-center">
                     <p>Type text to search and choose how to search.</p>
                     <p>You can also type text and then press enter to automatically select "AND" as search method.</p>
                     <p>
                         <input type="text"
                                id="input-search"
+                               className="block mb-2"
                                name="searchText"
                                placeholder="Search ..."
                                onFocus={this.onFocusInput}

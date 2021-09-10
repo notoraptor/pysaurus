@@ -34,28 +34,40 @@ System.register(["../utils/backend.js"], function (_export, _context) {
           const paths = Array.from(this.state.paths);
           paths.sort();
           return /*#__PURE__*/React.createElement("div", {
-            id: "databases"
-          }, /*#__PURE__*/React.createElement("h1", null, "Welcome to ", window.PYTHON_APP_NAME), /*#__PURE__*/React.createElement("table", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("h2", null, "Create a database"), /*#__PURE__*/React.createElement("div", {
-            className: "padding"
+            id: "databases",
+            className: "text-center"
+          }, /*#__PURE__*/React.createElement("h1", null, "Welcome to ", window.PYTHON_APP_NAME), /*#__PURE__*/React.createElement("table", {
+            className: "w-100 table-layout-fixed"
+          }, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("h2", null, "Create a database"), /*#__PURE__*/React.createElement("div", {
+            className: "p-1"
           }, /*#__PURE__*/React.createElement("input", {
             type: "text",
+            className: "w-100",
             value: this.state.name,
             onChange: this.onChangeName,
             placeholder: "Database name."
-          })), /*#__PURE__*/React.createElement("h3", null, "Database folders and files"), /*#__PURE__*/React.createElement("table", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
+          })), /*#__PURE__*/React.createElement("h3", null, "Database folders and files"), /*#__PURE__*/React.createElement("table", {
+            className: "w-100 table-layout-fixed"
+          }, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
+            className: "block",
             onClick: this.addFolder
           }, "Add folder")), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
+            className: "block",
             onClick: this.addFile
-          }, "Add file")))), /*#__PURE__*/React.createElement("table", null, paths.map((path, index) => /*#__PURE__*/React.createElement("tr", {
+          }, "Add file")))), /*#__PURE__*/React.createElement("table", {
+            className: "w-100 table-layout-fixed"
+          }, paths.map((path, index) => /*#__PURE__*/React.createElement("tr", {
             key: index
           }, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("code", null, path)), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
+            className: "block",
             onClick: () => this.removePath(path)
           }, "-"))))), /*#__PURE__*/React.createElement("div", {
-            className: "padding"
+            className: "p-1"
           }, /*#__PURE__*/React.createElement("button", {
+            className: "block",
             onClick: this.createDatabase
           }, "create database"))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("h2", null, "Open a database (", this.props.parameters.databases.length, " available)"), /*#__PURE__*/React.createElement("div", {
-            className: "padding"
+            className: "p-1"
           }, /*#__PURE__*/React.createElement("input", {
             type: "checkbox",
             id: "update",
@@ -64,9 +76,10 @@ System.register(["../utils/backend.js"], function (_export, _context) {
           }), " ", /*#__PURE__*/React.createElement("label", {
             htmlFor: "update"
           }, "update after opening")), /*#__PURE__*/React.createElement("h3", null, "Click on a database to open it"), this.props.parameters.databases.map((database, index) => /*#__PURE__*/React.createElement("div", {
-            className: "padding",
+            className: "p-1",
             key: index
           }, /*#__PURE__*/React.createElement("button", {
+            className: "block",
             onClick: () => this.openDatabase(database.path)
           }, database.name)))))));
         }

@@ -20,19 +20,19 @@ export class FormDatabaseEditFolders extends React.Component {
         paths.sort();
         return (
             <Dialog title={`Edit ${paths.length} folders for database: ${database.name}`} yes="save" action={this.onClose}>
-                <div className="path-edition vertical">
-                    <table>
+                <div className="form-database-edit-folders vertical flex-grow-1">
+                    <table className="table-layout-fixed">
                         <tr>
-                            <td><button onClick={this.addFolder}>Add folder</button></td>
-                            <td><button onClick={this.addFile}>Add file</button></td>
+                            <td><button className="block" onClick={this.addFolder}>Add folder</button></td>
+                            <td><button className="block" onClick={this.addFile}>Add file</button></td>
                         </tr>
                     </table>
-                    <div className="paths">
-                        <table>
+                    <div className="paths flex-grow-1 overflow-auto">
+                        <table className="table-layout-fixed">
                             {paths.map((path, index) => (
                                 <tr key={index}>
                                     <td><code>{path}</code></td>
-                                    <td><button onClick={() => this.removePath(path)}>-</button></td>
+                                    <td><button className="block" onClick={() => this.removePath(path)}>-</button></td>
                                 </tr>
                             ))}
                         </table>

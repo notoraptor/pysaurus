@@ -78,16 +78,14 @@ System.register(["../dialogs/FancyBox.js"], function (_export, _context) {
         render() {
           return /*#__PURE__*/React.createElement(FancyBox, {
             title: "Select Videos"
-          }, /*#__PURE__*/React.createElement("div", {
-            className: "form-source-video"
           }, this.renderTree(this.props.tree), /*#__PURE__*/React.createElement("p", null, "Currently selected:", this.state.paths.length ? '' : ' None'), this.state.paths.length ? /*#__PURE__*/React.createElement("ul", null, this.state.paths.map((path, index) => /*#__PURE__*/React.createElement("li", {
             key: index
           }, /*#__PURE__*/React.createElement("strong", null, path.replace(/-/g, '.'))))) : '', /*#__PURE__*/React.createElement("p", {
-            className: "submit"
+            className: "submit mx-1 my-4"
           }, /*#__PURE__*/React.createElement("button", {
-            className: "submit",
+            className: "submit block",
             onClick: this.submit
-          }, "select"))));
+          }, "select")));
         }
 
         renderTree(tree, prefix = '') {

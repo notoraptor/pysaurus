@@ -3,6 +3,8 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
 
   var MenuPack, FormVideoRename, Dialog, FormVideoEditProperties, Collapsable, MenuItem, Menu, backend_error, python_call, Characters, Video;
 
+  function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
+
   _export("Video", void 0);
 
   return {
@@ -66,16 +68,16 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
           return /*#__PURE__*/React.createElement("div", {
             className: 'video horizontal' + (data.exists ? ' found' : ' not-found')
           }, /*#__PURE__*/React.createElement("div", {
-            className: "image"
+            className: "image p-2"
           }, hasThumbnail ? /*#__PURE__*/React.createElement("img", {
             alt: data.title,
             src: data.thumbnail_path
           }) : /*#__PURE__*/React.createElement("div", {
             className: "no-thumbnail"
           }, "no thumbnail")), /*#__PURE__*/React.createElement("div", {
-            className: "video-details horizontal"
+            className: "video-details horizontal flex-grow-1"
           }, this.renderProperties(), /*#__PURE__*/React.createElement("div", {
-            className: "info"
+            className: "info p-2"
           }, /*#__PURE__*/React.createElement("div", {
             className: "name"
           }, /*#__PURE__*/React.createElement("div", {
@@ -85,7 +87,7 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
           }, data.exists ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.openVideo
           }, "Open file") : /*#__PURE__*/React.createElement("div", {
-            className: "not-found"
+            className: "text-center bold"
           }, "(not found)"), data.exists ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.openContainingFolder
           }, "Open containing folder") : '', meta_title ? /*#__PURE__*/React.createElement(MenuItem, {
@@ -121,7 +123,7 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
           }, /*#__PURE__*/React.createElement("em", null, data.file_title))), /*#__PURE__*/React.createElement("div", {
             className: 'filename-line' + (data.exists ? '' : ' horizontal')
           }, data.exists ? '' : /*#__PURE__*/React.createElement("div", {
-            className: "prepend",
+            className: "prepend clickable",
             onClick: this.deleteVideo
           }, /*#__PURE__*/React.createElement("code", {
             className: "text-not-found"
@@ -129,9 +131,11 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
             className: "text-delete"
           }, "DELETE")), /*#__PURE__*/React.createElement("div", {
             className: `filename ${alreadyOpened ? "already-opened" : ""}`
-          }, /*#__PURE__*/React.createElement("code", data.exists ? {
+          }, /*#__PURE__*/React.createElement("code", _extends({}, data.exists ? {
+            className: "clickable"
+          } : {}, data.exists ? {
             onClick: this.openVideo
-          } : {}, data.filename))), /*#__PURE__*/React.createElement("div", {
+          } : {}), data.filename))), /*#__PURE__*/React.createElement("div", {
             className: "format horizontal"
           }, /*#__PURE__*/React.createElement("div", {
             className: "prepend"
@@ -159,13 +163,13 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
           return /*#__PURE__*/React.createElement("div", {
             className: 'video horizontal' + (data.exists ? ' found' : ' not-found')
           }, /*#__PURE__*/React.createElement("div", {
-            className: "image"
+            className: "image p-2"
           }, /*#__PURE__*/React.createElement("div", {
             className: "no-thumbnail"
           }, "no thumbnail")), /*#__PURE__*/React.createElement("div", {
-            className: "video-details horizontal"
+            className: "video-details horizontal flex-grow-1"
           }, /*#__PURE__*/React.createElement("div", {
-            className: "info"
+            className: "info p-2"
           }, /*#__PURE__*/React.createElement("div", {
             className: "name"
           }, /*#__PURE__*/React.createElement("div", {
@@ -175,7 +179,7 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
           }, data.exists ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.openVideo
           }, "Open file") : /*#__PURE__*/React.createElement("div", {
-            className: "not-found"
+            className: "text-center bold"
           }, "(not found)"), data.exists ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.openContainingFolder
           }, "Open containing folder") : '', /*#__PURE__*/React.createElement(MenuItem, {
@@ -192,7 +196,7 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
           }, data.file_title)))), /*#__PURE__*/React.createElement("div", {
             className: 'filename-line' + (data.exists ? '' : ' horizontal')
           }, data.exists ? '' : /*#__PURE__*/React.createElement("div", {
-            className: "prepend",
+            className: "prepend clickable",
             onClick: this.deleteVideo
           }, /*#__PURE__*/React.createElement("code", {
             className: "text-not-found"
@@ -200,9 +204,11 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
             className: "text-delete"
           }, "DELETE")), /*#__PURE__*/React.createElement("div", {
             className: `filename ${alreadyOpened ? "already-opened" : ""}`
-          }, /*#__PURE__*/React.createElement("code", data.exists ? {
+          }, /*#__PURE__*/React.createElement("code", _extends({}, data.exists ? {
+            className: "clickable"
+          } : {}, data.exists ? {
             onClick: this.openVideo
-          } : {}, data.filename))), /*#__PURE__*/React.createElement("div", {
+          } : {}), data.filename))), /*#__PURE__*/React.createElement("div", {
             className: "format horizontal"
           }, /*#__PURE__*/React.createElement("div", {
             className: "prepend"
@@ -223,9 +229,9 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
           const propDefs = this.props.propDefs;
           if (!propDefs.length) return '';
           return /*#__PURE__*/React.createElement("div", {
-            className: "properties"
+            className: "properties p-2"
           }, /*#__PURE__*/React.createElement("div", {
-            className: "edit-properties",
+            className: "edit-properties clickable text-center mb-2",
             onClick: this.editProperties
           }, "PROPERTIES"), propDefs.map(def => {
             const name = def.name;
@@ -239,7 +245,7 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
             }, /*#__PURE__*/React.createElement(Collapsable, {
               title: name
             }, !noValue ? printableValues.map((element, elementIndex) => /*#__PURE__*/React.createElement("span", {
-              className: "value",
+              className: "value clickable",
               key: elementIndex,
               onClick: () => this.props.onSelectPropertyValue(name, element)
             }, element.toString())) : /*#__PURE__*/React.createElement("span", {
@@ -274,9 +280,11 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
             yes: "delete",
             action: this.reallyDeleteVideo
           }, /*#__PURE__*/React.createElement("div", {
-            className: "form-delete-video"
-          }, /*#__PURE__*/React.createElement("h2", null, "Are you sure you want to ", /*#__PURE__*/React.createElement("strong", null, "definitely"), " delete this video?"), /*#__PURE__*/React.createElement("div", {
-            className: "details"
+            className: "form-delete-video text-center bold"
+          }, /*#__PURE__*/React.createElement("h2", null, "Are you sure you want to ", /*#__PURE__*/React.createElement("strong", {
+            className: "red-flag"
+          }, "definitely"), " delete this video?"), /*#__PURE__*/React.createElement("div", {
+            className: "details overflow-auto px-2 py-1"
           }, /*#__PURE__*/React.createElement("code", {
             id: "filename"
           }, filename)), /*#__PURE__*/React.createElement("p", null, this.props.data.has_thumbnail ? /*#__PURE__*/React.createElement("img", {

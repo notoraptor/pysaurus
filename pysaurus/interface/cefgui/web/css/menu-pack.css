@@ -1,7 +1,5 @@
 .menu-pack {
 	display: inline-block;
-	position: relative;
-	cursor: pointer;
 	white-space: nowrap;
 }
 
@@ -17,7 +15,7 @@
 }
 
 .menu-pack > .title .text {
-	padding: 0.5em 1em 0.5em 1em;
+	padding: 0.5rem 1rem 0.5rem 1rem;
 }
 
 .menu-pack > .content {
@@ -32,21 +30,18 @@
 	display: block;
 }
 
-.menu-pack .menu-item {
-}
-
 .menu-pack .menu-item:hover {
 	background-color: rgb(140, 140, 140);
 	color: white;
 }
 
 .menu-pack .menu-item > .icon {
-	width: 2em;
+	width: 2rem;
 	position: relative;
 }
 
 .menu-pack .menu-item > .text {
-	padding: 0.25em 1em 0.25em 0;
+	padding: 0.25rem 1rem 0.25rem 0;
 	flex-grow: 1;
 }
 
@@ -57,7 +52,7 @@
 .menu-pack .menu-item > .text .shortcut {
 	color: gray;
 	font-style: italic;
-	margin-left: 1em;
+	margin-left: 1rem;
 }
 
 .menu-pack .menu-item:hover > .text .shortcut {
@@ -65,8 +60,8 @@
 }
 
 .menu-pack .menu-item > .icon .border {
-	width: 0.9em;
-	height: 0.9em;
+	width: 0.9rem;
+	height: 0.9rem;
 	border: 1px solid black;
 	/* Center element (parent must have position relative) */
 	position: absolute;
@@ -101,19 +96,15 @@
 }
 
 .menu-pack .menu-item.radio > .icon .border {
-	border-radius: 0.45em;
+	border-radius: 0.45rem;
 }
 
 .menu-pack .menu-item.radio > .icon .border .check {
-	border-radius: 0.45em;
-}
-
-.menu-pack .menu {
-	position: relative;
+	border-radius: 0.45rem;
 }
 
 .menu-pack .menu > .title {
-	padding: 0.25em 0.5em 0.25em 2em;
+	padding: 0.25rem 0.5rem 0.25rem 2rem;
 }
 
 .menu-pack .menu > .title:hover {
@@ -122,7 +113,7 @@
 }
 
 .menu-pack .menu > .title .text {
-	padding-right: 1em;
+	padding-right: 1rem;
 	flex-grow: 1;
 }
 

@@ -54,11 +54,11 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
           const allChecked = this.allChecked(start, end);
           console.log(`Rendering ${this.props.groupDef.groups.length} group(s).`);
           return /*#__PURE__*/React.createElement("div", {
-            className: "group-view vertical"
+            className: "group-view flex-grow-1 vertical"
           }, /*#__PURE__*/React.createElement("div", {
-            className: "header"
+            className: "header flex-shrink-0 text-center pt-2"
           }, /*#__PURE__*/React.createElement("div", {
-            className: "title"
+            className: "title bold pb-2"
           }, this.renderTitle()), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Pagination, {
             singular: "page",
             plural: "pages",
@@ -67,7 +67,7 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
             onChange: this.setPage,
             onSearch: this.search
           })), isProperty && !this.props.isClassified ? /*#__PURE__*/React.createElement("div", {
-            className: "selection line horizontal"
+            className: "selection line flex-shrink-0 horizontal"
           }, /*#__PURE__*/React.createElement("div", {
             className: "column"
           }, /*#__PURE__*/React.createElement("input", {
@@ -82,9 +82,9 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
             title: `Options for selected...`,
             action: this.openPropertyOptionsAll
           })) : '')) : ''), /*#__PURE__*/React.createElement("div", {
-            className: "content"
+            className: "content position-relative flex-grow-1 overflow-auto"
           }, this.props.groupDef.groups.length ? /*#__PURE__*/React.createElement("table", {
-            className: "second-td-text-right"
+            className: "second-td-text-right w-100 table-layout-fixed"
           }, this.props.groupDef.groups.slice(start, end).map((entry, index) => {
             index = start + index;
             const buttons = [];
@@ -119,8 +119,18 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
             }
 
             const classes = [isProperty ? "property" : "attribute"];
-            if (selected === index) classes.push("selected");
-            if (entry.value === null) classes.push("all");
+            classes.push("clickable");
+
+            if (selected === index) {
+              classes.push("selected");
+              classes.push("bold");
+            }
+
+            if (entry.value === null) {
+              classes.push("all");
+              classes.push("bolder");
+            }
+
             return /*#__PURE__*/React.createElement("tr", {
               className: classes.join(" "),
               key: index,
@@ -137,7 +147,7 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
               title: entry.count
             }, entry.count));
           })) : /*#__PURE__*/React.createElement("div", {
-            className: "absolute-plain no-groups vertical"
+            className: "absolute-plain no-groups text-center vertical"
           }, /*#__PURE__*/React.createElement("strong", null, /*#__PURE__*/React.createElement("em", null, "No groups")))));
         }
 
