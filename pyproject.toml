@@ -7,15 +7,14 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-cefpython3 = "^66.1"
 moviepy = "^1.0.3"
 Pillow = "^8.3.1"
 ujson = "^4.0.2"
 tornado = "^6.1"
-bcrypt = "^3.2.0"
 Flask = "^2.0.1"
 PyQt5 = "^5.15.4"
 PyQtWebEngine = "^5.15.4"
+cefpython3 = {version = "^66.1", markers = "sys_platform == 'win32'"}
 
 [tool.poetry.dev-dependencies]
 black = "^21.7b0"

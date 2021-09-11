@@ -95,11 +95,13 @@ def main():
 
 
 # TODO web server
-raise NotImplementedError(f"""
+raise NotImplementedError(
+    f"""
 Web server does not yet work correctly.
 - Notification system is slow.
 - Local images are not displayed.
-""")
+"""
+)
 
 
 if __name__ == "__main__":

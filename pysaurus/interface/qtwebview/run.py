@@ -24,11 +24,15 @@ class Api(GuiAPI):
         self.interface = interface  # type: Interface
 
     def _notify(self, notification):
-        self.interface.notified.emit(json.dumps({
-            "name": type(notification).__name__,
-            "notification": notification.to_dict(),
-            "message": str(notification),
-        }))
+        self.interface.notified.emit(
+            json.dumps(
+                {
+                    "name": type(notification).__name__,
+                    "notification": notification.to_dict(),
+                    "message": str(notification),
+                }
+            )
+        )
 
 
 class Interface(QObject):

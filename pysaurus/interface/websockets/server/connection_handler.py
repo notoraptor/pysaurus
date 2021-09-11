@@ -14,9 +14,7 @@ from pysaurus.interface.websockets.server import protocol
 REQUEST_ID = "request_id"
 
 
-EQUIV = {
-    "127.0.0.1": "localhost"
-}
+EQUIV = {"127.0.0.1": "localhost"}
 
 
 class ConnectionHandler(WebSocketHandler):
@@ -94,9 +92,9 @@ class ConnectionHandler(WebSocketHandler):
             try:
                 json_request["connection_id"] = self.server.get_connection_id(self)
                 request = protocol.Request.from_dict(json_request)
-                response = self.server.manage_request(
-                    request
-                ) or protocol.OkResponse(request.request_id)
+                response = self.server.manage_request(request) or protocol.OkResponse(
+                    request.request_id
+                )
             except PysaurusError as exc:
                 response = protocol.ErrorResponse.from_exception(
                     json_request.get(REQUEST_ID, ""), exc

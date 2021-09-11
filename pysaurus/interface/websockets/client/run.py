@@ -8,9 +8,7 @@ from pysaurus.core.components import AbsolutePath
 from pysaurus.core.functions import package_dir
 from pysaurus.database.viewport.layers.source_layer import SourceLayer
 
-entry_path = AbsolutePath.join(
-    package_dir(), "interface", "web", "index.html"
-)
+entry_path = AbsolutePath.join(package_dir(), "interface", "web", "index.html")
 relative_path = os.path.relpath(entry_path.path)
 
 
@@ -18,7 +16,7 @@ relative_path = os.path.relpath(entry_path.path)
 app = Flask(__name__, static_folder=entry_path.get_directory().path)
 
 
-@app.route('/')
+@app.route("/")
 def index():
     return send_file(entry_path.path)
 
@@ -43,11 +41,13 @@ def serve(path):
 
 
 # TODO web client
-raise NotImplementedError(f"""
+raise NotImplementedError(
+    f"""
 Web client does not yet work correctly.
 - Notification system is slow.
 - Local images are not displayed.
-""")
+"""
+)
 
 
 if __name__ == "__main__":

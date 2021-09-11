@@ -2,7 +2,7 @@ from tkinter import Tk, filedialog
 
 
 class TkContext:
-    __slots__ = "root",
+    __slots__ = ("root",)
 
     def __init__(self, topmost=True):
         self.root = Tk()
@@ -30,7 +30,9 @@ def _string_or_empty(value):
 
 def select_directory(default=None):
     with TkContext():
-        return _string_or_empty(filedialog.askdirectory(mustexist=True, initialdir=default))
+        return _string_or_empty(
+            filedialog.askdirectory(mustexist=True, initialdir=default)
+        )
 
 
 def select_file_to_open():
