@@ -14,7 +14,6 @@ ujson = "^4.0.2"
 tornado = "^6.1"
 bcrypt = "^3.2.0"
 Flask = "^2.0.1"
-pywebview = {extras = ["qt"], version = "^3.5"}
 PyQt5 = "^5.15.4"
 
 [tool.poetry.dev-dependencies]
