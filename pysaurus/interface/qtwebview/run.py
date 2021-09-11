@@ -8,6 +8,7 @@ from PyQt5.QtWidgets import QApplication
 
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.functions import package_dir
+from pysaurus.core.modules import System
 from pysaurus.interface.cefgui.gui_api import GuiAPI
 
 LevelType = QWebEnginePage.JavaScriptConsoleMessageLevel
@@ -87,8 +88,8 @@ class HelloWorldHtmlApp(QWebEngineView):
         self.web_page.setHtml(html, url)
         self.setPage(self.web_page)
 
-        # self.settings().setFontSize(QWebEngineSettings.FontSize.MinimumFontSize, 32)
-        self.setZoomFactor(1.5)
+        if System.is_windows():
+            self.setZoomFactor(1.5)
 
         # setup channel
         self.channel = QWebChannel()
