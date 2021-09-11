@@ -231,7 +231,7 @@ export class HomePage extends React.Component {
 
     render() {
         return (
-            <div id="home" className="flex-grow-1 p-4 vertical">
+            <div id="home" className="absolute-plain p-4 vertical">
                 <div className="text-center p-2">{this.renderInitialButton()}</div>
                 <div id="notifications" className="notifications flex-grow-1 overflow-auto">{this.renderMessages()}</div>
             </div>

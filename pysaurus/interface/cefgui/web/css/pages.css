@@ -87,15 +87,12 @@
 	border-right: 1px solid gray;
 }
 
-#videos .side-panel .stack {
-	display: flex;
-	flex-direction: column;
+#videos .side-panel .stack.group > .header {
+	flex-shrink: 0;
 }
-
 #videos .side-panel .stack.group > .content {
 	flex-grow: 1;
-	display: flex;
-	flex-direction: column;
+	position: relative;
 }
 
 #videos.classifier header > * + * {

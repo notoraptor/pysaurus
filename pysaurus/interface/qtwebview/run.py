@@ -64,7 +64,8 @@ class CustomPage(QWebEnginePage):
         self, level: LevelType, message: str, line_number: int, source_id: str
     ):
         file = sys.stdout if level == LevelType.InfoMessageLevel else sys.stderr
-        print(f"[JS:{LEVEL[level]}] {source_id}:{line_number}", message, file=file)
+        print(f"[JS:{LEVEL[level]}] {source_id}:{line_number}", file=file)
+        print(f"\t{message}", file=file)
 
 
 class HelloWorldHtmlApp(QWebEngineView):

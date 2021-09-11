@@ -54,7 +54,7 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
           const allChecked = this.allChecked(start, end);
           console.log(`Rendering ${this.props.groupDef.groups.length} group(s).`);
           return /*#__PURE__*/React.createElement("div", {
-            className: "group-view flex-grow-1 vertical"
+            className: "group-view absolute-plain vertical"
           }, /*#__PURE__*/React.createElement("div", {
             className: "header flex-shrink-0 text-center pt-2"
           }, /*#__PURE__*/React.createElement("div", {

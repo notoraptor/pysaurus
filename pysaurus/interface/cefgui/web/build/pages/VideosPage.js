@@ -174,7 +174,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           const actions = this.features.actions;
           return /*#__PURE__*/React.createElement("div", {
             id: "videos",
-            className: "vertical flex-grow-1 p-4"
+            className: "absolute-plain p-4 vertical"
           }, /*#__PURE__*/React.createElement("header", {
             className: "horizontal flex-shrink-0"
           }, /*#__PURE__*/React.createElement(MenuPack, {
@@ -250,7 +250,9 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           }))), /*#__PURE__*/React.createElement("div", {
             className: "frontier block flex-shrink-0"
           }), /*#__PURE__*/React.createElement("div", {
-            className: "content position-relative horizontal flex-grow-1"
+            className: "content position-relative flex-grow-1"
+          }, /*#__PURE__*/React.createElement("div", {
+            className: "absolute-plain horizontal"
           }, /*#__PURE__*/React.createElement("div", {
             className: "side-panel vertical"
           }, /*#__PURE__*/React.createElement(Collapsable, {
@@ -283,9 +285,11 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           }, /*#__PURE__*/React.createElement(Cross, {
             title: "unstack",
             action: this.classifierUnstack
-          })) : ''))) : '', groupDef ? /*#__PURE__*/React.createElement(Collapsable, {
+          })) : ''))) : '', groupDef ? /*#__PURE__*/React.createElement("div", {
+            className: "flex-grow-1 position-relative"
+          }, /*#__PURE__*/React.createElement(Collapsable, {
             lite: false,
-            className: "group flex-grow-1",
+            className: "group absolute-plain vertical",
             title: "Groups"
           }, /*#__PURE__*/React.createElement(GroupView, {
             groupDef: groupDef,
@@ -296,7 +300,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             onGroupViewState: this.onGroupViewState,
             onOptions: this.editPropertyValue,
             onPlus: groupDef.is_property && this.state.definitions[groupDef.field].multiple ? this.classifierSelectGroup : null
-          })) : ''), /*#__PURE__*/React.createElement("div", {
+          }))) : ''), /*#__PURE__*/React.createElement("div", {
             className: "main-panel videos overflow-auto"
           }, this.state.videos.map(data => /*#__PURE__*/React.createElement(Video, {
             key: data.video_id,
@@ -309,7 +313,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             onInfo: this.updateStatus,
             confirmDeletion: this.state.confirmDeletion,
             groupedByMoves: groupedByMoves
-          })))), /*#__PURE__*/React.createElement("footer", {
+          }))))), /*#__PURE__*/React.createElement("footer", {
             className: "horizontal flex-shrink-0"
           }, /*#__PURE__*/React.createElement("div", {
             className: "footer-status clickable",

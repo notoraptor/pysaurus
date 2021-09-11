@@ -132,7 +132,7 @@ export class VideosPage extends React.Component {
         const actions = this.features.actions;
 
         return (
-            <div id="videos" className="vertical flex-grow-1 p-4">
+            <div id="videos" className="absolute-plain p-4 vertical">
                 <header className="horizontal flex-shrink-0">
                     <MenuPack title="Database ...">
                         <MenuItem action={this.renameDatabase}>Rename database "{this.state.database.name}" ...</MenuItem>
@@ -202,68 +202,72 @@ export class VideosPage extends React.Component {
                     </div>
                 </header>
                 <div className="frontier block flex-shrink-0"/>
-                <div className="content position-relative horizontal flex-grow-1">
-                    <div className="side-panel vertical">
-                        <Collapsable lite={false} className="filter flex-shrink-0" title="Filter">
-                            {this.renderFilter()}
-                        </Collapsable>
-                        {this.state.path.length ? (
-                            <Collapsable lite={false} className="filter flex-shrink-0" title="Classifier path">
-                                {stringProperties.length ? (
-                                    <div className="path-menu text-center p-2">
-                                        <MenuPack title="Concatenate path into ...">
-                                            {stringProperties.map((def, i) => (
-                                                <MenuItem key={i} action={() => this.classifierConcatenate(def.name)}>
-                                                    {def.name}
-                                                </MenuItem>
-                                            ))}
-                                        </MenuPack>
-                                        <div className="pt-2">
-                                            <button className="block" onClick={this.classifierReversePath}>reverse path</button>
-                                        </div>
-                                    </div>
-                                ) : ''}
-                                {this.state.path.map((value, index) => (
-                                    <div key={index} className="path-step horizontal px-2 py-1">
-                                        <div className="flex-grow-1">{value.toString()}</div>
-                                        {index === this.state.path.length - 1 ? (
-                                            <div className="icon">
-                                                <Cross title="unstack" action={this.classifierUnstack}/>
+                <div className="content position-relative flex-grow-1">
+                    <div className="absolute-plain horizontal">
+                        <div className="side-panel vertical">
+                            <Collapsable lite={false} className="filter flex-shrink-0" title="Filter">
+                                {this.renderFilter()}
+                            </Collapsable>
+                            {this.state.path.length ? (
+                                <Collapsable lite={false} className="filter flex-shrink-0" title="Classifier path">
+                                    {stringProperties.length ? (
+                                        <div className="path-menu text-center p-2">
+                                            <MenuPack title="Concatenate path into ...">
+                                                {stringProperties.map((def, i) => (
+                                                    <MenuItem key={i} action={() => this.classifierConcatenate(def.name)}>
+                                                        {def.name}
+                                                    </MenuItem>
+                                                ))}
+                                            </MenuPack>
+                                            <div className="pt-2">
+                                                <button className="block" onClick={this.classifierReversePath}>reverse path</button>
                                             </div>
-                                        ) : ''}
-                                    </div>
-                                ))}
-                            </Collapsable>
-                        ) : ''}
-                        {groupDef ? (
-                            <Collapsable lite={false} className="group flex-grow-1" title="Groups">
-                                <GroupView
-                                    groupDef={groupDef}
-                                    isClassified={!!this.state.path.length}
-                                    pageSize={this.state.groupPageSize}
-                                    pageNumber={this.state.groupPageNumber}
-                                    selection={this.state.groupSelection}
-                                    onGroupViewState={this.onGroupViewState}
-                                    onOptions={this.editPropertyValue}
-                                    onPlus={
-                                        groupDef.is_property && this.state.definitions[groupDef.field].multiple
-                                            ? this.classifierSelectGroup : null
-                                    }/>
-                            </Collapsable>
-                        ) : ''}
+                                        </div>
+                                    ) : ''}
+                                    {this.state.path.map((value, index) => (
+                                        <div key={index} className="path-step horizontal px-2 py-1">
+                                            <div className="flex-grow-1">{value.toString()}</div>
+                                            {index === this.state.path.length - 1 ? (
+                                                <div className="icon">
+                                                    <Cross title="unstack" action={this.classifierUnstack}/>
+                                                </div>
+                                            ) : ''}
+                                        </div>
+                                    ))}
+                                </Collapsable>
+                            ) : ''}
+                            {groupDef ? (
+                                <div className="flex-grow-1 position-relative">
+                                    <Collapsable lite={false} className="group absolute-plain vertical" title="Groups">
+                                        <GroupView
+                                            groupDef={groupDef}
+                                            isClassified={!!this.state.path.length}
+                                            pageSize={this.state.groupPageSize}
+                                            pageNumber={this.state.groupPageNumber}
+                                            selection={this.state.groupSelection}
+                                            onGroupViewState={this.onGroupViewState}
+                                            onOptions={this.editPropertyValue}
+                                            onPlus={
+                                                groupDef.is_property && this.state.definitions[groupDef.field].multiple
+                                                    ? this.classifierSelectGroup : null
+                                            }/>
+                                    </Collapsable>
+                                </div>
+                            ) : ''}
+                        </div>
+                        <div className="main-panel videos overflow-auto">{this.state.videos.map(data => (
+                            <Video key={data.video_id}
+                                   data={data}
+                                   propDefs={this.state.properties}
+                                   selected={this.state.selector.has(data.video_id)}
+                                   onSelect={this.onVideoSelection}
+                                   onMove={this.moveVideo}
+                                   onSelectPropertyValue={this.focusPropertyValue}
+                                   onInfo={this.updateStatus}
+                                   confirmDeletion={this.state.confirmDeletion}
+                                   groupedByMoves={groupedByMoves}/>
+                        ))}</div>
                     </div>
-                    <div className="main-panel videos overflow-auto">{this.state.videos.map(data => (
-                        <Video key={data.video_id}
-                               data={data}
-                               propDefs={this.state.properties}
-                               selected={this.state.selector.has(data.video_id)}
-                               onSelect={this.onVideoSelection}
-                               onMove={this.moveVideo}
-                               onSelectPropertyValue={this.focusPropertyValue}
-                               onInfo={this.updateStatus}
-                               confirmDeletion={this.state.confirmDeletion}
-                               groupedByMoves={groupedByMoves}/>
-                    ))}</div>
                 </div>
                 <footer className="horizontal flex-shrink-0">
                     <div className="footer-status clickable" onClick={this.resetStatus}>{this.state.status}</div>

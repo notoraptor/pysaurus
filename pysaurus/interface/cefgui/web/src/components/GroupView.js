@@ -35,7 +35,7 @@ export class GroupView extends React.Component {
         const allChecked = this.allChecked(start, end);
         console.log(`Rendering ${this.props.groupDef.groups.length} group(s).`);
         return (
-            <div className="group-view flex-grow-1 vertical">
+            <div className="group-view absolute-plain vertical">
                 <div className="header flex-shrink-0 text-center pt-2">
                     <div className="title bold pb-2">{this.renderTitle()}</div>
                     <div>

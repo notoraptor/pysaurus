@@ -17,14 +17,6 @@ export class App extends React.Component {
     }
 
     render() {
-        return (
-            <div className="flex-grow-1 vertical">
-                <main className="flex-grow-1 vertical">{this.renderPage()}</main>
-            </div>
-        );
-    }
-
-    renderPage() {
         const parameters = this.state.parameters;
         const page = this.state.page;
         if (!page)

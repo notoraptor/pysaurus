@@ -37,14 +37,6 @@ System.register(["./pages/Test.js", "./pages/HomePage.js", "./pages/VideosPage.j
         }
 
         render() {
-          return /*#__PURE__*/React.createElement("div", {
-            className: "flex-grow-1 vertical"
-          }, /*#__PURE__*/React.createElement("main", {
-            className: "flex-grow-1 vertical"
-          }, this.renderPage()));
-        }
-
-        renderPage() {
           const parameters = this.state.parameters;
           const page = this.state.page;
           if (!page) return "Opening ...";

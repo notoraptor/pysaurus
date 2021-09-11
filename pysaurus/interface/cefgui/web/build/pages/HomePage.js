@@ -266,7 +266,7 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
         render() {
           return /*#__PURE__*/React.createElement("div", {
             id: "home",
-            className: "flex-grow-1 p-4 vertical"
+            className: "absolute-plain p-4 vertical"
           }, /*#__PURE__*/React.createElement("div", {
             className: "text-center p-2"
           }, this.renderInitialButton()), /*#__PURE__*/React.createElement("div", {
