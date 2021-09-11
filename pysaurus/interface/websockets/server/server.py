@@ -2,11 +2,11 @@
     receives requests and send responses.
 
     Example:
-        >>> from pysaurus.interface.server.server import Server
+        >>> from pysaurus.interface.websockets.server.server import Server
         >>> Server().start(port=1234)  # There is a default port. TODO which one?
 
     You can interrupt server by sending a keyboard interrupt signal (Ctrl+C).
-        >>> from pysaurus.interface.server.server import Server
+        >>> from pysaurus.interface.websockets.server.server import Server
         >>> try:
         >>>     Server().start()
         >>> except KeyboardInterrupt:
@@ -28,9 +28,9 @@ from tornado.queues import Future, Queue
 from tornado.websocket import WebSocketClosedError
 
 from pysaurus.core.components import AbsolutePath
-from pysaurus.interface.server import protocol
-from pysaurus.interface.server.connection_handler import ConnectionHandler
-from pysaurus.interface.server.connection_manager import ConnectionManager
+from pysaurus.interface.websockets.server import protocol
+from pysaurus.interface.websockets.server.connection_handler import ConnectionHandler
+from pysaurus.interface.websockets.server.connection_manager import ConnectionManager
 
 DEFAULT_PORT = 8432
 DEFAULT_PING_SECONDS = 60

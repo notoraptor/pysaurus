@@ -1,6 +1,6 @@
 from typing import Dict, Optional
 
-from pysaurus.interface.server.connection_handler import ConnectionHandler
+from pysaurus.interface.websockets.server.connection_handler import ConnectionHandler
 
 
 class ConnectionManager:

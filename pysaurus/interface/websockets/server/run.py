@@ -5,9 +5,9 @@ import queue
 import traceback
 
 from pysaurus.interface.cefgui.gui_api import GuiAPI
-from pysaurus.interface.server import protocol
-from pysaurus.interface.server.protocol import AutoErrorResponse
-from pysaurus.interface.server.server import DEFAULT_PORT, Server
+from pysaurus.interface.websockets.server import protocol
+from pysaurus.interface.websockets.server.protocol import AutoErrorResponse
+from pysaurus.interface.websockets.server.server import DEFAULT_PORT, Server
 
 
 class ErrroUnknownRequest(AutoErrorResponse):
@@ -92,6 +92,14 @@ def main():
         server.start(port=args.port)
     except KeyboardInterrupt:
         print("Keyboard interruption.")
+
+
+# TODO web server
+raise NotImplementedError(f"""
+Web server does not yet work correctly.
+- Notification system is slow.
+- Local images are not displayed.
+""")
 
 
 if __name__ == "__main__":

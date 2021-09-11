@@ -9,7 +9,7 @@ import ujson as json
 from tornado.websocket import WebSocketClosedError, WebSocketHandler
 
 from pysaurus.application.exceptions import PysaurusError
-from pysaurus.interface.server import protocol
+from pysaurus.interface.websockets.server import protocol
 
 REQUEST_ID = "request_id"
 
@@ -26,7 +26,7 @@ class ConnectionHandler(WebSocketHandler):
     """
 
     def __init__(self, *args, **kwargs):
-        from pysaurus.interface.server.server import Server
+        from pysaurus.interface.websockets.server.server import Server
 
         self.server = None  # type: Server
         super(ConnectionHandler, self).__init__(*args, **kwargs)

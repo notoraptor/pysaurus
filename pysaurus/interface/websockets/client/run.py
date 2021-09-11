@@ -1,7 +1,7 @@
 import os
 
 import ujson as json
-from flask import Flask, send_file, Response
+from flask import Flask, send_file, Response, abort
 
 from pysaurus.application.application import Application
 from pysaurus.core.components import AbsolutePath
@@ -23,7 +23,7 @@ def index():
     return send_file(entry_path.path)
 
 
-@app.route("/backend.js")
+@app.route("/onload.js")
 def js_backend():
     ret = f"""
 window.PYTHON_DEFAULT_SOURCES = {json.dumps(SourceLayer.DEFAULT_SOURCE_DEF)};
@@ -33,17 +33,21 @@ System.import('./build/client.js');
     return Response(ret, mimetype="text/javascript")
 
 
-@app.route("/onload.js")
-def js_index():
-    ret = f"""console.log("onload.");"""
-    return Response(ret, mimetype="text/javascript")
-
-
 @app.route("/<path:path>")
 def serve(path):
     file_path = AbsolutePath.join(entry_path.get_directory(), path)
+    if file_path.get_basename() == "favicon.ico":
+        abort(404)
     assert file_path.isfile(), file_path
     return send_file(file_path.path)
+
+
+# TODO web client
+raise NotImplementedError(f"""
+Web client does not yet work correctly.
+- Notification system is slow.
+- Local images are not displayed.
+""")
 
 
 if __name__ == "__main__":
