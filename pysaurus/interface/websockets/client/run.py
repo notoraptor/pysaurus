@@ -9,7 +9,7 @@ from pysaurus.core.functions import package_dir
 from pysaurus.database.viewport.layers.source_layer import SourceLayer
 
 entry_path = AbsolutePath.join(
-    package_dir(), "interface", "cefgui", "web", "index.html"
+    package_dir(), "interface", "web", "index.html"
 )
 relative_path = os.path.relpath(entry_path.path)
 

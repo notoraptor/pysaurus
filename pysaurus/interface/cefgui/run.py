@@ -5,6 +5,7 @@ import threading
 
 from cefpython3 import cefpython as cef
 
+from pysaurus.core.functions import package_dir
 from pysaurus.interface.cefgui.cef_api import CefAPI
 
 
@@ -29,7 +30,7 @@ def main():
     sys.excepthook = cef.ExceptHook
     threading.excepthook = thread_excepthook
     entry_path = os.path.normpath(
-        os.path.join(os.path.dirname(__file__), "web/index.html")
+        os.path.join(package_dir(), "interface/web/index.html")
     ).replace("\\", "/")
     url = "file:///" + os.path.abspath(entry_path)
     settings = {

@@ -68,7 +68,7 @@ class HelloWorldHtmlApp(QWebEngineView):
 
         # setup page
         html_path = AbsolutePath.join(
-            package_dir(), "interface", "cefgui", "web", "index.html"
+            package_dir(), "interface", "web", "index.html"
         ).assert_file()
         url = QUrl.fromLocalFile(html_path.path)
         print("Loading", url)
