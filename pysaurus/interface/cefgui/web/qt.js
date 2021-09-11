@@ -15,11 +15,9 @@ new QWebChannel(qt.webChannelTransport, function (channel) {
                 .catch(error => reject({name: "javascript error", message: error.message}));
         });
     }
-    backend.notified.connect(function() {
-        console.log("Notified.");
-        backend_call("notify", [])
-            .then(notification => window.NOTIFICATION_MANAGER.call(notification))
-            .catch(error => console.error(error));
+    backend.notified.connect(function(raw) {
+        const notification = JSON.parse(raw);
+        window.NOTIFICATION_MANAGER.call(notification);
     });
     backend_call("get_constants", [])
         .then(constants => {

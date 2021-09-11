@@ -1,5 +1,4 @@
 import sys
-from collections import deque
 
 import ujson as json
 from PyQt5.QtCore import pyqtSlot, QUrl, pyqtSignal, QObject
@@ -22,20 +21,14 @@ LEVEL = {
 class Api(GuiAPI):
     def __init__(self, interface):
         super().__init__()
-        self.notifications = deque()
         self.interface = interface  # type: Interface
 
     def _notify(self, notification):
-        self.notifications.append(notification)
-        self.interface.notified.emit()
-
-    def notify(self):
-        notification = self.notifications.popleft()
-        return {
+        self.interface.notified.emit(json.dumps({
             "name": type(notification).__name__,
             "notification": notification.to_dict(),
             "message": str(notification),
-        }
+        }))
 
 
 class Interface(QObject):
@@ -43,7 +36,7 @@ class Interface(QObject):
         super().__init__(parent)
         self.api = Api(self)
 
-    notified = pyqtSignal()
+    notified = pyqtSignal(str)
 
     @pyqtSlot(str, result=str)
     def call(self, json_str):
@@ -103,12 +96,14 @@ def main():
     # Initialize.
     app = QApplication.instance() or QApplication(sys.argv)
     view = HelloWorldHtmlApp()
+    screen_rect = app.desktop().screen().rect()
+    screen_center = screen_rect.center()
     # Set geometry.
-    width = 2048
-    height = 1080
-    screen_center = app.desktop().screen().rect().center()
+    width = (2 * screen_rect.width()) // 3
+    height = screen_rect.height() // 2
     x = screen_center.x() - width // 2
     y = screen_center.y() - height // 2
+    print(f"Window: size {width} x {height}, position ({x}; {y})")
     view.setGeometry(x, y, width, height)
     # Display.
     view.show()
