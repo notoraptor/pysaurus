@@ -1,16 +1,13 @@
-Video file manager written in Python (WIP).
+Python 3.8, Windows, Linux.
 
-```
-ffprobe -v quiet -print_format json -show_format -show_streams "<video-file>" > "<output-file>.json"
-```
+Run with default GUI (CEF on Windows, Qt web view elsewhere)
 
-TODO:
-- Add possibility to change language. Minimum languages expected: english, French.
-- Memory leaks in python code when running gui ?
-- Interface
-  - Remember last property value edition panel selected (either delete, edit or move panel).
-  - Using SQL instead of JSON could it make code faster and easier to maintain ?
-  - Redesign using bootstrap ?
-  - Suggest existing values on property edition.
-  - Add an option to execute a command line (example, `sort +date -length`) from interface, as a shortcut instead of multiple interface clicks.
-    - Does that mean interface is not ergonomic ?
+`python -m pysaurus`
+
+Run with Qt web view QUI
+
+`python -m pysaurus qt`
+
+Run with CEF GUI (on Windows only)
+
+`python -m pysaurus cef`
