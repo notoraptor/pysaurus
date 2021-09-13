@@ -88,9 +88,6 @@ class HelloWorldHtmlApp(QWebEngineView):
         self.web_page.setHtml(html, url)
         self.setPage(self.web_page)
 
-        if System.is_windows():
-            self.setZoomFactor(1.5)
-
         # setup channel
         self.channel = QWebChannel()
         self.channel.registerObject("backend", self.interface)
@@ -101,15 +98,24 @@ def main():
     # Initialize.
     app = QApplication.instance() or QApplication(sys.argv)
     view = HelloWorldHtmlApp()
+    # Set geometry.
     screen_rect = app.desktop().screen().rect()
     screen_center = screen_rect.center()
-    # Set geometry.
-    width = (2 * screen_rect.width()) // 3
-    height = screen_rect.height() // 2
+    width = (7 * screen_rect.width()) // 10
+    height = (2 * screen_rect.height()) // 3
     x = screen_center.x() - width // 2
     y = screen_center.y() - height // 2
     print(f"Window: size {width} x {height}, position ({x}; {y})")
     view.setGeometry(x, y, width, height)
+    # Set zoom.
+    if System.is_windows():
+        # view.setZoomFactor(1.8)
+        screen_height = screen_rect.height()
+        base_height = 1080
+        if screen_height > base_height:
+            scale = (screen_height / base_height) * 0.9
+            print("Scale", scale)
+            view.setZoomFactor(scale)
     # Display.
     view.show()
     exit(app.exec_())
