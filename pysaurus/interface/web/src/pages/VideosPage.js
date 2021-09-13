@@ -80,6 +80,7 @@ export class VideosPage extends React.Component {
         this.manageProperties = this.manageProperties.bind(this);
         this.onVideoSelection = this.onVideoSelection.bind(this);
         this.openRandomVideo = this.openRandomVideo.bind(this);
+        this.openRandomPlayer = this.openRandomPlayer.bind(this);
         this.reloadDatabase = this.reloadDatabase.bind(this);
         this.resetGroup = this.resetGroup.bind(this);
         this.resetSearch = this.resetSearch.bind(this);
@@ -103,8 +104,12 @@ export class VideosPage extends React.Component {
         this.renameDatabase = this.renameDatabase.bind(this);
         this.deleteDatabase = this.deleteDatabase.bind(this);
         this.onGroupViewState = this.onGroupViewState.bind(this);
+        this.notify = this.notify.bind(this);
+        this.canOpenRandomVideo = this.canOpenRandomVideo.bind(this);
+        this.canOpenRandomPlayer = this.canOpenRandomPlayer.bind(this);
 
         this.callbackIndex = -1;
+        this.notificationCallbackIndex = -1;
         this.features = new Actions({
             select: new Action("Ctrl+T", "Select videos ...", this.selectVideos),
             group: new Action("Ctrl+G", "Group ...", this.groupVideos),
@@ -116,8 +121,17 @@ export class VideosPage extends React.Component {
             unsort: new Action("Ctrl+Shift+S", "Reset sorting", this.resetSort),
             reload: new Action("Ctrl+R", "Reload database ...", this.reloadDatabase),
             manageProperties: new Action("Ctrl+P", "Manage properties ...", this.manageProperties),
-            openRandomVideo: new Action("Ctrl+O", "Open random video", this.openRandomVideo),
+            openRandomVideo: new Action("Ctrl+O", "Open random video", this.openRandomVideo, this.canOpenRandomVideo),
+            openRandomPlayer: new Action("Ctrl+E", "Open random player", this.openRandomPlayer, this.canOpenRandomPlayer),
         });
+    }
+
+    canOpenRandomVideo() {
+        return !this.state.notFound && this.state.nbVideos;
+    }
+
+    canOpenRandomPlayer() {
+        return window.PYTHON_HAS_EMBEDDED_PLAYER && this.canOpenRandomVideo();
     }
 
     render() {
@@ -169,7 +183,8 @@ export class VideosPage extends React.Component {
                             {<ActionToMenuItem action={actions.search}/>}
                             {<ActionToMenuItem action={actions.sort}/>}
                         </Menu>
-                        {this.state.notFound || !nbVideos ? '' : <ActionToMenuItem action={actions.openRandomVideo}/>}
+                        {this.canOpenRandomVideo() ? <ActionToMenuItem action={actions.openRandomVideo}/> : ""}
+                        {this.canOpenRandomPlayer() ? <ActionToMenuItem action={actions.openRandomPlayer}/> : ""}
                         <MenuItem action={this.findSimilarVideos}>Search similar videos</MenuItem>
                         <Menu title="Search similar videos (longer) ...">
                             <MenuItem action={this.findSimilarVideosIgnoreCache}>
@@ -410,10 +425,16 @@ export class VideosPage extends React.Component {
 
     componentDidMount() {
         this.callbackIndex = KEYBOARD_MANAGER.register(this.features.onKeyPressed);
+        this.notificationCallbackIndex = NOTIFICATION_MANAGER.register(this.notify);
     }
 
     componentWillUnmount() {
         KEYBOARD_MANAGER.unregister(this.callbackIndex);
+        NOTIFICATION_MANAGER.unregister(this.notificationCallbackIndex);
+    }
+
+    notify(notification) {
+        this.backend(null, {});
     }
 
     onGroupViewState(groupState) {
@@ -633,8 +654,14 @@ export class VideosPage extends React.Component {
     openRandomVideo() {
         python_call('open_random_video')
             .then(filename => {
-                this.setState({status: `Randomly opened: ${filename}`});
+                this.updateStatus(`Randomly opened: ${filename}`, true, true);
             })
+            .catch(backend_error);
+    }
+
+    openRandomPlayer() {
+        python_call('open_random_player')
+            .then(() => this.updateStatus(`Random player opened!`, true, true))
             .catch(backend_error);
     }
 

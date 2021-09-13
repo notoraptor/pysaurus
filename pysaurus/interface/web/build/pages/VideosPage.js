@@ -123,6 +123,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           this.manageProperties = this.manageProperties.bind(this);
           this.onVideoSelection = this.onVideoSelection.bind(this);
           this.openRandomVideo = this.openRandomVideo.bind(this);
+          this.openRandomPlayer = this.openRandomPlayer.bind(this);
           this.reloadDatabase = this.reloadDatabase.bind(this);
           this.resetGroup = this.resetGroup.bind(this);
           this.resetSearch = this.resetSearch.bind(this);
@@ -146,7 +147,11 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           this.renameDatabase = this.renameDatabase.bind(this);
           this.deleteDatabase = this.deleteDatabase.bind(this);
           this.onGroupViewState = this.onGroupViewState.bind(this);
+          this.notify = this.notify.bind(this);
+          this.canOpenRandomVideo = this.canOpenRandomVideo.bind(this);
+          this.canOpenRandomPlayer = this.canOpenRandomPlayer.bind(this);
           this.callbackIndex = -1;
+          this.notificationCallbackIndex = -1;
           this.features = new Actions({
             select: new Action("Ctrl+T", "Select videos ...", this.selectVideos),
             group: new Action("Ctrl+G", "Group ...", this.groupVideos),
@@ -158,8 +163,17 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             unsort: new Action("Ctrl+Shift+S", "Reset sorting", this.resetSort),
             reload: new Action("Ctrl+R", "Reload database ...", this.reloadDatabase),
             manageProperties: new Action("Ctrl+P", "Manage properties ...", this.manageProperties),
-            openRandomVideo: new Action("Ctrl+O", "Open random video", this.openRandomVideo)
+            openRandomVideo: new Action("Ctrl+O", "Open random video", this.openRandomVideo, this.canOpenRandomVideo),
+            openRandomPlayer: new Action("Ctrl+E", "Open random player", this.openRandomPlayer, this.canOpenRandomPlayer)
           });
+        }
+
+        canOpenRandomVideo() {
+          return !this.state.notFound && this.state.nbVideos;
+        }
+
+        canOpenRandomPlayer() {
+          return window.PYTHON_HAS_EMBEDDED_PLAYER && this.canOpenRandomVideo();
         }
 
         render() {
@@ -218,9 +232,11 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             action: actions.search
           }), /*#__PURE__*/React.createElement(ActionToMenuItem, {
             action: actions.sort
-          })), this.state.notFound || !nbVideos ? '' : /*#__PURE__*/React.createElement(ActionToMenuItem, {
+          })), this.canOpenRandomVideo() ? /*#__PURE__*/React.createElement(ActionToMenuItem, {
             action: actions.openRandomVideo
-          }), /*#__PURE__*/React.createElement(MenuItem, {
+          }) : "", this.canOpenRandomPlayer() ? /*#__PURE__*/React.createElement(ActionToMenuItem, {
+            action: actions.openRandomPlayer
+          }) : "", /*#__PURE__*/React.createElement(MenuItem, {
             action: this.findSimilarVideos
           }, "Search similar videos"), /*#__PURE__*/React.createElement(Menu, {
             title: "Search similar videos (longer) ..."
@@ -394,10 +410,16 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
 
         componentDidMount() {
           this.callbackIndex = KEYBOARD_MANAGER.register(this.features.onKeyPressed);
+          this.notificationCallbackIndex = NOTIFICATION_MANAGER.register(this.notify);
         }
 
         componentWillUnmount() {
           KEYBOARD_MANAGER.unregister(this.callbackIndex);
+          NOTIFICATION_MANAGER.unregister(this.notificationCallbackIndex);
+        }
+
+        notify(notification) {
+          this.backend(null, {});
         }
 
         onGroupViewState(groupState) {
@@ -644,10 +666,12 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
 
         openRandomVideo() {
           python_call('open_random_video').then(filename => {
-            this.setState({
-              status: `Randomly opened: ${filename}`
-            });
+            this.updateStatus(`Randomly opened: ${filename}`, true, true);
           }).catch(backend_error);
+        }
+
+        openRandomPlayer() {
+          python_call('open_random_player').then(() => this.updateStatus(`Random player opened!`, true, true)).catch(backend_error);
         }
 
         reloadDatabase() {

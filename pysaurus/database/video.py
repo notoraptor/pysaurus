@@ -316,6 +316,12 @@ class Video(VideoState):
         video_terms = self.terms(as_set=True)
         return any(term in video_terms for term in terms)
 
+    @staticmethod
+    def has_terms_id(self, terms):
+        # type: (Video, Sequence[str]) -> bool
+        term, = terms
+        return self.video_id == int(term)
+
     def set_properties(self, properties: dict) -> Set[str]:
         modified = set()
         for name, value in properties.items():

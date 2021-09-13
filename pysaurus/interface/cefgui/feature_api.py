@@ -53,12 +53,14 @@ class FeatureAPI:
 
     # Constant getters.
 
-    @staticmethod
-    def get_constants():
-        return {
+    def get_constants(self, **kwargs):
+        constsnts = {
             "PYTHON_DEFAULT_SOURCES": SourceLayer.DEFAULT_SOURCE_DEF,
             "PYTHON_APP_NAME": Application.app_name,
+            "PYTHON_HAS_EMBEDDED_PLAYER": False,
         }
+        constsnts.update(kwargs)
+        return constsnts
 
     def list_databases(self):
         return [
@@ -180,8 +182,20 @@ class FeatureAPI:
 
     # Database actions without modifications.
 
+    def choose_random_video(self):
+        video = self.provider.get_random_found_video()
+        self.provider.source_layer.reset_parameters()
+        self.provider.grouping_layer.reset_parameters()
+        self.provider.classifier_layer.reset_parameters()
+        self.provider.group_layer.reset_parameters()
+        self.set_search(str(video.video_id), "id")
+        return video
+
     def open_random_video(self):
-        return str(self.provider.get_random_found_video().filename.open())
+        return str(self.choose_random_video().filename.open())
+
+    def open_random_player(self):
+        raise NotImplementedError("No random player available")
 
     def open_video(self, video_id):
         self.database.get_from_id(video_id).filename.open()

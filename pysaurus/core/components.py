@@ -363,6 +363,20 @@ class Duration(object):
         return cls(minutes * 60_000_000)
 
 
+class ShortDuration(Duration):
+    __slots__ = ()
+
+    def __str__(self):
+        seconds = int((self.seconds * 1000000 + self.microseconds) / 1000000)
+        view = []
+        if self.days:
+            view.append("%02dd" % self.days)
+        view.append("%02d" % self.hours)
+        view.append("%02d" % self.minutes)
+        view.append("%02d" % seconds)
+        return ":".join(view)
+
+
 class FileSize(object):
     __slots__ = ("__size", "__unit")
 

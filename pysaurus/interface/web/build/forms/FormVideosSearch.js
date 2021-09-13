@@ -69,7 +69,16 @@ System.register(["../dialogs/FancyBox.js"], function (_export, _context) {
             checked: this.state.cond === 'exact'
           }), /*#__PURE__*/React.createElement("label", {
             htmlFor: "input-search-exact"
-          }, "exact sentence"))));
+          }, "exact sentence")), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("input", {
+            type: "radio",
+            id: "input-search-id",
+            name: "searchType",
+            value: "id",
+            onChange: this.onChangeCond,
+            checked: this.state.cond === 'id'
+          }), /*#__PURE__*/React.createElement("label", {
+            htmlFor: "input-search-id"
+          }, "video ID"))));
         }
 
         componentDidMount() {

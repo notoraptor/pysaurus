@@ -174,6 +174,10 @@ def identity(value):
     return value
 
 
+def function_none(*args, **kwargs):
+    return None
+
+
 def is_dictionary(dict_to_check):
     """Check if given variable is a dictionary-like object.
 

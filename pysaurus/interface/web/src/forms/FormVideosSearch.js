@@ -61,6 +61,15 @@ export class FormVideosSearch extends React.Component {
                                checked={this.state.cond === 'exact'}/>
                         <label htmlFor="input-search-exact">exact sentence</label>
                     </p>
+                    <p>
+                        <input type="radio"
+                               id="input-search-id"
+                               name="searchType"
+                               value="id"
+                               onChange={this.onChangeCond}
+                               checked={this.state.cond === 'id'}/>
+                        <label htmlFor="input-search-id">video ID</label>
+                    </p>
                 </div>
             </FancyBox>
         );

@@ -44,7 +44,6 @@ class SearchLayer(Layer):
     def __filter_from_root_layer(
         self, search_def: SearchDef, source_layer: SourceLayer, data: Group
     ) -> VideoArray:
-        assert search_def.cond in ("exact", "and", "or")
         term_to_videos = source_layer.index
         terms = functions.string_to_pieces(search_def.text)
         if search_def.cond == "exact":
@@ -57,6 +56,10 @@ class SearchLayer(Layer):
             selection = set(data.videos)
             for term in terms:
                 selection &= term_to_videos.get(term, set())
+        elif search_def.cond == "id":
+            term, = terms
+            video_id = int(term)
+            selection = (video for video in data.videos if video.video_id == video_id)
         else:  # search_def.cond == 'or'
             selection = set(term_to_videos.get(terms[0], set()))
             for term in terms[1:]:

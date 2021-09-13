@@ -96,7 +96,8 @@ export const FIELD_MAP = new FieldMap([
 export const SEARCH_TYPE_TITLE = {
     exact: 'exactly',
     and: 'all terms',
-    or: 'any term'
+    or: 'any term',
+    id: 'video ID'
 };
 
 export const PAGE_SIZES = [10, 20, 50, 100];

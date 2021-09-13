@@ -3,7 +3,7 @@ from typing import Optional
 from pysaurus.core.classes import ToDict
 from pysaurus.core.enumeration import Enumeration
 
-_Cond = Enumeration(("and", "or", "exact"))
+_Cond = Enumeration(("and", "or", "exact", "id"))
 
 
 class SearchDef(ToDict):

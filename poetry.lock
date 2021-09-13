@@ -460,6 +460,14 @@ toml = "*"
 testing = ["fields", "hunter", "process-tests", "six", "pytest-xdist", "virtualenv"]
 
 [[package]]
+name = "python-vlc"
+version = "3.0.12118"
+description = "VLC bindings for python."
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "regex"
 version = "2021.8.28"
 description = "Alternative regular expression module, to replace re."
@@ -568,7 +576,7 @@ watchdog = ["watchdog"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "6c5b34f0dc6525c45683f6f3b94b86d3c63db256b5b57edaa6eadf917051ea0f"
+content-hash = "e199e4069b05b65300248698ba859053f3e40a57426c75dbda04f0bccdcab989"
 
 [metadata.files]
 atomicwrites = [
@@ -928,6 +936,10 @@ pytest = [
 pytest-cov = [
     {file = "pytest-cov-2.12.1.tar.gz", hash = "sha256:261ceeb8c227b726249b376b8526b600f38667ee314f910353fa318caa01f4d7"},
     {file = "pytest_cov-2.12.1-py2.py3-none-any.whl", hash = "sha256:261bb9e47e65bd099c89c3edf92972865210c36813f80ede5277dceb77a4a62a"},
+]
+python-vlc = [
+    {file = "python-vlc-3.0.12118.tar.gz", hash = "sha256:566f2f7c303f6800851cacc016df1c6eeec094ad63e0a49d87db9d698094f1fb"},
+    {file = "python_vlc-3.0.12118-py3-none-any.whl", hash = "sha256:f88be06c6f819a4db2de1c586b193b5df1410ff10fca33b8c6f4e56037c46f7b"},
 ]
 regex = [
     {file = "regex-2021.8.28-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:9d05ad5367c90814099000442b2125535e9d77581855b9bee8780f1b41f2b1a2"},

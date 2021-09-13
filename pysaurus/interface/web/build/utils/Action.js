@@ -3,6 +3,10 @@ System.register(["./Shortcut.js"], function (_export, _context) {
 
   var Shortcut, Action;
 
+  function defaultIsActive() {
+    return true;
+  }
+
   _export("Action", void 0);
 
   return {
@@ -16,11 +20,13 @@ System.register(["./Shortcut.js"], function (_export, _context) {
          * @param shortcut {string}
          * @param title {string}
          * @param callback {function}
+         * @param filter {function}
          */
-        constructor(shortcut, title, callback) {
+        constructor(shortcut, title, callback, filter = undefined) {
           this.shortcut = new Shortcut(shortcut);
           this.title = title;
           this.callback = callback;
+          this.isActive = filter || defaultIsActive;
         }
 
       });

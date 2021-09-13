@@ -6,10 +6,20 @@ from PyQt5.QtWebChannel import QWebChannel
 from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEnginePage
 from PyQt5.QtWidgets import QApplication
 
+from pysaurus.application import exceptions
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.functions import package_dir
 from pysaurus.core.modules import System
+from pysaurus.core.notifications import Notification
 from pysaurus.interface.cefgui.gui_api import GuiAPI
+
+try:
+    from pysaurus.interface.qtwebview.player import Player
+
+    has_vlc = True
+except RuntimeError as exc:
+    print(f"{type(exc).__name__}: {exc}", file=sys.stderr)
+    has_vlc = False
 
 LevelType = QWebEnginePage.JavaScriptConsoleMessageLevel
 LEVEL = {
@@ -35,6 +45,12 @@ class Api(GuiAPI):
             )
         )
 
+    def get_constants(self):
+        return super().get_constants(PYTHON_HAS_EMBEDDED_PLAYER=has_vlc)
+
+    def open_random_player(self):
+        self.interface.player_triggered.emit()
+
 
 class Interface(QObject):
     def __init__(self, parent=None):
@@ -42,6 +58,7 @@ class Interface(QObject):
         self.api = Api(self)
 
     notified = pyqtSignal(str)
+    player_triggered = pyqtSignal()
 
     @pyqtSlot(str, result=str)
     def call(self, json_str):
@@ -49,7 +66,8 @@ class Interface(QObject):
             func_name, func_args = json.loads(json_str)
             assert not func_name.startswith("_")
             result = {"error": False, "data": getattr(self.api, func_name)(*func_args)}
-        except Exception as exc:
+        except exceptions.PysaurusError as exc:
+            print(exc)
             result = {
                 "error": True,
                 "data": {"name": type(exc).__name__, "message": str(exc)},
@@ -67,8 +85,10 @@ class CustomPage(QWebEnginePage):
 
 
 class HelloWorldHtmlApp(QWebEngineView):
-    def __init__(self):
+    def __init__(self, *, geometry=None):
         super().__init__()
+
+        # setup interface
         self.interface = Interface()
 
         # setup page
@@ -81,9 +101,11 @@ class HelloWorldHtmlApp(QWebEngineView):
             html = file.read()
         html = html.replace(
             "<!--headerScript-->",
-            """<script src="qrc:///qtwebchannel/qwebchannel.js"></script>""",
+            '<script src="qrc:///qtwebchannel/qwebchannel.js"></script>',
         )
-        html = html.replace("<!--bodyScript-->", """<script src="qt.js"></script>""")
+        html = html.replace(
+            '<script src="onload.js"></script>', '<script src="qt.js"></script>'
+        )
         self.web_page = CustomPage()
         self.web_page.setHtml(html, url)
         self.setPage(self.web_page)
@@ -93,11 +115,38 @@ class HelloWorldHtmlApp(QWebEngineView):
         self.channel.registerObject("backend", self.interface)
         self.page().setWebChannel(self.channel)
 
+        if geometry:
+            assert isinstance(geometry, (tuple, list))
+            assert len(geometry) == 4
+            self.setGeometry(*geometry)
+
+        # setup player
+        self.player = None
+        if has_vlc:
+            self.player = Player(on_next=self._on_next_random_video)
+            self.interface.player_triggered.connect(self.player.show)
+            if geometry:
+                _, _, width, height = geometry
+                self.player.resize(int(width * 3 / 4), int(height * 3 / 4))
+
+    def _on_next_random_video(self):
+        video = self.interface.api.choose_random_video()
+        self.interface.api._notify(Notification())
+        return video.filename.path
+
+
+def generate_except_hook(qapp):
+    def except_hook(cls, exception, traceback):
+        sys.__excepthook__(cls, exception, traceback)
+        qapp.exit(1)
+
+    return except_hook
+
 
 def main():
     # Initialize.
     app = QApplication.instance() or QApplication(sys.argv)
-    view = HelloWorldHtmlApp()
+    sys.excepthook = generate_except_hook(app)
     # Set geometry.
     screen_rect = app.desktop().screen().rect()
     screen_center = screen_rect.center()
@@ -106,7 +155,7 @@ def main():
     x = screen_center.x() - width // 2
     y = screen_center.y() - height // 2
     print(f"Window: size {width} x {height}, position ({x}; {y})")
-    view.setGeometry(x, y, width, height)
+    view = HelloWorldHtmlApp(geometry=(x, y, width, height))
     # Set zoom.
     if System.is_windows():
         # view.setZoomFactor(1.8)

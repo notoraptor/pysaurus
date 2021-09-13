@@ -20,6 +20,7 @@ export class Video extends React.Component {
         this.copyMetaTitle = this.copyMetaTitle.bind(this);
         this.copyFileTitle = this.copyFileTitle.bind(this);
         this.copyFilePath = this.copyFilePath.bind(this);
+        this.copyVideoID = this.copyVideoID.bind(this);
         this.renameVideo = this.renameVideo.bind(this);
         this.editProperties = this.editProperties.bind(this);
         this.onSelect = this.onSelect.bind(this);
@@ -67,6 +68,7 @@ export class Video extends React.Component {
                                     {meta_title ? <MenuItem action={this.copyMetaTitle}>Copy meta title</MenuItem> : ''}
                                     {file_title ? <MenuItem action={this.copyFileTitle}>Copy file title</MenuItem> : ''}
                                     <MenuItem action={this.copyFilePath}>Copy path</MenuItem>
+                                    <MenuItem action={this.copyVideoID}>Copy video ID</MenuItem>
                                     {data.exists ? <MenuItem action={this.renameVideo}>Rename video</MenuItem> : ''}
                                     {data.exists ? <MenuItem action={this.moveVideo}>Move video to another folder ...</MenuItem> : ""}
                                     <MenuItem className="red-flag" action={this.deleteVideo}>
@@ -320,7 +322,13 @@ export class Video extends React.Component {
     copyFilePath() {
         python_call('clipboard_video_path', this.props.data.video_id)
             .then(() => this.props.onInfo('Copied to clipboard: ' + this.props.data.filename))
-            .catch(() => this.props.onInfo(`Cannot copy file title to clipboard: ${this.props.data.filename}`));
+            .catch(() => this.props.onInfo(`Cannot copy file path to clipboard: ${this.props.data.filename}`));
+    }
+
+    copyVideoID() {
+        python_call('clipboard', this.props.data.video_id)
+            .then(() => this.props.onInfo('Copied to clipboard: ' + this.props.data.video_id))
+            .catch(() => this.props.onInfo(`Cannot copy video ID to clipboard: ${this.props.data.video_id}`));
     }
 
     confirmMove(srcID, dstID) {

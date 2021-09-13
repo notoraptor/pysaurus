@@ -75,7 +75,8 @@ System.register([], function (_export, _context) {
       _export("SEARCH_TYPE_TITLE", SEARCH_TYPE_TITLE = {
         exact: 'exactly',
         and: 'all terms',
-        or: 'any term'
+        or: 'any term',
+        id: 'video ID'
       });
 
       _export("PAGE_SIZES", PAGE_SIZES = [10, 20, 50, 100]);

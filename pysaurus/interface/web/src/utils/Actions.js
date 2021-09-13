@@ -23,7 +23,7 @@ export class Actions {
      */
     onKeyPressed(event) {
         for (let action of Object.values(this.actions)) {
-            if (action.shortcut.isPressed(event)) {
+            if (action.isActive() && action.shortcut.isPressed(event)) {
                 setTimeout(() => action.callback(), 0);
                 return true;
             }
