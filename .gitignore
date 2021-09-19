@@ -16,3 +16,4 @@ webrtc_event_logs/
 /dist
 /build
 /.*
+/tests/*.png

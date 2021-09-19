@@ -12,7 +12,6 @@ from pysaurus.core.components import (
     PathType,
 )
 from pysaurus.core.constants import THUMBNAIL_EXTENSION, CPU_COUNT
-from pysaurus.core.custom_json_parser import parse_json
 from pysaurus.core.modules import ImageUtils, System, FileSystem
 from pysaurus.core.notifier import Notifier, DEFAULT_NOTIFIER
 from pysaurus.core.path_tree import PathTree
@@ -29,6 +28,13 @@ from pysaurus.database.properties import PropType
 from pysaurus.database.video import Video
 from pysaurus.database.video_runtime_info import VideoRuntimeInfo
 from pysaurus.database.video_state import VideoState
+
+try:
+    from pysaurus.database import backend_cysaurus as backend_raptor
+except exceptions.CysaurusUnavailable:
+    from pysaurus.database import backend_pyav as backend_raptor
+    import sys
+    print("Using fallback backend for videos info and thumbnails.", file=sys.stderr)
 
 SPECIAL_PROPERTIES = [PropType("<error>", "", True)]
 
@@ -384,55 +390,26 @@ class Database:
 
     @Profiler.profile_method()
     def update(self):
-
         self.__set_special_properties()
-
         current_date = DateModified.now()
-        all_file_names = self.get_new_video_paths()
 
-        jobn = notifications.Jobs.videos(len(all_file_names), self.__notifier)
+        all_file_names = self.get_new_video_paths()
         if not all_file_names:
             return
-        jobs = []
-        for index, (file_names, job_id) in enumerate(
-            functions.dispatch_tasks(all_file_names, CPU_COUNT)
-        ):
-            input_file_path = AbsolutePath.file_path(
-                self.__db_folder, str(index), "list"
-            )
-            output_file_path = AbsolutePath.file_path(
-                self.__db_folder, str(index), "json"
-            )
 
-            with open(input_file_path.path, "wb") as file:
-                for file_name in file_names:
-                    file.write(("%s\n" % file_name).encode())
-
-            jobs.append(
-                (
-                    input_file_path.path,
-                    output_file_path.path,
-                    len(file_names),
-                    job_id,
-                    jobn,
-                )
-            )
-
+        jobn = notifications.Jobs.videos(len(all_file_names), self.__notifier)
+        jobs = functions.dispatch_tasks(all_file_names, CPU_COUNT, [self.folder, jobn])
         with Profiler(
             title="Get videos info from JSON (%d threads)" % len(jobs),
             notifier=self.__notifier,
         ):
-            counts_loaded = functions.parallelize(
-                jobs_python.job_video_to_json, jobs, cpu_count=CPU_COUNT
+            results = functions.parallelize(
+                backend_raptor.backend_video_infos, jobs, cpu_count=CPU_COUNT
             )
 
         videos = {}
         unreadable = {}
-        for job in jobs:
-            list_file_path = AbsolutePath.ensure(job[0])
-            json_file_path = AbsolutePath.ensure(job[1])
-            assert json_file_path.isfile()
-            arr = parse_json(json_file_path)
+        for arr in results:
             for d in arr:
                 file_path = AbsolutePath.ensure(d["f"])
                 if len(d) == 2:
@@ -465,9 +442,6 @@ class Database:
                 video_state.runtime.size = stat.st_size
                 video_state.runtime.driver_id = stat.st_dev
 
-            list_file_path.delete()
-            json_file_path.delete()
-        assert sum(counts_loaded) == len(videos)
         assert len(videos) + len(unreadable) == len(all_file_names)
 
         if videos:
@@ -493,7 +467,6 @@ class Database:
         videos_without_thumbs = []
         thumb_to_videos = {}  # type: Dict[str, List[Video]]
         thumb_errors = {}
-        thumb_jobs = []
 
         # Collect videos with and without thumbnails.
         existing_thumb_names = self.__check_thumbnails_on_disk()
@@ -524,7 +497,6 @@ class Database:
         nb_videos_no_thumbs = len(videos_without_thumbs)
         del thumb_to_videos
 
-        jobn = notifications.Jobs.thumbnails(nb_videos_no_thumbs, self.__notifier)
         if not videos_without_thumbs:
             self.__notify_missing_thumbnails()
             return
@@ -542,68 +514,32 @@ class Database:
         del valid_thumb_names
         self.__to_save()
 
-        dispatched_thumb_jobs = functions.dispatch_tasks(
-            videos_without_thumbs, CPU_COUNT
+        jobn = notifications.Jobs.thumbnails(nb_videos_no_thumbs, self.__notifier)
+        thumb_jobs = functions.dispatch_tasks(
+            [(video.filename.path, video.thumb_name) for video in videos_without_thumbs],
+            CPU_COUNT,
+            [self.__db_folder, self.__thumb_folder, jobn]
         )
         del videos_without_thumbs
-        for index, (job_videos, job_id) in enumerate(dispatched_thumb_jobs):
-            input_file_path = AbsolutePath.file_path(
-                self.__db_folder, str(index), "thumbnails.list"
-            )
-            output_file_path = AbsolutePath.file_path(
-                self.__db_folder, str(index), "thumbnails.json"
-            )
-
-            with open(input_file_path.path, "wb") as file:
-                for video in job_videos:
-                    file.write(
-                        (
-                            "%s\t%s\t%s\t\n"
-                            % (video.filename, self.__thumb_folder, video.thumb_name)
-                        ).encode()
-                    )
-
-            thumb_jobs.append(
-                (
-                    input_file_path.path,
-                    output_file_path.path,
-                    len(job_videos),
-                    job_id,
-                    jobn,
-                )
-            )
-
         with Profiler(
-            title="Get thumbnails from JSON through %d thread(s)" % len(thumb_jobs),
+            title="Get thumbnails from JSON through %d thread(s)" % CPU_COUNT,
             notifier=self.__notifier,
         ):
-            counts_loaded = functions.parallelize(
-                jobs_python.job_video_thumbnails_to_json,
+            results = functions.parallelize(
+                backend_raptor.backend_video_thumbnails,
                 thumb_jobs,
                 cpu_count=CPU_COUNT,
             )
 
-        for job in thumb_jobs:
-            list_file_path = AbsolutePath.ensure(job[0])
-            json_file_path = AbsolutePath.ensure(job[1])
-            assert json_file_path.isfile()
-
-            with open(json_file_path.path, encoding="utf-8") as file:
-                arr = json.load(file)
+        for arr in results:
             for d in arr:
-                if d is not None:
-                    assert len(d) == 2 and "f" in d and "e" in d
-                    file_name = d["f"]
-                    file_path = AbsolutePath.ensure(file_name)
-                    thumb_errors[file_name] = d["e"]
-                    video = self.__videos[file_path]
-                    video.unreadable_thumbnail = True
-                    video.runtime.has_thumbnail = False
-
-            list_file_path.delete()
-            json_file_path.delete()
-
-        assert sum(counts_loaded) + len(thumb_errors) == nb_videos_no_thumbs
+                assert len(d) == 2 and "f" in d and "e" in d
+                file_name = d["f"]
+                file_path = AbsolutePath.ensure(file_name)
+                thumb_errors[file_name] = d["e"]
+                video = self.__videos[file_path]
+                video.unreadable_thumbnail = True
+                video.runtime.has_thumbnail = False
 
         if thumb_errors:
             self.__notifier.notify(notifications.VideoThumbnailErrors(thumb_errors))

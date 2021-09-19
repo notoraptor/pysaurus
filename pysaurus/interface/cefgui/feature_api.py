@@ -58,6 +58,7 @@ class FeatureAPI:
             "PYTHON_DEFAULT_SOURCES": SourceLayer.DEFAULT_SOURCE_DEF,
             "PYTHON_APP_NAME": Application.app_name,
             "PYTHON_HAS_EMBEDDED_PLAYER": False,
+            "PYTHON_FEATURE_COMPARISON": False,
         }
         constsnts.update(kwargs)
         return constsnts

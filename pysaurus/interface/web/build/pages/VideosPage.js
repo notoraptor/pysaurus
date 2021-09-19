@@ -150,6 +150,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           this.notify = this.notify.bind(this);
           this.canOpenRandomVideo = this.canOpenRandomVideo.bind(this);
           this.canOpenRandomPlayer = this.canOpenRandomPlayer.bind(this);
+          this.canFindSimilarVideos = this.canFindSimilarVideos.bind(this);
           this.callbackIndex = -1;
           this.notificationCallbackIndex = -1;
           this.features = new Actions({
@@ -174,6 +175,10 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
 
         canOpenRandomPlayer() {
           return window.PYTHON_HAS_EMBEDDED_PLAYER && this.canOpenRandomVideo();
+        }
+
+        canFindSimilarVideos() {
+          return window.PYTHON_FEATURE_COMPARISON;
         }
 
         render() {
@@ -236,13 +241,13 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             action: actions.openRandomVideo
           }) : "", this.canOpenRandomPlayer() ? /*#__PURE__*/React.createElement(ActionToMenuItem, {
             action: actions.openRandomPlayer
-          }) : "", /*#__PURE__*/React.createElement(MenuItem, {
+          }) : "", this.canFindSimilarVideos() ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.findSimilarVideos
-          }, "Search similar videos"), /*#__PURE__*/React.createElement(Menu, {
+          }, "Search similar videos") : "", this.canFindSimilarVideos() ? /*#__PURE__*/React.createElement(Menu, {
             title: "Search similar videos (longer) ..."
           }, /*#__PURE__*/React.createElement(MenuItem, {
             action: this.findSimilarVideosIgnoreCache
-          }, /*#__PURE__*/React.createElement("strong", null, "Ignore cache")))), /*#__PURE__*/React.createElement(MenuPack, {
+          }, /*#__PURE__*/React.createElement("strong", null, "Ignore cache"))) : ""), /*#__PURE__*/React.createElement(MenuPack, {
             title: "Options"
           }, /*#__PURE__*/React.createElement(Menu, {
             title: "Page size ..."

@@ -16,6 +16,7 @@ PyQt5 = "^5.15.4"
 PyQtWebEngine = "^5.15.4"
 cefpython3 = {version = "^66.1", markers = "sys_platform == 'win32'"}
 python-vlc = "^3.0.12118"
+av = "^8.0.3"
 
 [tool.poetry.dev-dependencies]
 black = "^21.7b0"

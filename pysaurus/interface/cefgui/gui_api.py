@@ -18,11 +18,18 @@ from pysaurus.core.notifications import (
     DatabaseReady,
 )
 from pysaurus.core.path_tree import PathTree
-from pysaurus.database.database_features import DatabaseFeatures
 from pysaurus.database.viewport.video_provider import VideoProvider
 from pysaurus.interface.cefgui import tk_utils
 from pysaurus.interface.cefgui.feature_api import FeatureAPI
 from pysaurus.interface.cefgui.parallel_notifier import ParallelNotifier
+
+try:
+    from pysaurus.database.database_features import DatabaseFeatures
+    COMPARISON_ENABLED = True
+except exceptions.CysaurusUnavailable:
+    COMPARISON_ENABLED = False
+    import sys
+    print("Video thumbnails comparison unavailable.", file=sys.stderr)
 
 
 class GuiAPI(FeatureAPI):
@@ -35,6 +42,9 @@ class GuiAPI(FeatureAPI):
         self.copy_work: Optional[FileCopier] = None
         self.notifier.call_default_if_no_manager()
         self.monitor_notifications = monitor_notifications
+
+    def get_constants(self, **kwargs):
+        return super().get_constants(PYTHON_FEATURE_COMPARISON=COMPARISON_ENABLED)
 
     def create_database(self, name, folders, update):
         self._launch(self._create_database, args=(name, folders, update))

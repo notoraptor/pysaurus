@@ -100,3 +100,7 @@ class NoVideos(PysaurusError):
 
 class ForbiddenVideoFolder(PysaurusError):
     pass
+
+
+class CysaurusUnavailable(PysaurusError):
+    pass

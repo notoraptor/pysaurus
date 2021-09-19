@@ -107,6 +107,7 @@ export class VideosPage extends React.Component {
         this.notify = this.notify.bind(this);
         this.canOpenRandomVideo = this.canOpenRandomVideo.bind(this);
         this.canOpenRandomPlayer = this.canOpenRandomPlayer.bind(this);
+        this.canFindSimilarVideos = this.canFindSimilarVideos.bind(this);
 
         this.callbackIndex = -1;
         this.notificationCallbackIndex = -1;
@@ -132,6 +133,10 @@ export class VideosPage extends React.Component {
 
     canOpenRandomPlayer() {
         return window.PYTHON_HAS_EMBEDDED_PLAYER && this.canOpenRandomVideo();
+    }
+
+    canFindSimilarVideos() {
+        return window.PYTHON_FEATURE_COMPARISON;
     }
 
     render() {
@@ -185,12 +190,14 @@ export class VideosPage extends React.Component {
                         </Menu>
                         {this.canOpenRandomVideo() ? <ActionToMenuItem action={actions.openRandomVideo}/> : ""}
                         {this.canOpenRandomPlayer() ? <ActionToMenuItem action={actions.openRandomPlayer}/> : ""}
-                        <MenuItem action={this.findSimilarVideos}>Search similar videos</MenuItem>
-                        <Menu title="Search similar videos (longer) ...">
-                            <MenuItem action={this.findSimilarVideosIgnoreCache}>
-                                <strong>Ignore cache</strong>
-                            </MenuItem>
-                        </Menu>
+                        {this.canFindSimilarVideos() ? <MenuItem action={this.findSimilarVideos}>Search similar videos</MenuItem> : ""}
+                        {this.canFindSimilarVideos() ? (
+                            <Menu title="Search similar videos (longer) ...">
+                                <MenuItem action={this.findSimilarVideosIgnoreCache}>
+                                    <strong>Ignore cache</strong>
+                                </MenuItem>
+                            </Menu>
+                        ) : ""}
                     </MenuPack>
                     <MenuPack title="Options">
                         <Menu title="Page size ...">
