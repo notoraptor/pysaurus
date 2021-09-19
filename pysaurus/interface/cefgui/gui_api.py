@@ -25,10 +25,12 @@ from pysaurus.interface.cefgui.parallel_notifier import ParallelNotifier
 
 try:
     from pysaurus.database.database_features import DatabaseFeatures
+
     COMPARISON_ENABLED = True
 except exceptions.CysaurusUnavailable:
     COMPARISON_ENABLED = False
     import sys
+
     print("Video thumbnails comparison unavailable.", file=sys.stderr)
 
 

@@ -12,13 +12,15 @@ def backend_video_infos(job):
         for file_name in file_names:
             file.write(("%s\n" % file_name).encode())
 
-    count = video_raptor.job_video_to_json((
-        list_file_path.path,
-        json_file_path.path,
-        len(file_names),
-        job_id,
-        job_notifier,
-    ))
+    count = video_raptor.job_video_to_json(
+        (
+            list_file_path.path,
+            json_file_path.path,
+            len(file_names),
+            job_id,
+            job_notifier,
+        )
+    )
     assert json_file_path.isfile()
     arr = parse_json(json_file_path)
     assert len(arr) == count
@@ -36,13 +38,15 @@ def backend_video_thumbnails(job):
         for file_path, thumb_name in videos_data:
             file.write(f"{file_path}\t{thumb_folder}\t{thumb_name}\t\n".encode())
 
-    nb_loaded = video_raptor.job_video_thumbnails_to_json((
-        list_file_path.path,
-        json_file_path.path,
-        len(videos_data),
-        job_id,
-        job_notifier,
-    ))
+    nb_loaded = video_raptor.job_video_thumbnails_to_json(
+        (
+            list_file_path.path,
+            json_file_path.path,
+            len(videos_data),
+            job_id,
+            job_notifier,
+        )
+    )
     assert json_file_path.isfile()
     arr = parse_json(json_file_path)
     assert arr[-1] is None

@@ -319,7 +319,7 @@ class Video(VideoState):
     @staticmethod
     def has_terms_id(self, terms):
         # type: (Video, Sequence[str]) -> bool
-        term, = terms
+        (term,) = terms
         return self.video_id == int(term)
 
     def set_properties(self, properties: dict) -> Set[str]:

@@ -13,7 +13,6 @@ from pysaurus.interface.websockets.server import protocol
 
 REQUEST_ID = "request_id"
 
-
 EQUIV = {"127.0.0.1": "localhost"}
 
 

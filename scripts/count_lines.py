@@ -24,5 +24,5 @@ def main():
             print(f"{count}\t{line}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

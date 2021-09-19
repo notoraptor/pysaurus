@@ -34,6 +34,7 @@ try:
 except exceptions.CysaurusUnavailable:
     from pysaurus.database import backend_pyav as backend_raptor
     import sys
+
     print("Using fallback backend for videos info and thumbnails.", file=sys.stderr)
 
 SPECIAL_PROPERTIES = [PropType("<error>", "", True)]
@@ -516,9 +517,12 @@ class Database:
 
         jobn = notifications.Jobs.thumbnails(nb_videos_no_thumbs, self.__notifier)
         thumb_jobs = functions.dispatch_tasks(
-            [(video.filename.path, video.thumb_name) for video in videos_without_thumbs],
+            [
+                (video.filename.path, video.thumb_name)
+                for video in videos_without_thumbs
+            ],
             CPU_COUNT,
-            [self.__db_folder, self.__thumb_folder, jobn]
+            [self.__db_folder, self.__thumb_folder, jobn],
         )
         del videos_without_thumbs
         with Profiler(

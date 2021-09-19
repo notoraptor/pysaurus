@@ -103,6 +103,5 @@ Web server does not yet work correctly.
 """
 )
 
-
 if __name__ == "__main__":
     main()

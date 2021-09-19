@@ -90,8 +90,7 @@ def dispatch_tasks(tasks, job_count, extra_args=None):
     for job_len in job_lengths:
         job_id += 1
         jobs.append(
-            [tasks[cursor : (cursor + job_len)], f"{job_id}on{job_count}"]
-            + extra_args
+            [tasks[cursor : (cursor + job_len)], f"{job_id}on{job_count}"] + extra_args
         )
         cursor += job_len
     # NB: next_job_id is now next_job_id + len(tasks).

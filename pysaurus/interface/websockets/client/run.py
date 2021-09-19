@@ -11,7 +11,6 @@ from pysaurus.database.viewport.layers.source_layer import SourceLayer
 entry_path = AbsolutePath.join(package_dir(), "interface", "web", "index.html")
 relative_path = os.path.relpath(entry_path.path)
 
-
 # set the project root directory as the static folder, you can set others.
 app = Flask(__name__, static_folder=entry_path.get_directory().path)
 
@@ -48,7 +47,6 @@ Web client does not yet work correctly.
 - Local images are not displayed.
 """
 )
-
 
 if __name__ == "__main__":
     app.run(port=2000)

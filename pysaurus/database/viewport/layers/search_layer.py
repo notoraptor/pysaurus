@@ -57,7 +57,7 @@ class SearchLayer(Layer):
             for term in terms:
                 selection &= term_to_videos.get(term, set())
         elif search_def.cond == "id":
-            term, = terms
+            (term,) = terms
             video_id = int(term)
             selection = (video for video in data.videos if video.video_id == video_id)
         else:  # search_def.cond == 'or'

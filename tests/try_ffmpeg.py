@@ -23,5 +23,5 @@ def main():
     assert get_thumbnail(_path, default_thumb_name) is None
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -1,12 +1,14 @@
 import os
 
+from pysaurus.application import exceptions
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.functions import package_dir
 from pysaurus.core.modules import System
-from pysaurus.application import exceptions
 
 try:
-    BIN_PATH = AbsolutePath.join(package_dir(), "bin", System.get_identifier()).assert_dir()
+    BIN_PATH = AbsolutePath.join(
+        package_dir(), "bin", System.get_identifier()
+    ).assert_dir()
     ALIGNMENT_RAPTOR = AbsolutePath.join(
         BIN_PATH, System.get_lib_basename("alignmentRaptor", prefix="")
     ).assert_file()
