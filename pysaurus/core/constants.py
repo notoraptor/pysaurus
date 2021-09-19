@@ -65,3 +65,4 @@ SIZE_UNIT_TO_STRING = {
     TERA_BYTES: "Tb",
 }
 CPU_COUNT = os.cpu_count()
+USABLE_CPU_COUNT = max(1, CPU_COUNT - 2)

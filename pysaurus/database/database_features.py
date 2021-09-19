@@ -2,16 +2,30 @@ import itertools
 from ctypes import Array, c_bool
 from typing import List, Set
 
+import numpy as np
+
+from pysaurus.application import exceptions
 from pysaurus.core import notifications
 from pysaurus.core.fraction import Fraction
 from pysaurus.core.functions import compute_nb_couples, get_start_index, get_end_index
 from pysaurus.core.notifier import Notifier
 from pysaurus.core.profiling import Profiler
-from pysaurus.database.alignment_raptor import alignment as native_alignment
 from pysaurus.database.database import Database
 from pysaurus.database.miniature_tools.graph import Graph
 from pysaurus.database.miniature_tools.miniature import Miniature
 from pysaurus.database.video import Video
+
+try:
+    from pysaurus.database.video_similarities import alignment_raptor as backend_sim
+
+    has_cpp = True
+except exceptions.CysaurusUnavailable:
+    from pysaurus.database.video_similarities import backend_python as backend_sim
+    import sys
+
+    has_cpp = False
+    print("Using fallback backend for video similarities search.", file=sys.stderr)
+
 
 FRAC_SIM_LIMIT = Fraction(90, 100)
 FRAC_DST_LIMIT = Fraction(1) - FRAC_SIM_LIMIT
@@ -185,7 +199,7 @@ class DatabaseFeatures:
     @classmethod
     def _find_similar_miniatures(cls, miniatures, edges, notifier):
         # type: (List[Miniature], Array[c_bool], Notifier) -> List[Set[int]]
-        native_alignment.classify_similarities_directed(
+        backend_sim.classify_similarities_directed(
             miniatures, edges, SIM_LIMIT, notifier
         )
         graph = Graph()
@@ -198,6 +212,13 @@ class DatabaseFeatures:
                         graph.connect(i, j)
                 job_n.progress(None, i + 1, nb_miniatures)
         return [group for group in graph.pop_groups() if len(group) > 1]
+
+    @classmethod
+    def generate_edges(cls, nb_videos):
+        if has_cpp:
+            return (c_bool * (nb_videos * nb_videos))()
+        else:
+            return np.zeros(nb_videos * nb_videos, dtype=np.uint32)
 
     @classmethod
     def find_similar_videos(cls, db: Database, videos: List[Video] = None):
@@ -217,7 +238,8 @@ class DatabaseFeatures:
 
             if new_miniature_indices:
                 nb_max_comparisons = compute_nb_couples(nb_videos)
-                cmp_map = (c_bool * (nb_videos * nb_videos))()
+                with Profiler("Allocating edges map", notifier=db.notifier):
+                    cmp_map = cls.generate_edges(nb_videos)
                 classifier_new = _GrayClassifier.classify(
                     miniatures, new_miniature_indices
                 )

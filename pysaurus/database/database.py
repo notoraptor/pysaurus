@@ -30,9 +30,9 @@ from pysaurus.database.video_runtime_info import VideoRuntimeInfo
 from pysaurus.database.video_state import VideoState
 
 try:
-    from pysaurus.database import backend_cysaurus as backend_raptor
+    from pysaurus.database.video_info import video_raptor as backend_raptor
 except exceptions.CysaurusUnavailable:
-    from pysaurus.database import backend_pyav as backend_raptor
+    from pysaurus.database.video_info import backend_pyav as backend_raptor
     import sys
 
     print("Using fallback backend for videos info and thumbnails.", file=sys.stderr)
