@@ -332,7 +332,7 @@ export class Video extends React.Component {
     }
 
     confirmMove(srcID, dstID) {
-        python_call("move_video", srcID, dstID)
+        python_call("set_video_moved", srcID, dstID)
             .then(() => this.props.onInfo(`Moved: ${this.props.data.filename}`, true))
             .catch(backend_error);
     }

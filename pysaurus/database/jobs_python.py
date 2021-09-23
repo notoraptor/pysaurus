@@ -27,23 +27,21 @@ def _collect_videos_info(folder: str, files: Dict[AbsolutePath, VideoRuntimeInfo
             )
 
 
-def job_collect_videos_info(job: list) -> Dict[AbsolutePath, VideoRuntimeInfo]:
-    jobn: JobNotifications
-    paths, job_id, jobn = job
+def job_collect_videos_stats(job: list) -> Dict[AbsolutePath, VideoRuntimeInfo]:
+    job_notifier: JobNotifications
+    path, job_id, job_notifier = job
     files = {}  # type: Dict[AbsolutePath, VideoRuntimeInfo]
-    for i, path in enumerate(paths):  # type: (int, AbsolutePath)
-        if path.isdir():
-            _collect_videos_info(path.path, files)
-        elif path.extension in constants.VIDEO_SUPPORTED_EXTENSIONS:
-            stat = FileSystem.stat(path.path)
-            files[path] = VideoRuntimeInfo(
-                size=stat.st_size,
-                mtime=stat.st_mtime,
-                driver_id=stat.st_dev,
-                is_file=True,
-            )
-        jobn.progress(job_id, i, len(paths))
-    jobn.progress(job_id, len(paths), len(paths))
+    if path.isdir():
+        _collect_videos_info(path.path, files)
+    elif path.extension in constants.VIDEO_SUPPORTED_EXTENSIONS:
+        stat = FileSystem.stat(path.path)
+        files[path] = VideoRuntimeInfo(
+            size=stat.st_size,
+            mtime=stat.st_mtime,
+            driver_id=stat.st_dev,
+            is_file=True,
+        )
+    job_notifier.progress(job_id, 1, 1)
     return files
 
 

@@ -2,7 +2,7 @@
 
 import atexit
 
-from .application import Application
+from pysaurus.application.application import Application
 
 
 class ClosingApplication(Application):

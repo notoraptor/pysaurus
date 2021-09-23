@@ -2,7 +2,7 @@ import sys
 import traceback
 
 from pysaurus.application import exceptions
-from pysaurus.interface.cefgui.gui_api import GuiAPI
+from pysaurus.interface.api.gui_api import GuiAPI
 
 
 class CefAPI(GuiAPI):

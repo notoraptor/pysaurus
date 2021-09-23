@@ -39,7 +39,7 @@ class QualityAttribute(DbVideoAttribute):
         self.max = {}
 
     def update(self):
-        videos = list(self.database.get_readable_videos())
+        videos = list(self.database.get_videos("readable"))
         if not videos:
             self.min.clear()
             self.max.clear()
@@ -82,7 +82,7 @@ class PotentialMoveAttribute(DbVideoAttribute):
     def update(self):
         self.potential_moves.clear()
         groups = {}
-        for video in self.database.get_readable_videos():
+        for video in self.database.get_videos("readable"):
             key = (video.file_size, video.duration, video.duration_time_base)
             groups.setdefault(key, ([], []))[video.exists].append(video)
         move_id = 0

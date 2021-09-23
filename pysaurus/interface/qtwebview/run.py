@@ -11,7 +11,7 @@ from pysaurus.core.components import AbsolutePath
 from pysaurus.core.functions import package_dir
 from pysaurus.core.modules import System
 from pysaurus.core.notifications import Notification
-from pysaurus.interface.cefgui.gui_api import GuiAPI
+from pysaurus.interface.api.gui_api import GuiAPI
 
 try:
     from pysaurus.interface.qtwebview.player import Player
@@ -30,6 +30,8 @@ LEVEL = {
 
 
 class Api(GuiAPI):
+    PYTHON_HAS_EMBEDDED_PLAYER = has_vlc
+
     def __init__(self, interface):
         super().__init__()
         self.interface = interface  # type: Interface
@@ -44,9 +46,6 @@ class Api(GuiAPI):
                 }
             )
         )
-
-    def get_constants(self):
-        return super().get_constants(PYTHON_HAS_EMBEDDED_PLAYER=has_vlc)
 
     def open_random_player(self):
         self.interface.player_triggered.emit()

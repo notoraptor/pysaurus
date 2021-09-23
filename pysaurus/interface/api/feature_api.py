@@ -4,7 +4,7 @@ from typing import Optional
 from pysaurus.application.application import Application
 from pysaurus.core import notifications
 from pysaurus.core.components import FileSize, Duration
-from pysaurus.core.functions import compute_nb_pages
+from pysaurus.core.functions import compute_nb_pages, identity
 from pysaurus.database.database import Database
 from pysaurus.database.properties import PropType
 from pysaurus.database.video import Video
@@ -13,7 +13,16 @@ from pysaurus.database.viewport.layers.source_layer import SourceLayer
 from pysaurus.database.viewport.video_provider import VideoProvider
 
 
+def get_video_id(video: Video):
+    return video.video_id
+
+
 class FeatureAPI:
+    PYTHON_DEFAULT_SOURCES = SourceLayer.DEFAULT_SOURCE_DEF
+    PYTHON_APP_NAME = Application.app_name
+    PYTHON_HAS_EMBEDDED_PLAYER = False
+    PYTHON_FEATURE_COMPARISON = True
+
     def __init__(self, notifier):
         self.notifier = notifier
         self.application = Application(self.notifier)
@@ -22,46 +31,28 @@ class FeatureAPI:
 
     # Utilities.
 
-    def _selector_to_indices(self, selector: dict):
+    def _parse_video_selector(self, selector: dict, return_videos=False):
         if selector["all"]:
             exclude = set(selector["exclude"])
-            video_indices = [
-                video.video_id
-                for video in self.provider.get_view()
-                if video.video_id not in exclude
-            ]
-        else:
-            video_indices = set(selector["include"])
-        return video_indices
-
-    def _selector_to_videos(self, selector: dict):
-        if selector["all"]:
-            exclude = set(selector["exclude"])
-            videos = [
-                video
+            getter = identity if return_videos else get_video_id
+            output = [
+                getter(video)
                 for video in self.provider.get_view()
                 if video.video_id not in exclude
             ]
         else:
             include = set(selector["include"])
-            videos = [
+            output = [
                 video for video in self.provider.get_view() if video.video_id in include
-            ]
-        return videos
-
-    # Tk dialog boxes.
+            ] if return_videos else include
+        return output
 
     # Constant getters.
 
-    def get_constants(self, **kwargs):
-        constsnts = {
-            "PYTHON_DEFAULT_SOURCES": SourceLayer.DEFAULT_SOURCE_DEF,
-            "PYTHON_APP_NAME": Application.app_name,
-            "PYTHON_HAS_EMBEDDED_PLAYER": False,
-            "PYTHON_FEATURE_COMPARISON": False,
+    def get_constants(self):
+        return {
+            key: getattr(self, key) for key in dir(self) if key.startswith("PYTHON_")
         }
-        constsnts.update(kwargs)
-        return constsnts
 
     def list_databases(self):
         return [
@@ -77,13 +68,11 @@ class FeatureAPI:
             if ret is not None:
                 print("Ignored value returned by", callargs, file=sys.stderr)
                 print(type(ret), file=sys.stderr)
-        return self.get_info_and_videos(page_size, page_number, selector)
 
-    def get_info_and_videos(self, page_size, page_number, selector=None):
         # Backend state.
         real_nb_videos = len(self.provider.get_view())
         if selector:
-            view = self._selector_to_videos(selector)
+            view = self._parse_video_selector(selector, return_videos=True)
         else:
             view = self.provider.get_view()
         nb_videos = len(view)
@@ -212,7 +201,7 @@ class FeatureAPI:
 
     def count_prop_values(self, name, selector):
         value_to_count = self.database.count_property_values(
-            name, self._selector_to_indices(selector)
+            name, self._parse_video_selector(selector)
         )
         return sorted(value_to_count.items())
 
@@ -263,7 +252,7 @@ class FeatureAPI:
 
     def edit_property_for_videos(self, name, selector, to_add, to_remove):
         self.database.edit_property_for_videos(
-            name, self._selector_to_indices(selector), to_add, to_remove
+            name, self._parse_video_selector(selector), to_add, to_remove
         )
 
     def set_video_properties(self, video_id, properties):
@@ -300,7 +289,7 @@ class FeatureAPI:
             self.provider.get_all_videos(), path, from_property, to_property
         )
 
-    def move_video(self, from_id, to_id):
+    def set_video_moved(self, from_id, to_id):
         from_video = self.database.get_video_from_id(from_id)
         to_video = self.database.get_video_from_id(to_id)
         assert not from_video.exists

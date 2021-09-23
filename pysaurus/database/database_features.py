@@ -26,7 +26,6 @@ except exceptions.CysaurusUnavailable:
     has_cpp = False
     print("Using fallback backend for video similarities search.", file=sys.stderr)
 
-
 FRAC_SIM_LIMIT = Fraction(90, 100)
 FRAC_DST_LIMIT = Fraction(1) - FRAC_SIM_LIMIT
 SIM_LIMIT = float(FRAC_SIM_LIMIT)

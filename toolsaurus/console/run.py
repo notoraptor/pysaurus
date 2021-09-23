@@ -7,12 +7,12 @@ from pysaurus.core import functions
 from pysaurus.core.classes import StringPrinter
 from pysaurus.core.components import FileSize, Duration, AbsolutePath
 from pysaurus.database import path_utils
-from pysaurus.database.database import Database
 from pysaurus.database.video import Video
 from pysaurus.database.video_features import VideoFeatures
 from pysaurus.database.video_sorting import VideoSorting
 from pysaurus.database.video_state import VideoState
 from toolsaurus.command_line_interface import command_line_interface
+from toolsaurus.database.database import ExtendedDatabase
 from toolsaurus.function_parser import FunctionParser, fsigned, fdef
 from toolsaurus.functions import generate_temp_file_path
 from toolsaurus.printable import to_table, to_column
@@ -29,10 +29,26 @@ TEST_LIST_FILE_PATH = AbsolutePath(
 )
 
 
+def path_in_directory(self: AbsolutePath, directory, is_case_insensitive=None):
+    directory = AbsolutePath.ensure(directory)
+    if not directory.isdir():
+        return False
+    directory = directory.standard_path
+    path = self.standard_path
+    if is_case_insensitive:
+        directory = directory.lower()
+        path = path.lower()
+    if len(directory) >= len(path):
+        return False
+    return path.startswith(
+        "%s%s" % (directory, "" if directory.endswith(os.sep) else os.sep)
+    )
+
+
 class API:
     __slots__ = ("database",)
 
-    def __init__(self, database: Database):
+    def __init__(self, database: ExtendedDatabase):
         self.database = database
 
     @fsigned
@@ -368,8 +384,10 @@ class API:
             return ""
         videos = []
         for video in self.database.get_videos("readable", "not_found"):
-            if video.filename.in_directory(
-                folder, is_case_insensitive=self.database.sys_is_case_insensitive
+            if path_in_directory(
+                video.filename,
+                folder,
+                is_case_insensitive=self.database.sys_is_case_insensitive,
             ):
                 videos.append(video)
         videos.sort(key=lambda v: v.filename)
@@ -417,7 +435,9 @@ class ConsoleParser(FunctionParser):
     def __init__(self, list_file_path):
         super(ConsoleParser, self).__init__()
         # Load API.
-        self.api = API(Database.load_from_list_file_path(list_file_path, update=False))
+        self.api = API(
+            ExtendedDatabase.load_from_list_file_path(list_file_path, update=False)
+        )
         # Update parser from API.
         self.import_from(self.api)
         # Update parser with wrapped functions.

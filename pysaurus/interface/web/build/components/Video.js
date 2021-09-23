@@ -332,7 +332,7 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
         }
 
         confirmMove(srcID, dstID) {
-          python_call("move_video", srcID, dstID).then(() => this.props.onInfo(`Moved: ${this.props.data.filename}`, true)).catch(backend_error);
+          python_call("set_video_moved", srcID, dstID).then(() => this.props.onInfo(`Moved: ${this.props.data.filename}`, true)).catch(backend_error);
         }
 
         renameVideo() {

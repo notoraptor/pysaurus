@@ -4,7 +4,7 @@ import asyncio
 import queue
 import traceback
 
-from pysaurus.interface.cefgui.gui_api import GuiAPI
+from pysaurus.interface.api.gui_api import GuiAPI
 from pysaurus.interface.websockets.server import protocol
 from pysaurus.interface.websockets.server.protocol import AutoErrorResponse
 from pysaurus.interface.websockets.server.server import DEFAULT_PORT, Server
