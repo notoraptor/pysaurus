@@ -3,11 +3,13 @@ import os
 import platform
 import sys
 from html.parser import HTMLParser
+from io import BytesIO
 
 from PIL import Image
 from moviepy.video.io.VideoFileClip import VideoFileClip
 
 from pysaurus.core import core_exceptions
+from pysaurus.core.constants import THUMBNAIL_EXTENSION
 
 
 class HTMLStripper(HTMLParser):
@@ -191,6 +193,16 @@ class ImageUtils:
         image = Image.new("RGB", (width, height))
         image.putdata(data)
         return image
+
+    @staticmethod
+    def thumbnail_to_base64(thumb_path: str):
+        if not FileSystem.path.isfile(thumb_path):
+            return None
+        image = ImageUtils.open_rgb_image(thumb_path)
+        buffered = BytesIO()
+        image.save(buffered, format=THUMBNAIL_EXTENSION)
+        image_string = base64.b64encode(buffered.getvalue())
+        return image_string
 
 
 class FNV64:

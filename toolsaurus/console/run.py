@@ -1,16 +1,17 @@
 import os
-from typing import Union, Dict, List, Tuple
+from typing import Dict, List, Tuple
 
 import toolsaurus.functions
 from pysaurus.application import exceptions
 from pysaurus.core import functions
 from pysaurus.core.classes import StringPrinter
 from pysaurus.core.components import FileSize, Duration, AbsolutePath
+from pysaurus.core.modules import ImageUtils, VideoClipping
 from pysaurus.database import path_utils
 from pysaurus.database.video import Video
 from pysaurus.database.video_features import VideoFeatures
 from pysaurus.database.video_sorting import VideoSorting
-from pysaurus.database.video_state import VideoState
+from pysaurus.database.viewport.viewtools.search_def import SearchDef
 from toolsaurus.command_line_interface import command_line_interface
 from toolsaurus.database.database import ExtendedDatabase
 from toolsaurus.function_parser import FunctionParser, fsigned, fdef
@@ -83,26 +84,24 @@ class API:
         self.database.remove_videos_not_found()
 
     @fsigned
-    def info(self, video_id: int) -> Union[Video, VideoState]:
-        return self.database.get_video_from_id(
-            video_id, required=False
-        ) or self.database.get_unreadable_from_id(video_id, required=False)
+    def info(self, video_id: int) -> str:
+        return self.database.get_video_string(video_id)
 
     @fsigned
     def download_image(self, video_id: int) -> str:
-        return VideoFeatures.thumbnail_to_base64(
-            self.database.get_video_from_id(video_id)
+        return ImageUtils.thumbnail_to_base64(
+            str(self.database.get_video_field(video_id, "thumbnail_path"))
         )
 
     @fsigned
     def download_image_from_filename(self, filename: str) -> str:
-        return VideoFeatures.thumbnail_to_base64(
-            self.database.get_video_from_filename(filename)
+        return ImageUtils.thumbnail_to_base64(
+            str(self.database.get_video_from_filename(filename).thumbnail_path)
         )
 
     @fsigned
     def open_image(self, video_id: int):
-        return self.database.get_video_from_id(video_id).thumbnail_path.open()
+        return self.database.get_video_field(video_id, "thumbnail_path").open()
 
     @fsigned
     def open_image_from_filename(self, filename: str):
@@ -110,19 +109,20 @@ class API:
 
     @fsigned
     def clip(self, video_id: int, start: int, length: int) -> str:
-        return VideoFeatures.clip_to_base64(
-            self.database.get_video_from_id(video_id), start, length
+        return VideoClipping.video_clip_to_base64(
+            path=self.database.get_video_filename(video_id),
+            time_start=start,
+            clip_seconds=length,
+            unique_id=self.database.get_video_field(video_id, "thumb_name"),
         )
 
     @fsigned
     def clip_from_filename(self, filename: str, start: int, length: int) -> str:
-        return VideoFeatures.clip_to_base64(
-            self.database.get_video_from_filename(filename), start, length
-        )
+        return self.clip(self.database.get_video_id(filename), start, length)
 
     @fsigned
     def open(self, video_id: int) -> AbsolutePath:
-        return self.database.get_video_from_id(video_id).filename.open()
+        return self.database.get_video_filename(video_id).open()
 
     @fsigned
     def images(self, indices: str):
@@ -136,9 +136,10 @@ class API:
                 except ValueError:
                     errors.append(piece)
                 else:
-                    video = self.database.get_video_from_id(video_id, required=False)
-                    if video:
-                        videos.append(video)
+                    if self.database.has_video_id(video_id):
+                        videos.append(
+                            self.database.get_video_fields(video_id, ("filename", "thumbnail_path"))
+                        )
                     else:
                         unknown.append(video_id)
         temp_file_path = None
@@ -185,9 +186,10 @@ class API:
                 except ValueError:
                     errors.append(piece)
                 else:
-                    video = self.database.get_video_from_id(video_id, required=False)
-                    if video:
-                        videos.append(video)
+                    if self.database.has_video_id(video_id):
+                        videos.append(self.database.get_video_fields(
+                            video_id, ["filename"]
+                        ))
                     else:
                         unknown.append(video_id)
         temp_file_path = None
@@ -229,40 +231,37 @@ class API:
 
     @fsigned
     def delete(self, video_id: int) -> AbsolutePath:
-        return self.database.delete_video(self.database.get_video_from_id(video_id))
+        return self.database.delete_video(video_id)
 
     @fsigned
     def delete_unreadable(self, video_id: int):
-        return self.database.delete_video(
-            self.database.get_unreadable_from_id(video_id)
-        )
+        return self.database.delete_video(video_id)
 
     @fsigned
     def delete_unreadable_from_filename(self, filename: str):
         return self.database.delete_video(
-            self.database.get_unreadable_from_filename(filename)
+            self.database.get_unreadable_from_filename(filename).video_id
         )
 
     @fsigned
     def delete_from_filename(self, filename: str) -> AbsolutePath:
         return self.database.delete_video(
-            self.database.get_video_from_filename(filename)
+            self.database.get_video_from_filename(filename).video_id
         )
 
     @fsigned
     def rename(self, video_id: int, new_title: str) -> int:
         if new_title is None or not str(new_title):
             raise exceptions.MissingVideoNewTitle()
-        video = self.database.get_video_from_id(video_id)  # type: Video
-        self.database.change_video_file_title(video, str(new_title))
-        return video.video_id
+        self.database.change_video_file_title(video_id, str(new_title))
+        return video_id
 
     @fsigned
     def rename_from_filename(self, filename: str, new_title: str) -> (str, str):
         if new_title is None or not str(new_title):
             raise exceptions.MissingVideoNewTitle()
         video = self.database.get_video_from_filename(filename)  # type: Video
-        self.database.change_video_file_title(video, str(new_title))
+        self.database.change_video_file_title(video.video_id, str(new_title))
         return video.filename.path, video.filename.file_title
 
     @fsigned
@@ -277,7 +276,7 @@ class API:
     @fsigned
     def find(self, terms: str) -> List[Video]:
         return sorted(
-            VideoFeatures.find_text(terms, self.database.get_valid_videos()),
+            VideoFeatures.find(SearchDef(terms, "and"), self.database.get_valid_videos()),
             key=lambda video: video.date,
             reverse=True,
         )

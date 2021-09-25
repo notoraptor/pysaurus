@@ -1,15 +1,18 @@
 from typing import List
+from typing import Optional
 
 import ujson as json
 
 from pysaurus.application import exceptions
 from pysaurus.core import notifications
-from pysaurus.core.components import AbsolutePath
+from pysaurus.core.components import AbsolutePath, PathType
 from pysaurus.core.modules import System
 from pysaurus.core.profiling import Profiler
 from pysaurus.database import path_utils
 from pysaurus.database.database import Database
 from pysaurus.database.miniature_tools.miniature import Miniature
+from pysaurus.database.video import Video
+from pysaurus.database.video_state import VideoState
 
 
 class ExtendedDatabase(Database):
@@ -111,3 +114,11 @@ class ExtendedDatabase(Database):
     def save_miniatures(self, miniatures: List[Miniature]):
         with open(self.__miniatures_path.path, "w") as output_file:
             json.dump([m.to_dict() for m in miniatures], output_file)
+
+    def get_video_id(self, filename):
+        filename = AbsolutePath.ensure(filename)
+        if filename in self.__videos:
+            return self.__videos[filename].video_id
+        if filename in self.__unreadable:
+            return self.__unreadable[filename].video_id
+        raise exceptions.UnknownVideoFilename(filename)

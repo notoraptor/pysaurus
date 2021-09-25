@@ -190,25 +190,25 @@ class GuiAPI(FeatureAPI):
         )
         self.provider.refresh()
 
-    def _move_video_file(self, video_id, directory):
+    def _move_video_file(self, video_id: int, directory: str):
         self.provider.register_notifications()
         try:
-            video = self.database.get_video_from_id(video_id)
+            filename = self.database.get_video_filename(video_id)
             directory = AbsolutePath.ensure_directory(directory)
             if not PathTree(self.database.video_folders).in_folders(directory):
                 raise exceptions.ForbiddenVideoFolder(
                     directory, self.database.video_folders
                 )
             dst = AbsolutePath.file_path(
-                directory, video.filename.file_title, video.filename.extension
+                directory, filename.file_title, filename.extension
             )
             self.copy_work = FileCopier(
-                video.filename, dst, notifier=self.notifier, notify_end=False
+                filename, dst, notifier=self.notifier, notify_end=False
             )
             done = self.copy_work.move()
             self.copy_work = None
             if done:
-                old_path = self.database.change_video_path(video, dst)
+                old_path = self.database.change_video_path(video_id, dst)
                 if old_path:
                     old_path.delete()
                 self.provider.refresh()
@@ -225,7 +225,7 @@ class GuiAPI(FeatureAPI):
         tk_utils.clipboard_set(text)
 
     def clipboard_video_path(self, video_id):
-        tk_utils.clipboard_set(self.database.get_from_id(video_id).filename.path)
+        tk_utils.clipboard_set(self.database.get_video_filename(video_id).path)
 
     @staticmethod
     def select_directory(default=None):

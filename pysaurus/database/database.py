@@ -1,7 +1,8 @@
 import itertools
 import os
+from collections import namedtuple
 from multiprocessing import Pool
-from typing import Dict, Iterable, List, Optional, Set, Union
+from typing import Dict, Iterable, List, Optional, Set, Union, Sequence
 
 import ujson as json
 
@@ -190,7 +191,7 @@ class Database:
         self.__notifier.notify(notifications.DatabaseSaved(self))
 
     @staticmethod
-    def _transfer_db_path(
+    def __transfer_db_path(
         path: AbsolutePath, old_folder: AbsolutePath, new_folder: AbsolutePath
     ):
         old_name = old_folder.title
@@ -268,7 +269,7 @@ class Database:
         job_notifier = notifications.Jobs.video_folders(
             len(self.__folders), self.__notifier
         )
-        jobs = [(path, i, job_notifier) for i, path in enumerate(self.__folders)]
+        jobs = [[path, i, job_notifier] for i, path in enumerate(self.__folders)]
         with Profiler(
             title=f"Collect videos ({CPU_COUNT} threads)", notifier=self.__notifier
         ):
@@ -318,7 +319,7 @@ class Database:
     # Public methods.
 
     @Profiler.profile_method()
-    def update(self):
+    def update(self) -> None:
         SpecialProperties.install(self)
         current_date = DateModified.now()
 
@@ -326,8 +327,10 @@ class Database:
         if not all_file_names:
             return
 
-        jobn = notifications.Jobs.videos(len(all_file_names), self.__notifier)
-        jobs = functions.dispatch_tasks(all_file_names, CPU_COUNT, [self.folder, jobn])
+        job_notifier = notifications.Jobs.videos(len(all_file_names), self.__notifier)
+        jobs = functions.dispatch_tasks(
+            all_file_names, CPU_COUNT, [self.folder, job_notifier]
+        )
         with Profiler(
             title="Get videos info from JSON (%d threads)" % len(jobs),
             notifier=self.__notifier,
@@ -390,7 +393,7 @@ class Database:
             )
 
     @Profiler.profile_method()
-    def ensure_thumbnails(self):
+    def ensure_thumbnails(self) -> None:
         valid_thumb_names = set()
         videos_without_thumbs = []
         thumb_to_videos = {}  # type: Dict[str, List[Video]]
@@ -401,7 +404,7 @@ class Database:
 
         with Profiler("Check videos thumbnails", notifier=self.__notifier):
             for video in self.__videos.values():
-                thumb_name = video.ensure_thumbnail_name()
+                thumb_name = video.thumb_name
                 if not video.exists:
                     video.runtime.has_thumbnail = thumb_name in existing_thumb_names
                 elif not video.unreadable_thumbnail:
@@ -430,7 +433,7 @@ class Database:
             return
 
         for video in videos_without_thumbs:
-            base_thumb_name = video.ensure_thumbnail_name()
+            base_thumb_name = video.thumb_name
             thumb_name_index = 0
             thumb_name = base_thumb_name
             while thumb_name in valid_thumb_names:
@@ -442,14 +445,16 @@ class Database:
         del valid_thumb_names
         self.save()
 
-        jobn = notifications.Jobs.thumbnails(nb_videos_no_thumbs, self.__notifier)
+        job_notifier = notifications.Jobs.thumbnails(
+            nb_videos_no_thumbs, self.__notifier
+        )
         thumb_jobs = functions.dispatch_tasks(
             [
                 (video.filename.path, video.thumb_name)
                 for video in videos_without_thumbs
             ],
             CPU_COUNT,
-            [self.__db_folder, self.__thumb_folder.best_path, jobn],
+            [self.__db_folder, self.__thumb_folder.best_path, job_notifier],
         )
         del videos_without_thumbs
         with Profiler(
@@ -479,9 +484,7 @@ class Database:
         self.save()
 
     @Profiler.profile_method()
-    def ensure_miniatures(self, returns=False):
-        # type: (bool) -> Optional[List[Video]]
-
+    def ensure_miniatures(self, returns=False) -> Optional[List[Video]]:
         identifiers = set()  # type: Set[AbsolutePath]
         valid_dictionaries = []
         added_miniatures = []
@@ -511,10 +514,10 @@ class Database:
             if video.filename not in identifiers
         ]
 
-        jobn = notifications.Jobs.miniatures(len(tasks), self.__notifier)
+        job_notifier = notifications.Jobs.miniatures(len(tasks), self.__notifier)
         if tasks:
             have_added = True
-            jobs = functions.dispatch_tasks(tasks, CPU_COUNT, extra_args=[jobn])
+            jobs = functions.dispatch_tasks(tasks, CPU_COUNT, extra_args=[job_notifier])
             del tasks
             with Profiler("Generating miniatures.", self.__notifier):
                 results = functions.parallelize(
@@ -562,7 +565,7 @@ class Database:
                 video.miniature = m_dict[video.filename.path]
             return available_videos
 
-    def rename(self, new_name):
+    def rename(self, new_name) -> None:
         old_db_folder = self.__db_folder
         old_thumb_folder = self.__thumb_folder
         old_json_path = self.__json_path
@@ -583,22 +586,22 @@ class Database:
         assert new_db_folder.isdir()
 
         self.__db_folder = new_db_folder
-        self.__thumb_folder = self._transfer_db_path(
+        self.__thumb_folder = self.__transfer_db_path(
             old_thumb_folder, old_db_folder, new_db_folder
         )
-        self.__json_path = self._transfer_db_path(
+        self.__json_path = self.__transfer_db_path(
             old_json_path, old_db_folder, new_db_folder
         )
-        self.__miniatures_path = self._transfer_db_path(
+        self.__miniatures_path = self.__transfer_db_path(
             old_miniature_path, old_db_folder, new_db_folder
         )
-        self.__log_path = self._transfer_db_path(
+        self.__log_path = self.__transfer_db_path(
             old_log_path, old_db_folder, new_db_folder
         )
 
         self.__notifier.set_log_path(self.__log_path.path)
 
-    def set_folders(self, folders):
+    def set_folders(self, folders) -> None:
         folders = sorted(AbsolutePath.ensure(folder) for folder in folders)
         if folders == sorted(self.__folders):
             return
@@ -620,24 +623,20 @@ class Database:
         self.__discarded = discarded
         self.save()
 
-    def change_video_file_title(self, video, new_title):
-        # type: (VideoState, str) -> None
+    def change_video_file_title(self, video_id: int, new_title: str) -> None:
+        video = self.get_video_from_id(video_id)
         if video.filename.file_title != new_title:
             if functions.has_discarded_characters(new_title):
                 raise exceptions.InvalidFileName(new_title)
             new_filename = video.filename.new_title(new_title)
-            if video.filename in self.__videos:
-                video: Video
-                del self.__videos[video.filename]
-                self.__videos[new_filename] = video
-            elif video.filename in self.__unreadable:
-                del self.__unreadable[video.filename]
-                self.__unreadable[new_filename] = video
+            del self.__videos[video.filename]
+            self.__videos[new_filename] = video
             video.filename = new_filename
             self.save()
             self.__notify_filename_modified()
 
-    def change_video_path(self, video: Video, path: AbsolutePath) -> AbsolutePath:
+    def change_video_path(self, video_id: int, path: AbsolutePath) -> AbsolutePath:
+        video = self.get_video_from_id(video_id)
         path = AbsolutePath.ensure(path)
         assert video.filename != path
         assert path.isfile()
@@ -651,26 +650,30 @@ class Database:
                 self.__notify_filename_modified()
                 return old_filename
 
-    def get_video_from_id(self, video_id: int, required=True) -> Optional[Video]:
-        if (
-            video_id in self.__id_to_video
-            and self.__id_to_video[video_id].filename in self.__videos
-        ):
-            return self.__id_to_video[video_id]
-        if required:
-            raise exceptions.UnknownVideoID(video_id)
-        return None
+    def get_video_from_id(self, video_id: int, required=True) -> Video:
+        video = self.__id_to_video[video_id]
+        assert isinstance(video, Video)
+        return video
 
-    def get_from_id(self, video_id, required=True):
-        # type: (int, bool) -> Optional[VideoState]
-        if video_id in self.__id_to_video:
-            return self.__id_to_video[video_id]
-        if required:
-            raise exceptions.UnknownVideoID(video_id)
-        return None
+    def has_video_id(self, video_id: int) -> bool:
+        return video_id in self.__id_to_video
 
-    def delete_video(self, video, save=True):
-        # type: (VideoState, bool) -> AbsolutePath
+    def get_video_string(self, video_id: int) -> str:
+        return str(self.__id_to_video[video_id])
+
+    def get_video_fields(self, video_id: int, fields: Sequence[str]) -> namedtuple:
+        cls = namedtuple("cls", fields)
+        vid = self.__id_to_video[video_id]
+        return cls(**{field: getattr(vid, field) for field in fields})
+
+    def get_video_field(self, video_id: int, field: str):
+        return getattr(self.__id_to_video[video_id], field)
+
+    def get_video_filename(self, video_id: int) -> AbsolutePath:
+        return self.__id_to_video[video_id].filename
+
+    def delete_video(self, video_id: int, save=True) -> AbsolutePath:
+        video = self.__id_to_video[video_id]
         video.filename.delete()
         self.__videos.pop(video.filename, None)
         self.__unreadable.pop(video.filename, None)
@@ -683,14 +686,14 @@ class Database:
         self.__notifier.notify(notifications.VideoDeleted(video))
         return video.filename
 
-    def add_prop_type(self, prop: PropType, save: bool = True):
+    def add_prop_type(self, prop: PropType, save: bool = True) -> None:
         if prop.name in self.__prop_types:
             raise exceptions.PropertyAlreadyExists(prop.name)
         self.__prop_types[prop.name] = prop
         if save:
             self.save()
 
-    def rename_prop_type(self, old_name, new_name):
+    def rename_prop_type(self, old_name, new_name) -> None:
         if old_name in self.__prop_types:
             if new_name in self.__prop_types:
                 raise exceptions.PropertyAlreadyExists(new_name)
@@ -702,7 +705,7 @@ class Database:
                     video.properties[new_name] = video.properties.pop(old_name)
             self.save()
 
-    def convert_prop_to_unique(self, name):
+    def convert_prop_to_unique(self, name) -> None:
         if name in self.__prop_types:
             prop_type = self.__prop_types[name]
             if not prop_type.multiple:
@@ -719,7 +722,7 @@ class Database:
                         del video.properties[name]
             self.save()
 
-    def convert_prop_to_multiple(self, name):
+    def convert_prop_to_multiple(self, name) -> None:
         if name in self.__prop_types:
             prop_type = self.__prop_types[name]
             if prop_type.multiple:
@@ -730,14 +733,14 @@ class Database:
                     video.properties[name] = [video.properties[name]]
             self.save()
 
-    def remove_prop_type(self, name):
+    def remove_prop_type(self, name) -> None:
         if name in self.__prop_types:
             del self.__prop_types[name]
             for video in self.__videos.values():
                 video.remove_property(name)
             self.save()
 
-    def has_prop_type(self, name):
+    def has_prop_type(self, name) -> bool:
         return name in self.__prop_types
 
     def get_prop_type(self, name: str) -> PropType:
@@ -746,13 +749,14 @@ class Database:
     def get_prop_types(self) -> Iterable[PropType]:
         return self.__prop_types.values()
 
-    def set_video_properties(self, video: Video, properties):
+    def set_video_properties(self, video_id: int, properties) -> Set[str]:
+        video = self.get_video_from_id(video_id)
         modified = video.set_properties(properties)
         self.save()
         self.__notifier.notify(notifications.PropertiesModified(modified))
         return modified
 
-    def refresh(self, ensure_miniatures=False):
+    def refresh(self, ensure_miniatures=False) -> None:
         with Profiler("Reset thumbnail errors"):
             for video in self.get_videos("readable", "found", "without_thumbnails"):
                 video.unreadable_thumbnail = False
@@ -761,8 +765,9 @@ class Database:
         if ensure_miniatures:
             self.ensure_miniatures()
 
-    def delete_property_value(self, videos, name, values):
-        # type: (Iterable[Video], str, List) -> List[Video]
+    def delete_property_value(
+        self, videos: Iterable[Video], name: str, values: list
+    ) -> List[Video]:
         values = set(values)
         modified = []
         prop_type = self.get_prop_type(name)
@@ -789,8 +794,9 @@ class Database:
             self.__notifier.notify(notifications.PropertiesModified([name]))
         return modified
 
-    def edit_property_value(self, videos, name, old_values, new_value):
-        # type: (Iterable[Video], str, List, object) -> bool
+    def edit_property_value(
+        self, videos: Iterable[Video], name: str, old_values: list, new_value: object
+    ) -> bool:
         old_values = set(old_values)
         modified = False
         prop_type = self.get_prop_type(name)
@@ -820,8 +826,9 @@ class Database:
             self.__notifier.notify(notifications.PropertiesModified([name]))
         return modified
 
-    def move_property_value(self, videos, old_name, values, new_name):
-        # type: (Iterable[Video], str, List, str) -> List[Video]
+    def move_property_value(
+        self, videos: Iterable[Video], old_name: str, values: list, new_name: str
+    ) -> List[Video]:
         assert len(values) == 1, values
         value = values[0]
         prop_type = self.get_prop_type(new_name)
@@ -843,9 +850,12 @@ class Database:
         return videos
 
     def edit_property_for_videos(
-        self, name, video_indices, values_to_add, values_to_remove
-    ):
-        # type: (str, List[int], List, List) -> None
+        self,
+        name: str,
+        video_indices: List[int],
+        values_to_add: list,
+        values_to_remove: list,
+    ) -> None:
         prop_type = self.get_prop_type(name)
         if prop_type.multiple:
             values_to_add = prop_type(values_to_add)
@@ -877,8 +887,9 @@ class Database:
         self.save()
         self.__notifier.notify(notifications.PropertiesModified([name]))
 
-    def count_property_values(self, name, video_indices):
-        # type: (str, List[int]) -> Dict[object, int]
+    def count_property_values(
+        self, name: str, video_indices: List[int]
+    ) -> Dict[object, int]:
         prop_type = self.get_prop_type(name)
         value_to_count = {}
         video_indices = set(video_indices)
@@ -894,8 +905,9 @@ class Database:
                 value_to_count[value] = value_to_count.get(value, 0) + 1
         return value_to_count
 
-    def fill_property_with_terms(self, videos, prop_name, only_empty=False):
-        # type: (Iterable[Video], str, bool) -> None
+    def fill_property_with_terms(
+        self, videos: Iterable[Video], prop_name: str, only_empty=False
+    ) -> None:
         prop_type = self.get_prop_type(prop_name)
         assert prop_type.multiple
         assert prop_type.type is str
@@ -908,8 +920,9 @@ class Database:
         self.save()
         self.__notifier.notify(notifications.PropertiesModified([prop_name]))
 
-    def move_concatenated_prop_val(self, videos, path, from_property, to_property):
-        # type: (Iterable[Video], List, str, str) -> int
+    def move_concatenated_prop_val(
+        self, videos: Iterable[Video], path: list, from_property: str, to_property: str
+    ) -> int:
         from_prop_type = self.get_prop_type(from_property)
         to_prop_type = self.get_prop_type(to_property)
         assert from_prop_type.multiple
@@ -946,7 +959,9 @@ class Database:
 
         return len(modified)
 
-    def get_videos(self, source, *flags, **forced_flags):
+    def get_videos(
+        self, source, *flags, **forced_flags
+    ) -> List[Union[VideoState, Video]]:
         if source == "readable":
             videos = self.__videos.values()
         else:
@@ -963,3 +978,20 @@ class Database:
             if required
             else list(videos)
         )
+
+    def move_video_entry(self, from_id, to_id):
+        from_video = self.get_video_from_id(from_id)
+        to_video = self.get_video_from_id(to_id)
+        assert not from_video.exists
+        assert to_video.exists
+        transferred_properties = {}
+        for prop_name, prop_val in from_video.properties.items():
+            prop_type = self.get_prop_type(prop_name)
+            if prop_type.multiple:
+                transferred_properties[prop_name] = prop_type(
+                    prop_val + to_video.properties.get(prop_name, [])
+                )
+            else:
+                transferred_properties[prop_name] = prop_val
+        to_video.properties.update(transferred_properties)
+        self.delete_video(from_video)

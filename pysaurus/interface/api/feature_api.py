@@ -165,6 +165,7 @@ class FeatureAPI:
         self.provider.group_layer.set_group_id(0)
         self.database.notifier.notify(notifications.PropertiesModified([prop_name]))
 
+    # stable
     def classifier_reverse(self):
         path = list(reversed(self.provider.classifier_layer.get_path()))
         self.provider.classifier_layer.set_path(path)
@@ -188,10 +189,10 @@ class FeatureAPI:
         raise NotImplementedError("No random player available")
 
     def open_video(self, video_id):
-        self.database.get_from_id(video_id).filename.open()
+        self.database.get_video_filename(video_id).open()
 
     def open_containing_folder(self, video_id):
-        return str(self.database.get_from_id(video_id).filename.locate_file())
+        return str(self.database.get_video_filename(video_id).locate_file())
 
     # Database getters.
 
@@ -242,12 +243,10 @@ class FeatureAPI:
     # Database setters + provider updated.
 
     def delete_video(self, video_id):
-        self.database.delete_video(self.database.get_from_id(video_id))
+        self.database.delete_video(video_id)
 
     def rename_video(self, video_id, new_title):
-        self.database.change_video_file_title(
-            self.database.get_from_id(video_id), new_title
-        )
+        self.database.change_video_file_title(video_id, new_title)
         self.provider.refresh()
 
     def edit_property_for_videos(self, name, selector, to_add, to_remove):
@@ -256,9 +255,7 @@ class FeatureAPI:
         )
 
     def set_video_properties(self, video_id, properties):
-        self.database.set_video_properties(
-            self.database.get_video_from_id(video_id), properties
-        )
+        self.database.set_video_properties(video_id, properties)
 
     def fill_property_with_terms(self, prop_name, only_empty=False):
         self.database.fill_property_with_terms(
@@ -290,18 +287,4 @@ class FeatureAPI:
         )
 
     def set_video_moved(self, from_id, to_id):
-        from_video = self.database.get_video_from_id(from_id)
-        to_video = self.database.get_video_from_id(to_id)
-        assert not from_video.exists
-        assert to_video.exists
-        transferred_properties = {}
-        for prop_name, prop_val in from_video.properties.items():
-            prop_type = self.database.get_prop_type(prop_name)
-            if prop_type.multiple:
-                transferred_properties[prop_name] = prop_type(
-                    prop_val + to_video.properties.get(prop_name, [])
-                )
-            else:
-                transferred_properties[prop_name] = prop_val
-        to_video.properties.update(transferred_properties)
-        self.database.delete_video(from_video)
+        self.database.move_video_entry(from_id, to_id)

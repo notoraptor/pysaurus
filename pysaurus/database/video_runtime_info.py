@@ -17,4 +17,5 @@ class VideoRuntimeInfo(Jsonable):
 
     @classmethod
     def ensure(cls, d):
+        # type: (object) -> VideoRuntimeInfo
         return cls() if d is None else (d if isinstance(d, cls) else cls.from_dict(d))

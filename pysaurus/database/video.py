@@ -13,10 +13,9 @@ Video class. Properties:
 
 from typing import Sequence, Set
 
-from pysaurus.core.classes import StringPrinter, Text, TextWithNumbers
+from pysaurus.core.classes import Text, TextWithNumbers
 from pysaurus.core.components import AbsolutePath, Duration
 from pysaurus.core.functions import (
-    class_get_public_attributes,
     html_to_title,
     string_to_pieces,
 )
@@ -48,7 +47,7 @@ class Video(VideoState):
         "properties",
         "sample_rate",
         "similarity_id",
-        "thumb_name",
+        "_thumb_name",
         "video_codec",
         "video_codec_description",
         "width",
@@ -219,19 +218,12 @@ class Video(VideoState):
         self.properties = {}
         self.sample_rate = sample_rate
         self.similarity_id = similarity_id
-        self.thumb_name = thumb_name
+        self._thumb_name = thumb_name
         self.video_codec = Text(video_codec)
         self.video_codec_description = Text(video_codec_description)
         self.width = width
         # Additional initialization.
         self.set_properties(properties or {})
-
-    def __str__(self):
-        with StringPrinter() as printer:
-            printer.write("Video %s:" % self.video_id)
-            for field in class_get_public_attributes(Video):
-                printer.write("\t%s: %s" % (field, getattr(self, field)))
-            return str(printer)
 
     frame_rate = property(lambda self: self.frame_rate_num / self.frame_rate_den)
     length = property(
@@ -254,7 +246,7 @@ class Video(VideoState):
     )
     thumbnail_path = property(
         lambda self: path_utils.generate_thumb_path(
-            self.database.thumbnail_folder, self.ensure_thumbnail_name()
+            self.database.thumbnail_folder, self.thumb_name
         )
     )
 
@@ -281,10 +273,15 @@ class Video(VideoState):
             for video in self.database.moves_attribute(self)[1]
         ]
 
-    def ensure_thumbnail_name(self):
-        if not self.thumb_name:
-            self.thumb_name = path_utils.generate_thumb_name(self.filename)
-        return self.thumb_name
+    @property
+    def thumb_name(self):
+        if not self._thumb_name:
+            self._thumb_name = path_utils.generate_thumb_name(self.filename)
+        return self._thumb_name
+
+    @thumb_name.setter
+    def thumb_name(self, value):
+        self._thumb_name = value
 
     def terms(self, as_set=False):
         term_sources = [self.filename.path, str(self.meta_title)]
