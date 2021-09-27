@@ -14,3 +14,7 @@ TODO:
   - Suggest existing values on property edition.
   - Add an option to execute a command line (example, `sort +date -length`) from interface, as a shortcut instead of multiple interface clicks.
     - Does that mean interface is not ergonomic ?
+  - Make sure video menu is atop of everything.
+  - When grouping videos, display same or different values with specific color.
+  - group paging is not updated if last page is emptied
+  - some attributes could not be used to sort (e.g. "moved files (potentially)")

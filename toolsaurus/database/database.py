@@ -61,29 +61,25 @@ class ExtendedDatabase(Database):
 
     def get_unreadable_from_filename(self, filename, required=True):
         # type: (PathType, bool) -> Optional[VideoState]
-        filename = AbsolutePath.ensure(filename)
-        if filename in self.__unreadable:
-            return self.__unreadable[filename]
-        if required:
-            raise exceptions.UnknownVideoFilename(filename)
-        return None
+        video = self.get_video_from_filename(filename, required)
+        assert video.unreadable
+        return video
 
     def get_unreadable_from_id(self, video_id, required=True):
         # type: (int, bool) -> Optional[VideoState]
-        if (
-            video_id in self.__id_to_video
-            and self.__id_to_video[video_id].filename in self.__unreadable
-        ):
-            return self.__id_to_video[video_id]
+        if video_id in self.__id_to_video:
+            video = self.__id_to_video[video_id]
+            assert video.unreadable
+            return video
         if required:
             raise exceptions.UnknownVideoID(video_id)
         return None
 
     def remove_videos_not_found(self):
         nb_removed = 0
-        for video in list(self.__videos.values()):
+        for video in self.get_videos():
             if not video.filename.isfile():
-                self.delete_video(video, save=False)
+                self.delete_video(video.video_id, save=False)
                 nb_removed += 1
         if nb_removed:
             self.__notifier.notify(notifications.VideosNotFoundRemoved(nb_removed))
@@ -91,8 +87,6 @@ class ExtendedDatabase(Database):
 
     def reset(self, reset_thumbnails=False, reset_miniatures=False):
         self.__videos.clear()
-        self.__unreadable.clear()
-        self.__discarded.clear()
         self.__json_path.delete()
         if reset_miniatures:
             self.__miniatures_path.delete()
@@ -100,15 +94,18 @@ class ExtendedDatabase(Database):
             self.__thumb_folder.delete()
 
     def list_files(self, output_name):
+        readable_videos = self.get_videos("readable")
+        unreadable_videos = self.get_videos("unreadable")
+        discarded_videos = self.get_videos("discarded")
         with open(output_name, "wb") as file:
             file.write("# Videos\n".encode())
-            for file_name in sorted(self.__videos):
+            for file_name in sorted(readable_videos):
                 file.write(("%s\n" % str(file_name)).encode())
             file.write("# Unreadable\n".encode())
-            for file_name in sorted(self.__unreadable):
+            for file_name in sorted(unreadable_videos):
                 file.write(("%s\n" % str(file_name)).encode())
             file.write("# Discarded\n".encode())
-            for file_name in sorted(self.__discarded):
+            for file_name in sorted(discarded_videos):
                 file.write(("%s\n" % str(file_name)).encode())
 
     def save_miniatures(self, miniatures: List[Miniature]):
@@ -116,9 +113,4 @@ class ExtendedDatabase(Database):
             json.dump([m.to_dict() for m in miniatures], output_file)
 
     def get_video_id(self, filename):
-        filename = AbsolutePath.ensure(filename)
-        if filename in self.__videos:
-            return self.__videos[filename].video_id
-        if filename in self.__unreadable:
-            return self.__unreadable[filename].video_id
-        raise exceptions.UnknownVideoFilename(filename)
+        return self.__videos[AbsolutePath.ensure(filename)].video_id

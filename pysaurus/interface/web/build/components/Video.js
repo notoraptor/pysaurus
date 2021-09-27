@@ -67,7 +67,7 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
           const htmlID = `video-${data.video_id}`;
           const alreadyOpened = APP_STATE.videoHistory.has(data.filename);
           return /*#__PURE__*/React.createElement("div", {
-            className: 'video horizontal' + (data.exists ? ' found' : ' not-found')
+            className: 'video horizontal' + (data.found ? ' found' : ' not-found')
           }, /*#__PURE__*/React.createElement("div", {
             className: "image p-2"
           }, hasThumbnail ? /*#__PURE__*/React.createElement("img", {
@@ -85,11 +85,11 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
             className: "options horizontal"
           }, /*#__PURE__*/React.createElement(MenuPack, {
             title: `${Characters.SETTINGS}`
-          }, data.exists ? /*#__PURE__*/React.createElement(MenuItem, {
+          }, data.found ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.openVideo
           }, "Open file") : /*#__PURE__*/React.createElement("div", {
             className: "text-center bold"
-          }, "(not found)"), data.exists ? /*#__PURE__*/React.createElement(MenuItem, {
+          }, "(not found)"), data.found ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.openContainingFolder
           }, "Open containing folder") : '', meta_title ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.copyMetaTitle
@@ -99,14 +99,14 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
             action: this.copyFilePath
           }, "Copy path"), /*#__PURE__*/React.createElement(MenuItem, {
             action: this.copyVideoID
-          }, "Copy video ID"), data.exists ? /*#__PURE__*/React.createElement(MenuItem, {
+          }, "Copy video ID"), data.found ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.renameVideo
-          }, "Rename video") : '', data.exists ? /*#__PURE__*/React.createElement(MenuItem, {
+          }, "Rename video") : '', data.found ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.moveVideo
           }, "Move video to another folder ...") : "", /*#__PURE__*/React.createElement(MenuItem, {
             className: "red-flag",
             action: this.deleteVideo
-          }, data.exists ? 'Delete video' : 'Delete entry'), this.props.groupedByMoves && data.moves.length ? /*#__PURE__*/React.createElement(Menu, {
+          }, data.found ? 'Delete video' : 'Delete entry'), this.props.groupedByMoves && data.moves.length ? /*#__PURE__*/React.createElement(Menu, {
             title: "Confirm move to ..."
           }, data.moves.map((dst, index) => /*#__PURE__*/React.createElement(MenuItem, {
             key: index,
@@ -124,8 +124,8 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
           }, data.title)))), data.title === data.file_title ? '' : /*#__PURE__*/React.createElement("div", {
             className: "file-title"
           }, /*#__PURE__*/React.createElement("em", null, data.file_title))), /*#__PURE__*/React.createElement("div", {
-            className: 'filename-line' + (data.exists ? '' : ' horizontal')
-          }, data.exists ? '' : /*#__PURE__*/React.createElement("div", {
+            className: 'filename-line' + (data.found ? '' : ' horizontal')
+          }, data.found ? '' : /*#__PURE__*/React.createElement("div", {
             className: "prepend clickable",
             onClick: this.deleteVideo
           }, /*#__PURE__*/React.createElement("code", {
@@ -134,9 +134,9 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
             className: "text-delete"
           }, "DELETE")), /*#__PURE__*/React.createElement("div", {
             className: `filename ${alreadyOpened ? "already-opened" : ""}`
-          }, /*#__PURE__*/React.createElement("code", _extends({}, data.exists ? {
+          }, /*#__PURE__*/React.createElement("code", _extends({}, data.found ? {
             className: "clickable"
-          } : {}, data.exists ? {
+          } : {}, data.found ? {
             onClick: this.openVideo
           } : {}), data.filename))), /*#__PURE__*/React.createElement("div", {
             className: "format horizontal"
@@ -164,7 +164,7 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
           errors.sort();
           const alreadyOpened = APP_STATE.videoHistory.has(data.filename);
           return /*#__PURE__*/React.createElement("div", {
-            className: 'video horizontal' + (data.exists ? ' found' : ' not-found')
+            className: 'video horizontal' + (data.found ? ' found' : ' not-found')
           }, /*#__PURE__*/React.createElement("div", {
             className: "image p-2"
           }, /*#__PURE__*/React.createElement("div", {
@@ -179,26 +179,26 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
             className: "options horizontal"
           }, /*#__PURE__*/React.createElement(MenuPack, {
             title: `${Characters.SETTINGS}`
-          }, data.exists ? /*#__PURE__*/React.createElement(MenuItem, {
+          }, data.found ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.openVideo
           }, "Open file") : /*#__PURE__*/React.createElement("div", {
             className: "text-center bold"
-          }, "(not found)"), data.exists ? /*#__PURE__*/React.createElement(MenuItem, {
+          }, "(not found)"), data.found ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.openContainingFolder
           }, "Open containing folder") : '', /*#__PURE__*/React.createElement(MenuItem, {
             action: this.copyFileTitle
           }, "Copy file title"), /*#__PURE__*/React.createElement(MenuItem, {
             action: this.copyFilePath
-          }, "Copy path"), data.exists ? /*#__PURE__*/React.createElement(MenuItem, {
+          }, "Copy path"), data.found ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.renameVideo
           }, "Rename video") : '', /*#__PURE__*/React.createElement(MenuItem, {
             className: "red-flag",
             action: this.deleteVideo
-          }, data.exists ? 'Delete video' : 'Delete entry')), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", {
+          }, data.found ? 'Delete video' : 'Delete entry')), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", {
             className: "title"
           }, data.file_title)))), /*#__PURE__*/React.createElement("div", {
-            className: 'filename-line' + (data.exists ? '' : ' horizontal')
-          }, data.exists ? '' : /*#__PURE__*/React.createElement("div", {
+            className: 'filename-line' + (data.found ? '' : ' horizontal')
+          }, data.found ? '' : /*#__PURE__*/React.createElement("div", {
             className: "prepend clickable",
             onClick: this.deleteVideo
           }, /*#__PURE__*/React.createElement("code", {
@@ -207,9 +207,9 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
             className: "text-delete"
           }, "DELETE")), /*#__PURE__*/React.createElement("div", {
             className: `filename ${alreadyOpened ? "already-opened" : ""}`
-          }, /*#__PURE__*/React.createElement("code", _extends({}, data.exists ? {
+          }, /*#__PURE__*/React.createElement("code", _extends({}, data.found ? {
             className: "clickable"
-          } : {}, data.exists ? {
+          } : {}, data.found ? {
             onClick: this.openVideo
           } : {}), data.filename))), /*#__PURE__*/React.createElement("div", {
             className: "format horizontal"
@@ -300,7 +300,7 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
         }
 
         deleteVideo() {
-          if (this.props.data.exists || this.props.confirmDeletion) this.confirmDeletion();else this.reallyDeleteVideo();
+          if (this.props.data.found || this.props.confirmDeletion) this.confirmDeletion();else this.reallyDeleteVideo();
         }
 
         reallyDeleteVideo() {

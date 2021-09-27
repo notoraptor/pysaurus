@@ -46,7 +46,7 @@ export class Video extends React.Component {
         const htmlID = `video-${data.video_id}`;
         const alreadyOpened = APP_STATE.videoHistory.has(data.filename);
         return (
-            <div className={'video horizontal' + (data.exists ? ' found' : ' not-found')}>
+            <div className={'video horizontal' + (data.found ? ' found' : ' not-found')}>
                 <div className="image p-2">
                     {hasThumbnail ?
                         <img alt={data.title} src={data.thumbnail_path}/> :
@@ -58,10 +58,10 @@ export class Video extends React.Component {
                         <div className="name">
                             <div className="options horizontal">
                                 <MenuPack title={`${Characters.SETTINGS}`}>
-                                    {data.exists ?
+                                    {data.found ?
                                         <MenuItem action={this.openVideo}>Open file</MenuItem> :
                                         <div className="text-center bold">(not found)</div>}
-                                    {data.exists ?
+                                    {data.found ?
                                         <MenuItem action={this.openContainingFolder}>
                                             Open containing folder
                                         </MenuItem> : ''}
@@ -69,10 +69,10 @@ export class Video extends React.Component {
                                     {file_title ? <MenuItem action={this.copyFileTitle}>Copy file title</MenuItem> : ''}
                                     <MenuItem action={this.copyFilePath}>Copy path</MenuItem>
                                     <MenuItem action={this.copyVideoID}>Copy video ID</MenuItem>
-                                    {data.exists ? <MenuItem action={this.renameVideo}>Rename video</MenuItem> : ''}
-                                    {data.exists ? <MenuItem action={this.moveVideo}>Move video to another folder ...</MenuItem> : ""}
+                                    {data.found ? <MenuItem action={this.renameVideo}>Rename video</MenuItem> : ''}
+                                    {data.found ? <MenuItem action={this.moveVideo}>Move video to another folder ...</MenuItem> : ""}
                                     <MenuItem className="red-flag" action={this.deleteVideo}>
-                                        {data.exists ? 'Delete video' : 'Delete entry'}
+                                        {data.found ? 'Delete video' : 'Delete entry'}
                                     </MenuItem>
                                     {this.props.groupedByMoves && data.moves.length ? (
                                         <Menu title="Confirm move to ...">
@@ -98,14 +98,14 @@ export class Video extends React.Component {
                             {data.title === data.file_title ? '' :
                                 <div className="file-title"><em>{data.file_title}</em></div>}
                         </div>
-                        <div className={'filename-line' + (data.exists ? '' : ' horizontal')}>
-                            {data.exists ? '' :
+                        <div className={'filename-line' + (data.found ? '' : ' horizontal')}>
+                            {data.found ? '' :
                                 <div className="prepend clickable" onClick={this.deleteVideo}>
                                     <code className="text-not-found">NOT FOUND</code>
                                     <code className="text-delete">DELETE</code>
                                 </div>}
                             <div className={`filename ${alreadyOpened ? "already-opened" : ""}`}>
-                                <code {...(data.exists ? {className: "clickable"} : {})} {...(data.exists ? {onClick: this.openVideo} : {})}>{data.filename}</code>
+                                <code {...(data.found ? {className: "clickable"} : {})} {...(data.found ? {onClick: this.openVideo} : {})}>{data.filename}</code>
                             </div>
                         </div>
                         <div className="format horizontal">
@@ -149,7 +149,7 @@ export class Video extends React.Component {
         errors.sort();
         const alreadyOpened = APP_STATE.videoHistory.has(data.filename);
         return (
-            <div className={'video horizontal' + (data.exists ? ' found' : ' not-found')}>
+            <div className={'video horizontal' + (data.found ? ' found' : ' not-found')}>
                 <div className="image p-2">
                     <div className="no-thumbnail">no thumbnail</div>
                 </div>
@@ -158,31 +158,31 @@ export class Video extends React.Component {
                         <div className="name">
                             <div className="options horizontal">
                                 <MenuPack title={`${Characters.SETTINGS}`}>
-                                    {data.exists ?
+                                    {data.found ?
                                         <MenuItem action={this.openVideo}>Open file</MenuItem> :
                                         <div className="text-center bold">(not found)</div>}
-                                    {data.exists ?
+                                    {data.found ?
                                         <MenuItem action={this.openContainingFolder}>
                                             Open containing folder
                                         </MenuItem> : ''}
                                     <MenuItem action={this.copyFileTitle}>Copy file title</MenuItem>
                                     <MenuItem action={this.copyFilePath}>Copy path</MenuItem>
-                                    {data.exists ? <MenuItem action={this.renameVideo}>Rename video</MenuItem> : ''}
+                                    {data.found ? <MenuItem action={this.renameVideo}>Rename video</MenuItem> : ''}
                                     <MenuItem className="red-flag" action={this.deleteVideo}>
-                                        {data.exists ? 'Delete video' : 'Delete entry'}
+                                        {data.found ? 'Delete video' : 'Delete entry'}
                                     </MenuItem>
                                 </MenuPack>
                                 <div><strong className="title">{data.file_title}</strong></div>
                             </div>
                         </div>
-                        <div className={'filename-line' + (data.exists ? '' : ' horizontal')}>
-                            {data.exists ? '' :
+                        <div className={'filename-line' + (data.found ? '' : ' horizontal')}>
+                            {data.found ? '' :
                                 <div className="prepend clickable" onClick={this.deleteVideo}>
                                     <code className="text-not-found">NOT FOUND</code>
                                     <code className="text-delete">DELETE</code>
                                 </div>}
                             <div className={`filename ${alreadyOpened ? "already-opened" : ""}`}>
-                                <code {...(data.exists ? {className: "clickable"} : {})} {...(data.exists ? {onClick: this.openVideo} : {})}>{data.filename}</code>
+                                <code {...(data.found ? {className: "clickable"} : {})} {...(data.found ? {onClick: this.openVideo} : {})}>{data.filename}</code>
                             </div>
                         </div>
                         <div className="format horizontal">
@@ -285,7 +285,7 @@ export class Video extends React.Component {
     }
 
     deleteVideo() {
-        if (this.props.data.exists || this.props.confirmDeletion)
+        if (this.props.data.found || this.props.confirmDeletion)
             this.confirmDeletion();
         else
             this.reallyDeleteVideo();

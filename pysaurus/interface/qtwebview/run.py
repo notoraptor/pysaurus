@@ -1,4 +1,5 @@
 import sys
+import threading
 
 import ujson as json
 from PyQt5.QtCore import pyqtSlot, QUrl, pyqtSignal, QObject
@@ -142,10 +143,20 @@ def generate_except_hook(qapp):
     return except_hook
 
 
+def generate_thread_except_hook(qapp):
+    def thread_except_hook(arg):
+        print("Error occurring in thread:", arg.thread.name, file=sys.stderr)
+        sys.__excepthook__(arg.exc_type, arg.exc_value, arg.exc_traceback)
+        qapp.exit(1)
+
+    return thread_except_hook
+
+
 def main():
     # Initialize.
     app = QApplication.instance() or QApplication(sys.argv)
     sys.excepthook = generate_except_hook(app)
+    threading.excepthook = generate_thread_except_hook(app)
     # Set geometry.
     screen_rect = app.desktop().screen().rect()
     screen_center = screen_rect.center()

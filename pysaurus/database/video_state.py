@@ -22,8 +22,9 @@ class VideoState:
         "database",
         "runtime",
         "miniature",
+        "discarded",
     )
-    __protected__ = ("database", "runtime", "miniature")
+    __protected__ = ("database", "runtime", "miniature", "discarded")
     UNREADABLE = True
 
     def __init__(
@@ -50,6 +51,7 @@ class VideoState:
         self.database = database
         self.runtime = VideoRuntimeInfo.ensure(runtime)
         self.miniature = None
+        self.discarded = False
 
     def __str__(self):
         cls = type(self)
@@ -77,15 +79,14 @@ class VideoState:
     day = property(lambda self: self.date.day)
     # runtime attributes
     date = property(lambda self: DateModified(self.runtime.mtime))
-    exists = property(lambda self: self.runtime.is_file)
     has_thumbnail = property(
         lambda self: not self.unreadable_thumbnail and self.runtime.has_thumbnail
     )
 
     readable = ClassFlag(lambda self: not self.UNREADABLE)
     unreadable = ClassFlag(lambda self: self.UNREADABLE)
-    found = ClassFlag(lambda self: self.exists)
-    not_found = ClassFlag(lambda self: not self.exists)
+    found = ClassFlag(lambda self: self.runtime.is_file)
+    not_found = ClassFlag(lambda self: not self.runtime.is_file)
     with_thumbnails = ClassFlag(lambda self: self.has_thumbnail)
     without_thumbnails = ClassFlag(lambda self: not self.has_thumbnail)
 
