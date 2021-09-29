@@ -204,20 +204,6 @@ def is_dictionary(dict_to_check):
     )
 
 
-def is_sequence(seq_to_check):
-    """Check if given variable is a sequence-like object.
-    Note that strings and dictionary-like objects will not be considered as sequences.
-
-    :param seq_to_check: Sequence-like object to check.
-    :return: Indicates if the object is sequence-like.
-    :rtype: bool
-    """
-    # Strings and dicts are not valid sequences.
-    if isinstance(seq_to_check, str) or is_dictionary(seq_to_check):
-        return False
-    return hasattr(seq_to_check, "__iter__")
-
-
 get_start_index = bisect.bisect_left
 get_end_index = bisect.bisect_right
 
@@ -235,10 +221,6 @@ def class_get_public_attributes(cls: type, exclude=(), wrapper=sorted):
 
 def compute_nb_pages(count, page_size):
     return (count // page_size) + bool(count % page_size)
-
-
-def to_printable(element):
-    return repr(element) if isinstance(element, str) else element
 
 
 def to_json_value(value):

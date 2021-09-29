@@ -6,6 +6,7 @@ import urllib.parse
 from datetime import datetime
 
 from pysaurus.core.components import AbsolutePath
+from pysaurus.core.functions import is_dictionary
 
 EPOCH = datetime.utcfromtimestamp(0)
 TEMP_DIR = tempfile.gettempdir()
@@ -186,3 +187,21 @@ def generate_non_existing_path(directory, name, extension):
         else:
             break
     return file_path
+
+
+def to_printable(element):
+    return repr(element) if isinstance(element, str) else element
+
+
+def is_sequence(seq_to_check):
+    """Check if given variable is a sequence-like object.
+    Note that strings and dictionary-like objects will not be considered as sequences.
+
+    :param seq_to_check: Sequence-like object to check.
+    :return: Indicates if the object is sequence-like.
+    :rtype: bool
+    """
+    # Strings and dicts are not valid sequences.
+    if isinstance(seq_to_check, str) or is_dictionary(seq_to_check):
+        return False
+    return hasattr(seq_to_check, "__iter__")

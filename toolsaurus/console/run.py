@@ -1,6 +1,8 @@
 import os
 from typing import Dict, List, Tuple
 
+import toolsaurus.application.exceptions
+import toolsaurus.database.database
 import toolsaurus.functions
 from pysaurus.application import exceptions
 from pysaurus.core import functions
@@ -63,7 +65,7 @@ class API:
     @fsigned
     def nb_pages(self, query: str, page_size: int) -> int:
         if page_size <= 0:
-            raise exceptions.InvalidPageSize(page_size)
+            raise toolsaurus.application.exceptions.InvalidPageSize(page_size)
         count = self.nb(query)
         return (count // page_size) + bool(count % page_size)
 
@@ -252,14 +254,14 @@ class API:
     @fsigned
     def rename(self, video_id: int, new_title: str) -> int:
         if new_title is None or not str(new_title):
-            raise exceptions.MissingVideoNewTitle()
+            raise toolsaurus.application.exceptions.MissingVideoNewTitle()
         self.database.change_video_file_title(video_id, str(new_title))
         return video_id
 
     @fsigned
     def rename_from_filename(self, filename: str, new_title: str) -> (str, str):
         if new_title is None or not str(new_title):
-            raise exceptions.MissingVideoNewTitle()
+            raise toolsaurus.application.exceptions.MissingVideoNewTitle()
         video = self.database.get_video_from_filename(filename)  # type: Video
         self.database.change_video_file_title(video.video_id, str(new_title))
         return video.filename.path, video.filename.file_title
@@ -284,16 +286,16 @@ class API:
     @fsigned
     def find_batch(self, path: str) -> List[Tuple[str, List[Video]]]:
         results = []
-        for sentence in path_utils.load_list_file(path):
+        for sentence in toolsaurus.database.database.load_list_file(path):
             results.append((sentence, self.find(sentence)))
         return results
 
     @fsigned
     def list(self, fields: str, page_size: int, page_number: int) -> List[Video]:
         if page_size <= 0:
-            raise exceptions.InvalidPageSize(page_size)
+            raise toolsaurus.application.exceptions.InvalidPageSize(page_size)
         if page_number < 0:
-            raise exceptions.InvalidPageNumber(page_number)
+            raise toolsaurus.application.exceptions.InvalidPageNumber(page_number)
         sorting = VideoSorting(fields)
         videos = sorted(
             self.database.get_valid_videos(),

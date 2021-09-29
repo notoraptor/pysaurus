@@ -3,6 +3,7 @@ from typing import Optional
 
 import ujson as json
 
+import toolsaurus.application.exceptions
 from pysaurus.application import exceptions
 from pysaurus.core import notifications
 from pysaurus.core.components import AbsolutePath, PathType
@@ -36,7 +37,7 @@ class ExtendedDatabase(Database):
         reset=False,
         clear_old_folders=False,
     ):
-        paths = path_utils.load_path_list_file(list_file_path)
+        paths = load_path_list_file(list_file_path)
         database_folder = list_file_path.get_directory()
         database = cls(
             path=database_folder,
@@ -56,7 +57,7 @@ class ExtendedDatabase(Database):
         if filename in self.__videos:
             return self.__videos[filename]
         if required:
-            raise exceptions.UnknownVideoFilename(filename)
+            raise toolsaurus.application.exceptions.UnknownVideoFilename(filename)
         return None
 
     def get_unreadable_from_filename(self, filename, required=True):
@@ -72,7 +73,7 @@ class ExtendedDatabase(Database):
             assert video.unreadable
             return video
         if required:
-            raise exceptions.UnknownVideoID(video_id)
+            raise toolsaurus.application.exceptions.UnknownVideoID(video_id)
         return None
 
     def remove_videos_not_found(self):
@@ -114,3 +115,21 @@ class ExtendedDatabase(Database):
 
     def get_video_id(self, filename):
         return self.__videos[AbsolutePath.ensure(filename)].video_id
+
+
+def load_list_file(list_file_path):
+    # type: (Union[AbsolutePath, str]) -> Iterable[str]
+    strings = []
+    list_file_path = AbsolutePath.ensure(list_file_path)
+    if list_file_path.isfile():
+        with open(list_file_path.path, "r") as list_file:
+            for line in list_file:
+                line = line.strip()
+                if line and line[0] != "#":
+                    strings.append(line)
+    return strings
+
+
+def load_path_list_file(list_file_path):
+    # type: (AbsolutePath) -> Iterable[AbsolutePath]
+    return [AbsolutePath(string) for string in load_list_file(list_file_path)]

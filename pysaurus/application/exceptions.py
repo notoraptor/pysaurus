@@ -2,26 +2,6 @@ class PysaurusError(Exception):
     pass
 
 
-class UnknownVideoID(PysaurusError):
-    pass
-
-
-class UnknownVideoFilename(PysaurusError):
-    pass
-
-
-class MissingVideoNewTitle(PysaurusError):
-    pass
-
-
-class InvalidPageSize(PysaurusError):
-    pass
-
-
-class InvalidPageNumber(PysaurusError):
-    pass
-
-
 class MissingLanguageFile(PysaurusError):
     pass
 

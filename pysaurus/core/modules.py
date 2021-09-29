@@ -114,10 +114,6 @@ class System:
 
 class VideoClipping:
     @staticmethod
-    def get_video_duration(path):
-        return VideoFileClip(path).duration
-
-    @staticmethod
     def video_clip(path, time_start=0, clip_seconds=10, unique_id=None):
         assert isinstance(time_start, int) and time_start >= 0
         assert isinstance(clip_seconds, int) and clip_seconds > 0

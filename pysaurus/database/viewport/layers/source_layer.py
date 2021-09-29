@@ -55,9 +55,6 @@ class SourceLayer(Layer):
                 del self.index[term]
         del cache[vs.filename]
 
-    def count_videos(self):
-        return len(self._cache)
-
     def videos(self):
         return self._cache.values()
 

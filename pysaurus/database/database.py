@@ -587,7 +587,7 @@ class Database:
         self.save()
 
     def change_video_file_title(self, video_id: int, new_title: str) -> None:
-        video = self.get_video_from_id(video_id)
+        video = self.__get_video_from_id(video_id)
         if video.filename.file_title != new_title:
             if functions.has_discarded_characters(new_title):
                 raise exceptions.InvalidFileName(new_title)
@@ -599,7 +599,7 @@ class Database:
             self.__notify_filename_modified()
 
     def change_video_path(self, video_id: int, path: AbsolutePath) -> AbsolutePath:
-        video = self.get_video_from_id(video_id)
+        video = self.__get_video_from_id(video_id)
         path = AbsolutePath.ensure(path)
         assert video.filename != path
         assert path.isfile()
@@ -610,28 +610,6 @@ class Database:
         self.save()
         self.__notify_filename_modified()
         return old_filename
-
-    def get_video_from_id(self, video_id: int) -> Video:
-        video = self.__id_to_video[video_id]
-        assert isinstance(video, Video)
-        return video
-
-    def has_video_id(self, video_id: int) -> bool:
-        return video_id in self.__id_to_video
-
-    def get_video_string(self, video_id: int) -> str:
-        return str(self.__id_to_video[video_id])
-
-    def get_video_fields(self, video_id: int, fields: Sequence[str]) -> namedtuple:
-        cls = namedtuple("cls", fields)
-        vid = self.__id_to_video[video_id]
-        return cls(**{field: getattr(vid, field) for field in fields})
-
-    def get_video_field(self, video_id: int, field: str):
-        return getattr(self.__id_to_video[video_id], field)
-
-    def get_video_filename(self, video_id: int) -> AbsolutePath:
-        return self.__id_to_video[video_id].filename
 
     def delete_video(self, video_id: int, save=True) -> AbsolutePath:
         video = self.__id_to_video[video_id]
@@ -709,7 +687,7 @@ class Database:
         return self.__prop_types.values()
 
     def set_video_properties(self, video_id: int, properties) -> Set[str]:
-        video = self.get_video_from_id(video_id)
+        video = self.__get_video_from_id(video_id)
         modified = video.set_properties(properties)
         self.save()
         self.__notifier.notify(notifications.PropertiesModified(modified))
@@ -919,8 +897,8 @@ class Database:
         return len(modified)
 
     def move_video_entry(self, from_id, to_id):
-        from_video = self.get_video_from_id(from_id)
-        to_video = self.get_video_from_id(to_id)
+        from_video = self.__get_video_from_id(from_id)
+        to_video = self.__get_video_from_id(to_id)
         assert not from_video.found
         assert to_video.found
         transferred_properties = {}
@@ -945,3 +923,25 @@ class Database:
             for video in videos
             if all(getattr(video, flag) is required[flag] for flag in required)
         ] if required else list(videos)
+
+    def __get_video_from_id(self, video_id: int) -> Video:
+        video = self.__id_to_video[video_id]
+        assert isinstance(video, Video)
+        return video
+
+    def has_video_id(self, video_id: int) -> bool:
+        return video_id in self.__id_to_video
+
+    def get_video_string(self, video_id: int) -> str:
+        return str(self.__id_to_video[video_id])
+
+    def get_video_fields(self, video_id: int, fields: Sequence[str]) -> namedtuple:
+        cls = namedtuple("cls", fields)
+        vid = self.__id_to_video[video_id]
+        return cls(**{field: getattr(vid, field) for field in fields})
+
+    def get_video_field(self, video_id: int, field: str):
+        return getattr(self.__id_to_video[video_id], field)
+
+    def get_video_filename(self, video_id: int) -> AbsolutePath:
+        return self.__id_to_video[video_id].filename
