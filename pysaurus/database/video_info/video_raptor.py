@@ -111,7 +111,7 @@ def backend_video_infos(job):
     )
     assert json_file_path.isfile()
     arr = parse_json(json_file_path)
-    assert len(arr) == count
+    # assert len(arr) == count, (len(arr), count)
     list_file_path.delete()
     json_file_path.delete()
     return arr

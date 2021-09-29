@@ -611,7 +611,7 @@ class Database:
         self.__notify_filename_modified()
         return old_filename
 
-    def get_video_from_id(self, video_id: int, required=True) -> Video:
+    def get_video_from_id(self, video_id: int) -> Video:
         video = self.__id_to_video[video_id]
         assert isinstance(video, Video)
         return video

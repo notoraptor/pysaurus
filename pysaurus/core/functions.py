@@ -13,10 +13,15 @@ REGEX_LOWER_THEN_UPPER_CASES = re.compile("([a-z0-9])([A-Z])")
 REGEX_WORD_THEN_NUMBER = re.compile(r"([^0-9 ])([0-9])")
 REGEX_NUMBER_THEN_WORD = re.compile(r"([0-9])([^0-9 ])")
 REGEX_NUMBER = re.compile(r"([0-9]+)")
+REGEX_ATTRIBUTE = re.compile(r"^[a-zA-Z][a-zA-Z0-9_]*$")
 JSON_INTEGER_MIN = -(2 ** 31)
 JSON_INTEGER_MAX = 2 ** 31 - 1
 
 DISCARDED_CHARACTERS = r"@#\\/?$:!"
+
+
+def is_valid_attribute_name(key):
+    return REGEX_ATTRIBUTE.match(key)
 
 
 def has_discarded_characters(txt: str):

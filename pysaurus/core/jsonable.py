@@ -3,8 +3,7 @@ import types
 from typing import Sequence, Dict
 
 from pysaurus.core.override import Override
-
-REGEX_ATTRIBUTE = re.compile(r"^[a-zA-Z][a-zA-Z0-9_]*$")
+from pysaurus.core.functions import is_valid_attribute_name
 
 __fn_types__ = (
     types.FunctionType,
@@ -17,7 +16,7 @@ __fn_types__ = (
 
 
 def is_attribute(key, value):
-    return REGEX_ATTRIBUTE.match(key) and not isinstance(value, __fn_types__)
+    return is_valid_attribute_name(key) and not isinstance(value, __fn_types__)
 
 
 class _Checker:
@@ -58,7 +57,7 @@ class _Checker:
     def validate(self, value: object):
         raise NotImplementedError()
 
-    def to_json(self, value):
+    def to_dict(self, value):
         return value
 
 
@@ -87,7 +86,7 @@ class _JsonableChecker(_Checker):
         if args:
             (default,) = args
             if isinstance(default, cls):
-                default = default.to_json()
+                default = default.to_dict()
             else:
                 assert isinstance(default, dict) or default is None
         else:
@@ -97,10 +96,10 @@ class _JsonableChecker(_Checker):
 
     @_Checker.validate.override
     def validate(self, value: object):
-        return value if isinstance(value, self.cls) else self.cls.from_json(value)
+        return value if isinstance(value, self.cls) else self.cls.from_dict(value)
 
-    def to_json(self, value):
-        return value.to_json()
+    def to_dict(self, value):
+        return value.to_dict()
 
 
 def _get_checker(cls, *args):
@@ -138,18 +137,54 @@ class NoShortFunctor:
         return dct
 
 
+def get_bases(bases: tuple):
+    if not bases:
+        return ()
+    assert len(bases) == 1
+    all_bases = bases[0].__mro__
+    assert all_bases[-1] is object
+    assert all_bases[-2] is Jsonable
+    return all_bases[:-2]
+
+
+def gen_get(namespace: dict, key: str):
+    name_getter = f"get_{key}"
+    if name_getter in namespace:
+        return namespace.pop(name_getter)
+
+    def getter(self):
+        return self.__json__[key]
+    getter.__name__ = name_getter
+
+    return getter
+
+
+def gen_set(namespace: dict, key: str):
+    name_setter = f"set_{key}"
+
+    if name_setter in namespace:
+        return namespace.pop(name_setter)
+
+    def setter(self, value):
+        self.__json__[key] = value
+    setter.__name__ = name_setter
+
+    return setter
+
+
 class _MetaJSON(type):
-    def __init__(cls, name, bases, namespace, **kwargs):
+    __slots__ = ()
+
+    def __new__(cls, name, bases, namespace):
         assert "__definitions__" not in namespace, "Reserved attribute: __definitions__"
-        super().__init__(name, bases, namespace, **kwargs)
         annotations = namespace.get("__annotations__", {})
         attributes = {
             key: value for key, value in namespace.items() if is_attribute(key, value)
         }
+        original_attributes = list(attributes)
         definitions = {}
-        for base in bases:
-            if type(base) is type(cls):
-                definitions.update(base.__definitions__)
+        for base in get_bases(bases):
+            definitions.update(base.__definitions__)
         for key, value in attributes.items():
             if isinstance(value, _Checker):
                 assert key not in annotations
@@ -162,36 +197,43 @@ class _MetaJSON(type):
                 definitions[key] = _get_checker(type(value), value)
         for key, annotation in annotations.items():
             if key not in definitions:
+                original_attributes.append(key)
                 assert isinstance(annotation, type)
                 definitions[key] = _get_checker(annotation)
         short = namespace.get("__short__", {})
         shortener = (
             ShortFunctor(tuple(definitions), short) if short else NoShortFunctor()
         )
-        cls.__definitions__ = {key: definitions[key] for key in sorted(definitions)}
-        cls.__shortener__ = shortener
+        namespace["__definitions__"] = {
+            key: definitions[key] for key in sorted(definitions)
+        }
+        namespace["__shortener__"] = shortener
+        for key in original_attributes:
+            namespace[key] = property(gen_get(namespace, key), gen_set(namespace, key))
+        return type.__new__(cls, name, bases, namespace)
 
 
 class Jsonable(metaclass=_MetaJSON):
-    __slots__ = ()
+    __slots__ = "__json__",
 
     def __init__(self, **kwargs):
+        self.__json__ = {}
         for key, checker in self.__definitions__.items():
             if key in kwargs:
                 value = checker(kwargs.pop(key))
             else:
                 value = checker()
-            setattr(self, key, value)
+            self.__json__[key] = value
         assert not kwargs, f"{type(self).__name__}: unknown keys: {tuple(kwargs)}"
 
     def __bool__(self):
         return True
 
     def __len__(self):
-        return len(self.__definitions__)
+        return len(self.__json__)
 
     def __iter__(self):
-        return iter((key, getattr(self, key)) for key in self.__definitions__)
+        return iter(self.__json__.items())
 
     def __hash__(self):
         return hash(tuple(self))
@@ -212,17 +254,23 @@ class Jsonable(metaclass=_MetaJSON):
         assert isinstance(dct, dict)
         for key, checker in self.__definitions__.items():
             if key in dct:
-                setattr(self, key, checker(dct[key]))
+                self.__json__[key] = checker(dct[key])
 
     def to_json(self):
-        return self.__shortener__.to_short(
-            {key: self.__definitions__[key].to_json(value) for key, value in self}
-        )
+        return self.__json__
 
     @classmethod
     def from_json(cls, dct):
         assert isinstance(dct, dict)
+        return cls(**dct)
+
+    def to_dict(self):
+        return self.__shortener__.to_short(
+            {key: self.__definitions__[key].to_dict(value) for key, value in self}
+        )
+
+    @classmethod
+    def from_dict(cls, dct):
+        assert isinstance(dct, dict)
         return cls(**cls.__shortener__.from_short(dct))
 
-    to_dict = to_json
-    from_dict = from_json

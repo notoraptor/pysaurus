@@ -38,11 +38,25 @@ class D(Jsonable):
     a: A = None
 
 
+class E(Jsonable):
+    __slots__ = ("other",)
+    t = 0
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.other = -22
+
+
 def test_jsonable():
     a = A()
     b = B(z=[2])
     b_ = B2()
     c = C()
+    assert b.x == 0.0
+    assert b.z == [2]
+    assert b.__json__["x"] == 0.0
+    assert b.__json__["z"] == [2]
+    assert b.to_json() is b.__json__
     assert str(a) == "A(a=5, b=3, x=0.0, y='')"
     assert str(b) == "B(a=-1.0, b=3, e=True, x=0.0, y='', z=[2])"
     assert str(b_) == "B2()"
@@ -67,3 +81,10 @@ def test_none():
     assert str(D(y=None)) == "D(a=None, y=None)"
     assert str(D(y=2)) == "D(a=None, y=2)"
     assert str(D(a={"b": 11})) == "D(a=A(a=5, b=11, x=0.0, y=''), y=None)"
+
+
+def test_inherited():
+    e = E()
+    assert not hasattr(e, "__dict__")
+    assert e.other == -22
+    assert str(e) == "E(t=0)"
