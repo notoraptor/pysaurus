@@ -195,3 +195,13 @@ div.no-thumbnail {
 	word-break: break-all;
 	padding-right: 0.15rem;
 }
+
+/*
+.video .common-true {
+	color: green;
+}
+*/
+
+.video .common-false {
+	color: red;
+}

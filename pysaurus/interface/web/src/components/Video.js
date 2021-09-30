@@ -10,6 +10,17 @@ import {Characters} from "../utils/constants.js";
 
 window.LATEST_MOVE_FOLDER = null;
 
+
+/**
+ * Generate class name for common value of videos grouped by similarity
+ * @param value {boolean?}
+ * @returns {string}
+ */
+function cc(value) {
+    return value === undefined ? "" : (value ? "common-true" : "common-false");
+}
+
+
 export class Video extends React.Component {
     constructor(props) {
         super(props);
@@ -45,6 +56,8 @@ export class Video extends React.Component {
         const hasThumbnail = data.has_thumbnail;
         const htmlID = `video-${data.video_id}`;
         const alreadyOpened = APP_STATE.videoHistory.has(data.filename);
+        const common = (this.props.groupDef && this.props.groupDef.common) || {};
+        const groupedBySimilarityID = this.props.groupDef && this.props.groupDef.field === "similarity_id";
         return (
             <div className={'video horizontal' + (data.found ? ' found' : ' not-found')}>
                 <div className="image p-2">
@@ -109,22 +122,25 @@ export class Video extends React.Component {
                             </div>
                         </div>
                         <div className="format horizontal">
-                            <div className="prepend"><code>{data.extension}</code></div>
+                            <div className="prepend"><code className={cc(common.extension)}>{data.extension}</code></div>
                             <div>
-                                <strong title={data.file_size}>{data.size}</strong> / {data.container_format}{" "}
-                                (<span title={data.video_codec_description}>{data.video_codec}</span>,{" "}
-                                <span title={data.audio_codec_description}>{data.audio_codec}</span>)
+                                <strong title={data.file_size} className={cc(common.size)}>{data.size}</strong> / <span className={cc(common.container_format)}>{data.container_format}</span>{" "}
+                                (<span title={data.video_codec_description} className={cc(common.video_codec)}>{data.video_codec}</span>,{" "}
+                                <span title={data.audio_codec_description} className={cc(common.audio_codec)}>{data.audio_codec}</span>)
                             </div>
                             <div className="prepend"><code>Quality</code></div>
-                            <div><strong><em>{data.quality}</em></strong> %</div>
+                            <div className={cc(common.quality)}><strong><em>{data.quality}</em></strong> %</div>
                         </div>
                         <div>
-                            <strong>{data.width}</strong> x <strong>{data.height}</strong> @{" "}
-                            {data.frame_rate} fps, {data.bit_depth} bits | {data.sample_rate} Hz,{" "}
-                            <span title={data.audio_bit_rate}>{audio_bit_rate} Kb/s</span> |{" "}
-                            <strong>{data.length}</strong> | <code>{data.date}</code>
+                            <strong className={cc(common.width)}>{data.width}</strong> x{" "}
+                            <strong className={cc(common.height)}>{data.height}</strong> @{" "}
+                            <span className={cc(common.frame_rate)}>{data.frame_rate} fps</span>,{" "}
+                            <span className={cc(common.bit_depth)}>{data.bit_depth} bits</span> |{" "}
+                            <span className={cc(common.sample_rate)}>{data.sample_rate} Hz</span>,{" "}
+                            <span title={data.audio_bit_rate} className={cc(common.audio_bit_rate)}>{audio_bit_rate} Kb/s</span> |{" "}
+                            <strong className={cc(common.length)}>{data.length}</strong> | <code className={cc(common.date)}>{data.date}</code>
                         </div>
-                        {data.similarity_id !== null && data.similarity_id > -1 ? (
+                        {!groupedBySimilarityID && data.similarity_id !== null && data.similarity_id > -1 ? (
                             <div>
                                 <strong>Similarity ID:</strong> <code>{data.similarity_id}</code>
                             </div>
@@ -370,6 +386,7 @@ export class Video extends React.Component {
 Video.propTypes = {
     data: PropTypes.object.isRequired,
     propDefs: PropTypes.arrayOf(PropTypes.object).isRequired,
+    groupDef: PropTypes.object.isRequired,
     confirmDeletion: PropTypes.bool,
     groupedByMoves: PropTypes.bool,
     selected: PropTypes.bool,

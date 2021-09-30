@@ -42,9 +42,15 @@ class FeatureAPI:
             ]
         else:
             include = set(selector["include"])
-            output = [
-                video for video in self.provider.get_view() if video.video_id in include
-            ] if return_videos else include
+            output = (
+                [
+                    video
+                    for video in self.provider.get_view()
+                    if video.video_id in include
+                ]
+                if return_videos
+                else include
+            )
         return output
 
     # Constant getters.
@@ -78,11 +84,14 @@ class FeatureAPI:
         nb_videos = len(view)
         nb_pages = compute_nb_pages(nb_videos, page_size)
         videos = []
+        group_def = self.provider.get_group_def()
         if nb_videos:
             page_number = min(max(0, page_number), nb_pages - 1)
             start = page_size * page_number
             end = min(start + page_size, nb_videos)
             videos = [VideoFeatures.to_json(view[index]) for index in range(start, end)]
+            if group_def and group_def["field"] == "similarity_id":
+                group_def["common"] = VideoFeatures.get_common_fields(view)
         sources = self.provider.source_layer.get_sources()
         prop_types = self.get_prop_types()
         return {
@@ -103,7 +112,7 @@ class FeatureAPI:
             ),
             "notFound": all("not_found" in source for source in sources),
             "sources": sources,
-            "groupDef": self.provider.get_group_def(),
+            "groupDef": group_def,
             "searchDef": self.provider.get_search_def(),
             "sorting": self.provider.sort_layer.get_sorting(),
             "videos": videos,

@@ -1,9 +1,8 @@
-import re
 import types
 from typing import Sequence, Dict
 
-from pysaurus.core.override import Override
 from pysaurus.core.functions import is_valid_attribute_name
+from pysaurus.core.override import Override
 
 __fn_types__ = (
     types.FunctionType,
@@ -154,6 +153,7 @@ def gen_get(namespace: dict, key: str):
 
     def getter(self):
         return self.__json__[key]
+
     getter.__name__ = name_getter
 
     return getter
@@ -167,6 +167,7 @@ def gen_set(namespace: dict, key: str):
 
     def setter(self, value):
         self.__json__[key] = value
+
     setter.__name__ = name_setter
 
     return setter
@@ -214,7 +215,7 @@ class _MetaJSON(type):
 
 
 class Jsonable(metaclass=_MetaJSON):
-    __slots__ = "__json__",
+    __slots__ = ("__json__",)
 
     def __init__(self, **kwargs):
         self.__json__ = {}
@@ -273,4 +274,3 @@ class Jsonable(metaclass=_MetaJSON):
     def from_dict(cls, dct):
         assert isinstance(dct, dict)
         return cls(**cls.__shortener__.from_short(dct))
-

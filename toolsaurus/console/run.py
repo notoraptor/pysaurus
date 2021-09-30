@@ -4,12 +4,10 @@ from typing import Dict, List, Tuple
 import toolsaurus.application.exceptions
 import toolsaurus.database.database
 import toolsaurus.functions
-from pysaurus.application import exceptions
 from pysaurus.core import functions
 from pysaurus.core.classes import StringPrinter
 from pysaurus.core.components import FileSize, Duration, AbsolutePath
 from pysaurus.core.modules import ImageUtils, VideoClipping
-from pysaurus.database import path_utils
 from pysaurus.database.video import Video
 from pysaurus.database.video_features import VideoFeatures
 from pysaurus.database.video_sorting import VideoSorting
@@ -140,7 +138,9 @@ class API:
                 else:
                     if self.database.has_video_id(video_id):
                         videos.append(
-                            self.database.get_video_fields(video_id, ("filename", "thumbnail_path"))
+                            self.database.get_video_fields(
+                                video_id, ("filename", "thumbnail_path")
+                            )
                         )
                     else:
                         unknown.append(video_id)
@@ -189,9 +189,9 @@ class API:
                     errors.append(piece)
                 else:
                     if self.database.has_video_id(video_id):
-                        videos.append(self.database.get_video_fields(
-                            video_id, ["filename"]
-                        ))
+                        videos.append(
+                            self.database.get_video_fields(video_id, ["filename"])
+                        )
                     else:
                         unknown.append(video_id)
         temp_file_path = None
@@ -278,7 +278,9 @@ class API:
     @fsigned
     def find(self, terms: str) -> List[Video]:
         return sorted(
-            VideoFeatures.find(SearchDef(terms, "and"), self.database.get_valid_videos()),
+            VideoFeatures.find(
+                SearchDef(terms, "and"), self.database.get_valid_videos()
+            ),
             key=lambda video: video.date,
             reverse=True,
         )

@@ -918,11 +918,15 @@ class Database:
 
     def query(self, required: Dict[str, bool]) -> List[Union[VideoState, Video]]:
         videos = self.__videos.values()
-        return [
-            video
-            for video in videos
-            if all(getattr(video, flag) is required[flag] for flag in required)
-        ] if required else list(videos)
+        return (
+            [
+                video
+                for video in videos
+                if all(getattr(video, flag) is required[flag] for flag in required)
+            ]
+            if required
+            else list(videos)
+        )
 
     def __get_video_from_id(self, video_id: int) -> Video:
         video = self.__id_to_video[video_id]

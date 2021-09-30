@@ -339,6 +339,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             key: data.video_id,
             data: data,
             propDefs: this.state.properties,
+            groupDef: groupDef,
             selected: this.state.selector.has(data.video_id),
             onSelect: this.onVideoSelection,
             onMove: this.moveVideo,

@@ -5,6 +5,15 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
 
   function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
+  /**
+   * Generate class name for common value of videos grouped by similarity
+   * @param value {boolean?}
+   * @returns {string}
+   */
+  function cc(value) {
+    return value === undefined ? "" : value ? "common-true" : "common-false";
+  }
+
   _export("Video", void 0);
 
   return {
@@ -66,6 +75,8 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
           const hasThumbnail = data.has_thumbnail;
           const htmlID = `video-${data.video_id}`;
           const alreadyOpened = APP_STATE.videoHistory.has(data.filename);
+          const common = this.props.groupDef && this.props.groupDef.common || {};
+          const groupedBySimilarityID = this.props.groupDef && this.props.groupDef.field === "similarity_id";
           return /*#__PURE__*/React.createElement("div", {
             className: 'video horizontal' + (data.found ? ' found' : ' not-found')
           }, /*#__PURE__*/React.createElement("div", {
@@ -142,17 +153,41 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
             className: "format horizontal"
           }, /*#__PURE__*/React.createElement("div", {
             className: "prepend"
-          }, /*#__PURE__*/React.createElement("code", null, data.extension)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", {
-            title: data.file_size
-          }, data.size), " / ", data.container_format, " ", "(", /*#__PURE__*/React.createElement("span", {
-            title: data.video_codec_description
+          }, /*#__PURE__*/React.createElement("code", {
+            className: cc(common.extension)
+          }, data.extension)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", {
+            title: data.file_size,
+            className: cc(common.size)
+          }, data.size), " / ", /*#__PURE__*/React.createElement("span", {
+            className: cc(common.container_format)
+          }, data.container_format), " ", "(", /*#__PURE__*/React.createElement("span", {
+            title: data.video_codec_description,
+            className: cc(common.video_codec)
           }, data.video_codec), ",", " ", /*#__PURE__*/React.createElement("span", {
-            title: data.audio_codec_description
+            title: data.audio_codec_description,
+            className: cc(common.audio_codec)
           }, data.audio_codec), ")"), /*#__PURE__*/React.createElement("div", {
             className: "prepend"
-          }, /*#__PURE__*/React.createElement("code", null, "Quality")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, /*#__PURE__*/React.createElement("em", null, data.quality)), " %")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, data.width), " x ", /*#__PURE__*/React.createElement("strong", null, data.height), " @", " ", data.frame_rate, " fps, ", data.bit_depth, " bits | ", data.sample_rate, " Hz,", " ", /*#__PURE__*/React.createElement("span", {
-            title: data.audio_bit_rate
-          }, audio_bit_rate, " Kb/s"), " |", " ", /*#__PURE__*/React.createElement("strong", null, data.length), " | ", /*#__PURE__*/React.createElement("code", null, data.date)), data.similarity_id !== null && data.similarity_id > -1 ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, "Similarity ID:"), " ", /*#__PURE__*/React.createElement("code", null, data.similarity_id)) : "", this.props.groupedByMoves && data.moves.length === 1 ? /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("button", {
+          }, /*#__PURE__*/React.createElement("code", null, "Quality")), /*#__PURE__*/React.createElement("div", {
+            className: cc(common.quality)
+          }, /*#__PURE__*/React.createElement("strong", null, /*#__PURE__*/React.createElement("em", null, data.quality)), " %")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", {
+            className: cc(common.width)
+          }, data.width), " x", " ", /*#__PURE__*/React.createElement("strong", {
+            className: cc(common.height)
+          }, data.height), " @", " ", /*#__PURE__*/React.createElement("span", {
+            className: cc(common.frame_rate)
+          }, data.frame_rate, " fps"), ",", " ", /*#__PURE__*/React.createElement("span", {
+            className: cc(common.bit_depth)
+          }, data.bit_depth, " bits"), " |", " ", /*#__PURE__*/React.createElement("span", {
+            className: cc(common.sample_rate)
+          }, data.sample_rate, " Hz"), ",", " ", /*#__PURE__*/React.createElement("span", {
+            title: data.audio_bit_rate,
+            className: cc(common.audio_bit_rate)
+          }, audio_bit_rate, " Kb/s"), " |", " ", /*#__PURE__*/React.createElement("strong", {
+            className: cc(common.length)
+          }, data.length), " | ", /*#__PURE__*/React.createElement("code", {
+            className: cc(common.date)
+          }, data.date)), !groupedBySimilarityID && data.similarity_id !== null && data.similarity_id > -1 ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, "Similarity ID:"), " ", /*#__PURE__*/React.createElement("code", null, data.similarity_id)) : "", this.props.groupedByMoves && data.moves.length === 1 ? /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("button", {
             className: "block",
             onClick: () => this.confirmMove(data.video_id, data.moves[0].video_id)
           }, /*#__PURE__*/React.createElement("strong", null, "Confirm move to:"), /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("code", null, data.moves[0].filename))) : "")));
@@ -367,6 +402,7 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
       Video.propTypes = {
         data: PropTypes.object.isRequired,
         propDefs: PropTypes.arrayOf(PropTypes.object).isRequired,
+        groupDef: PropTypes.object.isRequired,
         confirmDeletion: PropTypes.bool,
         groupedByMoves: PropTypes.bool,
         selected: PropTypes.bool,

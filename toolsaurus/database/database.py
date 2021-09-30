@@ -4,12 +4,10 @@ from typing import Optional
 import ujson as json
 
 import toolsaurus.application.exceptions
-from pysaurus.application import exceptions
 from pysaurus.core import notifications
 from pysaurus.core.components import AbsolutePath, PathType
 from pysaurus.core.modules import System
 from pysaurus.core.profiling import Profiler
-from pysaurus.database import path_utils
 from pysaurus.database.database import Database
 from pysaurus.database.miniature_tools.miniature import Miniature
 from pysaurus.database.video import Video

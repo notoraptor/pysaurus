@@ -61,6 +61,11 @@ class GroupingLayer(Layer):
                     grouped_videos.setdefault(
                         getattr(video, group_def.field, None), []
                     ).append(video)
+                # hack
+                if group_def.field == "similarity_id":
+                    # Remove "None" (not checked) and "-1" (not similar) videos.
+                    grouped_videos.pop(None, None)
+                    grouped_videos.pop(-1, None)
             for field_value, videos in grouped_videos.items():
                 if group_def.allow_singletons or len(videos) > 1:
                     groups.append(Group(field_value, videos))
