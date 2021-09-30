@@ -60,6 +60,14 @@ class SortLayer(Layer):
             readable_unreadable[video_state.unreadable].append(video_state)
         sorting = VideoSorting(self.get_sorting())
         readable_unreadable[0].sort(key=lambda video: video.to_comparable(sorting))
+
+        if readable_unreadable[1]:
+            message = []
+            if readable_unreadable[0]:
+                message.append(f"{len(readable_unreadable[0])} readable sorted")
+            message.append(f"{len(readable_unreadable[1])} unreadable not sorted")
+            self.database.set_message(", ".join(message) + ".")
+
         return VideoArray(readable_unreadable[0] + readable_unreadable[1])
 
     def remove_from_cache(self, cache: VideoArray, video: VideoState):

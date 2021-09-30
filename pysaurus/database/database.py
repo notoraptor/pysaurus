@@ -61,6 +61,7 @@ class Database:
         "moves_attribute",
         "__prop_parser",
         "__save_id",
+        "__message",
     )
 
     def __init__(self, path, folders=None, clear_old_folders=False, notifier=None):
@@ -83,6 +84,7 @@ class Database:
         self.__id_to_video = {}  # type: Dict[int, Union[VideoState, Video]]
         self.__prop_parser = {}  # type: Dict[str, callable]
         self.__save_id = 0
+        self.__message = None
         self.quality_attribute = QualityAttribute(self)
         self.moves_attribute = PotentialMoveAttribute(self)
         # Set log file
@@ -949,3 +951,11 @@ class Database:
 
     def get_video_filename(self, video_id: int) -> AbsolutePath:
         return self.__id_to_video[video_id].filename
+
+    def set_message(self, message: str):
+        self.__message = message
+
+    def flush_message(self):
+        message = self.__message
+        self.__message = None
+        return message

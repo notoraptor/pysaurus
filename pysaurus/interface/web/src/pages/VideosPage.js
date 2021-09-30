@@ -477,6 +477,8 @@ export class VideosPage extends React.Component {
         const pageNumber = state.pageNumber !== undefined ? state.pageNumber : this.state.pageNumber;
         const displayOnlySelected = state.displayOnlySelected !== undefined ? state.displayOnlySelected : this.state.displayOnlySelected;
         const selector = displayOnlySelected ? (state.selector !== undefined ? state.selector : this.state.selector).toJSON() : null;
+        if (!state.status)
+            state.status = "Loaded.";
         python_call("backend", callargs, pageSize, pageNumber, selector)
             .then(info => this.setState(this.parametersToState(state, info), top ? this.scrollTop : undefined))
             .catch(backend_error);

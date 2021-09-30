@@ -25,6 +25,3 @@ TODO:
     - reduce size of allocated map (n**2 -> n*(n-1)/2)
     - Maybe memorize list of coordinates to check after native comparison,
       instead of checking all potential positions.
-  - video provider interface is irrelevant with unreadable videos.
-  - Qt
-    - Make sure video menu is atop of everything.

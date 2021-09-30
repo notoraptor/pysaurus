@@ -94,6 +94,10 @@ class FeatureAPI:
                 group_def["common"] = VideoFeatures.get_common_fields(view)
         sources = self.provider.source_layer.get_sources()
         prop_types = self.get_prop_types()
+        extra = {}
+        db_message = self.database.flush_message()
+        if db_message:
+            extra["status"] = db_message
         return {
             "pageSize": page_size,
             "pageNumber": page_number,
@@ -123,6 +127,7 @@ class FeatureAPI:
                 "name": self.database.folder.title,
                 "folders": [str(path) for path in sorted(self.database.video_folders)],
             },
+            **extra
         }
 
     # Provider setters.
