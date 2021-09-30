@@ -48,11 +48,22 @@ function compareSources(sources1, sources2) {
 }
 
 export class VideosPage extends React.Component {
+    parametersToState(state, info) {
+        if (info.groupDef) {
+            const groupPageSize = state.groupPageSize !== undefined ? state.groupPageSize : this.state.groupPageSize;
+            const groupPageNumber = state.groupPageNumber !== undefined ? state.groupPageNumber : this.state.groupPageNumber;
+            const count = info.groupDef.groups.length;
+            const nbPages = Math.floor(count / groupPageSize) + (count % groupPageSize ? 1 : 0);
+            state.groupPageNumber = Math.min(Math.max(0, groupPageNumber), nbPages - 1);
+        }
+        return Object.assign(state, info);
+    }
+
     constructor(props) {
         // parameters: {backend state}
         // app: App
         super(props);
-        this.state = Object.assign({
+        this.state = this.parametersToState({
             status: 'Loaded.',
             confirmDeletion: true,
             path: [],
@@ -466,7 +477,7 @@ export class VideosPage extends React.Component {
         const displayOnlySelected = state.displayOnlySelected !== undefined ? state.displayOnlySelected : this.state.displayOnlySelected;
         const selector = displayOnlySelected ? (state.selector !== undefined ? state.selector : this.state.selector).toJSON() : null;
         python_call("backend", callargs, pageSize, pageNumber, selector)
-            .then(info => this.setState(Object.assign(state, info), top ? this.scrollTop : undefined))
+            .then(info => this.setState(this.parametersToState(state, info), top ? this.scrollTop : undefined))
             .catch(backend_error);
     }
 

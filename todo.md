@@ -6,15 +6,16 @@ ffprobe -v quiet -print_format json -show_format -show_streams "<video-file>" > 
 
 > Using SQL instead of JSON could it make code faster and easier to maintain ?
 
-No. It may speed up code to select sources, but I don't hink it will help
-when searching videos by term, for e.g.
+No. It may speed up code to select sources, but I don't think it will help
+when searching videos by terms.
 
 
 TODO:
-- Add possibility to change language. Minimum languages expected: english, French.
+- Add possibility to change language. Minimum languages expected: English, French.
 - Memory leaks in python code when running gui ?
 - Interface
-  - Remember last property value edition panel selected (either delete, edit or move panel).
+  - Remember last edition panel selected for grouped property values
+    (either delete, edit or move panel).
   - Redesign using bootstrap ?
   - Suggest existing values on property edition.
   - Add an option to execute a command line (example, `sort +date -length`)
@@ -22,6 +23,9 @@ TODO:
     - Does that mean interface is not ergonomic?
   - When grouping videos, display same or different values with specific color.
   - some attributes must not be available for sorting (e.g. "moved files (potentially)")
+  - Optimize video similarities algorithm
+    - reduce size of allocated map (n**2 -> n*(n-1)/2)
+    - Maybe memorize list of coordinates to check after native comparison,
+      instead of checking all potential positions.
   - Qt
     - Make sure video menu is atop of everything.
-    - group paging is not updated if last page is emptied.
