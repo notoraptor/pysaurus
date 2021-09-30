@@ -118,7 +118,7 @@ System.register(["../utils/constants.js", "../dialogs/Dialog.js"], function (_ex
 
         fieldIsString() {
           if (this.state.isProperty) return this.props.propertyMap[this.state.field].type === "str";
-          return FIELD_MAP.fields[this.state.field].isString;
+          return FIELD_MAP.fields[this.state.field].isString();
         }
 
         onChangeFieldType(event) {

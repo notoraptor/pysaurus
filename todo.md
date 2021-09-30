@@ -22,7 +22,6 @@ TODO:
     from interface, as a shortcut instead of multiple interface clicks.
     - Does that mean interface is not ergonomic?
   - When grouping videos, display same or different values with specific color.
-  - some attributes must not be available for sorting (e.g. "moved files (potentially)")
   - Optimize video similarities algorithm
     - reduce size of allocated map (n**2 -> n*(n-1)/2)
     - Maybe memorize list of coordinates to check after native comparison,

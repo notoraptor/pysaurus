@@ -44,7 +44,7 @@ export class FormVideosSort extends React.Component {
                 <p key={index} className="sorting">
                     <button className="button-remove-sort" onClick={() => this.removeCriterion(index)}>-</button>
                     <select value={field} onChange={(event) => this.setField(index, event.target.value)}>
-                        {FIELD_MAP.allowed.map(
+                        {FIELD_MAP.sortable.map(
                             (entry, fieldIndex) => (
                                 <option key={fieldIndex} value={entry.name}>{entry.title}</option>
                             ))}
