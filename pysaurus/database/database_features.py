@@ -3,6 +3,7 @@ from ctypes import Array, c_bool
 from typing import List, Set
 
 import numpy as np
+from collections import deque
 
 from pysaurus.application import exceptions
 from pysaurus.core import notifications
@@ -95,9 +96,160 @@ class _GrayClassifier:
 
 
 class DatabaseFeatures:
+    __slots__ = "positions",
+
+    def __init__(self):
+        self.positions = deque()
+
+    def find_similar_videos_ignore_cache(self, db: Database):
+        videos = db.ensure_miniatures(returns=True)  # type: List[Video]
+        previous_sim = [video.similarity_id for video in videos]
+        for video in videos:
+            video.similarity_id = None
+        try:
+            self.find_similar_videos(db, videos)
+        except Exception:
+            # Restore previous similarities.
+            for i, video in enumerate(videos):
+                video.similarity_id = previous_sim[i]
+            raise
+
+    def find_similar_videos(self, db: Database, videos: List[Video] = None):
+        with Profiler("Find similar videos.", db.notifier):
+            if videos is None:
+                videos = db.ensure_miniatures(returns=True)  # type: List[Video]
+            nb_videos = len(videos)
+            miniatures = []
+            new_miniature_indices = []
+            old_miniature_indices = []
+            for i, video in enumerate(videos):
+                miniatures.append(video.miniature)
+                if video.similarity_id is None:
+                    new_miniature_indices.append(i)
+                else:
+                    old_miniature_indices.append(i)
+
+            if not new_miniature_indices:
+                db.notifier.notify(notifications.Message("No new videos to check."))
+                return
+
+            nb_max_comparisons = compute_nb_couples(nb_videos)
+            with Profiler("Allocating edges map", notifier=db.notifier):
+                cmp_map = self.generate_edges(nb_videos)
+            classifier_new = _GrayClassifier.classify(
+                miniatures, new_miniature_indices
+            )
+            classifier_old = _GrayClassifier.classify(
+                miniatures, old_miniature_indices
+            )
+
+            nb_cmp = self._collect_comparisons(
+                classifier_new, cmp_map, nb_videos, db.notifier
+            )
+            nb_cmp += self._cross_compare_classifiers(
+                classifier_new, classifier_old, cmp_map, nb_videos, db.notifier
+            )
+
+            db.notifier.notify(
+                notifications.Message(
+                    f"To do: {nb_cmp} / {nb_max_comparisons} comparisons "
+                    f"({nb_cmp * 100 / nb_max_comparisons} %)."
+                )
+            )
+
+            sim_groups = self._find_similar_miniatures(
+                miniatures, cmp_map, db.notifier
+            )
+
+            db.notifier.notify(
+                notifications.Message(
+                    f"Finally found {len(sim_groups)} new similarity groups "
+                    f"with {sum(len(g) for g in sim_groups)} images."
+                )
+            )
+            # Sort new similarity groups by size then smallest duration.
+            sim_groups.sort(
+                key=lambda s: (len(s), min(videos[x].length for x in s))
+            )
+            # Get next similarity id to use.
+            next_sim_id = (
+                max(
+                    [v.similarity_id for v in videos if v.similarity_id is not None]
+                    + [0]
+                )
+                + 1
+            )
+            with Profiler("Merge new similarities with old ones.", db.notifier):
+                sim_id_to_vid_ids = {}
+                for i in old_miniature_indices:
+                    sim_id_to_vid_ids.setdefault(
+                        videos[i].similarity_id, []
+                    ).append(i)
+                sim_id_to_vid_ids.pop(-1, None)
+                db.notifier.notify(
+                    notifications.Message(
+                        "Found",
+                        sum(1 for g in sim_id_to_vid_ids.values() if len(g) > 1),
+                        "old similarities.",
+                    )
+                )
+                graph = Graph()
+                for linked_videos in sim_id_to_vid_ids.values():
+                    for i in range(1, len(linked_videos)):
+                        graph.connect(linked_videos[i - 1], linked_videos[i])
+                for linked_videos in sim_groups:
+                    linked_videos = list(linked_videos)
+                    for i in range(1, len(linked_videos)):
+                        graph.connect(linked_videos[i - 1], linked_videos[i])
+                new_sim_groups = [
+                    group for group in graph.pop_groups() if len(group) > 1
+                ]
+                db.notifier.notify(
+                    notifications.Message(
+                        "Found",
+                        len(new_sim_groups),
+                        "total similarities after merging.",
+                    )
+                )
+                new_sim_indices = []
+                nb_new_indices = 0
+                for new_sim_group in new_sim_groups:
+                    old_indices = {videos[i].similarity_id for i in new_sim_group}
+                    if -1 in old_indices:
+                        old_indices.remove(-1)
+                    if None in old_indices:
+                        old_indices.remove(None)
+                    if not old_indices:
+                        new_id = next_sim_id
+                        next_sim_id += 1
+                        nb_new_indices += 1
+                    else:
+                        new_id = min(old_indices)
+                    new_sim_indices.append(new_id)
+                db.notifier.notify(
+                    notifications.Message(
+                        f"Found {nb_new_indices} pure new similarities."
+                    )
+                )
+
+                for i in new_miniature_indices:
+                    videos[i].similarity_id = -1
+                for pos in range(len(new_sim_groups)):
+                    new_id = new_sim_indices[pos]
+                    for i in new_sim_groups[pos]:
+                        videos[i].similarity_id = new_id
+            # Save.
+            db.save()
+
     @classmethod
+    def generate_edges(cls, nb_videos):
+        if has_cpp:
+            return (c_bool * (nb_videos * nb_videos))()
+        else:
+            return np.zeros(nb_videos * nb_videos, dtype=np.uint32)
+
     def _collect_comparisons(
-        cls,
+        self,
         classifier: _GrayClassifier,
         cmp_map: Array,
         nb_miniatures: int,
@@ -112,7 +264,7 @@ class DatabaseFeatures:
             for clf in classifier.classifiers:
                 for indices in clf.groups:
                     for i, j in itertools.combinations(indices, 2):
-                        cmp_map[i * nb_miniatures + j] = 1
+                        self._cmp(cmp_map, i * nb_miniatures + j)
 
             for clf in classifier.classifiers:
                 nb_groups = len(clf.groups)
@@ -127,7 +279,7 @@ class DatabaseFeatures:
                         for a, b in itertools.product(group_i, group_j):
                             if a > b:
                                 a, b = b, a
-                            cmp_map[a * nb_miniatures + b] = 1
+                            self._cmp(cmp_map, a * nb_miniatures + b)
 
             for r, c in classifier.cross_comparisons(notifier):
                 clr = classifier.classifiers[r]
@@ -143,13 +295,12 @@ class DatabaseFeatures:
                         for i, j in itertools.product(group_r, group_c):
                             if i > j:
                                 i, j = j, i
-                            cmp_map[i * nb_miniatures + j] = 1
+                            self._cmp(cmp_map, i * nb_miniatures + j)
 
             return nb_cmp
 
-    @classmethod
     def _cross_compare_classifiers(
-        cls,
+        self,
         classifier_left: _GrayClassifier,
         classifier_right: _GrayClassifier,
         cmp_map: Array,
@@ -189,173 +340,37 @@ class DatabaseFeatures:
                             for a, b in itertools.product(group_left, group_right):
                                 if a > b:
                                     a, b = b, a
-                                cmp_map[a * nb_miniatures + b] = 1
+                                self._cmp(cmp_map, a * nb_miniatures + b)
                 if (i_gray_left + 1) % 10 == 0:
                     jobn.progress(None, i_gray_left + 1, n)
             jobn.progress(None, n, n)
             return nb_cmp
 
-    @classmethod
-    def _find_similar_miniatures(cls, miniatures, edges, notifier):
+    def _cmp(self, cmp_map: Array, pos: int):
+        cmp_map[pos] = 1
+        self.positions.append(pos)
+
+    def _find_similar_miniatures(self, miniatures, edges, notifier):
         # type: (List[Miniature], Array[c_bool], Notifier) -> List[Set[int]]
         backend_sim.classify_similarities_directed(
             miniatures, edges, SIM_LIMIT, notifier
         )
         graph = Graph()
         nb_miniatures = len(miniatures)
-        job_n = notifications.Jobs.link_videos(nb_miniatures, notifier)
         with Profiler("Link videos ...", notifier):
-            for i in range(nb_miniatures):
-                for j in range(i + 1, nb_miniatures):
-                    if edges[i * nb_miniatures + j]:
-                        graph.connect(i, j)
-                job_n.progress(None, i + 1, nb_miniatures)
-        return [group for group in graph.pop_groups() if len(group) > 1]
-
-    @classmethod
-    def generate_edges(cls, nb_videos):
-        if has_cpp:
-            return (c_bool * (nb_videos * nb_videos))()
-        else:
-            return np.zeros(nb_videos * nb_videos, dtype=np.uint32)
-
-    @classmethod
-    def find_similar_videos(cls, db: Database, videos: List[Video] = None):
-        with Profiler("Find similar videos.", db.notifier):
-            if videos is None:
-                videos = db.ensure_miniatures(returns=True)  # type: List[Video]
-            nb_videos = len(videos)
-            miniatures = []
-            new_miniature_indices = []
-            old_miniature_indices = []
-            for i, video in enumerate(videos):
-                miniatures.append(video.miniature)
-                if video.similarity_id is None:
-                    new_miniature_indices.append(i)
-                else:
-                    old_miniature_indices.append(i)
-
-            if new_miniature_indices:
-                nb_max_comparisons = compute_nb_couples(nb_videos)
-                with Profiler("Allocating edges map", notifier=db.notifier):
-                    cmp_map = cls.generate_edges(nb_videos)
-                classifier_new = _GrayClassifier.classify(
-                    miniatures, new_miniature_indices
-                )
-                classifier_old = _GrayClassifier.classify(
-                    miniatures, old_miniature_indices
-                )
-
-                nb_cmp = cls._collect_comparisons(
-                    classifier_new, cmp_map, nb_videos, db.notifier
-                )
-                nb_cmp += cls._cross_compare_classifiers(
-                    classifier_new, classifier_old, cmp_map, nb_videos, db.notifier
-                )
-
-                db.notifier.notify(
-                    notifications.Message(
-                        f"To do: {nb_cmp} / {nb_max_comparisons} comparisons "
-                        f"({nb_cmp * 100 / nb_max_comparisons} %)."
-                    )
-                )
-
-                sim_groups = cls._find_similar_miniatures(
-                    miniatures, cmp_map, db.notifier
-                )
-
-                db.notifier.notify(
-                    notifications.Message(
-                        f"Finally found {len(sim_groups)} new similarity groups "
-                        f"with {sum(len(g) for g in sim_groups)} images."
-                    )
-                )
-                # Sort new similarity groups by size then smallest duration.
-                sim_groups.sort(
-                    key=lambda s: (len(s), min(videos[x].length for x in s))
-                )
-                # Get next similarity id to use.
-                next_sim_id = (
-                    max(
-                        [v.similarity_id for v in videos if v.similarity_id is not None]
-                        + [0]
-                    )
-                    + 1
-                )
-                with Profiler("Merge new similarities with old ones.", db.notifier):
-                    sim_id_to_vid_ids = {}
-                    for i in old_miniature_indices:
-                        sim_id_to_vid_ids.setdefault(
-                            videos[i].similarity_id, []
-                        ).append(i)
-                    sim_id_to_vid_ids.pop(-1, None)
-                    db.notifier.notify(
-                        notifications.Message(
-                            "Found",
-                            sum(1 for g in sim_id_to_vid_ids.values() if len(g) > 1),
-                            "old similarities.",
-                        )
-                    )
-                    graph = Graph()
-                    for linked_videos in sim_id_to_vid_ids.values():
-                        for i in range(1, len(linked_videos)):
-                            graph.connect(linked_videos[i - 1], linked_videos[i])
-                    for linked_videos in sim_groups:
-                        linked_videos = list(linked_videos)
-                        for i in range(1, len(linked_videos)):
-                            graph.connect(linked_videos[i - 1], linked_videos[i])
-                    new_sim_groups = [
-                        group for group in graph.pop_groups() if len(group) > 1
-                    ]
-                    db.notifier.notify(
-                        notifications.Message(
-                            "Found",
-                            len(new_sim_groups),
-                            "total similarities after merging.",
-                        )
-                    )
-                    new_sim_indices = []
-                    nb_new_indices = 0
-                    for new_sim_group in new_sim_groups:
-                        old_indices = {videos[i].similarity_id for i in new_sim_group}
-                        if -1 in old_indices:
-                            old_indices.remove(-1)
-                        if None in old_indices:
-                            old_indices.remove(None)
-                        if not old_indices:
-                            new_id = next_sim_id
-                            next_sim_id += 1
-                            nb_new_indices += 1
-                        else:
-                            new_id = min(old_indices)
-                        new_sim_indices.append(new_id)
-                    db.notifier.notify(
-                        notifications.Message(
-                            f"Found {nb_new_indices} pure new similarities."
-                        )
-                    )
-
-                    for i in new_miniature_indices:
-                        videos[i].similarity_id = -1
-                    for pos in range(len(new_sim_groups)):
-                        new_id = new_sim_indices[pos]
-                        for i in new_sim_groups[pos]:
-                            videos[i].similarity_id = new_id
-                # Save.
-                db.save()
+            if self.positions:
+                nb_pos = len(self.positions)
+                job_n = notifications.Jobs.link_videos(nb_pos, notifier)
+                for index, pos in enumerate(self.positions):
+                    if edges[pos]:
+                        graph.connect(pos // nb_miniatures, pos % nb_miniatures)
+                    job_n.progress(None, index + 1, nb_pos)
+                self.positions.clear()
             else:
-                db.notifier.notify(notifications.Message("No new videos to check."))
-
-    @classmethod
-    def find_similar_videos_ignore_cache(cls, db: Database):
-        videos = db.ensure_miniatures(returns=True)  # type: List[Video]
-        previous_sim = [video.similarity_id for video in videos]
-        for video in videos:
-            video.similarity_id = None
-        try:
-            cls.find_similar_videos(db, videos)
-        except Exception:
-            # Restore previous similarities.
-            for i, video in enumerate(videos):
-                video.similarity_id = previous_sim[i]
-            raise
+                job_n = notifications.Jobs.link_videos(nb_miniatures, notifier)
+                for i in range(nb_miniatures):
+                    for j in range(i + 1, nb_miniatures):
+                        if edges[i * nb_miniatures + j]:
+                            graph.connect(i, j)
+                    job_n.progress(None, i + 1, nb_miniatures)
+        return [group for group in graph.pop_groups() if len(group) > 1]

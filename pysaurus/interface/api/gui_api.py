@@ -169,7 +169,7 @@ class GuiAPI(FeatureAPI):
         self.provider.refresh()
 
     def _find_similarities(self):
-        DatabaseFeatures.find_similar_videos(self.database)
+        DatabaseFeatures().find_similar_videos(self.database)
         self.provider.set_groups(
             field="similarity_id",
             is_property=False,
@@ -180,7 +180,7 @@ class GuiAPI(FeatureAPI):
         self.provider.refresh()
 
     def _find_similarities_ignore_cache(self):
-        DatabaseFeatures.find_similar_videos_ignore_cache(self.database)
+        DatabaseFeatures().find_similar_videos_ignore_cache(self.database)
         self.provider.set_groups(
             field="similarity_id",
             is_property=False,
