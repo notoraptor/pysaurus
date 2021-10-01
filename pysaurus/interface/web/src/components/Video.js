@@ -38,6 +38,8 @@ export class Video extends React.Component {
         this.reallyDeleteVideo = this.reallyDeleteVideo.bind(this);
         this.confirmMove = this.confirmMove.bind(this);
         this.moveVideo = this.moveVideo.bind(this);
+        this.dismissSimilarity = this.dismissSimilarity.bind(this);
+        this.reallyDismissSimilarity = this.reallyDismissSimilarity.bind(this);
     }
 
     render() {
@@ -97,6 +99,9 @@ export class Video extends React.Component {
                                                 </MenuItem>
                                             ))}
                                         </Menu>
+                                    ) : ""}
+                                    {groupedBySimilarityID ? (
+                                        <MenuItem action={this.dismissSimilarity}>Dismiss similarity</MenuItem>
                                     ) : ""}
                                 </MenuPack>
                                 <div>
@@ -300,6 +305,26 @@ export class Video extends React.Component {
         );
     }
 
+    dismissSimilarity() {
+        const filename = this.props.data.filename;
+        const thumbnail_path = this.props.data.thumbnail_path;
+        Fancybox.load(
+            <Dialog title="Dismiss similarity" yes="dismiss" action={this.reallyDismissSimilarity}>
+                <div className="form-delete-video text-center bold">
+                    <h2>Are you sure you want to dismiss current similarity for this video?</h2>
+                    <div className="details overflow-auto px-2 py-1"><code id="filename">{filename}</code></div>
+                    <p>
+                        {this.props.data.has_thumbnail ? (
+                            <img id="thumbnail" alt="No thumbnail available" src={thumbnail_path}/>
+                        ) : (
+                            <div className="no-thumbnail">no thumbnail</div>
+                        )}
+                    </p>
+                </div>
+            </Dialog>
+        );
+    }
+
     deleteVideo() {
         if (this.props.data.found || this.props.confirmDeletion)
             this.confirmDeletion();
@@ -310,6 +335,12 @@ export class Video extends React.Component {
     reallyDeleteVideo() {
         python_call('delete_video', this.props.data.video_id)
             .then(() => this.props.onInfo('Video deleted! ' + this.props.data.filename, true))
+            .catch(backend_error);
+    }
+
+    reallyDismissSimilarity() {
+        python_call('dismiss_similarity', this.props.data.video_id)
+            .then(() => this.props.onInfo('Current similarity cancelled: ' + this.props.data.filename, true))
             .catch(backend_error);
     }
 

@@ -57,6 +57,8 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
           this.reallyDeleteVideo = this.reallyDeleteVideo.bind(this);
           this.confirmMove = this.confirmMove.bind(this);
           this.moveVideo = this.moveVideo.bind(this);
+          this.dismissSimilarity = this.dismissSimilarity.bind(this);
+          this.reallyDismissSimilarity = this.reallyDismissSimilarity.bind(this);
         }
 
         render() {
@@ -123,7 +125,9 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
             key: index,
             className: "confirm-move",
             action: () => this.confirmMove(data.video_id, dst.video_id)
-          }, /*#__PURE__*/React.createElement("code", null, dst.filename)))) : ""), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("input", {
+          }, /*#__PURE__*/React.createElement("code", null, dst.filename)))) : "", groupedBySimilarityID ? /*#__PURE__*/React.createElement(MenuItem, {
+            action: this.dismissSimilarity
+          }, "Dismiss similarity") : ""), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("input", {
             type: "checkbox",
             checked: this.props.selected,
             id: htmlID,
@@ -334,12 +338,38 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
           }, "no thumbnail")))));
         }
 
+        dismissSimilarity() {
+          const filename = this.props.data.filename;
+          const thumbnail_path = this.props.data.thumbnail_path;
+          Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
+            title: "Dismiss similarity",
+            yes: "dismiss",
+            action: this.reallyDismissSimilarity
+          }, /*#__PURE__*/React.createElement("div", {
+            className: "form-delete-video text-center bold"
+          }, /*#__PURE__*/React.createElement("h2", null, "Are you sure you want to dismiss current similarity for this video?"), /*#__PURE__*/React.createElement("div", {
+            className: "details overflow-auto px-2 py-1"
+          }, /*#__PURE__*/React.createElement("code", {
+            id: "filename"
+          }, filename)), /*#__PURE__*/React.createElement("p", null, this.props.data.has_thumbnail ? /*#__PURE__*/React.createElement("img", {
+            id: "thumbnail",
+            alt: "No thumbnail available",
+            src: thumbnail_path
+          }) : /*#__PURE__*/React.createElement("div", {
+            className: "no-thumbnail"
+          }, "no thumbnail")))));
+        }
+
         deleteVideo() {
           if (this.props.data.found || this.props.confirmDeletion) this.confirmDeletion();else this.reallyDeleteVideo();
         }
 
         reallyDeleteVideo() {
           python_call('delete_video', this.props.data.video_id).then(() => this.props.onInfo('Video deleted! ' + this.props.data.filename, true)).catch(backend_error);
+        }
+
+        reallyDismissSimilarity() {
+          python_call('dismiss_similarity', this.props.data.video_id).then(() => this.props.onInfo('Current similarity cancelled: ' + this.props.data.filename, true)).catch(backend_error);
         }
 
         openContainingFolder() {

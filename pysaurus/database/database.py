@@ -588,6 +588,12 @@ class Database:
         self.__folders = set(folders)
         self.save()
 
+    def dismiss_similarity(self, video_id: int):
+        video = self.__get_video_from_id(video_id)
+        video.similarity_id = -1
+        self.save()
+        self.__notifier.notify(notifications.FieldsModified(["similarity_id"]))
+
     def change_video_file_title(self, video_id: int, new_title: str) -> None:
         video = self.__get_video_from_id(video_id)
         if video.filename.file_title != new_title:
