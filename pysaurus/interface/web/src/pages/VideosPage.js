@@ -48,17 +48,6 @@ function compareSources(sources1, sources2) {
 }
 
 export class VideosPage extends React.Component {
-    parametersToState(state, info) {
-        if (info.groupDef) {
-            const groupPageSize = state.groupPageSize !== undefined ? state.groupPageSize : this.state.groupPageSize;
-            const groupPageNumber = state.groupPageNumber !== undefined ? state.groupPageNumber : this.state.groupPageNumber;
-            const count = info.groupDef.groups.length;
-            const nbPages = Math.floor(count / groupPageSize) + (count % groupPageSize ? 1 : 0);
-            state.groupPageNumber = Math.min(Math.max(0, groupPageNumber), nbPages - 1);
-        }
-        return Object.assign(state, info);
-    }
-
     constructor(props) {
         // parameters: {backend state}
         // app: App
@@ -173,6 +162,24 @@ export class VideosPage extends React.Component {
                         </Menu>
                         <MenuItem className="red-flag" action={this.deleteDatabase}>Delete database ...</MenuItem>
                     </MenuPack>
+                    <MenuPack title="Videos ...">
+                        <Menu title="Filter videos ...">
+                            {<ActionToMenuItem action={actions.select}/>}
+                            {<ActionToMenuItem action={actions.group}/>}
+                            {<ActionToMenuItem action={actions.search}/>}
+                            {<ActionToMenuItem action={actions.sort}/>}
+                        </Menu>
+                        {this.canOpenRandomVideo() ? <ActionToMenuItem action={actions.openRandomVideo}/> : ""}
+                        {this.canOpenRandomPlayer() ? <ActionToMenuItem action={actions.openRandomPlayer}/> : ""}
+                        {this.canFindSimilarVideos() ? <MenuItem action={this.findSimilarVideos}>Search similar videos</MenuItem> : ""}
+                        {this.canFindSimilarVideos() ? (
+                            <Menu title="Search similar videos (longer) ...">
+                                <MenuItem action={this.findSimilarVideosIgnoreCache}>
+                                    <strong>Ignore cache</strong>
+                                </MenuItem>
+                            </Menu>
+                        ) : ""}
+                    </MenuPack>
                     <MenuPack title="Properties ...">
                         {<ActionToMenuItem action={actions.manageProperties}/>}
                         {stringSetProperties.length ? <MenuItem action={this.fillWithKeywords}>Put keywords into a property ...</MenuItem> : ''}
@@ -191,24 +198,6 @@ export class VideosPage extends React.Component {
                                 </MenuItem>
                             ))
                         )}
-                    </MenuPack>
-                    <MenuPack title="Videos ...">
-                        <Menu title="Filter videos ...">
-                            {<ActionToMenuItem action={actions.select}/>}
-                            {<ActionToMenuItem action={actions.group}/>}
-                            {<ActionToMenuItem action={actions.search}/>}
-                            {<ActionToMenuItem action={actions.sort}/>}
-                        </Menu>
-                        {this.canOpenRandomVideo() ? <ActionToMenuItem action={actions.openRandomVideo}/> : ""}
-                        {this.canOpenRandomPlayer() ? <ActionToMenuItem action={actions.openRandomPlayer}/> : ""}
-                        {this.canFindSimilarVideos() ? <MenuItem action={this.findSimilarVideos}>Search similar videos</MenuItem> : ""}
-                        {this.canFindSimilarVideos() ? (
-                            <Menu title="Search similar videos (longer) ...">
-                                <MenuItem action={this.findSimilarVideosIgnoreCache}>
-                                    <strong>Ignore cache</strong>
-                                </MenuItem>
-                            </Menu>
-                        ) : ""}
                     </MenuPack>
                     <MenuPack title="Options">
                         <Menu title="Page size ...">
@@ -452,6 +441,31 @@ export class VideosPage extends React.Component {
         NOTIFICATION_MANAGER.unregister(this.notificationCallbackIndex);
     }
 
+    backend(callargs, state, top = true) {
+        const pageSize = state.pageSize !== undefined ? state.pageSize : this.state.pageSize;
+        const pageNumber = state.pageNumber !== undefined ? state.pageNumber : this.state.pageNumber;
+        const displayOnlySelected = state.displayOnlySelected !== undefined ? state.displayOnlySelected : this.state.displayOnlySelected;
+        const selector = displayOnlySelected ? (state.selector !== undefined ? state.selector : this.state.selector).toJSON() : null;
+        if (!state.status)
+            state.status = "Loaded.";
+        python_call("backend", callargs, pageSize, pageNumber, selector)
+            .then(info => this.setState(this.parametersToState(state, info), top ? this.scrollTop : undefined))
+            .catch(backend_error);
+    }
+
+    parametersToState(state, info) {
+        if (info.groupDef) {
+            const groupPageSize = state.groupPageSize !== undefined ? state.groupPageSize : this.state.groupPageSize;
+            const groupPageNumber = state.groupPageNumber !== undefined ? state.groupPageNumber : this.state.groupPageNumber;
+            const count = info.groupDef.groups.length;
+            const nbPages = Math.floor(count / groupPageSize) + (count % groupPageSize ? 1 : 0);
+            state.groupPageNumber = Math.min(Math.max(0, groupPageNumber), nbPages - 1);
+        }
+        if (info.viewChanged && !state.selector)
+            state.selector = new Selector();
+        return Object.assign(state, info);
+    }
+
     notify(notification) {
         this.backend(null, {});
     }
@@ -470,18 +484,6 @@ export class VideosPage extends React.Component {
 
     scrollTop() {
         document.querySelector('#videos .videos').scrollTop = 0;
-    }
-
-    backend(callargs, state, top = true) {
-        const pageSize = state.pageSize !== undefined ? state.pageSize : this.state.pageSize;
-        const pageNumber = state.pageNumber !== undefined ? state.pageNumber : this.state.pageNumber;
-        const displayOnlySelected = state.displayOnlySelected !== undefined ? state.displayOnlySelected : this.state.displayOnlySelected;
-        const selector = displayOnlySelected ? (state.selector !== undefined ? state.selector : this.state.selector).toJSON() : null;
-        if (!state.status)
-            state.status = "Loaded.";
-        python_call("backend", callargs, pageSize, pageNumber, selector)
-            .then(info => this.setState(this.parametersToState(state, info), top ? this.scrollTop : undefined))
-            .catch(backend_error);
     }
 
     onVideoSelection(videoID, selected) {

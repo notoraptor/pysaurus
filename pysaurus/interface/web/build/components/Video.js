@@ -116,10 +116,7 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
             action: this.renameVideo
           }, "Rename video") : '', data.found ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.moveVideo
-          }, "Move video to another folder ...") : "", /*#__PURE__*/React.createElement(MenuItem, {
-            className: "red-flag",
-            action: this.deleteVideo
-          }, data.found ? 'Delete video' : 'Delete entry'), this.props.groupedByMoves && data.moves.length ? /*#__PURE__*/React.createElement(Menu, {
+          }, "Move video to another folder ...") : "", this.props.groupedByMoves && data.moves.length ? /*#__PURE__*/React.createElement(Menu, {
             title: "Confirm move to ..."
           }, data.moves.map((dst, index) => /*#__PURE__*/React.createElement(MenuItem, {
             key: index,
@@ -127,7 +124,10 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
             action: () => this.confirmMove(data.video_id, dst.video_id)
           }, /*#__PURE__*/React.createElement("code", null, dst.filename)))) : "", groupedBySimilarityID ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.dismissSimilarity
-          }, "Dismiss similarity") : ""), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("input", {
+          }, "Dismiss similarity") : "", /*#__PURE__*/React.createElement(MenuItem, {
+            className: "red-flag",
+            action: this.deleteVideo
+          }, data.found ? 'Delete video' : 'Delete entry')), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("input", {
             type: "checkbox",
             checked: this.props.selected,
             id: htmlID,

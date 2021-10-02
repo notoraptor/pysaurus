@@ -91,18 +91,6 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
     }],
     execute: function () {
       _export("VideosPage", VideosPage = class VideosPage extends React.Component {
-        parametersToState(state, info) {
-          if (info.groupDef) {
-            const groupPageSize = state.groupPageSize !== undefined ? state.groupPageSize : this.state.groupPageSize;
-            const groupPageNumber = state.groupPageNumber !== undefined ? state.groupPageNumber : this.state.groupPageNumber;
-            const count = info.groupDef.groups.length;
-            const nbPages = Math.floor(count / groupPageSize) + (count % groupPageSize ? 1 : 0);
-            state.groupPageNumber = Math.min(Math.max(0, groupPageNumber), nbPages - 1);
-          }
-
-          return Object.assign(state, info);
-        }
-
         constructor(props) {
           // parameters: {backend state}
           // app: App
@@ -224,20 +212,6 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             className: "red-flag",
             action: this.deleteDatabase
           }, "Delete database ...")), /*#__PURE__*/React.createElement(MenuPack, {
-            title: "Properties ..."
-          }, /*#__PURE__*/React.createElement(ActionToMenuItem, {
-            action: actions.manageProperties
-          }), stringSetProperties.length ? /*#__PURE__*/React.createElement(MenuItem, {
-            action: this.fillWithKeywords
-          }, "Put keywords into a property ...") : '', this.state.properties.length > 5 ? /*#__PURE__*/React.createElement(Menu, {
-            title: "Group videos by property ..."
-          }, this.state.properties.map((def, index) => /*#__PURE__*/React.createElement(MenuItem, {
-            key: index,
-            action: () => this.backendGroupVideos(def.name, true)
-          }, def.name))) : this.state.properties.map((def, index) => /*#__PURE__*/React.createElement(MenuItem, {
-            key: index,
-            action: () => this.backendGroupVideos(def.name, true)
-          }, "Group videos by property: ", def.name))), /*#__PURE__*/React.createElement(MenuPack, {
             title: "Videos ..."
           }, /*#__PURE__*/React.createElement(Menu, {
             title: "Filter videos ..."
@@ -260,6 +234,20 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           }, /*#__PURE__*/React.createElement(MenuItem, {
             action: this.findSimilarVideosIgnoreCache
           }, /*#__PURE__*/React.createElement("strong", null, "Ignore cache"))) : ""), /*#__PURE__*/React.createElement(MenuPack, {
+            title: "Properties ..."
+          }, /*#__PURE__*/React.createElement(ActionToMenuItem, {
+            action: actions.manageProperties
+          }), stringSetProperties.length ? /*#__PURE__*/React.createElement(MenuItem, {
+            action: this.fillWithKeywords
+          }, "Put keywords into a property ...") : '', this.state.properties.length > 5 ? /*#__PURE__*/React.createElement(Menu, {
+            title: "Group videos by property ..."
+          }, this.state.properties.map((def, index) => /*#__PURE__*/React.createElement(MenuItem, {
+            key: index,
+            action: () => this.backendGroupVideos(def.name, true)
+          }, def.name))) : this.state.properties.map((def, index) => /*#__PURE__*/React.createElement(MenuItem, {
+            key: index,
+            action: () => this.backendGroupVideos(def.name, true)
+          }, "Group videos by property: ", def.name))), /*#__PURE__*/React.createElement(MenuPack, {
             title: "Options"
           }, /*#__PURE__*/React.createElement(Menu, {
             title: "Page size ..."
@@ -436,6 +424,28 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           NOTIFICATION_MANAGER.unregister(this.notificationCallbackIndex);
         }
 
+        backend(callargs, state, top = true) {
+          const pageSize = state.pageSize !== undefined ? state.pageSize : this.state.pageSize;
+          const pageNumber = state.pageNumber !== undefined ? state.pageNumber : this.state.pageNumber;
+          const displayOnlySelected = state.displayOnlySelected !== undefined ? state.displayOnlySelected : this.state.displayOnlySelected;
+          const selector = displayOnlySelected ? (state.selector !== undefined ? state.selector : this.state.selector).toJSON() : null;
+          if (!state.status) state.status = "Loaded.";
+          python_call("backend", callargs, pageSize, pageNumber, selector).then(info => this.setState(this.parametersToState(state, info), top ? this.scrollTop : undefined)).catch(backend_error);
+        }
+
+        parametersToState(state, info) {
+          if (info.groupDef) {
+            const groupPageSize = state.groupPageSize !== undefined ? state.groupPageSize : this.state.groupPageSize;
+            const groupPageNumber = state.groupPageNumber !== undefined ? state.groupPageNumber : this.state.groupPageNumber;
+            const count = info.groupDef.groups.length;
+            const nbPages = Math.floor(count / groupPageSize) + (count % groupPageSize ? 1 : 0);
+            state.groupPageNumber = Math.min(Math.max(0, groupPageNumber), nbPages - 1);
+          }
+
+          if (info.viewChanged && !state.selector) state.selector = new Selector();
+          return Object.assign(state, info);
+        }
+
         notify(notification) {
           this.backend(null, {});
         }
@@ -451,15 +461,6 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
 
         scrollTop() {
           document.querySelector('#videos .videos').scrollTop = 0;
-        }
-
-        backend(callargs, state, top = true) {
-          const pageSize = state.pageSize !== undefined ? state.pageSize : this.state.pageSize;
-          const pageNumber = state.pageNumber !== undefined ? state.pageNumber : this.state.pageNumber;
-          const displayOnlySelected = state.displayOnlySelected !== undefined ? state.displayOnlySelected : this.state.displayOnlySelected;
-          const selector = displayOnlySelected ? (state.selector !== undefined ? state.selector : this.state.selector).toJSON() : null;
-          if (!state.status) state.status = "Loaded.";
-          python_call("backend", callargs, pageSize, pageNumber, selector).then(info => this.setState(this.parametersToState(state, info), top ? this.scrollTop : undefined)).catch(backend_error);
         }
 
         onVideoSelection(videoID, selected) {

@@ -86,9 +86,6 @@ export class Video extends React.Component {
                                     <MenuItem action={this.copyVideoID}>Copy video ID</MenuItem>
                                     {data.found ? <MenuItem action={this.renameVideo}>Rename video</MenuItem> : ''}
                                     {data.found ? <MenuItem action={this.moveVideo}>Move video to another folder ...</MenuItem> : ""}
-                                    <MenuItem className="red-flag" action={this.deleteVideo}>
-                                        {data.found ? 'Delete video' : 'Delete entry'}
-                                    </MenuItem>
                                     {this.props.groupedByMoves && data.moves.length ? (
                                         <Menu title="Confirm move to ...">
                                             {data.moves.map((dst, index) => (
@@ -103,6 +100,9 @@ export class Video extends React.Component {
                                     {groupedBySimilarityID ? (
                                         <MenuItem action={this.dismissSimilarity}>Dismiss similarity</MenuItem>
                                     ) : ""}
+                                    <MenuItem className="red-flag" action={this.deleteVideo}>
+                                        {data.found ? 'Delete video' : 'Delete entry'}
+                                    </MenuItem>
                                 </MenuPack>
                                 <div>
                                     <input type="checkbox"

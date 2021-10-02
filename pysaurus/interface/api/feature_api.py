@@ -69,6 +69,12 @@ class FeatureAPI:
     # Provider getters.
 
     def backend(self, callargs, page_size, page_number, selector=None):
+        prev_sources = self.provider.source_layer.get_sources()
+        prev_grouping = self.provider.grouping_layer.get_grouping()
+        prev_path = self.provider.classifier_layer.get_path()
+        prev_group_id = self.provider.group_layer.get_group_id()
+        prev_search = self.provider.search_layer.get_search()
+
         if callargs:
             ret = getattr(self, callargs[0])(*callargs[1:])
             if ret is not None:
@@ -92,7 +98,21 @@ class FeatureAPI:
             videos = [VideoFeatures.to_json(view[index]) for index in range(start, end)]
             if group_def and group_def["field"] == "similarity_id":
                 group_def["common"] = VideoFeatures.get_common_fields(view)
+
         sources = self.provider.source_layer.get_sources()
+        grouping = self.provider.grouping_layer.get_grouping()
+        path = self.provider.classifier_layer.get_path()
+        group_id = self.provider.group_layer.get_group_id()
+        search = self.provider.search_layer.get_search()
+
+        provider_changed = (
+            prev_sources != sources
+            or prev_grouping != grouping
+            or prev_path != path
+            or prev_group_id != group_id
+            or prev_search != search
+        )
+
         prop_types = self.get_prop_types()
         extra = {}
         db_message = self.database.flush_message()
@@ -120,13 +140,14 @@ class FeatureAPI:
             "searchDef": self.provider.get_search_def(),
             "sorting": self.provider.sort_layer.get_sorting(),
             "videos": videos,
-            "path": self.provider.classifier_layer.get_path(),
+            "path": path,
             "properties": prop_types,
             "definitions": {prop["name"]: prop for prop in prop_types},
             "database": {
                 "name": self.database.folder.title,
                 "folders": [str(path) for path in sorted(self.database.video_folders)],
             },
+            "viewChanged": provider_changed,
             **extra
         }
 

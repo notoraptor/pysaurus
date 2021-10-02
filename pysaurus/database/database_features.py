@@ -3,7 +3,7 @@ from ctypes import Array, c_bool
 from typing import List, Set
 
 import numpy as np
-from collections import deque
+# from collections import deque
 
 from pysaurus.application import exceptions
 from pysaurus.core import notifications
@@ -99,7 +99,8 @@ class DatabaseFeatures:
     __slots__ = "positions",
 
     def __init__(self):
-        self.positions = deque()
+        # self.positions = deque()
+        self.positions = None
 
     def find_similar_videos_ignore_cache(self, db: Database):
         videos = db.ensure_miniatures(returns=True)  # type: List[Video]
@@ -348,7 +349,7 @@ class DatabaseFeatures:
 
     def _cmp(self, cmp_map: Array, pos: int):
         cmp_map[pos] = 1
-        self.positions.append(pos)
+        # self.positions.append(pos)
 
     def _find_similar_miniatures(self, miniatures, edges, notifier):
         # type: (List[Miniature], Array[c_bool], Notifier) -> List[Set[int]]

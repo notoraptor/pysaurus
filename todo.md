@@ -11,8 +11,9 @@ when searching videos by terms.
 
 
 TODO:
+
+Features:
 - Add possibility to change language. Minimum languages expected: English, French.
-- Memory leaks in python code when running gui ?
 - Interface
   - Remember last edition panel selected for grouped property values
     (either delete, edit or move panel).
@@ -21,7 +22,11 @@ TODO:
   - Add an option to execute a command line (example, `sort +date -length`)
     from interface, as a shortcut instead of multiple interface clicks.
     - Does that mean interface is not ergonomic?
+
+Optimizations:
+- Memory leaks in python code when running gui ?
+- Interface
   - Optimize video similarities algorithm
     - reduce size of allocated map (n**2 -> n*(n-1)/2)
-    - Maybe memorize list of coordinates to check after native comparison,
-      instead of checking all potential positions.
+- Interface update is too slow on video properties edition or group/classifier changes.
+  - Database backup and terms index update needs to be optimized.

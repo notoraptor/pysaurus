@@ -20,5 +20,5 @@ class DbCache:
         if key not in self.cache:
             self.cache[key] = self.database.query(required)
         else:
-            print("Cached", key, file=sys.stderr)
+            print("Cached", key)
         return self.cache[key]
