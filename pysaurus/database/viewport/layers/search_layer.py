@@ -36,7 +36,7 @@ class SearchLayer(Layer):
     def __filter_from_root_layer(
         self, search_def: SearchDef, source_layer: SourceLayer, data: Group
     ) -> VideoArray:
-        term_to_videos = source_layer.index
+        term_to_videos = source_layer.get_index()
         terms = functions.string_to_pieces(search_def.text)
         if search_def.cond == "exact":
             selection_and = set(data.videos)

@@ -148,7 +148,7 @@ class FeatureAPI:
                 "folders": [str(path) for path in sorted(self.database.video_folders)],
             },
             "viewChanged": provider_changed,
-            **extra
+            **extra,
         }
 
     # Provider setters.

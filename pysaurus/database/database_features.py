@@ -4,7 +4,7 @@ from typing import List, Set
 
 import numpy as np
 
-from collections import deque
+# from collections import deque
 
 from pysaurus.application import exceptions
 from pysaurus.core import notifications
@@ -100,8 +100,8 @@ class DatabaseFeatures:
     __slots__ = ("positions",)
 
     def __init__(self):
-        self.positions = deque()
-        # self.positions = None
+        # self.positions = deque()
+        self.positions = None
 
     def find_similar_videos_ignore_cache(self, db: Database):
         miniatures = db.ensure_miniatures(returns=True)  # type: List[Miniature]

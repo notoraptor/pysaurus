@@ -32,7 +32,9 @@ def classify_similarities_directed(
 ):
     nb_sequences = len(miniatures)
     with Profiler("Allocate native data", notifier):
-        native_sequences = [miniature_to_c_sequence(sequence) for sequence in miniatures]
+        native_sequences = [
+            miniature_to_c_sequence(sequence) for sequence in miniatures
+        ]
         native_sequence_pointers = [pointer(sequence) for sequence in native_sequences]
         pointer_array_type = PtrSequence * nb_sequences
     jobn = notifications.Jobs.native_comparisons(nb_sequences, notifier)
