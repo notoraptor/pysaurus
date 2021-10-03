@@ -280,6 +280,9 @@ class FeatureAPI:
     def dismiss_similarity(self, video_id):
         self.database.dismiss_similarity(video_id)
 
+    def reset_similarity(self, video_id):
+        self.database.reset_similarity(video_id)
+
     def delete_video(self, video_id):
         self.database.delete_video(video_id)
 
@@ -301,7 +304,7 @@ class FeatureAPI:
         )
 
     def delete_property_value(self, name, values):
-        return self.database.delete_property_value(
+        self.database.delete_property_value(
             self.provider.get_all_videos(), name, values
         )
 

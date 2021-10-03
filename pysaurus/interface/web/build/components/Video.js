@@ -59,6 +59,8 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
           this.moveVideo = this.moveVideo.bind(this);
           this.dismissSimilarity = this.dismissSimilarity.bind(this);
           this.reallyDismissSimilarity = this.reallyDismissSimilarity.bind(this);
+          this.resetSimilarity = this.resetSimilarity.bind(this);
+          this.reallyResetSimilarity = this.reallyResetSimilarity.bind(this);
         }
 
         render() {
@@ -124,7 +126,9 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
             action: () => this.confirmMove(data.video_id, dst.video_id)
           }, /*#__PURE__*/React.createElement("code", null, dst.filename)))) : "", groupedBySimilarityID ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.dismissSimilarity
-          }, "Dismiss similarity") : "", /*#__PURE__*/React.createElement(MenuItem, {
+          }, "Dismiss similarity") : "", data.similarity_id !== null ? /*#__PURE__*/React.createElement(MenuItem, {
+            action: this.resetSimilarity
+          }, "Reset similarity") : "", /*#__PURE__*/React.createElement(MenuItem, {
             className: "red-flag",
             action: this.deleteVideo
           }, data.found ? 'Delete video' : 'Delete entry')), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("input", {
@@ -191,7 +195,7 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
             className: cc(common.length)
           }, data.length), " | ", /*#__PURE__*/React.createElement("code", {
             className: cc(common.date)
-          }, data.date)), !groupedBySimilarityID && data.similarity_id !== null && data.similarity_id > -1 ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, "Similarity ID:"), " ", /*#__PURE__*/React.createElement("code", null, data.similarity_id)) : "", this.props.groupedByMoves && data.moves.length === 1 ? /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("button", {
+          }, data.date)), !groupedBySimilarityID ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, "Similarity ID:"), " ", /*#__PURE__*/React.createElement("code", null, data.similarity_id === null ? "(not yet compared)" : data.similarity_id === -1 ? "(no similarities)" : data.similarity_id)) : "", this.props.groupedByMoves && data.moves.length === 1 ? /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("button", {
             className: "block",
             onClick: () => this.confirmMove(data.video_id, data.moves[0].video_id)
           }, /*#__PURE__*/React.createElement("strong", null, "Confirm move to:"), /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("code", null, data.moves[0].filename))) : "")));
@@ -347,7 +351,29 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
             action: this.reallyDismissSimilarity
           }, /*#__PURE__*/React.createElement("div", {
             className: "form-delete-video text-center bold"
-          }, /*#__PURE__*/React.createElement("h2", null, "Are you sure you want to dismiss current similarity for this video?"), /*#__PURE__*/React.createElement("div", {
+          }, /*#__PURE__*/React.createElement("h2", null, "Are you sure you want to dismiss similarity for this video?"), /*#__PURE__*/React.createElement("div", {
+            className: "details overflow-auto px-2 py-1"
+          }, /*#__PURE__*/React.createElement("code", {
+            id: "filename"
+          }, filename)), /*#__PURE__*/React.createElement("p", null, this.props.data.has_thumbnail ? /*#__PURE__*/React.createElement("img", {
+            id: "thumbnail",
+            alt: "No thumbnail available",
+            src: thumbnail_path
+          }) : /*#__PURE__*/React.createElement("div", {
+            className: "no-thumbnail"
+          }, "no thumbnail")))));
+        }
+
+        resetSimilarity() {
+          const filename = this.props.data.filename;
+          const thumbnail_path = this.props.data.thumbnail_path;
+          Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
+            title: "Reset similarity",
+            yes: "reset",
+            action: this.reallyResetSimilarity
+          }, /*#__PURE__*/React.createElement("div", {
+            className: "form-delete-video text-center bold"
+          }, /*#__PURE__*/React.createElement("h2", null, "Are you sure you want to reset similarity for this video?"), /*#__PURE__*/React.createElement("h3", null, "Video will then be re-compared at next similarity search"), /*#__PURE__*/React.createElement("div", {
             className: "details overflow-auto px-2 py-1"
           }, /*#__PURE__*/React.createElement("code", {
             id: "filename"
@@ -370,6 +396,10 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
 
         reallyDismissSimilarity() {
           python_call('dismiss_similarity', this.props.data.video_id).then(() => this.props.onInfo('Current similarity cancelled: ' + this.props.data.filename, true)).catch(backend_error);
+        }
+
+        reallyResetSimilarity() {
+          python_call('reset_similarity', this.props.data.video_id).then(() => this.props.onInfo('Current similarity reset: ' + this.props.data.filename, true)).catch(backend_error);
         }
 
         openContainingFolder() {

@@ -151,6 +151,7 @@ class Database:
         self.save(on_new_identifiers=True)
         self.__notifier.notify(notifications.DatabaseLoaded(self))
 
+    @Profiler.profile_method()
     def save(self, on_new_identifiers=False):
         """Save database on disk.
 
@@ -461,7 +462,7 @@ class Database:
         self.__notify_missing_thumbnails()
 
     @Profiler.profile_method()
-    def ensure_miniatures(self, returns=False) -> Optional[List[Video]]:
+    def ensure_miniatures(self, returns=False) -> Optional[List[Miniature]]:
         identifiers = set()  # type: Set[AbsolutePath]
         valid_dictionaries = []
         added_miniatures = []
@@ -507,7 +508,9 @@ class Database:
 
         valid_miniatures = [Miniature.from_dict(d) for d in valid_dictionaries]
         available_miniatures = valid_miniatures + added_miniatures
-        m_dict = {m.identifier: m for m in available_miniatures}
+        m_dict = {
+            m.identifier: m for m in available_miniatures
+        }  # type: Dict[str, Miniature]
 
         m_no_groups = [
             m
@@ -538,9 +541,12 @@ class Database:
         self.__notifier.notify(notifications.NbMiniatures(len(available_miniatures)))
 
         if returns:
+            miniatures = []
             for video in available_videos:
-                video.miniature = m_dict[video.filename.path]
-            return available_videos
+                miniature = m_dict[video.filename.path]
+                miniature.video_id = video.video_id
+                miniatures.append(miniature)
+            return miniatures
 
     def rename(self, new_name) -> None:
         old_db_folder = self.__db_folder
@@ -591,6 +597,12 @@ class Database:
     def dismiss_similarity(self, video_id: int):
         video = self.__get_video_from_id(video_id)
         video.similarity_id = -1
+        self.save()
+        self.__notifier.notify(notifications.FieldsModified(["similarity_id"]))
+
+    def reset_similarity(self, video_id: int):
+        video = self.__get_video_from_id(video_id)
+        video.similarity_id = None
         self.save()
         self.__notifier.notify(notifications.FieldsModified(["similarity_id"]))
 
@@ -710,7 +722,7 @@ class Database:
         if ensure_miniatures:
             self.ensure_miniatures()
 
-    def delete_property_value(
+    def __del_prop_val(
         self, videos: Iterable[Video], name: str, values: list
     ) -> List[Video]:
         values = set(values)
@@ -738,6 +750,33 @@ class Database:
             self.save()
             self.__notifier.notify(notifications.PropertiesModified([name]))
         return modified
+
+    def delete_property_value(
+        self, videos: Iterable[Video], name: str, values: list
+    ) -> None:
+        self.__del_prop_val(videos, name, values)
+
+    def move_property_value(
+        self, videos: Iterable[Video], old_name: str, values: list, new_name: str
+    ) -> None:
+        assert len(values) == 1, values
+        value = values[0]
+        prop_type = self.get_prop_type(new_name)
+        prop_type.validate([value] if prop_type.multiple else value)
+        videos = self.__del_prop_val(videos, old_name, [value])
+        if prop_type.multiple:
+            for video in videos:
+                new_values = set(video.properties.get(new_name, ()))
+                new_values.add(value)
+                video.properties[new_name] = sorted(new_values)
+        else:
+            for video in videos:
+                video.properties[new_name] = value
+        if videos:
+            self.save()
+            self.__notifier.notify(
+                notifications.PropertiesModified([old_name, new_name])
+            )
 
     def edit_property_value(
         self, videos: Iterable[Video], name: str, old_values: list, new_value: object
@@ -770,29 +809,6 @@ class Database:
             self.save()
             self.__notifier.notify(notifications.PropertiesModified([name]))
         return modified
-
-    def move_property_value(
-        self, videos: Iterable[Video], old_name: str, values: list, new_name: str
-    ) -> List[Video]:
-        assert len(values) == 1, values
-        value = values[0]
-        prop_type = self.get_prop_type(new_name)
-        prop_type.validate([value] if prop_type.multiple else value)
-        videos = self.delete_property_value(videos, old_name, [value])
-        if prop_type.multiple:
-            for video in videos:
-                new_values = set(video.properties.get(new_name, ()))
-                new_values.add(value)
-                video.properties[new_name] = sorted(new_values)
-        else:
-            for video in videos:
-                video.properties[new_name] = value
-        if videos:
-            self.save()
-            self.__notifier.notify(
-                notifications.PropertiesModified([old_name, new_name])
-            )
-        return videos
 
     def edit_property_for_videos(
         self,
@@ -921,6 +937,16 @@ class Database:
         to_video.properties.update(transferred_properties)
         self.delete_video(from_id)
 
+    def set_message(self, message: str):
+        self.__message = message
+
+    def flush_message(self):
+        message = self.__message
+        self.__message = None
+        return message
+
+    # Videos access and edition
+
     def get_videos(self, *flags, **forced_flags) -> List[Union[VideoState, Video]]:
         return self.__cache.get(*flags, **forced_flags)
 
@@ -958,10 +984,15 @@ class Database:
     def get_video_filename(self, video_id: int) -> AbsolutePath:
         return self.__id_to_video[video_id].filename
 
-    def set_message(self, message: str):
-        self.__message = message
+    def get_videos_field(self, indices: Iterable[int], field: str) -> Iterable:
+        return (getattr(self.__id_to_video[video_id], field) for video_id in indices)
 
-    def flush_message(self):
-        message = self.__message
-        self.__message = None
-        return message
+    def set_videos_field_with_same_value(
+        self, indices: Iterable[int], field: str, value
+    ) -> None:
+        for video_id in indices:
+            setattr(self.__id_to_video[video_id], field, value)
+
+    def set_videos_field(self, indices: Iterable[int], field, values: Iterable) -> None:
+        for video_id, value in zip(indices, values):
+            setattr(self.__id_to_video[video_id], field, value)

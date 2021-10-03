@@ -40,6 +40,8 @@ export class Video extends React.Component {
         this.moveVideo = this.moveVideo.bind(this);
         this.dismissSimilarity = this.dismissSimilarity.bind(this);
         this.reallyDismissSimilarity = this.reallyDismissSimilarity.bind(this);
+        this.resetSimilarity = this.resetSimilarity.bind(this);
+        this.reallyResetSimilarity = this.reallyResetSimilarity.bind(this);
     }
 
     render() {
@@ -100,6 +102,9 @@ export class Video extends React.Component {
                                     {groupedBySimilarityID ? (
                                         <MenuItem action={this.dismissSimilarity}>Dismiss similarity</MenuItem>
                                     ) : ""}
+                                    {data.similarity_id !== null ? (
+                                        <MenuItem action={this.resetSimilarity}>Reset similarity</MenuItem>
+                                    ) : ""}
                                     <MenuItem className="red-flag" action={this.deleteVideo}>
                                         {data.found ? 'Delete video' : 'Delete entry'}
                                     </MenuItem>
@@ -145,9 +150,10 @@ export class Video extends React.Component {
                             <span title={data.audio_bit_rate} className={cc(common.audio_bit_rate)}>{audio_bit_rate} Kb/s</span> |{" "}
                             <strong className={cc(common.length)}>{data.length}</strong> | <code className={cc(common.date)}>{data.date}</code>
                         </div>
-                        {!groupedBySimilarityID && data.similarity_id !== null && data.similarity_id > -1 ? (
+                        {!groupedBySimilarityID ? (
                             <div>
-                                <strong>Similarity ID:</strong> <code>{data.similarity_id}</code>
+                                <strong>Similarity ID:</strong>{" "}
+                                <code>{data.similarity_id === null ? "(not yet compared)" : (data.similarity_id === -1 ? "(no similarities)" : data.similarity_id)}</code>
                             </div>
                         ) : ""}
                         {this.props.groupedByMoves && data.moves.length === 1 ? (
@@ -311,7 +317,28 @@ export class Video extends React.Component {
         Fancybox.load(
             <Dialog title="Dismiss similarity" yes="dismiss" action={this.reallyDismissSimilarity}>
                 <div className="form-delete-video text-center bold">
-                    <h2>Are you sure you want to dismiss current similarity for this video?</h2>
+                    <h2>Are you sure you want to dismiss similarity for this video?</h2>
+                    <div className="details overflow-auto px-2 py-1"><code id="filename">{filename}</code></div>
+                    <p>
+                        {this.props.data.has_thumbnail ? (
+                            <img id="thumbnail" alt="No thumbnail available" src={thumbnail_path}/>
+                        ) : (
+                            <div className="no-thumbnail">no thumbnail</div>
+                        )}
+                    </p>
+                </div>
+            </Dialog>
+        );
+    }
+
+    resetSimilarity() {
+        const filename = this.props.data.filename;
+        const thumbnail_path = this.props.data.thumbnail_path;
+        Fancybox.load(
+            <Dialog title="Reset similarity" yes="reset" action={this.reallyResetSimilarity}>
+                <div className="form-delete-video text-center bold">
+                    <h2>Are you sure you want to reset similarity for this video?</h2>
+                    <h3>Video will then be re-compared at next similarity search</h3>
                     <div className="details overflow-auto px-2 py-1"><code id="filename">{filename}</code></div>
                     <p>
                         {this.props.data.has_thumbnail ? (
@@ -341,6 +368,12 @@ export class Video extends React.Component {
     reallyDismissSimilarity() {
         python_call('dismiss_similarity', this.props.data.video_id)
             .then(() => this.props.onInfo('Current similarity cancelled: ' + this.props.data.filename, true))
+            .catch(backend_error);
+    }
+
+    reallyResetSimilarity() {
+        python_call('reset_similarity', this.props.data.video_id)
+            .then(() => this.props.onInfo('Current similarity reset: ' + this.props.data.filename, true))
             .catch(backend_error);
     }
 

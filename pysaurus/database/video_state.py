@@ -21,7 +21,6 @@ class VideoState:
         # Runtime attributes
         "database",
         "runtime",
-        "miniature",
         "discarded",
     )
     __protected__ = ("database", "runtime", "miniature", "discarded")
@@ -50,7 +49,6 @@ class VideoState:
 
         self.database = database
         self.runtime = VideoRuntimeInfo.ensure(runtime)
-        self.miniature = None
         self.discarded = False
 
     def __str__(self):

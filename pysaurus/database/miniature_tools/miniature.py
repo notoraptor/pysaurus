@@ -25,7 +25,7 @@ class GroupSignature:
 
 
 class Miniature(AbstractMatrix):
-    __slots__ = ("identifier", "r", "g", "b", "i", "group_signature")
+    __slots__ = ("identifier", "r", "g", "b", "i", "group_signature", "video_id")
 
     def __init__(
         self, red, green, blue, width, height, identifier=None, group_signature=None
@@ -38,6 +38,7 @@ class Miniature(AbstractMatrix):
         self.i = None
         self.identifier = identifier
         self.group_signature = group_signature
+        self.video_id = None
 
     def has_group_signature(self, pixel_distance_radius: int, group_min_size: int):
         return (

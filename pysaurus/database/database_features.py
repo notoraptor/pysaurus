@@ -3,7 +3,8 @@ from ctypes import Array, c_bool
 from typing import List, Set
 
 import numpy as np
-# from collections import deque
+
+from collections import deque
 
 from pysaurus.application import exceptions
 from pysaurus.core import notifications
@@ -96,36 +97,35 @@ class _GrayClassifier:
 
 
 class DatabaseFeatures:
-    __slots__ = "positions",
+    __slots__ = ("positions",)
 
     def __init__(self):
-        # self.positions = deque()
-        self.positions = None
+        self.positions = deque()
+        # self.positions = None
 
     def find_similar_videos_ignore_cache(self, db: Database):
-        videos = db.ensure_miniatures(returns=True)  # type: List[Video]
-        previous_sim = [video.similarity_id for video in videos]
-        for video in videos:
-            video.similarity_id = None
+        miniatures = db.ensure_miniatures(returns=True)  # type: List[Miniature]
+        video_indices = [m.video_id for m in miniatures]
+        previous_sim = list(db.get_videos_field(video_indices, "similarity_id"))
+        db.set_videos_field_with_same_value(video_indices, "similarity_id", None)
         try:
-            self.find_similar_videos(db, videos)
+            self.find_similar_videos(db, miniatures)
         except Exception:
             # Restore previous similarities.
-            for i, video in enumerate(videos):
-                video.similarity_id = previous_sim[i]
+            db.set_videos_field(video_indices, "similarity_id", previous_sim)
             raise
 
-    def find_similar_videos(self, db: Database, videos: List[Video] = None):
+    def find_similar_videos(self, db: Database, miniatures: List[Miniature] = None):
         with Profiler("Find similar videos.", db.notifier):
-            if videos is None:
-                videos = db.ensure_miniatures(returns=True)  # type: List[Video]
-            nb_videos = len(videos)
-            miniatures = []
+            if miniatures is None:
+                miniatures = db.ensure_miniatures(returns=True)  # type: List[Miniature]
+            video_indices = [m.video_id for m in miniatures]
+            prev_sims = list(db.get_videos_field(video_indices, "similarity_id"))
+            nb_videos = len(miniatures)
             new_miniature_indices = []
             old_miniature_indices = []
-            for i, video in enumerate(videos):
-                miniatures.append(video.miniature)
-                if video.similarity_id is None:
+            for i, similarity_id in enumerate(prev_sims):
+                if similarity_id is None:
                     new_miniature_indices.append(i)
                 else:
                     old_miniature_indices.append(i)
@@ -137,12 +137,8 @@ class DatabaseFeatures:
             nb_max_comparisons = compute_nb_couples(nb_videos)
             with Profiler("Allocating edges map", notifier=db.notifier):
                 cmp_map = self.generate_edges(nb_videos)
-            classifier_new = _GrayClassifier.classify(
-                miniatures, new_miniature_indices
-            )
-            classifier_old = _GrayClassifier.classify(
-                miniatures, old_miniature_indices
-            )
+            classifier_new = _GrayClassifier.classify(miniatures, new_miniature_indices)
+            classifier_old = _GrayClassifier.classify(miniatures, old_miniature_indices)
 
             nb_cmp = self._collect_comparisons(
                 classifier_new, cmp_map, nb_videos, db.notifier
@@ -158,9 +154,7 @@ class DatabaseFeatures:
                 )
             )
 
-            sim_groups = self._find_similar_miniatures(
-                miniatures, cmp_map, db.notifier
-            )
+            sim_groups = self._find_similar_miniatures(miniatures, cmp_map, db.notifier)
 
             db.notifier.notify(
                 notifications.Message(
@@ -169,23 +163,17 @@ class DatabaseFeatures:
                 )
             )
             # Sort new similarity groups by size then smallest duration.
-            sim_groups.sort(
-                key=lambda s: (len(s), min(videos[x].length for x in s))
-            )
+            lengths = list(db.get_videos_field(video_indices, "length"))
+            sim_groups.sort(key=lambda s: (len(s), min(lengths[x] for x in s)))
             # Get next similarity id to use.
             next_sim_id = (
-                max(
-                    [v.similarity_id for v in videos if v.similarity_id is not None]
-                    + [0]
-                )
+                max((sim_id for sim_id in prev_sims if sim_id is not None), default=0)
                 + 1
             )
             with Profiler("Merge new similarities with old ones.", db.notifier):
                 sim_id_to_vid_ids = {}
                 for i in old_miniature_indices:
-                    sim_id_to_vid_ids.setdefault(
-                        videos[i].similarity_id, []
-                    ).append(i)
+                    sim_id_to_vid_ids.setdefault(prev_sims[i], []).append(i)
                 sim_id_to_vid_ids.pop(-1, None)
                 db.notifier.notify(
                     notifications.Message(
@@ -215,7 +203,7 @@ class DatabaseFeatures:
                 new_sim_indices = []
                 nb_new_indices = 0
                 for new_sim_group in new_sim_groups:
-                    old_indices = {videos[i].similarity_id for i in new_sim_group}
+                    old_indices = {prev_sims[i] for i in new_sim_group}
                     if -1 in old_indices:
                         old_indices.remove(-1)
                     if None in old_indices:
@@ -233,12 +221,18 @@ class DatabaseFeatures:
                     )
                 )
 
-                for i in new_miniature_indices:
-                    videos[i].similarity_id = -1
-                for pos in range(len(new_sim_groups)):
-                    new_id = new_sim_indices[pos]
-                    for i in new_sim_groups[pos]:
-                        videos[i].similarity_id = new_id
+                db.set_videos_field_with_same_value(
+                    (video_indices[i] for i in new_miniature_indices),
+                    "similarity_id",
+                    -1,
+                )
+                v_indices_to_set = []
+                s_indices_to_set = []
+                for new_id, new_group in zip(new_sim_indices, new_sim_groups):
+                    for i in new_group:
+                        v_indices_to_set.append(video_indices[i])
+                        s_indices_to_set.append(new_id)
+                db.set_videos_field(v_indices_to_set, "similarity_id", s_indices_to_set)
             # Save.
             db.save()
 
@@ -349,7 +343,12 @@ class DatabaseFeatures:
 
     def _cmp(self, cmp_map: Array, pos: int):
         cmp_map[pos] = 1
-        # self.positions.append(pos)
+        # TODO Discard positions if too long, as it won't be so much faster (?)
+        if self.positions is not None:
+            if len(self.positions) < 1_000_000:
+                self.positions.append(pos)
+            else:
+                self.positions = None
 
     def _find_similar_miniatures(self, miniatures, edges, notifier):
         # type: (List[Miniature], Array[c_bool], Notifier) -> List[Set[int]]
