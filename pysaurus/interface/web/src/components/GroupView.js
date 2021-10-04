@@ -33,7 +33,6 @@ export class GroupView extends React.Component {
         const start = this.props.pageSize * this.props.pageNumber;
         const end = Math.min(start + this.props.pageSize, this.props.groupDef.groups.length);
         const allChecked = this.allChecked(start, end);
-        console.log(`Rendering ${this.props.groupDef.groups.length} group(s).`);
         return (
             <div className="group-view absolute-plain vertical">
                 <div className="header flex-shrink-0 text-center pt-2">

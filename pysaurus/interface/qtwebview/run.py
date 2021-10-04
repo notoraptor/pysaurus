@@ -30,6 +30,10 @@ LEVEL = {
 }
 
 
+class NextRandomVideo(Notification):
+    __slots__ = ()
+
+
 class Api(GuiAPI):
     PYTHON_HAS_EMBEDDED_PLAYER = has_vlc
 
@@ -131,7 +135,7 @@ class HelloWorldHtmlApp(QWebEngineView):
 
     def _on_next_random_video(self):
         video = self.interface.api.choose_random_video()
-        self.interface.api._notify(Notification())
+        self.interface.api._notify(NextRandomVideo())
         return video.filename.path
 
 

@@ -52,7 +52,6 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
           const start = this.props.pageSize * this.props.pageNumber;
           const end = Math.min(start + this.props.pageSize, this.props.groupDef.groups.length);
           const allChecked = this.allChecked(start, end);
-          console.log(`Rendering ${this.props.groupDef.groups.length} group(s).`);
           return /*#__PURE__*/React.createElement("div", {
             className: "group-view absolute-plain vertical"
           }, /*#__PURE__*/React.createElement("div", {
