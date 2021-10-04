@@ -153,6 +153,8 @@ def generate_thread_except_hook(qapp):
 
 
 def main():
+    from multiprocessing import freeze_support
+    freeze_support()
     # Initialize.
     app = QApplication.instance() or QApplication(sys.argv)
     sys.excepthook = generate_except_hook(app)
@@ -177,7 +179,7 @@ def main():
             view.setZoomFactor(scale)
     # Display.
     view.show()
-    exit(app.exec_())
+    sys.exit(app.exec_())
 
 
 if __name__ == "__main__":
