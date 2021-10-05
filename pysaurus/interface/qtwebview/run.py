@@ -70,11 +70,11 @@ class Interface(QObject):
             func_name, func_args = json.loads(json_str)
             assert not func_name.startswith("_")
             result = {"error": False, "data": getattr(self.api, func_name)(*func_args)}
-        except exceptions.PysaurusError as exc:
-            print(exc)
+        except (OSError, exceptions.PysaurusError) as exception:
+            print(exception)
             result = {
                 "error": True,
-                "data": {"name": type(exc).__name__, "message": str(exc)},
+                "data": {"name": type(exception).__name__, "message": str(exception)},
             }
         return json.dumps(result)
 
