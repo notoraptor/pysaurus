@@ -1,7 +1,7 @@
 import os
 
 import ujson as json
-from flask import Flask, send_file, Response, abort
+from flask import Flask, Response, abort, send_file
 
 from pysaurus.application.application import Application
 from pysaurus.core.components import AbsolutePath

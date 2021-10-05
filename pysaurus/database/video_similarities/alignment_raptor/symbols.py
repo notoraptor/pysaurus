@@ -1,7 +1,7 @@
 from ctypes import POINTER, Structure, c_double, c_int
 
 from pysaurus.bin.symbols import ALIGNMENT_RAPTOR
-from pysaurus.core.native.clibrary import CLibrary, c_int_p, c_double_p, c_bool_p
+from pysaurus.core.native.clibrary import CLibrary, c_bool_p, c_double_p, c_int_p
 
 
 class Sequence(Structure):

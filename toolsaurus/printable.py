@@ -1,4 +1,4 @@
-from typing import List, Any, Sequence, Iterable
+from typing import Any, Iterable, List, Sequence
 
 from pysaurus.core.classes import StringPrinter
 from toolsaurus.functions import class_get_field_title

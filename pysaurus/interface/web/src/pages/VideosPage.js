@@ -29,6 +29,7 @@ import {FormDatabaseEditFolders} from "../forms/FormDatabaseEditFolders.js";
 import {FormDatabaseRename} from "../forms/FormDatabaseRename.js";
 import {Dialog} from "../dialogs/Dialog.js";
 import {Cell} from "../components/Cell.js";
+import {FormNewPredictionProperty} from "../forms/FormNewPredictionProperty.js";
 
 
 function compareSources(sources1, sources2) {
@@ -45,6 +46,13 @@ function compareSources(sources1, sources2) {
         }
     }
     return true;
+}
+
+function arrayEquals(a, b) {
+    return Array.isArray(a) &&
+        Array.isArray(b) &&
+        a.length === b.length &&
+        a.every((val, index) => val === b[index]);
 }
 
 export class VideosPage extends React.Component {
@@ -65,6 +73,8 @@ export class VideosPage extends React.Component {
         this.backendGroupVideos = this.backendGroupVideos.bind(this);
         this.changeGroup = this.changeGroup.bind(this);
         this.changePage = this.changePage.bind(this);
+        this.previousPage = this.previousPage.bind(this);
+        this.nextPage = this.nextPage.bind(this);
         this.classifierConcatenate = this.classifierConcatenate.bind(this);
         this.classifierSelectGroup = this.classifierSelectGroup.bind(this);
         this.classifierUnstack = this.classifierUnstack.bind(this);
@@ -108,6 +118,10 @@ export class VideosPage extends React.Component {
         this.canOpenRandomVideo = this.canOpenRandomVideo.bind(this);
         this.canOpenRandomPlayer = this.canOpenRandomPlayer.bind(this);
         this.canFindSimilarVideos = this.canFindSimilarVideos.bind(this);
+        this.createPredictionProperty = this.createPredictionProperty.bind(this);
+        this.populatePredictionProperty = this.populatePredictionProperty.bind(this);
+        this.computePredictionProperty = this.computePredictionProperty.bind(this);
+        this.applyPrediction = this.applyPrediction.bind(this);
 
         this.callbackIndex = -1;
         this.notificationCallbackIndex = -1;
@@ -124,19 +138,45 @@ export class VideosPage extends React.Component {
             manageProperties: new Action("Ctrl+P", "Manage properties ...", this.manageProperties),
             openRandomVideo: new Action("Ctrl+O", "Open random video", this.openRandomVideo, this.canOpenRandomVideo),
             openRandomPlayer: new Action("Ctrl+E", "Open random player", this.openRandomPlayer, this.canOpenRandomPlayer),
+            previousPage: new Action("Ctrl+ArrowLeft", "Go to previous page", this.previousPage),
+            nextPage: new Action("Ctrl+ArrowRight", "Go to next page", this.nextPage),
         });
     }
 
-    canOpenRandomVideo() {
-        return !this.state.notFound && this.state.nbVideos;
+    createPredictionProperty() {
+        Fancybox.load(
+            <FormNewPredictionProperty onClose={name => {
+                this.backend(["create_prediction_property", name]);
+            }}/>
+        )
     }
 
-    canOpenRandomPlayer() {
-        return window.PYTHON_HAS_EMBEDDED_PLAYER && this.canOpenRandomVideo();
+    populatePredictionProperty() {
+        Fancybox.load(
+            <FancyBox title="Populate prediction property manually">
+                <p>Set:</p>
+                <ul>
+                    <li><strong>1</strong> for video thumbnails that match what you expect</li>
+                    <li><strong>0</strong> for video thumbnails that don't match what you expect</li>
+                    <li><strong>-1</strong> (default) for videos to ignore</li>
+                </ul>
+                <p>Prediction computation will only use videos tagged with <strong>1</strong> and <strong>0</strong>, so, you don't need to tag all of them.</p>
+                <p>There is however some good practices:</p>
+                <ul>
+                    <li>Tag enough videos with <strong>0</strong> and <strong>1</strong> (e.g. 20 videos)</li>
+                    <li>Try to tag same amount of videos for <strong>0</strong> and for <strong>1</strong> (e.g. 10 videos each)</li>
+                </ul>
+                <p>Once done, move you can compute prediction.</p>
+            </FancyBox>
+        );
     }
 
-    canFindSimilarVideos() {
-        return window.PYTHON_FEATURE_COMPARISON;
+    computePredictionProperty(propName) {
+        this.props.app.dbUpdate("compute_predictor", propName);
+    }
+
+    applyPrediction(propName) {
+        this.props.app.dbUpdate("apply_predictor", propName);
     }
 
     render() {
@@ -148,6 +188,7 @@ export class VideosPage extends React.Component {
         const groupedByMoves = groupDef && groupDef.field === "move_id";
         const stringSetProperties = this.getStringSetProperties(this.state.properties);
         const stringProperties = this.getStringProperties(this.state.properties);
+        const predictionProperties = this.getPredictionProperties(this.state.properties);
         const actions = this.features.actions;
 
         return (
@@ -198,6 +239,24 @@ export class VideosPage extends React.Component {
                                 </MenuItem>
                             ))
                         )}
+                    </MenuPack>
+                    <MenuPack title="Predictors ...">
+                        <MenuItem action={this.createPredictionProperty}>1) Create a prediction property ...</MenuItem>
+                        <MenuItem action={this.populatePredictionProperty}>2) Populate a prediction property manually ...</MenuItem>
+                        {predictionProperties.length ? (
+                            <Menu title="3) Compute prediction for property ...">
+                                {predictionProperties.map((def, i) => (
+                                    <MenuItem key={i} action={() => this.computePredictionProperty(def.name)}>{def.name}</MenuItem>
+                                ))}
+                            </Menu>
+                        ) : ""}
+                        {predictionProperties.length ? (
+                            <Menu title="4) Apply prediction from property ...">
+                                {predictionProperties.map((def, i) => (
+                                    <MenuItem key={i} action={() => this.applyPrediction(def.name)}>{def.name}</MenuItem>
+                                ))}
+                            </Menu>
+                        ) : ""}
                     </MenuPack>
                     <MenuPack title="Options">
                         <Menu title="Page size ...">
@@ -309,6 +368,18 @@ export class VideosPage extends React.Component {
                 </footer>
             </div>
         );
+    }
+
+    canOpenRandomVideo() {
+        return !this.state.notFound && this.state.nbVideos;
+    }
+
+    canOpenRandomPlayer() {
+        return window.PYTHON_HAS_EMBEDDED_PLAYER && this.canOpenRandomVideo();
+    }
+
+    canFindSimilarVideos() {
+        return window.PYTHON_FEATURE_COMPARISON;
     }
 
     renderFilter() {
@@ -441,7 +512,7 @@ export class VideosPage extends React.Component {
         NOTIFICATION_MANAGER.unregister(this.notificationCallbackIndex);
     }
 
-    backend(callargs, state, top = true) {
+    backend(callargs, state = {}, top = true) {
         const pageSize = state.pageSize !== undefined ? state.pageSize : this.state.pageSize;
         const pageNumber = state.pageNumber !== undefined ? state.pageNumber : this.state.pageNumber;
         const displayOnlySelected = state.displayOnlySelected !== undefined ? state.displayOnlySelected : this.state.displayOnlySelected;
@@ -740,12 +811,35 @@ export class VideosPage extends React.Component {
         this.backend(null, {pageNumber});
     }
 
+    previousPage() {
+        const pageNumber = this.state.pageNumber - 1;
+        if (pageNumber >= 0)
+            this.changePage(pageNumber);
+    }
+
+    nextPage() {
+        const pageNumber  = this.state.pageNumber + 1;
+        if (pageNumber < this.state.nbPages)
+            this.changePage(pageNumber);
+    }
+
     getStringSetProperties(definitions) {
         return definitions.filter(def => def.multiple && def.type === "str");
     }
 
     getStringProperties(definitions) {
         return definitions.filter(def => def.type === "str");
+    }
+
+    getPredictionProperties(definitions) {
+        return definitions.filter(def => (
+            def.name.indexOf("<?") === 0
+            && def.name.indexOf(">") === def.name.length - 1
+            && def.type === "int"
+            && def.defaultValue === -1
+            && !def.multiple
+            && arrayEquals(def.enumeration, [-1, 0, 1])
+        ));
     }
 
     /**

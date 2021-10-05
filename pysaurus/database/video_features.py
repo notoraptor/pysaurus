@@ -1,7 +1,7 @@
 from typing import Iterable
 
 from pysaurus.core import functions
-from pysaurus.core.functions import to_json_value, class_get_public_attributes
+from pysaurus.core.functions import class_get_public_attributes, to_json_value
 from pysaurus.database.video import Video
 from pysaurus.database.viewport.viewtools.search_def import SearchDef
 

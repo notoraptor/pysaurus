@@ -1,4 +1,4 @@
-from ctypes import pointer, c_int
+from ctypes import c_int, pointer
 from typing import List
 
 from pysaurus.core import notifications
@@ -10,8 +10,8 @@ from pysaurus.database.miniature_tools.miniature import Miniature
 from .symbols import (
     PtrPtrSequence,
     PtrSequence,
-    fn_classifySimilaritiesDirected,
     Sequence,
+    fn_classifySimilaritiesDirected,
 )
 
 

@@ -16,13 +16,14 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
     }
 
     const percent = Math.round(current * 100 / total);
+    const title = monitoring.title || `${current} done`;
     const jobClassID = "job " + monitoring.name;
     return /*#__PURE__*/React.createElement("div", {
       className: "job horizontal"
     }, /*#__PURE__*/React.createElement("label", {
       htmlFor: jobClassID,
       className: "pr-2"
-    }, current, " done (", percent, " %)"), /*#__PURE__*/React.createElement("progress", {
+    }, title, " (", percent, " %)"), /*#__PURE__*/React.createElement("progress", {
       className: "flex-grow-1",
       id: jobClassID,
       value: current,
@@ -53,11 +54,13 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
         constructor(name, total) {
           this.name = name;
           this.total = total;
+          this.title = null;
           this.jobs = new Map();
         }
 
         collectJobStep(notification) {
           this.jobs.set(notification.notification.channel, notification.notification.step);
+          this.title = notification.notification.title;
         }
 
       };
@@ -242,7 +245,9 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
         find_similar_videos_ignore_cache: "Find similarities (ignore cache)",
         create_database: "Create database",
         open_database: "Open database",
-        move_video_file: "Move video file"
+        move_video_file: "Move video file",
+        compute_predictor: "Compute predictor",
+        apply_predictor: "Predict"
       };
 
       _export("HomePage", HomePage = class HomePage extends React.Component {

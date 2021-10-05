@@ -2,9 +2,9 @@ import sys
 import threading
 
 import ujson as json
-from PyQt5.QtCore import pyqtSlot, QUrl, pyqtSignal, QObject
+from PyQt5.QtCore import QObject, QUrl, pyqtSignal, pyqtSlot
 from PyQt5.QtWebChannel import QWebChannel
-from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEnginePage
+from PyQt5.QtWebEngineWidgets import QWebEnginePage, QWebEngineView
 from PyQt5.QtWidgets import QApplication
 
 from pysaurus.application import exceptions
@@ -71,7 +71,10 @@ class Interface(QObject):
             assert not func_name.startswith("_")
             result = {"error": False, "data": getattr(self.api, func_name)(*func_args)}
         except (OSError, exceptions.PysaurusError) as exception:
-            print(exception)
+            import traceback
+
+            traceback.print_tb(exception.__traceback__)
+            print(type(exception), exception)
             result = {
                 "error": True,
                 "data": {"name": type(exception).__name__, "message": str(exception)},
@@ -158,6 +161,7 @@ def generate_thread_except_hook(qapp):
 
 def main():
     from multiprocessing import freeze_support
+
     freeze_support()
     # Initialize.
     app = QApplication.instance() or QApplication(sys.argv)

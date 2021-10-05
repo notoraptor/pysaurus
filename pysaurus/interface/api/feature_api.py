@@ -3,7 +3,7 @@ from typing import Optional
 
 from pysaurus.application.application import Application
 from pysaurus.core import notifications
-from pysaurus.core.components import FileSize, Duration
+from pysaurus.core.components import Duration, FileSize
 from pysaurus.core.functions import compute_nb_pages, identity
 from pysaurus.database.database import Database
 from pysaurus.database.properties import PropType
@@ -258,6 +258,9 @@ class FeatureAPI:
                 prop_default = float(prop_default)
         self.database.add_prop_type(PropType(prop_name, prop_default, prop_multiple))
         return self.get_prop_types()
+
+    def create_prediction_property(self, prop_name):
+        self.database.add_prop_type(PropType(f"<?{prop_name}>", [-1, 0, 1]))
 
     def delete_prop_type(self, name):
         self.database.remove_prop_type(name)

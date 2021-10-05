@@ -1,4 +1,4 @@
-from typing import Set, List
+from typing import List, Set
 
 from pysaurus.core import functions
 from pysaurus.database.video import Video

@@ -1,4 +1,4 @@
-from typing import Dict, Any, Set, List
+from typing import Any, Dict, List, Set
 
 
 class Graph:

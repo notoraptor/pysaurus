@@ -1,7 +1,7 @@
 import os
-from typing import List, Dict
+from typing import Dict, List
 
-from pysaurus.core import functions, constants
+from pysaurus.core import constants, functions
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.modules import FileSystem, ImageUtils
 from pysaurus.core.notifications import JobNotifications

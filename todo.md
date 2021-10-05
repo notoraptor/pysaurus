@@ -12,6 +12,13 @@ when searching videos by terms.
 
 TODO:
 
+Bugs:
+- Interface:
+  - background shortcuts sitll work when a fancybox is shown.
+    - hint: Set a flag when a fancybox is displayed, and ignore shortcuts when this flag is set.
+  - Many shortcuts are not describe anywhere in interface
+    - hint: Maybe each action with shortcut should appear in menus?
+
 Features:
 - Add possibility to change language. Minimum languages expected: English, French.
 - Interface
@@ -22,6 +29,9 @@ Features:
   - Add an option to execute a command line (example, `sort +date -length`)
     from interface, as a shortcut instead of multiple interface clicks.
     - Does that mean interface is not ergonomic?
+- Allow user to add shortcuts (under Shift control, e.g. "Shift + N") to either:
+  - set a unique property
+  - add a value to a multiple property
 
 Optimizations:
 - Memory leaks in python code when running gui ?

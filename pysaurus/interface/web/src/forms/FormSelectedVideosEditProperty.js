@@ -9,14 +9,11 @@ export class FormSelectedVideosEditProperty extends React.Component {
         // values: [(value, count)]
         // onClose
         super(props);
-        const mapping = new Map();
         const current = [];
         for (let valueAndCount of this.props.values) {
-            mapping.set(valueAndCount[0], valueAndCount[1]);
             current.push(valueAndCount[0]);
         }
         this.state = {
-            mapping: mapping,
             current: current,
             add: [],
             remove: [],
@@ -34,6 +31,14 @@ export class FormSelectedVideosEditProperty extends React.Component {
         this.removeAll = this.removeAll.bind(this);
         this.addAll = this.addAll.bind(this);
         this.unAddAll = this.unAddAll.bind(this);
+    }
+
+    getMapping() {
+        const mapping = new Map();
+        for (let valueAndCount of this.props.values) {
+            mapping.set(valueAndCount[0], valueAndCount[1]);
+        }
+        return mapping;
     }
 
     render() {
@@ -96,7 +101,7 @@ export class FormSelectedVideosEditProperty extends React.Component {
         return this.state.current.map((value, index) => (
             <div key={index} className="entry horizontal">
                 <button onClick={() => this.remove(value)}>{Characters.SMART_ARROW_LEFT}</button>
-                <div className="value">{value} <em><strong>({this.state.mapping.get(value)})</strong></em></div>
+                <div className="value">{value} <em><strong>({this.getMapping().get(value)})</strong></em></div>
                 <button onClick={() => this.add(value)}>{Characters.SMART_ARROW_RIGHT}</button>
             </div>
         ))
@@ -106,7 +111,7 @@ export class FormSelectedVideosEditProperty extends React.Component {
         return this.state.add.map((value, index) => (
             <div key={index} className="entry horizontal">
                 <button onClick={() => this.unAdd(value)}>
-                    {this.state.mapping.has(value) ? Characters.SMART_ARROW_LEFT : '-'}
+                    {this.getMapping().has(value) ? Characters.SMART_ARROW_LEFT : '-'}
                 </button>
                 <div className="value">{value}</div>
             </div>
@@ -173,7 +178,7 @@ export class FormSelectedVideosEditProperty extends React.Component {
             } else {
                 const add = [this.state.value];
                 const current = [];
-                const remove = Array.from(this.state.mapping);
+                const remove = Array.from(this.getMapping().keys());
                 remove.sort();
                 this.setState({remove, current, add});
             }
@@ -215,8 +220,9 @@ export class FormSelectedVideosEditProperty extends React.Component {
         } else {
             const add = [value];
             const current = [];
-            const remove = new Set(this.state.mapping);
-            remove.delete(value);
+            const setRemove = new Set(this.getMapping().keys());
+            setRemove.delete(value);
+            const remove = Array.from(setRemove);
             remove.sort();
             this.setState({remove, current, add});
         }
@@ -257,7 +263,7 @@ export class FormSelectedVideosEditProperty extends React.Component {
         add.delete(value);
         const newAdd = Array.from(add);
         newAdd.sort();
-        if (this.state.mapping.has(value)) {
+        if (this.getMapping().has(value)) {
             const current = new Set(this.state.current);
             current.add(value);
             const newCurrent = Array.from(current);
@@ -271,7 +277,7 @@ export class FormSelectedVideosEditProperty extends React.Component {
     unAddAll() {
         const current = new Set(this.state.current);
         for (let value of this.state.add) {
-            if (this.state.mapping.has(value)) {
+            if (this.getMapping().has(value)) {
                 current.add(value);
             }
         }

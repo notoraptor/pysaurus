@@ -1,6 +1,3 @@
-import sys
-
-
 class DbCache:
     __slots__ = "cache", "database", "iteration"
 

@@ -2,7 +2,7 @@ import os
 import sys
 from collections import namedtuple
 from multiprocessing import Pool
-from typing import Dict, Iterable, List, Optional, Set, Union, Sequence
+from typing import Dict, Iterable, List, Optional, Sequence, Set, Union
 
 import ujson as json
 
@@ -13,9 +13,9 @@ from pysaurus.core.components import (
     DateModified,
     PathType,
 )
-from pysaurus.core.constants import THUMBNAIL_EXTENSION, CPU_COUNT
-from pysaurus.core.modules import ImageUtils, FileSystem
-from pysaurus.core.notifier import Notifier, DEFAULT_NOTIFIER
+from pysaurus.core.constants import CPU_COUNT, THUMBNAIL_EXTENSION
+from pysaurus.core.modules import FileSystem, ImageUtils
+from pysaurus.core.notifier import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
 from pysaurus.database import jobs_python
@@ -23,8 +23,8 @@ from pysaurus.database.db_cache import DbCache
 from pysaurus.database.db_settings import DbSettings
 from pysaurus.database.db_utils import new_sub_file, new_sub_folder
 from pysaurus.database.db_video_attribute import (
-    QualityAttribute,
     PotentialMoveAttribute,
+    QualityAttribute,
 )
 from pysaurus.database.miniature_tools.group_computer import GroupComputer
 from pysaurus.database.miniature_tools.miniature import Miniature
@@ -47,6 +47,8 @@ class Database:
         "__db_folder",
         "__thumb_folder",
         "__json_path",
+        "__tmp_json_path_next",
+        "__tmp_json_path_prev",
         "__miniatures_path",
         "__log_path",
         "__settings",
@@ -62,6 +64,7 @@ class Database:
         "__prop_parser",
         "__save_id",
         "__message",
+        "__predictors",
     )
 
     def __init__(self, path, folders=None, clear_old_folders=False, notifier=None):
@@ -70,6 +73,8 @@ class Database:
         self.__db_folder = AbsolutePath.ensure_directory(path)
         self.__thumb_folder = new_sub_folder(self.__db_folder, "thumbnails").mkdir()
         self.__json_path = new_sub_file(self.__db_folder, "json")
+        self.__tmp_json_path_prev = new_sub_file(self.__db_folder, "prev.json")
+        self.__tmp_json_path_next = new_sub_file(self.__db_folder, "next.json")
         self.__miniatures_path = new_sub_file(self.__db_folder, "miniatures.json")
         self.__log_path = new_sub_file(self.__db_folder, "log")
         # Database data
@@ -77,9 +82,10 @@ class Database:
         self.__date = DateModified.now()
         self.__folders = set()  # type: Set[AbsolutePath]
         self.__videos = {}  # type: Dict[AbsolutePath, Union[VideoState, Video]]
-        self.__cache = DbCache(self)
         self.__prop_types = {}  # type: Dict[str, PropType]
+        self.__predictors = {}  # type: Dict[str, List[float]]
         # RAM data
+        self.__cache = DbCache(self)
         self.__notifier = notifier or DEFAULT_NOTIFIER
         self.__id_to_video = {}  # type: Dict[int, Union[VideoState, Video]]
         self.__prop_parser = {}  # type: Dict[str, callable]
@@ -137,6 +143,9 @@ class Database:
         for prop_dict in json_dict.get("prop_types", ()):
             self.add_prop_type(PropType.from_dict(prop_dict), save=False)
 
+        # Parsing predictors
+        self.__predictors = json_dict.get("predictors", {})
+
         # Parsing videos.
         folders_tree = PathTree(self.__folders)
         for video_dict in json_dict.get("videos", ()):
@@ -165,15 +174,24 @@ class Database:
             "settings": self.__settings.to_dict(),
             "date": self.__date.time,
             "folders": sorted(folder.path for folder in self.__folders),
+            "prop_types": [prop.to_dict() for prop in self.__prop_types.values()],
+            "predictors": self.__predictors,
             "videos": sorted(
                 (video.to_dict() for video in self.__videos.values()),
                 key=lambda dct: dct["f"],
             ),
-            "prop_types": [prop.to_dict() for prop in self.__prop_types.values()],
         }
+
         # functions.assert_data_is_serializable(json_output)
-        with open(self.__json_path.path, "w") as output_file:
+        with open(self.__tmp_json_path_next.path, "w") as output_file:
             json.dump(json_output, output_file)
+        self.__tmp_json_path_prev.delete()
+        os.rename(self.__json_path.path, self.__tmp_json_path_prev.path)
+        os.rename(self.__tmp_json_path_next.path, self.__json_path.path)
+        assert not self.__tmp_json_path_next.exists()
+        assert self.__tmp_json_path_prev.isfile()
+        assert self.__json_path.isfile()
+
         self.__notifier.notify(notifications.DatabaseSaved(self))
 
     @staticmethod
@@ -944,6 +962,12 @@ class Database:
         message = self.__message
         self.__message = None
         return message
+
+    def get_predictor(self, prop_name):
+        return self.__predictors.get(prop_name, None)
+
+    def set_predictor(self, prop_name: str, theta: List[float]):
+        self.__predictors[prop_name] = theta
 
     # Videos access and edition
 

@@ -2,7 +2,7 @@ from pysaurus.core.classes import StringPrinter, Text, TextWithNumbers
 from pysaurus.core.compare import to_comparable
 from pysaurus.core.components import AbsolutePath, DateModified, FileSize
 from pysaurus.core.constants import PYTHON_ERROR_THUMBNAIL
-from pysaurus.core.functions import string_to_pieces, class_get_public_attributes
+from pysaurus.core.functions import class_get_public_attributes, string_to_pieces
 from pysaurus.database.video_runtime_info import VideoRuntimeInfo
 from pysaurus.database.video_sorting import VideoSorting
 

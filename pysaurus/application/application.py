@@ -2,7 +2,7 @@
 import json
 import os
 from pathlib import Path
-from typing import Dict, Optional, List, Iterable
+from typing import Dict, Iterable, List, Optional
 
 from pysaurus.application import exceptions
 from pysaurus.application.config import Config
@@ -61,6 +61,9 @@ class Application:
         if not self.databases[path]:
             self.databases[path] = Database(path, notifier=self.notifier)
         return self.databases[path]
+
+    def open_database_from_name(self, name: str) -> Database:
+        return self.open_database(AbsolutePath.join(self.dbs_dir, name))
 
     def new_database(self, name, folders: Iterable[AbsolutePath]):
         if functions.has_discarded_characters(name):

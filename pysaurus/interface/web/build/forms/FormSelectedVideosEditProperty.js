@@ -21,16 +21,13 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js", "../utils/cons
           // values: [(value, count)]
           // onClose
           super(props);
-          const mapping = new Map();
           const current = [];
 
           for (let valueAndCount of this.props.values) {
-            mapping.set(valueAndCount[0], valueAndCount[1]);
             current.push(valueAndCount[0]);
           }
 
           this.state = {
-            mapping: mapping,
             current: current,
             add: [],
             remove: [],
@@ -48,6 +45,16 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js", "../utils/cons
           this.removeAll = this.removeAll.bind(this);
           this.addAll = this.addAll.bind(this);
           this.unAddAll = this.unAddAll.bind(this);
+        }
+
+        getMapping() {
+          const mapping = new Map();
+
+          for (let valueAndCount of this.props.values) {
+            mapping.set(valueAndCount[0], valueAndCount[1]);
+          }
+
+          return mapping;
         }
 
         render() {
@@ -113,7 +120,7 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js", "../utils/cons
             onClick: () => this.remove(value)
           }, Characters.SMART_ARROW_LEFT), /*#__PURE__*/React.createElement("div", {
             className: "value"
-          }, value, " ", /*#__PURE__*/React.createElement("em", null, /*#__PURE__*/React.createElement("strong", null, "(", this.state.mapping.get(value), ")"))), /*#__PURE__*/React.createElement("button", {
+          }, value, " ", /*#__PURE__*/React.createElement("em", null, /*#__PURE__*/React.createElement("strong", null, "(", this.getMapping().get(value), ")"))), /*#__PURE__*/React.createElement("button", {
             onClick: () => this.add(value)
           }, Characters.SMART_ARROW_RIGHT)));
         }
@@ -124,7 +131,7 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js", "../utils/cons
             className: "entry horizontal"
           }, /*#__PURE__*/React.createElement("button", {
             onClick: () => this.unAdd(value)
-          }, this.state.mapping.has(value) ? Characters.SMART_ARROW_LEFT : '-'), /*#__PURE__*/React.createElement("div", {
+          }, this.getMapping().has(value) ? Characters.SMART_ARROW_LEFT : '-'), /*#__PURE__*/React.createElement("div", {
             className: "value"
           }, value)));
         }
@@ -197,7 +204,7 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js", "../utils/cons
             } else {
               const add = [this.state.value];
               const current = [];
-              const remove = Array.from(this.state.mapping);
+              const remove = Array.from(this.getMapping().keys());
               remove.sort();
               this.setState({
                 remove,
@@ -252,8 +259,9 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js", "../utils/cons
           } else {
             const add = [value];
             const current = [];
-            const remove = new Set(this.state.mapping);
-            remove.delete(value);
+            const setRemove = new Set(this.getMapping().keys());
+            setRemove.delete(value);
+            const remove = Array.from(setRemove);
             remove.sort();
             this.setState({
               remove,
@@ -308,7 +316,7 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js", "../utils/cons
           const newAdd = Array.from(add);
           newAdd.sort();
 
-          if (this.state.mapping.has(value)) {
+          if (this.getMapping().has(value)) {
             const current = new Set(this.state.current);
             current.add(value);
             const newCurrent = Array.from(current);
@@ -328,7 +336,7 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js", "../utils/cons
           const current = new Set(this.state.current);
 
           for (let value of this.state.add) {
-            if (this.state.mapping.has(value)) {
+            if (this.getMapping().has(value)) {
               current.add(value);
             }
           }

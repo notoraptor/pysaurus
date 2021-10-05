@@ -1,6 +1,6 @@
-from typing import Dict, List, Iterable, Optional
+from typing import Dict, Iterable, List, Optional
 
-from pysaurus.core.classes import ToDict, StringPrinter
+from pysaurus.core.classes import StringPrinter, ToDict
 
 
 class Notification(ToDict):
@@ -217,14 +217,23 @@ class JobToDo(Notification):
 
 
 class JobStep(Notification):
-    __slots__ = "name", "channel", "step", "total"
+    __slots__ = "name", "channel", "step", "total", "title"
     __slot_sorter__ = list
 
-    def __init__(self, name: str, channel: Optional[str], step: int, total: int):
+    def __init__(
+        self,
+        name: str,
+        channel: Optional[str],
+        step: int,
+        total: int,
+        *,
+        title: str = None,
+    ):
         self.name = name
         self.channel = channel
         self.step = step
         self.total = total
+        self.title = title
 
 
 class JobNotifications:
@@ -235,10 +244,19 @@ class JobNotifications:
         self.notifier = notifier
         self.notifier.notify(JobToDo(self.name, total, title))
         if total:
-            self.notifier.notify(JobStep(self.name, None, 0, total))
+            self.notifier.notify(JobStep(self.name, None, 0, total, title=title))
 
-    def progress(self, channel: Optional[str], channel_step: int, channel_size: int):
-        self.notifier.notify(JobStep(self.name, channel, channel_step, channel_size))
+    def progress(
+        self,
+        channel: Optional[str],
+        channel_step: int,
+        channel_size: int,
+        *,
+        title: str = None,
+    ):
+        self.notifier.notify(
+            JobStep(self.name, channel, channel_step, channel_size, title=title)
+        )
 
 
 class _JobNotificationsFactory:
@@ -262,3 +280,5 @@ class Jobs:
     native_comparisons = _JobNotificationsFactory("native comparison")
     copy_file = _JobNotificationsFactory("byte")
     link_videos = _JobNotificationsFactory("videos relation")
+    train_steps = _JobNotificationsFactory("train step")
+    predictions = _JobNotificationsFactory("prediction")

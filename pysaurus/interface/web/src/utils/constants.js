@@ -121,7 +121,7 @@ export const SEARCH_TYPE_TITLE = {
     id: 'video ID'
 };
 
-export const PAGE_SIZES = [10, 20, 50, 100];
+export const PAGE_SIZES = [1, 10, 20, 50, 100];
 
 export const VIDEO_DEFAULT_PAGE_SIZE = PAGE_SIZES[PAGE_SIZES.length - 1];
 

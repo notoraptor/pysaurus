@@ -6,8 +6,8 @@ from pysaurus.core.notifier import Notifier
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.miniature_tools.miniature import Miniature
 from pysaurus.database.video_similarities.backend_python import (
-    compare_faster,
     SIMPLE_MAX_PIXEL_DISTANCE,
+    compare_faster,
 )
 
 

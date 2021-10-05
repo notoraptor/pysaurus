@@ -1,7 +1,7 @@
-System.register(["../utils/constants.js", "../components/MenuPack.js", "../components/Pagination.js", "../components/Video.js", "../forms/FormVideosSource.js", "../forms/FormVideosGrouping.js", "../forms/FormVideosSearch.js", "../forms/FormVideosSort.js", "../components/GroupView.js", "../forms/FormPropertyEditSelectedValues.js", "../forms/FormVideosKeywordsToProperty.js", "../forms/FormSelectedVideosEditProperty.js", "../components/Collapsable.js", "../components/Cross.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/MenuItemRadio.js", "../components/Menu.js", "../utils/Selector.js", "../utils/Action.js", "../utils/Actions.js", "../components/ActionToMenuItem.js", "../components/ActionToSettingIcon.js", "../components/ActionToCross.js", "../utils/backend.js", "../dialogs/FancyBox.js", "./HomePage.js", "../forms/FormDatabaseEditFolders.js", "../forms/FormDatabaseRename.js", "../dialogs/Dialog.js", "../components/Cell.js"], function (_export, _context) {
+System.register(["../utils/constants.js", "../components/MenuPack.js", "../components/Pagination.js", "../components/Video.js", "../forms/FormVideosSource.js", "../forms/FormVideosGrouping.js", "../forms/FormVideosSearch.js", "../forms/FormVideosSort.js", "../components/GroupView.js", "../forms/FormPropertyEditSelectedValues.js", "../forms/FormVideosKeywordsToProperty.js", "../forms/FormSelectedVideosEditProperty.js", "../components/Collapsable.js", "../components/Cross.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/MenuItemRadio.js", "../components/Menu.js", "../utils/Selector.js", "../utils/Action.js", "../utils/Actions.js", "../components/ActionToMenuItem.js", "../components/ActionToSettingIcon.js", "../components/ActionToCross.js", "../utils/backend.js", "../dialogs/FancyBox.js", "./HomePage.js", "../forms/FormDatabaseEditFolders.js", "../forms/FormDatabaseRename.js", "../dialogs/Dialog.js", "../components/Cell.js", "../forms/FormNewPredictionProperty.js"], function (_export, _context) {
   "use strict";
 
-  var PAGE_SIZES, SEARCH_TYPE_TITLE, SOURCE_TREE, FIELD_MAP, MenuPack, Pagination, Video, FormVideosSource, FormVideosGrouping, FormVideosSearch, FormVideosSort, GroupView, FormPropertyEditSelectedValues, FormVideosKeywordsToProperty, FormSelectedVideosEditProperty, Collapsable, Cross, MenuItem, MenuItemCheck, MenuItemRadio, Menu, Selector, Action, Actions, ActionToMenuItem, ActionToSettingIcon, ActionToCross, backend_error, python_call, FancyBox, HomePage, FormDatabaseEditFolders, FormDatabaseRename, Dialog, Cell, VideosPage;
+  var PAGE_SIZES, SEARCH_TYPE_TITLE, SOURCE_TREE, FIELD_MAP, MenuPack, Pagination, Video, FormVideosSource, FormVideosGrouping, FormVideosSearch, FormVideosSort, GroupView, FormPropertyEditSelectedValues, FormVideosKeywordsToProperty, FormSelectedVideosEditProperty, Collapsable, Cross, MenuItem, MenuItemCheck, MenuItemRadio, Menu, Selector, Action, Actions, ActionToMenuItem, ActionToSettingIcon, ActionToCross, backend_error, python_call, FancyBox, HomePage, FormDatabaseEditFolders, FormDatabaseRename, Dialog, Cell, FormNewPredictionProperty, VideosPage;
 
   function compareSources(sources1, sources2) {
     if (sources1.length !== sources2.length) return false;
@@ -17,6 +17,10 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
     }
 
     return true;
+  }
+
+  function arrayEquals(a, b) {
+    return Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((val, index) => val === b[index]);
   }
 
   _export("VideosPage", void 0);
@@ -88,6 +92,8 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
       Dialog = _dialogsDialogJs.Dialog;
     }, function (_componentsCellJs) {
       Cell = _componentsCellJs.Cell;
+    }, function (_formsFormNewPredictionPropertyJs) {
+      FormNewPredictionProperty = _formsFormNewPredictionPropertyJs.FormNewPredictionProperty;
     }],
     execute: function () {
       _export("VideosPage", VideosPage = class VideosPage extends React.Component {
@@ -108,6 +114,8 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           this.backendGroupVideos = this.backendGroupVideos.bind(this);
           this.changeGroup = this.changeGroup.bind(this);
           this.changePage = this.changePage.bind(this);
+          this.previousPage = this.previousPage.bind(this);
+          this.nextPage = this.nextPage.bind(this);
           this.classifierConcatenate = this.classifierConcatenate.bind(this);
           this.classifierSelectGroup = this.classifierSelectGroup.bind(this);
           this.classifierUnstack = this.classifierUnstack.bind(this);
@@ -151,6 +159,10 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           this.canOpenRandomVideo = this.canOpenRandomVideo.bind(this);
           this.canOpenRandomPlayer = this.canOpenRandomPlayer.bind(this);
           this.canFindSimilarVideos = this.canFindSimilarVideos.bind(this);
+          this.createPredictionProperty = this.createPredictionProperty.bind(this);
+          this.populatePredictionProperty = this.populatePredictionProperty.bind(this);
+          this.computePredictionProperty = this.computePredictionProperty.bind(this);
+          this.applyPrediction = this.applyPrediction.bind(this);
           this.callbackIndex = -1;
           this.notificationCallbackIndex = -1;
           this.features = new Actions({
@@ -165,20 +177,32 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             reload: new Action("Ctrl+R", "Reload database ...", this.reloadDatabase),
             manageProperties: new Action("Ctrl+P", "Manage properties ...", this.manageProperties),
             openRandomVideo: new Action("Ctrl+O", "Open random video", this.openRandomVideo, this.canOpenRandomVideo),
-            openRandomPlayer: new Action("Ctrl+E", "Open random player", this.openRandomPlayer, this.canOpenRandomPlayer)
+            openRandomPlayer: new Action("Ctrl+E", "Open random player", this.openRandomPlayer, this.canOpenRandomPlayer),
+            previousPage: new Action("Ctrl+ArrowLeft", "Go to previous page", this.previousPage),
+            nextPage: new Action("Ctrl+ArrowRight", "Go to next page", this.nextPage)
           });
         }
 
-        canOpenRandomVideo() {
-          return !this.state.notFound && this.state.nbVideos;
+        createPredictionProperty() {
+          Fancybox.load( /*#__PURE__*/React.createElement(FormNewPredictionProperty, {
+            onClose: name => {
+              this.backend(["create_prediction_property", name]);
+            }
+          }));
         }
 
-        canOpenRandomPlayer() {
-          return window.PYTHON_HAS_EMBEDDED_PLAYER && this.canOpenRandomVideo();
+        populatePredictionProperty() {
+          Fancybox.load( /*#__PURE__*/React.createElement(FancyBox, {
+            title: "Populate prediction property manually"
+          }, /*#__PURE__*/React.createElement("p", null, "Set:"), /*#__PURE__*/React.createElement("ul", null, /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("strong", null, "1"), " for video thumbnails that match what you expect"), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("strong", null, "0"), " for video thumbnails that don't match what you expect"), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("strong", null, "-1"), " (default) for videos to ignore")), /*#__PURE__*/React.createElement("p", null, "Prediction computation will only use videos tagged with ", /*#__PURE__*/React.createElement("strong", null, "1"), " and ", /*#__PURE__*/React.createElement("strong", null, "0"), ", so, you don't need to tag all of them."), /*#__PURE__*/React.createElement("p", null, "There is however some good practices:"), /*#__PURE__*/React.createElement("ul", null, /*#__PURE__*/React.createElement("li", null, "Tag enough videos with ", /*#__PURE__*/React.createElement("strong", null, "0"), " and ", /*#__PURE__*/React.createElement("strong", null, "1"), " (e.g. 20 videos)"), /*#__PURE__*/React.createElement("li", null, "Try to tag same amount of videos for ", /*#__PURE__*/React.createElement("strong", null, "0"), " and for ", /*#__PURE__*/React.createElement("strong", null, "1"), " (e.g. 10 videos each)")), /*#__PURE__*/React.createElement("p", null, "Once done, move you can compute prediction.")));
         }
 
-        canFindSimilarVideos() {
-          return window.PYTHON_FEATURE_COMPARISON;
+        computePredictionProperty(propName) {
+          this.props.app.dbUpdate("compute_predictor", propName);
+        }
+
+        applyPrediction(propName) {
+          this.props.app.dbUpdate("apply_predictor", propName);
         }
 
         render() {
@@ -190,6 +214,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           const groupedByMoves = groupDef && groupDef.field === "move_id";
           const stringSetProperties = this.getStringSetProperties(this.state.properties);
           const stringProperties = this.getStringProperties(this.state.properties);
+          const predictionProperties = this.getPredictionProperties(this.state.properties);
           const actions = this.features.actions;
           return /*#__PURE__*/React.createElement("div", {
             id: "videos",
@@ -248,6 +273,22 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             key: index,
             action: () => this.backendGroupVideos(def.name, true)
           }, "Group videos by property: ", def.name))), /*#__PURE__*/React.createElement(MenuPack, {
+            title: "Predictors ..."
+          }, /*#__PURE__*/React.createElement(MenuItem, {
+            action: this.createPredictionProperty
+          }, "1) Create a prediction property ..."), /*#__PURE__*/React.createElement(MenuItem, {
+            action: this.populatePredictionProperty
+          }, "2) Populate a prediction property manually ..."), predictionProperties.length ? /*#__PURE__*/React.createElement(Menu, {
+            title: "3) Compute prediction for property ..."
+          }, predictionProperties.map((def, i) => /*#__PURE__*/React.createElement(MenuItem, {
+            key: i,
+            action: () => this.computePredictionProperty(def.name)
+          }, def.name))) : "", predictionProperties.length ? /*#__PURE__*/React.createElement(Menu, {
+            title: "4) Apply prediction from property ..."
+          }, predictionProperties.map((def, i) => /*#__PURE__*/React.createElement(MenuItem, {
+            key: i,
+            action: () => this.applyPrediction(def.name)
+          }, def.name))) : ""), /*#__PURE__*/React.createElement(MenuPack, {
             title: "Options"
           }, /*#__PURE__*/React.createElement(Menu, {
             title: "Page size ..."
@@ -353,6 +394,18 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           }, validLength))));
         }
 
+        canOpenRandomVideo() {
+          return !this.state.notFound && this.state.nbVideos;
+        }
+
+        canOpenRandomPlayer() {
+          return window.PYTHON_HAS_EMBEDDED_PLAYER && this.canOpenRandomVideo();
+        }
+
+        canFindSimilarVideos() {
+          return window.PYTHON_FEATURE_COMPARISON;
+        }
+
         renderFilter() {
           const actions = this.features.actions;
           const sources = this.state.sources;
@@ -424,7 +477,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           NOTIFICATION_MANAGER.unregister(this.notificationCallbackIndex);
         }
 
-        backend(callargs, state, top = true) {
+        backend(callargs, state = {}, top = true) {
           const pageSize = state.pageSize !== undefined ? state.pageSize : this.state.pageSize;
           const pageNumber = state.pageNumber !== undefined ? state.pageNumber : this.state.pageNumber;
           const displayOnlySelected = state.displayOnlySelected !== undefined ? state.displayOnlySelected : this.state.displayOnlySelected;
@@ -750,12 +803,26 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           });
         }
 
+        previousPage() {
+          const pageNumber = this.state.pageNumber - 1;
+          if (pageNumber >= 0) this.changePage(pageNumber);
+        }
+
+        nextPage() {
+          const pageNumber = this.state.pageNumber + 1;
+          if (pageNumber < this.state.nbPages) this.changePage(pageNumber);
+        }
+
         getStringSetProperties(definitions) {
           return definitions.filter(def => def.multiple && def.type === "str");
         }
 
         getStringProperties(definitions) {
           return definitions.filter(def => def.type === "str");
+        }
+
+        getPredictionProperties(definitions) {
+          return definitions.filter(def => def.name.indexOf("<?") === 0 && def.name.indexOf(">") === def.name.length - 1 && def.type === "int" && def.defaultValue === -1 && !def.multiple && arrayEquals(def.enumeration, [-1, 0, 1]));
         }
         /**
          * @param indicesSet {Set}

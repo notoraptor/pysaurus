@@ -1,4 +1,4 @@
-from typing import Tuple, Set
+from typing import Set, Tuple
 
 from pysaurus.core import functions
 

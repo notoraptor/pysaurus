@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Dict, Any
+from typing import Any, Dict
 
 from pysaurus.database.video import Video
 

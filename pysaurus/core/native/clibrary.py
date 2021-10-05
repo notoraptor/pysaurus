@@ -1,5 +1,5 @@
 import os.path
-from ctypes import c_char_p, POINTER, c_int, c_double, c_bool, util, CDLL
+from ctypes import CDLL, POINTER, c_bool, c_char_p, c_double, c_int, util
 
 c_int_p = POINTER(c_int)
 c_double_p = POINTER(c_double)

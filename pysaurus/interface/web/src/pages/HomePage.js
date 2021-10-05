@@ -5,11 +5,13 @@ class ProgressionMonitoring {
     constructor(name, total) {
         this.name = name;
         this.total = total;
+        this.title = null;
         this.jobs = new Map();
     }
 
     collectJobStep(notification) {
         this.jobs.set(notification.notification.channel, notification.notification.step);
+        this.title = notification.notification.title;
     }
 }
 
@@ -24,10 +26,11 @@ function Monitoring(props) {
         current += step;
     }
     const percent = Math.round(current * 100 / total);
+    const title = monitoring.title || `${current} done`;
     const jobClassID = "job " + monitoring.name;
     return (
         <div className="job horizontal">
-            <label htmlFor={jobClassID} className="pr-2">{current} done ({percent} %)</label>
+            <label htmlFor={jobClassID} className="pr-2">{title} ({percent} %)</label>
             <progress className="flex-grow-1" id={jobClassID} value={current} max={total}/>
         </div>
     );
@@ -209,6 +212,8 @@ const ACTIONS = {
     create_database: "Create database",
     open_database: "Open database",
     move_video_file: "Move video file",
+    compute_predictor: "Compute predictor",
+    apply_predictor: "Predict"
 };
 
 export class HomePage extends React.Component {

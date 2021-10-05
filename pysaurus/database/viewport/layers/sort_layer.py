@@ -1,4 +1,4 @@
-from typing import Sequence, List
+from typing import List, Sequence
 
 from pysaurus.database.video_sorting import VideoSorting
 from pysaurus.database.video_state import VideoState

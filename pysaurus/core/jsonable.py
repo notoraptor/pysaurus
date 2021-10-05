@@ -1,5 +1,5 @@
 import types
-from typing import Sequence, Dict
+from typing import Dict, Sequence
 
 from pysaurus.core.functions import is_valid_attribute_name
 from pysaurus.core.override import Override

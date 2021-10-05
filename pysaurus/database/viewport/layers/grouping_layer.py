@@ -1,4 +1,4 @@
-from typing import Optional, Dict
+from typing import Dict, Optional
 
 from pysaurus.core.components import AbsolutePath
 from pysaurus.database.video_state import VideoState

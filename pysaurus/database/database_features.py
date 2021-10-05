@@ -4,18 +4,17 @@ from typing import List, Set
 
 import numpy as np
 
-# from collections import deque
-
 from pysaurus.application import exceptions
 from pysaurus.core import notifications
 from pysaurus.core.fraction import Fraction
-from pysaurus.core.functions import compute_nb_couples, get_start_index, get_end_index
+from pysaurus.core.functions import compute_nb_couples, get_end_index, get_start_index
 from pysaurus.core.notifier import Notifier
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.database import Database
 from pysaurus.database.miniature_tools.graph import Graph
 from pysaurus.database.miniature_tools.miniature import Miniature
-from pysaurus.database.video import Video
+
+# from collections import deque
 
 try:
     from pysaurus.database.video_similarities import alignment_raptor as backend_sim

@@ -1,4 +1,4 @@
-from typing import Dict, Sequence, Iterable, Set
+from typing import Dict, Iterable, Sequence, Set
 
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.profiling import Profiler

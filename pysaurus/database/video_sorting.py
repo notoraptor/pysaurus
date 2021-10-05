@@ -1,4 +1,4 @@
-from typing import List, Iterable, Tuple, Union
+from typing import Iterable, List, Tuple, Union
 
 
 class VideoSorting:

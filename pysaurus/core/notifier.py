@@ -1,4 +1,4 @@
-from typing import Optional, Callable, Dict
+from typing import Callable, Dict, Optional
 
 from pysaurus.core.components import DateModified
 from pysaurus.core.notifications import Notification

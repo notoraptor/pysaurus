@@ -3,21 +3,22 @@ import queue
 import threading
 import time
 from abc import abstractmethod
-from typing import Optional, Callable, Sequence, Dict
+from typing import Callable, Dict, Optional, Sequence
 
 from pysaurus.application import exceptions
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.file_copier import FileCopier
 from pysaurus.core.functions import launch_thread
 from pysaurus.core.notifications import (
-    Notification,
-    End,
-    Done,
-    Terminated,
     Cancelled,
     DatabaseReady,
+    Done,
+    End,
+    Notification,
+    Terminated,
 )
 from pysaurus.core.path_tree import PathTree
+from pysaurus.database import pattern_detection
 from pysaurus.database.database_features import DatabaseFeatures
 from pysaurus.database.viewport.video_provider import VideoProvider
 from pysaurus.interface.api import tk_utils
@@ -53,6 +54,12 @@ class GuiAPI(FeatureAPI):
 
     def move_video_file(self, video_id, directory):
         self._launch(self._move_video_file, args=(video_id, directory), finish=False)
+
+    def compute_predictor(self, prop_name):
+        self._launch(self._compute_predictor, args=(prop_name,))
+
+    def apply_predictor(self, prop_name):
+        self._launch(self._apply_predictor, args=(prop_name,))
 
     def cancel_copy(self):
         if self.copy_work is not None:
@@ -219,6 +226,29 @@ class GuiAPI(FeatureAPI):
             self.database.notifier.notify(End(f"Error {type(exc).__name__}: {exc}"))
         finally:
             self.db_loading_thread = None
+
+    def _compute_predictor(self, prop_name):
+        pattern_detection.compute_pattern_detector(
+            self.database,
+            self.database.get_videos("readable", "with_thumbnails"),
+            prop_name,
+        )
+        # self._apply_predictor(prop_name)
+
+    def _apply_predictor(self, prop_name):
+        output_prop_name = pattern_detection.apply_pattern_detector(
+            self.database,
+            self.database.get_videos("readable", "with_thumbnails"),
+            prop_name,
+        )
+        self.provider.set_groups(
+            field=output_prop_name,
+            is_property=True,
+            sorting="field",
+            reverse=False,
+            allow_singletons=True,
+        )
+        self.provider.refresh()
 
     @staticmethod
     def clipboard(text):
