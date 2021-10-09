@@ -4,7 +4,7 @@ from typing import Any, Dict
 from pysaurus.database.video import Video
 
 
-class DbVideoAttribute:
+class _DbVideoAttribute:
     __slots__ = "database", "__iteration", "__values"
 
     def __init__(self, database):
@@ -14,22 +14,23 @@ class DbVideoAttribute:
 
     def __call__(self, video: Video):
         if self.__iteration != self.database.iteration:
-            self.update()
+            self.__values.clear()
+            self._update()
             self.__iteration = self.database.iteration
         if video not in self.__values:
-            self.__values[video] = self.get(video)
+            self.__values[video] = self._get(video)
         return self.__values[video]
 
     @abstractmethod
-    def update(self):
+    def _update(self):
         raise NotImplementedError()
 
     @abstractmethod
-    def get(self, video: Video):
+    def _get(self, video: Video):
         raise NotImplementedError()
 
 
-class QualityAttribute(DbVideoAttribute):
+class QualityAttribute(_DbVideoAttribute):
     __slots__ = "fields", "min", "max"
 
     def __init__(self, database):
@@ -38,7 +39,7 @@ class QualityAttribute(DbVideoAttribute):
         self.min = {}
         self.max = {}
 
-    def update(self):
+    def _update(self):
         videos = list(self.database.get_videos("readable"))
         if not videos:
             self.min.clear()
@@ -53,7 +54,7 @@ class QualityAttribute(DbVideoAttribute):
             for field in self.fields
         }
 
-    def get(self, video: Video):
+    def _get(self, video: Video):
         total_level = 0
         qualities = {}
         for field, level in Video.QUALITY_FIELDS:
@@ -71,7 +72,27 @@ class QualityAttribute(DbVideoAttribute):
         return sum(qualities.values()) * 100 / total_level
 
 
-class PotentialMoveAttribute(DbVideoAttribute):
+class _MoveKey:
+    __slots__ = "key", "string"
+
+    def __init__(self, video):
+        self.key = (video.file_size, video.duration, video.duration_time_base)
+        self.string = f"{video.size}, {video.length}"
+
+    def __hash__(self):
+        return hash(self.key)
+
+    def __eq__(self, other):
+        return self.key == other.key
+
+    def __lt__(self, other):
+        return self.key < other.key
+
+    def __str__(self):
+        return self.string
+
+
+class PotentialMoveAttribute(_DbVideoAttribute):
     __slots__ = "potential_moves", "move_groups"
 
     def __init__(self, database):
@@ -79,21 +100,19 @@ class PotentialMoveAttribute(DbVideoAttribute):
         self.potential_moves = {}
         self.move_groups = {}
 
-    def update(self):
+    def _update(self):
         self.potential_moves.clear()
+        self.move_groups.clear()
         groups = {}
         for video in self.database.get_videos("readable"):
-            key = (video.file_size, video.duration, video.duration_time_base)
-            groups.setdefault(key, ([], []))[video.found].append(video)
-        move_id = 0
-        for not_found, found in groups.values():
+            groups.setdefault(_MoveKey(video), ([], []))[video.found].append(video)
+        for key, (not_found, found) in groups.items():
             if not_found and found:
                 for video_not_found in not_found:
                     self.potential_moves[video_not_found] = found
-                    self.move_groups[video_not_found] = move_id
+                    self.move_groups[video_not_found] = key
                 for video in found:
-                    self.move_groups[video] = move_id
-                move_id += 1
+                    self.move_groups[video] = key
 
-    def get(self, video: Video):
+    def _get(self, video: Video):
         return self.move_groups.get(video, None), self.potential_moves.get(video, ())

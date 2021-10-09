@@ -361,6 +361,7 @@ class Database:
                         video_state.properties.update(
                             self.__videos[file_path].properties
                         )
+                        video_state.similarity_id = self.__videos[file_path].similarity_id
                     # Set special properties
                     SpecialProperties.set(video_state)
                 videos[file_path] = video_state
@@ -659,6 +660,7 @@ class Database:
         if save:
             self.save()
         self.__notifier.notify(notifications.VideoDeleted(video))
+        self.__notifier.notify(notifications.FieldsModified(["move_id", "quality"]))
         return video.filename
 
     def add_prop_type(self, prop: PropType, save: bool = True) -> None:
@@ -953,6 +955,7 @@ class Database:
             else:
                 transferred_properties[prop_name] = prop_val
         to_video.properties.update(transferred_properties)
+        to_video.similarity_id = from_video.similarity_id
         self.delete_video(from_id)
 
     def set_message(self, message: str):

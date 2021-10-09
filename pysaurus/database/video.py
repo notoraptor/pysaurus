@@ -215,13 +215,13 @@ class Video(VideoState):
         self.frame_rate_num = frame_rate_num
         self.height = height
         self.meta_title = Text(html_to_title(meta_title))
-        self.properties = {}
         self.sample_rate = sample_rate
-        self.similarity_id = similarity_id
-        self._thumb_name = thumb_name
         self.video_codec = Text(video_codec)
         self.video_codec_description = Text(video_codec_description)
         self.width = width
+        self._thumb_name = thumb_name  # may change when updating thumbnails
+        self.similarity_id = similarity_id  # may change due to similarity search
+        self.properties = {}  # may change on properties update
         # Additional initialization.
         self.set_properties(properties or {})
 
