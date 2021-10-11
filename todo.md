@@ -14,8 +14,6 @@ TODO:
 
 Bugs:
 - Interface:
-  - Many shortcuts are not describe anywhere in interface
-    - hint: Maybe each action with shortcut should appear in menus?
 - Qt player may freeze unexpectedly when requiring next video
 - Cannot force kill a Python thread.
 

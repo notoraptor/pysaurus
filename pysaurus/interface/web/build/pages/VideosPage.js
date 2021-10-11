@@ -163,8 +163,15 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           this.populatePredictionProperty = this.populatePredictionProperty.bind(this);
           this.computePredictionProperty = this.computePredictionProperty.bind(this);
           this.applyPrediction = this.applyPrediction.bind(this);
+          this.sourceIsSet = this.sourceIsSet.bind(this);
+          this.groupIsSet = this.groupIsSet.bind(this);
+          this.searchIsSet = this.searchIsSet.bind(this);
+          this.sortIsSet = this.sortIsSet.bind(this);
+          this.previousGroup = this.previousGroup.bind(this);
+          this.nextGroup = this.nextGroup.bind(this);
           this.callbackIndex = -1;
-          this.notificationCallbackIndex = -1;
+          this.notificationCallbackIndex = -1; // 14 shortcuts currently.
+
           this.features = new Actions({
             select: new Action("Ctrl+T", "Select videos ...", this.selectVideos, Fancybox.isInactive),
             group: new Action("Ctrl+G", "Group ...", this.groupVideos, Fancybox.isInactive),
@@ -216,6 +223,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           const stringProperties = this.getStringProperties(this.state.properties);
           const predictionProperties = this.getPredictionProperties(this.state.properties);
           const actions = this.features.actions;
+          const aFilterIsSet = this.sourceIsSet() || this.groupIsSet() || this.searchIsSet() || this.sortIsSet();
           return /*#__PURE__*/React.createElement("div", {
             id: "videos",
             className: "absolute-plain p-4 vertical"
@@ -223,13 +231,13 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             className: "horizontal flex-shrink-0"
           }, /*#__PURE__*/React.createElement(MenuPack, {
             title: "Database ..."
-          }, /*#__PURE__*/React.createElement(MenuItem, {
+          }, /*#__PURE__*/React.createElement(ActionToMenuItem, {
+            action: actions.reload
+          }), /*#__PURE__*/React.createElement(MenuItem, {
             action: this.renameDatabase
           }, "Rename database \"", this.state.database.name, "\" ..."), /*#__PURE__*/React.createElement(MenuItem, {
             action: this.editDatabaseFolders
-          }, "Edit ", this.state.database.folders.length, " database folders ..."), /*#__PURE__*/React.createElement(ActionToMenuItem, {
-            action: actions.reload
-          }), /*#__PURE__*/React.createElement(Menu, {
+          }, "Edit ", this.state.database.folders.length, " database folders ..."), /*#__PURE__*/React.createElement(Menu, {
             title: "Close database ..."
           }, /*#__PURE__*/React.createElement(MenuItem, {
             action: this.closeDatabase
@@ -248,7 +256,17 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             action: actions.search
           }), /*#__PURE__*/React.createElement(ActionToMenuItem, {
             action: actions.sort
-          })), this.canOpenRandomVideo() ? /*#__PURE__*/React.createElement(ActionToMenuItem, {
+          })), aFilterIsSet ? /*#__PURE__*/React.createElement(Menu, {
+            title: "Reset filters ..."
+          }, this.sourceIsSet() ? /*#__PURE__*/React.createElement(ActionToMenuItem, {
+            action: actions.unselect
+          }) : "", this.groupIsSet() ? /*#__PURE__*/React.createElement(ActionToMenuItem, {
+            action: actions.ungroup
+          }) : "", this.searchIsSet() ? /*#__PURE__*/React.createElement(ActionToMenuItem, {
+            action: actions.unsearch
+          }) : "", this.sortIsSet() ? /*#__PURE__*/React.createElement(ActionToMenuItem, {
+            action: actions.unsort
+          }) : "") : "", this.canOpenRandomVideo() ? /*#__PURE__*/React.createElement(ActionToMenuItem, {
             action: actions.openRandomVideo
           }) : "", this.canOpenRandomPlayer() ? /*#__PURE__*/React.createElement(ActionToMenuItem, {
             action: actions.openRandomPlayer
@@ -289,6 +307,22 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             key: i,
             action: () => this.applyPrediction(def.name)
           }, def.name))) : ""), /*#__PURE__*/React.createElement(MenuPack, {
+            title: "Navigation ..."
+          }, /*#__PURE__*/React.createElement(Menu, {
+            title: "Videos ..."
+          }, /*#__PURE__*/React.createElement(ActionToMenuItem, {
+            action: actions.previousPage
+          }), /*#__PURE__*/React.createElement(ActionToMenuItem, {
+            action: actions.nextPage
+          })), this.groupIsSet() ? /*#__PURE__*/React.createElement(Menu, {
+            title: "Groups ..."
+          }, /*#__PURE__*/React.createElement(MenuItem, {
+            action: this.previousGroup,
+            shortcut: "Ctrl+ArrowUp"
+          }, "Go to previous group"), /*#__PURE__*/React.createElement(MenuItem, {
+            action: this.nextGroup,
+            shortcut: "Ctrl+ArrowDown"
+          }, "Go to next group")) : ""), /*#__PURE__*/React.createElement(MenuPack, {
             title: "Options"
           }, /*#__PURE__*/React.createElement(Menu, {
             title: "Page size ..."
@@ -394,18 +428,6 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           }, validLength))));
         }
 
-        canOpenRandomVideo() {
-          return Fancybox.isInactive() && !this.state.notFound && this.state.nbVideos;
-        }
-
-        canOpenRandomPlayer() {
-          return Fancybox.isInactive() && window.PYTHON_HAS_EMBEDDED_PLAYER && this.canOpenRandomVideo();
-        }
-
-        canFindSimilarVideos() {
-          return window.PYTHON_FEATURE_COMPARISON;
-        }
-
         renderFilter() {
           const actions = this.features.actions;
           const sources = this.state.sources;
@@ -465,6 +487,34 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             title: `Deselect all`,
             action: this.deselect
           }) : ''))));
+        }
+
+        sourceIsSet() {
+          return !compareSources(window.PYTHON_DEFAULT_SOURCES, this.state.sources);
+        }
+
+        groupIsSet() {
+          return !!this.state.groupDef;
+        }
+
+        searchIsSet() {
+          return !!this.state.searchDef;
+        }
+
+        sortIsSet() {
+          return !(this.state.sorting.length === 1 && this.state.sorting[0] === '-date');
+        }
+
+        canOpenRandomVideo() {
+          return Fancybox.isInactive() && !this.state.notFound && this.state.nbVideos;
+        }
+
+        canOpenRandomPlayer() {
+          return Fancybox.isInactive() && window.PYTHON_HAS_EMBEDDED_PLAYER && this.canOpenRandomVideo();
+        }
+
+        canFindSimilarVideos() {
+          return window.PYTHON_FEATURE_COMPARISON;
         }
 
         componentDidMount() {
@@ -811,6 +861,20 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         nextPage() {
           const pageNumber = this.state.pageNumber + 1;
           if (pageNumber < this.state.nbPages) this.changePage(pageNumber);
+        }
+
+        previousGroup() {
+          const groupID = this.state.groupDef.group_id;
+          if (groupID > 0) this.onGroupViewState({
+            groupID: groupID - 1
+          });
+        }
+
+        nextGroup() {
+          const groupID = this.state.groupDef.group_id;
+          if (groupID < this.state.groupDef.groups.length - 1) this.onGroupViewState({
+            groupID: groupID + 1
+          });
         }
 
         getStringSetProperties(definitions) {

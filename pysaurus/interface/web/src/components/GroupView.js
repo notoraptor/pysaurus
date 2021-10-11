@@ -22,7 +22,7 @@ export class GroupView extends React.Component {
         this.callbackIndex = -1;
         this.features = new Actions({
             previous: new Action("Ctrl+ArrowUp", "Go to previous group", this.previousGroup, Fancybox.isInactive),
-            next: new Action("Ctrl+ArrowDown", "Go to next group", this.nextGroup, Fancybox.isInactive)
+            next: new Action("Ctrl+ArrowDown", "Go to next group", this.nextGroup, Fancybox.isInactive),
         });
     }
 

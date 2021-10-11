@@ -122,9 +122,16 @@ export class VideosPage extends React.Component {
         this.populatePredictionProperty = this.populatePredictionProperty.bind(this);
         this.computePredictionProperty = this.computePredictionProperty.bind(this);
         this.applyPrediction = this.applyPrediction.bind(this);
+        this.sourceIsSet = this.sourceIsSet.bind(this);
+        this.groupIsSet = this.groupIsSet.bind(this);
+        this.searchIsSet = this.searchIsSet.bind(this);
+        this.sortIsSet = this.sortIsSet.bind(this);
+        this.previousGroup = this.previousGroup.bind(this);
+        this.nextGroup = this.nextGroup.bind(this);
 
         this.callbackIndex = -1;
         this.notificationCallbackIndex = -1;
+        // 14 shortcuts currently.
         this.features = new Actions({
             select: new Action("Ctrl+T", "Select videos ...", this.selectVideos, Fancybox.isInactive),
             group: new Action("Ctrl+G", "Group ...", this.groupVideos, Fancybox.isInactive),
@@ -191,13 +198,15 @@ export class VideosPage extends React.Component {
         const predictionProperties = this.getPredictionProperties(this.state.properties);
         const actions = this.features.actions;
 
+        const aFilterIsSet = this.sourceIsSet() || this.groupIsSet() || this.searchIsSet() || this.sortIsSet();
+
         return (
             <div id="videos" className="absolute-plain p-4 vertical">
                 <header className="horizontal flex-shrink-0">
                     <MenuPack title="Database ...">
+                        {<ActionToMenuItem action={actions.reload}/>}
                         <MenuItem action={this.renameDatabase}>Rename database "{this.state.database.name}" ...</MenuItem>
                         <MenuItem action={this.editDatabaseFolders}>Edit {this.state.database.folders.length} database folders ...</MenuItem>
-                        {<ActionToMenuItem action={actions.reload}/>}
                         <Menu title="Close database ...">
                             <MenuItem action={this.closeDatabase}><strong>Close database</strong></MenuItem>
                         </Menu>
@@ -210,6 +219,14 @@ export class VideosPage extends React.Component {
                             {<ActionToMenuItem action={actions.search}/>}
                             {<ActionToMenuItem action={actions.sort}/>}
                         </Menu>
+                        {aFilterIsSet ? (
+                            <Menu title="Reset filters ...">
+                                {this.sourceIsSet() ? <ActionToMenuItem action={actions.unselect}/> : ""}
+                                {this.groupIsSet() ? <ActionToMenuItem action={actions.ungroup}/> : ""}
+                                {this.searchIsSet() ? <ActionToMenuItem action={actions.unsearch}/> : ""}
+                                {this.sortIsSet() ? <ActionToMenuItem action={actions.unsort}/> : ""}
+                            </Menu>
+                        ) : ""}
                         {this.canOpenRandomVideo() ? <ActionToMenuItem action={actions.openRandomVideo}/> : ""}
                         {this.canOpenRandomPlayer() ? <ActionToMenuItem action={actions.openRandomPlayer}/> : ""}
                         {this.canFindSimilarVideos() ? <MenuItem action={this.findSimilarVideos}>Search similar videos</MenuItem> : ""}
@@ -255,6 +272,18 @@ export class VideosPage extends React.Component {
                                 {predictionProperties.map((def, i) => (
                                     <MenuItem key={i} action={() => this.applyPrediction(def.name)}>{def.name}</MenuItem>
                                 ))}
+                            </Menu>
+                        ) : ""}
+                    </MenuPack>
+                    <MenuPack title="Navigation ...">
+                        <Menu title="Videos ...">
+                            <ActionToMenuItem action={actions.previousPage}/>
+                            <ActionToMenuItem action={actions.nextPage}/>
+                        </Menu>
+                        {this.groupIsSet() ? (
+                            <Menu title="Groups ...">
+                                <MenuItem action={this.previousGroup} shortcut="Ctrl+ArrowUp">Go to previous group</MenuItem>
+                                <MenuItem action={this.nextGroup} shortcut="Ctrl+ArrowDown">Go to next group</MenuItem>
                             </Menu>
                         ) : ""}
                     </MenuPack>
@@ -368,18 +397,6 @@ export class VideosPage extends React.Component {
                 </footer>
             </div>
         );
-    }
-
-    canOpenRandomVideo() {
-        return Fancybox.isInactive() && !this.state.notFound && this.state.nbVideos;
-    }
-
-    canOpenRandomPlayer() {
-        return Fancybox.isInactive() && window.PYTHON_HAS_EMBEDDED_PLAYER && this.canOpenRandomVideo();
-    }
-
-    canFindSimilarVideos() {
-        return window.PYTHON_FEATURE_COMPARISON;
     }
 
     renderFilter() {
@@ -500,6 +517,34 @@ export class VideosPage extends React.Component {
                 </tbody>
             </table>
         );
+    }
+
+    sourceIsSet() {
+        return !compareSources(window.PYTHON_DEFAULT_SOURCES, this.state.sources);
+    }
+
+    groupIsSet() {
+        return !!this.state.groupDef;
+    }
+
+    searchIsSet() {
+        return !!this.state.searchDef;
+    }
+
+    sortIsSet() {
+        return !(this.state.sorting.length === 1 && this.state.sorting[0] === '-date');
+    }
+
+    canOpenRandomVideo() {
+        return Fancybox.isInactive() && !this.state.notFound && this.state.nbVideos;
+    }
+
+    canOpenRandomPlayer() {
+        return Fancybox.isInactive() && window.PYTHON_HAS_EMBEDDED_PLAYER && this.canOpenRandomVideo();
+    }
+
+    canFindSimilarVideos() {
+        return window.PYTHON_FEATURE_COMPARISON;
     }
 
     componentDidMount() {
@@ -821,6 +866,18 @@ export class VideosPage extends React.Component {
         const pageNumber  = this.state.pageNumber + 1;
         if (pageNumber < this.state.nbPages)
             this.changePage(pageNumber);
+    }
+
+    previousGroup() {
+        const groupID = this.state.groupDef.group_id;
+        if (groupID > 0)
+            this.onGroupViewState({groupID: groupID - 1});
+    }
+
+    nextGroup() {
+        const groupID = this.state.groupDef.group_id;
+        if (groupID < this.state.groupDef.groups.length - 1)
+            this.onGroupViewState({groupID: groupID + 1});
     }
 
     getStringSetProperties(definitions) {

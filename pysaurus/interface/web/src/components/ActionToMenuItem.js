@@ -6,6 +6,6 @@ export function ActionToMenuItem(props) {
     return <MenuItem shortcut={action.shortcut.str} action={action.callback}>{title || action.title}</MenuItem>;
 }
 ActionToMenuItem.propTypes = {
-    action: PropTypes.instanceOf(Action),
+    action: PropTypes.instanceOf(Action).isRequired,
     title: PropTypes.string
 }

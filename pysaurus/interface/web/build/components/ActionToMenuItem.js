@@ -24,7 +24,7 @@ System.register(["./MenuItem.js", "../utils/Action.js"], function (_export, _con
     }],
     execute: function () {
       ActionToMenuItem.propTypes = {
-        action: PropTypes.instanceOf(Action),
+        action: PropTypes.instanceOf(Action).isRequired,
         title: PropTypes.string
       };
     }
