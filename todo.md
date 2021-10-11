@@ -18,6 +18,8 @@ Bugs:
     - hint: Set a flag when a fancybox is displayed, and ignore shortcuts when this flag is set.
   - Many shortcuts are not describe anywhere in interface
     - hint: Maybe each action with shortcut should appear in menus?
+- Qt player may freeze unexpectedly when requiring next video
+- Cannot force kill a Python thread.
 
 Features:
 - Add possibility to change language. Minimum languages expected: English, French.

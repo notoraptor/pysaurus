@@ -1,8 +1,9 @@
 import sys
 import threading
+import traceback
 
 import ujson as json
-from PyQt5.QtCore import QObject, QUrl, pyqtSignal, pyqtSlot
+from PyQt5.QtCore import QMetaObject, QObject, QUrl, Q_ARG, Qt, pyqtSignal, pyqtSlot
 from PyQt5.QtWebChannel import QWebChannel
 from PyQt5.QtWebEngineWidgets import QWebEnginePage, QWebEngineView
 from PyQt5.QtWidgets import QApplication
@@ -19,6 +20,7 @@ try:
 
     has_vlc = True
 except RuntimeError as exc:
+    print("Unable to import VLC player", file=sys.stderr)
     print(f"{type(exc).__name__}: {exc}", file=sys.stderr)
     has_vlc = False
 
@@ -41,6 +43,21 @@ class Api(GuiAPI):
         super().__init__()
         self.interface = interface  # type: Interface
 
+    def _run_thread(self, function, *args, **kwargs):
+        def wrapper():
+            try:
+                function(*args, **kwargs)
+            except Exception as exception:
+                self.threads_stop_flag = True
+                QMetaObject.invokeMethod(
+                    self.interface,
+                    "throw",
+                    Qt.QueuedConnection,
+                    Q_ARG(Exception, exception),
+                )
+
+        return super()._run_thread(wrapper)
+
     def _notify(self, notification):
         self.interface.notified.emit(
             json.dumps(
@@ -61,7 +78,9 @@ class Interface(QObject):
         super().__init__(parent)
         self.api = Api(self)
 
+    # Slot set in Javascript code
     notified = pyqtSignal(str)
+    # Slot set in Python code below
     player_triggered = pyqtSignal()
 
     @pyqtSlot(str, result=str)
@@ -71,15 +90,17 @@ class Interface(QObject):
             assert not func_name.startswith("_")
             result = {"error": False, "data": getattr(self.api, func_name)(*func_args)}
         except (OSError, exceptions.PysaurusError) as exception:
-            import traceback
-
-            traceback.print_tb(exception.__traceback__)
-            print(type(exception), exception)
+            traceback.print_tb(exception.__traceback__, file=sys.stderr)
+            print(type(exception), exception, file=sys.stderr)
             result = {
                 "error": True,
                 "data": {"name": type(exception).__name__, "message": str(exception)},
             }
         return json.dumps(result)
+
+    @pyqtSlot(Exception)
+    def throw(self, exception):
+        raise exception
 
 
 class CustomPage(QWebEnginePage):
@@ -91,7 +112,7 @@ class CustomPage(QWebEnginePage):
         print(f"\t{message}", file=file)
 
 
-class HelloWorldHtmlApp(QWebEngineView):
+class PysaurusQtApplication(QWebEngineView):
     def __init__(self, *, geometry=None):
         super().__init__()
 
@@ -122,6 +143,7 @@ class HelloWorldHtmlApp(QWebEngineView):
         self.channel.registerObject("backend", self.interface)
         self.page().setWebChannel(self.channel)
 
+        # setup geometry
         if geometry:
             assert isinstance(geometry, (tuple, list))
             assert len(geometry) == 4
@@ -152,7 +174,7 @@ def generate_except_hook(qapp):
 
 def generate_thread_except_hook(qapp):
     def thread_except_hook(arg):
-        print("Error occurring in thread:", arg.thread.name, file=sys.stderr)
+        print("[Qt] Error occurring in thread:", arg.thread.name, file=sys.stderr)
         sys.__excepthook__(arg.exc_type, arg.exc_value, arg.exc_traceback)
         qapp.exit(1)
 
@@ -175,7 +197,7 @@ def main():
     x = screen_center.x() - width // 2
     y = screen_center.y() - height // 2
     print(f"Window: size {width} x {height}, position ({x}; {y})")
-    view = HelloWorldHtmlApp(geometry=(x, y, width, height))
+    view = PysaurusQtApplication(geometry=(x, y, width, height))
     # Set zoom.
     if System.is_windows():
         # view.setZoomFactor(1.8)

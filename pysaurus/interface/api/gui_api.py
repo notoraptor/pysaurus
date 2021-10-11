@@ -94,6 +94,9 @@ class GuiAPI(FeatureAPI):
 
     # Private methods.
 
+    def _run_thread(self, function, *args, **kwargs):
+        return launch_thread(function, *args, **kwargs)
+
     def _launch(
         self,
         function: Callable,
@@ -120,9 +123,9 @@ class GuiAPI(FeatureAPI):
 
         # Launch monitor thread.
         if self.monitor_notifications:
-            self.monitor_thread = launch_thread(self._monitor_notifications)
+            self.monitor_thread = self._run_thread(self._monitor_notifications)
         # Then launch function.
-        self.db_loading_thread = launch_thread(run, *args, **kwargs)
+        self.db_loading_thread = self._run_thread(run, *args, **kwargs)
 
     def _finish_loading(self, log_message):
         if self.provider:
