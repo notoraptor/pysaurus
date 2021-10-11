@@ -15,6 +15,7 @@ System.register([], function (_export, _context) {
           this.load = this.load.bind(this);
           this.close = this.close.bind(this);
           this.manageOtherActiveElements = this.manageOtherActiveElements.bind(this);
+          this.isInactive = this.isInactive.bind(this);
         }
 
         static getFocusableElements() {
@@ -57,6 +58,10 @@ System.register([], function (_export, _context) {
               }
             }
           }
+        }
+
+        isInactive() {
+          return !this.loaded;
         }
 
       });

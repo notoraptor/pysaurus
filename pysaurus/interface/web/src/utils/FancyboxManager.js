@@ -5,6 +5,7 @@ export class FancyboxManager {
         this.load = this.load.bind(this);
         this.close = this.close.bind(this);
         this.manageOtherActiveElements = this.manageOtherActiveElements.bind(this);
+        this.isInactive = this.isInactive.bind(this);
     }
 
     static getFocusableElements() {
@@ -49,5 +50,9 @@ export class FancyboxManager {
                 }
             }
         }
+    }
+
+    isInactive() {
+        return !this.loaded;
     }
 }

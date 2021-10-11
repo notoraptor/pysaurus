@@ -14,8 +14,6 @@ TODO:
 
 Bugs:
 - Interface:
-  - background shortcuts sitll work when a fancybox is shown.
-    - hint: Set a flag when a fancybox is displayed, and ignore shortcuts when this flag is set.
   - Many shortcuts are not describe anywhere in interface
     - hint: Maybe each action with shortcut should appear in menus?
 - Qt player may freeze unexpectedly when requiring next video

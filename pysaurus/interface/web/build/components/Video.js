@@ -38,8 +38,6 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
       Characters = _utilsConstantsJs.Characters;
     }],
     execute: function () {
-      window.LATEST_MOVE_FOLDER = null;
-
       _export("Video", Video = class Video extends React.Component {
         constructor(props) {
           super(props);
@@ -443,9 +441,9 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
         }
 
         moveVideo() {
-          python_call("select_directory", window.LATEST_MOVE_FOLDER).then(directory => {
+          python_call("select_directory", window.APP_STATE.latestMoveFolder).then(directory => {
             if (directory) {
-              window.LATEST_MOVE_FOLDER = directory;
+              window.APP_STATE.latestMoveFolder = directory;
               this.props.onMove(this.props.data.video_id, directory);
             }
           }).catch(backend_error);

@@ -126,20 +126,20 @@ export class VideosPage extends React.Component {
         this.callbackIndex = -1;
         this.notificationCallbackIndex = -1;
         this.features = new Actions({
-            select: new Action("Ctrl+T", "Select videos ...", this.selectVideos),
-            group: new Action("Ctrl+G", "Group ...", this.groupVideos),
-            search: new Action("Ctrl+F", "Search ...", this.searchVideos),
-            sort: new Action("Ctrl+S", "Sort ...", this.sortVideos),
-            unselect: new Action("Ctrl+Shift+T", "Reset selection", this.unselectVideos),
-            ungroup: new Action("Ctrl+Shift+G", "Reset group", this.resetGroup),
-            unsearch: new Action("Ctrl+Shift+F", "Reset search", this.resetSearch),
-            unsort: new Action("Ctrl+Shift+S", "Reset sorting", this.resetSort),
-            reload: new Action("Ctrl+R", "Reload database ...", this.reloadDatabase),
-            manageProperties: new Action("Ctrl+P", "Manage properties ...", this.manageProperties),
+            select: new Action("Ctrl+T", "Select videos ...", this.selectVideos, Fancybox.isInactive),
+            group: new Action("Ctrl+G", "Group ...", this.groupVideos, Fancybox.isInactive),
+            search: new Action("Ctrl+F", "Search ...", this.searchVideos, Fancybox.isInactive),
+            sort: new Action("Ctrl+S", "Sort ...", this.sortVideos, Fancybox.isInactive),
+            unselect: new Action("Ctrl+Shift+T", "Reset selection", this.unselectVideos, Fancybox.isInactive),
+            ungroup: new Action("Ctrl+Shift+G", "Reset group", this.resetGroup, Fancybox.isInactive),
+            unsearch: new Action("Ctrl+Shift+F", "Reset search", this.resetSearch, Fancybox.isInactive),
+            unsort: new Action("Ctrl+Shift+S", "Reset sorting", this.resetSort, Fancybox.isInactive),
+            reload: new Action("Ctrl+R", "Reload database ...", this.reloadDatabase, Fancybox.isInactive),
+            manageProperties: new Action("Ctrl+P", "Manage properties ...", this.manageProperties, Fancybox.isInactive),
             openRandomVideo: new Action("Ctrl+O", "Open random video", this.openRandomVideo, this.canOpenRandomVideo),
             openRandomPlayer: new Action("Ctrl+E", "Open random player", this.openRandomPlayer, this.canOpenRandomPlayer),
-            previousPage: new Action("Ctrl+ArrowLeft", "Go to previous page", this.previousPage),
-            nextPage: new Action("Ctrl+ArrowRight", "Go to next page", this.nextPage),
+            previousPage: new Action("Ctrl+ArrowLeft", "Go to previous page", this.previousPage, Fancybox.isInactive),
+            nextPage: new Action("Ctrl+ArrowRight", "Go to next page", this.nextPage, Fancybox.isInactive),
         });
     }
 
@@ -371,11 +371,11 @@ export class VideosPage extends React.Component {
     }
 
     canOpenRandomVideo() {
-        return !this.state.notFound && this.state.nbVideos;
+        return Fancybox.isInactive() && !this.state.notFound && this.state.nbVideos;
     }
 
     canOpenRandomPlayer() {
-        return window.PYTHON_HAS_EMBEDDED_PLAYER && this.canOpenRandomVideo();
+        return Fancybox.isInactive() && window.PYTHON_HAS_EMBEDDED_PLAYER && this.canOpenRandomVideo();
     }
 
     canFindSimilarVideos() {
@@ -581,7 +581,7 @@ export class VideosPage extends React.Component {
                 python_call("cancel_copy");
             }}>
                 <div className="absolute-plain vertical">
-                    <HomePage key={window.ID_GENERATOR.next()}
+                    <HomePage key={window.APP_STATE.idGenerator.next()}
                               app={this.props.app}
                               parameters={{
                                   command: ["move_video_file", videoID, directory],

@@ -8,9 +8,6 @@ import {Menu} from "./Menu.js";
 import {backend_error, python_call} from "../utils/backend.js";
 import {Characters} from "../utils/constants.js";
 
-window.LATEST_MOVE_FOLDER = null;
-
-
 /**
  * Generate class name for common value of videos grouped by similarity
  * @param value {boolean?}
@@ -430,10 +427,10 @@ export class Video extends React.Component {
     }
 
     moveVideo() {
-        python_call("select_directory", window.LATEST_MOVE_FOLDER)
+        python_call("select_directory", window.APP_STATE.latestMoveFolder)
             .then(directory => {
                 if (directory) {
-                    window.LATEST_MOVE_FOLDER = directory;
+                    window.APP_STATE.latestMoveFolder = directory;
                     this.props.onMove(this.props.data.video_id, directory);
                 }
             })

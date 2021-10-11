@@ -15,9 +15,7 @@ System.register(["./App.js", "./utils/FancyboxManager.js", "./utils/Callbacks.js
       IdGenerator = _utilsFunctionsJs.IdGenerator;
     }],
     execute: function () {
-      window.ID_GENERATOR = new IdGenerator();
       /** Global fancybox manager. Used to open/close a fancybox.s */
-
       window.Fancybox = new FancyboxManager("fancybox");
       /** NOTIFICATION_MANAGER.call is called from Python to send notifications to interface. */
 
@@ -28,7 +26,9 @@ System.register(["./App.js", "./utils/FancyboxManager.js", "./utils/Callbacks.js
       /** Global state. **/
 
       window.APP_STATE = {
-        videoHistory: new Set()
+        videoHistory: new Set(),
+        idGenerator: new IdGenerator(),
+        latestMoveFolder: null
       };
 
       window.onkeydown = function (event) {

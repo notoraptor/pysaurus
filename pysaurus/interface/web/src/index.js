@@ -4,9 +4,6 @@ import {Callbacks} from "./utils/Callbacks.js";
 import {python_call} from "./utils/backend.js";
 import {IdGenerator} from "./utils/functions.js";
 
-
-window.ID_GENERATOR = new IdGenerator();
-
 /** Global fancybox manager. Used to open/close a fancybox.s */
 window.Fancybox = new FancyboxManager("fancybox");
 
@@ -18,7 +15,9 @@ window.KEYBOARD_MANAGER = new Callbacks();
 
 /** Global state. **/
 window.APP_STATE = {
-    videoHistory: new Set()
+    videoHistory: new Set(),
+    idGenerator: new IdGenerator(),
+    latestMoveFolder: null
 };
 
 window.onkeydown = function (event) {
