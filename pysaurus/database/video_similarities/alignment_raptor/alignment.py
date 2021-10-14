@@ -1,7 +1,7 @@
 from ctypes import c_int, pointer
 from typing import List
 
-from pysaurus.core import notifications
+from pysaurus.core import job_notifications
 from pysaurus.core.constants import VIDEO_BATCH_SIZE
 from pysaurus.core.native.clibrary import c_int_p
 from pysaurus.core.notifier import Notifier
@@ -37,7 +37,7 @@ def classify_similarities_directed(
         ]
         native_sequence_pointers = [pointer(sequence) for sequence in native_sequences]
         pointer_array_type = PtrSequence * nb_sequences
-    jobn = notifications.Jobs.native_comparisons(nb_sequences, notifier)
+    jobn = job_notifications.CompareMiniatures(nb_sequences, notifier)
     with Profiler("Finding similar images using simpler NATIVE comparison.", notifier):
         cursor = 0
         while cursor < nb_sequences:

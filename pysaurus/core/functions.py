@@ -44,7 +44,7 @@ def split_words_and_numbers(text):
 def camel_case_to_snake_case(name, split_upper_cases=True):
     """Convert a string (expected to be in camel case) to snake case.
     :param name: string to convert.
-    :param split_upper_cases: if True, split consecutive uppercases too
+    :param split_upper_cases: if True, also split consecutive uppercase letters
         (e.g. 'ABC' => 'a_b_c')
     :return: snake case version of given name.
     :rtype: str

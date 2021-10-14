@@ -1,7 +1,7 @@
 from multiprocessing import Pool
 from typing import List
 
-from pysaurus.core import notifications
+from pysaurus.core import job_notifications
 from pysaurus.core.classes import AbstractMatrix
 from pysaurus.core.constants import CPU_COUNT
 from pysaurus.core.notifier import DEFAULT_NOTIFIER
@@ -98,7 +98,7 @@ class GroupComputer:
         ]
 
     def async_compute(self, context) -> DecomposedMiniature:
-        jobn: notifications.JobNotifications
+        jobn: job_notifications.CollectMiniatureGroups
         index_task, miniature, nb_all_tasks, jobn = context
         if (index_task + 1) % self.print_step == 0:
             jobn.progress(None, index_task + 1, nb_all_tasks)
@@ -109,7 +109,7 @@ class GroupComputer:
     ) -> List[DecomposedMiniature]:
         cpu_count = cpu_count or max(1, CPU_COUNT - 2)
         notifier = notifier or DEFAULT_NOTIFIER
-        jobn = notifications.Jobs.group_computer(len(miniatures), notifier)
+        jobn = job_notifications.CollectMiniatureGroups(len(miniatures), notifier)
         tasks = [(i, m, len(miniatures), jobn) for i, m in enumerate(miniatures)]
         with Profiler(
             f"batch_compute_groups(n={len(tasks)}, cpu={cpu_count})", notifier

@@ -1,7 +1,7 @@
 from multiprocessing import Pool
 from typing import List
 
-from pysaurus.core import notifications
+from pysaurus.core import job_notifications
 from pysaurus.core.constants import USABLE_CPU_COUNT
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.miniature_tools.miniature import Miniature
@@ -139,7 +139,7 @@ def classify_similarities_directed(miniatures, edges, limit, notifier):
     width = miniatures[0].width
     height = miniatures[0].height
     maximum_distance_score = SIMPLE_MAX_PIXEL_DISTANCE * width * height
-    job_notifier = notifications.Jobs.native_comparisons(nb_sequences, notifier)
+    job_notifier = job_notifications.CompareMiniaturesFromPython(nb_sequences, notifier)
     with Profiler(
         f"Python images comparison ({USABLE_CPU_COUNT} thread(s))", notifier=notifier
     ):

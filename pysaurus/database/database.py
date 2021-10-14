@@ -7,7 +7,7 @@ from typing import Dict, Iterable, List, Optional, Sequence, Set, Union
 import ujson as json
 
 from pysaurus.application import exceptions
-from pysaurus.core import functions, notifications
+from pysaurus.core import functions, job_notifications, notifications
 from pysaurus.core.components import (
     AbsolutePath,
     DateModified,
@@ -268,7 +268,7 @@ class Database:
     def __check_videos_on_disk(self):
         # type: () -> Dict[AbsolutePath, VideoRuntimeInfo]
         paths = {}  # type: Dict[AbsolutePath, VideoRuntimeInfo]
-        job_notifier = notifications.Jobs.video_folders(
+        job_notifier = job_notifications.CollectVideosFromFolders(
             len(self.__folders), self.__notifier
         )
         jobs = [[path, i, job_notifier] for i, path in enumerate(self.__folders)]
@@ -329,7 +329,9 @@ class Database:
         if not all_file_names:
             return
 
-        job_notifier = notifications.Jobs.videos(len(all_file_names), self.__notifier)
+        job_notifier = job_notifications.CollectVideoInfos(
+            len(all_file_names), self.__notifier
+        )
         jobs = functions.dispatch_tasks(
             all_file_names, CPU_COUNT, [self.folder, job_notifier]
         )
@@ -444,7 +446,7 @@ class Database:
         del valid_thumb_names
         self.save()
 
-        job_notifier = notifications.Jobs.thumbnails(
+        job_notifier = job_notifications.CollectVideoThumbnails(
             nb_videos_no_thumbs, self.__notifier
         )
         thumb_jobs = functions.dispatch_tasks(
@@ -513,7 +515,9 @@ class Database:
             if video.filename not in identifiers
         ]
 
-        job_notifier = notifications.Jobs.miniatures(len(tasks), self.__notifier)
+        job_notifier = job_notifications.CollectVideoMiniatures(
+            len(tasks), self.__notifier
+        )
         if tasks:
             have_added = True
             jobs = functions.dispatch_tasks(tasks, CPU_COUNT, extra_args=[job_notifier])

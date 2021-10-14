@@ -1,6 +1,6 @@
 from typing import List
 
-from pysaurus.core import notifications
+from pysaurus.core import job_notifications
 from pysaurus.core.constants import VIDEO_BATCH_SIZE
 from pysaurus.core.notifier import Notifier
 from pysaurus.core.profiling import Profiler
@@ -44,7 +44,7 @@ def classify_similarities_directed_old(
     width = miniatures[0].width
     height = miniatures[0].height
     maximum_distance_score = SIMPLE_MAX_PIXEL_DISTANCE * width * height
-    job_notifier = notifications.Jobs.native_comparisons(nb_sequences, notifier)
+    job_notifier = job_notifications.CompareMiniatures(nb_sequences, notifier)
     with Profiler("Finding similar images using simpler NATIVE comparison.", notifier):
         cursor = 0
         while cursor < nb_sequences:

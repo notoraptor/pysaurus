@@ -1,7 +1,7 @@
 import os
 import shutil
 
-from pysaurus.core import core_exceptions, notifications
+from pysaurus.core import core_exceptions, job_notifications, notifications
 from pysaurus.core.components import AbsolutePath, FileSize
 from pysaurus.core.modules import FileSystem
 from pysaurus.core.notifier import DEFAULT_NOTIFIER, Notifier
@@ -65,7 +65,7 @@ class FileCopier:
         return ret
 
     def copy(self):
-        job_notifier = notifications.Jobs.copy_file(
+        job_notifier = job_notifications.CopyFile(
             self.total, self.notifier, f"{FileSize(self.total)} to copy"
         )
         with Profiler("Copy", self.notifier):

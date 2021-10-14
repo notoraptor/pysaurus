@@ -2,7 +2,8 @@ from typing import List
 
 import numpy as np
 
-from pysaurus.core.notifications import Jobs, Message
+from pysaurus.core import job_notifications
+from pysaurus.core.notifications import Message
 from pysaurus.core.notifier import DEFAULT_NOTIFIER
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.miniature_tools.miniature import Miniature
@@ -50,7 +51,7 @@ def train(
     nb_convergence = 0
     nb_expected_convergence = 10
     notifier = notifier or DEFAULT_NOTIFIER
-    job_notifier = Jobs.train_steps(nb_steps, notifier)
+    job_notifier = job_notifications.OptimizePatternPredictor(nb_steps, notifier)
     with Profiler(f"Train", notifier):
         for step in range(nb_steps):
             # theta: (t,)

@@ -1,8 +1,9 @@
 from typing import List
 
 from pysaurus.application.exceptions import PysaurusError
+from pysaurus.core import job_notifications
 from pysaurus.core.modules import ImageUtils
-from pysaurus.core.notifications import Jobs, Message
+from pysaurus.core.notifications import Message
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.database import Database
 from pysaurus.database.machine_learning import predict, train
@@ -58,7 +59,7 @@ def apply_pattern_detector(db: Database, videos: List[Video], prop_name: str):
     output_prop_name = "<!" + prop_name[2:]
     if not db.has_prop_type(output_prop_name):
         db.add_prop_type(PropType(output_prop_name, [0, 1]), save=False)
-    job_notifier = Jobs.predictions(len(videos), db.notifier)
+    job_notifier = job_notifications.PredictPattern(len(videos), db.notifier)
     with Profiler("Predict", db.notifier):
         for i, video in enumerate(videos):
             video.properties[output_prop_name] = int(

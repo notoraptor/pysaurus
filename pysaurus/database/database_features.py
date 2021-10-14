@@ -5,7 +5,7 @@ from typing import List, Set
 import numpy as np
 
 from pysaurus.application import exceptions
-from pysaurus.core import notifications
+from pysaurus.core import job_notifications, notifications
 from pysaurus.core.fraction import Fraction
 from pysaurus.core.functions import compute_nb_couples, get_end_index, get_start_index
 from pysaurus.core.notifier import Notifier
@@ -64,7 +64,7 @@ class _GrayClassifier:
         """Return sequence of couples of indices of classifiers to cross compare."""
         n = len(self.grays)
         t = self.j_limit
-        jobn = notifications.Jobs.gray_comparisons(n, notifier)
+        jobn = job_notifications.CompareMiniatureGrays(n, notifier)
         for i in range(n):
             for j in range(i + 1, t[i]):
                 yield i, j
@@ -302,7 +302,7 @@ class DatabaseFeatures:
         notifier: Notifier,
     ):
         n = len(classifier_left.grays)
-        jobn = notifications.Jobs.new_comparisons(n, notifier)
+        jobn = job_notifications.CompareOldVsNewMiniatures(n, notifier)
         with Profiler("Cross compare classifiers.", notifier):
             nb_cmp = 0
             for i_gray_left, gray_left in enumerate(classifier_left.grays):
@@ -359,14 +359,14 @@ class DatabaseFeatures:
         with Profiler("Link videos ...", notifier):
             if self.positions:
                 nb_pos = len(self.positions)
-                job_n = notifications.Jobs.link_videos(nb_pos, notifier)
+                job_n = job_notifications.LinkComparedMiniatures(nb_pos, notifier)
                 for index, pos in enumerate(self.positions):
                     if edges[pos]:
                         graph.connect(pos // nb_miniatures, pos % nb_miniatures)
                     job_n.progress(None, index + 1, nb_pos)
                 self.positions.clear()
             else:
-                job_n = notifications.Jobs.link_videos(nb_miniatures, notifier)
+                job_n = job_notifications.LinkComparedVideos(nb_miniatures, notifier)
                 for i in range(nb_miniatures):
                     for j in range(i + 1, nb_miniatures):
                         if edges[i * nb_miniatures + j]:

@@ -27,7 +27,10 @@ class _Profile(Duration):
 
     def __init__(self, time_start, time_end):
         difference = time_end - time_start
-        super().__init__((difference.seconds + difference.days * 24 * 3600) * 1_000_000 + difference.microseconds)
+        super().__init__(
+            (difference.seconds + difference.days * 24 * 3600) * 1_000_000
+            + difference.microseconds
+        )
 
 
 class Profiler:
