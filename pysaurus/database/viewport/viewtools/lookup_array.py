@@ -16,7 +16,7 @@ class LookupArray(Generic[T]):
         self.extend(content)
 
     def __str__(self):
-        return "%s<%s>%s" % (type(self).__name__, self.__type.__name__, self.__content)
+        return f"{type(self).__name__}<{self.__type.__name__}>{self.__content}"
 
     def __len__(self):
         return len(self.__content)

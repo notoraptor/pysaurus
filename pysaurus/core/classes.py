@@ -2,9 +2,6 @@ import locale
 from abc import abstractmethod
 from io import StringIO
 from itertools import chain
-from typing import TypeVar
-
-T = TypeVar("T")
 
 
 class StringPrinter:
@@ -71,10 +68,10 @@ class ToDict:
             value = getattr(self, name)
             if self.__print_none__ or value is not None:
                 values.append((name, value))
-        return "%s(%s)" % (
+        return "{}({})".format(
             type(self).__name__,
             ", ".join(
-                "%s=%s" % (name, repr(value) if isinstance(value, str) else value)
+                f"{name}={repr(value) if isinstance(value, str) else value}"
                 for name, value in values
             ),
         )

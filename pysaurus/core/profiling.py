@@ -1,12 +1,13 @@
 import functools
 from datetime import datetime
 
+from pysaurus.core.components import Duration
 from pysaurus.core.notifications import Notification
 from pysaurus.core.notifier import DEFAULT_NOTIFIER
 
 
 class ProfilingStart(Notification):
-    __slots__ = ["name"]
+    __slots__ = ("name",)
 
     def __init__(self, title):
         # type: (str) -> None
@@ -21,28 +22,12 @@ class ProfilingEnd(Notification):
         self.time = str(time)
 
 
-class _Profile:
-    __slots__ = ("seconds", "microseconds")
+class _Profile(Duration):
+    __slots__ = ()
 
     def __init__(self, time_start, time_end):
         difference = time_end - time_start
-        self.seconds = difference.seconds + difference.days * 24 * 3600
-        self.microseconds = difference.microseconds
-
-    def __str__(self):
-        hours = self.seconds // 3600
-        minutes = (self.seconds - 3600 * hours) // 60
-        seconds = self.seconds - 3600 * hours - 60 * minutes
-        pieces = []
-        if hours:
-            pieces.append("%d h" % hours)
-        if minutes:
-            pieces.append("%d min" % minutes)
-        if seconds:
-            pieces.append("%d sec" % seconds)
-        if self.microseconds:
-            pieces.append("%d microsec" % self.microseconds)
-        return " ".join(pieces) if pieces else "0 sec"
+        super().__init__((difference.seconds + difference.days * 24 * 3600) * 1_000_000 + difference.microseconds)
 
 
 class Profiler:

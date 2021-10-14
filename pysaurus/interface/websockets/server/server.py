@@ -31,6 +31,9 @@ from pysaurus.core.components import AbsolutePath
 from pysaurus.interface.websockets.server import protocol
 from pysaurus.interface.websockets.server.connection_handler import ConnectionHandler
 from pysaurus.interface.websockets.server.connection_manager import ConnectionManager
+from pysaurus.interface.websockets.server.server_exceptions import (
+    ServerAlreadyRunningOnPort,
+)
 
 DEFAULT_PORT = 8432
 DEFAULT_PING_SECONDS = 60
@@ -132,7 +135,7 @@ class Server(ConnectionManager):
             (tornado.ioloop.IOLoop.instance()).
         """
         if self.__port is not None:
-            raise Exception("Server is already running on port %s." % self.__port)
+            raise ServerAlreadyRunningOnPort(self.__port)
         if port is None:
             port = DEFAULT_PORT
         if io_loop is None:
@@ -226,7 +229,7 @@ class Server(ConnectionManager):
                 await connection_handler.write_message(
                     json.dumps(notification.to_dict())
                 )
-                Server.log("To %d: %s" % (notification.connection_id, notification))
+                Server.log(f"To {notification.connection_id}: {notification}")
         else:
             sending = []
             for connection_id, connection_handler in self._connections():
@@ -236,7 +239,7 @@ class Server(ConnectionManager):
                 )
                 sending.append(future_sending)
             await multi(sending)
-            Server.log("To everyone: %s" % notification.name)
+            Server.log(f"To everyone: {notification.name}")
 
     async def _call_on_start(self):
         if self.on_start:

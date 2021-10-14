@@ -131,7 +131,7 @@ def _pgcd(a, b):
 
 def pgcd(a, b):
     # type: (int, int) -> int
-    """ "Plus grand commun diviseur" (Greatest Common Divider)"""
+    """'Plus grand commun diviseur' (Greatest Common Divider)"""
     if a < 0:
         a = -a
     if b < 0:
@@ -180,28 +180,6 @@ def identity(value):
 
 def function_none(*args, **kwargs):
     return None
-
-
-def is_dictionary(dict_to_check):
-    """Check if given variable is a dictionary-like object.
-
-    :param dict_to_check: Dictionary to check.
-    :return: Indicates if the object is a dictionary.
-    :rtype: bool
-    """
-    return isinstance(dict_to_check, dict) or all(
-        hasattr(dict_to_check, expected_attribute)
-        for expected_attribute in (
-            "__len__",
-            "__contains__",
-            "__bool__",
-            "__iter__",
-            "__getitem__",
-            "keys",
-            "values",
-            "items",
-        )
-    )
 
 
 get_start_index = bisect.bisect_left

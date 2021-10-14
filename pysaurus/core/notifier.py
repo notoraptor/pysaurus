@@ -39,11 +39,9 @@ class Notifier:
         if self.__log_path:
             with open(self.__log_path, "a", encoding="utf-8") as file:
                 if not self.__log_written:
-                    file.write(
-                        "\n########## LOG %s ##########\n\n" % DateModified.now()
-                    )
+                    file.write(f"\n########## LOG {DateModified.now()} ##########\n\n")
                     self.__log_written = True
-                line = "%s\n" % notification
+                line = f"{notification}\n"
                 file.write(line)
 
     def set_default_manager(self, function):

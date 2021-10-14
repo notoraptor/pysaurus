@@ -86,7 +86,7 @@ def generate_pattern_heatmap(theta: List[float]):
     for i in range(len(pixel_thetas)):
         pixel_thetas[i] = int(255 * (pixel_thetas[i] - min_val) / (max_val - min_val))
     rs = pixel_thetas[:size]
-    gs = pixel_thetas[size:2*size]
-    bs = pixel_thetas[2*size:]
+    gs = pixel_thetas[size : 2 * size]
+    bs = pixel_thetas[2 * size :]
     assert len(rs) == len(gs) == len(bs) == size
     output = list(zip(rs, gs, bs))

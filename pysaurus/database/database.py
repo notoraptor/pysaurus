@@ -361,7 +361,9 @@ class Database:
                         video_state.properties.update(
                             self.__videos[file_path].properties
                         )
-                        video_state.similarity_id = self.__videos[file_path].similarity_id
+                        video_state.similarity_id = self.__videos[
+                            file_path
+                        ].similarity_id
                     # Set special properties
                     SpecialProperties.set(video_state)
                 videos[file_path] = video_state
@@ -434,7 +436,7 @@ class Database:
             thumb_name_index = 0
             thumb_name = base_thumb_name
             while thumb_name in valid_thumb_names:
-                thumb_name = "%s_%d" % (base_thumb_name, thumb_name_index)
+                thumb_name = f"{base_thumb_name}_{thumb_name_index}"
                 thumb_name_index += 1
             video.thumb_name = thumb_name
             video.runtime.has_thumbnail = True

@@ -98,7 +98,7 @@ def backend_video_infos(job):
 
     with open(list_file_path.path, "wb") as file:
         for file_name in file_names:
-            file.write(("%s\n" % file_name).encode())
+            file.write(f"{file_name}\n".encode())
 
     count = job_video_to_json(
         (

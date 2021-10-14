@@ -6,7 +6,6 @@ import urllib.parse
 from datetime import datetime
 
 from pysaurus.core.components import AbsolutePath
-from pysaurus.core.functions import is_dictionary
 
 EPOCH = datetime.utcfromtimestamp(0)
 TEMP_DIR = tempfile.gettempdir()
@@ -205,3 +204,25 @@ def is_sequence(seq_to_check):
     if isinstance(seq_to_check, str) or is_dictionary(seq_to_check):
         return False
     return hasattr(seq_to_check, "__iter__")
+
+
+def is_dictionary(dict_to_check):
+    """Check if given variable is a dictionary-like object.
+
+    :param dict_to_check: Dictionary to check.
+    :return: Indicates if the object is a dictionary.
+    :rtype: bool
+    """
+    return isinstance(dict_to_check, dict) or all(
+        hasattr(dict_to_check, expected_attribute)
+        for expected_attribute in (
+            "__len__",
+            "__contains__",
+            "__bool__",
+            "__iter__",
+            "__getitem__",
+            "keys",
+            "values",
+            "items",
+        )
+    )

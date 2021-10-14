@@ -36,9 +36,10 @@ class Fraction:
     def __str__(self):
         if self.den == 0:
             return "0"
+        sign = "-" if self.sign < 0 else ""
         if self.den == 1:
-            return "%s%d" % ("-" if self.sign < 0 else "", self.num)
-        return "%s%d/%d" % ("-" if self.sign < 0 else "", self.num, self.den)
+            return f"{sign}{self.num}"
+        return f"{sign}{self.num}/{self.den}"
 
     def __hash__(self):
         return hash((self.sign, self.num, self.den))

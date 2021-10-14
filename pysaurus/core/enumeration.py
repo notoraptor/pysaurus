@@ -2,11 +2,11 @@ class EnumerationError(Exception):
     pass
 
 
-class EnumerationTypeError(Exception):
+class EnumerationTypeError(EnumerationError):
     pass
 
 
-class EnumerationValueError(Exception):
+class EnumerationValueError(EnumerationError):
     pass
 
 
@@ -30,6 +30,6 @@ class Enumeration:
         return value
 
     def __str__(self):
-        return "{%s}" % (", ".join(sorted(self.values)))
+        return "{" + (", ".join(sorted(self.values))) + "}"
 
     __repr__ = __str__

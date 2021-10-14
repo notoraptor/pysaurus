@@ -30,7 +30,7 @@ def c_prototype(dll, name, res_type, arg_types):
 
 
 class CFunction:
-    __slots__ = ["__c_func", "__c_args"]
+    __slots__ = "__c_func", "__c_args"
 
     def __init__(self, library, name, restype, argtypes):
         self.__c_args = None if argtypes is None else list(argtypes)
@@ -48,7 +48,7 @@ class CFunction:
 
 
 class CLibrary:
-    __slots__ = ["library"]
+    __slots__ = ("library",)
 
     def __init__(self, name):
         self.library = c_library(name)

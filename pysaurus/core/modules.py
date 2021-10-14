@@ -67,7 +67,7 @@ class System:
         base_name = os.path.join(folder, "tmp")
         count = 0
         while True:
-            test_name = "%s%d" % (base_name, count)
+            test_name = f"{base_name}{count}"
             if FileSystem.path.exists(test_name):
                 count += 1
             else:
@@ -128,8 +128,8 @@ class VideoClipping:
         if unique_id is None:
             path = os.path.abspath(path)
             unique_id = FNV64.hash(path)
-        output_name = "%s_%s_%s.mp4" % (unique_id, time_start, clip_seconds)
-        print("Clip from %s to %s sec in: %s" % (time_start, time_end, output_name))
+        output_name = f"{unique_id}_{time_start}_{clip_seconds}.mp4"
+        print("Clip from", time_start, "to", time_end, "sec in:", output_name)
         sub_clip = clip.subclip(time_start, time_end)
         sub_clip.write_videofile(output_name)
         sub_clip.close()

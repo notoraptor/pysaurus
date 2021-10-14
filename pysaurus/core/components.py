@@ -2,6 +2,7 @@ import os
 import pathlib
 import shutil
 import subprocess
+import sys
 from datetime import datetime
 from typing import Union
 
@@ -21,7 +22,7 @@ class AbsolutePath(object):
             and System.is_windows()
             and not path.startswith(WINDOWS_PATH_PREFIX)
         ):
-            path = "%s%s" % (WINDOWS_PATH_PREFIX, path)
+            path = f"{WINDOWS_PATH_PREFIX}{path}"
         self.__path = path
 
     def is_standard(self):
@@ -170,7 +171,7 @@ class AbsolutePath(object):
                 from pysaurus.core.native.windows import get_short_path_name
 
                 path = get_short_path_name(self.standard_path)
-                print("[Opening Windows short path]", path)
+                print("AbsolutePath: opening Windows short path", path, file=sys.stderr)
             else:
                 path = self.__path
             FileSystem.startfile(path)
@@ -180,7 +181,7 @@ class AbsolutePath(object):
 
     def locate_file(self):
         if System.is_windows():
-            command = 'explorer /select,"%s"' % self.__path
+            command = f'explorer /select,"{self.__path}"'
         elif System.is_mac():
             # TODO not tested
             command = ["open", "-R", self.__path]
@@ -405,10 +406,7 @@ class FileSize(object):
         return isinstance(other, FileSize) and self.value < other.value
 
     def __str__(self):
-        return "%s %s" % (
-            round(self.nb_units, 2),
-            constants.SIZE_UNIT_TO_STRING[self.__unit],
-        )
+        return f"{round(self.nb_units, 2)} {constants.SIZE_UNIT_TO_STRING[self.__unit]}"
 
     def to_json(self):
         return str(self)

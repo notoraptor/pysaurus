@@ -8,7 +8,7 @@ class Notification(ToDict):
 
 
 class UnusedThumbnails(Notification):
-    __slots__ = ["removed"]
+    __slots__ = ("removed",)
 
     def __init__(self, removed):
         # type: (int) -> None
@@ -21,7 +21,7 @@ class VideosNotFoundRemoved(UnusedThumbnails):
 
 
 class CollectingFiles(Notification):
-    __slots__ = ["folder"]
+    __slots__ = ("folder",)
 
     def __init__(self, folder):
         super().__init__()
@@ -37,7 +37,7 @@ class PathIgnored(CollectingFiles):
 
 
 class CollectedFiles(Notification):
-    __slots__ = ["count", "folder_to_count"]
+    __slots__ = "count", "folder_to_count"
     count: int
     folder_to_count: Dict[str, int]
 
@@ -54,16 +54,16 @@ class CollectedFiles(Notification):
 
     def __str__(self):
         with StringPrinter() as printer:
-            printer.write("%s: %d" % (type(self).__name__, self.count))
+            printer.write(f"{type(self).__name__}: {self.count}")
             for folder, local_count in sorted(
                 self.folder_to_count.items(), key=lambda couple: (-couple[1], couple[0])
             ):
-                printer.write("%d\t%s" % (local_count, folder))
+                printer.write(f"{local_count}\t{folder}")
             return str(printer)
 
 
 class FinishedCollectingVideos(Notification):
-    __slots__ = ["count"]
+    __slots__ = ("count",)
 
     def __init__(self, paths):
         super().__init__()
@@ -106,7 +106,7 @@ class DatabaseSaved(DatabaseLoaded):
 
 
 class MissingVideos(Notification):
-    __slots__ = ["names"]
+    __slots__ = ("names",)
 
     def __init__(self, file_names):
         super().__init__()
@@ -114,9 +114,9 @@ class MissingVideos(Notification):
 
     def __str__(self):
         with StringPrinter() as printer:
-            printer.write("%s: %d" % (type(self).__name__, len(self.names)))
+            printer.write(f"{type(self).__name__}: {len(self.names)}")
             for name in sorted(self.names):
-                printer.write("\t%s" % name)
+                printer.write(f"\t{name}")
             return str(printer)
 
 
@@ -125,7 +125,7 @@ class MissingThumbnails(MissingVideos):
 
 
 class VideoInfoErrors(Notification):
-    __slots__ = ["video_errors"]
+    __slots__ = ("video_errors",)
 
     def __init__(self, video_errors: Dict[str, List[str]]):
         super().__init__()
@@ -135,11 +135,11 @@ class VideoInfoErrors(Notification):
 
     def __str__(self):
         with StringPrinter() as printer:
-            printer.write("%s: %d" % (type(self).__name__, len(self.video_errors)))
+            printer.write(f"{type(self).__name__}: {len(self.video_errors)}")
             for file_name, errors in self.video_errors.items():
                 printer.title(file_name)
                 for video_error in errors:
-                    printer.write("\t%s" % video_error)
+                    printer.write(f"\t{video_error}")
             return str(printer)
 
 

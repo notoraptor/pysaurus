@@ -35,7 +35,7 @@ class Layer:
         return layer
 
     def __log(self, *args, **kwargs):
-        print("%s/" % type(self).__name__, *args, **kwargs)
+        print(f"{type(self).__name__}/", *args, **kwargs)
 
     def set_parent(self, parent):
         self.parent = parent
@@ -61,7 +61,7 @@ class Layer:
         self.__to_update = True
         self.__data = data
         self.__log(
-            "data", None if self.__data is None else "set %s" % type(data).__name__
+            "data", None if self.__data is None else f"set {type(data).__name__}"
         )
 
     def request_update(self):

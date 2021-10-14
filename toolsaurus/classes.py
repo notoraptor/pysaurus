@@ -1,11 +1,12 @@
 from abc import abstractmethod
-from typing import Generic, List
+from typing import Generic, List, TypeVar
 
-from pysaurus.core.classes import T
+
+T = TypeVar("T")
 
 
 class Context:
-    __slots__ = ["_context"]
+    __slots__ = ("_context",)
 
     def __init__(self):
         self._context = False

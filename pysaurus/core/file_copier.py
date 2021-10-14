@@ -79,15 +79,13 @@ class FileCopier:
                                 break
                             size += out_file.write(buffer)
                             job_notifier.progress(
-                                None, size, self.total, title=f"{FileSize(size)}"
+                                None, size, self.total, title=str(FileSize(size))
                             )
                 if self.cancel:
                     self.dst.delete()
                 else:
-                    assert self.dst.isfile(), "Destination file does not exists"
-                    assert (
-                        self.total == self.dst.get_size() == size
-                    ), "Copied file does not have same size as initial file"
+                    assert self.dst.isfile()
+                    assert self.total == self.dst.get_size() == size
             except Exception:
                 self.dst.delete()
                 raise

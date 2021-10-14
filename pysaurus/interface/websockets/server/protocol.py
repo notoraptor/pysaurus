@@ -1,6 +1,10 @@
 from typing import Any
 
 from pysaurus.core.classes import ToDict
+from pysaurus.interface.websockets.server.server_exceptions import (
+    RequestMissingFieldError,
+    RequestUnexpectedExtraFields,
+)
 
 OK = "ok"
 ERROR = "error"
@@ -22,10 +26,10 @@ class Request(ToDict):
     def from_dict(dct):
         # type: (dict) -> Request
         if len(dct) != len(Request.__slots__):
-            raise Exception("Request: unexpected extra fields.")
+            raise RequestUnexpectedExtraFields()
         for field in Request.__slots__:
             if field not in dct:
-                raise Exception("Request: missing field %s" % field)
+                raise RequestMissingFieldError(field)
         return Request(**dct)
 
 
