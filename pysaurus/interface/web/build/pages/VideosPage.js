@@ -414,6 +414,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             className: "horizontal flex-shrink-0"
           }, /*#__PURE__*/React.createElement("div", {
             className: "footer-status clickable",
+            title: this.state.status,
             onClick: this.resetStatus
           }, this.state.status), /*#__PURE__*/React.createElement("div", {
             className: "footer-information text-right"

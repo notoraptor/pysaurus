@@ -44,6 +44,7 @@ class SourceLayer(Layer):
             source.extend(database.get_videos(*path))
         source_dict = {video.filename: video for video in source}
         assert len(source_dict) == len(source), (len(source_dict), len(source))
+        self.update_index()
         return source_dict
 
     def remove_from_cache(self, cache: Dict[AbsolutePath, VideoState], vs: VideoState):

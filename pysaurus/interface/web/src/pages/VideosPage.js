@@ -381,7 +381,9 @@ export class VideosPage extends React.Component {
                     </div>
                 </div>
                 <footer className="horizontal flex-shrink-0">
-                    <div className="footer-status clickable" onClick={this.resetStatus}>{this.state.status}</div>
+                    <div className="footer-status clickable" title={this.state.status} onClick={this.resetStatus}>
+                        {this.state.status}
+                    </div>
                     <div className="footer-information text-right">
                         {groupDef ? (
                             <div className="info group">
