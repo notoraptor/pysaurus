@@ -121,7 +121,7 @@ class TextWithNumbers(Text):
 
 
 class AbstractMatrix:
-    __slots__ = ("width", "height")
+    __slots__ = "width", "height"
 
     def __init__(self, width: int, height: int):
         self.width = width

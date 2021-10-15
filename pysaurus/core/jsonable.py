@@ -225,7 +225,8 @@ class Jsonable(metaclass=_MetaJSON):
             else:
                 value = checker()
             self.__json__[key] = value
-        assert not kwargs, f"{type(self).__name__}: unknown keys: {tuple(kwargs)}"
+        if kwargs:
+            raise KeyError(kwargs)
 
     def __bool__(self):
         return True

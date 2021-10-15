@@ -37,10 +37,12 @@ class JobNotifications:
     __slots__ = "name", "notifier"
     __kind__ = "datas"
 
-    def __init__(self, total: int, notifier, title: str = None):
+    def __init__(self, total: int, notifier, title: str = None, pretty_total=None):
         name = camel_case_to_snake_case(type(self).__name__).replace("_", " ")
         if title is None:
-            title = f"{name} ({total} {self.__kind__})"
+            if pretty_total is None:
+                pretty_total = f"{total} {self.__kind__}"
+            title = f"{name} ({pretty_total})"
         self.name = name
         self.notifier = notifier
         self.notifier.notify(JobToDo(self.name, total, title))

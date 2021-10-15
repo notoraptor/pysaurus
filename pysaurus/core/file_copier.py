@@ -1,11 +1,9 @@
-import os
 import shutil
 
 from pysaurus.core import core_exceptions, job_notifications, notifications
 from pysaurus.core.components import AbsolutePath, FileSize
 from pysaurus.core.modules import FileSystem
 from pysaurus.core.notifier import DEFAULT_NOTIFIER, Notifier
-from pysaurus.core.profiling import Profiler
 
 
 class FileCopier:
@@ -49,7 +47,7 @@ class FileCopier:
         src_drive = self.src.get_drive_name()
         dst_drive = self.dst.get_drive_name()
         if src_drive and dst_drive and src_drive == dst_drive:
-            os.rename(self.src.path, self.dst.path)
+            FileSystem.rename(self.src.path, self.dst.path)
             if self.src.exists():
                 raise FileExistsError(self.src)
             if not self.dst.isfile():
@@ -66,29 +64,28 @@ class FileCopier:
 
     def copy(self):
         job_notifier = job_notifications.CopyFile(
-            self.total, self.notifier, f"{FileSize(self.total)} to copy"
+            self.total, self.notifier, pretty_total=FileSize(self.total)
         )
-        with Profiler("Copy", self.notifier):
-            try:
-                with open(self.src.path, "rb") as in_file:
-                    with open(self.dst.path, "wb") as out_file:
-                        size = 0
-                        while not self.cancel:
-                            buffer = in_file.read(self.buffer_size)
-                            if not buffer:
-                                break
-                            size += out_file.write(buffer)
-                            job_notifier.progress(
-                                None, size, self.total, title=str(FileSize(size))
-                            )
-                if self.cancel:
-                    self.dst.delete()
-                else:
-                    assert self.dst.isfile()
-                    assert self.total == self.dst.get_size() == size
-            except Exception:
+        try:
+            with open(self.src.path, "rb") as in_file:
+                with open(self.dst.path, "wb") as out_file:
+                    size = 0
+                    while not self.cancel:
+                        buffer = in_file.read(self.buffer_size)
+                        if not buffer:
+                            break
+                        size += out_file.write(buffer)
+                        job_notifier.progress(
+                            None, size, self.total, title=str(FileSize(size))
+                        )
+            if self.cancel:
                 self.dst.delete()
-                raise
+            else:
+                assert self.dst.isfile()
+                assert self.total == self.dst.get_size() == size
+        except Exception:
+            self.dst.delete()
+            raise
         if self.notify_end:
             if self.cancel:
                 self.notifier.notify(notifications.Cancelled())

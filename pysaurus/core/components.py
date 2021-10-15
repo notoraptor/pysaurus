@@ -22,7 +22,7 @@ class AbsolutePath(object):
             and System.is_windows()
             and not path.startswith(WINDOWS_PATH_PREFIX)
         ):
-            path = f"{WINDOWS_PATH_PREFIX}{path}"
+            path = WINDOWS_PATH_PREFIX + path
         self.__path = path
 
     def is_standard(self):
@@ -125,7 +125,7 @@ class AbsolutePath(object):
     def get_drive_name(self):
         drive_name = os.path.splitdrive(self.standard_path)[0]
         if drive_name and not drive_name.endswith(os.path.sep):
-            drive_name = f"{drive_name}{os.path.sep}"
+            drive_name = drive_name + os.path.sep
         return drive_name
 
     def get_size(self):

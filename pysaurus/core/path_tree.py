@@ -6,7 +6,7 @@ from pysaurus.core.components import AbsolutePath
 
 
 class PathTreeNode:
-    __slots__ = ("name", "children", "termination")
+    __slots__ = "name", "children", "termination"
 
     def __init__(self, name: str):
         self.name = name
@@ -45,7 +45,7 @@ class PathTree(PathTreeNode):
 
     def __debug(self, output: StringPrinter, children, indent=""):
         for name in sorted(children):
-            output.write(f"{indent}{name}")
+            output.write(indent + name)
             self.__debug(output, children[name].children, indent + "\t")
 
     def __str__(self):

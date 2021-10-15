@@ -18,6 +18,7 @@ from pysaurus.core.notifications import (
     Terminated,
 )
 from pysaurus.core.path_tree import PathTree
+from pysaurus.core.profiling import Profiler
 from pysaurus.database import pattern_detection
 from pysaurus.database.database_features import DatabaseFeatures
 from pysaurus.database.viewport.video_provider import VideoProvider
@@ -215,7 +216,8 @@ class GuiAPI(FeatureAPI):
             self.copy_work = FileCopier(
                 filename, dst, notifier=self.notifier, notify_end=False
             )
-            done = self.copy_work.move()
+            with Profiler("Move", notifier=self.notifier):
+                done = self.copy_work.move()
             self.copy_work = None
             if done:
                 old_path = self.database.change_video_path(video_id, dst)

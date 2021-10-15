@@ -36,32 +36,6 @@ class PathIgnored(CollectingFiles):
     __slots__ = ()
 
 
-class CollectedFiles(Notification):
-    __slots__ = "count", "folder_to_count"
-    count: int
-    folder_to_count: Dict[str, int]
-
-    def __init__(self, paths: list):
-        super().__init__()
-        self.count = len(paths)
-        self.folder_to_count = {}
-        for path in paths:
-            directory = str(path.get_directory())
-            if directory in self.folder_to_count:
-                self.folder_to_count[directory] += 1
-            else:
-                self.folder_to_count[directory] = 1
-
-    def __str__(self):
-        with StringPrinter() as printer:
-            printer.write(f"{type(self).__name__}: {self.count}")
-            for folder, local_count in sorted(
-                self.folder_to_count.items(), key=lambda couple: (-couple[1], couple[0])
-            ):
-                printer.write(f"{local_count}\t{folder}")
-            return str(printer)
-
-
 class FinishedCollectingVideos(Notification):
     __slots__ = ("count",)
 

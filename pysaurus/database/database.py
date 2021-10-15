@@ -186,8 +186,8 @@ class Database:
         with open(self.__tmp_json_path_next.path, "w") as output_file:
             json.dump(json_output, output_file)
         self.__tmp_json_path_prev.delete()
-        os.rename(self.__json_path.path, self.__tmp_json_path_prev.path)
-        os.rename(self.__tmp_json_path_next.path, self.__json_path.path)
+        FileSystem.rename(self.__json_path.path, self.__tmp_json_path_prev.path)
+        FileSystem.rename(self.__tmp_json_path_next.path, self.__json_path.path)
         assert not self.__tmp_json_path_next.exists()
         assert self.__tmp_json_path_prev.isfile()
         assert self.__json_path.isfile()
@@ -208,7 +208,7 @@ class Database:
             print("Renaming", re_path)
             if new_path.exists():
                 raise exceptions.PathAlreadyExists(new_path)
-            os.rename(re_path.path, new_path.path)
+            FileSystem.rename(re_path.path, new_path.path)
             assert not re_path.exists()
             assert new_path.exists()
         return new_path
@@ -589,7 +589,7 @@ class Database:
         new_db_folder = AbsolutePath.join(old_db_folder.get_directory(), new_name)
         if new_db_folder.exists():
             raise exceptions.DatabaseAlreadyExists(new_db_folder)
-        os.rename(old_db_folder.path, new_db_folder.path)
+        FileSystem.rename(old_db_folder.path, new_db_folder.path)
         assert not old_db_folder.exists()
         assert new_db_folder.isdir()
 

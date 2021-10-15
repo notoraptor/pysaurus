@@ -221,88 +221,68 @@ class FNV64:
         return hex(h)[2:]
 
 
-def _silent(*args, **kwargs):
-    pass
-
-
-# _print = print
-_print = _silent
-
-
 class _FileSystemPath:
     @classmethod
     def exists(cls, path: str):
-        _print("FILESYSTEM PATH EXISTS", path)
         return os.path.exists(path)
 
     @classmethod
     def isfile(cls, path: str):
-        _print("FILESYSTEM PATH.ISFILE", path)
         return os.path.isfile(path)
 
     @classmethod
     def isdir(cls, path: str):
-        _print("FILESYSTEM PATH ISDIR", path)
         return os.path.isdir(path)
 
     @classmethod
     def getmtime(cls, path: str):
-        _print("FILESYSTEM PATH GETMTIME")
         return os.path.getmtime(path)
 
     @classmethod
     def getsize(cls, path: str):
-        _print("FILESYSTEM PATH GETSIZE")
         return os.path.getsize(path)
 
 
 class _FileSystem:
     path = _FileSystemPath
+    DirEntry = os.DirEntry
 
     @classmethod
     def scandir(cls, path: str):
-        _print("FILESYSTEM SCANDIR")
         return os.scandir(path)
 
     @classmethod
     def stat(cls, path: str):
-        _print("FILESYSTEM STAT")
         return os.stat(path)
 
     @classmethod
     def utime(cls, path: str, times: tuple):
-        _print("FILESYSTEM UTIME")
         return os.utime(path, times)
 
     @classmethod
     def listdir(cls, path: str):
-        _print("FILESYSTEM LISTDIR")
         return os.listdir(path)
 
     @classmethod
     def walk(cls, path: str):
-        _print("FILESYSTEM WALK")
         return os.walk(path)
 
     @classmethod
     def makedirs(cls, *args, **kwargs):
-        _print("FILESYSTEM MAKEDIRS", *args, kwargs)
         return os.makedirs(*args, **kwargs)
 
     @classmethod
     def unlink(cls, path: str):
-        _print("FILESYSTEM UNLINK", path)
         return os.unlink(path)
 
     @classmethod
     def rename(cls, old_path: str, new_path: str):
-        _print("FILESYSTEM RENAME")
         return os.rename(old_path, new_path)
 
     @classmethod
     def startfile(cls, path: str):
-        _print("FILESYSTEM STARTFILE")
         return os.startfile(path)
 
 
+# May be used for debugging, e.g. to trace os file/folder operations.
 FileSystem = _FileSystem

@@ -15,7 +15,7 @@ class ProfilingStart(Notification):
 
 
 class ProfilingEnd(Notification):
-    __slots__ = ("name", "time")
+    __slots__ = "name", "time"
 
     def __init__(self, name, time):
         self.name = name
@@ -34,8 +34,7 @@ class _Profile(Duration):
 
 
 class Profiler:
-    __slots__ = ("__title", "__time_start", "__time_end", "__notifier")
-    DEFAULT_PLACE_HOLDER = "__time__"
+    __slots__ = "__title", "__time_start", "__time_end", "__notifier"
 
     def __init__(self, title, notifier=None):
         self.__title = title
