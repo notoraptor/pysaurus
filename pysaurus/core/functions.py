@@ -2,6 +2,7 @@ import bisect
 import concurrent.futures
 import os
 import re
+import sys
 import threading
 
 from pysaurus.core.modules import HTMLStripper
@@ -238,3 +239,8 @@ def get_default(value, default):
 
 def compute_nb_couples(n: int):
     return (n * (n - 1)) // 2 if n > 1 else 0
+
+
+def fatal(exception: Exception, code=1):
+    print(f"{type(exception).__name__}:", exception, file=sys.stderr)
+    exit(code)
