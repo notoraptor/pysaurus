@@ -42,9 +42,7 @@ def compute_pattern_detector(db: Database, videos: List[Video], prop_name: str):
     for video_id, y in video_id_to_class.items():
         miniatures.append(video_id_to_miniature[video_id])
         classes.append(video_id_to_class[video_id])
-    theta = train(
-        miniatures, classes, theta=db.get_predictor(prop_name), notifier=db.notifier
-    )
+    theta = train(miniatures, classes, theta=db.get_predictor(prop_name), database=db)
     db.set_predictor(prop_name, theta)
     db.save()
 
@@ -55,12 +53,11 @@ def apply_pattern_detector(db: Database, videos: List[Video], prop_name: str):
         raise PysaurusError(f"No predictor for {prop_name}")
     video_id_to_miniature = {m.video_id: m for m in db.ensure_miniatures(returns=True)}
     videos = [v for v in videos if v.video_id in video_id_to_miniature]
-    video_dict = {v.video_id: v for v in videos}
     output_prop_name = "<!" + prop_name[2:]
     if not db.has_prop_type(output_prop_name):
         db.add_prop_type(PropType(output_prop_name, [0, 1]), save=False)
     job_notifier = job_notifications.PredictPattern(len(videos), db.notifier)
-    with Profiler("Predict", db.notifier):
+    with Profiler(db.lang.profile_predict, db.notifier):
         for i, video in enumerate(videos):
             video.properties[output_prop_name] = int(
                 predict(video_id_to_miniature[video.video_id], theta) >= 0.5

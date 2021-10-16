@@ -115,7 +115,7 @@ class DatabaseFeatures:
             raise
 
     def find_similar_videos(self, db: Database, miniatures: List[Miniature] = None):
-        with Profiler("Find similar videos.", db.notifier):
+        with Profiler(db.lang.profile_find_similar_videos, db.notifier):
             if miniatures is None:
                 miniatures = db.ensure_miniatures(returns=True)  # type: List[Miniature]
             video_indices = [m.video_id for m in miniatures]
@@ -134,16 +134,14 @@ class DatabaseFeatures:
                 return
 
             nb_max_comparisons = compute_nb_couples(nb_videos)
-            with Profiler("Allocating edges map", notifier=db.notifier):
+            with Profiler(db.lang.profile_allocate_edge_map, notifier=db.notifier):
                 cmp_map = self.generate_edges(nb_videos)
             classifier_new = _GrayClassifier.classify(miniatures, new_miniature_indices)
             classifier_old = _GrayClassifier.classify(miniatures, old_miniature_indices)
 
-            nb_cmp = self._collect_comparisons(
-                classifier_new, cmp_map, nb_videos, db.notifier
-            )
+            nb_cmp = self._collect_comparisons(classifier_new, cmp_map, nb_videos, db)
             nb_cmp += self._cross_compare_classifiers(
-                classifier_new, classifier_old, cmp_map, nb_videos, db.notifier
+                classifier_new, classifier_old, cmp_map, nb_videos, db
             )
 
             db.notifier.notify(
@@ -153,7 +151,7 @@ class DatabaseFeatures:
                 )
             )
 
-            sim_groups = self._find_similar_miniatures(miniatures, cmp_map, db.notifier)
+            sim_groups = self._find_similar_miniatures(miniatures, cmp_map, db)
 
             db.notifier.notify(
                 notifications.Message(
@@ -169,7 +167,7 @@ class DatabaseFeatures:
                 max((sim_id for sim_id in prev_sims if sim_id is not None), default=0)
                 + 1
             )
-            with Profiler("Merge new similarities with old ones.", db.notifier):
+            with Profiler(db.lang.profile_merge_old_and_new_similarities, db.notifier):
                 sim_id_to_vid_ids = {}
                 for i in old_miniature_indices:
                     sim_id_to_vid_ids.setdefault(prev_sims[i], []).append(i)
@@ -247,9 +245,9 @@ class DatabaseFeatures:
         classifier: _GrayClassifier,
         cmp_map: Array,
         nb_miniatures: int,
-        notifier: Notifier,
+        db: Database,
     ):
-        with Profiler("Collect comparisons.", notifier):
+        with Profiler(db.lang.profile_collect_comparisons, db.notifier):
             nb_cmp = sum(
                 compute_nb_couples(len(group))
                 for clf in classifier.classifiers
@@ -275,7 +273,7 @@ class DatabaseFeatures:
                                 a, b = b, a
                             self._cmp(cmp_map, a * nb_miniatures + b)
 
-            for r, c in classifier.cross_comparisons(notifier):
+            for r, c in classifier.cross_comparisons(db.notifier):
                 clr = classifier.classifiers[r]
                 clc = classifier.classifiers[c]
                 for x_r in range(len(clr.counts)):
@@ -299,11 +297,11 @@ class DatabaseFeatures:
         classifier_right: _GrayClassifier,
         cmp_map: Array,
         nb_miniatures: int,
-        notifier: Notifier,
+        db: Database,
     ):
         n = len(classifier_left.grays)
-        jobn = job_notifications.CompareOldVsNewMiniatures(n, notifier)
-        with Profiler("Cross compare classifiers.", notifier):
+        jobn = job_notifications.CompareOldVsNewMiniatures(n, db.notifier)
+        with Profiler(db.lang.profile_compare_old_vs_new_miniatures, db.notifier):
             nb_cmp = 0
             for i_gray_left, gray_left in enumerate(classifier_left.grays):
                 sub_classifier_left = classifier_left.classifiers[i_gray_left]
@@ -349,24 +347,22 @@ class DatabaseFeatures:
             else:
                 self.positions = None
 
-    def _find_similar_miniatures(self, miniatures, edges, notifier):
-        # type: (List[Miniature], Array[c_bool], Notifier) -> List[Set[int]]
-        backend_sim.classify_similarities_directed(
-            miniatures, edges, SIM_LIMIT, notifier
-        )
+    def _find_similar_miniatures(self, miniatures, edges, db):
+        # type: (List[Miniature], Array[c_bool], Database) -> List[Set[int]]
+        backend_sim.classify_similarities_directed(miniatures, edges, SIM_LIMIT, db)
         graph = Graph()
         nb_miniatures = len(miniatures)
-        with Profiler("Link videos ...", notifier):
+        with Profiler(db.lang.profile_link_miniature_comparisons, db.notifier):
             if self.positions:
                 nb_pos = len(self.positions)
-                job_n = job_notifications.LinkComparedMiniatures(nb_pos, notifier)
+                job_n = job_notifications.LinkComparedMiniatures(nb_pos, db.notifier)
                 for index, pos in enumerate(self.positions):
                     if edges[pos]:
                         graph.connect(pos // nb_miniatures, pos % nb_miniatures)
                     job_n.progress(None, index + 1, nb_pos)
                 self.positions.clear()
             else:
-                job_n = job_notifications.LinkComparedVideos(nb_miniatures, notifier)
+                job_n = job_notifications.LinkComparedVideos(nb_miniatures, db.notifier)
                 for i in range(nb_miniatures):
                     for j in range(i + 1, nb_miniatures):
                         if edges[i * nb_miniatures + j]:

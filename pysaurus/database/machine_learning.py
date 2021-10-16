@@ -2,6 +2,7 @@ from typing import List
 
 import numpy as np
 
+from pysaurus.application.default_language import DefaultLanguage
 from pysaurus.core import job_notifications
 from pysaurus.core.notifications import Message
 from pysaurus.core.notifier import DEFAULT_NOTIFIER
@@ -36,7 +37,7 @@ def train(
     theta: List[float] = None,
     alpha: float = 32,
     nb_steps: int = 5000,
-    notifier=None,
+    database=None,
 ) -> List[float]:
     assert len(miniatures) == len(ys) > 1
     m = len(miniatures)
@@ -50,9 +51,10 @@ def train(
     print("xs", xs.shape, "ys", ys.shape, "theta", theta.shape)
     nb_convergence = 0
     nb_expected_convergence = 10
-    notifier = notifier or DEFAULT_NOTIFIER
+    notifier = database.notifier if database else DEFAULT_NOTIFIER
+    lang = database.lang if database else DefaultLanguage
     job_notifier = job_notifications.OptimizePatternPredictor(nb_steps, notifier)
-    with Profiler(f"Train", notifier):
+    with Profiler(lang.profile_train, notifier):
         for step in range(nb_steps):
             # theta: (t,)
             # xs: (m, t)

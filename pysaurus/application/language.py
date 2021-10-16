@@ -12,6 +12,6 @@ class Language:
                 value = dct.pop(key)
                 assert isinstance(value, (bool, int, float, str))
             else:
-                value = key
+                value = getattr(DefaultLanguage, key)
             setattr(self, key, value)
-        assert not dct, dct
+        # assert not dct, dct

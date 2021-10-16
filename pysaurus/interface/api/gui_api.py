@@ -216,7 +216,7 @@ class GuiAPI(FeatureAPI):
             self.copy_work = FileCopier(
                 filename, dst, notifier=self.notifier, notify_end=False
             )
-            with Profiler("Move", notifier=self.notifier):
+            with Profiler(self.database.lang.profile_move, notifier=self.notifier):
                 done = self.copy_work.move()
             self.copy_work = None
             if done:

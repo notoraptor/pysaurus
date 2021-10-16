@@ -1,6 +1,7 @@
 from multiprocessing import Pool
 from typing import List
 
+from pysaurus.application.default_language import DefaultLanguage
 from pysaurus.core import job_notifications
 from pysaurus.core.classes import AbstractMatrix
 from pysaurus.core.constants import CPU_COUNT
@@ -105,14 +106,16 @@ class GroupComputer:
         return DecomposedMiniature(miniature.identifier, self.group_pixels(miniature))
 
     def batch_compute_groups(
-        self, miniatures: List[Miniature], *, notifier=None, cpu_count=None
+        self, miniatures: List[Miniature], *, database=None, cpu_count=None
     ) -> List[DecomposedMiniature]:
         cpu_count = cpu_count or max(1, CPU_COUNT - 2)
-        notifier = notifier or DEFAULT_NOTIFIER
+        notifier = database.notifier if database else DEFAULT_NOTIFIER
+        lang = database.lang if database else DefaultLanguage
         jobn = job_notifications.CollectMiniatureGroups(len(miniatures), notifier)
         tasks = [(i, m, len(miniatures), jobn) for i, m in enumerate(miniatures)]
         with Profiler(
-            f"batch_compute_groups(n={len(tasks)}, cpu={cpu_count})", notifier
+            lang.profile_batch_compute_groups.format(n=len(tasks), cpu_count=cpu_count),
+            notifier,
         ):
             with Pool(cpu_count) as p:
                 raw_output = list(p.imap(self.async_compute, tasks))

@@ -7,6 +7,7 @@ from typing import Dict, Iterable, List, Optional, Sequence, Set, Union
 import ujson as json
 
 from pysaurus.application import exceptions
+from pysaurus.application.default_language import DefaultLanguage
 from pysaurus.core import functions, job_notifications, notifications
 from pysaurus.core.components import (
     AbsolutePath,
@@ -61,14 +62,17 @@ class Database:
         "__cache",
         "quality_attribute",
         "moves_attribute",
+        "lang",
         "__prop_parser",
         "__save_id",
         "__message",
         "__predictors",
     )
 
-    def __init__(self, path, folders=None, clear_old_folders=False, notifier=None):
-        # type: (PathType, Iterable[PathType], bool, Notifier) -> None
+    def __init__(
+        self, path, folders=None, clear_old_folders=False, notifier=None, lang=None
+    ):
+        # type: (PathType, Iterable[PathType], bool, Notifier, DefaultLanguage) -> None
         # Paths
         self.__db_folder = AbsolutePath.ensure_directory(path)
         self.__thumb_folder = new_sub_folder(self.__db_folder, "thumbnails").mkdir()
@@ -93,6 +97,7 @@ class Database:
         self.__message = None
         self.quality_attribute = QualityAttribute(self)
         self.moves_attribute = PotentialMoveAttribute(self)
+        self.lang = lang
         # Set log file
         self.__notifier.set_log_path(self.__log_path.path)
         # Load database
@@ -273,7 +278,8 @@ class Database:
         )
         jobs = [[path, i, job_notifier] for i, path in enumerate(self.__folders)]
         with Profiler(
-            title=f"Collect videos ({CPU_COUNT} threads)", notifier=self.__notifier
+            title=self.lang.profile_collect_videos.format(cpu_count=CPU_COUNT),
+            notifier=self.__notifier,
         ):
             with Pool(CPU_COUNT) as p:
                 for local_result in p.imap_unordered(
@@ -286,7 +292,7 @@ class Database:
     def __check_thumbnails_on_disk(self):
         # type: () -> Dict[str, DateModified]
         thumbs = {}
-        with Profiler("Collect thumbnails", self.__notifier):
+        with Profiler(self.lang.profile_collect_thumbnails, self.__notifier):
             for entry in FileSystem.scandir(
                 self.thumbnail_folder.path
             ):  # type: os.DirEntry
@@ -402,7 +408,9 @@ class Database:
         # Collect videos with and without thumbnails.
         existing_thumb_names = self.__check_thumbnails_on_disk()
 
-        with Profiler("Check videos thumbnails", notifier=self.__notifier):
+        with Profiler(
+            self.lang.profile_check_video_thumbnails, notifier=self.__notifier
+        ):
             for video in self.get_videos("readable"):
                 thumb_name = video.thumb_name
                 if not video.found:
@@ -418,7 +426,9 @@ class Database:
 
         # If a thumbnail name is associated to many videos,
         # consider these videos don't have thumbnails.
-        with Profiler("Check unique thumbnails", notifier=self.__notifier):
+        with Profiler(
+            self.lang.profile_check_unique_thumbnails, notifier=self.__notifier
+        ):
             for valid_thumb_name, vds in thumb_to_videos.items():
                 if len(vds) == 1:
                     valid_thumb_names.add(valid_thumb_name)
@@ -459,7 +469,9 @@ class Database:
         )
         del videos_without_thumbs
         with Profiler(
-            title="Get thumbnails from JSON through %d thread(s)" % CPU_COUNT,
+            title=self.lang.profile_collect_video_thumbnails.format(
+                cpu_count=CPU_COUNT
+            ),
             notifier=self.__notifier,
         ):
             results = functions.parallelize(
@@ -522,7 +534,7 @@ class Database:
             have_added = True
             jobs = functions.dispatch_tasks(tasks, CPU_COUNT, extra_args=[job_notifier])
             del tasks
-            with Profiler("Generating miniatures.", self.__notifier):
+            with Profiler(self.lang.profile_generate_miniatures, self.__notifier):
                 results = functions.parallelize(
                     jobs_python.job_generate_miniatures, jobs, CPU_COUNT
                 )
@@ -550,9 +562,7 @@ class Database:
                 group_min_size=self.__settings.miniature_group_min_size,
                 pixel_distance_radius=self.__settings.miniature_pixel_distance_radius,
             )
-            for dm in group_computer.batch_compute_groups(
-                m_no_groups, notifier=self.__notifier
-            ):
+            for dm in group_computer.batch_compute_groups(m_no_groups, database=self):
                 m_dict[dm.miniature_identifier].set_group_signature(
                     self.__settings.miniature_pixel_distance_radius,
                     self.__settings.miniature_group_min_size,
@@ -740,7 +750,7 @@ class Database:
         return modified
 
     def refresh(self, ensure_miniatures=False) -> None:
-        with Profiler("Reset thumbnail errors"):
+        with Profiler(self.lang.profile_reset_thumbnail_errors):
             for video in self.get_videos("readable", "found", "without_thumbnails"):
                 video.unreadable_thumbnail = False
         self.update()

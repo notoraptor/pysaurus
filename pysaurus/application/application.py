@@ -59,7 +59,9 @@ class Application:
         path = AbsolutePath.ensure(path)
         assert path in self.databases
         if not self.databases[path]:
-            self.databases[path] = Database(path, notifier=self.notifier)
+            self.databases[path] = Database(
+                path, notifier=self.notifier, lang=self.lang
+            )
         return self.databases[path]
 
     def open_database_from_name(self, name: str) -> Database:
@@ -76,7 +78,7 @@ class Application:
         if path.exists():
             raise exceptions.DatabasePathUnavailable(path)
         self.databases[path] = Database(
-            path.mkdir(), folders=folders, notifier=self.notifier
+            path.mkdir(), folders=folders, notifier=self.notifier, lang=self.lang
         )
         return self.databases[path]
 

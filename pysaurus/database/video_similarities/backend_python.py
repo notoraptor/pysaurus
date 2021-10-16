@@ -134,14 +134,19 @@ def _job_compare(job):
     return (i, j) if ok else None
 
 
-def classify_similarities_directed(miniatures, edges, limit, notifier):
+def classify_similarities_directed(miniatures, edges, limit, database):
     nb_sequences = len(miniatures)
     width = miniatures[0].width
     height = miniatures[0].height
     maximum_distance_score = SIMPLE_MAX_PIXEL_DISTANCE * width * height
-    job_notifier = job_notifications.CompareMiniaturesFromPython(nb_sequences, notifier)
+    job_notifier = job_notifications.CompareMiniaturesFromPython(
+        nb_sequences, database.notifier
+    )
     with Profiler(
-        f"Python images comparison ({USABLE_CPU_COUNT} thread(s))", notifier=notifier
+        database.lang.profile_classify_similarities_python.format(
+            cpu_count=USABLE_CPU_COUNT
+        ),
+        notifier=database.notifier,
     ):
         with Pool(USABLE_CPU_COUNT) as p:
             raw_output = list(
