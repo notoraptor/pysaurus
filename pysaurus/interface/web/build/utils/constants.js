@@ -1,9 +1,11 @@
-System.register([], function (_export, _context) {
+System.register(["./functions.js"], function (_export, _context) {
   "use strict";
 
-  var FieldInfo, FieldMap, GroupPermission, FieldType, FIELD_MAP, SEARCH_TYPE_TITLE, PAGE_SIZES, VIDEO_DEFAULT_PAGE_SIZE, VIDEO_DEFAULT_PAGE_NUMBER, SOURCE_TREE, Characters;
+  var formatString, FieldInfo, FieldMap, GroupPermission, FieldType, FIELD_MAP, SEARCH_TYPE_TITLE, PAGE_SIZES, VIDEO_DEFAULT_PAGE_SIZE, VIDEO_DEFAULT_PAGE_NUMBER, SOURCE_TREE, Characters;
   return {
-    setters: [],
+    setters: [function (_functionsJs) {
+      formatString = _functionsJs.formatString;
+    }],
     execute: function () {
       _export("GroupPermission", GroupPermission = {
         FORBIDDEN: 0,
@@ -56,19 +58,8 @@ System.register([], function (_export, _context) {
       };
       FieldMap = class FieldMap {
         /**
-         * Comparison method for FieldInfo class.
-         * @param f1 {FieldInfo}
-         * @param f2 {FieldInfo}
-         * @returns {number}
-         */
-        static compareFieldInfo(f1, f2) {
-          return f1.title.localeCompare(f2.title) || f1.name.localeCompare(f2.name);
-        }
-        /**
          * @param fieldInfoList {Array.<FieldInfo>}
          */
-
-
         constructor(fieldInfoList) {
           this.list = fieldInfoList;
           this.allowed = [];
@@ -76,7 +67,9 @@ System.register([], function (_export, _context) {
           this.fields = {};
 
           for (let fieldInfo of fieldInfoList) {
-            if (this.fields.hasOwnProperty(fieldInfo.name)) throw new Error(`Duplicated field: ${fieldInfo.name}`);
+            if (this.fields.hasOwnProperty(fieldInfo.name)) throw new Error(formatString(PYTHON_LANG.error_duplicated_field, {
+              name: fieldInfo.name
+            }));
             this.fields[fieldInfo.name] = fieldInfo;
 
             if (!fieldInfo.isForbidden()) {
@@ -88,16 +81,27 @@ System.register([], function (_export, _context) {
           this.list.sort(FieldMap.compareFieldInfo);
           this.allowed.sort(FieldMap.compareFieldInfo);
         }
+        /**
+         * Comparison method for FieldInfo class.
+         * @param f1 {FieldInfo}
+         * @param f2 {FieldInfo}
+         * @returns {number}
+         */
+
+
+        static compareFieldInfo(f1, f2) {
+          return f1.title.localeCompare(f2.title) || f1.name.localeCompare(f2.name);
+        }
 
       };
 
-      _export("FIELD_MAP", FIELD_MAP = new FieldMap([new FieldInfo('audio_bit_rate', '', GroupPermission.ALL, FieldType.int), new FieldInfo('audio_codec', '', GroupPermission.ALL, FieldType.str), new FieldInfo('audio_codec_description', '', GroupPermission.ALL, FieldType.str), new FieldInfo('bit_depth', '', GroupPermission.ALL, FieldType.int), new FieldInfo('container_format', '', GroupPermission.ALL, FieldType.str), new FieldInfo('date', 'date modified', GroupPermission.ONLY_MANY, FieldType.sortable), new FieldInfo('day', '', GroupPermission.ALL, FieldType.str), new FieldInfo('disk', '', GroupPermission.ALL, FieldType.str), new FieldInfo('extension', 'file extension', GroupPermission.ALL, FieldType.str), new FieldInfo('file_size', 'file size (bytes)', GroupPermission.ONLY_MANY, FieldType.int), new FieldInfo('file_title', '', GroupPermission.ONLY_MANY, FieldType.str), new FieldInfo('file_title_numeric', 'file title (with numbers)', GroupPermission.ONLY_MANY, FieldType.sortable), new FieldInfo('filename', 'file path', GroupPermission.ONLY_MANY, FieldType.str), new FieldInfo('frame_rate', '', GroupPermission.ALL, FieldType.float), new FieldInfo('height', '', GroupPermission.ALL, FieldType.int), new FieldInfo('length', '', GroupPermission.ONLY_MANY, FieldType.sortable), new FieldInfo('move_id', 'moved files (potentially)', GroupPermission.ONLY_MANY, FieldType.unsortable), new FieldInfo('properties', '', GroupPermission.FORBIDDEN, FieldType.unsortable), new FieldInfo('quality', '', GroupPermission.ONLY_MANY, FieldType.float), new FieldInfo('sample_rate', '', GroupPermission.ALL, FieldType.int), new FieldInfo('similarity_id', 'similarity', GroupPermission.ONLY_MANY, FieldType.unsortable), new FieldInfo('size', '', GroupPermission.ONLY_MANY, FieldType.sortable), new FieldInfo('thumbnail_path', '', GroupPermission.FORBIDDEN, FieldType.str), new FieldInfo('title', '', GroupPermission.ONLY_MANY, FieldType.str), new FieldInfo('title_numeric', 'title (with numbers)', GroupPermission.ONLY_MANY, FieldType.sortable), new FieldInfo('video_codec', '', GroupPermission.ALL, FieldType.str), new FieldInfo('video_codec_description', '', GroupPermission.ALL, FieldType.str), new FieldInfo('video_id', 'video ID', GroupPermission.FORBIDDEN, FieldType.int), new FieldInfo('width', '', GroupPermission.ALL, FieldType.int)]));
+      _export("FIELD_MAP", FIELD_MAP = new FieldMap([new FieldInfo('audio_bit_rate', PYTHON_LANG.attr_audio_bit_rate, GroupPermission.ALL, FieldType.int), new FieldInfo('audio_codec', PYTHON_LANG.attr_audio_codec, GroupPermission.ALL, FieldType.str), new FieldInfo('audio_codec_description', PYTHON_LANG.attr_audio_codec_description, GroupPermission.ALL, FieldType.str), new FieldInfo('bit_depth', PYTHON_LANG.attr_bit_depth, GroupPermission.ALL, FieldType.int), new FieldInfo('container_format', PYTHON_LANG.attr_container_format, GroupPermission.ALL, FieldType.str), new FieldInfo('date', PYTHON_LANG.attr_date, GroupPermission.ONLY_MANY, FieldType.sortable), new FieldInfo('day', PYTHON_LANG.attr_day, GroupPermission.ALL, FieldType.str), new FieldInfo('disk', PYTHON_LANG.attr_disk, GroupPermission.ALL, FieldType.str), new FieldInfo('extension', PYTHON_LANG.attr_extension, GroupPermission.ALL, FieldType.str), new FieldInfo('file_size', PYTHON_LANG.attr_file_size, GroupPermission.ONLY_MANY, FieldType.int), new FieldInfo('file_title', PYTHON_LANG.attr_file_title, GroupPermission.ONLY_MANY, FieldType.str), new FieldInfo('file_title_numeric', PYTHON_LANG.attr_file_title_numerixc, GroupPermission.ONLY_MANY, FieldType.sortable), new FieldInfo('filename', PYTHON_LANG.attr_filename, GroupPermission.ONLY_MANY, FieldType.str), new FieldInfo('frame_rate', PYTHON_LANG.attr_frame_rate, GroupPermission.ALL, FieldType.float), new FieldInfo('height', PYTHON_LANG.attr_height, GroupPermission.ALL, FieldType.int), new FieldInfo('length', PYTHON_LANG.attr_length, GroupPermission.ONLY_MANY, FieldType.sortable), new FieldInfo('move_id', PYTHON_LANG.attr_move_id, GroupPermission.ONLY_MANY, FieldType.unsortable), new FieldInfo('properties', PYTHON_LANG.attr_properties, GroupPermission.FORBIDDEN, FieldType.unsortable), new FieldInfo('quality', PYTHON_LANG.attr_quality, GroupPermission.ONLY_MANY, FieldType.float), new FieldInfo('sample_rate', PYTHON_LANG.attr_sample_rate, GroupPermission.ALL, FieldType.int), new FieldInfo('similarity_id', PYTHON_LANG.attr_similarity_id, GroupPermission.ONLY_MANY, FieldType.unsortable), new FieldInfo('size', PYTHON_LANG.attr_size, GroupPermission.ONLY_MANY, FieldType.sortable), new FieldInfo('thumbnail_path', PYTHON_LANG.attr_thumbnail_path, GroupPermission.FORBIDDEN, FieldType.str), new FieldInfo('title', PYTHON_LANG.attr_title, GroupPermission.ONLY_MANY, FieldType.str), new FieldInfo('title_numeric', PYTHON_LANG.attr_title_numeric, GroupPermission.ONLY_MANY, FieldType.sortable), new FieldInfo('video_codec', PYTHON_LANG.attr_video_codec, GroupPermission.ALL, FieldType.str), new FieldInfo('video_codec_description', PYTHON_LANG.attr_video_codec_description, GroupPermission.ALL, FieldType.str), new FieldInfo('video_id', PYTHON_LANG.attr_video_id, GroupPermission.FORBIDDEN, FieldType.int), new FieldInfo('width', PYTHON_LANG.attr_width, GroupPermission.ALL, FieldType.int)]));
 
       _export("SEARCH_TYPE_TITLE", SEARCH_TYPE_TITLE = {
-        exact: 'exactly',
-        and: 'all terms',
-        or: 'any term',
-        id: 'video ID'
+        exact: PYTHON_LANG.search_exact,
+        and: PYTHON_LANG.search_and,
+        or: PYTHON_LANG.search_or,
+        id: PYTHON_LANG.search_id
       });
 
       _export("PAGE_SIZES", PAGE_SIZES = [1, 10, 20, 50, 100]);

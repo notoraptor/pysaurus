@@ -18,7 +18,7 @@ System.register([], function (_export, _context) {
     }
 
     return /*#__PURE__*/React.createElement("div", {
-      className: classNames.join(' ')
+      className: classNames.join(" ")
     }, /*#__PURE__*/React.createElement("div", {
       className: "w-100"
     }, props.children));

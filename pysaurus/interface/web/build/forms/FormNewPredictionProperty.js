@@ -26,14 +26,12 @@ System.register(["../dialogs/Dialog.js"], function (_export, _context) {
 
         render() {
           return /*#__PURE__*/React.createElement(Dialog, {
-            title: "New prediction property",
-            yes: "create",
+            title: PYTHON_LANG.form_title_new_prediction_property,
+            yes: PYTHON_LANG.text_create,
             action: this.onClose
           }, /*#__PURE__*/React.createElement("div", {
             className: "form-rename text-center"
-          }, /*#__PURE__*/React.createElement("h1", null, "Property name:"), /*#__PURE__*/React.createElement("h2", null, "Final name will be ", /*#__PURE__*/React.createElement("code", {
-            id: "filename"
-          }, "<?{property name}>")), /*#__PURE__*/React.createElement("p", {
+          }, markdownToReact(PYTHON_LANG.form_content_new_prediction_property), /*#__PURE__*/React.createElement("p", {
             className: "form"
           }, /*#__PURE__*/React.createElement("input", {
             type: "text",

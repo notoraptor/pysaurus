@@ -17,8 +17,8 @@ System.register(["../dialogs/FancyBox.js"], function (_export, _context) {
           // onClose(criterion)
           super(props);
           this.state = {
-            text: this.props.text || '',
-            cond: this.props.cond || ''
+            text: this.props.text || "",
+            cond: this.props.cond || ""
           };
           this.onFocusInput = this.onFocusInput.bind(this);
           this.onChangeInput = this.onChangeInput.bind(this);
@@ -29,10 +29,10 @@ System.register(["../dialogs/FancyBox.js"], function (_export, _context) {
 
         render() {
           return /*#__PURE__*/React.createElement(FancyBox, {
-            title: "Search videos"
+            title: PYTHON_LANG.form_title_search_videos
           }, /*#__PURE__*/React.createElement("div", {
             className: "form-videos-search text-center"
-          }, /*#__PURE__*/React.createElement("p", null, "Type text to search and choose how to search."), /*#__PURE__*/React.createElement("p", null, "You can also type text and then press enter to automatically select \"AND\" as search method."), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("input", {
+          }, markdownToReact(PYTHON_LANG.form_content_search_videos), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("input", {
             type: "text",
             id: "input-search",
             className: "block mb-2",
@@ -51,7 +51,7 @@ System.register(["../dialogs/FancyBox.js"], function (_export, _context) {
             checked: this.state.cond === 'and'
           }), /*#__PURE__*/React.createElement("label", {
             htmlFor: "input-search-and"
-          }, "all terms")), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("input", {
+          }, PYTHON_LANG.search_and)), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("input", {
             type: "radio",
             id: "input-search-or",
             name: "searchType",
@@ -60,7 +60,7 @@ System.register(["../dialogs/FancyBox.js"], function (_export, _context) {
             checked: this.state.cond === 'or'
           }), /*#__PURE__*/React.createElement("label", {
             htmlFor: "input-search-or"
-          }, "any term")), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("input", {
+          }, PYTHON_LANG.search_or)), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("input", {
             type: "radio",
             id: "input-search-exact",
             name: "searchType",
@@ -69,7 +69,7 @@ System.register(["../dialogs/FancyBox.js"], function (_export, _context) {
             checked: this.state.cond === 'exact'
           }), /*#__PURE__*/React.createElement("label", {
             htmlFor: "input-search-exact"
-          }, "exact sentence")), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("input", {
+          }, PYTHON_LANG.search_exact_sentence)), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("input", {
             type: "radio",
             id: "input-search-id",
             name: "searchType",
@@ -78,7 +78,7 @@ System.register(["../dialogs/FancyBox.js"], function (_export, _context) {
             checked: this.state.cond === 'id'
           }), /*#__PURE__*/React.createElement("label", {
             htmlFor: "input-search-id"
-          }, "video ID"))));
+          }, PYTHON_LANG.search_id))));
         }
 
         componentDidMount() {
@@ -92,7 +92,7 @@ System.register(["../dialogs/FancyBox.js"], function (_export, _context) {
         onChangeInput(event) {
           this.setState({
             text: event.target.value,
-            cond: ''
+            cond: ""
           });
         }
 

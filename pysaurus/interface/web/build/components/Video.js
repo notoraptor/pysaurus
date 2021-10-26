@@ -1,7 +1,7 @@
-System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dialog.js", "../forms/FormVideoEditProperties.js", "./Collapsable.js", "./MenuItem.js", "./Menu.js", "../utils/backend.js", "../utils/constants.js"], function (_export, _context) {
+System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dialog.js", "../forms/FormVideoEditProperties.js", "./Collapsable.js", "./MenuItem.js", "./Menu.js", "../utils/backend.js", "../utils/constants.js", "../utils/functions.js"], function (_export, _context) {
   "use strict";
 
-  var MenuPack, FormVideoRename, Dialog, FormVideoEditProperties, Collapsable, MenuItem, Menu, backend_error, python_call, Characters, Video;
+  var MenuPack, FormVideoRename, Dialog, FormVideoEditProperties, Collapsable, MenuItem, Menu, backend_error, python_call, Characters, formatString, Video;
 
   function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
@@ -36,6 +36,8 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
       python_call = _utilsBackendJs.python_call;
     }, function (_utilsConstantsJs) {
       Characters = _utilsConstantsJs.Characters;
+    }, function (_utilsFunctionsJs) {
+      formatString = _utilsFunctionsJs.formatString;
     }],
     execute: function () {
       _export("Video", Video = class Video extends React.Component {
@@ -88,7 +90,7 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
             src: data.thumbnail_path
           }) : /*#__PURE__*/React.createElement("div", {
             className: "no-thumbnail"
-          }, "no thumbnail")), /*#__PURE__*/React.createElement("div", {
+          }, PYTHON_LANG.text_no_thumbnail)), /*#__PURE__*/React.createElement("div", {
             className: "video-details horizontal flex-grow-1"
           }, this.renderProperties(), /*#__PURE__*/React.createElement("div", {
             className: "info p-2"
@@ -100,23 +102,23 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
             title: `${Characters.SETTINGS}`
           }, data.found ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.openVideo
-          }, "Open file") : /*#__PURE__*/React.createElement("div", {
+          }, PYTHON_LANG.action_open_file) : /*#__PURE__*/React.createElement("div", {
             className: "text-center bold"
-          }, "(not found)"), data.found ? /*#__PURE__*/React.createElement(MenuItem, {
+          }, PYTHON_LANG.text_not_found), data.found ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.openContainingFolder
-          }, "Open containing folder") : '', meta_title ? /*#__PURE__*/React.createElement(MenuItem, {
+          }, PYTHON_LANG.action_open_containing_folder) : "", meta_title ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.copyMetaTitle
-          }, "Copy meta title") : '', file_title ? /*#__PURE__*/React.createElement(MenuItem, {
+          }, PYTHON_LANG.action_copy_meta_title) : "", file_title ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.copyFileTitle
-          }, "Copy file title") : '', /*#__PURE__*/React.createElement(MenuItem, {
+          }, PYTHON_LANG.action_copy_file_title) : "", /*#__PURE__*/React.createElement(MenuItem, {
             action: this.copyFilePath
-          }, "Copy path"), /*#__PURE__*/React.createElement(MenuItem, {
+          }, PYTHON_LANG.action_copy_path), /*#__PURE__*/React.createElement(MenuItem, {
             action: this.copyVideoID
-          }, "Copy video ID"), data.found ? /*#__PURE__*/React.createElement(MenuItem, {
+          }, PYTHON_LANG.action_copy_video_id), data.found ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.renameVideo
-          }, "Rename video") : '', data.found ? /*#__PURE__*/React.createElement(MenuItem, {
+          }, PYTHON_LANG.action_rename_video) : "", data.found ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.moveVideo
-          }, "Move video to another folder ...") : "", this.props.groupedByMoves && data.moves.length ? /*#__PURE__*/React.createElement(Menu, {
+          }, PYTHON_LANG.action_move_video_to_another_folder) : "", this.props.groupedByMoves && data.moves.length ? /*#__PURE__*/React.createElement(Menu, {
             title: "Confirm move to ..."
           }, data.moves.map((dst, index) => /*#__PURE__*/React.createElement(MenuItem, {
             key: index,
@@ -124,12 +126,12 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
             action: () => this.confirmMove(data.video_id, dst.video_id)
           }, /*#__PURE__*/React.createElement("code", null, dst.filename)))) : "", groupedBySimilarityID ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.dismissSimilarity
-          }, "Dismiss similarity") : "", data.similarity_id !== null ? /*#__PURE__*/React.createElement(MenuItem, {
+          }, PYTHON_LANG.action_dismiss_similarity) : "", data.similarity_id !== null ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.resetSimilarity
-          }, "Reset similarity") : "", /*#__PURE__*/React.createElement(MenuItem, {
+          }, PYTHON_LANG.action_reset_similarity) : "", /*#__PURE__*/React.createElement(MenuItem, {
             className: "red-flag",
             action: this.deleteVideo
-          }, data.found ? 'Delete video' : 'Delete entry')), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("input", {
+          }, data.found ? PYTHON_LANG.text_delete_video : PYTHON_LANG.text_delete_entry)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("input", {
             type: "checkbox",
             checked: this.props.selected,
             id: htmlID,
@@ -138,18 +140,18 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
             htmlFor: htmlID
           }, /*#__PURE__*/React.createElement("strong", {
             className: "title"
-          }, data.title)))), data.title === data.file_title ? '' : /*#__PURE__*/React.createElement("div", {
+          }, data.title)))), data.title === data.file_title ? "" : /*#__PURE__*/React.createElement("div", {
             className: "file-title"
           }, /*#__PURE__*/React.createElement("em", null, data.file_title))), /*#__PURE__*/React.createElement("div", {
-            className: 'filename-line' + (data.found ? '' : ' horizontal')
-          }, data.found ? '' : /*#__PURE__*/React.createElement("div", {
+            className: 'filename-line' + (data.found ? "" : ' horizontal')
+          }, data.found ? "" : /*#__PURE__*/React.createElement("div", {
             className: "prepend clickable",
             onClick: this.deleteVideo
           }, /*#__PURE__*/React.createElement("code", {
             className: "text-not-found"
-          }, "NOT FOUND"), /*#__PURE__*/React.createElement("code", {
+          }, PYTHON_LANG.text_not_found_uppercase), /*#__PURE__*/React.createElement("code", {
             className: "text-delete"
-          }, "DELETE")), /*#__PURE__*/React.createElement("div", {
+          }, PYTHON_LANG.text_delete)), /*#__PURE__*/React.createElement("div", {
             className: `filename ${alreadyOpened ? "already-opened" : ""}`
           }, /*#__PURE__*/React.createElement("code", _extends({}, data.found ? {
             className: "clickable"
@@ -164,7 +166,7 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
           }, data.extension)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", {
             title: data.file_size,
             className: cc(common.size)
-          }, data.size), " / ", /*#__PURE__*/React.createElement("span", {
+          }, data.size), " /", " ", /*#__PURE__*/React.createElement("span", {
             className: cc(common.container_format)
           }, data.container_format), " ", "(", /*#__PURE__*/React.createElement("span", {
             title: data.video_codec_description,
@@ -182,21 +184,21 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
             className: cc(common.height)
           }, data.height), " @", " ", /*#__PURE__*/React.createElement("span", {
             className: cc(common.frame_rate)
-          }, data.frame_rate, " fps"), ",", " ", /*#__PURE__*/React.createElement("span", {
+          }, data.frame_rate, " ", PYTHON_LANG.suffix_fps), ",", " ", /*#__PURE__*/React.createElement("span", {
             className: cc(common.bit_depth)
-          }, data.bit_depth, " bits"), " |", " ", /*#__PURE__*/React.createElement("span", {
+          }, data.bit_depth, " ", PYTHON_LANG.text_bits), " |", " ", /*#__PURE__*/React.createElement("span", {
             className: cc(common.sample_rate)
-          }, data.sample_rate, " Hz"), ",", " ", /*#__PURE__*/React.createElement("span", {
+          }, data.sample_rate, " ", PYTHON_LANG.suffix_hertz), ",", " ", /*#__PURE__*/React.createElement("span", {
             title: data.audio_bit_rate,
             className: cc(common.audio_bit_rate)
-          }, audio_bit_rate, " Kb/s"), " |", " ", /*#__PURE__*/React.createElement("strong", {
+          }, audio_bit_rate, " ", PYTHON_LANG.suffix_kbps), " |", " ", /*#__PURE__*/React.createElement("strong", {
             className: cc(common.length)
           }, data.length), " | ", /*#__PURE__*/React.createElement("code", {
             className: cc(common.date)
-          }, data.date)), !groupedBySimilarityID ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, "Similarity ID:"), " ", /*#__PURE__*/React.createElement("code", null, data.similarity_id === null ? "(not yet compared)" : data.similarity_id === -1 ? "(no similarities)" : data.similarity_id)) : "", this.props.groupedByMoves && data.moves.length === 1 ? /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("button", {
+          }, data.date)), !groupedBySimilarityID ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, PYTHON_LANG.text_similarity_id, ":"), " ", /*#__PURE__*/React.createElement("code", null, data.similarity_id === null ? PYTHON_LANG.text_not_yet_compared : data.similarity_id === -1 ? PYTHON_LANG.text_no_similarities : data.similarity_id)) : "", this.props.groupedByMoves && data.moves.length === 1 ? /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("button", {
             className: "block",
             onClick: () => this.confirmMove(data.video_id, data.moves[0].video_id)
-          }, /*#__PURE__*/React.createElement("strong", null, "Confirm move to:"), /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("code", null, data.moves[0].filename))) : "")));
+          }, /*#__PURE__*/React.createElement("strong", null, PYTHON_LANG.text_confirm_move_to, ":"), /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("code", null, data.moves[0].filename))) : "")));
         }
 
         renderVideoState() {
@@ -210,7 +212,7 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
             className: "image p-2"
           }, /*#__PURE__*/React.createElement("div", {
             className: "no-thumbnail"
-          }, "no thumbnail")), /*#__PURE__*/React.createElement("div", {
+          }, PYTHON_LANG.text_no_thumbnail)), /*#__PURE__*/React.createElement("div", {
             className: "video-details horizontal flex-grow-1"
           }, /*#__PURE__*/React.createElement("div", {
             className: "info p-2"
@@ -222,31 +224,31 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
             title: `${Characters.SETTINGS}`
           }, data.found ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.openVideo
-          }, "Open file") : /*#__PURE__*/React.createElement("div", {
+          }, PYTHON_LANG.action_open_file) : /*#__PURE__*/React.createElement("div", {
             className: "text-center bold"
-          }, "(not found)"), data.found ? /*#__PURE__*/React.createElement(MenuItem, {
+          }, PYTHON_LANG.text_not_found), data.found ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.openContainingFolder
-          }, "Open containing folder") : '', /*#__PURE__*/React.createElement(MenuItem, {
+          }, PYTHON_LANG.action_open_containing_folder) : "", /*#__PURE__*/React.createElement(MenuItem, {
             action: this.copyFileTitle
-          }, "Copy file title"), /*#__PURE__*/React.createElement(MenuItem, {
+          }, PYTHON_LANG.action_copy_file_title), /*#__PURE__*/React.createElement(MenuItem, {
             action: this.copyFilePath
-          }, "Copy path"), data.found ? /*#__PURE__*/React.createElement(MenuItem, {
+          }, PYTHON_LANG.action_copy_path), data.found ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.renameVideo
-          }, "Rename video") : '', /*#__PURE__*/React.createElement(MenuItem, {
+          }, PYTHON_LANG.action_rename_video) : "", /*#__PURE__*/React.createElement(MenuItem, {
             className: "red-flag",
             action: this.deleteVideo
-          }, data.found ? 'Delete video' : 'Delete entry')), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", {
+          }, data.found ? PYTHON_LANG.text_delete_video : PYTHON_LANG.text_delete_entry)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", {
             className: "title"
           }, data.file_title)))), /*#__PURE__*/React.createElement("div", {
-            className: 'filename-line' + (data.found ? '' : ' horizontal')
-          }, data.found ? '' : /*#__PURE__*/React.createElement("div", {
+            className: 'filename-line' + (data.found ? "" : ' horizontal')
+          }, data.found ? "" : /*#__PURE__*/React.createElement("div", {
             className: "prepend clickable",
             onClick: this.deleteVideo
           }, /*#__PURE__*/React.createElement("code", {
             className: "text-not-found"
-          }, "NOT FOUND"), /*#__PURE__*/React.createElement("code", {
+          }, PYTHON_LANG.text_not_found_uppercase), /*#__PURE__*/React.createElement("code", {
             className: "text-delete"
-          }, "DELETE")), /*#__PURE__*/React.createElement("div", {
+          }, PYTHON_LANG.text_delete)), /*#__PURE__*/React.createElement("div", {
             className: `filename ${alreadyOpened ? "already-opened" : ""}`
           }, /*#__PURE__*/React.createElement("code", _extends({}, data.found ? {
             className: "clickable"
@@ -260,7 +262,7 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
             title: data.file_size
           }, data.size)), " | ", /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("code", null, data.date))), /*#__PURE__*/React.createElement("div", {
             className: "horizontal"
-          }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, "Video unreadable:")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+          }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, PYTHON_LANG.text_video_unreadable, ":")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
             className: "property"
           }, errors.map((element, elementIndex) => /*#__PURE__*/React.createElement("span", {
             className: "value",
@@ -271,7 +273,7 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
         renderProperties() {
           const props = this.props.data.properties;
           const propDefs = this.props.propDefs;
-          if (!propDefs.length) return '';
+          if (!propDefs.length) return "";
           return /*#__PURE__*/React.createElement("div", {
             className: "properties p-2"
           }, /*#__PURE__*/React.createElement("div", {
@@ -283,7 +285,7 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
             let noValue;
             if (def.multiple) noValue = !value.length;else noValue = def.type === "str" && !value;
             let printableValues = def.multiple ? value : [value];
-            return noValue ? '' : /*#__PURE__*/React.createElement("div", {
+            return noValue ? "" : /*#__PURE__*/React.createElement("div", {
               key: name,
               className: `property ${props.hasOwnProperty(name) ? "defined" : ""}`
             }, /*#__PURE__*/React.createElement(Collapsable, {
@@ -294,15 +296,19 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
               onClick: () => this.props.onSelectPropertyValue(name, element)
             }, element.toString())) : /*#__PURE__*/React.createElement("span", {
               className: "no-value"
-            }, "no value")));
+            }, PYTHON_LANG.text_no_value)));
           }));
         }
 
         openVideo() {
           python_call('open_video', this.props.data.video_id).then(() => {
             APP_STATE.videoHistory.add(this.props.data.filename);
-            this.props.onInfo('Opened: ' + this.props.data.filename);
-          }).catch(() => this.props.onInfo('Unable to open: ' + this.props.data.filename));
+            this.props.onInfo(formatString(PYTHON_LANG.status_opened, {
+              path: this.props.data.filename
+            }));
+          }).catch(() => this.props.onInfo(formatString(PYTHON_LANG.status_unable_to_open, {
+            path: this.props.data.filename
+          })));
         }
 
         editProperties() {
@@ -311,7 +317,9 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
             data: data,
             definitions: this.props.propDefs,
             onClose: properties => {
-              python_call('set_video_properties', this.props.data.video_id, properties).then(() => this.props.onInfo(`Properties updated: ${data.filename}`, true)).catch(backend_error);
+              python_call('set_video_properties', this.props.data.video_id, properties).then(() => this.props.onInfo(formatString(PYTHON_LANG.status_properties_updated, {
+                path: data.filename
+              }), true)).catch(backend_error);
             }
           }));
         }
@@ -320,14 +328,12 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
           const filename = this.props.data.filename;
           const thumbnail_path = this.props.data.thumbnail_path;
           Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
-            title: "Confirm deletion",
-            yes: "delete",
+            title: PYTHON_LANG.form_title_confirm_delete_video,
+            yes: PYTHON_LANG.text_delete,
             action: this.reallyDeleteVideo
           }, /*#__PURE__*/React.createElement("div", {
             className: "form-delete-video text-center bold"
-          }, /*#__PURE__*/React.createElement("h2", null, "Are you sure you want to ", /*#__PURE__*/React.createElement("strong", {
-            className: "red-flag"
-          }, "definitely"), " delete this video?"), /*#__PURE__*/React.createElement("div", {
+          }, markdownToReact(PYTHON_LANG.form_head_confirm_delete_video), /*#__PURE__*/React.createElement("div", {
             className: "details overflow-auto px-2 py-1"
           }, /*#__PURE__*/React.createElement("code", {
             id: "filename"
@@ -337,19 +343,19 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
             src: thumbnail_path
           }) : /*#__PURE__*/React.createElement("div", {
             className: "no-thumbnail"
-          }, "no thumbnail")))));
+          }, PYTHON_LANG.text_no_thumbnail)))));
         }
 
         dismissSimilarity() {
           const filename = this.props.data.filename;
           const thumbnail_path = this.props.data.thumbnail_path;
           Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
-            title: "Dismiss similarity",
-            yes: "dismiss",
+            title: PYTHON_LANG.action_dismiss_similarity,
+            yes: PYTHON_LANG.text_dismiss,
             action: this.reallyDismissSimilarity
           }, /*#__PURE__*/React.createElement("div", {
             className: "form-delete-video text-center bold"
-          }, /*#__PURE__*/React.createElement("h2", null, "Are you sure you want to dismiss similarity for this video?"), /*#__PURE__*/React.createElement("div", {
+          }, /*#__PURE__*/React.createElement("h2", null, PYTHON_LANG.form_head_confirm_dismiss), /*#__PURE__*/React.createElement("div", {
             className: "details overflow-auto px-2 py-1"
           }, /*#__PURE__*/React.createElement("code", {
             id: "filename"
@@ -359,19 +365,19 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
             src: thumbnail_path
           }) : /*#__PURE__*/React.createElement("div", {
             className: "no-thumbnail"
-          }, "no thumbnail")))));
+          }, PYTHON_LANG.text_no_thumbnail)))));
         }
 
         resetSimilarity() {
           const filename = this.props.data.filename;
           const thumbnail_path = this.props.data.thumbnail_path;
           Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
-            title: "Reset similarity",
-            yes: "reset",
+            title: PYTHON_LANG.action_reset_similarity,
+            yes: PYTHON_LANG.text_reset,
             action: this.reallyResetSimilarity
           }, /*#__PURE__*/React.createElement("div", {
             className: "form-delete-video text-center bold"
-          }, /*#__PURE__*/React.createElement("h2", null, "Are you sure you want to reset similarity for this video?"), /*#__PURE__*/React.createElement("h3", null, "Video will then be re-compared at next similarity search"), /*#__PURE__*/React.createElement("div", {
+          }, markdownToReact(PYTHON_LANG.form_content_reset_similarity), /*#__PURE__*/React.createElement("div", {
             className: "details overflow-auto px-2 py-1"
           }, /*#__PURE__*/React.createElement("code", {
             id: "filename"
@@ -381,7 +387,7 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
             src: thumbnail_path
           }) : /*#__PURE__*/React.createElement("div", {
             className: "no-thumbnail"
-          }, "no thumbnail")))));
+          }, PYTHON_LANG.text_no_thumbnail)))));
         }
 
         deleteVideo() {
@@ -389,43 +395,69 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
         }
 
         reallyDeleteVideo() {
-          python_call('delete_video', this.props.data.video_id).then(() => this.props.onInfo('Video deleted! ' + this.props.data.filename, true)).catch(backend_error);
+          python_call('delete_video', this.props.data.video_id).then(() => this.props.onInfo(formatString(PYTHON_LANG.status_video_deleted, {
+            path: this.props.data.filename
+          }), true)).catch(backend_error);
         }
 
         reallyDismissSimilarity() {
-          python_call('dismiss_similarity', this.props.data.video_id).then(() => this.props.onInfo('Current similarity cancelled: ' + this.props.data.filename, true)).catch(backend_error);
+          python_call('dismiss_similarity', this.props.data.video_id).then(() => this.props.onInfo(formatString(PYTHON_LANG.status_video_similarity_cancelled, {
+            path: this.props.data.filename
+          }), true)).catch(backend_error);
         }
 
         reallyResetSimilarity() {
-          python_call('reset_similarity', this.props.data.video_id).then(() => this.props.onInfo('Current similarity reset: ' + this.props.data.filename, true)).catch(backend_error);
+          python_call('reset_similarity', this.props.data.video_id).then(() => this.props.onInfo(formatString(PYTHON_LANG.status_video_similarity_reset, {
+            path: this.props.date.filename
+          }), true)).catch(backend_error);
         }
 
         openContainingFolder() {
           python_call('open_containing_folder', this.props.data.video_id).then(folder => {
-            this.props.onInfo(`Opened folder: ${folder}`);
+            this.props.onInfo(formatString(PYTHON_LANG.status_opened_folder, {
+              path: folder
+            }));
           }).catch(backend_error);
         }
 
         copyMetaTitle() {
           const text = this.props.data.title;
-          python_call('clipboard', text).then(() => this.props.onInfo('Copied to clipboard: ' + text)).catch(() => this.props.onInfo(`Cannot copy meta title to clipboard: ${text}`));
+          python_call('clipboard', text).then(() => this.props.onInfo(formatString(PYTHON_LANG.status_copied_to_clipboard, {
+            text
+          }))).catch(() => this.props.onInfo(formatString(PYTHON_LANG.status_cannot_copy_meta_title, {
+            text
+          })));
         }
 
         copyFileTitle() {
           const text = this.props.data.file_title;
-          python_call('clipboard', text).then(() => this.props.onInfo('Copied to clipboard: ' + text)).catch(() => this.props.onInfo(`Cannot copy file title to clipboard: ${text}`));
+          python_call('clipboard', text).then(() => this.props.onInfo(formatString(PYTHON_LANG.status_copied_to_clipboard, {
+            text
+          }))).catch(() => this.props.onInfo(formatString(PYTHON_LANG.status_cannot_copy_file_title, {
+            text
+          })));
         }
 
         copyFilePath() {
-          python_call('clipboard_video_path', this.props.data.video_id).then(() => this.props.onInfo('Copied to clipboard: ' + this.props.data.filename)).catch(() => this.props.onInfo(`Cannot copy file path to clipboard: ${this.props.data.filename}`));
+          python_call('clipboard_video_path', this.props.data.video_id).then(() => this.props.onInfo(formatString(PYTHON_LANG.status_copied_to_clipboard, {
+            text: this.props.data.filename
+          })).catch(() => this.props.onInfo(formatString(PYTHON_LANG.status_cannot_copy_file_path, {
+            text: this.props.data.filename
+          }))));
         }
 
         copyVideoID() {
-          python_call('clipboard', this.props.data.video_id).then(() => this.props.onInfo('Copied to clipboard: ' + this.props.data.video_id)).catch(() => this.props.onInfo(`Cannot copy video ID to clipboard: ${this.props.data.video_id}`));
+          python_call('clipboard', this.props.data.video_id).then(() => this.props.onInfo(formatString(PYTHON_LANG.status_copied_to_clipboard, {
+            text: this.props.data.video_id
+          }))).catch(() => this.props.onInfo(formatString(PYTHON_LANG.status_cannot_copy_video_id, {
+            text: this.props.data.video_id
+          })));
         }
 
         confirmMove(srcID, dstID) {
-          python_call("set_video_moved", srcID, dstID).then(() => this.props.onInfo(`Moved: ${this.props.data.filename}`, true)).catch(backend_error);
+          python_call("set_video_moved", srcID, dstID).then(() => this.props.onInfo(formatString(PYTHON_LANG.status_moved, {
+            path: this.props.data.filename
+          }), true)).catch(backend_error);
         }
 
         renameVideo() {

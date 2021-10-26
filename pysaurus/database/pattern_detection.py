@@ -20,6 +20,18 @@ def _is_prediction_property(prop: PropType):
     )
 
 
+class NoVideoForClass0(PysaurusError):
+    pass
+
+
+class NoVideoForClass1(PysaurusError):
+    pass
+
+
+class NoPredictor(PysaurusError):
+    pass
+
+
 def compute_pattern_detector(db: Database, videos: List[Video], prop_name: str):
     assert _is_prediction_property(db.get_prop_type(prop_name))
     video_id_to_miniature = {m.video_id: m for m in db.ensure_miniatures(returns=True)}
@@ -29,11 +41,16 @@ def compute_pattern_detector(db: Database, videos: List[Video], prop_name: str):
         prop_val = video.properties.get(prop_name, -1)
         classifier.setdefault(prop_val, []).append(video)
     if 0 not in classifier:
-        raise PysaurusError(f"No video tagged with 0 for {prop_name}")
+        raise NoVideoForClass0(prop_name)
     if 1 not in classifier:
-        raise PysaurusError(f"No video tagged with 1 for {prop_name}")
+        raise NoVideoForClass1(prop_name)
     db.notifier.notify(
-        Message(f"Training set: false {len(classifier[0])}, true {len(classifier[1])}")
+        Message(
+            db.lang.message_predictor_training_set.format(
+                count0=len(classifier[0]),
+                count1=len(classifier[1])
+            )
+        )
     )
     video_id_to_class = {video.video_id: False for video in classifier[0]}
     video_id_to_class.update({video.video_id: True for video in classifier[1]})
@@ -50,7 +67,7 @@ def compute_pattern_detector(db: Database, videos: List[Video], prop_name: str):
 def apply_pattern_detector(db: Database, videos: List[Video], prop_name: str):
     theta = db.get_predictor(prop_name)
     if not theta:
-        raise PysaurusError(f"No predictor for {prop_name}")
+        raise NoPredictor(prop_name)
     video_id_to_miniature = {m.video_id: m for m in db.ensure_miniatures(returns=True)}
     videos = [v for v in videos if v.video_id in video_id_to_miniature]
     output_prop_name = "<!" + prop_name[2:]
@@ -64,7 +81,6 @@ def apply_pattern_detector(db: Database, videos: List[Video], prop_name: str):
             )
             job_notifier.progress(None, i + 1, len(videos))
 
-    db.notifier.notify(Message(f"Predicted {len(videos)} videos"))
     db.save()
     return output_prop_name
 

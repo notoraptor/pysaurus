@@ -244,3 +244,11 @@ def compute_nb_couples(n: int):
 def fatal(exception: Exception, code=1):
     print(f"{type(exception).__name__}:", exception, file=sys.stderr)
     exit(code)
+
+
+def object_to_dict(obj):
+    cls = obj if isinstance(obj, type) else type(obj)
+    return {
+        key: getattr(obj, key)
+        for key in class_get_public_attributes(cls)
+    }

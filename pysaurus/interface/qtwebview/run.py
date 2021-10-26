@@ -196,7 +196,7 @@ def main():
     height = (2 * screen_rect.height()) // 3
     x = screen_center.x() - width // 2
     y = screen_center.y() - height // 2
-    print(f"Window: size {width} x {height}, position ({x}; {y})")
+    print(f"Window: size {width} x {height}, position ({x}; {y})", file=sys.stderr)
     view = PysaurusQtApplication(geometry=(x, y, width, height))
     # Set zoom.
     if System.is_windows():

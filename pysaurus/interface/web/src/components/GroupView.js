@@ -5,6 +5,7 @@ import {PlusIcon} from "./PlusIcon.js";
 import {capitalizeFirstLetter} from "../utils/functions.js";
 import {Actions} from "../utils/Actions.js";
 import {Action} from "../utils/Action.js";
+import {formatString} from "../utils/functions.js";
 
 export class GroupView extends React.Component {
     constructor(props) {
@@ -51,21 +52,20 @@ export class GroupView extends React.Component {
                                 <input id="group-view-select-all"
                                        type="checkbox"
                                        checked={allChecked}
-                                       onChange={event => this.onCheckAll(event, start, end)}/>
-                                {' '}
+                                       onChange={event => this.onCheckAll(event, start, end)}/>{" "}
                                 <label htmlFor="group-view-select-all">
-                                    {allChecked ? 'All ' : ''}{selection.size} selected
+                                    {formatString(allChecked ? PYTHON_LANG.text_all_groups_selected : PYTHON_LANG.text_groups_selected, {count: selection.size})}
                                 </label>
                                 {selection.size ? (
                                     <span>
                                         &nbsp;
                                         <SettingIcon key="options-for-selected"
-                                                     title={`Options for selected...`}
+                                                     title="Options for selected..."
                                                      action={this.openPropertyOptionsAll}/>
-                                    </span>) : ''}
+                                    </span>) : ""}
                             </div>
                         </div>
-                    ) : ''}
+                    ) : ""}
                 </div>
                 <div className="content position-relative flex-grow-1 overflow-auto">
                     {this.props.groupDef.groups.length ? (
@@ -77,19 +77,19 @@ export class GroupView extends React.Component {
                                     if (!this.props.isClassified) {
                                         buttons.push(<input type="checkbox" checked={selection.has(index)}
                                                             onChange={event => this.onCheckEntry(event, index)}/>)
-                                        buttons.push(' ');
+                                        buttons.push(" ");
                                         if (!selection.size) {
                                             buttons.push(<SettingIcon key="options"
-                                                                      title={`Options ...`}
+                                                                      title="Options ..."
                                                                       action={(event) => this.openPropertyOptions(event, index)}/>);
-                                            buttons.push(' ');
+                                            buttons.push(" ");
                                         }
                                     }
                                     if (!selection.size) {
                                         buttons.push(<PlusIcon key="add"
-                                                               title={`Add ...`}
+                                                               title="Add ..."
                                                                action={(event) => this.openPropertyPlus(event, index)}/>);
-                                        buttons.push(' ');
+                                        buttons.push(" ");
                                     }
                                 }
                                 const classes = [isProperty ? "property" : "attribute"];
@@ -109,7 +109,7 @@ export class GroupView extends React.Component {
                                         <td {...(isProperty ? {} : {title: entry.value})}>
                                             {buttons}
                                             <span key="value" {...(isProperty ? {title: entry.value} : {})}>
-                                                {entry.value === null ? `(none)` : entry.value}
+                                                {entry.value === null ? "(none)" : entry.value}
                                             </span>
                                         </td>
                                         <td title={entry.count}>{entry.count}</td>
@@ -117,7 +117,11 @@ export class GroupView extends React.Component {
                                 );
                             })}
                         </table>
-                    ) : <div className="absolute-plain no-groups text-center vertical"><strong><em>No groups</em></strong></div>}
+                    ) : (
+                        <div className="absolute-plain no-groups text-center vertical">
+                            <strong><em>{PYTHON_LANG.text_no_groups}</em></strong>
+                        </div>
+                    )}
                 </div>
             </div>
         );

@@ -1,4 +1,5 @@
 import {Dialog} from "../dialogs/Dialog.js";
+import {formatString} from "../utils/functions.js";
 
 export class FormDatabaseRename extends React.Component {
     constructor(props) {
@@ -15,9 +16,11 @@ export class FormDatabaseRename extends React.Component {
 
     render() {
         return (
-            <Dialog title={`Rename database "${this.props.title}"`} yes="rename" action={this.onClose}>
+            <Dialog title={formatString(PYTHON_LANG.form_title_rename_database, {name: this.props.title})}
+                    yes={PYTHON_LANG.text_rename}
+                    action={this.onClose}>
                 <div className="form-rename text-center">
-                    <h1>Rename database</h1>
+                    <h1>{PYTHON_LANG.text_rename_database}</h1>
                     <h2><code id="filename">{this.props.title}</code></h2>
                     <p className="form">
                         <input type="text"

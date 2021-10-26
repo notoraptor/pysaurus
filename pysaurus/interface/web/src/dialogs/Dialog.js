@@ -10,13 +10,15 @@ export class Dialog extends React.Component {
         return (
             <FancyBox title={this.props.title}>
                 <div className="dialog absolute-plain vertical">
-                    <div className="position-relative flex-grow-1 overflow-auto p-2 vertical">{this.props.children}</div>
+                    <div className="position-relative flex-grow-1 overflow-auto p-2 vertical">
+                        {this.props.children}
+                    </div>
                     <div className="buttons flex-shrink-0 horizontal">
                         <div className="button flex-grow-1 p-2 yes">
-                            <button className="block bold" onClick={this.yes}>{this.props.yes || "yes"}</button>
+                            <button className="block bold" onClick={this.yes}>{this.props.yes || PYTHON_LANG.word_yes}</button>
                         </div>
                         <div className="button flex-grow-1 p-2 no">
-                            <button className="block bold" onClick={Fancybox.close}>{this.props.no || "cancel"}</button>
+                            <button className="block bold" onClick={Fancybox.close}>{this.props.no || PYTHON_LANG.word_cancel}</button>
                         </div>
                     </div>
                 </div>

@@ -210,7 +210,7 @@ class Database:
         new_path = AbsolutePath.join(new_folder, new_basename)
         re_path = AbsolutePath.join(new_folder, old_basename)
         if re_path.exists():
-            print("Renaming", re_path)
+            print("Database: renaming", re_path, file=sys.stderr)
             if new_path.exists():
                 raise exceptions.PathAlreadyExists(new_path)
             FileSystem.rename(re_path.path, new_path.path)
@@ -342,7 +342,7 @@ class Database:
             all_file_names, CPU_COUNT, [self.folder, job_notifier]
         )
         with Profiler(
-            title="Get videos info from JSON (%d threads)" % len(jobs),
+            self.lang.profile_collect_video_infos.format(cpu_count=len(jobs)),
             notifier=self.__notifier,
         ):
             results = functions.parallelize(
@@ -956,7 +956,7 @@ class Database:
 
         return len(modified)
 
-    def move_video_entry(self, from_id, to_id):
+    def move_video_entry(self, from_id, to_id, save=True):
         from_video = self.__get_video_from_id(from_id)
         to_video = self.__get_video_from_id(to_id)
         assert not from_video.found
@@ -972,7 +972,18 @@ class Database:
                 transferred_properties[prop_name] = prop_val
         to_video.properties.update(transferred_properties)
         to_video.similarity_id = from_video.similarity_id
-        self.delete_video(from_id)
+        self.delete_video(from_id, save=save)
+
+    def confirm_unique_moves(self):
+        nb_moved = 0
+        for video in self.get_videos("readable", "not_found"):
+            moves = video.moves
+            if len(moves) == 1:
+                self.move_video_entry(video.video_id, moves[0]["video_id"], False)
+                nb_moved += 1
+        if nb_moved:
+            self.save()
+        return nb_moved
 
     def set_message(self, message: str):
         self.__message = message

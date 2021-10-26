@@ -1,7 +1,7 @@
-System.register(["../utils/constants.js", "../components/MenuPack.js", "../components/Pagination.js", "../components/Video.js", "../forms/FormVideosSource.js", "../forms/FormVideosGrouping.js", "../forms/FormVideosSearch.js", "../forms/FormVideosSort.js", "../components/GroupView.js", "../forms/FormPropertyEditSelectedValues.js", "../forms/FormVideosKeywordsToProperty.js", "../forms/FormSelectedVideosEditProperty.js", "../components/Collapsable.js", "../components/Cross.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/MenuItemRadio.js", "../components/Menu.js", "../utils/Selector.js", "../utils/Action.js", "../utils/Actions.js", "../components/ActionToMenuItem.js", "../components/ActionToSettingIcon.js", "../components/ActionToCross.js", "../utils/backend.js", "../dialogs/FancyBox.js", "./HomePage.js", "../forms/FormDatabaseEditFolders.js", "../forms/FormDatabaseRename.js", "../dialogs/Dialog.js", "../components/Cell.js", "../forms/FormNewPredictionProperty.js"], function (_export, _context) {
+System.register(["../utils/constants.js", "../components/MenuPack.js", "../components/Pagination.js", "../components/Video.js", "../forms/FormVideosSource.js", "../forms/FormVideosGrouping.js", "../forms/FormVideosSearch.js", "../forms/FormVideosSort.js", "../components/GroupView.js", "../forms/FormPropertyEditSelectedValues.js", "../forms/FormVideosKeywordsToProperty.js", "../forms/FormSelectedVideosEditProperty.js", "../components/Collapsable.js", "../components/Cross.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/MenuItemRadio.js", "../components/Menu.js", "../utils/Selector.js", "../utils/Action.js", "../utils/Actions.js", "../components/ActionToMenuItem.js", "../components/ActionToSettingIcon.js", "../components/ActionToCross.js", "../utils/backend.js", "../dialogs/FancyBox.js", "./HomePage.js", "../forms/FormDatabaseEditFolders.js", "../forms/FormDatabaseRename.js", "../dialogs/Dialog.js", "../components/Cell.js", "../forms/FormNewPredictionProperty.js", "../utils/functions.js"], function (_export, _context) {
   "use strict";
 
-  var PAGE_SIZES, SEARCH_TYPE_TITLE, SOURCE_TREE, FIELD_MAP, MenuPack, Pagination, Video, FormVideosSource, FormVideosGrouping, FormVideosSearch, FormVideosSort, GroupView, FormPropertyEditSelectedValues, FormVideosKeywordsToProperty, FormSelectedVideosEditProperty, Collapsable, Cross, MenuItem, MenuItemCheck, MenuItemRadio, Menu, Selector, Action, Actions, ActionToMenuItem, ActionToSettingIcon, ActionToCross, backend_error, python_call, FancyBox, HomePage, FormDatabaseEditFolders, FormDatabaseRename, Dialog, Cell, FormNewPredictionProperty, VideosPage;
+  var FIELD_MAP, PAGE_SIZES, SEARCH_TYPE_TITLE, SOURCE_TREE, MenuPack, Pagination, Video, FormVideosSource, FormVideosGrouping, FormVideosSearch, FormVideosSort, GroupView, FormPropertyEditSelectedValues, FormVideosKeywordsToProperty, FormSelectedVideosEditProperty, Collapsable, Cross, MenuItem, MenuItemCheck, MenuItemRadio, Menu, Selector, Action, Actions, ActionToMenuItem, ActionToSettingIcon, ActionToCross, backend_error, python_call, FancyBox, HomePage, FormDatabaseEditFolders, FormDatabaseRename, Dialog, Cell, FormNewPredictionProperty, formatString, VideosPage;
 
   function compareSources(sources1, sources2) {
     if (sources1.length !== sources2.length) return false;
@@ -27,10 +27,10 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
 
   return {
     setters: [function (_utilsConstantsJs) {
+      FIELD_MAP = _utilsConstantsJs.FIELD_MAP;
       PAGE_SIZES = _utilsConstantsJs.PAGE_SIZES;
       SEARCH_TYPE_TITLE = _utilsConstantsJs.SEARCH_TYPE_TITLE;
       SOURCE_TREE = _utilsConstantsJs.SOURCE_TREE;
-      FIELD_MAP = _utilsConstantsJs.FIELD_MAP;
     }, function (_componentsMenuPackJs) {
       MenuPack = _componentsMenuPackJs.MenuPack;
     }, function (_componentsPaginationJs) {
@@ -94,6 +94,8 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
       Cell = _componentsCellJs.Cell;
     }, function (_formsFormNewPredictionPropertyJs) {
       FormNewPredictionProperty = _formsFormNewPredictionPropertyJs.FormNewPredictionProperty;
+    }, function (_utilsFunctionsJs) {
+      formatString = _utilsFunctionsJs.formatString;
     }],
     execute: function () {
       _export("VideosPage", VideosPage = class VideosPage extends React.Component {
@@ -102,7 +104,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           // app: App
           super(props);
           this.state = this.parametersToState({
-            status: 'Loaded.',
+            status: PYTHON_LANG.status_loaded,
             confirmDeletion: true,
             path: [],
             selector: new Selector(),
@@ -169,47 +171,26 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           this.sortIsSet = this.sortIsSet.bind(this);
           this.previousGroup = this.previousGroup.bind(this);
           this.nextGroup = this.nextGroup.bind(this);
+          this.confirmAllUniqueMoves = this.confirmAllUniqueMoves.bind(this);
           this.callbackIndex = -1;
           this.notificationCallbackIndex = -1; // 14 shortcuts currently.
 
           this.features = new Actions({
-            select: new Action("Ctrl+T", "Select videos ...", this.selectVideos, Fancybox.isInactive),
-            group: new Action("Ctrl+G", "Group ...", this.groupVideos, Fancybox.isInactive),
-            search: new Action("Ctrl+F", "Search ...", this.searchVideos, Fancybox.isInactive),
-            sort: new Action("Ctrl+S", "Sort ...", this.sortVideos, Fancybox.isInactive),
-            unselect: new Action("Ctrl+Shift+T", "Reset selection", this.unselectVideos, Fancybox.isInactive),
-            ungroup: new Action("Ctrl+Shift+G", "Reset group", this.resetGroup, Fancybox.isInactive),
-            unsearch: new Action("Ctrl+Shift+F", "Reset search", this.resetSearch, Fancybox.isInactive),
-            unsort: new Action("Ctrl+Shift+S", "Reset sorting", this.resetSort, Fancybox.isInactive),
-            reload: new Action("Ctrl+R", "Reload database ...", this.reloadDatabase, Fancybox.isInactive),
-            manageProperties: new Action("Ctrl+P", "Manage properties ...", this.manageProperties, Fancybox.isInactive),
-            openRandomVideo: new Action("Ctrl+O", "Open random video", this.openRandomVideo, this.canOpenRandomVideo),
-            openRandomPlayer: new Action("Ctrl+E", "Open random player", this.openRandomPlayer, this.canOpenRandomPlayer),
-            previousPage: new Action("Ctrl+ArrowLeft", "Go to previous page", this.previousPage, Fancybox.isInactive),
-            nextPage: new Action("Ctrl+ArrowRight", "Go to next page", this.nextPage, Fancybox.isInactive)
+            select: new Action("Ctrl+T", PYTHON_LANG.action_select_videos, this.selectVideos, Fancybox.isInactive),
+            group: new Action("Ctrl+G", PYTHON_LANG.action_group_videos, this.groupVideos, Fancybox.isInactive),
+            search: new Action("Ctrl+F", PYTHON_LANG.action_search_videos, this.searchVideos, Fancybox.isInactive),
+            sort: new Action("Ctrl+S", PYTHON_LANG.action_sort_videos, this.sortVideos, Fancybox.isInactive),
+            unselect: new Action("Ctrl+Shift+T", PYTHON_LANG.action_unselect_videos, this.unselectVideos, Fancybox.isInactive),
+            ungroup: new Action("Ctrl+Shift+G", PYTHON_LANG.action_ungroup_videos, this.resetGroup, Fancybox.isInactive),
+            unsearch: new Action("Ctrl+Shift+F", PYTHON_LANG.action_unsearch_videos, this.resetSearch, Fancybox.isInactive),
+            unsort: new Action("Ctrl+Shift+S", PYTHON_LANG.action_unsort_videos, this.resetSort, Fancybox.isInactive),
+            reload: new Action("Ctrl+R", PYTHON_LANG.action_reload_database, this.reloadDatabase, Fancybox.isInactive),
+            manageProperties: new Action("Ctrl+P", PYTHON_LANG.action_manage_properties, this.manageProperties, Fancybox.isInactive),
+            openRandomVideo: new Action("Ctrl+O", PYTHON_LANG.action_open_random_video, this.openRandomVideo, this.canOpenRandomVideo),
+            openRandomPlayer: new Action("Ctrl+E", PYTHON_LANG.action_open_random_player, this.openRandomPlayer, this.canOpenRandomPlayer),
+            previousPage: new Action("Ctrl+ArrowLeft", PYTHON_LANG.action_go_to_previous_page, this.previousPage, Fancybox.isInactive),
+            nextPage: new Action("Ctrl+ArrowRight", PYTHON_LANG.action_go_to_next_page, this.nextPage, Fancybox.isInactive)
           });
-        }
-
-        createPredictionProperty() {
-          Fancybox.load( /*#__PURE__*/React.createElement(FormNewPredictionProperty, {
-            onClose: name => {
-              this.backend(["create_prediction_property", name]);
-            }
-          }));
-        }
-
-        populatePredictionProperty() {
-          Fancybox.load( /*#__PURE__*/React.createElement(FancyBox, {
-            title: "Populate prediction property manually"
-          }, /*#__PURE__*/React.createElement("p", null, "Set:"), /*#__PURE__*/React.createElement("ul", null, /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("strong", null, "1"), " for video thumbnails that match what you expect"), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("strong", null, "0"), " for video thumbnails that don't match what you expect"), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("strong", null, "-1"), " (default) for videos to ignore")), /*#__PURE__*/React.createElement("p", null, "Prediction computation will only use videos tagged with ", /*#__PURE__*/React.createElement("strong", null, "1"), " and ", /*#__PURE__*/React.createElement("strong", null, "0"), ", so, you don't need to tag all of them."), /*#__PURE__*/React.createElement("p", null, "There is however some good practices:"), /*#__PURE__*/React.createElement("ul", null, /*#__PURE__*/React.createElement("li", null, "Tag enough videos with ", /*#__PURE__*/React.createElement("strong", null, "0"), " and ", /*#__PURE__*/React.createElement("strong", null, "1"), " (e.g. 20 videos)"), /*#__PURE__*/React.createElement("li", null, "Try to tag same amount of videos for ", /*#__PURE__*/React.createElement("strong", null, "0"), " and for ", /*#__PURE__*/React.createElement("strong", null, "1"), " (e.g. 10 videos each)")), /*#__PURE__*/React.createElement("p", null, "Once done, move you can compute prediction.")));
-        }
-
-        computePredictionProperty(propName) {
-          this.props.app.dbUpdate("compute_predictor", propName);
-        }
-
-        applyPrediction(propName) {
-          this.props.app.dbUpdate("apply_predictor", propName);
         }
 
         render() {
@@ -230,24 +211,28 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           }, /*#__PURE__*/React.createElement("header", {
             className: "horizontal flex-shrink-0"
           }, /*#__PURE__*/React.createElement(MenuPack, {
-            title: "Database ..."
+            title: PYTHON_LANG.menu_database
           }, /*#__PURE__*/React.createElement(ActionToMenuItem, {
             action: actions.reload
           }), /*#__PURE__*/React.createElement(MenuItem, {
             action: this.renameDatabase
-          }, "Rename database \"", this.state.database.name, "\" ..."), /*#__PURE__*/React.createElement(MenuItem, {
+          }, formatString(PYTHON_LANG.action_rename_database, {
+            name: this.state.database.name
+          })), /*#__PURE__*/React.createElement(MenuItem, {
             action: this.editDatabaseFolders
-          }, "Edit ", this.state.database.folders.length, " database folders ..."), /*#__PURE__*/React.createElement(Menu, {
-            title: "Close database ..."
+          }, formatString(PYTHON_LANG.action_edit_database_folders, {
+            count: this.state.database.folders.length
+          })), /*#__PURE__*/React.createElement(Menu, {
+            title: PYTHON_LANG.menu_close_database
           }, /*#__PURE__*/React.createElement(MenuItem, {
             action: this.closeDatabase
-          }, /*#__PURE__*/React.createElement("strong", null, "Close database"))), /*#__PURE__*/React.createElement(MenuItem, {
+          }, /*#__PURE__*/React.createElement("strong", null, PYTHON_LANG.action_close_database))), /*#__PURE__*/React.createElement(MenuItem, {
             className: "red-flag",
             action: this.deleteDatabase
-          }, "Delete database ...")), /*#__PURE__*/React.createElement(MenuPack, {
-            title: "Videos ..."
+          }, PYTHON_LANG.action_delete_database)), /*#__PURE__*/React.createElement(MenuPack, {
+            title: PYTHON_LANG.menu_videos
           }, /*#__PURE__*/React.createElement(Menu, {
-            title: "Filter videos ..."
+            title: PYTHON_LANG.menu_filter_videos
           }, /*#__PURE__*/React.createElement(ActionToMenuItem, {
             action: actions.select
           }), /*#__PURE__*/React.createElement(ActionToMenuItem, {
@@ -257,7 +242,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           }), /*#__PURE__*/React.createElement(ActionToMenuItem, {
             action: actions.sort
           })), aFilterIsSet ? /*#__PURE__*/React.createElement(Menu, {
-            title: "Reset filters ..."
+            title: PYTHON_LANG.menu_reset_filters
           }, this.sourceIsSet() ? /*#__PURE__*/React.createElement(ActionToMenuItem, {
             action: actions.unselect
           }) : "", this.groupIsSet() ? /*#__PURE__*/React.createElement(ActionToMenuItem, {
@@ -272,73 +257,79 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             action: actions.openRandomPlayer
           }) : "", this.canFindSimilarVideos() ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.findSimilarVideos
-          }, "Search similar videos") : "", this.canFindSimilarVideos() ? /*#__PURE__*/React.createElement(Menu, {
-            title: "Search similar videos (longer) ..."
+          }, PYTHON_LANG.action_search_similar_videos) : "", this.canFindSimilarVideos() ? /*#__PURE__*/React.createElement(Menu, {
+            title: PYTHON_LANG.menu_search_similar_videos_longer
           }, /*#__PURE__*/React.createElement(MenuItem, {
             action: this.findSimilarVideosIgnoreCache
-          }, /*#__PURE__*/React.createElement("strong", null, "Ignore cache"))) : ""), /*#__PURE__*/React.createElement(MenuPack, {
-            title: "Properties ..."
+          }, /*#__PURE__*/React.createElement("strong", null, PYTHON_LANG.action_ignore_cache))) : "", groupedByMoves ? /*#__PURE__*/React.createElement(MenuItem, {
+            action: this.confirmAllUniqueMoves
+          }, /*#__PURE__*/React.createElement("strong", null, /*#__PURE__*/React.createElement("em", null, PYTHON_LANG.action_confirm_all_unique_moves))) : ""), /*#__PURE__*/React.createElement(MenuPack, {
+            title: PYTHON_LANG.menu_properties
           }, /*#__PURE__*/React.createElement(ActionToMenuItem, {
             action: actions.manageProperties
           }), stringSetProperties.length ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.fillWithKeywords
-          }, "Put keywords into a property ...") : '', this.state.properties.length > 5 ? /*#__PURE__*/React.createElement(Menu, {
-            title: "Group videos by property ..."
+          }, PYTHON_LANG.action_put_keywords_into_property) : "", this.state.properties.length > 5 ? /*#__PURE__*/React.createElement(Menu, {
+            title: PYTHON_LANG.menu_group_videos_by_property
           }, this.state.properties.map((def, index) => /*#__PURE__*/React.createElement(MenuItem, {
             key: index,
             action: () => this.backendGroupVideos(def.name, true)
           }, def.name))) : this.state.properties.map((def, index) => /*#__PURE__*/React.createElement(MenuItem, {
             key: index,
             action: () => this.backendGroupVideos(def.name, true)
-          }, "Group videos by property: ", def.name))), /*#__PURE__*/React.createElement(MenuPack, {
-            title: "Predictors ..."
+          }, formatString(PYTHON_LANG.action_group_videos_by_property, {
+            name: def.name
+          })))), /*#__PURE__*/React.createElement(MenuPack, {
+            title: PYTHON_LANG.menu_predictors
           }, /*#__PURE__*/React.createElement(MenuItem, {
             action: this.createPredictionProperty
-          }, "1) Create a prediction property ..."), /*#__PURE__*/React.createElement(MenuItem, {
+          }, PYTHON_LANG.action_create_prediction_property), /*#__PURE__*/React.createElement(MenuItem, {
             action: this.populatePredictionProperty
-          }, "2) Populate a prediction property manually ..."), predictionProperties.length ? /*#__PURE__*/React.createElement(Menu, {
-            title: "3) Compute prediction for property ..."
+          }, PYTHON_LANG.action_populate_prediction_property_manually), predictionProperties.length ? /*#__PURE__*/React.createElement(Menu, {
+            title: PYTHON_LANG.menu_compute_prediction
           }, predictionProperties.map((def, i) => /*#__PURE__*/React.createElement(MenuItem, {
             key: i,
             action: () => this.computePredictionProperty(def.name)
           }, def.name))) : "", predictionProperties.length ? /*#__PURE__*/React.createElement(Menu, {
-            title: "4) Apply prediction from property ..."
+            title: PYTHON_LANG.menu_apply_prediction
           }, predictionProperties.map((def, i) => /*#__PURE__*/React.createElement(MenuItem, {
             key: i,
             action: () => this.applyPrediction(def.name)
           }, def.name))) : ""), /*#__PURE__*/React.createElement(MenuPack, {
-            title: "Navigation ..."
+            title: PYTHON_LANG.menu_navigation
           }, /*#__PURE__*/React.createElement(Menu, {
-            title: "Videos ..."
+            title: PYTHON_LANG.menu_navigation_videos
           }, /*#__PURE__*/React.createElement(ActionToMenuItem, {
             action: actions.previousPage
           }), /*#__PURE__*/React.createElement(ActionToMenuItem, {
             action: actions.nextPage
           })), this.groupIsSet() ? /*#__PURE__*/React.createElement(Menu, {
-            title: "Groups ..."
+            title: PYTHON_LANG.menu_navigation_groups
           }, /*#__PURE__*/React.createElement(MenuItem, {
             action: this.previousGroup,
             shortcut: "Ctrl+ArrowUp"
-          }, "Go to previous group"), /*#__PURE__*/React.createElement(MenuItem, {
+          }, PYTHON_LANG.action_go_to_previous_group), /*#__PURE__*/React.createElement(MenuItem, {
             action: this.nextGroup,
             shortcut: "Ctrl+ArrowDown"
-          }, "Go to next group")) : ""), /*#__PURE__*/React.createElement(MenuPack, {
-            title: "Options"
+          }, PYTHON_LANG.action_go_to_next_group)) : ""), /*#__PURE__*/React.createElement(MenuPack, {
+            title: PYTHON_LANG.menu_options
           }, /*#__PURE__*/React.createElement(Menu, {
-            title: "Page size ..."
+            title: PYTHON_LANG.menu_page_size
           }, PAGE_SIZES.map((count, index) => /*#__PURE__*/React.createElement(MenuItemRadio, {
             key: index,
             checked: this.state.pageSize === count,
             value: count,
             action: this.setPageSize
-          }, count, " video", count > 1 ? 's' : '', " per page"))), /*#__PURE__*/React.createElement(MenuItemCheck, {
+          }, formatString(PYTHON_LANG.action_page_size, {
+            count
+          })))), /*#__PURE__*/React.createElement(MenuItemCheck, {
             checked: this.state.confirmDeletion,
             action: this.confirmDeletionForNotFound
-          }, "confirm deletion for entries not found")), /*#__PURE__*/React.createElement("div", {
+          }, PYTHON_LANG.action_confirm_deletion_for_entries_not_found)), /*#__PURE__*/React.createElement("div", {
             className: "pagination text-right"
           }, /*#__PURE__*/React.createElement(Pagination, {
-            singular: "page",
-            plural: "pages",
+            singular: PYTHON_LANG.word_page,
+            plural: PYTHON_LANG.word_pages,
             nbPages: nbPages,
             pageNumber: this.state.pageNumber,
             key: this.state.pageNumber,
@@ -354,15 +345,15 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           }, /*#__PURE__*/React.createElement(Collapsable, {
             lite: false,
             className: "filter flex-shrink-0",
-            title: "Filter"
+            title: PYTHON_LANG.section_filter
           }, this.renderFilter()), this.state.path.length ? /*#__PURE__*/React.createElement(Collapsable, {
             lite: false,
             className: "filter flex-shrink-0",
-            title: "Classifier path"
+            title: PYTHON_LANG.section_classifier_path
           }, stringProperties.length ? /*#__PURE__*/React.createElement("div", {
             className: "path-menu text-center p-2"
           }, /*#__PURE__*/React.createElement(MenuPack, {
-            title: "Concatenate path into ..."
+            title: PYTHON_LANG.menu_concatenate_path
           }, stringProperties.map((def, i) => /*#__PURE__*/React.createElement(MenuItem, {
             key: i,
             action: () => this.classifierConcatenate(def.name)
@@ -371,7 +362,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           }, /*#__PURE__*/React.createElement("button", {
             className: "block",
             onClick: this.classifierReversePath
-          }, "reverse path"))) : '', this.state.path.map((value, index) => /*#__PURE__*/React.createElement("div", {
+          }, PYTHON_LANG.action_reverse_path))) : "", this.state.path.map((value, index) => /*#__PURE__*/React.createElement("div", {
             key: index,
             className: "path-step horizontal px-2 py-1"
           }, /*#__PURE__*/React.createElement("div", {
@@ -379,14 +370,14 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           }, value.toString()), index === this.state.path.length - 1 ? /*#__PURE__*/React.createElement("div", {
             className: "icon"
           }, /*#__PURE__*/React.createElement(Cross, {
-            title: "unstack",
+            title: PYTHON_LANG.text_unstack,
             action: this.classifierUnstack
-          })) : ''))) : '', groupDef ? /*#__PURE__*/React.createElement("div", {
+          })) : ""))) : "", groupDef ? /*#__PURE__*/React.createElement("div", {
             className: "flex-grow-1 position-relative"
           }, /*#__PURE__*/React.createElement(Collapsable, {
             lite: false,
             className: "group absolute-plain vertical",
-            title: "Groups"
+            title: PYTHON_LANG.section_groups
           }, /*#__PURE__*/React.createElement(GroupView, {
             groupDef: groupDef,
             isClassified: !!this.state.path.length,
@@ -396,7 +387,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             onGroupViewState: this.onGroupViewState,
             onOptions: this.editPropertyValue,
             onPlus: groupDef.is_property && this.state.definitions[groupDef.field].multiple ? this.classifierSelectGroup : null
-          }))) : ''), /*#__PURE__*/React.createElement("div", {
+          }))) : ""), /*#__PURE__*/React.createElement("div", {
             className: "main-panel videos overflow-auto"
           }, this.state.videos.map(data => /*#__PURE__*/React.createElement(Video, {
             key: data.video_id,
@@ -420,9 +411,12 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             className: "footer-information text-right"
           }, groupDef ? /*#__PURE__*/React.createElement("div", {
             className: "info group"
-          }, groupDef.groups.length ? `Group ${groupDef.group_id + 1}/${groupDef.groups.length}` : "No groups") : '', /*#__PURE__*/React.createElement("div", {
+          }, groupDef.groups.length ? formatString(PYTHON_LANG.text_group, {
+            group: groupDef.group_id + 1,
+            count: groupDef.groups.length
+          }) : PYTHON_LANG.text_no_group) : "", /*#__PURE__*/React.createElement("div", {
             className: "info count"
-          }, nbVideos, " video", nbVideos > 1 ? 's' : ''), /*#__PURE__*/React.createElement("div", {
+          }, nbVideos, " video", nbVideos > 1 ? 's' : ""), /*#__PURE__*/React.createElement("div", {
             className: "info size"
           }, validSize), /*#__PURE__*/React.createElement("div", {
             className: "info length"
@@ -443,51 +437,80 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             className: "filter w-100"
           }, /*#__PURE__*/React.createElement("tbody", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, sources.map((source, index) => /*#__PURE__*/React.createElement("div", {
             key: index
-          }, source.join(' ').replace('_', ' ')))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToSettingIcon, {
+          }, source.join(" ").replace('_', " ")))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToSettingIcon, {
             action: actions.select
           })), !compareSources(window.PYTHON_DEFAULT_SOURCES, sources) ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToCross, {
             action: actions.unselect
-          })) : '')), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, groupDef ? /*#__PURE__*/React.createElement("div", null, "Grouped") : /*#__PURE__*/React.createElement("div", {
+          })) : "")), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, groupDef ? /*#__PURE__*/React.createElement("div", null, PYTHON_LANG.text_grouped) : /*#__PURE__*/React.createElement("div", {
             className: "no-filter"
-          }, "Ungrouped")), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToSettingIcon, {
+          }, PYTHON_LANG.text_ungrouped)), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToSettingIcon, {
             action: actions.group,
-            title: groupDef ? 'Edit ...' : 'Group ...'
+            title: groupDef ? PYTHON_LANG.action_edit : PYTHON_LANG.action_group
           })), groupDef ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToCross, {
             action: actions.ungroup
-          })) : '')), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, searchDef ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", null, "Searched ", SEARCH_TYPE_TITLE[searchDef.cond]), /*#__PURE__*/React.createElement("div", {
+          })) : "")), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, searchDef ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", null, formatString(PYTHON_LANG.text_searched, {
+            text: SEARCH_TYPE_TITLE[searchDef.cond]
+          })), /*#__PURE__*/React.createElement("div", {
             className: "word-break-all"
           }, "\"", /*#__PURE__*/React.createElement("strong", null, searchDef.text), "\"")) : /*#__PURE__*/React.createElement("div", {
             className: "no-filter"
-          }, "No search")), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToSettingIcon, {
+          }, PYTHON_LANG.text_no_search)), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToSettingIcon, {
             action: actions.search,
-            title: searchDef ? 'Edit ...' : 'Search ...'
+            title: searchDef ? PYTHON_LANG.action_edit : PYTHON_LANG.action_search
           })), searchDef ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToCross, {
             action: actions.unsearch
-          })) : '')), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, "Sorted by"), sorting.map((val, i) => /*#__PURE__*/React.createElement("div", {
+          })) : "")), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, PYTHON_LANG.text_sorted_by), sorting.map((val, i) => /*#__PURE__*/React.createElement("div", {
             key: i
-          }, /*#__PURE__*/React.createElement("strong", null, FIELD_MAP.fields[val.substr(1)].title), ' ', val[0] === '-' ? /*#__PURE__*/React.createElement("span", null, "\u25BC") : /*#__PURE__*/React.createElement("span", null, "\u25B2")))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToSettingIcon, {
+          }, /*#__PURE__*/React.createElement("strong", null, FIELD_MAP.fields[val.substr(1)].title), " ", val[0] === '-' ? /*#__PURE__*/React.createElement("span", null, "\u25BC") : /*#__PURE__*/React.createElement("span", null, "\u25B2")))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToSettingIcon, {
             action: actions.sort
-          })), sortingIsDefault ? '' : /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToCross, {
+          })), sortingIsDefault ? "" : /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToCross, {
             action: actions.unsort
-          })))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, selectionSize ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", null, "Selected"), /*#__PURE__*/React.createElement("div", null, selectedAll ? 'all' : '', " ", selectionSize, " ", selectedAll ? '' : `/ ${realNbVideos}`, " ", "video", selectionSize < 2 ? '' : 's'), /*#__PURE__*/React.createElement("div", {
+          })))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, selectionSize ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", null, "Selected"), /*#__PURE__*/React.createElement("div", null, selectedAll ? formatString(PYTHON_LANG.text_all_videos_selected, {
+            count: selectionSize
+          }) : formatString(PYTHON_LANG.text_videos_selected, {
+            count: selectionSize,
+            total: realNbVideos
+          })), /*#__PURE__*/React.createElement("div", {
             className: "mb-1"
           }, /*#__PURE__*/React.createElement("button", {
             onClick: this.displayOnlySelected
-          }, this.state.displayOnlySelected ? 'Display all videos' : 'Display only selected videos'))) : /*#__PURE__*/React.createElement("div", null, "No videos selected"), selectedAll ? '' : /*#__PURE__*/React.createElement("div", {
+          }, this.state.displayOnlySelected ? PYTHON_LANG.action_display_all_videos : PYTHON_LANG.action_display_selected_videos))) : /*#__PURE__*/React.createElement("div", null, PYTHON_LANG.text_no_videos_selected), selectedAll ? "" : /*#__PURE__*/React.createElement("div", {
             className: "mb-1"
           }, /*#__PURE__*/React.createElement("button", {
             onClick: this.selectAll
-          }, "select all")), selectionSize ? /*#__PURE__*/React.createElement("div", {
+          }, PYTHON_LANG.action_select_all)), selectionSize ? /*#__PURE__*/React.createElement("div", {
             className: "mb-1"
           }, /*#__PURE__*/React.createElement(MenuPack, {
-            title: "Edit property ..."
+            title: PYTHON_LANG.menu_edit_properties
           }, this.state.properties.map((def, index) => /*#__PURE__*/React.createElement(MenuItem, {
             key: index,
             action: () => this.editPropertiesForManyVideos(def.name)
-          }, def.name)))) : ''), /*#__PURE__*/React.createElement("td", null, selectionSize ? /*#__PURE__*/React.createElement(Cross, {
-            title: `Deselect all`,
+          }, def.name)))) : ""), /*#__PURE__*/React.createElement("td", null, selectionSize ? /*#__PURE__*/React.createElement(Cross, {
+            title: PYTHON_LANG.action_deselect_all,
             action: this.deselect
-          }) : ''))));
+          }) : ""))));
+        }
+
+        createPredictionProperty() {
+          Fancybox.load( /*#__PURE__*/React.createElement(FormNewPredictionProperty, {
+            onClose: name => {
+              this.backend(["create_prediction_property", name]);
+            }
+          }));
+        }
+
+        populatePredictionProperty() {
+          Fancybox.load( /*#__PURE__*/React.createElement(FancyBox, {
+            title: PYTHON_LANG.form_title_populate_predictor_manually
+          }, markdownToReact(PYTHON_LANG.form_content_populate_predictor_manually)));
+        }
+
+        computePredictionProperty(propName) {
+          this.props.app.dbUpdate("compute_predictor", propName);
+        }
+
+        applyPrediction(propName) {
+          this.props.app.dbUpdate("apply_predictor", propName);
         }
 
         sourceIsSet() {
@@ -533,7 +556,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           const pageNumber = state.pageNumber !== undefined ? state.pageNumber : this.state.pageNumber;
           const displayOnlySelected = state.displayOnlySelected !== undefined ? state.displayOnlySelected : this.state.displayOnlySelected;
           const selector = displayOnlySelected ? (state.selector !== undefined ? state.selector : this.state.selector).toJSON() : null;
-          if (!state.status) state.status = "Updated.";
+          if (!state.status) state.status = PYTHON_LANG.status_updated;
           python_call("backend", callargs, pageSize, pageNumber, selector).then(info => this.setState(this.parametersToState(state, info), top ? this.scrollTop : undefined)).catch(backend_error);
         }
 
@@ -588,7 +611,9 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
 
         moveVideo(videoID, directory) {
           Fancybox.load( /*#__PURE__*/React.createElement(FancyBox, {
-            title: `Move file to ${directory}`,
+            title: formatString(PYTHON_LANG.form_title_move_file, {
+              path: directory
+            }),
             onClose: () => {
               python_call("cancel_copy");
             }
@@ -601,7 +626,9 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
               command: ["move_video_file", videoID, directory],
               onReady: status => {
                 Fancybox.close();
-                if (status === "Cancelled") this.updateStatus(`Video not moved.`);else this.updateStatus(`Video moved to ${directory}`, true);
+                if (status === "Cancelled") this.updateStatus(PYTHON_LANG.status_video_not_moved);else this.updateStatus(formatString(PYTHON_LANG.status_video_moved, {
+                  directory
+                }), true);
               }
             }
           }))));
@@ -645,7 +672,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
 
         resetStatus() {
           this.setState({
-            status: "Ready."
+            status: PYTHON_LANG.status_ready
           });
         }
 
@@ -701,7 +728,10 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             onClose: edition => {
               this.backend(['edit_property_for_videos', propertyName, videoIndices, edition.add, edition.remove], {
                 pageNumber: 0,
-                status: `Edited property "${propertyName}" for ${selectionSize} video${selectionSize < 2 ? '' : 's'}`
+                status: formatString(PYTHON_LANG.status_prop_val_edited, {
+                  property: propertyName,
+                  count: selectionSize
+                })
               });
             }
           }))).catch(backend_error);
@@ -756,8 +786,10 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
 
         deleteDatabase() {
           Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
-            title: `Delete database ${this.state.database.name}`,
-            yes: "DELETE",
+            title: formatString(PYTHON_LANG.dialog_delete_database, {
+              name: this.state.database.name
+            }),
+            yes: PYTHON_LANG.text_delete,
             action: () => {
               python_call("delete_database").then(databases => this.props.app.dbHome(databases)).catch(backend_error);
             }
@@ -765,13 +797,27 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             center: true,
             full: true,
             className: "text-center"
-          }, /*#__PURE__*/React.createElement("h2", null, "Are you sure you want to delete database"), /*#__PURE__*/React.createElement("h1", null, /*#__PURE__*/React.createElement("span", {
+          }, /*#__PURE__*/React.createElement("h1", null, PYTHON_LANG.text_database, " ", /*#__PURE__*/React.createElement("span", {
             className: "red-flag"
-          }, this.state.database.name), " ?"), /*#__PURE__*/React.createElement("h3", null, "Database entries and thumbnails will be deleted."), /*#__PURE__*/React.createElement("h3", null, "Video files won't be touched."))));
+          }, this.state.database.name)), markdownToReact(PYTHON_LANG.form_content_confirm_delete_database))));
+        }
+
+        confirmAllUniqueMoves() {
+          Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
+            title: PYTHON_LANG.action_confirm_all_unique_moves,
+            yes: PYTHON_LANG.text_move,
+            action: () => {
+              python_call("confirm_unique_moves").then(nbMoved => this.updateStatus(`Moved ${nbMoved} video(s)`, true, true)).catch(backend_error);
+            }
+          }, /*#__PURE__*/React.createElement(Cell, {
+            center: true,
+            full: true,
+            className: "text-center"
+          }, markdownToReact(PYTHON_LANG.form_content_confirm_unique_moves))));
         }
 
         resetGroup() {
-          this.backend(['set_groups', ''], {
+          this.backend(['set_groups', ""], {
             pageNumber: 0
           });
         }
@@ -790,12 +836,14 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
 
         openRandomVideo() {
           python_call('open_random_video').then(filename => {
-            this.updateStatus(`Randomly opened: ${filename}`, true, true);
+            this.updateStatus(formatString(PYTHON_LANG.status_randomly_opened, {
+              path: filename
+            }), true, true);
           }).catch(backend_error);
         }
 
         openRandomPlayer() {
-          python_call('open_random_player').then(() => this.updateStatus(`Random player opened!`, true, true)).catch(backend_error);
+          python_call('open_random_player').then(() => this.updateStatus("Random player opened!", true, true)).catch(backend_error);
         }
 
         reloadDatabase() {
@@ -819,7 +867,9 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             properties: this.getStringSetProperties(this.state.properties),
             onClose: state => {
               python_call('fill_property_with_terms', state.field, state.onlyEmpty).then(() => this.backend(null, {
-                status: `Filled property "${state.field}" with video keywords.`
+                status: formatString(PYTHON_LANG.status_filled_property_with_keywords, {
+                  name: state.field
+                })
               })).catch(backend_error);
             }
           }));
@@ -912,21 +962,32 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
                 case 'delete':
                   this.backend(['delete_property_value', name, values], {
                     groupSelection: new Set(),
-                    status: `Property value deleted: "${name}" / "${values.join('", "')}"`
+                    status: formatString(PYTHON_LANG.status_prop_vals_deleted, {
+                      name: name,
+                      values: values.join('", "')
+                    })
                   });
                   break;
 
                 case 'edit':
                   this.backend(['edit_property_value', name, values, operation.value], {
                     groupSelection: new Set(),
-                    status: `Property value edited: "${name}" : "${values.join('", "')}" -> "${operation.value}"`
+                    status: formatString(PYTHON_LANG.status_prop_vals_edited, {
+                      name: name,
+                      values: values.join('", "'),
+                      destination: operation.value
+                    })
                   });
                   break;
 
                 case 'move':
                   this.backend(['move_property_value', name, values, operation.move], {
                     groupSelection: new Set(),
-                    status: `Property value moved: "${values.join('", "')}" from "${name}" to "${operation.move}"`
+                    status: formatString(PYTHON_LANG.status_prop_val_moved, {
+                      values: values.join('", "'),
+                      name: name,
+                      destination: operation.move
+                    })
                   });
                   break;
               }

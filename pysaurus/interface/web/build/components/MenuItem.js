@@ -18,7 +18,7 @@ System.register([], function (_export, _context) {
           const classNames = ["menu-item horizontal"];
           if (this.props.className) classNames.push(this.props.className);
           return /*#__PURE__*/React.createElement("div", {
-            className: classNames.join(' '),
+            className: classNames.join(" "),
             onClick: this.onClick
           }, /*#__PURE__*/React.createElement("div", {
             className: "icon"
@@ -28,7 +28,7 @@ System.register([], function (_export, _context) {
             className: "title"
           }, this.props.children), /*#__PURE__*/React.createElement("div", {
             className: "shortcut"
-          }, this.props.shortcut || '')));
+          }, this.props.shortcut || "")));
         }
 
         onClick() {

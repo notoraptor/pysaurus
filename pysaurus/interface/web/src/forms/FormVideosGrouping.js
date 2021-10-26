@@ -35,7 +35,7 @@ export class FormVideosGrouping extends React.Component {
                 <table className="from-videos-grouping first-td-text-right w-100">
                     <tbody>
                     <tr>
-                        <td className="label">Field type</td>
+                        <td className="label">{PYTHON_LANG.text_field_type}</td>
                         <td>
                             <input id="field-type-property"
                                    type="radio"
@@ -57,7 +57,10 @@ export class FormVideosGrouping extends React.Component {
                     <tr>
                         <td className="label"><label htmlFor="group-field">Field</label></td>
                         <td>
-                            <select className="block" id="group-field" value={this.state.field} onChange={this.onChangeGroupField}>
+                            <select className="block"
+                                    id="group-field"
+                                    value={this.state.field}
+                                    onChange={this.onChangeGroupField}>
                                 {this.state.isProperty ? (
                                     this.props.properties.map((def, index) => (
                                         <option key={index} value={def.name}>{def.name}</option>
@@ -79,24 +82,27 @@ export class FormVideosGrouping extends React.Component {
                                        onChange={this.onChangeAllowSingletons}/>
                             </td>
                             <td>
-                                <label htmlFor="allow-singletons">Allow singletons (groups with only 1 video)</label>
+                                <label htmlFor="allow-singletons">{PYTHON_LANG.text_allow_singletons}</label>
                             </td>
                         </tr>
                     ) : (
                         <tr>
                             <td>&nbsp;</td>
-                            <td><em>Will look for groups with at least 2 videos.</em></td>
+                            <td><em>{PYTHON_LANG.text_singletons_auto_disabled}</em></td>
                         </tr>
                     )}
                     <tr>
                         <td className="label">
-                            <label htmlFor="group-sorting">Sort using:</label>
+                            <label htmlFor="group-sorting">{PYTHON_LANG.text_sort_using}</label>
                         </td>
                         <td>
-                            <select className="block" id="group-sorting" value={this.state.sorting} onChange={this.onChangeSorting}>
-                                <option value="field">Field value</option>
-                                {this.fieldIsString() ? <option value="length">Field value length</option> : ''}
-                                <option value="count">Group size</option>
+                            <select className="block"
+                                    id="group-sorting"
+                                    value={this.state.sorting}
+                                    onChange={this.onChangeSorting}>
+                                <option value="field">{PYTHON_LANG.text_field_value}</option>
+                                {this.fieldIsString() ? <option value="length">{PYTHON_LANG.text_field_value_length}</option> : ""}
+                                <option value="count">{PYTHON_LANG.text_group_size}</option>
                             </select>
                         </td>
                     </tr>
@@ -108,7 +114,7 @@ export class FormVideosGrouping extends React.Component {
                                    onChange={this.onChangeGroupReverse}/>
                         </td>
                         <td>
-                            <label htmlFor="group-reverse">sort in reverse order</label>
+                            <label htmlFor="group-reverse">{PYTHON_LANG.text_sort_reverse}</label>
                         </td>
                     </tr>
                     </tbody>

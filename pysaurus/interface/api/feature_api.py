@@ -4,7 +4,7 @@ from typing import Optional
 from pysaurus.application.application import Application
 from pysaurus.core import notifications
 from pysaurus.core.components import Duration, FileSize
-from pysaurus.core.functions import compute_nb_pages, identity
+from pysaurus.core.functions import compute_nb_pages, identity, object_to_dict
 from pysaurus.database.database import Database
 from pysaurus.database.properties import PropType
 from pysaurus.database.video import Video
@@ -28,6 +28,7 @@ class FeatureAPI:
         self.application = Application(self.notifier)
         self.database = None  # type: Optional[Database]
         self.provider = None  # type: Optional[VideoProvider]
+        self.PYTHON_LANG = object_to_dict(self.application.lang)
 
     # Utilities.
 
@@ -221,7 +222,7 @@ class FeatureAPI:
         return str(self.choose_random_video().filename.open())
 
     def open_random_player(self):
-        raise NotImplementedError("No random player available")
+        raise NotImplementedError()
 
     def open_video(self, video_id):
         self.database.get_video_filename(video_id).open()
@@ -332,3 +333,6 @@ class FeatureAPI:
 
     def set_video_moved(self, from_id, to_id):
         self.database.move_video_entry(from_id, to_id)
+
+    def confirm_unique_moves(self):
+        return self.database.confirm_unique_moves()

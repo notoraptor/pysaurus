@@ -13,13 +13,12 @@ export function Cell(props) {
         classNames.push("flex-grow-1");
     }
     return (
-        <div className={classNames.join(' ')}>
-            <div className="w-100">
-                {props.children}
-            </div>
+        <div className={classNames.join(" ")}>
+            <div className="w-100">{props.children}</div>
         </div>
     );
 }
+
 Cell.propTypes = {
     className: PropTypes.string,
     center: PropTypes.bool,

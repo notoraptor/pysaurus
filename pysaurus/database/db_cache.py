@@ -1,3 +1,6 @@
+import sys
+
+
 class DbCache:
     __slots__ = "cache", "database", "iteration"
 
@@ -17,5 +20,5 @@ class DbCache:
         if key not in self.cache:
             self.cache[key] = self.database.query(required)
         else:
-            print("Cached", key)
+            print("Cached", key, file=sys.stderr)
         return self.cache[key]

@@ -1,7 +1,7 @@
 System.register(["../dialogs/Dialog.js", "../utils/functions.js", "../utils/constants.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, parsePropValString, Characters, FormSelectedVideosEditProperty;
+  var Dialog, formatString, parsePropValString, Characters, FormSelectedVideosEditProperty;
 
   _export("FormSelectedVideosEditProperty", void 0);
 
@@ -9,6 +9,7 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js", "../utils/cons
     setters: [function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
     }, function (_utilsFunctionsJs) {
+      formatString = _utilsFunctionsJs.formatString;
       parsePropValString = _utilsFunctionsJs.parsePropValString;
     }, function (_utilsConstantsJs) {
       Characters = _utilsConstantsJs.Characters;
@@ -61,14 +62,17 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js", "../utils/cons
           const propName = this.props.definition.name;
           const nbVideos = this.props.nbVideos;
           return /*#__PURE__*/React.createElement(Dialog, {
-            title: `Edit property "${propName}" for ${nbVideos} video${nbVideos < 2 ? '' : 's'}`,
+            title: formatString(PYTHON_LANG.form_title_edit_property_for_videos, {
+              name: propName,
+              count: nbVideos
+            }),
             yes: "edit",
             action: this.onClose
           }, /*#__PURE__*/React.createElement("div", {
             className: "form-selected-videos-edit-property vertical flex-grow-1 text-center"
           }, /*#__PURE__*/React.createElement("div", {
             className: "bar titles flex-shrink-0 horizontal bold"
-          }, /*#__PURE__*/React.createElement("div", null, "To remove"), /*#__PURE__*/React.createElement("div", null, "Current"), /*#__PURE__*/React.createElement("div", null, "To add")), /*#__PURE__*/React.createElement("div", {
+          }, /*#__PURE__*/React.createElement("div", null, PYTHON_LANG.text_to_remove), /*#__PURE__*/React.createElement("div", null, PYTHON_LANG.text_current), /*#__PURE__*/React.createElement("div", null, PYTHON_LANG.text_to_add)), /*#__PURE__*/React.createElement("div", {
             className: "bar panels horizontal flex-grow-1"
           }, /*#__PURE__*/React.createElement("div", {
             className: "remove"
@@ -82,7 +86,9 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js", "../utils/cons
             className: "horizontal"
           }, /*#__PURE__*/React.createElement("div", {
             className: "value"
-          }, "all ", this.state.remove.length, " values"), /*#__PURE__*/React.createElement("button", {
+          }, formatString(PYTHON_LANG.text_all_values, {
+            count: this.state.remove.length
+          })), /*#__PURE__*/React.createElement("button", {
             onClick: this.unRemoveAll
           }, Characters.SMART_ARROW_RIGHT)) : /*#__PURE__*/React.createElement("div", null), this.state.current.length > 1 ? /*#__PURE__*/React.createElement("div", {
             className: "horizontal"
@@ -90,15 +96,19 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js", "../utils/cons
             onClick: this.removeAll
           }, Characters.SMART_ARROW_LEFT), /*#__PURE__*/React.createElement("div", {
             className: "value"
-          }, "all ", this.state.current.length, " values"), this.props.definition.multiple ? /*#__PURE__*/React.createElement("button", {
+          }, formatString(PYTHON_LANG.text_all_values, {
+            count: this.state.current.length
+          })), this.props.definition.multiple ? /*#__PURE__*/React.createElement("button", {
             onClick: this.addAll
-          }, Characters.SMART_ARROW_RIGHT) : '') : /*#__PURE__*/React.createElement("div", null), this.state.add.length > 1 ? /*#__PURE__*/React.createElement("div", {
+          }, Characters.SMART_ARROW_RIGHT) : "") : /*#__PURE__*/React.createElement("div", null), this.state.add.length > 1 ? /*#__PURE__*/React.createElement("div", {
             className: "horizontal"
           }, /*#__PURE__*/React.createElement("button", {
             onClick: this.unAddAll
           }, Characters.SMART_ARROW_LEFT), /*#__PURE__*/React.createElement("div", {
             className: "value"
-          }, "all ", this.state.add.length, " values")) : /*#__PURE__*/React.createElement("div", null)), this.renderFormAdd()));
+          }, formatString(PYTHON_LANG.text_all_values, {
+            count: this.state.add.length
+          }))) : /*#__PURE__*/React.createElement("div", null)), this.renderFormAdd()));
         }
 
         renderRemove() {

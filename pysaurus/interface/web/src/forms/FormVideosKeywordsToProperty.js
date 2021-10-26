@@ -1,5 +1,6 @@
 import {Dialog} from "../dialogs/Dialog.js";
 import {Cell} from "../components/Cell.js";
+import {formatString} from "../utils/functions.js";
 
 export class FormVideosKeywordsToProperty extends React.Component {
     constructor(props) {
@@ -20,7 +21,7 @@ export class FormVideosKeywordsToProperty extends React.Component {
                         <select value={this.state.field}
                                 onChange={this.onChangeGroupField}>
                             {this.props.properties.map((def, i) => (
-                                <option key={i} value={def.name}>Property: {def.name}</option>
+                                <option key={i} value={def.name}>{PYTHON_LANG.word_property}: {def.name}</option>
                             ))}
                         </select>
                     </p>
@@ -29,8 +30,10 @@ export class FormVideosKeywordsToProperty extends React.Component {
                                type="checkbox"
                                checked={this.state.onlyEmpty}
                                onChange={this.onChangeEmpty}/>
-                        {' '}
-                        <label htmlFor="only-empty">only videos without values for property "{this.state.field}"</label>
+                        {" "}
+                        <label htmlFor="only-empty">
+                            {formatString(PYTHON_LANG.text_fill_videos_without_properties, {name: this.state.field})}
+                        </label>
                     </p>
                 </Cell>
             </Dialog>

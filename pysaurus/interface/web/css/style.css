@@ -103,3 +103,13 @@
 .set-input td input {
 	width: 100%;
 }
+
+/** div paragraph **/
+div.paragraph {
+	margin-top: 1em;
+	margin-bottom: 1em;
+}
+
+.help div.paragraph {
+	margin: 0;
+}

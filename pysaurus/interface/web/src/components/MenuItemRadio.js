@@ -10,6 +10,7 @@ export function MenuItemRadio(props) {
         </div>
     );
 }
+
 MenuItemRadio.propTypes = {
     value: PropTypes.object,
     checked: PropTypes.bool,

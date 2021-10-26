@@ -20,7 +20,7 @@ class PixelGroup:
 
     def __str__(self):
         return (
-            f"PixelGroup({self.identifier + 1}, "
+            f"{type(self).__name__}({self.identifier + 1}, "
             f"{self.color}, "
             f"{len(self.members)} member(s), "
             f"center {self.center})"

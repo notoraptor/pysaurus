@@ -7,6 +7,7 @@ export function MicroButton(props) {
         </div>
     );
 }
+
 MicroButton.propTypes = {
     title: PropTypes.string,
     action: PropTypes.func,

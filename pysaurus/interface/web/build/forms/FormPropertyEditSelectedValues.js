@@ -1,7 +1,7 @@
 System.register(["../dialogs/Dialog.js", "../utils/functions.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, parsePropValString, FormPropertyEditSelectedValues;
+  var Dialog, formatString, parsePropValString, FormPropertyEditSelectedValues;
 
   _export("FormPropertyEditSelectedValues", void 0);
 
@@ -9,6 +9,7 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js"], function (_ex
     setters: [function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
     }, function (_utilsFunctionsJs) {
+      formatString = _utilsFunctionsJs.formatString;
       parsePropValString = _utilsFunctionsJs.parsePropValString;
     }],
     execute: function () {
@@ -18,7 +19,7 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js"], function (_ex
           this.state = {
             form: 'edit',
             value: this.props.values[0].toString(),
-            move: '',
+            move: "",
             otherDefinitions: this.getCompatibleDefinitions()
           };
           this.setDelete = this.setDelete.bind(this);
@@ -35,7 +36,13 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js"], function (_ex
           const canMove = this.state.otherDefinitions.length && this.props.values.length === 1;
           const values = this.props.values;
           let title;
-          if (values.length === 1) title = `Property "${this.props.name}", value "${values[0]}"`;else title = `Property "${this.props.name}", ${values.length} values"`;
+          if (values.length === 1) title = formatString(PYTHON_LANG.form_title_edit_prop_val, {
+            name: this.props.name,
+            value: values[0]
+          });else title = formatString(PYTHON_LANG.form_title_edit_prop_vals, {
+            name: this.props.name,
+            count: values.length
+          });
           return /*#__PURE__*/React.createElement(Dialog, {
             title: title,
             yes: this.state.form,
@@ -45,15 +52,15 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js"], function (_ex
           }, /*#__PURE__*/React.createElement("div", {
             className: "bar flex-shrink-0 text-center"
           }, /*#__PURE__*/React.createElement("button", {
-            className: `delete ${this.state.form === 'delete' ? 'selected bolder' : ''}`,
+            className: `delete ${this.state.form === 'delete' ? 'selected bolder' : ""}`,
             onClick: this.setDelete
           }, "delete"), /*#__PURE__*/React.createElement("button", {
-            className: `edit ${this.state.form === 'edit' ? 'selected bolder' : ''}`,
+            className: `edit ${this.state.form === 'edit' ? 'selected bolder' : ""}`,
             onClick: this.setEdit
           }, "edit"), canMove ? /*#__PURE__*/React.createElement("button", {
-            className: `move ${this.state.form === 'move' ? 'selected bolder' : ''}`,
+            className: `move ${this.state.form === 'move' ? 'selected bolder' : ""}`,
             onClick: this.setMove
-          }, "move") : ''), /*#__PURE__*/React.createElement("div", {
+          }, "move") : ""), /*#__PURE__*/React.createElement("div", {
             className: `form position-relative flex-grow-1 text-center ${this.state.form}`
           }, this.renderForm())));
         }
@@ -78,7 +85,10 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js"], function (_ex
         renderDelete() {
           return /*#__PURE__*/React.createElement("div", {
             className: "flex-grow-1"
-          }, /*#__PURE__*/React.createElement("h3", null, "Are you sure you want to delete property value"), /*#__PURE__*/React.createElement("h3", null, "\"", this.props.name, "\" / ", this.valuesToString(), " ?"));
+          }, markdownToReact(formatString(PYTHON_LANG.form_content_delete_prop_val, {
+            name: this.props.name,
+            value: this.valuesToString()
+          })));
         }
 
         renderEdit() {
@@ -115,14 +125,21 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js"], function (_ex
 
           return /*#__PURE__*/React.createElement("div", {
             className: "flex-grow-1"
-          }, /*#__PURE__*/React.createElement("h3", null, "Edit property \"", this.props.name, "\" / ", this.valuesToString()), /*#__PURE__*/React.createElement("div", null, input));
+          }, /*#__PURE__*/React.createElement("h3", null, formatString(PYTHON_LANG.form_content_edit_prop_val, {
+            name: this.props.name,
+            value: this.valuesToString()
+          })), /*#__PURE__*/React.createElement("div", null, input));
         }
 
         renderMove() {
           const def = this.props.properties[this.props.name];
           return /*#__PURE__*/React.createElement("div", {
             className: "flex-grow-1"
-          }, /*#__PURE__*/React.createElement("h3", null, "Move property \"", this.props.name, "\" / ", this.valuesToString(), " to another property of type \"", def.type, "\"."), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("select", {
+          }, /*#__PURE__*/React.createElement("h3", null, formatString(PYTHON_LANG.form_content_move_prop_val, {
+            name: this.props.name,
+            value: this.valuesToString(),
+            type: def.type
+          })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("select", {
             value: this.state.move,
             onChange: this.onMove
           }, this.state.otherDefinitions.map((other, index) => /*#__PURE__*/React.createElement("option", {
@@ -193,7 +210,11 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js"], function (_ex
 
         valuesToString() {
           if (this.props.values.length === 1) return this.props.values[0].toString();
-          return `${this.props.values.length} values (${this.props.values[0].toString()} ... ${this.props.values[this.props.values.length - 1].toString()})`;
+          return formatString(PYTHON_LANG.form_summary_values, {
+            count: this.props.values.length,
+            first: this.props.values[0],
+            last: this.props.values[this.props.values.length - 1]
+          });
         }
 
       });

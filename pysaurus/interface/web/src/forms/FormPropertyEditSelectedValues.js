@@ -1,5 +1,5 @@
 import {Dialog} from "../dialogs/Dialog.js";
-import {parsePropValString} from "../utils/functions.js";
+import {formatString, parsePropValString} from "../utils/functions.js";
 
 export class FormPropertyEditSelectedValues extends React.Component {
     constructor(props) {
@@ -7,7 +7,7 @@ export class FormPropertyEditSelectedValues extends React.Component {
         this.state = {
             form: 'edit',
             value: this.props.values[0].toString(),
-            move: '',
+            move: "",
             otherDefinitions: this.getCompatibleDefinitions()
         };
         this.setDelete = this.setDelete.bind(this);
@@ -25,27 +25,27 @@ export class FormPropertyEditSelectedValues extends React.Component {
         const values = this.props.values;
         let title;
         if (values.length === 1)
-            title = `Property "${this.props.name}", value "${values[0]}"`;
+            title = formatString(PYTHON_LANG.form_title_edit_prop_val, {name: this.props.name, value: values[0]});
         else
-            title = `Property "${this.props.name}", ${values.length} values"`;
+            title = formatString(PYTHON_LANG.form_title_edit_prop_vals, {name: this.props.name, count: values.length});
         return (
             <Dialog title={title} yes={this.state.form} action={this.onClose}>
                 <div className="form-property-edit-selected-values vertical flex-grow-1">
                     <div className="bar flex-shrink-0 text-center">
-                        <button className={`delete ${this.state.form === 'delete' ? 'selected bolder' : ''}`}
+                        <button className={`delete ${this.state.form === 'delete' ? 'selected bolder' : ""}`}
                                 onClick={this.setDelete}>
                             delete
                         </button>
-                        <button className={`edit ${this.state.form === 'edit' ? 'selected bolder' : ''}`}
+                        <button className={`edit ${this.state.form === 'edit' ? 'selected bolder' : ""}`}
                                 onClick={this.setEdit}>
                             edit
                         </button>
                         {canMove ? (
-                            <button className={`move ${this.state.form === 'move' ? 'selected bolder' : ''}`}
+                            <button className={`move ${this.state.form === 'move' ? 'selected bolder' : ""}`}
                                     onClick={this.setMove}>
                                 move
                             </button>
-                        ) : ''}
+                        ) : ""}
                     </div>
                     <div className={`form position-relative flex-grow-1 text-center ${this.state.form}`}>
                         {this.renderForm()}
@@ -73,8 +73,10 @@ export class FormPropertyEditSelectedValues extends React.Component {
     renderDelete() {
         return (
             <div className="flex-grow-1">
-                <h3>Are you sure you want to delete property value</h3>
-                <h3>"{this.props.name}" / {this.valuesToString()} ?</h3>
+                {markdownToReact(formatString(
+                    PYTHON_LANG.form_content_delete_prop_val,
+                    {name: this.props.name, value: this.valuesToString()}
+                ))}
             </div>
         );
     }
@@ -107,7 +109,7 @@ export class FormPropertyEditSelectedValues extends React.Component {
         }
         return (
             <div className="flex-grow-1">
-                <h3>Edit property "{this.props.name}" / {this.valuesToString()}</h3>
+                <h3>{formatString(PYTHON_LANG.form_content_edit_prop_val, {name: this.props.name, value: this.valuesToString()})}</h3>
                 <div>{input}</div>
             </div>
         );
@@ -117,8 +119,12 @@ export class FormPropertyEditSelectedValues extends React.Component {
         const def = this.props.properties[this.props.name];
         return (
             <div className="flex-grow-1">
-                <h3>Move property "{this.props.name}" / {this.valuesToString()} to another property of type
-                    "{def.type}".</h3>
+                <h3>
+                    {formatString(
+                        PYTHON_LANG.form_content_move_prop_val,
+                        {name: this.props.name, value: this.valuesToString(), type: def.type}
+                    )}
+                </h3>
                 <div>
                     <select value={this.state.move} onChange={this.onMove}>
                         {this.state.otherDefinitions.map((other, index) =>
@@ -178,7 +184,14 @@ export class FormPropertyEditSelectedValues extends React.Component {
     valuesToString() {
         if (this.props.values.length === 1)
             return this.props.values[0].toString();
-        return `${this.props.values.length} values (${this.props.values[0].toString()} ... ${this.props.values[this.props.values.length - 1].toString()})`;
+        return formatString(
+            PYTHON_LANG.form_summary_values,
+            {
+                count: this.props.values.length,
+                first: this.props.values[0],
+                last: this.props.values[this.props.values.length - 1]
+            }
+        );
     }
 }
 

@@ -1,7 +1,7 @@
 System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../components/Cell.js", "../forms/FormPropertyRename.js", "../utils/backend.js", "../utils/functions.js"], function (_export, _context) {
   "use strict";
 
-  var ComponentController, SetInput, Dialog, Cell, FormPropertyRename, backend_error, python_call, parsePropValString, PropertiesPage, DEFAULT_VALUES;
+  var ComponentController, SetInput, Dialog, Cell, FormPropertyRename, backend_error, python_call, formatString, parsePropValString, PropertiesPage, DEFAULT_VALUES;
 
   function getDefaultValue(propType, isEnum) {
     return isEnum ? [] : DEFAULT_VALUES[propType].toString();
@@ -23,6 +23,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
       backend_error = _utilsBackendJs.backend_error;
       python_call = _utilsBackendJs.python_call;
     }, function (_utilsFunctionsJs) {
+      formatString = _utilsFunctionsJs.formatString;
       parsePropValString = _utilsFunctionsJs.parsePropValString;
     }],
     execute: function () {
@@ -30,7 +31,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
         bool: false,
         int: 0,
         float: 0.0,
-        str: ''
+        str: ""
       };
 
       _export("PropertiesPage", PropertiesPage = class PropertiesPage extends React.Component {
@@ -42,7 +43,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
           const defaultType = 'str';
           this.state = {
             definitions: definitions,
-            name: '',
+            name: "",
             type: defaultType,
             enumeration: true,
             defaultValue: getDefaultValue(defaultType, true),
@@ -73,17 +74,17 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             onClick: this.back
           }, "\u2B9C")), /*#__PURE__*/React.createElement("div", {
             className: "text-center flex-grow-1"
-          }, "Properties Management")), /*#__PURE__*/React.createElement("hr", null), /*#__PURE__*/React.createElement("div", {
+          }, PYTHON_LANG.gui_properties_title)), /*#__PURE__*/React.createElement("hr", null), /*#__PURE__*/React.createElement("div", {
             className: "content horizontal"
           }, /*#__PURE__*/React.createElement("div", {
             className: "list text-center"
           }, /*#__PURE__*/React.createElement("h3", {
             className: "text-center"
-          }, "Current properties"), this.renderPropTypes()), /*#__PURE__*/React.createElement("div", {
+          }, PYTHON_LANG.gui_properties_current), this.renderPropTypes()), /*#__PURE__*/React.createElement("div", {
             className: "new"
           }, /*#__PURE__*/React.createElement("h3", {
             className: "text-center"
-          }, "Add a new property"), /*#__PURE__*/React.createElement("table", {
+          }, PYTHON_LANG.gui_properties_add_new), /*#__PURE__*/React.createElement("table", {
             className: "first-td-text-right w-100"
           }, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("label", {
             htmlFor: "prop-name"
@@ -102,29 +103,29 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             onChange: this.onChangeType
           }, /*#__PURE__*/React.createElement("option", {
             value: "bool"
-          }, "boolean"), /*#__PURE__*/React.createElement("option", {
+          }, PYTHON_LANG.text_boolean), /*#__PURE__*/React.createElement("option", {
             value: "int"
-          }, "integer"), /*#__PURE__*/React.createElement("option", {
+          }, PYTHON_LANG.text_integer), /*#__PURE__*/React.createElement("option", {
             value: "float"
-          }, "floating number"), /*#__PURE__*/React.createElement("option", {
+          }, PYTHON_LANG.text_float), /*#__PURE__*/React.createElement("option", {
             value: "str"
-          }, "text")))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("input", {
+          }, PYTHON_LANG.text_text)))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("input", {
             type: "checkbox",
             id: "prop-multiple",
             checked: this.state.multiple,
             onChange: this.onChangeMultiple
           })), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("label", {
             htmlFor: "prop-multiple"
-          }, "accept many values"))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("input", {
+          }, PYTHON_LANG.text_accept_many_values))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("input", {
             type: "checkbox",
             id: "prop-enumeration",
             checked: this.state.enumeration,
             onChange: this.onChangeEnumeration
           })), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("label", {
             htmlFor: "prop-enumeration"
-          }, "Is enumeration"))), !this.state.multiple || this.state.enumeration ? /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("label", {
+          }, PYTHON_LANG.text_is_enumeration))), !this.state.multiple || this.state.enumeration ? /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("label", {
             htmlFor: 'prop-default-' + this.state.type
-          }, this.state.enumeration ? 'Enumeration values' + (this.state.multiple ? '' : ' (first is default)') : 'Default value')), /*#__PURE__*/React.createElement("td", null, this.renderDefaultInput())) : "", /*#__PURE__*/React.createElement("tr", {
+          }, this.state.enumeration ? this.state.multiple ? PYTHON_LANG.gui_properties_enumeration_values_multiple : PYTHON_LANG.gui_properties_enumeration_values : PYTHON_LANG.gui_properties_default_value)), /*#__PURE__*/React.createElement("td", null, this.renderDefaultInput())) : "", /*#__PURE__*/React.createElement("tr", {
             className: "buttons"
           }, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
             className: "reset block",
@@ -146,7 +147,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             className: "name bold"
           }, def.name), /*#__PURE__*/React.createElement("td", {
             className: "type"
-          }, def.multiple ? /*#__PURE__*/React.createElement("span", null, "one or many\xA0") : '', /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("code", null, def.type), " value", def.multiple ? 's' : ''), def.enumeration ? /*#__PURE__*/React.createElement("span", null, "\xA0in ", '{', def.enumeration.join(', '), '}') : ''), /*#__PURE__*/React.createElement("td", {
+          }, def.multiple ? /*#__PURE__*/React.createElement("span", null, PYTHON_LANG.text_one_or_many, "\xA0") : "", /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("code", null, def.type), " ", def.multiple ? PYTHON_LANG.word_values : PYTHON_LANG.word_value), def.enumeration ? /*#__PURE__*/React.createElement("span", null, "\xA0", PYTHON_LANG.word_in, " ", '{', def.enumeration.join(', '), '}') : ""), /*#__PURE__*/React.createElement("td", {
             className: "default"
           }, function () {
             if (def.multiple) {
@@ -268,8 +269,10 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
 
         deleteProperty(name) {
           Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
-            title: `Delete property "${name}"?`,
-            yes: 'delete',
+            title: formatString(PYTHON_LANG.form_title_delete_property, {
+              name
+            }),
+            yes: PYTHON_LANG.text_delete,
             action: () => {
               python_call('delete_prop_type', name).catch(backend_error).then(definitions => {
                 const state = this.getDefaultInputState();
@@ -281,13 +284,17 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             className: "text-center",
             center: true,
             full: true
-          }, /*#__PURE__*/React.createElement("h3", null, "Are you sure you want to delete property \"", name, "\"?"))));
+          }, /*#__PURE__*/React.createElement("h3", null, formatString(PYTHON_LANG.form_content_delete_property, {
+            name
+          })))));
         }
 
         convertPropertyToUnique(name) {
           Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
-            title: `Convert to unique property "${name}"?`,
-            yes: 'convert to unique',
+            title: formatString(PYTHON_LANG.form_title_convert_to_unique_property, {
+              name
+            }),
+            yes: PYTHON_LANG.form_convert_to_unique_property_yes,
             action: () => {
               python_call('convert_prop_to_unique', name).then(definitions => {
                 const state = this.getDefaultInputState();
@@ -299,13 +306,17 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             className: "text-center",
             center: true,
             full: true
-          }, /*#__PURE__*/React.createElement("h3", null, "Are you sure you want to convert to unique property \"", name, "\"?"))));
+          }, /*#__PURE__*/React.createElement("h3", null, formatString(PYTHON_LANG.form_confirm_convert_to_unique_property, {
+            name
+          })))));
         }
 
         convertPropertyToMultiple(name) {
           Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
-            title: `Convert to multiple property "${name}"?`,
-            yes: 'convert to multiple',
+            title: formatString(PYTHON_LANG.form_title_convert_to_multiple_property, {
+              name
+            }),
+            yes: PYTHON_LANG.form_convert_to_multiple_property_yes,
             action: () => {
               python_call('convert_prop_to_multiple', name).then(definitions => {
                 const state = this.getDefaultInputState();
@@ -317,7 +328,9 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             className: "text-center",
             center: true,
             full: true
-          }, /*#__PURE__*/React.createElement("h3", null, "Are you sure you want to convert to multiple property \"", name, "\"?"))));
+          }, /*#__PURE__*/React.createElement("h3", null, formatString(PYTHON_LANG.form_confirm_convert_to_multiple_property, {
+            name
+          })))));
         }
 
         renameProperty(name) {
@@ -336,7 +349,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
         getDefaultInputState() {
           const defaultType = 'str';
           return {
-            name: '',
+            name: "",
             type: defaultType,
             enumeration: false,
             defaultValue: getDefaultValue(defaultType),

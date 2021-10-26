@@ -14,6 +14,8 @@ TODO:
 
 Bugs:
 - Interface:
+  - top of centered text in fancy box is not shown if window is too small 
+    (e.g. with form to confirm database deletion)
 - Qt player may freeze unexpectedly when requiring next video
 - Cannot force kill a Python thread.
 

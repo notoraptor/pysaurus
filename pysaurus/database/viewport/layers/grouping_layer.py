@@ -63,7 +63,7 @@ class GroupingLayer(Layer):
                     ).append(video)
                 # hack
                 if group_def.field == "similarity_id":
-                    # Remove "None" (not checked) and "-1" (not similar) videos.
+                    # Remove None (not checked) and -1 (not similar) videos.
                     grouped_videos.pop(None, None)
                     grouped_videos.pop(-1, None)
             for field_value, videos in grouped_videos.items():

@@ -5,7 +5,7 @@ export class DialogSearch extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            text: '',
+            text: "",
         }
         this.onFocusInput = this.onFocusInput.bind(this);
         this.onChangeInput = this.onChangeInput.bind(this);

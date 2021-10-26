@@ -4,7 +4,7 @@ from pysaurus.database.miniature_tools.pixel_group import PixelGroup
 
 
 class DecomposedMiniature:
-    __slots__ = ("miniature_identifier", "pixel_groups")
+    __slots__ = "miniature_identifier", "pixel_groups"
     miniature_identifier: Any
     pixel_groups: List[PixelGroup]
 

@@ -8,6 +8,7 @@ export function MenuPack(props) {
         </div>
     );
 }
+
 MenuPack.propTypes = {
     title: PropTypes.string.isRequired
 };

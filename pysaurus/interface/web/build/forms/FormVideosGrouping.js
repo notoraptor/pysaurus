@@ -49,7 +49,7 @@ System.register(["../utils/constants.js", "../dialogs/Dialog.js"], function (_ex
             className: "from-videos-grouping first-td-text-right w-100"
           }, /*#__PURE__*/React.createElement("tbody", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
             className: "label"
-          }, "Field type"), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("input", {
+          }, PYTHON_LANG.text_field_type), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("input", {
             id: "field-type-property",
             type: "radio",
             value: "true",
@@ -89,22 +89,22 @@ System.register(["../utils/constants.js", "../dialogs/Dialog.js"], function (_ex
             onChange: this.onChangeAllowSingletons
           })), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("label", {
             htmlFor: "allow-singletons"
-          }, "Allow singletons (groups with only 1 video)"))) : /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, "\xA0"), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("em", null, "Will look for groups with at least 2 videos."))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
+          }, PYTHON_LANG.text_allow_singletons))) : /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, "\xA0"), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("em", null, PYTHON_LANG.text_singletons_auto_disabled))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
             className: "label"
           }, /*#__PURE__*/React.createElement("label", {
             htmlFor: "group-sorting"
-          }, "Sort using:")), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("select", {
+          }, PYTHON_LANG.text_sort_using)), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("select", {
             className: "block",
             id: "group-sorting",
             value: this.state.sorting,
             onChange: this.onChangeSorting
           }, /*#__PURE__*/React.createElement("option", {
             value: "field"
-          }, "Field value"), this.fieldIsString() ? /*#__PURE__*/React.createElement("option", {
+          }, PYTHON_LANG.text_field_value), this.fieldIsString() ? /*#__PURE__*/React.createElement("option", {
             value: "length"
-          }, "Field value length") : '', /*#__PURE__*/React.createElement("option", {
+          }, PYTHON_LANG.text_field_value_length) : "", /*#__PURE__*/React.createElement("option", {
             value: "count"
-          }, "Group size")))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
+          }, PYTHON_LANG.text_group_size)))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
             className: "label"
           }, /*#__PURE__*/React.createElement("input", {
             type: "checkbox",
@@ -113,7 +113,7 @@ System.register(["../utils/constants.js", "../dialogs/Dialog.js"], function (_ex
             onChange: this.onChangeGroupReverse
           })), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("label", {
             htmlFor: "group-reverse"
-          }, "sort in reverse order"))))));
+          }, PYTHON_LANG.text_sort_reverse))))));
         }
 
         fieldIsString() {

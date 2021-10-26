@@ -33,7 +33,7 @@ System.register(["../dialogs/Dialog.js"], function (_export, _context) {
             action: this.onClose
           }, /*#__PURE__*/React.createElement("div", {
             className: "form-rename text-center"
-          }, /*#__PURE__*/React.createElement("h1", null, "Rename video"), /*#__PURE__*/React.createElement("h2", null, /*#__PURE__*/React.createElement("code", {
+          }, /*#__PURE__*/React.createElement("h1", null, PYTHON_LANG.action_rename_video), /*#__PURE__*/React.createElement("h2", null, /*#__PURE__*/React.createElement("code", {
             id: "filename"
           }, this.props.filename)), /*#__PURE__*/React.createElement("p", {
             className: "form"

@@ -9,11 +9,11 @@ export class MenuItem extends React.Component {
         if (this.props.className)
             classNames.push(this.props.className);
         return (
-            <div className={classNames.join(' ')} onClick={this.onClick}>
+            <div className={classNames.join(" ")} onClick={this.onClick}>
                 <div className="icon"/>
                 <div className="text horizontal">
                     <div className="title">{this.props.children}</div>
-                    <div className="shortcut">{this.props.shortcut || ''}</div>
+                    <div className="shortcut">{this.props.shortcut || ""}</div>
                 </div>
             </div>
         );

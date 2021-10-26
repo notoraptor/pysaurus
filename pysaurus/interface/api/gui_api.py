@@ -228,7 +228,10 @@ class GuiAPI(FeatureAPI):
             else:
                 self.notifier.notify(Cancelled())
         except Exception as exc:
-            self.database.notifier.notify(End(f"Error {type(exc).__name__}: {exc}"))
+            self.database.notifier.notify(End(self.database.lang.error_moving_file.format(
+                name=type(exc).__name__,
+                message=exc
+            )))
         finally:
             self.db_loading_thread = None
 

@@ -16,7 +16,7 @@ System.register(["../components/Cell.js", "./Dialog.js"], function (_export, _co
         constructor(props) {
           super(props);
           this.state = {
-            text: ''
+            text: ""
           };
           this.onFocusInput = this.onFocusInput.bind(this);
           this.onChangeInput = this.onChangeInput.bind(this);

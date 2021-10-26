@@ -8,7 +8,7 @@ from pysaurus.database.viewport.layers.layer import Layer
 
 
 class SourceLayer(Layer):
-    __slots__ = ("__index", "__to_update_index")
+    __slots__ = "__index", "__to_update_index"
     __props__ = ("sources",)
     _cache: Dict[AbsolutePath, VideoState]
     DEFAULT_SOURCE_DEF = [("readable",)]

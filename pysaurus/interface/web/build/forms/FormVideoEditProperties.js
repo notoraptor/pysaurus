@@ -37,8 +37,8 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../utils/
           const data = this.props.data;
           const hasThumbnail = data.has_thumbnail;
           return /*#__PURE__*/React.createElement(Dialog, {
-            title: 'Edit video properties',
-            yes: "save",
+            title: PYTHON_LANG.form_edit_video_properties,
+            yes: PYTHON_LANG.texte_save,
             action: this.onClose
           }, /*#__PURE__*/React.createElement("div", {
             className: "form-video-edit-properties horizontal"
@@ -51,9 +51,9 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../utils/
             src: data.thumbnail_path
           }) : /*#__PURE__*/React.createElement("div", {
             className: "no-thumbnail"
-          }, "no thumbnail")), /*#__PURE__*/React.createElement("div", {
+          }, PYTHON_LANG.text_no_thumbnail)), /*#__PURE__*/React.createElement("div", {
             className: "filename p-1 mb-1"
-          }, /*#__PURE__*/React.createElement("code", null, data.filename)), data.title === data.file_title ? '' : /*#__PURE__*/React.createElement("div", {
+          }, /*#__PURE__*/React.createElement("code", null, data.filename)), data.title === data.file_title ? "" : /*#__PURE__*/React.createElement("div", {
             className: "title mb-1"
           }, /*#__PURE__*/React.createElement("em", null, data.title))), /*#__PURE__*/React.createElement("div", {
             className: "properties flex-grow-1"

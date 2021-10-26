@@ -7,8 +7,8 @@ export class FormVideosSearch extends React.Component {
         // onClose(criterion)
         super(props);
         this.state = {
-            text: this.props.text || '',
-            cond: this.props.cond || '',
+            text: this.props.text || "",
+            cond: this.props.cond || "",
         }
         this.onFocusInput = this.onFocusInput.bind(this);
         this.onChangeInput = this.onChangeInput.bind(this);
@@ -19,10 +19,9 @@ export class FormVideosSearch extends React.Component {
 
     render() {
         return (
-            <FancyBox title="Search videos">
+            <FancyBox title={PYTHON_LANG.form_title_search_videos}>
                 <div className="form-videos-search text-center">
-                    <p>Type text to search and choose how to search.</p>
-                    <p>You can also type text and then press enter to automatically select "AND" as search method.</p>
+                    {markdownToReact(PYTHON_LANG.form_content_search_videos)}
                     <p>
                         <input type="text"
                                id="input-search"
@@ -41,7 +40,7 @@ export class FormVideosSearch extends React.Component {
                                value="and"
                                onChange={this.onChangeCond}
                                checked={this.state.cond === 'and'}/>
-                        <label htmlFor="input-search-and">all terms</label>
+                        <label htmlFor="input-search-and">{PYTHON_LANG.search_and}</label>
                     </p>
                     <p>
                         <input type="radio"
@@ -50,7 +49,7 @@ export class FormVideosSearch extends React.Component {
                                value="or"
                                onChange={this.onChangeCond}
                                checked={this.state.cond === 'or'}/>
-                        <label htmlFor="input-search-or">any term</label>
+                        <label htmlFor="input-search-or">{PYTHON_LANG.search_or}</label>
                     </p>
                     <p>
                         <input type="radio"
@@ -59,7 +58,7 @@ export class FormVideosSearch extends React.Component {
                                value="exact"
                                onChange={this.onChangeCond}
                                checked={this.state.cond === 'exact'}/>
-                        <label htmlFor="input-search-exact">exact sentence</label>
+                        <label htmlFor="input-search-exact">{PYTHON_LANG.search_exact_sentence}</label>
                     </p>
                     <p>
                         <input type="radio"
@@ -68,7 +67,7 @@ export class FormVideosSearch extends React.Component {
                                value="id"
                                onChange={this.onChangeCond}
                                checked={this.state.cond === 'id'}/>
-                        <label htmlFor="input-search-id">video ID</label>
+                        <label htmlFor="input-search-id">{PYTHON_LANG.search_id}</label>
                     </p>
                 </div>
             </FancyBox>
@@ -84,7 +83,7 @@ export class FormVideosSearch extends React.Component {
     }
 
     onChangeInput(event) {
-        this.setState({text: event.target.value, cond: ''});
+        this.setState({text: event.target.value, cond: ""});
     }
 
     onChangeCond(event) {

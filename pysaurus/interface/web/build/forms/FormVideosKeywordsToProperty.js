@@ -1,7 +1,7 @@
-System.register(["../dialogs/Dialog.js", "../components/Cell.js"], function (_export, _context) {
+System.register(["../dialogs/Dialog.js", "../components/Cell.js", "../utils/functions.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, Cell, FormVideosKeywordsToProperty;
+  var Dialog, Cell, formatString, FormVideosKeywordsToProperty;
 
   _export("FormVideosKeywordsToProperty", void 0);
 
@@ -10,6 +10,8 @@ System.register(["../dialogs/Dialog.js", "../components/Cell.js"], function (_ex
       Dialog = _dialogsDialogJs.Dialog;
     }, function (_componentsCellJs) {
       Cell = _componentsCellJs.Cell;
+    }, function (_utilsFunctionsJs) {
+      formatString = _utilsFunctionsJs.formatString;
     }],
     execute: function () {
       _export("FormVideosKeywordsToProperty", FormVideosKeywordsToProperty = class FormVideosKeywordsToProperty extends React.Component {
@@ -41,14 +43,16 @@ System.register(["../dialogs/Dialog.js", "../components/Cell.js"], function (_ex
           }, this.props.properties.map((def, i) => /*#__PURE__*/React.createElement("option", {
             key: i,
             value: def.name
-          }, "Property: ", def.name)))), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("input", {
+          }, PYTHON_LANG.word_property, ": ", def.name)))), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("input", {
             id: "only-empty",
             type: "checkbox",
             checked: this.state.onlyEmpty,
             onChange: this.onChangeEmpty
-          }), ' ', /*#__PURE__*/React.createElement("label", {
+          }), " ", /*#__PURE__*/React.createElement("label", {
             htmlFor: "only-empty"
-          }, "only videos without values for property \"", this.state.field, "\""))));
+          }, formatString(PYTHON_LANG.text_fill_videos_without_properties, {
+            name: this.state.field
+          })))));
         }
 
         onChangeGroupField(event) {

@@ -1,4 +1,5 @@
 import os
+import sys
 
 import av
 
@@ -14,7 +15,7 @@ def open_video(filename):
     try:
         return av.open(filename)
     except UnicodeDecodeError:
-        print("Opening with metadata encoding latin-1")
+        print("Opening with metadata encoding latin-1", file=sys.stderr)
         return av.open(filename, metadata_encoding="latin-1")
 
 
@@ -73,12 +74,21 @@ def get_infos(filename):
         return {M["filename"]: filename, M["errors"]: [f"{type(exc).__name__}: {exc}"]}
 
 
+
+class NoVideoStream(RuntimeError):
+    pass
+
+
+class NoFrameFoundInMiddleOfVideo(RuntimeError):
+    pass
+
+
 def get_thumbnail(filename, thumb_path, thumb_size=300):
     try:
         with open_video(filename) as container:
             _video_streams = container.streams.video
             if not _video_streams:
-                raise RuntimeError("No video stream")
+                raise NoVideoStream()
             video_stream = _video_streams[0]
             video_stream.codec_context.skip_frame = "NONKEY"
             container.seek(offset=container.duration // 2)
@@ -90,7 +100,7 @@ def get_thumbnail(filename, thumb_path, thumb_size=300):
                 thumbnail_saved = True
                 break
             if not thumbnail_saved:
-                raise RuntimeError("No frame found in middle of video")
+                raise NoFrameFoundInMiddleOfVideo()
     except Exception as exc:
         return {
             M["filename"]: filename,

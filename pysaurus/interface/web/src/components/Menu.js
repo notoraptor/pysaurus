@@ -9,6 +9,7 @@ export function Menu(props) {
         </div>
     );
 }
+
 Menu.propTypes = {
     title: PropTypes.string.isRequired
 }

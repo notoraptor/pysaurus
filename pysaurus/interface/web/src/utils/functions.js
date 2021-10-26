@@ -13,7 +13,7 @@ export function parsePropValString(propType, propEnum, value) {
             else if (value === "true")
                 parsed = true;
             else
-                throw `Invalid bool value, expected: [false, true], got ${value}`;
+                throw formatString(PYTHON_LANG.error_invalid_bool_value, {value});
             break;
         case "int":
             parsed = parseInt(value);
@@ -23,7 +23,7 @@ export function parsePropValString(propType, propEnum, value) {
         case "float":
             parsed = parseFloat(value);
             if (isNaN(parsed))
-                throw `Unable to parse floating value: ${value}`;
+                throw formatString(PYTHON_LANG.error_parsing_float, {value});
             break;
         case "str":
             parsed = value;
@@ -32,7 +32,7 @@ export function parsePropValString(propType, propEnum, value) {
             throw `Unknown property type: ${propType}`;
     }
     if (propEnum && propEnum.indexOf(parsed) < 0)
-        throw `Invalid enum value, expected: [${propEnum.join(', ')}], got ${value}`;
+        throw formatString(PYTHON_LANG.error_parsing_enum, {expected: propEnum.join(', '), value: value});
     return parsed;
 }
 
@@ -44,11 +44,25 @@ export function capitalizeFirstLetter(str) {
     return str.substr(0, 1).toUpperCase() + str.substr(1);
 }
 
+/**
+ *
+ * @param text {string}
+ * @param kwargs {Object}
+ * @return string
+ */
+export function formatString(text, kwargs) {
+    for (let entry of Object.entries(kwargs)) {
+        const [key, value] = entry;
+        text = text.replace(new RegExp("\\{" + key + "\\}", "g"), value.toString());
+    }
+    return text;
+}
 
 export class IdGenerator {
     constructor() {
         this.id = 0;
     }
+
     next() {
         return ++this.id;
     }

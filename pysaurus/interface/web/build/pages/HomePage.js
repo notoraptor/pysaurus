@@ -1,7 +1,7 @@
-System.register(["../utils/constants.js", "../utils/backend.js"], function (_export, _context) {
+System.register(["../utils/constants.js", "../utils/backend.js", "../utils/functions.js"], function (_export, _context) {
   "use strict";
 
-  var Characters, backend_error, python_call, ProgressionMonitoring, HomePage, EndStatus, EndReady, NotificationCollector, NotificationRenderer, ACTIONS;
+  var Characters, backend_error, python_call, formatString, ProgressionMonitoring, HomePage, EndStatus, EndReady, NotificationCollector, NotificationRenderer, ACTIONS;
 
   /**
    * @param props {{monitoring: ProgressionMonitoring}}
@@ -16,7 +16,9 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
     }
 
     const percent = Math.round(current * 100 / total);
-    const title = monitoring.title || `${current} done`;
+    const title = monitoring.title || formatString(PYTHON_LANG.text_done, {
+      count: current
+    });
     const jobClassID = "job " + monitoring.name;
     return /*#__PURE__*/React.createElement("div", {
       className: "job horizontal"
@@ -48,6 +50,8 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
     }, function (_utilsBackendJs) {
       backend_error = _utilsBackendJs.backend_error;
       python_call = _utilsBackendJs.python_call;
+    }, function (_utilsFunctionsJs) {
+      formatString = _utilsFunctionsJs.formatString;
     }],
     execute: function () {
       ProgressionMonitoring = class ProgressionMonitoring {
@@ -123,7 +127,21 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
           const data = message.notification;
           return /*#__PURE__*/React.createElement("div", {
             key: i
-          }, /*#__PURE__*/React.createElement("strong", null, "Database ", message.name === 'DatabaseSaved' ? 'saved' : 'loaded'), ":", data.entries, ' ', data.entries > 1 ? 'entries' : 'entry', ",", data.discarded, " discarded,", data.unreadable_not_found, " unreadable not found,", data.unreadable_found, " unreadable found,", data.readable_not_found, " readable not found,", data.readable_found_without_thumbnails, " readable found without thumbnails,", data.valid, " valid");
+          }, /*#__PURE__*/React.createElement("strong", null, message.name === 'DatabaseSaved' ? PYTHON_LANG.text_database_saved : PYTHON_LANG.text_database_loaded), ":", formatString(PYTHON_LANG.text_nb_entries, {
+            count: data.entries
+          }) + ", ", formatString(PYTHON_LANG.text_nb_discarded, {
+            count: data.discarded
+          }) + ", ", formatString(PYTHON_LANG.text_nb_unreadable_not_found, {
+            count: data.unreadable_not_found
+          }) + ", ", formatString(PYTHON_LANG.text_nb_unreadable_found, {
+            count: data.unreadable_found
+          }) + ", ", formatString(PYTHON_LANG.text_nb_readable_not_found, {
+            count: data.readable_not_found
+          }) + ", ", formatString(PYTHON_LANG.text_nb_readable_found_without_thumbnails, {
+            count: data.readable_found_without_thumbnails
+          }) + ", ", formatString(PYTHON_LANG.text_nb_valid, {
+            count: data.valid
+          }));
         },
         DatabaseSaved: function (app, message, i) {
           return NotificationRenderer.DatabaseLoaded(app, message, i);
@@ -131,17 +149,17 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
         DatabaseReady: function (app, message, i) {
           return /*#__PURE__*/React.createElement("div", {
             key: i
-          }, /*#__PURE__*/React.createElement("strong", null, "Database open!"));
+          }, /*#__PURE__*/React.createElement("strong", null, PYTHON_LANG.text_notification_database_ready));
         },
         Done: function (app, message, i) {
           return /*#__PURE__*/React.createElement("div", {
             key: i
-          }, /*#__PURE__*/React.createElement("strong", null, "Done!"));
+          }, /*#__PURE__*/React.createElement("strong", null, PYTHON_LANG.text_notification_done));
         },
         Cancelled: function (app, message, i) {
           return /*#__PURE__*/React.createElement("div", {
             key: i
-          }, /*#__PURE__*/React.createElement("strong", null, "Cancelled."));
+          }, /*#__PURE__*/React.createElement("strong", null, PYTHON_LANG.text_notification_cancelled));
         },
         End: function (app, message, i) {
           const info = message.notification.message;
@@ -153,7 +171,9 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
           const count = message.notification.count;
           return /*#__PURE__*/React.createElement("div", {
             key: i
-          }, /*#__PURE__*/React.createElement("strong", null, "Collected"), ' ', count, " file", count > 1 ? 's' : '');
+          }, markdownToReact(formatString(PYTHON_LANG.gui_home_collected_files, {
+            count
+          }), true));
         },
         MissingThumbnails: function (app, message, i) {
           const names = message.notification.names;
@@ -161,13 +181,15 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
           if (names.length) {
             return /*#__PURE__*/React.createElement("div", {
               key: i
-            }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, "Missing ", names.length, " thumbnails"), ":"), names.map((name, indexName) => /*#__PURE__*/React.createElement("div", {
+            }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, formatString(PYTHON_LANG.text_notification_missing_thumbnails, {
+              count: names.length
+            })), ":"), names.map((name, indexName) => /*#__PURE__*/React.createElement("div", {
               key: indexName
             }, /*#__PURE__*/React.createElement("code", null, name))));
           } else {
             return /*#__PURE__*/React.createElement("div", {
               key: i
-            }, /*#__PURE__*/React.createElement("em", null, "No missing thumbnails!"));
+            }, /*#__PURE__*/React.createElement("em", null, PYTHON_LANG.text_notification_no_missing_thumbnails));
           }
         },
         ProfilingStart: function (app, message, i) {
@@ -175,14 +197,14 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
             key: i
           }, /*#__PURE__*/React.createElement("span", {
             className: "span-profiled"
-          }, "PROFILING"), " ", message.notification.name);
+          }, PYTHON_LANG.text_profiling), " ", message.notification.name);
         },
         ProfilingEnd: function (app, message, i) {
           return /*#__PURE__*/React.createElement("div", {
             key: i
           }, /*#__PURE__*/React.createElement("span", {
             className: "span-profiled"
-          }, message.notification.inplace ? `PROFILING / ` : ``, "PROFILED"), " ", message.notification.name, " ", /*#__PURE__*/React.createElement("span", {
+          }, message.notification.inplace ? `${PYTHON_LANG.text_profiling} / ` : "", PYTHON_LANG.text_profiled), " ", message.notification.name, " ", /*#__PURE__*/React.createElement("span", {
             className: "span-profiled"
           }, "TIME"), " ", message.notification.time);
         },
@@ -192,7 +214,9 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
           keys.sort();
           return /*#__PURE__*/React.createElement("div", {
             key: i
-          }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, errors.length, ' ', message.name === 'VideoInfoErrors' ? 'video' : 'thumbnail', " ", "error", errors.length > 1 ? 's' : ''), ":"), /*#__PURE__*/React.createElement("ul", null, keys.map((name, indexName) => /*#__PURE__*/React.createElement("li", {
+          }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, formatString(message.name === 'VideoInfoErrors' ? PYTHON_LANG.text_nb_video_errors : PYTHON_LANG.text_nb_thumbnail_errors, {
+            count: keys.length
+          })), ":"), /*#__PURE__*/React.createElement("ul", null, keys.map((name, indexName) => /*#__PURE__*/React.createElement("li", {
             key: indexName
           }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("code", null, name)), /*#__PURE__*/React.createElement("ul", null, errors[name].map((error, indexError) => /*#__PURE__*/React.createElement("li", {
             key: indexError
@@ -213,11 +237,11 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
           } else if (total) {
             return /*#__PURE__*/React.createElement("div", {
               key: i
-            }, /*#__PURE__*/React.createElement("strong", null, total, ' ', label, total > 1 ? 's' : '', " to load."));
+            }, PYTHON_LANG.gui_home_to_load, ": ", /*#__PURE__*/React.createElement("strong", null, total, " ", label));
           } else {
             return /*#__PURE__*/React.createElement("div", {
               key: i
-            }, /*#__PURE__*/React.createElement("em", null, "No ", label, "s to load!"));
+            }, /*#__PURE__*/React.createElement("em", null, PYTHON_LANG.gui_home_to_load, ": ", PYTHON_LANG.text_nothing));
           }
         },
         NbMiniatures: function (app, message, i) {
@@ -226,11 +250,13 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
           if (total) {
             return /*#__PURE__*/React.createElement("div", {
               key: i
-            }, /*#__PURE__*/React.createElement("strong", null, total, " miniature", total > 1 ? 's' : '', " saved."));
+            }, /*#__PURE__*/React.createElement("strong", null, formatString(PYTHON_LANG.text_nb_miniatures_saved, {
+              count: total
+            })));
           } else {
             return /*#__PURE__*/React.createElement("div", {
               key: i
-            }, /*#__PURE__*/React.createElement("em", null, "No miniatures saved!"));
+            }, /*#__PURE__*/React.createElement("em", null, PYTHON_LANG.text_no_miniatures_saved));
           }
         },
         Message: function (app, message, i) {
@@ -283,7 +309,7 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
         renderInitialButton() {
           if (this.props.parameters.onReady) return /*#__PURE__*/React.createElement("strong", null, this.state.status || ACTIONS[this.props.parameters.command[0]] + " ...");else if (this.state.loaded) return /*#__PURE__*/React.createElement("button", {
             onClick: this.displayVideos
-          }, "Display videos");else return /*#__PURE__*/React.createElement("button", {
+          }, PYTHON_LANG.text_display_videos);else return /*#__PURE__*/React.createElement("button", {
             disabled: true
           }, ACTIONS[this.props.parameters.command[0]], " ...");
         }
@@ -301,7 +327,7 @@ System.register(["../utils/constants.js", "../utils/backend.js"], function (_exp
             } else {
               output.push( /*#__PURE__*/React.createElement("div", {
                 key: i
-              }, /*#__PURE__*/React.createElement("em", null, "unknown"), ": ", message.message));
+              }, /*#__PURE__*/React.createElement("em", null, PYTHON_LANG.text_notification_unknown), ": ", message.message));
             }
           }
 

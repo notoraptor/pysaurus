@@ -12,7 +12,7 @@ System.register(["../dialogs/FancyBox.js"], function (_export, _context) {
     return subTree;
   }
 
-  function collectPaths(tree, collection, prefix = '') {
+  function collectPaths(tree, collection, prefix = "") {
     if (tree) {
       if (prefix.length) collection.push(prefix);
 
@@ -78,44 +78,44 @@ System.register(["../dialogs/FancyBox.js"], function (_export, _context) {
         render() {
           return /*#__PURE__*/React.createElement(FancyBox, {
             title: "Select Videos"
-          }, this.renderTree(this.props.tree), /*#__PURE__*/React.createElement("p", null, "Currently selected:", this.state.paths.length ? '' : ' None'), this.state.paths.length ? /*#__PURE__*/React.createElement("ul", null, this.state.paths.map((path, index) => /*#__PURE__*/React.createElement("li", {
+          }, this.renderTree(this.props.tree), /*#__PURE__*/React.createElement("p", null, this.state.paths.length ? PYTHON_LANG.form_source_currently_selected : PYTHON_LANG.form_source_none_selected), this.state.paths.length ? /*#__PURE__*/React.createElement("ul", null, this.state.paths.map((path, index) => /*#__PURE__*/React.createElement("li", {
             key: index
-          }, /*#__PURE__*/React.createElement("strong", null, path.replace(/-/g, '.'))))) : '', /*#__PURE__*/React.createElement("p", {
+          }, /*#__PURE__*/React.createElement("strong", null, path.replace(/-/g, '.'))))) : "", /*#__PURE__*/React.createElement("p", {
             className: "submit mx-1 my-4"
           }, /*#__PURE__*/React.createElement("button", {
             className: "submit block",
             onClick: this.submit
-          }, "select")));
+          }, PYTHON_LANG.text_select)));
         }
 
-        renderTree(tree, prefix = '') {
+        renderTree(tree, prefix = "") {
           return /*#__PURE__*/React.createElement("ul", null, Object.keys(tree).map((name, index) => {
             const subTree = tree[name];
             const entryName = prefix.length ? prefix + '-' + name : name;
             const hasPath = this.hasPath(entryName);
             return /*#__PURE__*/React.createElement("li", {
               key: index
-            }, subTree ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, name), ' ', /*#__PURE__*/React.createElement("input", {
+            }, subTree ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, name), " ", /*#__PURE__*/React.createElement("input", {
               type: "radio",
               onChange: this.onChangeRadio,
               id: entryName + '0',
               name: entryName,
               value: 'select',
               checked: hasPath
-            }), ' ', /*#__PURE__*/React.createElement("label", {
+            }), " ", /*#__PURE__*/React.createElement("label", {
               htmlFor: entryName + '0'
-            }, "select"), ' ', /*#__PURE__*/React.createElement("input", {
+            }, "select"), " ", /*#__PURE__*/React.createElement("input", {
               type: "radio",
               onChange: this.onChangeRadio,
               id: entryName + '1',
               name: entryName,
               value: 'develop',
               checked: !hasPath
-            }), ' ', /*#__PURE__*/React.createElement("label", {
+            }), " ", /*#__PURE__*/React.createElement("label", {
               htmlFor: entryName + '1'
-            }, "develop")), hasPath ? '' : this.renderTree(subTree, entryName)) : /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("label", {
+            }, PYTHON_LANG.form_source_develop)), hasPath ? "" : this.renderTree(subTree, entryName)) : /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("label", {
               htmlFor: entryName + '0'
-            }, /*#__PURE__*/React.createElement("strong", null, name)), ' ', /*#__PURE__*/React.createElement("input", {
+            }, /*#__PURE__*/React.createElement("strong", null, name)), " ", /*#__PURE__*/React.createElement("input", {
               type: "checkbox",
               onChange: this.onChangeCheckBox,
               id: entryName + '0',

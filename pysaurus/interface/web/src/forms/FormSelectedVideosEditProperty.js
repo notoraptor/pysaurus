@@ -1,5 +1,5 @@
 import {Dialog} from "../dialogs/Dialog.js";
-import {parsePropValString} from "../utils/functions.js";
+import {formatString, parsePropValString} from "../utils/functions.js";
 import {Characters} from "../utils/constants.js";
 
 export class FormSelectedVideosEditProperty extends React.Component {
@@ -45,14 +45,14 @@ export class FormSelectedVideosEditProperty extends React.Component {
         const propName = this.props.definition.name;
         const nbVideos = this.props.nbVideos;
         return (
-            <Dialog title={`Edit property "${propName}" for ${nbVideos} video${nbVideos < 2 ? '' : 's'}`}
+            <Dialog title={formatString(PYTHON_LANG.form_title_edit_property_for_videos, {name: propName, count: nbVideos})}
                     yes="edit"
                     action={this.onClose}>
                 <div className="form-selected-videos-edit-property vertical flex-grow-1 text-center">
                     <div className="bar titles flex-shrink-0 horizontal bold">
-                        <div>To remove</div>
-                        <div>Current</div>
-                        <div>To add</div>
+                        <div>{PYTHON_LANG.text_to_remove}</div>
+                        <div>{PYTHON_LANG.text_current}</div>
+                        <div>{PYTHON_LANG.text_to_add}</div>
                     </div>
                     <div className="bar panels horizontal flex-grow-1">
                         <div className="remove">{this.renderRemove()}</div>
@@ -62,23 +62,29 @@ export class FormSelectedVideosEditProperty extends React.Component {
                     <div className="bar new flex-shrink-0 all horizontal">
                         {this.state.remove.length > 1 ? (
                             <div className="horizontal">
-                                <div className="value">all {this.state.remove.length} values</div>
+                                <div className="value">
+                                    {formatString(PYTHON_LANG.text_all_values, {count: this.state.remove.length})}
+                                </div>
                                 <button onClick={this.unRemoveAll}>{Characters.SMART_ARROW_RIGHT}</button>
                             </div>
                         ) : <div/>}
                         {this.state.current.length > 1 ? (
                             <div className="horizontal">
                                 <button onClick={this.removeAll}>{Characters.SMART_ARROW_LEFT}</button>
-                                <div className="value">all {this.state.current.length} values</div>
+                                <div className="value">
+                                    {formatString(PYTHON_LANG.text_all_values, {count: this.state.current.length})}
+                                </div>
                                 {this.props.definition.multiple ? (
                                     <button onClick={this.addAll}>{Characters.SMART_ARROW_RIGHT}</button>
-                                ) : ''}
+                                ) : ""}
                             </div>
                         ) : <div/>}
                         {this.state.add.length > 1 ? (
                             <div className="horizontal">
                                 <button onClick={this.unAddAll}>{Characters.SMART_ARROW_LEFT}</button>
-                                <div className="value">all {this.state.add.length} values</div>
+                                <div className="value">
+                                    {formatString(PYTHON_LANG.text_all_values, {count: this.state.add.length})}
+                                </div>
                             </div>
                         ) : <div/>}
                     </div>

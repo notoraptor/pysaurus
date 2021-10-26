@@ -1,7 +1,7 @@
 System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js", "./PlusIcon.js", "../utils/functions.js", "../utils/Actions.js", "../utils/Action.js"], function (_export, _context) {
   "use strict";
 
-  var Characters, FIELD_MAP, Pagination, SettingIcon, PlusIcon, capitalizeFirstLetter, Actions, Action, GroupView;
+  var Characters, FIELD_MAP, Pagination, SettingIcon, PlusIcon, capitalizeFirstLetter, Actions, Action, formatString, GroupView;
 
   function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
@@ -19,6 +19,7 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
       PlusIcon = _PlusIconJs.PlusIcon;
     }, function (_utilsFunctionsJs) {
       capitalizeFirstLetter = _utilsFunctionsJs.capitalizeFirstLetter;
+      formatString = _utilsFunctionsJs.formatString;
     }, function (_utilsActionsJs) {
       Actions = _utilsActionsJs.Actions;
     }, function (_utilsActionJs) {
@@ -74,13 +75,15 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
             type: "checkbox",
             checked: allChecked,
             onChange: event => this.onCheckAll(event, start, end)
-          }), ' ', /*#__PURE__*/React.createElement("label", {
+          }), " ", /*#__PURE__*/React.createElement("label", {
             htmlFor: "group-view-select-all"
-          }, allChecked ? 'All ' : '', selection.size, " selected"), selection.size ? /*#__PURE__*/React.createElement("span", null, "\xA0", /*#__PURE__*/React.createElement(SettingIcon, {
+          }, formatString(allChecked ? PYTHON_LANG.text_all_groups_selected : PYTHON_LANG.text_groups_selected, {
+            count: selection.size
+          })), selection.size ? /*#__PURE__*/React.createElement("span", null, "\xA0", /*#__PURE__*/React.createElement(SettingIcon, {
             key: "options-for-selected",
-            title: `Options for selected...`,
+            title: "Options for selected...",
             action: this.openPropertyOptionsAll
-          })) : '')) : ''), /*#__PURE__*/React.createElement("div", {
+          })) : "")) : ""), /*#__PURE__*/React.createElement("div", {
             className: "content position-relative flex-grow-1 overflow-auto"
           }, this.props.groupDef.groups.length ? /*#__PURE__*/React.createElement("table", {
             className: "second-td-text-right w-100 table-layout-fixed"
@@ -95,25 +98,25 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
                   checked: selection.has(index),
                   onChange: event => this.onCheckEntry(event, index)
                 }));
-                buttons.push(' ');
+                buttons.push(" ");
 
                 if (!selection.size) {
                   buttons.push( /*#__PURE__*/React.createElement(SettingIcon, {
                     key: "options",
-                    title: `Options ...`,
+                    title: "Options ...",
                     action: event => this.openPropertyOptions(event, index)
                   }));
-                  buttons.push(' ');
+                  buttons.push(" ");
                 }
               }
 
               if (!selection.size) {
                 buttons.push( /*#__PURE__*/React.createElement(PlusIcon, {
                   key: "add",
-                  title: `Add ...`,
+                  title: "Add ...",
                   action: event => this.openPropertyPlus(event, index)
                 }));
-                buttons.push(' ');
+                buttons.push(" ");
               }
             }
 
@@ -142,12 +145,12 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
               key: "value"
             }, isProperty ? {
               title: entry.value
-            } : {}), entry.value === null ? `(none)` : entry.value)), /*#__PURE__*/React.createElement("td", {
+            } : {}), entry.value === null ? "(none)" : entry.value)), /*#__PURE__*/React.createElement("td", {
               title: entry.count
             }, entry.count));
           })) : /*#__PURE__*/React.createElement("div", {
             className: "absolute-plain no-groups text-center vertical"
-          }, /*#__PURE__*/React.createElement("strong", null, /*#__PURE__*/React.createElement("em", null, "No groups")))));
+          }, /*#__PURE__*/React.createElement("strong", null, /*#__PURE__*/React.createElement("em", null, PYTHON_LANG.text_no_groups)))));
         }
 
         renderTitle() {

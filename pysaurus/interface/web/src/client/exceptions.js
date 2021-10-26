@@ -1,21 +1,21 @@
 function createException(type, message) {
-	return {type: type, message: message};
+    return {type: type, message: message};
 }
 
 export class Exceptions {
-	static fromErrorResponse(response) {
-		return createException(response.error_type, response.message);
-	}
+    static fromErrorResponse(response) {
+        return createException(response.error_type, response.message);
+    }
 
-	static disconnected() {
-		return createException('disconnected', 'disconnected');
-	}
+    static disconnected() {
+        return createException('disconnected', 'disconnected');
+    }
 
-	static connectionFailed() {
-		return createException('connectionFailed', 'Unable to connect.');
-	}
+    static connectionFailed() {
+        return createException('connectionFailed', 'Unable to connect.');
+    }
 
-	static databaseFailed(message) {
-		return createException('databaseFailed', message);
-	}
+    static databaseFailed(message) {
+        return createException('databaseFailed', message);
+    }
 }

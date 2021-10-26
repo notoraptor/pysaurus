@@ -22,7 +22,7 @@ System.register(["../utils/constants.js"], function (_export, _context) {
         render() {
           const lite = this.props.lite !== undefined ? this.props.lite : true;
           return /*#__PURE__*/React.createElement("div", {
-            className: `abstract-collapsable ${lite ? "collapsable" : "stack"} ${this.props.className || ''}`
+            className: `abstract-collapsable ${lite ? "collapsable" : "stack"} ${this.props.className || ""}`
           }, /*#__PURE__*/React.createElement("div", {
             className: "header clickable horizontal",
             onClick: this.stack
@@ -30,7 +30,7 @@ System.register(["../utils/constants.js"], function (_export, _context) {
             className: "title"
           }, this.props.title), /*#__PURE__*/React.createElement("div", {
             className: "icon"
-          }, this.state.stack ? Characters.ARROW_DOWN : Characters.ARROW_UP)), this.state.stack ? '' : /*#__PURE__*/React.createElement("div", {
+          }, this.state.stack ? Characters.ARROW_DOWN : Characters.ARROW_UP)), this.state.stack ? "" : /*#__PURE__*/React.createElement("div", {
             className: "content"
           }, this.props.children));
         }

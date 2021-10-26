@@ -1,5 +1,6 @@
 import {Characters} from "../utils/constants.js";
 import {backend_error, python_call} from "../utils/backend.js";
+import {formatString} from "../utils/functions.js";
 
 class ProgressionMonitoring {
     constructor(name, total) {
@@ -26,7 +27,7 @@ function Monitoring(props) {
         current += step;
     }
     const percent = Math.round(current * 100 / total);
-    const title = monitoring.title || `${current} done`;
+    const title = monitoring.title || formatString(PYTHON_LANG.text_done, {count: current});
     const jobClassID = "job " + monitoring.name;
     return (
         <div className="job horizontal">
@@ -95,14 +96,14 @@ const NotificationRenderer = {
         const data = message.notification;
         return (
             <div key={i}>
-                <strong>Database {message.name === 'DatabaseSaved' ? 'saved' : 'loaded'}</strong>:
-                {data.entries}{' '}{data.entries > 1 ? 'entries' : 'entry'},
-                {data.discarded} discarded,
-                {data.unreadable_not_found} unreadable not found,
-                {data.unreadable_found} unreadable found,
-                {data.readable_not_found} readable not found,
-                {data.readable_found_without_thumbnails} readable found without thumbnails,
-                {data.valid} valid
+                <strong>{message.name === 'DatabaseSaved' ? PYTHON_LANG.text_database_saved : PYTHON_LANG.text_database_loaded}</strong>:
+                {formatString(PYTHON_LANG.text_nb_entries, {count: data.entries}) + ", "}
+                {formatString(PYTHON_LANG.text_nb_discarded, {count: data.discarded}) + ", "}
+                {formatString(PYTHON_LANG.text_nb_unreadable_not_found, {count: data.unreadable_not_found}) + ", "}
+                {formatString(PYTHON_LANG.text_nb_unreadable_found, {count: data.unreadable_found}) + ", "}
+                {formatString(PYTHON_LANG.text_nb_readable_not_found, {count: data.readable_not_found}) + ", "}
+                {formatString(PYTHON_LANG.text_nb_readable_found_without_thumbnails, {count: data.readable_found_without_thumbnails}) + ", "}
+                {formatString(PYTHON_LANG.text_nb_valid, {count: data.valid})}
             </div>
         );
     },
@@ -110,13 +111,13 @@ const NotificationRenderer = {
         return NotificationRenderer.DatabaseLoaded(app, message, i);
     },
     DatabaseReady: function (app, message, i) {
-        return <div key={i}><strong>Database open!</strong></div>;
+        return <div key={i}><strong>{PYTHON_LANG.text_notification_database_ready}</strong></div>;
     },
     Done: function (app, message, i) {
-        return <div key={i}><strong>Done!</strong></div>;
+        return <div key={i}><strong>{PYTHON_LANG.text_notification_done}</strong></div>;
     },
     Cancelled: function (app, message, i) {
-        return <div key={i}><strong>Cancelled.</strong></div>;
+        return <div key={i}><strong>{PYTHON_LANG.text_notification_cancelled}</strong></div>;
     },
     End: function (app, message, i) {
         const info = message.notification.message;
@@ -124,30 +125,30 @@ const NotificationRenderer = {
     },
     FinishedCollectingVideos: function (app, message, i) {
         const count = message.notification.count;
-        return (<div key={i}><strong>Collected</strong>{' '}{count} file{count > 1 ? 's' : ''}</div>);
+        return (<div key={i}>{markdownToReact(formatString(PYTHON_LANG.gui_home_collected_files, {count}), true)}</div>);
     },
     MissingThumbnails: function (app, message, i) {
         const names = message.notification.names;
         if (names.length) {
             return (
                 <div key={i}>
-                    <div><strong>Missing {names.length} thumbnails</strong>:</div>
+                    <div><strong>{formatString(PYTHON_LANG.text_notification_missing_thumbnails, {count: names.length})}</strong>:</div>
                     {names.map((name, indexName) => <div key={indexName}><code>{name}</code></div>)}
                 </div>
             );
         } else {
-            return (<div key={i}><em>No missing thumbnails!</em></div>);
+            return (<div key={i}><em>{PYTHON_LANG.text_notification_no_missing_thumbnails}</em></div>);
         }
     },
     ProfilingStart: function (app, message, i) {
         return (
-            <div key={i}><span className="span-profiled">PROFILING</span> {message.notification.name}</div>
+            <div key={i}><span className="span-profiled">{PYTHON_LANG.text_profiling}</span> {message.notification.name}</div>
         );
     },
     ProfilingEnd: function (app, message, i) {
         return (
             <div key={i}>
-                <span className="span-profiled">{message.notification.inplace ? `PROFILING / ` : ``}PROFILED</span>{" "}
+                <span className="span-profiled">{message.notification.inplace ? `${PYTHON_LANG.text_profiling} / ` : ""}{PYTHON_LANG.text_profiled}</span>{" "}
                 {message.notification.name}{" "}
                 <span className="span-profiled">TIME</span>{" "}
                 {message.notification.time}
@@ -162,8 +163,10 @@ const NotificationRenderer = {
             <div key={i}>
                 <div>
                     <strong>
-                        {errors.length}{' '}{message.name === 'VideoInfoErrors' ? 'video' : 'thumbnail'}{" "}
-                        error{errors.length > 1 ? 's' : ''}
+                        {formatString(
+                            (message.name === 'VideoInfoErrors' ? PYTHON_LANG.text_nb_video_errors : PYTHON_LANG.text_nb_thumbnail_errors),
+                            {count: keys.length}
+                        )}
                     </strong>:
                 </div>
                 <ul>{keys.map((name, indexName) => (
@@ -187,17 +190,17 @@ const NotificationRenderer = {
         if (title) {
             return <div key={i}><strong>{title}</strong></div>;
         } else if (total) {
-            return (<div key={i}><strong>{total}{' '}{label}{total > 1 ? 's' : ''} to load.</strong></div>);
+            return (<div key={i}>{PYTHON_LANG.gui_home_to_load}: <strong>{total}{" "}{label}</strong></div>);
         } else {
-            return (<div key={i}><em>No {label}s to load!</em></div>);
+            return (<div key={i}><em>{PYTHON_LANG.gui_home_to_load}: {PYTHON_LANG.text_nothing}</em></div>);
         }
     },
     NbMiniatures: function (app, message, i) {
         const total = message.notification.total;
         if (total) {
-            return (<div key={i}><strong>{total} miniature{total > 1 ? 's' : ''} saved.</strong></div>);
+            return (<div key={i}><strong>{formatString(PYTHON_LANG.text_nb_miniatures_saved, {count: total})}</strong></div>);
         } else {
-            return (<div key={i}><em>No miniatures saved!</em></div>);
+            return (<div key={i}><em>{PYTHON_LANG.text_no_miniatures_saved}</em></div>);
         }
     },
     Message: function (app, message, i) {
@@ -238,7 +241,9 @@ export class HomePage extends React.Component {
         return (
             <div id="home" className="absolute-plain p-4 vertical">
                 <div className="text-center p-2">{this.renderInitialButton()}</div>
-                <div id="notifications" className="notifications flex-grow-1 overflow-auto">{this.renderMessages()}</div>
+                <div id="notifications" className="notifications flex-grow-1 overflow-auto">
+                    {this.renderMessages()}
+                </div>
             </div>
         );
     }
@@ -247,7 +252,7 @@ export class HomePage extends React.Component {
         if (this.props.parameters.onReady)
             return <strong>{this.state.status || (ACTIONS[this.props.parameters.command[0]] + " ...")}</strong>;
         else if (this.state.loaded)
-            return <button onClick={this.displayVideos}>Display videos</button>;
+            return <button onClick={this.displayVideos}>{PYTHON_LANG.text_display_videos}</button>;
         else
             return <button disabled={true}>{ACTIONS[this.props.parameters.command[0]]} ...</button>;
     }
@@ -262,7 +267,7 @@ export class HomePage extends React.Component {
                 if (display)
                     output.push(display);
             } else {
-                output.push(<div key={i}><em>unknown</em>: {message.message}</div>);
+                output.push(<div key={i}><em>{PYTHON_LANG.text_notification_unknown}</em>: {message.message}</div>);
             }
         }
         if (!this.state.loaded)

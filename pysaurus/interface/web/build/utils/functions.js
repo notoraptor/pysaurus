@@ -14,7 +14,9 @@ System.register([], function (_export, _context) {
 
     switch (propType) {
       case "bool":
-        if (value === "false") parsed = false;else if (value === "true") parsed = true;else throw `Invalid bool value, expected: [false, true], got ${value}`;
+        if (value === "false") parsed = false;else if (value === "true") parsed = true;else throw formatString(PYTHON_LANG.error_invalid_bool_value, {
+          value
+        });
         break;
 
       case "int":
@@ -24,7 +26,9 @@ System.register([], function (_export, _context) {
 
       case "float":
         parsed = parseFloat(value);
-        if (isNaN(parsed)) throw `Unable to parse floating value: ${value}`;
+        if (isNaN(parsed)) throw formatString(PYTHON_LANG.error_parsing_float, {
+          value
+        });
         break;
 
       case "str":
@@ -35,7 +39,10 @@ System.register([], function (_export, _context) {
         throw `Unknown property type: ${propType}`;
     }
 
-    if (propEnum && propEnum.indexOf(parsed) < 0) throw `Invalid enum value, expected: [${propEnum.join(', ')}], got ${value}`;
+    if (propEnum && propEnum.indexOf(parsed) < 0) throw formatString(PYTHON_LANG.error_parsing_enum, {
+      expected: propEnum.join(', '),
+      value: value
+    });
     return parsed;
   }
 
@@ -44,10 +51,27 @@ System.register([], function (_export, _context) {
     if (str.length === 1) return str.toUpperCase();
     return str.substr(0, 1).toUpperCase() + str.substr(1);
   }
+  /**
+   *
+   * @param text {string}
+   * @param kwargs {Object}
+   * @return string
+   */
+
+
+  function formatString(text, kwargs) {
+    for (let entry of Object.entries(kwargs)) {
+      const [key, value] = entry;
+      text = text.replace(new RegExp("\\{" + key + "\\}", "g"), value.toString());
+    }
+
+    return text;
+  }
 
   _export({
     parsePropValString: parsePropValString,
     capitalizeFirstLetter: capitalizeFirstLetter,
+    formatString: formatString,
     IdGenerator: void 0
   });
 

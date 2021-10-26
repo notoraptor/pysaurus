@@ -1,10 +1,10 @@
+import sys
 from typing import List
 
 import numpy as np
 
 from pysaurus.application.default_language import DefaultLanguage
 from pysaurus.core import job_notifications
-from pysaurus.core.notifications import Message
 from pysaurus.core.notifier import DEFAULT_NOTIFIER
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.miniature_tools.miniature import Miniature
@@ -48,7 +48,7 @@ def train(
     else:
         assert len(theta) == xs.shape[1]
         theta = np.asarray(theta, dtype=np.float64)
-    print("xs", xs.shape, "ys", ys.shape, "theta", theta.shape)
+    print("xs", xs.shape, "ys", ys.shape, "theta", theta.shape, file=sys.stderr)
     nb_convergence = 0
     nb_expected_convergence = 10
     notifier = database.notifier if database else DEFAULT_NOTIFIER
@@ -67,7 +67,9 @@ def train(
                     None,
                     nb_steps,
                     nb_steps,
-                    title=f"Converged, \u00A9 {c}, \u03b8 [{min(theta)}; {max(theta)}]",
+                    title=lang.job_step_predictor_opt_converged.format(
+                        cost=c, min_theta=min(theta), max_theta=max(theta)
+                    ),
                 )
                 break
             previous_theta = theta
@@ -79,8 +81,12 @@ def train(
                 None,
                 step + 1,
                 nb_steps,
-                title=f"# {step + 1}, \u00A9 {c}, \u03b8 [{min(theta)}; {max(theta)}]",
+                title=lang.job_step_predictor_opt.format(
+                    step=(step + 1), cost=c, min_theta=min(theta), max_theta=max(theta)
+                ),
             )
     if nb_convergence == nb_expected_convergence:
-        notifier.notify(Message(f"Converged in {nb_convergence} last steps."))
+        notifier.notify(
+            lang.message_predictor_opt_converged.format(count=nb_convergence)
+        )
     return list(theta)

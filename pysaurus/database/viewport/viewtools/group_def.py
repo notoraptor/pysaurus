@@ -18,7 +18,7 @@ class GroupDef(ToDict):
         self,
         field: Optional[str] = None,
         is_property: Optional[bool] = False,
-        sorting: Optional[str] = "field",
+        sorting: Optional[str] = FIELD,
         reverse: Optional[bool] = False,
         allow_singletons: Optional[bool] = True,
     ):
@@ -52,7 +52,7 @@ class GroupDef(ToDict):
         return self.sort_groups(groups, self.sorting, self.reverse)
 
     @classmethod
-    def sort_groups(cls, groups: List[Group], sorting="field", reverse=False):
+    def sort_groups(cls, groups: List[Group], sorting=FIELD, reverse=False):
         return sorted(
             groups, key=lambda group: cls._comparable_group(group, sorting, reverse)
         )

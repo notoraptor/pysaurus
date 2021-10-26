@@ -15,7 +15,9 @@ export class FancyBox extends React.Component {
             <div className="fancybox-wrapper absolute-plain">
                 <div className="fancybox vertical">
                     <div className="fancybox-header flex-shrink-0 horizontal p-2">
-                        <div className="fancybox-title bold flex-grow-1 text-center" title={this.props.title}>{this.props.title}</div>
+                        <div className="fancybox-title bold flex-grow-1 text-center" title={this.props.title}>
+                            {this.props.title}
+                        </div>
                         <div className="pl-2">
                             <button onClick={this.onClose}>&times;</button>
                         </div>
@@ -51,6 +53,7 @@ export class FancyBox extends React.Component {
             Fancybox.close();
     }
 }
+
 FancyBox.propTypes = {
     title: PropTypes.string.isRequired,
     // onClose()

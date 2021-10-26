@@ -1,7 +1,7 @@
-System.register(["../utils/backend.js"], function (_export, _context) {
+System.register(["../utils/backend.js", "../utils/functions.js"], function (_export, _context) {
   "use strict";
 
-  var backend_error, python_call, DatabasesPage;
+  var backend_error, python_call, formatString, DatabasesPage;
 
   _export("DatabasesPage", void 0);
 
@@ -9,6 +9,8 @@ System.register(["../utils/backend.js"], function (_export, _context) {
     setters: [function (_utilsBackendJs) {
       backend_error = _utilsBackendJs.backend_error;
       python_call = _utilsBackendJs.python_call;
+    }, function (_utilsFunctionsJs) {
+      formatString = _utilsFunctionsJs.formatString;
     }],
     execute: function () {
       _export("DatabasesPage", DatabasesPage = class DatabasesPage extends React.Component {
@@ -36,25 +38,27 @@ System.register(["../utils/backend.js"], function (_export, _context) {
           return /*#__PURE__*/React.createElement("div", {
             id: "databases",
             className: "text-center"
-          }, /*#__PURE__*/React.createElement("h1", null, "Welcome to ", window.PYTHON_APP_NAME), /*#__PURE__*/React.createElement("table", {
+          }, /*#__PURE__*/React.createElement("h1", null, formatString(PYTHON_LANG.gui_database_welcome, {
+            name: window.PYTHON_APP_NAME
+          })), /*#__PURE__*/React.createElement("table", {
             className: "w-100 table-layout-fixed"
-          }, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("h2", null, "Create a database"), /*#__PURE__*/React.createElement("div", {
+          }, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("h2", null, PYTHON_LANG.gui_database_create), /*#__PURE__*/React.createElement("div", {
             className: "p-1"
           }, /*#__PURE__*/React.createElement("input", {
             type: "text",
             className: "w-100",
             value: this.state.name,
             onChange: this.onChangeName,
-            placeholder: "Database name."
-          })), /*#__PURE__*/React.createElement("h3", null, "Database folders and files"), /*#__PURE__*/React.createElement("table", {
+            placeholder: PYTHON_LANG.gui_database_name_placeholder
+          })), /*#__PURE__*/React.createElement("h3", null, PYTHON_LANG.gui_database_paths), /*#__PURE__*/React.createElement("table", {
             className: "w-100 table-layout-fixed"
           }, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
             className: "block",
             onClick: this.addFolder
-          }, "Add folder")), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
+          }, PYTHON_LANG.gui_database_add_folder)), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
             className: "block",
             onClick: this.addFile
-          }, "Add file")))), /*#__PURE__*/React.createElement("table", {
+          }, PYTHON_LANG.gui_database_add_file)))), /*#__PURE__*/React.createElement("table", {
             className: "w-100 table-layout-fixed"
           }, paths.map((path, index) => /*#__PURE__*/React.createElement("tr", {
             key: index
@@ -66,7 +70,9 @@ System.register(["../utils/backend.js"], function (_export, _context) {
           }, /*#__PURE__*/React.createElement("button", {
             className: "block",
             onClick: this.createDatabase
-          }, "create database"))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("h2", null, "Open a database (", this.props.parameters.databases.length, " available)"), /*#__PURE__*/React.createElement("div", {
+          }, PYTHON_LANG.gui_database_button_create))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("h2", null, formatString(PYTHON_LANG.gui_database_open, {
+            count: this.props.parameters.databases.length
+          })), /*#__PURE__*/React.createElement("div", {
             className: "p-1"
           }, /*#__PURE__*/React.createElement("input", {
             type: "checkbox",
@@ -75,7 +81,7 @@ System.register(["../utils/backend.js"], function (_export, _context) {
             onChange: this.onChangeUpdate
           }), " ", /*#__PURE__*/React.createElement("label", {
             htmlFor: "update"
-          }, "update after opening")), /*#__PURE__*/React.createElement("h3", null, "Click on a database to open it"), this.props.parameters.databases.map((database, index) => /*#__PURE__*/React.createElement("div", {
+          }, PYTHON_LANG.gui_database_update_after_opening)), /*#__PURE__*/React.createElement("h3", null, PYTHON_LANG.gui_database_click_to_open), this.props.parameters.databases.map((database, index) => /*#__PURE__*/React.createElement("div", {
             className: "p-1",
             key: index
           }, /*#__PURE__*/React.createElement("button", {

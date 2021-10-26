@@ -1,13 +1,15 @@
-System.register(["../dialogs/Dialog.js"], function (_export, _context) {
+System.register(["../dialogs/Dialog.js", "../utils/functions.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, FormDatabaseRename;
+  var Dialog, formatString, FormDatabaseRename;
 
   _export("FormDatabaseRename", void 0);
 
   return {
     setters: [function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
+    }, function (_utilsFunctionsJs) {
+      formatString = _utilsFunctionsJs.formatString;
     }],
     execute: function () {
       _export("FormDatabaseRename", FormDatabaseRename = class FormDatabaseRename extends React.Component {
@@ -27,12 +29,14 @@ System.register(["../dialogs/Dialog.js"], function (_export, _context) {
 
         render() {
           return /*#__PURE__*/React.createElement(Dialog, {
-            title: `Rename database "${this.props.title}"`,
-            yes: "rename",
+            title: formatString(PYTHON_LANG.form_title_rename_database, {
+              name: this.props.title
+            }),
+            yes: PYTHON_LANG.text_rename,
             action: this.onClose
           }, /*#__PURE__*/React.createElement("div", {
             className: "form-rename text-center"
-          }, /*#__PURE__*/React.createElement("h1", null, "Rename database"), /*#__PURE__*/React.createElement("h2", null, /*#__PURE__*/React.createElement("code", {
+          }, /*#__PURE__*/React.createElement("h1", null, PYTHON_LANG.text_rename_database), /*#__PURE__*/React.createElement("h2", null, /*#__PURE__*/React.createElement("code", {
             id: "filename"
           }, this.props.title)), /*#__PURE__*/React.createElement("p", {
             className: "form"

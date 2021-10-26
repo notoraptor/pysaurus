@@ -30,13 +30,13 @@ System.register(["../utils/constants.js", "../dialogs/FancyBox.js"], function (_
 
         render() {
           return /*#__PURE__*/React.createElement(FancyBox, {
-            title: "Sort videos"
+            title: PYTHON_LANG.form_title_sort_videos
           }, /*#__PURE__*/React.createElement("div", {
             id: "form-videos-sort",
             className: "form absolute-plain vertical text-center p-2"
           }, /*#__PURE__*/React.createElement("div", {
             className: "help mb-4"
-          }, /*#__PURE__*/React.createElement("div", null, "Click on \"+\" to add a new sorting criterion."), /*#__PURE__*/React.createElement("div", null, "Click on \"-\" to remove a sorting criterion."), /*#__PURE__*/React.createElement("div", null, "Click on \"sort\" to validate, or close dialog to cancel.")), /*#__PURE__*/React.createElement("div", {
+          }, markdownToReact(PYTHON_LANG.form_content_sort_videos)), /*#__PURE__*/React.createElement("div", {
             id: "sorting",
             className: "flex-grow-1 overflow-auto"
           }, this.renderSorting()), /*#__PURE__*/React.createElement("p", {

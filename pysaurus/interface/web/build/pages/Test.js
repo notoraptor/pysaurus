@@ -1,14 +1,12 @@
-System.register(["../components/MenuPack.js", "../utils/constants.js", "../components/SetInput.js", "../dialogs/Dialog.js", "../components/Cross.js", "../dialogs/FancyBox.js", "./HomePage.js", "../utils/backend.js"], function (_export, _context) {
+System.register(["../utils/constants.js", "../components/SetInput.js", "../dialogs/Dialog.js", "../components/Cross.js"], function (_export, _context) {
   "use strict";
 
-  var MenuPack, PAGE_SIZES, ComponentController, SetInput, Dialog, Cross, FancyBox, HomePage, python_call, Test;
+  var PAGE_SIZES, ComponentController, SetInput, Dialog, Cross, Test;
 
   _export("Test", void 0);
 
   return {
-    setters: [function (_componentsMenuPackJs) {
-      MenuPack = _componentsMenuPackJs.MenuPack;
-    }, function (_utilsConstantsJs) {
+    setters: [function (_utilsConstantsJs) {
       PAGE_SIZES = _utilsConstantsJs.PAGE_SIZES;
     }, function (_componentsSetInputJs) {
       ComponentController = _componentsSetInputJs.ComponentController;
@@ -17,12 +15,6 @@ System.register(["../components/MenuPack.js", "../utils/constants.js", "../compo
       Dialog = _dialogsDialogJs.Dialog;
     }, function (_componentsCrossJs) {
       Cross = _componentsCrossJs.Cross;
-    }, function (_dialogsFancyBoxJs) {
-      FancyBox = _dialogsFancyBoxJs.FancyBox;
-    }, function (_HomePageJs) {
-      HomePage = _HomePageJs.HomePage;
-    }, function (_utilsBackendJs) {
-      python_call = _utilsBackendJs.python_call;
     }],
     execute: function () {
       _export("Test", Test = class Test extends React.Component {
@@ -55,7 +47,7 @@ System.register(["../components/MenuPack.js", "../utils/constants.js", "../compo
         fancy() {
           Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
             title: "Test Fancy Box 2!",
-            action: () => console.log(`Choice: yes!`)
+            action: () => console.log("Choice: yes!")
           }, /*#__PURE__*/React.createElement("h1", null, "hello world ", this.state.pageSize), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world")));
         }
 

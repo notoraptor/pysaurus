@@ -22,16 +22,16 @@ export class FormVideoEditProperties extends React.Component {
         const data = this.props.data;
         const hasThumbnail = data.has_thumbnail;
         return (
-            <Dialog title={'Edit video properties'} yes="save" action={this.onClose}>
+            <Dialog title={PYTHON_LANG.form_edit_video_properties} yes={PYTHON_LANG.texte_save} action={this.onClose}>
                 <div className="form-video-edit-properties horizontal">
                     <div className="info">
                         <div className="image">
                             {hasThumbnail ?
                                 <img alt={data.title} src={data.thumbnail_path}/> :
-                                <div className="no-thumbnail">no thumbnail</div>}
+                                <div className="no-thumbnail">{PYTHON_LANG.text_no_thumbnail}</div>}
                         </div>
                         <div className="filename p-1 mb-1"><code>{data.filename}</code></div>
-                        {data.title === data.file_title ? '' : <div className="title mb-1"><em>{data.title}</em></div>}
+                        {data.title === data.file_title ? "" : <div className="title mb-1"><em>{data.title}</em></div>}
                     </div>
                     <div className="properties flex-grow-1">
                         <table className="first-td-text-right w-100">

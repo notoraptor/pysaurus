@@ -130,7 +130,9 @@ class DatabaseFeatures:
                     old_miniature_indices.append(i)
 
             if not new_miniature_indices:
-                db.notifier.notify(notifications.Message("No new videos to check."))
+                db.notifier.notify(
+                    notifications.Message(db.lang.message_similarity_no_new_videos)
+                )
                 return
 
             nb_max_comparisons = compute_nb_couples(nb_videos)
@@ -146,8 +148,11 @@ class DatabaseFeatures:
 
             db.notifier.notify(
                 notifications.Message(
-                    f"To do: {nb_cmp} / {nb_max_comparisons} comparisons "
-                    f"({nb_cmp * 100 / nb_max_comparisons} %)."
+                    db.lang.message_similarity_todo.format(
+                        count=nb_cmp,
+                        total=nb_max_comparisons,
+                        percent=(nb_cmp * 100 / nb_max_comparisons),
+                    )
                 )
             )
 
@@ -155,8 +160,10 @@ class DatabaseFeatures:
 
             db.notifier.notify(
                 notifications.Message(
-                    f"Finally found {len(sim_groups)} new similarity groups "
-                    f"with {sum(len(g) for g in sim_groups)} images."
+                    db.lang.message_similarity_count_found.format(
+                        nb_similarities=len(sim_groups),
+                        nb_images=sum(len(g) for g in sim_groups),
+                    )
                 )
             )
             # Sort new similarity groups by size then smallest duration.
@@ -174,9 +181,11 @@ class DatabaseFeatures:
                 sim_id_to_vid_ids.pop(-1, None)
                 db.notifier.notify(
                     notifications.Message(
-                        "Found",
-                        sum(1 for g in sim_id_to_vid_ids.values() if len(g) > 1),
-                        "old similarities.",
+                        db.lang.message_similarity_count_old.format(
+                            count=sum(
+                                1 for g in sim_id_to_vid_ids.values() if len(g) > 1
+                            )
+                        )
                     )
                 )
                 graph = Graph()
@@ -192,9 +201,9 @@ class DatabaseFeatures:
                 ]
                 db.notifier.notify(
                     notifications.Message(
-                        "Found",
-                        len(new_sim_groups),
-                        "total similarities after merging.",
+                        db.lang.message_similarity_count_final.format(
+                            count=len(new_sim_groups)
+                        )
                     )
                 )
                 new_sim_indices = []
@@ -214,7 +223,9 @@ class DatabaseFeatures:
                     new_sim_indices.append(new_id)
                 db.notifier.notify(
                     notifications.Message(
-                        f"Found {nb_new_indices} pure new similarities."
+                        db.lang.message_similarity_count_pure_new.format(
+                            count=nb_new_indices
+                        )
                     )
                 )
 

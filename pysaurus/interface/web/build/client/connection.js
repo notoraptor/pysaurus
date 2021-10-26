@@ -22,7 +22,7 @@ System.register(["./future.js", "./requestContext.js", "./exceptions.js"], funct
 
       _export("Connection", Connection = class Connection {
         constructor(hostname, port, useSSL) {
-          if (useSSL) console.log(`Using SSL.`); // Public read-only attributes.
+          if (useSSL) console.log("Using SSL."); // Public read-only attributes.
 
           this.protocol = useSSL ? 'wss' : 'ws';
           this.hostname = hostname;
@@ -126,7 +126,7 @@ System.register(["./future.js", "./requestContext.js", "./exceptions.js"], funct
         }
 
         manageResponse(response) {
-          if (!response.hasOwnProperty('request_id')) throw new Error(`Response does not have request ID.`);
+          if (!response.hasOwnProperty('request_id')) throw new Error("Response does not have request ID.");
           if (!response.hasOwnProperty('type')) throw new Error('Response does not have type.');
           if (!this.waitingRequests.hasOwnProperty(response.request_id)) throw new Error(`Unknown response request ID: ${response.request_id}`);
           const requestContext = this.waitingRequests[response.request_id];

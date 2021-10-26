@@ -1,3 +1,5 @@
+import {formatString} from "../utils/functions.js";
+
 class SetController {
     constructor() {
     }
@@ -63,7 +65,7 @@ export class ComponentController extends SetController {
 export class SetInput extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {add: this.props.values ? this.props.values[0] : ''};
+        this.state = {add: this.props.values ? this.props.values[0] : ""};
         this.onChangeAdd = this.onChangeAdd.bind(this);
         this.onInputAdd = this.onInputAdd.bind(this);
         this.onAdd = this.onAdd.bind(this);
@@ -73,7 +75,7 @@ export class SetInput extends React.Component {
 
     render() {
         return (
-            <div className={`set-input ${this.props.className || ''}`}>
+            <div className={`set-input ${this.props.className || ""}`}>
                 <table className="first-td-text-right">
                     <tbody>
                     {this.renderList()}
@@ -94,7 +96,9 @@ export class SetInput extends React.Component {
                                        {...(this.props.identifier ? {id: this.props.identifier} : {})}/>
                             )}
                         </td>
-                        <td><button className="add block" onClick={this.onAdd}>+</button></td>
+                        <td>
+                            <button className="add block" onClick={this.onAdd}>+</button>
+                        </td>
                     </tr>
                     </tbody>
                 </table>
@@ -111,7 +115,9 @@ export class SetInput extends React.Component {
             output.push(
                 <tr className="item" key={i}>
                     <td>{value.toString()}</td>
-                    <td><button className="remove block" onClick={() => this.remove(value)}>-</button></td>
+                    <td>
+                        <button className="remove block" onClick={() => this.remove(value)}>-</button>
+                    </td>
                 </tr>
             );
         }
@@ -138,9 +144,9 @@ export class SetInput extends React.Component {
         const controller = this.props.controller;
         try {
             if (controller.has(value))
-                window.alert(`Value already in list: ${value}`);
+                window.alert(formatString(PYTHON_LANG.alert_value_already_in_list, {value}));
             else
-                this.setState({add: ''}, () => controller.add(value));
+                this.setState({add: ""}, () => controller.add(value));
         } catch (exception) {
             window.alert(exception.toString());
         }
@@ -156,6 +162,7 @@ export class SetInput extends React.Component {
         }
     }
 }
+
 SetInput.propTypes = {
     controller: PropTypes.instanceOf(SetController),
     identifier: PropTypes.string,

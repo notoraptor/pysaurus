@@ -1,7 +1,7 @@
-System.register([], function (_export, _context) {
+System.register(["../utils/functions.js"], function (_export, _context) {
   "use strict";
 
-  var SetController, ComponentController, SetInput;
+  var formatString, SetController, ComponentController, SetInput;
 
   function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
@@ -11,7 +11,9 @@ System.register([], function (_export, _context) {
   });
 
   return {
-    setters: [],
+    setters: [function (_utilsFunctionsJs) {
+      formatString = _utilsFunctionsJs.formatString;
+    }],
     execute: function () {
       SetController = class SetController {
         constructor() {}
@@ -77,7 +79,7 @@ System.register([], function (_export, _context) {
         constructor(props) {
           super(props);
           this.state = {
-            add: this.props.values ? this.props.values[0] : ''
+            add: this.props.values ? this.props.values[0] : ""
           };
           this.onChangeAdd = this.onChangeAdd.bind(this);
           this.onInputAdd = this.onInputAdd.bind(this);
@@ -88,7 +90,7 @@ System.register([], function (_export, _context) {
 
         render() {
           return /*#__PURE__*/React.createElement("div", {
-            className: `set-input ${this.props.className || ''}`
+            className: `set-input ${this.props.className || ""}`
           }, /*#__PURE__*/React.createElement("table", {
             className: "first-td-text-right"
           }, /*#__PURE__*/React.createElement("tbody", null, this.renderList(), /*#__PURE__*/React.createElement("tr", {
@@ -153,8 +155,10 @@ System.register([], function (_export, _context) {
           const controller = this.props.controller;
 
           try {
-            if (controller.has(value)) window.alert(`Value already in list: ${value}`);else this.setState({
-              add: ''
+            if (controller.has(value)) window.alert(formatString(PYTHON_LANG.alert_value_already_in_list, {
+              value
+            }));else this.setState({
+              add: ""
             }, () => controller.add(value));
           } catch (exception) {
             window.alert(exception.toString());
