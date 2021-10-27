@@ -1,7 +1,7 @@
-System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../components/Cell.js", "../forms/FormPropertyRename.js", "../utils/backend.js", "../utils/functions.js"], function (_export, _context) {
+System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../components/Cell.js", "../forms/FormPropertyRename.js", "../utils/backend.js"], function (_export, _context) {
   "use strict";
 
-  var ComponentController, SetInput, Dialog, Cell, FormPropertyRename, backend_error, python_call, formatString, parsePropValString, PropertiesPage, DEFAULT_VALUES;
+  var ComponentController, SetInput, Dialog, Cell, FormPropertyRename, backend_error, python_call, PropertiesPage, DEFAULT_VALUES;
 
   function getDefaultValue(propType, isEnum) {
     return isEnum ? [] : DEFAULT_VALUES[propType].toString();
@@ -22,9 +22,6 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
     }, function (_utilsBackendJs) {
       backend_error = _utilsBackendJs.backend_error;
       python_call = _utilsBackendJs.python_call;
-    }, function (_utilsFunctionsJs) {
-      formatString = _utilsFunctionsJs.formatString;
-      parsePropValString = _utilsFunctionsJs.parsePropValString;
     }],
     execute: function () {
       DEFAULT_VALUES = {
@@ -269,7 +266,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
 
         deleteProperty(name) {
           Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
-            title: formatString(PYTHON_LANG.form_title_delete_property, {
+            title: PYTHON_LANG.form_title_delete_property.format({
               name
             }),
             yes: PYTHON_LANG.text_delete,
@@ -284,14 +281,14 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             className: "text-center",
             center: true,
             full: true
-          }, /*#__PURE__*/React.createElement("h3", null, formatString(PYTHON_LANG.form_content_delete_property, {
+          }, /*#__PURE__*/React.createElement("h3", null, PYTHON_LANG.form_content_delete_property.format({
             name
           })))));
         }
 
         convertPropertyToUnique(name) {
           Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
-            title: formatString(PYTHON_LANG.form_title_convert_to_unique_property, {
+            title: PYTHON_LANG.form_title_convert_to_unique_property.format({
               name
             }),
             yes: PYTHON_LANG.form_convert_to_unique_property_yes,
@@ -306,14 +303,14 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             className: "text-center",
             center: true,
             full: true
-          }, /*#__PURE__*/React.createElement("h3", null, formatString(PYTHON_LANG.form_confirm_convert_to_unique_property, {
+          }, /*#__PURE__*/React.createElement("h3", null, PYTHON_LANG.form_confirm_convert_to_unique_property.format({
             name
           })))));
         }
 
         convertPropertyToMultiple(name) {
           Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
-            title: formatString(PYTHON_LANG.form_title_convert_to_multiple_property, {
+            title: PYTHON_LANG.form_title_convert_to_multiple_property.format({
               name
             }),
             yes: PYTHON_LANG.form_convert_to_multiple_property_yes,
@@ -328,7 +325,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             className: "text-center",
             center: true,
             full: true
-          }, /*#__PURE__*/React.createElement("h3", null, formatString(PYTHON_LANG.form_confirm_convert_to_multiple_property, {
+          }, /*#__PURE__*/React.createElement("h3", null, PYTHON_LANG.form_confirm_convert_to_multiple_property.format({
             name
           })))));
         }

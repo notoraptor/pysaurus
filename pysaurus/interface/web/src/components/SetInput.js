@@ -1,5 +1,3 @@
-import {formatString} from "../utils/functions.js";
-
 class SetController {
     constructor() {
     }
@@ -144,7 +142,7 @@ export class SetInput extends React.Component {
         const controller = this.props.controller;
         try {
             if (controller.has(value))
-                window.alert(formatString(PYTHON_LANG.alert_value_already_in_list, {value}));
+                window.alert(PYTHON_LANG.alert_value_already_in_list.format({value}));
             else
                 this.setState({add: ""}, () => controller.add(value));
         } catch (exception) {

@@ -1,7 +1,7 @@
-System.register(["../utils/functions.js"], function (_export, _context) {
+System.register([], function (_export, _context) {
   "use strict";
 
-  var formatString, SetController, ComponentController, SetInput;
+  var SetController, ComponentController, SetInput;
 
   function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
@@ -11,9 +11,7 @@ System.register(["../utils/functions.js"], function (_export, _context) {
   });
 
   return {
-    setters: [function (_utilsFunctionsJs) {
-      formatString = _utilsFunctionsJs.formatString;
-    }],
+    setters: [],
     execute: function () {
       SetController = class SetController {
         constructor() {}
@@ -155,7 +153,7 @@ System.register(["../utils/functions.js"], function (_export, _context) {
           const controller = this.props.controller;
 
           try {
-            if (controller.has(value)) window.alert(formatString(PYTHON_LANG.alert_value_already_in_list, {
+            if (controller.has(value)) window.alert(PYTHON_LANG.alert_value_already_in_list.format({
               value
             }));else this.setState({
               add: ""

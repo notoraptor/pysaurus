@@ -1,7 +1,7 @@
 System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js", "./PlusIcon.js", "../utils/functions.js", "../utils/Actions.js", "../utils/Action.js"], function (_export, _context) {
   "use strict";
 
-  var Characters, FIELD_MAP, Pagination, SettingIcon, PlusIcon, capitalizeFirstLetter, Actions, Action, formatString, GroupView;
+  var Characters, FIELD_MAP, Pagination, SettingIcon, PlusIcon, capitalizeFirstLetter, Actions, Action, GroupView;
 
   function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
@@ -19,7 +19,6 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
       PlusIcon = _PlusIconJs.PlusIcon;
     }, function (_utilsFunctionsJs) {
       capitalizeFirstLetter = _utilsFunctionsJs.capitalizeFirstLetter;
-      formatString = _utilsFunctionsJs.formatString;
     }, function (_utilsActionsJs) {
       Actions = _utilsActionsJs.Actions;
     }, function (_utilsActionJs) {
@@ -77,7 +76,7 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
             onChange: event => this.onCheckAll(event, start, end)
           }), " ", /*#__PURE__*/React.createElement("label", {
             htmlFor: "group-view-select-all"
-          }, formatString(allChecked ? PYTHON_LANG.text_all_groups_selected : PYTHON_LANG.text_groups_selected, {
+          }, (allChecked ? PYTHON_LANG.text_all_groups_selected : PYTHON_LANG.text_groups_selected).format({
             count: selection.size
           })), selection.size ? /*#__PURE__*/React.createElement("span", null, "\xA0", /*#__PURE__*/React.createElement(SettingIcon, {
             key: "options-for-selected",

@@ -1,5 +1,4 @@
 import {Dialog} from "../dialogs/Dialog.js";
-import {formatString} from "../utils/functions.js";
 
 export class FormPropertyRename extends React.Component {
     constructor(props) {
@@ -16,7 +15,7 @@ export class FormPropertyRename extends React.Component {
 
     render() {
         return (
-            <Dialog title={formatString(PYTHON_LANG.form_title_rename_property, {name: this.props.title})}
+            <Dialog title={PYTHON_LANG.form_title_rename_property.format({name: this.props.title})}
                     yes={PYTHON_LANG.text_rename}
                     action={this.onClose}>
                 <div className="form-rename text-center">

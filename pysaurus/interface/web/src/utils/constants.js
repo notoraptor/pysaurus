@@ -1,5 +1,3 @@
-import {formatString} from "./functions.js";
-
 export const GroupPermission = {
     FORBIDDEN: 0,
     ONLY_MANY: 1,
@@ -61,7 +59,7 @@ class FieldMap {
         this.fields = {};
         for (let fieldInfo of fieldInfoList) {
             if (this.fields.hasOwnProperty(fieldInfo.name))
-                throw new Error(formatString(PYTHON_LANG.error_duplicated_field, {name: fieldInfo.name}));
+                throw new Error(PYTHON_LANG.error_duplicated_field.format({name: fieldInfo.name}));
             this.fields[fieldInfo.name] = fieldInfo;
             if (!fieldInfo.isForbidden()) {
                 this.allowed.push(fieldInfo);

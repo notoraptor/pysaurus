@@ -19,7 +19,7 @@ export class FormVideosSort extends React.Component {
         return (
             <FancyBox title={PYTHON_LANG.form_title_sort_videos}>
                 <div id="form-videos-sort" className="form absolute-plain vertical text-center p-2">
-                    <div className="help mb-4">{markdownToReact(PYTHON_LANG.form_content_sort_videos)}</div>
+                    <div className="help mb-4">{PYTHON_LANG.form_content_sort_videos.markdown()}</div>
                     <div id="sorting" className="flex-grow-1 overflow-auto">{this.renderSorting()}</div>
                     <p className="buttons flex-shrink-0 horizontal">
                         <button className="add flex-grow-1 mr-1" onClick={this.addCriterion}>+</button>

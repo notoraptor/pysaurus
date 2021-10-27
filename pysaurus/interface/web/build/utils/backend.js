@@ -1,14 +1,12 @@
-System.register(["./functions.js"], function (_export, _context) {
+System.register([], function (_export, _context) {
   "use strict";
-
-  var formatString;
 
   function python_call(name, ...args) {
     return window.backend_call(name, args);
   }
 
   function backend_error(error) {
-    window.alert(formatString(PYTHON_LANG.backend_error, {
+    window.alert(PYTHON_LANG.backend_error.format({
       name: error.name,
       message: error.message
     }));
@@ -20,9 +18,7 @@ System.register(["./functions.js"], function (_export, _context) {
   });
 
   return {
-    setters: [function (_functionsJs) {
-      formatString = _functionsJs.formatString;
-    }],
+    setters: [],
     execute: function () {}
   };
 });

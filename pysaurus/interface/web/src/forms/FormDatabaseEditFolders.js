@@ -1,6 +1,5 @@
 import {Dialog} from "../dialogs/Dialog.js";
 import {backend_error, python_call} from "../utils/backend.js";
-import {formatString} from "../utils/functions.js";
 
 export class FormDatabaseEditFolders extends React.Component {
     constructor(props) {
@@ -21,7 +20,7 @@ export class FormDatabaseEditFolders extends React.Component {
         const paths = Array.from(this.state.paths);
         paths.sort();
         return (
-            <Dialog title={formatString(PYTHON_LANG.form_title_edit_database_folders, {count: paths.length, name: database.name})}
+            <Dialog title={PYTHON_LANG.form_title_edit_database_folders.format({count: paths.length, name: database.name})}
                     yes={PYTHON_LANG.texte_save}
                     action={this.onClose}>
                 <div className="form-database-edit-folders vertical flex-grow-1">

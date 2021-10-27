@@ -32,7 +32,7 @@ System.register(["../dialogs/FancyBox.js"], function (_export, _context) {
             title: PYTHON_LANG.form_title_search_videos
           }, /*#__PURE__*/React.createElement("div", {
             className: "form-videos-search text-center"
-          }, markdownToReact(PYTHON_LANG.form_content_search_videos), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("input", {
+          }, PYTHON_LANG.form_content_search_videos.markdown(), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("input", {
             type: "text",
             id: "input-search",
             className: "block mb-2",

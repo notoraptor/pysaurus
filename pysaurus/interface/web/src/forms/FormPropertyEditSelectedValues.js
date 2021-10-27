@@ -1,5 +1,4 @@
 import {Dialog} from "../dialogs/Dialog.js";
-import {formatString, parsePropValString} from "../utils/functions.js";
 
 export class FormPropertyEditSelectedValues extends React.Component {
     constructor(props) {
@@ -25,9 +24,9 @@ export class FormPropertyEditSelectedValues extends React.Component {
         const values = this.props.values;
         let title;
         if (values.length === 1)
-            title = formatString(PYTHON_LANG.form_title_edit_prop_val, {name: this.props.name, value: values[0]});
+            title = PYTHON_LANG.form_title_edit_prop_val.format({name: this.props.name, value: values[0]});
         else
-            title = formatString(PYTHON_LANG.form_title_edit_prop_vals, {name: this.props.name, count: values.length});
+            title = PYTHON_LANG.form_title_edit_prop_vals.format({name: this.props.name, count: values.length});
         return (
             <Dialog title={title} yes={this.state.form} action={this.onClose}>
                 <div className="form-property-edit-selected-values vertical flex-grow-1">
@@ -73,10 +72,9 @@ export class FormPropertyEditSelectedValues extends React.Component {
     renderDelete() {
         return (
             <div className="flex-grow-1">
-                {markdownToReact(formatString(
-                    PYTHON_LANG.form_content_delete_prop_val,
-                    {name: this.props.name, value: this.valuesToString()}
-                ))}
+                {PYTHON_LANG.form_content_delete_prop_val.
+                    format({name: this.props.name, value: this.valuesToString()})
+                    .markdown()}
             </div>
         );
     }
@@ -109,7 +107,7 @@ export class FormPropertyEditSelectedValues extends React.Component {
         }
         return (
             <div className="flex-grow-1">
-                <h3>{formatString(PYTHON_LANG.form_content_edit_prop_val, {name: this.props.name, value: this.valuesToString()})}</h3>
+                <h3>{PYTHON_LANG.form_content_edit_prop_val.format({name: this.props.name, value: this.valuesToString()})}</h3>
                 <div>{input}</div>
             </div>
         );
@@ -120,10 +118,7 @@ export class FormPropertyEditSelectedValues extends React.Component {
         return (
             <div className="flex-grow-1">
                 <h3>
-                    {formatString(
-                        PYTHON_LANG.form_content_move_prop_val,
-                        {name: this.props.name, value: this.valuesToString(), type: def.type}
-                    )}
+                    {PYTHON_LANG.form_content_move_prop_val.format({name: this.props.name, value: this.valuesToString(), type: def.type})}
                 </h3>
                 <div>
                     <select value={this.state.move} onChange={this.onMove}>
@@ -184,14 +179,11 @@ export class FormPropertyEditSelectedValues extends React.Component {
     valuesToString() {
         if (this.props.values.length === 1)
             return this.props.values[0].toString();
-        return formatString(
-            PYTHON_LANG.form_summary_values,
-            {
+        return PYTHON_LANG.form_summary_values.format({
                 count: this.props.values.length,
                 first: this.props.values[0],
                 last: this.props.values[this.props.values.length - 1]
-            }
-        );
+            });
     }
 }
 

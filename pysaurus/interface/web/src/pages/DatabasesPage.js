@@ -1,5 +1,4 @@
 import {backend_error, python_call} from "../utils/backend.js";
-import {formatString} from "../utils/functions.js";
 
 export class DatabasesPage extends React.Component {
     constructor(props) {
@@ -25,7 +24,7 @@ export class DatabasesPage extends React.Component {
         paths.sort();
         return (
             <div id="databases" className="text-center">
-                <h1>{formatString(PYTHON_LANG.gui_database_welcome, {name: window.PYTHON_APP_NAME})}</h1>
+                <h1>{PYTHON_LANG.gui_database_welcome.format({name: window.PYTHON_APP_NAME})}</h1>
                 <table className="w-100 table-layout-fixed">
                     <tr>
                         <td>
@@ -67,7 +66,7 @@ export class DatabasesPage extends React.Component {
                             </div>
                         </td>
                         <td>
-                            <h2>{formatString(PYTHON_LANG.gui_database_open, {count: this.props.parameters.databases.length})}</h2>
+                            <h2>{PYTHON_LANG.gui_database_open.format({count: this.props.parameters.databases.length})}</h2>
                             <div className="p-1">
                                 <input type="checkbox"
                                        id="update"

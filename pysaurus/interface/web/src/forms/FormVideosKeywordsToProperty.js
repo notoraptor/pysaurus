@@ -1,6 +1,5 @@
 import {Dialog} from "../dialogs/Dialog.js";
 import {Cell} from "../components/Cell.js";
-import {formatString} from "../utils/functions.js";
 
 export class FormVideosKeywordsToProperty extends React.Component {
     constructor(props) {
@@ -32,7 +31,7 @@ export class FormVideosKeywordsToProperty extends React.Component {
                                onChange={this.onChangeEmpty}/>
                         {" "}
                         <label htmlFor="only-empty">
-                            {formatString(PYTHON_LANG.text_fill_videos_without_properties, {name: this.state.field})}
+                            {PYTHON_LANG.text_fill_videos_without_properties.format({name: this.state.field})}
                         </label>
                     </p>
                 </Cell>

@@ -31,7 +31,7 @@ System.register(["../dialogs/Dialog.js"], function (_export, _context) {
             action: this.onClose
           }, /*#__PURE__*/React.createElement("div", {
             className: "form-rename text-center"
-          }, markdownToReact(PYTHON_LANG.form_content_new_prediction_property), /*#__PURE__*/React.createElement("p", {
+          }, PYTHON_LANG.form_content_new_prediction_property.markdown(), /*#__PURE__*/React.createElement("p", {
             className: "form"
           }, /*#__PURE__*/React.createElement("input", {
             type: "text",

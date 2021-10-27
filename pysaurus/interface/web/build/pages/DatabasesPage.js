@@ -1,7 +1,7 @@
-System.register(["../utils/backend.js", "../utils/functions.js"], function (_export, _context) {
+System.register(["../utils/backend.js"], function (_export, _context) {
   "use strict";
 
-  var backend_error, python_call, formatString, DatabasesPage;
+  var backend_error, python_call, DatabasesPage;
 
   _export("DatabasesPage", void 0);
 
@@ -9,8 +9,6 @@ System.register(["../utils/backend.js", "../utils/functions.js"], function (_exp
     setters: [function (_utilsBackendJs) {
       backend_error = _utilsBackendJs.backend_error;
       python_call = _utilsBackendJs.python_call;
-    }, function (_utilsFunctionsJs) {
-      formatString = _utilsFunctionsJs.formatString;
     }],
     execute: function () {
       _export("DatabasesPage", DatabasesPage = class DatabasesPage extends React.Component {
@@ -38,7 +36,7 @@ System.register(["../utils/backend.js", "../utils/functions.js"], function (_exp
           return /*#__PURE__*/React.createElement("div", {
             id: "databases",
             className: "text-center"
-          }, /*#__PURE__*/React.createElement("h1", null, formatString(PYTHON_LANG.gui_database_welcome, {
+          }, /*#__PURE__*/React.createElement("h1", null, PYTHON_LANG.gui_database_welcome.format({
             name: window.PYTHON_APP_NAME
           })), /*#__PURE__*/React.createElement("table", {
             className: "w-100 table-layout-fixed"
@@ -70,7 +68,7 @@ System.register(["../utils/backend.js", "../utils/functions.js"], function (_exp
           }, /*#__PURE__*/React.createElement("button", {
             className: "block",
             onClick: this.createDatabase
-          }, PYTHON_LANG.gui_database_button_create))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("h2", null, formatString(PYTHON_LANG.gui_database_open, {
+          }, PYTHON_LANG.gui_database_button_create))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("h2", null, PYTHON_LANG.gui_database_open.format({
             count: this.props.parameters.databases.length
           })), /*#__PURE__*/React.createElement("div", {
             className: "p-1"

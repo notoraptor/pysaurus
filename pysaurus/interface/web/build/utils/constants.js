@@ -1,11 +1,9 @@
-System.register(["./functions.js"], function (_export, _context) {
+System.register([], function (_export, _context) {
   "use strict";
 
-  var formatString, FieldInfo, FieldMap, GroupPermission, FieldType, FIELD_MAP, SEARCH_TYPE_TITLE, PAGE_SIZES, VIDEO_DEFAULT_PAGE_SIZE, VIDEO_DEFAULT_PAGE_NUMBER, SOURCE_TREE, Characters;
+  var FieldInfo, FieldMap, GroupPermission, FieldType, FIELD_MAP, SEARCH_TYPE_TITLE, PAGE_SIZES, VIDEO_DEFAULT_PAGE_SIZE, VIDEO_DEFAULT_PAGE_NUMBER, SOURCE_TREE, Characters;
   return {
-    setters: [function (_functionsJs) {
-      formatString = _functionsJs.formatString;
-    }],
+    setters: [],
     execute: function () {
       _export("GroupPermission", GroupPermission = {
         FORBIDDEN: 0,
@@ -67,7 +65,7 @@ System.register(["./functions.js"], function (_export, _context) {
           this.fields = {};
 
           for (let fieldInfo of fieldInfoList) {
-            if (this.fields.hasOwnProperty(fieldInfo.name)) throw new Error(formatString(PYTHON_LANG.error_duplicated_field, {
+            if (this.fields.hasOwnProperty(fieldInfo.name)) throw new Error(PYTHON_LANG.error_duplicated_field.format({
               name: fieldInfo.name
             }));
             this.fields[fieldInfo.name] = fieldInfo;

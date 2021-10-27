@@ -1,7 +1,7 @@
-System.register(["./App.js", "./utils/FancyboxManager.js", "./utils/Callbacks.js", "./utils/backend.js", "./utils/functions.js"], function (_export, _context) {
+System.register(["./App.js", "./utils/FancyboxManager.js", "./utils/Callbacks.js", "./utils/backend.js", "./utils/functions.js", "./utils/markdown.js"], function (_export, _context) {
   "use strict";
 
-  var App, FancyboxManager, Callbacks, python_call, IdGenerator, underlineRule, rules, rawBuiltParser, parse, reactOutput;
+  var App, FancyboxManager, Callbacks, python_call, IdGenerator, formatString, markdownToReact;
   return {
     setters: [function (_AppJs) {
       App = _AppJs.App;
@@ -13,9 +13,21 @@ System.register(["./App.js", "./utils/FancyboxManager.js", "./utils/Callbacks.js
       python_call = _utilsBackendJs.python_call;
     }, function (_utilsFunctionsJs) {
       IdGenerator = _utilsFunctionsJs.IdGenerator;
+      formatString = _utilsFunctionsJs.formatString;
+    }, function (_utilsMarkdownJs) {
+      markdownToReact = _utilsMarkdownJs.markdownToReact;
     }],
     execute: function () {
+      String.prototype.format = function (kwargs) {
+        return formatString(this, kwargs);
+      };
+
+      String.prototype.markdown = function (inline = false) {
+        return markdownToReact(this, inline);
+      };
       /** Global fancybox manager. Used to open/close a fancybox.s */
+
+
       window.Fancybox = new FancyboxManager("fancybox");
       /** NOTIFICATION_MANAGER.call is called from Python to send notifications to interface. */
 
@@ -29,49 +41,6 @@ System.register(["./App.js", "./utils/FancyboxManager.js", "./utils/Callbacks.js
         videoHistory: new Set(),
         idGenerator: new IdGenerator(),
         latestMoveFolder: null
-      }; //
-
-      underlineRule = {
-        // Specify the order in which this rule is to be run
-        order: SimpleMarkdown.defaultRules.em.order - 0.5,
-        // First we check whether a string matches
-        match: function (source) {
-          return /^!!([\s\S]+?)!!/.exec(source);
-        },
-        // Then parse this string into a syntax node
-        parse: function (capture, parse, state) {
-          return {
-            content: parse(capture[1], state)
-          };
-        },
-        // Finally transform this syntax node into a
-        // React element
-        react: function (node, output) {
-          return React.createElement("strong", {
-            className: "red-flag"
-          }, output(node.content)); // return React.DOM.u(null, output(node.content));
-        }
-      };
-      rules = Object.assign({}, SimpleMarkdown.defaultRules, {
-        underline: underlineRule
-      });
-      rawBuiltParser = SimpleMarkdown.parserFor(rules);
-
-      parse = function (source, inline = false) {
-        var blockSource = source + "\n\n";
-        return rawBuiltParser(blockSource, {
-          inline
-        });
-      }; // You probably only need one of these: choose depending on
-      // whether you want react nodes or an html string:
-
-
-      reactOutput = SimpleMarkdown.outputFor(rules, 'react'); // console.log(JSON.stringify(reactOutput(parse("Hello !!world!! !"))));
-      //
-
-      window.markdownToReact = function (text, inline = false) {
-        // return SimpleMarkdown.defaultReactOutput(SimpleMarkdown.defaultBlockParse(text));
-        return reactOutput(parse(text, inline));
       };
 
       window.onkeydown = function (event) {

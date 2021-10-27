@@ -3,7 +3,6 @@ import {Dialog} from "../dialogs/Dialog.js";
 import {Cell} from "../components/Cell.js";
 import {FormPropertyRename} from "../forms/FormPropertyRename.js";
 import {backend_error, python_call} from "../utils/backend.js";
-import {formatString, parsePropValString} from "../utils/functions.js";
 
 const DEFAULT_VALUES = {
     bool: false,
@@ -277,7 +276,7 @@ export class PropertiesPage extends React.Component {
 
     deleteProperty(name) {
         Fancybox.load(
-            <Dialog title={formatString(PYTHON_LANG.form_title_delete_property, {name})} yes={PYTHON_LANG.text_delete} action={() => {
+            <Dialog title={PYTHON_LANG.form_title_delete_property.format({name})} yes={PYTHON_LANG.text_delete} action={() => {
                 python_call('delete_prop_type', name)
                     .catch(backend_error)
                     .then(definitions => {
@@ -287,7 +286,7 @@ export class PropertiesPage extends React.Component {
                     })
             }}>
                 <Cell className="text-center" center={true} full={true}>
-                    <h3>{formatString(PYTHON_LANG.form_content_delete_property, {name})}</h3>
+                    <h3>{PYTHON_LANG.form_content_delete_property.format({name})}</h3>
                 </Cell>
             </Dialog>
         );
@@ -295,7 +294,7 @@ export class PropertiesPage extends React.Component {
 
     convertPropertyToUnique(name) {
         Fancybox.load(
-            <Dialog title={formatString(PYTHON_LANG.form_title_convert_to_unique_property, {name})}
+            <Dialog title={PYTHON_LANG.form_title_convert_to_unique_property.format({name})}
                     yes={PYTHON_LANG.form_convert_to_unique_property_yes}
                     action={() => {
                 python_call('convert_prop_to_unique', name)
@@ -307,7 +306,7 @@ export class PropertiesPage extends React.Component {
                     .catch(backend_error)
             }}>
                 <Cell className="text-center" center={true} full={true}>
-                    <h3>{formatString(PYTHON_LANG.form_confirm_convert_to_unique_property, {name})}</h3>
+                    <h3>{PYTHON_LANG.form_confirm_convert_to_unique_property.format({name})}</h3>
                 </Cell>
             </Dialog>
         );
@@ -315,7 +314,7 @@ export class PropertiesPage extends React.Component {
 
     convertPropertyToMultiple(name) {
         Fancybox.load(
-            <Dialog title={formatString(PYTHON_LANG.form_title_convert_to_multiple_property, {name})}
+            <Dialog title={PYTHON_LANG.form_title_convert_to_multiple_property.format({name})}
                     yes={PYTHON_LANG.form_convert_to_multiple_property_yes}
                     action={() => {
                 python_call('convert_prop_to_multiple', name)
@@ -327,7 +326,7 @@ export class PropertiesPage extends React.Component {
                     .catch(backend_error)
             }}>
                 <Cell className="text-center" center={true} full={true}>
-                    <h3>{formatString(PYTHON_LANG.form_confirm_convert_to_multiple_property, {name})}</h3>
+                    <h3>{PYTHON_LANG.form_confirm_convert_to_multiple_property.format({name})}</h3>
                 </Cell>
             </Dialog>
         );

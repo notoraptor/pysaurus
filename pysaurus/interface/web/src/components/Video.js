@@ -7,7 +7,6 @@ import {MenuItem} from "./MenuItem.js";
 import {Menu} from "./Menu.js";
 import {backend_error, python_call} from "../utils/backend.js";
 import {Characters} from "../utils/constants.js";
-import {formatString} from "../utils/functions.js";
 
 /**
  * Generate class name for common value of videos grouped by similarity
@@ -288,9 +287,9 @@ export class Video extends React.Component {
         python_call('open_video', this.props.data.video_id)
             .then(() => {
                 APP_STATE.videoHistory.add(this.props.data.filename);
-                this.props.onInfo(formatString(PYTHON_LANG.status_opened, {path: this.props.data.filename}))
+                this.props.onInfo(PYTHON_LANG.status_opened.format({path: this.props.data.filename}))
             })
-            .catch(() => this.props.onInfo(formatString(PYTHON_LANG.status_unable_to_open, {path: this.props.data.filename})));
+            .catch(() => this.props.onInfo(PYTHON_LANG.status_unable_to_open.format({path: this.props.data.filename})));
     }
 
     editProperties() {
@@ -298,7 +297,7 @@ export class Video extends React.Component {
         Fancybox.load(
             <FormVideoEditProperties data={data} definitions={this.props.propDefs} onClose={properties => {
                 python_call('set_video_properties', this.props.data.video_id, properties)
-                    .then(() => this.props.onInfo(formatString(PYTHON_LANG.status_properties_updated, {path: data.filename}), true))
+                    .then(() => this.props.onInfo(PYTHON_LANG.status_properties_updated.format({path: data.filename}), true))
                     .catch(backend_error);
             }}/>
         );
@@ -312,7 +311,7 @@ export class Video extends React.Component {
                     yes={PYTHON_LANG.text_delete}
                     action={this.reallyDeleteVideo}>
                 <div className="form-delete-video text-center bold">
-                    {markdownToReact(PYTHON_LANG.form_head_confirm_delete_video)}
+                    {PYTHON_LANG.form_head_confirm_delete_video.markdown()}
                     <div className="details overflow-auto px-2 py-1"><code id="filename">{filename}</code></div>
                     <p>
                         {this.props.data.has_thumbnail ? (
@@ -354,7 +353,7 @@ export class Video extends React.Component {
                     yes={PYTHON_LANG.text_reset}
                     action={this.reallyResetSimilarity}>
                 <div className="form-delete-video text-center bold">
-                    {markdownToReact(PYTHON_LANG.form_content_reset_similarity)}
+                    {PYTHON_LANG.form_content_reset_similarity.markdown()}
                     <div className="details overflow-auto px-2 py-1"><code id="filename">{filename}</code></div>
                     <p>
                         {this.props.data.has_thumbnail ? (
@@ -377,17 +376,14 @@ export class Video extends React.Component {
 
     reallyDeleteVideo() {
         python_call('delete_video', this.props.data.video_id)
-            .then(() => this.props.onInfo(formatString(PYTHON_LANG.status_video_deleted, {path: this.props.data.filename}), true))
+            .then(() => this.props.onInfo(PYTHON_LANG.status_video_deleted.format({path: this.props.data.filename}), true))
             .catch(backend_error);
     }
 
     reallyDismissSimilarity() {
         python_call('dismiss_similarity', this.props.data.video_id)
             .then(() => this.props.onInfo(
-                formatString(
-                    PYTHON_LANG.status_video_similarity_cancelled,
-                    {path: this.props.data.filename}
-                ), true)
+                PYTHON_LANG.status_video_similarity_cancelled.format({path: this.props.data.filename}), true)
             )
             .catch(backend_error);
     }
@@ -395,9 +391,7 @@ export class Video extends React.Component {
     reallyResetSimilarity() {
         python_call('reset_similarity', this.props.data.video_id)
             .then(() => this.props.onInfo(
-                formatString(
-                    PYTHON_LANG.status_video_similarity_reset, {path: this.props.date.filename}
-                ), true)
+                PYTHON_LANG.status_video_similarity_reset.format({path: this.props.date.filename}), true)
             )
             .catch(backend_error);
     }
@@ -405,7 +399,7 @@ export class Video extends React.Component {
     openContainingFolder() {
         python_call('open_containing_folder', this.props.data.video_id)
             .then(folder => {
-                this.props.onInfo(formatString(PYTHON_LANG.status_opened_folder, {path: folder}));
+                this.props.onInfo(PYTHON_LANG.status_opened_folder.format({path: folder}));
             })
             .catch(backend_error);
     }
@@ -413,41 +407,41 @@ export class Video extends React.Component {
     copyMetaTitle() {
         const text = this.props.data.title;
         python_call('clipboard', text)
-            .then(() => this.props.onInfo(formatString(PYTHON_LANG.status_copied_to_clipboard, {text})))
-            .catch(() => this.props.onInfo(formatString(PYTHON_LANG.status_cannot_copy_meta_title, {text})));
+            .then(() => this.props.onInfo(PYTHON_LANG.status_copied_to_clipboard.format({text})))
+            .catch(() => this.props.onInfo(PYTHON_LANG.status_cannot_copy_meta_title.format({text})));
     }
 
     copyFileTitle() {
         const text = this.props.data.file_title;
         python_call('clipboard', text)
-            .then(() => this.props.onInfo(formatString(PYTHON_LANG.status_copied_to_clipboard, {text})))
-            .catch(() => this.props.onInfo(formatString(PYTHON_LANG.status_cannot_copy_file_title, {text})));
+            .then(() => this.props.onInfo(PYTHON_LANG.status_copied_to_clipboard.format({text})))
+            .catch(() => this.props.onInfo(PYTHON_LANG.status_cannot_copy_file_title.format({text})));
     }
 
     copyFilePath() {
         python_call('clipboard_video_path', this.props.data.video_id)
             .then(() => this.props.onInfo(
-                formatString(PYTHON_LANG.status_copied_to_clipboard, {text: this.props.data.filename})
+                PYTHON_LANG.status_copied_to_clipboard.format({text: this.props.data.filename})
             )
             .catch(() => this.props.onInfo(
-                formatString(PYTHON_LANG.status_cannot_copy_file_path, {text: this.props.data.filename})
+                PYTHON_LANG.status_cannot_copy_file_path.format({text: this.props.data.filename})
             )));
     }
 
     copyVideoID() {
         python_call('clipboard', this.props.data.video_id)
             .then(() => this.props.onInfo(
-                formatString(PYTHON_LANG.status_copied_to_clipboard, {text: this.props.data.video_id})
+                PYTHON_LANG.status_copied_to_clipboard.format({text: this.props.data.video_id})
             ))
             .catch(() => this.props.onInfo(
-                formatString(PYTHON_LANG.status_cannot_copy_video_id, {text: this.props.data.video_id})
+                PYTHON_LANG.status_cannot_copy_video_id.format({text: this.props.data.video_id})
             ));
     }
 
     confirmMove(srcID, dstID) {
         python_call("set_video_moved", srcID, dstID)
             .then(() => this.props.onInfo(
-                formatString(PYTHON_LANG.status_moved, {path: this.props.data.filename}), true
+                PYTHON_LANG.status_moved.format({path: this.props.data.filename}), true
             ))
             .catch(backend_error);
     }

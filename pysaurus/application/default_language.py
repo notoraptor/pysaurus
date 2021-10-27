@@ -1,5 +1,5 @@
-def join_p(*lines):
-    return "\n\n".join(lines)
+def make_text(*paragraphs, sep="\n\n"):
+    return sep.join(paragraphs)
 
 
 class DefaultLanguage:
@@ -433,7 +433,7 @@ Click on "-" to remove a sorting criterion.
 
 Click on "sort" to validate, or close dialog to cancel.
 """
-    form_content_confirm_unique_moves = join_p(
+    form_content_confirm_unique_moves = make_text(
         "# Are you sure you want to confirm all unique moves?",
         "## Each not found video which has one unique other found video with "
         "same size and duration will be moved to the later. "

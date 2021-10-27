@@ -1,7 +1,7 @@
-System.register(["../dialogs/Dialog.js", "../utils/backend.js", "../utils/functions.js"], function (_export, _context) {
+System.register(["../dialogs/Dialog.js", "../utils/backend.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, backend_error, python_call, formatString, FormDatabaseEditFolders;
+  var Dialog, backend_error, python_call, FormDatabaseEditFolders;
 
   _export("FormDatabaseEditFolders", void 0);
 
@@ -11,8 +11,6 @@ System.register(["../dialogs/Dialog.js", "../utils/backend.js", "../utils/functi
     }, function (_utilsBackendJs) {
       backend_error = _utilsBackendJs.backend_error;
       python_call = _utilsBackendJs.python_call;
-    }, function (_utilsFunctionsJs) {
-      formatString = _utilsFunctionsJs.formatString;
     }],
     execute: function () {
       _export("FormDatabaseEditFolders", FormDatabaseEditFolders = class FormDatabaseEditFolders extends React.Component {
@@ -34,7 +32,7 @@ System.register(["../dialogs/Dialog.js", "../utils/backend.js", "../utils/functi
           const paths = Array.from(this.state.paths);
           paths.sort();
           return /*#__PURE__*/React.createElement(Dialog, {
-            title: formatString(PYTHON_LANG.form_title_edit_database_folders, {
+            title: PYTHON_LANG.form_title_edit_database_folders.format({
               count: paths.length,
               name: database.name
             }),

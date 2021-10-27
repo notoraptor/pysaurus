@@ -14,7 +14,7 @@ System.register([], function (_export, _context) {
 
     switch (propType) {
       case "bool":
-        if (value === "false") parsed = false;else if (value === "true") parsed = true;else throw formatString(PYTHON_LANG.error_invalid_bool_value, {
+        if (value === "false") parsed = false;else if (value === "true") parsed = true;else throw PYTHON_LANG.error_invalid_bool_value.format({
           value
         });
         break;
@@ -26,7 +26,7 @@ System.register([], function (_export, _context) {
 
       case "float":
         parsed = parseFloat(value);
-        if (isNaN(parsed)) throw formatString(PYTHON_LANG.error_parsing_float, {
+        if (isNaN(parsed)) throw PYTHON_LANG.error_parsing_float.format({
           value
         });
         break;
@@ -39,7 +39,7 @@ System.register([], function (_export, _context) {
         throw `Unknown property type: ${propType}`;
     }
 
-    if (propEnum && propEnum.indexOf(parsed) < 0) throw formatString(PYTHON_LANG.error_parsing_enum, {
+    if (propEnum && propEnum.indexOf(parsed) < 0) throw PYTHON_LANG.error_parsing_enum.format({
       expected: propEnum.join(', '),
       value: value
     });

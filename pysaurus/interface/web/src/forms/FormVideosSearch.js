@@ -21,7 +21,7 @@ export class FormVideosSearch extends React.Component {
         return (
             <FancyBox title={PYTHON_LANG.form_title_search_videos}>
                 <div className="form-videos-search text-center">
-                    {markdownToReact(PYTHON_LANG.form_content_search_videos)}
+                    {PYTHON_LANG.form_content_search_videos.markdown()}
                     <p>
                         <input type="text"
                                id="input-search"

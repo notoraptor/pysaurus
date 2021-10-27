@@ -5,7 +5,6 @@ import {PlusIcon} from "./PlusIcon.js";
 import {capitalizeFirstLetter} from "../utils/functions.js";
 import {Actions} from "../utils/Actions.js";
 import {Action} from "../utils/Action.js";
-import {formatString} from "../utils/functions.js";
 
 export class GroupView extends React.Component {
     constructor(props) {
@@ -54,7 +53,7 @@ export class GroupView extends React.Component {
                                        checked={allChecked}
                                        onChange={event => this.onCheckAll(event, start, end)}/>{" "}
                                 <label htmlFor="group-view-select-all">
-                                    {formatString(allChecked ? PYTHON_LANG.text_all_groups_selected : PYTHON_LANG.text_groups_selected, {count: selection.size})}
+                                    {(allChecked ? PYTHON_LANG.text_all_groups_selected : PYTHON_LANG.text_groups_selected).format({count: selection.size})}
                                 </label>
                                 {selection.size ? (
                                     <span>

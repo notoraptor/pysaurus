@@ -1,7 +1,7 @@
-System.register(["../utils/constants.js", "../components/MenuPack.js", "../components/Pagination.js", "../components/Video.js", "../forms/FormVideosSource.js", "../forms/FormVideosGrouping.js", "../forms/FormVideosSearch.js", "../forms/FormVideosSort.js", "../components/GroupView.js", "../forms/FormPropertyEditSelectedValues.js", "../forms/FormVideosKeywordsToProperty.js", "../forms/FormSelectedVideosEditProperty.js", "../components/Collapsable.js", "../components/Cross.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/MenuItemRadio.js", "../components/Menu.js", "../utils/Selector.js", "../utils/Action.js", "../utils/Actions.js", "../components/ActionToMenuItem.js", "../components/ActionToSettingIcon.js", "../components/ActionToCross.js", "../utils/backend.js", "../dialogs/FancyBox.js", "./HomePage.js", "../forms/FormDatabaseEditFolders.js", "../forms/FormDatabaseRename.js", "../dialogs/Dialog.js", "../components/Cell.js", "../forms/FormNewPredictionProperty.js", "../utils/functions.js"], function (_export, _context) {
+System.register(["../utils/constants.js", "../components/MenuPack.js", "../components/Pagination.js", "../components/Video.js", "../forms/FormVideosSource.js", "../forms/FormVideosGrouping.js", "../forms/FormVideosSearch.js", "../forms/FormVideosSort.js", "../components/GroupView.js", "../forms/FormPropertyEditSelectedValues.js", "../forms/FormVideosKeywordsToProperty.js", "../forms/FormSelectedVideosEditProperty.js", "../components/Collapsable.js", "../components/Cross.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/MenuItemRadio.js", "../components/Menu.js", "../utils/Selector.js", "../utils/Action.js", "../utils/Actions.js", "../components/ActionToMenuItem.js", "../components/ActionToSettingIcon.js", "../components/ActionToCross.js", "../utils/backend.js", "../dialogs/FancyBox.js", "./HomePage.js", "../forms/FormDatabaseEditFolders.js", "../forms/FormDatabaseRename.js", "../dialogs/Dialog.js", "../components/Cell.js", "../forms/FormNewPredictionProperty.js"], function (_export, _context) {
   "use strict";
 
-  var FIELD_MAP, PAGE_SIZES, SEARCH_TYPE_TITLE, SOURCE_TREE, MenuPack, Pagination, Video, FormVideosSource, FormVideosGrouping, FormVideosSearch, FormVideosSort, GroupView, FormPropertyEditSelectedValues, FormVideosKeywordsToProperty, FormSelectedVideosEditProperty, Collapsable, Cross, MenuItem, MenuItemCheck, MenuItemRadio, Menu, Selector, Action, Actions, ActionToMenuItem, ActionToSettingIcon, ActionToCross, backend_error, python_call, FancyBox, HomePage, FormDatabaseEditFolders, FormDatabaseRename, Dialog, Cell, FormNewPredictionProperty, formatString, VideosPage;
+  var FIELD_MAP, PAGE_SIZES, SEARCH_TYPE_TITLE, SOURCE_TREE, MenuPack, Pagination, Video, FormVideosSource, FormVideosGrouping, FormVideosSearch, FormVideosSort, GroupView, FormPropertyEditSelectedValues, FormVideosKeywordsToProperty, FormSelectedVideosEditProperty, Collapsable, Cross, MenuItem, MenuItemCheck, MenuItemRadio, Menu, Selector, Action, Actions, ActionToMenuItem, ActionToSettingIcon, ActionToCross, backend_error, python_call, FancyBox, HomePage, FormDatabaseEditFolders, FormDatabaseRename, Dialog, Cell, FormNewPredictionProperty, VideosPage;
 
   function compareSources(sources1, sources2) {
     if (sources1.length !== sources2.length) return false;
@@ -94,8 +94,6 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
       Cell = _componentsCellJs.Cell;
     }, function (_formsFormNewPredictionPropertyJs) {
       FormNewPredictionProperty = _formsFormNewPredictionPropertyJs.FormNewPredictionProperty;
-    }, function (_utilsFunctionsJs) {
-      formatString = _utilsFunctionsJs.formatString;
     }],
     execute: function () {
       _export("VideosPage", VideosPage = class VideosPage extends React.Component {
@@ -216,11 +214,11 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             action: actions.reload
           }), /*#__PURE__*/React.createElement(MenuItem, {
             action: this.renameDatabase
-          }, formatString(PYTHON_LANG.action_rename_database, {
+          }, PYTHON_LANG.action_rename_database.format({
             name: this.state.database.name
           })), /*#__PURE__*/React.createElement(MenuItem, {
             action: this.editDatabaseFolders
-          }, formatString(PYTHON_LANG.action_edit_database_folders, {
+          }, PYTHON_LANG.action_edit_database_folders.format({
             count: this.state.database.folders.length
           })), /*#__PURE__*/React.createElement(Menu, {
             title: PYTHON_LANG.menu_close_database
@@ -277,7 +275,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           }, def.name))) : this.state.properties.map((def, index) => /*#__PURE__*/React.createElement(MenuItem, {
             key: index,
             action: () => this.backendGroupVideos(def.name, true)
-          }, formatString(PYTHON_LANG.action_group_videos_by_property, {
+          }, PYTHON_LANG.action_group_videos_by_property.format({
             name: def.name
           })))), /*#__PURE__*/React.createElement(MenuPack, {
             title: PYTHON_LANG.menu_predictors
@@ -320,7 +318,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             checked: this.state.pageSize === count,
             value: count,
             action: this.setPageSize
-          }, formatString(PYTHON_LANG.action_page_size, {
+          }, PYTHON_LANG.action_page_size.format({
             count
           })))), /*#__PURE__*/React.createElement(MenuItemCheck, {
             checked: this.state.confirmDeletion,
@@ -411,7 +409,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             className: "footer-information text-right"
           }, groupDef ? /*#__PURE__*/React.createElement("div", {
             className: "info group"
-          }, groupDef.groups.length ? formatString(PYTHON_LANG.text_group, {
+          }, groupDef.groups.length ? PYTHON_LANG.text_group.format({
             group: groupDef.group_id + 1,
             count: groupDef.groups.length
           }) : PYTHON_LANG.text_no_group) : "", /*#__PURE__*/React.createElement("div", {
@@ -448,7 +446,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             title: groupDef ? PYTHON_LANG.action_edit : PYTHON_LANG.action_group
           })), groupDef ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToCross, {
             action: actions.ungroup
-          })) : "")), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, searchDef ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", null, formatString(PYTHON_LANG.text_searched, {
+          })) : "")), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, searchDef ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", null, PYTHON_LANG.text_searched.format({
             text: SEARCH_TYPE_TITLE[searchDef.cond]
           })), /*#__PURE__*/React.createElement("div", {
             className: "word-break-all"
@@ -465,9 +463,9 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             action: actions.sort
           })), sortingIsDefault ? "" : /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToCross, {
             action: actions.unsort
-          })))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, selectionSize ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", null, "Selected"), /*#__PURE__*/React.createElement("div", null, selectedAll ? formatString(PYTHON_LANG.text_all_videos_selected, {
+          })))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, selectionSize ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", null, "Selected"), /*#__PURE__*/React.createElement("div", null, selectedAll ? PYTHON_LANG.text_all_videos_selected.format({
             count: selectionSize
-          }) : formatString(PYTHON_LANG.text_videos_selected, {
+          }) : PYTHON_LANG.text_videos_selected.format({
             count: selectionSize,
             total: realNbVideos
           })), /*#__PURE__*/React.createElement("div", {
@@ -502,7 +500,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         populatePredictionProperty() {
           Fancybox.load( /*#__PURE__*/React.createElement(FancyBox, {
             title: PYTHON_LANG.form_title_populate_predictor_manually
-          }, markdownToReact(PYTHON_LANG.form_content_populate_predictor_manually)));
+          }, PYTHON_LANG.form_content_populate_predictor_manually.markdown()));
         }
 
         computePredictionProperty(propName) {
@@ -611,7 +609,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
 
         moveVideo(videoID, directory) {
           Fancybox.load( /*#__PURE__*/React.createElement(FancyBox, {
-            title: formatString(PYTHON_LANG.form_title_move_file, {
+            title: PYTHON_LANG.form_title_move_file.format({
               path: directory
             }),
             onClose: () => {
@@ -626,7 +624,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
               command: ["move_video_file", videoID, directory],
               onReady: status => {
                 Fancybox.close();
-                if (status === "Cancelled") this.updateStatus(PYTHON_LANG.status_video_not_moved);else this.updateStatus(formatString(PYTHON_LANG.status_video_moved, {
+                if (status === "Cancelled") this.updateStatus(PYTHON_LANG.status_video_not_moved);else this.updateStatus(PYTHON_LANG.status_video_moved.format({
                   directory
                 }), true);
               }
@@ -728,7 +726,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             onClose: edition => {
               this.backend(['edit_property_for_videos', propertyName, videoIndices, edition.add, edition.remove], {
                 pageNumber: 0,
-                status: formatString(PYTHON_LANG.status_prop_val_edited, {
+                status: PYTHON_LANG.status_prop_val_edited.format({
                   property: propertyName,
                   count: selectionSize
                 })
@@ -786,7 +784,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
 
         deleteDatabase() {
           Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
-            title: formatString(PYTHON_LANG.dialog_delete_database, {
+            title: PYTHON_LANG.dialog_delete_database.format({
               name: this.state.database.name
             }),
             yes: PYTHON_LANG.text_delete,
@@ -799,7 +797,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             className: "text-center"
           }, /*#__PURE__*/React.createElement("h1", null, PYTHON_LANG.text_database, " ", /*#__PURE__*/React.createElement("span", {
             className: "red-flag"
-          }, this.state.database.name)), markdownToReact(PYTHON_LANG.form_content_confirm_delete_database))));
+          }, this.state.database.name)), PYTHON_LANG.form_content_confirm_delete_database.markdown())));
         }
 
         confirmAllUniqueMoves() {
@@ -813,7 +811,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             center: true,
             full: true,
             className: "text-center"
-          }, markdownToReact(PYTHON_LANG.form_content_confirm_unique_moves))));
+          }, PYTHON_LANG.form_content_confirm_unique_moves.markdown())));
         }
 
         resetGroup() {
@@ -836,7 +834,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
 
         openRandomVideo() {
           python_call('open_random_video').then(filename => {
-            this.updateStatus(formatString(PYTHON_LANG.status_randomly_opened, {
+            this.updateStatus(PYTHON_LANG.status_randomly_opened.format({
               path: filename
             }), true, true);
           }).catch(backend_error);
@@ -867,7 +865,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             properties: this.getStringSetProperties(this.state.properties),
             onClose: state => {
               python_call('fill_property_with_terms', state.field, state.onlyEmpty).then(() => this.backend(null, {
-                status: formatString(PYTHON_LANG.status_filled_property_with_keywords, {
+                status: PYTHON_LANG.status_filled_property_with_keywords.format({
                   name: state.field
                 })
               })).catch(backend_error);
@@ -962,7 +960,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
                 case 'delete':
                   this.backend(['delete_property_value', name, values], {
                     groupSelection: new Set(),
-                    status: formatString(PYTHON_LANG.status_prop_vals_deleted, {
+                    status: PYTHON_LANG.status_prop_vals_deleted.format({
                       name: name,
                       values: values.join('", "')
                     })
@@ -972,7 +970,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
                 case 'edit':
                   this.backend(['edit_property_value', name, values, operation.value], {
                     groupSelection: new Set(),
-                    status: formatString(PYTHON_LANG.status_prop_vals_edited, {
+                    status: PYTHON_LANG.status_prop_vals_edited.format({
                       name: name,
                       values: values.join('", "'),
                       destination: operation.value
@@ -983,7 +981,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
                 case 'move':
                   this.backend(['move_property_value', name, values, operation.move], {
                     groupSelection: new Set(),
-                    status: formatString(PYTHON_LANG.status_prop_val_moved, {
+                    status: PYTHON_LANG.status_prop_val_moved.format({
                       values: values.join('", "'),
                       name: name,
                       destination: operation.move

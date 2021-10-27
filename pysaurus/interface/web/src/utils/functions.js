@@ -13,7 +13,7 @@ export function parsePropValString(propType, propEnum, value) {
             else if (value === "true")
                 parsed = true;
             else
-                throw formatString(PYTHON_LANG.error_invalid_bool_value, {value});
+                throw PYTHON_LANG.error_invalid_bool_value.format({value});
             break;
         case "int":
             parsed = parseInt(value);
@@ -23,7 +23,7 @@ export function parsePropValString(propType, propEnum, value) {
         case "float":
             parsed = parseFloat(value);
             if (isNaN(parsed))
-                throw formatString(PYTHON_LANG.error_parsing_float, {value});
+                throw PYTHON_LANG.error_parsing_float.format({value});
             break;
         case "str":
             parsed = value;
@@ -32,7 +32,7 @@ export function parsePropValString(propType, propEnum, value) {
             throw `Unknown property type: ${propType}`;
     }
     if (propEnum && propEnum.indexOf(parsed) < 0)
-        throw formatString(PYTHON_LANG.error_parsing_enum, {expected: propEnum.join(', '), value: value});
+        throw PYTHON_LANG.error_parsing_enum.format({expected: propEnum.join(', '), value: value});
     return parsed;
 }
 

@@ -1,5 +1,3 @@
-import {formatString} from "./functions.js";
-
 export class Actions {
     /**
      * @param actions {Object.<string, Action>}
@@ -12,10 +10,7 @@ export class Actions {
         for (let name of Object.keys(actions)) {
             const shortcut = actions[name].shortcut.str;
             if (shortcutToName.hasOwnProperty(shortcut))
-                throw new Error(formatString(
-                    PYTHON_LANG.error_duplicated_shortcut,
-                    {shortcut: shortcut, name1: shortcutToName[shortcut], name2: name}
-                ));
+                throw new Error(PYTHON_LANG.error_duplicated_shortcut.format({shortcut: shortcut, name1: shortcutToName[shortcut], name2: name}));
             shortcutToName[shortcut] = name;
         }
         this.onKeyPressed = this.onKeyPressed.bind(this);

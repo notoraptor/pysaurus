@@ -1,15 +1,13 @@
-System.register(["../dialogs/Dialog.js", "../utils/functions.js"], function (_export, _context) {
+System.register(["../dialogs/Dialog.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, formatString, FormDatabaseRename;
+  var Dialog, FormDatabaseRename;
 
   _export("FormDatabaseRename", void 0);
 
   return {
     setters: [function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
-    }, function (_utilsFunctionsJs) {
-      formatString = _utilsFunctionsJs.formatString;
     }],
     execute: function () {
       _export("FormDatabaseRename", FormDatabaseRename = class FormDatabaseRename extends React.Component {
@@ -29,7 +27,7 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js"], function (_ex
 
         render() {
           return /*#__PURE__*/React.createElement(Dialog, {
-            title: formatString(PYTHON_LANG.form_title_rename_database, {
+            title: PYTHON_LANG.form_title_rename_database.format({
               name: this.props.title
             }),
             yes: PYTHON_LANG.text_rename,

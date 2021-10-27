@@ -18,7 +18,7 @@ export class FormNewPredictionProperty extends React.Component {
                     yes={PYTHON_LANG.text_create}
                     action={this.onClose}>
                 <div className="form-rename text-center">
-                    {markdownToReact(PYTHON_LANG.form_content_new_prediction_property)}
+                    {PYTHON_LANG.form_content_new_prediction_property.markdown()}
                     <p className="form">
                         <input type="text"
                                id="name"

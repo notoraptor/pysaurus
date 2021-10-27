@@ -42,7 +42,9 @@ class Application:
         if lang_path.exists():
             assert lang_path.isfile()
         elif self.config.language == DefaultLanguage.__language__:
-            default_dct = functions.object_to_dict(DefaultLanguage)
+            default_dct = functions.object_to_dict(
+                DefaultLanguage, value_wrapper=str.strip
+            )
             with open(lang_path.path, "w") as file:
                 json.dump(default_dct, file, indent="\t")
         else:

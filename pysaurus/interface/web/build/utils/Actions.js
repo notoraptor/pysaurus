@@ -1,14 +1,12 @@
-System.register(["./functions.js"], function (_export, _context) {
+System.register([], function (_export, _context) {
   "use strict";
 
-  var formatString, Actions;
+  var Actions;
 
   _export("Actions", void 0);
 
   return {
-    setters: [function (_functionsJs) {
-      formatString = _functionsJs.formatString;
-    }],
+    setters: [],
     execute: function () {
       _export("Actions", Actions = class Actions {
         /**
@@ -21,7 +19,7 @@ System.register(["./functions.js"], function (_export, _context) {
 
           for (let name of Object.keys(actions)) {
             const shortcut = actions[name].shortcut.str;
-            if (shortcutToName.hasOwnProperty(shortcut)) throw new Error(formatString(PYTHON_LANG.error_duplicated_shortcut, {
+            if (shortcutToName.hasOwnProperty(shortcut)) throw new Error(PYTHON_LANG.error_duplicated_shortcut.format({
               shortcut: shortcut,
               name1: shortcutToName[shortcut],
               name2: name

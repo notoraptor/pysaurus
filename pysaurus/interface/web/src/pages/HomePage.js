@@ -1,6 +1,5 @@
 import {Characters} from "../utils/constants.js";
 import {backend_error, python_call} from "../utils/backend.js";
-import {formatString} from "../utils/functions.js";
 
 class ProgressionMonitoring {
     constructor(name, total) {
@@ -27,7 +26,7 @@ function Monitoring(props) {
         current += step;
     }
     const percent = Math.round(current * 100 / total);
-    const title = monitoring.title || formatString(PYTHON_LANG.text_done, {count: current});
+    const title = monitoring.title || PYTHON_LANG.text_done.format({count: current});
     const jobClassID = "job " + monitoring.name;
     return (
         <div className="job horizontal">
@@ -97,13 +96,13 @@ const NotificationRenderer = {
         return (
             <div key={i}>
                 <strong>{message.name === 'DatabaseSaved' ? PYTHON_LANG.text_database_saved : PYTHON_LANG.text_database_loaded}</strong>:
-                {formatString(PYTHON_LANG.text_nb_entries, {count: data.entries}) + ", "}
-                {formatString(PYTHON_LANG.text_nb_discarded, {count: data.discarded}) + ", "}
-                {formatString(PYTHON_LANG.text_nb_unreadable_not_found, {count: data.unreadable_not_found}) + ", "}
-                {formatString(PYTHON_LANG.text_nb_unreadable_found, {count: data.unreadable_found}) + ", "}
-                {formatString(PYTHON_LANG.text_nb_readable_not_found, {count: data.readable_not_found}) + ", "}
-                {formatString(PYTHON_LANG.text_nb_readable_found_without_thumbnails, {count: data.readable_found_without_thumbnails}) + ", "}
-                {formatString(PYTHON_LANG.text_nb_valid, {count: data.valid})}
+                {PYTHON_LANG.text_nb_entries.format({count: data.entries}) + ", "}
+                {PYTHON_LANG.text_nb_discarded.format({count: data.discarded}) + ", "}
+                {PYTHON_LANG.text_nb_unreadable_not_found.format({count: data.unreadable_not_found}) + ", "}
+                {PYTHON_LANG.text_nb_unreadable_found.format({count: data.unreadable_found}) + ", "}
+                {PYTHON_LANG.text_nb_readable_not_found.format({count: data.readable_not_found}) + ", "}
+                {PYTHON_LANG.text_nb_readable_found_without_thumbnails.format({count: data.readable_found_without_thumbnails}) + ", "}
+                {PYTHON_LANG.text_nb_valid.format({count: data.valid})}
             </div>
         );
     },
@@ -125,14 +124,14 @@ const NotificationRenderer = {
     },
     FinishedCollectingVideos: function (app, message, i) {
         const count = message.notification.count;
-        return (<div key={i}>{markdownToReact(formatString(PYTHON_LANG.gui_home_collected_files, {count}), true)}</div>);
+        return (<div key={i}>{PYTHON_LANG.gui_home_collected_files.format({count}).markdown(true)}</div>);
     },
     MissingThumbnails: function (app, message, i) {
         const names = message.notification.names;
         if (names.length) {
             return (
                 <div key={i}>
-                    <div><strong>{formatString(PYTHON_LANG.text_notification_missing_thumbnails, {count: names.length})}</strong>:</div>
+                    <div><strong>{PYTHON_LANG.text_notification_missing_thumbnails.format({count: names.length})}</strong>:</div>
                     {names.map((name, indexName) => <div key={indexName}><code>{name}</code></div>)}
                 </div>
             );
@@ -163,10 +162,11 @@ const NotificationRenderer = {
             <div key={i}>
                 <div>
                     <strong>
-                        {formatString(
-                            (message.name === 'VideoInfoErrors' ? PYTHON_LANG.text_nb_video_errors : PYTHON_LANG.text_nb_thumbnail_errors),
-                            {count: keys.length}
-                        )}
+                        {(
+                            message.name === 'VideoInfoErrors' ?
+                                PYTHON_LANG.text_nb_video_errors :
+                                PYTHON_LANG.text_nb_thumbnail_errors
+                        ).format({count: keys.length})}
                     </strong>:
                 </div>
                 <ul>{keys.map((name, indexName) => (
@@ -198,7 +198,7 @@ const NotificationRenderer = {
     NbMiniatures: function (app, message, i) {
         const total = message.notification.total;
         if (total) {
-            return (<div key={i}><strong>{formatString(PYTHON_LANG.text_nb_miniatures_saved, {count: total})}</strong></div>);
+            return (<div key={i}><strong>{PYTHON_LANG.text_nb_miniatures_saved.format({count: total})}</strong></div>);
         } else {
             return (<div key={i}><em>{PYTHON_LANG.text_no_miniatures_saved}</em></div>);
         }

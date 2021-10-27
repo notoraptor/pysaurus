@@ -1,5 +1,4 @@
 import {Dialog} from "../dialogs/Dialog.js";
-import {formatString, parsePropValString} from "../utils/functions.js";
 import {Characters} from "../utils/constants.js";
 
 export class FormSelectedVideosEditProperty extends React.Component {
@@ -45,7 +44,7 @@ export class FormSelectedVideosEditProperty extends React.Component {
         const propName = this.props.definition.name;
         const nbVideos = this.props.nbVideos;
         return (
-            <Dialog title={formatString(PYTHON_LANG.form_title_edit_property_for_videos, {name: propName, count: nbVideos})}
+            <Dialog title={PYTHON_LANG.form_title_edit_property_for_videos.format({name: propName, count: nbVideos})}
                     yes="edit"
                     action={this.onClose}>
                 <div className="form-selected-videos-edit-property vertical flex-grow-1 text-center">
@@ -63,7 +62,7 @@ export class FormSelectedVideosEditProperty extends React.Component {
                         {this.state.remove.length > 1 ? (
                             <div className="horizontal">
                                 <div className="value">
-                                    {formatString(PYTHON_LANG.text_all_values, {count: this.state.remove.length})}
+                                    {PYTHON_LANG.text_all_values.format({count: this.state.remove.length})}
                                 </div>
                                 <button onClick={this.unRemoveAll}>{Characters.SMART_ARROW_RIGHT}</button>
                             </div>
@@ -72,7 +71,7 @@ export class FormSelectedVideosEditProperty extends React.Component {
                             <div className="horizontal">
                                 <button onClick={this.removeAll}>{Characters.SMART_ARROW_LEFT}</button>
                                 <div className="value">
-                                    {formatString(PYTHON_LANG.text_all_values, {count: this.state.current.length})}
+                                    {PYTHON_LANG.text_all_values.format({count: this.state.current.length})}
                                 </div>
                                 {this.props.definition.multiple ? (
                                     <button onClick={this.addAll}>{Characters.SMART_ARROW_RIGHT}</button>
@@ -83,7 +82,7 @@ export class FormSelectedVideosEditProperty extends React.Component {
                             <div className="horizontal">
                                 <button onClick={this.unAddAll}>{Characters.SMART_ARROW_LEFT}</button>
                                 <div className="value">
-                                    {formatString(PYTHON_LANG.text_all_values, {count: this.state.add.length})}
+                                    {PYTHON_LANG.text_all_values.format({count: this.state.add.length})}
                                 </div>
                             </div>
                         ) : <div/>}

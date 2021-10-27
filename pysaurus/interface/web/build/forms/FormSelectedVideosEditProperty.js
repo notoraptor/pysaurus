@@ -1,16 +1,13 @@
-System.register(["../dialogs/Dialog.js", "../utils/functions.js", "../utils/constants.js"], function (_export, _context) {
+System.register(["../dialogs/Dialog.js", "../utils/constants.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, formatString, parsePropValString, Characters, FormSelectedVideosEditProperty;
+  var Dialog, Characters, FormSelectedVideosEditProperty;
 
   _export("FormSelectedVideosEditProperty", void 0);
 
   return {
     setters: [function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
-    }, function (_utilsFunctionsJs) {
-      formatString = _utilsFunctionsJs.formatString;
-      parsePropValString = _utilsFunctionsJs.parsePropValString;
     }, function (_utilsConstantsJs) {
       Characters = _utilsConstantsJs.Characters;
     }],
@@ -62,7 +59,7 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js", "../utils/cons
           const propName = this.props.definition.name;
           const nbVideos = this.props.nbVideos;
           return /*#__PURE__*/React.createElement(Dialog, {
-            title: formatString(PYTHON_LANG.form_title_edit_property_for_videos, {
+            title: PYTHON_LANG.form_title_edit_property_for_videos.format({
               name: propName,
               count: nbVideos
             }),
@@ -86,7 +83,7 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js", "../utils/cons
             className: "horizontal"
           }, /*#__PURE__*/React.createElement("div", {
             className: "value"
-          }, formatString(PYTHON_LANG.text_all_values, {
+          }, PYTHON_LANG.text_all_values.format({
             count: this.state.remove.length
           })), /*#__PURE__*/React.createElement("button", {
             onClick: this.unRemoveAll
@@ -96,7 +93,7 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js", "../utils/cons
             onClick: this.removeAll
           }, Characters.SMART_ARROW_LEFT), /*#__PURE__*/React.createElement("div", {
             className: "value"
-          }, formatString(PYTHON_LANG.text_all_values, {
+          }, PYTHON_LANG.text_all_values.format({
             count: this.state.current.length
           })), this.props.definition.multiple ? /*#__PURE__*/React.createElement("button", {
             onClick: this.addAll
@@ -106,7 +103,7 @@ System.register(["../dialogs/Dialog.js", "../utils/functions.js", "../utils/cons
             onClick: this.unAddAll
           }, Characters.SMART_ARROW_LEFT), /*#__PURE__*/React.createElement("div", {
             className: "value"
-          }, formatString(PYTHON_LANG.text_all_values, {
+          }, PYTHON_LANG.text_all_values.format({
             count: this.state.add.length
           }))) : /*#__PURE__*/React.createElement("div", null)), this.renderFormAdd()));
         }

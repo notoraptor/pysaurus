@@ -246,9 +246,9 @@ def fatal(exception: Exception, code=1):
     exit(code)
 
 
-def object_to_dict(obj):
+def object_to_dict(obj, value_wrapper=identity):
     cls = obj if isinstance(obj, type) else type(obj)
     return {
-        key: getattr(obj, key)
+        key: value_wrapper(getattr(obj, key))
         for key in class_get_public_attributes(cls)
     }

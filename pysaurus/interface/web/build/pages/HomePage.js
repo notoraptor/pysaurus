@@ -1,7 +1,7 @@
-System.register(["../utils/constants.js", "../utils/backend.js", "../utils/functions.js"], function (_export, _context) {
+System.register(["../utils/constants.js", "../utils/backend.js"], function (_export, _context) {
   "use strict";
 
-  var Characters, backend_error, python_call, formatString, ProgressionMonitoring, HomePage, EndStatus, EndReady, NotificationCollector, NotificationRenderer, ACTIONS;
+  var Characters, backend_error, python_call, ProgressionMonitoring, HomePage, EndStatus, EndReady, NotificationCollector, NotificationRenderer, ACTIONS;
 
   /**
    * @param props {{monitoring: ProgressionMonitoring}}
@@ -16,7 +16,7 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../utils/funct
     }
 
     const percent = Math.round(current * 100 / total);
-    const title = monitoring.title || formatString(PYTHON_LANG.text_done, {
+    const title = monitoring.title || PYTHON_LANG.text_done.format({
       count: current
     });
     const jobClassID = "job " + monitoring.name;
@@ -50,8 +50,6 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../utils/funct
     }, function (_utilsBackendJs) {
       backend_error = _utilsBackendJs.backend_error;
       python_call = _utilsBackendJs.python_call;
-    }, function (_utilsFunctionsJs) {
-      formatString = _utilsFunctionsJs.formatString;
     }],
     execute: function () {
       ProgressionMonitoring = class ProgressionMonitoring {
@@ -127,19 +125,19 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../utils/funct
           const data = message.notification;
           return /*#__PURE__*/React.createElement("div", {
             key: i
-          }, /*#__PURE__*/React.createElement("strong", null, message.name === 'DatabaseSaved' ? PYTHON_LANG.text_database_saved : PYTHON_LANG.text_database_loaded), ":", formatString(PYTHON_LANG.text_nb_entries, {
+          }, /*#__PURE__*/React.createElement("strong", null, message.name === 'DatabaseSaved' ? PYTHON_LANG.text_database_saved : PYTHON_LANG.text_database_loaded), ":", PYTHON_LANG.text_nb_entries.format({
             count: data.entries
-          }) + ", ", formatString(PYTHON_LANG.text_nb_discarded, {
+          }) + ", ", PYTHON_LANG.text_nb_discarded.format({
             count: data.discarded
-          }) + ", ", formatString(PYTHON_LANG.text_nb_unreadable_not_found, {
+          }) + ", ", PYTHON_LANG.text_nb_unreadable_not_found.format({
             count: data.unreadable_not_found
-          }) + ", ", formatString(PYTHON_LANG.text_nb_unreadable_found, {
+          }) + ", ", PYTHON_LANG.text_nb_unreadable_found.format({
             count: data.unreadable_found
-          }) + ", ", formatString(PYTHON_LANG.text_nb_readable_not_found, {
+          }) + ", ", PYTHON_LANG.text_nb_readable_not_found.format({
             count: data.readable_not_found
-          }) + ", ", formatString(PYTHON_LANG.text_nb_readable_found_without_thumbnails, {
+          }) + ", ", PYTHON_LANG.text_nb_readable_found_without_thumbnails.format({
             count: data.readable_found_without_thumbnails
-          }) + ", ", formatString(PYTHON_LANG.text_nb_valid, {
+          }) + ", ", PYTHON_LANG.text_nb_valid.format({
             count: data.valid
           }));
         },
@@ -171,9 +169,9 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../utils/funct
           const count = message.notification.count;
           return /*#__PURE__*/React.createElement("div", {
             key: i
-          }, markdownToReact(formatString(PYTHON_LANG.gui_home_collected_files, {
+          }, PYTHON_LANG.gui_home_collected_files.format({
             count
-          }), true));
+          }).markdown(true));
         },
         MissingThumbnails: function (app, message, i) {
           const names = message.notification.names;
@@ -181,7 +179,7 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../utils/funct
           if (names.length) {
             return /*#__PURE__*/React.createElement("div", {
               key: i
-            }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, formatString(PYTHON_LANG.text_notification_missing_thumbnails, {
+            }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, PYTHON_LANG.text_notification_missing_thumbnails.format({
               count: names.length
             })), ":"), names.map((name, indexName) => /*#__PURE__*/React.createElement("div", {
               key: indexName
@@ -214,7 +212,7 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../utils/funct
           keys.sort();
           return /*#__PURE__*/React.createElement("div", {
             key: i
-          }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, formatString(message.name === 'VideoInfoErrors' ? PYTHON_LANG.text_nb_video_errors : PYTHON_LANG.text_nb_thumbnail_errors, {
+          }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, (message.name === 'VideoInfoErrors' ? PYTHON_LANG.text_nb_video_errors : PYTHON_LANG.text_nb_thumbnail_errors).format({
             count: keys.length
           })), ":"), /*#__PURE__*/React.createElement("ul", null, keys.map((name, indexName) => /*#__PURE__*/React.createElement("li", {
             key: indexName
@@ -250,7 +248,7 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../utils/funct
           if (total) {
             return /*#__PURE__*/React.createElement("div", {
               key: i
-            }, /*#__PURE__*/React.createElement("strong", null, formatString(PYTHON_LANG.text_nb_miniatures_saved, {
+            }, /*#__PURE__*/React.createElement("strong", null, PYTHON_LANG.text_nb_miniatures_saved.format({
               count: total
             })));
           } else {

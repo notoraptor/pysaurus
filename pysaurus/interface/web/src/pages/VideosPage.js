@@ -30,8 +30,6 @@ import {FormDatabaseRename} from "../forms/FormDatabaseRename.js";
 import {Dialog} from "../dialogs/Dialog.js";
 import {Cell} from "../components/Cell.js";
 import {FormNewPredictionProperty} from "../forms/FormNewPredictionProperty.js";
-import {formatString} from "../utils/functions.js";
-
 
 function compareSources(sources1, sources2) {
     if (sources1.length !== sources2.length)
@@ -173,12 +171,10 @@ export class VideosPage extends React.Component {
                     <MenuPack title={PYTHON_LANG.menu_database}>
                         {<ActionToMenuItem action={actions.reload}/>}
                         <MenuItem action={this.renameDatabase}>
-                            {formatString(PYTHON_LANG.action_rename_database, {name: this.state.database.name})}
+                            {PYTHON_LANG.action_rename_database.format({name: this.state.database.name})}
                         </MenuItem>
                         <MenuItem action={this.editDatabaseFolders}>
-                            {formatString(
-                                PYTHON_LANG.action_edit_database_folders, {count: this.state.database.folders.length}
-                            )}
+                            {PYTHON_LANG.action_edit_database_folders.format({count: this.state.database.folders.length})}
                         </MenuItem>
                         <Menu title={PYTHON_LANG.menu_close_database}>
                             <MenuItem action={this.closeDatabase}>
@@ -239,7 +235,7 @@ export class VideosPage extends React.Component {
                         ) : (
                             this.state.properties.map((def, index) => (
                                 <MenuItem key={index} action={() => this.backendGroupVideos(def.name, true)}>
-                                    {formatString(PYTHON_LANG.action_group_videos_by_property, {name: def.name})}
+                                    {PYTHON_LANG.action_group_videos_by_property.format({name: def.name})}
                                 </MenuItem>
                             ))
                         )}
@@ -287,7 +283,7 @@ export class VideosPage extends React.Component {
                                                checked={this.state.pageSize === count}
                                                value={count}
                                                action={this.setPageSize}>
-                                    {formatString(PYTHON_LANG.action_page_size, {count})}
+                                    {PYTHON_LANG.action_page_size.format({count})}
                                 </MenuItemRadio>
                             ))}
                         </Menu>
@@ -385,7 +381,7 @@ export class VideosPage extends React.Component {
                         {groupDef ? (
                             <div className="info group">
                                 {groupDef.groups.length ?
-                                    formatString(PYTHON_LANG.text_group, {
+                                    PYTHON_LANG.text_group.format({
                                         group: (groupDef.group_id + 1),
                                         count: groupDef.groups.length
                                     })
@@ -447,7 +443,7 @@ export class VideosPage extends React.Component {
                     <td>
                         {searchDef ? (
                             <div>
-                                <div>{formatString(PYTHON_LANG.text_searched, {text: SEARCH_TYPE_TITLE[searchDef.cond]})}</div>
+                                <div>{PYTHON_LANG.text_searched.format({text: SEARCH_TYPE_TITLE[searchDef.cond]})}</div>
                                 <div className="word-break-all">&quot;<strong>{searchDef.text}</strong>&quot;</div>
                             </div>
                         ) : <div className="no-filter">{PYTHON_LANG.text_no_search}</div>}
@@ -483,14 +479,8 @@ export class VideosPage extends React.Component {
                                 <div>Selected</div>
                                 <div>
                                     {selectedAll ?
-                                        formatString(
-                                            PYTHON_LANG.text_all_videos_selected,
-                                            {count: selectionSize}
-                                        ) :
-                                        formatString(
-                                            PYTHON_LANG.text_videos_selected,
-                                            {count: selectionSize, total: realNbVideos}
-                                        )}
+                                        PYTHON_LANG.text_all_videos_selected.format({count: selectionSize}) :
+                                        PYTHON_LANG.text_videos_selected.format({count: selectionSize, total: realNbVideos})}
                                 </div>
                                 <div className="mb-1">
                                     <button onClick={this.displayOnlySelected}>
@@ -537,7 +527,7 @@ export class VideosPage extends React.Component {
     populatePredictionProperty() {
         Fancybox.load(
             <FancyBox title={PYTHON_LANG.form_title_populate_predictor_manually}>
-                {markdownToReact(PYTHON_LANG.form_content_populate_predictor_manually)}
+                {PYTHON_LANG.form_content_populate_predictor_manually.markdown()}
             </FancyBox>
         );
     }
@@ -653,7 +643,7 @@ export class VideosPage extends React.Component {
 
     moveVideo(videoID, directory) {
         Fancybox.load(
-            <FancyBox title={formatString(PYTHON_LANG.form_title_move_file, {path: directory})} onClose={() => {
+            <FancyBox title={PYTHON_LANG.form_title_move_file.format({path: directory})} onClose={() => {
                 python_call("cancel_copy");
             }}>
                 <div className="absolute-plain vertical">
@@ -666,7 +656,7 @@ export class VideosPage extends React.Component {
                                       if (status === "Cancelled")
                                           this.updateStatus(PYTHON_LANG.status_video_not_moved);
                                       else
-                                          this.updateStatus(formatString(PYTHON_LANG.status_video_moved, {directory}), true);
+                                          this.updateStatus(PYTHON_LANG.status_video_moved.format({directory}), true);
                                   }
                               }}/>
                 </div>
@@ -749,7 +739,7 @@ export class VideosPage extends React.Component {
                                                             ['edit_property_for_videos', propertyName, videoIndices, edition.add, edition.remove],
                                                             {
                                                                 pageNumber: 0,
-                                                                status: formatString(PYTHON_LANG.status_prop_val_edited, {
+                                                                status: PYTHON_LANG.status_prop_val_edited.format({
                                                                     property: propertyName,
                                                                     count: selectionSize
                                                                 })
@@ -798,7 +788,7 @@ export class VideosPage extends React.Component {
 
     deleteDatabase() {
         Fancybox.load(
-            <Dialog title={formatString(PYTHON_LANG.dialog_delete_database, {name: this.state.database.name})}
+            <Dialog title={PYTHON_LANG.dialog_delete_database.format({name: this.state.database.name})}
                     yes={PYTHON_LANG.text_delete} action={() => {
                 python_call("delete_database")
                     .then(databases => this.props.app.dbHome(databases))
@@ -806,7 +796,7 @@ export class VideosPage extends React.Component {
             }}>
                 <Cell center={true} full={true} className="text-center">
                     <h1>{PYTHON_LANG.text_database} <span className="red-flag">{this.state.database.name}</span></h1>
-                    {markdownToReact(PYTHON_LANG.form_content_confirm_delete_database)}
+                    {PYTHON_LANG.form_content_confirm_delete_database.markdown()}
                 </Cell>
             </Dialog>
         )
@@ -820,7 +810,7 @@ export class VideosPage extends React.Component {
                     .catch(backend_error);
             }}>
                 <Cell center={true} full={true} className="text-center">
-                    {markdownToReact(PYTHON_LANG.form_content_confirm_unique_moves)}
+                    {PYTHON_LANG.form_content_confirm_unique_moves.markdown()}
                 </Cell>
             </Dialog>
         );
@@ -841,7 +831,7 @@ export class VideosPage extends React.Component {
     openRandomVideo() {
         python_call('open_random_video')
             .then(filename => {
-                this.updateStatus(formatString(PYTHON_LANG.status_randomly_opened, {path: filename}), true, true);
+                this.updateStatus(PYTHON_LANG.status_randomly_opened.format({path: filename}), true, true);
             })
             .catch(backend_error);
     }
@@ -873,7 +863,7 @@ export class VideosPage extends React.Component {
             <FormVideosKeywordsToProperty properties={this.getStringSetProperties(this.state.properties)}
                                           onClose={state => {
                                               python_call('fill_property_with_terms', state.field, state.onlyEmpty)
-                                                  .then(() => this.backend(null, {status: formatString(PYTHON_LANG.status_filled_property_with_keywords, {name: state.field})}))
+                                                  .then(() => this.backend(null, {status: PYTHON_LANG.status_filled_property_with_keywords.format({name: state.field})}))
                                                   .catch(backend_error);
                                           }}/>
         )
@@ -968,10 +958,7 @@ export class VideosPage extends React.Component {
                                                             ['delete_property_value', name, values],
                                                             {
                                                                 groupSelection: new Set(),
-                                                                status: formatString(
-                                                                    PYTHON_LANG.status_prop_vals_deleted,
-                                                                    {name: name, values: values.join('", "')}
-                                                                )
+                                                                status: PYTHON_LANG.status_prop_vals_deleted.format({name: name, values: values.join('", "')})
                                                             }
                                                         );
                                                         break;
@@ -980,14 +967,11 @@ export class VideosPage extends React.Component {
                                                             ['edit_property_value', name, values, operation.value],
                                                             {
                                                                 groupSelection: new Set(),
-                                                                status: formatString(
-                                                                    PYTHON_LANG.status_prop_vals_edited,
-                                                                    {
+                                                                status: PYTHON_LANG.status_prop_vals_edited.format({
                                                                         name: name,
                                                                         values: values.join('", "'),
                                                                         destination: operation.value
-                                                                    }
-                                                                )
+                                                                    })
                                                             }
                                                         );
                                                         break;
@@ -996,7 +980,7 @@ export class VideosPage extends React.Component {
                                                             ['move_property_value', name, values, operation.move],
                                                             {
                                                                 groupSelection: new Set(),
-                                                                status: formatString(PYTHON_LANG.status_prop_val_moved, {
+                                                                status: PYTHON_LANG.status_prop_val_moved.format({
                                                                     values: values.join('", "'),
                                                                     name: name,
                                                                     destination: operation.move,
