@@ -6,7 +6,6 @@ from typing import Dict, Iterable, List, Optional
 
 from pysaurus.application import exceptions
 from pysaurus.application.config import Config
-from pysaurus.application.default_language import DefaultLanguage
 from pysaurus.application.language import Language
 from pysaurus.core import functions
 from pysaurus.core.components import AbsolutePath
@@ -15,6 +14,7 @@ from pysaurus.core.dict_file_format import dff_dump, dff_load
 from pysaurus.core.modules import FileSystem
 from pysaurus.core.notifier import DEFAULT_NOTIFIER
 from pysaurus.database.database import Database
+from pysaurus.language.default_language import DefaultLanguage
 
 
 class Application:

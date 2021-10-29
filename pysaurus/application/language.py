@@ -1,5 +1,5 @@
-from pysaurus.application.default_language import DefaultLanguage
 from pysaurus.core.functions import class_get_public_attributes
+from pysaurus.language.default_language import DefaultLanguage
 
 
 class Language:

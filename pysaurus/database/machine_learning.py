@@ -3,11 +3,11 @@ from typing import List
 
 import numpy as np
 
-from pysaurus.application.default_language import DefaultLanguage
 from pysaurus.core import job_notifications
 from pysaurus.core.notifier import DEFAULT_NOTIFIER
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.miniature_tools.miniature import Miniature
+from pysaurus.language.default_language import DefaultLanguage
 
 
 def _miniature_to_x(m: Miniature) -> List:

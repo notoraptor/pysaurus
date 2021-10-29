@@ -1,7 +1,6 @@
 from multiprocessing import Pool
 from typing import List
 
-from pysaurus.application.default_language import DefaultLanguage
 from pysaurus.core import job_notifications
 from pysaurus.core.classes import AbstractMatrix
 from pysaurus.core.constants import CPU_COUNT
@@ -16,6 +15,7 @@ from pysaurus.database.miniature_tools.pixel_comparator import (
     DistancePixelComparator,
 )
 from pysaurus.database.miniature_tools.pixel_group import PixelGroup
+from pysaurus.language.default_language import DefaultLanguage
 
 
 class GroupComputer:

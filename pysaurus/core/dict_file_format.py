@@ -22,6 +22,9 @@ def dff_loads(text: str) -> dict:
         if line.startswith("\t"):
             # value line
             lines.append(line[1:])
+        elif not line.strip():
+            if key is not None:
+                lines.append("")
         else:
             # key
             if key is None:

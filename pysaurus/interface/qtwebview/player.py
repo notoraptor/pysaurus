@@ -13,7 +13,7 @@ from pysaurus.core.classes import ToDict
 from pysaurus.core.components import ShortDuration as Duration
 from pysaurus.core.functions import function_none
 from pysaurus.interface.qtwebview.jump_slider import JumpSlider
-from pysaurus.application.default_language import DefaultLanguage
+from pysaurus.language.default_language import DefaultLanguage
 
 
 class MyEvent(ToDict):

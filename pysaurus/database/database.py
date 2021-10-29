@@ -7,7 +7,6 @@ from typing import Dict, Iterable, List, Optional, Sequence, Set, Union
 import ujson as json
 
 from pysaurus.application import exceptions
-from pysaurus.application.default_language import DefaultLanguage
 from pysaurus.core import functions, job_notifications, notifications
 from pysaurus.core.components import (
     AbsolutePath,
@@ -34,6 +33,7 @@ from pysaurus.database.special_properties import SpecialProperties
 from pysaurus.database.video import Video
 from pysaurus.database.video_runtime_info import VideoRuntimeInfo
 from pysaurus.database.video_state import VideoState
+from pysaurus.language.default_language import DefaultLanguage
 
 try:
     from pysaurus.database.video_info import video_raptor as backend_raptor
@@ -97,7 +97,7 @@ class Database:
         self.__message = None
         self.quality_attribute = QualityAttribute(self)
         self.moves_attribute = PotentialMoveAttribute(self)
-        self.lang = lang
+        self.lang = lang or DefaultLanguage
         # Set log file
         self.__notifier.set_log_path(self.__log_path.path)
         # Load database
