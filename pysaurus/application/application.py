@@ -1,6 +1,6 @@
 # import atexit
-import json
 import os
+import sys
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional
 
@@ -11,6 +11,7 @@ from pysaurus.application.language import Language
 from pysaurus.core import functions
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.custom_json_parser import parse_json
+from pysaurus.core.dict_file_format import dff_dump, dff_load
 from pysaurus.core.modules import FileSystem
 from pysaurus.core.notifier import DEFAULT_NOTIFIER
 from pysaurus.database.database import Database
@@ -38,18 +39,18 @@ class Application:
             assert self.config_path.isfile()
             self.config.update(parse_json(self.config_path))
         # Load language.
-        lang_path = AbsolutePath.join(self.lang_dir, f"{self.config.language}.json")
+        lang_path = AbsolutePath.join(self.lang_dir, f"{self.config.language}.txt")
         if lang_path.exists():
             assert lang_path.isfile()
         elif self.config.language == DefaultLanguage.__language__:
+            print("Dumping default langage", DefaultLanguage.__language__, file=sys.stderr)
             default_dct = functions.object_to_dict(
                 DefaultLanguage, value_wrapper=str.strip
             )
-            with open(lang_path.path, "w") as file:
-                json.dump(default_dct, file, indent="\t")
+            dff_dump(default_dct, lang_path)
         else:
             raise exceptions.MissingLanguageFile(self.config.language)
-        self.lang = Language(parse_json(lang_path))
+        self.lang = Language(dff_load(lang_path))
 
     def get_database_paths(self) -> List[AbsolutePath]:
         return sorted(self.databases.keys())
