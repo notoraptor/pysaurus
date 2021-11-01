@@ -1,5 +1,6 @@
 import {Dialog} from "../dialogs/Dialog.js";
 import {Cell} from "../components/Cell.js";
+import {LangContext} from "../language.js";
 
 export class FormVideosKeywordsToProperty extends React.Component {
     constructor(props) {
@@ -20,7 +21,7 @@ export class FormVideosKeywordsToProperty extends React.Component {
                         <select value={this.state.field}
                                 onChange={this.onChangeGroupField}>
                             {this.props.properties.map((def, i) => (
-                                <option key={i} value={def.name}>{PYTHON_LANG.word_property}: {def.name}</option>
+                                <option key={i} value={def.name}>{this.context.word_property}: {def.name}</option>
                             ))}
                         </select>
                     </p>
@@ -31,7 +32,7 @@ export class FormVideosKeywordsToProperty extends React.Component {
                                onChange={this.onChangeEmpty}/>
                         {" "}
                         <label htmlFor="only-empty">
-                            {PYTHON_LANG.text_fill_videos_without_properties.format({name: this.state.field})}
+                            {this.context.text_fill_videos_without_properties.format({name: this.state.field})}
                         </label>
                     </p>
                 </Cell>
@@ -51,3 +52,4 @@ export class FormVideosKeywordsToProperty extends React.Component {
         this.props.onClose(this.state);
     }
 }
+FormVideosKeywordsToProperty.contextType = LangContext;

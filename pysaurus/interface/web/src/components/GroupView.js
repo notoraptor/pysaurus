@@ -1,10 +1,11 @@
-import {Characters, FIELD_MAP} from "../utils/constants.js";
+import {Characters, getFieldMap} from "../utils/constants.js";
 import {Pagination} from "./Pagination.js";
 import {SettingIcon} from "./SettingIcon.js";
 import {PlusIcon} from "./PlusIcon.js";
 import {capitalizeFirstLetter} from "../utils/functions.js";
 import {Actions} from "../utils/Actions.js";
 import {Action} from "../utils/Action.js";
+import {LangContext} from "../language.js";
 
 export class GroupView extends React.Component {
     constructor(props) {
@@ -19,11 +20,9 @@ export class GroupView extends React.Component {
         this.allChecked = this.allChecked.bind(this);
         this.onCheckEntry = this.onCheckEntry.bind(this);
         this.onCheckAll = this.onCheckAll.bind(this);
+        this.getFields = this.getFields.bind(this);
+        this.getActions = this.getActions.bind(this);
         this.callbackIndex = -1;
-        this.features = new Actions({
-            previous: new Action("Ctrl+ArrowUp", "Go to previous group", this.previousGroup, Fancybox.isInactive),
-            next: new Action("Ctrl+ArrowDown", "Go to next group", this.nextGroup, Fancybox.isInactive),
-        });
     }
 
     render() {
@@ -53,7 +52,7 @@ export class GroupView extends React.Component {
                                        checked={allChecked}
                                        onChange={event => this.onCheckAll(event, start, end)}/>{" "}
                                 <label htmlFor="group-view-select-all">
-                                    {(allChecked ? PYTHON_LANG.text_all_groups_selected : PYTHON_LANG.text_groups_selected).format({count: selection.size})}
+                                    {(allChecked ? this.context.text_all_groups_selected : this.context.text_groups_selected).format({count: selection.size})}
                                 </label>
                                 {selection.size ? (
                                     <span>
@@ -118,7 +117,7 @@ export class GroupView extends React.Component {
                         </table>
                     ) : (
                         <div className="absolute-plain no-groups text-center vertical">
-                            <strong><em>{PYTHON_LANG.text_no_groups}</em></strong>
+                            <strong><em>{this.context.text_no_groups}</em></strong>
                         </div>
                     )}
                 </div>
@@ -129,7 +128,7 @@ export class GroupView extends React.Component {
     renderTitle() {
         const field = this.props.groupDef.field;
         let title = this.props.groupDef.is_property ?
-            `"${capitalizeFirstLetter(field)}"` : capitalizeFirstLetter(FIELD_MAP.fields[field].title);
+            `"${capitalizeFirstLetter(field)}"` : capitalizeFirstLetter(this.getFields().fields[field].title);
         if (this.props.groupDef.sorting === "length")
             title = `|| ${title} ||`;
         else if (this.props.groupDef.sorting === "count")
@@ -139,11 +138,22 @@ export class GroupView extends React.Component {
     }
 
     componentDidMount() {
-        this.callbackIndex = KEYBOARD_MANAGER.register(this.features.onKeyPressed);
+        this.callbackIndex = KEYBOARD_MANAGER.register(this.getActions().onKeyPressed);
     }
 
     componentWillUnmount() {
         KEYBOARD_MANAGER.unregister(this.callbackIndex);
+    }
+
+    getActions() {
+        return new Actions({
+            previous: new Action("Ctrl+ArrowUp", this.context.action_go_to_previous_group, this.previousGroup, Fancybox.isInactive),
+            next: new Action("Ctrl+ArrowDown", this.context.action_go_to_next_group, this.nextGroup, Fancybox.isInactive),
+        }, this.context);
+    }
+
+    getFields() {
+        return getFieldMap(this.context);
     }
 
     getNullIndex() {
@@ -237,7 +247,7 @@ export class GroupView extends React.Component {
         this.props.onGroupViewState({selection});
     }
 }
-
+GroupView.contextType = LangContext;
 GroupView.propTypes = {
     groupDef: PropTypes.shape({
         group_id: PropTypes.number.isRequired,

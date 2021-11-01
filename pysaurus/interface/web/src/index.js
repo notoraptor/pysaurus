@@ -27,7 +27,8 @@ window.KEYBOARD_MANAGER = new Callbacks();
 window.APP_STATE = {
     videoHistory: new Set(),
     idGenerator: new IdGenerator(),
-    latestMoveFolder: null
+    latestMoveFolder: null,
+    lang: null
 };
 
 window.onkeydown = function (event) {

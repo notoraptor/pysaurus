@@ -74,7 +74,6 @@ def get_infos(filename):
         return {M["filename"]: filename, M["errors"]: [f"{type(exc).__name__}: {exc}"]}
 
 
-
 class NoVideoStream(RuntimeError):
     pass
 

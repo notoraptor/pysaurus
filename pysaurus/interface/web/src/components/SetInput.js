@@ -1,3 +1,6 @@
+import {LangContext} from "../language.js";
+import {utilities} from "../utils/functions.js";
+
 class SetController {
     constructor() {
     }
@@ -57,6 +60,12 @@ export class ComponentController extends SetController {
                 arr.push(value);
         }
         this.app.setState({[this.field]: arr});
+    }
+}
+
+export class ComponentPropController extends ComponentController {
+    constructor(app, field, propType, propEnum) {
+        super(app, field, value => utilities(app.context).parsePropValString(propType, propEnum, value));
     }
 }
 
@@ -142,7 +151,7 @@ export class SetInput extends React.Component {
         const controller = this.props.controller;
         try {
             if (controller.has(value))
-                window.alert(PYTHON_LANG.alert_value_already_in_list.format({value}));
+                window.alert(this.context.alert_value_already_in_list.format({value}));
             else
                 this.setState({add: ""}, () => controller.add(value));
         } catch (exception) {
@@ -160,6 +169,8 @@ export class SetInput extends React.Component {
         }
     }
 }
+
+SetInput.contextType = LangContext;
 
 SetInput.propTypes = {
     controller: PropTypes.instanceOf(SetController),

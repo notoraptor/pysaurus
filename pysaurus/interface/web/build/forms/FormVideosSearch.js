@@ -1,13 +1,15 @@
-System.register(["../dialogs/FancyBox.js"], function (_export, _context) {
+System.register(["../dialogs/FancyBox.js", "../language.js"], function (_export, _context) {
   "use strict";
 
-  var FancyBox, FormVideosSearch;
+  var FancyBox, LangContext, FormVideosSearch;
 
   _export("FormVideosSearch", void 0);
 
   return {
     setters: [function (_dialogsFancyBoxJs) {
       FancyBox = _dialogsFancyBoxJs.FancyBox;
+    }, function (_languageJs) {
+      LangContext = _languageJs.LangContext;
     }],
     execute: function () {
       _export("FormVideosSearch", FormVideosSearch = class FormVideosSearch extends React.Component {
@@ -29,10 +31,10 @@ System.register(["../dialogs/FancyBox.js"], function (_export, _context) {
 
         render() {
           return /*#__PURE__*/React.createElement(FancyBox, {
-            title: PYTHON_LANG.form_title_search_videos
+            title: this.context.form_title_search_videos
           }, /*#__PURE__*/React.createElement("div", {
             className: "form-videos-search text-center"
-          }, PYTHON_LANG.form_content_search_videos.markdown(), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("input", {
+          }, this.context.form_content_search_videos.markdown(), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("input", {
             type: "text",
             id: "input-search",
             className: "block mb-2",
@@ -51,7 +53,7 @@ System.register(["../dialogs/FancyBox.js"], function (_export, _context) {
             checked: this.state.cond === 'and'
           }), /*#__PURE__*/React.createElement("label", {
             htmlFor: "input-search-and"
-          }, PYTHON_LANG.search_and)), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("input", {
+          }, this.context.search_and)), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("input", {
             type: "radio",
             id: "input-search-or",
             name: "searchType",
@@ -60,7 +62,7 @@ System.register(["../dialogs/FancyBox.js"], function (_export, _context) {
             checked: this.state.cond === 'or'
           }), /*#__PURE__*/React.createElement("label", {
             htmlFor: "input-search-or"
-          }, PYTHON_LANG.search_or)), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("input", {
+          }, this.context.search_or)), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("input", {
             type: "radio",
             id: "input-search-exact",
             name: "searchType",
@@ -69,7 +71,7 @@ System.register(["../dialogs/FancyBox.js"], function (_export, _context) {
             checked: this.state.cond === 'exact'
           }), /*#__PURE__*/React.createElement("label", {
             htmlFor: "input-search-exact"
-          }, PYTHON_LANG.search_exact_sentence)), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("input", {
+          }, this.context.search_exact_sentence)), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("input", {
             type: "radio",
             id: "input-search-id",
             name: "searchType",
@@ -78,7 +80,7 @@ System.register(["../dialogs/FancyBox.js"], function (_export, _context) {
             checked: this.state.cond === 'id'
           }), /*#__PURE__*/React.createElement("label", {
             htmlFor: "input-search-id"
-          }, PYTHON_LANG.search_id))));
+          }, this.context.search_id))));
         }
 
         componentDidMount() {
@@ -130,6 +132,8 @@ System.register(["../dialogs/FancyBox.js"], function (_export, _context) {
         }
 
       });
+
+      FormVideosSearch.contextType = LangContext;
     }
   };
 });

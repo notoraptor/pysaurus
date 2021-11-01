@@ -1,17 +1,22 @@
-System.register([], function (_export, _context) {
+System.register(["../language.js", "../utils/functions.js"], function (_export, _context) {
   "use strict";
 
-  var SetController, ComponentController, SetInput;
+  var LangContext, utilities, SetController, ComponentController, ComponentPropController, SetInput;
 
   function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
   _export({
     ComponentController: void 0,
+    ComponentPropController: void 0,
     SetInput: void 0
   });
 
   return {
-    setters: [],
+    setters: [function (_languageJs) {
+      LangContext = _languageJs.LangContext;
+    }, function (_utilsFunctionsJs) {
+      utilities = _utilsFunctionsJs.utilities;
+    }],
     execute: function () {
       SetController = class SetController {
         constructor() {}
@@ -69,6 +74,13 @@ System.register([], function (_export, _context) {
           this.app.setState({
             [this.field]: arr
           });
+        }
+
+      });
+
+      _export("ComponentPropController", ComponentPropController = class ComponentPropController extends ComponentController {
+        constructor(app, field, propType, propEnum) {
+          super(app, field, value => utilities(app.context).parsePropValString(propType, propEnum, value));
         }
 
       });
@@ -153,7 +165,7 @@ System.register([], function (_export, _context) {
           const controller = this.props.controller;
 
           try {
-            if (controller.has(value)) window.alert(PYTHON_LANG.alert_value_already_in_list.format({
+            if (controller.has(value)) window.alert(this.context.alert_value_already_in_list.format({
               value
             }));else this.setState({
               add: ""
@@ -175,6 +187,7 @@ System.register([], function (_export, _context) {
 
       });
 
+      SetInput.contextType = LangContext;
       SetInput.propTypes = {
         controller: PropTypes.instanceOf(SetController),
         identifier: PropTypes.string,

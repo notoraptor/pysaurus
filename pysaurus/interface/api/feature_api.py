@@ -4,13 +4,14 @@ from typing import Optional
 from pysaurus.application.application import Application
 from pysaurus.core import notifications
 from pysaurus.core.components import Duration, FileSize
-from pysaurus.core.functions import compute_nb_pages, identity, object_to_dict
+from pysaurus.core.functions import compute_nb_pages, identity
 from pysaurus.database.database import Database
 from pysaurus.database.properties import PropType
 from pysaurus.database.video import Video
 from pysaurus.database.video_features import VideoFeatures
 from pysaurus.database.viewport.layers.source_layer import SourceLayer
 from pysaurus.database.viewport.video_provider import VideoProvider
+from pysaurus.language.default_language import language_to_dict
 
 
 def get_video_id(video: Video):
@@ -28,7 +29,7 @@ class FeatureAPI:
         self.application = Application(self.notifier)
         self.database = None  # type: Optional[Database]
         self.provider = None  # type: Optional[VideoProvider]
-        self.PYTHON_LANG = object_to_dict(self.application.lang)
+        self.PYTHON_LANG = language_to_dict(self.application.lang)
 
     # Utilities.
 
@@ -61,11 +62,23 @@ class FeatureAPI:
             key: getattr(self, key) for key in dir(self) if key.startswith("PYTHON_")
         }
 
-    def list_databases(self):
+    def _list_databases(self):
         return [
             {"name": path.title, "path": str(path)}
             for path in self.application.get_database_paths()
         ]
+
+    def list_languages(self):
+        return [
+            {"name": path.title, "path": str(path)}
+            for path in self.application.get_language_paths()
+        ]
+
+    def get_app_state(self):
+        return {"languages": self.list_languages(), "databases": self._list_databases()}
+
+    def set_language(self, name):
+        return language_to_dict(self.application.open_language_from_name(name))
 
     # Provider getters.
 

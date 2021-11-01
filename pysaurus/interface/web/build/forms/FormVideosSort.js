@@ -1,15 +1,17 @@
-System.register(["../utils/constants.js", "../dialogs/FancyBox.js"], function (_export, _context) {
+System.register(["../utils/constants.js", "../dialogs/FancyBox.js", "../language.js"], function (_export, _context) {
   "use strict";
 
-  var FIELD_MAP, FancyBox, FormVideosSort;
+  var getFieldMap, FancyBox, LangContext, FormVideosSort;
 
   _export("FormVideosSort", void 0);
 
   return {
     setters: [function (_utilsConstantsJs) {
-      FIELD_MAP = _utilsConstantsJs.FIELD_MAP;
+      getFieldMap = _utilsConstantsJs.getFieldMap;
     }, function (_dialogsFancyBoxJs) {
       FancyBox = _dialogsFancyBoxJs.FancyBox;
+    }, function (_languageJs) {
+      LangContext = _languageJs.LangContext;
     }],
     execute: function () {
       _export("FormVideosSort", FormVideosSort = class FormVideosSort extends React.Component {
@@ -26,17 +28,22 @@ System.register(["../utils/constants.js", "../dialogs/FancyBox.js"], function (_
           this.addCriterion = this.addCriterion.bind(this);
           this.removeCriterion = this.removeCriterion.bind(this);
           this.submit = this.submit.bind(this);
+          this.getFields = this.getFields.bind(this);
+        }
+
+        getFields() {
+          return getFieldMap(this.context);
         }
 
         render() {
           return /*#__PURE__*/React.createElement(FancyBox, {
-            title: PYTHON_LANG.form_title_sort_videos
+            title: this.context.form_title_sort_videos
           }, /*#__PURE__*/React.createElement("div", {
             id: "form-videos-sort",
             className: "form absolute-plain vertical text-center p-2"
           }, /*#__PURE__*/React.createElement("div", {
             className: "help mb-4"
-          }, PYTHON_LANG.form_content_sort_videos.markdown()), /*#__PURE__*/React.createElement("div", {
+          }, this.context.form_content_sort_videos.markdown()), /*#__PURE__*/React.createElement("div", {
             id: "sorting",
             className: "flex-grow-1 overflow-auto"
           }, this.renderSorting()), /*#__PURE__*/React.createElement("p", {
@@ -65,7 +72,7 @@ System.register(["../utils/constants.js", "../dialogs/FancyBox.js"], function (_
             }, "-"), /*#__PURE__*/React.createElement("select", {
               value: field,
               onChange: event => this.setField(index, event.target.value)
-            }, FIELD_MAP.sortable.map((entry, fieldIndex) => /*#__PURE__*/React.createElement("option", {
+            }, this.getFields().sortable.map((entry, fieldIndex) => /*#__PURE__*/React.createElement("option", {
               key: fieldIndex,
               value: entry.name
             }, entry.title))), /*#__PURE__*/React.createElement("input", {
@@ -123,6 +130,8 @@ System.register(["../utils/constants.js", "../dialogs/FancyBox.js"], function (_
         }
 
       });
+
+      FormVideosSort.contextType = LangContext;
     }
   };
 });

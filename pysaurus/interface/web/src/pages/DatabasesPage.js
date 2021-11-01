@@ -1,8 +1,9 @@
 import {backend_error, python_call} from "../utils/backend.js";
+import {LangContext} from "../language.js";
 
 export class DatabasesPage extends React.Component {
     constructor(props) {
-        // parameters: {databases: [{name, path}]}
+        // parameters: {databases: [{name, path}], languages: [{name, path}]}
         // app: App
         super(props);
         this.state = {
@@ -17,36 +18,50 @@ export class DatabasesPage extends React.Component {
         this.createDatabase = this.createDatabase.bind(this);
         this.openDatabase = this.openDatabase.bind(this);
         this.onChangeUpdate = this.onChangeUpdate.bind(this);
+        this.onChangeLanguage = this.onChangeLanguage.bind(this);
     }
 
     render() {
+        const languages = this.props.parameters.languages;
         const paths = Array.from(this.state.paths);
         paths.sort();
         return (
             <div id="databases" className="text-center">
-                <h1>{PYTHON_LANG.gui_database_welcome.format({name: window.PYTHON_APP_NAME})}</h1>
+                <h1>{this.context.gui_database_welcome.format({name: window.PYTHON_APP_NAME})}</h1>
                 <table className="w-100 table-layout-fixed">
+                    {languages.length > 1 ? (
+                        <tr>
+                            <td className="text-right"><label htmlFor="language">{this.context.text_choose_language}:</label></td>
+                            <td className="text-left">
+                                <select id="language"
+                                        value={this.context.__language__}
+                                        onChange={this.onChangeLanguage}>{languages.map((language, index) => (
+                                    <option value={language.name}>{language.name}</option>
+                                ))}</select>
+                            </td>
+                        </tr>
+                    ) : ""}
                     <tr>
                         <td>
-                            <h2>{PYTHON_LANG.gui_database_create}</h2>
+                            <h2>{this.context.gui_database_create}</h2>
                             <div className="p-1">
                                 <input type="text"
                                        className="w-100"
                                        value={this.state.name}
                                        onChange={this.onChangeName}
-                                       placeholder={PYTHON_LANG.gui_database_name_placeholder}/>
+                                       placeholder={this.context.gui_database_name_placeholder}/>
                             </div>
-                            <h3>{PYTHON_LANG.gui_database_paths}</h3>
+                            <h3>{this.context.gui_database_paths}</h3>
                             <table className="w-100 table-layout-fixed">
                                 <tr>
                                     <td>
                                         <button className="block" onClick={this.addFolder}>
-                                            {PYTHON_LANG.gui_database_add_folder}
+                                            {this.context.gui_database_add_folder}
                                         </button>
                                     </td>
                                     <td>
                                         <button className="block" onClick={this.addFile}>
-                                            {PYTHON_LANG.gui_database_add_file}
+                                            {this.context.gui_database_add_file}
                                         </button>
                                     </td>
                                 </tr>
@@ -61,21 +76,21 @@ export class DatabasesPage extends React.Component {
                             ))}</table>
                             <div className="p-1">
                                 <button className="block" onClick={this.createDatabase}>
-                                    {PYTHON_LANG.gui_database_button_create}
+                                    {this.context.gui_database_button_create}
                                 </button>
                             </div>
                         </td>
                         <td>
-                            <h2>{PYTHON_LANG.gui_database_open.format({count: this.props.parameters.databases.length})}</h2>
+                            <h2>{this.context.gui_database_open.format({count: this.props.parameters.databases.length})}</h2>
                             <div className="p-1">
                                 <input type="checkbox"
                                        id="update"
                                        checked={this.state.update}
                                        onChange={this.onChangeUpdate}/>
                                 {" "}
-                                <label htmlFor="update">{PYTHON_LANG.gui_database_update_after_opening}</label>
+                                <label htmlFor="update">{this.context.gui_database_update_after_opening}</label>
                             </div>
-                            <h3>{PYTHON_LANG.gui_database_click_to_open}</h3>
+                            <h3>{this.context.gui_database_click_to_open}</h3>
                             {this.props.parameters.databases.map((database, index) => (
                                 <div className="p-1" key={index}>
                                     <button className="block" onClick={() => this.openDatabase(database.path)}>
@@ -88,6 +103,10 @@ export class DatabasesPage extends React.Component {
                 </table>
             </div>
         );
+    }
+
+    onChangeLanguage(event) {
+        this.props.app.setLanguage(event.target.value);
     }
 
     onChangeName(event) {
@@ -139,3 +158,4 @@ export class DatabasesPage extends React.Component {
         this.props.app.dbUpdate("open_database", path, this.state.update);
     }
 }
+DatabasesPage.contextType = LangContext;

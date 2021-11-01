@@ -1,4 +1,5 @@
 import {Dialog} from "../dialogs/Dialog.js";
+import {LangContext} from "../language.js";
 
 export class FormDatabaseRename extends React.Component {
     constructor(props) {
@@ -15,11 +16,11 @@ export class FormDatabaseRename extends React.Component {
 
     render() {
         return (
-            <Dialog title={PYTHON_LANG.form_title_rename_database.format({name: this.props.title})}
-                    yes={PYTHON_LANG.text_rename}
+            <Dialog title={this.context.form_title_rename_database.format({name: this.props.title})}
+                    yes={this.context.text_rename}
                     action={this.onClose}>
                 <div className="form-rename text-center">
-                    <h1>{PYTHON_LANG.text_rename_database}</h1>
+                    <h1>{this.context.text_rename_database}</h1>
                     <h2><code id="filename">{this.props.title}</code></h2>
                     <p className="form">
                         <input type="text"
@@ -63,3 +64,4 @@ export class FormDatabaseRename extends React.Component {
             this.props.onClose(this.state.title);
     }
 }
+FormDatabaseRename.contextType = LangContext;

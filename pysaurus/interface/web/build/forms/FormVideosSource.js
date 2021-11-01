@@ -1,7 +1,7 @@
-System.register(["../dialogs/FancyBox.js"], function (_export, _context) {
+System.register(["../dialogs/FancyBox.js", "../language.js"], function (_export, _context) {
   "use strict";
 
-  var FancyBox, FormVideosSource;
+  var FancyBox, LangContext, FormVideosSource;
 
   function getSubTree(tree, entryName) {
     const steps = entryName.split('-');
@@ -57,6 +57,8 @@ System.register(["../dialogs/FancyBox.js"], function (_export, _context) {
   return {
     setters: [function (_dialogsFancyBoxJs) {
       FancyBox = _dialogsFancyBoxJs.FancyBox;
+    }, function (_languageJs) {
+      LangContext = _languageJs.LangContext;
     }],
     execute: function () {
       _export("FormVideosSource", FormVideosSource = class FormVideosSource extends React.Component {
@@ -78,14 +80,14 @@ System.register(["../dialogs/FancyBox.js"], function (_export, _context) {
         render() {
           return /*#__PURE__*/React.createElement(FancyBox, {
             title: "Select Videos"
-          }, this.renderTree(this.props.tree), /*#__PURE__*/React.createElement("p", null, this.state.paths.length ? PYTHON_LANG.form_source_currently_selected : PYTHON_LANG.form_source_none_selected), this.state.paths.length ? /*#__PURE__*/React.createElement("ul", null, this.state.paths.map((path, index) => /*#__PURE__*/React.createElement("li", {
+          }, this.renderTree(this.props.tree), /*#__PURE__*/React.createElement("p", null, this.state.paths.length ? this.context.form_source_currently_selected : this.context.form_source_none_selected), this.state.paths.length ? /*#__PURE__*/React.createElement("ul", null, this.state.paths.map((path, index) => /*#__PURE__*/React.createElement("li", {
             key: index
           }, /*#__PURE__*/React.createElement("strong", null, path.replace(/-/g, '.'))))) : "", /*#__PURE__*/React.createElement("p", {
             className: "submit mx-1 my-4"
           }, /*#__PURE__*/React.createElement("button", {
             className: "submit block",
             onClick: this.submit
-          }, PYTHON_LANG.text_select)));
+          }, this.context.text_select)));
         }
 
         renderTree(tree, prefix = "") {
@@ -113,7 +115,7 @@ System.register(["../dialogs/FancyBox.js"], function (_export, _context) {
               checked: !hasPath
             }), " ", /*#__PURE__*/React.createElement("label", {
               htmlFor: entryName + '1'
-            }, PYTHON_LANG.form_source_develop)), hasPath ? "" : this.renderTree(subTree, entryName)) : /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("label", {
+            }, this.context.form_source_develop)), hasPath ? "" : this.renderTree(subTree, entryName)) : /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("label", {
               htmlFor: entryName + '0'
             }, /*#__PURE__*/React.createElement("strong", null, name)), " ", /*#__PURE__*/React.createElement("input", {
               type: "checkbox",
@@ -172,6 +174,8 @@ System.register(["../dialogs/FancyBox.js"], function (_export, _context) {
         }
 
       });
+
+      FormVideosSource.contextType = LangContext;
     }
   };
 });

@@ -1,5 +1,6 @@
-import {FIELD_MAP} from "../utils/constants.js";
+import {getFieldMap} from "../utils/constants.js";
 import {FancyBox} from "../dialogs/FancyBox.js";
+import {LangContext} from "../language.js";
 
 export class FormVideosSort extends React.Component {
     constructor(props) {
@@ -13,13 +14,18 @@ export class FormVideosSort extends React.Component {
         this.addCriterion = this.addCriterion.bind(this);
         this.removeCriterion = this.removeCriterion.bind(this);
         this.submit = this.submit.bind(this);
+        this.getFields = this.getFields.bind(this);
+    }
+
+    getFields() {
+        return getFieldMap(this.context);
     }
 
     render() {
         return (
-            <FancyBox title={PYTHON_LANG.form_title_sort_videos}>
+            <FancyBox title={this.context.form_title_sort_videos}>
                 <div id="form-videos-sort" className="form absolute-plain vertical text-center p-2">
-                    <div className="help mb-4">{PYTHON_LANG.form_content_sort_videos.markdown()}</div>
+                    <div className="help mb-4">{this.context.form_content_sort_videos.markdown()}</div>
                     <div id="sorting" className="flex-grow-1 overflow-auto">{this.renderSorting()}</div>
                     <p className="buttons flex-shrink-0 horizontal">
                         <button className="add flex-grow-1 mr-1" onClick={this.addCriterion}>+</button>
@@ -40,7 +46,7 @@ export class FormVideosSort extends React.Component {
                 <p key={index} className="sorting">
                     <button className="button-remove-sort" onClick={() => this.removeCriterion(index)}>-</button>
                     <select value={field} onChange={(event) => this.setField(index, event.target.value)}>
-                        {FIELD_MAP.sortable.map(
+                        {this.getFields().sortable.map(
                             (entry, fieldIndex) => (
                                 <option key={fieldIndex} value={entry.name}>{entry.title}</option>
                             ))}
@@ -90,3 +96,4 @@ export class FormVideosSort extends React.Component {
             this.props.onClose(sorting);
     }
 }
+FormVideosSort.contextType = LangContext;

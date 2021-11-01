@@ -6,10 +6,8 @@ System.register([], function (_export, _context) {
   }
 
   function backend_error(error) {
-    window.alert(PYTHON_LANG.backend_error.format({
-      name: error.name,
-      message: error.message
-    }));
+    const desc = error.string || `${error.name}: ${error.message}`;
+    window.alert(desc);
   }
 
   _export({

@@ -12,14 +12,14 @@ System.register([], function (_export, _context) {
         /**
          * @param actions {Object.<string, Action>}
          */
-        constructor(actions) {
+        constructor(actions, context) {
           /** @type {Object.<string, Action>} */
           this.actions = actions;
           const shortcutToName = {};
 
           for (let name of Object.keys(actions)) {
             const shortcut = actions[name].shortcut.str;
-            if (shortcutToName.hasOwnProperty(shortcut)) throw new Error(PYTHON_LANG.error_duplicated_shortcut.format({
+            if (shortcutToName.hasOwnProperty(shortcut)) throw new Error(context.error_duplicated_shortcut.format({
               shortcut: shortcut,
               name1: shortcutToName[shortcut],
               name2: name

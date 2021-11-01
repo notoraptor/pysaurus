@@ -1,8 +1,19 @@
+from pysaurus.core.functions import object_to_dict
+
+
 def make_text(*paragraphs, sep="\n\n"):
     return sep.join(paragraphs)
 
 
+def language_to_dict(lang, extend=True):
+    dct = object_to_dict(lang, value_wrapper=str.strip)
+    if extend:
+        dct["__language__"] = lang.__language__
+    return dct
+
+
 class DefaultLanguage:
+    __slots__ = ()
     __language__ = "english"
 
     profile_collect_thumbnails = "Collect thumbnails"
@@ -218,6 +229,7 @@ class DefaultLanguage:
     text_accept_many_values = "accept many values"
     text_is_enumeration = "Is enumeration"
     text_one_or_many = "one or many"
+    text_choose_language = "Language:"
     text_move = "move"
     word_value = "value"
     word_values = "values"
@@ -228,7 +240,6 @@ class DefaultLanguage:
     dialog_delete_database = "Delete database {name}"
     alert_value_already_in_list = "Value already in list: {value}"
     error_duplicated_shortcut = "Duplicated shortcut {shortcut} for {name1} and {name2}"
-    backend_error = "Backend error: {name}: {message}"
     error_duplicated_field = "Duplicated field: {name}"
     error_invalid_bool_value = (
         "Invalid bool value, expected: [false, true], got {value}"
@@ -439,5 +450,5 @@ Click on "sort" to validate, or close dialog to cancel.
         "same size and duration will be moved to the later. "
         "Properties and variable attributes will be copied "
         "from not found to found video, and "
-        "not found video entry will be deleted."
+        "not found video entry will be deleted.",
     )

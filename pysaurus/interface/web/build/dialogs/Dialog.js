@@ -1,13 +1,15 @@
-System.register(["./FancyBox.js"], function (_export, _context) {
+System.register(["./FancyBox.js", "../language.js"], function (_export, _context) {
   "use strict";
 
-  var FancyBox, Dialog;
+  var FancyBox, LangContext, Dialog;
 
   _export("Dialog", void 0);
 
   return {
     setters: [function (_FancyBoxJs) {
       FancyBox = _FancyBoxJs.FancyBox;
+    }, function (_languageJs) {
+      LangContext = _languageJs.LangContext;
     }],
     execute: function () {
       _export("Dialog", Dialog = class Dialog extends React.Component {
@@ -30,12 +32,12 @@ System.register(["./FancyBox.js"], function (_export, _context) {
           }, /*#__PURE__*/React.createElement("button", {
             className: "block bold",
             onClick: this.yes
-          }, this.props.yes || PYTHON_LANG.word_yes)), /*#__PURE__*/React.createElement("div", {
+          }, this.props.yes || this.context.word_yes)), /*#__PURE__*/React.createElement("div", {
             className: "button flex-grow-1 p-2 no"
           }, /*#__PURE__*/React.createElement("button", {
             className: "block bold",
             onClick: Fancybox.close
-          }, this.props.no || PYTHON_LANG.word_cancel)))));
+          }, this.props.no || this.context.word_cancel)))));
         }
 
         yes() {
@@ -45,6 +47,7 @@ System.register(["./FancyBox.js"], function (_export, _context) {
 
       });
 
+      Dialog.contextType = LangContext;
       Dialog.propTypes = {
         title: PropTypes.string.isRequired,
         // action()

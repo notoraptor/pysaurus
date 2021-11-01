@@ -1,7 +1,7 @@
-System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../components/Cell.js", "../forms/FormPropertyRename.js", "../utils/backend.js"], function (_export, _context) {
+System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../components/Cell.js", "../forms/FormPropertyRename.js", "../utils/backend.js", "../language.js", "../utils/functions.js"], function (_export, _context) {
   "use strict";
 
-  var ComponentController, SetInput, Dialog, Cell, FormPropertyRename, backend_error, python_call, PropertiesPage, DEFAULT_VALUES;
+  var ComponentPropController, SetInput, Dialog, Cell, FormPropertyRename, backend_error, python_call, LangContext, utilities, PropertiesPage, DEFAULT_VALUES;
 
   function getDefaultValue(propType, isEnum) {
     return isEnum ? [] : DEFAULT_VALUES[propType].toString();
@@ -11,7 +11,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
 
   return {
     setters: [function (_componentsSetInputJs) {
-      ComponentController = _componentsSetInputJs.ComponentController;
+      ComponentPropController = _componentsSetInputJs.ComponentPropController;
       SetInput = _componentsSetInputJs.SetInput;
     }, function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
@@ -22,6 +22,10 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
     }, function (_utilsBackendJs) {
       backend_error = _utilsBackendJs.backend_error;
       python_call = _utilsBackendJs.python_call;
+    }, function (_languageJs) {
+      LangContext = _languageJs.LangContext;
+    }, function (_utilsFunctionsJs) {
+      utilities = _utilsFunctionsJs.utilities;
     }],
     execute: function () {
       DEFAULT_VALUES = {
@@ -71,17 +75,17 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             onClick: this.back
           }, "\u2B9C")), /*#__PURE__*/React.createElement("div", {
             className: "text-center flex-grow-1"
-          }, PYTHON_LANG.gui_properties_title)), /*#__PURE__*/React.createElement("hr", null), /*#__PURE__*/React.createElement("div", {
+          }, this.context.gui_properties_title)), /*#__PURE__*/React.createElement("hr", null), /*#__PURE__*/React.createElement("div", {
             className: "content horizontal"
           }, /*#__PURE__*/React.createElement("div", {
             className: "list text-center"
           }, /*#__PURE__*/React.createElement("h3", {
             className: "text-center"
-          }, PYTHON_LANG.gui_properties_current), this.renderPropTypes()), /*#__PURE__*/React.createElement("div", {
+          }, this.context.gui_properties_current), this.renderPropTypes()), /*#__PURE__*/React.createElement("div", {
             className: "new"
           }, /*#__PURE__*/React.createElement("h3", {
             className: "text-center"
-          }, PYTHON_LANG.gui_properties_add_new), /*#__PURE__*/React.createElement("table", {
+          }, this.context.gui_properties_add_new), /*#__PURE__*/React.createElement("table", {
             className: "first-td-text-right w-100"
           }, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("label", {
             htmlFor: "prop-name"
@@ -100,29 +104,29 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             onChange: this.onChangeType
           }, /*#__PURE__*/React.createElement("option", {
             value: "bool"
-          }, PYTHON_LANG.text_boolean), /*#__PURE__*/React.createElement("option", {
+          }, this.context.text_boolean), /*#__PURE__*/React.createElement("option", {
             value: "int"
-          }, PYTHON_LANG.text_integer), /*#__PURE__*/React.createElement("option", {
+          }, this.context.text_integer), /*#__PURE__*/React.createElement("option", {
             value: "float"
-          }, PYTHON_LANG.text_float), /*#__PURE__*/React.createElement("option", {
+          }, this.context.text_float), /*#__PURE__*/React.createElement("option", {
             value: "str"
-          }, PYTHON_LANG.text_text)))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("input", {
+          }, this.context.text_text)))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("input", {
             type: "checkbox",
             id: "prop-multiple",
             checked: this.state.multiple,
             onChange: this.onChangeMultiple
           })), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("label", {
             htmlFor: "prop-multiple"
-          }, PYTHON_LANG.text_accept_many_values))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("input", {
+          }, this.context.text_accept_many_values))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("input", {
             type: "checkbox",
             id: "prop-enumeration",
             checked: this.state.enumeration,
             onChange: this.onChangeEnumeration
           })), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("label", {
             htmlFor: "prop-enumeration"
-          }, PYTHON_LANG.text_is_enumeration))), !this.state.multiple || this.state.enumeration ? /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("label", {
+          }, this.context.text_is_enumeration))), !this.state.multiple || this.state.enumeration ? /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("label", {
             htmlFor: 'prop-default-' + this.state.type
-          }, this.state.enumeration ? this.state.multiple ? PYTHON_LANG.gui_properties_enumeration_values_multiple : PYTHON_LANG.gui_properties_enumeration_values : PYTHON_LANG.gui_properties_default_value)), /*#__PURE__*/React.createElement("td", null, this.renderDefaultInput())) : "", /*#__PURE__*/React.createElement("tr", {
+          }, this.state.enumeration ? this.state.multiple ? this.context.gui_properties_enumeration_values_multiple : this.context.gui_properties_enumeration_values : this.context.gui_properties_default_value)), /*#__PURE__*/React.createElement("td", null, this.renderDefaultInput())) : "", /*#__PURE__*/React.createElement("tr", {
             className: "buttons"
           }, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
             className: "reset block",
@@ -144,7 +148,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             className: "name bold"
           }, def.name), /*#__PURE__*/React.createElement("td", {
             className: "type"
-          }, def.multiple ? /*#__PURE__*/React.createElement("span", null, PYTHON_LANG.text_one_or_many, "\xA0") : "", /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("code", null, def.type), " ", def.multiple ? PYTHON_LANG.word_values : PYTHON_LANG.word_value), def.enumeration ? /*#__PURE__*/React.createElement("span", null, "\xA0", PYTHON_LANG.word_in, " ", '{', def.enumeration.join(', '), '}') : ""), /*#__PURE__*/React.createElement("td", {
+          }, def.multiple ? /*#__PURE__*/React.createElement("span", null, this.context.text_one_or_many, "\xA0") : "", /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("code", null, def.type), " ", def.multiple ? this.context.word_values : this.context.word_value), def.enumeration ? /*#__PURE__*/React.createElement("span", null, "\xA0", this.context.word_in, " ", '{', def.enumeration.join(', '), '}') : ""), /*#__PURE__*/React.createElement("td", {
             className: "default"
           }, function () {
             if (def.multiple) {
@@ -173,7 +177,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
 
         renderDefaultInput() {
           if (this.state.enumeration) {
-            const controller = new ComponentController(this, 'defaultValue', value => parsePropValString(this.state.type, null, value));
+            const controller = new ComponentPropController(this, 'defaultValue', this.state.type, null);
             return /*#__PURE__*/React.createElement(SetInput, {
               className: "block",
               identifier: 'prop-default-' + this.state.type,
@@ -253,7 +257,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
         submit() {
           try {
             let definition = this.state.defaultValue;
-            if (!this.state.enumeration) definition = parsePropValString(this.state.type, null, definition);
+            if (!this.state.enumeration) definition = utilities(this.context).parsePropValString(this.state.type, null, definition);
             python_call('add_prop_type', this.state.name, this.state.type, definition, this.state.multiple).then(definitions => {
               const state = this.getDefaultInputState();
               state.definitions = definitions;
@@ -266,10 +270,10 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
 
         deleteProperty(name) {
           Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
-            title: PYTHON_LANG.form_title_delete_property.format({
+            title: this.context.form_title_delete_property.format({
               name
             }),
-            yes: PYTHON_LANG.text_delete,
+            yes: this.context.text_delete,
             action: () => {
               python_call('delete_prop_type', name).catch(backend_error).then(definitions => {
                 const state = this.getDefaultInputState();
@@ -281,17 +285,17 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             className: "text-center",
             center: true,
             full: true
-          }, /*#__PURE__*/React.createElement("h3", null, PYTHON_LANG.form_content_delete_property.format({
+          }, /*#__PURE__*/React.createElement("h3", null, this.context.form_content_delete_property.format({
             name
           })))));
         }
 
         convertPropertyToUnique(name) {
           Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
-            title: PYTHON_LANG.form_title_convert_to_unique_property.format({
+            title: this.context.form_title_convert_to_unique_property.format({
               name
             }),
-            yes: PYTHON_LANG.form_convert_to_unique_property_yes,
+            yes: this.context.form_convert_to_unique_property_yes,
             action: () => {
               python_call('convert_prop_to_unique', name).then(definitions => {
                 const state = this.getDefaultInputState();
@@ -303,17 +307,17 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             className: "text-center",
             center: true,
             full: true
-          }, /*#__PURE__*/React.createElement("h3", null, PYTHON_LANG.form_confirm_convert_to_unique_property.format({
+          }, /*#__PURE__*/React.createElement("h3", null, this.context.form_confirm_convert_to_unique_property.format({
             name
           })))));
         }
 
         convertPropertyToMultiple(name) {
           Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
-            title: PYTHON_LANG.form_title_convert_to_multiple_property.format({
+            title: this.context.form_title_convert_to_multiple_property.format({
               name
             }),
-            yes: PYTHON_LANG.form_convert_to_multiple_property_yes,
+            yes: this.context.form_convert_to_multiple_property_yes,
             action: () => {
               python_call('convert_prop_to_multiple', name).then(definitions => {
                 const state = this.getDefaultInputState();
@@ -325,7 +329,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             className: "text-center",
             center: true,
             full: true
-          }, /*#__PURE__*/React.createElement("h3", null, PYTHON_LANG.form_confirm_convert_to_multiple_property.format({
+          }, /*#__PURE__*/React.createElement("h3", null, this.context.form_confirm_convert_to_multiple_property.format({
             name
           })))));
         }
@@ -355,6 +359,8 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
         }
 
       });
+
+      PropertiesPage.contextType = LangContext;
     }
   };
 });

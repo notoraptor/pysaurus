@@ -1,18 +1,20 @@
-System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../utils/functions.js"], function (_export, _context) {
+System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../utils/functions.js", "../language.js"], function (_export, _context) {
   "use strict";
 
-  var ComponentController, SetInput, Dialog, parsePropValString, FormVideoEditProperties;
+  var ComponentPropController, SetInput, Dialog, utilities, LangContext, FormVideoEditProperties;
 
   _export("FormVideoEditProperties", void 0);
 
   return {
     setters: [function (_componentsSetInputJs) {
-      ComponentController = _componentsSetInputJs.ComponentController;
+      ComponentPropController = _componentsSetInputJs.ComponentPropController;
       SetInput = _componentsSetInputJs.SetInput;
     }, function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
     }, function (_utilsFunctionsJs) {
-      parsePropValString = _utilsFunctionsJs.parsePropValString;
+      utilities = _utilsFunctionsJs.utilities;
+    }, function (_languageJs) {
+      LangContext = _languageJs.LangContext;
     }],
     execute: function () {
       _export("FormVideoEditProperties", FormVideoEditProperties = class FormVideoEditProperties extends React.Component {
@@ -37,8 +39,8 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../utils/
           const data = this.props.data;
           const hasThumbnail = data.has_thumbnail;
           return /*#__PURE__*/React.createElement(Dialog, {
-            title: PYTHON_LANG.form_edit_video_properties,
-            yes: PYTHON_LANG.texte_save,
+            title: this.context.form_edit_video_properties,
+            yes: this.context.texte_save,
             action: this.onClose
           }, /*#__PURE__*/React.createElement("div", {
             className: "form-video-edit-properties horizontal"
@@ -51,7 +53,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../utils/
             src: data.thumbnail_path
           }) : /*#__PURE__*/React.createElement("div", {
             className: "no-thumbnail"
-          }, PYTHON_LANG.text_no_thumbnail)), /*#__PURE__*/React.createElement("div", {
+          }, this.context.text_no_thumbnail)), /*#__PURE__*/React.createElement("div", {
             className: "filename p-1 mb-1"
           }, /*#__PURE__*/React.createElement("code", null, data.filename)), data.title === data.file_title ? "" : /*#__PURE__*/React.createElement("div", {
             className: "title mb-1"
@@ -66,7 +68,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../utils/
             if (def.multiple) {
               let possibleValues = null;
               if (def.enumeration) possibleValues = def.enumeration;else if (def.type === "bool") possibleValues = [false, true];
-              const controller = new ComponentController(this, name, value => parsePropValString(def.type, possibleValues, value));
+              const controller = new ComponentPropController(this, name, def.type, possibleValues);
               input = /*#__PURE__*/React.createElement(SetInput, {
                 controller: controller,
                 values: possibleValues
@@ -113,7 +115,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../utils/
         onChange(event, def) {
           try {
             this.setState({
-              [def.name]: parsePropValString(def.type, def.enumeration, event.target.value)
+              [def.name]: utilities(this.context).parsePropValString(def.type, def.enumeration, event.target.value)
             });
           } catch (exception) {
             window.alert(exception.toString());
@@ -121,6 +123,8 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../utils/
         }
 
       });
+
+      FormVideoEditProperties.contextType = LangContext;
     }
   };
 });

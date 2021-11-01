@@ -1,5 +1,7 @@
 import {Dialog} from "../dialogs/Dialog.js";
 import {Characters} from "../utils/constants.js";
+import {LangContext} from "../language.js";
+import {utilities} from "../utils/functions.js";
 
 export class FormSelectedVideosEditProperty extends React.Component {
     constructor(props) {
@@ -44,14 +46,14 @@ export class FormSelectedVideosEditProperty extends React.Component {
         const propName = this.props.definition.name;
         const nbVideos = this.props.nbVideos;
         return (
-            <Dialog title={PYTHON_LANG.form_title_edit_property_for_videos.format({name: propName, count: nbVideos})}
+            <Dialog title={this.context.form_title_edit_property_for_videos.format({name: propName, count: nbVideos})}
                     yes="edit"
                     action={this.onClose}>
                 <div className="form-selected-videos-edit-property vertical flex-grow-1 text-center">
                     <div className="bar titles flex-shrink-0 horizontal bold">
-                        <div>{PYTHON_LANG.text_to_remove}</div>
-                        <div>{PYTHON_LANG.text_current}</div>
-                        <div>{PYTHON_LANG.text_to_add}</div>
+                        <div>{this.context.text_to_remove}</div>
+                        <div>{this.context.text_current}</div>
+                        <div>{this.context.text_to_add}</div>
                     </div>
                     <div className="bar panels horizontal flex-grow-1">
                         <div className="remove">{this.renderRemove()}</div>
@@ -62,7 +64,7 @@ export class FormSelectedVideosEditProperty extends React.Component {
                         {this.state.remove.length > 1 ? (
                             <div className="horizontal">
                                 <div className="value">
-                                    {PYTHON_LANG.text_all_values.format({count: this.state.remove.length})}
+                                    {this.context.text_all_values.format({count: this.state.remove.length})}
                                 </div>
                                 <button onClick={this.unRemoveAll}>{Characters.SMART_ARROW_RIGHT}</button>
                             </div>
@@ -71,7 +73,7 @@ export class FormSelectedVideosEditProperty extends React.Component {
                             <div className="horizontal">
                                 <button onClick={this.removeAll}>{Characters.SMART_ARROW_LEFT}</button>
                                 <div className="value">
-                                    {PYTHON_LANG.text_all_values.format({count: this.state.current.length})}
+                                    {this.context.text_all_values.format({count: this.state.current.length})}
                                 </div>
                                 {this.props.definition.multiple ? (
                                     <button onClick={this.addAll}>{Characters.SMART_ARROW_RIGHT}</button>
@@ -82,7 +84,7 @@ export class FormSelectedVideosEditProperty extends React.Component {
                             <div className="horizontal">
                                 <button onClick={this.unAddAll}>{Characters.SMART_ARROW_LEFT}</button>
                                 <div className="value">
-                                    {PYTHON_LANG.text_all_values.format({count: this.state.add.length})}
+                                    {this.context.text_all_values.format({count: this.state.add.length})}
                                 </div>
                             </div>
                         ) : <div/>}
@@ -160,7 +162,7 @@ export class FormSelectedVideosEditProperty extends React.Component {
     onEdit(event) {
         const def = this.props.definition;
         try {
-            this.setState({value: parsePropValString(def.type, def.enumeration, event.target.value)});
+            this.setState({value: utilities(this.context).parsePropValString(def.type, def.enumeration, event.target.value)});
         } catch (exception) {
             window.alert(exception.toString());
         }
@@ -296,3 +298,4 @@ export class FormSelectedVideosEditProperty extends React.Component {
         this.props.onClose({add: this.state.add, remove: this.state.remove});
     }
 }
+FormSelectedVideosEditProperty.contextType = LangContext;

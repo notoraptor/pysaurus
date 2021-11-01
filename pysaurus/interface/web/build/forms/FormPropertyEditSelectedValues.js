@@ -1,13 +1,17 @@
-System.register(["../dialogs/Dialog.js"], function (_export, _context) {
+System.register(["../dialogs/Dialog.js", "../language.js", "../utils/functions.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, FormPropertyEditSelectedValues;
+  var Dialog, LangContext, utilities, FormPropertyEditSelectedValues;
 
   _export("FormPropertyEditSelectedValues", void 0);
 
   return {
     setters: [function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
+    }, function (_languageJs) {
+      LangContext = _languageJs.LangContext;
+    }, function (_utilsFunctionsJs) {
+      utilities = _utilsFunctionsJs.utilities;
     }],
     execute: function () {
       _export("FormPropertyEditSelectedValues", FormPropertyEditSelectedValues = class FormPropertyEditSelectedValues extends React.Component {
@@ -33,10 +37,10 @@ System.register(["../dialogs/Dialog.js"], function (_export, _context) {
           const canMove = this.state.otherDefinitions.length && this.props.values.length === 1;
           const values = this.props.values;
           let title;
-          if (values.length === 1) title = PYTHON_LANG.form_title_edit_prop_val.format({
+          if (values.length === 1) title = this.context.form_title_edit_prop_val.format({
             name: this.props.name,
             value: values[0]
-          });else title = PYTHON_LANG.form_title_edit_prop_vals.format({
+          });else title = this.context.form_title_edit_prop_vals.format({
             name: this.props.name,
             count: values.length
           });
@@ -82,7 +86,7 @@ System.register(["../dialogs/Dialog.js"], function (_export, _context) {
         renderDelete() {
           return /*#__PURE__*/React.createElement("div", {
             className: "flex-grow-1"
-          }, PYTHON_LANG.form_content_delete_prop_val.format({
+          }, this.context.form_content_delete_prop_val.format({
             name: this.props.name,
             value: this.valuesToString()
           }).markdown());
@@ -122,7 +126,7 @@ System.register(["../dialogs/Dialog.js"], function (_export, _context) {
 
           return /*#__PURE__*/React.createElement("div", {
             className: "flex-grow-1"
-          }, /*#__PURE__*/React.createElement("h3", null, PYTHON_LANG.form_content_edit_prop_val.format({
+          }, /*#__PURE__*/React.createElement("h3", null, this.context.form_content_edit_prop_val.format({
             name: this.props.name,
             value: this.valuesToString()
           })), /*#__PURE__*/React.createElement("div", null, input));
@@ -132,7 +136,7 @@ System.register(["../dialogs/Dialog.js"], function (_export, _context) {
           const def = this.props.properties[this.props.name];
           return /*#__PURE__*/React.createElement("div", {
             className: "flex-grow-1"
-          }, /*#__PURE__*/React.createElement("h3", null, PYTHON_LANG.form_content_move_prop_val.format({
+          }, /*#__PURE__*/React.createElement("h3", null, this.context.form_content_move_prop_val.format({
             name: this.props.name,
             value: this.valuesToString(),
             type: def.type
@@ -181,7 +185,7 @@ System.register(["../dialogs/Dialog.js"], function (_export, _context) {
 
           try {
             this.setState({
-              value: parsePropValString(def.type, def.enumeration, event.target.value)
+              value: utilities(this.context).parsePropValString(def.type, def.enumeration, event.target.value)
             });
           } catch (exception) {
             window.alert(exception.toString());
@@ -207,7 +211,7 @@ System.register(["../dialogs/Dialog.js"], function (_export, _context) {
 
         valuesToString() {
           if (this.props.values.length === 1) return this.props.values[0].toString();
-          return PYTHON_LANG.form_summary_values.format({
+          return this.context.form_summary_values.format({
             count: this.props.values.length,
             first: this.props.values[0],
             last: this.props.values[this.props.values.length - 1]
@@ -216,6 +220,7 @@ System.register(["../dialogs/Dialog.js"], function (_export, _context) {
 
       });
 
+      FormPropertyEditSelectedValues.contextType = LangContext;
       FormPropertyEditSelectedValues.propTypes = {
         properties: PropTypes.object.isRequired,
         name: PropTypes.string.isRequired,

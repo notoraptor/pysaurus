@@ -1,15 +1,17 @@
-System.register(["../utils/constants.js", "../dialogs/Dialog.js"], function (_export, _context) {
+System.register(["../utils/constants.js", "../dialogs/Dialog.js", "../language.js"], function (_export, _context) {
   "use strict";
 
-  var FIELD_MAP, Dialog, FormVideosGrouping;
+  var getFieldMap, Dialog, LangContext, FormVideosGrouping;
 
   _export("FormVideosGrouping", void 0);
 
   return {
     setters: [function (_utilsConstantsJs) {
-      FIELD_MAP = _utilsConstantsJs.FIELD_MAP;
+      getFieldMap = _utilsConstantsJs.getFieldMap;
     }, function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
+    }, function (_languageJs) {
+      LangContext = _languageJs.LangContext;
     }],
     execute: function () {
       _export("FormVideosGrouping", FormVideosGrouping = class FormVideosGrouping extends React.Component {
@@ -27,10 +29,10 @@ System.register(["../utils/constants.js", "../dialogs/Dialog.js"], function (_ex
             allowSingletons: this.props.groupDef.allow_singletons
           } : {
             isProperty: false,
-            field: FIELD_MAP.allowed[0].name,
+            field: undefined,
             sorting: "field",
             reverse: false,
-            allowSingletons: !FIELD_MAP.allowed[0].isOnlyMany()
+            allowSingletons: undefined
           };
           this.onChangeAllowSingletons = this.onChangeAllowSingletons.bind(this);
           this.onChangeGroupField = this.onChangeGroupField.bind(this);
@@ -38,9 +40,13 @@ System.register(["../utils/constants.js", "../dialogs/Dialog.js"], function (_ex
           this.onChangeGroupReverse = this.onChangeGroupReverse.bind(this);
           this.onClose = this.onClose.bind(this);
           this.onChangeFieldType = this.onChangeFieldType.bind(this);
+          this.getFields = this.getFields.bind(this);
+          this.getStateField = this.getStateField.bind(this);
+          this.getStateAllowSingletons = this.getStateAllowSingletons.bind(this);
         }
 
         render() {
+          const field = this.getStateField();
           return /*#__PURE__*/React.createElement(Dialog, {
             title: "Group videos:",
             yes: "group",
@@ -49,7 +55,7 @@ System.register(["../utils/constants.js", "../dialogs/Dialog.js"], function (_ex
             className: "from-videos-grouping first-td-text-right w-100"
           }, /*#__PURE__*/React.createElement("tbody", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
             className: "label"
-          }, PYTHON_LANG.text_field_type), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("input", {
+          }, this.context.text_field_type), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("input", {
             id: "field-type-property",
             type: "radio",
             value: "true",
@@ -72,39 +78,39 @@ System.register(["../utils/constants.js", "../dialogs/Dialog.js"], function (_ex
           }, "Field")), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("select", {
             className: "block",
             id: "group-field",
-            value: this.state.field,
+            value: field,
             onChange: this.onChangeGroupField
           }, this.state.isProperty ? this.props.properties.map((def, index) => /*#__PURE__*/React.createElement("option", {
             key: index,
             value: def.name
-          }, def.name)) : FIELD_MAP.allowed.map((fieldOption, index) => /*#__PURE__*/React.createElement("option", {
+          }, def.name)) : this.getFields().allowed.map((fieldOption, index) => /*#__PURE__*/React.createElement("option", {
             key: index,
             value: fieldOption.name
-          }, fieldOption.title))))), this.state.isProperty || !FIELD_MAP.fields[this.state.field].isOnlyMany() ? /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
+          }, fieldOption.title))))), this.state.isProperty || !this.getFields().fields[field].isOnlyMany() ? /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
             className: "label"
           }, /*#__PURE__*/React.createElement("input", {
             type: "checkbox",
             id: "allow-singletons",
-            checked: this.state.allowSingletons,
+            checked: this.getStateAllowSingletons(),
             onChange: this.onChangeAllowSingletons
           })), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("label", {
             htmlFor: "allow-singletons"
-          }, PYTHON_LANG.text_allow_singletons))) : /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, "\xA0"), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("em", null, PYTHON_LANG.text_singletons_auto_disabled))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
+          }, this.context.text_allow_singletons))) : /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, "\xA0"), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("em", null, this.context.text_singletons_auto_disabled))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
             className: "label"
           }, /*#__PURE__*/React.createElement("label", {
             htmlFor: "group-sorting"
-          }, PYTHON_LANG.text_sort_using)), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("select", {
+          }, this.context.text_sort_using)), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("select", {
             className: "block",
             id: "group-sorting",
             value: this.state.sorting,
             onChange: this.onChangeSorting
           }, /*#__PURE__*/React.createElement("option", {
             value: "field"
-          }, PYTHON_LANG.text_field_value), this.fieldIsString() ? /*#__PURE__*/React.createElement("option", {
+          }, this.context.text_field_value), this.fieldIsString() ? /*#__PURE__*/React.createElement("option", {
             value: "length"
-          }, PYTHON_LANG.text_field_value_length) : "", /*#__PURE__*/React.createElement("option", {
+          }, this.context.text_field_value_length) : "", /*#__PURE__*/React.createElement("option", {
             value: "count"
-          }, PYTHON_LANG.text_group_size)))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
+          }, this.context.text_group_size)))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
             className: "label"
           }, /*#__PURE__*/React.createElement("input", {
             type: "checkbox",
@@ -113,20 +119,33 @@ System.register(["../utils/constants.js", "../dialogs/Dialog.js"], function (_ex
             onChange: this.onChangeGroupReverse
           })), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("label", {
             htmlFor: "group-reverse"
-          }, PYTHON_LANG.text_sort_reverse))))));
+          }, this.context.text_sort_reverse))))));
+        }
+
+        getStateField() {
+          return this.state.field === undefined ? this.getFields().allowed[0].name : this.state.field;
+        }
+
+        getStateAllowSingletons() {
+          return this.state.allowSingletons === undefined ? !this.getFields().allowed[0].isOnlyMany() : this.state.allowSingletons;
+        }
+
+        getFields() {
+          return getFieldMap(this.context);
         }
 
         fieldIsString() {
-          if (this.state.isProperty) return this.props.propertyMap[this.state.field].type === "str";
-          return FIELD_MAP.fields[this.state.field].isString();
+          const field = this.getStateField();
+          if (this.state.isProperty) return this.props.propertyMap[field].type === "str";
+          return this.getFields().fields[field].isString();
         }
 
         onChangeFieldType(event) {
           const isProperty = event.target.value === "true";
-          const field = isProperty ? this.props.properties[0].name : FIELD_MAP.allowed[0].name;
+          const field = isProperty ? this.props.properties[0].name : this.getFields().allowed[0].name;
           const sorting = "field";
           const reverse = false;
-          const allowSingletons = isProperty || !FIELD_MAP.allowed[0].isOnlyMany();
+          const allowSingletons = isProperty || !this.getFields().allowed[0].isOnlyMany();
           this.setState({
             isProperty,
             field,
@@ -140,7 +159,7 @@ System.register(["../utils/constants.js", "../dialogs/Dialog.js"], function (_ex
           const field = event.target.value;
           const sorting = "field";
           const reverse = false;
-          const allowSingletons = this.state.isProperty || !FIELD_MAP.fields[field].isOnlyMany();
+          const allowSingletons = this.state.isProperty || !this.getFields().fields[field].isOnlyMany();
           this.setState({
             field,
             sorting,
@@ -173,6 +192,8 @@ System.register(["../utils/constants.js", "../dialogs/Dialog.js"], function (_ex
         }
 
       });
+
+      FormVideosGrouping.contextType = LangContext;
     }
   };
 });

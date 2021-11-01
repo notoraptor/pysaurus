@@ -1,13 +1,15 @@
-System.register(["../dialogs/Dialog.js"], function (_export, _context) {
+System.register(["../dialogs/Dialog.js", "../language.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, FormVideoRename;
+  var Dialog, LangContext, FormVideoRename;
 
   _export("FormVideoRename", void 0);
 
   return {
     setters: [function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
+    }, function (_languageJs) {
+      LangContext = _languageJs.LangContext;
     }],
     execute: function () {
       _export("FormVideoRename", FormVideoRename = class FormVideoRename extends React.Component {
@@ -33,7 +35,7 @@ System.register(["../dialogs/Dialog.js"], function (_export, _context) {
             action: this.onClose
           }, /*#__PURE__*/React.createElement("div", {
             className: "form-rename text-center"
-          }, /*#__PURE__*/React.createElement("h1", null, PYTHON_LANG.action_rename_video), /*#__PURE__*/React.createElement("h2", null, /*#__PURE__*/React.createElement("code", {
+          }, /*#__PURE__*/React.createElement("h1", null, this.context.action_rename_video), /*#__PURE__*/React.createElement("h2", null, /*#__PURE__*/React.createElement("code", {
             id: "filename"
           }, this.props.filename)), /*#__PURE__*/React.createElement("p", {
             className: "form"
@@ -78,6 +80,8 @@ System.register(["../dialogs/Dialog.js"], function (_export, _context) {
         }
 
       });
+
+      FormVideoRename.contextType = LangContext;
     }
   };
 });

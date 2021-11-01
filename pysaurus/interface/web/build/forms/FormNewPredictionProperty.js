@@ -1,13 +1,15 @@
-System.register(["../dialogs/Dialog.js"], function (_export, _context) {
+System.register(["../dialogs/Dialog.js", "../language.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, FormNewPredictionProperty;
+  var Dialog, LangContext, FormNewPredictionProperty;
 
   _export("FormNewPredictionProperty", void 0);
 
   return {
     setters: [function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
+    }, function (_languageJs) {
+      LangContext = _languageJs.LangContext;
     }],
     execute: function () {
       _export("FormNewPredictionProperty", FormNewPredictionProperty = class FormNewPredictionProperty extends React.Component {
@@ -26,12 +28,12 @@ System.register(["../dialogs/Dialog.js"], function (_export, _context) {
 
         render() {
           return /*#__PURE__*/React.createElement(Dialog, {
-            title: PYTHON_LANG.form_title_new_prediction_property,
-            yes: PYTHON_LANG.text_create,
+            title: this.context.form_title_new_prediction_property,
+            yes: this.context.text_create,
             action: this.onClose
           }, /*#__PURE__*/React.createElement("div", {
             className: "form-rename text-center"
-          }, PYTHON_LANG.form_content_new_prediction_property.markdown(), /*#__PURE__*/React.createElement("p", {
+          }, this.context.form_content_new_prediction_property.markdown(), /*#__PURE__*/React.createElement("p", {
             className: "form"
           }, /*#__PURE__*/React.createElement("input", {
             type: "text",
@@ -74,6 +76,8 @@ System.register(["../dialogs/Dialog.js"], function (_export, _context) {
         }
 
       });
+
+      FormNewPredictionProperty.contextType = LangContext;
     }
   };
 });

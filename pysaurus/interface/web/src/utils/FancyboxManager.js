@@ -1,3 +1,5 @@
+import {LangContext} from "../language.js";
+
 export class FancyboxManager {
     constructor(containerID) {
         this.containerID = containerID;
@@ -19,7 +21,7 @@ export class FancyboxManager {
             throw "A fancy box is already displayed.";
         this.loaded = true;
         this.manageOtherActiveElements();
-        ReactDOM.render(component, document.getElementById(this.containerID));
+        ReactDOM.render(<LangContext.Provider value={APP_STATE.lang}>{component}</LangContext.Provider>, document.getElementById(this.containerID));
     }
 
     close() {

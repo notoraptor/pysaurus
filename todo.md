@@ -20,7 +20,7 @@ Bugs:
 - Cannot force kill a Python thread.
 
 Features:
-- Add possibility to change language. Minimum languages expected: English, French.
+- Remember entry edition and add an option to sort by date edited.
 - Interface
   - Remember last edition panel selected for grouped property values
     (either delete, edit or move panel).

@@ -1,8 +1,10 @@
-import {ComponentController, SetInput} from "../components/SetInput.js";
+import {ComponentPropController, SetInput} from "../components/SetInput.js";
 import {Dialog} from "../dialogs/Dialog.js";
 import {Cell} from "../components/Cell.js";
 import {FormPropertyRename} from "../forms/FormPropertyRename.js";
 import {backend_error, python_call} from "../utils/backend.js";
+import {LangContext} from "../language.js";
+import {utilities} from "../utils/functions.js";
 
 const DEFAULT_VALUES = {
     bool: false,
@@ -50,16 +52,16 @@ export class PropertiesPage extends React.Component {
                     <div className="back position-relative">
                         <button className="block bold h-100 px-4" onClick={this.back}>&#11164;</button>
                     </div>
-                    <div className="text-center flex-grow-1">{PYTHON_LANG.gui_properties_title}</div>
+                    <div className="text-center flex-grow-1">{this.context.gui_properties_title}</div>
                 </h2>
                 <hr/>
                 <div className="content horizontal">
                     <div className="list text-center">
-                        <h3 className="text-center">{PYTHON_LANG.gui_properties_current}</h3>
+                        <h3 className="text-center">{this.context.gui_properties_current}</h3>
                         {this.renderPropTypes()}
                     </div>
                     <div className="new">
-                        <h3 className="text-center">{PYTHON_LANG.gui_properties_add_new}</h3>
+                        <h3 className="text-center">{this.context.gui_properties_add_new}</h3>
                         <table className="first-td-text-right w-100">
                             <tr>
                                 <td><label htmlFor="prop-name">Name:</label></td>
@@ -78,10 +80,10 @@ export class PropertiesPage extends React.Component {
                                             className="block"
                                             value={this.state.type}
                                             onChange={this.onChangeType}>
-                                        <option value="bool">{PYTHON_LANG.text_boolean}</option>
-                                        <option value="int">{PYTHON_LANG.text_integer}</option>
-                                        <option value="float">{PYTHON_LANG.text_float}</option>
-                                        <option value="str">{PYTHON_LANG.text_text}</option>
+                                        <option value="bool">{this.context.text_boolean}</option>
+                                        <option value="int">{this.context.text_integer}</option>
+                                        <option value="float">{this.context.text_float}</option>
+                                        <option value="str">{this.context.text_text}</option>
                                     </select>
                                 </td>
                             </tr>
@@ -92,7 +94,7 @@ export class PropertiesPage extends React.Component {
                                            checked={this.state.multiple}
                                            onChange={this.onChangeMultiple}/>
                                 </td>
-                                <td><label htmlFor="prop-multiple">{PYTHON_LANG.text_accept_many_values}</label></td>
+                                <td><label htmlFor="prop-multiple">{this.context.text_accept_many_values}</label></td>
                             </tr>
                             <tr>
                                 <td>
@@ -101,7 +103,7 @@ export class PropertiesPage extends React.Component {
                                            checked={this.state.enumeration}
                                            onChange={this.onChangeEnumeration}/>
                                 </td>
-                                <td><label htmlFor="prop-enumeration">{PYTHON_LANG.text_is_enumeration}</label></td>
+                                <td><label htmlFor="prop-enumeration">{this.context.text_is_enumeration}</label></td>
                             </tr>
                             {!this.state.multiple || this.state.enumeration ? (
                                 <tr>
@@ -109,9 +111,9 @@ export class PropertiesPage extends React.Component {
                                         <label htmlFor={'prop-default-' + this.state.type}>
                                             {this.state.enumeration ? (
                                                 this.state.multiple ?
-                                                    PYTHON_LANG.gui_properties_enumeration_values_multiple :
-                                                    PYTHON_LANG.gui_properties_enumeration_values
-                                            ) : PYTHON_LANG.gui_properties_default_value}
+                                                    this.context.gui_properties_enumeration_values_multiple :
+                                                    this.context.gui_properties_enumeration_values
+                                            ) : this.context.gui_properties_default_value}
                                         </label>
                                     </td>
                                     <td>{this.renderDefaultInput()}</td>
@@ -148,10 +150,10 @@ export class PropertiesPage extends React.Component {
                     <tr key={index}>
                         <td className="name bold">{def.name}</td>
                         <td className="type">
-                            {def.multiple ? <span>{PYTHON_LANG.text_one_or_many}&nbsp;</span> : ""}
-                            <span><code>{def.type}</code> {def.multiple ? PYTHON_LANG.word_values : PYTHON_LANG.word_value}</span>
+                            {def.multiple ? <span>{this.context.text_one_or_many}&nbsp;</span> : ""}
+                            <span><code>{def.type}</code> {def.multiple ? this.context.word_values : this.context.word_value}</span>
                             {def.enumeration ?
-                                <span>&nbsp;{PYTHON_LANG.word_in} {'{'}{def.enumeration.join(', ')}{'}'}</span>
+                                <span>&nbsp;{this.context.word_in} {'{'}{def.enumeration.join(', ')}{'}'}</span>
                                 : ""}
                         </td>
                         <td className="default">
@@ -199,8 +201,7 @@ export class PropertiesPage extends React.Component {
 
     renderDefaultInput() {
         if (this.state.enumeration) {
-            const controller = new ComponentController(
-                this, 'defaultValue', value => parsePropValString(this.state.type, null, value));
+            const controller = new ComponentPropController(this, 'defaultValue', this.state.type, null);
             return <SetInput className="block" identifier={'prop-default-' + this.state.type} controller={controller}/>;
         }
         if (this.state.type === 'bool') {
@@ -261,7 +262,7 @@ export class PropertiesPage extends React.Component {
         try {
             let definition = this.state.defaultValue;
             if (!this.state.enumeration)
-                definition = parsePropValString(this.state.type, null, definition);
+                definition = utilities(this.context).parsePropValString(this.state.type, null, definition);
             python_call('add_prop_type', this.state.name, this.state.type, definition, this.state.multiple)
                 .then(definitions => {
                     const state = this.getDefaultInputState();
@@ -276,7 +277,7 @@ export class PropertiesPage extends React.Component {
 
     deleteProperty(name) {
         Fancybox.load(
-            <Dialog title={PYTHON_LANG.form_title_delete_property.format({name})} yes={PYTHON_LANG.text_delete} action={() => {
+            <Dialog title={this.context.form_title_delete_property.format({name})} yes={this.context.text_delete} action={() => {
                 python_call('delete_prop_type', name)
                     .catch(backend_error)
                     .then(definitions => {
@@ -286,7 +287,7 @@ export class PropertiesPage extends React.Component {
                     })
             }}>
                 <Cell className="text-center" center={true} full={true}>
-                    <h3>{PYTHON_LANG.form_content_delete_property.format({name})}</h3>
+                    <h3>{this.context.form_content_delete_property.format({name})}</h3>
                 </Cell>
             </Dialog>
         );
@@ -294,8 +295,8 @@ export class PropertiesPage extends React.Component {
 
     convertPropertyToUnique(name) {
         Fancybox.load(
-            <Dialog title={PYTHON_LANG.form_title_convert_to_unique_property.format({name})}
-                    yes={PYTHON_LANG.form_convert_to_unique_property_yes}
+            <Dialog title={this.context.form_title_convert_to_unique_property.format({name})}
+                    yes={this.context.form_convert_to_unique_property_yes}
                     action={() => {
                 python_call('convert_prop_to_unique', name)
                     .then(definitions => {
@@ -306,7 +307,7 @@ export class PropertiesPage extends React.Component {
                     .catch(backend_error)
             }}>
                 <Cell className="text-center" center={true} full={true}>
-                    <h3>{PYTHON_LANG.form_confirm_convert_to_unique_property.format({name})}</h3>
+                    <h3>{this.context.form_confirm_convert_to_unique_property.format({name})}</h3>
                 </Cell>
             </Dialog>
         );
@@ -314,8 +315,8 @@ export class PropertiesPage extends React.Component {
 
     convertPropertyToMultiple(name) {
         Fancybox.load(
-            <Dialog title={PYTHON_LANG.form_title_convert_to_multiple_property.format({name})}
-                    yes={PYTHON_LANG.form_convert_to_multiple_property_yes}
+            <Dialog title={this.context.form_title_convert_to_multiple_property.format({name})}
+                    yes={this.context.form_convert_to_multiple_property_yes}
                     action={() => {
                 python_call('convert_prop_to_multiple', name)
                     .then(definitions => {
@@ -326,7 +327,7 @@ export class PropertiesPage extends React.Component {
                     .catch(backend_error)
             }}>
                 <Cell className="text-center" center={true} full={true}>
-                    <h3>{PYTHON_LANG.form_confirm_convert_to_multiple_property.format({name})}</h3>
+                    <h3>{this.context.form_confirm_convert_to_multiple_property.format({name})}</h3>
                 </Cell>
             </Dialog>
         );
@@ -357,3 +358,4 @@ export class PropertiesPage extends React.Component {
         };
     }
 }
+PropertiesPage.contextType = LangContext;

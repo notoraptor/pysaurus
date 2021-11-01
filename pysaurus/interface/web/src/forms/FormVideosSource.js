@@ -1,4 +1,5 @@
 import {FancyBox} from "../dialogs/FancyBox.js";
+import {LangContext} from "../language.js";
 
 function getSubTree(tree, entryName) {
     const steps = entryName.split('-');
@@ -61,7 +62,7 @@ export class FormVideosSource extends React.Component {
         return (
             <FancyBox title="Select Videos">
                 {this.renderTree(this.props.tree)}
-                <p>{this.state.paths.length ? PYTHON_LANG.form_source_currently_selected : PYTHON_LANG.form_source_none_selected}</p>
+                <p>{this.state.paths.length ? this.context.form_source_currently_selected : this.context.form_source_none_selected}</p>
                 {this.state.paths.length ? (
                     <ul>
                         {this.state.paths.map((path, index) => (
@@ -70,7 +71,7 @@ export class FormVideosSource extends React.Component {
                     </ul>
                 ) : ""}
                 <p className="submit mx-1 my-4">
-                    <button className="submit block" onClick={this.submit}>{PYTHON_LANG.text_select}</button>
+                    <button className="submit block" onClick={this.submit}>{this.context.text_select}</button>
                 </p>
             </FancyBox>
         );
@@ -101,7 +102,7 @@ export class FormVideosSource extends React.Component {
                                                id={entryName + '1'}
                                                name={entryName}
                                                value={'develop'} checked={!hasPath}/>{" "}
-                                        <label htmlFor={entryName + '1'}>{PYTHON_LANG.form_source_develop}</label>
+                                        <label htmlFor={entryName + '1'}>{this.context.form_source_develop}</label>
                                     </div>
                                     {hasPath ? "" : this.renderTree(subTree, entryName)}
                                 </div>
@@ -160,3 +161,4 @@ export class FormVideosSource extends React.Component {
             this.props.onClose(this.state.paths.map(path => path.split('-')));
     }
 }
+FormVideosSource.contextType = LangContext;

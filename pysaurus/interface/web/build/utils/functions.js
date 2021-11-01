@@ -1,50 +1,7 @@
 System.register([], function (_export, _context) {
   "use strict";
 
-  var IdGenerator;
-
-  /**
-   * @param propType {string}
-   * @param propEnum {Array}
-   * @param value {string}
-   * @returns {null}
-   */
-  function parsePropValString(propType, propEnum, value) {
-    let parsed = null;
-
-    switch (propType) {
-      case "bool":
-        if (value === "false") parsed = false;else if (value === "true") parsed = true;else throw PYTHON_LANG.error_invalid_bool_value.format({
-          value
-        });
-        break;
-
-      case "int":
-        parsed = parseInt(value);
-        if (isNaN(parsed)) throw `Unable to parse integer: ${value}`;
-        break;
-
-      case "float":
-        parsed = parseFloat(value);
-        if (isNaN(parsed)) throw PYTHON_LANG.error_parsing_float.format({
-          value
-        });
-        break;
-
-      case "str":
-        parsed = value;
-        break;
-
-      default:
-        throw `Unknown property type: ${propType}`;
-    }
-
-    if (propEnum && propEnum.indexOf(parsed) < 0) throw PYTHON_LANG.error_parsing_enum.format({
-      expected: propEnum.join(', '),
-      value: value
-    });
-    return parsed;
-  }
+  var IdGenerator, Utilities;
 
   function capitalizeFirstLetter(str) {
     if (str.length === 0) return str;
@@ -68,11 +25,15 @@ System.register([], function (_export, _context) {
     return text;
   }
 
+  function utilities(lang) {
+    return new Utilities(lang);
+  }
+
   _export({
-    parsePropValString: parsePropValString,
     capitalizeFirstLetter: capitalizeFirstLetter,
     formatString: formatString,
-    IdGenerator: void 0
+    IdGenerator: void 0,
+    utilities: utilities
   });
 
   return {
@@ -88,6 +49,58 @@ System.register([], function (_export, _context) {
         }
 
       });
+
+      Utilities = class Utilities {
+        constructor(lang) {
+          this.lang = lang;
+          this.parsePropValString = this.parsePropValString.bind(this);
+        }
+        /**
+         * @param propType {string}
+         * @param propEnum {Array}
+         * @param value {string}
+         * @returns {null}
+         */
+
+
+        parsePropValString(propType, propEnum, value) {
+          let parsed = null;
+
+          switch (propType) {
+            case "bool":
+              if (value === "false") parsed = false;else if (value === "true") parsed = true;else throw this.lang.error_invalid_bool_value.format({
+                value
+              });
+              break;
+
+            case "int":
+              parsed = parseInt(value);
+              if (isNaN(parsed)) throw `Unable to parse integer: ${value}`;
+              break;
+
+            case "float":
+              parsed = parseFloat(value);
+              if (isNaN(parsed)) throw this.lang.error_parsing_float.format({
+                value
+              });
+              break;
+
+            case "str":
+              parsed = value;
+              break;
+
+            default:
+              throw `Unknown property type: ${propType}`;
+          }
+
+          if (propEnum && propEnum.indexOf(parsed) < 0) throw this.lang.error_parsing_enum.format({
+            expected: propEnum.join(', '),
+            value: value
+          });
+          return parsed;
+        }
+
+      };
     }
   };
 });

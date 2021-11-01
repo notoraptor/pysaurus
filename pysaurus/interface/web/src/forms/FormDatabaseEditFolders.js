@@ -1,5 +1,6 @@
 import {Dialog} from "../dialogs/Dialog.js";
 import {backend_error, python_call} from "../utils/backend.js";
+import {LangContext} from "../language.js";
 
 export class FormDatabaseEditFolders extends React.Component {
     constructor(props) {
@@ -20,17 +21,17 @@ export class FormDatabaseEditFolders extends React.Component {
         const paths = Array.from(this.state.paths);
         paths.sort();
         return (
-            <Dialog title={PYTHON_LANG.form_title_edit_database_folders.format({count: paths.length, name: database.name})}
-                    yes={PYTHON_LANG.texte_save}
+            <Dialog title={this.context.form_title_edit_database_folders.format({count: paths.length, name: database.name})}
+                    yes={this.context.texte_save}
                     action={this.onClose}>
                 <div className="form-database-edit-folders vertical flex-grow-1">
                     <table className="table-layout-fixed">
                         <tr>
                             <td>
-                                <button className="block" onClick={this.addFolder}>{PYTHON_LANG.gui_database_add_folder}</button>
+                                <button className="block" onClick={this.addFolder}>{this.context.gui_database_add_folder}</button>
                             </td>
                             <td>
-                                <button className="block" onClick={this.addFile}>{PYTHON_LANG.gui_database_add_file}</button>
+                                <button className="block" onClick={this.addFile}>{this.context.gui_database_add_file}</button>
                             </td>
                         </tr>
                     </table>
@@ -85,7 +86,7 @@ export class FormDatabaseEditFolders extends React.Component {
         this.props.onClose(Array.from(this.state.paths));
     }
 }
-
+FormDatabaseEditFolders.contextType = LangContext;
 FormDatabaseEditFolders.propTypes = {
     database: PropTypes.shape({
         name: PropTypes.string.isRequired,

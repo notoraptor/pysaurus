@@ -1,7 +1,7 @@
-System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js", "./PlusIcon.js", "../utils/functions.js", "../utils/Actions.js", "../utils/Action.js"], function (_export, _context) {
+System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js", "./PlusIcon.js", "../utils/functions.js", "../utils/Actions.js", "../utils/Action.js", "../language.js"], function (_export, _context) {
   "use strict";
 
-  var Characters, FIELD_MAP, Pagination, SettingIcon, PlusIcon, capitalizeFirstLetter, Actions, Action, GroupView;
+  var Characters, getFieldMap, Pagination, SettingIcon, PlusIcon, capitalizeFirstLetter, Actions, Action, LangContext, GroupView;
 
   function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
@@ -10,7 +10,7 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
   return {
     setters: [function (_utilsConstantsJs) {
       Characters = _utilsConstantsJs.Characters;
-      FIELD_MAP = _utilsConstantsJs.FIELD_MAP;
+      getFieldMap = _utilsConstantsJs.getFieldMap;
     }, function (_PaginationJs) {
       Pagination = _PaginationJs.Pagination;
     }, function (_SettingIconJs) {
@@ -23,6 +23,8 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
       Actions = _utilsActionsJs.Actions;
     }, function (_utilsActionJs) {
       Action = _utilsActionJs.Action;
+    }, function (_languageJs) {
+      LangContext = _languageJs.LangContext;
     }],
     execute: function () {
       _export("GroupView", GroupView = class GroupView extends React.Component {
@@ -38,11 +40,9 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
           this.allChecked = this.allChecked.bind(this);
           this.onCheckEntry = this.onCheckEntry.bind(this);
           this.onCheckAll = this.onCheckAll.bind(this);
+          this.getFields = this.getFields.bind(this);
+          this.getActions = this.getActions.bind(this);
           this.callbackIndex = -1;
-          this.features = new Actions({
-            previous: new Action("Ctrl+ArrowUp", "Go to previous group", this.previousGroup, Fancybox.isInactive),
-            next: new Action("Ctrl+ArrowDown", "Go to next group", this.nextGroup, Fancybox.isInactive)
-          });
         }
 
         render() {
@@ -76,7 +76,7 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
             onChange: event => this.onCheckAll(event, start, end)
           }), " ", /*#__PURE__*/React.createElement("label", {
             htmlFor: "group-view-select-all"
-          }, (allChecked ? PYTHON_LANG.text_all_groups_selected : PYTHON_LANG.text_groups_selected).format({
+          }, (allChecked ? this.context.text_all_groups_selected : this.context.text_groups_selected).format({
             count: selection.size
           })), selection.size ? /*#__PURE__*/React.createElement("span", null, "\xA0", /*#__PURE__*/React.createElement(SettingIcon, {
             key: "options-for-selected",
@@ -149,23 +149,34 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
             }, entry.count));
           })) : /*#__PURE__*/React.createElement("div", {
             className: "absolute-plain no-groups text-center vertical"
-          }, /*#__PURE__*/React.createElement("strong", null, /*#__PURE__*/React.createElement("em", null, PYTHON_LANG.text_no_groups)))));
+          }, /*#__PURE__*/React.createElement("strong", null, /*#__PURE__*/React.createElement("em", null, this.context.text_no_groups)))));
         }
 
         renderTitle() {
           const field = this.props.groupDef.field;
-          let title = this.props.groupDef.is_property ? `"${capitalizeFirstLetter(field)}"` : capitalizeFirstLetter(FIELD_MAP.fields[field].title);
+          let title = this.props.groupDef.is_property ? `"${capitalizeFirstLetter(field)}"` : capitalizeFirstLetter(this.getFields().fields[field].title);
           if (this.props.groupDef.sorting === "length") title = `|| ${title} ||`;else if (this.props.groupDef.sorting === "count") title = `${title} (#)`;
           title = `${title} ${this.props.groupDef.reverse ? Characters.ARROW_DOWN : Characters.ARROW_UP}`;
           return title;
         }
 
         componentDidMount() {
-          this.callbackIndex = KEYBOARD_MANAGER.register(this.features.onKeyPressed);
+          this.callbackIndex = KEYBOARD_MANAGER.register(this.getActions().onKeyPressed);
         }
 
         componentWillUnmount() {
           KEYBOARD_MANAGER.unregister(this.callbackIndex);
+        }
+
+        getActions() {
+          return new Actions({
+            previous: new Action("Ctrl+ArrowUp", this.context.action_go_to_previous_group, this.previousGroup, Fancybox.isInactive),
+            next: new Action("Ctrl+ArrowDown", this.context.action_go_to_next_group, this.nextGroup, Fancybox.isInactive)
+          }, this.context);
+        }
+
+        getFields() {
+          return getFieldMap(this.context);
         }
 
         getNullIndex() {
@@ -274,6 +285,7 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
 
       });
 
+      GroupView.contextType = LangContext;
       GroupView.propTypes = {
         groupDef: PropTypes.shape({
           group_id: PropTypes.number.isRequired,

@@ -40,7 +40,8 @@ System.register(["./App.js", "./utils/FancyboxManager.js", "./utils/Callbacks.js
       window.APP_STATE = {
         videoHistory: new Set(),
         idGenerator: new IdGenerator(),
-        latestMoveFolder: null
+        latestMoveFolder: null,
+        lang: null
       };
 
       window.onkeydown = function (event) {

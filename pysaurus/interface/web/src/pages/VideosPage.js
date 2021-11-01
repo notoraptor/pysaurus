@@ -1,4 +1,4 @@
-import {FIELD_MAP, PAGE_SIZES, SEARCH_TYPE_TITLE, SOURCE_TREE} from "../utils/constants.js";
+import {PAGE_SIZES, SOURCE_TREE, getFieldMap} from "../utils/constants.js";
 import {MenuPack} from "../components/MenuPack.js";
 import {Pagination} from "../components/Pagination.js";
 import {Video} from "../components/Video.js";
@@ -30,6 +30,7 @@ import {FormDatabaseRename} from "../forms/FormDatabaseRename.js";
 import {Dialog} from "../dialogs/Dialog.js";
 import {Cell} from "../components/Cell.js";
 import {FormNewPredictionProperty} from "../forms/FormNewPredictionProperty.js";
+import {LangContext} from "../language.js";
 
 function compareSources(sources1, sources2) {
     if (sources1.length !== sources2.length)
@@ -61,7 +62,7 @@ export class VideosPage extends React.Component {
         super(props);
 
         this.state = this.parametersToState({
-            status: PYTHON_LANG.status_loaded,
+            status: undefined,
             confirmDeletion: true,
             path: [],
             selector: new Selector(),
@@ -129,29 +130,16 @@ export class VideosPage extends React.Component {
         this.previousGroup = this.previousGroup.bind(this);
         this.nextGroup = this.nextGroup.bind(this);
         this.confirmAllUniqueMoves = this.confirmAllUniqueMoves.bind(this);
+        this.getStatus = this.getStatus.bind(this);
+        this.getFields = this.getFields.bind(this);
+        this.getActions = this.getActions.bind(this);
 
         this.callbackIndex = -1;
         this.notificationCallbackIndex = -1;
-        // 14 shortcuts currently.
-        this.features = new Actions({
-            select: new Action("Ctrl+T", PYTHON_LANG.action_select_videos, this.selectVideos, Fancybox.isInactive),
-            group: new Action("Ctrl+G", PYTHON_LANG.action_group_videos, this.groupVideos, Fancybox.isInactive),
-            search: new Action("Ctrl+F", PYTHON_LANG.action_search_videos, this.searchVideos, Fancybox.isInactive),
-            sort: new Action("Ctrl+S", PYTHON_LANG.action_sort_videos, this.sortVideos, Fancybox.isInactive),
-            unselect: new Action("Ctrl+Shift+T", PYTHON_LANG.action_unselect_videos, this.unselectVideos, Fancybox.isInactive),
-            ungroup: new Action("Ctrl+Shift+G", PYTHON_LANG.action_ungroup_videos, this.resetGroup, Fancybox.isInactive),
-            unsearch: new Action("Ctrl+Shift+F", PYTHON_LANG.action_unsearch_videos, this.resetSearch, Fancybox.isInactive),
-            unsort: new Action("Ctrl+Shift+S", PYTHON_LANG.action_unsort_videos, this.resetSort, Fancybox.isInactive),
-            reload: new Action("Ctrl+R", PYTHON_LANG.action_reload_database, this.reloadDatabase, Fancybox.isInactive),
-            manageProperties: new Action("Ctrl+P", PYTHON_LANG.action_manage_properties, this.manageProperties, Fancybox.isInactive),
-            openRandomVideo: new Action("Ctrl+O", PYTHON_LANG.action_open_random_video, this.openRandomVideo, this.canOpenRandomVideo),
-            openRandomPlayer: new Action("Ctrl+E", PYTHON_LANG.action_open_random_player, this.openRandomPlayer, this.canOpenRandomPlayer),
-            previousPage: new Action("Ctrl+ArrowLeft", PYTHON_LANG.action_go_to_previous_page, this.previousPage, Fancybox.isInactive),
-            nextPage: new Action("Ctrl+ArrowRight", PYTHON_LANG.action_go_to_next_page, this.nextPage, Fancybox.isInactive),
-        });
     }
 
     render() {
+        const languages = this.props.app.getLanguages();
         const nbVideos = this.state.nbVideos;
         const nbPages = this.state.nbPages;
         const validSize = this.state.validSize;
@@ -161,39 +149,39 @@ export class VideosPage extends React.Component {
         const stringSetProperties = this.getStringSetProperties(this.state.properties);
         const stringProperties = this.getStringProperties(this.state.properties);
         const predictionProperties = this.getPredictionProperties(this.state.properties);
-        const actions = this.features.actions;
-
+        const actions = this.getActions().actions;
         const aFilterIsSet = this.sourceIsSet() || this.groupIsSet() || this.searchIsSet() || this.sortIsSet();
+        const status = this.getStatus();
 
         return (
             <div id="videos" className="absolute-plain p-4 vertical">
                 <header className="horizontal flex-shrink-0">
-                    <MenuPack title={PYTHON_LANG.menu_database}>
+                    <MenuPack title={this.context.menu_database}>
                         {<ActionToMenuItem action={actions.reload}/>}
                         <MenuItem action={this.renameDatabase}>
-                            {PYTHON_LANG.action_rename_database.format({name: this.state.database.name})}
+                            {this.context.action_rename_database.format({name: this.state.database.name})}
                         </MenuItem>
                         <MenuItem action={this.editDatabaseFolders}>
-                            {PYTHON_LANG.action_edit_database_folders.format({count: this.state.database.folders.length})}
+                            {this.context.action_edit_database_folders.format({count: this.state.database.folders.length})}
                         </MenuItem>
-                        <Menu title={PYTHON_LANG.menu_close_database}>
+                        <Menu title={this.context.menu_close_database}>
                             <MenuItem action={this.closeDatabase}>
-                                <strong>{PYTHON_LANG.action_close_database}</strong>
+                                <strong>{this.context.action_close_database}</strong>
                             </MenuItem>
                         </Menu>
                         <MenuItem className="red-flag" action={this.deleteDatabase}>
-                            {PYTHON_LANG.action_delete_database}
+                            {this.context.action_delete_database}
                         </MenuItem>
                     </MenuPack>
-                    <MenuPack title={PYTHON_LANG.menu_videos}>
-                        <Menu title={PYTHON_LANG.menu_filter_videos}>
+                    <MenuPack title={this.context.menu_videos}>
+                        <Menu title={this.context.menu_filter_videos}>
                             {<ActionToMenuItem action={actions.select}/>}
                             {<ActionToMenuItem action={actions.group}/>}
                             {<ActionToMenuItem action={actions.search}/>}
                             {<ActionToMenuItem action={actions.sort}/>}
                         </Menu>
                         {aFilterIsSet ? (
-                            <Menu title={PYTHON_LANG.menu_reset_filters}>
+                            <Menu title={this.context.menu_reset_filters}>
                                 {this.sourceIsSet() ? <ActionToMenuItem action={actions.unselect}/> : ""}
                                 {this.groupIsSet() ? <ActionToMenuItem action={actions.ungroup}/> : ""}
                                 {this.searchIsSet() ? <ActionToMenuItem action={actions.unsearch}/> : ""}
@@ -204,28 +192,28 @@ export class VideosPage extends React.Component {
                         {this.canOpenRandomPlayer() ? <ActionToMenuItem action={actions.openRandomPlayer}/> : ""}
                         {this.canFindSimilarVideos() ? (
                             <MenuItem action={this.findSimilarVideos}>
-                                {PYTHON_LANG.action_search_similar_videos}
+                                {this.context.action_search_similar_videos}
                             </MenuItem>
                         ) : ""}
                         {this.canFindSimilarVideos() ? (
-                            <Menu title={PYTHON_LANG.menu_search_similar_videos_longer}>
+                            <Menu title={this.context.menu_search_similar_videos_longer}>
                                 <MenuItem action={this.findSimilarVideosIgnoreCache}>
-                                    <strong>{PYTHON_LANG.action_ignore_cache}</strong>
+                                    <strong>{this.context.action_ignore_cache}</strong>
                                 </MenuItem>
                             </Menu>
                         ) : ""}
                         {groupedByMoves ? (
                             <MenuItem action={this.confirmAllUniqueMoves}>
-                                <strong><em>{PYTHON_LANG.action_confirm_all_unique_moves}</em></strong>
+                                <strong><em>{this.context.action_confirm_all_unique_moves}</em></strong>
                             </MenuItem>
                         ) : ""}
                     </MenuPack>
-                    <MenuPack title={PYTHON_LANG.menu_properties}>
+                    <MenuPack title={this.context.menu_properties}>
                         {<ActionToMenuItem action={actions.manageProperties}/>}
                         {stringSetProperties.length ? <MenuItem
-                            action={this.fillWithKeywords}>{PYTHON_LANG.action_put_keywords_into_property}</MenuItem> : ""}
+                            action={this.fillWithKeywords}>{this.context.action_put_keywords_into_property}</MenuItem> : ""}
                         {this.state.properties.length > 5 ? (
-                            <Menu title={PYTHON_LANG.menu_group_videos_by_property}>{
+                            <Menu title={this.context.menu_group_videos_by_property}>{
                                 this.state.properties.map((def, index) => (
                                     <MenuItem key={index} action={() => this.backendGroupVideos(def.name, true)}>
                                         {def.name}
@@ -235,18 +223,18 @@ export class VideosPage extends React.Component {
                         ) : (
                             this.state.properties.map((def, index) => (
                                 <MenuItem key={index} action={() => this.backendGroupVideos(def.name, true)}>
-                                    {PYTHON_LANG.action_group_videos_by_property.format({name: def.name})}
+                                    {this.context.action_group_videos_by_property.format({name: def.name})}
                                 </MenuItem>
                             ))
                         )}
                     </MenuPack>
-                    <MenuPack title={PYTHON_LANG.menu_predictors}>
+                    <MenuPack title={this.context.menu_predictors}>
                         <MenuItem
-                            action={this.createPredictionProperty}>{PYTHON_LANG.action_create_prediction_property}</MenuItem>
+                            action={this.createPredictionProperty}>{this.context.action_create_prediction_property}</MenuItem>
                         <MenuItem
-                            action={this.populatePredictionProperty}>{PYTHON_LANG.action_populate_prediction_property_manually}</MenuItem>
+                            action={this.populatePredictionProperty}>{this.context.action_populate_prediction_property_manually}</MenuItem>
                         {predictionProperties.length ? (
-                            <Menu title={PYTHON_LANG.menu_compute_prediction}>
+                            <Menu title={this.context.menu_compute_prediction}>
                                 {predictionProperties.map((def, i) => (
                                     <MenuItem key={i}
                                               action={() => this.computePredictionProperty(def.name)}>{def.name}</MenuItem>
@@ -254,7 +242,7 @@ export class VideosPage extends React.Component {
                             </Menu>
                         ) : ""}
                         {predictionProperties.length ? (
-                            <Menu title={PYTHON_LANG.menu_apply_prediction}>
+                            <Menu title={this.context.menu_apply_prediction}>
                                 {predictionProperties.map((def, i) => (
                                     <MenuItem key={i}
                                               action={() => this.applyPrediction(def.name)}>{def.name}</MenuItem>
@@ -262,38 +250,49 @@ export class VideosPage extends React.Component {
                             </Menu>
                         ) : ""}
                     </MenuPack>
-                    <MenuPack title={PYTHON_LANG.menu_navigation}>
-                        <Menu title={PYTHON_LANG.menu_navigation_videos}>
+                    <MenuPack title={this.context.menu_navigation}>
+                        <Menu title={this.context.menu_navigation_videos}>
                             <ActionToMenuItem action={actions.previousPage}/>
                             <ActionToMenuItem action={actions.nextPage}/>
                         </Menu>
                         {this.groupIsSet() ? (
-                            <Menu title={PYTHON_LANG.menu_navigation_groups}>
+                            <Menu title={this.context.menu_navigation_groups}>
                                 <MenuItem action={this.previousGroup}
-                                          shortcut="Ctrl+ArrowUp">{PYTHON_LANG.action_go_to_previous_group}</MenuItem>
+                                          shortcut="Ctrl+ArrowUp">{this.context.action_go_to_previous_group}</MenuItem>
                                 <MenuItem action={this.nextGroup}
-                                          shortcut="Ctrl+ArrowDown">{PYTHON_LANG.action_go_to_next_group}</MenuItem>
+                                          shortcut="Ctrl+ArrowDown">{this.context.action_go_to_next_group}</MenuItem>
                             </Menu>
                         ) : ""}
                     </MenuPack>
-                    <MenuPack title={PYTHON_LANG.menu_options}>
-                        <Menu title={PYTHON_LANG.menu_page_size}>
+                    <MenuPack title={this.context.menu_options}>
+                        <Menu title={this.context.menu_page_size}>
                             {PAGE_SIZES.map((count, index) => (
                                 <MenuItemRadio key={index}
                                                checked={this.state.pageSize === count}
                                                value={count}
                                                action={this.setPageSize}>
-                                    {PYTHON_LANG.action_page_size.format({count})}
+                                    {this.context.action_page_size.format({count})}
                                 </MenuItemRadio>
                             ))}
                         </Menu>
                         <MenuItemCheck checked={this.state.confirmDeletion} action={this.confirmDeletionForNotFound}>
-                            {PYTHON_LANG.action_confirm_deletion_for_entries_not_found}
+                            {this.context.action_confirm_deletion_for_entries_not_found}
                         </MenuItemCheck>
+                        {languages.length > 1 ? (
+                            <Menu title={this.context.text_choose_language + " ..."}>
+                                {languages.map((language, index) => (
+                                    <MenuItem action={() => this.props.app.setLanguage(language.name)}>
+                                        {this.context.__language__ === language.name ? (
+                                            <strong>{language.name}</strong>
+                                        ) : language.name}
+                                    </MenuItem>
+                                ))}
+                            </Menu>
+                        ) : ""}
                     </MenuPack>
                     <div className="pagination text-right">
-                        <Pagination singular={PYTHON_LANG.word_page}
-                                    plural={PYTHON_LANG.word_pages}
+                        <Pagination singular={this.context.word_page}
+                                    plural={this.context.word_pages}
                                     nbPages={nbPages}
                                     pageNumber={this.state.pageNumber}
                                     key={this.state.pageNumber}
@@ -304,15 +303,15 @@ export class VideosPage extends React.Component {
                 <div className="content position-relative flex-grow-1">
                     <div className="absolute-plain horizontal">
                         <div className="side-panel vertical">
-                            <Collapsable lite={false} className="filter flex-shrink-0" title={PYTHON_LANG.section_filter}>
+                            <Collapsable lite={false} className="filter flex-shrink-0" title={this.context.section_filter}>
                                 {this.renderFilter()}
                             </Collapsable>
                             {this.state.path.length ? (
                                 <Collapsable lite={false} className="filter flex-shrink-0"
-                                             title={PYTHON_LANG.section_classifier_path}>
+                                             title={this.context.section_classifier_path}>
                                     {stringProperties.length ? (
                                         <div className="path-menu text-center p-2">
-                                            <MenuPack title={PYTHON_LANG.menu_concatenate_path}>
+                                            <MenuPack title={this.context.menu_concatenate_path}>
                                                 {stringProperties.map((def, i) => (
                                                     <MenuItem key={i}
                                                               action={() => this.classifierConcatenate(def.name)}>
@@ -322,7 +321,7 @@ export class VideosPage extends React.Component {
                                             </MenuPack>
                                             <div className="pt-2">
                                                 <button className="block"
-                                                        onClick={this.classifierReversePath}>{PYTHON_LANG.action_reverse_path}</button>
+                                                        onClick={this.classifierReversePath}>{this.context.action_reverse_path}</button>
                                             </div>
                                         </div>
                                     ) : ""}
@@ -331,7 +330,7 @@ export class VideosPage extends React.Component {
                                             <div className="flex-grow-1">{value.toString()}</div>
                                             {index === this.state.path.length - 1 ? (
                                                 <div className="icon">
-                                                    <Cross title={PYTHON_LANG.text_unstack} action={this.classifierUnstack}/>
+                                                    <Cross title={this.context.text_unstack} action={this.classifierUnstack}/>
                                                 </div>
                                             ) : ""}
                                         </div>
@@ -341,7 +340,7 @@ export class VideosPage extends React.Component {
                             {groupDef ? (
                                 <div className="flex-grow-1 position-relative">
                                     <Collapsable lite={false} className="group absolute-plain vertical"
-                                                 title={PYTHON_LANG.section_groups}>
+                                                 title={this.context.section_groups}>
                                         <GroupView
                                             groupDef={groupDef}
                                             isClassified={!!this.state.path.length}
@@ -374,18 +373,18 @@ export class VideosPage extends React.Component {
                     </div>
                 </div>
                 <footer className="horizontal flex-shrink-0">
-                    <div className="footer-status clickable" title={this.state.status} onClick={this.resetStatus}>
-                        {this.state.status}
+                    <div className="footer-status clickable" title={status} onClick={this.resetStatus}>
+                        {status}
                     </div>
                     <div className="footer-information text-right">
                         {groupDef ? (
                             <div className="info group">
                                 {groupDef.groups.length ?
-                                    PYTHON_LANG.text_group.format({
+                                    this.context.text_group.format({
                                         group: (groupDef.group_id + 1),
                                         count: groupDef.groups.length
                                     })
-                                    : PYTHON_LANG.text_no_group}
+                                    : this.context.text_no_group}
                             </div>
                         ) : ""}
                         <div className="info count">{nbVideos} video{nbVideos > 1 ? 's' : ""}</div>
@@ -398,7 +397,13 @@ export class VideosPage extends React.Component {
     }
 
     renderFilter() {
-        const actions = this.features.actions;
+        const searchTypeTitle = {
+            exact: this.context.search_exact,
+            and: this.context.search_and,
+            or: this.context.search_or,
+            id: this.context.search_id
+        };
+        const actions = this.getActions().actions;
         const sources = this.state.sources;
         const groupDef = this.state.groupDef;
         const searchDef = this.state.searchDef;
@@ -427,13 +432,13 @@ export class VideosPage extends React.Component {
                 <tr>
                     <td>
                         {groupDef ? (
-                            <div>{PYTHON_LANG.text_grouped}</div>
-                        ) : <div className="no-filter">{PYTHON_LANG.text_ungrouped}</div>}
+                            <div>{this.context.text_grouped}</div>
+                        ) : <div className="no-filter">{this.context.text_ungrouped}</div>}
                     </td>
                     <td>
                         <div>
                             <ActionToSettingIcon action={actions.group}
-                                                 title={groupDef ? PYTHON_LANG.action_edit : PYTHON_LANG.action_group}/>
+                                                 title={groupDef ? this.context.action_edit : this.context.action_group}/>
                         </div>
                         {groupDef ? <div><ActionToCross action={actions.ungroup}/></div> : ""}
                     </td>
@@ -443,15 +448,15 @@ export class VideosPage extends React.Component {
                     <td>
                         {searchDef ? (
                             <div>
-                                <div>{PYTHON_LANG.text_searched.format({text: SEARCH_TYPE_TITLE[searchDef.cond]})}</div>
+                                <div>{this.context.text_searched.format({text: searchTypeTitle[searchDef.cond]})}</div>
                                 <div className="word-break-all">&quot;<strong>{searchDef.text}</strong>&quot;</div>
                             </div>
-                        ) : <div className="no-filter">{PYTHON_LANG.text_no_search}</div>}
+                        ) : <div className="no-filter">{this.context.text_no_search}</div>}
                     </td>
                     <td>
                         <div>
                             <ActionToSettingIcon action={actions.search}
-                                                 title={searchDef ? PYTHON_LANG.action_edit : PYTHON_LANG.action_search}/>
+                                                 title={searchDef ? this.context.action_edit : this.context.action_search}/>
                         </div>
                         {searchDef ? <div><ActionToCross action={actions.unsearch}/></div> : ""}
                     </td>
@@ -459,10 +464,10 @@ export class VideosPage extends React.Component {
                 {/** Sort **/}
                 <tr>
                     <td>
-                        <div>{PYTHON_LANG.text_sorted_by}</div>
+                        <div>{this.context.text_sorted_by}</div>
                         {sorting.map((val, i) => (
                             <div key={i}>
-                                <strong>{FIELD_MAP.fields[val.substr(1)].title}</strong>{" "}
+                                <strong>{this.getFields().fields[val.substr(1)].title}</strong>{" "}
                                 {val[0] === '-' ? (<span>&#9660;</span>) : (<span>&#9650;</span>)}
                             </div>))}
                     </td>
@@ -479,25 +484,25 @@ export class VideosPage extends React.Component {
                                 <div>Selected</div>
                                 <div>
                                     {selectedAll ?
-                                        PYTHON_LANG.text_all_videos_selected.format({count: selectionSize}) :
-                                        PYTHON_LANG.text_videos_selected.format({count: selectionSize, total: realNbVideos})}
+                                        this.context.text_all_videos_selected.format({count: selectionSize}) :
+                                        this.context.text_videos_selected.format({count: selectionSize, total: realNbVideos})}
                                 </div>
                                 <div className="mb-1">
                                     <button onClick={this.displayOnlySelected}>
                                         {this.state.displayOnlySelected ?
-                                            PYTHON_LANG.action_display_all_videos : PYTHON_LANG.action_display_selected_videos}
+                                            this.context.action_display_all_videos : this.context.action_display_selected_videos}
                                     </button>
                                 </div>
                             </div>
                         ) : (
-                            <div>{PYTHON_LANG.text_no_videos_selected}</div>
+                            <div>{this.context.text_no_videos_selected}</div>
                         )}
                         {selectedAll ? "" : <div className="mb-1">
-                            <button onClick={this.selectAll}>{PYTHON_LANG.action_select_all}</button>
+                            <button onClick={this.selectAll}>{this.context.action_select_all}</button>
                         </div>}
                         {selectionSize ? (
                             <div className="mb-1">
-                                <MenuPack title={PYTHON_LANG.menu_edit_properties}>
+                                <MenuPack title={this.context.menu_edit_properties}>
                                     {this.state.properties.map((def, index) => (
                                         <MenuItem key={index} action={() => this.editPropertiesForManyVideos(def.name)}>
                                             {def.name}
@@ -508,12 +513,40 @@ export class VideosPage extends React.Component {
                         ) : ""}
                     </td>
                     <td>
-                        {selectionSize ? <Cross title={PYTHON_LANG.action_deselect_all} action={this.deselect}/> : ""}
+                        {selectionSize ? <Cross title={this.context.action_deselect_all} action={this.deselect}/> : ""}
                     </td>
                 </tr>
                 </tbody>
             </table>
         );
+    }
+
+    getStatus() {
+        return this.state.status === undefined ? this.context.status_loaded : this.state.status;
+    }
+
+    getFields() {
+        return getFieldMap(this.context);
+    }
+
+    getActions() {
+        // 14 shortcuts currently.
+        return new Actions({
+            select: new Action("Ctrl+T", this.context.action_select_videos, this.selectVideos, Fancybox.isInactive),
+            group: new Action("Ctrl+G", this.context.action_group_videos, this.groupVideos, Fancybox.isInactive),
+            search: new Action("Ctrl+F", this.context.action_search_videos, this.searchVideos, Fancybox.isInactive),
+            sort: new Action("Ctrl+S", this.context.action_sort_videos, this.sortVideos, Fancybox.isInactive),
+            unselect: new Action("Ctrl+Shift+T", this.context.action_unselect_videos, this.unselectVideos, Fancybox.isInactive),
+            ungroup: new Action("Ctrl+Shift+G", this.context.action_ungroup_videos, this.resetGroup, Fancybox.isInactive),
+            unsearch: new Action("Ctrl+Shift+F", this.context.action_unsearch_videos, this.resetSearch, Fancybox.isInactive),
+            unsort: new Action("Ctrl+Shift+S", this.context.action_unsort_videos, this.resetSort, Fancybox.isInactive),
+            reload: new Action("Ctrl+R", this.context.action_reload_database, this.reloadDatabase, Fancybox.isInactive),
+            manageProperties: new Action("Ctrl+P", this.context.action_manage_properties, this.manageProperties, Fancybox.isInactive),
+            openRandomVideo: new Action("Ctrl+O", this.context.action_open_random_video, this.openRandomVideo, this.canOpenRandomVideo),
+            openRandomPlayer: new Action("Ctrl+E", this.context.action_open_random_player, this.openRandomPlayer, this.canOpenRandomPlayer),
+            previousPage: new Action("Ctrl+ArrowLeft", this.context.action_go_to_previous_page, this.previousPage, Fancybox.isInactive),
+            nextPage: new Action("Ctrl+ArrowRight", this.context.action_go_to_next_page, this.nextPage, Fancybox.isInactive),
+        }, this.context);
     }
 
     createPredictionProperty() {
@@ -526,8 +559,8 @@ export class VideosPage extends React.Component {
 
     populatePredictionProperty() {
         Fancybox.load(
-            <FancyBox title={PYTHON_LANG.form_title_populate_predictor_manually}>
-                {PYTHON_LANG.form_content_populate_predictor_manually.markdown()}
+            <FancyBox title={this.context.form_title_populate_predictor_manually}>
+                {this.context.form_content_populate_predictor_manually.markdown()}
             </FancyBox>
         );
     }
@@ -569,7 +602,7 @@ export class VideosPage extends React.Component {
     }
 
     componentDidMount() {
-        this.callbackIndex = KEYBOARD_MANAGER.register(this.features.onKeyPressed);
+        this.callbackIndex = KEYBOARD_MANAGER.register(this.getActions().onKeyPressed);
         this.notificationCallbackIndex = NOTIFICATION_MANAGER.register(this.notify);
     }
 
@@ -584,7 +617,7 @@ export class VideosPage extends React.Component {
         const displayOnlySelected = state.displayOnlySelected !== undefined ? state.displayOnlySelected : this.state.displayOnlySelected;
         const selector = displayOnlySelected ? (state.selector !== undefined ? state.selector : this.state.selector).toJSON() : null;
         if (!state.status)
-            state.status = PYTHON_LANG.status_updated;
+            state.status = this.context.status_updated;
         python_call("backend", callargs, pageSize, pageNumber, selector)
             .then(info => this.setState(this.parametersToState(state, info), top ? this.scrollTop : undefined))
             .catch(backend_error);
@@ -643,7 +676,7 @@ export class VideosPage extends React.Component {
 
     moveVideo(videoID, directory) {
         Fancybox.load(
-            <FancyBox title={PYTHON_LANG.form_title_move_file.format({path: directory})} onClose={() => {
+            <FancyBox title={this.context.form_title_move_file.format({path: directory})} onClose={() => {
                 python_call("cancel_copy");
             }}>
                 <div className="absolute-plain vertical">
@@ -654,9 +687,9 @@ export class VideosPage extends React.Component {
                                   onReady: (status) => {
                                       Fancybox.close();
                                       if (status === "Cancelled")
-                                          this.updateStatus(PYTHON_LANG.status_video_not_moved);
+                                          this.updateStatus(this.context.status_video_not_moved);
                                       else
-                                          this.updateStatus(PYTHON_LANG.status_video_moved.format({directory}), true);
+                                          this.updateStatus(this.context.status_video_moved.format({directory}), true);
                                   }
                               }}/>
                 </div>
@@ -695,7 +728,7 @@ export class VideosPage extends React.Component {
     }
 
     resetStatus() {
-        this.setState({status: PYTHON_LANG.status_ready});
+        this.setState({status: this.context.status_ready});
     }
 
     unselectVideos() {
@@ -739,7 +772,7 @@ export class VideosPage extends React.Component {
                                                             ['edit_property_for_videos', propertyName, videoIndices, edition.add, edition.remove],
                                                             {
                                                                 pageNumber: 0,
-                                                                status: PYTHON_LANG.status_prop_val_edited.format({
+                                                                status: this.context.status_prop_val_edited.format({
                                                                     property: propertyName,
                                                                     count: selectionSize
                                                                 })
@@ -788,15 +821,15 @@ export class VideosPage extends React.Component {
 
     deleteDatabase() {
         Fancybox.load(
-            <Dialog title={PYTHON_LANG.dialog_delete_database.format({name: this.state.database.name})}
-                    yes={PYTHON_LANG.text_delete} action={() => {
+            <Dialog title={this.context.dialog_delete_database.format({name: this.state.database.name})}
+                    yes={this.context.text_delete} action={() => {
                 python_call("delete_database")
                     .then(databases => this.props.app.dbHome(databases))
                     .catch(backend_error);
             }}>
                 <Cell center={true} full={true} className="text-center">
-                    <h1>{PYTHON_LANG.text_database} <span className="red-flag">{this.state.database.name}</span></h1>
-                    {PYTHON_LANG.form_content_confirm_delete_database.markdown()}
+                    <h1>{this.context.text_database} <span className="red-flag">{this.state.database.name}</span></h1>
+                    {this.context.form_content_confirm_delete_database.markdown()}
                 </Cell>
             </Dialog>
         )
@@ -804,13 +837,13 @@ export class VideosPage extends React.Component {
 
     confirmAllUniqueMoves() {
         Fancybox.load(
-            <Dialog title={PYTHON_LANG.action_confirm_all_unique_moves} yes={PYTHON_LANG.text_move} action={() => {
+            <Dialog title={this.context.action_confirm_all_unique_moves} yes={this.context.text_move} action={() => {
                 python_call("confirm_unique_moves")
                     .then(nbMoved => this.updateStatus(`Moved ${nbMoved} video(s)`, true, true))
                     .catch(backend_error);
             }}>
                 <Cell center={true} full={true} className="text-center">
-                    {PYTHON_LANG.form_content_confirm_unique_moves.markdown()}
+                    {this.context.form_content_confirm_unique_moves.markdown()}
                 </Cell>
             </Dialog>
         );
@@ -831,7 +864,7 @@ export class VideosPage extends React.Component {
     openRandomVideo() {
         python_call('open_random_video')
             .then(filename => {
-                this.updateStatus(PYTHON_LANG.status_randomly_opened.format({path: filename}), true, true);
+                this.updateStatus(this.context.status_randomly_opened.format({path: filename}), true, true);
             })
             .catch(backend_error);
     }
@@ -863,7 +896,7 @@ export class VideosPage extends React.Component {
             <FormVideosKeywordsToProperty properties={this.getStringSetProperties(this.state.properties)}
                                           onClose={state => {
                                               python_call('fill_property_with_terms', state.field, state.onlyEmpty)
-                                                  .then(() => this.backend(null, {status: PYTHON_LANG.status_filled_property_with_keywords.format({name: state.field})}))
+                                                  .then(() => this.backend(null, {status: this.context.status_filled_property_with_keywords.format({name: state.field})}))
                                                   .catch(backend_error);
                                           }}/>
         )
@@ -958,7 +991,7 @@ export class VideosPage extends React.Component {
                                                             ['delete_property_value', name, values],
                                                             {
                                                                 groupSelection: new Set(),
-                                                                status: PYTHON_LANG.status_prop_vals_deleted.format({name: name, values: values.join('", "')})
+                                                                status: this.context.status_prop_vals_deleted.format({name: name, values: values.join('", "')})
                                                             }
                                                         );
                                                         break;
@@ -967,7 +1000,7 @@ export class VideosPage extends React.Component {
                                                             ['edit_property_value', name, values, operation.value],
                                                             {
                                                                 groupSelection: new Set(),
-                                                                status: PYTHON_LANG.status_prop_vals_edited.format({
+                                                                status: this.context.status_prop_vals_edited.format({
                                                                         name: name,
                                                                         values: values.join('", "'),
                                                                         destination: operation.value
@@ -980,7 +1013,7 @@ export class VideosPage extends React.Component {
                                                             ['move_property_value', name, values, operation.move],
                                                             {
                                                                 groupSelection: new Set(),
-                                                                status: PYTHON_LANG.status_prop_val_moved.format({
+                                                                status: this.context.status_prop_val_moved.format({
                                                                     values: values.join('", "'),
                                                                     name: name,
                                                                     destination: operation.move,
@@ -1021,3 +1054,4 @@ export class VideosPage extends React.Component {
             .catch(backend_error);
     }
 }
+VideosPage.contextType = LangContext;

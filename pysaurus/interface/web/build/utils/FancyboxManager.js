@@ -1,12 +1,14 @@
-System.register([], function (_export, _context) {
+System.register(["../language.js"], function (_export, _context) {
   "use strict";
 
-  var FancyboxManager;
+  var LangContext, FancyboxManager;
 
   _export("FancyboxManager", void 0);
 
   return {
-    setters: [],
+    setters: [function (_languageJs) {
+      LangContext = _languageJs.LangContext;
+    }],
     execute: function () {
       _export("FancyboxManager", FancyboxManager = class FancyboxManager {
         constructor(containerID) {
@@ -26,7 +28,9 @@ System.register([], function (_export, _context) {
           if (this.loaded) throw "A fancy box is already displayed.";
           this.loaded = true;
           this.manageOtherActiveElements();
-          ReactDOM.render(component, document.getElementById(this.containerID));
+          ReactDOM.render( /*#__PURE__*/React.createElement(LangContext.Provider, {
+            value: APP_STATE.lang
+          }, component), document.getElementById(this.containerID));
         }
 
         close() {

@@ -1,4 +1,5 @@
 import {FancyBox} from "../dialogs/FancyBox.js";
+import {LangContext} from "../language.js";
 
 export class FormVideosSearch extends React.Component {
     constructor(props) {
@@ -19,9 +20,9 @@ export class FormVideosSearch extends React.Component {
 
     render() {
         return (
-            <FancyBox title={PYTHON_LANG.form_title_search_videos}>
+            <FancyBox title={this.context.form_title_search_videos}>
                 <div className="form-videos-search text-center">
-                    {PYTHON_LANG.form_content_search_videos.markdown()}
+                    {this.context.form_content_search_videos.markdown()}
                     <p>
                         <input type="text"
                                id="input-search"
@@ -40,7 +41,7 @@ export class FormVideosSearch extends React.Component {
                                value="and"
                                onChange={this.onChangeCond}
                                checked={this.state.cond === 'and'}/>
-                        <label htmlFor="input-search-and">{PYTHON_LANG.search_and}</label>
+                        <label htmlFor="input-search-and">{this.context.search_and}</label>
                     </p>
                     <p>
                         <input type="radio"
@@ -49,7 +50,7 @@ export class FormVideosSearch extends React.Component {
                                value="or"
                                onChange={this.onChangeCond}
                                checked={this.state.cond === 'or'}/>
-                        <label htmlFor="input-search-or">{PYTHON_LANG.search_or}</label>
+                        <label htmlFor="input-search-or">{this.context.search_or}</label>
                     </p>
                     <p>
                         <input type="radio"
@@ -58,7 +59,7 @@ export class FormVideosSearch extends React.Component {
                                value="exact"
                                onChange={this.onChangeCond}
                                checked={this.state.cond === 'exact'}/>
-                        <label htmlFor="input-search-exact">{PYTHON_LANG.search_exact_sentence}</label>
+                        <label htmlFor="input-search-exact">{this.context.search_exact_sentence}</label>
                     </p>
                     <p>
                         <input type="radio"
@@ -67,7 +68,7 @@ export class FormVideosSearch extends React.Component {
                                value="id"
                                onChange={this.onChangeCond}
                                checked={this.state.cond === 'id'}/>
-                        <label htmlFor="input-search-id">{PYTHON_LANG.search_id}</label>
+                        <label htmlFor="input-search-id">{this.context.search_id}</label>
                     </p>
                 </div>
             </FancyBox>
@@ -111,3 +112,4 @@ export class FormVideosSearch extends React.Component {
         this.props.onClose(criterion);
     }
 }
+FormVideosSearch.contextType = LangContext;

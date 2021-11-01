@@ -4,19 +4,29 @@ import {VideosPage} from "./pages/VideosPage.js";
 import {PropertiesPage} from "./pages/PropertiesPage.js";
 import {DatabasesPage} from "./pages/DatabasesPage.js";
 import {backend_error, python_call} from "./utils/backend.js";
-
 import {VIDEO_DEFAULT_PAGE_NUMBER, VIDEO_DEFAULT_PAGE_SIZE} from "./utils/constants.js";
+import {LangContext} from "./language.js";
 
 export class App extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {page: null, parameters: {}};
+        this.state = {page: null, parameters: {}, lang: window.PYTHON_LANG, languages: []};
+        APP_STATE.lang = this.state.lang;
         this.loadPage = this.loadPage.bind(this);
         this.loadPropertiesPage = this.loadPropertiesPage.bind(this);
         this.loadVideosPage = this.loadVideosPage.bind(this);
+        this.getLanguages = this.getLanguages.bind(this);
     }
 
     render() {
+        return (
+            <LangContext.Provider value={this.state.lang}>
+                {this.renderPage()}
+            </LangContext.Provider>
+        );
+    }
+
+    renderPage() {
         const parameters = this.state.parameters;
         const page = this.state.page;
         if (!page)
@@ -35,21 +45,35 @@ export class App extends React.Component {
 
     componentDidMount() {
         if (!this.state.page) {
-            python_call("list_databases")
-                .then(databases => this.dbHome(databases))
+            python_call("get_app_state")
+                .then(appState => this.dbHome(appState))
                 .catch(backend_error);
         }
     }
 
-    loadPage(pageName, parameters = undefined) {
+    loadPage(pageName, parameters = undefined, otherState = undefined) {
         parameters = parameters ? parameters : {};
-        this.setState({page: pageName, parameters: parameters});
+        const state = Object.assign({}, otherState || {}, {page: pageName, parameters: parameters});
+        this.setState(state);
     }
 
     // Public methods for children components.
 
-    dbHome(databases = undefined) {
-        this.loadPage("databases", databases === undefined ? databases : {databases});
+    getLanguages() {
+        return this.state.languages;
+    }
+
+    setLanguage(name) {
+        python_call("set_language", name)
+            .then(lang => {
+                APP_STATE.lang = lang;
+                this.setState({lang})
+            })
+            .catch(backend_error);
+    }
+
+    dbHome(appState = undefined) {
+        this.loadPage("databases", appState, appState ? {languages: appState.languages} : undefined);
     }
 
     dbUpdate(...command) {

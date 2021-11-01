@@ -47,8 +47,7 @@ def compute_pattern_detector(db: Database, videos: List[Video], prop_name: str):
     db.notifier.notify(
         Message(
             db.lang.message_predictor_training_set.format(
-                count0=len(classifier[0]),
-                count1=len(classifier[1])
+                count0=len(classifier[0]), count1=len(classifier[1])
             )
         )
     )

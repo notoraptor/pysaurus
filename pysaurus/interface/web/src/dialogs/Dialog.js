@@ -1,4 +1,5 @@
 import {FancyBox} from "./FancyBox.js";
+import {LangContext} from "../language.js";
 
 export class Dialog extends React.Component {
     constructor(props) {
@@ -15,10 +16,10 @@ export class Dialog extends React.Component {
                     </div>
                     <div className="buttons flex-shrink-0 horizontal">
                         <div className="button flex-grow-1 p-2 yes">
-                            <button className="block bold" onClick={this.yes}>{this.props.yes || PYTHON_LANG.word_yes}</button>
+                            <button className="block bold" onClick={this.yes}>{this.props.yes || this.context.word_yes}</button>
                         </div>
                         <div className="button flex-grow-1 p-2 no">
-                            <button className="block bold" onClick={Fancybox.close}>{this.props.no || PYTHON_LANG.word_cancel}</button>
+                            <button className="block bold" onClick={Fancybox.close}>{this.props.no || this.context.word_cancel}</button>
                         </div>
                     </div>
                 </div>
@@ -32,7 +33,7 @@ export class Dialog extends React.Component {
             this.props.action();
     }
 }
-
+Dialog.contextType = LangContext;
 Dialog.propTypes = {
     title: PropTypes.string.isRequired,
     // action()

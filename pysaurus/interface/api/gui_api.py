@@ -71,13 +71,13 @@ class GuiAPI(FeatureAPI):
     def close_database(self):
         self.database = None
         self.provider = None
-        return self.list_databases()
+        return self.get_app_state()
 
     def delete_database(self):
         assert self.application.delete_database(self.database.folder)
         self.database = None
         self.provider = None
-        return self.list_databases()
+        return self.get_app_state()
 
     def close_app(self):
         # Close threads.
@@ -228,10 +228,13 @@ class GuiAPI(FeatureAPI):
             else:
                 self.notifier.notify(Cancelled())
         except Exception as exc:
-            self.database.notifier.notify(End(self.database.lang.error_moving_file.format(
-                name=type(exc).__name__,
-                message=exc
-            )))
+            self.database.notifier.notify(
+                End(
+                    self.database.lang.error_moving_file.format(
+                        name=type(exc).__name__, message=exc
+                    )
+                )
+            )
         finally:
             self.db_loading_thread = None
 

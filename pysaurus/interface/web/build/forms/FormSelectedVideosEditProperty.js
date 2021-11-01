@@ -1,7 +1,7 @@
-System.register(["../dialogs/Dialog.js", "../utils/constants.js"], function (_export, _context) {
+System.register(["../dialogs/Dialog.js", "../utils/constants.js", "../language.js", "../utils/functions.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, Characters, FormSelectedVideosEditProperty;
+  var Dialog, Characters, LangContext, utilities, FormSelectedVideosEditProperty;
 
   _export("FormSelectedVideosEditProperty", void 0);
 
@@ -10,6 +10,10 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js"], function (_ex
       Dialog = _dialogsDialogJs.Dialog;
     }, function (_utilsConstantsJs) {
       Characters = _utilsConstantsJs.Characters;
+    }, function (_languageJs) {
+      LangContext = _languageJs.LangContext;
+    }, function (_utilsFunctionsJs) {
+      utilities = _utilsFunctionsJs.utilities;
     }],
     execute: function () {
       _export("FormSelectedVideosEditProperty", FormSelectedVideosEditProperty = class FormSelectedVideosEditProperty extends React.Component {
@@ -59,7 +63,7 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js"], function (_ex
           const propName = this.props.definition.name;
           const nbVideos = this.props.nbVideos;
           return /*#__PURE__*/React.createElement(Dialog, {
-            title: PYTHON_LANG.form_title_edit_property_for_videos.format({
+            title: this.context.form_title_edit_property_for_videos.format({
               name: propName,
               count: nbVideos
             }),
@@ -69,7 +73,7 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js"], function (_ex
             className: "form-selected-videos-edit-property vertical flex-grow-1 text-center"
           }, /*#__PURE__*/React.createElement("div", {
             className: "bar titles flex-shrink-0 horizontal bold"
-          }, /*#__PURE__*/React.createElement("div", null, PYTHON_LANG.text_to_remove), /*#__PURE__*/React.createElement("div", null, PYTHON_LANG.text_current), /*#__PURE__*/React.createElement("div", null, PYTHON_LANG.text_to_add)), /*#__PURE__*/React.createElement("div", {
+          }, /*#__PURE__*/React.createElement("div", null, this.context.text_to_remove), /*#__PURE__*/React.createElement("div", null, this.context.text_current), /*#__PURE__*/React.createElement("div", null, this.context.text_to_add)), /*#__PURE__*/React.createElement("div", {
             className: "bar panels horizontal flex-grow-1"
           }, /*#__PURE__*/React.createElement("div", {
             className: "remove"
@@ -83,7 +87,7 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js"], function (_ex
             className: "horizontal"
           }, /*#__PURE__*/React.createElement("div", {
             className: "value"
-          }, PYTHON_LANG.text_all_values.format({
+          }, this.context.text_all_values.format({
             count: this.state.remove.length
           })), /*#__PURE__*/React.createElement("button", {
             onClick: this.unRemoveAll
@@ -93,7 +97,7 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js"], function (_ex
             onClick: this.removeAll
           }, Characters.SMART_ARROW_LEFT), /*#__PURE__*/React.createElement("div", {
             className: "value"
-          }, PYTHON_LANG.text_all_values.format({
+          }, this.context.text_all_values.format({
             count: this.state.current.length
           })), this.props.definition.multiple ? /*#__PURE__*/React.createElement("button", {
             onClick: this.addAll
@@ -103,7 +107,7 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js"], function (_ex
             onClick: this.unAddAll
           }, Characters.SMART_ARROW_LEFT), /*#__PURE__*/React.createElement("div", {
             className: "value"
-          }, PYTHON_LANG.text_all_values.format({
+          }, this.context.text_all_values.format({
             count: this.state.add.length
           }))) : /*#__PURE__*/React.createElement("div", null)), this.renderFormAdd()));
         }
@@ -185,7 +189,7 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js"], function (_ex
 
           try {
             this.setState({
-              value: parsePropValString(def.type, def.enumeration, event.target.value)
+              value: utilities(this.context).parsePropValString(def.type, def.enumeration, event.target.value)
             });
           } catch (exception) {
             window.alert(exception.toString());
@@ -365,6 +369,8 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js"], function (_ex
         }
 
       });
+
+      FormSelectedVideosEditProperty.contextType = LangContext;
     }
   };
 });

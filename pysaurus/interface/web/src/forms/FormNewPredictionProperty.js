@@ -1,4 +1,5 @@
 import {Dialog} from "../dialogs/Dialog.js";
+import {LangContext} from "../language.js";
 
 export class FormNewPredictionProperty extends React.Component {
     constructor(props) {
@@ -14,11 +15,11 @@ export class FormNewPredictionProperty extends React.Component {
 
     render() {
         return (
-            <Dialog title={PYTHON_LANG.form_title_new_prediction_property}
-                    yes={PYTHON_LANG.text_create}
+            <Dialog title={this.context.form_title_new_prediction_property}
+                    yes={this.context.text_create}
                     action={this.onClose}>
                 <div className="form-rename text-center">
-                    {PYTHON_LANG.form_content_new_prediction_property.markdown()}
+                    {this.context.form_content_new_prediction_property.markdown()}
                     <p className="form">
                         <input type="text"
                                id="name"
@@ -61,3 +62,4 @@ export class FormNewPredictionProperty extends React.Component {
             this.props.onClose(this.state.title);
     }
 }
+FormNewPredictionProperty.contextType = LangContext;

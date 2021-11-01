@@ -1,13 +1,15 @@
-System.register(["../dialogs/Dialog.js"], function (_export, _context) {
+System.register(["../dialogs/Dialog.js", "../language.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, FormPropertyRename;
+  var Dialog, LangContext, FormPropertyRename;
 
   _export("FormPropertyRename", void 0);
 
   return {
     setters: [function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
+    }, function (_languageJs) {
+      LangContext = _languageJs.LangContext;
     }],
     execute: function () {
       _export("FormPropertyRename", FormPropertyRename = class FormPropertyRename extends React.Component {
@@ -27,14 +29,14 @@ System.register(["../dialogs/Dialog.js"], function (_export, _context) {
 
         render() {
           return /*#__PURE__*/React.createElement(Dialog, {
-            title: PYTHON_LANG.form_title_rename_property.format({
+            title: this.context.form_title_rename_property.format({
               name: this.props.title
             }),
-            yes: PYTHON_LANG.text_rename,
+            yes: this.context.text_rename,
             action: this.onClose
           }, /*#__PURE__*/React.createElement("div", {
             className: "form-rename text-center"
-          }, /*#__PURE__*/React.createElement("h1", null, PYTHON_LANG.text_rename_property), /*#__PURE__*/React.createElement("h2", null, /*#__PURE__*/React.createElement("code", {
+          }, /*#__PURE__*/React.createElement("h1", null, this.context.text_rename_property), /*#__PURE__*/React.createElement("h2", null, /*#__PURE__*/React.createElement("code", {
             id: "filename"
           }, this.props.title)), /*#__PURE__*/React.createElement("p", {
             className: "form"
@@ -79,6 +81,8 @@ System.register(["../dialogs/Dialog.js"], function (_export, _context) {
         }
 
       });
+
+      FormPropertyRename.contextType = LangContext;
     }
   };
 });

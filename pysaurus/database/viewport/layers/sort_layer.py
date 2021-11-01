@@ -64,8 +64,16 @@ class SortLayer(Layer):
         if readable_unreadable[1]:
             message = []
             if readable_unreadable[0]:
-                message.append(self.database.lang.message_count_readable_sorted.format(count=len(readable_unreadable[0])))
-            message.append(self.database.lang.message_count_unreadable_not_sorted.format(count=len(readable_unreadable[1])))
+                message.append(
+                    self.database.lang.message_count_readable_sorted.format(
+                        count=len(readable_unreadable[0])
+                    )
+                )
+            message.append(
+                self.database.lang.message_count_unreadable_not_sorted.format(
+                    count=len(readable_unreadable[1])
+                )
+            )
             self.database.set_message(", ".join(message) + ".")
 
         return VideoArray(readable_unreadable[0] + readable_unreadable[1])

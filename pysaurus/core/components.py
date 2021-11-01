@@ -145,6 +145,16 @@ class AbsolutePath(object):
         if self.exists():
             raise FileExistsError(self.__path)
 
+    def copy_file_to(self, dst):
+        if not self.isfile():
+            raise core_exceptions.NotAFileError(self)
+        dst = self.ensure(dst)
+        if dst.exists():
+            raise FileExistsError(dst)
+        shutil.copy(self.__path, dst.path)
+        if not dst.isfile():
+            raise FileNotFoundError(dst)
+
     def new_title(self, title):
         # type: (str) -> AbsolutePath
         new_path = AbsolutePath.file_path(self.get_directory(), title, self.extension)

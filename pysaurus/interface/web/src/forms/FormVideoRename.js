@@ -1,4 +1,5 @@
 import {Dialog} from "../dialogs/Dialog.js";
+import {LangContext} from "../language.js";
 
 export class FormVideoRename extends React.Component {
     constructor(props) {
@@ -18,7 +19,7 @@ export class FormVideoRename extends React.Component {
         return (
             <Dialog title={"Rename"} yes="rename" action={this.onClose}>
                 <div className="form-rename text-center">
-                    <h1>{PYTHON_LANG.action_rename_video}</h1>
+                    <h1>{this.context.action_rename_video}</h1>
                     <h2><code id="filename">{this.props.filename}</code></h2>
                     <p className="form">
                         <input type="text"
@@ -62,3 +63,4 @@ export class FormVideoRename extends React.Component {
             this.props.onClose(this.state.title);
     }
 }
+FormVideoRename.contextType = LangContext;

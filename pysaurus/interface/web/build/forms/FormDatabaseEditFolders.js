@@ -1,7 +1,7 @@
-System.register(["../dialogs/Dialog.js", "../utils/backend.js"], function (_export, _context) {
+System.register(["../dialogs/Dialog.js", "../utils/backend.js", "../language.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, backend_error, python_call, FormDatabaseEditFolders;
+  var Dialog, backend_error, python_call, LangContext, FormDatabaseEditFolders;
 
   _export("FormDatabaseEditFolders", void 0);
 
@@ -11,6 +11,8 @@ System.register(["../dialogs/Dialog.js", "../utils/backend.js"], function (_expo
     }, function (_utilsBackendJs) {
       backend_error = _utilsBackendJs.backend_error;
       python_call = _utilsBackendJs.python_call;
+    }, function (_languageJs) {
+      LangContext = _languageJs.LangContext;
     }],
     execute: function () {
       _export("FormDatabaseEditFolders", FormDatabaseEditFolders = class FormDatabaseEditFolders extends React.Component {
@@ -32,11 +34,11 @@ System.register(["../dialogs/Dialog.js", "../utils/backend.js"], function (_expo
           const paths = Array.from(this.state.paths);
           paths.sort();
           return /*#__PURE__*/React.createElement(Dialog, {
-            title: PYTHON_LANG.form_title_edit_database_folders.format({
+            title: this.context.form_title_edit_database_folders.format({
               count: paths.length,
               name: database.name
             }),
-            yes: PYTHON_LANG.texte_save,
+            yes: this.context.texte_save,
             action: this.onClose
           }, /*#__PURE__*/React.createElement("div", {
             className: "form-database-edit-folders vertical flex-grow-1"
@@ -45,10 +47,10 @@ System.register(["../dialogs/Dialog.js", "../utils/backend.js"], function (_expo
           }, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
             className: "block",
             onClick: this.addFolder
-          }, PYTHON_LANG.gui_database_add_folder)), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
+          }, this.context.gui_database_add_folder)), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
             className: "block",
             onClick: this.addFile
-          }, PYTHON_LANG.gui_database_add_file)))), /*#__PURE__*/React.createElement("div", {
+          }, this.context.gui_database_add_file)))), /*#__PURE__*/React.createElement("div", {
             className: "paths flex-grow-1 overflow-auto"
           }, /*#__PURE__*/React.createElement("table", {
             className: "table-layout-fixed"
@@ -98,6 +100,7 @@ System.register(["../dialogs/Dialog.js", "../utils/backend.js"], function (_expo
 
       });
 
+      FormDatabaseEditFolders.contextType = LangContext;
       FormDatabaseEditFolders.propTypes = {
         database: PropTypes.shape({
           name: PropTypes.string.isRequired,

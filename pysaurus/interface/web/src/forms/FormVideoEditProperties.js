@@ -1,6 +1,7 @@
-import {ComponentController, SetInput} from "../components/SetInput.js";
+import {ComponentPropController, SetInput} from "../components/SetInput.js";
 import {Dialog} from "../dialogs/Dialog.js";
-import {parsePropValString} from "../utils/functions.js";
+import {utilities} from "../utils/functions.js";
+import {LangContext} from "../language.js";
 
 export class FormVideoEditProperties extends React.Component {
     constructor(props) {
@@ -22,13 +23,13 @@ export class FormVideoEditProperties extends React.Component {
         const data = this.props.data;
         const hasThumbnail = data.has_thumbnail;
         return (
-            <Dialog title={PYTHON_LANG.form_edit_video_properties} yes={PYTHON_LANG.texte_save} action={this.onClose}>
+            <Dialog title={this.context.form_edit_video_properties} yes={this.context.texte_save} action={this.onClose}>
                 <div className="form-video-edit-properties horizontal">
                     <div className="info">
                         <div className="image">
                             {hasThumbnail ?
                                 <img alt={data.title} src={data.thumbnail_path}/> :
-                                <div className="no-thumbnail">{PYTHON_LANG.text_no_thumbnail}</div>}
+                                <div className="no-thumbnail">{this.context.text_no_thumbnail}</div>}
                         </div>
                         <div className="filename p-1 mb-1"><code>{data.filename}</code></div>
                         {data.title === data.file_title ? "" : <div className="title mb-1"><em>{data.title}</em></div>}
@@ -44,8 +45,7 @@ export class FormVideoEditProperties extends React.Component {
                                         possibleValues = def.enumeration;
                                     else if (def.type === "bool")
                                         possibleValues = [false, true];
-                                    const controller = new ComponentController(
-                                        this, name, value => parsePropValString(def.type, possibleValues, value));
+                                    const controller = new ComponentPropController(this, name, def.type, possibleValues);
                                     input = <SetInput controller={controller} values={possibleValues}/>;
                                 } else if (def.enumeration) {
                                     input = (
@@ -87,9 +87,10 @@ export class FormVideoEditProperties extends React.Component {
 
     onChange(event, def) {
         try {
-            this.setState({[def.name]: parsePropValString(def.type, def.enumeration, event.target.value)});
+            this.setState({[def.name]: utilities(this.context).parsePropValString(def.type, def.enumeration, event.target.value)});
         } catch (exception) {
             window.alert(exception.toString());
         }
     }
 }
+FormVideoEditProperties.contextType = LangContext;
