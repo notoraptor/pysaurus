@@ -306,9 +306,12 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
             this.props.onInfo(this.context.status_opened.format({
               path: this.props.data.filename
             }));
-          }).catch(() => this.props.onInfo(this.context.status_unable_to_open.format({
-            path: this.props.data.filename
-          })));
+          }).catch(error => {
+            backend_error(error);
+            this.props.onInfo(this.context.status_unable_to_open.format({
+              path: this.props.data.filename
+            }));
+          });
         }
 
         editProperties() {
