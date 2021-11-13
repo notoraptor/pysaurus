@@ -1,7 +1,7 @@
-System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dialog.js", "../forms/FormVideoEditProperties.js", "./Collapsable.js", "./MenuItem.js", "./Menu.js", "../utils/backend.js", "../utils/constants.js", "../language.js"], function (_export, _context) {
+System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEditProperties.js", "./Collapsable.js", "./MenuItem.js", "./Menu.js", "../utils/backend.js", "../utils/constants.js", "../language.js", "../forms/GenericFormRename.js"], function (_export, _context) {
   "use strict";
 
-  var MenuPack, FormVideoRename, Dialog, FormVideoEditProperties, Collapsable, MenuItem, Menu, backend_error, python_call, Characters, LangContext, Video;
+  var MenuPack, Dialog, FormVideoEditProperties, Collapsable, MenuItem, Menu, backend_error, python_call, Characters, LangContext, GenericFormRename, Video;
 
   function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
@@ -19,8 +19,6 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
   return {
     setters: [function (_MenuPackJs) {
       MenuPack = _MenuPackJs.MenuPack;
-    }, function (_formsFormVideoRenameJs) {
-      FormVideoRename = _formsFormVideoRenameJs.FormVideoRename;
     }, function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
     }, function (_formsFormVideoEditPropertiesJs) {
@@ -38,6 +36,8 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
       Characters = _utilsConstantsJs.Characters;
     }, function (_languageJs) {
       LangContext = _languageJs.LangContext;
+    }, function (_formsGenericFormRenameJs) {
+      GenericFormRename = _formsGenericFormRenameJs.GenericFormRename;
     }],
     execute: function () {
       _export("Video", Video = class Video extends React.Component {
@@ -116,7 +116,7 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
             action: this.copyVideoID
           }, this.context.action_copy_video_id), data.found ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.renameVideo
-          }, this.context.action_rename_video) : "", data.found ? /*#__PURE__*/React.createElement(MenuItem, {
+          }, this.context.text_rename_video) : "", data.found ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.moveVideo
           }, this.context.action_move_video_to_another_folder) : "", this.props.groupedByMoves && data.moves.length ? /*#__PURE__*/React.createElement(Menu, {
             title: "Confirm move to ..."
@@ -234,7 +234,7 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
             action: this.copyFilePath
           }, this.context.action_copy_path), data.found ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.renameVideo
-          }, this.context.action_rename_video) : "", /*#__PURE__*/React.createElement(MenuItem, {
+          }, this.context.text_rename_video) : "", /*#__PURE__*/React.createElement(MenuItem, {
             className: "red-flag",
             action: this.deleteVideo
           }, data.found ? this.context.text_delete_video : this.context.text_delete_entry)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", {
@@ -466,9 +466,11 @@ System.register(["./MenuPack.js", "../forms/FormVideoRename.js", "../dialogs/Dia
         renameVideo() {
           const filename = this.props.data.filename;
           const title = this.props.data.file_title;
-          Fancybox.load( /*#__PURE__*/React.createElement(FormVideoRename, {
-            filename: filename,
-            title: title,
+          Fancybox.load( /*#__PURE__*/React.createElement(GenericFormRename, {
+            title: this.context.form_title_rename_video,
+            header: this.context.text_rename_video,
+            description: filename,
+            data: title,
             onClose: newTitle => {
               python_call('rename_video', this.props.data.video_id, newTitle).then(() => this.props.onInfo(`Renamed: ${newTitle}`, true)).catch(backend_error);
             }

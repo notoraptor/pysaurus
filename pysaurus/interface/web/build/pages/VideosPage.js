@@ -1,7 +1,7 @@
-System.register(["../utils/constants.js", "../components/MenuPack.js", "../components/Pagination.js", "../components/Video.js", "../forms/FormVideosSource.js", "../forms/FormVideosGrouping.js", "../forms/FormVideosSearch.js", "../forms/FormVideosSort.js", "../components/GroupView.js", "../forms/FormPropertyEditSelectedValues.js", "../forms/FormVideosKeywordsToProperty.js", "../forms/FormSelectedVideosEditProperty.js", "../components/Collapsable.js", "../components/Cross.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/MenuItemRadio.js", "../components/Menu.js", "../utils/Selector.js", "../utils/Action.js", "../utils/Actions.js", "../components/ActionToMenuItem.js", "../components/ActionToSettingIcon.js", "../components/ActionToCross.js", "../utils/backend.js", "../dialogs/FancyBox.js", "./HomePage.js", "../forms/FormDatabaseEditFolders.js", "../forms/FormDatabaseRename.js", "../dialogs/Dialog.js", "../components/Cell.js", "../forms/FormNewPredictionProperty.js", "../language.js"], function (_export, _context) {
+System.register(["../utils/constants.js", "../components/MenuPack.js", "../components/Pagination.js", "../components/Video.js", "../forms/FormVideosSource.js", "../forms/FormVideosGrouping.js", "../forms/FormVideosSearch.js", "../forms/FormVideosSort.js", "../components/GroupView.js", "../forms/FormPropertyEditSelectedValues.js", "../forms/FormVideosKeywordsToProperty.js", "../forms/FormSelectedVideosEditProperty.js", "../components/Collapsable.js", "../components/Cross.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/MenuItemRadio.js", "../components/Menu.js", "../utils/Selector.js", "../utils/Action.js", "../utils/Actions.js", "../components/ActionToMenuItem.js", "../components/ActionToSettingIcon.js", "../components/ActionToCross.js", "../utils/backend.js", "../dialogs/FancyBox.js", "./HomePage.js", "../forms/FormDatabaseEditFolders.js", "../dialogs/Dialog.js", "../components/Cell.js", "../forms/FormNewPredictionProperty.js", "../forms/GenericFormRename.js", "../language.js"], function (_export, _context) {
   "use strict";
 
-  var PAGE_SIZES, SOURCE_TREE, getFieldMap, MenuPack, Pagination, Video, FormVideosSource, FormVideosGrouping, FormVideosSearch, FormVideosSort, GroupView, FormPropertyEditSelectedValues, FormVideosKeywordsToProperty, FormSelectedVideosEditProperty, Collapsable, Cross, MenuItem, MenuItemCheck, MenuItemRadio, Menu, Selector, Action, Actions, ActionToMenuItem, ActionToSettingIcon, ActionToCross, backend_error, python_call, FancyBox, HomePage, FormDatabaseEditFolders, FormDatabaseRename, Dialog, Cell, FormNewPredictionProperty, LangContext, VideosPage;
+  var PAGE_SIZES, SOURCE_TREE, getFieldMap, MenuPack, Pagination, Video, FormVideosSource, FormVideosGrouping, FormVideosSearch, FormVideosSort, GroupView, FormPropertyEditSelectedValues, FormVideosKeywordsToProperty, FormSelectedVideosEditProperty, Collapsable, Cross, MenuItem, MenuItemCheck, MenuItemRadio, Menu, Selector, Action, Actions, ActionToMenuItem, ActionToSettingIcon, ActionToCross, backend_error, python_call, FancyBox, HomePage, FormDatabaseEditFolders, Dialog, Cell, FormNewPredictionProperty, GenericFormRename, LangContext, VideosPage;
 
   function compareSources(sources1, sources2) {
     if (sources1.length !== sources2.length) return false;
@@ -85,14 +85,14 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
       HomePage = _HomePageJs.HomePage;
     }, function (_formsFormDatabaseEditFoldersJs) {
       FormDatabaseEditFolders = _formsFormDatabaseEditFoldersJs.FormDatabaseEditFolders;
-    }, function (_formsFormDatabaseRenameJs) {
-      FormDatabaseRename = _formsFormDatabaseRenameJs.FormDatabaseRename;
     }, function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
     }, function (_componentsCellJs) {
       Cell = _componentsCellJs.Cell;
     }, function (_formsFormNewPredictionPropertyJs) {
       FormNewPredictionProperty = _formsFormNewPredictionPropertyJs.FormNewPredictionProperty;
+    }, function (_formsGenericFormRenameJs) {
+      GenericFormRename = _formsGenericFormRenameJs.GenericFormRename;
     }, function (_languageJs) {
       LangContext = _languageJs.LangContext;
     }],
@@ -799,8 +799,14 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         }
 
         renameDatabase() {
-          Fancybox.load( /*#__PURE__*/React.createElement(FormDatabaseRename, {
-            title: this.state.database.name,
+          const name = this.state.database.name;
+          Fancybox.load( /*#__PURE__*/React.createElement(GenericFormRename, {
+            title: this.context.form_title_rename_database.format({
+              name
+            }),
+            header: this.context.text_rename_database,
+            description: name,
+            data: name,
             onClose: name => {
               this.backend(["rename_database", name], {
                 pageNumber: 0

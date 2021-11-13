@@ -1,5 +1,4 @@
 import {MenuPack} from "./MenuPack.js";
-import {FormVideoRename} from "../forms/FormVideoRename.js";
 import {Dialog} from "../dialogs/Dialog.js";
 import {FormVideoEditProperties} from "../forms/FormVideoEditProperties.js";
 import {Collapsable} from "./Collapsable.js";
@@ -8,6 +7,7 @@ import {Menu} from "./Menu.js";
 import {backend_error, python_call} from "../utils/backend.js";
 import {Characters} from "../utils/constants.js";
 import {LangContext} from "../language.js";
+import {GenericFormRename} from "../forms/GenericFormRename.js";
 
 /**
  * Generate class name for common value of videos grouped by similarity
@@ -84,7 +84,7 @@ export class Video extends React.Component {
                                     {file_title ? <MenuItem action={this.copyFileTitle}>{this.context.action_copy_file_title}</MenuItem> : ""}
                                     <MenuItem action={this.copyFilePath}>{this.context.action_copy_path}</MenuItem>
                                     <MenuItem action={this.copyVideoID}>{this.context.action_copy_video_id}</MenuItem>
-                                    {data.found ? <MenuItem action={this.renameVideo}>{this.context.action_rename_video}</MenuItem> : ""}
+                                    {data.found ? <MenuItem action={this.renameVideo}>{this.context.text_rename_video}</MenuItem> : ""}
                                     {data.found ?
                                         <MenuItem action={this.moveVideo}>{this.context.action_move_video_to_another_folder}</MenuItem>
                                         : ""}
@@ -207,7 +207,7 @@ export class Video extends React.Component {
                                         </MenuItem> : ""}
                                     <MenuItem action={this.copyFileTitle}>{this.context.action_copy_file_title}</MenuItem>
                                     <MenuItem action={this.copyFilePath}>{this.context.action_copy_path}</MenuItem>
-                                    {data.found ? <MenuItem action={this.renameVideo}>{this.context.action_rename_video}</MenuItem> : ""}
+                                    {data.found ? <MenuItem action={this.renameVideo}>{this.context.text_rename_video}</MenuItem> : ""}
                                     <MenuItem className="red-flag" action={this.deleteVideo}>
                                         {data.found ? this.context.text_delete_video : this.context.text_delete_entry}
                                     </MenuItem>
@@ -454,11 +454,15 @@ export class Video extends React.Component {
         const filename = this.props.data.filename;
         const title = this.props.data.file_title;
         Fancybox.load(
-            <FormVideoRename filename={filename} title={title} onClose={newTitle => {
-                python_call('rename_video', this.props.data.video_id, newTitle)
-                    .then(() => this.props.onInfo(`Renamed: ${newTitle}`, true))
-                    .catch(backend_error);
-            }}/>
+            <GenericFormRename title={this.context.form_title_rename_video}
+                               header={this.context.text_rename_video}
+                               description={filename}
+                               data={title}
+                               onClose={newTitle => {
+                                   python_call('rename_video', this.props.data.video_id, newTitle)
+                                       .then(() => this.props.onInfo(`Renamed: ${newTitle}`, true))
+                                       .catch(backend_error);
+                               }}/>
         );
     }
 

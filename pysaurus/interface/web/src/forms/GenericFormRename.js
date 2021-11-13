@@ -1,15 +1,11 @@
 import {Dialog} from "../dialogs/Dialog.js";
 import {LangContext} from "../language.js";
 
-export class FormVideoRename extends React.Component {
+export class GenericFormRename extends React.Component {
     constructor(props) {
-        // filename: str
-        // title: str
-        // onClose(newTitle)
         super(props);
-        this.state = {title: this.props.title};
+        this.state = {data: this.props.data};
         this.onChange = this.onChange.bind(this);
-        this.onClose = this.onClose.bind(this);
         this.onKeyDown = this.onKeyDown.bind(this);
         this.submit = this.submit.bind(this);
         this.onFocusInput = this.onFocusInput.bind(this);
@@ -17,15 +13,17 @@ export class FormVideoRename extends React.Component {
 
     render() {
         return (
-            <Dialog title={"Rename"} yes="rename" action={this.onClose}>
+            <Dialog title={this.props.title}
+                    yes={this.context.text_rename}
+                    action={this.submit}>
                 <div className="form-rename text-center">
-                    <h1>{this.context.action_rename_video}</h1>
-                    <h2><code id="filename">{this.props.filename}</code></h2>
+                    <h1>{this.props.header}</h1>
+                    <h2><code id="filename">{this.props.description}</code></h2>
                     <p className="form">
                         <input type="text"
                                id="name"
                                className="block"
-                               value={this.state.title}
+                               value={this.state.data}
                                onChange={this.onChange}
                                onKeyDown={this.onKeyDown}
                                onFocus={this.onFocusInput}/>
@@ -44,11 +42,7 @@ export class FormVideoRename extends React.Component {
     }
 
     onChange(event) {
-        this.setState({title: event.target.value});
-    }
-
-    onClose() {
-        this.submit();
+        this.setState({data: event.target.value});
     }
 
     onKeyDown(event) {
@@ -58,9 +52,16 @@ export class FormVideoRename extends React.Component {
         }
     }
 
-    submit(yes) {
-        if (this.state.title && this.state.title !== this.props.title)
-            this.props.onClose(this.state.title);
+    submit() {
+        if (this.state.data && this.state.data !== this.props.data)
+            this.props.onClose(this.state.data);
     }
 }
-FormVideoRename.contextType = LangContext;
+GenericFormRename.propTypes = {
+    title: PropTypes.string.isRequired,
+    header: PropTypes.string.isRequired,
+    description: PropTypes.string.isRequired,
+    data: PropTypes.string.isRequired,
+    onClose: PropTypes.func.isRequired,
+};
+GenericFormRename.contextType = LangContext;

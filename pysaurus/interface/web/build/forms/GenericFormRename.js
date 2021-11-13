@@ -1,9 +1,9 @@
 System.register(["../dialogs/Dialog.js", "../language.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, LangContext, FormPropertyRename;
+  var Dialog, LangContext, GenericFormRename;
 
-  _export("FormPropertyRename", void 0);
+  _export("GenericFormRename", void 0);
 
   return {
     setters: [function (_dialogsDialogJs) {
@@ -12,16 +12,13 @@ System.register(["../dialogs/Dialog.js", "../language.js"], function (_export, _
       LangContext = _languageJs.LangContext;
     }],
     execute: function () {
-      _export("FormPropertyRename", FormPropertyRename = class FormPropertyRename extends React.Component {
+      _export("GenericFormRename", GenericFormRename = class GenericFormRename extends React.Component {
         constructor(props) {
-          // title: str
-          // onClose(newTitle)
           super(props);
           this.state = {
-            title: this.props.title
+            data: this.props.data
           };
           this.onChange = this.onChange.bind(this);
-          this.onClose = this.onClose.bind(this);
           this.onKeyDown = this.onKeyDown.bind(this);
           this.submit = this.submit.bind(this);
           this.onFocusInput = this.onFocusInput.bind(this);
@@ -29,22 +26,20 @@ System.register(["../dialogs/Dialog.js", "../language.js"], function (_export, _
 
         render() {
           return /*#__PURE__*/React.createElement(Dialog, {
-            title: this.context.form_title_rename_property.format({
-              name: this.props.title
-            }),
+            title: this.props.title,
             yes: this.context.text_rename,
-            action: this.onClose
+            action: this.submit
           }, /*#__PURE__*/React.createElement("div", {
             className: "form-rename text-center"
-          }, /*#__PURE__*/React.createElement("h1", null, this.context.text_rename_property), /*#__PURE__*/React.createElement("h2", null, /*#__PURE__*/React.createElement("code", {
+          }, /*#__PURE__*/React.createElement("h1", null, this.props.header), /*#__PURE__*/React.createElement("h2", null, /*#__PURE__*/React.createElement("code", {
             id: "filename"
-          }, this.props.title)), /*#__PURE__*/React.createElement("p", {
+          }, this.props.description)), /*#__PURE__*/React.createElement("p", {
             className: "form"
           }, /*#__PURE__*/React.createElement("input", {
             type: "text",
             id: "name",
             className: "block",
-            value: this.state.title,
+            value: this.state.data,
             onChange: this.onChange,
             onKeyDown: this.onKeyDown,
             onFocus: this.onFocusInput
@@ -61,12 +56,8 @@ System.register(["../dialogs/Dialog.js", "../language.js"], function (_export, _
 
         onChange(event) {
           this.setState({
-            title: event.target.value
+            data: event.target.value
           });
-        }
-
-        onClose() {
-          this.submit();
         }
 
         onKeyDown(event) {
@@ -77,12 +68,19 @@ System.register(["../dialogs/Dialog.js", "../language.js"], function (_export, _
         }
 
         submit() {
-          if (this.state.title && this.state.title !== this.props.title) this.props.onClose(this.state.title);
+          if (this.state.data && this.state.data !== this.props.data) this.props.onClose(this.state.data);
         }
 
       });
 
-      FormPropertyRename.contextType = LangContext;
+      GenericFormRename.propTypes = {
+        title: PropTypes.string.isRequired,
+        header: PropTypes.string.isRequired,
+        description: PropTypes.string.isRequired,
+        data: PropTypes.string.isRequired,
+        onClose: PropTypes.func.isRequired
+      };
+      GenericFormRename.contextType = LangContext;
     }
   };
 });

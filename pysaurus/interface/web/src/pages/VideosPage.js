@@ -26,10 +26,10 @@ import {backend_error, python_call} from "../utils/backend.js";
 import {FancyBox} from "../dialogs/FancyBox.js";
 import {HomePage} from "./HomePage.js";
 import {FormDatabaseEditFolders} from "../forms/FormDatabaseEditFolders.js";
-import {FormDatabaseRename} from "../forms/FormDatabaseRename.js";
 import {Dialog} from "../dialogs/Dialog.js";
 import {Cell} from "../components/Cell.js";
 import {FormNewPredictionProperty} from "../forms/FormNewPredictionProperty.js";
+import {GenericFormRename} from "../forms/GenericFormRename.js";
 import {LangContext} from "../language.js";
 
 function compareSources(sources1, sources2) {
@@ -812,11 +812,16 @@ export class VideosPage extends React.Component {
     }
 
     renameDatabase() {
+        const name = this.state.database.name;
         Fancybox.load(
-            <FormDatabaseRename title={this.state.database.name} onClose={name => {
+            <GenericFormRename title={this.context.form_title_rename_database.format({name})}
+                               header={this.context.text_rename_database}
+                               description={name}
+                               data={name}
+                               onClose={name => {
                 this.backend(["rename_database", name], {pageNumber: 0});
             }}/>
-        )
+        );
     }
 
     deleteDatabase() {

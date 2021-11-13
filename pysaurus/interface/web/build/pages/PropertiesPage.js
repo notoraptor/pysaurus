@@ -1,7 +1,7 @@
-System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../components/Cell.js", "../forms/FormPropertyRename.js", "../utils/backend.js", "../language.js", "../utils/functions.js"], function (_export, _context) {
+System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../components/Cell.js", "../utils/backend.js", "../utils/functions.js", "../forms/GenericFormRename.js", "../language.js"], function (_export, _context) {
   "use strict";
 
-  var ComponentPropController, SetInput, Dialog, Cell, FormPropertyRename, backend_error, python_call, LangContext, utilities, PropertiesPage, DEFAULT_VALUES;
+  var ComponentPropController, SetInput, Dialog, Cell, backend_error, python_call, utilities, GenericFormRename, LangContext, PropertiesPage, DEFAULT_VALUES;
 
   function getDefaultValue(propType, isEnum) {
     return isEnum ? [] : DEFAULT_VALUES[propType].toString();
@@ -17,15 +17,15 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
       Dialog = _dialogsDialogJs.Dialog;
     }, function (_componentsCellJs) {
       Cell = _componentsCellJs.Cell;
-    }, function (_formsFormPropertyRenameJs) {
-      FormPropertyRename = _formsFormPropertyRenameJs.FormPropertyRename;
     }, function (_utilsBackendJs) {
       backend_error = _utilsBackendJs.backend_error;
       python_call = _utilsBackendJs.python_call;
-    }, function (_languageJs) {
-      LangContext = _languageJs.LangContext;
     }, function (_utilsFunctionsJs) {
       utilities = _utilsFunctionsJs.utilities;
+    }, function (_formsGenericFormRenameJs) {
+      GenericFormRename = _formsGenericFormRenameJs.GenericFormRename;
+    }, function (_languageJs) {
+      LangContext = _languageJs.LangContext;
     }],
     execute: function () {
       DEFAULT_VALUES = {
@@ -335,8 +335,13 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
         }
 
         renameProperty(name) {
-          Fancybox.load( /*#__PURE__*/React.createElement(FormPropertyRename, {
-            title: name,
+          Fancybox.load( /*#__PURE__*/React.createElement(GenericFormRename, {
+            title: this.context.form_title_rename_property.format({
+              name
+            }),
+            header: this.context.text_rename_property,
+            description: name,
+            data: name,
             onClose: newName => {
               python_call('rename_property', name, newName).then(definitions => {
                 const state = this.getDefaultInputState();

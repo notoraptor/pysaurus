@@ -197,6 +197,7 @@ class DefaultLanguage:
     text_reset = "reset"
     text_rename_database = "Rename database"
     text_rename_property = "Rename property"
+    text_rename_video = "Rename video"
     text_create = "create"
     text_to_remove = "To remove"
     text_current = "Current"
@@ -324,7 +325,6 @@ class DefaultLanguage:
     action_copy_file_title = "Copy file title"
     action_copy_path = "Copy path"
     action_copy_video_id = "Copy video ID"
-    action_rename_video = "Rename video"
     action_move_video_to_another_folder = "Move video to another folder ..."
     action_dismiss_similarity = "Dismiss similarity"
     action_reset_similarity = "Reset similarity"
@@ -452,3 +452,4 @@ Click on "sort" to validate, or close dialog to cancel.
         "from not found to found video, and "
         "not found video entry will be deleted.",
     )
+    form_title_rename_video = "Rename video"

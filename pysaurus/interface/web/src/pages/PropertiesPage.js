@@ -1,10 +1,10 @@
 import {ComponentPropController, SetInput} from "../components/SetInput.js";
 import {Dialog} from "../dialogs/Dialog.js";
 import {Cell} from "../components/Cell.js";
-import {FormPropertyRename} from "../forms/FormPropertyRename.js";
 import {backend_error, python_call} from "../utils/backend.js";
-import {LangContext} from "../language.js";
 import {utilities} from "../utils/functions.js";
+import {GenericFormRename} from "../forms/GenericFormRename.js";
+import {LangContext} from "../language.js";
 
 const DEFAULT_VALUES = {
     bool: false,
@@ -335,15 +335,19 @@ export class PropertiesPage extends React.Component {
 
     renameProperty(name) {
         Fancybox.load(
-            <FormPropertyRename title={name} onClose={newName => {
-                python_call('rename_property', name, newName)
-                    .then(definitions => {
-                        const state = this.getDefaultInputState();
-                        state.definitions = definitions;
-                        this.setState(state);
-                    })
-                    .catch(backend_error);
-            }}/>
+            <GenericFormRename title={this.context.form_title_rename_property.format({name})}
+                               header={this.context.text_rename_property}
+                               description={name}
+                               data={name}
+                               onClose={newName => {
+                                   python_call('rename_property', name, newName)
+                                       .then(definitions => {
+                                           const state = this.getDefaultInputState();
+                                           state.definitions = definitions;
+                                           this.setState(state);
+                                       })
+                                       .catch(backend_error);
+                               }}/>
         );
     }
 
