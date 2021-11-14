@@ -7,6 +7,7 @@ import ujson as json
 
 from pysaurus.application import exceptions
 from pysaurus.application.config import Config
+from pysaurus.application.utils import package_dir
 from pysaurus.core import functions
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.custom_json_parser import parse_json
@@ -41,7 +42,7 @@ class Application:
             if path.isfile() and path.extension == "txt":
                 self.languages[path] = None
         # Load default languages names.
-        for entry in FileSystem.scandir(os.path.join(functions.package_dir(), "language", "default")):
+        for entry in FileSystem.scandir(os.path.join(package_dir(), "language", "default")):
             path = AbsolutePath(entry.path)
             if path.isfile() and path.extension == "txt":
                 print("Checking embedded language", path.title)

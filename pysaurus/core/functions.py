@@ -1,6 +1,5 @@
 import bisect
 import concurrent.futures
-import os
 import re
 import sys
 import threading
@@ -101,10 +100,6 @@ def dispatch_tasks(tasks, job_count, extra_args=None):
         cursor += job_len
     # NB: next_job_id is now next_job_id + len(tasks).
     return jobs
-
-
-def package_dir():
-    return os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
 
 def flat_to_coord(index, width):

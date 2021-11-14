@@ -1,8 +1,8 @@
 import os
 
 from pysaurus.application import exceptions
+from pysaurus.application.utils import package_dir
 from pysaurus.core.components import AbsolutePath
-from pysaurus.core.functions import package_dir
 from pysaurus.core.modules import System
 
 try:

@@ -4,8 +4,8 @@ import ujson as json
 from flask import Flask, Response, abort, send_file
 
 from pysaurus.application.application import Application
+from pysaurus.application.utils import package_dir
 from pysaurus.core.components import AbsolutePath
-from pysaurus.core.functions import package_dir
 from pysaurus.database.viewport.layers.source_layer import SourceLayer
 
 entry_path = AbsolutePath.join(package_dir(), "interface", "web", "index.html")

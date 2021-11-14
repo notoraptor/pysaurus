@@ -1,6 +1,8 @@
 import os
 from typing import Dict, List, Tuple
 
+import pysaurus.application.application
+import pysaurus.application.utils
 import toolsaurus.application.exceptions
 import toolsaurus.database.database
 import toolsaurus.functions
@@ -20,7 +22,7 @@ from toolsaurus.printable import to_column, to_table
 
 TEST_LIST_FILE_PATH = AbsolutePath(
     os.path.join(
-        functions.package_dir(),
+        pysaurus.application.utils.package_dir(),
         "../../pysaurus",
         "..",
         ".local",
