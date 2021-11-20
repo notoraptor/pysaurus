@@ -22,7 +22,7 @@ export class FormDatabaseEditFolders extends React.Component {
         paths.sort();
         return (
             <Dialog title={this.context.form_title_edit_database_folders.format({count: paths.length, name: database.name})}
-                    yes={this.context.texte_save}
+                    yes={this.context.text_save}
                     action={this.onClose}>
                 <div className="form-database-edit-folders vertical flex-grow-1">
                     <table className="table-layout-fixed">

@@ -3,21 +3,27 @@ import {utilities} from "../utils/functions.js";
 
 class SetController {
     constructor() {
+        //
     }
 
     size() {
+        return 0;
     }
 
     get(index) {
+        return null;
     }
 
     has(value) {
+        return false;
     }
 
     add(value) {
+        //
     }
 
     remove(value) {
+        //
     }
 }
 

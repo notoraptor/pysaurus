@@ -72,7 +72,6 @@ const NotificationCollector = {
         app.collectNotification(notification, {jobMap});
     },
     JobStep: function (app, notification) {
-        const lastIndex = app.state.messages.length - 1;
         const jobsAreAlreadyCollected = app.state.jobMap.get(notification.notification.name).jobs.size;
         const jobMap = new Map(app.state.jobMap);
         jobMap.get(notification.notification.name).collectJobStep(notification);
@@ -310,7 +309,7 @@ export class HomePage extends React.Component {
             .catch(backend_error);
     }
 
-    componentDidUpdate(prevProps, prevState, snapshot) {
+    componentDidUpdate() {
         const divNotifs = document.getElementById("notifications");
         divNotifs.scrollTop = divNotifs.scrollHeight;
         if (this.props.parameters.onReady && this.state.ready) {

@@ -26,7 +26,7 @@ const rules = Object.assign({}, SimpleMarkdown.defaultRules, {
 });
 const rawBuiltParser = SimpleMarkdown.parserFor(rules);
 const parse = function(source, inline = false) {
-    var blockSource = source + "\n\n";
+    const blockSource = source + "\n\n";
     return rawBuiltParser(blockSource, {inline});
 };
 // You probably only need one of these: choose depending on

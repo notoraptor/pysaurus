@@ -40,7 +40,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../utils/
           const hasThumbnail = data.has_thumbnail;
           return /*#__PURE__*/React.createElement(Dialog, {
             title: this.context.form_edit_video_properties,
-            yes: this.context.texte_save,
+            yes: this.context.text_save,
             action: this.onClose
           }, /*#__PURE__*/React.createElement("div", {
             className: "form-video-edit-properties horizontal"

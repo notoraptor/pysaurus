@@ -11,6 +11,7 @@ System.register([], function (_export, _context) {
       _export("Actions", Actions = class Actions {
         /**
          * @param actions {Object.<string, Action>}
+         * @param context {Object}
          */
         constructor(actions, context) {
           /** @type {Object.<string, Action>} */

@@ -55,6 +55,7 @@ System.register(["../utils/backend.js", "../language.js"], function (_export, _c
             value: this.context.__language__,
             onChange: this.onChangeLanguage
           }, languages.map((language, index) => /*#__PURE__*/React.createElement("option", {
+            key: index,
             value: language.name
           }, language.name))))) : "", /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("h2", null, this.context.gui_database_create), /*#__PURE__*/React.createElement("div", {
             className: "p-1"

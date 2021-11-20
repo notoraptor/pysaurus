@@ -40,7 +40,7 @@ System.register([], function (_export, _context) {
       rawBuiltParser = SimpleMarkdown.parserFor(rules);
 
       parse = function (source, inline = false) {
-        var blockSource = source + "\n\n";
+        const blockSource = source + "\n\n";
         return rawBuiltParser(blockSource, {
           inline
         });

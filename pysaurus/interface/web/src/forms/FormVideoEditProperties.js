@@ -23,7 +23,7 @@ export class FormVideoEditProperties extends React.Component {
         const data = this.props.data;
         const hasThumbnail = data.has_thumbnail;
         return (
-            <Dialog title={this.context.form_edit_video_properties} yes={this.context.texte_save} action={this.onClose}>
+            <Dialog title={this.context.form_edit_video_properties} yes={this.context.text_save} action={this.onClose}>
                 <div className="form-video-edit-properties horizontal">
                     <div className="info">
                         <div className="image">

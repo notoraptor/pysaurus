@@ -19,17 +19,26 @@ System.register(["../language.js", "../utils/functions.js"], function (_export, 
     }],
     execute: function () {
       SetController = class SetController {
-        constructor() {}
+        constructor() {//
+        }
 
-        size() {}
+        size() {
+          return 0;
+        }
 
-        get(index) {}
+        get(index) {
+          return null;
+        }
 
-        has(value) {}
+        has(value) {
+          return false;
+        }
 
-        add(value) {}
+        add(value) {//
+        }
 
-        remove(value) {}
+        remove(value) {//
+        }
 
       };
 

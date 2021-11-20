@@ -281,7 +281,7 @@ export class VideosPage extends React.Component {
                         {languages.length > 1 ? (
                             <Menu title={this.context.text_choose_language + " ..."}>
                                 {languages.map((language, index) => (
-                                    <MenuItem action={() => this.props.app.setLanguage(language.name)}>
+                                    <MenuItem key={index} action={() => this.props.app.setLanguage(language.name)}>
                                         {this.context.__language__ === language.name ? (
                                             <strong>{language.name}</strong>
                                         ) : language.name}

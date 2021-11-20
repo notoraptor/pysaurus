@@ -1,6 +1,7 @@
 export class Actions {
     /**
      * @param actions {Object.<string, Action>}
+     * @param context {Object}
      */
     constructor(actions, context) {
         /** @type {Object.<string, Action>} */

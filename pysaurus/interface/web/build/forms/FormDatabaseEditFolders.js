@@ -38,7 +38,7 @@ System.register(["../dialogs/Dialog.js", "../utils/backend.js", "../language.js"
               count: paths.length,
               name: database.name
             }),
-            yes: this.context.texte_save,
+            yes: this.context.text_save,
             action: this.onClose
           }, /*#__PURE__*/React.createElement("div", {
             className: "form-database-edit-folders vertical flex-grow-1"

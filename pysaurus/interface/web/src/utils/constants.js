@@ -51,6 +51,7 @@ class FieldInfo {
 class FieldMap {
     /**
      * @param fieldInfoList {Array.<FieldInfo>}
+     * @param context {Object}
      */
     constructor(fieldInfoList, context) {
         this.list = fieldInfoList;

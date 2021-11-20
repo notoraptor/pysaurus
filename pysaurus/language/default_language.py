@@ -168,7 +168,7 @@ class DefaultLanguage:
     text_videos_selected = "{count} / {total} video(s)"
     text_delete_video = "Delete video"
     text_delete_entry = "Delete entry"
-    texte_save = "save"
+    text_save = "save"
     text_rename = "rename"
     text_database_saved = "Database saved"
     text_database_loaded = "Database loaded"

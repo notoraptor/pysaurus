@@ -64,6 +64,7 @@ System.register([], function (_export, _context) {
       FieldMap = class FieldMap {
         /**
          * @param fieldInfoList {Array.<FieldInfo>}
+         * @param context {Object}
          */
         constructor(fieldInfoList, context) {
           this.list = fieldInfoList;

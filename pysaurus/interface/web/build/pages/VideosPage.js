@@ -315,6 +315,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           }, this.context.action_confirm_deletion_for_entries_not_found), languages.length > 1 ? /*#__PURE__*/React.createElement(Menu, {
             title: this.context.text_choose_language + " ..."
           }, languages.map((language, index) => /*#__PURE__*/React.createElement(MenuItem, {
+            key: index,
             action: () => this.props.app.setLanguage(language.name)
           }, this.context.__language__ === language.name ? /*#__PURE__*/React.createElement("strong", null, language.name) : language.name))) : ""), /*#__PURE__*/React.createElement("div", {
             className: "pagination text-right"

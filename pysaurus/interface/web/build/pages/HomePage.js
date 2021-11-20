@@ -98,7 +98,6 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
           });
         },
         JobStep: function (app, notification) {
-          const lastIndex = app.state.messages.length - 1;
           const jobsAreAlreadyCollected = app.state.jobMap.get(notification.notification.name).jobs.size;
           const jobMap = new Map(app.state.jobMap);
           jobMap.get(notification.notification.name).collectJobStep(notification);
@@ -389,7 +388,7 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
           python_call(...this.props.parameters.command).catch(backend_error);
         }
 
-        componentDidUpdate(prevProps, prevState, snapshot) {
+        componentDidUpdate() {
           const divNotifs = document.getElementById("notifications");
           divNotifs.scrollTop = divNotifs.scrollHeight;
 

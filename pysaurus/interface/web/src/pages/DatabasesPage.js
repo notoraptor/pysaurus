@@ -36,7 +36,7 @@ export class DatabasesPage extends React.Component {
                                 <select id="language"
                                         value={this.context.__language__}
                                         onChange={this.onChangeLanguage}>{languages.map((language, index) => (
-                                    <option value={language.name}>{language.name}</option>
+                                    <option key={index} value={language.name}>{language.name}</option>
                                 ))}</select>
                             </td>
                         </tr>
