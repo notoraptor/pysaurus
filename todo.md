@@ -13,7 +13,10 @@ when searching videos by terms.
 TODO:
 
 Bugs:
+- Error when deleting a database:
+  - FileNotFoundError: [Errno 2] No such file or directory: '<database>.log'
 - Interface:
+  - Does Database write on the right log file when deleting or changing database ?
   - top of centered text in fancy box is not shown if window is too small 
     (e.g. with form to confirm database deletion)
 - Qt player may freeze unexpectedly when requiring next video
