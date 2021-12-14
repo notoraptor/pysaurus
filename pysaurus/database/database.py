@@ -191,10 +191,12 @@ class Database:
         with open(self.__tmp_json_path_next.path, "w") as output_file:
             json.dump(json_output, output_file)
         self.__tmp_json_path_prev.delete()
-        FileSystem.rename(self.__json_path.path, self.__tmp_json_path_prev.path)
+        if self.__json_path.isfile():
+            FileSystem.rename(self.__json_path.path, self.__tmp_json_path_prev.path)
+            assert not self.__json_path.isfile()
+            assert self.__tmp_json_path_prev.isfile()
         FileSystem.rename(self.__tmp_json_path_next.path, self.__json_path.path)
         assert not self.__tmp_json_path_next.exists()
-        assert self.__tmp_json_path_prev.isfile()
         assert self.__json_path.isfile()
 
         self.__notifier.notify(notifications.DatabaseSaved(self))

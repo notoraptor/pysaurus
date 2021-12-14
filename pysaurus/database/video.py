@@ -209,7 +209,7 @@ class Video(VideoState):
         self.channels = channels
         self.container_format = Text(container_format)
         self.device_name = Text(device_name)
-        self.duration = duration
+        self.duration = abs(duration)
         self.duration_time_base = duration_time_base or 1
         self.frame_rate_den = frame_rate_den or 1
         self.frame_rate_num = frame_rate_num

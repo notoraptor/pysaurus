@@ -21,6 +21,8 @@ Bugs:
     (e.g. with form to confirm database deletion)
 - Qt player may freeze unexpectedly when requiring next video
 - Cannot force kill a Python thread.
+- We read some duration as a negative too big number,
+  while vlc detects real duration correctly.
 
 Features:
 - Remember entry edition and add an option to sort by date edited.

@@ -304,6 +304,8 @@ class Duration(object):
     )
 
     def __init__(self, microseconds: Union[int, float]):
+        assert 0 <= microseconds, microseconds
+
         if isinstance(microseconds, float):
             microseconds = round(microseconds)
 
