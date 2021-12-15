@@ -1,7 +1,7 @@
 System.register(["./App.js", "./utils/FancyboxManager.js", "./utils/Callbacks.js", "./utils/backend.js", "./utils/functions.js", "./utils/markdown.js"], function (_export, _context) {
   "use strict";
 
-  var App, FancyboxManager, Callbacks, python_call, IdGenerator, formatString, markdownToReact;
+  var App, FancyboxManager, Callbacks, python_call, formatString, IdGenerator, markdownToReact;
   return {
     setters: [function (_AppJs) {
       App = _AppJs.App;
@@ -12,8 +12,8 @@ System.register(["./App.js", "./utils/FancyboxManager.js", "./utils/Callbacks.js
     }, function (_utilsBackendJs) {
       python_call = _utilsBackendJs.python_call;
     }, function (_utilsFunctionsJs) {
-      IdGenerator = _utilsFunctionsJs.IdGenerator;
       formatString = _utilsFunctionsJs.formatString;
+      IdGenerator = _utilsFunctionsJs.IdGenerator;
     }, function (_utilsMarkdownJs) {
       markdownToReact = _utilsMarkdownJs.markdownToReact;
     }],

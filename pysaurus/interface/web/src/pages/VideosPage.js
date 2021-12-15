@@ -1,4 +1,4 @@
-import {PAGE_SIZES, SOURCE_TREE, getFieldMap} from "../utils/constants.js";
+import {getFieldMap, PAGE_SIZES, SOURCE_TREE} from "../utils/constants.js";
 import {MenuPack} from "../components/MenuPack.js";
 import {Pagination} from "../components/Pagination.js";
 import {Video} from "../components/Video.js";
@@ -28,7 +28,6 @@ import {HomePage} from "./HomePage.js";
 import {FormDatabaseEditFolders} from "../forms/FormDatabaseEditFolders.js";
 import {Dialog} from "../dialogs/Dialog.js";
 import {Cell} from "../components/Cell.js";
-import {FormNewPredictionProperty} from "../forms/FormNewPredictionProperty.js";
 import {GenericFormRename} from "../forms/GenericFormRename.js";
 import {LangContext} from "../language.js";
 
@@ -119,10 +118,6 @@ export class VideosPage extends React.Component {
         this.canOpenRandomVideo = this.canOpenRandomVideo.bind(this);
         this.canOpenRandomPlayer = this.canOpenRandomPlayer.bind(this);
         this.canFindSimilarVideos = this.canFindSimilarVideos.bind(this);
-        this.createPredictionProperty = this.createPredictionProperty.bind(this);
-        this.populatePredictionProperty = this.populatePredictionProperty.bind(this);
-        this.computePredictionProperty = this.computePredictionProperty.bind(this);
-        this.applyPrediction = this.applyPrediction.bind(this);
         this.sourceIsSet = this.sourceIsSet.bind(this);
         this.groupIsSet = this.groupIsSet.bind(this);
         this.searchIsSet = this.searchIsSet.bind(this);
@@ -148,7 +143,6 @@ export class VideosPage extends React.Component {
         const groupedByMoves = groupDef && groupDef.field === "move_id";
         const stringSetProperties = this.getStringSetProperties(this.state.properties);
         const stringProperties = this.getStringProperties(this.state.properties);
-        const predictionProperties = this.getPredictionProperties(this.state.properties);
         const actions = this.getActions().actions;
         const aFilterIsSet = this.sourceIsSet() || this.groupIsSet() || this.searchIsSet() || this.sortIsSet();
         const status = this.getStatus();
@@ -227,28 +221,6 @@ export class VideosPage extends React.Component {
                                 </MenuItem>
                             ))
                         )}
-                    </MenuPack>
-                    <MenuPack title={this.context.menu_predictors}>
-                        <MenuItem
-                            action={this.createPredictionProperty}>{this.context.action_create_prediction_property}</MenuItem>
-                        <MenuItem
-                            action={this.populatePredictionProperty}>{this.context.action_populate_prediction_property_manually}</MenuItem>
-                        {predictionProperties.length ? (
-                            <Menu title={this.context.menu_compute_prediction}>
-                                {predictionProperties.map((def, i) => (
-                                    <MenuItem key={i}
-                                              action={() => this.computePredictionProperty(def.name)}>{def.name}</MenuItem>
-                                ))}
-                            </Menu>
-                        ) : ""}
-                        {predictionProperties.length ? (
-                            <Menu title={this.context.menu_apply_prediction}>
-                                {predictionProperties.map((def, i) => (
-                                    <MenuItem key={i}
-                                              action={() => this.applyPrediction(def.name)}>{def.name}</MenuItem>
-                                ))}
-                            </Menu>
-                        ) : ""}
                     </MenuPack>
                     <MenuPack title={this.context.menu_navigation}>
                         <Menu title={this.context.menu_navigation_videos}>
@@ -547,30 +519,6 @@ export class VideosPage extends React.Component {
             previousPage: new Action("Ctrl+ArrowLeft", this.context.action_go_to_previous_page, this.previousPage, Fancybox.isInactive),
             nextPage: new Action("Ctrl+ArrowRight", this.context.action_go_to_next_page, this.nextPage, Fancybox.isInactive),
         }, this.context);
-    }
-
-    createPredictionProperty() {
-        Fancybox.load(
-            <FormNewPredictionProperty onClose={name => {
-                this.backend(["create_prediction_property", name]);
-            }}/>
-        )
-    }
-
-    populatePredictionProperty() {
-        Fancybox.load(
-            <FancyBox title={this.context.form_title_populate_predictor_manually}>
-                {this.context.form_content_populate_predictor_manually.markdown()}
-            </FancyBox>
-        );
-    }
-
-    computePredictionProperty(propName) {
-        this.props.app.dbUpdate("compute_predictor", propName);
-    }
-
-    applyPrediction(propName) {
-        this.props.app.dbUpdate("apply_predictor", propName);
     }
 
     sourceIsSet() {
@@ -961,17 +909,6 @@ export class VideosPage extends React.Component {
 
     getStringProperties(definitions) {
         return definitions.filter(def => def.type === "str");
-    }
-
-    getPredictionProperties(definitions) {
-        return definitions.filter(def => (
-            def.name.indexOf("<?") === 0
-            && def.name.indexOf(">") === def.name.length - 1
-            && def.type === "int"
-            && def.defaultValue === -1
-            && !def.multiple
-            && arrayEquals(def.enumeration, [-1, 0, 1])
-        ));
     }
 
     /**

@@ -4,6 +4,7 @@ import threading
 import time
 from abc import abstractmethod
 from typing import Callable, Dict, Optional, Sequence
+from pysaurus.database.properties import PropType
 
 from pysaurus.application import exceptions
 from pysaurus.core.components import AbsolutePath
@@ -56,10 +57,16 @@ class GuiAPI(FeatureAPI):
     def move_video_file(self, video_id, directory):
         self._launch(self._move_video_file, args=(video_id, directory), finish=False)
 
+    def create_prediction_property(self, prop_name):
+        # unused
+        self.database.add_prop_type(PropType(f"<?{prop_name}>", [-1, 0, 1]))
+
     def compute_predictor(self, prop_name):
+        # unused
         self._launch(self._compute_predictor, args=(prop_name,))
 
     def apply_predictor(self, prop_name):
+        # unused
         self._launch(self._apply_predictor, args=(prop_name,))
 
     def cancel_copy(self):

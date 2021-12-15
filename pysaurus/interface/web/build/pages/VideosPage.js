@@ -1,7 +1,7 @@
-System.register(["../utils/constants.js", "../components/MenuPack.js", "../components/Pagination.js", "../components/Video.js", "../forms/FormVideosSource.js", "../forms/FormVideosGrouping.js", "../forms/FormVideosSearch.js", "../forms/FormVideosSort.js", "../components/GroupView.js", "../forms/FormPropertyEditSelectedValues.js", "../forms/FormVideosKeywordsToProperty.js", "../forms/FormSelectedVideosEditProperty.js", "../components/Collapsable.js", "../components/Cross.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/MenuItemRadio.js", "../components/Menu.js", "../utils/Selector.js", "../utils/Action.js", "../utils/Actions.js", "../components/ActionToMenuItem.js", "../components/ActionToSettingIcon.js", "../components/ActionToCross.js", "../utils/backend.js", "../dialogs/FancyBox.js", "./HomePage.js", "../forms/FormDatabaseEditFolders.js", "../dialogs/Dialog.js", "../components/Cell.js", "../forms/FormNewPredictionProperty.js", "../forms/GenericFormRename.js", "../language.js"], function (_export, _context) {
+System.register(["../utils/constants.js", "../components/MenuPack.js", "../components/Pagination.js", "../components/Video.js", "../forms/FormVideosSource.js", "../forms/FormVideosGrouping.js", "../forms/FormVideosSearch.js", "../forms/FormVideosSort.js", "../components/GroupView.js", "../forms/FormPropertyEditSelectedValues.js", "../forms/FormVideosKeywordsToProperty.js", "../forms/FormSelectedVideosEditProperty.js", "../components/Collapsable.js", "../components/Cross.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/MenuItemRadio.js", "../components/Menu.js", "../utils/Selector.js", "../utils/Action.js", "../utils/Actions.js", "../components/ActionToMenuItem.js", "../components/ActionToSettingIcon.js", "../components/ActionToCross.js", "../utils/backend.js", "../dialogs/FancyBox.js", "./HomePage.js", "../forms/FormDatabaseEditFolders.js", "../dialogs/Dialog.js", "../components/Cell.js", "../forms/GenericFormRename.js", "../language.js"], function (_export, _context) {
   "use strict";
 
-  var PAGE_SIZES, SOURCE_TREE, getFieldMap, MenuPack, Pagination, Video, FormVideosSource, FormVideosGrouping, FormVideosSearch, FormVideosSort, GroupView, FormPropertyEditSelectedValues, FormVideosKeywordsToProperty, FormSelectedVideosEditProperty, Collapsable, Cross, MenuItem, MenuItemCheck, MenuItemRadio, Menu, Selector, Action, Actions, ActionToMenuItem, ActionToSettingIcon, ActionToCross, backend_error, python_call, FancyBox, HomePage, FormDatabaseEditFolders, Dialog, Cell, FormNewPredictionProperty, GenericFormRename, LangContext, VideosPage;
+  var getFieldMap, PAGE_SIZES, SOURCE_TREE, MenuPack, Pagination, Video, FormVideosSource, FormVideosGrouping, FormVideosSearch, FormVideosSort, GroupView, FormPropertyEditSelectedValues, FormVideosKeywordsToProperty, FormSelectedVideosEditProperty, Collapsable, Cross, MenuItem, MenuItemCheck, MenuItemRadio, Menu, Selector, Action, Actions, ActionToMenuItem, ActionToSettingIcon, ActionToCross, backend_error, python_call, FancyBox, HomePage, FormDatabaseEditFolders, Dialog, Cell, GenericFormRename, LangContext, VideosPage;
 
   function compareSources(sources1, sources2) {
     if (sources1.length !== sources2.length) return false;
@@ -27,9 +27,9 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
 
   return {
     setters: [function (_utilsConstantsJs) {
+      getFieldMap = _utilsConstantsJs.getFieldMap;
       PAGE_SIZES = _utilsConstantsJs.PAGE_SIZES;
       SOURCE_TREE = _utilsConstantsJs.SOURCE_TREE;
-      getFieldMap = _utilsConstantsJs.getFieldMap;
     }, function (_componentsMenuPackJs) {
       MenuPack = _componentsMenuPackJs.MenuPack;
     }, function (_componentsPaginationJs) {
@@ -89,8 +89,6 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
       Dialog = _dialogsDialogJs.Dialog;
     }, function (_componentsCellJs) {
       Cell = _componentsCellJs.Cell;
-    }, function (_formsFormNewPredictionPropertyJs) {
-      FormNewPredictionProperty = _formsFormNewPredictionPropertyJs.FormNewPredictionProperty;
     }, function (_formsGenericFormRenameJs) {
       GenericFormRename = _formsGenericFormRenameJs.GenericFormRename;
     }, function (_languageJs) {
@@ -160,10 +158,6 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           this.canOpenRandomVideo = this.canOpenRandomVideo.bind(this);
           this.canOpenRandomPlayer = this.canOpenRandomPlayer.bind(this);
           this.canFindSimilarVideos = this.canFindSimilarVideos.bind(this);
-          this.createPredictionProperty = this.createPredictionProperty.bind(this);
-          this.populatePredictionProperty = this.populatePredictionProperty.bind(this);
-          this.computePredictionProperty = this.computePredictionProperty.bind(this);
-          this.applyPrediction = this.applyPrediction.bind(this);
           this.sourceIsSet = this.sourceIsSet.bind(this);
           this.groupIsSet = this.groupIsSet.bind(this);
           this.searchIsSet = this.searchIsSet.bind(this);
@@ -188,7 +182,6 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           const groupedByMoves = groupDef && groupDef.field === "move_id";
           const stringSetProperties = this.getStringSetProperties(this.state.properties);
           const stringProperties = this.getStringProperties(this.state.properties);
-          const predictionProperties = this.getPredictionProperties(this.state.properties);
           const actions = this.getActions().actions;
           const aFilterIsSet = this.sourceIsSet() || this.groupIsSet() || this.searchIsSet() || this.sortIsSet();
           const status = this.getStatus();
@@ -267,22 +260,6 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           }, this.context.action_group_videos_by_property.format({
             name: def.name
           })))), /*#__PURE__*/React.createElement(MenuPack, {
-            title: this.context.menu_predictors
-          }, /*#__PURE__*/React.createElement(MenuItem, {
-            action: this.createPredictionProperty
-          }, this.context.action_create_prediction_property), /*#__PURE__*/React.createElement(MenuItem, {
-            action: this.populatePredictionProperty
-          }, this.context.action_populate_prediction_property_manually), predictionProperties.length ? /*#__PURE__*/React.createElement(Menu, {
-            title: this.context.menu_compute_prediction
-          }, predictionProperties.map((def, i) => /*#__PURE__*/React.createElement(MenuItem, {
-            key: i,
-            action: () => this.computePredictionProperty(def.name)
-          }, def.name))) : "", predictionProperties.length ? /*#__PURE__*/React.createElement(Menu, {
-            title: this.context.menu_apply_prediction
-          }, predictionProperties.map((def, i) => /*#__PURE__*/React.createElement(MenuItem, {
-            key: i,
-            action: () => this.applyPrediction(def.name)
-          }, def.name))) : ""), /*#__PURE__*/React.createElement(MenuPack, {
             title: this.context.menu_navigation
           }, /*#__PURE__*/React.createElement(Menu, {
             title: this.context.menu_navigation_videos
@@ -515,28 +492,6 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             previousPage: new Action("Ctrl+ArrowLeft", this.context.action_go_to_previous_page, this.previousPage, Fancybox.isInactive),
             nextPage: new Action("Ctrl+ArrowRight", this.context.action_go_to_next_page, this.nextPage, Fancybox.isInactive)
           }, this.context);
-        }
-
-        createPredictionProperty() {
-          Fancybox.load( /*#__PURE__*/React.createElement(FormNewPredictionProperty, {
-            onClose: name => {
-              this.backend(["create_prediction_property", name]);
-            }
-          }));
-        }
-
-        populatePredictionProperty() {
-          Fancybox.load( /*#__PURE__*/React.createElement(FancyBox, {
-            title: this.context.form_title_populate_predictor_manually
-          }, this.context.form_content_populate_predictor_manually.markdown()));
-        }
-
-        computePredictionProperty(propName) {
-          this.props.app.dbUpdate("compute_predictor", propName);
-        }
-
-        applyPrediction(propName) {
-          this.props.app.dbUpdate("apply_predictor", propName);
         }
 
         sourceIsSet() {
@@ -966,10 +921,6 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
 
         getStringProperties(definitions) {
           return definitions.filter(def => def.type === "str");
-        }
-
-        getPredictionProperties(definitions) {
-          return definitions.filter(def => def.name.indexOf("<?") === 0 && def.name.indexOf(">") === def.name.length - 1 && def.type === "int" && def.defaultValue === -1 && !def.multiple && arrayEquals(def.enumeration, [-1, 0, 1]));
         }
         /**
          * @param indicesSet {Set}

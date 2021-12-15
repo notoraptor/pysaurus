@@ -2,8 +2,7 @@ import {App} from "./App.js";
 import {FancyboxManager} from "./utils/FancyboxManager.js";
 import {Callbacks} from "./utils/Callbacks.js";
 import {python_call} from "./utils/backend.js";
-import {IdGenerator} from "./utils/functions.js";
-import {formatString} from "./utils/functions.js";
+import {formatString, IdGenerator} from "./utils/functions.js";
 import {markdownToReact} from "./utils/markdown.js";
 
 String.prototype.format = function (kwargs) {

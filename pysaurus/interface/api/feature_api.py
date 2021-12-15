@@ -273,9 +273,6 @@ class FeatureAPI:
         self.database.add_prop_type(PropType(prop_name, prop_default, prop_multiple))
         return self.get_prop_types()
 
-    def create_prediction_property(self, prop_name):
-        self.database.add_prop_type(PropType(f"<?{prop_name}>", [-1, 0, 1]))
-
     def delete_prop_type(self, name):
         self.database.remove_prop_type(name)
         return self.get_prop_types()
