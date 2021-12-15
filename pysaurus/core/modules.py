@@ -107,9 +107,7 @@ class System:
 
     @staticmethod
     def get_exe_basename(name):
-        if System.is_windows():
-            return f"{name}.exe"
-        return name
+        return f"{name}.exe" if System.is_windows() else name
 
 
 class VideoClipping:

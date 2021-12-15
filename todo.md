@@ -37,6 +37,7 @@ Features:
 - Allow user to add shortcuts (under Shift control, e.g. "Shift + N") to either:
   - set a unique property
   - add a value to a multiple property
+- Add an option "save to playlist" to save current view into a playlist.
 
 Optimizations:
 - Memory leaks in python code when running gui ?
