@@ -1,7 +1,7 @@
-System.register(["../utils/backend.js", "../language.js"], function (_export, _context) {
+System.register(["../utils/backend.js", "../components/PathsInput.js", "../language.js"], function (_export, _context) {
   "use strict";
 
-  var backend_error, python_call, LangContext, DatabasesPage;
+  var backend_error, python_call, PathsInput, LangContext, DatabasesPage;
 
   _export("DatabasesPage", void 0);
 
@@ -9,6 +9,8 @@ System.register(["../utils/backend.js", "../language.js"], function (_export, _c
     setters: [function (_utilsBackendJs) {
       backend_error = _utilsBackendJs.backend_error;
       python_call = _utilsBackendJs.python_call;
+    }, function (_componentsPathsInputJs) {
+      PathsInput = _componentsPathsInputJs.PathsInput;
     }, function (_languageJs) {
       LangContext = _languageJs.LangContext;
     }],
@@ -20,7 +22,7 @@ System.register(["../utils/backend.js", "../language.js"], function (_export, _c
           super(props);
           this.state = {
             name: "",
-            paths: new Set(),
+            paths: [],
             update: true
           };
           this.onChangeName = this.onChangeName.bind(this);
@@ -31,6 +33,7 @@ System.register(["../utils/backend.js", "../language.js"], function (_export, _c
           this.openDatabase = this.openDatabase.bind(this);
           this.onChangeUpdate = this.onChangeUpdate.bind(this);
           this.onChangeLanguage = this.onChangeLanguage.bind(this);
+          this.onUpdatePaths = this.onUpdatePaths.bind(this);
         }
 
         render() {
@@ -65,22 +68,12 @@ System.register(["../utils/backend.js", "../language.js"], function (_export, _c
             value: this.state.name,
             onChange: this.onChangeName,
             placeholder: this.context.gui_database_name_placeholder
-          })), /*#__PURE__*/React.createElement("h3", null, this.context.gui_database_paths), /*#__PURE__*/React.createElement("table", {
-            className: "w-100 table-layout-fixed"
-          }, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
-            className: "block",
-            onClick: this.addFolder
-          }, this.context.gui_database_add_folder)), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
-            className: "block",
-            onClick: this.addFile
-          }, this.context.gui_database_add_file)))), /*#__PURE__*/React.createElement("table", {
-            className: "w-100 table-layout-fixed"
-          }, paths.map((path, index) => /*#__PURE__*/React.createElement("tr", {
-            key: index
-          }, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("code", null, path)), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
-            className: "block",
-            onClick: () => this.removePath(path)
-          }, "-"))))), /*#__PURE__*/React.createElement("div", {
+          })), /*#__PURE__*/React.createElement("h3", null, this.context.gui_database_paths), /*#__PURE__*/React.createElement("div", {
+            className: "vertical new-paths"
+          }, /*#__PURE__*/React.createElement(PathsInput, {
+            onUpdate: this.onUpdatePaths,
+            data: this.state.paths
+          })), /*#__PURE__*/React.createElement("div", {
             className: "p-1"
           }, /*#__PURE__*/React.createElement("button", {
             className: "block",
@@ -163,6 +156,12 @@ System.register(["../utils/backend.js", "../language.js"], function (_export, _c
 
         openDatabase(path) {
           this.props.app.dbUpdate("open_database", path, this.state.update);
+        }
+
+        onUpdatePaths(paths) {
+          this.setState({
+            paths
+          });
         }
 
       });

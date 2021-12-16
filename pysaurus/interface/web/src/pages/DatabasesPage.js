@@ -1,4 +1,5 @@
 import {backend_error, python_call} from "../utils/backend.js";
+import {PathsInput} from "../components/PathsInput.js";
 import {LangContext} from "../language.js";
 
 export class DatabasesPage extends React.Component {
@@ -8,7 +9,7 @@ export class DatabasesPage extends React.Component {
         super(props);
         this.state = {
             name: "",
-            paths: new Set(),
+            paths: [],
             update: true,
         };
         this.onChangeName = this.onChangeName.bind(this);
@@ -19,6 +20,7 @@ export class DatabasesPage extends React.Component {
         this.openDatabase = this.openDatabase.bind(this);
         this.onChangeUpdate = this.onChangeUpdate.bind(this);
         this.onChangeLanguage = this.onChangeLanguage.bind(this);
+        this.onUpdatePaths = this.onUpdatePaths.bind(this);
     }
 
     render() {
@@ -52,28 +54,9 @@ export class DatabasesPage extends React.Component {
                                        placeholder={this.context.gui_database_name_placeholder}/>
                             </div>
                             <h3>{this.context.gui_database_paths}</h3>
-                            <table className="w-100 table-layout-fixed">
-                                <tr>
-                                    <td>
-                                        <button className="block" onClick={this.addFolder}>
-                                            {this.context.gui_database_add_folder}
-                                        </button>
-                                    </td>
-                                    <td>
-                                        <button className="block" onClick={this.addFile}>
-                                            {this.context.gui_database_add_file}
-                                        </button>
-                                    </td>
-                                </tr>
-                            </table>
-                            <table className="w-100 table-layout-fixed">{paths.map((path, index) => (
-                                <tr key={index}>
-                                    <td><code>{path}</code></td>
-                                    <td>
-                                        <button className="block" onClick={() => this.removePath(path)}>-</button>
-                                    </td>
-                                </tr>
-                            ))}</table>
+                            <div className="vertical new-paths">
+                            <PathsInput onUpdate={this.onUpdatePaths} data={this.state.paths}/>
+                            </div>
                             <div className="p-1">
                                 <button className="block" onClick={this.createDatabase}>
                                     {this.context.gui_database_button_create}
@@ -156,6 +139,10 @@ export class DatabasesPage extends React.Component {
 
     openDatabase(path) {
         this.props.app.dbUpdate("open_database", path, this.state.update);
+    }
+
+    onUpdatePaths(paths) {
+        this.setState({paths});
     }
 }
 DatabasesPage.contextType = LangContext;

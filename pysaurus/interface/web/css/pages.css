@@ -1,3 +1,7 @@
+#databases .new-paths {
+	min-height: 10rem;
+}
+
 #databases td {
 	padding: 0.25rem;
 }

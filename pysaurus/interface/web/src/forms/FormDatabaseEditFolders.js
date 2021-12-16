@@ -1,6 +1,6 @@
 import {Dialog} from "../dialogs/Dialog.js";
-import {backend_error, python_call} from "../utils/backend.js";
 import {LangContext} from "../language.js";
+import {PathsInput} from "../components/PathsInput.js";
 
 export class FormDatabaseEditFolders extends React.Component {
     constructor(props) {
@@ -8,84 +8,36 @@ export class FormDatabaseEditFolders extends React.Component {
         // onClose(paths)
         super(props);
         this.state = {
-            paths: new Set(this.props.database.folders)
+            paths: this.props.database.folders.slice()
         }
+        this.onUpdate = this.onUpdate.bind(this);
         this.onClose = this.onClose.bind(this);
-        this.removePath = this.removePath.bind(this);
-        this.addFolder = this.addFolder.bind(this);
-        this.addFile = this.addFile.bind(this);
     }
 
     render() {
-        const database = this.props.database;
-        const paths = Array.from(this.state.paths);
-        paths.sort();
         return (
-            <Dialog title={this.context.form_title_edit_database_folders.format({count: paths.length, name: database.name})}
-                    yes={this.context.text_save}
-                    action={this.onClose}>
-                <div className="form-database-edit-folders vertical flex-grow-1">
-                    <table className="table-layout-fixed">
-                        <tr>
-                            <td>
-                                <button className="block" onClick={this.addFolder}>{this.context.gui_database_add_folder}</button>
-                            </td>
-                            <td>
-                                <button className="block" onClick={this.addFile}>{this.context.gui_database_add_file}</button>
-                            </td>
-                        </tr>
-                    </table>
-                    <div className="paths flex-grow-1 overflow-auto">
-                        <table className="table-layout-fixed">
-                            {paths.map((path, index) => (
-                                <tr key={index}>
-                                    <td><code>{path}</code></td>
-                                    <td>
-                                        <button className="block" onClick={() => this.removePath(path)}>-</button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </table>
-                    </div>
-                </div>
+            <Dialog
+                title={
+                    this.context.form_title_edit_database_folders.format(
+                        {count: this.state.paths.length, name: this.props.database.name}
+                    )
+                }
+                yes={this.context.text_save}
+                action={this.onClose}>
+                <PathsInput onUpdate={this.onUpdate} data={this.state.paths}/>
             </Dialog>
         );
     }
 
-    removePath(path) {
-        const paths = new Set(this.state.paths);
-        paths.delete(path);
+    onUpdate(paths) {
         this.setState({paths});
     }
 
-    addFolder() {
-        python_call("select_directory")
-            .then(directory => {
-                if (directory) {
-                    const paths = new Set(this.state.paths);
-                    paths.add(directory);
-                    this.setState({paths});
-                }
-            })
-            .catch(backend_error);
-    }
-
-    addFile() {
-        python_call("select_file")
-            .then(file => {
-                if (file) {
-                    const paths = new Set(this.state.paths);
-                    paths.add(file);
-                    this.setState({paths});
-                }
-            })
-            .catch(backend_error);
-    }
-
     onClose() {
-        this.props.onClose(Array.from(this.state.paths));
+        this.props.onClose(this.state.paths);
     }
 }
+
 FormDatabaseEditFolders.contextType = LangContext;
 FormDatabaseEditFolders.propTypes = {
     database: PropTypes.shape({
