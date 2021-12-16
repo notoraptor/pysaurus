@@ -127,6 +127,13 @@ class PysaurusQtApplication(QWebEngineView):
         print("Loading", url)
         with open(html_path.path) as file:
             html = file.read()
+        html = html.replace(
+            "<!--headerScript-->",
+            '<script src="qrc:///qtwebchannel/qwebchannel.js"></script>',
+        )
+        html = html.replace(
+            '<script src="onload.js"></script>', '<script src="qt.js"></script>'
+        )
         self.web_page = CustomPage()
         self.web_page.setHtml(html, url)
         self.setPage(self.web_page)
