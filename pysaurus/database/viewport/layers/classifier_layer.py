@@ -65,7 +65,7 @@ class ClassifierLayer(Layer):
                 else:
                     field_value = [video.properties.get(cache.field, prop_type.default)]
             else:
-                field_value = [getattr(video, cache.field)]
+                field_value = [None]
             for value in field_value:
                 if cache.contains_key(value):
                     groups.append(cache.lookup(value))
