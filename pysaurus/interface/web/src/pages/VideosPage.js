@@ -221,6 +221,20 @@ export class VideosPage extends React.Component {
                                 </MenuItem>
                             ))
                         )}
+                        {stringProperties.length ? (
+                            <Menu title={this.context.text_convert_to_lowercase}>
+                                {stringProperties.map((def, defIndex) => (
+                                    <MenuItem key={defIndex} action={() => this.propToLowercase(def)}>{def.name}</MenuItem>
+                                ))}
+                            </Menu>
+                        ) : ""}
+                        {stringProperties.length ? (
+                            <Menu title={this.context.text_convert_to_uppercase}>
+                                {stringProperties.map((def, defIndex) => (
+                                    <MenuItem key={defIndex} action={() => this.propToUppercase(def)}>{def.name}</MenuItem>
+                                ))}
+                            </Menu>
+                        ) : ""}
                     </MenuPack>
                     <MenuPack title={this.context.menu_navigation}>
                         <Menu title={this.context.menu_navigation_videos}>
@@ -984,6 +998,14 @@ export class VideosPage extends React.Component {
 
     classifierConcatenate(outputPropertyName) {
         this.backend(['classifier_concatenate_path', outputPropertyName], {pageNumber: 0});
+    }
+
+    propToLowercase(def) {
+        this.backend(["prop_to_lowercase", def.name]);
+    }
+
+    propToUppercase(def) {
+        this.backend(["prop_to_uppercase", def.name]);
     }
 
     focusPropertyValue(propertyName, propertyValue) {

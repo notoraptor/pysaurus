@@ -1,8 +1,9 @@
-from pysaurus.core.classes import StringPrinter, Text, TextWithNumbers
+from pysaurus.core.classes import StringPrinter, Text
 from pysaurus.core.compare import to_comparable
 from pysaurus.core.components import AbsolutePath, DateModified, FileSize
 from pysaurus.core.constants import PYTHON_ERROR_THUMBNAIL
 from pysaurus.core.functions import class_get_public_attributes, string_to_pieces
+from pysaurus.database.semantic_text import SemanticText
 from pysaurus.database.video_runtime_info import VideoRuntimeInfo
 from pysaurus.database.video_sorting import VideoSorting
 
@@ -71,7 +72,7 @@ class VideoState:
     extension = property(lambda self: self.filename.extension)
     file_title = property(lambda self: Text(self.filename.file_title))
     file_title_numeric = property(
-        lambda self: TextWithNumbers(self.filename.file_title)
+        lambda self: SemanticText(self.filename.file_title)
     )
     size = property(lambda self: FileSize(self.file_size))
     day = property(lambda self: self.date.day)

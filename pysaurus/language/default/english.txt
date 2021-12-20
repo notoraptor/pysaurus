@@ -66,8 +66,6 @@ action_reload_database
 	Reload database ...
 action_rename_database
 	Rename database "{name}" ...
-action_rename_video
-	Rename video
 action_reset_similarity
 	Reset similarity
 action_reverse_path
@@ -120,6 +118,8 @@ attr_file_title_numeric
 	file title (with numbers)
 attr_filename
 	file path
+attr_filename_numeric
+	file path (with numbers)
 attr_frame_rate
 	frame rate
 attr_height
@@ -172,17 +172,17 @@ form_confirm_convert_to_unique_property
 	Are you sure you want to convert to unique property "{name}"?
 form_content_confirm_delete_database
 	## Are you sure you want to delete this database?
-
+	
 	### Database entries and thumbnails will be deleted.
-
+	
 	### Video files won't be touched.
 form_content_confirm_unique_moves
 	# Are you sure you want to confirm all unique moves?
-
+	
 	## Each not found video which has one unique other found video with same size and duration will be moved to the later. Properties and variable attributes will be copied from not found to found video, and not found video entry will be deleted.
 form_content_delete_prop_val
 	### Are you sure you want to delete property value
-
+	
 	### "{name}" / {value} ?
 form_content_delete_property
 	Are you sure you want to delete property "{name}"?
@@ -192,38 +192,38 @@ form_content_move_prop_val
 	Move property "{name}" / {value} to another property of type "{type}".
 form_content_new_prediction_property
 	# Property name:
-
+	
 	## Final name will be `<?{property name}>`
 form_content_populate_predictor_manually
 	Set:
-
+	
 	- **1** for video thumbnails that match what you expect
 	- **0** for video thumbnails that don't match what you expect
 	- **-1** (default) for videos to ignore
-
+	
 	Prediction computation will only use videos tagged with **1** and **0**,
 	so you don't need to tag all of them.
-
+	
 	There is however some good practices:
-
+	
 	- Tag enough videos with **0** and **1** (e.g. 20 videos)
 	- Try to tag same amount of videos for **0** and for **1** (e.g. 10 videos each)
-
+	
 	Once done, move you can compute prediction.
 form_content_reset_similarity
 	## Are you sure you want to reset similarity for this video?
-
+	
 	### Video will then be re-compared at next similarity search
 form_content_search_videos
 	Type text to search and choose how to search.
-
+	
 	You can also type text and then press enter
 	to automatically select "AND" as search method.
 form_content_sort_videos
 	Click on "+" to add a new sorting criterion.
-
+	
 	Click on "-" to remove a sorting criterion.
-
+	
 	Click on "sort" to validate, or close dialog to cancel.
 form_convert_to_multiple_property_yes
 	convert to multiple
@@ -269,6 +269,8 @@ form_title_rename_database
 	Rename database "{name}"
 form_title_rename_property
 	Rename property "{name}"?
+form_title_rename_video
+	Rename video
 form_title_search_videos
 	Search videos
 form_title_sort_videos
@@ -517,6 +519,10 @@ text_choose_language
 	Language
 text_confirm_move_to
 	Confirm move to
+text_convert_to_lowercase
+	Convert values to lowercase for ...
+text_convert_to_uppercase
+	Convert values to uppercase for ...
 text_create
 	create
 text_current
@@ -631,8 +637,12 @@ text_rename_database
 	Rename database
 text_rename_property
 	Rename property
+text_rename_video
+	Rename video
 text_reset
 	reset
+text_save
+	save
 text_searched
 	Searched {text}
 text_select
@@ -663,8 +673,6 @@ text_videos
 	video(s)
 text_videos_selected
 	{count} / {total} video(s)
-texte_save
-	save
 word_all
 	all
 word_cancel

@@ -264,6 +264,12 @@ class FeatureAPI:
     def rename_database(self, name):
         self.database.rename(name)
 
+    def prop_to_lowercase(self, prop_name):
+        self.database.prop_to_lowercase(prop_name)
+
+    def prop_to_uppercase(self, prop_name):
+        self.database.prop_to_uppercase(prop_name)
+
     def add_prop_type(self, prop_name, prop_type, prop_default, prop_multiple):
         if prop_type == "float":
             if isinstance(prop_default, list):

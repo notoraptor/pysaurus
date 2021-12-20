@@ -23,6 +23,9 @@ Bugs:
 - Cannot force kill a Python thread.
 - We read some duration as a negative too big number,
   while vlc detects real duration correctly.
+- videos terms detection sometimes split words that contains uppercases, but those words should not be split.
+  - E.g. "FiLM" must not be split in "Dragon Ball Z - FiLM x 01 - A la poursuite de Garlic MULTi 1080p BluRay x265 - KHAYA"
+- If selected videos are emptied, it prints "selected -1 /0"
 
 Features:
 - Remember entry edition and add an option to sort by date edited.

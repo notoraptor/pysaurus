@@ -57,7 +57,7 @@ class Application:
                 else:
                     path.copy_file_to(user_path)
                     self.languages[user_path] = None
-                    print("Installed embedded lamguage", path.title)
+                    print("Installed embedded language", path.title)
         # Load config file.
         if self.config_path.exists():
             assert self.config_path.isfile()

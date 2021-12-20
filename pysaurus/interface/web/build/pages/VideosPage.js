@@ -259,7 +259,17 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             action: () => this.backendGroupVideos(def.name, true)
           }, this.context.action_group_videos_by_property.format({
             name: def.name
-          })))), /*#__PURE__*/React.createElement(MenuPack, {
+          }))), stringProperties.length ? /*#__PURE__*/React.createElement(Menu, {
+            title: this.context.text_convert_to_lowercase
+          }, stringProperties.map((def, defIndex) => /*#__PURE__*/React.createElement(MenuItem, {
+            key: defIndex,
+            action: () => this.propToLowercase(def)
+          }, def.name))) : "", stringProperties.length ? /*#__PURE__*/React.createElement(Menu, {
+            title: this.context.text_convert_to_uppercase
+          }, stringProperties.map((def, defIndex) => /*#__PURE__*/React.createElement(MenuItem, {
+            key: defIndex,
+            action: () => this.propToUppercase(def)
+          }, def.name))) : ""), /*#__PURE__*/React.createElement(MenuPack, {
             title: this.context.menu_navigation
           }, /*#__PURE__*/React.createElement(Menu, {
             title: this.context.menu_navigation_videos
@@ -1000,6 +1010,14 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           this.backend(['classifier_concatenate_path', outputPropertyName], {
             pageNumber: 0
           });
+        }
+
+        propToLowercase(def) {
+          this.backend(["prop_to_lowercase", def.name]);
+        }
+
+        propToUppercase(def) {
+          this.backend(["prop_to_uppercase", def.name]);
         }
 
         focusPropertyValue(propertyName, propertyValue) {

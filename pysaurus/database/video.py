@@ -13,13 +13,14 @@ Video class. Properties:
 
 from typing import Sequence, Set
 
-from pysaurus.core.classes import Text, TextWithNumbers
+from pysaurus.core.classes import Text
 from pysaurus.core.components import AbsolutePath, Duration
 from pysaurus.core.functions import (
     html_to_title,
-    string_to_pieces,
+    string_to_pieces
 )
 from pysaurus.database import path_utils
+from pysaurus.database.semantic_text import SemanticText
 from pysaurus.database.video_state import VideoState
 
 
@@ -239,7 +240,8 @@ class Video(VideoState):
         if self.meta_title
         else self.file_title_numeric
     )
-    meta_title_numeric = property(lambda self: TextWithNumbers(self.meta_title.value))
+    filename_numeric = property(lambda self: SemanticText(self.filename.path))
+    meta_title_numeric = property(lambda self: SemanticText(self.meta_title.value))
     raw_seconds = property(lambda self: self.duration / self.duration_time_base)
     raw_microseconds = property(
         lambda self: self.duration * 1000000 / self.duration_time_base

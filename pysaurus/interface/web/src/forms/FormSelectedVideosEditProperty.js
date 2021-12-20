@@ -18,7 +18,7 @@ export class FormSelectedVideosEditProperty extends React.Component {
             current: current,
             add: [],
             remove: [],
-            value: null
+            value: this.getDefaultValue()
         };
         this.onEdit = this.onEdit.bind(this);
         this.onEditKeyDown = this.onEditKeyDown.bind(this);
@@ -125,19 +125,30 @@ export class FormSelectedVideosEditProperty extends React.Component {
         ));
     }
 
+    getDefaultValue() {
+        const def = this.props.definition;
+        if (def.enumeration)
+            return def.enumeration[0];
+        if (def.type === "bool")
+            return "false";
+        if (def.type === "int")
+            return "0";
+        return "";
+    }
+
     renderFormAdd() {
         const def = this.props.definition;
         let input;
         if (def.enumeration) {
             input = (
-                <select onChange={this.onEdit}>
+                <select onChange={this.onEdit} value={this.state.value}>
                     {def.enumeration.map((value, valueIndex) =>
                         <option key={valueIndex} value={value}>{value}</option>)}
                 </select>
             );
         } else if (def.type === "bool") {
             input = (
-                <select onChange={this.onEdit}>
+                <select onChange={this.onEdit} value={this.state.value}>
                     <option value="false">false</option>
                     <option value="true">true</option>
                 </select>
@@ -145,6 +156,7 @@ export class FormSelectedVideosEditProperty extends React.Component {
         } else {
             input = <input type={def.type === "int" ? "number" : "text"}
                            onChange={this.onEdit}
+                           value={this.state.value}
                            onKeyDown={this.onEditKeyDown}/>;
         }
         return (
@@ -181,13 +193,13 @@ export class FormSelectedVideosEditProperty extends React.Component {
                 add.add(this.state.value);
                 const output = Array.from(add);
                 output.sort();
-                this.setState({add: output});
+                this.setState({add: output, value: this.getDefaultValue()});
             } else {
                 const add = [this.state.value];
                 const current = [];
                 const remove = Array.from(this.getMapping().keys());
                 remove.sort();
-                this.setState({remove, current, add});
+                this.setState({remove, current, add, value: this.getDefaultValue()});
             }
         }
     }

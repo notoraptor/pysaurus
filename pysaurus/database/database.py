@@ -320,6 +320,7 @@ class Database:
                     "title_numeric",
                     "file_title",
                     "file_title_numeric",
+                    "filename_numeric",
                     "disk",
                     "filename",
                 )
@@ -916,6 +917,34 @@ class Database:
             values = video.terms(as_set=True)
             values.update(video.properties.get(prop_name, ()))
             video.properties[prop_name] = prop_type(values)
+        self.save()
+        self.__notifier.notify(notifications.PropertiesModified([prop_name]))
+
+    def prop_to_lowercase(self, prop_name):
+        prop_type = self.get_prop_type(prop_name)
+        assert prop_type.type is str
+        for video in self.get_videos("readable"):
+            if prop_name in video.properties:
+                if prop_type.multiple:
+                    video.properties[prop_name] = sorted(
+                        set(value.strip().lower() for value in video.properties[prop_name])
+                    )
+                else:
+                    video.properties[prop_name] = video.properties[prop_name].strip().lower()
+        self.save()
+        self.__notifier.notify(notifications.PropertiesModified([prop_name]))
+
+    def prop_to_uppercase(self, prop_name):
+        prop_type = self.get_prop_type(prop_name)
+        assert prop_type.type is str
+        for video in self.get_videos("readable"):
+            if prop_name in video.properties:
+                if prop_type.multiple:
+                    video.properties[prop_name] = sorted(
+                        set(value.strip().upper() for value in video.properties[prop_name])
+                    )
+                else:
+                    video.properties[prop_name] = video.properties[prop_name].strip().upper()
         self.save()
         self.__notifier.notify(notifications.PropertiesModified([prop_name]))
 

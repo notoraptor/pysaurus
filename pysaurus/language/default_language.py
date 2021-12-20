@@ -108,6 +108,7 @@ class DefaultLanguage:
     attr_file_title = "file title"
     attr_file_title_numeric = "file title (with numbers)"
     attr_filename = "file path"
+    attr_filename_numeric = "file path (with numbers)"
     attr_frame_rate = "frame rate"
     attr_height = "height"
     attr_length = "length"
@@ -453,3 +454,6 @@ Click on "sort" to validate, or close dialog to cancel.
         "not found video entry will be deleted.",
     )
     form_title_rename_video = "Rename video"
+
+    text_convert_to_lowercase = "Convert values to lowercase for ..."
+    text_convert_to_uppercase = "Convert values to uppercase for ..."

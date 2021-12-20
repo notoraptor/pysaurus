@@ -33,7 +33,7 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js", "../language.j
             current: current,
             add: [],
             remove: [],
-            value: null
+            value: this.getDefaultValue()
           };
           this.onEdit = this.onEdit.bind(this);
           this.onEditKeyDown = this.onEditKeyDown.bind(this);
@@ -147,20 +147,30 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js", "../language.j
           }, value)));
         }
 
+        getDefaultValue() {
+          const def = this.props.definition;
+          if (def.enumeration) return def.enumeration[0];
+          if (def.type === "bool") return "false";
+          if (def.type === "int") return "0";
+          return "";
+        }
+
         renderFormAdd() {
           const def = this.props.definition;
           let input;
 
           if (def.enumeration) {
             input = /*#__PURE__*/React.createElement("select", {
-              onChange: this.onEdit
+              onChange: this.onEdit,
+              value: this.state.value
             }, def.enumeration.map((value, valueIndex) => /*#__PURE__*/React.createElement("option", {
               key: valueIndex,
               value: value
             }, value)));
           } else if (def.type === "bool") {
             input = /*#__PURE__*/React.createElement("select", {
-              onChange: this.onEdit
+              onChange: this.onEdit,
+              value: this.state.value
             }, /*#__PURE__*/React.createElement("option", {
               value: "false"
             }, "false"), /*#__PURE__*/React.createElement("option", {
@@ -170,6 +180,7 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js", "../language.j
             input = /*#__PURE__*/React.createElement("input", {
               type: def.type === "int" ? "number" : "text",
               onChange: this.onEdit,
+              value: this.state.value,
               onKeyDown: this.onEditKeyDown
             });
           }
@@ -210,7 +221,8 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js", "../language.j
               const output = Array.from(add);
               output.sort();
               this.setState({
-                add: output
+                add: output,
+                value: this.getDefaultValue()
               });
             } else {
               const add = [this.state.value];
@@ -220,7 +232,8 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js", "../language.j
               this.setState({
                 remove,
                 current,
-                add
+                add,
+                value: this.getDefaultValue()
               });
             }
           }
