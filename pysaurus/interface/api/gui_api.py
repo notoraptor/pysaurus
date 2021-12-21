@@ -4,7 +4,6 @@ import threading
 import time
 from abc import abstractmethod
 from typing import Callable, Dict, Optional, Sequence
-from pysaurus.database.properties import PropType
 
 from pysaurus.application import exceptions
 from pysaurus.core.components import AbsolutePath
@@ -22,6 +21,7 @@ from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
 from pysaurus.database import pattern_detection
 from pysaurus.database.database_features import DatabaseFeatures
+from pysaurus.database.properties import PropType
 from pysaurus.database.viewport.video_provider import VideoProvider
 from pysaurus.interface.api import tk_utils
 from pysaurus.interface.api.feature_api import FeatureAPI
@@ -175,12 +175,14 @@ class GuiAPI(FeatureAPI):
         self.provider = VideoProvider(self.database)
         if update:
             self._update_database()
+        self.database.update_video_languages()
 
     def _open_database(self, path: str, update: bool):
         self.database = self.application.open_database(path)
         self.provider = VideoProvider(self.database)
         if update:
             self._update_database()
+        self.database.update_video_languages()
 
     def _update_database(self):
         self.database.refresh(ensure_miniatures=False)

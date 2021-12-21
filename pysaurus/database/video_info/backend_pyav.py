@@ -3,9 +3,10 @@ import sys
 
 import av
 
+from pysaurus.core.jsonable import Jsonable
 from pysaurus.database.video import Video
 
-M = Video.LONG_TO_MIN
+M = Video.LONG_TO_MIN.copy()
 M["errors"] = "e"
 M["filename"] = "f"
 M["file_size"] = "s"
@@ -19,7 +20,7 @@ def open_video(filename):
         return av.open(filename, metadata_encoding="latin-1")
 
 
-def get_infos(filename):
+def get_info(filename):
     try:
         with open_video(filename) as container:
             _video_streams = container.streams.video
@@ -113,7 +114,7 @@ def backend_video_infos(job):
     count = len(file_names)
     arr = []
     for i, file_name in enumerate(file_names):
-        arr.append(get_infos(file_name))
+        arr.append(get_info(file_name))
         job_notifier.progress(job_id, i + 1, count)
     return arr
 
@@ -130,3 +131,42 @@ def backend_video_thumbnails(job):
             arr_errors.append(d_err)
         job_notifier.progress(job_id, i + 1, count)
     return arr_errors
+
+
+class StreamInfo(Jsonable):
+    lang_code = ""
+    short_name = ""
+    long_name = ""
+
+
+class StreamsInfo:
+
+    def __init__(self, *, audio=(), subtitle=()):
+        self.audio = audio
+        self.subtitle = subtitle
+
+    @classmethod
+    def get(cls, filename):
+        with open_video(filename) as container:
+            return cls(
+                audio=[
+                    StreamInfo(
+                        lang_code=audio_stream.language,
+                        short_name=audio_stream.codec_context.codec.name,
+                        long_name=audio_stream.codec_context.codec.long_name
+                    ) for audio_stream in container.streams.audio
+                ],
+                subtitle=[
+                    StreamInfo(
+                        lang_code=subtitle_stream.language,
+                        short_name=subtitle_stream.codec_context.codec.name,
+                        long_name=subtitle_stream.codec_context.codec.long_name
+                    )
+                    for subtitle_stream in container.streams.subtitles
+                ]
+            )
+
+    def __str__(self):
+        return f"audio {self.audio} subtitle {self.subtitle}"
+
+    __repr__ = __str__

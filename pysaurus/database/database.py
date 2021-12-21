@@ -330,6 +330,17 @@ class Database:
     # Public methods.
 
     @Profiler.profile_method()
+    def update_video_languages(self):
+        jln = job_notifications.CollectVideoStreamLanguages(
+            len(self.__videos), self.__notifier
+        )
+        for i, video in enumerate(self.__videos.values()):
+            if video.readable:
+                video.get_stream_languages()
+            jln.progress(None, i + 1, len(self.__videos))
+        self.save()
+
+    @Profiler.profile_method()
     def update(self) -> None:
         SpecialProperties.install(self)
         current_date = DateModified.now()

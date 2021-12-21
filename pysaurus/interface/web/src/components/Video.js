@@ -157,6 +157,10 @@ export class Video extends React.Component {
                             <strong className={cc(common.length)}>{data.length}</strong> | <code
                             className={cc(common.date)}>{data.date}</code>
                         </div>
+                        <div>
+                            <strong>Audio</strong>: {data.audio_languages.length ? data.audio_languages.join(", ") : "(none)"} |{" "}
+                            <strong>Subtitles</strong>: {data.subtitle_languages.length ? data.subtitle_languages.join(", ") : "(none)"}
+                        </div>
                         {!groupedBySimilarityID ? (
                             <div>
                                 <strong>{this.context.text_similarity_id}:</strong>{" "}

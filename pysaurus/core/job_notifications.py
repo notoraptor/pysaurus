@@ -72,6 +72,11 @@ class CollectVideoInfos(JobNotifications):
     __kind__ = "videos"
 
 
+class CollectVideoStreamLanguages(JobNotifications):
+    __slots__ = ()
+    __kind__ = "stream languages"
+
+
 class CollectVideoThumbnails(JobNotifications):
     __slots__ = ()
     __kind__ = "videos"

@@ -10,7 +10,7 @@ Video class. Properties:
 
     (number of seconds) = duration / duration_time_base
 """
-
+import sys
 from typing import Sequence, Set
 
 from pysaurus.core.classes import Text
@@ -49,6 +49,8 @@ class Video(VideoState):
         "sample_rate",
         "similarity_id",
         "_thumb_name",
+        "_audio_languages",
+        "_subtitle_languages",
         "video_codec",
         "video_codec_description",
         "width",
@@ -58,6 +60,7 @@ class Video(VideoState):
         "A": "audio_codec_description",
         "C": "channels",
         "D": "bit_depth",
+        "L": "subtitle_languages",
         "S": "similarity_id",
         "V": "video_codec_description",
         "a": "audio_codec",
@@ -66,6 +69,7 @@ class Video(VideoState):
         "d": "duration",
         "h": "height",
         "i": "thumb_name",
+        "l": "audio_languages",
         "n": "meta_title",
         "p": "properties",
         "r": "audio_bit_rate",
@@ -121,6 +125,8 @@ class Video(VideoState):
         video_codec="",
         video_codec_description="",
         width=0,
+        audio_languages=None,
+        subtitle_languages=None
     ):
         """
         :type database: pysaurus.core.database.database.Database
@@ -149,6 +155,8 @@ class Video(VideoState):
         :type video_codec: str
         :type video_codec_description: str
         :type width: int
+        :type audio_languages: list|tuple
+        :type subtitle_languages: list|tuple
         """
         if from_dictionary:
             audio_bit_rate = from_dictionary.get(
@@ -195,6 +203,8 @@ class Video(VideoState):
                 self.LONG_TO_MIN["video_codec_description"], video_codec_description
             )
             width = from_dictionary.get(self.LONG_TO_MIN["width"], width)
+            audio_languages = from_dictionary.get(self.LONG_TO_MIN["audio_languages"], audio_languages)
+            subtitle_languages = from_dictionary.get(self.LONG_TO_MIN["subtitle_languages"], subtitle_languages)
         super(Video, self).__init__(
             filename=filename,
             size=size,
@@ -220,6 +230,8 @@ class Video(VideoState):
         self.video_codec = Text(video_codec)
         self.video_codec_description = Text(video_codec_description)
         self.width = width
+        self._audio_languages = audio_languages
+        self._subtitle_languages = subtitle_languages
         self._thumb_name = thumb_name  # may change when updating thumbnails
         self.similarity_id = similarity_id  # may change due to similarity search
         self.properties = {}  # may change on properties update
@@ -284,6 +296,28 @@ class Video(VideoState):
     @thumb_name.setter
     def thumb_name(self, value):
         self._thumb_name = value
+
+    @property
+    def audio_languages(self):
+        return self._audio_languages
+
+    @property
+    def subtitle_languages(self):
+        return self._subtitle_languages
+
+    def get_stream_languages(self):
+        if (
+            self._audio_languages is not None
+            and None not in self._audio_languages
+            and self._subtitle_languages is not None
+            and None not in self._subtitle_languages
+        ):
+            return
+        from pysaurus.database.video_info.backend_pyav import StreamsInfo
+        print("[stream languages]", self.filename, file=sys.stderr)
+        info = StreamsInfo.get(self.filename.path)
+        self._audio_languages = [stream.lang_code for stream in info.audio if stream.lang_code is not None]
+        self._subtitle_languages = [stream.lang_code for stream in info.subtitle if stream.lang_code is not None]
 
     def terms(self, as_set=False):
         term_sources = [self.filename.path, str(self.meta_title)]
