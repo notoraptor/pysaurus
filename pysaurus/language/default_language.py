@@ -362,7 +362,7 @@ Set:
 - **0** for video thumbnails that don't match what you expect
 - **-1** (default) for videos to ignore
 
-Prediction computation will only use videos tagged with **1** and **0**, 
+Prediction computation will only use videos tagged with **1** and **0**,
 so you don't need to tag all of them.
 
 There is however some good practices:
@@ -434,7 +434,7 @@ Once done, move you can compute prediction.
     form_content_search_videos = """
 Type text to search and choose how to search.
 
-You can also type text and then press enter 
+You can also type text and then press enter
 to automatically select "AND" as search method.
 """
     form_title_sort_videos = "Sort videos"

@@ -71,9 +71,7 @@ class VideoState:
 
     extension = property(lambda self: self.filename.extension)
     file_title = property(lambda self: Text(self.filename.file_title))
-    file_title_numeric = property(
-        lambda self: SemanticText(self.filename.file_title)
-    )
+    file_title_numeric = property(lambda self: SemanticText(self.filename.file_title))
     size = property(lambda self: FileSize(self.file_size))
     day = property(lambda self: self.date.day)
     # runtime attributes

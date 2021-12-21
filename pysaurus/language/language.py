@@ -4,7 +4,8 @@ from pysaurus.language.default_language import DefaultLanguage
 
 class Language(DefaultLanguage):
     __slots__ = class_get_public_attributes(DefaultLanguage, wrapper=tuple) + (
-        "__language__", "__updated__"
+        "__language__",
+        "__updated__",
     )
 
     def __init__(self, dct, name):

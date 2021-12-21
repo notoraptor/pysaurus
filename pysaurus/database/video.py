@@ -15,10 +15,7 @@ from typing import Sequence, Set
 
 from pysaurus.core.classes import Text
 from pysaurus.core.components import AbsolutePath, Duration
-from pysaurus.core.functions import (
-    html_to_title,
-    string_to_pieces
-)
+from pysaurus.core.functions import html_to_title, string_to_pieces
 from pysaurus.database import path_utils
 from pysaurus.database.semantic_text import SemanticText
 from pysaurus.database.video_state import VideoState
@@ -126,7 +123,7 @@ class Video(VideoState):
         video_codec_description="",
         width=0,
         audio_languages=None,
-        subtitle_languages=None
+        subtitle_languages=None,
     ):
         """
         :type database: pysaurus.core.database.database.Database
@@ -203,8 +200,12 @@ class Video(VideoState):
                 self.LONG_TO_MIN["video_codec_description"], video_codec_description
             )
             width = from_dictionary.get(self.LONG_TO_MIN["width"], width)
-            audio_languages = from_dictionary.get(self.LONG_TO_MIN["audio_languages"], audio_languages)
-            subtitle_languages = from_dictionary.get(self.LONG_TO_MIN["subtitle_languages"], subtitle_languages)
+            audio_languages = from_dictionary.get(
+                self.LONG_TO_MIN["audio_languages"], audio_languages
+            )
+            subtitle_languages = from_dictionary.get(
+                self.LONG_TO_MIN["subtitle_languages"], subtitle_languages
+            )
         super(Video, self).__init__(
             filename=filename,
             size=size,
@@ -314,10 +315,15 @@ class Video(VideoState):
         ):
             return
         from pysaurus.database.video_info.backend_pyav import StreamsInfo
+
         print("[stream languages]", self.filename, file=sys.stderr)
         info = StreamsInfo.get(self.filename.path)
-        self._audio_languages = [stream.lang_code for stream in info.audio if stream.lang_code is not None]
-        self._subtitle_languages = [stream.lang_code for stream in info.subtitle if stream.lang_code is not None]
+        self._audio_languages = [
+            stream.lang_code for stream in info.audio if stream.lang_code is not None
+        ]
+        self._subtitle_languages = [
+            stream.lang_code for stream in info.subtitle if stream.lang_code is not None
+        ]
 
     def terms(self, as_set=False):
         term_sources = [self.filename.path, str(self.meta_title)]

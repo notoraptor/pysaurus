@@ -42,7 +42,9 @@ class Application:
             if path.isfile() and path.extension == "txt":
                 self.languages[path] = None
         # Load default languages names.
-        for entry in FileSystem.scandir(os.path.join(package_dir(), "language", "default")):
+        for entry in FileSystem.scandir(
+            os.path.join(package_dir(), "language", "default")
+        ):
             path = AbsolutePath(entry.path)
             if path.isfile() and path.extension == "txt":
                 print("Checking embedded language", path.title)
@@ -66,7 +68,9 @@ class Application:
         lang_path = AbsolutePath.join(self.lang_dir, f"{self.config.language}.txt")
         if lang_path not in self.languages:
             if self.config.language == DefaultLanguage.__language__:
-                print("[Default language]", DefaultLanguage.__language__, file=sys.stderr)
+                print(
+                    "[Default language]", DefaultLanguage.__language__, file=sys.stderr
+                )
                 dff_dump(language_to_dict(DefaultLanguage, extend=False), lang_path)
             else:
                 raise exceptions.MissingLanguageFile(self.config.language)
@@ -81,7 +85,9 @@ class Application:
 
     @property
     def lang(self) -> DefaultLanguage:
-        return self.languages[AbsolutePath.join(self.lang_dir, f"{self.config.language}.txt")]
+        return self.languages[
+            AbsolutePath.join(self.lang_dir, f"{self.config.language}.txt")
+        ]
 
     def get_database_paths(self) -> List[AbsolutePath]:
         return sorted(self.databases.keys())

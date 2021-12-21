@@ -140,7 +140,6 @@ class StreamInfo(Jsonable):
 
 
 class StreamsInfo:
-
     def __init__(self, *, audio=(), subtitle=()):
         self.audio = audio
         self.subtitle = subtitle
@@ -153,17 +152,18 @@ class StreamsInfo:
                     StreamInfo(
                         lang_code=audio_stream.language,
                         short_name=audio_stream.codec_context.codec.name,
-                        long_name=audio_stream.codec_context.codec.long_name
-                    ) for audio_stream in container.streams.audio
+                        long_name=audio_stream.codec_context.codec.long_name,
+                    )
+                    for audio_stream in container.streams.audio
                 ],
                 subtitle=[
                     StreamInfo(
                         lang_code=subtitle_stream.language,
                         short_name=subtitle_stream.codec_context.codec.name,
-                        long_name=subtitle_stream.codec_context.codec.long_name
+                        long_name=subtitle_stream.codec_context.codec.long_name,
                     )
                     for subtitle_stream in container.streams.subtitles
-                ]
+                ],
             )
 
     def __str__(self):

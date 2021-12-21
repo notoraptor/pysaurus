@@ -938,10 +938,15 @@ class Database:
             if prop_name in video.properties:
                 if prop_type.multiple:
                     video.properties[prop_name] = sorted(
-                        set(value.strip().lower() for value in video.properties[prop_name])
+                        set(
+                            value.strip().lower()
+                            for value in video.properties[prop_name]
+                        )
                     )
                 else:
-                    video.properties[prop_name] = video.properties[prop_name].strip().lower()
+                    video.properties[prop_name] = (
+                        video.properties[prop_name].strip().lower()
+                    )
         self.save()
         self.__notifier.notify(notifications.PropertiesModified([prop_name]))
 
@@ -952,10 +957,15 @@ class Database:
             if prop_name in video.properties:
                 if prop_type.multiple:
                     video.properties[prop_name] = sorted(
-                        set(value.strip().upper() for value in video.properties[prop_name])
+                        set(
+                            value.strip().upper()
+                            for value in video.properties[prop_name]
+                        )
                     )
                 else:
-                    video.properties[prop_name] = video.properties[prop_name].strip().upper()
+                    video.properties[prop_name] = (
+                        video.properties[prop_name].strip().upper()
+                    )
         self.save()
         self.__notifier.notify(notifications.PropertiesModified([prop_name]))
 
