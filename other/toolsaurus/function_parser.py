@@ -4,8 +4,8 @@ import textwrap
 import typing
 from typing import Callable, Dict, Optional
 
+from other.toolsaurus.functions import is_instance_from_module
 from pysaurus.core.classes import StringPrinter
-from toolsaurus.functions import is_instance_from_module
 
 
 class _ArgumentParserError(Exception):

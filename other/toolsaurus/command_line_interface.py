@@ -2,7 +2,7 @@ import shlex
 import sys
 import traceback
 
-from toolsaurus.function_parser import FunctionParser
+from other.toolsaurus.function_parser import FunctionParser
 
 
 def command_line_interface(console_parser: FunctionParser):

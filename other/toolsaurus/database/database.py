@@ -2,7 +2,6 @@ from typing import List, Optional
 
 import ujson as json
 
-import toolsaurus.application.exceptions
 from pysaurus.core import notifications
 from pysaurus.core.components import AbsolutePath, PathType
 from pysaurus.core.modules import System
@@ -54,7 +53,7 @@ class ExtendedDatabase(Database):
         if filename in self.__videos:
             return self.__videos[filename]
         if required:
-            raise toolsaurus.application.exceptions.UnknownVideoFilename(filename)
+            raise other.toolsaurus.application.exceptions.UnknownVideoFilename(filename)
         return None
 
     def get_unreadable_from_filename(self, filename, required=True):
@@ -70,7 +69,7 @@ class ExtendedDatabase(Database):
             assert video.unreadable
             return video
         if required:
-            raise toolsaurus.application.exceptions.UnknownVideoID(video_id)
+            raise other.toolsaurus.application.exceptions.UnknownVideoID(video_id)
         return None
 
     def remove_videos_not_found(self):

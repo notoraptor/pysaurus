@@ -1,11 +1,14 @@
 import os
 from typing import Dict, List, Tuple
 
+import other.toolsaurus.functions
 import pysaurus.application.application
 import pysaurus.application.utils
-import toolsaurus.application.exceptions
-import toolsaurus.database.database
-import toolsaurus.functions
+from other.toolsaurus.command_line_interface import command_line_interface
+from other.toolsaurus.database.database import ExtendedDatabase
+from other.toolsaurus.function_parser import FunctionParser, fdef, fsigned
+from other.toolsaurus.functions import generate_temp_file_path
+from other.toolsaurus.printable import to_column, to_table
 from pysaurus.core import functions
 from pysaurus.core.classes import StringPrinter
 from pysaurus.core.components import AbsolutePath, Duration, FileSize
@@ -14,16 +17,11 @@ from pysaurus.database.video import Video
 from pysaurus.database.video_features import VideoFeatures
 from pysaurus.database.video_sorting import VideoSorting
 from pysaurus.database.viewport.viewtools.search_def import SearchDef
-from toolsaurus.command_line_interface import command_line_interface
-from toolsaurus.database.database import ExtendedDatabase
-from toolsaurus.function_parser import FunctionParser, fdef, fsigned
-from toolsaurus.functions import generate_temp_file_path
-from toolsaurus.printable import to_column, to_table
 
 TEST_LIST_FILE_PATH = AbsolutePath(
     os.path.join(
         pysaurus.application.utils.package_dir(),
-        "../../pysaurus",
+        "../../../pysaurus",
         "..",
         ".local",
         ".local",
@@ -65,7 +63,7 @@ class API:
     @fsigned
     def nb_pages(self, query: str, page_size: int) -> int:
         if page_size <= 0:
-            raise toolsaurus.application.exceptions.InvalidPageSize(page_size)
+            raise other.toolsaurus.application.exceptions.InvalidPageSize(page_size)
         count = self.nb(query)
         return (count // page_size) + bool(count % page_size)
 
@@ -256,14 +254,14 @@ class API:
     @fsigned
     def rename(self, video_id: int, new_title: str) -> int:
         if new_title is None or not str(new_title):
-            raise toolsaurus.application.exceptions.MissingVideoNewTitle()
+            raise other.toolsaurus.application.exceptions.MissingVideoNewTitle()
         self.database.change_video_file_title(video_id, str(new_title))
         return video_id
 
     @fsigned
     def rename_from_filename(self, filename: str, new_title: str) -> (str, str):
         if new_title is None or not str(new_title):
-            raise toolsaurus.application.exceptions.MissingVideoNewTitle()
+            raise other.toolsaurus.application.exceptions.MissingVideoNewTitle()
         video = self.database.get_video_from_filename(filename)  # type: Video
         self.database.change_video_file_title(video.video_id, str(new_title))
         return video.filename.path, video.filename.file_title
@@ -290,16 +288,16 @@ class API:
     @fsigned
     def find_batch(self, path: str) -> List[Tuple[str, List[Video]]]:
         results = []
-        for sentence in toolsaurus.database.database.load_list_file(path):
+        for sentence in other.toolsaurus.database.database.load_list_file(path):
             results.append((sentence, self.find(sentence)))
         return results
 
     @fsigned
     def list(self, fields: str, page_size: int, page_number: int) -> List[Video]:
         if page_size <= 0:
-            raise toolsaurus.application.exceptions.InvalidPageSize(page_size)
+            raise other.toolsaurus.application.exceptions.InvalidPageSize(page_size)
         if page_number < 0:
-            raise toolsaurus.application.exceptions.InvalidPageNumber(page_number)
+            raise other.toolsaurus.application.exceptions.InvalidPageNumber(page_number)
         sorting = VideoSorting(fields)
         videos = sorted(
             self.database.get_valid_videos(),
@@ -417,7 +415,7 @@ class API:
             key=lambda video: video.filename,
         )
 
-    @fdef(toolsaurus.functions.bool_type)
+    @fdef(other.toolsaurus.functions.bool_type)
     def update(self, ensure_miniatures=False):
         self.database.refresh(ensure_miniatures)
 
