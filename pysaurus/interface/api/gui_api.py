@@ -175,14 +175,12 @@ class GuiAPI(FeatureAPI):
         self.provider = VideoProvider(self.database)
         if update:
             self._update_database()
-        self.database.update_video_languages()
 
     def _open_database(self, path: str, update: bool):
         self.database = self.application.open_database(path)
         self.provider = VideoProvider(self.database)
         if update:
             self._update_database()
-        self.database.update_video_languages()
 
     def _update_database(self):
         self.database.refresh(ensure_miniatures=False)

@@ -330,15 +330,14 @@ class Database:
     # Public methods.
 
     @Profiler.profile_method()
-    def update_video_languages(self):
+    def update_video_languages(self, videos: List[Video]):
         jln = job_notifications.CollectVideoStreamLanguages(
-            len(self.__videos), self.__notifier
+            len(videos), self.__notifier
         )
-        for i, video in enumerate(self.__videos.values()):
-            if video.readable:
-                video.get_stream_languages()
-            jln.progress(None, i + 1, len(self.__videos))
-        self.save()
+        for i, video in enumerate(videos):
+            assert video.readable
+            video.get_stream_languages()
+            jln.progress(None, i + 1, len(videos))
 
     @Profiler.profile_method()
     def update(self) -> None:
@@ -399,6 +398,7 @@ class Database:
         assert len(videos) == len(all_file_names)
 
         if videos:
+            self.update_video_languages(list(videos.values()))
             self.__videos.update(videos)
             self.__date = current_date
             self.save()

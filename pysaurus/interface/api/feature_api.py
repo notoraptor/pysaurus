@@ -4,7 +4,7 @@ from typing import Optional
 from pysaurus.application.application import Application
 from pysaurus.core import notifications
 from pysaurus.core.components import Duration, FileSize
-from pysaurus.core.functions import compute_nb_pages, identity
+from pysaurus.core.functions import compute_nb_pages
 from pysaurus.database.database import Database
 from pysaurus.database.properties import PropType
 from pysaurus.database.video import Video
@@ -12,10 +12,6 @@ from pysaurus.database.video_features import VideoFeatures
 from pysaurus.database.viewport.layers.source_layer import SourceLayer
 from pysaurus.database.viewport.video_provider import VideoProvider
 from pysaurus.language.default_language import language_to_dict
-
-
-def get_video_id(video: Video):
-    return video.video_id
 
 
 class FeatureAPI:
@@ -36,9 +32,8 @@ class FeatureAPI:
     def _parse_video_selector(self, selector: dict, return_videos=False):
         if selector["all"]:
             exclude = set(selector["exclude"])
-            getter = identity if return_videos else get_video_id
             output = [
-                getter(video)
+                (video if return_videos else video.video_id)
                 for video in self.provider.get_view()
                 if video.video_id not in exclude
             ]
