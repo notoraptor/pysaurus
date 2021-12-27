@@ -87,6 +87,10 @@ class VideoState:
     with_thumbnails = ClassFlag(lambda self: self.has_thumbnail)
     without_thumbnails = ClassFlag(lambda self: not self.has_thumbnail)
 
+    def get_thumb_name(self):
+        from pysaurus.database import path_utils
+        return path_utils.generate_thumb_name(self.filename)
+
     @property
     def unreadable_thumbnail(self):
         return PYTHON_ERROR_THUMBNAIL in self.errors

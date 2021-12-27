@@ -114,6 +114,8 @@ class Database:
     thumbnail_folder = property(lambda self: self.__thumb_folder)
     notifier = property(lambda self: self.__notifier)
     iteration = property(lambda self: self.__save_id)
+    date = property(lambda self: self.__date)
+    settings = property(lambda self: self.__settings)
 
     # Private methods.
 

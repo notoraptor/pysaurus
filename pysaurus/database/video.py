@@ -146,7 +146,7 @@ class Video(VideoState):
         :type height: int
         :type meta_title: str
         :type properties: dict
-        :type sample_rate: float
+        :type sample_rate: int
         :type similarity_id: int, optional
         :type thumb_name: str
         :type video_codec: str

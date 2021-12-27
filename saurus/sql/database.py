@@ -1,6 +1,5 @@
 import os
 import sqlite3
-from datetime import datetime
 
 
 class Database:
@@ -43,6 +42,16 @@ class Database:
         values = [kwargs[column] for column in columns]
         return self.modify(
             f"INSERT INTO {table} ({', '.join(columns)}) "
+            f"VALUES ({', '.join('?' * len(columns))})",
+            values,
+        )
+
+    def insert_or_ignore(self, table: str, **kwargs):
+        """Insert a row in a table and return new row ID."""
+        columns = list(kwargs)
+        values = [kwargs[column] for column in columns]
+        return self.modify(
+            f"INSERT OR IGNORE INTO {table} ({', '.join(columns)}) "
             f"VALUES ({', '.join('?' * len(columns))})",
             values,
         )
@@ -115,11 +124,3 @@ class Database:
             where_parameters,
         )
         return self.cursor.fetchone()[0]
-
-    @classmethod
-    def date_to_timestamp(cls, date: str) -> int:
-        return round(datetime.strptime(date, "%Y-%m-%d").timestamp())
-
-    @classmethod
-    def timestamp_to_date(cls, timestamp: int) -> str:
-        return datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d")
