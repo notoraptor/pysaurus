@@ -1,7 +1,8 @@
-from pysaurus.application.application import Application
+from pysaurus.application.application import Application as OldApp
 from pysaurus.database.properties import PropType
 from pysaurus.database.video import Video
 from saurus.sql import data
+from saurus.sql.application import Application as NewApp
 
 
 def old_to_new_prop(old_p: PropType) -> data.Property:
@@ -62,32 +63,31 @@ def old_to_new_video(video) -> data.Video:
             readable=video.readable,
             errors=video.errors,
             has_thumbnail=video.runtime.has_thumbnail,
-            thumb_name=video.get_thumb_name()
+            thumb_name=video.get_thumb_name(),
         )
     )
 
 
 def main():
-    app = Application()
-    for database_path in app.get_database_paths():
+    old_app = OldApp()
+    for database_path in old_app.get_database_paths():
         print("[database]", database_path.title)
-        db = app.open_database(database_path)
-        data.Application().save(
-            data.Collection(
-                name=db.folder.title,
-                date_updated=db.date.time,
-                miniature_pixel_distance_radius=db.settings.miniature_pixel_distance_radius,
-                miniature_group_min_size=db.settings.miniature_group_min_size,
-                sources=[source.path for source in db.video_folders],
-                properties={
-                    prop.name: old_to_new_prop(prop) for prop in db.get_prop_types()
-                },
-                videos={
-                    video.filename.path: old_to_new_video(video)
-                    for video in db.query({})
-                },
-            )
+        db = old_app.open_database(database_path)
+        new_app = NewApp()
+        collection = data.Collection(
+            name=db.folder.title,
+            date_updated=db.date.time,
+            miniature_pixel_distance_radius=db.settings.miniature_pixel_distance_radius,
+            miniature_group_min_size=db.settings.miniature_group_min_size,
+            sources=[source.path for source in db.video_folders],
+            properties={
+                prop.name: old_to_new_prop(prop) for prop in db.get_prop_types()
+            },
+            videos={
+                video.filename.path: old_to_new_video(video) for video in db.query({})
+            },
         )
+        new_app.db.add_collection(collection=collection)
 
 
 if __name__ == "__main__":
