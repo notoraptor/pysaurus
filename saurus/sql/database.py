@@ -14,7 +14,9 @@ class Database:
         in database at given path.
         """
         self.connection = sqlite3.connect(path)
+        self.connection.row_factory = sqlite3.Row
         self.cursor = self.connection.cursor()
+        self.cursor.arraysize = 1000
         with open(self.DATABASE_SCRIPT_FILE) as script_file:
             self.cursor.executescript(script_file.read())
             self.connection.commit()
@@ -35,6 +37,10 @@ class Database:
     def query_one(self, query, parameters=()):
         self.cursor.execute(query, parameters)
         return self.cursor.fetchone()
+
+    def query_all(self, query, parameters=()):
+        self.cursor.execute(query, parameters)
+        return self.cursor.fetchall()
 
     def insert(self, table: str, **kwargs):
         """Insert a row in a table and return new row ID."""
