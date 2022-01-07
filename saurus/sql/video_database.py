@@ -10,7 +10,7 @@ class VideoDatabase(Database):
     def add_collection(self, *, collection: data.Collection):
         # Collection
         if self.select_id_from_values(
-                "collection", "collection_id", name=collection.name
+            "collection", "collection_id", name=collection.name
         ):
             raise RuntimeError(f"Collection already exists: {collection.name}")
         collection.collection_id = self.insert(
@@ -30,10 +30,10 @@ class VideoDatabase(Database):
         # Properties
         for prop in collection.properties.values():
             if self.select_id_from_values(
-                    "property",
-                    "property_id",
-                    collection_id=collection.collection_id,
-                    name=prop.name,
+                "property",
+                "property_id",
+                collection_id=collection.collection_id,
+                name=prop.name,
             ):
                 raise RuntimeError(
                     f"Property already exists: {collection.name}/{prop.name}"
@@ -86,7 +86,7 @@ class VideoDatabase(Database):
             sample_rate=video.sample_rate,
             video_codec=video.video_codec,
             video_codec_description=video.video_codec_description,
-            width=video.width
+            width=video.width,
         )
         # video errors
         for error in video.errors:

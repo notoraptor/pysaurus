@@ -4,9 +4,7 @@ import sqlite3
 
 class Database:
     __slots__ = ("connection", "cursor")
-    DATABASE_SCRIPT_FILE = os.path.join(
-        os.path.dirname(__file__), "database.sql"
-    )
+    DATABASE_SCRIPT_FILE = os.path.join(os.path.dirname(__file__), "database.sql")
 
     def __init__(self, path: str):
         """
@@ -78,9 +76,7 @@ class Database:
         elif len(results) == 1:
             return results[0][0]
         else:
-            raise RuntimeError(
-                f"Found {len(results)} entries for {table}.{column}"
-            )
+            raise RuntimeError(f"Found {len(results)} entries for {table}.{column}")
 
     def select_id_from_values(self, table, column, **values):
         where_pieces = []
@@ -102,9 +98,7 @@ class Database:
         elif len(results) == 1:
             return results[0][0]
         else:
-            raise RuntimeError(
-                f"Found {len(results)} entries for {table}.{column}"
-            )
+            raise RuntimeError(f"Found {len(results)} entries for {table}.{column}")
 
     def count(self, table, column, where_query, where_parameters=()):
         """Select and return count from a table."""

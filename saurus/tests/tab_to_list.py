@@ -7,7 +7,7 @@ def listify(filepath):
     print("<ul>" * (depth + 1))
     for line in open(filepath):
         line = line.rstrip()
-        newDepth = sum(1 for i in itertools.takewhile(lambda c: c=='\t', line))
+        newDepth = sum(1 for i in itertools.takewhile(lambda c: c == "\t", line))
         if newDepth > depth:
             print("<ul>" * (newDepth - depth))
         elif depth > newDepth:
