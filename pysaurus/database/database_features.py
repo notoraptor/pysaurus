@@ -17,7 +17,7 @@ from pysaurus.database.miniature_tools.miniature import Miniature
 # from collections import deque
 
 try:
-    from pysaurus.database.video_similarities import alignment_raptor as backend_sim
+    from pysaurus.database.video_similarities.alignment_raptor import alignment as backend_sim
 
     has_cpp = True
 except exceptions.CysaurusUnavailable:
