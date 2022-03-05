@@ -146,7 +146,7 @@ class Video(VideoState):
         :type height: int
         :type meta_title: str
         :type properties: dict
-        :type sample_rate: float
+        :type sample_rate: int
         :type similarity_id: int, optional
         :type thumb_name: str
         :type video_codec: str
@@ -231,8 +231,8 @@ class Video(VideoState):
         self.video_codec = Text(video_codec)
         self.video_codec_description = Text(video_codec_description)
         self.width = width
-        self._audio_languages = audio_languages
-        self._subtitle_languages = subtitle_languages
+        self._audio_languages = audio_languages or []
+        self._subtitle_languages = subtitle_languages or []
         self._thumb_name = thumb_name  # may change when updating thumbnails
         self.similarity_id = similarity_id  # may change due to similarity search
         self.properties = {}  # may change on properties update

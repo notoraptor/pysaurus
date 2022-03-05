@@ -114,6 +114,8 @@ class Database:
     thumbnail_folder = property(lambda self: self.__thumb_folder)
     notifier = property(lambda self: self.__notifier)
     iteration = property(lambda self: self.__save_id)
+    date = property(lambda self: self.__date)
+    settings = property(lambda self: self.__settings)
 
     # Private methods.
 
@@ -330,15 +332,14 @@ class Database:
     # Public methods.
 
     @Profiler.profile_method()
-    def update_video_languages(self):
+    def update_video_languages(self, videos: List[Video]):
         jln = job_notifications.CollectVideoStreamLanguages(
-            len(self.__videos), self.__notifier
+            len(videos), self.__notifier
         )
-        for i, video in enumerate(self.__videos.values()):
+        for i, video in enumerate(videos):
             if video.readable:
                 video.get_stream_languages()
-            jln.progress(None, i + 1, len(self.__videos))
-        self.save()
+            jln.progress(None, i + 1, len(videos))
 
     @Profiler.profile_method()
     def update(self) -> None:
@@ -399,6 +400,7 @@ class Database:
         assert len(videos) == len(all_file_names)
 
         if videos:
+            self.update_video_languages(list(videos.values()))
             self.__videos.update(videos)
             self.__date = current_date
             self.save()
