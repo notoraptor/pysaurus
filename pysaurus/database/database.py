@@ -337,8 +337,8 @@ class Database:
             len(videos), self.__notifier
         )
         for i, video in enumerate(videos):
-            assert video.readable
-            video.get_stream_languages()
+            if video.readable:
+                video.get_stream_languages()
             jln.progress(None, i + 1, len(videos))
 
     @Profiler.profile_method()
