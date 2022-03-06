@@ -1,7 +1,6 @@
 from abc import abstractmethod
 from typing import Generic, List, TypeVar
 
-
 T = TypeVar("T")
 
 

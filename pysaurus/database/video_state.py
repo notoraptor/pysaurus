@@ -89,6 +89,7 @@ class VideoState:
 
     def get_thumb_name(self):
         from pysaurus.database import path_utils
+
         return path_utils.generate_thumb_name(self.filename)
 
     @property
