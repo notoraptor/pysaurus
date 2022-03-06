@@ -9,11 +9,9 @@ class VideoDatabase(Database):
 
     def add_collection(self, *, collection: data.Collection):
         # Collection
-        if self.select_id_from_values(
+        collection.collection_id = self.select_id_from_values(
             "collection", "collection_id", name=collection.name
-        ):
-            raise RuntimeError(f"Collection already exists: {collection.name}")
-        collection.collection_id = self.insert(
+        ) or self.insert(
             "collection",
             name=collection.name,
             date_updated=collection.date_updated,
@@ -22,44 +20,46 @@ class VideoDatabase(Database):
         )
         # Collection sources
         for source in collection.sources:
-            self.insert(
+            self.insert_or_ignore(
                 "collection_source",
                 collection_id=collection.collection_id,
                 source=source,
             )
         # Properties
         for prop in collection.properties.values():
-            if self.select_id_from_values(
-                "property",
-                "property_id",
-                collection_id=collection.collection_id,
-                name=prop.name,
-            ):
-                raise RuntimeError(
-                    f"Property already exists: {collection.name}/{prop.name}"
-                )
-            property_id = self.insert(
-                "property",
-                collection_id=collection.collection_id,
-                name=prop.name,
-                type=prop.type,
-                default_value=prop.default_value,
-            )
-            prop.property_id = property_id
-            # property enumeration
-            for i, value in enumerate(prop.enumeration):
-                self.insert(
-                    "property_enumeration",
-                    property_id=property_id,
-                    enum_value=value,
-                    rank=i,
-                )
+            self.add_property(prop=prop, collection=collection)
         # Videos
-        videos = list(collection.videos.values())
-        for index_video in tqdm(range(len(videos))):
-            self.add_video(video=videos[index_video], collection=collection)
+        for video in tqdm(list(collection.videos.values())):
+            self.add_video(video=video, collection=collection)
+
+    def add_property(self, *, prop: data.Property, collection: data.Collection):
+        # Will update prop.property_id
+        property_id = self.select_id_from_values(
+            "property",
+            "property_id",
+            collection_id=collection.collection_id,
+            name=prop.name,
+            type=prop.type,
+            default_value=prop.default_value,
+        ) or self.insert(
+            "property",
+            collection_id=collection.collection_id,
+            name=prop.name,
+            type=prop.type,
+            default_value=prop.default_value,
+        )
+        # property enumeration
+        for i, value in enumerate(prop.enumeration):
+            self.insert_or_ignore(
+                "property_enumeration",
+                property_id=property_id,
+                enum_value=value,
+                rank=i,
+            )
+        prop.property_id = property_id
 
     def add_video(self, *, video: data.Video, collection: data.Collection):
+        # Will update video.video_id
         video_id = self.select_id_from_values(
             "video", "video_id", filename=video.filename
         ) or self.insert(
@@ -109,7 +109,7 @@ class VideoDatabase(Database):
                 rank=i,
             )
         # collection to video
-        self.insert(
+        self.insert_or_ignore(
             "collection_to_video",
             collection_id=collection.collection_id,
             video_id=video_id,
@@ -121,9 +121,10 @@ class VideoDatabase(Database):
         for prop_name, prop_vals in video.properties.items():
             prop = collection.properties[prop_name]
             for value in prop_vals:
-                self.insert(
+                self.insert_or_ignore(
                     "video_property_value",
                     video_id=video_id,
                     property_id=prop.property_id,
                     property_value=value,
                 )
+        video.video_id = video_id

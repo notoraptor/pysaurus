@@ -98,7 +98,8 @@ CREATE TABLE IF NOT EXISTS collection_to_video (
 CREATE TABLE IF NOT EXISTS video_property_value (
 	video_id INTEGER REFERENCES video(video_id) ON DELETE CASCADE,
 	property_id INTEGER REFERENCES property(property_id) ON DELETE CASCADE,
-	property_value TEXT
+	property_value TEXT,
+	UNIQUE (video_id, property_id, property_value)
 );
 
 INSERT OR IGNORE INTO application (application_id) VALUES (0);

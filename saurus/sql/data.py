@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Sequence, Dict
+from typing import Dict, Sequence
 
 
 @dataclass

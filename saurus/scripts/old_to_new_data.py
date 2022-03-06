@@ -1,4 +1,5 @@
 from pysaurus.application.application import Application as OldApp
+from pysaurus.core.profiling import Profiler
 from pysaurus.database.properties import PropType
 from pysaurus.database.video import Video
 from saurus.sql import data
@@ -10,7 +11,7 @@ def old_to_new_prop(old_p: PropType) -> data.Property:
         name=old_p.name,
         type=old_p.type.__name__,
         default_value=None if old_p.multiple else old_p.default,
-        enumeration=old_p.default if old_p.is_enum() else [],
+        enumeration=old_p.definition if old_p.is_enum() else [],
     )
 
 
@@ -21,7 +22,7 @@ def old_to_new_video(video) -> data.Video:
             filename=video.filename.path,
             file_size=video.file_size,
             mtime=video.runtime.mtime,
-            driver_id=video.runtime.driver_id,
+            driver_id=(video.runtime.driver_id or 0),
             is_file=video.runtime.is_file,
             readable=video.readable,
             audio_bit_rate=video.audio_bit_rate,
@@ -69,25 +70,37 @@ def old_to_new_video(video) -> data.Video:
 
 
 def main():
+    report = []
     old_app = OldApp()
-    for database_path in old_app.get_database_paths():
-        print("[database]", database_path.title)
-        db = old_app.open_database(database_path)
-        new_app = NewApp()
-        collection = data.Collection(
-            name=db.folder.title,
-            date_updated=db.date.time,
-            miniature_pixel_distance_radius=db.settings.miniature_pixel_distance_radius,
-            miniature_group_min_size=db.settings.miniature_group_min_size,
-            sources=[source.path for source in db.video_folders],
-            properties={
-                prop.name: old_to_new_prop(prop) for prop in db.get_prop_types()
-            },
-            videos={
-                video.filename.path: old_to_new_video(video) for video in db.query({})
-            },
-        )
-        new_app.db.add_collection(collection=collection)
+    with Profiler("Adding databases"):
+        for database_path in old_app.get_database_paths():
+            db = old_app.open_database(database_path)
+            info = (database_path.title, db.nb_entries)
+            report.append(info)
+            print("[loading]", *info)
+            new_app = NewApp()
+            collection = data.Collection(
+                name=db.folder.title,
+                date_updated=db.date.time,
+                miniature_pixel_distance_radius=db.settings.miniature_pixel_distance_radius,
+                miniature_group_min_size=db.settings.miniature_group_min_size,
+                sources=[source.path for source in db.video_folders],
+                properties={
+                    prop.name: old_to_new_prop(prop) for prop in db.get_prop_types()
+                },
+                videos={
+                    video.filename.path: old_to_new_video(video)
+                    for video in db.query({})
+                },
+            )
+            with Profiler(f"Adding: {database_path.title}"):
+                new_app.db.add_collection(collection=collection)
+    print()
+    nb_total_entries = 0
+    for (title, count) in report:
+        print(title, count)
+        nb_total_entries += count
+    print("TOTAL", nb_total_entries)
 
 
 if __name__ == "__main__":
