@@ -14,7 +14,7 @@ class Application:
         self.home_dir = AbsolutePath(str(Path.home()))
         self.app_dir = AbsolutePath.join(self.home_dir, f".{self.app_name}").mkdir()
         self.db_path = AbsolutePath.join(self.app_dir, f"databases.db")
-        self.lang_dir = AbsolutePath.join(self.app_dir, "languages").mkdir()
+        self.lang_dir = AbsolutePath.join(self.app_dir, "lang").mkdir()
 
         self.db = VideoDatabase(self.db_path.path)
         row = self.db.query_one("SELECT application_id, lang FROM application")
