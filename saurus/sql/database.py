@@ -1,12 +1,10 @@
-import os
 import sqlite3
 
 
 class Database:
     __slots__ = ("connection", "cursor")
-    DATABASE_SCRIPT_FILE = os.path.join(os.path.dirname(__file__), "database.sql")
 
-    def __init__(self, path: str):
+    def __init__(self, script_path: str, path: str):
         """
         Open (or create) and populate tables (if necessary)
         in database at given path.
@@ -15,7 +13,7 @@ class Database:
         self.connection.row_factory = sqlite3.Row
         self.cursor = self.connection.cursor()
         self.cursor.arraysize = 1000
-        with open(self.DATABASE_SCRIPT_FILE) as script_file:
+        with open(script_path) as script_file:
             self.cursor.executescript(script_file.read())
             self.connection.commit()
 

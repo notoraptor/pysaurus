@@ -1,3 +1,5 @@
+import os
+
 from tqdm import tqdm
 
 from saurus.sql import data
@@ -6,6 +8,10 @@ from saurus.sql.database import Database
 
 class VideoDatabase(Database):
     __slots__ = ()
+    DATABASE_SCRIPT_FILE = os.path.join(os.path.dirname(__file__), "database.sql")
+
+    def __init__(self, path: str):
+        super().__init__(self.DATABASE_SCRIPT_FILE, path)
 
     def add_collection(self, *, collection: data.Collection):
         # Collection
