@@ -11,8 +11,8 @@
   "license": "ISC",
   "devDependencies": {
     "@babel/cli": "^7.17.6",
-    "@babel/core": "^7.17.5",
-    "@babel/plugin-transform-modules-systemjs": "^7.16.7",
+    "@babel/core": "^7.17.8",
+    "@babel/plugin-transform-modules-systemjs": "^7.17.8",
     "@babel/preset-react": "^7.16.7"
   },
   "dependencies": {}

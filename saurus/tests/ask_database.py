@@ -1,7 +1,7 @@
 import sys
 from dataclasses import dataclass
 
-from saurus.gui import frontend, theria
+from saurus.gui import frontend
 from saurus.sql.application import Application
 
 
@@ -10,13 +10,16 @@ class Collection:
     collection_id: int
     name: str
     nb_videos: int = -1
-    b: int = 2
+    b: int = 0
 
-    def open(self):
-        print("Hello", self.name)
+    def decrement(self):
+        self.b -= 1
 
-    def appart(self):
-        pass
+    def increment(self):
+        self.b += 1
+
+    def add(self, value: int = 0):
+        self.b += value
 
 
 def main():
@@ -32,9 +35,7 @@ def main():
             "SELECT COUNT(video_id) FROM collection_to_video WHERE collection_id = ?",
             [collection.collection_id],
         )[0]
-    rendering = theria.render(collections)
-    print(rendering)
-    sys.exit(frontend.gui(rendering))
+    sys.exit(frontend.gui(collections))
 
 
 if __name__ == "__main__":
