@@ -10,7 +10,6 @@ Video class. Properties:
 
     (number of seconds) = duration / duration_time_base
 """
-import sys
 from typing import Sequence, Set
 
 from pysaurus.core.classes import Text
@@ -305,25 +304,6 @@ class Video(VideoState):
     @property
     def subtitle_languages(self):
         return self._subtitle_languages
-
-    def get_stream_languages(self):
-        if (
-            self._audio_languages is not None
-            and None not in self._audio_languages
-            and self._subtitle_languages is not None
-            and None not in self._subtitle_languages
-        ):
-            return
-        from pysaurus.database.video_info.backend_pyav import StreamsInfo
-
-        print("[stream languages]", self.filename, file=sys.stderr)
-        info = StreamsInfo.get(self.filename.path)
-        self._audio_languages = [
-            stream.lang_code for stream in info.audio if stream.lang_code is not None
-        ]
-        self._subtitle_languages = [
-            stream.lang_code for stream in info.subtitle if stream.lang_code is not None
-        ]
 
     def terms(self, as_set=False):
         term_sources = [self.filename.path, str(self.meta_title)]

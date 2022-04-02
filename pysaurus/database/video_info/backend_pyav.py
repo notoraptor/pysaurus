@@ -23,12 +23,13 @@ def open_video(filename):
 def get_info(filename):
     try:
         with open_video(filename) as container:
-            _video_streams = container.streams.video
-            _audio_streams = container.streams.audio
-            if not _video_streams:
+            video_streams = container.streams.video
+            audio_streams = container.streams.audio
+            subtitle_streams = container.streams.subtitles
+            if not video_streams:
                 raise RuntimeError("ERROR_FIND_VIDEO_STREAM")
-            video_stream = _video_streams[0]
-            acc = _audio_streams[0].codec_context if _audio_streams else None
+            video_stream = video_streams[0]
+            acc = audio_streams[0].codec_context if audio_streams else None
             video_stream.codec_context.skip_frame = "NONKEY"
 
             end_reachable = False
@@ -60,6 +61,16 @@ def get_info(filename):
             d[M["container_format"]] = container.format.long_name
             d[M["video_codec"]] = video_stream.codec_context.codec.name
             d[M["video_codec_description"]] = video_stream.codec_context.codec.long_name
+            d[M["audio_languages"]] = [
+                audio_stream.language
+                for audio_stream in audio_streams
+                if audio_stream.language is not None
+            ]
+            d[M["subtitle_languages"]] = [
+                subtitle_stream.language
+                for subtitle_stream in subtitle_streams
+                if subtitle_stream.language is not None
+            ]
             if acc:
                 d[M["channels"]] = acc.channels
                 d[M["sample_rate"]] = acc.sample_rate

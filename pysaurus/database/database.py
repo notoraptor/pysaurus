@@ -103,7 +103,8 @@ class Database:
         # Load database
         self.__load(folders, clear_old_folders)
         # Set special properties
-        SpecialProperties.install(self)
+        with Profiler("install special properties", notifier=self.notifier):
+            SpecialProperties.install(self)
 
     # Properties.
 
@@ -332,16 +333,6 @@ class Database:
     # Public methods.
 
     @Profiler.profile_method()
-    def update_video_languages(self, videos: List[Video]):
-        jln = job_notifications.CollectVideoStreamLanguages(
-            len(videos), self.__notifier
-        )
-        for i, video in enumerate(videos):
-            if video.readable:
-                video.get_stream_languages()
-            jln.progress(None, i + 1, len(videos))
-
-    @Profiler.profile_method()
     def update(self) -> None:
         SpecialProperties.install(self)
         current_date = DateModified.now()
@@ -400,7 +391,6 @@ class Database:
         assert len(videos) == len(all_file_names)
 
         if videos:
-            self.update_video_languages(list(videos.values()))
             self.__videos.update(videos)
             self.__date = current_date
             self.save()
@@ -742,12 +732,13 @@ class Database:
                     video.properties[name] = [video.properties[name]]
             self.save()
 
-    def remove_prop_type(self, name) -> None:
+    def remove_prop_type(self, name, save: bool = True) -> None:
         if name in self.__prop_types:
             del self.__prop_types[name]
             for video in self.get_videos("readable"):
                 video.remove_property(name)
-            self.save()
+            if save:
+                self.save()
 
     def has_prop_type(self, name) -> bool:
         return name in self.__prop_types

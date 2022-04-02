@@ -33,8 +33,8 @@ class SpecialProperties:
                 not database.has_prop_type(expected.name)
                 or database.get_prop_type(expected.name) != expected
             ):
-                database.remove_prop_type(expected.name)
-                database.add_prop_type(expected)
+                database.remove_prop_type(expected.name, save=False)
+                database.add_prop_type(expected, save=False)
                 to_save = True
         if to_save:
             database.save()
