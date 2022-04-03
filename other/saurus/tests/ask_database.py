@@ -1,8 +1,8 @@
 import sys
 from dataclasses import dataclass
 
-from saurus.gui import frontend
-from saurus.sql.application import Application
+from other.saurus.gui import frontend
+from other.saurus.sql.application import Application
 
 
 @dataclass

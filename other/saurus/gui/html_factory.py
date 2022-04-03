@@ -30,7 +30,11 @@ class Tag:
         return self
 
     def __str__(self):
-        return self.__str_compact() if self.__repr_compact else indent_string_tree(self.tree())
+        return (
+            self.__str_compact()
+            if self.__repr_compact
+            else indent_string_tree(self.tree())
+        )
 
     def compact(self):
         self.__repr_compact = True

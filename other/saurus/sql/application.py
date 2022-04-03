@@ -2,10 +2,10 @@ from pathlib import Path
 
 from tqdm import tqdm
 
+from other.saurus.language import say
+from other.saurus.sql import data
+from other.saurus.sql.video_database import VideoDatabase
 from pysaurus.core.components import AbsolutePath
-from saurus.language import say
-from saurus.sql import data
-from saurus.sql.video_database import VideoDatabase
 
 
 class Application:
@@ -13,7 +13,7 @@ class Application:
         self.app_name = "Pysaurus"
         self.home_dir = AbsolutePath(str(Path.home()))
         self.app_dir = AbsolutePath.join(self.home_dir, f".{self.app_name}").mkdir()
-        self.db_path = AbsolutePath.join(self.app_dir, f"databases.db")
+        self.db_path = AbsolutePath.join(self.app_dir, "databases.db")
         self.lang_dir = AbsolutePath.join(self.app_dir, "lang").mkdir()
 
         self.db = VideoDatabase(self.db_path.path)
