@@ -45,8 +45,8 @@ class Video(VideoState):
         "sample_rate",
         "similarity_id",
         "_thumb_name",
-        "_audio_languages",
-        "_subtitle_languages",
+        "audio_languages",
+        "subtitle_languages",
         "video_codec",
         "video_codec_description",
         "width",
@@ -230,8 +230,8 @@ class Video(VideoState):
         self.video_codec = Text(video_codec)
         self.video_codec_description = Text(video_codec_description)
         self.width = width
-        self._audio_languages = audio_languages or []
-        self._subtitle_languages = subtitle_languages or []
+        self.audio_languages = audio_languages or []
+        self.subtitle_languages = subtitle_languages or []
         self._thumb_name = thumb_name  # may change when updating thumbnails
         self.similarity_id = similarity_id  # may change due to similarity search
         self.properties = {}  # may change on properties update
@@ -296,14 +296,6 @@ class Video(VideoState):
     @thumb_name.setter
     def thumb_name(self, value):
         self._thumb_name = value
-
-    @property
-    def audio_languages(self):
-        return self._audio_languages
-
-    @property
-    def subtitle_languages(self):
-        return self._subtitle_languages
 
     def terms(self, as_set=False):
         term_sources = [self.filename.path, str(self.meta_title)]
