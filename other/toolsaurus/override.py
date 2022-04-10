@@ -1,7 +1,7 @@
 import inspect
 
 
-class Override:
+class _Override:
     __slots__ = "mapping", "with_any", "nb_methods", "name"
 
     def __init__(self, name=None):
@@ -47,12 +47,11 @@ class Override:
         assert not self.nb_methods or (
             self.nb_methods == len(self.mapping) + len(self.with_any)
         )
-        ovr = self
 
         def wrapper(*args, **kwargs):
-            return ovr(*args, **kwargs)
+            return self(*args, **kwargs)
 
-        wrapper.override = ovr.override
+        wrapper.__override__ = self
         return wrapper
 
     def __call__(self, *args, **kwargs):
@@ -82,3 +81,41 @@ class Override:
                 ):
                     return fn(*args, **kwargs)
         raise KeyError(initial_identifier, self)
+
+
+def _get_call_scope(nb_steps: int = 1):
+    # https://stackoverflow.com/a/15669966
+    assert nb_steps > 0
+    frame = inspect.currentframe()
+    for _ in range(nb_steps):
+        frame = frame.f_back
+    # print('File {0.f_code.co_filename} and line {0.f_lineno}'.format(frame))
+    return frame.f_locals
+
+
+def override(arg):
+    def _override_decorator(function, *, stack_length=0, parent_class=None):
+        scope = _get_call_scope(stack_length + 2)
+        function_name = function.__name__
+        if function_name in scope:
+            prev = scope[function_name]
+            poly = getattr(prev, "__override__", None)
+            if poly is None:
+                poly = _Override(function_name)
+                poly.override(prev)
+        elif parent_class and hasattr(parent_class, function_name):
+            prev = getattr(parent_class, function_name)
+            poly = getattr(prev, "__override__", None)
+            if poly is None:
+                poly = _Override(function_name)
+                poly.override(prev)
+        else:
+            poly = _Override(function_name)
+        return poly.override(function)
+
+    if inspect.isclass(arg):
+        cls = arg
+        return lambda fn: _override_decorator(fn, stack_length=1, parent_class=cls)
+    elif inspect.isfunction(arg):
+        fn = arg
+        return _override_decorator(fn, stack_length=1)

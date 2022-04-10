@@ -2,7 +2,6 @@ import types
 from typing import Dict, Sequence
 
 from pysaurus.core.functions import is_valid_attribute_name
-from pysaurus.core.override import Override
 
 __fn_types__ = (
     types.FunctionType,
@@ -21,39 +20,28 @@ def is_attribute(key, value):
 class _Checker:
     __slots__ = ("default",)
 
-    __init__ = Override("_Checker.__init__")
+    def __init__(self, *args):
+        if len(args) == 0:
+            self.default = ()
+        else:
+            assert len(args) == 1
+            (value,) = args
+            self.default = None if value is None else (value,)
 
-    @__init__.override
-    def __init__(self):
-        self.default = ()
-
-    @__init__.override
-    def __init__(self, value: object):
-        self.default = None if value is None else (value,)
-
-    __call__ = Override("_Checker.__call__")
-
-    @__call__.override
-    def __call__(self):
-        return None if self.default is None else self.validate(*self.default)
-
-    @__call__.override
-    def __call__(self, value: object):
-        return None if value is self.default is None else self.validate(value)
+    def __call__(self, *args):
+        if len(args) == 0:
+            return None if self.default is None else self.validate(*self.default)
+        else:
+            assert len(args) == 1
+            (value,) = args
+            return None if value is self.default is None else self.validate(value)
 
     def __str__(self):
         return f"${type(self).__name__}" f"({', '.join(str(d) for d in self.default)})"
 
     __repr__ = __str__
 
-    validate = Override("_Checker.validate")
-
-    @validate.override
-    def validate(self):
-        raise NotImplementedError()
-
-    @validate.override
-    def validate(self, value: object):
+    def validate(self, *args):
         raise NotImplementedError()
 
     def to_dict(self, value):
@@ -68,13 +56,13 @@ class _ClassChecker(_Checker):
         super().__init__(*args)
         self.cls = cls
 
-    @_Checker.validate.override
-    def validate(self):
-        return self.cls()
-
-    @_Checker.validate.override
-    def validate(self, value: object):
-        return value if isinstance(value, self.cls) else self.cls(value)
+    def validate(self, *args):
+        if len(args) == 0:
+            return self.cls()
+        else:
+            assert len(args) == 1
+            (value,) = args
+            return value if isinstance(value, self.cls) else self.cls(value)
 
 
 class _JsonableChecker(_Checker):
@@ -93,9 +81,13 @@ class _JsonableChecker(_Checker):
         super().__init__(default)
         self.cls = cls
 
-    @_Checker.validate.override
-    def validate(self, value: object):
-        return value if isinstance(value, self.cls) else self.cls.from_dict(value)
+    def validate(self, *args):
+        if len(args) == 0:
+            return super().validate()
+        else:
+            assert len(args) == 1
+            (value,) = args
+            return value if isinstance(value, self.cls) else self.cls.from_dict(value)
 
     def to_dict(self, value):
         return value.to_dict()

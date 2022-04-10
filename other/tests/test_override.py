@@ -1,4 +1,4 @@
-from pysaurus.core.override import Override
+from other.toolsaurus.override import Override
 
 f = Override("f")
 
@@ -37,6 +37,9 @@ class A:
     @f.override
     def f(self, x: object):
         return "object"
+
+    print(locals())
+    print(globals())
 
 
 class B(A):

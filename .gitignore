@@ -9,6 +9,7 @@
 .idea
 .local
 pysaurus.egg-info
+pytest_cache
 blob_storage/
 pysaurus/interface/web/blob_storage/
 pysaurus/interface/web/webrtc_event_logs/
