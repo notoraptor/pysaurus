@@ -1,7 +1,6 @@
+import re
 import types
 from typing import Dict, Sequence
-
-from pysaurus.core.functions import is_valid_attribute_name
 
 __fn_types__ = (
     types.FunctionType,
@@ -10,11 +9,14 @@ __fn_types__ = (
     types.BuiltinFunctionType,
     types.ClassMethodDescriptorType,
     classmethod,
+    property,
 )
+
+__regex_attribute__ = re.compile(r"^[a-z][a-zA-Z0-9_]*$")
 
 
 def is_attribute(key, value):
-    return is_valid_attribute_name(key) and not isinstance(value, __fn_types__)
+    return __regex_attribute__.match(key) and not isinstance(value, __fn_types__)
 
 
 class _Checker:
@@ -104,7 +106,7 @@ class ShortFunctor:
     __slots__ = ("__to_short", "__to_long")
 
     def __init__(self, fields: Sequence[str], long_to_short: Dict[str, str]):
-        assert len(fields) == len(long_to_short)
+        assert len(fields) == len(long_to_short), (fields, long_to_short)
         assert all(field in long_to_short for field in fields)
         self.__to_short = long_to_short
         self.__to_long = {short: long for long, short in long_to_short.items()}
@@ -168,7 +170,7 @@ def gen_set(namespace: dict, key: str):
 class _MetaJSON(type):
     __slots__ = ()
 
-    def __new__(cls, name, bases, namespace):
+    def __new__(mcs, name, bases, namespace):
         assert "__definitions__" not in namespace, "Reserved attribute: __definitions__"
         annotations = namespace.get("__annotations__", {})
         attributes = {
@@ -194,16 +196,15 @@ class _MetaJSON(type):
                 assert isinstance(annotation, type)
                 definitions[key] = _get_checker(annotation)
         short = namespace.get("__short__", {})
-        shortener = (
-            ShortFunctor(tuple(definitions), short) if short else NoShortFunctor()
-        )
         namespace["__definitions__"] = {
             key: definitions[key] for key in sorted(definitions)
         }
-        namespace["__shortener__"] = shortener
+        namespace["__shortener__"] = (
+            ShortFunctor(tuple(definitions), short) if short else NoShortFunctor()
+        )
         for key in original_attributes:
             namespace[key] = property(gen_get(namespace, key), gen_set(namespace, key))
-        return type.__new__(cls, name, bases, namespace)
+        return type.__new__(mcs, name, bases, namespace)
 
 
 class Jsonable(metaclass=_MetaJSON):
@@ -233,7 +234,11 @@ class Jsonable(metaclass=_MetaJSON):
         return hash(tuple(self))
 
     def __eq__(self, other):
-        return type(self) is type(other) and all(a == b for a, b in zip(self, other))
+        return (
+            isinstance(other, Jsonable)
+            and len(self) == len(other)
+            and all(a == b for a, b in zip(self, other))
+        )
 
     def __str__(self):
         fields = ", ".join(
@@ -249,6 +254,10 @@ class Jsonable(metaclass=_MetaJSON):
         for key, checker in self.__definitions__.items():
             if key in dct:
                 self.__json__[key] = checker(dct[key])
+
+    @classmethod
+    def get_args_from(cls, dictionary: dict):
+        return {field: dictionary[field] for field in cls.__definitions__}
 
     def to_json(self):
         return self.__json__

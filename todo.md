@@ -26,6 +26,7 @@ Bugs:
 - videos terms detection sometimes split words that contains uppercases, but those words should not be split.
   - E.g. "FiLM" must not be split in "Dragon Ball Z - FiLM x 01 - A la poursuite de Garlic MULTi 1080p BluRay x265 - KHAYA"
 - If selected videos are emptied, it prints "selected -1 /0"
+- When opening grouping dialog and clicking to group button without anything else, grouping will not occure (attribute is not selected by default)
 
 Features:
 - Remember entry edition and add an option to sort by date edited.

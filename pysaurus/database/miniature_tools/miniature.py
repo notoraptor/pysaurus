@@ -3,25 +3,16 @@ from typing import Any, Optional, Tuple, Union
 
 from pysaurus.core.classes import AbstractMatrix
 from pysaurus.core.fraction import Fraction
+from pysaurus.core.jsonable import Jsonable
 from pysaurus.core.modules import ImageUtils
 
 Bytes = Union[bytes, bytearray]
 
 
-class GroupSignature:
-    __slots__ = "r", "m", "n"
-
-    def __init__(self, pixel_distance_radius: int, group_min_size: int, nb_groups: int):
-        self.r = pixel_distance_radius
-        self.m = group_min_size
-        self.n = nb_groups
-
-    def to_dict(self):
-        return self.r, self.m, self.n
-
-    @classmethod
-    def from_dict(cls, d):
-        return cls(*d)
+class GroupSignature(Jsonable):
+    r: float  # pixel_distance_radius
+    m: int  # group_min_size
+    n: int  # nb_groups
 
 
 class Miniature(AbstractMatrix):
@@ -51,7 +42,7 @@ class Miniature(AbstractMatrix):
         self, pixel_distance_radius, group_min_size: int, nb_groups: int
     ):
         self.group_signature = GroupSignature(
-            pixel_distance_radius, group_min_size, nb_groups
+            r=pixel_distance_radius, m=group_min_size, n=nb_groups
         )
 
     @property
@@ -66,6 +57,9 @@ class Miniature(AbstractMatrix):
         for i in range(len(self.r)):
             yield self.r[i], self.g[i], self.b[i]
 
+    def global_intensity(self) -> Fraction:
+        return Fraction(sum(self.r) + sum(self.g) + sum(self.b), 3 * self.size)
+
     def to_dict(self):
         return {
             "r": base64.b64encode(self.r).decode(),
@@ -76,9 +70,6 @@ class Miniature(AbstractMatrix):
             "i": self.identifier,
             "s": self.group_signature.to_dict() if self.group_signature else None,
         }
-
-    def global_intensity(self) -> Fraction:
-        return Fraction(sum(self.r) + sum(self.g) + sum(self.b), 3 * self.size)
 
     @staticmethod
     def from_dict(dct: dict):
