@@ -1,6 +1,6 @@
 import re
 import types
-from typing import Dict, Sequence
+from typing import Callable, Dict
 
 __fn_types__ = (
     types.FunctionType,
@@ -19,115 +19,156 @@ def is_attribute(key, value):
     return __regex_attribute__.match(key) and not isinstance(value, __fn_types__)
 
 
-class _Checker:
-    __slots__ = ("default",)
+class Type:
+    """
+    key = value
+        name = key, type = type(value), default = value
+    key: type = value
+        name = key, type = type, default = value (validate with type)
+    key: type
+        name = key, type = type, no default: must receive a value
+    key = None
+        name = key, type = any, default = None
+    key: type = None
+        name = key, type = type, default = None (only values are validated with type)
+    type: either
+        type
+            type ot attribute
+        short: str
+            short name of attribute
+        (type, short) or (short, type)
+            type and short name of attribute
+            If one attribute has short name, then all attributes must have short names
+    """
 
-    def __init__(self, *args):
-        if len(args) == 0:
-            self.default = ()
+    __slots__ = ("name", "short", "type", "default")
+
+    def __init__(self, name, typedef, *default):
+        assert __regex_attribute__.match(name)
+        if typedef is None:
+            short, ktype = None, None
+        elif isinstance(typedef, (tuple, list)):
+            assert len(typedef) == 2
+            v1, v2 = typedef
+            if isinstance(v1, str):
+                assert isinstance(v2, type)
+                short, ktype = v1, v2
+            else:
+                assert isinstance(v1, type)
+                assert isinstance(v2, str)
+                short, ktype = v2, v1
+        elif isinstance(typedef, str):
+            short, ktype = typedef, None
         else:
-            assert len(args) == 1
-            (value,) = args
-            self.default = None if value is None else (value,)
+            assert isinstance(typedef, type)
+            short, ktype = None, typedef
+        if default:
+            assert len(default) == 1
+            (default_value,) = default
+            if ktype is None and default_value is not None:
+                ktype = type(default_value)
+        if short is not None:
+            assert __regex_attribute__.match(short)
+        self.name = name
+        self.short = short
+        self.type = ktype
+        self.default = default
+
+    def __str__(self):
+        ret = self.name
+        if self.short:
+            ret += "(" + self.short + ")"
+        ret += ": " + (self.type.__name__ if self.type else "Any")
+        if self.default:
+            ret += f" = {self.default[0]}"
+        return ret
 
     def __call__(self, *args):
         if len(args) == 0:
-            return None if self.default is None else self.validate(*self.default)
+            return None if self.accepts_none() else self.new()
         else:
             assert len(args) == 1
             (value,) = args
-            return None if value is self.default is None else self.validate(value)
+            if value is None:
+                if not self.accepts_none():
+                    raise ValueError(f"None forbidden for attribute: {self.name}")
+                return None
+            else:
+                return self.validate(value)
 
-    def __str__(self):
-        return f"${type(self).__name__}" f"({', '.join(str(d) for d in self.default)})"
+    def accepts_none(self):
+        return self.default and self.default[0] is None
 
-    __repr__ = __str__
+    def new(self):
+        if not self.default:
+            raise ValueError(f"No default value available for attribute: {self.name}")
+        return self.validate(self.default[0])
 
-    def validate(self, *args):
-        raise NotImplementedError()
-
-    def to_dict(self, value):
+    def validate(self, value):
+        if self.type and not isinstance(value, self.type):
+            raise TypeError(f"expected type {self.type}, got {type(value)}")
         return value
 
+    def to_dict(self, value):
+        return self(value)
 
-class _ClassChecker(_Checker):
-    __slots__ = ("cls",)
 
-    def __init__(self, cls, *args):
-        assert isinstance(cls, type)
-        super().__init__(*args)
-        self.cls = cls
-
-    def validate(self, *args):
-        if len(args) == 0:
-            return self.cls()
+class JsonableType(Type):
+    def __init__(self, name, typedef, *default):
+        super().__init__(name, typedef, *default)
+        if self.type is None:
+            self.type = Jsonable
         else:
-            assert len(args) == 1
-            (value,) = args
-            return value if isinstance(value, self.cls) else self.cls(value)
+            assert issubclass(self.type, Jsonable)
 
-
-class _JsonableChecker(_Checker):
-    __slots__ = ("cls",)
-
-    def __init__(self, cls, *args):
-        assert issubclass(cls, Jsonable)
-        if args:
-            (default,) = args
-            if isinstance(default, cls):
-                default = default.to_dict()
-            else:
-                assert isinstance(default, dict) or default is None
-        else:
-            default = {}
-        super().__init__(default)
-        self.cls = cls
-
-    def validate(self, *args):
-        if len(args) == 0:
-            return super().validate()
-        else:
-            assert len(args) == 1
-            (value,) = args
-            return value if isinstance(value, self.cls) else self.cls.from_dict(value)
+    def validate(self, value):
+        if isinstance(value, self.type):
+            return value
+        assert isinstance(value, dict), type(value)
+        return self.type.from_dict(value)
 
     def to_dict(self, value):
-        return value.to_dict()
+        value = self(value)
+        return None if value is None else value.to_dict()
 
 
-def _get_checker(cls, *args):
-    if issubclass(cls, Jsonable):
-        return _JsonableChecker(cls, *args)
-    else:
-        return _ClassChecker(cls, *args)
+def _get_type(key, annotation, *default):
+    attribute_type = Type(key, annotation, *default)
+    if issubclass(attribute_type.type, Jsonable):
+        typedef = (
+            attribute_type.type
+            if attribute_type.short is None
+            else (attribute_type.type, attribute_type.short)
+        )
+        attribute_type = JsonableType(
+            attribute_type.name, typedef, *attribute_type.default
+        )
+    return attribute_type
 
 
-class ShortFunctor:
-    __slots__ = ("__to_short", "__to_long")
+class Shortener:
+    __slots__ = ("__to_short", "__to_long", "to_short", "to_long")
 
-    def __init__(self, fields: Sequence[str], long_to_short: Dict[str, str]):
-        assert len(fields) == len(long_to_short), (fields, long_to_short)
-        assert all(field in long_to_short for field in fields)
-        self.__to_short = long_to_short
-        self.__to_long = {short: long for long, short in long_to_short.items()}
-
-    def to_short(self, dct_long_keys: dict):
-        return {self.__to_short[key]: value for key, value in dct_long_keys.items()}
-
-    def from_short(self, dct_short_keys: dict):
-        return {self.__to_long[short]: value for short, value in dct_short_keys.items()}
-
-
-class NoShortFunctor:
-    __slots__ = ()
+    def __init__(self, long_to_short: Dict[str, str]):
+        self.__to_short: Dict[str, str] = {}
+        self.__to_long: Dict[str, str] = {}
+        self.to_short: Callable[[str], str] = self._neutral
+        self.to_long: Callable[[str], str] = self._neutral
+        if long_to_short:
+            self.__to_short = long_to_short
+            self.__to_long = {short: long for long, short in long_to_short.items()}
+            self.to_short = self._to_short
+            self.to_long = self._to_long
 
     @classmethod
-    def to_short(cls, dct):
-        return dct
+    def _neutral(cls, key: str) -> str:
+        return key
 
-    @classmethod
-    def from_short(cls, dct):
-        return dct
+    def _to_short(self, long: str) -> str:
+        return self.__to_short[long]
+
+    def _to_long(self, short: str) -> str:
+        return self.__to_long[short]
 
 
 def get_bases(bases: tuple):
@@ -181,27 +222,27 @@ class _MetaJSON(type):
         for base in get_bases(bases):
             definitions.update(base.__definitions__)
         for key, value in attributes.items():
-            if isinstance(value, _Checker):
+            if isinstance(value, Type):
                 assert key not in annotations
                 definitions[key] = value
             elif key in annotations:
                 annotation = annotations[key]
-                assert isinstance(annotation, type)
-                definitions[key] = _get_checker(annotation, value)
+                definitions[key] = _get_type(key, annotation, value)
             else:
-                definitions[key] = _get_checker(type(value), value)
+                definitions[key] = _get_type(key, None, value)
         for key, annotation in annotations.items():
             if key not in definitions:
                 original_attributes.append(key)
-                assert isinstance(annotation, type)
-                definitions[key] = _get_checker(annotation)
-        short = namespace.get("__short__", {})
+                definitions[key] = _get_type(key, annotation)
+        short = {jt.name: jt.short for jt in definitions.values() if jt.short}
+        if short:
+            assert len(short) == len(definitions), "short required for all or nothing"
+        else:
+            short = namespace.get("__short__", {})
         namespace["__definitions__"] = {
             key: definitions[key] for key in sorted(definitions)
         }
-        namespace["__shortener__"] = (
-            ShortFunctor(tuple(definitions), short) if short else NoShortFunctor()
-        )
+        namespace["__shortener__"] = Shortener(short)
         for key in original_attributes:
             namespace[key] = property(gen_get(namespace, key), gen_set(namespace, key))
         return type.__new__(mcs, name, bases, namespace)
@@ -268,11 +309,14 @@ class Jsonable(metaclass=_MetaJSON):
         return cls(**dct)
 
     def to_dict(self):
-        return self.__shortener__.to_short(
-            {key: self.__definitions__[key].to_dict(value) for key, value in self}
-        )
+        return {
+            self.__shortener__.to_short(key): self.__definitions__[key].to_dict(value)
+            for key, value in self
+        }
 
     @classmethod
     def from_dict(cls, dct):
         assert isinstance(dct, dict)
-        return cls(**cls.__shortener__.from_short(dct))
+        return cls(
+            **{cls.__shortener__.to_long(short): value for short, value in dct.items()}
+        )

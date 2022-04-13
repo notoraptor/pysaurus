@@ -2,18 +2,11 @@ from pysaurus.core.jsonable import Jsonable
 
 
 class VideoRuntimeInfo(Jsonable):
-    __short__ = {
-        "size": "s",
-        "mtime": "m",
-        "driver_id": "d",
-        "is_file": "f",
-        "has_thumbnail": "t",
-    }
-    size: int = 0
-    mtime: float = 0
-    driver_id: int = None
-    is_file: bool = False
-    has_thumbnail: bool = False
+    size: "s" = 0
+    mtime: "m" = 0.0
+    driver_id: (int, "d") = None
+    is_file: "f" = False
+    has_thumbnail: "t" = False
 
     @classmethod
     def ensure(cls, d):
