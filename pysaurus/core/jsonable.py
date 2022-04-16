@@ -1,6 +1,6 @@
 import re
 import types
-from typing import Callable, Dict
+from typing import Any, Callable, Dict
 
 __fn_types__ = (
     types.FunctionType,
@@ -9,10 +9,12 @@ __fn_types__ = (
     types.BuiltinFunctionType,
     types.ClassMethodDescriptorType,
     classmethod,
+    staticmethod,
     property,
 )
 
 __regex_attribute__ = re.compile(r"^[a-z][a-zA-Z0-9_]*$")
+__regex_short__ = re.compile(r"^[a-zA-Z][a-zA-Z0-9_]*$")
 
 
 def is_attribute(key, value):
@@ -21,27 +23,31 @@ def is_attribute(key, value):
 
 class Type:
     """
-    key = value
-        name = key, type = type(value), default = value
-    key: type = value
-        name = key, type = type, default = value (validate with type)
-    key: type
-        name = key, type = type, no default: must receive a value
-    key = None
-        name = key, type = any, default = None
-    key: type = None
-        name = key, type = type, default = None (only values are validated with type)
-    type: either
-        type
-            type ot attribute
-        short: str
-            short name of attribute
-        (type, short) or (short, type)
-            type and short name of attribute
-            If one attribute has short name, then all attributes must have short names
+    name: typedef = default
+        name: string, required
+        typedef: optional
+            Define attribute type and short name
+            If short not provided, set to None
+            If type not provided, set to default type
+            Typedef is either:
+                type: attribute type
+                short: str: attribute short name
+                (type, short) or (short, type): attribute type and short name
+        default: optional
+            If not provided:
+                No default allowed: value required for this attribute.
+                If type not provided, any type allowed.
+            If None:
+                None allowed as value.
+                If type not provided, any type allowed.
+            If provided:
+                Will be validated against attribute type
+                If type not provided, type is default type.
+    NB:
+        If one attribute has short name, then all attributes must have short names
     """
 
-    __slots__ = ("name", "short", "type", "default")
+    __slots__ = ("name", "short", "type", "default", "to_dict", "from_dict")
 
     def __init__(self, name, typedef, *default):
         assert __regex_attribute__.match(name)
@@ -68,11 +74,13 @@ class Type:
             if ktype is None and default_value is not None:
                 ktype = type(default_value)
         if short is not None:
-            assert __regex_attribute__.match(short)
+            assert __regex_short__.match(short)
         self.name = name
         self.short = short
         self.type = ktype
         self.default = default
+        self.to_dict = self.standard_to_dict
+        self.from_dict = self.standard_from_dict
 
     def __str__(self):
         ret = self.name
@@ -109,7 +117,10 @@ class Type:
             raise TypeError(f"expected type {self.type}, got {type(value)}")
         return value
 
-    def to_dict(self, value):
+    def standard_to_dict(self, obj, value):
+        return self(value)
+
+    def standard_from_dict(self, cls, value):
         return self(value)
 
 
@@ -124,12 +135,14 @@ class JsonableType(Type):
     def validate(self, value):
         if isinstance(value, self.type):
             return value
-        assert isinstance(value, dict), type(value)
         return self.type.from_dict(value)
 
-    def to_dict(self, value):
+    def standard_to_dict(self, obj, value):
         value = self(value)
         return None if value is None else value.to_dict()
+
+    def standard_from_dict(self, cls, value):
+        return None if value is None else self.type.from_dict(value)
 
 
 def _get_type(key, annotation, *default):
@@ -147,18 +160,18 @@ def _get_type(key, annotation, *default):
 
 
 class Shortener:
-    __slots__ = ("__to_short", "__to_long", "to_short", "to_long")
+    __slots__ = ("__to_short", "__to_long", "to_short", "from_short")
 
     def __init__(self, long_to_short: Dict[str, str]):
         self.__to_short: Dict[str, str] = {}
         self.__to_long: Dict[str, str] = {}
         self.to_short: Callable[[str], str] = self._neutral
-        self.to_long: Callable[[str], str] = self._neutral
+        self.from_short: Callable[[str], str] = self._neutral
         if long_to_short:
             self.__to_short = long_to_short
             self.__to_long = {short: long for long, short in long_to_short.items()}
             self.to_short = self._to_short
-            self.to_long = self._to_long
+            self.from_short = self._to_long
 
     @classmethod
     def _neutral(cls, key: str) -> str:
@@ -181,31 +194,43 @@ def get_bases(bases: tuple):
     return all_bases[:-2]
 
 
-def gen_get(namespace: dict, key: str):
+def generate_property(
+    namespace: Dict[str, Any], key: str, previous_properties: Dict[str, property]
+):
+    getter = None
+    setter = None
+    prev_prop = None
+    if key in previous_properties:
+        prev_prop = previous_properties[key]
+        getter = prev_prop.fget
+        setter = prev_prop.fset
+
     name_getter = f"get_{key}"
     if name_getter in namespace:
-        return namespace.pop(name_getter)
+        getter = namespace.pop(name_getter)
+    elif getter is None:
 
-    def getter(self):
-        return self.__json__[key]
+        def fn_get(self):
+            return self.__json__[key]
 
-    getter.__name__ = name_getter
+        fn_get.__name__ = name_getter
+        getter = fn_get
 
-    return getter
-
-
-def gen_set(namespace: dict, key: str):
     name_setter = f"set_{key}"
-
     if name_setter in namespace:
-        return namespace.pop(name_setter)
+        setter = namespace.pop(name_setter)
+    elif setter is None:
 
-    def setter(self, value):
-        self.__json__[key] = value
+        def fn_set(self, value):
+            self.__json__[key] = value
 
-    setter.__name__ = name_setter
+        fn_set.__name__ = name_setter
+        setter = fn_set
 
-    return setter
+    if prev_prop and prev_prop.fget is getter and prev_prop.fset is setter:
+        return prev_prop
+    else:
+        return property(getter, setter)
 
 
 class _MetaJSON(type):
@@ -218,7 +243,7 @@ class _MetaJSON(type):
             key: value for key, value in namespace.items() if is_attribute(key, value)
         }
         original_attributes = list(attributes)
-        definitions = {}
+        definitions: Dict[str, Type] = {}
         for base in get_bases(bases):
             definitions.update(base.__definitions__)
         for key, value in attributes.items():
@@ -234,17 +259,51 @@ class _MetaJSON(type):
             if key not in definitions:
                 original_attributes.append(key)
                 definitions[key] = _get_type(key, annotation)
-        short = {jt.name: jt.short for jt in definitions.values() if jt.short}
+        short = {
+            jt.name: jt.short for jt in definitions.values() if jt.short
+        } or namespace.get("__short__", {})
         if short:
-            assert len(short) == len(definitions), "short required for all or nothing"
-        else:
-            short = namespace.get("__short__", {})
+            if len(short) != len(definitions):
+                raise TypeError(
+                    f"""short required for all or nothing.
+Got:      {', '.join(sorted(short))}
+Expected: {', '.join(sorted(definitions))}
+"""
+                )
+            assert all(
+                key in short for key in definitions
+            ), "missing attributes in short"
+
+        for jt in definitions.values():
+            name_to_dict = f"to_dict_{jt.name}"
+            name_from_dict = f"from_dict_{jt.name}"
+            if name_to_dict in namespace:
+                jt.to_dict = namespace.pop(name_to_dict)
+                if isinstance(jt.to_dict, (classmethod, staticmethod)):
+                    jt.to_dict = jt.to_dict.__func__
+                assert callable(jt.to_dict)
+            if name_from_dict in namespace:
+                jt.from_dict = namespace.pop(name_from_dict)
+                if isinstance(jt.from_dict, (classmethod, staticmethod)):
+                    jt.from_dict = jt.from_dict.__func__
+                assert callable(jt.from_dict)
+
         namespace["__definitions__"] = {
             key: definitions[key] for key in sorted(definitions)
         }
         namespace["__shortener__"] = Shortener(short)
-        for key in original_attributes:
-            namespace[key] = property(gen_get(namespace, key), gen_set(namespace, key))
+
+        previous_properties = {}
+        for base in reversed(get_bases(bases)):
+            for key in definitions:
+                if hasattr(base, key):
+                    previous_properties[key] = getattr(base, key)
+        assert all(
+            isinstance(value, property) for value in previous_properties.values()
+        )
+
+        for key in definitions:
+            namespace[key] = generate_property(namespace, key, previous_properties)
         return type.__new__(mcs, name, bases, namespace)
 
 
@@ -310,13 +369,17 @@ class Jsonable(metaclass=_MetaJSON):
 
     def to_dict(self):
         return {
-            self.__shortener__.to_short(key): self.__definitions__[key].to_dict(value)
+            self.__shortener__.to_short(key): self.__definitions__[key].to_dict(
+                self, value
+            )
             for key, value in self
         }
 
     @classmethod
-    def from_dict(cls, dct):
-        assert isinstance(dct, dict)
-        return cls(
-            **{cls.__shortener__.to_long(short): value for short, value in dct.items()}
-        )
+    def from_dict(cls, dct: dict, **kwargs):
+        assert isinstance(dct, dict), type(dct)
+        params = {}
+        for short, value in dct.items():
+            key = cls.__shortener__.from_short(short)
+            params[key] = cls.__definitions__[key].from_dict(cls, value)
+        return cls(**params, **kwargs)

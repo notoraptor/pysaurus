@@ -1,4 +1,5 @@
-from typing import List, Optional
+from collections import namedtuple
+from typing import List, Optional, Sequence
 
 import ujson as json
 
@@ -111,6 +112,20 @@ class ExtendedDatabase(Database):
 
     def get_video_id(self, filename):
         return self.__videos[AbsolutePath.ensure(filename)].video_id
+
+    def get_video_field(self, video_id: int, field: str):
+        return getattr(self.__id_to_video[video_id], field)
+
+    def get_video_fields(self, video_id: int, fields: Sequence[str]) -> namedtuple:
+        cls = namedtuple("cls", fields)
+        vid = self.__id_to_video[video_id]
+        return cls(**{field: getattr(vid, field) for field in fields})
+
+    def get_video_string(self, video_id: int) -> str:
+        return str(self.__id_to_video[video_id])
+
+    def has_video_id(self, video_id: int) -> bool:
+        return video_id in self.__id_to_video
 
 
 def load_list_file(list_file_path):

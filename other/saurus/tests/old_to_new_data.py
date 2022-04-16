@@ -64,7 +64,7 @@ def old_to_new_video(video) -> data.Video:
             readable=video.readable,
             errors=video.errors,
             has_thumbnail=video.runtime.has_thumbnail,
-            thumb_name=video.get_thumb_name(),
+            thumb_name=video.thumb_name,
         )
     )
 

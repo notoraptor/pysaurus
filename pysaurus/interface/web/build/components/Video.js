@@ -411,7 +411,7 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
 
         reallyResetSimilarity() {
           python_call('reset_similarity', this.props.data.video_id).then(() => this.props.onInfo(this.context.status_video_similarity_reset.format({
-            path: this.props.date.filename
+            path: this.props.data.filename
           }), true)).catch(backend_error);
         }
 

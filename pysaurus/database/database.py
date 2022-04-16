@@ -1,8 +1,7 @@
 import os
 import sys
-from collections import namedtuple
 from multiprocessing import Pool
-from typing import Dict, Iterable, List, Optional, Sequence, Set, Union
+from typing import Dict, Iterable, List, Optional, Set, Union
 
 import ujson as json
 
@@ -28,6 +27,7 @@ from pysaurus.database.db_video_attribute import (
 )
 from pysaurus.database.miniature_tools.group_computer import GroupComputer
 from pysaurus.database.miniature_tools.miniature import Miniature
+from pysaurus.database.path_utils import flush_json_data
 from pysaurus.database.properties import PropType
 from pysaurus.database.special_properties import SpecialProperties
 from pysaurus.database.video import Video
@@ -63,7 +63,6 @@ class Database:
         "quality_attribute",
         "moves_attribute",
         "lang",
-        "__prop_parser",
         "__save_id",
         "__message",
         "__predictors",
@@ -92,7 +91,6 @@ class Database:
         self.__cache = DbCache(self)
         self.__notifier = notifier or DEFAULT_NOTIFIER
         self.__id_to_video = {}  # type: Dict[int, Union[VideoState, Video]]
-        self.__prop_parser = {}  # type: Dict[str, callable]
         self.__save_id = 0
         self.__message = None
         self.quality_attribute = QualityAttribute(self)
@@ -158,9 +156,9 @@ class Database:
         folders_tree = PathTree(self.__folders)
         for video_dict in json_dict.get("videos", ()):
             if video_dict["U"]:
-                video_state = VideoState.from_dict(video_dict, self)
+                video_state = VideoState.from_dict(video_dict)
             else:
-                video_state = Video.from_dict(video_dict, self)
+                video_state = Video.from_dict(video_dict, database=self)
             if not folders_tree.in_folders(video_state.filename):
                 video_state.discarded = True
             self.__videos[video_state.filename] = video_state
@@ -190,18 +188,12 @@ class Database:
             ),
         }
 
-        # functions.assert_data_is_serializable(json_output)
-        with open(self.__tmp_json_path_next.path, "w") as output_file:
-            json.dump(json_output, output_file)
-        self.__tmp_json_path_prev.delete()
-        if self.__json_path.isfile():
-            FileSystem.rename(self.__json_path.path, self.__tmp_json_path_prev.path)
-            assert not self.__json_path.isfile()
-            assert self.__tmp_json_path_prev.isfile()
-        FileSystem.rename(self.__tmp_json_path_next.path, self.__json_path.path)
-        assert not self.__tmp_json_path_next.exists()
-        assert self.__json_path.isfile()
-
+        flush_json_data(
+            json_output,
+            self.__tmp_json_path_prev,
+            self.__json_path,
+            self.__tmp_json_path_next,
+        )
         self.__notifier.notify(notifications.DatabaseSaved(self))
 
     @staticmethod
@@ -369,7 +361,7 @@ class Database:
                     )
                     unreadable.append(video_state)
                 else:
-                    video_state = Video.from_dict(d, self)
+                    video_state = Video.from_dict(d, database=self)
                     # Get previous properties, if available
                     if file_path in self.__videos and self.__videos[file_path].readable:
                         video_state.properties.update(
@@ -635,41 +627,32 @@ class Database:
         self.__folders = set(folders)
         self.save()
 
-    def dismiss_similarity(self, video_id: int):
+    def set_similarity(self, video_id: int, value: Optional[int]):
         video = self.__get_video_from_id(video_id)
-        video.similarity_id = -1
-        self.save()
-        self.__notifier.notify(notifications.FieldsModified(["similarity_id"]))
-
-    def reset_similarity(self, video_id: int):
-        video = self.__get_video_from_id(video_id)
-        video.similarity_id = None
+        video.similarity_id = value
         self.save()
         self.__notifier.notify(notifications.FieldsModified(["similarity_id"]))
 
     def change_video_file_title(self, video_id: int, new_title: str) -> None:
+        if functions.has_discarded_characters(new_title):
+            raise exceptions.InvalidFileName(new_title)
         video = self.__get_video_from_id(video_id)
         if video.filename.file_title != new_title:
-            if functions.has_discarded_characters(new_title):
-                raise exceptions.InvalidFileName(new_title)
-            new_filename = video.filename.new_title(new_title)
-            del self.__videos[video.filename]
-            self.__videos[new_filename] = video
-            video.filename = new_filename
-            self.save()
-            self.__notify_filename_modified()
+            self.change_video_path(video_id, video.filename.new_title(new_title))
 
     def change_video_path(self, video_id: int, path: AbsolutePath) -> AbsolutePath:
-        video = self.__get_video_from_id(video_id)
         path = AbsolutePath.ensure(path)
-        assert video.filename != path
         assert path.isfile()
+        video = self.__get_video_from_id(video_id)
+        assert video.filename != path
         old_filename = video.filename
+
         del self.__videos[video.filename]
         self.__videos[path] = video
         video.filename = path
         self.save()
         self.__notify_filename_modified()
+
         return old_filename
 
     def delete_video(self, video_id: int, save=True) -> AbsolutePath:
@@ -751,7 +734,7 @@ class Database:
 
     def set_video_properties(self, video_id: int, properties) -> Set[str]:
         video = self.__get_video_from_id(video_id)
-        modified = video.set_properties(properties)
+        modified = video.update_properties(properties)
         self.save()
         self.__notifier.notify(notifications.PropertiesModified(modified))
         return modified
@@ -870,7 +853,7 @@ class Database:
             values_to_remove = {prop_type(value) for value in values_to_remove}
         video_indices = set(video_indices)
         for video_id in video_indices:
-            video = self.__id_to_video[video_id]
+            video = self.__get_video_from_id(video_id)
             if prop_type.multiple:
                 values = set(video.properties.get(prop_type.name, ()))
                 values.difference_update(values_to_remove)
@@ -898,7 +881,7 @@ class Database:
         value_to_count = {}
         video_indices = set(video_indices)
         for video_id in video_indices:
-            video = self.__id_to_video[video_id]
+            video = self.__get_video_from_id(video_id)
             if prop_type.multiple:
                 values = video.properties.get(prop_type.name, [])
             elif prop_type.name in video.properties:
@@ -1065,20 +1048,6 @@ class Database:
         video = self.__id_to_video[video_id]
         assert isinstance(video, Video)
         return video
-
-    def has_video_id(self, video_id: int) -> bool:
-        return video_id in self.__id_to_video
-
-    def get_video_string(self, video_id: int) -> str:
-        return str(self.__id_to_video[video_id])
-
-    def get_video_fields(self, video_id: int, fields: Sequence[str]) -> namedtuple:
-        cls = namedtuple("cls", fields)
-        vid = self.__id_to_video[video_id]
-        return cls(**{field: getattr(vid, field) for field in fields})
-
-    def get_video_field(self, video_id: int, field: str):
-        return getattr(self.__id_to_video[video_id], field)
 
     def get_video_filename(self, video_id: int) -> AbsolutePath:
         return self.__id_to_video[video_id].filename

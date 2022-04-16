@@ -3,53 +3,25 @@ from pysaurus.core.compare import to_comparable
 from pysaurus.core.components import AbsolutePath, DateModified, FileSize
 from pysaurus.core.constants import PYTHON_ERROR_THUMBNAIL
 from pysaurus.core.functions import class_get_public_attributes, string_to_pieces
+from pysaurus.core.jsonable import Jsonable
 from pysaurus.database.semantic_text import SemanticText
 from pysaurus.database.video_runtime_info import VideoRuntimeInfo
 from pysaurus.database.video_sorting import VideoSorting
 
 
-class ClassFlag(property):
-    pass
+class VideoState(Jsonable):
+    filename: ("f", str) = None
+    file_size: "s" = 0
+    errors: "e" = set()
+    video_id: ("j", int) = None
+    runtime: ("R", VideoRuntimeInfo) = {}
+    unreadable: "U" = True
+    thumb_name: "i" = ""
+    __slots__ = ("discarded",)
+    __protected__ = ("database", "runtime", "discarded")
 
-
-class VideoState:
-    __slots__ = (
-        # Video properties
-        "filename",
-        "file_size",
-        "errors",
-        "video_id",
-        # Runtime attributes
-        "database",
-        "runtime",
-        "discarded",
-    )
-    __protected__ = ("database", "runtime", "miniature", "discarded")
-    UNREADABLE = True
-
-    def __init__(
-        self,
-        database,
-        filename=None,
-        size=0,
-        errors=(),
-        video_id: int = None,
-        runtime: VideoRuntimeInfo = None,
-        from_dictionary: dict = None,
-    ):
-        if from_dictionary:
-            filename = from_dictionary.get("f", filename)
-            size = from_dictionary.get("s", size)
-            errors = from_dictionary.get("e", errors)
-            video_id = from_dictionary.get("j", video_id)
-            runtime = from_dictionary.get("R", runtime)
-        self.filename = AbsolutePath.ensure(filename)
-        self.file_size = size
-        self.errors = set(errors)
-        self.video_id = video_id
-
-        self.database = database
-        self.runtime = VideoRuntimeInfo.ensure(runtime)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.discarded = False
 
     def __str__(self):
@@ -69,28 +41,44 @@ class VideoState:
     def __lt__(self, other):
         return self.filename < other.filename
 
+    def get_filename(self):
+        return AbsolutePath(self.__json__["filename"])
+
+    def set_filename(self, data):
+        assert isinstance(data, (str, AbsolutePath))
+        self.__json__["filename"] = str(data)
+
+    def get_thumb_name(self):
+        from pysaurus.database import path_utils
+
+        return path_utils.generate_thumb_name(self.filename)
+
+    def to_dict_errors(self, errors):
+        return list(errors)
+
+    @classmethod
+    def from_dict_errors(cls, errors):
+        return set(errors)
+
     extension = property(lambda self: self.filename.extension)
     file_title = property(lambda self: Text(self.filename.file_title))
     file_title_numeric = property(lambda self: SemanticText(self.filename.file_title))
     size = property(lambda self: FileSize(self.file_size))
     day = property(lambda self: self.date.day)
     # runtime attributes
+    disk = property(
+        lambda self: self.filename.get_drive_name() or self.runtime.driver_id
+    )
     date = property(lambda self: DateModified(self.runtime.mtime))
     has_thumbnail = property(
         lambda self: not self.unreadable_thumbnail and self.runtime.has_thumbnail
     )
 
-    readable = ClassFlag(lambda self: not self.UNREADABLE)
-    unreadable = ClassFlag(lambda self: self.UNREADABLE)
-    found = ClassFlag(lambda self: self.runtime.is_file)
-    not_found = ClassFlag(lambda self: not self.runtime.is_file)
-    with_thumbnails = ClassFlag(lambda self: self.has_thumbnail)
-    without_thumbnails = ClassFlag(lambda self: not self.has_thumbnail)
-
-    def get_thumb_name(self):
-        from pysaurus.database import path_utils
-
-        return path_utils.generate_thumb_name(self.filename)
+    readable = property(lambda self: not self.unreadable)
+    found = property(lambda self: self.runtime.is_file)
+    not_found = property(lambda self: not self.runtime.is_file)
+    with_thumbnails = property(lambda self: self.has_thumbnail)
+    without_thumbnails = property(lambda self: not self.has_thumbnail)
 
     @property
     def unreadable_thumbnail(self):
@@ -103,11 +91,6 @@ class VideoState:
         elif PYTHON_ERROR_THUMBNAIL in self.errors:
             self.errors.remove(PYTHON_ERROR_THUMBNAIL)
 
-    @property
-    def disk(self):
-        disk = self.filename.get_drive_name()
-        return disk or self.runtime.driver_id
-
     def terms(self, as_set=False):
         return string_to_pieces(self.filename.path, as_set=as_set)
 
@@ -116,27 +99,13 @@ class VideoState:
             to_comparable(getattr(self, field), reverse) for field, reverse in sorting
         ]
 
-    def to_dict(self):
-        return {
-            "e": list(self.errors),
-            "f": self.filename.path,
-            "j": self.video_id,
-            "s": self.file_size,
-            "U": self.UNREADABLE,
-            "R": self.runtime.to_dict(),
-        }
-
-    @classmethod
-    def from_dict(cls, dct, database):
-        return cls(
-            filename=dct["f"],
-            size=dct["s"],
-            errors=dct["e"],
-            video_id=dct.get("j", None),
-            runtime=dct.get("R", None),
-            database=database,
-        )
-
     @classmethod
     def is_flag(cls, name):
-        return isinstance(getattr(cls, name), ClassFlag)
+        return name in {
+            "readable",
+            "unreadable",
+            "found",
+            "not_found",
+            "with_thumbnails",
+            "without_thumbnails",
+        }

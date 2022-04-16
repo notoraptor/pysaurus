@@ -337,7 +337,9 @@ export class Video extends React.Component {
         const filename = this.props.data.filename;
         const thumbnail_path = this.props.data.thumbnail_path;
         Fancybox.load(
-            <Dialog title={this.context.action_dismiss_similarity} yes={this.context.text_dismiss} action={this.reallyDismissSimilarity}>
+            <Dialog title={this.context.action_dismiss_similarity}
+                    yes={this.context.text_dismiss}
+                    action={this.reallyDismissSimilarity}>
                 <div className="form-delete-video text-center bold">
                     <h2>{this.context.form_head_confirm_dismiss}</h2>
                     <div className="details overflow-auto px-2 py-1"><code id="filename">{filename}</code></div>
@@ -399,7 +401,7 @@ export class Video extends React.Component {
     reallyResetSimilarity() {
         python_call('reset_similarity', this.props.data.video_id)
             .then(() => this.props.onInfo(
-                this.context.status_video_similarity_reset.format({path: this.props.date.filename}), true)
+                this.context.status_video_similarity_reset.format({path: this.props.data.filename}), true)
             )
             .catch(backend_error);
     }

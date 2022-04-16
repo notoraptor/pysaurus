@@ -33,9 +33,19 @@ class _DbVideoAttribute:
 class QualityAttribute(_DbVideoAttribute):
     __slots__ = "fields", "min", "max"
 
+    QUALITY_FIELDS = (
+        ("quality_compression", 6),
+        ("height", 5),
+        ("width", 4),
+        ("raw_seconds", 3),
+        ("frame_rate", 2),
+        ("file_size", 1),
+        ("audio_bit_rate", 0.5),
+    )
+
     def __init__(self, database):
         super().__init__(database)
-        self.fields = tuple(t[0] for t in Video.QUALITY_FIELDS)
+        self.fields = tuple(t[0] for t in self.QUALITY_FIELDS)
         self.min = {}
         self.max = {}
 
@@ -57,7 +67,7 @@ class QualityAttribute(_DbVideoAttribute):
     def _get(self, video: Video):
         total_level = 0
         qualities = {}
-        for field, level in Video.QUALITY_FIELDS:
+        for field, level in self.QUALITY_FIELDS:
             value = getattr(video, field)
             min_value = self.min[field]
             max_value = self.max[field]

@@ -293,10 +293,10 @@ class FeatureAPI:
     # Database setters + provider updated.
 
     def dismiss_similarity(self, video_id):
-        self.database.dismiss_similarity(video_id)
+        self.database.set_similarity(video_id, -1)
 
     def reset_similarity(self, video_id):
-        self.database.reset_similarity(video_id)
+        self.database.set_similarity(video_id, None)
 
     def delete_video(self, video_id):
         self.database.delete_video(video_id)

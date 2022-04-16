@@ -49,6 +49,20 @@ class E(Jsonable):
         self.other = -22
 
 
+class F(Jsonable):
+    a: set
+
+    def get_a(self):
+        return list(self.__json__["a"])
+
+    def to_dict_a(self, v):
+        return tuple(sorted(v))
+
+    @classmethod
+    def from_dict_a(cls, v):
+        return set(v)
+
+
 def test_jsonable():
     a = A(x=0.0, y="")
     b = B(x=0.0, y="", z=[2])
@@ -103,13 +117,13 @@ def test_type():
     with pytest.raises(ValueError):
         t.new()
     assert t.validate(12) == 12
-    assert t.to_dict(10) == 10
+    assert t.to_dict(None, 10) == 10
     assert str(t) == "test: int"
 
     t = Type("test", int, 7)
     assert t.new() == 7
     assert t.validate(12) == 12
-    assert t.to_dict(10) == 10
+    assert t.to_dict(None, 10) == 10
     assert str(t) == "test: int = 7"
 
     t = Type("test", float, 4.9)
@@ -130,3 +144,16 @@ def test_type():
 
     t = Type("test", "t", None)
     assert str(t) == "test(t): Any = None"
+
+
+def test_methods():
+    f = F(a={1, 2, 3})
+    assert isinstance(f.a, list)
+    assert isinstance(f.__json__["a"], set)
+    df = f.to_dict()
+    assert isinstance(df["a"], tuple)
+    assert df["a"] == (1, 2, 3)
+    g = f.from_dict(df)
+    assert isinstance(g.a, list)
+    assert isinstance(g.__json__["a"], set)
+    assert f == g

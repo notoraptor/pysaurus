@@ -10,7 +10,7 @@ Bytes = Union[bytes, bytearray]
 
 
 class GroupSignature(Jsonable):
-    r: float  # pixel_distance_radius
+    r: int  # pixel_distance_radius
     m: int  # group_min_size
     n: int  # nb_groups
 
@@ -31,6 +31,9 @@ class Miniature(AbstractMatrix):
         self.group_signature = group_signature
         self.video_id = None
 
+    size = property(lambda self: self.width * self.height)
+    nb_pixels = property(lambda self: len(self.r))
+
     def has_group_signature(self, pixel_distance_radius: int, group_min_size: int):
         return (
             self.group_signature
@@ -44,14 +47,6 @@ class Miniature(AbstractMatrix):
         self.group_signature = GroupSignature(
             r=pixel_distance_radius, m=group_min_size, n=nb_groups
         )
-
-    @property
-    def size(self):
-        return self.width * self.height
-
-    @property
-    def nb_pixels(self):
-        return len(self.r)
 
     def data(self):
         for i in range(len(self.r)):

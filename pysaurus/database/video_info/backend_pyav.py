@@ -6,10 +6,7 @@ import av
 from pysaurus.core.jsonable import Jsonable
 from pysaurus.database.video import Video
 
-M = Video.LONG_TO_MIN.copy()
-M["errors"] = "e"
-M["filename"] = "f"
-M["file_size"] = "s"
+M = {jt.name: jt.short for jt in Video.__definitions__.values()}
 
 
 def open_video(filename):
