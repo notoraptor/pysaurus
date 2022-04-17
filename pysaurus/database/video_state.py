@@ -49,9 +49,9 @@ class VideoState(Jsonable):
         self.__json__["filename"] = str(data)
 
     def get_thumb_name(self):
-        from pysaurus.database import path_utils
+        from pysaurus.database.db_utils import generate_thumb_name
 
-        return path_utils.generate_thumb_name(self.filename)
+        return generate_thumb_name(self.filename)
 
     def to_dict_errors(self, errors):
         return list(errors)

@@ -15,7 +15,7 @@ from typing import Sequence, Set
 from pysaurus.core.classes import Text
 from pysaurus.core.components import Duration
 from pysaurus.core.functions import html_to_title, string_to_pieces
-from pysaurus.database import path_utils
+from pysaurus.database import db_utils
 from pysaurus.database.semantic_text import SemanticText
 from pysaurus.database.video_state import VideoState
 
@@ -81,7 +81,7 @@ class Video(VideoState):
     def get_thumb_name(self):
         thumb_name = self.__json__["thumb_name"]
         if not thumb_name:
-            thumb_name = path_utils.generate_thumb_name(self.filename)
+            thumb_name = db_utils.generate_thumb_name(self.filename)
             self.__json__["thumb_name"] = thumb_name
         return thumb_name
 
@@ -106,7 +106,7 @@ class Video(VideoState):
         lambda self: self.duration * 1000000 / self.duration_time_base
     )
     thumbnail_path = property(
-        lambda self: path_utils.generate_thumb_path(
+        lambda self: db_utils.generate_thumb_path(
             self.database.thumbnail_folder, self.thumb_name
         )
     )

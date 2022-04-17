@@ -64,8 +64,8 @@ class DatabaseLoaded(Notification):
 
     def __init__(self, database):
         super().__init__()
-        self.entries = database.nb_entries
-        self.discarded = database.nb_discarded
+        self.entries = len(database.query())
+        self.discarded = len(database.get_videos("discarded"))
         self.unreadable_not_found = len(database.get_videos("unreadable", "not_found"))
         self.unreadable_found = len(database.get_videos("unreadable", "found"))
         self.readable_not_found = len(database.get_videos("readable", "not_found"))

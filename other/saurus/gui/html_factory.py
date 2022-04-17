@@ -197,7 +197,6 @@ class HtmlFactory:
 
 HTML = HtmlFactory()
 
-
 if __name__ == "__main__":
     print(HTML.span())
     print(HTML.br())
