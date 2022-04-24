@@ -70,7 +70,7 @@ def apply_pattern_detector(db: Database, videos: List[Video], prop_name: str):
     video_id_to_miniature = {m.video_id: m for m in db.ensure_miniatures(returns=True)}
     videos = [v for v in videos if v.video_id in video_id_to_miniature]
     output_prop_name = "<!" + prop_name[2:]
-    if not db.has_prop_type(output_prop_name):
+    if not db.select("property", (), name=output_prop_name):
         db.add_prop_type(PropType(output_prop_name, [0, 1]), save=False)
     job_notifier = job_notifications.PredictPattern(len(videos), db.notifier)
     with Profiler(db.lang.profile_predict, db.notifier):

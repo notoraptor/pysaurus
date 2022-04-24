@@ -247,3 +247,14 @@ def object_to_dict(obj, value_wrapper=identity):
         key: value_wrapper(getattr(obj, key))
         for key in class_get_public_attributes(cls)
     }
+
+
+def indent_string_tree(tree: list, indent="", indentation="\t"):
+    return "\n".join(
+        (
+            indent_string_tree(entry, indent + indentation, indentation=indentation)
+            if isinstance(entry, list)
+            else f"{indent}{entry}"
+        )
+        for entry in tree
+    )

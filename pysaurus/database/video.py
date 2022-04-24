@@ -10,7 +10,7 @@ Video class. Properties:
 
     (number of seconds) = duration / duration_time_base
 """
-from typing import Sequence, Set
+from typing import Any, Dict, Iterable, Sequence, Set
 
 from pysaurus.core.classes import Text
 from pysaurus.core.components import Duration
@@ -30,7 +30,7 @@ class Video(VideoState):
     channels: "C" = 2
     container_format: "c" = ""
     device_name: "b" = ""
-    duration: "d" = 0
+    duration: "d" = 0.0
     duration_time_base: "t" = 0
     frame_rate_den: "y" = 0
     frame_rate_num: "x" = 0
@@ -84,6 +84,24 @@ class Video(VideoState):
             thumb_name = db_utils.generate_thumb_name(self.filename)
             self.__json__["thumb_name"] = thumb_name
         return thumb_name
+
+    def set_properties(self, properties: dict):
+        self.__json__["properties"] = {
+            key: self.database.get_prop_type(key)(value)
+            for key, value in properties.items()
+        }
+
+    def extract_attributes(self, keys: Iterable[str]) -> Dict[str, Any]:
+        output = {}
+        for key in keys:
+            if key.startswith(":"):
+                prop_name = key[1:]
+                output.setdefault("properties", {})[prop_name] = self.properties[
+                    prop_name
+                ]
+            else:
+                output[key] = getattr(self, key)
+        return output
 
     frame_rate = property(lambda self: self.frame_rate_num / self.frame_rate_den)
     length = property(
@@ -174,6 +192,3 @@ class Video(VideoState):
         modified = name not in self.properties or self.properties[name] != value
         self.properties[name] = value
         return modified
-
-    def remove_property(self, name):
-        self.properties.pop(name, None)

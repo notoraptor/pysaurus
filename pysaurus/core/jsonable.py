@@ -1,6 +1,6 @@
 import re
 import types
-from typing import Any, Callable, Dict
+from typing import Any, Callable, Dict, Iterable
 
 __fn_types__ = (
     types.FunctionType,
@@ -113,8 +113,11 @@ class Type:
         return self.validate(self.default[0])
 
     def validate(self, value):
-        if self.type and not isinstance(value, self.type):
-            raise TypeError(f"expected type {self.type}, got {type(value)}")
+        if self.type:
+            if self.type is float and isinstance(value, (int, float)):
+                return self.type(value)
+            elif not isinstance(value, self.type):
+                raise TypeError(f"{self.name}: expected type {self.type}, got {type(value)}")
         return value
 
     def standard_to_dict(self, obj, value):
@@ -349,11 +352,23 @@ class Jsonable(metaclass=_MetaJSON):
 
     __repr__ = __str__
 
-    def update(self, dct: dict):
-        assert isinstance(dct, dict)
-        for key, checker in self.__definitions__.items():
-            if key in dct:
-                self.__json__[key] = checker(dct[key])
+    def update(self, dct: dict) -> Dict[str, Any]:
+        old_modified = {}
+        for key, value in dct.items():
+            value = self.__definitions__[key](value)
+            if self.__json__[key] != value:
+                old_modified[key] = self.__json__[key]
+                self.__json__[key] = value
+        return old_modified
+
+    def match_json(self, **kwargs) -> bool:
+        return all(
+            self.__json__[key] == self.__definitions__[key](value)
+            for key, value in kwargs.items()
+        )
+
+    def extract_attributes(self, keys: Iterable[str]) -> Dict[str, Any]:
+        return {key: getattr(self, key) for key in keys}
 
     @classmethod
     def get_args_from(cls, dictionary: dict):

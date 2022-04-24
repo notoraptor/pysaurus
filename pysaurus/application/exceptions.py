@@ -30,6 +30,10 @@ class PropertyToUniqueError(PysaurusError):
     pass
 
 
+class PropertyNotFound(PysaurusError):
+    pass
+
+
 class PathAlreadyExists(PysaurusError):
     pass
 

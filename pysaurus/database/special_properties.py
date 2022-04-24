@@ -30,7 +30,7 @@ class SpecialProperties:
         to_save = False
         for expected in cls.properties:
             if (
-                not database.has_prop_type(expected.name)
+                not database.select("property", (), name=expected.name)
                 or database.get_prop_type(expected.name) != expected
             ):
                 database.remove_prop_type(expected.name, save=False)

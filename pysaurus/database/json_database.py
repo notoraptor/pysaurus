@@ -1,50 +1,22 @@
-from typing import Dict, Iterable, List, Optional, Set, Union
-
-import ujson as json
+from collections import namedtuple
+from typing import Dict, Iterable, List, Optional, Sequence, Set, Union
 
 from pysaurus.application import exceptions
-from pysaurus.core import notifications
+from pysaurus.core import condlang, notifications
 from pysaurus.core.components import AbsolutePath, DateModified, PathType
 from pysaurus.core.notifier import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.db_cache import DbCache
 from pysaurus.database.db_settings import DbSettings
-from pysaurus.database.db_utils import flush_json_data
 from pysaurus.database.db_video_attribute import (
     PotentialMoveAttribute,
     QualityAttribute,
 )
+from pysaurus.database.json_backup import JsonBackup
 from pysaurus.database.properties import PropType
 from pysaurus.database.video import Video
 from pysaurus.database.video_state import VideoState
-
-
-class JsonBackup:
-    __slots__ = ("__json_path", "__thumb_folder", "__prev_path", "__next_path")
-
-    def __init__(self, path: PathType):
-        path = AbsolutePath.ensure(path)
-        folder = path.get_directory()
-        self.__json_path = path
-        self.__prev_path = AbsolutePath.file_path(folder, path.title, "prev.json")
-        self.__next_path = AbsolutePath.file_path(folder, path.title, "next.json")
-        self.__thumb_folder = AbsolutePath.join(folder, f"{path.title}.thumbnails")
-
-    path = property(lambda self: self.__json_path)
-    thumbnail_folder = property(lambda self: self.__thumb_folder)
-
-    def load(self):
-        data = {}
-        if self.__json_path.exists():
-            with open(self.__json_path.assert_file().path) as output_file:
-                data = json.load(output_file)
-        return data
-
-    def save(self, json_output):
-        flush_json_data(
-            json_output, self.__prev_path, self.__json_path, self.__next_path
-        )
 
 
 class JsonDatabase:
@@ -208,3 +180,134 @@ class JsonDatabase:
 
     def get_prop_types(self) -> Iterable[PropType]:
         return self.prop_types.values()
+
+    def select(self, entry: str, fields: Sequence[str], *cond, **kwargs) -> namedtuple:
+        attributes = {field for field in fields if not field.startswith(":")}
+        properties = {field for field in fields if field.startswith(":")}
+        cls_fields = set(attributes)
+        if entry == "video":
+            attributes.update(("filename", "video_id"))
+            cls_fields.update(("filename", "video_id"))
+            source = self.videos.values()
+            if properties:
+                cls_fields.add("properties")
+        elif entry == "property":
+            attributes.add("name")
+            cls_fields.add("name")
+            source = self.prop_types.values()
+            assert not properties
+        else:
+            raise ValueError(f"Unknown database entry: {entry}")
+        if cond:
+            (condition,) = cond
+            assert isinstance(condition, str)
+            test = condlang.cond_lang(condition)
+            print(test.pretty())
+
+            def selector(el):
+                return test(namespace=el)
+
+        else:
+
+            def selector(el):
+                return el.match_json(**kwargs)
+
+        cls = namedtuple("DbRow", cls_fields)
+        return [
+            cls(**el.extract_attributes(attributes | properties))
+            for el in source
+            if selector(el)
+        ]
+
+    def select_one(self, name: str, fields: Sequence[str], /, **kwargs):
+        row = self.select(name, fields, **kwargs)
+        assert len(row) == 1
+        return row[0]
+
+    def modify(self, entry, indices: List, **kwargs):
+        if not indices or not kwargs:
+            return
+        if entry == "video":
+            if len(indices) > 1:
+                for index in ("filename", "video_id"):
+                    assert index not in kwargs
+            video = None
+            old = None
+            for video_id in indices:
+                video = self.__id_to_video[video_id]
+                old = video.update(kwargs)
+            if len(indices) == 1:
+                if "filename" in old:
+                    del self.videos[AbsolutePath(old["filename"])]
+                    self.videos[video.filename] = video
+                if "video_id" in old:
+                    del self.__id_to_video[old["video_id"]]
+                    self.__id_to_video[video.video_id] = video
+        elif entry == "property":
+            assert "definition" not in kwargs
+            if len(indices) > 1:
+                assert "name" not in kwargs
+            prop_type = None
+            old = None
+            for prop_name in indices:
+                prop_type = self.prop_types[prop_name]
+                old = prop_type.update(kwargs)
+            if len(indices) == 1 and "name" in old:
+                del self.prop_types[old["name"]]
+                self.prop_types[prop_type.name] = prop_type
+                for video in self.videos.values():
+                    if isinstance(video, Video) and old["name"] in video.properties:
+                        video.properties[prop_type.name] = video.properties.pop(
+                            old["name"]
+                        )
+            if "multiple" in old:
+                if old["multiple"]:
+                    # True -> False: converted to unique property
+                    for prop_name in indices:
+                        for video in self.videos.values():
+                            if (
+                                isinstance(video, Video)
+                                and prop_name in video.properties
+                            ):
+                                if video.properties[prop_name]:
+                                    video.properties[prop_name] = video.properties[
+                                        prop_name
+                                    ][0]
+                                else:
+                                    del video.properties[prop_name]
+                else:
+                    # False -> True: converted to multiple property
+                    for prop_name in indices:
+                        for video in self.videos.values():
+                            if (
+                                isinstance(video, Video)
+                                and prop_name in video.properties
+                            ):
+                                video.properties[prop_name] = [
+                                    video.properties[prop_name]
+                                ]
+        else:
+            raise ValueError(f"Unknown database entry: {entry}")
+
+    def insert(self, name, **kwargs):
+        pass
+
+    def insert_from_dict(self, name, dct, **extra_kwargs):
+        pass
+
+    def delete_entry(self, entry, indices: List):
+        if entry == "video":
+            for video_id in indices:
+                video = self.__id_to_video[video_id]
+                del self.videos[video.filename]
+                del self.__id_to_video[video_id]
+                if isinstance(video, Video):
+                    video.thumbnail_path.delete()
+        elif entry == "property":
+            for name in indices:
+                self.prop_types.pop(name, None)
+                for video in self.videos.values():
+                    if isinstance(video, Video):
+                        video.properties.pop(name, None)
+        else:
+            raise ValueError(f"Unknown database entry: {entry}")

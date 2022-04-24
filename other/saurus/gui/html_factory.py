@@ -1,12 +1,4 @@
-def indent_string_tree(tree: list, indent=""):
-    return "\n".join(
-        (
-            indent_string_tree(entry, indent + "\t")
-            if isinstance(entry, list)
-            else f"{indent}{entry}"
-        )
-        for entry in tree
-    )
+from pysaurus.core.functions import indent_string_tree
 
 
 class Tag:
