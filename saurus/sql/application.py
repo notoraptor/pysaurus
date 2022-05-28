@@ -2,10 +2,10 @@ from pathlib import Path
 
 from tqdm import tqdm
 
-from other.saurus.language import say
-from other.saurus.sql import data
-from other.saurus.sql.video_database import VideoDatabase
 from pysaurus.core.components import AbsolutePath
+from saurus.language import say
+from saurus.sql import data
+from saurus.sql.video_database import VideoDatabase
 
 
 class Application:

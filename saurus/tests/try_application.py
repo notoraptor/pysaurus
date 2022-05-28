@@ -1,5 +1,5 @@
-from other.saurus.sql.application import Application
 from pysaurus.core.profiling import Profiler
+from saurus.sql.application import Application
 
 app = Application()
 names = app.list_collections()

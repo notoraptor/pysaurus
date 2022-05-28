@@ -11,8 +11,8 @@ from PyQt5.QtWebChannel import QWebChannel
 from PyQt5.QtWebEngineWidgets import QWebEnginePage, QWebEngineView
 from PyQt5.QtWidgets import QApplication
 
-from other.saurus.gui import theria
 from pysaurus.core.modules import System
+from saurus.gui import theria
 
 freeze_support()
 

@@ -1,4 +1,4 @@
-from other.saurus.gui import theria
+from saurus.gui import theria
 
 
 class A:

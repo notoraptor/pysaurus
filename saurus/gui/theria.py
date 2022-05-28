@@ -1,7 +1,7 @@
 import inspect
 from typing import Any, Callable, Dict, Type
 
-from other.saurus.gui.html_factory import HTML
+from saurus.gui.html_factory import HTML
 
 
 class Incrementer:

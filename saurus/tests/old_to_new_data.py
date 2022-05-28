@@ -1,9 +1,9 @@
-from other.saurus.sql import data
-from other.saurus.sql.application import Application as NewApp
 from pysaurus.application.application import Application as OldApp
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.properties import PropType
 from pysaurus.database.video import Video
+from saurus.sql import data
+from saurus.sql.application import Application as NewApp
 
 
 def old_to_new_prop(old_p: PropType) -> data.Property:

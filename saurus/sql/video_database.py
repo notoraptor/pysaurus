@@ -2,8 +2,8 @@ import os
 
 from tqdm import tqdm
 
-from other.saurus.sql import data
-from other.saurus.sql.database import Database
+from saurus.sql import data
+from saurus.sql.database import Database
 
 
 class VideoDatabase(Database):
