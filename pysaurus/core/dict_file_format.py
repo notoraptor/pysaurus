@@ -37,7 +37,7 @@ def dff_loads(text: str) -> dict:
         assert not lines
     else:
         dictionary[key] = "\n".join(lines)
-    return dictionary
+    return {key: value.rstrip() for key, value in dictionary.items()}
 
 
 def dff_dump(dictionary: dict, path):

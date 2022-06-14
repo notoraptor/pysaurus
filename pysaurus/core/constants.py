@@ -17,6 +17,7 @@ VIDEO_SUPPORTED_EXTENSIONS = frozenset(
         "f4v",
         "flv",
         "gifv",
+        "m2ts",
         "m2v",
         "m4p",
         "m4v",
@@ -45,7 +46,7 @@ VIDEO_SUPPORTED_EXTENSIONS = frozenset(
         "yuv",
     )
 )
-assert len(VIDEO_SUPPORTED_EXTENSIONS) == 37, (
+assert len(VIDEO_SUPPORTED_EXTENSIONS) == 38, (
     len(VIDEO_SUPPORTED_EXTENSIONS),
     VIDEO_SUPPORTED_EXTENSIONS,
 )
