@@ -181,6 +181,8 @@ class JsonDatabase:
     def get_prop_types(self) -> Iterable[PropType]:
         return self.prop_types.values()
 
+    ####################################################################################
+
     def select(self, entry: str, fields: Sequence[str], *cond, **kwargs) -> namedtuple:
         attributes = {field for field in fields if not field.startswith(":")}
         properties = {field for field in fields if field.startswith(":")}

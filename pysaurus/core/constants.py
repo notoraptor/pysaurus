@@ -39,6 +39,7 @@ VIDEO_SUPPORTED_EXTENSIONS = frozenset(
         "rmvb",
         "roq",
         "svi",
+        "ts",
         "vid",
         "vob",
         "webm",
@@ -46,7 +47,7 @@ VIDEO_SUPPORTED_EXTENSIONS = frozenset(
         "yuv",
     )
 )
-assert len(VIDEO_SUPPORTED_EXTENSIONS) == 38, (
+assert len(VIDEO_SUPPORTED_EXTENSIONS) == 39, (
     len(VIDEO_SUPPORTED_EXTENSIONS),
     VIDEO_SUPPORTED_EXTENSIONS,
 )

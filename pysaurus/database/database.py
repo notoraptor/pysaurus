@@ -215,9 +215,9 @@ class Database(JsonDatabase):
                 file_path = AbsolutePath.ensure(d["f"])
                 if len(d) == 2:
                     video_state = VideoState(
-                        filename=file_path,
-                        size=file_path.get_size(),
-                        errors=d["e"],
+                        filename=file_path.path,
+                        file_size=file_path.get_size(),
+                        errors=set(d["e"]),
                         database=self,
                     )
                     unreadable.append(video_state)
@@ -484,79 +484,103 @@ class Database(JsonDatabase):
         self.save()
 
     def set_similarity(self, video_id: int, value: Optional[int]):
-        self.modify("video", [video_id], similarity_id=value)
+        video = self.__get_video_from_id(video_id)
+        video.similarity_id = value
         self.save()
         self.notifier.notify(notifications.FieldsModified(["similarity_id"]))
 
     def change_video_file_title(self, video_id: int, new_title: str) -> None:
         if functions.has_discarded_characters(new_title):
             raise exceptions.InvalidFileName(new_title)
-        video = self.select_one("video", (), video_id=video_id)
+        video = self.__get_video_from_id(video_id)
         if video.filename.file_title != new_title:
             self.change_video_path(video_id, video.filename.new_title(new_title))
 
     def change_video_path(self, video_id: int, path: AbsolutePath) -> AbsolutePath:
         path = AbsolutePath.ensure(path)
         assert path.isfile()
-
-        video = self.select_one("video", (), video_id=video_id)
+        video = self.__get_video_from_id(video_id)
         assert video.filename != path
         old_filename = video.filename
 
-        self.modify("video", [video_id], filename=str(path))
+        del self.videos[video.filename]
+        self.videos[path] = video
+        video.filename = path
         self.save()
         self.__notify_filename_modified()
 
         return old_filename
 
     def delete_video(self, video_id: int, save=True) -> AbsolutePath:
-        v = self.__get_video_from_id(video_id)
-        video = self.select_one("video", (), video_id=video_id)
+        video = self.id_to_video[video_id]
         video.filename.delete()
-        self.delete_entry("video", [video_id])
+        self.videos.pop(video.filename, None)
+        self.id_to_video.pop(video.video_id, None)
+        if isinstance(video, Video):
+            video.thumbnail_path.delete()
         if save:
             self.save()
-        self.notifier.notify(notifications.VideoDeleted(v))
+        self.notifier.notify(notifications.VideoDeleted(video))
         self.notifier.notify(notifications.FieldsModified(["move_id", "quality"]))
         return video.filename
 
     def rename_prop_type(self, old_name, new_name) -> None:
-        if self.select("property", (), name=old_name):
-            if self.select("property", (), name=new_name):
+        if old_name in self.prop_types:
+            if new_name in self.prop_types:
                 raise exceptions.PropertyAlreadyExists(new_name)
-            self.modify("property", [old_name], name=new_name)
+            prop_type = self.prop_types.pop(old_name)
+            prop_type.name = new_name
+            self.prop_types[new_name] = prop_type
+            for video in self.get_videos("readable"):
+                if old_name in video.properties:
+                    video.properties[new_name] = video.properties.pop(old_name)
             self.save()
 
     def convert_prop_to_unique(self, name) -> None:
-        if not self.select("property", (), name=name, multiple=True):
-            raise exceptions.PropertyNotFound(dict(name=name, multiple=True))
-        vs_with_many_vals = self.select(
-            "video",
-            [f":{name}"],
-            f"readable and {repr(name)} in properties and len(properties[{repr(name)}]) > 1",
-        )
-        if vs_with_many_vals:
-            raise exceptions.PropertyToUniqueError(name, vs_with_many_vals[0])
-        self.modify("property", [name], multiple=False)
-        self.save()
-
-    def convert_prop_to_multiple(self, name) -> None:
-        if not self.select("property", (), name=name, multiple=False):
-            raise exceptions.PropertyNotFound(dict(name=name, multiple=False))
-        self.modify("property", [name], multiple=True)
-        self.save()
-
-    def remove_prop_type(self, name, save: bool = True) -> None:
-        self.delete_entry("property", [name])
-        if save:
+        if name in self.prop_types:
+            prop_type = self.prop_types[name]
+            if not prop_type.multiple:
+                raise exceptions.PropertyAlreadyUnique(name)
+            for video in self.get_videos("readable"):
+                if name in video.properties and len(video.properties[name]) > 1:
+                    raise exceptions.PropertyToUniqueError(name, video)
+            prop_type.multiple = False
+            for video in self.get_videos("readable"):
+                if name in video.properties:
+                    if video.properties[name]:
+                        video.properties[name] = video.properties[name][0]
+                    else:
+                        del video.properties[name]
             self.save()
 
-    def set_video_properties(self, video_id: int, properties):
-        video = self.select_one("video", ["properties"], video_id=video_id)
-        new_properties = {**video.properties, **properties}
-        self.modify("video", [video_id], properties=new_properties)
+    def convert_prop_to_multiple(self, name) -> None:
+        if name in self.prop_types:
+            prop_type = self.prop_types[name]
+            if prop_type.multiple:
+                raise exceptions.PropertyAlreadyMultiple(name)
+            prop_type.multiple = True
+            for video in self.get_videos("readable"):
+                if name in video.properties:
+                    video.properties[name] = [video.properties[name]]
+            self.save()
+
+    def remove_prop_type(self, name, save: bool = True) -> None:
+        if name in self.prop_types:
+            del self.prop_types[name]
+            for video in self.get_videos("readable"):
+                video.remove_property(name)
+            if save:
+                self.save()
+
+    def has_prop_type(self, name) -> bool:
+        return name in self.prop_types
+
+    def set_video_properties(self, video_id: int, properties) -> Set[str]:
+        video = self.__get_video_from_id(video_id)
+        modified = video.update_properties(properties)
         self.save()
-        self.notifier.notify(notifications.PropertiesModified(list(properties)))
+        self.notifier.notify(notifications.PropertiesModified(modified))
+        return modified
 
     def refresh(self, ensure_miniatures=False) -> None:
         with Profiler(self.lang.profile_reset_thumbnail_errors):
@@ -853,7 +877,7 @@ class Database(JsonDatabase):
         return video
 
     def get_video_filename(self, video_id: int) -> AbsolutePath:
-        return self.select_one("video", (), video_id=video_id).filename
+        return self.id_to_video[video_id].filename
 
     def get_videos_field(self, indices: Iterable[int], field: str) -> Iterable:
         return (getattr(self.id_to_video[video_id], field) for video_id in indices)
@@ -861,8 +885,9 @@ class Database(JsonDatabase):
     def set_videos_field_with_same_value(
         self, indices: Iterable[int], field: str, value
     ) -> None:
-        self.modify("video", list(indices), **{field: value})
+        for video_id in indices:
+            setattr(self.id_to_video[video_id], field, value)
 
     def set_videos_field(self, indices: Iterable[int], field, values: Iterable) -> None:
         for video_id, value in zip(indices, values):
-            self.modify("video", [video_id], **{field: value})
+            setattr(self.id_to_video[video_id], field, value)

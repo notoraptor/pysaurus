@@ -1,5 +1,6 @@
 import re
 import types
+from copy import deepcopy
 from typing import Any, Callable, Dict, Iterable
 
 __fn_types__ = (
@@ -114,10 +115,15 @@ class Type:
 
     def validate(self, value):
         if self.type:
-            if self.type is float and isinstance(value, (int, float)):
-                return self.type(value)
-            elif not isinstance(value, self.type):
-                raise TypeError(f"{self.name}: expected type {self.type}, got {type(value)}")
+            allowed_types = (self.type,)
+            if self.type is float:
+                allowed_types = (int, float)
+            if not isinstance(value, allowed_types):
+                raise TypeError(
+                    f"{self.name}: type error, "
+                    f"expected {allowed_types}, got {type(value)}"
+                )
+            return deepcopy(value)
         return value
 
     def standard_to_dict(self, obj, value):
@@ -321,8 +327,8 @@ class Jsonable(metaclass=_MetaJSON):
             else:
                 value = checker()
             self.__json__[key] = value
-        if kwargs:
-            raise KeyError(kwargs)
+        # if kwargs:
+        #     raise KeyError(kwargs)
 
     def __bool__(self):
         return True

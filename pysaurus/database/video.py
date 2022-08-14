@@ -192,3 +192,6 @@ class Video(VideoState):
         modified = name not in self.properties or self.properties[name] != value
         self.properties[name] = value
         return modified
+
+    def remove_property(self, name):
+        self.properties.pop(name, None)
