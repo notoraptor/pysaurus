@@ -17,13 +17,10 @@ class Property:
 
 @dataclass
 class Video:
-    # table columns
+    # table columns: constant data
     video_id: int
     filename: str
     file_size: int = 0
-    mtime: float = 0.0
-    driver_id: int = 0
-    is_file: bool = False
     readable: bool = False
     audio_bit_rate: int = 0
     audio_codec: str = ""
@@ -42,6 +39,10 @@ class Video:
     video_codec: str = ""
     video_codec_description: str = ""
     width: int = 0
+    # table columns: runtime frozen data
+    mtime: float = 0.0
+    driver_id: int = 0
+    is_file: bool = False
     # related data
     errors: Sequence[str] = field(default_factory=list)
     audio_languages: Sequence[str] = field(default_factory=list)
