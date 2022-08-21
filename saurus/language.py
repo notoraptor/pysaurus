@@ -12,11 +12,11 @@ class _LanguageData:
 
     @abstractmethod
     def load(self) -> dict:
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def dump(self, data: dict):
-        pass
+        raise NotImplementedError()
 
 
 class _FileData(_LanguageData):
@@ -45,7 +45,7 @@ class _MemoryData(_LanguageData):
         self.data = data
 
 
-class _Language:
+class Language:
     __slots__ = ("default", "current", "folder", "data")
 
     def __init__(self):
@@ -54,19 +54,19 @@ class _Language:
         self.folder: Optional[AbsolutePath] = None
         self.data = None
 
-    def _key_of(self, text: str) -> str:
-        pieces = string_to_pieces(text)
-        if len(pieces) > 20:
-            pieces = pieces[:20] + ["..."]
-        hl_key = "".join(piece.title() for piece in pieces)
-        return f"{hl_key}_{FNV64.hash(text)}"
-
-    def _get_data_manager(self):
-        return _MemoryData() if self.folder is None else _FileData(self.current_path)
-
-    @property
-    def current_path(self):
-        return AbsolutePath.join(self.folder, f"{self.current}.txt")
+    def __call__(self, text: str) -> str:
+        """Translate."""
+        dm = _MemoryData() if self.folder is None else _FileData(self.current_path)
+        if self.data is None:
+            # load language
+            self.data = dm.load()
+        # Update language
+        key = self.keyof(text)
+        if key not in self.data:
+            self.data[key] = text
+            dm.dump(self.data)
+        # return translation
+        return self.data[key]
 
     def set_folder(self, folder: PathType):
         folder = AbsolutePath.ensure_directory(folder)
@@ -79,27 +79,16 @@ class _Language:
             self.current = language
             self.data = None
 
-    def new(self):
-        return _Language()
+    def keyof(self, text: str) -> str:
+        pieces = string_to_pieces(text)
+        if len(pieces) > 20:
+            pieces = pieces[:20] + ["..."]
+        hl_key = "".join(piece.title() for piece in pieces)
+        return f"{hl_key}_{FNV64.hash(text)}"
 
-    def translate(self, text: str) -> str:
-        data = self._get_data_manager()
-        if self.data is None:
-            # load language
-            self.data = data.load()
-        # Update language
-        key = self._key_of(text)
-        if key not in self.data:
-            self.data[key] = text
-            data.dump(self.data)
-        # return translation
-        return self.data[key]
-
-    def __call__(self, text: str) -> str:
-        return self.translate(text)
-
-    def __getitem__(self, item):
-        return self._key_of(item)
+    @property
+    def current_path(self):
+        return AbsolutePath.join(self.folder, f"{self.current}.txt")
 
 
-say = _Language()
+say = Language()
