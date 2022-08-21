@@ -226,3 +226,11 @@ def is_dictionary(dict_to_check):
             "items",
         )
     )
+
+
+def get_file_extension(string):
+    # type: (str) -> str
+    index_of_dot = string.rfind(".")
+    if index_of_dot >= 0:
+        return string[(index_of_dot + 1) :].lower()
+    return ""

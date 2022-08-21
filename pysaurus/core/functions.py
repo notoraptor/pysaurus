@@ -112,14 +112,6 @@ def coord_to_flat(x, y, width):
     return y * width + x
 
 
-def get_file_extension(string):
-    # type: (str) -> str
-    index_of_dot = string.rfind(".")
-    if index_of_dot >= 0:
-        return string[(index_of_dot + 1) :].lower()
-    return ""
-
-
 def _pgcd(a, b):
     # type: (int, int) -> int
     return a if not b else _pgcd(b, a % b)

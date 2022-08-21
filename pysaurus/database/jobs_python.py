@@ -1,46 +1,18 @@
-import os
 from typing import Dict, List
 
-from pysaurus.core import constants, functions
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.job_notifications import JobNotifications
-from pysaurus.core.modules import FileSystem, ImageUtils
+from pysaurus.core.modules import ImageUtils
 from pysaurus.database.miniature_tools.miniature import Miniature
+from pysaurus.database.video_file_lister import scan_path_for_videos
 from pysaurus.database.video_runtime_info import VideoRuntimeInfo
-
-
-def _collect_videos_info(folder: str, files: Dict[AbsolutePath, VideoRuntimeInfo]):
-    entry: os.DirEntry
-    for entry in FileSystem.scandir(folder):
-        if entry.is_dir():
-            _collect_videos_info(entry.path, files)
-        elif (
-            functions.get_file_extension(entry.name)
-            in constants.VIDEO_SUPPORTED_EXTENSIONS
-        ):
-            stat = entry.stat()
-            files[AbsolutePath(entry.path)] = VideoRuntimeInfo(
-                size=stat.st_size,
-                mtime=stat.st_mtime,
-                driver_id=stat.st_dev,
-                is_file=True,
-            )
 
 
 def job_collect_videos_stats(job: list) -> Dict[AbsolutePath, VideoRuntimeInfo]:
     job_notifier: JobNotifications
     path, job_id, job_notifier = job
     files = {}  # type: Dict[AbsolutePath, VideoRuntimeInfo]
-    if path.isdir():
-        _collect_videos_info(path.path, files)
-    elif path.extension in constants.VIDEO_SUPPORTED_EXTENSIONS:
-        stat = FileSystem.stat(path.path)
-        files[path] = VideoRuntimeInfo(
-            size=stat.st_size,
-            mtime=stat.st_mtime,
-            driver_id=stat.st_dev,
-            is_file=True,
-        )
+    scan_path_for_videos(path, files)
     job_notifier.progress(job_id, 1, 1)
     return files
 

@@ -77,8 +77,7 @@ class AbsolutePath(object):
 
     @property
     def extension(self):
-        extension = os.path.splitext(self.__path)[1]
-        return extension[1:].lower() if extension else ""
+        return os.path.splitext(self.__path)[1][1:].lower()
 
     def __str__(self):
         return self.standard_path
