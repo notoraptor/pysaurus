@@ -10,7 +10,6 @@ from pysaurus.core.profiling import Profiler
 from pysaurus.database.database import Database
 from pysaurus.database.miniature_tools.miniature import Miniature
 from pysaurus.database.video import Video
-from pysaurus.database.video_state import VideoState
 
 
 class ExtendedDatabase(Database):
@@ -58,13 +57,13 @@ class ExtendedDatabase(Database):
         return None
 
     def get_unreadable_from_filename(self, filename, required=True):
-        # type: (PathType, bool) -> Optional[VideoState]
+        # type: (PathType, bool) -> Optional[Video]
         video = self.get_video_from_filename(filename, required)
         assert video.unreadable
         return video
 
     def get_unreadable_from_id(self, video_id, required=True):
-        # type: (int, bool) -> Optional[VideoState]
+        # type: (int, bool) -> Optional[Video]
         if video_id in self.__id_to_video:
             video = self.__id_to_video[video_id]
             assert video.unreadable

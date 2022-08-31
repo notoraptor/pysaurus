@@ -11,6 +11,10 @@ def test_say():
     say.set_language("french")
     assert say(text) == translation
     assert say.keyof(text) == footprint
+    assert (
+        say("hello {world}, it's {person}", world="terre", person="me")
+        == "hello terre, it's me"
+    )
 
 
 def test_say_folder():

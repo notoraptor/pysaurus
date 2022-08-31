@@ -17,6 +17,7 @@ from pysaurus.core.notifier import DEFAULT_NOTIFIER
 from pysaurus.database.database import Database
 from pysaurus.language.default_language import DefaultLanguage, language_to_dict
 from pysaurus.language.language import Language
+from saurus.language import say
 
 
 class Application:
@@ -75,6 +76,8 @@ class Application:
             else:
                 raise exceptions.MissingLanguageFile(self.config.language)
         self.languages[lang_path] = self._load_lang(lang_path)
+        say.set_language(self.config.language)
+        say.set_folder(AbsolutePath.join(self.app_dir, "lang"))
 
     def _load_lang(self, lang_path: AbsolutePath):
         lang = Language(dff_load(lang_path), self.config.language)

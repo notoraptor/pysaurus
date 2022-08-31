@@ -25,7 +25,9 @@ def _scan_folder_for_videos(folder: str, files: Dict[AbsolutePath, VideoRuntimeI
             )
 
 
-def scan_path_for_videos(path: AbsolutePath, files: Dict[AbsolutePath, VideoRuntimeInfo]):
+def scan_path_for_videos(
+    path: AbsolutePath, files: Dict[AbsolutePath, VideoRuntimeInfo]
+):
     if path.isdir():
         _scan_folder_for_videos(path.path, files)
     elif path.extension in constants.VIDEO_SUPPORTED_EXTENSIONS:

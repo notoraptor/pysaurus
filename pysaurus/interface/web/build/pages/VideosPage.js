@@ -833,6 +833,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
 
         openRandomVideo() {
           python_call('open_random_video').then(filename => {
+            APP_STATE.videoHistory.add(filename);
             this.updateStatus(this.context.status_randomly_opened.format({
               path: filename
             }), true, true);

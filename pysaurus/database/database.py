@@ -1,6 +1,5 @@
 import os
 import sys
-from multiprocessing import Pool
 from typing import Dict, Iterable, List, Optional, Set
 
 import ujson as json
@@ -24,8 +23,6 @@ from pysaurus.database.miniature_tools.group_computer import GroupComputer
 from pysaurus.database.miniature_tools.miniature import Miniature
 from pysaurus.database.special_properties import SpecialProperties
 from pysaurus.database.video import Video
-from pysaurus.database.video_runtime_info import VideoRuntimeInfo
-from pysaurus.database.video_state import VideoState
 from pysaurus.language.default_language import DefaultLanguage
 
 try:
@@ -104,7 +101,7 @@ class Database(JsonDatabase):
             video_state = None
             if file_name in self.videos:
                 video = self.videos[file_name]
-                if not isinstance(video, Video) or SpecialProperties.all_in(video):
+                if not video.readable or SpecialProperties.all_in(video):
                     video_state = video
 
             if (
@@ -118,7 +115,7 @@ class Database(JsonDatabase):
         return all_file_names
 
     def __set_videos_states_flags(self):
-        file_paths = self.__check_videos_on_disk()
+        file_paths = jobs_python.collect_video_paths(self.folders, self.notifier)
         for video_state in self.videos.values():
             info = file_paths.get(video_state.filename, None)
             video_state.runtime.is_file = info is not None
@@ -127,25 +124,6 @@ class Database(JsonDatabase):
                 video_state.runtime.size = info.size
                 video_state.runtime.driver_id = info.driver_id
         return file_paths
-
-    def __check_videos_on_disk(self):
-        # type: () -> Dict[AbsolutePath, VideoRuntimeInfo]
-        paths = {}  # type: Dict[AbsolutePath, VideoRuntimeInfo]
-        job_notifier = job_notifications.CollectVideosFromFolders(
-            len(self.folders), self.notifier
-        )
-        jobs = [[path, i, job_notifier] for i, path in enumerate(self.folders)]
-        with Profiler(
-            title=self.lang.profile_collect_videos.format(cpu_count=CPU_COUNT),
-            notifier=self.notifier,
-        ):
-            with Pool(CPU_COUNT) as p:
-                for local_result in p.imap_unordered(
-                    jobs_python.job_collect_videos_stats, jobs
-                ):
-                    paths.update(local_result)
-        self.notifier.notify(notifications.FinishedCollectingVideos(paths))
-        return paths
 
     def __check_thumbnails_on_disk(self):
         # type: () -> Dict[str, DateModified]
@@ -187,7 +165,6 @@ class Database(JsonDatabase):
 
     @Profiler.profile_method()
     def update(self) -> None:
-        SpecialProperties.install(self)
         current_date = DateModified.now()
 
         all_file_names = self.__get_new_video_paths()
@@ -214,10 +191,11 @@ class Database(JsonDatabase):
             for d in arr:
                 file_path = AbsolutePath.ensure(d["f"])
                 if len(d) == 2:
-                    video_state = VideoState(
+                    video_state = Video(
                         filename=file_path.path,
                         file_size=file_path.get_size(),
                         errors=set(d["e"]),
+                        unreadable=True,
                         database=self,
                     )
                     unreadable.append(video_state)
@@ -516,7 +494,7 @@ class Database(JsonDatabase):
         video.filename.delete()
         self.videos.pop(video.filename, None)
         self.id_to_video.pop(video.video_id, None)
-        if isinstance(video, Video):
+        if video.readable:
             video.thumbnail_path.delete()
         if save:
             self.save()
@@ -873,7 +851,7 @@ class Database(JsonDatabase):
 
     def __get_video_from_id(self, video_id: int) -> Video:
         video = self.id_to_video[video_id]
-        assert isinstance(video, Video)
+        assert video.readable
         return video
 
     def get_video_filename(self, video_id: int) -> AbsolutePath:

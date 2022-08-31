@@ -65,6 +65,8 @@ class QualityAttribute(_DbVideoAttribute):
         }
 
     def _get(self, video: Video):
+        if video.unreadable:
+            return 0
         total_level = 0
         qualities = {}
         for field, level in self.QUALITY_FIELDS:

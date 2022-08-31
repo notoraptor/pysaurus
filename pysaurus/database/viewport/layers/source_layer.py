@@ -3,19 +3,19 @@ from typing import Dict, Iterable, Sequence, Set
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.database import Database
-from pysaurus.database.video_state import VideoState
+from pysaurus.database.video import Video
 from pysaurus.database.viewport.layers.layer import Layer
 
 
 class SourceLayer(Layer):
     __slots__ = "__index", "__to_update_index"
     __props__ = ("sources",)
-    _cache: Dict[AbsolutePath, VideoState]
+    _cache: Dict[AbsolutePath, Video]
     DEFAULT_SOURCE_DEF = [("readable",)]
 
     def __init__(self, database):
         super().__init__(database)
-        self.__index = {}  # type: Dict[str, Set[VideoState]]
+        self.__index = {}  # type: Dict[str, Set[Video]]
         self.__to_update_index = True
 
     def set_sources(self, paths: Sequence[Sequence[str]] = None):
@@ -27,7 +27,7 @@ class SourceLayer(Layer):
                 path = tuple(path)
                 if path not in valid_paths:
                     assert len(set(path)) == len(path)
-                    assert all(VideoState.is_flag(flag) for flag in path)
+                    assert all(Video.is_flag(flag) for flag in path)
                     valid_paths.add(path)
             if valid_paths:
                 self._set_parameters(sources=sorted(valid_paths))
@@ -38,7 +38,7 @@ class SourceLayer(Layer):
     def reset_parameters(self):
         self.set_sources(self.DEFAULT_SOURCE_DEF)
 
-    def filter(self, database: Database) -> Dict[AbsolutePath, VideoState]:
+    def filter(self, database: Database) -> Dict[AbsolutePath, Video]:
         source = []
         for path in self.get_sources():
             source.extend(database.get_videos(*path))
@@ -47,7 +47,7 @@ class SourceLayer(Layer):
         self.update_index()
         return source_dict
 
-    def remove_from_cache(self, cache: Dict[AbsolutePath, VideoState], vs: VideoState):
+    def remove_from_cache(self, cache: Dict[AbsolutePath, Video], vs: Video):
         assert vs.filename in cache, len(cache)
         for term in vs.terms(as_set=True):
             if term in self.__index and vs in self.__index[term]:
@@ -70,7 +70,7 @@ class SourceLayer(Layer):
 
     @classmethod
     @Profiler.profile()
-    def __index_videos(cls, videos: Iterable[VideoState]) -> Dict[str, Set[VideoState]]:
+    def __index_videos(cls, videos: Iterable[Video]) -> Dict[str, Set[Video]]:
         term_to_videos = {}
         for video in videos:
             for term in video.terms():

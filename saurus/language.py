@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Optional
+from typing import Dict, Optional
 
 from pysaurus.core import dict_file_format as dff
 from pysaurus.core.components import AbsolutePath, PathType
@@ -33,7 +33,7 @@ class _FileData(_LanguageData):
 
 
 class _MemoryData(_LanguageData):
-    __slots__ = "data",
+    __slots__ = ("data",)
 
     def __init__(self):
         self.data = {}
@@ -52,9 +52,9 @@ class Language:
         self.default = "english"
         self.current = "english"
         self.folder: Optional[AbsolutePath] = None
-        self.data = None
+        self.data: Optional[Dict[str, str]] = None
 
-    def __call__(self, text: str) -> str:
+    def __call__(self, text: str, **placeholders) -> str:
         """Translate."""
         dm = _MemoryData() if self.folder is None else _FileData(self.current_path)
         if self.data is None:
@@ -66,7 +66,10 @@ class Language:
             self.data[key] = text
             dm.dump(self.data)
         # return translation
-        return self.data[key]
+        translation = self.data[key]
+        if placeholders:
+            translation = translation.format(**placeholders)
+        return translation
 
     def set_folder(self, folder: PathType):
         folder = AbsolutePath.ensure_directory(folder)

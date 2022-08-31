@@ -1,5 +1,5 @@
 from collections import namedtuple
-from typing import Dict, Iterable, List, Optional, Sequence, Set, Union
+from typing import Dict, Iterable, List, Optional, Sequence, Set
 
 from pysaurus.application import exceptions
 from pysaurus.core import condlang, notifications
@@ -16,7 +16,6 @@ from pysaurus.database.db_video_attribute import (
 from pysaurus.database.json_backup import JsonBackup
 from pysaurus.database.properties import PropType
 from pysaurus.database.video import Video
-from pysaurus.database.video_state import VideoState
 
 
 class JsonDatabase:
@@ -45,13 +44,13 @@ class JsonDatabase:
         self.settings = DbSettings()
         self.date = DateModified.now()
         self.folders: Set[AbsolutePath] = set()
-        self.videos: Dict[AbsolutePath, Union[VideoState, Video]] = {}
+        self.videos: Dict[AbsolutePath, Video] = {}
         self.prop_types: Dict[str, PropType] = {}
         self.predictors: Dict[str, List[float]] = {}
         self.__backup = JsonBackup(path)
         self.__notifier = notifier
         self.__save_id = 0
-        self.__id_to_video: Dict[int, Union[VideoState, Video]] = {}
+        self.__id_to_video: Dict[int, Video] = {}
         self.__cache = DbCache(self)
         self.__quality_attribute = QualityAttribute(self)
         self.__moves_attribute = PotentialMoveAttribute(self)
@@ -65,7 +64,7 @@ class JsonDatabase:
     notifier = property(lambda self: self.__notifier)
 
     def __ensure_identifiers(self):
-        id_to_video = {}  # type: Dict[int, Union[VideoState, Video]]
+        id_to_video = {}  # type: Dict[int, Video]
         without_identifiers = []
         for video_state in self.videos.values():
             if (
@@ -115,10 +114,7 @@ class JsonDatabase:
         # Parsing videos.
         folders_tree = PathTree(self.folders)
         for video_dict in json_dict.get("videos", ()):
-            if video_dict["U"]:
-                video_state = VideoState.from_dict(video_dict)
-            else:
-                video_state = Video.from_dict(video_dict, database=self)
+            video_state = Video.from_dict(video_dict, database=self)
             video_state.discarded = not folders_tree.in_folders(video_state.filename)
             self.videos[video_state.filename] = video_state
 
@@ -160,7 +156,7 @@ class JsonDatabase:
     def set_path(self, path: PathType):
         self.__backup = JsonBackup(path)
 
-    def query(self, required: Dict[str, bool] = None) -> List[Union[VideoState, Video]]:
+    def query(self, required: Dict[str, bool] = None) -> List[Video]:
         videos = self.videos.values()
         return (
             [
@@ -172,7 +168,7 @@ class JsonDatabase:
             else list(videos)
         )
 
-    def get_videos(self, *flags, **forced_flags) -> List[Union[VideoState, Video]]:
+    def get_videos(self, *flags, **forced_flags) -> List[Video]:
         return self.__cache.get(*flags, **forced_flags)
 
     def get_prop_type(self, name: str) -> PropType:
@@ -258,7 +254,7 @@ class JsonDatabase:
                 del self.prop_types[old["name"]]
                 self.prop_types[prop_type.name] = prop_type
                 for video in self.videos.values():
-                    if isinstance(video, Video) and old["name"] in video.properties:
+                    if video.readable and old["name"] in video.properties:
                         video.properties[prop_type.name] = video.properties.pop(
                             old["name"]
                         )
@@ -267,10 +263,7 @@ class JsonDatabase:
                     # True -> False: converted to unique property
                     for prop_name in indices:
                         for video in self.videos.values():
-                            if (
-                                isinstance(video, Video)
-                                and prop_name in video.properties
-                            ):
+                            if video.readable and prop_name in video.properties:
                                 if video.properties[prop_name]:
                                     video.properties[prop_name] = video.properties[
                                         prop_name
@@ -281,10 +274,7 @@ class JsonDatabase:
                     # False -> True: converted to multiple property
                     for prop_name in indices:
                         for video in self.videos.values():
-                            if (
-                                isinstance(video, Video)
-                                and prop_name in video.properties
-                            ):
+                            if video.readable and prop_name in video.properties:
                                 video.properties[prop_name] = [
                                     video.properties[prop_name]
                                 ]
@@ -303,13 +293,13 @@ class JsonDatabase:
                 video = self.__id_to_video[video_id]
                 del self.videos[video.filename]
                 del self.__id_to_video[video_id]
-                if isinstance(video, Video):
+                if video.readable:
                     video.thumbnail_path.delete()
         elif entry == "property":
             for name in indices:
                 self.prop_types.pop(name, None)
                 for video in self.videos.values():
-                    if isinstance(video, Video):
+                    if video.readable:
                         video.properties.pop(name, None)
         else:
             raise ValueError(f"Unknown database entry: {entry}")

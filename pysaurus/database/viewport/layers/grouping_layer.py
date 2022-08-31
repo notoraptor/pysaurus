@@ -1,7 +1,7 @@
 from typing import Dict, Optional
 
 from pysaurus.core.components import AbsolutePath
-from pysaurus.database.video_state import VideoState
+from pysaurus.database.video import Video
 from pysaurus.database.viewport.layers.layer import Layer
 from pysaurus.database.viewport.viewtools.group import Group
 from pysaurus.database.viewport.viewtools.group_array import GroupArray
@@ -44,7 +44,7 @@ class GroupingLayer(Layer):
         else:
             return [video_state.properties.get(prop_type.name, prop_type.default)]
 
-    def filter(self, data: Dict[AbsolutePath, VideoState]) -> GroupArray:
+    def filter(self, data: Dict[AbsolutePath, Video]) -> GroupArray:
         group_def = self.get_grouping()
         groups = []
         if not group_def:
@@ -72,7 +72,7 @@ class GroupingLayer(Layer):
             groups = group_def.sort(groups)
         return GroupArray(group_def.field, group_def.is_property, groups)
 
-    def remove_from_cache(self, cache: GroupArray, video: VideoState):
+    def remove_from_cache(self, cache: GroupArray, video: Video):
         groups = []
         if len(cache) == 1 and cache[0].field_value is None:
             groups.append(cache[0])

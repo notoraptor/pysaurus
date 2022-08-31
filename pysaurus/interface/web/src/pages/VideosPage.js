@@ -831,6 +831,7 @@ export class VideosPage extends React.Component {
     openRandomVideo() {
         python_call('open_random_video')
             .then(filename => {
+                APP_STATE.videoHistory.add(filename);
                 this.updateStatus(this.context.status_randomly_opened.format({path: filename}), true, true);
             })
             .catch(backend_error);

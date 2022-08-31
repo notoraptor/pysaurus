@@ -1,7 +1,6 @@
 from pysaurus.application.application import Application as OldApp
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.properties import PropType
-from pysaurus.database.video import Video
 from saurus.sql import data
 from saurus.sql.application import Application as NewApp
 
@@ -53,7 +52,7 @@ def old_to_new_video(video) -> data.Video:
                 for k, v in video.properties.items()
             },
         )
-        if isinstance(video, Video)
+        if video.readable
         else data.Video(
             video_id=video.video_id,
             filename=video.filename.path,

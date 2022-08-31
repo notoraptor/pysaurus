@@ -7,7 +7,6 @@ from pysaurus.core.components import Duration, FileSize
 from pysaurus.core.functions import compute_nb_pages
 from pysaurus.database.database import Database
 from pysaurus.database.properties import PropType
-from pysaurus.database.video import Video
 from pysaurus.database.video_features import VideoFeatures
 from pysaurus.database.viewport.layers.source_layer import SourceLayer
 from pysaurus.database.viewport.video_provider import VideoProvider
@@ -136,11 +135,7 @@ class FeatureAPI:
             "validSize": str(FileSize(sum(video.file_size for video in view))),
             "validLength": str(
                 Duration(
-                    sum(
-                        video.raw_microseconds
-                        for video in view
-                        if isinstance(video, Video)
-                    )
+                    sum(video.raw_microseconds for video in view if video.readable)
                 )
             ),
             "notFound": all("not_found" in source for source in sources),
