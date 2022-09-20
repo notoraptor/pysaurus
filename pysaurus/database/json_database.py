@@ -1,8 +1,7 @@
-from collections import namedtuple
-from typing import Dict, Iterable, List, Optional, Sequence, Set
+from typing import Dict, Iterable, List, Optional, Set
 
 from pysaurus.application import exceptions
-from pysaurus.core import condlang, notifications
+from pysaurus.core import notifications
 from pysaurus.core.components import AbsolutePath, DateModified, PathType
 from pysaurus.core.notifier import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.path_tree import PathTree
@@ -62,25 +61,6 @@ class JsonDatabase:
     id_to_video = property(lambda self: self.__id_to_video)
     thumbnail_folder = property(lambda self: self.__backup.thumbnail_folder)
     notifier = property(lambda self: self.__notifier)
-
-    def __ensure_identifiers(self):
-        id_to_video = {}  # type: Dict[int, Video]
-        without_identifiers = []
-        for video_state in self.videos.values():
-            if (
-                not isinstance(video_state.video_id, int)
-                or video_state.video_id in id_to_video
-            ):
-                without_identifiers.append(video_state)
-            else:
-                id_to_video[video_state.video_id] = video_state
-        next_id = (max(id_to_video) + 1) if id_to_video else 0
-        for video_state in without_identifiers:
-            video_state.video_id = next_id
-            next_id += 1
-            id_to_video[video_state.video_id] = video_state
-        self.__id_to_video = id_to_video
-        return len(without_identifiers)
 
     @Profiler.profile_method()
     def __load(self, folders: Optional[Iterable[PathType]] = None):
@@ -146,6 +126,25 @@ class JsonDatabase:
         )
         self.__notifier.notify(notifications.DatabaseSaved(self))
 
+    def __ensure_identifiers(self):
+        id_to_video = {}  # type: Dict[int, Video]
+        without_identifiers = []
+        for video_state in self.videos.values():
+            if (
+                not isinstance(video_state.video_id, int)
+                or video_state.video_id in id_to_video
+            ):
+                without_identifiers.append(video_state)
+            else:
+                id_to_video[video_state.video_id] = video_state
+        next_id = (max(id_to_video) + 1) if id_to_video else 0
+        for video_state in without_identifiers:
+            video_state.video_id = next_id
+            next_id += 1
+            id_to_video[video_state.video_id] = video_state
+        self.__id_to_video = id_to_video
+        return len(without_identifiers)
+
     def add_prop_type(self, prop: PropType, save: bool = True) -> None:
         if prop.name in self.prop_types:
             raise exceptions.PropertyAlreadyExists(prop.name)
@@ -176,130 +175,3 @@ class JsonDatabase:
 
     def get_prop_types(self) -> Iterable[PropType]:
         return self.prop_types.values()
-
-    ####################################################################################
-
-    def select(self, entry: str, fields: Sequence[str], *cond, **kwargs) -> namedtuple:
-        attributes = {field for field in fields if not field.startswith(":")}
-        properties = {field for field in fields if field.startswith(":")}
-        cls_fields = set(attributes)
-        if entry == "video":
-            attributes.update(("filename", "video_id"))
-            cls_fields.update(("filename", "video_id"))
-            source = self.videos.values()
-            if properties:
-                cls_fields.add("properties")
-        elif entry == "property":
-            attributes.add("name")
-            cls_fields.add("name")
-            source = self.prop_types.values()
-            assert not properties
-        else:
-            raise ValueError(f"Unknown database entry: {entry}")
-        if cond:
-            (condition,) = cond
-            assert isinstance(condition, str)
-            test = condlang.cond_lang(condition)
-            print(test.pretty())
-
-            def selector(el):
-                return test(namespace=el)
-
-        else:
-
-            def selector(el):
-                return el.match_json(**kwargs)
-
-        cls = namedtuple("DbRow", cls_fields)
-        return [
-            cls(**el.extract_attributes(attributes | properties))
-            for el in source
-            if selector(el)
-        ]
-
-    def select_one(self, name: str, fields: Sequence[str], /, **kwargs):
-        row = self.select(name, fields, **kwargs)
-        assert len(row) == 1
-        return row[0]
-
-    def modify(self, entry, indices: List, **kwargs):
-        if not indices or not kwargs:
-            return
-        if entry == "video":
-            if len(indices) > 1:
-                for index in ("filename", "video_id"):
-                    assert index not in kwargs
-            video = None
-            old = None
-            for video_id in indices:
-                video = self.__id_to_video[video_id]
-                old = video.update(kwargs)
-            if len(indices) == 1:
-                if "filename" in old:
-                    del self.videos[AbsolutePath(old["filename"])]
-                    self.videos[video.filename] = video
-                if "video_id" in old:
-                    del self.__id_to_video[old["video_id"]]
-                    self.__id_to_video[video.video_id] = video
-        elif entry == "property":
-            assert "definition" not in kwargs
-            if len(indices) > 1:
-                assert "name" not in kwargs
-            prop_type = None
-            old = None
-            for prop_name in indices:
-                prop_type = self.prop_types[prop_name]
-                old = prop_type.update(kwargs)
-            if len(indices) == 1 and "name" in old:
-                del self.prop_types[old["name"]]
-                self.prop_types[prop_type.name] = prop_type
-                for video in self.videos.values():
-                    if video.readable and old["name"] in video.properties:
-                        video.properties[prop_type.name] = video.properties.pop(
-                            old["name"]
-                        )
-            if "multiple" in old:
-                if old["multiple"]:
-                    # True -> False: converted to unique property
-                    for prop_name in indices:
-                        for video in self.videos.values():
-                            if video.readable and prop_name in video.properties:
-                                if video.properties[prop_name]:
-                                    video.properties[prop_name] = video.properties[
-                                        prop_name
-                                    ][0]
-                                else:
-                                    del video.properties[prop_name]
-                else:
-                    # False -> True: converted to multiple property
-                    for prop_name in indices:
-                        for video in self.videos.values():
-                            if video.readable and prop_name in video.properties:
-                                video.properties[prop_name] = [
-                                    video.properties[prop_name]
-                                ]
-        else:
-            raise ValueError(f"Unknown database entry: {entry}")
-
-    def insert(self, name, **kwargs):
-        pass
-
-    def insert_from_dict(self, name, dct, **extra_kwargs):
-        pass
-
-    def delete_entry(self, entry, indices: List):
-        if entry == "video":
-            for video_id in indices:
-                video = self.__id_to_video[video_id]
-                del self.videos[video.filename]
-                del self.__id_to_video[video_id]
-                if video.readable:
-                    video.thumbnail_path.delete()
-        elif entry == "property":
-            for name in indices:
-                self.prop_types.pop(name, None)
-                for video in self.videos.values():
-                    if video.readable:
-                        video.properties.pop(name, None)
-        else:
-            raise ValueError(f"Unknown database entry: {entry}")
