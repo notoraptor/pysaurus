@@ -552,7 +552,7 @@ export class VideosPage extends React.Component {
     }
 
     canOpenRandomVideo() {
-        return Fancybox.isInactive() && !this.state.notFound && this.state.nbVideos;
+        return Fancybox.isInactive() && !this.state.notFound && this.state.totalNbVideos;
     }
 
     canOpenRandomPlayer() {

@@ -23,6 +23,7 @@ from pysaurus.database.miniature_tools.group_computer import GroupComputer
 from pysaurus.database.miniature_tools.miniature import Miniature
 from pysaurus.database.special_properties import SpecialProperties
 from pysaurus.database.video import Video
+from pysaurus.database.video_runtime_info import VideoRuntimeInfo
 from pysaurus.language.default_language import DefaultLanguage
 
 try:
@@ -92,30 +93,9 @@ class Database(JsonDatabase):
             assert new_path.exists()
         return new_path
 
-    def __get_new_video_paths(self):
-        all_file_names = []
-
-        file_names = self.__set_videos_states_flags()
-
-        for file_name in file_names:  # type: AbsolutePath
-            video_state = None
-            if file_name in self.videos:
-                video = self.videos[file_name]
-                if not video.readable or SpecialProperties.all_in(video):
-                    video_state = video
-
-            if (
-                not video_state
-                or video_state.date >= self.date
-                or video_state.runtime.size != video_state.file_size
-            ):
-                all_file_names.append(file_name.path)
-
-        all_file_names.sort()
-        return all_file_names
-
-    def __set_videos_states_flags(self):
-        file_paths = jobs_python.collect_video_paths(self.folders, self.notifier)
+    def _update_video_runtime_flags(
+        self, file_paths: Dict[AbsolutePath, VideoRuntimeInfo]
+    ):
         for video_state in self.videos.values():
             info = file_paths.get(video_state.filename, None)
             video_state.runtime.is_file = info is not None
@@ -123,7 +103,22 @@ class Database(JsonDatabase):
                 video_state.runtime.mtime = info.mtime
                 video_state.runtime.size = info.size
                 video_state.runtime.driver_id = info.driver_id
-        return file_paths
+
+    def _find_video_paths_for_update(
+        self, file_names: Iterable[AbsolutePath]
+    ) -> List[str]:
+        all_file_names = []
+        for file_name in file_names:  # type: AbsolutePath
+            video = self.videos.get(file_name, None)
+            if (
+                video is None
+                or video.date >= self.date
+                or video.runtime.size != video.file_size
+                or (video.readable and not SpecialProperties.all_in(video))
+            ):
+                all_file_names.append(file_name.path)
+        all_file_names.sort()
+        return all_file_names
 
     def __check_thumbnails_on_disk(self):
         # type: () -> Dict[str, DateModified]
@@ -167,15 +162,17 @@ class Database(JsonDatabase):
     def update(self) -> None:
         current_date = DateModified.now()
 
-        all_file_names = self.__get_new_video_paths()
-        if not all_file_names:
+        all_files = jobs_python.collect_video_paths(self.folders, self.notifier)
+        self._update_video_runtime_flags(all_files)
+        files_to_update = self._find_video_paths_for_update(all_files)
+        if not files_to_update:
             return
 
         job_notifier = job_notifications.CollectVideoInfos(
-            len(all_file_names), self.notifier
+            len(files_to_update), self.notifier
         )
         jobs = functions.dispatch_tasks(
-            all_file_names, CPU_COUNT, [self.folder, job_notifier]
+            files_to_update, CPU_COUNT, [self.folder, job_notifier]
         )
         with Profiler(
             self.lang.profile_collect_video_infos.format(cpu_count=len(jobs)),
@@ -215,7 +212,7 @@ class Database(JsonDatabase):
                 video_state.runtime.size = stat.st_size
                 video_state.runtime.driver_id = stat.st_dev
 
-        assert len(videos) == len(all_file_names)
+        assert len(videos) == len(files_to_update)
 
         if videos:
             self.videos.update(videos)

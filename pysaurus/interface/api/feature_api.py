@@ -131,6 +131,7 @@ class FeatureAPI:
             "pageNumber": page_number,
             "nbVideos": nb_videos,
             "realNbVideos": real_nb_videos,
+            "totalNbVideos": len(self.provider.source_layer.videos()),
             "nbPages": nb_pages,
             "validSize": str(FileSize(sum(video.file_size for video in view))),
             "validLength": str(
