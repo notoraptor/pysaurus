@@ -17,7 +17,7 @@ from pysaurus.core.notifier import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
 from pysaurus.database import jobs_python
-from pysaurus.database.db_utils import new_sub_file, new_sub_folder
+from pysaurus.database.database_paths import DatabasePaths
 from pysaurus.database.json_database import JsonDatabase
 from pysaurus.database.miniature_tools.group_computer import GroupComputer
 from pysaurus.database.miniature_tools.miniature import Miniature
@@ -35,32 +35,20 @@ except exceptions.CysaurusUnavailable:
 
 
 class Database(JsonDatabase):
-    __slots__ = (
-        "__db_folder",
-        "__thumb_folder",
-        "__json_path",
-        "__miniatures_path",
-        "__log_path",
-        "__message",
-        "lang",
-    )
+    __slots__ = ("__paths", "__message", "lang")
 
     def __init__(self, path, folders=None, notifier=None, lang=None):
         # type: (PathType, Iterable[PathType], Notifier, DefaultLanguage) -> None
         # Paths
-        self.__db_folder = AbsolutePath.ensure_directory(path)
-        self.__thumb_folder = new_sub_folder(self.__db_folder, "thumbnails").mkdir()
-        self.__json_path = new_sub_file(self.__db_folder, "json")
-        self.__miniatures_path = new_sub_file(self.__db_folder, "miniatures.json")
-        self.__log_path = new_sub_file(self.__db_folder, "log")
+        self.__paths = DatabasePaths(path)
         # RAM data
         self.__message = None
         self.lang = lang or DefaultLanguage
         # Set log file
         notifier = notifier or DEFAULT_NOTIFIER
-        notifier.set_log_path(self.__log_path.path)
+        notifier.set_log_path(self.__paths.log_path.path)
         # Load database
-        super().__init__(self.__json_path, folders, notifier)
+        super().__init__(self.__paths.json_path, folders, notifier)
         # Set special properties
         with Profiler("install special properties", notifier=self.notifier):
             SpecialProperties.install(self)
@@ -69,29 +57,10 @@ class Database(JsonDatabase):
 
     nb_entries = property(lambda self: len(self.videos))
     nb_discarded = property(lambda self: len(self.get_videos("discarded")))
-    folder = property(lambda self: self.__db_folder)
+    folder = property(lambda self: self.__paths.db_folder)
     video_folders = property(lambda self: list(self.folders))
 
     # Private methods.
-
-    @staticmethod
-    def __transfer_db_path(
-        path: AbsolutePath, old_folder: AbsolutePath, new_folder: AbsolutePath
-    ):
-        old_name = old_folder.title
-        old_basename = path.get_basename()
-        assert old_basename.startswith(old_name)
-        new_basename = f"{new_folder.title}{old_basename[(len(old_name)):]}"
-        new_path = AbsolutePath.join(new_folder, new_basename)
-        re_path = AbsolutePath.join(new_folder, old_basename)
-        if re_path.exists():
-            print("Database: renaming", re_path, file=sys.stderr)
-            if new_path.exists():
-                raise exceptions.PathAlreadyExists(new_path)
-            FileSystem.rename(re_path.path, new_path.path)
-            assert not re_path.exists()
-            assert new_path.exists()
-        return new_path
 
     def _update_video_runtime_flags(
         self, file_paths: Dict[AbsolutePath, VideoRuntimeInfo]
@@ -293,7 +262,7 @@ class Database(JsonDatabase):
                 for video in videos_without_thumbs
             ],
             CPU_COUNT,
-            [self.__db_folder, self.__thumb_folder.best_path, job_notifier],
+            [self.__paths.db_folder, self.__paths.thumb_folder.best_path, job_notifier],
         )
         del videos_without_thumbs
         with Profiler(
@@ -332,11 +301,13 @@ class Database(JsonDatabase):
         have_removed = False
         have_added = False
 
-        if self.__miniatures_path.exists():
-            with open(self.__miniatures_path.assert_file().path) as miniatures_file:
+        if self.__paths.miniatures_path.exists():
+            with open(
+                self.__paths.miniatures_path.assert_file().path
+            ) as miniatures_file:
                 json_array = json.load(miniatures_file)
             if not isinstance(json_array, list):
-                raise exceptions.InvalidMiniaturesJSON(self.__miniatures_path)
+                raise exceptions.InvalidMiniaturesJSON(self.__paths.miniatures_path)
             for dct in json_array:
                 identifier = AbsolutePath(dct["i"])
                 if identifier in self.videos and ImageUtils.DEFAULT_THUMBNAIL_SIZE == (
@@ -398,7 +369,7 @@ class Database(JsonDatabase):
                 )
 
         if have_removed or have_added:
-            with open(self.__miniatures_path.path, "w") as output_file:
+            with open(self.__paths.miniatures_path.path, "w") as output_file:
                 json.dump([m.to_dict() for m in available_miniatures], output_file)
 
         self.notifier.notify(notifications.NbMiniatures(len(available_miniatures)))
@@ -412,41 +383,9 @@ class Database(JsonDatabase):
             return miniatures
 
     def rename(self, new_name) -> None:
-        old_db_folder = self.__db_folder
-        old_thumb_folder = self.__thumb_folder
-        old_json_path = self.__json_path
-        old_miniature_path = self.__miniatures_path
-        old_log_path = self.__log_path
-
-        new_name = new_name.strip()
-        if new_name == self.__db_folder.title:
-            return
-        if functions.has_discarded_characters(new_name):
-            raise exceptions.InvalidDatabaseName(new_name)
-
-        new_db_folder = AbsolutePath.join(old_db_folder.get_directory(), new_name)
-        if new_db_folder.exists():
-            raise exceptions.DatabaseAlreadyExists(new_db_folder)
-        FileSystem.rename(old_db_folder.path, new_db_folder.path)
-        assert not old_db_folder.exists()
-        assert new_db_folder.isdir()
-
-        self.__db_folder = new_db_folder
-        self.__thumb_folder = self.__transfer_db_path(
-            old_thumb_folder, old_db_folder, new_db_folder
-        )
-        self.__json_path = self.__transfer_db_path(
-            old_json_path, old_db_folder, new_db_folder
-        )
-        self.__miniatures_path = self.__transfer_db_path(
-            old_miniature_path, old_db_folder, new_db_folder
-        )
-        self.__log_path = self.__transfer_db_path(
-            old_log_path, old_db_folder, new_db_folder
-        )
-
-        self.notifier.set_log_path(self.__log_path.path)
-        self.set_path(self.__json_path)
+        self.__paths = self.__paths.renamed(new_name)
+        self.notifier.set_log_path(self.__paths.log_path.path)
+        self.set_path(self.__paths.json_path)
 
     def set_folders(self, folders) -> None:
         folders = sorted(AbsolutePath.ensure(folder) for folder in folders)

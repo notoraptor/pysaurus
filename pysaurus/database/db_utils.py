@@ -5,14 +5,6 @@ from pysaurus.core.constants import THUMBNAIL_EXTENSION
 from pysaurus.core.modules import FNV64, FileSystem
 
 
-def new_sub_file(folder: AbsolutePath, extension: str):
-    return AbsolutePath.file_path(folder, folder.title, extension)
-
-
-def new_sub_folder(folder: AbsolutePath, suffix: str, sep="."):
-    return AbsolutePath.join(folder, f"{folder.title}{sep}{suffix}")
-
-
 def generate_thumb_name(file_name):
     # type: (AbsolutePath) -> str
     return FNV64.hash(file_name.standard_path)
