@@ -1,7 +1,7 @@
 import ujson as json
 
 from pysaurus.core.components import AbsolutePath, PathType
-from pysaurus.database.db_utils import flush_json_data
+from pysaurus.core.modules import FileSystem
 
 
 class JsonBackup:
@@ -29,3 +29,28 @@ class JsonBackup:
         flush_json_data(
             json_output, self.__prev_path, self.__json_path, self.__next_path
         )
+
+
+def flush_json_data(
+    data: object,
+    previous_file_path: AbsolutePath,
+    target_file_path: AbsolutePath,
+    next_file_path: AbsolutePath,
+):
+    # Store JSON data to next file
+    with open(next_file_path.path, "w") as output_file:
+        json.dump(data, output_file)
+    # Remove previous file
+    previous_file_path.delete()
+    # Move target file to previous file
+    if target_file_path.isfile():
+        FileSystem.rename(target_file_path.path, previous_file_path.path)
+        assert not target_file_path.isfile()
+        assert previous_file_path.isfile()
+    # Move next file to target file
+    FileSystem.rename(next_file_path.path, target_file_path.path)
+    # Next file deleted
+    # Previous file may exists
+    # Target file contains data
+    assert not next_file_path.exists()
+    assert target_file_path.isfile()

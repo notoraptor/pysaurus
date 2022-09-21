@@ -45,7 +45,7 @@ class DatabasePaths:
         FileSystem.rename(self.__miniatures_path.path, new_paths.miniatures_path.path)
         FileSystem.rename(self.__log_path.path, new_paths.log_path.path)
         self.__db_folder.delete()
-        print('Deleted', self.__db_folder, file=sys.stderr)
+        print("Deleted", self.__db_folder, file=sys.stderr)
         return new_paths
 
 

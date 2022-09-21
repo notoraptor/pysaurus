@@ -15,14 +15,14 @@ from typing import Any, Dict, Iterable, Sequence, Set
 from pysaurus.core.classes import StringPrinter, Text
 from pysaurus.core.compare import to_comparable
 from pysaurus.core.components import AbsolutePath, DateModified, Duration, FileSize
-from pysaurus.core.constants import PYTHON_ERROR_THUMBNAIL
+from pysaurus.core.constants import PYTHON_ERROR_THUMBNAIL, THUMBNAIL_EXTENSION
 from pysaurus.core.functions import (
     class_get_public_attributes,
     html_to_title,
     string_to_pieces,
 )
 from pysaurus.core.jsonable import Jsonable
-from pysaurus.database import db_utils
+from pysaurus.core.modules import FNV64
 from pysaurus.database.semantic_text import SemanticText
 from pysaurus.database.video_runtime_info import VideoRuntimeInfo
 from pysaurus.database.video_sorting import VideoSorting
@@ -122,7 +122,7 @@ class Video(Jsonable):
     def get_thumb_name(self):
         thumb_name = self.__json__["thumb_name"]
         if not thumb_name:
-            thumb_name = db_utils.generate_thumb_name(self.filename)
+            thumb_name = FNV64.hash(self.filename.standard_path)
             self.__json__["thumb_name"] = thumb_name
         return thumb_name
 
@@ -192,8 +192,8 @@ class Video(Jsonable):
         lambda self: self.duration * 1000000 / self.duration_time_base
     )
     thumbnail_path = property(
-        lambda self: db_utils.generate_thumb_path(
-            self.database.thumbnail_folder, self.thumb_name
+        lambda self: AbsolutePath.file_path(
+            self.database.thumbnail_folder, self.thumb_name, THUMBNAIL_EXTENSION
         )
     )
     quality = property(lambda self: self.database.quality_attribute(self))
