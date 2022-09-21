@@ -5,6 +5,7 @@ from pysaurus.application import exceptions
 from pysaurus.bin.symbols import RUN_VIDEO_RAPTOR_BATCH, RUN_VIDEO_RAPTOR_THUMBNAILS
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.custom_json_parser import parse_json
+from pysaurus.core.job_utils import Job
 
 
 def job_video_to_json(job):
@@ -91,21 +92,21 @@ def job_video_thumbnails_to_json(job):
     return nb_loaded
 
 
-def backend_video_infos(job):
-    file_names, job_id, database_folder, job_notifier = job
-    list_file_path = AbsolutePath.file_path(database_folder, str(job_id), "list")
-    json_file_path = AbsolutePath.file_path(database_folder, str(job_id), "json")
+def backend_video_infos(job: Job):
+    database_folder, job_notifier = job.args
+    list_file_path = AbsolutePath.file_path(database_folder, str(job.id), "list")
+    json_file_path = AbsolutePath.file_path(database_folder, str(job.id), "json")
 
     with open(list_file_path.path, "wb") as file:
-        for file_name in file_names:
+        for file_name in job.batch:
             file.write(f"{file_name}\n".encode())
 
-    count = job_video_to_json(
+    job_video_to_json(
         (
             list_file_path.path,
             json_file_path.path,
-            len(file_names),
-            job_id,
+            len(job.batch),
+            job.id,
             job_notifier,
         )
     )
@@ -117,21 +118,21 @@ def backend_video_infos(job):
     return arr
 
 
-def backend_video_thumbnails(job):
-    videos_data, job_id, db_folder, thumb_folder, job_notifier = job
-    list_file_path = AbsolutePath.file_path(db_folder, job_id, "thumbnails.list")
-    json_file_path = AbsolutePath.file_path(db_folder, job_id, "thumbnails.json")
+def backend_video_thumbnails(job: Job):
+    db_folder, thumb_folder, job_notifier = job.args
+    list_file_path = AbsolutePath.file_path(db_folder, job.id, "thumbnails.list")
+    json_file_path = AbsolutePath.file_path(db_folder, job.id, "thumbnails.json")
 
     with open(list_file_path.path, "wb") as file:
-        for file_path, thumb_name in videos_data:
+        for file_path, thumb_name in job.batch:
             file.write(f"{file_path}\t{thumb_folder}\t{thumb_name}\t\n".encode())
 
     nb_loaded = job_video_thumbnails_to_json(
         (
             list_file_path.path,
             json_file_path.path,
-            len(videos_data),
-            job_id,
+            len(job.batch),
+            job.id,
             job_notifier,
         )
     )
@@ -139,7 +140,7 @@ def backend_video_thumbnails(job):
     arr = parse_json(json_file_path)
     assert arr[-1] is None
     arr.pop()
-    assert nb_loaded + len(arr) == len(videos_data)
+    assert nb_loaded + len(arr) == len(job.batch)
     list_file_path.delete()
     json_file_path.delete()
     return arr

@@ -12,6 +12,7 @@ from pysaurus.core.components import (
     PathType,
 )
 from pysaurus.core.constants import CPU_COUNT, THUMBNAIL_EXTENSION
+from pysaurus.core.job_utils import run_split_batch
 from pysaurus.core.modules import FileSystem, ImageUtils
 from pysaurus.core.notifier import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.path_tree import PathTree
@@ -140,15 +141,15 @@ class Database(JsonDatabase):
         job_notifier = job_notifications.CollectVideoInfos(
             len(files_to_update), self.notifier
         )
-        jobs = functions.dispatch_tasks(
-            files_to_update, CPU_COUNT, [self.folder, job_notifier]
-        )
         with Profiler(
-            self.lang.profile_collect_video_infos.format(cpu_count=len(jobs)),
+            self.lang.profile_collect_video_infos.format(cpu_count=CPU_COUNT),
             notifier=self.notifier,
         ):
-            results = functions.parallelize(
-                backend_raptor.backend_video_infos, jobs, cpu_count=CPU_COUNT
+            results = run_split_batch(
+                backend_raptor.backend_video_infos,
+                files_to_update,
+                CPU_COUNT,
+                [self.folder, job_notifier],
             )
 
         videos = {}
@@ -256,25 +257,24 @@ class Database(JsonDatabase):
         job_notifier = job_notifications.CollectVideoThumbnails(
             nb_videos_no_thumbs, self.notifier
         )
-        thumb_jobs = functions.dispatch_tasks(
-            [
-                (video.filename.path, video.thumb_name)
-                for video in videos_without_thumbs
-            ],
-            CPU_COUNT,
-            [self.__paths.db_folder, self.__paths.thumb_folder.best_path, job_notifier],
-        )
-        del videos_without_thumbs
         with Profiler(
             title=self.lang.profile_collect_video_thumbnails.format(
                 cpu_count=CPU_COUNT
             ),
             notifier=self.notifier,
         ):
-            results = functions.parallelize(
+            results = run_split_batch(
                 backend_raptor.backend_video_thumbnails,
-                thumb_jobs,
-                cpu_count=CPU_COUNT,
+                [
+                    (video.filename.path, video.thumb_name)
+                    for video in videos_without_thumbs
+                ],
+                CPU_COUNT,
+                [
+                    self.__paths.db_folder,
+                    self.__paths.thumb_folder.best_path,
+                    job_notifier,
+                ],
             )
 
         for arr in results:
@@ -331,13 +331,13 @@ class Database(JsonDatabase):
         )
         if tasks:
             have_added = True
-            jobs = functions.dispatch_tasks(tasks, CPU_COUNT, extra_args=[job_notifier])
-            del tasks
             with Profiler(self.lang.profile_generate_miniatures, self.notifier):
-                results = functions.parallelize(
-                    jobs_python.job_generate_miniatures, jobs, CPU_COUNT
+                results = run_split_batch(
+                    jobs_python.job_generate_miniatures,
+                    tasks,
+                    CPU_COUNT,
+                    [job_notifier],
                 )
-            del jobs
             for local_array in results:
                 added_miniatures.extend(local_array)
             del results

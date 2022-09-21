@@ -5,6 +5,7 @@ from pysaurus.core import job_notifications, notifications
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.constants import CPU_COUNT
 from pysaurus.core.job_notifications import JobNotifications
+from pysaurus.core.job_utils import Job
 from pysaurus.core.modules import ImageUtils
 from pysaurus.core.notifier import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.profiling import Profiler
@@ -23,20 +24,19 @@ def job_collect_videos_stats(job: list) -> Dict[AbsolutePath, VideoRuntimeInfo]:
     return files
 
 
-def job_generate_miniatures(job) -> List[Miniature]:
-    jobn: JobNotifications
-    thumbnails, job_id, jobn = job
-    nb_videos = len(thumbnails)
+def job_generate_miniatures(job: Job) -> List[Miniature]:
+    jobn: JobNotifications = job.args[0]
+    nb_videos = len(job.batch)
     miniatures = []
-    for i, (file_name, thumbnail_path) in enumerate(thumbnails):
+    for i, (file_name, thumbnail_path) in enumerate(job.batch):
         miniatures.append(
             Miniature.from_file_name(
                 thumbnail_path.path, ImageUtils.DEFAULT_THUMBNAIL_SIZE, file_name.path
             )
         )
         if (i + 1) % 500 == 0:
-            jobn.progress(job_id, i + 1, nb_videos)
-    jobn.progress(job_id, nb_videos, nb_videos)
+            jobn.progress(job.id, i + 1, nb_videos)
+    jobn.progress(job.id, nb_videos, nb_videos)
     return miniatures
 
 
