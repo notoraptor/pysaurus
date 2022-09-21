@@ -20,7 +20,7 @@ from pysaurus.core.notifications import (
 from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
 from pysaurus.database import pattern_detection
-from pysaurus.database.database_features import DatabaseFeatures
+from pysaurus.database.db_features import DbFeatures
 from pysaurus.database.properties import PropType
 from pysaurus.database.viewport.video_provider import VideoProvider
 from pysaurus.interface.api import tk_utils
@@ -187,7 +187,7 @@ class GuiAPI(FeatureAPI):
         self.provider.refresh()
 
     def _find_similarities(self):
-        DatabaseFeatures().find_similar_videos(self.database)
+        DbFeatures().find_similar_videos(self.database)
         self.provider.set_groups(
             field="similarity_id",
             is_property=False,
@@ -198,7 +198,7 @@ class GuiAPI(FeatureAPI):
         self.provider.refresh()
 
     def _find_similarities_ignore_cache(self):
-        DatabaseFeatures().find_similar_videos_ignore_cache(self.database)
+        DbFeatures().find_similar_videos_ignore_cache(self.database)
         self.provider.set_groups(
             field="similarity_id",
             is_property=False,

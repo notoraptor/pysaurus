@@ -17,7 +17,7 @@ from pysaurus.core.notifier import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
 from pysaurus.database import jobs_python
-from pysaurus.database.database_paths import DatabasePaths
+from pysaurus.database.db_paths import DbPaths
 from pysaurus.database.json_database import JsonDatabase
 from pysaurus.database.miniature_tools.group_computer import GroupComputer
 from pysaurus.database.miniature_tools.miniature import Miniature
@@ -40,7 +40,7 @@ class Database(JsonDatabase):
     def __init__(self, path, folders=None, notifier=None, lang=None):
         # type: (PathType, Iterable[PathType], Notifier, DefaultLanguage) -> None
         # Paths
-        self.__paths = DatabasePaths(path)
+        self.__paths = DbPaths(path)
         # RAM data
         self.__message = None
         self.lang = lang or DefaultLanguage

@@ -97,7 +97,7 @@ class _GrayClassifier:
         )
 
 
-class DatabaseFeatures:
+class DbFeatures:
     __slots__ = ("positions",)
 
     def __init__(self):

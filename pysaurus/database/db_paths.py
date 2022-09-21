@@ -6,7 +6,7 @@ from pysaurus.core.components import AbsolutePath, PathType
 from pysaurus.core.modules import FileSystem
 
 
-class DatabasePaths:
+class DbPaths:
     __slots__ = (
         "__db_folder",
         "__thumb_folder",
@@ -39,7 +39,7 @@ class DatabasePaths:
         new_db_folder = AbsolutePath.join(self.__db_folder.get_directory(), new_name)
         if new_db_folder.exists():
             raise exceptions.DatabaseAlreadyExists(new_db_folder)
-        new_paths = DatabasePaths(new_db_folder.mkdir(), create_thumb_folder=False)
+        new_paths = DbPaths(new_db_folder.mkdir(), create_thumb_folder=False)
         FileSystem.rename(self.__thumb_folder.path, new_paths.thumb_folder.path)
         FileSystem.rename(self.__json_path.path, new_paths.json_path.path)
         FileSystem.rename(self.__miniatures_path.path, new_paths.miniatures_path.path)
