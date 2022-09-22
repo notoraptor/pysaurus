@@ -56,6 +56,7 @@ class Database(JsonDatabase):
 
     # Properties.
 
+    thumbnail_folder = property(lambda self: self.__paths.thumb_folder)
     nb_entries = property(lambda self: len(self.videos))
     nb_discarded = property(lambda self: len(self.get_videos("discarded")))
     folder = property(lambda self: self.__paths.db_folder)
@@ -95,7 +96,7 @@ class Database(JsonDatabase):
         thumbs = {}
         with Profiler(self.lang.profile_collect_thumbnails, self.notifier):
             for entry in FileSystem.scandir(
-                self.thumbnail_folder.path
+                self.__paths.thumb_folder.path
             ):  # type: os.DirEntry
                 if entry.path.lower().endswith(f".{THUMBNAIL_EXTENSION}"):
                     name = entry.name

@@ -59,7 +59,6 @@ class JsonDatabase:
     quality_attribute = property(lambda self: self.__quality_attribute)
     moves_attribute = property(lambda self: self.__moves_attribute)
     id_to_video = property(lambda self: self.__id_to_video)
-    thumbnail_folder = property(lambda self: self.__backup.thumbnail_folder)
     notifier = property(lambda self: self.__notifier)
 
     @Profiler.profile_method()
