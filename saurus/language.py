@@ -1,90 +1,75 @@
-# TODO: THIS IS NOT THREAD-SAFE!
-
-from abc import abstractmethod
-from typing import Dict, Optional
-
 from pysaurus.core import dict_file_format as dff
 from pysaurus.core.components import AbsolutePath, PathType
 from pysaurus.core.functions import string_to_pieces
 from pysaurus.core.modules import FNV64
 
 
-class _LanguageData:
-    __slots__ = ()
-
-    @abstractmethod
-    def load(self) -> dict:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def dump(self, data: dict):
-        raise NotImplementedError()
-
-
-class _FileData(_LanguageData):
-    __slots__ = ("path",)
-
-    def __init__(self, path: AbsolutePath):
-        self.path = path
-
-    def load(self) -> dict:
-        return dff.dff_load(self.path) if self.path.isfile() else {}
-
-    def dump(self, data: dict):
-        dff.dff_dump(data, self.path)
-
-
-class _MemoryData(_LanguageData):
-    __slots__ = ("data",)
-
-    def __init__(self):
-        self.data = {}
-
-    def load(self) -> dict:
-        return self.data
-
-    def dump(self, data: dict):
-        self.data = data
-
-
 class Language:
-    __slots__ = ("default", "current", "folder", "data")
+    __slots__ = ("dictionary",)
+    K_DEFAULT = "default"
+    K_CURRENT = "current"
+    K_FOLDER = "folder"
+    K_DATA = "data"
 
-    def __init__(self):
-        self.default = "english"
-        self.current = "english"
-        self.folder: Optional[AbsolutePath] = None
-        self.data: Optional[Dict[str, str]] = None
+    def __init__(self, *, folder=None, dictionary=None):
+        if dictionary is None:
+            dictionary = {}
+        self.dictionary = dictionary
+        self.dictionary[self.K_DEFAULT] = "english"
+        self.dictionary[self.K_CURRENT] = "english"
+        self.dictionary[self.K_FOLDER] = None
+        self.dictionary[self.K_DATA] = {}
+        if folder is not None:
+            self.set_folder(folder)
+
+    default = property(lambda self: self.dictionary[self.K_DEFAULT])
+
+    def __str__(self):
+        return dff.dff_dumps(self.dictionary[self.K_DATA])
+
+    def __len__(self):
+        return len(self.dictionary[self.K_DATA])
 
     def __call__(self, text: str, **placeholders) -> str:
         """Translate."""
-        dm = _MemoryData() if self.folder is None else _FileData(self.current_path)
-        if self.data is None:
-            # load language
-            self.data = dm.load()
         # Update language
-        key = self.keyof(text)
-        if key not in self.data:
-            self.data[key] = text
-            dm.dump(self.data)
+        key = self.key_of(text)
+        if key not in self.dictionary[self.K_DATA]:
+            tmp_d = self.dictionary[self.K_DATA]
+            tmp_d[key] = text
+            self.dictionary[self.K_DATA] = tmp_d
+            self._save_data()
         # return translation
-        translation = self.data[key]
+        translation = self.dictionary[self.K_DATA][key]
         if placeholders:
             translation = translation.format(**placeholders)
         return translation
 
+    def set_internal(self, dictionary: dict):
+        assert dictionary is not None
+        dictionary.update(self.dictionary)
+        self.dictionary = dictionary
+
     def set_folder(self, folder: PathType):
-        folder = AbsolutePath.ensure_directory(folder)
-        if self.folder is None or self.folder != folder:
-            self.folder = folder
-            self.data = None
+        if folder is None:
+            self.dictionary[self.K_FOLDER] = None
+            self._update_data()
+        else:
+            folder = str(AbsolutePath.ensure_directory(folder))
+            if (
+                self.dictionary[self.K_FOLDER] is None
+                or self.dictionary[self.K_FOLDER] != folder
+            ):
+                self.dictionary[self.K_FOLDER] = folder
+                self._update_data()
 
     def set_language(self, language: str):
-        if self.current != language:
-            self.current = language
-            self.data = None
+        if self.dictionary[self.K_CURRENT] != language:
+            self.dictionary[self.K_CURRENT] = language
+            self._update_data()
 
-    def keyof(self, text: str) -> str:
+    @classmethod
+    def key_of(cls, text: str) -> str:
         pieces = string_to_pieces(text)
         if len(pieces) > 20:
             pieces = pieces[:20] + ["..."]
@@ -93,7 +78,22 @@ class Language:
 
     @property
     def current_path(self):
-        return AbsolutePath.join(self.folder, f"{self.current}.txt")
+        return AbsolutePath.join(
+            self.dictionary[self.K_FOLDER], f"{self.dictionary[self.K_CURRENT]}.txt"
+        )
+
+    def _update_data(self):
+        self.dictionary[self.K_DATA].clear()
+        if self.dictionary[self.K_FOLDER] is not None:
+            path = self.current_path
+            if path.isfile():
+                self.dictionary[self.K_DATA] = dff.dff_load(path)
+
+    def _save_data(self):
+        if self.dictionary[self.K_FOLDER] is not None:
+            path = self.current_path
+            if path.isfile():
+                dff.dff_dump(self.dictionary[self.K_DATA], path)
 
 
 say = Language()
