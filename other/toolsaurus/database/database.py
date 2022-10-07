@@ -64,8 +64,8 @@ class ExtendedDatabase(Database):
 
     def get_unreadable_from_id(self, video_id, required=True):
         # type: (int, bool) -> Optional[Video]
-        if video_id in self.__id_to_video:
-            video = self.__id_to_video[video_id]
+        if video_id in self.id_to_video:
+            video = self.id_to_video[video_id]
             assert video.unreadable
             return video
         if required:
@@ -79,7 +79,7 @@ class ExtendedDatabase(Database):
                 self.delete_video(video.video_id, save=False)
                 nb_removed += 1
         if nb_removed:
-            self.__notifier.notify(notifications.VideosNotFoundRemoved(nb_removed))
+            self.notifier.notify(notifications.VideosNotFoundRemoved(nb_removed))
             self.save()
 
     def reset(self, reset_thumbnails=False, reset_miniatures=False):
@@ -113,18 +113,18 @@ class ExtendedDatabase(Database):
         return self.__videos[AbsolutePath.ensure(filename)].video_id
 
     def get_video_field(self, video_id: int, field: str):
-        return getattr(self.__id_to_video[video_id], field)
+        return getattr(self.id_to_video[video_id], field)
 
     def get_video_fields(self, video_id: int, fields: Sequence[str]) -> namedtuple:
         cls = namedtuple("cls", fields)
-        vid = self.__id_to_video[video_id]
+        vid = self.id_to_video[video_id]
         return cls(**{field: getattr(vid, field) for field in fields})
 
     def get_video_string(self, video_id: int) -> str:
-        return str(self.__id_to_video[video_id])
+        return str(self.id_to_video[video_id])
 
     def has_video_id(self, video_id: int) -> bool:
-        return video_id in self.__id_to_video
+        return video_id in self.id_to_video
 
 
 def load_list_file(list_file_path):

@@ -19,19 +19,19 @@ from pysaurus.database.video import Video
 
 class JsonDatabase:
     __slots__ = (
+        "__backup",
+        "__cache",
         "settings",
         "date",
         "folders",
         "videos",
         "prop_types",
         "predictors",
-        "__backup",
-        "__save_id",
-        "__notifier",
-        "__id_to_video",
-        "__cache",
-        "__quality_attribute",
-        "__moves_attribute",
+        "iteration",
+        "notifier",
+        "id_to_video",
+        "quality_attribute",
+        "moves_attribute",
     )
 
     def __init__(
@@ -40,26 +40,20 @@ class JsonDatabase:
         folders: Optional[Iterable[PathType]] = None,
         notifier: Notifier = DEFAULT_NOTIFIER,
     ):
+        self.__backup = JsonBackup(path)
+        self.__cache = DbCache(self)
         self.settings = DbSettings()
         self.date = DateModified.now()
         self.folders: Set[AbsolutePath] = set()
         self.videos: Dict[AbsolutePath, Video] = {}
         self.prop_types: Dict[str, PropType] = {}
         self.predictors: Dict[str, List[float]] = {}
-        self.__backup = JsonBackup(path)
-        self.__notifier = notifier
-        self.__save_id = 0
-        self.__id_to_video: Dict[int, Video] = {}
-        self.__cache = DbCache(self)
-        self.__quality_attribute = QualityAttribute(self)
-        self.__moves_attribute = PotentialMoveAttribute(self)
+        self.notifier = notifier
+        self.iteration = 0
+        self.id_to_video: Dict[int, Video] = {}
+        self.quality_attribute = QualityAttribute(self)
+        self.moves_attribute = PotentialMoveAttribute(self)
         self.__load(folders)
-
-    iteration = property(lambda self: self.__save_id)
-    quality_attribute = property(lambda self: self.__quality_attribute)
-    moves_attribute = property(lambda self: self.__moves_attribute)
-    id_to_video = property(lambda self: self.__id_to_video)
-    notifier = property(lambda self: self.__notifier)
 
     @Profiler.profile_method()
     def __load(self, folders: Optional[Iterable[PathType]] = None):
@@ -98,7 +92,7 @@ class JsonDatabase:
             self.videos[video_state.filename] = video_state
 
         self.save(on_new_identifiers=to_save)
-        self.__notifier.notify(notifications.DatabaseLoaded(self))
+        self.notifier.notify(notifications.DatabaseLoaded(self))
 
     @Profiler.profile_method()
     def save(self, on_new_identifiers=False):
@@ -108,7 +102,7 @@ class JsonDatabase:
         """
         if not self.__ensure_identifiers() and on_new_identifiers:
             return
-        self.__save_id += 1
+        self.iteration += 1
         # Save database.
         self.__backup.save(
             {
@@ -123,7 +117,7 @@ class JsonDatabase:
                 ),
             }
         )
-        self.__notifier.notify(notifications.DatabaseSaved(self))
+        self.notifier.notify(notifications.DatabaseSaved(self))
 
     def __ensure_identifiers(self):
         id_to_video = {}  # type: Dict[int, Video]
@@ -141,7 +135,7 @@ class JsonDatabase:
             video_state.video_id = next_id
             next_id += 1
             id_to_video[video_state.video_id] = video_state
-        self.__id_to_video = id_to_video
+        self.id_to_video = id_to_video
         return len(without_identifiers)
 
     def add_prop_type(self, prop: PropType, save: bool = True) -> None:
