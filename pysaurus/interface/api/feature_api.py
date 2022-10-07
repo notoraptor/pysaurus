@@ -149,7 +149,7 @@ class FeatureAPI:
             "properties": prop_types,
             "definitions": {prop["name"]: prop for prop in prop_types},
             "database": {
-                "name": self.database.folder.title,
+                "name": self.database.name,
                 "folders": [str(path) for path in sorted(self.database.video_folders)],
             },
             "viewChanged": provider_changed,

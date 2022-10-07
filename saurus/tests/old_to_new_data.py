@@ -79,7 +79,7 @@ def main():
             print("[loading]", *info)
             new_app = NewApp()
             collection = data.Collection(
-                name=db.folder.title,
+                name=db.name,
                 date_updated=db.date.time,
                 miniature_pixel_distance_radius=db.settings.miniature_pixel_distance_radius,
                 miniature_group_min_size=db.settings.miniature_group_min_size,

@@ -61,6 +61,7 @@ class Database(JsonDatabase):
     nb_discarded = property(lambda self: len(self.get_videos("discarded")))
     folder = property(lambda self: self.__paths.db_folder)
     video_folders = property(lambda self: list(self.folders))
+    name = property(lambda self: self.__paths.db_folder.title)
 
     # Private methods.
 
@@ -150,7 +151,7 @@ class Database(JsonDatabase):
                 backend_raptor.backend_video_infos,
                 files_to_update,
                 CPU_COUNT,
-                [self.folder, job_notifier],
+                [self.__paths.db_folder, job_notifier],
             )
 
         videos = {}

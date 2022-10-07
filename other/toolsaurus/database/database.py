@@ -1,8 +1,9 @@
 from collections import namedtuple
-from typing import List, Optional, Sequence
+from typing import Iterable, List, Optional, Sequence, Union
 
 import ujson as json
 
+import other.toolsaurus.application.exceptions
 from pysaurus.core import notifications
 from pysaurus.core.components import AbsolutePath, PathType
 from pysaurus.core.modules import System
@@ -17,7 +18,9 @@ class ExtendedDatabase(Database):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.sys_is_case_insensitive = System.is_case_insensitive(self.folder.path)
+        self.sys_is_case_insensitive = System.is_case_insensitive(
+            self.__paths.db_folder.path
+        )
 
     def get_valid_videos(self):
         return self.get_videos("readable", "found", "with_thumbnails")
@@ -50,8 +53,8 @@ class ExtendedDatabase(Database):
     def get_video_from_filename(self, filename, required=True):
         # type: (PathType, bool) -> Optional[Video]
         filename = AbsolutePath.ensure(filename)
-        if filename in self.__videos:
-            return self.__videos[filename]
+        if filename in self.videos:
+            return self.videos[filename]
         if required:
             raise other.toolsaurus.application.exceptions.UnknownVideoFilename(filename)
         return None
@@ -83,12 +86,12 @@ class ExtendedDatabase(Database):
             self.save()
 
     def reset(self, reset_thumbnails=False, reset_miniatures=False):
-        self.__videos.clear()
-        self.__json_path.delete()
+        self.videos.clear()
+        self.__paths.json_path.delete()
         if reset_miniatures:
-            self.__miniatures_path.delete()
+            self.__paths.miniatures_path.delete()
         if reset_thumbnails:
-            self.__thumb_folder.delete()
+            self.__paths.thumb_folder.delete()
 
     def list_files(self, output_name):
         readable_videos = self.get_videos("readable")
@@ -106,11 +109,11 @@ class ExtendedDatabase(Database):
                 file.write(("%s\n" % str(file_name)).encode())
 
     def save_miniatures(self, miniatures: List[Miniature]):
-        with open(self.__miniatures_path.path, "w") as output_file:
+        with open(self.__paths.miniatures_path.path, "w") as output_file:
             json.dump([m.to_dict() for m in miniatures], output_file)
 
     def get_video_id(self, filename):
-        return self.__videos[AbsolutePath.ensure(filename)].video_id
+        return self.videos[AbsolutePath.ensure(filename)].video_id
 
     def get_video_field(self, video_id: int, field: str):
         return getattr(self.id_to_video[video_id], field)
@@ -127,8 +130,7 @@ class ExtendedDatabase(Database):
         return video_id in self.id_to_video
 
 
-def load_list_file(list_file_path):
-    # type: (Union[AbsolutePath, str]) -> Iterable[str]
+def load_list_file(list_file_path: Union[AbsolutePath, str]) -> Iterable[str]:
     strings = []
     list_file_path = AbsolutePath.ensure(list_file_path)
     if list_file_path.isfile():
@@ -140,6 +142,5 @@ def load_list_file(list_file_path):
     return strings
 
 
-def load_path_list_file(list_file_path):
-    # type: (AbsolutePath) -> Iterable[AbsolutePath]
+def load_path_list_file(list_file_path: AbsolutePath) -> Iterable[AbsolutePath]:
     return [AbsolutePath(string) for string in load_list_file(list_file_path)]
