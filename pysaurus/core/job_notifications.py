@@ -82,6 +82,11 @@ class CollectVideoThumbnails(JobNotifications):
     __kind__ = "videos"
 
 
+class CompressThumbnailsToJpeg(JobNotifications):
+    __slots__ = ()
+    __kind__ = "PNG thumbnails"
+
+
 class CollectVideoMiniatures(JobNotifications):
     __slots__ = ()
     __kind__ = "videos"

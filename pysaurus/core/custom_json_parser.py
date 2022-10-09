@@ -108,7 +108,13 @@ def _start_array(iterable: Iterator[int]):
             parsed.append(_start_array(iterable))
         elif byte == ARRAY_END:
             parsed.extend(_flush_acc(acc))
-            if len(parsed) != nb_commas + 1:
+            if not (
+                # if parsed, we must have one less comma
+                (parsed and nb_commas == len(parsed) - 1)
+                or
+                # if not parsed, we must not have commas
+                (not parsed and nb_commas == 0)
+            ):
                 raise JsonCommaCountError(nb_commas, len(parsed))
             break
         elif byte == COMMA:

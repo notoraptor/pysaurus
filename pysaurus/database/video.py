@@ -15,7 +15,7 @@ from typing import Any, Dict, Iterable, Sequence, Set
 from pysaurus.core.classes import StringPrinter, Text
 from pysaurus.core.compare import to_comparable
 from pysaurus.core.components import AbsolutePath, DateModified, Duration, FileSize
-from pysaurus.core.constants import PYTHON_ERROR_THUMBNAIL, THUMBNAIL_EXTENSION
+from pysaurus.core.constants import JPEG_EXTENSION, PYTHON_ERROR_THUMBNAIL
 from pysaurus.core.functions import (
     class_get_public_attributes,
     html_to_title,
@@ -192,7 +192,7 @@ class Video(Jsonable):
     )
     thumbnail_path = property(
         lambda self: AbsolutePath.file_path(
-            self.database.thumbnail_folder, self.thumb_name, THUMBNAIL_EXTENSION
+            self.database.thumbnail_folder, self.thumb_name, JPEG_EXTENSION
         )
     )
     quality = property(lambda self: self.database.quality_attribute(self))

@@ -1,5 +1,6 @@
 import os
 import sys
+from multiprocessing import Pool
 from typing import Dict, Iterable, List, Optional, Set
 
 import ujson as json
@@ -11,7 +12,7 @@ from pysaurus.core.components import (
     DateModified,
     PathType,
 )
-from pysaurus.core.constants import CPU_COUNT, THUMBNAIL_EXTENSION
+from pysaurus.core.constants import CPU_COUNT, JPEG_EXTENSION, THUMBNAIL_EXTENSION
 from pysaurus.core.job_utils import run_split_batch
 from pysaurus.core.modules import FileSystem, ImageUtils
 from pysaurus.core.notifier import DEFAULT_NOTIFIER, Notifier
@@ -35,6 +36,22 @@ except exceptions.CysaurusUnavailable:
     print("Using fallback backend for videos info and thumbnails.", file=sys.stderr)
 
 
+def image_to_jpeg(input_path):
+    path = AbsolutePath(input_path)
+    output_path = AbsolutePath.file_path(
+        path.get_directory(), path.title, JPEG_EXTENSION
+    )
+    ImageUtils.open_rgb_image(path.path).save(output_path.path)
+    assert output_path.isfile()
+    path.delete()
+
+
+def thumbnail_to_jpeg(job):
+    path, job_id, job_notifier = job
+    image_to_jpeg(path)
+    job_notifier.progress(job_id, 1, 1)
+
+
 class Database(JsonDatabase):
     __slots__ = ("__paths", "__message", "lang")
 
@@ -53,6 +70,7 @@ class Database(JsonDatabase):
         # Set special properties
         with Profiler("install special properties", notifier=self.notifier):
             SpecialProperties.install(self)
+        self.compress_thumbnails()
 
     # Properties.
 
@@ -94,9 +112,9 @@ class Database(JsonDatabase):
             for entry in FileSystem.scandir(
                 self.__paths.thumb_folder.path
             ):  # type: os.DirEntry
-                if entry.path.lower().endswith(f".{THUMBNAIL_EXTENSION}"):
+                if entry.path.lower().endswith(f".{JPEG_EXTENSION}"):
                     name = entry.name
-                    thumbs[name[: -(len(THUMBNAIL_EXTENSION) + 1)]] = DateModified(
+                    thumbs[name[: -(len(JPEG_EXTENSION) + 1)]] = DateModified(
                         entry.stat().st_mtime
                     )
         return thumbs
@@ -192,6 +210,29 @@ class Database(JsonDatabase):
             )
 
     @Profiler.profile_method()
+    def compress_thumbnails(self):
+        png_paths = []
+        for entry in FileSystem.scandir(self.__paths.thumb_folder.path):
+            path = AbsolutePath(entry.path)
+            if (
+                path.extension == THUMBNAIL_EXTENSION
+                and not AbsolutePath.file_path(
+                    path.get_directory(), path.title, JPEG_EXTENSION
+                ).exists()
+            ):
+                png_paths.append(path.path)
+        if not png_paths:
+            self.notifier.notify(notifications.Message("no thumbnail to compress"))
+            return
+        job_notifier = job_notifications.CompressThumbnailsToJpeg(
+            len(png_paths), self.notifier
+        )
+        tasks = [(path, i, job_notifier) for i, path in enumerate(png_paths)]
+        with Profiler("compress thumbnails", self.notifier):
+            with Pool(CPU_COUNT) as p:
+                list(p.imap_unordered(thumbnail_to_jpeg, tasks))
+
+    @Profiler.profile_method()
     def ensure_thumbnails(self) -> None:
         valid_thumb_names = set()
         videos_without_thumbs = []
@@ -283,6 +324,7 @@ class Database(JsonDatabase):
         if thumb_errors:
             self.notifier.notify(notifications.VideoThumbnailErrors(thumb_errors))
 
+        self.compress_thumbnails()
         self.save()
         self.__notify_missing_thumbnails()
 
