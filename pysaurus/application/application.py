@@ -92,20 +92,17 @@ class Application:
             AbsolutePath.join(self.lang_dir, f"{self.config.language}.txt")
         ]
 
-    def get_database_paths(self) -> List[AbsolutePath]:
-        return sorted(self.databases.keys())
+    def get_database_names(self) -> List[str]:
+        return sorted(path.title for path in self.databases.keys())
 
-    def open_database(self, path: AbsolutePath) -> Database:
-        path = AbsolutePath.ensure(path)
+    def open_database_from_name(self, name: str) -> Database:
+        path = AbsolutePath.join(self.dbs_dir, name)
         assert path in self.databases
         if not self.databases[path]:
             self.databases[path] = Database(
                 path, notifier=self.notifier, lang=self.lang
             )
         return self.databases[path]
-
-    def open_database_from_name(self, name: str) -> Database:
-        return self.open_database(AbsolutePath.join(self.dbs_dir, name))
 
     def new_database(self, name, folders: Iterable[AbsolutePath]):
         if functions.has_discarded_characters(name):
@@ -122,7 +119,8 @@ class Application:
         )
         return self.databases[path]
 
-    def delete_database(self, path: AbsolutePath):
+    def delete_database_from_name(self, name: str):
+        path = AbsolutePath.join(self.dbs_dir, name)
         if path in self.databases:
             path.delete()
             del self.databases[path]

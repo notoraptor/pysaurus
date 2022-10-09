@@ -94,7 +94,7 @@ System.register(["../utils/backend.js", "../components/PathsInput.js", "../langu
             key: index
           }, /*#__PURE__*/React.createElement("button", {
             className: "block",
-            onClick: () => this.openDatabase(database.path)
+            onClick: () => this.openDatabase(database.name)
           }, database.name)))))));
         }
 
@@ -154,8 +154,8 @@ System.register(["../utils/backend.js", "../components/PathsInput.js", "../langu
           this.props.app.dbUpdate("create_database", this.state.name, Array.from(this.state.paths), this.state.update);
         }
 
-        openDatabase(path) {
-          this.props.app.dbUpdate("open_database", path, this.state.update);
+        openDatabase(name) {
+          this.props.app.dbUpdate("open_database", name, this.state.update);
         }
 
         onUpdatePaths(paths) {

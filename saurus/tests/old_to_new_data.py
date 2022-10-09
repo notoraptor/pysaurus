@@ -72,9 +72,9 @@ def main():
     report = []
     old_app = OldApp()
     with Profiler("Adding databases"):
-        for database_path in old_app.get_database_paths():
-            db = old_app.open_database(database_path)
-            info = (database_path.title, db.nb_entries)
+        for database_name in old_app.get_database_names():
+            db = old_app.open_database_from_name(database_name)
+            info = (database_name, db.nb_entries)
             report.append(info)
             print("[loading]", *info)
             new_app = NewApp()

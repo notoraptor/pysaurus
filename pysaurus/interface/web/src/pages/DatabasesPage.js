@@ -76,7 +76,7 @@ export class DatabasesPage extends React.Component {
                             <h3>{this.context.gui_database_click_to_open}</h3>
                             {this.props.parameters.databases.map((database, index) => (
                                 <div className="p-1" key={index}>
-                                    <button className="block" onClick={() => this.openDatabase(database.path)}>
+                                    <button className="block" onClick={() => this.openDatabase(database.name)}>
                                         {database.name}
                                     </button>
                                 </div>
@@ -137,8 +137,8 @@ export class DatabasesPage extends React.Component {
         this.props.app.dbUpdate("create_database", this.state.name, Array.from(this.state.paths), this.state.update)
     }
 
-    openDatabase(path) {
-        this.props.app.dbUpdate("open_database", path, this.state.update);
+    openDatabase(name) {
+        this.props.app.dbUpdate("open_database", name, this.state.update);
     }
 
     onUpdatePaths(paths) {

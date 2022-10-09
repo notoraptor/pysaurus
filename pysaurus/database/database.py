@@ -56,12 +56,11 @@ class Database(JsonDatabase):
 
     # Properties.
 
+    name = property(lambda self: self.__paths.db_folder.title)
     thumbnail_folder = property(lambda self: self.__paths.thumb_folder)
     nb_entries = property(lambda self: len(self.videos))
     nb_discarded = property(lambda self: len(self.get_videos("discarded")))
-    folder = property(lambda self: self.__paths.db_folder)
     video_folders = property(lambda self: list(self.folders))
-    name = property(lambda self: self.__paths.db_folder.title)
 
     # Private methods.
 

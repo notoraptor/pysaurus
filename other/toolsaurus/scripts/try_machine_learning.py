@@ -1,7 +1,6 @@
 from typing import List
 
 from pysaurus.application.application import Application
-from pysaurus.core.components import AbsolutePath
 from pysaurus.database.machine_learning import predict, train
 from pysaurus.database.miniature_tools.miniature import Miniature
 from pysaurus.database.video import Video
@@ -9,7 +8,7 @@ from pysaurus.database.video import Video
 
 def main():
     app = Application()
-    db = app.open_database(AbsolutePath.join(app.dbs_dir, "adult videos"))
+    db = app.open_database_from_name("adult videos")
     all_miniatures = db.ensure_miniatures(returns=True)  # type: List[Miniature]
     video_id_to_miniature = {m.video_id: m for m in all_miniatures}
     videos = db.get_videos("readable", "with_thumbnails")  # type: List[Video]

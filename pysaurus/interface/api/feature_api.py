@@ -57,10 +57,7 @@ class FeatureAPI:
         }
 
     def _list_databases(self):
-        return [
-            {"name": path.title, "path": str(path)}
-            for path in self.application.get_database_paths()
-        ]
+        return [{"name": name} for name in self.application.get_database_names()]
 
     def list_languages(self):
         return [

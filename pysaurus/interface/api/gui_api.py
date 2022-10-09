@@ -42,8 +42,8 @@ class GuiAPI(FeatureAPI):
     def create_database(self, name, folders, update):
         self._launch(self._create_database, args=(name, folders, update))
 
-    def open_database(self, path, update):
-        self._launch(self._open_database, args=(path, update))
+    def open_database(self, name, update):
+        self._launch(self._open_database, args=(name, update))
 
     def update_database(self):
         self._launch(self._update_database)
@@ -81,7 +81,7 @@ class GuiAPI(FeatureAPI):
         return self.get_app_state()
 
     def delete_database(self):
-        assert self.application.delete_database(self.database.folder)
+        assert self.application.delete_database_from_name(self.database.name)
         self.database = None
         self.provider = None
         return self.get_app_state()
@@ -176,8 +176,8 @@ class GuiAPI(FeatureAPI):
         if update:
             self._update_database()
 
-    def _open_database(self, path: str, update: bool):
-        self.database = self.application.open_database(path)
+    def _open_database(self, name: str, update: bool):
+        self.database = self.application.open_database_from_name(name)
         self.provider = VideoProvider(self.database)
         if update:
             self._update_database()
