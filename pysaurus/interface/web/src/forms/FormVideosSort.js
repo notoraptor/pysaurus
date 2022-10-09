@@ -17,10 +17,6 @@ export class FormVideosSort extends React.Component {
         this.getFields = this.getFields.bind(this);
     }
 
-    getFields() {
-        return getFieldMap(this.context);
-    }
-
     render() {
         return (
             <FancyBox title={this.context.form_title_sort_videos}>
@@ -60,6 +56,10 @@ export class FormVideosSort extends React.Component {
             );
         })
     };
+
+    getFields() {
+        return getFieldMap(this.context);
+    }
 
     setField(index, value) {
         const sorting = this.state.sorting.slice();

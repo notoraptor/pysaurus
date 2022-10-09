@@ -109,7 +109,7 @@ export class Video extends React.Component {
                                         {data.found ? this.context.text_delete_video : this.context.text_delete_entry}
                                     </MenuItem>
                                 </MenuPack>
-                                <div>
+                                <div title={data.video_id}>
                                     <input type="checkbox"
                                            checked={this.props.selected}
                                            id={htmlID}

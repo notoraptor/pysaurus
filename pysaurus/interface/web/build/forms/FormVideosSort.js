@@ -31,10 +31,6 @@ System.register(["../utils/constants.js", "../dialogs/FancyBox.js", "../language
           this.getFields = this.getFields.bind(this);
         }
 
-        getFields() {
-          return getFieldMap(this.context);
-        }
-
         render() {
           return /*#__PURE__*/React.createElement(FancyBox, {
             title: this.context.form_title_sort_videos
@@ -84,6 +80,10 @@ System.register(["../utils/constants.js", "../dialogs/FancyBox.js", "../language
               htmlFor: reverseID
             }, "reverse"));
           });
+        }
+
+        getFields() {
+          return getFieldMap(this.context);
         }
 
         setField(index, value) {

@@ -131,7 +131,9 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
           }, this.context.action_reset_similarity) : "", /*#__PURE__*/React.createElement(MenuItem, {
             className: "red-flag",
             action: this.deleteVideo
-          }, data.found ? this.context.text_delete_video : this.context.text_delete_entry)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("input", {
+          }, data.found ? this.context.text_delete_video : this.context.text_delete_entry)), /*#__PURE__*/React.createElement("div", {
+            title: data.video_id
+          }, /*#__PURE__*/React.createElement("input", {
             type: "checkbox",
             checked: this.props.selected,
             id: htmlID,

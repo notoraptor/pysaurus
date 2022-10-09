@@ -1,7 +1,7 @@
 export const GroupPermission = {
     FORBIDDEN: 0,
     ONLY_MANY: 1,
-    ALL: 2
+    ALL: 2,
 };
 
 const FieldType = {
@@ -62,11 +62,10 @@ class FieldMap {
             if (this.fields.hasOwnProperty(fieldInfo.name))
                 throw new Error(context.error_duplicated_field.format({name: fieldInfo.name}));
             this.fields[fieldInfo.name] = fieldInfo;
-            if (!fieldInfo.isForbidden()) {
+            if (!fieldInfo.isForbidden())
                 this.allowed.push(fieldInfo);
-                if (fieldInfo.isSortable())
-                    this.sortable.push(fieldInfo);
-            }
+            if (fieldInfo.isSortable())
+                this.sortable.push(fieldInfo);
         }
         this.list.sort(FieldMap.compareFieldInfo);
         this.allowed.sort(FieldMap.compareFieldInfo);
@@ -108,7 +107,7 @@ export function getFieldMap(context) {
         new FieldInfo('sample_rate', context.attr_sample_rate, GroupPermission.ALL, FieldType.int),
         new FieldInfo('similarity_id', context.attr_similarity_id, GroupPermission.ONLY_MANY, FieldType.unsortable),
         new FieldInfo('size', context.attr_size, GroupPermission.ONLY_MANY, FieldType.sortable),
-        new FieldInfo('thumbnail_path', context.attr_thumbnail_path, GroupPermission.FORBIDDEN, FieldType.str),
+        new FieldInfo('thumbnail_path', context.attr_thumbnail_path, GroupPermission.FORBIDDEN, FieldType.unsortable),
         new FieldInfo('title', context.attr_title, GroupPermission.ONLY_MANY, FieldType.str),
         new FieldInfo('title_numeric', context.attr_title_numeric, GroupPermission.ONLY_MANY, FieldType.sortable),
         new FieldInfo('video_codec', context.attr_video_codec, GroupPermission.ALL, FieldType.str),
