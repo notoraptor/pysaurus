@@ -76,7 +76,7 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
           const title = data.title;
           const file_title = data.file_title;
           const meta_title = title === file_title ? null : title;
-          const hasThumbnail = data.has_thumbnail;
+          const hasThumbnail = data.with_thumbnails;
           const htmlID = `video-${data.video_id}`;
           const alreadyOpened = APP_STATE.videoHistory.has(data.filename);
           const common = this.props.groupDef && this.props.groupDef.common || {};
@@ -340,7 +340,7 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
             className: "details overflow-auto px-2 py-1"
           }, /*#__PURE__*/React.createElement("code", {
             id: "filename"
-          }, filename)), /*#__PURE__*/React.createElement("p", null, this.props.data.has_thumbnail ? /*#__PURE__*/React.createElement("img", {
+          }, filename)), /*#__PURE__*/React.createElement("p", null, this.props.data.with_thumbnails ? /*#__PURE__*/React.createElement("img", {
             id: "thumbnail",
             alt: "No thumbnail available",
             src: thumbnail_path
@@ -362,7 +362,7 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
             className: "details overflow-auto px-2 py-1"
           }, /*#__PURE__*/React.createElement("code", {
             id: "filename"
-          }, filename)), /*#__PURE__*/React.createElement("p", null, this.props.data.has_thumbnail ? /*#__PURE__*/React.createElement("img", {
+          }, filename)), /*#__PURE__*/React.createElement("p", null, this.props.data.with_thumbnails ? /*#__PURE__*/React.createElement("img", {
             id: "thumbnail",
             alt: "No thumbnail available",
             src: thumbnail_path
@@ -384,7 +384,7 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
             className: "details overflow-auto px-2 py-1"
           }, /*#__PURE__*/React.createElement("code", {
             id: "filename"
-          }, filename)), /*#__PURE__*/React.createElement("p", null, this.props.data.has_thumbnail ? /*#__PURE__*/React.createElement("img", {
+          }, filename)), /*#__PURE__*/React.createElement("p", null, this.props.data.with_thumbnails ? /*#__PURE__*/React.createElement("img", {
             id: "thumbnail",
             alt: "No thumbnail available",
             src: thumbnail_path

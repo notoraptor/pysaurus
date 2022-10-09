@@ -161,15 +161,14 @@ class Video(Jsonable):
         lambda self: self.filename.get_drive_name() or self.runtime.driver_id
     )
     date = property(lambda self: DateModified(self.runtime.mtime))
-    has_thumbnail = property(
-        lambda self: not self.unreadable_thumbnail and self.runtime.has_thumbnail
-    )
 
     readable = property(lambda self: not self.unreadable)
     found = property(lambda self: self.runtime.is_file)
     not_found = property(lambda self: not self.runtime.is_file)
-    with_thumbnails = property(lambda self: self.has_thumbnail)
-    without_thumbnails = property(lambda self: not self.has_thumbnail)
+    with_thumbnails = property(
+        lambda self: not self.unreadable_thumbnail and self.runtime.has_thumbnail
+    )
+    without_thumbnails = property(lambda self: not self.with_thumbnails)
 
     frame_rate = property(lambda self: self.frame_rate_num / self.frame_rate_den)
     length = property(

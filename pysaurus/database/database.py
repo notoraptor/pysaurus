@@ -64,27 +64,23 @@ class Database(JsonDatabase):
 
     # Private methods.
 
-    def _update_video_runtime_flags(
+    def _update_videos_not_found(
         self, file_paths: Dict[AbsolutePath, VideoRuntimeInfo]
     ):
         for video_state in self.videos.values():
-            info = file_paths.get(video_state.filename, None)
-            video_state.runtime.is_file = info is not None
-            if info:
-                video_state.runtime.mtime = info.mtime
-                video_state.runtime.size = info.size
-                video_state.runtime.driver_id = info.driver_id
+            video_state.runtime.is_file = video_state.filename in file_paths
 
     def _find_video_paths_for_update(
-        self, file_names: Iterable[AbsolutePath]
+        self, file_paths: Dict[AbsolutePath, VideoRuntimeInfo]
     ) -> List[str]:
         all_file_names = []
-        for file_name in file_names:  # type: AbsolutePath
-            video = self.videos.get(file_name, None)
+        for file_name, file_info in file_paths.items():
+            video: Video = self.videos.get(file_name, None)
             if (
                 video is None
-                or video.date >= self.date
-                or video.runtime.size != video.file_size
+                or file_info.mtime != video.runtime.mtime
+                or file_info.size != video.file_size
+                or file_info.driver_id != video.runtime.driver_id
                 or (video.readable and not SpecialProperties.all_in(video))
             ):
                 all_file_names.append(file_name.path)
@@ -134,7 +130,7 @@ class Database(JsonDatabase):
         current_date = DateModified.now()
 
         all_files = jobs_python.collect_video_paths(self.folders, self.notifier)
-        self._update_video_runtime_flags(all_files)
+        self._update_videos_not_found(all_files)
         files_to_update = self._find_video_paths_for_update(all_files)
         if not files_to_update:
             return
@@ -177,11 +173,7 @@ class Database(JsonDatabase):
                     SpecialProperties.set(video_state)
                 videos[file_path] = video_state
                 self.videos.pop(file_path, None)
-                stat = FileSystem.stat(file_path.path)
-                video_state.runtime.is_file = True
-                video_state.runtime.mtime = stat.st_mtime
-                video_state.runtime.size = stat.st_size
-                video_state.runtime.driver_id = stat.st_dev
+                video_state.runtime = all_files[file_path]
 
         assert len(videos) == len(files_to_update)
 

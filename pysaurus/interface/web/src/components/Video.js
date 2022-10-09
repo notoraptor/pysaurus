@@ -55,7 +55,7 @@ export class Video extends React.Component {
         const title = data.title;
         const file_title = data.file_title;
         const meta_title = (title === file_title ? null : title);
-        const hasThumbnail = data.has_thumbnail;
+        const hasThumbnail = data.with_thumbnails;
         const htmlID = `video-${data.video_id}`;
         const alreadyOpened = APP_STATE.videoHistory.has(data.filename);
         const common = (this.props.groupDef && this.props.groupDef.common) || {};
@@ -322,7 +322,7 @@ export class Video extends React.Component {
                     {this.context.form_head_confirm_delete_video.markdown()}
                     <div className="details overflow-auto px-2 py-1"><code id="filename">{filename}</code></div>
                     <p>
-                        {this.props.data.has_thumbnail ? (
+                        {this.props.data.with_thumbnails ? (
                             <img id="thumbnail" alt="No thumbnail available" src={thumbnail_path}/>
                         ) : (
                             <div className="no-thumbnail">{this.context.text_no_thumbnail}</div>
@@ -344,7 +344,7 @@ export class Video extends React.Component {
                     <h2>{this.context.form_head_confirm_dismiss}</h2>
                     <div className="details overflow-auto px-2 py-1"><code id="filename">{filename}</code></div>
                     <p>
-                        {this.props.data.has_thumbnail ? (
+                        {this.props.data.with_thumbnails ? (
                             <img id="thumbnail" alt="No thumbnail available" src={thumbnail_path}/>
                         ) : (
                             <div className="no-thumbnail">{this.context.text_no_thumbnail}</div>
@@ -366,7 +366,7 @@ export class Video extends React.Component {
                     {this.context.form_content_reset_similarity.markdown()}
                     <div className="details overflow-auto px-2 py-1"><code id="filename">{filename}</code></div>
                     <p>
-                        {this.props.data.has_thumbnail ? (
+                        {this.props.data.with_thumbnails ? (
                             <img id="thumbnail" alt="No thumbnail available" src={thumbnail_path}/>
                         ) : (
                             <div className="no-thumbnail">{this.context.text_no_thumbnail}</div>
