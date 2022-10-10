@@ -3,7 +3,7 @@ from typing import Collection, Dict, List
 
 from pysaurus.core import job_notifications, notifications
 from pysaurus.core.components import AbsolutePath
-from pysaurus.core.constants import CPU_COUNT
+from pysaurus.core.constants import CPU_COUNT, JPEG_EXTENSION
 from pysaurus.core.job_notifications import JobNotifications
 from pysaurus.core.job_utils import Job
 from pysaurus.core.modules import ImageUtils
@@ -55,3 +55,19 @@ def collect_video_paths(
                 paths.update(local_result)
     notifier.notify(notifications.FinishedCollectingVideos(paths))
     return paths
+
+
+def image_to_jpeg(input_path):
+    path = AbsolutePath(input_path)
+    output_path = AbsolutePath.file_path(
+        path.get_directory(), path.title, JPEG_EXTENSION
+    )
+    ImageUtils.open_rgb_image(path.path).save(output_path.path)
+    assert output_path.isfile()
+    path.delete()
+
+
+def job_image_to_jpeg(job):
+    path, job_id, job_notifier = job
+    image_to_jpeg(path)
+    job_notifier.progress(job_id, 1, 1)

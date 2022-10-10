@@ -20,6 +20,7 @@ from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
 from pysaurus.database import jobs_python
 from pysaurus.database.db_paths import DbPaths
+from pysaurus.database.jobs_python import job_image_to_jpeg
 from pysaurus.database.json_database import JsonDatabase
 from pysaurus.database.miniature_tools.group_computer import GroupComputer
 from pysaurus.database.miniature_tools.miniature import Miniature
@@ -34,22 +35,6 @@ except exceptions.CysaurusUnavailable:
     from pysaurus.database.video_info import backend_pyav as backend_raptor
 
     print("Using fallback backend for videos info and thumbnails.", file=sys.stderr)
-
-
-def image_to_jpeg(input_path):
-    path = AbsolutePath(input_path)
-    output_path = AbsolutePath.file_path(
-        path.get_directory(), path.title, JPEG_EXTENSION
-    )
-    ImageUtils.open_rgb_image(path.path).save(output_path.path)
-    assert output_path.isfile()
-    path.delete()
-
-
-def thumbnail_to_jpeg(job):
-    path, job_id, job_notifier = job
-    image_to_jpeg(path)
-    job_notifier.progress(job_id, 1, 1)
 
 
 class Database(JsonDatabase):
@@ -230,7 +215,7 @@ class Database(JsonDatabase):
         tasks = [(path, i, job_notifier) for i, path in enumerate(png_paths)]
         with Profiler("compress thumbnails", self.notifier):
             with Pool(CPU_COUNT) as p:
-                list(p.imap_unordered(thumbnail_to_jpeg, tasks))
+                list(p.imap_unordered(job_image_to_jpeg, tasks))
 
     @Profiler.profile_method()
     def ensure_thumbnails(self) -> None:
