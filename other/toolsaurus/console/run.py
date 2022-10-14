@@ -55,7 +55,7 @@ class API:
     @fsigned
     def nb(self, query: str) -> int:
         if query == "entries":
-            return len(self.database.videos)
+            return len(self.database.query())
         if query == "discarded":
             return len(self.database.get_videos("discarded"))
         return len(self.database.get_videos(*query.strip().split()))

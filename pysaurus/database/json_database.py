@@ -20,7 +20,7 @@ from pysaurus.database.video import Video
 class JsonDatabase:
     __slots__ = (
         "__backup",
-        "__cache",
+        "get_videos",
         "settings",
         "date",
         "folders",
@@ -40,19 +40,23 @@ class JsonDatabase:
         folders: Optional[Iterable[PathType]] = None,
         notifier: Notifier = DEFAULT_NOTIFIER,
     ):
+        # Private data
         self.__backup = JsonBackup(path)
-        self.__cache = DbCache(self)
+        self.get_videos = DbCache(self)
+        # Database content
         self.settings = DbSettings()
         self.date = DateModified.now()
         self.folders: Set[AbsolutePath] = set()
         self.videos: Dict[AbsolutePath, Video] = {}
         self.prop_types: Dict[str, PropType] = {}
         self.predictors: Dict[str, List[float]] = {}
+        # Runtime
         self.notifier = notifier
         self.iteration = 0
         self.id_to_video: Dict[int, Video] = {}
         self.quality_attribute = QualityAttribute(self)
         self.moves_attribute = PotentialMoveAttribute(self)
+        # Initialize
         self.__load(folders)
 
     @Profiler.profile_method()
@@ -138,13 +142,6 @@ class JsonDatabase:
         self.id_to_video = id_to_video
         return len(without_identifiers)
 
-    def add_prop_type(self, prop: PropType, save: bool = True) -> None:
-        if prop.name in self.prop_types:
-            raise exceptions.PropertyAlreadyExists(prop.name)
-        self.prop_types[prop.name] = prop
-        if save:
-            self.save()
-
     def set_path(self, path: PathType):
         self.__backup = JsonBackup(path)
 
@@ -160,11 +157,26 @@ class JsonDatabase:
             else list(videos)
         )
 
-    def get_videos(self, *flags, **forced_flags) -> List[Video]:
-        return self.__cache.get(*flags, **forced_flags)
+    def add_prop_type(self, prop: PropType, save: bool = True) -> None:
+        if prop.name in self.prop_types:
+            raise exceptions.PropertyAlreadyExists(prop.name)
+        self.prop_types[prop.name] = prop
+        if save:
+            self.save()
 
     def get_prop_type(self, name: str) -> PropType:
         return self.prop_types[name]
 
     def get_prop_types(self) -> Iterable[PropType]:
         return self.prop_types.values()
+
+    def remove_prop_type(self, name, save: bool = True) -> None:
+        if name in self.prop_types:
+            del self.prop_types[name]
+            for video in self.query():
+                video.remove_property(name)
+            if save:
+                self.save()
+
+    def has_prop_type(self, name) -> bool:
+        return name in self.prop_types

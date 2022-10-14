@@ -23,7 +23,8 @@ class PropError(SpecialPropType):
 
 
 class SpecialProperties:
-    properties = [PropError()]
+    # properties = [PropError()]
+    properties = []
 
     @classmethod
     def install(cls, database):

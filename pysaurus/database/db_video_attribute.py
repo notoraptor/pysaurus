@@ -31,7 +31,7 @@ class _DbVideoAttribute:
 
 
 class QualityAttribute(_DbVideoAttribute):
-    __slots__ = "fields", "min", "max"
+    __slots__ = "min", "max"
 
     QUALITY_FIELDS = (
         ("quality_compression", 6),
@@ -42,10 +42,11 @@ class QualityAttribute(_DbVideoAttribute):
         ("file_size", 1),
         ("audio_bit_rate", 0.5),
     )
+    FIELDS = tuple(t[0] for t in QUALITY_FIELDS)
+    TOTAL_LEVEL = sum(t[1] for t in QUALITY_FIELDS)
 
     def __init__(self, database):
         super().__init__(database)
-        self.fields = tuple(t[0] for t in self.QUALITY_FIELDS)
         self.min = {}
         self.max = {}
 
@@ -57,18 +58,17 @@ class QualityAttribute(_DbVideoAttribute):
             return
         self.min = {
             field: min(getattr(video, field) for video in videos)
-            for field in self.fields
+            for field in self.FIELDS
         }
         self.max = {
             field: max(getattr(video, field) for video in videos)
-            for field in self.fields
+            for field in self.FIELDS
         }
 
     def _get(self, video: Video):
         if video.unreadable:
             return 0
-        total_level = 0
-        qualities = {}
+        total_quality = 0
         for field, level in self.QUALITY_FIELDS:
             value = getattr(video, field)
             min_value = self.min[field]
@@ -79,9 +79,8 @@ class QualityAttribute(_DbVideoAttribute):
             else:
                 quality = (value - min_value) / (max_value - min_value)
                 assert 0 <= quality <= 1, (quality, field, value, min_value, max_value)
-            qualities[field] = quality * level
-            total_level += level
-        return sum(qualities.values()) * 100 / total_level
+            total_quality += quality * level
+        return total_quality * 100 / self.TOTAL_LEVEL
 
 
 class _MoveKey:

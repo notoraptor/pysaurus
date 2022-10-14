@@ -42,6 +42,7 @@ Features:
   - set a unique property
   - add a value to a multiple property
 - Add an option "save to playlist" to save current view into a playlist.
+- Manage errors like read-only properties.
 
 Optimizations:
 - Memory leaks in python code when running gui ?

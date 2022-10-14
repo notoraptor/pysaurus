@@ -22,8 +22,8 @@ class FeatureAPI:
     def __init__(self, notifier):
         self.notifier = notifier
         self.application = Application(self.notifier)
-        self.database = None  # type: Optional[Database]
-        self.provider = None  # type: Optional[VideoProvider]
+        self.database: Optional[Database] = None
+        self.provider: Optional[VideoProvider] = None
         self.PYTHON_LANG = language_to_dict(self.application.lang)
 
     # Utilities.

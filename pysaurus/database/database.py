@@ -168,8 +168,10 @@ class Database(JsonDatabase):
                     video_state = Video.from_dict(d, database=self)
                     # Get previous properties, if available
                     if file_path in self.videos and self.videos[file_path].readable:
-                        video_state.properties.update(self.videos[file_path].properties)
-                        video_state.similarity_id = self.videos[file_path].similarity_id
+                        old_video = self.videos[file_path]
+                        video_state.properties.update(old_video.properties)
+                        video_state.similarity_id = old_video.similarity_id
+                        video_state.video_id = old_video.video_id
                     # Set special properties
                     SpecialProperties.set(video_state)
                 videos[file_path] = video_state
@@ -193,33 +195,10 @@ class Database(JsonDatabase):
             )
 
     @Profiler.profile_method()
-    def compress_thumbnails(self):
-        png_paths = []
-        for entry in FileSystem.scandir(self.__paths.thumb_folder.path):
-            path = AbsolutePath(entry.path)
-            if (
-                path.extension == THUMBNAIL_EXTENSION
-                and not AbsolutePath.file_path(
-                    path.get_directory(), path.title, JPEG_EXTENSION
-                ).exists()
-            ):
-                png_paths.append(path.path)
-        if not png_paths:
-            self.notifier.notify(notifications.Message("no thumbnail to compress"))
-            return
-        job_notifier = job_notifications.CompressThumbnailsToJpeg(
-            len(png_paths), self.notifier
-        )
-        tasks = [(path, i, job_notifier) for i, path in enumerate(png_paths)]
-        with Profiler("compress thumbnails", self.notifier):
-            with Pool(CPU_COUNT) as p:
-                list(p.imap_unordered(job_image_to_jpeg, tasks))
-
-    @Profiler.profile_method()
     def ensure_thumbnails(self) -> None:
         valid_thumb_names = set()
         videos_without_thumbs = []
-        thumb_to_videos = {}  # type: Dict[str, List[Video]]
+        thumb_to_videos: Dict[str, List[Video]] = {}
         thumb_errors = {}
 
         # Collect videos with and without thumbnails.
@@ -400,6 +379,29 @@ class Database(JsonDatabase):
                 miniatures.append(miniature)
             return miniatures
 
+    @Profiler.profile_method()
+    def compress_thumbnails(self):
+        png_paths = []
+        for entry in FileSystem.scandir(self.__paths.thumb_folder.path):
+            path = AbsolutePath(entry.path)
+            if (
+                path.extension == THUMBNAIL_EXTENSION
+                and not AbsolutePath.file_path(
+                    path.get_directory(), path.title, JPEG_EXTENSION
+                ).exists()
+            ):
+                png_paths.append(path.path)
+        if not png_paths:
+            self.notifier.notify(notifications.Message("no thumbnail to compress"))
+            return
+        job_notifier = job_notifications.CompressThumbnailsToJpeg(
+            len(png_paths), self.notifier
+        )
+        tasks = [(path, i, job_notifier) for i, path in enumerate(png_paths)]
+        with Profiler("compress thumbnails", self.notifier):
+            with Pool(CPU_COUNT) as p:
+                list(p.imap_unordered(job_image_to_jpeg, tasks))
+
     def rename(self, new_name) -> None:
         self.__paths = self.__paths.renamed(new_name)
         self.notifier.set_log_path(self.__paths.log_path.path)
@@ -495,17 +497,6 @@ class Database(JsonDatabase):
                 if name in video.properties:
                     video.properties[name] = [video.properties[name]]
             self.save()
-
-    def remove_prop_type(self, name, save: bool = True) -> None:
-        if name in self.prop_types:
-            del self.prop_types[name]
-            for video in self.get_videos("readable"):
-                video.remove_property(name)
-            if save:
-                self.save()
-
-    def has_prop_type(self, name) -> bool:
-        return name in self.prop_types
 
     def set_video_properties(self, video_id: int, properties) -> Set[str]:
         video = self.__get_video_from_id(video_id)

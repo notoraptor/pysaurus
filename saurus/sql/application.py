@@ -30,7 +30,7 @@ class Application:
             for row in self.db.query("SELECT name FROM collection ORDER BY name ASC")
         ]
 
-    def open_collection(self, name: str):
+    def open_collection(self, name: str) -> data.Collection:
         r_col = self.db.query_one("SELECT * FROM collection WHERE name = ?", [name])
         collection_id = r_col["collection_id"]
         sources = [

@@ -9,7 +9,7 @@ class DbCache:
         self.database = database
         self.iteration = -1
 
-    def get(self, *flags, **forced_flags):
+    def __call__(self, *flags, **forced_flags):
         required = {flag: True for flag in flags}
         required.update(forced_flags)
         required["discarded"] = required.get("discarded", False)

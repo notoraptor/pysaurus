@@ -81,6 +81,8 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
           const alreadyOpened = APP_STATE.videoHistory.has(data.filename);
           const common = this.props.groupDef && this.props.groupDef.common || {};
           const groupedBySimilarityID = this.props.groupDef && this.props.groupDef.field === "similarity_id";
+          const errors = data.errors.slice();
+          errors.sort();
           return /*#__PURE__*/React.createElement("div", {
             className: 'video horizontal' + (data.found ? ' found' : ' not-found')
           }, /*#__PURE__*/React.createElement("div", {
@@ -197,7 +199,14 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
             className: cc(common.length)
           }, data.length), " | ", /*#__PURE__*/React.createElement("code", {
             className: cc(common.date)
-          }, data.date)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, "Audio"), ": ", data.audio_languages.length ? data.audio_languages.join(", ") : "(none)", " |", " ", /*#__PURE__*/React.createElement("strong", null, "Subtitles"), ": ", data.subtitle_languages.length ? data.subtitle_languages.join(", ") : "(none)"), !groupedBySimilarityID ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, this.context.text_similarity_id, ":"), " ", /*#__PURE__*/React.createElement("code", null, data.similarity_id === null ? this.context.text_not_yet_compared : data.similarity_id === -1 ? this.context.text_no_similarities : data.similarity_id)) : "", this.props.groupedByMoves && data.moves.length === 1 ? /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("button", {
+          }, data.date)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, "Audio"), ": ", data.audio_languages.length ? data.audio_languages.join(", ") : "(none)", " |", " ", /*#__PURE__*/React.createElement("strong", null, "Subtitles"), ": ", data.subtitle_languages.length ? data.subtitle_languages.join(", ") : "(none)"), errors.length ? /*#__PURE__*/React.createElement("div", {
+            className: "horizontal"
+          }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, "Errors:"), "\xA0"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+            className: "property"
+          }, errors.map((element, elementIndex) => /*#__PURE__*/React.createElement("span", {
+            className: "value",
+            key: elementIndex
+          }, element.toString()))))) : "", !groupedBySimilarityID ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, this.context.text_similarity_id, ":"), " ", /*#__PURE__*/React.createElement("code", null, data.similarity_id === null ? this.context.text_not_yet_compared : data.similarity_id === -1 ? this.context.text_no_similarities : data.similarity_id)) : "", this.props.groupedByMoves && data.moves.length === 1 ? /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("button", {
             className: "block",
             onClick: () => this.confirmMove(data.video_id, data.moves[0].video_id)
           }, /*#__PURE__*/React.createElement("strong", null, this.context.text_confirm_move_to, ":"), /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("code", null, data.moves[0].filename))) : "")));

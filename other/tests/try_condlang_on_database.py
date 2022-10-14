@@ -15,7 +15,7 @@ def db_select(
     if entry == "video":
         attributes.update(("filename", "video_id"))
         cls_fields.update(("filename", "video_id"))
-        source = self.videos.values()
+        source = self.query()
         if properties:
             cls_fields.add("properties")
     elif entry == "property":

@@ -37,7 +37,6 @@ class Video(Jsonable):
     thumb_name: "i" = ""
 
     unreadable: "U" = False
-    # Video optional arguments
     audio_bit_rate: "r" = 0
     audio_codec: "a" = ""
     audio_codec_description: "A" = ""
@@ -120,11 +119,9 @@ class Video(Jsonable):
         return Text(self.__json__["video_codec_description"])
 
     def get_thumb_name(self):
-        thumb_name = self.__json__["thumb_name"]
-        if not thumb_name:
-            thumb_name = FNV64.hash(self.filename.standard_path)
-            self.__json__["thumb_name"] = thumb_name
-        return thumb_name
+        if not self.__json__["thumb_name"]:
+            self.__json__["thumb_name"] = FNV64.hash(self.filename.standard_path)
+        return self.__json__["thumb_name"]
 
     def set_properties(self, properties: dict):
         self.__json__["properties"] = {

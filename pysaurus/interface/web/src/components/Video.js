@@ -60,6 +60,8 @@ export class Video extends React.Component {
         const alreadyOpened = APP_STATE.videoHistory.has(data.filename);
         const common = (this.props.groupDef && this.props.groupDef.common) || {};
         const groupedBySimilarityID = this.props.groupDef && this.props.groupDef.field === "similarity_id";
+        const errors = data.errors.slice();
+        errors.sort();
         return (
             <div className={'video horizontal' + (data.found ? ' found' : ' not-found')}>
                 <div className="image p-2">
@@ -161,6 +163,18 @@ export class Video extends React.Component {
                             <strong>Audio</strong>: {data.audio_languages.length ? data.audio_languages.join(", ") : "(none)"} |{" "}
                             <strong>Subtitles</strong>: {data.subtitle_languages.length ? data.subtitle_languages.join(", ") : "(none)"}
                         </div>
+                        {errors.length ? (
+                            <div className="horizontal">
+                                <div><strong>Errors:</strong>&nbsp;</div>
+                                <div>
+                                    <div className="property">
+                                        {errors.map((element, elementIndex) => (
+                                            <span className="value" key={elementIndex}>{element.toString()}</span>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        ) : ""}
                         {!groupedBySimilarityID ? (
                             <div>
                                 <strong>{this.context.text_similarity_id}:</strong>{" "}
