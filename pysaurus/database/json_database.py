@@ -170,6 +170,12 @@ class JsonDatabase:
     def get_prop_types(self) -> Iterable[PropType]:
         return self.prop_types.values()
 
+    def describe_prop_types(self):
+        return sorted(
+            (prop.describe() for prop in self.prop_types.values()),
+            key=lambda d: d["name"],
+        )
+
     def remove_prop_type(self, name, save: bool = True) -> None:
         if name in self.prop_types:
             del self.prop_types[name]
@@ -178,5 +184,19 @@ class JsonDatabase:
             if save:
                 self.save()
 
-    def has_prop_type(self, name) -> bool:
-        return name in self.prop_types
+    def has_prop_type(self, name, *, dtype=None) -> bool:
+        return name in self.prop_types and (
+            dtype is None or self.prop_types[name].type is dtype
+        )
+
+    def rename_prop_type(self, old_name, new_name) -> None:
+        if self.has_prop_type(old_name):
+            if self.has_prop_type(new_name):
+                raise exceptions.PropertyAlreadyExists(new_name)
+            prop_type = self.prop_types.pop(old_name)
+            prop_type.name = new_name
+            self.prop_types[new_name] = prop_type
+            for video in self.query():
+                if old_name in video.properties:
+                    video.properties[new_name] = video.properties.pop(old_name)
+            self.save()

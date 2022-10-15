@@ -458,28 +458,16 @@ class Database(JsonDatabase):
         self.notifier.notify(notifications.FieldsModified(["move_id", "quality"]))
         return video.filename
 
-    def rename_prop_type(self, old_name, new_name) -> None:
-        if old_name in self.prop_types:
-            if new_name in self.prop_types:
-                raise exceptions.PropertyAlreadyExists(new_name)
-            prop_type = self.prop_types.pop(old_name)
-            prop_type.name = new_name
-            self.prop_types[new_name] = prop_type
-            for video in self.get_videos("readable"):
-                if old_name in video.properties:
-                    video.properties[new_name] = video.properties.pop(old_name)
-            self.save()
-
     def convert_prop_to_unique(self, name) -> None:
-        if name in self.prop_types:
-            prop_type = self.prop_types[name]
+        if self.has_prop_type(name):
+            prop_type = self.get_prop_type(name)
             if not prop_type.multiple:
                 raise exceptions.PropertyAlreadyUnique(name)
-            for video in self.get_videos("readable"):
+            for video in self.query():
                 if name in video.properties and len(video.properties[name]) > 1:
                     raise exceptions.PropertyToUniqueError(name, video)
             prop_type.multiple = False
-            for video in self.get_videos("readable"):
+            for video in self.query():
                 if name in video.properties:
                     if video.properties[name]:
                         video.properties[name] = video.properties[name][0]
@@ -488,12 +476,12 @@ class Database(JsonDatabase):
             self.save()
 
     def convert_prop_to_multiple(self, name) -> None:
-        if name in self.prop_types:
-            prop_type = self.prop_types[name]
+        if self.has_prop_type(name):
+            prop_type = self.get_prop_type(name)
             if prop_type.multiple:
                 raise exceptions.PropertyAlreadyMultiple(name)
             prop_type.multiple = True
-            for video in self.get_videos("readable"):
+            for video in self.query():
                 if name in video.properties:
                     video.properties[name] = [video.properties[name]]
             self.save()
@@ -675,7 +663,7 @@ class Database(JsonDatabase):
     def prop_to_lowercase(self, prop_name):
         prop_type = self.get_prop_type(prop_name)
         assert prop_type.type is str
-        for video in self.get_videos("readable"):
+        for video in self.query():
             if prop_name in video.properties:
                 if prop_type.multiple:
                     video.properties[prop_name] = sorted(
@@ -694,7 +682,7 @@ class Database(JsonDatabase):
     def prop_to_uppercase(self, prop_name):
         prop_type = self.get_prop_type(prop_name)
         assert prop_type.type is str
-        for video in self.get_videos("readable"):
+        for video in self.query():
             if prop_name in video.properties:
                 if prop_type.multiple:
                     video.properties[prop_name] = sorted(

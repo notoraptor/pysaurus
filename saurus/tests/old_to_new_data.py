@@ -92,7 +92,7 @@ def main():
                     for video in db.query({})
                 },
             )
-            with Profiler(f"Adding: {database_path.title}"):
+            with Profiler(f"Adding: {db.name}"):
                 new_app.db.add_collection(collection=collection)
     print()
     nb_total_entries = 0
