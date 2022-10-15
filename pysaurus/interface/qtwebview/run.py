@@ -11,6 +11,7 @@ from PyQt5.QtWidgets import QApplication
 from pysaurus.application import exceptions
 from pysaurus.application.utils import package_dir
 from pysaurus.core.components import AbsolutePath
+from pysaurus.core.enumeration import EnumerationError
 from pysaurus.core.modules import System
 from pysaurus.core.notifications import Notification
 from pysaurus.interface.api.gui_api import GuiAPI
@@ -89,7 +90,7 @@ class Interface(QObject):
             func_name, func_args = json.loads(json_str)
             assert not func_name.startswith("_")
             result = {"error": False, "data": getattr(self.api, func_name)(*func_args)}
-        except (OSError, exceptions.PysaurusError) as exception:
+        except (OSError, EnumerationError, exceptions.PysaurusError) as exception:
             traceback.print_tb(exception.__traceback__, file=sys.stderr)
             print(type(exception), exception, file=sys.stderr)
             result = {

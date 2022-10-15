@@ -29,7 +29,7 @@ export class PropertiesPage extends React.Component {
             name: "",
             type: defaultType,
             enumeration: true,
-            defaultValue: getDefaultValue(defaultType, true),
+            defaultPropVal: getDefaultValue(defaultType, true),
             multiple: false,
         };
         this.back = this.back.bind(this);
@@ -201,14 +201,14 @@ export class PropertiesPage extends React.Component {
 
     renderDefaultInput() {
         if (this.state.enumeration) {
-            const controller = new ComponentPropController(this, 'defaultValue', this.state.type, null);
+            const controller = new ComponentPropController(this, 'defaultPropVal', this.state.type, null);
             return <SetInput className="block" identifier={'prop-default-' + this.state.type} controller={controller}/>;
         }
         if (this.state.type === 'bool') {
             return (
                 <select className="prop-default block"
                         id="prop-default-bool"
-                        value={this.state.defaultValue}
+                        value={this.state.defaultPropVal}
                         onChange={this.onChangeDefault}>
                     <option value="false">false</option>
                     <option value="true">true</option>
@@ -219,7 +219,7 @@ export class PropertiesPage extends React.Component {
                       className="prop-default block"
                       id={'prop-default-' + this.state.type}
                       onChange={this.onChangeDefault}
-                      value={this.state.defaultValue}/>;
+                      value={this.state.defaultPropVal}/>;
     }
 
     back() {
@@ -235,13 +235,13 @@ export class PropertiesPage extends React.Component {
     onChangeType(event) {
         const value = event.target.value;
         if (this.state.type !== value)
-            this.setState({type: value, enumeration: false, defaultValue: getDefaultValue(value), multiple: false});
+            this.setState({type: value, enumeration: false, defaultPropVal: getDefaultValue(value), multiple: false});
     }
 
     onChangeDefault(event) {
-        const defaultValue = event.target.value;
-        if (this.state.defaultValue !== defaultValue)
-            this.setState({defaultValue});
+        const defaultPropVal = event.target.value;
+        if (this.state.defaultPropVal !== defaultPropVal)
+            this.setState({defaultPropVal});
     }
 
     onChangeMultiple(event) {
@@ -250,8 +250,8 @@ export class PropertiesPage extends React.Component {
 
     onChangeEnumeration(event) {
         const enumeration = event.target.checked;
-        const defaultValue = getDefaultValue(this.state.type, enumeration);
-        this.setState({enumeration, defaultValue});
+        const defaultPropVal = getDefaultValue(this.state.type, enumeration);
+        this.setState({enumeration, defaultPropVal});
     }
 
     reset() {
@@ -260,7 +260,7 @@ export class PropertiesPage extends React.Component {
 
     submit() {
         try {
-            let definition = this.state.defaultValue;
+            let definition = this.state.defaultPropVal;
             if (!this.state.enumeration)
                 definition = utilities(this.context).parsePropValString(this.state.type, null, definition);
             python_call('add_prop_type', this.state.name, this.state.type, definition, this.state.multiple)
@@ -357,7 +357,7 @@ export class PropertiesPage extends React.Component {
             name: "",
             type: defaultType,
             enumeration: false,
-            defaultValue: getDefaultValue(defaultType),
+            defaultPropVal: getDefaultValue(defaultType),
             multiple: false,
         };
     }

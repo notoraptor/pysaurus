@@ -47,7 +47,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             name: "",
             type: defaultType,
             enumeration: true,
-            defaultValue: getDefaultValue(defaultType, true),
+            defaultPropVal: getDefaultValue(defaultType, true),
             multiple: false
           };
           this.back = this.back.bind(this);
@@ -177,7 +177,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
 
         renderDefaultInput() {
           if (this.state.enumeration) {
-            const controller = new ComponentPropController(this, 'defaultValue', this.state.type, null);
+            const controller = new ComponentPropController(this, 'defaultPropVal', this.state.type, null);
             return /*#__PURE__*/React.createElement(SetInput, {
               className: "block",
               identifier: 'prop-default-' + this.state.type,
@@ -189,7 +189,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             return /*#__PURE__*/React.createElement("select", {
               className: "prop-default block",
               id: "prop-default-bool",
-              value: this.state.defaultValue,
+              value: this.state.defaultPropVal,
               onChange: this.onChangeDefault
             }, /*#__PURE__*/React.createElement("option", {
               value: "false"
@@ -203,7 +203,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             className: "prop-default block",
             id: 'prop-default-' + this.state.type,
             onChange: this.onChangeDefault,
-            value: this.state.defaultValue
+            value: this.state.defaultPropVal
           });
         }
 
@@ -223,15 +223,15 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
           if (this.state.type !== value) this.setState({
             type: value,
             enumeration: false,
-            defaultValue: getDefaultValue(value),
+            defaultPropVal: getDefaultValue(value),
             multiple: false
           });
         }
 
         onChangeDefault(event) {
-          const defaultValue = event.target.value;
-          if (this.state.defaultValue !== defaultValue) this.setState({
-            defaultValue
+          const defaultPropVal = event.target.value;
+          if (this.state.defaultPropVal !== defaultPropVal) this.setState({
+            defaultPropVal
           });
         }
 
@@ -243,10 +243,10 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
 
         onChangeEnumeration(event) {
           const enumeration = event.target.checked;
-          const defaultValue = getDefaultValue(this.state.type, enumeration);
+          const defaultPropVal = getDefaultValue(this.state.type, enumeration);
           this.setState({
             enumeration,
-            defaultValue
+            defaultPropVal
           });
         }
 
@@ -256,7 +256,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
 
         submit() {
           try {
-            let definition = this.state.defaultValue;
+            let definition = this.state.defaultPropVal;
             if (!this.state.enumeration) definition = utilities(this.context).parsePropValString(this.state.type, null, definition);
             python_call('add_prop_type', this.state.name, this.state.type, definition, this.state.multiple).then(definitions => {
               const state = this.getDefaultInputState();
@@ -358,7 +358,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             name: "",
             type: defaultType,
             enumeration: false,
-            defaultValue: getDefaultValue(defaultType),
+            defaultPropVal: getDefaultValue(defaultType),
             multiple: false
           };
         }
