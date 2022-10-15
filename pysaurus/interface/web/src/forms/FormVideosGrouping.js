@@ -5,7 +5,7 @@ import {LangContext} from "../language.js";
 export class FormVideosGrouping extends React.Component {
     constructor(props) {
         // groupDef: GroupDef
-        // properties: [PropDef]
+        // prop_types: [PropDef]
         // propertyMap: {name: PropDef}
         // onClose(groupDef)
         super(props);
@@ -67,7 +67,7 @@ export class FormVideosGrouping extends React.Component {
                                     value={field}
                                     onChange={this.onChangeGroupField}>
                                 {this.state.isProperty ? (
-                                    this.props.properties.map((def, index) => (
+                                    this.props.prop_types.map((def, index) => (
                                         <option key={index} value={def.name}>{def.name}</option>
                                     ))
                                 ) : (
@@ -149,7 +149,7 @@ export class FormVideosGrouping extends React.Component {
 
     onChangeFieldType(event) {
         const isProperty = event.target.value === "true";
-        const field = isProperty ? this.props.properties[0].name : this.getFields().allowed[0].name;
+        const field = isProperty ? this.props.prop_types[0].name : this.getFields().allowed[0].name;
         const sorting = "field";
         const reverse = false;
         const allowSingletons = isProperty || !this.getFields().allowed[0].isOnlyMany();

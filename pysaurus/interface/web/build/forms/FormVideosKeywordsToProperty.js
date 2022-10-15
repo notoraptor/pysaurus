@@ -16,11 +16,11 @@ System.register(["../dialogs/Dialog.js", "../components/Cell.js", "../language.j
     execute: function () {
       _export("FormVideosKeywordsToProperty", FormVideosKeywordsToProperty = class FormVideosKeywordsToProperty extends React.Component {
         constructor(props) {
-          // properties: PropertyDefinition[]
+          // prop_types: PropertyDefinition[]
           // onClose(name)
           super(props);
           this.state = {
-            field: this.props.properties[0].name,
+            field: this.props.prop_types[0].name,
             onlyEmpty: false
           };
           this.onChangeGroupField = this.onChangeGroupField.bind(this);
@@ -40,7 +40,7 @@ System.register(["../dialogs/Dialog.js", "../components/Cell.js", "../language.j
           }, /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("select", {
             value: this.state.field,
             onChange: this.onChangeGroupField
-          }, this.props.properties.map((def, i) => /*#__PURE__*/React.createElement("option", {
+          }, this.props.prop_types.map((def, i) => /*#__PURE__*/React.createElement("option", {
             key: i,
             value: def.name
           }, this.context.word_property, ": ", def.name)))), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("input", {

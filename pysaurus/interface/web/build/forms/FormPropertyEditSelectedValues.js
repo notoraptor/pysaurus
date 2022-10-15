@@ -95,7 +95,7 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../utils/functions.j
         renderEdit() {
           const name = this.props.name;
           const propVal = this.state.value;
-          const def = this.props.properties[name];
+          const def = this.props.definitions[name];
           let input;
 
           if (def.enumeration) {
@@ -133,7 +133,7 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../utils/functions.j
         }
 
         renderMove() {
-          const def = this.props.properties[this.props.name];
+          const def = this.props.definitions[this.props.name];
           return /*#__PURE__*/React.createElement("div", {
             className: "flex-grow-1"
           }, /*#__PURE__*/React.createElement("h3", null, this.context.form_content_move_prop_val.format({
@@ -150,10 +150,10 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../utils/functions.j
         }
 
         getCompatibleDefinitions() {
-          const def = this.props.properties[this.props.name];
+          const def = this.props.definitions[this.props.name];
           const otherDefinitions = [];
 
-          for (let other of Object.values(this.props.properties)) {
+          for (let other of Object.values(this.props.definitions)) {
             if (def.name !== other.name && def.type === other.type) otherDefinitions.push(other);
           }
 
@@ -181,7 +181,7 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../utils/functions.j
         }
 
         onEdit(event) {
-          const def = this.props.properties[this.props.name];
+          const def = this.props.definitions[this.props.name];
 
           try {
             this.setState({
@@ -222,7 +222,7 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../utils/functions.j
 
       FormPropertyEditSelectedValues.contextType = LangContext;
       FormPropertyEditSelectedValues.propTypes = {
-        properties: PropTypes.object.isRequired,
+        definitions: PropTypes.object.isRequired,
         name: PropTypes.string.isRequired,
         values: PropTypes.array.isRequired,
         // onClose(object)

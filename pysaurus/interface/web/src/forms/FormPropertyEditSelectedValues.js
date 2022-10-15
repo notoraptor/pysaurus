@@ -84,7 +84,7 @@ export class FormPropertyEditSelectedValues extends React.Component {
     renderEdit() {
         const name = this.props.name;
         const propVal = this.state.value;
-        const def = this.props.properties[name];
+        const def = this.props.definitions[name];
 
         let input;
         if (def.enumeration) {
@@ -116,7 +116,7 @@ export class FormPropertyEditSelectedValues extends React.Component {
     }
 
     renderMove() {
-        const def = this.props.properties[this.props.name];
+        const def = this.props.definitions[this.props.name];
         return (
             <div className="flex-grow-1">
                 <h3>
@@ -133,9 +133,9 @@ export class FormPropertyEditSelectedValues extends React.Component {
     }
 
     getCompatibleDefinitions() {
-        const def = this.props.properties[this.props.name];
+        const def = this.props.definitions[this.props.name];
         const otherDefinitions = [];
-        for (let other of Object.values(this.props.properties)) {
+        for (let other of Object.values(this.props.definitions)) {
             if (def.name !== other.name && def.type === other.type)
                 otherDefinitions.push(other);
         }
@@ -155,7 +155,7 @@ export class FormPropertyEditSelectedValues extends React.Component {
     }
 
     onEdit(event) {
-        const def = this.props.properties[this.props.name];
+        const def = this.props.definitions[this.props.name];
         try {
             this.setState({value: utilities(this.context).parsePropValString(def.type, def.enumeration, event.target.value)});
         } catch (exception) {
@@ -190,7 +190,7 @@ export class FormPropertyEditSelectedValues extends React.Component {
 }
 FormPropertyEditSelectedValues.contextType = LangContext;
 FormPropertyEditSelectedValues.propTypes = {
-    properties: PropTypes.object.isRequired,
+    definitions: PropTypes.object.isRequired,
     name: PropTypes.string.isRequired,
     values: PropTypes.array.isRequired,
     // onClose(object)

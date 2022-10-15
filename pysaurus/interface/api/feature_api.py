@@ -118,7 +118,6 @@ class FeatureAPI:
             or prev_search != search
         )
 
-        prop_types = self.get_prop_types()
         extra = {}
         db_message = self.database.flush_message()
         if db_message:
@@ -143,8 +142,7 @@ class FeatureAPI:
             "sorting": self.provider.sort_layer.get_sorting(),
             "videos": videos,
             "path": path,
-            "properties": prop_types,
-            "definitions": {prop["name"]: prop for prop in prop_types},
+            "prop_types": self.database.describe_prop_types(),
             "database": {
                 "name": self.database.name,
                 "folders": [str(path) for path in sorted(self.database.video_folders)],

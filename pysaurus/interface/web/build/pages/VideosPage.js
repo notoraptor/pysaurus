@@ -19,10 +19,6 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
     return true;
   }
 
-  function arrayEquals(a, b) {
-    return Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((val, index) => val === b[index]);
-  }
-
   _export("VideosPage", void 0);
 
   return {
@@ -180,8 +176,8 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           const validLength = this.state.validLength;
           const groupDef = this.state.groupDef;
           const groupedByMoves = groupDef && groupDef.field === "move_id";
-          const stringSetProperties = this.getStringSetProperties(this.state.properties);
-          const stringProperties = this.getStringProperties(this.state.properties);
+          const stringSetProperties = this.getStringSetProperties(this.state.prop_types);
+          const stringProperties = this.getStringProperties(this.state.prop_types);
           const actions = this.getActions().actions;
           const aFilterIsSet = this.sourceIsSet() || this.groupIsSet() || this.searchIsSet() || this.sortIsSet();
           const status = this.getStatus();
@@ -249,12 +245,12 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             action: actions.manageProperties
           }), stringSetProperties.length ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.fillWithKeywords
-          }, this.context.action_put_keywords_into_property) : "", this.state.properties.length > 5 ? /*#__PURE__*/React.createElement(Menu, {
+          }, this.context.action_put_keywords_into_property) : "", this.state.prop_types.length > 5 ? /*#__PURE__*/React.createElement(Menu, {
             title: this.context.menu_group_videos_by_property
-          }, this.state.properties.map((def, index) => /*#__PURE__*/React.createElement(MenuItem, {
+          }, this.state.prop_types.map((def, index) => /*#__PURE__*/React.createElement(MenuItem, {
             key: index,
             action: () => this.backendGroupVideos(def.name, true)
-          }, def.name))) : this.state.properties.map((def, index) => /*#__PURE__*/React.createElement(MenuItem, {
+          }, def.name))) : this.state.prop_types.map((def, index) => /*#__PURE__*/React.createElement(MenuItem, {
             key: index,
             action: () => this.backendGroupVideos(def.name, true)
           }, this.context.action_group_videos_by_property.format({
@@ -371,7 +367,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           }, this.state.videos.map(data => /*#__PURE__*/React.createElement(Video, {
             key: data.video_id,
             data: data,
-            propDefs: this.state.properties,
+            propDefs: this.state.prop_types,
             groupDef: groupDef,
             selected: this.state.selector.has(data.video_id),
             onSelect: this.onVideoSelection,
@@ -467,7 +463,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             className: "mb-1"
           }, /*#__PURE__*/React.createElement(MenuPack, {
             title: this.context.menu_edit_properties
-          }, this.state.properties.map((def, index) => /*#__PURE__*/React.createElement(MenuItem, {
+          }, this.state.prop_types.map((def, index) => /*#__PURE__*/React.createElement(MenuItem, {
             key: index,
             action: () => this.editPropertiesForManyVideos(def.name)
           }, def.name)))) : ""), /*#__PURE__*/React.createElement("td", null, selectionSize ? /*#__PURE__*/React.createElement(Cross, {
@@ -561,6 +557,13 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           }
 
           if (info.viewChanged && !state.selector) state.selector = new Selector();
+          const definitions = {};
+
+          for (let propType of info.prop_types) {
+            definitions[propType.name] = propType;
+          }
+
+          state.definitions = definitions;
           return Object.assign(state, info);
         }
 
@@ -693,7 +696,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           };
           Fancybox.load( /*#__PURE__*/React.createElement(FormVideosGrouping, {
             groupDef: groupDef,
-            properties: this.state.properties,
+            prop_types: this.state.prop_types,
             propertyMap: this.state.definitions,
             onClose: criterion => {
               this.backend(['set_groups', criterion.field, criterion.isProperty, criterion.sorting, criterion.reverse, criterion.allowSingletons], {
@@ -862,7 +865,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
 
         fillWithKeywords() {
           Fancybox.load( /*#__PURE__*/React.createElement(FormVideosKeywordsToProperty, {
-            properties: this.getStringSetProperties(this.state.properties),
+            prop_types: this.getStringSetProperties(this.state.prop_types),
             onClose: state => {
               python_call('fill_property_with_terms', state.field, state.onlyEmpty).then(() => this.backend(null, {
                 status: this.context.status_filled_property_with_keywords.format({
@@ -948,7 +951,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           for (let index of indices) values.push(groupDef.groups[index].value);
 
           Fancybox.load( /*#__PURE__*/React.createElement(FormPropertyEditSelectedValues, {
-            properties: this.state.definitions,
+            definitions: this.state.definitions,
             name: name,
             values: values,
             onClose: operation => {

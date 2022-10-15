@@ -47,13 +47,6 @@ function compareSources(sources1, sources2) {
     return true;
 }
 
-function arrayEquals(a, b) {
-    return Array.isArray(a) &&
-        Array.isArray(b) &&
-        a.length === b.length &&
-        a.every((val, index) => val === b[index]);
-}
-
 export class VideosPage extends React.Component {
     constructor(props) {
         // parameters: {backend state}
@@ -141,8 +134,8 @@ export class VideosPage extends React.Component {
         const validLength = this.state.validLength;
         const groupDef = this.state.groupDef;
         const groupedByMoves = groupDef && groupDef.field === "move_id";
-        const stringSetProperties = this.getStringSetProperties(this.state.properties);
-        const stringProperties = this.getStringProperties(this.state.properties);
+        const stringSetProperties = this.getStringSetProperties(this.state.prop_types);
+        const stringProperties = this.getStringProperties(this.state.prop_types);
         const actions = this.getActions().actions;
         const aFilterIsSet = this.sourceIsSet() || this.groupIsSet() || this.searchIsSet() || this.sortIsSet();
         const status = this.getStatus();
@@ -206,16 +199,16 @@ export class VideosPage extends React.Component {
                         {<ActionToMenuItem action={actions.manageProperties}/>}
                         {stringSetProperties.length ? <MenuItem
                             action={this.fillWithKeywords}>{this.context.action_put_keywords_into_property}</MenuItem> : ""}
-                        {this.state.properties.length > 5 ? (
+                        {this.state.prop_types.length > 5 ? (
                             <Menu title={this.context.menu_group_videos_by_property}>{
-                                this.state.properties.map((def, index) => (
+                                this.state.prop_types.map((def, index) => (
                                     <MenuItem key={index} action={() => this.backendGroupVideos(def.name, true)}>
                                         {def.name}
                                     </MenuItem>
                                 ))
                             }</Menu>
                         ) : (
-                            this.state.properties.map((def, index) => (
+                            this.state.prop_types.map((def, index) => (
                                 <MenuItem key={index} action={() => this.backendGroupVideos(def.name, true)}>
                                     {this.context.action_group_videos_by_property.format({name: def.name})}
                                 </MenuItem>
@@ -346,7 +339,7 @@ export class VideosPage extends React.Component {
                         <div className="main-panel videos overflow-auto">{this.state.videos.map(data => (
                             <Video key={data.video_id}
                                    data={data}
-                                   propDefs={this.state.properties}
+                                   propDefs={this.state.prop_types}
                                    groupDef={groupDef}
                                    selected={this.state.selector.has(data.video_id)}
                                    onSelect={this.onVideoSelection}
@@ -489,7 +482,7 @@ export class VideosPage extends React.Component {
                         {selectionSize ? (
                             <div className="mb-1">
                                 <MenuPack title={this.context.menu_edit_properties}>
-                                    {this.state.properties.map((def, index) => (
+                                    {this.state.prop_types.map((def, index) => (
                                         <MenuItem key={index} action={() => this.editPropertiesForManyVideos(def.name)}>
                                             {def.name}
                                         </MenuItem>
@@ -595,6 +588,11 @@ export class VideosPage extends React.Component {
         }
         if (info.viewChanged && !state.selector)
             state.selector = new Selector();
+        const definitions = {};
+        for (let propType of info.prop_types) {
+            definitions[propType.name] = propType;
+        }
+        state.definitions = definitions;
         return Object.assign(state, info);
     }
 
@@ -709,7 +707,7 @@ export class VideosPage extends React.Component {
         const groupDef = this.state.groupDef || {field: null, is_property: null, reverse: null};
         Fancybox.load(
             <FormVideosGrouping groupDef={groupDef}
-                                properties={this.state.properties}
+                                prop_types={this.state.prop_types}
                                 propertyMap={this.state.definitions}
                                 onClose={criterion => {
                                     this.backend(['set_groups', criterion.field, criterion.isProperty, criterion.sorting, criterion.reverse, criterion.allowSingletons], {pageNumber: 0});
@@ -861,7 +859,7 @@ export class VideosPage extends React.Component {
 
     fillWithKeywords() {
         Fancybox.load(
-            <FormVideosKeywordsToProperty properties={this.getStringSetProperties(this.state.properties)}
+            <FormVideosKeywordsToProperty prop_types={this.getStringSetProperties(this.state.prop_types)}
                                           onClose={state => {
                                               python_call('fill_property_with_terms', state.field, state.onlyEmpty)
                                                   .then(() => this.backend(null, {status: this.context.status_filled_property_with_keywords.format({name: state.field})}))
@@ -938,7 +936,7 @@ export class VideosPage extends React.Component {
         for (let index of indices)
             values.push(groupDef.groups[index].value);
         Fancybox.load(
-            <FormPropertyEditSelectedValues properties={this.state.definitions}
+            <FormPropertyEditSelectedValues definitions={this.state.definitions}
                                             name={name}
                                             values={values}
                                             onClose={operation => {

@@ -4,10 +4,10 @@ import {LangContext} from "../language.js";
 
 export class FormVideosKeywordsToProperty extends React.Component {
     constructor(props) {
-        // properties: PropertyDefinition[]
+        // prop_types: PropertyDefinition[]
         // onClose(name)
         super(props);
-        this.state = {field: this.props.properties[0].name, onlyEmpty: false};
+        this.state = {field: this.props.prop_types[0].name, onlyEmpty: false};
         this.onChangeGroupField = this.onChangeGroupField.bind(this);
         this.onChangeEmpty = this.onChangeEmpty.bind(this);
         this.onClose = this.onClose.bind(this);
@@ -20,7 +20,7 @@ export class FormVideosKeywordsToProperty extends React.Component {
                     <p>
                         <select value={this.state.field}
                                 onChange={this.onChangeGroupField}>
-                            {this.props.properties.map((def, i) => (
+                            {this.props.prop_types.map((def, i) => (
                                 <option key={i} value={def.name}>{this.context.word_property}: {def.name}</option>
                             ))}
                         </select>

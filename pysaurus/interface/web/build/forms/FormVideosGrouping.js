@@ -17,7 +17,7 @@ System.register(["../utils/constants.js", "../dialogs/Dialog.js", "../language.j
       _export("FormVideosGrouping", FormVideosGrouping = class FormVideosGrouping extends React.Component {
         constructor(props) {
           // groupDef: GroupDef
-          // properties: [PropDef]
+          // prop_types: [PropDef]
           // propertyMap: {name: PropDef}
           // onClose(groupDef)
           super(props);
@@ -80,7 +80,7 @@ System.register(["../utils/constants.js", "../dialogs/Dialog.js", "../language.j
             id: "group-field",
             value: field,
             onChange: this.onChangeGroupField
-          }, this.state.isProperty ? this.props.properties.map((def, index) => /*#__PURE__*/React.createElement("option", {
+          }, this.state.isProperty ? this.props.prop_types.map((def, index) => /*#__PURE__*/React.createElement("option", {
             key: index,
             value: def.name
           }, def.name)) : this.getFields().allowed.map((fieldOption, index) => /*#__PURE__*/React.createElement("option", {
@@ -142,7 +142,7 @@ System.register(["../utils/constants.js", "../dialogs/Dialog.js", "../language.j
 
         onChangeFieldType(event) {
           const isProperty = event.target.value === "true";
-          const field = isProperty ? this.props.properties[0].name : this.getFields().allowed[0].name;
+          const field = isProperty ? this.props.prop_types[0].name : this.getFields().allowed[0].name;
           const sorting = "field";
           const reverse = false;
           const allowSingletons = isProperty || !this.getFields().allowed[0].isOnlyMany();
