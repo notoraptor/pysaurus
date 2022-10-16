@@ -2,6 +2,7 @@ import os
 import sys
 from multiprocessing import Pool
 from typing import Dict, Iterable, List, Optional, Set
+from collections import Counter
 
 import ujson as json
 
@@ -505,27 +506,14 @@ class Database(JsonDatabase):
     def __del_prop_val(
         self, videos: Iterable[Video], name: str, values: list
     ) -> List[Video]:
-        values = set(values)
         modified = []
-        prop_type = self.get_prop_type(name)
-        if prop_type.multiple:
-            prop_type.validate(values)
-            for video in videos:
-                if name in video.properties and video.properties[name]:
-                    new_values = set(video.properties[name])
-                    len_before = len(new_values)
-                    new_values = new_values - values
-                    len_after = len(new_values)
-                    if len_before > len_after:
-                        video.properties[name] = sorted(new_values)
-                        modified.append(video)
-        else:
-            for value in values:
-                prop_type.validate(value)
-            for video in videos:
-                if name in video.properties and video.properties[name] in values:
-                    del video.properties[name]
-                    modified.append(video)
+        values = set(self.validate_prop_values(name, values))
+        for video in videos:
+            previous_values = set(self.get_prop_values(video, name))
+            new_values = previous_values - values
+            if len(previous_values) > len(new_values):
+                self.set_prop_values(video, name, new_values)
+                modified.append(video)
         if modified:
             self.save()
             self.notifier.notify(notifications.PropertiesModified([name]))
@@ -539,50 +527,27 @@ class Database(JsonDatabase):
     def move_property_value(
         self, videos: Iterable[Video], old_name: str, values: list, new_name: str
     ) -> None:
-        assert len(values) == 1, values
-        value = values[0]
-        prop_type = self.get_prop_type(new_name)
-        prop_type.validate([value] if prop_type.multiple else value)
-        videos = self.__del_prop_val(videos, old_name, [value])
-        if prop_type.multiple:
-            for video in videos:
-                new_values = set(video.properties.get(new_name, ()))
-                new_values.add(value)
-                video.properties[new_name] = sorted(new_values)
-        else:
-            for video in videos:
-                video.properties[new_name] = value
-        if videos:
+        (value,) = values
+        modified = self.__del_prop_val(videos, old_name, [value])
+        for video in modified:
+            self.merge_prop_values(video, new_name, [value])
+        if modified:
             self.save()
             self.notifier.notify(notifications.PropertiesModified([old_name, new_name]))
 
     def edit_property_value(
         self, videos: Iterable[Video], name: str, old_values: list, new_value: object
     ) -> bool:
-        old_values = set(old_values)
         modified = False
-        prop_type = self.get_prop_type(name)
-        if prop_type.multiple:
-            prop_type.validate(old_values)
-            prop_type.validate([new_value])
-            for video in videos:
-                if name in video.properties and video.properties[name]:
-                    new_values = set(video.properties[name])
-                    len_before = len(new_values)
-                    new_values = new_values - old_values
-                    len_after = len(new_values)
-                    if len_before > len_after:
-                        new_values.add(new_value)
-                        video.properties[name] = sorted(new_values)
-                        modified = True
-        else:
-            for old_value in old_values:
-                prop_type.validate(old_value)
-            prop_type.validate(new_value)
-            for video in videos:
-                if name in video.properties and video.properties[name] in old_values:
-                    video.properties[name] = new_value
-                    modified = True
+        old_values = set(self.validate_prop_values(name, old_values))
+        (new_value,) = self.validate_prop_values(name, [new_value])
+        for video in videos:
+            previous_values = set(self.get_prop_values(video, name))
+            next_values = previous_values - old_values
+            if len(previous_values) > len(next_values):
+                next_values.add(new_value)
+                self.set_prop_values(video, name, next_values)
+                modified = True
         if modified:
             self.save()
             self.notifier.notify(notifications.PropertiesModified([name]))
@@ -595,146 +560,87 @@ class Database(JsonDatabase):
         values_to_add: list,
         values_to_remove: list,
     ) -> None:
-        print("TO CHANGE", len(video_indices), video_indices)
-        prop_type = self.get_prop_type(name)
-        if prop_type.multiple:
-            values_to_add = prop_type(values_to_add)
-            values_to_remove = prop_type(values_to_remove)
-        else:
-            assert len(values_to_add) < 2
-            values_to_add = [prop_type(value) for value in values_to_add]
-            values_to_remove = {prop_type(value) for value in values_to_remove}
-        video_indices = set(video_indices)
-        for video_id in video_indices:
+        print(
+            "Edit",
+            len(video_indices),
+            "video props, add",
+            values_to_add,
+            "remove",
+            values_to_remove,
+        )
+        values_to_add = self.validate_prop_values(name, values_to_add)
+        values_to_remove = set(self.validate_prop_values(name, values_to_remove))
+        for video_id in set(video_indices):
             video = self.__get_video_from_id(video_id)
-            if prop_type.multiple:
-                values = set(video.properties.get(prop_type.name, ()))
-                values.difference_update(values_to_remove)
-                values.update(values_to_add)
-                if values:
-                    video.properties[prop_type.name] = sorted(values)
-                elif prop_type.name in video.properties:
-                    del video.properties[prop_type.name]
-            else:
-                if (
-                    values_to_remove
-                    and prop_type.name in video.properties
-                    and video.properties[prop_type.name] in values_to_remove
-                ):
-                    del video.properties[prop_type.name]
-                if values_to_add:
-                    video.properties[prop_type.name] = values_to_add[0]
+            values = set(self.get_prop_values(video, name)) - values_to_remove
+            self.set_prop_values(video, name, values)
+            self.merge_prop_values(video, name, values_to_add)
         self.save()
         self.notifier.notify(notifications.PropertiesModified([name]))
 
     def count_property_values(
         self, name: str, video_indices: List[int]
     ) -> Dict[object, int]:
-        prop_type = self.get_prop_type(name)
-        value_to_count = {}
-        video_indices = set(video_indices)
-        for video_id in video_indices:
-            video = self.__get_video_from_id(video_id)
-            if prop_type.multiple:
-                values = video.properties.get(prop_type.name, [])
-            elif prop_type.name in video.properties:
-                values = [video.properties[prop_type.name]]
-            else:
-                values = []
-            for value in values:
-                value_to_count[value] = value_to_count.get(value, 0) + 1
-        return value_to_count
+        count = Counter()
+        for video_id in set(video_indices):
+            count.update(self.get_prop_values(self.__get_video_from_id(video_id), name))
+        return count
 
     def fill_property_with_terms(
         self, videos: Iterable[Video], prop_name: str, only_empty=False
     ) -> None:
-        prop_type = self.get_prop_type(prop_name)
-        assert prop_type.multiple
-        assert prop_type.type is str
+        assert self.has_prop_type(prop_name, dtype=str, multiple=True)
         for video in videos:
-            if only_empty and video.properties.get(prop_name, None):
+            values = set(self.get_prop_values(video, prop_name))
+            if only_empty and values:
                 continue
-            values = video.terms(as_set=True)
-            values.update(video.properties.get(prop_name, ()))
-            video.properties[prop_name] = prop_type(values)
+            self.set_prop_values(video, prop_name, values | video.terms(as_set=True))
         self.save()
         self.notifier.notify(notifications.PropertiesModified([prop_name]))
 
     def prop_to_lowercase(self, prop_name):
-        prop_type = self.get_prop_type(prop_name)
-        assert prop_type.type is str
+        assert self.has_prop_type(prop_name, dtype=str)
         for video in self.query():
-            if prop_name in video.properties:
-                if prop_type.multiple:
-                    video.properties[prop_name] = sorted(
-                        set(
-                            value.strip().lower()
-                            for value in video.properties[prop_name]
-                        )
-                    )
-                else:
-                    video.properties[prop_name] = (
-                        video.properties[prop_name].strip().lower()
-                    )
+            values = self.get_prop_values(video, prop_name)
+            self.set_prop_values(
+                video, prop_name, [value.strip().lower() for value in values]
+            )
         self.save()
         self.notifier.notify(notifications.PropertiesModified([prop_name]))
 
     def prop_to_uppercase(self, prop_name):
-        prop_type = self.get_prop_type(prop_name)
-        assert prop_type.type is str
+        assert self.has_prop_type(prop_name, dtype=str)
         for video in self.query():
-            if prop_name in video.properties:
-                if prop_type.multiple:
-                    video.properties[prop_name] = sorted(
-                        set(
-                            value.strip().upper()
-                            for value in video.properties[prop_name]
-                        )
-                    )
-                else:
-                    video.properties[prop_name] = (
-                        video.properties[prop_name].strip().upper()
-                    )
+            values = self.get_prop_values(video, prop_name)
+            self.set_prop_values(
+                video, prop_name, [value.strip().upper() for value in values]
+            )
         self.save()
         self.notifier.notify(notifications.PropertiesModified([prop_name]))
 
     def move_concatenated_prop_val(
         self, videos: Iterable[Video], path: list, from_property: str, to_property: str
     ) -> int:
-        from_prop_type = self.get_prop_type(from_property)
-        to_prop_type = self.get_prop_type(to_property)
-        assert from_prop_type.multiple
-        assert to_prop_type.type is str
-        from_prop_type.validate(path)
-        new_value = " ".join(str(value) for value in path)
-        to_prop_type.validate([new_value] if to_prop_type.multiple else new_value)
-
+        assert self.has_prop_type(from_property, multiple=True)
+        assert self.has_prop_type(to_property, dtype=str)
+        self.validate_prop_values(from_property, path)
+        (concat_path,) = self.validate_prop_values(
+            to_property, [" ".join(str(value) for value in path)]
+        )
         modified = []
         path_set = set(path)
         for video in videos:
-            if from_property in video.properties and video.properties[from_property]:
-                new_values = set(video.properties[from_property])
-                len_before = len(new_values)
-                new_values = new_values - path_set
-                if len_before == len(new_values) + len(path):
-                    video.properties[from_property] = sorted(new_values)
-                    modified.append(video)
-
-        if to_prop_type.multiple:
-            for video in modified:
-                new_values = set(video.properties.get(to_property, ()))
-                new_values.add(new_value)
-                video.properties[to_property] = sorted(new_values)
-        else:
-            for video in modified:
-                video.properties[to_property] = new_value
-
+            old_values = set(self.get_prop_values(video, from_property))
+            new_values = old_values - path_set
+            if len(old_values) == len(new_values) + len(path_set):
+                self.set_prop_values(video, from_property, new_values)
+                self.merge_prop_values(video, to_property, [concat_path])
+                modified.append(video)
         if modified:
             self.save()
             self.notifier.notify(
                 notifications.PropertiesModified([from_property, to_property])
             )
-
         return len(modified)
 
     def move_video_entry(self, from_id, to_id, save=True):
@@ -742,16 +648,10 @@ class Database(JsonDatabase):
         to_video = self.__get_video_from_id(to_id)
         assert not from_video.found
         assert to_video.found
-        transferred_properties = {}
-        for prop_name, prop_val in from_video.properties.items():
-            prop_type = self.get_prop_type(prop_name)
-            if prop_type.multiple:
-                transferred_properties[prop_name] = prop_type(
-                    prop_val + to_video.properties.get(prop_name, [])
-                )
-            else:
-                transferred_properties[prop_name] = prop_val
-        to_video.properties.update(transferred_properties)
+        for prop_name in self.get_prop_names():
+            self.merge_prop_values(
+                to_video, prop_name, self.get_prop_values(from_video, prop_name)
+            )
         to_video.similarity_id = from_video.similarity_id
         self.delete_video(from_id, save=save)
 

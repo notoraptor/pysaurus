@@ -64,7 +64,7 @@ class PropType(Jsonable):
             raise exceptions.InvalidPropertyValue(self, value)
         return value
 
-    def describe(self):
+    def describe(self) -> dict:
         return {
             "name": self.name,
             "type": self.type.__name__,

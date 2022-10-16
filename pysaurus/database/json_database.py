@@ -1,4 +1,4 @@
-from typing import Dict, Iterable, List, Optional, Set
+from typing import Dict, Iterable, List, Optional, Set, Sequence, Union
 
 from pysaurus.application import exceptions
 from pysaurus.core import notifications
@@ -157,24 +157,37 @@ class JsonDatabase:
             else list(videos)
         )
 
+    def _get_prop_types(self) -> Iterable[PropType]:
+        return self.prop_types.values()
+
+    def has_prop_type(self, name, *, dtype=None, multiple=None) -> bool:
+        if name not in self.prop_types:
+            return False
+        pt = self.prop_types[name]
+        if dtype is not None and pt.type is not dtype:
+            return False
+        if multiple is not None and pt.multiple is not multiple:
+            return False
+        return True
+
+    def get_prop_type(self, name: str) -> PropType:
+        return self.prop_types[name]
+
+    def get_prop_names(self) -> Iterable[str]:
+        return self.prop_types.keys()
+
+    def describe_prop_types(self) -> List[dict]:
+        return sorted(
+            (prop.describe() for prop in self.prop_types.values()),
+            key=lambda d: d["name"],
+        )
+
     def add_prop_type(self, prop: PropType, save: bool = True) -> None:
         if prop.name in self.prop_types:
             raise exceptions.PropertyAlreadyExists(prop.name)
         self.prop_types[prop.name] = prop
         if save:
             self.save()
-
-    def get_prop_type(self, name: str) -> PropType:
-        return self.prop_types[name]
-
-    def get_prop_types(self) -> Iterable[PropType]:
-        return self.prop_types.values()
-
-    def describe_prop_types(self):
-        return sorted(
-            (prop.describe() for prop in self.prop_types.values()),
-            key=lambda d: d["name"],
-        )
 
     def remove_prop_type(self, name, save: bool = True) -> None:
         if name in self.prop_types:
@@ -183,11 +196,6 @@ class JsonDatabase:
                 video.remove_property(name)
             if save:
                 self.save()
-
-    def has_prop_type(self, name, *, dtype=None) -> bool:
-        return name in self.prop_types and (
-            dtype is None or self.prop_types[name].type is dtype
-        )
 
     def rename_prop_type(self, old_name, new_name) -> None:
         if self.has_prop_type(old_name):
@@ -200,3 +208,37 @@ class JsonDatabase:
                 if old_name in video.properties:
                     video.properties[new_name] = video.properties.pop(old_name)
             self.save()
+
+    def get_prop_values(self, video: Video, name: str) -> list:
+        values = []
+        if name in video.properties:
+            value = video.properties[name]
+            values = value if self.prop_types[name].multiple else [value]
+        assert isinstance(values, list)
+        return values
+
+    def set_prop_values(
+        self, video: Video, name: str, values: Union[Sequence, Set]
+    ) -> None:
+        if not values:
+            video.properties.pop(name, None)
+        elif self.prop_types[name].multiple:
+            video.properties[name] = self.prop_types[name].validate(values)
+        else:
+            (value,) = values
+            video.properties[name] = self.prop_types[name].validate(value)
+
+    def merge_prop_values(
+        self, video: Video, name: str, values: Union[Sequence, Set]
+    ) -> None:
+        if self.prop_types[name].multiple:
+            values = video.properties.get(name, []) + list(values)
+        self.set_prop_values(video, name, values)
+
+    def validate_prop_values(self, name, values: list) -> list:
+        prop_type = self.prop_types[name]
+        if prop_type.multiple:
+            values = prop_type.validate(values)
+        else:
+            values = [prop_type.validate(value) for value in values]
+        return values

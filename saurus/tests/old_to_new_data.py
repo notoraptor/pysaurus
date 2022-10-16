@@ -85,7 +85,7 @@ def main():
                 miniature_group_min_size=db.settings.miniature_group_min_size,
                 sources=[source.path for source in db.video_folders],
                 properties={
-                    prop.name: old_to_new_prop(prop) for prop in db.get_prop_types()
+                    prop.name: old_to_new_prop(prop) for prop in db._get_prop_types()
                 },
                 videos={
                     video.filename.path: old_to_new_video(video)

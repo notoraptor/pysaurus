@@ -21,7 +21,7 @@ def db_select(
     elif entry == "property":
         attributes.add("name")
         cls_fields.add("name")
-        source = self.get_prop_types()
+        source = self._get_prop_types()
         assert not properties
     else:
         raise ValueError(f"Unknown database entry: {entry}")
