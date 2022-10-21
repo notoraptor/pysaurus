@@ -25,7 +25,7 @@ class ClassifierLayer(Layer):
     def filter(self, data: GroupArray) -> GroupArray:
         if data.field is None or not data.is_property:
             return data
-        if not self.database.get_prop_type(data.field).multiple:
+        if not self.database.has_prop_type(data.field, multiple=True):
             return data
         path = self.get_path()
         if not path:

@@ -459,34 +459,6 @@ class Database(JsonDatabase):
         self.notifier.notify(notifications.FieldsModified(["move_id", "quality"]))
         return video.filename
 
-    def convert_prop_to_unique(self, name) -> None:
-        if self.has_prop_type(name):
-            prop_type = self.get_prop_type(name)
-            if not prop_type.multiple:
-                raise exceptions.PropertyAlreadyUnique(name)
-            for video in self.query():
-                if name in video.properties and len(video.properties[name]) > 1:
-                    raise exceptions.PropertyToUniqueError(name, video)
-            prop_type.multiple = False
-            for video in self.query():
-                if name in video.properties:
-                    if video.properties[name]:
-                        video.properties[name] = video.properties[name][0]
-                    else:
-                        del video.properties[name]
-            self.save()
-
-    def convert_prop_to_multiple(self, name) -> None:
-        if self.has_prop_type(name):
-            prop_type = self.get_prop_type(name)
-            if prop_type.multiple:
-                raise exceptions.PropertyAlreadyMultiple(name)
-            prop_type.multiple = True
-            for video in self.query():
-                if name in video.properties:
-                    video.properties[name] = [video.properties[name]]
-            self.save()
-
     def set_video_properties(self, video_id: int, properties) -> Set[str]:
         video = self.__get_video_from_id(video_id)
         modified = video.update_properties(properties)
