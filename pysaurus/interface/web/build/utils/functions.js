@@ -37,7 +37,8 @@ System.register([], function (_export, _context) {
     capitalizeFirstLetter: capitalizeFirstLetter,
     formatString: formatString,
     IdGenerator: void 0,
-    utilities: utilities
+    utilities: utilities,
+    arrayEquals: arrayEquals
   });
 
   return {

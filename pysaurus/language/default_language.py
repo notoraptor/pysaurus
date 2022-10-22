@@ -58,7 +58,7 @@ class DefaultLanguage:
     error_moving_file = "Error {name}: {message}"
 
     job_step_predictor_opt_converged = (
-        "Converged, \u00A9 {cost}, \u03b8 [{min_theta}; {max_theta}]"
+        "Converged, # {step}, \u00A9 {cost}, \u03b8 [{min_theta}; {max_theta}]"
     )
     job_step_predictor_opt = (
         "# {step}, \u00A9 {cost}, \u03b8 [{min_theta}; {max_theta}]"

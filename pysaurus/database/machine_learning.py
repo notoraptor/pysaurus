@@ -8,6 +8,7 @@ from pysaurus.core.notifier import DEFAULT_NOTIFIER
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.miniature_tools.miniature import Miniature
 from pysaurus.language.default_language import DefaultLanguage
+from pysaurus.core import notifications
 
 
 def _miniature_to_x(m: Miniature) -> List:
@@ -55,38 +56,52 @@ def train(
     lang = database.lang if database else DefaultLanguage
     job_notifier = job_notifications.OptimizePatternPredictor(nb_steps, notifier)
     with Profiler(lang.profile_train, notifier):
-        for step in range(nb_steps):
-            # theta: (t,)
-            # xs: (m, t)
-            # ys: (m,)
-            # 1 / (1 + np.exp(xs @ theta)) - ys -> (m,)
-            # xs.T @ (1 / (1 + np.exp(xs @ theta)) - ys) -> (t, 1) -> new_theta
-            c = _cost(theta, xs, ys)
-            if nb_convergence == nb_expected_convergence:
+        with open("train.tsv", "w") as train_log:
+            print("\t".join(f"t{i + 1}" for i in range(len(theta))), file=train_log)
+            for step in range(nb_steps):
+                # theta: (t,)
+                # xs: (m, t)
+                # ys: (m,)
+                # 1 / (1 + np.exp(xs @ theta)) - ys -> (m,)
+                # xs.T @ (1 / (1 + np.exp(xs @ theta)) - ys) -> (t, 1) -> new_theta
+                if step % 100 == 0:
+                    print("\t".join(str(val) for val in theta), file=train_log)
+                c = _cost(theta, xs, ys)
+                if nb_convergence == nb_expected_convergence:
+                    job_notifier.progress(
+                        None,
+                        nb_steps,
+                        nb_steps,
+                        title=lang.job_step_predictor_opt_converged.format(
+                            step=(step + 1),
+                            cost=c,
+                            min_theta=min(theta),
+                            max_theta=max(theta),
+                        ),
+                    )
+                    break
+                previous_theta = theta
+                theta = (
+                    theta - alpha * (xs.T @ (1 / (1 + np.exp(-(xs @ theta))) - ys)) / m
+                )
+                nb_convergence = (
+                    (nb_convergence + 1) if np.all(previous_theta == theta) else 0
+                )
                 job_notifier.progress(
                     None,
+                    step + 1,
                     nb_steps,
-                    nb_steps,
-                    title=lang.job_step_predictor_opt_converged.format(
-                        cost=c, min_theta=min(theta), max_theta=max(theta)
+                    title=lang.job_step_predictor_opt.format(
+                        step=(step + 1),
+                        cost=c,
+                        min_theta=min(theta),
+                        max_theta=max(theta),
                     ),
                 )
-                break
-            previous_theta = theta
-            theta = theta - alpha * (xs.T @ (1 / (1 + np.exp(-(xs @ theta))) - ys)) / m
-            nb_convergence = (
-                (nb_convergence + 1) if np.all(previous_theta == theta) else 0
-            )
-            job_notifier.progress(
-                None,
-                step + 1,
-                nb_steps,
-                title=lang.job_step_predictor_opt.format(
-                    step=(step + 1), cost=c, min_theta=min(theta), max_theta=max(theta)
-                ),
-            )
     if nb_convergence == nb_expected_convergence:
         notifier.notify(
-            lang.message_predictor_opt_converged.format(count=nb_convergence)
+            notifications.Message(
+                lang.message_predictor_opt_converged.format(count=nb_convergence)
+            )
         )
     return list(theta)
