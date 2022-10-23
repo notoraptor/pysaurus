@@ -34,8 +34,10 @@ class PropType(Jsonable):
     def __call__(self, value=None):
         return self.new() if value is None else self.validate(value)
 
-    def is_enum(self):
-        return isinstance(self.definition, list)
+    def is_enum(self, with_values=None):
+        return isinstance(self.definition, list) and (
+            with_values is None or set(self.definition) == set(with_values)
+        )
 
     def new(self):
         return [] if self.multiple else self.default

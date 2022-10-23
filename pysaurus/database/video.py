@@ -226,7 +226,7 @@ class Video(Jsonable):
     def terms(self, as_set=False):
         term_sources = [self.filename.path, str(self.meta_title)]
         for name, val in self.properties.items():
-            if self.database.has_prop_type(name, dtype=str):
+            if self.database.has_prop_type(name, with_type=str):
                 if isinstance(val, list):
                     term_sources.extend(val)
                 else:

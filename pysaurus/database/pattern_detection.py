@@ -11,12 +11,11 @@ from pysaurus.database.properties import PropType
 from pysaurus.database.video import Video
 
 
-def _is_prediction_property(prop: PropType):
+def _is_prediction_property(db: Database, name: str) -> bool:
     return (
-        prop.name.startswith("<?")
-        and prop.name.endswith(">")
-        and prop.definition == [-1, 0, 1]
-        and not prop.multiple
+        name.startswith("<?")
+        and name.endswith(">")
+        and db.has_prop_type(name, multiple=False, with_enum=[-1, 0, 1])
     )
 
 
@@ -33,7 +32,7 @@ class NoPredictor(PysaurusError):
 
 
 def compute_pattern_detector(db: Database, videos: List[Video], prop_name: str):
-    assert _is_prediction_property(db.get_prop_type(prop_name))
+    assert _is_prediction_property(db, prop_name)
     video_id_to_miniature = {m.video_id: m for m in db.ensure_miniatures(returns=True)}
     videos = [v for v in videos if v.video_id in video_id_to_miniature]
     classifier = {}

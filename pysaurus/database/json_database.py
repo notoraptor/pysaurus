@@ -164,13 +164,17 @@ class JsonDatabase:
     def _get_prop_types(self) -> Iterable[PropType]:
         return self.prop_types.values()
 
-    def has_prop_type(self, name, *, dtype=None, multiple=None) -> bool:
+    def has_prop_type(
+        self, name, *, with_type=None, multiple=None, with_enum=None
+    ) -> bool:
         if name not in self.prop_types:
             return False
         pt = self.prop_types[name]
-        if dtype is not None and pt.type is not dtype:
+        if with_type is not None and pt.type is not with_type:
             return False
         if multiple is not None and pt.multiple is not multiple:
+            return False
+        if with_enum is not None and not pt.is_enum(with_enum):
             return False
         return True
 

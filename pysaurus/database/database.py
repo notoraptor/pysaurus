@@ -561,7 +561,7 @@ class Database(JsonDatabase):
     def fill_property_with_terms(
         self, videos: Iterable[Video], prop_name: str, only_empty=False
     ) -> None:
-        assert self.has_prop_type(prop_name, dtype=str, multiple=True)
+        assert self.has_prop_type(prop_name, with_type=str, multiple=True)
         for video in videos:
             values = set(self.get_prop_values(video, prop_name))
             if only_empty and values:
@@ -571,7 +571,7 @@ class Database(JsonDatabase):
         self.notifier.notify(notifications.PropertiesModified([prop_name]))
 
     def prop_to_lowercase(self, prop_name):
-        assert self.has_prop_type(prop_name, dtype=str)
+        assert self.has_prop_type(prop_name, with_type=str)
         for video in self.query():
             values = self.get_prop_values(video, prop_name)
             self.set_prop_values(
@@ -581,7 +581,7 @@ class Database(JsonDatabase):
         self.notifier.notify(notifications.PropertiesModified([prop_name]))
 
     def prop_to_uppercase(self, prop_name):
-        assert self.has_prop_type(prop_name, dtype=str)
+        assert self.has_prop_type(prop_name, with_type=str)
         for video in self.query():
             values = self.get_prop_values(video, prop_name)
             self.set_prop_values(
@@ -594,7 +594,7 @@ class Database(JsonDatabase):
         self, videos: Iterable[Video], path: list, from_property: str, to_property: str
     ) -> int:
         assert self.has_prop_type(from_property, multiple=True)
-        assert self.has_prop_type(to_property, dtype=str)
+        assert self.has_prop_type(to_property, with_type=str)
         self.validate_prop_values(from_property, path)
         (concat_path,) = self.validate_prop_values(
             to_property, [" ".join(str(value) for value in path)]
