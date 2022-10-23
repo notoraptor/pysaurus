@@ -86,7 +86,11 @@ class JsonDatabase:
             self.add_prop_type(PropType.from_dict(prop_dict), save=False)
 
         # Parsing predictors
-        self.predictors = json_dict.get("predictors", {})
+        self.predictors = {
+            name: predictor
+            for name, predictor in json_dict.get("predictors", {}).items()
+            if name in self.prop_types
+        }
 
         # Parsing videos.
         folders_tree = PathTree(self.folders)
