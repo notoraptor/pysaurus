@@ -125,7 +125,7 @@ class Video(Jsonable):
 
     def set_properties(self, properties: dict):
         self.__json__["properties"] = {
-            key: self.database.get_prop_type(key)(value)
+            key: self.database.get_prop_val(key, value)
             for key, value in properties.items()
         }
 
@@ -257,14 +257,14 @@ class Video(Jsonable):
         return self.video_id == int(term)
 
     def update_properties(self, properties: dict) -> Set[str]:
-        modified = set()
-        for name, value in properties.items():
-            if self.update_property(name, value):
-                modified.add(name)
-        return modified
+        return {
+            name
+            for name, value in properties.items()
+            if self.update_property(name, value)
+        }
 
     def update_property(self, name, value):
-        value = self.database.get_prop_type(name)(value)
+        value = self.database.get_prop_val(name, value)
         modified = name not in self.properties or self.properties[name] != value
         self.properties[name] = value
         return modified

@@ -59,11 +59,14 @@ class ClassifierLayer(Layer):
             groups.append(cache[0])
         else:
             if cache.is_property:
-                prop_type = self.database.get_prop_type(cache.field)
-                if prop_type.multiple:
+                if self.database.has_prop_type(cache.field, multiple=True):
                     field_value = video.properties.get(cache.field, None) or [None]
                 else:
-                    field_value = [video.properties.get(cache.field, prop_type.default)]
+                    field_value = [
+                        video.properties.get(
+                            cache.field, self.database.get_default_prop_val(cache.field)
+                        )
+                    ]
             else:
                 field_value = [None]
             for value in field_value:

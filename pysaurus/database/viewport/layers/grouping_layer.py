@@ -35,14 +35,15 @@ class GroupingLayer(Layer):
     def reset_parameters(self):
         self._set_parameters(grouping=self.DEFAULT_GROUP_DEF)
 
-    @staticmethod
-    def _get_prop_vals(prop_type, video_state):
+    def _get_prop_vals(self, name, video_state):
+        multiple = self.database.has_prop_type(name, multiple=True)
+        default = self.database.get_default_prop_val(name)
         if video_state.unreadable:
-            return [None if prop_type.multiple else prop_type.default]
-        elif prop_type.multiple:
-            return video_state.properties.get(prop_type.name, None) or [None]
+            return [None if multiple else default]
+        elif multiple:
+            return video_state.properties.get(name, None) or [None]
         else:
-            return [video_state.properties.get(prop_type.name, prop_type.default)]
+            return [video_state.properties.get(name, default)]
 
     def filter(self, data: Dict[AbsolutePath, Video]) -> GroupArray:
         group_def = self.get_grouping()
@@ -52,9 +53,8 @@ class GroupingLayer(Layer):
         else:
             grouped_videos = {}
             if group_def.is_property:
-                prop_type = self.database.get_prop_type(group_def.field)
                 for video in data.values():
-                    for value in self._get_prop_vals(prop_type, video):
+                    for value in self._get_prop_vals(group_def.field, video):
                         grouped_videos.setdefault(value, []).append(video)
             else:
                 for video in data.values():
@@ -79,9 +79,7 @@ class GroupingLayer(Layer):
         else:
             group_def = self.get_grouping()
             if group_def.is_property:
-                field_value = self._get_prop_vals(
-                    self.database.get_prop_type(group_def.field), video
-                )
+                field_value = self._get_prop_vals(group_def.field, video)
             else:
                 field_value = [getattr(video, group_def.field, None)]
             for value in field_value:

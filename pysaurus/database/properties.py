@@ -5,6 +5,7 @@ from pysaurus.core.enumeration import Enumeration
 from pysaurus.core.jsonable import Jsonable
 
 DefType = Union[bool, int, float, str, list, tuple]
+PropValueType = Union[bool, int, float, str, list]
 
 
 class PropType(Jsonable):
@@ -30,8 +31,9 @@ class PropType(Jsonable):
         lambda self: self.definition[0] if self.is_enum() else self.definition
     )
     type = property(lambda self: type(self.default))
+    enumeration = property(lambda self: self.definition if self.is_enum() else None)
 
-    def __call__(self, value=None):
+    def __call__(self, value=None) -> PropValueType:
         return self.new() if value is None else self.validate(value)
 
     def is_enum(self, with_values=None):
@@ -39,10 +41,10 @@ class PropType(Jsonable):
             with_values is None or set(self.definition) == set(with_values)
         )
 
-    def new(self):
+    def new(self) -> PropValueType:
         return [] if self.multiple else self.default
 
-    def validate(self, value):
+    def validate(self, value) -> PropValueType:
         if self.multiple:
             if not isinstance(value, (list, tuple, set)):
                 raise exceptions.InvalidMultiplePropertyValue(self, value)
@@ -70,7 +72,7 @@ class PropType(Jsonable):
         return {
             "name": self.name,
             "type": self.type.__name__,
-            "enumeration": self.definition if self.is_enum() else None,
+            "enumeration": self.enumeration,
             "defaultValue": self.new(),
             "multiple": self.multiple,
         }

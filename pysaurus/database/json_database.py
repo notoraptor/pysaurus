@@ -13,7 +13,7 @@ from pysaurus.database.db_video_attribute import (
     QualityAttribute,
 )
 from pysaurus.database.json_backup import JsonBackup
-from pysaurus.database.properties import PropType
+from pysaurus.database.properties import PropType, PropValueType
 from pysaurus.database.video import Video
 
 
@@ -165,7 +165,7 @@ class JsonDatabase:
         return self.prop_types.values()
 
     def has_prop_type(
-        self, name, *, with_type=None, multiple=None, with_enum=None
+        self, name, *, with_type=None, multiple=None, with_enum=None, default=None
     ) -> bool:
         if name not in self.prop_types:
             return False
@@ -176,10 +176,15 @@ class JsonDatabase:
             return False
         if with_enum is not None and not pt.is_enum(with_enum):
             return False
+        if default is not None and pt.default != default:
+            return False
         return True
 
-    def get_prop_type(self, name: str) -> PropType:
-        return self.prop_types[name]
+    def get_prop_val(self, name, value) -> PropValueType:
+        return self.prop_types[name](value)
+
+    def get_default_prop_val(self, name) -> PropValueType:
+        return self.prop_types[name].default
 
     def get_prop_names(self) -> Iterable[str]:
         return self.prop_types.keys()
@@ -219,7 +224,7 @@ class JsonDatabase:
 
     def convert_prop_to_unique(self, name) -> None:
         if self.has_prop_type(name):
-            prop_type = self.get_prop_type(name)
+            prop_type = self.prop_types[name]
             if not prop_type.multiple:
                 raise exceptions.PropertyAlreadyUnique(name)
             for video in self.query():
@@ -236,7 +241,7 @@ class JsonDatabase:
 
     def convert_prop_to_multiple(self, name) -> None:
         if self.has_prop_type(name):
-            prop_type = self.get_prop_type(name)
+            prop_type = self.prop_types[name]
             if prop_type.multiple:
                 raise exceptions.PropertyAlreadyMultiple(name)
             prop_type.multiple = True

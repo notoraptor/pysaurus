@@ -30,9 +30,11 @@ class SpecialProperties:
     def install(cls, database):
         to_save = False
         for expected in cls.properties:
-            if (
-                not database.has_prop_type(expected.name)
-                or database.get_prop_type(expected.name) != expected
+            if not database.has_prop_type(
+                name=expected.name,
+                with_type=expected.type,
+                with_enum=expected.enumeration,
+                default=expected.default,
             ):
                 database.remove_prop_type(expected.name, save=False)
                 database.add_prop_type(expected, save=False)
