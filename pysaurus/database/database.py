@@ -110,7 +110,7 @@ class Database(JsonDatabase):
         ]
         self.notifier.notify(notifications.MissingThumbnails(remaining_thumb_videos))
 
-    def __notify_filename_modified(self):
+    def __notify_filename_modified(self, video: Video, old_path: AbsolutePath):
         self.notifier.notify(
             notifications.FieldsModified(
                 (
@@ -124,6 +124,13 @@ class Database(JsonDatabase):
                 )
             )
         )
+        self._update_video_path_in_index(video, old_path)
+
+    def _notify_properties_modified(
+        self, properties: Iterable[str], videos: Iterable[Video]
+    ):
+        self._update_videos_in_index(videos)
+        self.notifier.notify(notifications.PropertiesModified(properties))
 
     # Public methods.
 
@@ -185,6 +192,7 @@ class Database(JsonDatabase):
             self.videos.update(videos)
             self.date = current_date
             self.save()
+            self._add_videos_to_index(videos.values())
         if unreadable:
             self.notifier.notify(
                 notifications.VideoInfoErrors(
@@ -442,7 +450,7 @@ class Database(JsonDatabase):
         self.videos[path] = video
         video.filename = path
         self.save()
-        self.__notify_filename_modified()
+        self.__notify_filename_modified(video, old_filename)
 
         return old_filename
 
@@ -455,6 +463,7 @@ class Database(JsonDatabase):
             video.thumbnail_path.delete()
         if save:
             self.save()
+        self._remove_video_from_index(video)
         self.notifier.notify(notifications.VideoDeleted(video))
         self.notifier.notify(notifications.FieldsModified(["move_id", "quality"]))
         return video.filename
@@ -463,7 +472,7 @@ class Database(JsonDatabase):
         video = self.__get_video_from_id(video_id)
         modified = video.update_properties(properties)
         self.save()
-        self.notifier.notify(notifications.PropertiesModified(modified))
+        self._notify_properties_modified(modified, [video])
         return modified
 
     def refresh(self, ensure_miniatures=False) -> None:
@@ -488,7 +497,7 @@ class Database(JsonDatabase):
                 modified.append(video)
         if modified:
             self.save()
-            self.notifier.notify(notifications.PropertiesModified([name]))
+            self._notify_properties_modified([name], modified)
         return modified
 
     def delete_property_value(
@@ -505,12 +514,12 @@ class Database(JsonDatabase):
             self.merge_prop_values(video, new_name, [value])
         if modified:
             self.save()
-            self.notifier.notify(notifications.PropertiesModified([old_name, new_name]))
+            self._notify_properties_modified([old_name, new_name], modified)
 
     def edit_property_value(
         self, videos: Iterable[Video], name: str, old_values: list, new_value: object
     ) -> bool:
-        modified = False
+        modified = []
         old_values = set(self.validate_prop_values(name, old_values))
         (new_value,) = self.validate_prop_values(name, [new_value])
         for video in videos:
@@ -519,11 +528,11 @@ class Database(JsonDatabase):
             if len(previous_values) > len(next_values):
                 next_values.add(new_value)
                 self.set_prop_values(video, name, next_values)
-                modified = True
+                modified.append(video)
         if modified:
             self.save()
-            self.notifier.notify(notifications.PropertiesModified([name]))
-        return modified
+            self._notify_properties_modified([name], modified)
+        return bool(modified)
 
     def edit_property_for_videos(
         self,
@@ -542,13 +551,15 @@ class Database(JsonDatabase):
         )
         values_to_add = self.validate_prop_values(name, values_to_add)
         values_to_remove = set(self.validate_prop_values(name, values_to_remove))
+        modified = []
         for video_id in set(video_indices):
             video = self.__get_video_from_id(video_id)
             values = set(self.get_prop_values(video, name)) - values_to_remove
             self.set_prop_values(video, name, values)
             self.merge_prop_values(video, name, values_to_add)
+            modified.append(video)
         self.save()
-        self.notifier.notify(notifications.PropertiesModified([name]))
+        self._notify_properties_modified([name], modified)
 
     def count_property_values(
         self, name: str, video_indices: List[int]
@@ -562,33 +573,42 @@ class Database(JsonDatabase):
         self, videos: Iterable[Video], prop_name: str, only_empty=False
     ) -> None:
         assert self.has_prop_type(prop_name, with_type=str, multiple=True)
+        modified = []
         for video in videos:
             values = set(self.get_prop_values(video, prop_name))
             if only_empty and values:
                 continue
             self.set_prop_values(video, prop_name, values | video.terms(as_set=True))
-        self.save()
-        self.notifier.notify(notifications.PropertiesModified([prop_name]))
+            modified.append(video)
+        if modified:
+            self.save()
+            self._notify_properties_modified([prop_name], modified)
 
     def prop_to_lowercase(self, prop_name):
         assert self.has_prop_type(prop_name, with_type=str)
+        modified = []
         for video in self.query():
             values = self.get_prop_values(video, prop_name)
-            self.set_prop_values(
-                video, prop_name, [value.strip().lower() for value in values]
-            )
-        self.save()
-        self.notifier.notify(notifications.PropertiesModified([prop_name]))
+            new_values = [value.strip().lower() for value in values]
+            if values and new_values != values:
+                self.set_prop_values(video, prop_name, new_values)
+                modified.append(video)
+        if modified:
+            self.save()
+            self._notify_properties_modified([prop_name], modified)
 
     def prop_to_uppercase(self, prop_name):
         assert self.has_prop_type(prop_name, with_type=str)
+        modified = []
         for video in self.query():
             values = self.get_prop_values(video, prop_name)
-            self.set_prop_values(
-                video, prop_name, [value.strip().upper() for value in values]
-            )
-        self.save()
-        self.notifier.notify(notifications.PropertiesModified([prop_name]))
+            new_values = [value.strip().upper() for value in values]
+            if values and new_values != values:
+                self.set_prop_values(video, prop_name, new_values)
+                modified.append(video)
+        if modified:
+            self.save()
+            self._notify_properties_modified([prop_name], modified)
 
     def move_concatenated_prop_val(
         self, videos: Iterable[Video], path: list, from_property: str, to_property: str
@@ -610,9 +630,7 @@ class Database(JsonDatabase):
                 modified.append(video)
         if modified:
             self.save()
-            self.notifier.notify(
-                notifications.PropertiesModified([from_property, to_property])
-            )
+            self._notify_properties_modified([from_property, to_property], modified)
         return len(modified)
 
     def move_video_entry(self, from_id, to_id, save=True):

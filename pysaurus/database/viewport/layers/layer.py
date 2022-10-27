@@ -40,7 +40,10 @@ class Layer:
     def set_sub_layer(self, sub_layer):
         self.__sub_layer = sub_layer
         sub_layer.parent = self
-        self.__log("set sub layer", None if self.__sub_layer is None else type(sub_layer).__name__)
+        self.__log(
+            "set sub layer",
+            None if self.__sub_layer is None else type(sub_layer).__name__,
+        )
 
     def _set_parameters(self, **kwargs):
         for key in kwargs:
@@ -57,9 +60,7 @@ class Layer:
     def set_data(self, data):
         self.__to_update = True
         self.__data = data
-        self.__log(
-            "set data", None if self.__data is None else type(data).__name__
-        )
+        self.__log("set data", None if self.__data is None else type(data).__name__)
 
     def request_update(self):
         self.__to_update = True

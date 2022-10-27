@@ -121,7 +121,6 @@ class VideoProvider:
         self._manage_attributes_modified(notification.fields, True)
 
     def _manage_attributes_modified(self, properties: Sequence[str], is_property=True):
-        self.source_layer.update_index()
         group_def = self.grouping_layer.get_grouping()
         if (
             group_def

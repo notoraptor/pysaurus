@@ -8,15 +8,13 @@ from pysaurus.database.viewport.layers.layer import Layer
 
 
 class SourceLayer(Layer):
-    __slots__ = "__index", "__to_update_index"
+    __slots__ = ()
     __props__ = ("sources",)
     _cache: Dict[AbsolutePath, Video]
     DEFAULT_SOURCE_DEF = [("readable",)]
 
     def __init__(self, database):
         super().__init__(database)
-        self.__index = {}  # type: Dict[str, Set[Video]]
-        self.__to_update_index = True
 
     def set_sources(self, paths: Sequence[Sequence[str]] = None):
         if paths is None:
@@ -44,35 +42,14 @@ class SourceLayer(Layer):
             source.extend(database.get_videos(*path))
         source_dict = {video.filename: video for video in source}
         assert len(source_dict) == len(source), (len(source_dict), len(source))
-        self.update_index()
         return source_dict
 
     def remove_from_cache(self, cache: Dict[AbsolutePath, Video], vs: Video):
         assert vs.filename in cache, len(cache)
-        for term in vs.terms(as_set=True):
-            if term in self.__index and vs in self.__index[term]:
-                self.__index[term].remove(vs)
-                if not self.__index[term]:
-                    del self.__index[term]
         del cache[vs.filename]
 
     def videos(self):
         return self._cache.values()
 
-    def update_index(self):
-        self.__to_update_index = True
-
     def get_index(self):
-        if self.__to_update_index:
-            self.__index = self.__index_videos(self._cache.values())
-            self.__to_update_index = False
-        return self.__index
-
-    @classmethod
-    @Profiler.profile()
-    def __index_videos(cls, videos: Iterable[Video]) -> Dict[str, Set[Video]]:
-        term_to_videos = {}
-        for video in videos:
-            for term in video.terms():
-                term_to_videos.setdefault(term, set()).add(video)
-        return term_to_videos
+        return self.database.indexer.get_index()

@@ -1,7 +1,7 @@
 from typing import Dict, Iterable, List, Optional, Set, Sequence, Union
 
 from pysaurus.application import exceptions
-from pysaurus.core import notifications
+from pysaurus.database.video_indexer import VideoIndexer
 from pysaurus.core.components import AbsolutePath, DateModified, PathType
 from pysaurus.core.notifications import Notification
 from pysaurus.core.notifier import DEFAULT_NOTIFIER, Notifier
@@ -61,6 +61,7 @@ class JsonDatabase:
         "id_to_video",
         "quality_attribute",
         "moves_attribute",
+        "indexer",
     )
 
     def __init__(
@@ -85,8 +86,11 @@ class JsonDatabase:
         self.id_to_video: Dict[int, Video] = {}
         self.quality_attribute = QualityAttribute(self)
         self.moves_attribute = PotentialMoveAttribute(self)
+        self.indexer = VideoIndexer()
         # Initialize
         self.__load(folders)
+        with Profiler("build index", self.notifier):
+            self.indexer.build(self.videos.values())
 
     @Profiler.profile_method()
     def __load(self, folders: Optional[Iterable[PathType]] = None):
@@ -312,3 +316,21 @@ class JsonDatabase:
         else:
             values = [prop_type.validate(value) for value in values]
         return values
+
+    @Profiler.profile_method()
+    def _remove_video_from_index(self, video):
+        self.indexer.remove_video(video)
+
+    @Profiler.profile_method()
+    def _add_videos_to_index(self, videos):
+        for video in videos:
+            self.indexer.add_video(video)
+
+    @Profiler.profile_method()
+    def _update_videos_in_index(self, videos):
+        for video in videos:
+            self.indexer.update_video(video)
+
+    @Profiler.profile_method()
+    def _update_video_path_in_index(self, video, old_path: AbsolutePath):
+        self.indexer.replace_path(video, old_path)
