@@ -51,34 +51,6 @@ class NbMiniatures(Notification):
         self.total = total
 
 
-class DatabaseLoaded(Notification):
-    __slots__ = (
-        "entries",
-        "discarded",
-        "unreadable_not_found",
-        "unreadable_found",
-        "readable_not_found",
-        "valid",
-        "readable_found_without_thumbnails",
-    )
-
-    def __init__(self, database):
-        super().__init__()
-        self.entries = len(database.query())
-        self.discarded = len(database.get_videos("discarded"))
-        self.unreadable_not_found = len(database.get_videos("unreadable", "not_found"))
-        self.unreadable_found = len(database.get_videos("unreadable", "found"))
-        self.readable_not_found = len(database.get_videos("readable", "not_found"))
-        self.readable_found_without_thumbnails = len(
-            database.get_videos("readable", "found", "without_thumbnails")
-        )
-        self.valid = len(database.get_videos("readable", "found", "with_thumbnails"))
-
-
-class DatabaseSaved(DatabaseLoaded):
-    __slots__ = ()
-
-
 class MissingVideos(Notification):
     __slots__ = ("names",)
 

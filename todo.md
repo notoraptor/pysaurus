@@ -43,6 +43,7 @@ Features:
   - add a value to a multiple property
 - Add an option "save to playlist" to save current view into a playlist.
 - Manage errors like read-only properties.
+- Add video property "date_added" for date when video was added to database.
 
 Optimizations:
 - Memory leaks in python code when running gui ?

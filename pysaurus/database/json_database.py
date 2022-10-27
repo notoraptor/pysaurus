@@ -3,6 +3,7 @@ from typing import Dict, Iterable, List, Optional, Set, Sequence, Union
 from pysaurus.application import exceptions
 from pysaurus.core import notifications
 from pysaurus.core.components import AbsolutePath, DateModified, PathType
+from pysaurus.core.notifications import Notification
 from pysaurus.core.notifier import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
@@ -15,6 +16,34 @@ from pysaurus.database.db_video_attribute import (
 from pysaurus.database.json_backup import JsonBackup
 from pysaurus.database.properties import PropType, PropValueType
 from pysaurus.database.video import Video
+
+
+class DatabaseLoaded(Notification):
+    __slots__ = (
+        "entries",
+        "discarded",
+        "unreadable_not_found",
+        "unreadable_found",
+        "readable_not_found",
+        "valid",
+        "readable_found_without_thumbnails",
+    )
+
+    def __init__(self, database):
+        super().__init__()
+        self.entries = len(database.query())
+        self.discarded = len(database.get_videos("discarded"))
+        self.unreadable_not_found = len(database.get_videos("unreadable", "not_found"))
+        self.unreadable_found = len(database.get_videos("unreadable", "found"))
+        self.readable_not_found = len(database.get_videos("readable", "not_found"))
+        self.readable_found_without_thumbnails = len(
+            database.get_videos("readable", "found", "without_thumbnails")
+        )
+        self.valid = len(database.get_videos("readable", "found", "with_thumbnails"))
+
+
+class DatabaseSaved(DatabaseLoaded):
+    __slots__ = ()
 
 
 class JsonDatabase:
@@ -100,7 +129,7 @@ class JsonDatabase:
             self.videos[video_state.filename] = video_state
 
         self.save(on_new_identifiers=to_save)
-        self.notifier.notify(notifications.DatabaseLoaded(self))
+        self.notifier.notify(DatabaseLoaded(self))
 
     @Profiler.profile_method()
     def save(self, on_new_identifiers=False):
@@ -125,7 +154,7 @@ class JsonDatabase:
                 ),
             }
         )
-        self.notifier.notify(notifications.DatabaseSaved(self))
+        self.notifier.notify(DatabaseSaved(self))
 
     def __ensure_identifiers(self):
         id_to_video = {}  # type: Dict[int, Video]

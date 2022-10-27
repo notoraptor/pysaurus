@@ -37,13 +37,10 @@ class Layer:
     def __log(self, *args, **kwargs):
         print(f"{type(self).__name__}/", *args, **kwargs)
 
-    def set_parent(self, parent):
-        self.parent = parent
-
     def set_sub_layer(self, sub_layer):
         self.__sub_layer = sub_layer
-        sub_layer.set_parent(self)
-        self.__log("sub-filter", None if self.__sub_layer is None else "set")
+        sub_layer.parent = self
+        self.__log("set sub layer", None if self.__sub_layer is None else type(sub_layer).__name__)
 
     def _set_parameters(self, **kwargs):
         for key in kwargs:
@@ -61,7 +58,7 @@ class Layer:
         self.__to_update = True
         self.__data = data
         self.__log(
-            "data", None if self.__data is None else f"set {type(data).__name__}"
+            "set data", None if self.__data is None else type(data).__name__
         )
 
     def request_update(self):
@@ -96,7 +93,7 @@ class Layer:
 
     def delete_video(self, video):
         self.remove_from_cache(self.__filtered, video)
-        self.__log("delete", video.filename)
+        self.__log("delete video", video.filename)
         if self.__sub_layer:
             self.__sub_layer.delete_video(video)
 
