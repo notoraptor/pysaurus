@@ -476,7 +476,7 @@ class Database(JsonDatabase):
         return modified
 
     def refresh(self, ensure_miniatures=False) -> None:
-        with Profiler(self.lang.profile_reset_thumbnail_errors):
+        with Profiler(self.lang.profile_reset_thumbnail_errors, self.notifier):
             for video in self.get_videos("readable", "found", "without_thumbnails"):
                 video.unreadable_thumbnail = False
         self.update()

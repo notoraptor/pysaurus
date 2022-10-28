@@ -171,16 +171,18 @@ class GuiAPI(FeatureAPI):
         raise NotImplementedError()
 
     def _create_database(self, name: str, folders: Sequence[str], update: bool):
-        self.database = self.application.new_database(name, folders)
-        self.provider = VideoProvider(self.database)
-        if update:
-            self._update_database()
+        with Profiler("Create database", self.application.notifier):
+            self.database = self.application.new_database(name, folders)
+            self.provider = VideoProvider(self.database)
+            if update:
+                self._update_database()
 
     def _open_database(self, name: str, update: bool):
-        self.database = self.application.open_database_from_name(name)
-        self.provider = VideoProvider(self.database)
-        if update:
-            self._update_database()
+        with Profiler("Open database", self.application.notifier):
+            self.database = self.application.open_database_from_name(name)
+            self.provider = VideoProvider(self.database)
+            if update:
+                self._update_database()
 
     def _update_database(self):
         self.database.refresh(ensure_miniatures=False)
