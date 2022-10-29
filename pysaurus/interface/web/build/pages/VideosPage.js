@@ -250,7 +250,8 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           }, /*#__PURE__*/React.createElement("strong", null, this.context.action_ignore_cache))) : "", groupedByMoves ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.confirmAllUniqueMoves
           }, /*#__PURE__*/React.createElement("strong", null, /*#__PURE__*/React.createElement("em", null, this.context.action_confirm_all_unique_moves))) : "", /*#__PURE__*/React.createElement(MenuItem, {
-            action: this.playlist
+            action: this.playlist,
+            shortcut: "Ctrl+L"
           }, /*#__PURE__*/React.createElement("strong", null, /*#__PURE__*/React.createElement("em", null, "Play list")))), /*#__PURE__*/React.createElement(MenuPack, {
             title: this.context.menu_properties
           }, /*#__PURE__*/React.createElement(ActionToMenuItem, {
@@ -524,7 +525,8 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             openRandomVideo: new Action("Ctrl+O", this.context.action_open_random_video, this.openRandomVideo, this.canOpenRandomVideo),
             openRandomPlayer: new Action("Ctrl+E", this.context.action_open_random_player, this.openRandomPlayer, this.canOpenRandomPlayer),
             previousPage: new Action("Ctrl+ArrowLeft", this.context.action_go_to_previous_page, this.previousPage, Fancybox.isInactive),
-            nextPage: new Action("Ctrl+ArrowRight", this.context.action_go_to_next_page, this.nextPage, Fancybox.isInactive)
+            nextPage: new Action("Ctrl+ArrowRight", this.context.action_go_to_next_page, this.nextPage, Fancybox.isInactive),
+            playlist: new Action("Ctrl+L", "play list", this.playlist, Fancybox.isInactive)
           }, this.context);
         }
 

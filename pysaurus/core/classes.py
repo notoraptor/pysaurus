@@ -117,3 +117,10 @@ class AbstractMatrix:
     @abstractmethod
     def data(self):
         raise NotImplementedError()
+
+
+class StringedTuple(tuple):
+    """A tuple that prints elements with str instead of repr"""
+
+    def __str__(self):
+        return f"({', '.join(str(arg) for arg in self)})"

@@ -188,7 +188,13 @@ System.register(["../utils/constants.js", "../dialogs/Dialog.js", "../language.j
         }
 
         onClose() {
-          this.props.onClose(Object.assign({}, this.state));
+          this.props.onClose(Object.assign({}, {
+            isProperty: this.state.isProperty,
+            field: this.getStateField(),
+            sorting: this.state.sorting,
+            reverse: this.state.reverse,
+            allowSingletons: this.getStateAllowSingletons()
+          }));
         }
 
       });

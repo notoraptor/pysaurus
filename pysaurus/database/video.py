@@ -12,7 +12,7 @@ Video class. Properties:
 """
 from typing import Any, Dict, Iterable, Sequence, Set
 
-from pysaurus.core.classes import StringPrinter, Text
+from pysaurus.core.classes import StringPrinter, StringedTuple, Text
 from pysaurus.core.compare import to_comparable
 from pysaurus.core.components import AbsolutePath, DateModified, Duration, FileSize
 from pysaurus.core.constants import JPEG_EXTENSION, PYTHON_ERROR_THUMBNAIL
@@ -194,6 +194,7 @@ class Video(Jsonable):
     )
     quality = property(lambda self: self.database.quality_attribute(self))
     move_id = property(lambda self: self.database.moves_attribute(self)[0])
+    size_length = property(lambda self: StringedTuple((self.size, self.length)))
 
     @property
     def unreadable_thumbnail(self):

@@ -177,7 +177,13 @@ export class FormVideosGrouping extends React.Component {
     }
 
     onClose() {
-        this.props.onClose(Object.assign({}, this.state));
+        this.props.onClose(Object.assign({}, {
+            isProperty: this.state.isProperty,
+            field: this.getStateField(),
+            sorting: this.state.sorting,
+            reverse: this.state.reverse,
+            allowSingletons: this.getStateAllowSingletons(),
+        }));
     }
 }
 FormVideosGrouping.contextType = LangContext;

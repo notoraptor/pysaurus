@@ -114,6 +114,7 @@ export function getFieldMap(context) {
         new FieldInfo('video_codec_description', context.attr_video_codec_description, GroupPermission.ALL, FieldType.str),
         new FieldInfo('video_id', context.attr_video_id, GroupPermission.FORBIDDEN, FieldType.int),
         new FieldInfo('width', context.attr_width, GroupPermission.ALL, FieldType.int),
+        new FieldInfo('size_length', "(size and length)", GroupPermission.ONLY_MANY, FieldType.sortable),
     ], context);
 }
 
