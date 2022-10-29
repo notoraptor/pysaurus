@@ -127,6 +127,7 @@ export class VideosPage extends React.Component {
         this.getStatus = this.getStatus.bind(this);
         this.getFields = this.getFields.bind(this);
         this.getActions = this.getActions.bind(this);
+        this.playlist = this.playlist.bind(this);
 
         this.callbackIndex = -1;
         this.notificationCallbackIndex = -1;
@@ -201,6 +202,9 @@ export class VideosPage extends React.Component {
                                 <strong><em>{this.context.action_confirm_all_unique_moves}</em></strong>
                             </MenuItem>
                         ) : ""}
+                        <MenuItem action={this.playlist}>
+                            <strong><em>Play list</em></strong>
+                        </MenuItem>
                     </MenuPack>
                     <MenuPack title={this.context.menu_properties}>
                         {<ActionToMenuItem action={actions.manageProperties}/>}
@@ -885,6 +889,12 @@ export class VideosPage extends React.Component {
                 APP_STATE.videoHistory.add(filename);
                 this.updateStatus(this.context.status_randomly_opened.format({path: filename}), true, true);
             })
+            .catch(backend_error);
+    }
+
+    playlist() {
+        python_call("playlist")
+            .then(filename => this.updateStatus(`Opened playlist: ${filename}`))
             .catch(backend_error);
     }
 

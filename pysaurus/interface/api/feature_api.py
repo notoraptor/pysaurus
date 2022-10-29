@@ -220,6 +220,9 @@ class FeatureAPI:
     def open_random_video(self):
         return str(self.choose_random_video().filename.open())
 
+    def playlist(self):
+        return str(self.database.to_xspf_playlist(self.provider.get_view()).open())
+
     def open_random_player(self):
         raise NotImplementedError()
 

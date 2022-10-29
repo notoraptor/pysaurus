@@ -8,8 +8,6 @@ from datetime import datetime
 from pysaurus.core.components import AbsolutePath
 
 EPOCH = datetime.utcfromtimestamp(0)
-TEMP_DIR = tempfile.gettempdir()
-TEMP_PREFIX = tempfile.gettempprefix() + "_pysaurus_"
 
 
 def permute(values, initial_permutation=()):
@@ -162,19 +160,6 @@ def assert_str(value):
 def is_instance_from_module(module, obj):
     typ = obj if isinstance(obj, type) else type(obj)
     return any(cls.__module__ == module.__name__ for cls in typ.__mro__)
-
-
-def generate_temp_file_path(extension):
-    temp_file_id = 0
-    while True:
-        temp_file_path = AbsolutePath.file_path(
-            TEMP_DIR, "%s%s" % (TEMP_PREFIX, temp_file_id), extension
-        )
-        if temp_file_path.exists():
-            temp_file_id += 1
-        else:
-            break
-    return temp_file_path
 
 
 def generate_non_existing_path(directory, name, extension):

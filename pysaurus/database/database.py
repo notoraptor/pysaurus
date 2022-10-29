@@ -29,6 +29,7 @@ from pysaurus.database.special_properties import SpecialProperties
 from pysaurus.database.video import Video
 from pysaurus.database.video_runtime_info import VideoRuntimeInfo
 from pysaurus.language.default_language import DefaultLanguage
+from pysaurus.database.utils import generate_temp_file_path
 
 try:
     from pysaurus.database.video_info import video_raptor as backend_raptor
@@ -669,6 +670,23 @@ class Database(JsonDatabase):
 
     def set_predictor(self, prop_name: str, theta: List[float]):
         self.predictors[prop_name] = theta
+
+    @classmethod
+    def to_xspf_playlist(cls, videos: Iterable[Video]) -> AbsolutePath:
+        tracks = "".join(
+            f"<track><location>{video.filename.uri}</location></track>"
+            for video in videos
+        )
+        file_content = (
+            f'<?xml version="1.0" encoding="UTF-8"?>'
+            f'<playlist version="1" xmlns="http://xspf.org/ns/0/">'
+            f"<trackList>{tracks}</trackList>"
+            f"</playlist>"
+        )
+        temp_file_path = generate_temp_file_path("xspf")
+        with open(temp_file_path, "w") as file:
+            file.write(file_content)
+        return AbsolutePath(temp_file_path)
 
     # Videos access and edition
 

@@ -7,7 +7,7 @@ import pysaurus.application.utils
 from other.toolsaurus.command_line_interface import command_line_interface
 from other.toolsaurus.database.database import ExtendedDatabase
 from other.toolsaurus.function_parser import FunctionParser, fdef, fsigned
-from other.toolsaurus.functions import generate_temp_file_path
+from pysaurus.database.utils import generate_temp_file_path
 from other.toolsaurus.printable import to_column, to_table
 from pysaurus.core import functions
 from pysaurus.core.classes import StringPrinter

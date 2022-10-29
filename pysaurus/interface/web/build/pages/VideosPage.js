@@ -172,6 +172,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           this.getStatus = this.getStatus.bind(this);
           this.getFields = this.getFields.bind(this);
           this.getActions = this.getActions.bind(this);
+          this.playlist = this.playlist.bind(this);
           this.callbackIndex = -1;
           this.notificationCallbackIndex = -1;
         }
@@ -248,7 +249,9 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             action: this.findSimilarVideosIgnoreCache
           }, /*#__PURE__*/React.createElement("strong", null, this.context.action_ignore_cache))) : "", groupedByMoves ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.confirmAllUniqueMoves
-          }, /*#__PURE__*/React.createElement("strong", null, /*#__PURE__*/React.createElement("em", null, this.context.action_confirm_all_unique_moves))) : ""), /*#__PURE__*/React.createElement(MenuPack, {
+          }, /*#__PURE__*/React.createElement("strong", null, /*#__PURE__*/React.createElement("em", null, this.context.action_confirm_all_unique_moves))) : "", /*#__PURE__*/React.createElement(MenuItem, {
+            action: this.playlist
+          }, /*#__PURE__*/React.createElement("strong", null, /*#__PURE__*/React.createElement("em", null, "Play list")))), /*#__PURE__*/React.createElement(MenuPack, {
             title: this.context.menu_properties
           }, /*#__PURE__*/React.createElement(ActionToMenuItem, {
             action: actions.manageProperties
@@ -888,6 +891,10 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
               path: filename
             }), true, true);
           }).catch(backend_error);
+        }
+
+        playlist() {
+          python_call("playlist").then(filename => this.updateStatus(`Opened playlist: ${filename}`)).catch(backend_error);
         }
 
         openRandomPlayer() {

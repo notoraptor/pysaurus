@@ -36,8 +36,10 @@ class DbPaths:
         new_paths = DbPaths(new_db_folder.mkdir(), create_thumb_folder=False)
         FileSystem.rename(self.thumb_folder.path, new_paths.thumb_folder.path)
         FileSystem.rename(self.json_path.path, new_paths.json_path.path)
-        FileSystem.rename(self.miniatures_path.path, new_paths.miniatures_path.path)
-        FileSystem.rename(self.log_path.path, new_paths.log_path.path)
+        if self.miniatures_path.exists():
+            FileSystem.rename(self.miniatures_path.path, new_paths.miniatures_path.path)
+        if self.log_path.exists():
+            FileSystem.rename(self.log_path.path, new_paths.log_path.path)
         self.db_folder.delete()
         print("Deleted", self.db_folder, file=sys.stderr)
         return new_paths
