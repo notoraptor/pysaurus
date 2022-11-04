@@ -198,9 +198,11 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             className: "horizontal flex-shrink-0"
           }, /*#__PURE__*/React.createElement(MenuPack, {
             title: this.context.menu_database
+          }, /*#__PURE__*/React.createElement(Menu, {
+            title: "Reload database ..."
           }, /*#__PURE__*/React.createElement(ActionToMenuItem, {
             action: actions.reload
-          }), /*#__PURE__*/React.createElement(MenuItem, {
+          })), /*#__PURE__*/React.createElement(MenuItem, {
             action: this.renameDatabase
           }, this.context.action_rename_database.format({
             name: this.state.database.name

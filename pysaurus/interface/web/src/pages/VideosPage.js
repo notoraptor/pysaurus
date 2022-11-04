@@ -152,7 +152,9 @@ export class VideosPage extends React.Component {
             <div id="videos" className="absolute-plain p-4 vertical">
                 <header className="horizontal flex-shrink-0">
                     <MenuPack title={this.context.menu_database}>
-                        {<ActionToMenuItem action={actions.reload}/>}
+                        <Menu title="Reload database ...">
+                            {<ActionToMenuItem action={actions.reload}/>}
+                        </Menu>
                         <MenuItem action={this.renameDatabase}>
                             {this.context.action_rename_database.format({name: this.state.database.name})}
                         </MenuItem>
