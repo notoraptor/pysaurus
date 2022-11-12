@@ -38,6 +38,8 @@ class NextRandomVideo(Notification):
 
 
 class Api(GuiAPI):
+    __slots__ = ("interface",)
+
     PYTHON_HAS_EMBEDDED_PLAYER = has_vlc
 
     def __init__(self, interface):

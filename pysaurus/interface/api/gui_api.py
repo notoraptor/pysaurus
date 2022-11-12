@@ -29,6 +29,15 @@ from pysaurus.interface.api.parallel_notifier import ParallelNotifier
 
 
 class GuiAPI(FeatureAPI):
+    __slots__ = (
+        "multiprocessing_manager",
+        "monitor_thread",
+        "db_loading_thread",
+        "threads_stop_flag",
+        "copy_work",
+        "monitor_notifications",
+    )
+
     def __init__(self, monitor_notifications=True):
         self.multiprocessing_manager = multiprocessing.Manager()
         super().__init__(ParallelNotifier(self.multiprocessing_manager.Queue()))
@@ -77,13 +86,11 @@ class GuiAPI(FeatureAPI):
 
     def close_database(self):
         self.database = None
-        self.provider = None
         return self.get_app_state()
 
     def delete_database(self):
         assert self.application.delete_database_from_name(self.database.name)
         self.database = None
-        self.provider = None
         return self.get_app_state()
 
     def close_app(self):
@@ -136,8 +143,8 @@ class GuiAPI(FeatureAPI):
         self.db_loading_thread = self._run_thread(run, *args, **kwargs)
 
     def _finish_loading(self, log_message):
-        if self.provider:
-            self.provider.register_notifications()
+        if self.database:
+            self.database.provider.register_notifications()
         self.notifier.notify(DatabaseReady())
         self.db_loading_thread = None
         print(log_message)
@@ -173,45 +180,43 @@ class GuiAPI(FeatureAPI):
     def _create_database(self, name: str, folders: Sequence[str], update: bool):
         with Profiler("Create database", self.application.notifier):
             self.database = self.application.new_database(name, folders)
-            self.provider = VideoProvider(self.database)
             if update:
                 self._update_database()
 
     def _open_database(self, name: str, update: bool):
         with Profiler("Open database", self.application.notifier):
             self.database = self.application.open_database_from_name(name)
-            self.provider = VideoProvider(self.database)
             if update:
                 self._update_database()
 
     def _update_database(self):
         self.database.refresh(ensure_miniatures=False)
-        self.provider.refresh()
+        self.database.provider.refresh()
 
     def _find_similarities(self):
         DbFeatures().find_similar_videos(self.database)
-        self.provider.set_groups(
+        self.database.provider.set_groups(
             field="similarity_id",
             is_property=False,
             sorting="field",
             reverse=False,
             allow_singletons=False,
         )
-        self.provider.refresh()
+        self.database.provider.refresh()
 
     def _find_similarities_ignore_cache(self):
         DbFeatures().find_similar_videos_ignore_cache(self.database)
-        self.provider.set_groups(
+        self.database.provider.set_groups(
             field="similarity_id",
             is_property=False,
             sorting="field",
             reverse=False,
             allow_singletons=False,
         )
-        self.provider.refresh()
+        self.database.provider.refresh()
 
     def _move_video_file(self, video_id: int, directory: str):
-        self.provider.register_notifications()
+        self.database.provider.register_notifications()
         try:
             filename = self.database.get_video_filename(video_id)
             directory = AbsolutePath.ensure_directory(directory)
@@ -232,7 +237,7 @@ class GuiAPI(FeatureAPI):
                 old_path = self.database.change_video_path(video_id, dst)
                 if old_path:
                     old_path.delete()
-                self.provider.refresh()
+                self.database.provider.refresh()
                 self.notifier.notify(Done())
             else:
                 self.notifier.notify(Cancelled())
@@ -261,14 +266,14 @@ class GuiAPI(FeatureAPI):
             self.database.get_videos("readable", "with_thumbnails"),
             prop_name,
         )
-        self.provider.set_groups(
+        self.database.provider.set_groups(
             field=output_prop_name,
             is_property=True,
             sorting="field",
             reverse=False,
             allow_singletons=True,
         )
-        self.provider.refresh()
+        self.database.provider.refresh()
 
     @staticmethod
     def clipboard(text):

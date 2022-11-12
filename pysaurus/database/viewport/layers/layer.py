@@ -2,7 +2,6 @@ from abc import abstractmethod
 from typing import Optional
 
 from pysaurus.core.functions import deep_equals
-from pysaurus.database.database import Database
 from pysaurus.database.video import Video
 
 
@@ -18,14 +17,16 @@ class Layer:
     )
     __props__ = ()
 
-    def __init__(self, database: Database):
+    def __init__(self, database):
+        from pysaurus.database.database import Database
+
         self.__args = {}
         self.__sub_layer = None  # type: Optional[Layer]
         self.__to_update = False
         self.__filtered = None
         self.__data = None
         self.parent = None  # type: Optional[Layer]
-        self.database = database
+        self.database: Database = database
         self.reset_parameters()
 
     def get_root(self):

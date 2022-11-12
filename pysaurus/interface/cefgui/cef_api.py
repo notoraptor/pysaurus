@@ -6,6 +6,8 @@ from pysaurus.interface.api.gui_api import GuiAPI
 
 
 class CefAPI(GuiAPI):
+    __slots__ = ("browser",)
+
     def __init__(self, browser):
         super().__init__()
         self.browser = browser

@@ -9,7 +9,6 @@ from typing import Optional, Sequence
 
 from pysaurus.application import exceptions
 from pysaurus.core import notifications
-from pysaurus.database.database import Database
 from pysaurus.database.video import Video
 from pysaurus.database.viewport.layers.classifier_layer import ClassifierLayer
 from pysaurus.database.viewport.layers.group_layer import GroupLayer
@@ -32,8 +31,10 @@ class VideoProvider:
         "sort_layer",
     )
 
-    def __init__(self, database: Database):
-        self.database = database
+    def __init__(self, database):
+        from pysaurus.database.database import Database
+
+        self.database: Database = database
 
         self.source_layer = SourceLayer(database)
         self.grouping_layer = GroupingLayer(database)

@@ -1,8 +1,6 @@
 from typing import Dict, Iterable, Sequence, Set
 
 from pysaurus.core.components import AbsolutePath
-from pysaurus.core.profiling import Profiler
-from pysaurus.database.database import Database
 from pysaurus.database.video import Video
 from pysaurus.database.viewport.layers.layer import Layer
 
@@ -12,9 +10,6 @@ class SourceLayer(Layer):
     __props__ = ("sources",)
     _cache: Dict[AbsolutePath, Video]
     DEFAULT_SOURCE_DEF = [("readable",)]
-
-    def __init__(self, database):
-        super().__init__(database)
 
     def set_sources(self, paths: Sequence[Sequence[str]] = None):
         if paths is None:
@@ -36,7 +31,10 @@ class SourceLayer(Layer):
     def reset_parameters(self):
         self.set_sources(self.DEFAULT_SOURCE_DEF)
 
-    def filter(self, database: Database) -> Dict[AbsolutePath, Video]:
+    def filter(self, database) -> Dict[AbsolutePath, Video]:
+        from pysaurus.database.database import Database
+
+        database: Database
         source = []
         for path in self.get_sources():
             source.extend(database.get_videos(*path))

@@ -30,6 +30,7 @@ from pysaurus.database.video import Video
 from pysaurus.database.video_runtime_info import VideoRuntimeInfo
 from pysaurus.language.default_language import DefaultLanguage
 from pysaurus.database.utils import generate_temp_file_path
+from pysaurus.database.viewport.video_provider import VideoProvider
 
 try:
     from pysaurus.database.video_info import video_raptor as backend_raptor
@@ -40,7 +41,7 @@ except exceptions.CysaurusUnavailable:
 
 
 class Database(JsonDatabase):
-    __slots__ = ("__paths", "__message", "lang")
+    __slots__ = ("__paths", "__message", "lang", "provider")
 
     def __init__(self, path, folders=None, notifier=None, lang=None):
         # type: (PathType, Iterable[PathType], Notifier, DefaultLanguage) -> None
@@ -49,6 +50,7 @@ class Database(JsonDatabase):
         # RAM data
         self.__message = None
         self.lang = lang or DefaultLanguage
+        self.provider: Optional[VideoProvider] = VideoProvider(self)
         # Set log file
         notifier = notifier or DEFAULT_NOTIFIER
         notifier.set_log_path(self.__paths.log_path.path)
