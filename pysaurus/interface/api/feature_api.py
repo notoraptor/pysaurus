@@ -56,17 +56,16 @@ class FeatureAPI:
             key: getattr(self, key) for key in dir(self) if key.startswith("PYTHON_")
         }
 
-    def _list_databases(self):
-        return [{"name": name} for name in self.application.get_database_names()]
-
-    def list_languages(self):
-        return [
-            {"name": path.title, "path": str(path)}
-            for path in self.application.get_language_paths()
-        ]
-
     def get_app_state(self):
-        return {"languages": self.list_languages(), "databases": self._list_databases()}
+        return {
+            "languages": [
+                {"name": path.title, "path": str(path)}
+                for path in self.application.get_language_paths()
+            ],
+            "databases": [
+                {"name": name} for name in self.application.get_database_names()
+            ],
+        }
 
     def set_language(self, name):
         return language_to_dict(self.application.open_language_from_name(name))

@@ -1,3 +1,4 @@
+import functools
 import locale
 from abc import abstractmethod
 from io import StringIO
@@ -124,3 +125,50 @@ class StringedTuple(tuple):
 
     def __str__(self):
         return f"({', '.join(str(arg) for arg in self)})"
+
+
+class Runnable:
+    """Helper class to make a method automatically run in a separate process
+
+    Target class must provide a launcher method
+    to be used to run a function asynchronously.
+
+    Runnable instance can then be used as a decorator on other class methods.
+
+    Example:
+        runnable = Runnable("my_launcher_method")
+
+        class MyClass:
+            def my_launcher_method(fn, args, my_arg1=None, my_arg2=None):
+                pass
+
+            @runnable()
+            def a_task():
+                pass
+
+            @runnable(my_arg2="an arg for launcher method")
+            def another_task():
+                pass
+    """
+
+    __slots__ = ("__lmm",)
+
+    def __init__(self, launcher_method_name: str):
+        """Initialize runnable.
+
+        :param launcher_method_name: name of method to be used to run functions
+            asynchronously.
+        """
+        self.__lmm = launcher_method_name
+
+    def __call__(self, **kwargs):
+        launcher_method_name = self.__lmm
+
+        def decorator(fn):
+            @functools.wraps(fn)
+            def wrapper(self, *args):
+                getattr(self, launcher_method_name)(fn, (self,) + args, **kwargs)
+
+            return wrapper
+
+        return decorator

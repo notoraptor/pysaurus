@@ -134,6 +134,7 @@ export class DatabasesPage extends React.Component {
     }
 
     createDatabase() {
+        // TODO: flag `update` should be either reserved to update_database, or display as global flag into this page
         this.props.app.dbUpdate("create_database", this.state.name, Array.from(this.state.paths), this.state.update)
     }
 

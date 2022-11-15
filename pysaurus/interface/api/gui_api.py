@@ -6,6 +6,7 @@ from abc import abstractmethod
 from typing import Callable, Dict, Optional, Sequence
 
 from pysaurus.application import exceptions
+from pysaurus.core.classes import Runnable
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.file_copier import FileCopier
 from pysaurus.core.functions import launch_thread
@@ -22,10 +23,11 @@ from pysaurus.core.profiling import Profiler
 from pysaurus.database import pattern_detection
 from pysaurus.database.db_features import DbFeatures
 from pysaurus.database.properties import PropType
-from pysaurus.database.viewport.video_provider import VideoProvider
 from pysaurus.interface.api import tk_utils
 from pysaurus.interface.api.feature_api import FeatureAPI
 from pysaurus.interface.api.parallel_notifier import ParallelNotifier
+
+process = Runnable("_launch")
 
 
 class GuiAPI(FeatureAPI):
@@ -48,35 +50,10 @@ class GuiAPI(FeatureAPI):
         self.notifier.call_default_if_no_manager()
         self.monitor_notifications = monitor_notifications
 
-    def create_database(self, name, folders, update):
-        self._launch(self._create_database, args=(name, folders, update))
-
-    def open_database(self, name, update):
-        self._launch(self._open_database, args=(name, update))
-
-    def update_database(self):
-        self._launch(self._update_database)
-
-    def find_similar_videos(self):
-        self._launch(self._find_similarities)
-
-    def find_similar_videos_ignore_cache(self):
-        self._launch(self._find_similarities_ignore_cache)
-
-    def move_video_file(self, video_id, directory):
-        self._launch(self._move_video_file, args=(video_id, directory), finish=False)
+    # Public tasks
 
     def create_prediction_property(self, prop_name):
-        # unused
         self.database.add_prop_type(PropType(f"<?{prop_name}>", [-1, 0, 1]))
-
-    def compute_predictor(self, prop_name):
-        # unused
-        self._launch(self._compute_predictor, args=(prop_name,))
-
-    def apply_predictor(self, prop_name):
-        # unused
-        self._launch(self._apply_predictor, args=(prop_name,))
 
     def cancel_copy(self):
         if self.copy_work is not None:
@@ -177,23 +154,32 @@ class GuiAPI(FeatureAPI):
         # type: (Notification) -> None
         raise NotImplementedError()
 
-    def _create_database(self, name: str, folders: Sequence[str], update: bool):
+    # Protected versions of tasks
+
+    @process()
+    def create_database(self, name: str, folders: Sequence[str], update: bool):
         with Profiler("Create database", self.application.notifier):
             self.database = self.application.new_database(name, folders)
             if update:
                 self._update_database()
 
-    def _open_database(self, name: str, update: bool):
+    @process()
+    def open_database(self, name: str, update: bool):
         with Profiler("Open database", self.application.notifier):
             self.database = self.application.open_database_from_name(name)
             if update:
                 self._update_database()
 
+    @process()
+    def update_database(self):
+        self._update_database()
+
     def _update_database(self):
         self.database.refresh(ensure_miniatures=False)
         self.database.provider.refresh()
 
-    def _find_similarities(self):
+    @process()
+    def find_similar_videos(self):
         DbFeatures().find_similar_videos(self.database)
         self.database.provider.set_groups(
             field="similarity_id",
@@ -204,7 +190,8 @@ class GuiAPI(FeatureAPI):
         )
         self.database.provider.refresh()
 
-    def _find_similarities_ignore_cache(self):
+    @process()
+    def find_similar_videos_ignore_cache(self):
         DbFeatures().find_similar_videos_ignore_cache(self.database)
         self.database.provider.set_groups(
             field="similarity_id",
@@ -215,7 +202,8 @@ class GuiAPI(FeatureAPI):
         )
         self.database.provider.refresh()
 
-    def _move_video_file(self, video_id: int, directory: str):
+    @process(finish=False)
+    def move_video_file(self, video_id: int, directory: str):
         self.database.provider.register_notifications()
         try:
             filename = self.database.get_video_filename(video_id)
@@ -252,15 +240,16 @@ class GuiAPI(FeatureAPI):
         finally:
             self.db_loading_thread = None
 
-    def _compute_predictor(self, prop_name):
+    @process()
+    def compute_predictor(self, prop_name):
         pattern_detection.compute_pattern_detector(
             self.database,
             self.database.get_videos("readable", "with_thumbnails"),
             prop_name,
         )
-        # self._apply_predictor(prop_name)
 
-    def _apply_predictor(self, prop_name):
+    @process()
+    def apply_predictor(self, prop_name):
         output_prop_name = pattern_detection.apply_pattern_detector(
             self.database,
             self.database.get_videos("readable", "with_thumbnails"),
