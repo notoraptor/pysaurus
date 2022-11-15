@@ -50,7 +50,7 @@ System.register(["../dialogs/FancyBox.js", "../language.js"], function (_export,
             name: "searchType",
             value: "and",
             onChange: this.onChangeCond,
-            checked: this.state.cond === 'and'
+            checked: this.state.cond === "and"
           }), /*#__PURE__*/React.createElement("label", {
             htmlFor: "input-search-and"
           }, this.context.search_and)), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("input", {
@@ -59,7 +59,7 @@ System.register(["../dialogs/FancyBox.js", "../language.js"], function (_export,
             name: "searchType",
             value: "or",
             onChange: this.onChangeCond,
-            checked: this.state.cond === 'or'
+            checked: this.state.cond === "or"
           }), /*#__PURE__*/React.createElement("label", {
             htmlFor: "input-search-or"
           }, this.context.search_or)), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("input", {
@@ -68,7 +68,7 @@ System.register(["../dialogs/FancyBox.js", "../language.js"], function (_export,
             name: "searchType",
             value: "exact",
             onChange: this.onChangeCond,
-            checked: this.state.cond === 'exact'
+            checked: this.state.cond === "exact"
           }), /*#__PURE__*/React.createElement("label", {
             htmlFor: "input-search-exact"
           }, this.context.search_exact_sentence)), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("input", {
@@ -77,14 +77,14 @@ System.register(["../dialogs/FancyBox.js", "../language.js"], function (_export,
             name: "searchType",
             value: "id",
             onChange: this.onChangeCond,
-            checked: this.state.cond === 'id'
+            checked: this.state.cond === "id"
           }), /*#__PURE__*/React.createElement("label", {
             htmlFor: "input-search-id"
           }, this.context.search_id))));
         }
 
         componentDidMount() {
-          document.querySelector('#input-search').focus();
+          document.querySelector("#input-search").focus();
         }
 
         onFocusInput(event) {
@@ -116,7 +116,7 @@ System.register(["../dialogs/FancyBox.js", "../language.js"], function (_export,
           if (event.key === "Enter") {
             if (this.state.text.length) {
               const text = this.state.text;
-              const cond = 'and';
+              const cond = "and";
               this.onClose({
                 text,
                 cond

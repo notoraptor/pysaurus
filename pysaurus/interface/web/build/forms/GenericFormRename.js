@@ -47,7 +47,7 @@ System.register(["../dialogs/Dialog.js", "../language.js"], function (_export, _
         }
 
         componentDidMount() {
-          document.querySelector('input#name').focus();
+          document.querySelector("input#name").focus();
         }
 
         onFocusInput(event) {

@@ -21,7 +21,7 @@ System.register(["../language.js"], function (_export, _context) {
         }
 
         static getFocusableElements() {
-          return [...document.querySelector("main").querySelectorAll('a, button, input, textarea, select, details, [tabindex]:not([tabindex="-1"])')].filter(el => !el.hasAttribute('disabled'));
+          return [...document.querySelector("main").querySelectorAll('a, button, input, textarea, select, details, [tabindex]:not([tabindex="-1"])')].filter(el => !el.hasAttribute("disabled"));
         }
 
         load(component) {

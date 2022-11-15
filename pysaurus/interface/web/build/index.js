@@ -49,11 +49,11 @@ System.register(["./App.js", "./utils/FancyboxManager.js", "./utils/Callbacks.js
       };
 
       document.body.onunload = function () {
-        console.info('GUI closed!');
-        python_call('close_app');
+        console.info("GUI closed!");
+        python_call("close_app");
       };
 
-      ReactDOM.render( /*#__PURE__*/React.createElement(App, null), document.getElementById('root'));
+      ReactDOM.render( /*#__PURE__*/React.createElement(App, null), document.getElementById("root"));
     }
   };
 });

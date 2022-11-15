@@ -19,7 +19,7 @@ System.register(["../utils/constants.js", "../dialogs/FancyBox.js", "../language
           // sorting
           // onClose(sorting)
           super(props);
-          const sorting = this.props.sorting.length ? this.props.sorting : ['-date'];
+          const sorting = this.props.sorting.length ? this.props.sorting : ["-date"];
           this.state = {
             sorting: sorting
           };
@@ -96,7 +96,7 @@ System.register(["../utils/constants.js", "../dialogs/FancyBox.js", "../language
 
         setReverse(index, checked) {
           const sorting = this.state.sorting.slice();
-          sorting[index] = (checked ? '-' : '+') + sorting[index].substr(1);
+          sorting[index] = (checked ? "-" : "+") + sorting[index].substr(1);
           this.setState({
             sorting
           });
@@ -104,7 +104,7 @@ System.register(["../utils/constants.js", "../dialogs/FancyBox.js", "../language
 
         addCriterion() {
           const sorting = this.state.sorting.slice();
-          sorting.push('+title');
+          sorting.push("+title");
           this.setState({
             sorting
           });

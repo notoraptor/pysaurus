@@ -142,7 +142,7 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js", "../language.j
             className: "entry horizontal"
           }, /*#__PURE__*/React.createElement("button", {
             onClick: () => this.unAdd(value)
-          }, this.getMapping().has(value) ? Characters.SMART_ARROW_LEFT : '-'), /*#__PURE__*/React.createElement("div", {
+          }, this.getMapping().has(value) ? Characters.SMART_ARROW_LEFT : "-"), /*#__PURE__*/React.createElement("div", {
             className: "value"
           }, value)));
         }

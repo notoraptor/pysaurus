@@ -48,7 +48,7 @@ System.register([], function (_export, _context) {
       // whether you want react nodes or an html string:
 
 
-      reactOutput = SimpleMarkdown.outputFor(rules, 'react');
+      reactOutput = SimpleMarkdown.outputFor(rules, "react");
     }
   };
 });

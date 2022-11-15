@@ -3,7 +3,9 @@ body {
 	font-family: "Trebuchet MS", Helvetica, sans-serif;
 }
 
-table, th, td {
+table,
+th,
+td {
 	border-collapse: collapse;
 }
 

@@ -46,11 +46,11 @@ System.register(["../dialogs/Dialog.js", "../components/Cell.js"], function (_ex
             onFocus: this.onFocusInput,
             onChange: this.onChange,
             onKeyDown: this.onInput
-          }), " / ", this.props.nbPages));
+          }), " ", "/ ", this.props.nbPages));
         }
 
         componentDidMount() {
-          document.querySelector('#input-go').focus();
+          document.querySelector("#input-go").focus();
         }
 
         onFocusInput(event) {

@@ -45,7 +45,7 @@ System.register(["../components/Cell.js", "./Dialog.js"], function (_export, _co
         }
 
         componentDidMount() {
-          document.querySelector('#input-search').focus();
+          document.querySelector("#input-search").focus();
         }
 
         onFocusInput(event) {

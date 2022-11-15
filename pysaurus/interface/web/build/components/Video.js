@@ -84,7 +84,7 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
           const errors = data.errors.slice();
           errors.sort();
           return /*#__PURE__*/React.createElement("div", {
-            className: 'video horizontal' + (data.found ? ' found' : ' not-found')
+            className: "video horizontal" + (data.found ? " found" : " not-found")
           }, /*#__PURE__*/React.createElement("div", {
             className: "image p-2"
           }, hasThumbnail ? /*#__PURE__*/React.createElement("img", {
@@ -147,7 +147,7 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
           }, data.title)))), data.title === data.file_title ? "" : /*#__PURE__*/React.createElement("div", {
             className: "file-title"
           }, /*#__PURE__*/React.createElement("em", null, data.file_title))), /*#__PURE__*/React.createElement("div", {
-            className: 'filename-line' + (data.found ? "" : ' horizontal')
+            className: "filename-line" + (data.found ? "" : " horizontal")
           }, data.found ? "" : /*#__PURE__*/React.createElement("div", {
             className: "prepend clickable",
             onClick: this.deleteVideo
@@ -170,7 +170,7 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
           }, data.extension)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", {
             title: data.file_size,
             className: cc(common.size)
-          }, data.size), " /", " ", /*#__PURE__*/React.createElement("span", {
+          }, data.size), " ", "/", " ", /*#__PURE__*/React.createElement("span", {
             className: cc(common.container_format)
           }, data.container_format), " ", "(", /*#__PURE__*/React.createElement("span", {
             title: data.video_codec_description,
@@ -182,24 +182,24 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
             className: "prepend"
           }, /*#__PURE__*/React.createElement("code", null, "Quality")), /*#__PURE__*/React.createElement("div", {
             className: cc(common.quality)
-          }, /*#__PURE__*/React.createElement("strong", null, /*#__PURE__*/React.createElement("em", null, data.quality)), " %")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", {
+          }, /*#__PURE__*/React.createElement("strong", null, /*#__PURE__*/React.createElement("em", null, data.quality)), " ", "%")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", {
             className: cc(common.width)
           }, data.width), " x", " ", /*#__PURE__*/React.createElement("strong", {
             className: cc(common.height)
-          }, data.height), " @", " ", /*#__PURE__*/React.createElement("span", {
+          }, data.height), " ", "@", " ", /*#__PURE__*/React.createElement("span", {
             className: cc(common.frame_rate)
           }, data.frame_rate, " ", this.context.suffix_fps), ",", " ", /*#__PURE__*/React.createElement("span", {
             className: cc(common.bit_depth)
-          }, data.bit_depth, " ", this.context.text_bits), " |", " ", /*#__PURE__*/React.createElement("span", {
+          }, data.bit_depth, " ", this.context.text_bits), " ", "|", " ", /*#__PURE__*/React.createElement("span", {
             className: cc(common.sample_rate)
           }, data.sample_rate, " ", this.context.suffix_hertz), ",", " ", /*#__PURE__*/React.createElement("span", {
             title: data.audio_bit_rate,
             className: cc(common.audio_bit_rate)
-          }, audio_bit_rate, " ", this.context.suffix_kbps), " |", " ", /*#__PURE__*/React.createElement("strong", {
+          }, audio_bit_rate, " ", this.context.suffix_kbps), " ", "|", " ", /*#__PURE__*/React.createElement("strong", {
             className: cc(common.length)
-          }, data.length), " | ", /*#__PURE__*/React.createElement("code", {
+          }, data.length), " ", "| ", /*#__PURE__*/React.createElement("code", {
             className: cc(common.date)
-          }, data.date)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, "Audio"), ": ", data.audio_languages.length ? data.audio_languages.join(", ") : "(none)", " |", " ", /*#__PURE__*/React.createElement("strong", null, "Subtitles"), ": ", data.subtitle_languages.length ? data.subtitle_languages.join(", ") : "(none)"), errors.length ? /*#__PURE__*/React.createElement("div", {
+          }, data.date)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, "Audio"), ":", " ", data.audio_languages.length ? data.audio_languages.join(", ") : "(none)", " ", "| ", /*#__PURE__*/React.createElement("strong", null, "Subtitles"), ":", " ", data.subtitle_languages.length ? data.subtitle_languages.join(", ") : "(none)"), errors.length ? /*#__PURE__*/React.createElement("div", {
             className: "horizontal"
           }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, "Errors:"), "\xA0"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
             className: "property"
@@ -218,7 +218,7 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
           errors.sort();
           const alreadyOpened = APP_STATE.videoHistory.has(data.filename);
           return /*#__PURE__*/React.createElement("div", {
-            className: 'video horizontal' + (data.found ? ' found' : ' not-found')
+            className: "video horizontal" + (data.found ? " found" : " not-found")
           }, /*#__PURE__*/React.createElement("div", {
             className: "image p-2"
           }, /*#__PURE__*/React.createElement("div", {
@@ -251,7 +251,7 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
           }, data.found ? this.context.text_delete_video : this.context.text_delete_entry)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", {
             className: "title"
           }, data.file_title)))), /*#__PURE__*/React.createElement("div", {
-            className: 'filename-line' + (data.found ? "" : ' horizontal')
+            className: "filename-line" + (data.found ? "" : " horizontal")
           }, data.found ? "" : /*#__PURE__*/React.createElement("div", {
             className: "prepend clickable",
             onClick: this.deleteVideo
@@ -312,7 +312,7 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
         }
 
         openVideo() {
-          python_call('open_video', this.props.data.video_id).then(() => {
+          python_call("open_video", this.props.data.video_id).then(() => {
             APP_STATE.videoHistory.add(this.props.data.filename);
             this.props.onInfo(this.context.status_opened.format({
               path: this.props.data.filename
@@ -331,7 +331,7 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
             data: data,
             definitions: this.props.propDefs,
             onClose: properties => {
-              python_call('set_video_properties', this.props.data.video_id, properties).then(() => this.props.onInfo(this.context.status_properties_updated.format({
+              python_call("set_video_properties", this.props.data.video_id, properties).then(() => this.props.onInfo(this.context.status_properties_updated.format({
                 path: data.filename
               }), true)).catch(backend_error);
             }
@@ -409,25 +409,25 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
         }
 
         reallyDeleteVideo() {
-          python_call('delete_video', this.props.data.video_id).then(() => this.props.onInfo(this.context.status_video_deleted.format({
+          python_call("delete_video", this.props.data.video_id).then(() => this.props.onInfo(this.context.status_video_deleted.format({
             path: this.props.data.filename
           }), true)).catch(backend_error);
         }
 
         reallyDismissSimilarity() {
-          python_call('dismiss_similarity', this.props.data.video_id).then(() => this.props.onInfo(this.context.status_video_similarity_cancelled.format({
+          python_call("dismiss_similarity", this.props.data.video_id).then(() => this.props.onInfo(this.context.status_video_similarity_cancelled.format({
             path: this.props.data.filename
           }), true)).catch(backend_error);
         }
 
         reallyResetSimilarity() {
-          python_call('reset_similarity', this.props.data.video_id).then(() => this.props.onInfo(this.context.status_video_similarity_reset.format({
+          python_call("reset_similarity", this.props.data.video_id).then(() => this.props.onInfo(this.context.status_video_similarity_reset.format({
             path: this.props.data.filename
           }), true)).catch(backend_error);
         }
 
         openContainingFolder() {
-          python_call('open_containing_folder', this.props.data.video_id).then(folder => {
+          python_call("open_containing_folder", this.props.data.video_id).then(folder => {
             this.props.onInfo(this.context.status_opened_folder.format({
               path: folder
             }));
@@ -436,7 +436,7 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
 
         copyMetaTitle() {
           const text = this.props.data.title;
-          python_call('clipboard', text).then(() => this.props.onInfo(this.context.status_copied_to_clipboard.format({
+          python_call("clipboard", text).then(() => this.props.onInfo(this.context.status_copied_to_clipboard.format({
             text
           }))).catch(() => this.props.onInfo(this.context.status_cannot_copy_meta_title.format({
             text
@@ -445,7 +445,7 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
 
         copyFileTitle() {
           const text = this.props.data.file_title;
-          python_call('clipboard', text).then(() => this.props.onInfo(this.context.status_copied_to_clipboard.format({
+          python_call("clipboard", text).then(() => this.props.onInfo(this.context.status_copied_to_clipboard.format({
             text
           }))).catch(() => this.props.onInfo(this.context.status_cannot_copy_file_title.format({
             text
@@ -453,7 +453,7 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
         }
 
         copyFilePath() {
-          python_call('clipboard_video_path', this.props.data.video_id).then(() => this.props.onInfo(this.context.status_copied_to_clipboard.format({
+          python_call("clipboard_video_path", this.props.data.video_id).then(() => this.props.onInfo(this.context.status_copied_to_clipboard.format({
             text: this.props.data.filename
           })).catch(() => this.props.onInfo(this.context.status_cannot_copy_file_path.format({
             text: this.props.data.filename
@@ -461,7 +461,7 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
         }
 
         copyVideoID() {
-          python_call('clipboard', this.props.data.video_id).then(() => this.props.onInfo(this.context.status_copied_to_clipboard.format({
+          python_call("clipboard", this.props.data.video_id).then(() => this.props.onInfo(this.context.status_copied_to_clipboard.format({
             text: this.props.data.video_id
           }))).catch(() => this.props.onInfo(this.context.status_cannot_copy_video_id.format({
             text: this.props.data.video_id
@@ -483,7 +483,7 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
             description: filename,
             data: title,
             onClose: newTitle => {
-              python_call('rename_video', this.props.data.video_id, newTitle).then(() => this.props.onInfo(`Renamed: ${newTitle}`, true)).catch(backend_error);
+              python_call("rename_video", this.props.data.video_id, newTitle).then(() => this.props.onInfo(`Renamed: ${newTitle}`, true)).catch(backend_error);
             }
           }));
         }

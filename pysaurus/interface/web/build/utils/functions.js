@@ -99,7 +99,7 @@ System.register([], function (_export, _context) {
           }
 
           if (propEnum && propEnum.indexOf(parsed) < 0) throw this.lang.error_parsing_enum.format({
-            expected: propEnum.join(', '),
+            expected: propEnum.join(", "),
             value: value
           });
           return parsed;

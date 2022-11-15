@@ -168,7 +168,7 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
           const data = message.notification;
           return /*#__PURE__*/React.createElement("div", {
             key: i
-          }, /*#__PURE__*/React.createElement("strong", null, message.name === 'DatabaseSaved' ? this.context.text_database_saved : this.context.text_database_loaded), ":", this.context.text_nb_entries.format({
+          }, /*#__PURE__*/React.createElement("strong", null, message.name === "DatabaseSaved" ? this.context.text_database_saved : this.context.text_database_loaded), ":", this.context.text_nb_entries.format({
             count: data.entries
           }) + ", ", this.context.text_nb_discarded.format({
             count: data.discarded
@@ -265,7 +265,7 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
           keys.sort();
           return /*#__PURE__*/React.createElement("div", {
             key: i
-          }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, (message.name === 'VideoInfoErrors' ? this.context.text_nb_video_errors : this.context.text_nb_thumbnail_errors).format({
+          }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, (message.name === "VideoInfoErrors" ? this.context.text_nb_video_errors : this.context.text_nb_thumbnail_errors).format({
             count: keys.length
           })), ":"), /*#__PURE__*/React.createElement("ul", null, keys.map((name, indexName) => /*#__PURE__*/React.createElement("li", {
             key: indexName
@@ -290,7 +290,7 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
           } else if (total) {
             return /*#__PURE__*/React.createElement("div", {
               key: i
-            }, this.context.gui_home_to_load, ": ", /*#__PURE__*/React.createElement("strong", null, total, " ", label));
+            }, this.context.gui_home_to_load, ":", " ", /*#__PURE__*/React.createElement("strong", null, total, " ", label));
           } else {
             return /*#__PURE__*/React.createElement("div", {
               key: i

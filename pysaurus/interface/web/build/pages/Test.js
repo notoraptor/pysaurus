@@ -23,18 +23,18 @@ System.register(["../utils/constants.js", "../components/SetInput.js", "../dialo
           this.state = {
             pageSize: PAGE_SIZES[0],
             confirmDeletion: false,
-            arr: ['a', 'b', 'ccc']
+            arr: ["a", "b", "ccc"]
           };
         }
 
         render() {
-          const c = new ComponentController(this, 'arr');
+          const c = new ComponentController(this, "arr");
           return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(SetInput, {
             identifier: "entry",
             controller: c,
-            values: ['my', 'name', 'is', 'Emninem']
+            values: ["my", "name", "is", "Emninem"]
           }), "Hello! ", /*#__PURE__*/React.createElement(Cross, {
-            action: () => console.log('cross!')
+            action: () => console.log("cross!")
           }), /*#__PURE__*/React.createElement("a", {
             href: "https://google.fr"
           }, "yayayayayaya!"), /*#__PURE__*/React.createElement("input", {

@@ -10,7 +10,7 @@ System.register([], function (_export, _context) {
     }, /*#__PURE__*/React.createElement("div", {
       className: "border"
     }, /*#__PURE__*/React.createElement("div", {
-      className: 'check ' + (!!props.checked ? 'checked' : 'not-checked')
+      className: "check " + (!!props.checked ? "checked" : "not-checked")
     }))), /*#__PURE__*/React.createElement("div", {
       className: "text"
     }, props.children));

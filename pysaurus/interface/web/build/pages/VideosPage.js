@@ -422,7 +422,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             count: groupDef.groups.length
           }) : this.context.text_no_group) : "", /*#__PURE__*/React.createElement("div", {
             className: "info count"
-          }, nbVideos, " video", nbVideos > 1 ? 's' : ""), /*#__PURE__*/React.createElement("div", {
+          }, nbVideos, " video", nbVideos > 1 ? "s" : ""), /*#__PURE__*/React.createElement("div", {
             className: "info size"
           }, validSize), /*#__PURE__*/React.createElement("div", {
             className: "info length"
@@ -443,13 +443,13 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           const sorting = this.state.sorting;
           const realNbVideos = this.state.realNbVideos;
           const selectionSize = this.state.selector.size(realNbVideos);
-          const sortingIsDefault = sorting.length === 1 && sorting[0] === '-date';
+          const sortingIsDefault = sorting.length === 1 && sorting[0] === "-date";
           const selectedAll = realNbVideos === selectionSize;
           return /*#__PURE__*/React.createElement("table", {
             className: "filter w-100"
           }, /*#__PURE__*/React.createElement("tbody", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, sources.map((source, index) => /*#__PURE__*/React.createElement("div", {
             key: index
-          }, source.join(" ").replace('_', " ")))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToSettingIcon, {
+          }, source.join(" ").replace("_", " ")))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToSettingIcon, {
             action: actions.select
           })), !compareSources(window.PYTHON_DEFAULT_SOURCES, sources) ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToCross, {
             action: actions.unselect
@@ -473,7 +473,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             action: actions.unsearch
           })) : "")), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, this.context.text_sorted_by), sorting.map((val, i) => /*#__PURE__*/React.createElement("div", {
             key: i
-          }, /*#__PURE__*/React.createElement("strong", null, this.getFields().fields[val.substr(1)].title), " ", val[0] === '-' ? /*#__PURE__*/React.createElement("span", null, "\u25BC") : /*#__PURE__*/React.createElement("span", null, "\u25B2")))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToSettingIcon, {
+          }, /*#__PURE__*/React.createElement("strong", null, this.getFields().fields[val.substr(1)].title), " ", val[0] === "-" ? /*#__PURE__*/React.createElement("span", null, "\u25BC") : /*#__PURE__*/React.createElement("span", null, "\u25B2")))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToSettingIcon, {
             action: actions.sort
           })), sortingIsDefault ? "" : /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToCross, {
             action: actions.unsort
@@ -567,7 +567,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         }
 
         sortIsSet() {
-          return !(this.state.sorting.length === 1 && this.state.sorting[0] === '-date');
+          return !(this.state.sorting.length === 1 && this.state.sorting[0] === "-date");
         }
 
         canOpenRandomVideo() {
@@ -635,7 +635,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         }
 
         scrollTop() {
-          document.querySelector('#videos .videos').scrollTop = 0;
+          document.querySelector("#videos .videos").scrollTop = 0;
         }
 
         onVideoSelection(videoID, selected) {
@@ -725,7 +725,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         }
 
         unselectVideos() {
-          this.backend(['set_sources', null], {
+          this.backend(["set_sources", null], {
             pageNumber: 0
           });
         }
@@ -735,7 +735,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             tree: SOURCE_TREE,
             sources: this.state.sources,
             onClose: sources => {
-              this.backend(['set_sources', sources], {
+              this.backend(["set_sources", sources], {
                 pageNumber: 0
               });
             }
@@ -753,7 +753,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             prop_types: this.state.prop_types,
             propertyMap: this.state.definitions,
             onClose: criterion => {
-              this.backend(['set_groups', criterion.field, criterion.isProperty, criterion.sorting, criterion.reverse, criterion.allowSingletons], {
+              this.backend(["set_groups", criterion.field, criterion.isProperty, criterion.sorting, criterion.reverse, criterion.allowSingletons], {
                 pageNumber: 0
               });
             }
@@ -761,7 +761,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         }
 
         backendGroupVideos(field, isProperty = false, sorting = "count", reverse = true, allowSingletons = true) {
-          this.backend(['set_groups', field, isProperty, sorting, reverse, allowSingletons], {
+          this.backend(["set_groups", field, isProperty, sorting, reverse, allowSingletons], {
             pageNumber: 0
           });
         }
@@ -769,12 +769,12 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         editPropertiesForManyVideos(propertyName) {
           const selectionSize = this.state.selector.size(this.state.realNbVideos);
           const videoIndices = this.state.selector.toJSON();
-          python_call('count_prop_values', propertyName, videoIndices).then(valuesAndCounts => Fancybox.load( /*#__PURE__*/React.createElement(FormSelectedVideosEditProperty, {
+          python_call("count_prop_values", propertyName, videoIndices).then(valuesAndCounts => Fancybox.load( /*#__PURE__*/React.createElement(FormSelectedVideosEditProperty, {
             nbVideos: selectionSize,
             definition: this.state.definitions[propertyName],
             values: valuesAndCounts,
             onClose: edition => {
-              this.backend(['edit_property_for_videos', propertyName, videoIndices, edition.add, edition.remove], {
+              this.backend(["edit_property_for_videos", propertyName, videoIndices, edition.add, edition.remove], {
                 pageNumber: 0,
                 status: this.context.status_prop_val_edited.format({
                   property: propertyName,
@@ -794,7 +794,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             text: search_def.text,
             cond: search_def.cond,
             onClose: criterion => {
-              this.backend(['set_search', criterion.text, criterion.cond], {
+              this.backend(["set_search", criterion.text, criterion.cond], {
                 pageNumber: 0
               });
             }
@@ -805,7 +805,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           Fancybox.load( /*#__PURE__*/React.createElement(FormVideosSort, {
             sorting: this.state.sorting,
             onClose: sorting => {
-              this.backend(['set_sorting', sorting], {
+              this.backend(["set_sorting", sorting], {
                 pageNumber: 0
               });
             }
@@ -871,25 +871,25 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         }
 
         resetGroup() {
-          this.backend(['set_groups', ""], {
+          this.backend(["set_groups", ""], {
             pageNumber: 0
           });
         }
 
         resetSearch() {
-          this.backend(['set_search', null, null], {
+          this.backend(["set_search", null, null], {
             pageNumber: 0
           });
         }
 
         resetSort() {
-          this.backend(['set_sorting', null], {
+          this.backend(["set_sorting", null], {
             pageNumber: 0
           });
         }
 
         openRandomVideo() {
-          python_call('open_random_video').then(filename => {
+          python_call("open_random_video").then(filename => {
             APP_STATE.videoHistory.add(filename);
             this.updateStatus(this.context.status_randomly_opened.format({
               path: filename
@@ -902,7 +902,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         }
 
         openRandomPlayer() {
-          python_call('open_random_player').then(() => this.updateStatus("Random player opened!", true, true)).catch(backend_error);
+          python_call("open_random_player").then(() => this.updateStatus("Random player opened!", true, true)).catch(backend_error);
         }
 
         reloadDatabase() {
@@ -925,7 +925,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           Fancybox.load( /*#__PURE__*/React.createElement(FormVideosKeywordsToProperty, {
             prop_types: this.getStringSetProperties(this.state.prop_types),
             onClose: state => {
-              python_call('fill_property_with_terms', state.field, state.onlyEmpty).then(() => this.backend(null, {
+              python_call("fill_property_with_terms", state.field, state.onlyEmpty).then(() => this.backend(null, {
                 status: this.context.status_filled_property_with_keywords.format({
                   name: state.field
                 })
@@ -948,7 +948,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         }
 
         changeGroup(groupNumber) {
-          this.backend(['set_group', groupNumber], {
+          this.backend(["set_group", groupNumber], {
             pageNumber: 0
           });
         }
@@ -1018,8 +1018,8 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             values: values,
             onClose: operation => {
               switch (operation.form) {
-                case 'delete':
-                  this.backend(['delete_property_value', name, values], {
+                case "delete":
+                  this.backend(["delete_property_value", name, values], {
                     groupSelection: new Set(),
                     status: this.context.status_prop_vals_deleted.format({
                       name: name,
@@ -1028,8 +1028,8 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
                   });
                   break;
 
-                case 'edit':
-                  this.backend(['edit_property_value', name, values, operation.value], {
+                case "edit":
+                  this.backend(["edit_property_value", name, values, operation.value], {
                     groupSelection: new Set(),
                     status: this.context.status_prop_vals_edited.format({
                       name: name,
@@ -1039,8 +1039,8 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
                   });
                   break;
 
-                case 'move':
-                  this.backend(['move_property_value', name, values, operation.move], {
+                case "move":
+                  this.backend(["move_property_value", name, values, operation.move], {
                     groupSelection: new Set(),
                     status: this.context.status_prop_val_moved.format({
                       values: values.join('", "'),
@@ -1055,25 +1055,25 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         }
 
         classifierReversePath() {
-          python_call('classifier_reverse').then(path => this.setState({
+          python_call("classifier_reverse").then(path => this.setState({
             path
           })).catch(backend_error);
         }
 
         classifierSelectGroup(index) {
-          this.backend(['classifier_select_group', index], {
+          this.backend(["classifier_select_group", index], {
             pageNumber: 0
           });
         }
 
         classifierUnstack() {
-          this.backend(['classifier_back'], {
+          this.backend(["classifier_back"], {
             pageNumber: 0
           });
         }
 
         classifierConcatenate(outputPropertyName) {
-          this.backend(['classifier_concatenate_path', outputPropertyName], {
+          this.backend(["classifier_concatenate_path", outputPropertyName], {
             pageNumber: 0
           });
         }
@@ -1087,7 +1087,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         }
 
         focusPropertyValue(propertyName, propertyValue) {
-          this.backend(['classifier_focus_prop_val', propertyName, propertyValue], {
+          this.backend(["classifier_focus_prop_val", propertyName, propertyValue], {
             pageNumber: 0
           });
         }

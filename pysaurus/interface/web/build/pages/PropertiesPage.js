@@ -41,7 +41,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
           // parameters {definitions}
           super(props);
           const definitions = this.props.parameters.definitions;
-          const defaultType = 'str';
+          const defaultType = "str";
           this.state = {
             definitions: definitions,
             name: "",
@@ -125,7 +125,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
           })), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("label", {
             htmlFor: "prop-enumeration"
           }, this.context.text_is_enumeration))), !this.state.multiple || this.state.enumeration ? /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("label", {
-            htmlFor: 'prop-default-' + this.state.type
+            htmlFor: "prop-default-" + this.state.type
           }, this.state.enumeration ? this.state.multiple ? this.context.gui_properties_enumeration_values_multiple : this.context.gui_properties_enumeration_values : this.context.gui_properties_default_value)), /*#__PURE__*/React.createElement("td", null, this.renderDefaultInput())) : "", /*#__PURE__*/React.createElement("tr", {
             className: "buttons"
           }, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
@@ -148,11 +148,11 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             className: "name bold"
           }, def.name), /*#__PURE__*/React.createElement("td", {
             className: "type"
-          }, def.multiple ? /*#__PURE__*/React.createElement("span", null, this.context.text_one_or_many, "\xA0") : "", /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("code", null, def.type), " ", def.multiple ? this.context.word_values : this.context.word_value), def.enumeration ? /*#__PURE__*/React.createElement("span", null, "\xA0", this.context.word_in, " ", '{', def.enumeration.join(', '), '}') : ""), /*#__PURE__*/React.createElement("td", {
+          }, def.multiple ? /*#__PURE__*/React.createElement("span", null, this.context.text_one_or_many, "\xA0") : "", /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("code", null, def.type), " ", def.multiple ? this.context.word_values : this.context.word_value), def.enumeration ? /*#__PURE__*/React.createElement("span", null, "\xA0", this.context.word_in, " ", "{", def.enumeration.join(", "), "}") : ""), /*#__PURE__*/React.createElement("td", {
             className: "default"
           }, function () {
             if (def.multiple) {
-              return `{${def.defaultValue.join(', ')}}`;
+              return `{${def.defaultValue.join(", ")}}`;
             } else if (def.type === "str") {
               return `"${def.defaultValue}"`;
             } else {
@@ -177,15 +177,15 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
 
         renderDefaultInput() {
           if (this.state.enumeration) {
-            const controller = new ComponentPropController(this, 'defaultPropVal', this.state.type, null);
+            const controller = new ComponentPropController(this, "defaultPropVal", this.state.type, null);
             return /*#__PURE__*/React.createElement(SetInput, {
               className: "block",
-              identifier: 'prop-default-' + this.state.type,
+              identifier: "prop-default-" + this.state.type,
               controller: controller
             });
           }
 
-          if (this.state.type === 'bool') {
+          if (this.state.type === "bool") {
             return /*#__PURE__*/React.createElement("select", {
               className: "prop-default block",
               id: "prop-default-bool",
@@ -201,7 +201,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
           return /*#__PURE__*/React.createElement("input", {
             type: this.state.type === "int" ? "number" : "text",
             className: "prop-default block",
-            id: 'prop-default-' + this.state.type,
+            id: "prop-default-" + this.state.type,
             onChange: this.onChangeDefault,
             value: this.state.defaultPropVal
           });
@@ -258,7 +258,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
           try {
             let definition = this.state.defaultPropVal;
             if (!this.state.enumeration) definition = utilities(this.context).parsePropValString(this.state.type, null, definition);
-            python_call('add_prop_type', this.state.name, this.state.type, definition, this.state.multiple).then(definitions => {
+            python_call("add_prop_type", this.state.name, this.state.type, definition, this.state.multiple).then(definitions => {
               const state = this.getDefaultInputState();
               state.definitions = definitions;
               this.setState(state);
@@ -275,7 +275,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             }),
             yes: this.context.text_delete,
             action: () => {
-              python_call('delete_prop_type', name).catch(backend_error).then(definitions => {
+              python_call("delete_prop_type", name).catch(backend_error).then(definitions => {
                 const state = this.getDefaultInputState();
                 state.definitions = definitions;
                 this.setState(state);
@@ -297,7 +297,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             }),
             yes: this.context.form_convert_to_unique_property_yes,
             action: () => {
-              python_call('convert_prop_to_unique', name).then(definitions => {
+              python_call("convert_prop_to_unique", name).then(definitions => {
                 const state = this.getDefaultInputState();
                 state.definitions = definitions;
                 this.setState(state);
@@ -319,7 +319,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             }),
             yes: this.context.form_convert_to_multiple_property_yes,
             action: () => {
-              python_call('convert_prop_to_multiple', name).then(definitions => {
+              python_call("convert_prop_to_multiple", name).then(definitions => {
                 const state = this.getDefaultInputState();
                 state.definitions = definitions;
                 this.setState(state);
@@ -343,7 +343,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             description: name,
             data: name,
             onClose: newName => {
-              python_call('rename_property', name, newName).then(definitions => {
+              python_call("rename_property", name, newName).then(definitions => {
                 const state = this.getDefaultInputState();
                 state.definitions = definitions;
                 this.setState(state);
@@ -353,7 +353,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
         }
 
         getDefaultInputState() {
-          const defaultType = 'str';
+          const defaultType = "str";
           return {
             name: "",
             type: defaultType,

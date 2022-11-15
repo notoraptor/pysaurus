@@ -6,12 +6,12 @@ System.register([], function (_export, _context) {
     if (props.className) classNames.push(props.className);
 
     if (props.center) {
-      classNames.push('cell-center');
-      classNames.push('horizontal');
+      classNames.push("cell-center");
+      classNames.push("horizontal");
     }
 
     if (props.full) {
-      classNames.push('position-relative');
+      classNames.push("position-relative");
       classNames.push("w-100");
       classNames.push("h-100");
       classNames.push("flex-grow-1");

@@ -18,7 +18,7 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../utils/functions.j
         constructor(props) {
           super(props);
           this.state = {
-            form: 'edit',
+            form: "edit",
             value: this.props.values[0].toString(),
             move: "",
             otherDefinitions: this.getCompatibleDefinitions()
@@ -53,13 +53,13 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../utils/functions.j
           }, /*#__PURE__*/React.createElement("div", {
             className: "bar flex-shrink-0 text-center"
           }, /*#__PURE__*/React.createElement("button", {
-            className: `delete ${this.state.form === 'delete' ? 'selected bolder' : ""}`,
+            className: `delete ${this.state.form === "delete" ? "selected bolder" : ""}`,
             onClick: this.setDelete
           }, "delete"), /*#__PURE__*/React.createElement("button", {
-            className: `edit ${this.state.form === 'edit' ? 'selected bolder' : ""}`,
+            className: `edit ${this.state.form === "edit" ? "selected bolder" : ""}`,
             onClick: this.setEdit
           }, "edit"), canMove ? /*#__PURE__*/React.createElement("button", {
-            className: `move ${this.state.form === 'move' ? 'selected bolder' : ""}`,
+            className: `move ${this.state.form === "move" ? "selected bolder" : ""}`,
             onClick: this.setMove
           }, "move") : ""), /*#__PURE__*/React.createElement("div", {
             className: `form position-relative flex-grow-1 text-center ${this.state.form}`
@@ -68,13 +68,13 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../utils/functions.j
 
         renderForm() {
           switch (this.state.form) {
-            case 'delete':
+            case "delete":
               return this.renderDelete();
 
-            case 'edit':
+            case "edit":
               return this.renderEdit();
 
-            case 'move':
+            case "move":
               if (this.props.values.length === 1) return this.renderMove();
               break;
 
@@ -162,20 +162,20 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../utils/functions.j
 
         setDelete() {
           this.setState({
-            form: 'delete'
+            form: "delete"
           });
         }
 
         setEdit() {
           this.setState({
-            form: 'edit',
+            form: "edit",
             value: this.props.value
           });
         }
 
         setMove() {
           this.setState({
-            form: 'move',
+            form: "move",
             move: this.state.otherDefinitions[0].name
           });
         }
