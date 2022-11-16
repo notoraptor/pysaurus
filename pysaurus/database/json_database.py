@@ -160,6 +160,7 @@ class JsonDatabase:
         )
         self.notifier.notify(DatabaseSaved(self))
 
+    @Profiler.profile_method()
     def __ensure_identifiers(self):
         id_to_video = {}  # type: Dict[int, Video]
         without_identifiers = []

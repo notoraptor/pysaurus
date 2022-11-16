@@ -48,7 +48,16 @@ class Type:
         If one attribute has short name, then all attributes must have short names
     """
 
-    __slots__ = ("name", "short", "type", "default", "to_dict", "from_dict")
+    __slots__ = (
+        "name",
+        "short",
+        "type",
+        "default",
+        "to_dict",
+        "from_dict",
+        "allowed_types",
+        "_get_default",
+    )
 
     def __init__(self, name, typedef, *default):
         assert __regex_attribute__.match(name)
@@ -82,6 +91,10 @@ class Type:
         self.default = default
         self.to_dict = self.standard_to_dict
         self.from_dict = self.standard_from_dict
+        self.allowed_types = None
+        self._get_default = None
+        if self.type:
+            self.allowed_types = (int, float) if self.type is float else (self.type,)
 
     def __str__(self):
         ret = self.name
@@ -105,25 +118,32 @@ class Type:
             else:
                 return self.validate(value)
 
+    def _get_immutable_default(self):
+        return self.default[0]
+
+    def _get_mutable_default(self):
+        return deepcopy(self.default[0])
+
     def accepts_none(self):
         return self.default and self.default[0] is None
 
     def new(self):
         if not self.default:
             raise ValueError(f"No default value available for attribute: {self.name}")
-        return self.validate(self.default[0])
+        if self._get_default is None:
+            self(self.default[0])
+            if isinstance(self.default[0], (bool, int, float, str, bytes)):
+                self._get_default = self._get_immutable_default
+            else:
+                self._get_default = self._get_mutable_default
+        return self._get_default()
 
     def validate(self, value):
-        if self.type:
-            allowed_types = (self.type,)
-            if self.type is float:
-                allowed_types = (int, float)
-            if not isinstance(value, allowed_types):
-                raise TypeError(
-                    f"{self.name}: type error, "
-                    f"expected {allowed_types}, got {type(value)}"
-                )
-            return deepcopy(value)
+        if self.allowed_types and not isinstance(value, self.allowed_types):
+            raise TypeError(
+                f"{self.name}: type error, "
+                f"expected {self.allowed_types}, got {type(value)}"
+            )
         return value
 
     def standard_to_dict(self, obj, value):

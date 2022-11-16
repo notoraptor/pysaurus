@@ -2,6 +2,7 @@ import ujson as json
 
 from pysaurus.core.components import AbsolutePath, PathType
 from pysaurus.core.modules import FileSystem
+from pysaurus.core.profiling import Profiler
 
 
 class JsonBackup:
@@ -17,6 +18,7 @@ class JsonBackup:
                 data = json.load(output_file)
         return data
 
+    @Profiler.profile("JsonBackup.save")
     def save(self, data):
         prev_path = AbsolutePath.file_path(
             self.path.get_directory(), self.path.title, "prev.json"
@@ -31,5 +33,5 @@ class JsonBackup:
         # Store JSON data to target file
         with open(self.path.path, "w") as output_file:
             json.dump(data, output_file)
-        # Data saved. Previous file may exists. Target file contains data.
+        # Data saved. Previous file may exist. Target file contains data.
         assert self.path.isfile()
