@@ -52,3 +52,4 @@ Optimizations:
     - reduce size of allocated map (n**2 -> n*(n-1)/2)
 - Interface update is too slow on video properties edition or group/classifier changes.
   - Database backup and terms index update needs to be optimized.
+- Allow both to delete video or move video to trash
