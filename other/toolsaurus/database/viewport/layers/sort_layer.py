@@ -1,10 +1,10 @@
 from typing import List, Sequence
 
+from other.toolsaurus.database.viewport.layers.layer import Layer
+from other.toolsaurus.database.viewport.layers.source_layer import SourceLayer
 from pysaurus.database.video import Video
 from pysaurus.database.video_sorting import VideoSorting
-from pysaurus.database.viewport.layers.layer import Layer
-from pysaurus.database.viewport.layers.source_layer import SourceLayer
-from pysaurus.database.viewport.viewtools.video_array import VideoArray
+from pysaurus.database.viewport.view_tools import VideoArray
 
 
 class SortLayer(Layer):
@@ -18,7 +18,7 @@ class SortLayer(Layer):
         self.__filter = self.filter_all
 
     def _choose_filter(self):
-        root = self.get_root()
+        root = self._get_root()
         sorting = self.get_sorting()
         if (
             isinstance(root, SourceLayer)
@@ -40,12 +40,12 @@ class SortLayer(Layer):
         self._choose_filter()
 
     def get_sorting(self):
-        return self.get_parameter("sorting")
+        return self._get_parameter("sorting")
 
     def reset_parameters(self):
         self.set_sorting(self.DEFAULT_SORT_DEF)
 
-    def filter(self, data: Sequence[Video]) -> VideoArray:
+    def _filter(self, data: Sequence[Video]) -> VideoArray:
         return self.__filter(data)
 
     def filter_all(self, data: Sequence[Video]) -> VideoArray:
@@ -78,6 +78,6 @@ class SortLayer(Layer):
 
         return VideoArray(readable_unreadable[0] + readable_unreadable[1])
 
-    def remove_from_cache(self, cache: VideoArray, video: Video):
+    def _remove_from_cache(self, cache: VideoArray, video: Video):
         if video in cache:
             cache.remove(video)

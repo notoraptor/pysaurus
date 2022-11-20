@@ -1,8 +1,8 @@
-from typing import Dict, Iterable, Sequence, Set
+from typing import Dict, Sequence
 
+from other.toolsaurus.database.viewport.layers.layer import Layer
 from pysaurus.core.components import AbsolutePath
 from pysaurus.database.video import Video
-from pysaurus.database.viewport.layers.layer import Layer
 
 
 class SourceLayer(Layer):
@@ -26,12 +26,12 @@ class SourceLayer(Layer):
                 self._set_parameters(sources=sorted(valid_paths))
 
     def get_sources(self):
-        return self.get_parameter("sources")
+        return self._get_parameter("sources")
 
     def reset_parameters(self):
         self.set_sources(self.DEFAULT_SOURCE_DEF)
 
-    def filter(self, database) -> Dict[AbsolutePath, Video]:
+    def _filter(self, database) -> Dict[AbsolutePath, Video]:
         from pysaurus.database.database import Database
 
         database: Database
@@ -42,7 +42,7 @@ class SourceLayer(Layer):
         assert len(source_dict) == len(source), (len(source_dict), len(source))
         return source_dict
 
-    def remove_from_cache(self, cache: Dict[AbsolutePath, Video], vs: Video):
+    def _remove_from_cache(self, cache: Dict[AbsolutePath, Video], vs: Video):
         assert vs.filename in cache, len(cache)
         del cache[vs.filename]
 

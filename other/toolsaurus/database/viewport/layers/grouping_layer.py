@@ -1,11 +1,9 @@
 from typing import Dict, Optional
 
+from other.toolsaurus.database.viewport.layers.layer import Layer
 from pysaurus.core.components import AbsolutePath
 from pysaurus.database.video import Video
-from pysaurus.database.viewport.layers.layer import Layer
-from pysaurus.database.viewport.viewtools.group import Group
-from pysaurus.database.viewport.viewtools.group_array import GroupArray
-from pysaurus.database.viewport.viewtools.group_def import GroupDef
+from pysaurus.database.viewport.view_tools import Group, GroupArray, GroupDef
 
 
 class GroupingLayer(Layer):
@@ -30,22 +28,15 @@ class GroupingLayer(Layer):
         )
 
     def get_grouping(self) -> GroupDef:
-        return self.get_parameter("grouping")
+        return self._get_parameter("grouping")
 
     def reset_parameters(self):
         self._set_parameters(grouping=self.DEFAULT_GROUP_DEF)
 
     def _get_prop_vals(self, name, video_state):
-        multiple = self.database.has_prop_type(name, multiple=True)
-        default = self.database.get_default_prop_val(name)
-        if video_state.unreadable:
-            return [None if multiple else default]
-        elif multiple:
-            return video_state.properties.get(name, None) or [None]
-        else:
-            return [video_state.properties.get(name, default)]
+        return self.database.get_prop_values(video_state, name, default=True) or [None]
 
-    def filter(self, data: Dict[AbsolutePath, Video]) -> GroupArray:
+    def _filter(self, data: Dict[AbsolutePath, Video]) -> GroupArray:
         group_def = self.get_grouping()
         groups = []
         if not group_def:
@@ -72,7 +63,7 @@ class GroupingLayer(Layer):
             groups = group_def.sort(groups)
         return GroupArray(group_def.field, group_def.is_property, groups)
 
-    def remove_from_cache(self, cache: GroupArray, video: Video):
+    def _remove_from_cache(self, cache: GroupArray, video: Video):
         groups = []
         if len(cache) == 1 and cache[0].field_value is None:
             groups.append(cache[0])

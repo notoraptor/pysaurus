@@ -7,15 +7,14 @@ from pysaurus.core.components import Duration, FileSize
 from pysaurus.core.functions import compute_nb_pages
 from pysaurus.database.database import Database
 from pysaurus.database.properties import PropType
+from pysaurus.database.utils import DEFAULT_SOURCE_DEF
 from pysaurus.database.video_features import VideoFeatures
-from pysaurus.database.viewport.layers.source_layer import SourceLayer
-from pysaurus.database.viewport.video_provider import VideoProvider
 from pysaurus.language.default_language import language_to_dict
 
 
 class FeatureAPI:
     __slots__ = ("notifier", "application", "database", "PYTHON_LANG")
-    PYTHON_DEFAULT_SOURCES = SourceLayer.DEFAULT_SOURCE_DEF
+    PYTHON_DEFAULT_SOURCES = DEFAULT_SOURCE_DEF
     PYTHON_APP_NAME = Application.app_name
     PYTHON_HAS_EMBEDDED_PLAYER = False
     PYTHON_FEATURE_COMPARISON = True
@@ -73,11 +72,11 @@ class FeatureAPI:
     # Provider getters.
 
     def backend(self, callargs, page_size, page_number, selector=None):
-        prev_sources = self.database.provider.source_layer.get_sources()
-        prev_grouping = self.database.provider.grouping_layer.get_grouping()
-        prev_path = self.database.provider.classifier_layer.get_path()
-        prev_group_id = self.database.provider.group_layer.get_group_id()
-        prev_search = self.database.provider.search_layer.get_search()
+        prev_sources = self.database.provider.get_sources()
+        prev_grouping = self.database.provider.get_grouping()
+        prev_path = self.database.provider.get_classifier_path()
+        prev_group_id = self.database.provider.get_group()
+        prev_search = self.database.provider.get_search()
 
         if callargs:
             ret = getattr(self, callargs[0])(*callargs[1:])
@@ -103,11 +102,11 @@ class FeatureAPI:
             if group_def and group_def["field"] == "similarity_id":
                 group_def["common"] = VideoFeatures.get_common_fields(view)
 
-        sources = self.database.provider.source_layer.get_sources()
-        grouping = self.database.provider.grouping_layer.get_grouping()
-        path = self.database.provider.classifier_layer.get_path()
-        group_id = self.database.provider.group_layer.get_group_id()
-        search = self.database.provider.search_layer.get_search()
+        sources = self.database.provider.get_sources()
+        grouping = self.database.provider.get_grouping()
+        path = self.database.provider.get_classifier_path()
+        group_id = self.database.provider.get_group()
+        search = self.database.provider.get_search()
 
         provider_changed = (
             prev_sources != sources
@@ -126,7 +125,7 @@ class FeatureAPI:
             "pageNumber": page_number,
             "nbVideos": nb_videos,
             "realNbVideos": real_nb_videos,
-            "totalNbVideos": len(self.database.provider.source_layer.videos()),
+            "totalNbVideos": len(self.database.provider.get_all_videos()),
             "nbPages": nb_pages,
             "validSize": str(FileSize(sum(video.file_size for video in view))),
             "validLength": str(
@@ -138,7 +137,7 @@ class FeatureAPI:
             "sources": sources,
             "groupDef": group_def,
             "searchDef": self.database.provider.get_search_def(),
-            "sorting": self.database.provider.sort_layer.get_sorting(),
+            "sorting": self.database.provider.get_sort(),
             "videos": videos,
             "path": path,
             "prop_types": self.database.describe_prop_types(),
@@ -153,7 +152,7 @@ class FeatureAPI:
     # Provider setters.
 
     def set_sources(self, paths):
-        self.database.provider.set_source(paths)
+        self.database.provider.set_sources(paths)
 
     def set_groups(
         self, field, is_property=None, sorting=None, reverse=None, allow_singletons=None
@@ -176,43 +175,42 @@ class FeatureAPI:
         self.database.provider.set_sort(sorting)
 
     def classifier_select_group(self, group_id):
-        prop_name = self.database.provider.grouping_layer.get_grouping().field
-        path = self.database.provider.classifier_layer.get_path()
-        value = self.database.provider.classifier_layer.get_group_value(group_id)
+        prop_name = self.database.provider.get_grouping().field
+        path = self.database.provider.get_classifier_path()
+        value = self.database.provider.get_classifier_group_value(group_id)
         new_path = path + [value]
-        self.database.provider.classifier_layer.set_path(new_path)
-        self.database.provider.group_layer.set_group_id(0)
+        self.database.provider.set_classifier_path(new_path)
+        self.database.provider.set_group(0)
         self.database.notifier.notify(notifications.PropertiesModified([prop_name]))
 
     def classifier_focus_prop_val(self, prop_name, field_value):
         self.set_groups(prop_name, True, "count", True, True)
         self.database.provider.get_view()
-        group_id = self.database.provider.grouping_layer.get_group_id(field_value)
-        self.database.provider.classifier_layer.set_path([])
-        self.database.provider.classifier_layer.run()
+        group_id = self.database.provider.convert_field_value_to_group_id(field_value)
+        self.database.provider.set_classifier_path([])
+        self.database.provider.get_view()
         self.classifier_select_group(group_id)
 
     def classifier_back(self):
-        prop_name = self.database.provider.grouping_layer.get_grouping().field
-        path = self.database.provider.classifier_layer.get_path()
-        self.database.provider.classifier_layer.set_path(path[:-1])
-        self.database.provider.group_layer.set_group_id(0)
+        prop_name = self.database.provider.get_grouping().field
+        path = self.database.provider.get_classifier_path()
+        self.database.provider.set_classifier_path(path[:-1])
+        self.database.provider.set_group(0)
         self.database.notifier.notify(notifications.PropertiesModified([prop_name]))
 
     # stable
     def classifier_reverse(self):
-        path = list(reversed(self.database.provider.classifier_layer.get_path()))
-        self.database.provider.classifier_layer.set_path(path)
+        path = list(reversed(self.database.provider.get_classifier_path()))
+        self.database.provider.set_classifier_path(path)
         return path
 
     # Database actions without modifications.
 
     def choose_random_video(self):
         video = self.database.provider.get_random_found_video()
-        self.database.provider.source_layer.reset_parameters()
-        self.database.provider.grouping_layer.reset_parameters()
-        self.database.provider.classifier_layer.reset_parameters()
-        self.database.provider.group_layer.reset_parameters()
+        self.database.provider.reset_parameters(
+            "source", "grouping", "classifier", "group"
+        )
         self.set_search(str(video.video_id), "id")
         return video
 
@@ -328,10 +326,10 @@ class FeatureAPI:
         )
 
     def classifier_concatenate_path(self, to_property):
-        path = self.database.provider.classifier_layer.get_path()
-        from_property = self.database.provider.grouping_layer.get_grouping().field
-        self.database.provider.classifier_layer.set_path([])
-        self.database.provider.group_layer.set_group_id(0)
+        path = self.database.provider.get_classifier_path()
+        from_property = self.database.provider.get_grouping().field
+        self.database.provider.set_classifier_path([])
+        self.database.provider.set_group(0)
         self.database.move_concatenated_prop_val(
             self.database.provider.get_all_videos(), path, from_property, to_property
         )

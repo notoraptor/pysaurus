@@ -1,11 +1,10 @@
 from typing import List, Set
 
+from other.toolsaurus.database.viewport.layers.grouping_layer import GroupingLayer
+from other.toolsaurus.database.viewport.layers.layer import Layer
 from pysaurus.core import functions
 from pysaurus.database.video import Video
-from pysaurus.database.viewport.layers.grouping_layer import GroupingLayer
-from pysaurus.database.viewport.layers.layer import Layer
-from pysaurus.database.viewport.viewtools.group import Group
-from pysaurus.database.viewport.viewtools.group_array import GroupArray
+from pysaurus.database.viewport.view_tools import Group, GroupArray
 
 
 class ClassifierLayer(Layer):
@@ -17,12 +16,12 @@ class ClassifierLayer(Layer):
         self._set_parameters(path=path)
 
     def get_path(self) -> list:
-        return self.get_parameter("path")
+        return self._get_parameter("path")
 
     def reset_parameters(self):
         self._set_parameters(path=[])
 
-    def filter(self, data: GroupArray) -> GroupArray:
+    def _filter(self, data: GroupArray) -> GroupArray:
         if data.field is None or not data.is_property:
             return data
         if not self.database.has_prop_type(data.field, multiple=True):
@@ -53,7 +52,7 @@ class ClassifierLayer(Layer):
         ]
         return GroupArray(prop_name, True, self.parent.get_grouping().sort(groups))
 
-    def remove_from_cache(self, cache: GroupArray, video: Video):
+    def _remove_from_cache(self, cache: GroupArray, video: Video):
         groups = []
         if len(cache) == 1 and cache[0].field_value is None:
             groups.append(cache[0])

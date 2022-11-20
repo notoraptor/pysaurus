@@ -1,7 +1,8 @@
-from typing import Iterable, Dict, Set, List
-from pysaurus.database.video import Video
-from pysaurus.core.functions import string_to_pieces
+from typing import Dict, Iterable, List, Sequence, Set
+
 from pysaurus.core.components import AbsolutePath
+from pysaurus.core.functions import string_to_pieces
+from pysaurus.database.video import Video
 
 
 class VideoIndexer:
@@ -52,3 +53,6 @@ class VideoIndexer:
 
     def get_index(self) -> Dict[str, Set[Video]]:
         return self.term_to_videos
+
+    def video_has_terms_exact(self, video: Video, terms: Sequence[str]):
+        return " ".join(terms) in " ".join(self.video_to_terms[video])

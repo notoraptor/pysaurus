@@ -1,8 +1,8 @@
 import os
 import sys
+from collections import Counter
 from multiprocessing import Pool
 from typing import Dict, Iterable, List, Optional, Set
-from collections import Counter
 
 import ujson as json
 
@@ -26,11 +26,12 @@ from pysaurus.database.json_database import JsonDatabase
 from pysaurus.database.miniature_tools.group_computer import GroupComputer
 from pysaurus.database.miniature_tools.miniature import Miniature
 from pysaurus.database.special_properties import SpecialProperties
+from pysaurus.database.utils import generate_temp_file_path
 from pysaurus.database.video import Video
 from pysaurus.database.video_runtime_info import VideoRuntimeInfo
+from pysaurus.database.viewport.abstract_video_provider import AbstractVideoProvider
+from pysaurus.database.viewport.video_filter import VideoSelector
 from pysaurus.language.default_language import DefaultLanguage
-from pysaurus.database.utils import generate_temp_file_path
-from pysaurus.database.viewport.video_provider import VideoProvider
 
 try:
     from pysaurus.database.video_info import video_raptor as backend_raptor
@@ -50,7 +51,7 @@ class Database(JsonDatabase):
         # RAM data
         self.__message = None
         self.lang = lang or DefaultLanguage
-        self.provider: Optional[VideoProvider] = VideoProvider(self)
+        self.provider: Optional[AbstractVideoProvider] = VideoSelector(self)
         # Set log file
         notifier = notifier or DEFAULT_NOTIFIER
         notifier.set_log_path(self.__paths.log_path.path)
@@ -410,9 +411,8 @@ class Database(JsonDatabase):
             len(png_paths), self.notifier
         )
         tasks = [(path, i, job_notifier) for i, path in enumerate(png_paths)]
-        with Profiler("compress thumbnails", self.notifier):
-            with Pool(CPU_COUNT) as p:
-                list(p.imap_unordered(job_image_to_jpeg, tasks))
+        with Pool(CPU_COUNT) as p:
+            list(p.imap_unordered(job_image_to_jpeg, tasks))
 
     def rename(self, new_name) -> None:
         self.__paths = self.__paths.renamed(new_name)

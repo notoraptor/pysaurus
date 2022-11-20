@@ -1,33 +1,31 @@
 from typing import Optional
 
+from other.toolsaurus.database.viewport.layers.layer import Layer
+from other.toolsaurus.database.viewport.layers.source_layer import SourceLayer
 from pysaurus.core import functions
 from pysaurus.database.video import Video
 from pysaurus.database.video_features import VideoFeatures
-from pysaurus.database.viewport.layers.layer import Layer
-from pysaurus.database.viewport.layers.source_layer import SourceLayer
-from pysaurus.database.viewport.viewtools.group import Group
-from pysaurus.database.viewport.viewtools.search_def import SearchDef
-from pysaurus.database.viewport.viewtools.video_array import VideoArray
+from pysaurus.database.viewport.view_tools import Group, SearchDef, VideoArray
 
 
 class SearchLayer(Layer):
     __slots__ = ()
     __props__ = ("search",)
-    DEFAULT_SEARCH_DEF = SearchDef(None, None)  # str text, str cond
+    DEFAULT_SEARCH_DEF = SearchDef()
 
     def set_search(self, text: Optional[str], cond: Optional[str]):
         self._set_parameters(search=SearchDef(text, cond))
 
     def get_search(self) -> SearchDef:
-        return self.get_parameter("search")
+        return self._get_parameter("search")
 
     def reset_parameters(self):
         self._set_parameters(search=self.DEFAULT_SEARCH_DEF)
 
-    def filter(self, data: Group) -> VideoArray:
+    def _filter(self, data: Group) -> VideoArray:
         search_def = self.get_search()
         if search_def:
-            root = self.get_root()
+            root = self._get_root()
             if isinstance(root, SourceLayer):
                 return self.__filter_from_root_layer(search_def, root, data)
             return VideoArray(VideoFeatures.find(search_def, data.videos))
@@ -59,6 +57,6 @@ class SearchLayer(Layer):
             selection &= set(data.videos)
         return VideoArray(selection)
 
-    def remove_from_cache(self, cache: VideoArray, video: Video):
+    def _remove_from_cache(self, cache: VideoArray, video: Video):
         if video in cache:
             cache.remove(video)

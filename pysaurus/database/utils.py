@@ -1,8 +1,10 @@
-import tempfile
 import os
+import tempfile
 
 TEMP_DIR = tempfile.gettempdir()
 TEMP_PREFIX = tempfile.gettempprefix() + "_pysaurus_"
+
+DEFAULT_SOURCE_DEF = [("readable",)]
 
 
 def generate_temp_file_path(extension) -> str:

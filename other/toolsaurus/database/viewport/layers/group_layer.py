@@ -1,8 +1,8 @@
 from typing import Sequence
 
+from other.toolsaurus.database.viewport.layers.layer import Layer
 from pysaurus.database.video import Video
-from pysaurus.database.viewport.layers.layer import Layer
-from pysaurus.database.viewport.viewtools.group import Group
+from pysaurus.database.viewport.view_tools import Group
 
 
 class GroupLayer(Layer):
@@ -15,7 +15,7 @@ class GroupLayer(Layer):
         self._set_parameters(group_id=max(group_id, 0))
 
     def get_group_id(self) -> int:
-        return self.get_parameter("group_id")
+        return self._get_parameter("group_id")
 
     def _clip_group_id(self, nb_groups):
         self.set_group_id(min(self.get_group_id(), nb_groups - 1))
@@ -24,10 +24,10 @@ class GroupLayer(Layer):
     def reset_parameters(self):
         self.set_group_id(0)
 
-    def filter(self, data: Sequence[Group]) -> Group:
+    def _filter(self, data: Sequence[Group]) -> Group:
         return data[self._clip_group_id(len(data))] if data else Group()
 
-    def remove_from_cache(self, cache: Group, video: Video):
+    def _remove_from_cache(self, cache: Group, video: Video):
         if video in cache.videos:
             cache.videos.remove(video)
         if not cache.videos:

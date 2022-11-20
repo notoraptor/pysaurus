@@ -6,13 +6,18 @@ T = TypeVar("T")
 class LookupArray(Generic[T]):
     __slots__ = "__type", "__content", "__table", "__key_fn"
 
-    def __init__(self, element_type, content: Iterable[T] = (), key: callable = None):
-        self.__type = element_type  # type: Type
-        self.__content = []  # type: List[T]
-        self.__table = {}  # type: Dict[Any, int]
-        self.__key_fn = (
+    def __init__(
+        self,
+        element_type: Type,
+        content: Iterable[T] = (),
+        key: Callable[[T], Any] = None,
+    ):
+        self.__type: Type = element_type
+        self.__content: List[T] = []
+        self.__table: Dict[Any, int] = {}
+        self.__key_fn: Callable[[T], Any] = (
             key if callable(key) else lambda value: value
-        )  # type: Callable[[T], Any]
+        )
         self.extend(content)
 
     def __str__(self):

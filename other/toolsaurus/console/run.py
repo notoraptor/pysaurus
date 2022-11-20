@@ -7,16 +7,16 @@ import pysaurus.application.utils
 from other.toolsaurus.command_line_interface import command_line_interface
 from other.toolsaurus.database.database import ExtendedDatabase
 from other.toolsaurus.function_parser import FunctionParser, fdef, fsigned
-from pysaurus.database.utils import generate_temp_file_path
 from other.toolsaurus.printable import to_column, to_table
 from pysaurus.core import functions
 from pysaurus.core.classes import StringPrinter
 from pysaurus.core.components import AbsolutePath, Duration, FileSize
 from pysaurus.core.modules import ImageUtils, VideoClipping
+from pysaurus.database.utils import generate_temp_file_path
 from pysaurus.database.video import Video
 from pysaurus.database.video_features import VideoFeatures
 from pysaurus.database.video_sorting import VideoSorting
-from pysaurus.database.viewport.viewtools.search_def import SearchDef
+from pysaurus.database.viewport.view_tools import SearchDef
 
 TEST_LIST_FILE_PATH = AbsolutePath(
     os.path.join(

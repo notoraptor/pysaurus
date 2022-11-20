@@ -213,7 +213,8 @@ class Video(Jsonable):
             return 0
         basic_file_size = (
             self.width * self.height * self.frame_rate * 3
-            + self.sample_rate * self.channels * 2  # todo: why x 2 ?
+            + self.sample_rate * self.channels * 2
+            # todo: why x 2 ?
         ) * self.raw_seconds
         return self.file_size / basic_file_size
 

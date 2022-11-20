@@ -77,6 +77,8 @@ class ToDict:
             ),
         )
 
+    __repr__ = __str__
+
     def __eq__(self, other):
         return type(self) is type(other) and all(
             getattr(self, field) == getattr(other, field) for field in self.get_slots()

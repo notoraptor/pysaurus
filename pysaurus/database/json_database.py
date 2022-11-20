@@ -1,7 +1,6 @@
-from typing import Dict, Iterable, List, Optional, Set, Sequence, Union
+from typing import Dict, Iterable, List, Optional, Sequence, Set, Union
 
 from pysaurus.application import exceptions
-from pysaurus.database.video_indexer import VideoIndexer
 from pysaurus.core.components import AbsolutePath, DateModified, PathType
 from pysaurus.core.notifications import Notification
 from pysaurus.core.notifier import DEFAULT_NOTIFIER, Notifier
@@ -16,6 +15,7 @@ from pysaurus.database.db_video_attribute import (
 from pysaurus.database.json_backup import JsonBackup
 from pysaurus.database.properties import PropType, PropValueType
 from pysaurus.database.video import Video
+from pysaurus.database.video_indexer import VideoIndexer
 
 
 class DatabaseLoaded(Notification):
@@ -284,12 +284,14 @@ class JsonDatabase:
                     video.properties[name] = [video.properties[name]]
             self.save()
 
-    def get_prop_values(self, video: Video, name: str) -> list:
+    def get_prop_values(self, video: Video, name: str, default=False) -> list:
         values = []
         if name in video.properties:
             value = video.properties[name]
             values = value if self.prop_types[name].multiple else [value]
         assert isinstance(values, list)
+        if default and not values and not self.prop_types[name].multiple:
+            values = [self.prop_types[name].default]
         return values
 
     def set_prop_values(
