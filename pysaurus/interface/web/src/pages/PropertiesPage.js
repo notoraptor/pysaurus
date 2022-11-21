@@ -55,21 +55,17 @@ export class PropertiesPage extends React.Component {
 						</button>
 					</div>
 					<div className="text-center flex-grow-1">
-						{this.context.gui_properties_title}
+						{tr("Properties Management")}
 					</div>
 				</h2>
 				<hr />
 				<div className="content horizontal">
 					<div className="list text-center">
-						<h3 className="text-center">
-							{this.context.gui_properties_current}
-						</h3>
+						<h3 className="text-center">{tr("Current properties")}</h3>
 						{this.renderPropTypes()}
 					</div>
 					<div className="new">
-						<h3 className="text-center">
-							{this.context.gui_properties_add_new}
-						</h3>
+						<h3 className="text-center">{tr("Add a new property")}</h3>
 						<table className="first-td-text-right w-100">
 							<tr>
 								<td>
@@ -95,18 +91,12 @@ export class PropertiesPage extends React.Component {
 										className="block"
 										value={this.state.type}
 										onChange={this.onChangeType}>
-										<option value="bool">
-											{this.context.text_boolean}
-										</option>
-										<option value="int">
-											{this.context.text_integer}
-										</option>
+										<option value="bool">{tr("boolean")}</option>
+										<option value="int">{tr("integer")}</option>
 										<option value="float">
-											{this.context.text_float}
+											{tr("floating number")}
 										</option>
-										<option value="str">
-											{this.context.text_text}
-										</option>
+										<option value="str">{tr("text")}</option>
 									</select>
 								</td>
 							</tr>
@@ -121,7 +111,7 @@ export class PropertiesPage extends React.Component {
 								</td>
 								<td>
 									<label htmlFor="prop-multiple">
-										{this.context.text_accept_many_values}
+										{tr("accept many values")}
 									</label>
 								</td>
 							</tr>
@@ -136,7 +126,7 @@ export class PropertiesPage extends React.Component {
 								</td>
 								<td>
 									<label htmlFor="prop-enumeration">
-										{this.context.text_is_enumeration}
+										{tr("Is enumeration")}
 									</label>
 								</td>
 							</tr>
@@ -147,12 +137,11 @@ export class PropertiesPage extends React.Component {
 											htmlFor={"prop-default-" + this.state.type}>
 											{this.state.enumeration
 												? this.state.multiple
-													? this.context
-															.gui_properties_enumeration_values_multiple
-													: this.context
-															.gui_properties_enumeration_values
-												: this.context
-														.gui_properties_default_value}
+													? tr(
+															"Enumeration values (first is default)"
+													  )
+													: tr("Enumeration values")
+												: tr("Default value")}
 										</label>
 									</td>
 									<td>{this.renderDefaultInput()}</td>
@@ -200,19 +189,17 @@ export class PropertiesPage extends React.Component {
 							<td className="name bold">{def.name}</td>
 							<td className="type">
 								{def.multiple ? (
-									<span>{this.context.text_one_or_many}&nbsp;</span>
+									<span>{tr("one or many")}&nbsp;</span>
 								) : (
 									""
 								)}
 								<span>
 									<code>{def.type}</code>{" "}
-									{def.multiple
-										? this.context.word_values
-										: this.context.word_value}
+									{def.multiple ? tr("values") : tr("value")}
 								</span>
 								{def.enumeration ? (
 									<span>
-										&nbsp;{this.context.word_in} {"{"}
+										&nbsp;{tr("in")} {"{"}
 										{def.enumeration.join(", ")}
 										{"}"}
 									</span>
@@ -384,8 +371,8 @@ export class PropertiesPage extends React.Component {
 	deleteProperty(name) {
 		Fancybox.load(
 			<Dialog
-				title={this.context.form_title_delete_property.format({ name })}
-				yes={this.context.text_delete}
+				title={tr('Delete property "{name}"?', { name })}
+				yes={tr("DELETE")}
 				action={() => {
 					python_call("delete_prop_type", name)
 						.catch(backend_error)
@@ -397,7 +384,7 @@ export class PropertiesPage extends React.Component {
 				}}>
 				<Cell className="text-center" center={true} full={true}>
 					<h3>
-						{this.context.form_content_delete_property.format({
+						{tr('Are you sure you want to delete property "{name}"?', {
 							name,
 						})}
 					</h3>
@@ -409,10 +396,10 @@ export class PropertiesPage extends React.Component {
 	convertPropertyToUnique(name) {
 		Fancybox.load(
 			<Dialog
-				title={this.context.form_title_convert_to_unique_property.format({
+				title={tr('Convert to unique property "{name}"?', {
 					name,
 				})}
-				yes={this.context.form_convert_to_unique_property_yes}
+				yes={tr("convert to unique")}
 				action={() => {
 					python_call("convert_prop_to_unique", name)
 						.then((definitions) => {
@@ -424,9 +411,12 @@ export class PropertiesPage extends React.Component {
 				}}>
 				<Cell className="text-center" center={true} full={true}>
 					<h3>
-						{this.context.form_confirm_convert_to_unique_property.format({
-							name,
-						})}
+						{tr(
+							'Are you sure you want to convert to unique property "{name}"?',
+							{
+								name,
+							}
+						)}
 					</h3>
 				</Cell>
 			</Dialog>
@@ -436,10 +426,10 @@ export class PropertiesPage extends React.Component {
 	convertPropertyToMultiple(name) {
 		Fancybox.load(
 			<Dialog
-				title={this.context.form_title_convert_to_multiple_property.format({
+				title={tr('Convert to multiple property "{name}"?', {
 					name,
 				})}
-				yes={this.context.form_convert_to_multiple_property_yes}
+				yes={tr("convert to multiple")}
 				action={() => {
 					python_call("convert_prop_to_multiple", name)
 						.then((definitions) => {
@@ -451,9 +441,12 @@ export class PropertiesPage extends React.Component {
 				}}>
 				<Cell className="text-center" center={true} full={true}>
 					<h3>
-						{this.context.form_confirm_convert_to_multiple_property.format({
-							name,
-						})}
+						{tr(
+							'Are you sure you want to convert to multiple property "{name}"?',
+							{
+								name,
+							}
+						)}
 					</h3>
 				</Cell>
 			</Dialog>
@@ -463,8 +456,8 @@ export class PropertiesPage extends React.Component {
 	renameProperty(name) {
 		Fancybox.load(
 			<GenericFormRename
-				title={this.context.form_title_rename_property.format({ name })}
-				header={this.context.text_rename_property}
+				title={tr('Rename property "{name}"?', { name })}
+				header={tr("Rename property")}
 				description={name}
 				data={name}
 				onClose={(newName) => {

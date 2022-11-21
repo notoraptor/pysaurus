@@ -64,8 +64,8 @@ export class FormVideosSource extends React.Component {
 				{this.renderTree(this.props.tree)}
 				<p>
 					{this.state.paths.length
-						? this.context.form_source_currently_selected
-						: this.context.form_source_none_selected}
+						? tr("Currently selected:")
+						: tr("Currently selected: none")}
 				</p>
 				{this.state.paths.length ? (
 					<ul>
@@ -80,7 +80,7 @@ export class FormVideosSource extends React.Component {
 				)}
 				<p className="submit mx-1 my-4">
 					<button className="submit block" onClick={this.submit}>
-						{this.context.text_select}
+						{tr("select")}
 					</button>
 				</p>
 			</FancyBox>
@@ -118,7 +118,7 @@ export class FormVideosSource extends React.Component {
 											checked={!hasPath}
 										/>{" "}
 										<label htmlFor={entryName + "1"}>
-											{this.context.form_source_develop}
+											{tr("develop")}
 										</label>
 									</div>
 									{hasPath ? "" : this.renderTree(subTree, entryName)}

@@ -27,7 +27,7 @@ System.register(["../dialogs/Dialog.js", "../language.js"], function (_export, _
         render() {
           return /*#__PURE__*/React.createElement(Dialog, {
             title: this.props.title,
-            yes: this.context.text_rename,
+            yes: tr("rename"),
             action: this.submit
           }, /*#__PURE__*/React.createElement("div", {
             className: "form-rename text-center"

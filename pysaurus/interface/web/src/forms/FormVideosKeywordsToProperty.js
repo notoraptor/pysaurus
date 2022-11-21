@@ -23,7 +23,7 @@ export class FormVideosKeywordsToProperty extends React.Component {
 							onChange={this.onChangeGroupField}>
 							{this.props.prop_types.map((def, i) => (
 								<option key={i} value={def.name}>
-									{this.context.word_property}: {def.name}
+									{tr("Property")}: {def.name}
 								</option>
 							))}
 						</select>
@@ -36,7 +36,7 @@ export class FormVideosKeywordsToProperty extends React.Component {
 							onChange={this.onChangeEmpty}
 						/>{" "}
 						<label htmlFor="only-empty">
-							{this.context.text_fill_videos_without_properties.format({
+							{tr('only videos without values for property "{name}"', {
 								name: this.state.field,
 							})}
 						</label>

@@ -26,8 +26,8 @@ export class FormVideoEditProperties extends React.Component {
 		const hasThumbnail = data.with_thumbnails;
 		return (
 			<Dialog
-				title={this.context.form_edit_video_properties}
-				yes={this.context.text_save}
+				title={tr("Edit video properties")}
+				yes={tr("save")}
 				action={this.onClose}>
 				<div className="form-video-edit-properties horizontal">
 					<div className="info">
@@ -35,9 +35,7 @@ export class FormVideoEditProperties extends React.Component {
 							{hasThumbnail ? (
 								<img alt={data.title} src={data.thumbnail_path} />
 							) : (
-								<div className="no-thumbnail">
-									{this.context.text_no_thumbnail}
-								</div>
+								<div className="no-thumbnail">{tr("no thumbnail")}</div>
 							)}
 						</div>
 						<div className="filename p-1 mb-1">

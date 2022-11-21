@@ -16,11 +16,15 @@ export class FormNewPredictionProperty extends React.Component {
 	render() {
 		return (
 			<Dialog
-				title={this.context.form_title_new_prediction_property}
-				yes={this.context.text_create}
+				title={tr("New prediction property")}
+				yes={tr("create")}
 				action={this.onClose}>
 				<div className="form-rename text-center">
-					{this.context.form_content_new_prediction_property.markdown()}
+					{tr(`
+# Property name:
+
+## Final name will be \`<?{property name}>\`
+`).markdown()}
 					<p className="form">
 						<input
 							type="text"

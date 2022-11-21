@@ -49,7 +49,7 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
           }
 
           const percent = Math.round(current * 100 / total);
-          const title = monitoring.title || this.context.text_done.format({
+          const title = monitoring.title || tr("{count} done", {
             count: current
           });
           const jobClassID = "job " + monitoring.name;
@@ -153,7 +153,7 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
           } else {
             return /*#__PURE__*/React.createElement("div", {
               key: i
-            }, /*#__PURE__*/React.createElement("em", null, this.context.text_notification_unknown), ": ", message.message);
+            }, /*#__PURE__*/React.createElement("em", null, tr("unknown")), ": ", message.message);
           }
         }
 
@@ -168,19 +168,19 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
           const data = message.notification;
           return /*#__PURE__*/React.createElement("div", {
             key: i
-          }, /*#__PURE__*/React.createElement("strong", null, message.name === "DatabaseSaved" ? this.context.text_database_saved : this.context.text_database_loaded), ":", this.context.text_nb_entries.format({
+          }, /*#__PURE__*/React.createElement("strong", null, message.name === "DatabaseSaved" ? tr("Database saved") : tr("Database loaded")), ":", tr("{count} entries", {
             count: data.entries
-          }) + ", ", this.context.text_nb_discarded.format({
+          }) + ", ", tr("{count} discarded", {
             count: data.discarded
-          }) + ", ", this.context.text_nb_unreadable_not_found.format({
+          }) + ", ", tr("{count} unreadable not found", {
             count: data.unreadable_not_found
-          }) + ", ", this.context.text_nb_unreadable_found.format({
+          }) + ", ", tr("{count} unreadable found", {
             count: data.unreadable_found
-          }) + ", ", this.context.text_nb_readable_not_found.format({
+          }) + ", ", tr("{count} readable not found", {
             count: data.readable_not_found
-          }) + ", ", this.context.text_nb_readable_found_without_thumbnails.format({
+          }) + ", ", tr("{count} readable found without thumbnails", {
             count: data.readable_found_without_thumbnails
-          }) + ", ", this.context.text_nb_valid.format({
+          }) + ", ", tr("{count} valid", {
             count: data.valid
           }));
         }
@@ -192,19 +192,19 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
         DatabaseReady(app, message, i) {
           return /*#__PURE__*/React.createElement("div", {
             key: i
-          }, /*#__PURE__*/React.createElement("strong", null, this.context.text_notification_database_ready));
+          }, /*#__PURE__*/React.createElement("strong", null, tr("Database open!")));
         }
 
         Done(app, message, i) {
           return /*#__PURE__*/React.createElement("div", {
             key: i
-          }, /*#__PURE__*/React.createElement("strong", null, this.context.text_notification_done));
+          }, /*#__PURE__*/React.createElement("strong", null, tr("Done!")));
         }
 
         Cancelled(app, message, i) {
           return /*#__PURE__*/React.createElement("div", {
             key: i
-          }, /*#__PURE__*/React.createElement("strong", null, this.context.text_notification_cancelled));
+          }, /*#__PURE__*/React.createElement("strong", null, tr("Cancelled.")));
         }
 
         End(app, message, i) {
@@ -218,7 +218,7 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
           const count = message.notification.count;
           return /*#__PURE__*/React.createElement("div", {
             key: i
-          }, this.context.gui_home_collected_files.format({
+          }, tr("**Collected** {count} file(s)", {
             count
           }).markdown(true));
         }
@@ -229,7 +229,7 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
           if (names.length) {
             return /*#__PURE__*/React.createElement("div", {
               key: i
-            }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, this.context.text_notification_missing_thumbnails.format({
+            }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, tr("Missing {count} thumbnails", {
               count: names.length
             })), ":"), names.map((name, indexName) => /*#__PURE__*/React.createElement("div", {
               key: indexName
@@ -237,7 +237,7 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
           } else {
             return /*#__PURE__*/React.createElement("div", {
               key: i
-            }, /*#__PURE__*/React.createElement("em", null, this.context.text_notification_no_missing_thumbnails));
+            }, /*#__PURE__*/React.createElement("em", null, tr("No missing thumbnails!")));
           }
         }
 
@@ -246,7 +246,7 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
             key: i
           }, /*#__PURE__*/React.createElement("span", {
             className: "span-profiled"
-          }, this.context.text_profiling), " ", message.notification.name);
+          }, tr("PROFILING")), " ", message.notification.name);
         }
 
         ProfilingEnd(app, message, i) {
@@ -254,7 +254,7 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
             key: i
           }, /*#__PURE__*/React.createElement("span", {
             className: "span-profiled"
-          }, message.notification.inplace ? `${this.context.text_profiling} / ` : "", this.context.text_profiled), " ", message.notification.name, " ", /*#__PURE__*/React.createElement("span", {
+          }, message.notification.inplace ? `${tr("PROFILING")} / ` : "", tr("PROFILED")), " ", message.notification.name, " ", /*#__PURE__*/React.createElement("span", {
             className: "span-profiled"
           }, "TIME"), " ", message.notification.time);
         }
@@ -265,7 +265,7 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
           keys.sort();
           return /*#__PURE__*/React.createElement("div", {
             key: i
-          }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, (message.name === "VideoInfoErrors" ? this.context.text_nb_video_errors : this.context.text_nb_thumbnail_errors).format({
+          }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, tr(message.name === "VideoInfoErrors" ? "{count} video error(s)" : "{count} thumbnail error(s)", {
             count: keys.length
           })), ":"), /*#__PURE__*/React.createElement("ul", null, keys.map((name, indexName) => /*#__PURE__*/React.createElement("li", {
             key: indexName
@@ -290,11 +290,11 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
           } else if (total) {
             return /*#__PURE__*/React.createElement("div", {
               key: i
-            }, this.context.gui_home_to_load, ":", " ", /*#__PURE__*/React.createElement("strong", null, total, " ", label));
+            }, tr("To load"), ":", " ", /*#__PURE__*/React.createElement("strong", null, total, " ", label));
           } else {
             return /*#__PURE__*/React.createElement("div", {
               key: i
-            }, /*#__PURE__*/React.createElement("em", null, this.context.gui_home_to_load, ": ", this.context.text_nothing));
+            }, /*#__PURE__*/React.createElement("em", null, tr("To load"), ": ", tr("nothing!")));
           }
         }
 
@@ -304,13 +304,13 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
           if (total) {
             return /*#__PURE__*/React.createElement("div", {
               key: i
-            }, /*#__PURE__*/React.createElement("strong", null, this.context.text_nb_miniatures_saved.format({
+            }, /*#__PURE__*/React.createElement("strong", null, tr("{count} miniature(s) saved.", {
               count: total
             })));
           } else {
             return /*#__PURE__*/React.createElement("div", {
               key: i
-            }, /*#__PURE__*/React.createElement("em", null, this.context.text_no_miniatures_saved));
+            }, /*#__PURE__*/React.createElement("em", null, tr("No miniatures saved!")));
           }
         }
 
@@ -366,7 +366,7 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
         renderInitialButton() {
           if (this.props.parameters.onReady) return /*#__PURE__*/React.createElement("strong", null, this.state.status || ACTIONS[this.props.parameters.command[0]] + " ...");else if (this.state.loaded) return /*#__PURE__*/React.createElement("button", {
             onClick: this.displayVideos
-          }, this.context.text_display_videos);else return /*#__PURE__*/React.createElement("button", {
+          }, tr("Display videos"));else return /*#__PURE__*/React.createElement("button", {
             disabled: true
           }, ACTIONS[this.props.parameters.command[0]], " ...");
         }

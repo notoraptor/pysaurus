@@ -37,10 +37,10 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../utils/functions.j
           const canMove = this.state.otherDefinitions.length && this.props.values.length === 1;
           const values = this.props.values;
           let title;
-          if (values.length === 1) title = this.context.form_title_edit_prop_val.format({
+          if (values.length === 1) title = tr('Property "{name}", value "{value}"', {
             name: this.props.name,
             value: values[0]
-          });else title = this.context.form_title_edit_prop_vals.format({
+          });else title = tr('Property "{name}", {count} values"', {
             name: this.props.name,
             count: values.length
           });
@@ -86,7 +86,11 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../utils/functions.j
         renderDelete() {
           return /*#__PURE__*/React.createElement("div", {
             className: "flex-grow-1"
-          }, this.context.form_content_delete_prop_val.format({
+          }, tr(`
+### Are you sure you want to delete property value
+
+### "{name}" / {value} ?
+`, {
             name: this.props.name,
             value: this.valuesToString()
           }).markdown());
@@ -126,7 +130,7 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../utils/functions.j
 
           return /*#__PURE__*/React.createElement("div", {
             className: "flex-grow-1"
-          }, /*#__PURE__*/React.createElement("h3", null, this.context.form_content_edit_prop_val.format({
+          }, /*#__PURE__*/React.createElement("h3", null, tr('Edit property "{name}" / {value}', {
             name: this.props.name,
             value: this.valuesToString()
           })), /*#__PURE__*/React.createElement("div", null, input));
@@ -136,7 +140,7 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../utils/functions.j
           const def = this.props.definitions[this.props.name];
           return /*#__PURE__*/React.createElement("div", {
             className: "flex-grow-1"
-          }, /*#__PURE__*/React.createElement("h3", null, this.context.form_content_move_prop_val.format({
+          }, /*#__PURE__*/React.createElement("h3", null, tr('Move property "{name}" / {value} to another property of type "{type}".', {
             name: this.props.name,
             value: this.valuesToString(),
             type: def.type
@@ -211,7 +215,7 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../utils/functions.j
 
         valuesToString() {
           if (this.props.values.length === 1) return this.props.values[0].toString();
-          return this.context.form_summary_values.format({
+          return tr("{count} values ({first} ... {last})", {
             count: this.props.values.length,
             first: this.props.values[0],
             last: this.props.values[this.props.values.length - 1]

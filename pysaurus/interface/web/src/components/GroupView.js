@@ -62,8 +62,8 @@ export class GroupView extends React.Component {
 								/>{" "}
 								<label htmlFor="group-view-select-all">
 									{(allChecked
-										? this.context.text_all_groups_selected
-										: this.context.text_groups_selected
+										? tr("All {count} selected")
+										: tr("{count} selected")
 									).format({ count: selection.size })}
 								</label>
 								{selection.size ? (
@@ -180,7 +180,7 @@ export class GroupView extends React.Component {
 					) : (
 						<div className="absolute-plain no-groups text-center vertical">
 							<strong>
-								<em>{this.context.text_no_groups}</em>
+								<em>{tr("No groups")}</em>
 							</strong>
 						</div>
 					)}
@@ -215,13 +215,13 @@ export class GroupView extends React.Component {
 			{
 				previous: new Action(
 					"Ctrl+ArrowUp",
-					this.context.action_go_to_previous_group,
+					tr("Go to previous group"),
 					this.previousGroup,
 					Fancybox.isInactive
 				),
 				next: new Action(
 					"Ctrl+ArrowDown",
-					this.context.action_go_to_next_group,
+					tr("Go to next group"),
 					this.nextGroup,
 					Fancybox.isInactive
 				),

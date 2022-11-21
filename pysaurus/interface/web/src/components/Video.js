@@ -69,9 +69,7 @@ export class Video extends React.Component {
 					{hasThumbnail ? (
 						<img alt={data.title} src={data.thumbnail_path} />
 					) : (
-						<div className="no-thumbnail">
-							{this.context.text_no_thumbnail}
-						</div>
+						<div className="no-thumbnail">{tr("no thumbnail")}</div>
 					)}
 				</div>
 				<div className="video-details horizontal flex-grow-1">
@@ -82,53 +80,50 @@ export class Video extends React.Component {
 								<MenuPack title={`${Characters.SETTINGS}`}>
 									{data.found ? (
 										<MenuItem action={this.openVideo}>
-											{this.context.action_open_file}
+											{tr("Open file")}
 										</MenuItem>
 									) : (
 										<div className="text-center bold">
-											{this.context.text_not_found}
+											{tr("(not found)")}
 										</div>
 									)}
 									{data.found ? (
 										<MenuItem action={this.openContainingFolder}>
-											{this.context.action_open_containing_folder}
+											{tr("Open containing folder")}
 										</MenuItem>
 									) : (
 										""
 									)}
 									{meta_title ? (
 										<MenuItem action={this.copyMetaTitle}>
-											{this.context.action_copy_meta_title}
+											{tr("Copy meta title")}
 										</MenuItem>
 									) : (
 										""
 									)}
 									{file_title ? (
 										<MenuItem action={this.copyFileTitle}>
-											{this.context.action_copy_file_title}
+											{tr("Copy file title")}
 										</MenuItem>
 									) : (
 										""
 									)}
 									<MenuItem action={this.copyFilePath}>
-										{this.context.action_copy_path}
+										{tr("Copy path")}
 									</MenuItem>
 									<MenuItem action={this.copyVideoID}>
-										{this.context.action_copy_video_id}
+										{tr("Copy video ID")}
 									</MenuItem>
 									{data.found ? (
 										<MenuItem action={this.renameVideo}>
-											{this.context.text_rename_video}
+											{tr("Rename video")}
 										</MenuItem>
 									) : (
 										""
 									)}
 									{data.found ? (
 										<MenuItem action={this.moveVideo}>
-											{
-												this.context
-													.action_move_video_to_another_folder
-											}
+											{tr("Move video to another folder ...")}
 										</MenuItem>
 									) : (
 										""
@@ -154,14 +149,14 @@ export class Video extends React.Component {
 									)}
 									{groupedBySimilarityID ? (
 										<MenuItem action={this.dismissSimilarity}>
-											{this.context.action_dismiss_similarity}
+											{tr("Dismiss similarity")}
 										</MenuItem>
 									) : (
 										""
 									)}
 									{data.similarity_id !== null ? (
 										<MenuItem action={this.resetSimilarity}>
-											{this.context.action_reset_similarity}
+											{tr("Reset similarity")}
 										</MenuItem>
 									) : (
 										""
@@ -170,8 +165,8 @@ export class Video extends React.Component {
 										className="red-flag"
 										action={this.deleteVideo}>
 										{data.found
-											? this.context.text_delete_video
-											: this.context.text_delete_entry}
+											? tr("Delete video")
+											: tr("Delete entry")}
 									</MenuItem>
 								</MenuPack>
 								<div title={data.video_id}>
@@ -206,11 +201,9 @@ export class Video extends React.Component {
 									className="prepend clickable"
 									onClick={this.deleteVideo}>
 									<code className="text-not-found">
-										{this.context.text_not_found_uppercase}
+										{tr("NOT FOUND")}
 									</code>
-									<code className="text-delete">
-										{this.context.text_delete}
-									</code>
+									<code className="text-delete">{tr("DELETE")}</code>
 								</div>
 							)}
 							<div
@@ -271,21 +264,21 @@ export class Video extends React.Component {
 							<strong className={cc(common.height)}>{data.height}</strong>{" "}
 							@{" "}
 							<span className={cc(common.frame_rate)}>
-								{data.frame_rate} {this.context.suffix_fps}
+								{data.frame_rate} {tr("fps")}
 							</span>
 							,{" "}
 							<span className={cc(common.bit_depth)}>
-								{data.bit_depth} {this.context.text_bits}
+								{data.bit_depth} {tr("bits")}
 							</span>{" "}
 							|{" "}
 							<span className={cc(common.sample_rate)}>
-								{data.sample_rate} {this.context.suffix_hertz}
+								{data.sample_rate} {tr("Hz")}
 							</span>
 							,{" "}
 							<span
 								title={data.audio_bit_rate}
 								className={cc(common.audio_bit_rate)}>
-								{audio_bit_rate} {this.context.suffix_kbps}
+								{audio_bit_rate} {tr("Kb/s")}
 							</span>{" "}
 							|{" "}
 							<strong className={cc(common.length)}>{data.length}</strong>{" "}
@@ -321,12 +314,12 @@ export class Video extends React.Component {
 						)}
 						{!groupedBySimilarityID ? (
 							<div>
-								<strong>{this.context.text_similarity_id}:</strong>{" "}
+								<strong>{tr("Similarity ID")}:</strong>{" "}
 								<code>
 									{data.similarity_id === null
-										? this.context.text_not_yet_compared
+										? tr("(not yet compared)")
 										: data.similarity_id === -1
-										? this.context.text_no_similarities
+										? tr("(no similarities)")
 										: data.similarity_id}
 								</code>
 							</div>
@@ -343,9 +336,7 @@ export class Video extends React.Component {
 											data.moves[0].video_id
 										)
 									}>
-									<strong>
-										{this.context.text_confirm_move_to}:
-									</strong>
+									<strong>{tr("Confirm move to")}:</strong>
 									<br />
 									<code>{data.moves[0].filename}</code>
 								</button>
@@ -368,7 +359,7 @@ export class Video extends React.Component {
 			<div
 				className={"video horizontal" + (data.found ? " found" : " not-found")}>
 				<div className="image p-2">
-					<div className="no-thumbnail">{this.context.text_no_thumbnail}</div>
+					<div className="no-thumbnail">{tr("no thumbnail")}</div>
 				</div>
 				<div className="video-details horizontal flex-grow-1">
 					<div className="info p-2">
@@ -377,29 +368,29 @@ export class Video extends React.Component {
 								<MenuPack title={`${Characters.SETTINGS}`}>
 									{data.found ? (
 										<MenuItem action={this.openVideo}>
-											{this.context.action_open_file}
+											{tr("Open file")}
 										</MenuItem>
 									) : (
 										<div className="text-center bold">
-											{this.context.text_not_found}
+											{tr("(not found)")}
 										</div>
 									)}
 									{data.found ? (
 										<MenuItem action={this.openContainingFolder}>
-											{this.context.action_open_containing_folder}
+											{tr("Open containing folder")}
 										</MenuItem>
 									) : (
 										""
 									)}
 									<MenuItem action={this.copyFileTitle}>
-										{this.context.action_copy_file_title}
+										{tr("Copy file title")}
 									</MenuItem>
 									<MenuItem action={this.copyFilePath}>
-										{this.context.action_copy_path}
+										{tr("Copy path")}
 									</MenuItem>
 									{data.found ? (
 										<MenuItem action={this.renameVideo}>
-											{this.context.text_rename_video}
+											{tr("Rename video")}
 										</MenuItem>
 									) : (
 										""
@@ -408,8 +399,8 @@ export class Video extends React.Component {
 										className="red-flag"
 										action={this.deleteVideo}>
 										{data.found
-											? this.context.text_delete_video
-											: this.context.text_delete_entry}
+											? tr("Delete video")
+											: tr("Delete entry")}
 									</MenuItem>
 								</MenuPack>
 								<div>
@@ -428,11 +419,9 @@ export class Video extends React.Component {
 									className="prepend clickable"
 									onClick={this.deleteVideo}>
 									<code className="text-not-found">
-										{this.context.text_not_found_uppercase}
+										{tr("NOT FOUND")}
 									</code>
-									<code className="text-delete">
-										{this.context.text_delete}
-									</code>
+									<code className="text-delete">{tr("DELETE")}</code>
 								</div>
 							)}
 							<div
@@ -462,7 +451,7 @@ export class Video extends React.Component {
 						</div>
 						<div className="horizontal">
 							<div>
-								<strong>{this.context.text_video_unreadable}:</strong>
+								<strong>{tr("Video unreadable")}:</strong>
 							</div>
 							<div>
 								<div className="property">
@@ -524,9 +513,7 @@ export class Video extends React.Component {
 										</span>
 									))
 								) : (
-									<span className="no-value">
-										{this.context.text_no_value}
-									</span>
+									<span className="no-value">{tr("no value")}</span>
 								)}
 							</Collapsable>
 						</div>
@@ -541,7 +528,7 @@ export class Video extends React.Component {
 			.then(() => {
 				APP_STATE.videoHistory.add(this.props.data.filename);
 				this.props.onInfo(
-					this.context.status_opened.format({
+					tr("Opened: {path}", {
 						path: this.props.data.filename,
 					})
 				);
@@ -549,7 +536,7 @@ export class Video extends React.Component {
 			.catch((error) => {
 				backend_error(error);
 				this.props.onInfo(
-					this.context.status_unable_to_open.format({
+					tr("Unable to open: {path}", {
 						path: this.props.data.filename,
 					})
 				);
@@ -570,7 +557,7 @@ export class Video extends React.Component {
 					)
 						.then(() =>
 							this.props.onInfo(
-								this.context.status_properties_updated.format({
+								tr("Properties updated: {path}", {
 									path: data.filename,
 								}),
 								true
@@ -587,11 +574,13 @@ export class Video extends React.Component {
 		const thumbnail_path = this.props.data.thumbnail_path;
 		Fancybox.load(
 			<Dialog
-				title={this.context.form_title_confirm_delete_video}
-				yes={this.context.text_delete}
+				title={tr("Confirm deletion")}
+				yes={tr("DELETE")}
 				action={this.reallyDeleteVideo}>
 				<div className="form-delete-video text-center bold">
-					{this.context.form_head_confirm_delete_video.markdown()}
+					{tr(
+						"## Are you sure you want to !!definitely!! delete this video?"
+					).markdown()}
 					<div className="details overflow-auto px-2 py-1">
 						<code id="filename">{filename}</code>
 					</div>
@@ -603,9 +592,7 @@ export class Video extends React.Component {
 								src={thumbnail_path}
 							/>
 						) : (
-							<div className="no-thumbnail">
-								{this.context.text_no_thumbnail}
-							</div>
+							<div className="no-thumbnail">{tr("no thumbnail")}</div>
 						)}
 					</p>
 				</div>
@@ -618,11 +605,15 @@ export class Video extends React.Component {
 		const thumbnail_path = this.props.data.thumbnail_path;
 		Fancybox.load(
 			<Dialog
-				title={this.context.action_dismiss_similarity}
-				yes={this.context.text_dismiss}
+				title={tr("Dismiss similarity")}
+				yes={tr("dismiss")}
 				action={this.reallyDismissSimilarity}>
 				<div className="form-delete-video text-center bold">
-					<h2>{this.context.form_head_confirm_dismiss}</h2>
+					<h2>
+						{tr(
+							"Are you sure you want to dismiss similarity for this video?"
+						)}
+					</h2>
 					<div className="details overflow-auto px-2 py-1">
 						<code id="filename">{filename}</code>
 					</div>
@@ -634,9 +625,7 @@ export class Video extends React.Component {
 								src={thumbnail_path}
 							/>
 						) : (
-							<div className="no-thumbnail">
-								{this.context.text_no_thumbnail}
-							</div>
+							<div className="no-thumbnail">{tr("no thumbnail")}</div>
 						)}
 					</p>
 				</div>
@@ -649,11 +638,15 @@ export class Video extends React.Component {
 		const thumbnail_path = this.props.data.thumbnail_path;
 		Fancybox.load(
 			<Dialog
-				title={this.context.action_reset_similarity}
-				yes={this.context.text_reset}
+				title={tr("Reset similarity")}
+				yes={tr("reset")}
 				action={this.reallyResetSimilarity}>
 				<div className="form-delete-video text-center bold">
-					{this.context.form_content_reset_similarity.markdown()}
+					{tr(`
+## Are you sure you want to reset similarity for this video?
+
+### Video will then be re-compared at next similarity search
+`).markdown()}
 					<div className="details overflow-auto px-2 py-1">
 						<code id="filename">{filename}</code>
 					</div>
@@ -665,9 +658,7 @@ export class Video extends React.Component {
 								src={thumbnail_path}
 							/>
 						) : (
-							<div className="no-thumbnail">
-								{this.context.text_no_thumbnail}
-							</div>
+							<div className="no-thumbnail">{tr("no thumbnail")}</div>
 						)}
 					</p>
 				</div>
@@ -684,7 +675,7 @@ export class Video extends React.Component {
 		python_call("delete_video", this.props.data.video_id)
 			.then(() =>
 				this.props.onInfo(
-					this.context.status_video_deleted.format({
+					tr("Video deleted! {path}", {
 						path: this.props.data.filename,
 					}),
 					true
@@ -697,7 +688,7 @@ export class Video extends React.Component {
 		python_call("dismiss_similarity", this.props.data.video_id)
 			.then(() =>
 				this.props.onInfo(
-					this.context.status_video_similarity_cancelled.format({
+					tr("Current similarity cancelled: {path}", {
 						path: this.props.data.filename,
 					}),
 					true
@@ -710,7 +701,7 @@ export class Video extends React.Component {
 		python_call("reset_similarity", this.props.data.video_id)
 			.then(() =>
 				this.props.onInfo(
-					this.context.status_video_similarity_reset.format({
+					tr("Current similarity reset: {path}", {
 						path: this.props.data.filename,
 					}),
 					true
@@ -722,9 +713,7 @@ export class Video extends React.Component {
 	openContainingFolder() {
 		python_call("open_containing_folder", this.props.data.video_id)
 			.then((folder) => {
-				this.props.onInfo(
-					this.context.status_opened_folder.format({ path: folder })
-				);
+				this.props.onInfo(tr("Opened folder: {path}", { path: folder }));
 			})
 			.catch(backend_error);
 	}
@@ -732,14 +721,10 @@ export class Video extends React.Component {
 	copyMetaTitle() {
 		const text = this.props.data.title;
 		python_call("clipboard", text)
-			.then(() =>
-				this.props.onInfo(
-					this.context.status_copied_to_clipboard.format({ text })
-				)
-			)
+			.then(() => this.props.onInfo(tr("Copied to clipboard: {text}", { text })))
 			.catch(() =>
 				this.props.onInfo(
-					this.context.status_cannot_copy_meta_title.format({ text })
+					tr("Cannot copy meta title to clipboard: {text}", { text })
 				)
 			);
 	}
@@ -747,14 +732,10 @@ export class Video extends React.Component {
 	copyFileTitle() {
 		const text = this.props.data.file_title;
 		python_call("clipboard", text)
-			.then(() =>
-				this.props.onInfo(
-					this.context.status_copied_to_clipboard.format({ text })
-				)
-			)
+			.then(() => this.props.onInfo(tr("Copied to clipboard: {text}", { text })))
 			.catch(() =>
 				this.props.onInfo(
-					this.context.status_cannot_copy_file_title.format({ text })
+					tr("Cannot copy meta title to clipboard: {text}", { text })
 				)
 			);
 	}
@@ -763,13 +744,13 @@ export class Video extends React.Component {
 		python_call("clipboard_video_path", this.props.data.video_id).then(() =>
 			this.props
 				.onInfo(
-					this.context.status_copied_to_clipboard.format({
+					tr("Copied to clipboard: {text}", {
 						text: this.props.data.filename,
 					})
 				)
 				.catch(() =>
 					this.props.onInfo(
-						this.context.status_cannot_copy_file_path.format({
+						tr("Cannot copy file path to clipboard: {text}", {
 							text: this.props.data.filename,
 						})
 					)
@@ -781,14 +762,14 @@ export class Video extends React.Component {
 		python_call("clipboard", this.props.data.video_id)
 			.then(() =>
 				this.props.onInfo(
-					this.context.status_copied_to_clipboard.format({
+					tr("Copied to clipboard: {text}", {
 						text: this.props.data.video_id,
 					})
 				)
 			)
 			.catch(() =>
 				this.props.onInfo(
-					this.context.status_cannot_copy_video_id.format({
+					tr("Cannot copy video ID to clipboard: {text}", {
 						text: this.props.data.video_id,
 					})
 				)
@@ -799,7 +780,7 @@ export class Video extends React.Component {
 		python_call("set_video_moved", srcID, dstID)
 			.then(() =>
 				this.props.onInfo(
-					this.context.status_moved.format({
+					tr("Moved: {path}", {
 						path: this.props.data.filename,
 					}),
 					true
@@ -813,8 +794,8 @@ export class Video extends React.Component {
 		const title = this.props.data.file_title;
 		Fancybox.load(
 			<GenericFormRename
-				title={this.context.form_title_rename_video}
-				header={this.context.text_rename_video}
+				title={tr("Rename video")}
+				header={tr("Rename video")}
 				description={filename}
 				data={title}
 				onClose={(newTitle) => {

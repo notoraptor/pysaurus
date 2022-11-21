@@ -17,12 +17,12 @@ export class PathsInput extends React.Component {
 						<tr>
 							<td>
 								<button className="block" onClick={this.addFolder}>
-									{this.context.gui_database_add_folder}
+									{tr("Add folder")}
 								</button>
 							</td>
 							<td>
 								<button className="block" onClick={this.addFile}>
-									{this.context.gui_database_add_file}
+									{tr("Add file")}
 								</button>
 							</td>
 						</tr>

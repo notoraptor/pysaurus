@@ -17,11 +17,11 @@ export class FormDatabaseEditFolders extends React.Component {
 	render() {
 		return (
 			<Dialog
-				title={this.context.form_title_edit_database_folders.format({
+				title={tr("Edit {count} folders for database: {name}", {
 					count: this.state.paths.length,
 					name: this.props.database.name,
 				})}
-				yes={this.context.text_save}
+				yes={tr("save")}
 				action={this.onClose}>
 				<PathsInput onUpdate={this.onUpdate} data={this.state.paths} />
 			</Dialog>

@@ -28,12 +28,16 @@ System.register(["../dialogs/Dialog.js", "../language.js"], function (_export, _
 
         render() {
           return /*#__PURE__*/React.createElement(Dialog, {
-            title: this.context.form_title_new_prediction_property,
-            yes: this.context.text_create,
+            title: tr("New prediction property"),
+            yes: tr("create"),
             action: this.onClose
           }, /*#__PURE__*/React.createElement("div", {
             className: "form-rename text-center"
-          }, this.context.form_content_new_prediction_property.markdown(), /*#__PURE__*/React.createElement("p", {
+          }, tr(`
+# Property name:
+
+## Final name will be \`<?{property name}>\`
+`).markdown(), /*#__PURE__*/React.createElement("p", {
             className: "form"
           }, /*#__PURE__*/React.createElement("input", {
             type: "text",

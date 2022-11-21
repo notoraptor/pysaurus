@@ -33,13 +33,19 @@ System.register(["../utils/constants.js", "../dialogs/FancyBox.js", "../language
 
         render() {
           return /*#__PURE__*/React.createElement(FancyBox, {
-            title: this.context.form_title_sort_videos
+            title: tr("Sort videos")
           }, /*#__PURE__*/React.createElement("div", {
             id: "form-videos-sort",
             className: "form absolute-plain vertical text-center p-2"
           }, /*#__PURE__*/React.createElement("div", {
             className: "help mb-4"
-          }, this.context.form_content_sort_videos.markdown()), /*#__PURE__*/React.createElement("div", {
+          }, tr(`
+Click on "+" to add a new sorting criterion.
+
+Click on "-" to remove a sorting criterion.
+
+Click on "sort" to validate, or close dialog to cancel.
+`).markdown()), /*#__PURE__*/React.createElement("div", {
             id: "sorting",
             className: "flex-grow-1 overflow-auto"
           }, this.renderSorting()), /*#__PURE__*/React.createElement("p", {

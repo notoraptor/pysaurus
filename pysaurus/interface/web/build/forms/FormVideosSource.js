@@ -80,14 +80,14 @@ System.register(["../dialogs/FancyBox.js", "../language.js"], function (_export,
         render() {
           return /*#__PURE__*/React.createElement(FancyBox, {
             title: "Select Videos"
-          }, this.renderTree(this.props.tree), /*#__PURE__*/React.createElement("p", null, this.state.paths.length ? this.context.form_source_currently_selected : this.context.form_source_none_selected), this.state.paths.length ? /*#__PURE__*/React.createElement("ul", null, this.state.paths.map((path, index) => /*#__PURE__*/React.createElement("li", {
+          }, this.renderTree(this.props.tree), /*#__PURE__*/React.createElement("p", null, this.state.paths.length ? tr("Currently selected:") : tr("Currently selected: none")), this.state.paths.length ? /*#__PURE__*/React.createElement("ul", null, this.state.paths.map((path, index) => /*#__PURE__*/React.createElement("li", {
             key: index
           }, /*#__PURE__*/React.createElement("strong", null, path.replace(/-/g, "."))))) : "", /*#__PURE__*/React.createElement("p", {
             className: "submit mx-1 my-4"
           }, /*#__PURE__*/React.createElement("button", {
             className: "submit block",
             onClick: this.submit
-          }, this.context.text_select)));
+          }, tr("select"))));
         }
 
         renderTree(tree, prefix = "") {
@@ -115,7 +115,7 @@ System.register(["../dialogs/FancyBox.js", "../language.js"], function (_export,
               checked: !hasPath
             }), " ", /*#__PURE__*/React.createElement("label", {
               htmlFor: entryName + "1"
-            }, this.context.form_source_develop)), hasPath ? "" : this.renderTree(subTree, entryName)) : /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("label", {
+            }, tr("develop"))), hasPath ? "" : this.renderTree(subTree, entryName)) : /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("label", {
               htmlFor: entryName + "0"
             }, /*#__PURE__*/React.createElement("strong", null, name)), " ", /*#__PURE__*/React.createElement("input", {
               type: "checkbox",

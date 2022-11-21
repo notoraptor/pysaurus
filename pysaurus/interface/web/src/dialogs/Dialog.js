@@ -17,12 +17,12 @@ export class Dialog extends React.Component {
 					<div className="buttons flex-shrink-0 horizontal">
 						<div className="button flex-grow-1 p-2 yes">
 							<button className="block bold" onClick={this.yes}>
-								{this.props.yes || this.context.word_yes}
+								{this.props.yes || tr("yes")}
 							</button>
 						</div>
 						<div className="button flex-grow-1 p-2 no">
 							<button className="block bold" onClick={Fancybox.close}>
-								{this.props.no || this.context.word_cancel}
+								{this.props.no || tr("cancel")}
 							</button>
 						</div>
 					</div>

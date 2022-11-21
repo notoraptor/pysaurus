@@ -20,7 +20,7 @@ System.register([], function (_export, _context) {
 
           for (let name of Object.keys(actions)) {
             const shortcut = actions[name].shortcut.str;
-            if (shortcutToName.hasOwnProperty(shortcut)) throw new Error(context.error_duplicated_shortcut.format({
+            if (shortcutToName.hasOwnProperty(shortcut)) throw new Error(tr("Duplicated shortcut {shortcut} for {name1} and {name2}", {
               shortcut: shortcut,
               name1: shortcutToName[shortcut],
               name2: name

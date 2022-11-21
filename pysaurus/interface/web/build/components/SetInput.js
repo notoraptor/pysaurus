@@ -174,7 +174,7 @@ System.register(["../language.js", "../utils/functions.js"], function (_export, 
           const controller = this.props.controller;
 
           try {
-            if (controller.has(value)) window.alert(this.context.alert_value_already_in_list.format({
+            if (controller.has(value)) window.alert(tr("Value already in list: {value}", {
               value
             }));else this.setState({
               add: ""

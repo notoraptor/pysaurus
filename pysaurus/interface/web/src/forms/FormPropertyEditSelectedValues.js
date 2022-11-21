@@ -27,12 +27,12 @@ export class FormPropertyEditSelectedValues extends React.Component {
 		const values = this.props.values;
 		let title;
 		if (values.length === 1)
-			title = this.context.form_title_edit_prop_val.format({
+			title = tr('Property "{name}", value "{value}"', {
 				name: this.props.name,
 				value: values[0],
 			});
 		else
-			title = this.context.form_title_edit_prop_vals.format({
+			title = tr('Property "{name}", {count} values"', {
 				name: this.props.name,
 				count: values.length,
 			});
@@ -92,12 +92,17 @@ export class FormPropertyEditSelectedValues extends React.Component {
 	renderDelete() {
 		return (
 			<div className="flex-grow-1">
-				{this.context.form_content_delete_prop_val
-					.format({
+				{tr(
+					`
+### Are you sure you want to delete property value
+
+### "{name}" / {value} ?
+`,
+					{
 						name: this.props.name,
 						value: this.valuesToString(),
-					})
-					.markdown()}
+					}
+				).markdown()}
 			</div>
 		);
 	}
@@ -138,7 +143,7 @@ export class FormPropertyEditSelectedValues extends React.Component {
 		return (
 			<div className="flex-grow-1">
 				<h3>
-					{this.context.form_content_edit_prop_val.format({
+					{tr('Edit property "{name}" / {value}', {
 						name: this.props.name,
 						value: this.valuesToString(),
 					})}
@@ -153,11 +158,14 @@ export class FormPropertyEditSelectedValues extends React.Component {
 		return (
 			<div className="flex-grow-1">
 				<h3>
-					{this.context.form_content_move_prop_val.format({
-						name: this.props.name,
-						value: this.valuesToString(),
-						type: def.type,
-					})}
+					{tr(
+						'Move property "{name}" / {value} to another property of type "{type}".',
+						{
+							name: this.props.name,
+							value: this.valuesToString(),
+							type: def.type,
+						}
+					)}
 				</h3>
 				<div>
 					<select value={this.state.move} onChange={this.onMove}>
@@ -229,7 +237,7 @@ export class FormPropertyEditSelectedValues extends React.Component {
 
 	valuesToString() {
 		if (this.props.values.length === 1) return this.props.values[0].toString();
-		return this.context.form_summary_values.format({
+		return tr("{count} values ({first} ... {last})", {
 			count: this.props.values.length,
 			first: this.props.values[0],
 			last: this.props.values[this.props.values.length - 1],

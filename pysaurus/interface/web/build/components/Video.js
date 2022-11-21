@@ -92,7 +92,7 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
             src: data.thumbnail_path
           }) : /*#__PURE__*/React.createElement("div", {
             className: "no-thumbnail"
-          }, this.context.text_no_thumbnail)), /*#__PURE__*/React.createElement("div", {
+          }, tr("no thumbnail"))), /*#__PURE__*/React.createElement("div", {
             className: "video-details horizontal flex-grow-1"
           }, this.renderProperties(), /*#__PURE__*/React.createElement("div", {
             className: "info p-2"
@@ -104,23 +104,23 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
             title: `${Characters.SETTINGS}`
           }, data.found ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.openVideo
-          }, this.context.action_open_file) : /*#__PURE__*/React.createElement("div", {
+          }, tr("Open file")) : /*#__PURE__*/React.createElement("div", {
             className: "text-center bold"
-          }, this.context.text_not_found), data.found ? /*#__PURE__*/React.createElement(MenuItem, {
+          }, tr("(not found)")), data.found ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.openContainingFolder
-          }, this.context.action_open_containing_folder) : "", meta_title ? /*#__PURE__*/React.createElement(MenuItem, {
+          }, tr("Open containing folder")) : "", meta_title ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.copyMetaTitle
-          }, this.context.action_copy_meta_title) : "", file_title ? /*#__PURE__*/React.createElement(MenuItem, {
+          }, tr("Copy meta title")) : "", file_title ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.copyFileTitle
-          }, this.context.action_copy_file_title) : "", /*#__PURE__*/React.createElement(MenuItem, {
+          }, tr("Copy file title")) : "", /*#__PURE__*/React.createElement(MenuItem, {
             action: this.copyFilePath
-          }, this.context.action_copy_path), /*#__PURE__*/React.createElement(MenuItem, {
+          }, tr("Copy path")), /*#__PURE__*/React.createElement(MenuItem, {
             action: this.copyVideoID
-          }, this.context.action_copy_video_id), data.found ? /*#__PURE__*/React.createElement(MenuItem, {
+          }, tr("Copy video ID")), data.found ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.renameVideo
-          }, this.context.text_rename_video) : "", data.found ? /*#__PURE__*/React.createElement(MenuItem, {
+          }, tr("Rename video")) : "", data.found ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.moveVideo
-          }, this.context.action_move_video_to_another_folder) : "", this.props.groupedByMoves && data.moves.length ? /*#__PURE__*/React.createElement(Menu, {
+          }, tr("Move video to another folder ...")) : "", this.props.groupedByMoves && data.moves.length ? /*#__PURE__*/React.createElement(Menu, {
             title: "Confirm move to ..."
           }, data.moves.map((dst, index) => /*#__PURE__*/React.createElement(MenuItem, {
             key: index,
@@ -128,12 +128,12 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
             action: () => this.confirmMove(data.video_id, dst.video_id)
           }, /*#__PURE__*/React.createElement("code", null, dst.filename)))) : "", groupedBySimilarityID ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.dismissSimilarity
-          }, this.context.action_dismiss_similarity) : "", data.similarity_id !== null ? /*#__PURE__*/React.createElement(MenuItem, {
+          }, tr("Dismiss similarity")) : "", data.similarity_id !== null ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.resetSimilarity
-          }, this.context.action_reset_similarity) : "", /*#__PURE__*/React.createElement(MenuItem, {
+          }, tr("Reset similarity")) : "", /*#__PURE__*/React.createElement(MenuItem, {
             className: "red-flag",
             action: this.deleteVideo
-          }, data.found ? this.context.text_delete_video : this.context.text_delete_entry)), /*#__PURE__*/React.createElement("div", {
+          }, data.found ? tr("Delete video") : tr("Delete entry"))), /*#__PURE__*/React.createElement("div", {
             title: data.video_id
           }, /*#__PURE__*/React.createElement("input", {
             type: "checkbox",
@@ -153,9 +153,9 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
             onClick: this.deleteVideo
           }, /*#__PURE__*/React.createElement("code", {
             className: "text-not-found"
-          }, this.context.text_not_found_uppercase), /*#__PURE__*/React.createElement("code", {
+          }, tr("NOT FOUND")), /*#__PURE__*/React.createElement("code", {
             className: "text-delete"
-          }, this.context.text_delete)), /*#__PURE__*/React.createElement("div", {
+          }, tr("DELETE"))), /*#__PURE__*/React.createElement("div", {
             className: `filename ${alreadyOpened ? "already-opened" : ""}`
           }, /*#__PURE__*/React.createElement("code", _extends({}, data.found ? {
             className: "clickable"
@@ -188,14 +188,14 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
             className: cc(common.height)
           }, data.height), " ", "@", " ", /*#__PURE__*/React.createElement("span", {
             className: cc(common.frame_rate)
-          }, data.frame_rate, " ", this.context.suffix_fps), ",", " ", /*#__PURE__*/React.createElement("span", {
+          }, data.frame_rate, " ", tr("fps")), ",", " ", /*#__PURE__*/React.createElement("span", {
             className: cc(common.bit_depth)
-          }, data.bit_depth, " ", this.context.text_bits), " ", "|", " ", /*#__PURE__*/React.createElement("span", {
+          }, data.bit_depth, " ", tr("bits")), " ", "|", " ", /*#__PURE__*/React.createElement("span", {
             className: cc(common.sample_rate)
-          }, data.sample_rate, " ", this.context.suffix_hertz), ",", " ", /*#__PURE__*/React.createElement("span", {
+          }, data.sample_rate, " ", tr("Hz")), ",", " ", /*#__PURE__*/React.createElement("span", {
             title: data.audio_bit_rate,
             className: cc(common.audio_bit_rate)
-          }, audio_bit_rate, " ", this.context.suffix_kbps), " ", "|", " ", /*#__PURE__*/React.createElement("strong", {
+          }, audio_bit_rate, " ", tr("Kb/s")), " ", "|", " ", /*#__PURE__*/React.createElement("strong", {
             className: cc(common.length)
           }, data.length), " ", "| ", /*#__PURE__*/React.createElement("code", {
             className: cc(common.date)
@@ -206,10 +206,10 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
           }, errors.map((element, elementIndex) => /*#__PURE__*/React.createElement("span", {
             className: "value",
             key: elementIndex
-          }, element.toString()))))) : "", !groupedBySimilarityID ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, this.context.text_similarity_id, ":"), " ", /*#__PURE__*/React.createElement("code", null, data.similarity_id === null ? this.context.text_not_yet_compared : data.similarity_id === -1 ? this.context.text_no_similarities : data.similarity_id)) : "", this.props.groupedByMoves && data.moves.length === 1 ? /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("button", {
+          }, element.toString()))))) : "", !groupedBySimilarityID ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, tr("Similarity ID"), ":"), " ", /*#__PURE__*/React.createElement("code", null, data.similarity_id === null ? tr("(not yet compared)") : data.similarity_id === -1 ? tr("(no similarities)") : data.similarity_id)) : "", this.props.groupedByMoves && data.moves.length === 1 ? /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("button", {
             className: "block",
             onClick: () => this.confirmMove(data.video_id, data.moves[0].video_id)
-          }, /*#__PURE__*/React.createElement("strong", null, this.context.text_confirm_move_to, ":"), /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("code", null, data.moves[0].filename))) : "")));
+          }, /*#__PURE__*/React.createElement("strong", null, tr("Confirm move to"), ":"), /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("code", null, data.moves[0].filename))) : "")));
         }
 
         renderVideoState() {
@@ -223,7 +223,7 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
             className: "image p-2"
           }, /*#__PURE__*/React.createElement("div", {
             className: "no-thumbnail"
-          }, this.context.text_no_thumbnail)), /*#__PURE__*/React.createElement("div", {
+          }, tr("no thumbnail"))), /*#__PURE__*/React.createElement("div", {
             className: "video-details horizontal flex-grow-1"
           }, /*#__PURE__*/React.createElement("div", {
             className: "info p-2"
@@ -235,20 +235,20 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
             title: `${Characters.SETTINGS}`
           }, data.found ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.openVideo
-          }, this.context.action_open_file) : /*#__PURE__*/React.createElement("div", {
+          }, tr("Open file")) : /*#__PURE__*/React.createElement("div", {
             className: "text-center bold"
-          }, this.context.text_not_found), data.found ? /*#__PURE__*/React.createElement(MenuItem, {
+          }, tr("(not found)")), data.found ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.openContainingFolder
-          }, this.context.action_open_containing_folder) : "", /*#__PURE__*/React.createElement(MenuItem, {
+          }, tr("Open containing folder")) : "", /*#__PURE__*/React.createElement(MenuItem, {
             action: this.copyFileTitle
-          }, this.context.action_copy_file_title), /*#__PURE__*/React.createElement(MenuItem, {
+          }, tr("Copy file title")), /*#__PURE__*/React.createElement(MenuItem, {
             action: this.copyFilePath
-          }, this.context.action_copy_path), data.found ? /*#__PURE__*/React.createElement(MenuItem, {
+          }, tr("Copy path")), data.found ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.renameVideo
-          }, this.context.text_rename_video) : "", /*#__PURE__*/React.createElement(MenuItem, {
+          }, tr("Rename video")) : "", /*#__PURE__*/React.createElement(MenuItem, {
             className: "red-flag",
             action: this.deleteVideo
-          }, data.found ? this.context.text_delete_video : this.context.text_delete_entry)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", {
+          }, data.found ? tr("Delete video") : tr("Delete entry"))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", {
             className: "title"
           }, data.file_title)))), /*#__PURE__*/React.createElement("div", {
             className: "filename-line" + (data.found ? "" : " horizontal")
@@ -257,9 +257,9 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
             onClick: this.deleteVideo
           }, /*#__PURE__*/React.createElement("code", {
             className: "text-not-found"
-          }, this.context.text_not_found_uppercase), /*#__PURE__*/React.createElement("code", {
+          }, tr("NOT FOUND")), /*#__PURE__*/React.createElement("code", {
             className: "text-delete"
-          }, this.context.text_delete)), /*#__PURE__*/React.createElement("div", {
+          }, tr("DELETE"))), /*#__PURE__*/React.createElement("div", {
             className: `filename ${alreadyOpened ? "already-opened" : ""}`
           }, /*#__PURE__*/React.createElement("code", _extends({}, data.found ? {
             className: "clickable"
@@ -273,7 +273,7 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
             title: data.file_size
           }, data.size)), " | ", /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("code", null, data.date))), /*#__PURE__*/React.createElement("div", {
             className: "horizontal"
-          }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, this.context.text_video_unreadable, ":")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+          }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, tr("Video unreadable"), ":")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
             className: "property"
           }, errors.map((element, elementIndex) => /*#__PURE__*/React.createElement("span", {
             className: "value",
@@ -307,19 +307,19 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
               onClick: () => this.props.onSelectPropertyValue(name, element)
             }, element.toString())) : /*#__PURE__*/React.createElement("span", {
               className: "no-value"
-            }, this.context.text_no_value)));
+            }, tr("no value"))));
           }));
         }
 
         openVideo() {
           python_call("open_video", this.props.data.video_id).then(() => {
             APP_STATE.videoHistory.add(this.props.data.filename);
-            this.props.onInfo(this.context.status_opened.format({
+            this.props.onInfo(tr("Opened: {path}", {
               path: this.props.data.filename
             }));
           }).catch(error => {
             backend_error(error);
-            this.props.onInfo(this.context.status_unable_to_open.format({
+            this.props.onInfo(tr("Unable to open: {path}", {
               path: this.props.data.filename
             }));
           });
@@ -331,7 +331,7 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
             data: data,
             definitions: this.props.propDefs,
             onClose: properties => {
-              python_call("set_video_properties", this.props.data.video_id, properties).then(() => this.props.onInfo(this.context.status_properties_updated.format({
+              python_call("set_video_properties", this.props.data.video_id, properties).then(() => this.props.onInfo(tr("Properties updated: {path}", {
                 path: data.filename
               }), true)).catch(backend_error);
             }
@@ -342,12 +342,12 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
           const filename = this.props.data.filename;
           const thumbnail_path = this.props.data.thumbnail_path;
           Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
-            title: this.context.form_title_confirm_delete_video,
-            yes: this.context.text_delete,
+            title: tr("Confirm deletion"),
+            yes: tr("DELETE"),
             action: this.reallyDeleteVideo
           }, /*#__PURE__*/React.createElement("div", {
             className: "form-delete-video text-center bold"
-          }, this.context.form_head_confirm_delete_video.markdown(), /*#__PURE__*/React.createElement("div", {
+          }, tr("## Are you sure you want to !!definitely!! delete this video?").markdown(), /*#__PURE__*/React.createElement("div", {
             className: "details overflow-auto px-2 py-1"
           }, /*#__PURE__*/React.createElement("code", {
             id: "filename"
@@ -357,19 +357,19 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
             src: thumbnail_path
           }) : /*#__PURE__*/React.createElement("div", {
             className: "no-thumbnail"
-          }, this.context.text_no_thumbnail)))));
+          }, tr("no thumbnail"))))));
         }
 
         dismissSimilarity() {
           const filename = this.props.data.filename;
           const thumbnail_path = this.props.data.thumbnail_path;
           Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
-            title: this.context.action_dismiss_similarity,
-            yes: this.context.text_dismiss,
+            title: tr("Dismiss similarity"),
+            yes: tr("dismiss"),
             action: this.reallyDismissSimilarity
           }, /*#__PURE__*/React.createElement("div", {
             className: "form-delete-video text-center bold"
-          }, /*#__PURE__*/React.createElement("h2", null, this.context.form_head_confirm_dismiss), /*#__PURE__*/React.createElement("div", {
+          }, /*#__PURE__*/React.createElement("h2", null, tr("Are you sure you want to dismiss similarity for this video?")), /*#__PURE__*/React.createElement("div", {
             className: "details overflow-auto px-2 py-1"
           }, /*#__PURE__*/React.createElement("code", {
             id: "filename"
@@ -379,19 +379,23 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
             src: thumbnail_path
           }) : /*#__PURE__*/React.createElement("div", {
             className: "no-thumbnail"
-          }, this.context.text_no_thumbnail)))));
+          }, tr("no thumbnail"))))));
         }
 
         resetSimilarity() {
           const filename = this.props.data.filename;
           const thumbnail_path = this.props.data.thumbnail_path;
           Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
-            title: this.context.action_reset_similarity,
-            yes: this.context.text_reset,
+            title: tr("Reset similarity"),
+            yes: tr("reset"),
             action: this.reallyResetSimilarity
           }, /*#__PURE__*/React.createElement("div", {
             className: "form-delete-video text-center bold"
-          }, this.context.form_content_reset_similarity.markdown(), /*#__PURE__*/React.createElement("div", {
+          }, tr(`
+## Are you sure you want to reset similarity for this video?
+
+### Video will then be re-compared at next similarity search
+`).markdown(), /*#__PURE__*/React.createElement("div", {
             className: "details overflow-auto px-2 py-1"
           }, /*#__PURE__*/React.createElement("code", {
             id: "filename"
@@ -401,7 +405,7 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
             src: thumbnail_path
           }) : /*#__PURE__*/React.createElement("div", {
             className: "no-thumbnail"
-          }, this.context.text_no_thumbnail)))));
+          }, tr("no thumbnail"))))));
         }
 
         deleteVideo() {
@@ -409,26 +413,26 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
         }
 
         reallyDeleteVideo() {
-          python_call("delete_video", this.props.data.video_id).then(() => this.props.onInfo(this.context.status_video_deleted.format({
+          python_call("delete_video", this.props.data.video_id).then(() => this.props.onInfo(tr("Video deleted! {path}", {
             path: this.props.data.filename
           }), true)).catch(backend_error);
         }
 
         reallyDismissSimilarity() {
-          python_call("dismiss_similarity", this.props.data.video_id).then(() => this.props.onInfo(this.context.status_video_similarity_cancelled.format({
+          python_call("dismiss_similarity", this.props.data.video_id).then(() => this.props.onInfo(tr("Current similarity cancelled: {path}", {
             path: this.props.data.filename
           }), true)).catch(backend_error);
         }
 
         reallyResetSimilarity() {
-          python_call("reset_similarity", this.props.data.video_id).then(() => this.props.onInfo(this.context.status_video_similarity_reset.format({
+          python_call("reset_similarity", this.props.data.video_id).then(() => this.props.onInfo(tr("Current similarity reset: {path}", {
             path: this.props.data.filename
           }), true)).catch(backend_error);
         }
 
         openContainingFolder() {
           python_call("open_containing_folder", this.props.data.video_id).then(folder => {
-            this.props.onInfo(this.context.status_opened_folder.format({
+            this.props.onInfo(tr("Opened folder: {path}", {
               path: folder
             }));
           }).catch(backend_error);
@@ -436,40 +440,40 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
 
         copyMetaTitle() {
           const text = this.props.data.title;
-          python_call("clipboard", text).then(() => this.props.onInfo(this.context.status_copied_to_clipboard.format({
+          python_call("clipboard", text).then(() => this.props.onInfo(tr("Copied to clipboard: {text}", {
             text
-          }))).catch(() => this.props.onInfo(this.context.status_cannot_copy_meta_title.format({
+          }))).catch(() => this.props.onInfo(tr("Cannot copy meta title to clipboard: {text}", {
             text
           })));
         }
 
         copyFileTitle() {
           const text = this.props.data.file_title;
-          python_call("clipboard", text).then(() => this.props.onInfo(this.context.status_copied_to_clipboard.format({
+          python_call("clipboard", text).then(() => this.props.onInfo(tr("Copied to clipboard: {text}", {
             text
-          }))).catch(() => this.props.onInfo(this.context.status_cannot_copy_file_title.format({
+          }))).catch(() => this.props.onInfo(tr("Cannot copy meta title to clipboard: {text}", {
             text
           })));
         }
 
         copyFilePath() {
-          python_call("clipboard_video_path", this.props.data.video_id).then(() => this.props.onInfo(this.context.status_copied_to_clipboard.format({
+          python_call("clipboard_video_path", this.props.data.video_id).then(() => this.props.onInfo(tr("Copied to clipboard: {text}", {
             text: this.props.data.filename
-          })).catch(() => this.props.onInfo(this.context.status_cannot_copy_file_path.format({
+          })).catch(() => this.props.onInfo(tr("Cannot copy file path to clipboard: {text}", {
             text: this.props.data.filename
           }))));
         }
 
         copyVideoID() {
-          python_call("clipboard", this.props.data.video_id).then(() => this.props.onInfo(this.context.status_copied_to_clipboard.format({
+          python_call("clipboard", this.props.data.video_id).then(() => this.props.onInfo(tr("Copied to clipboard: {text}", {
             text: this.props.data.video_id
-          }))).catch(() => this.props.onInfo(this.context.status_cannot_copy_video_id.format({
+          }))).catch(() => this.props.onInfo(tr("Cannot copy video ID to clipboard: {text}", {
             text: this.props.data.video_id
           })));
         }
 
         confirmMove(srcID, dstID) {
-          python_call("set_video_moved", srcID, dstID).then(() => this.props.onInfo(this.context.status_moved.format({
+          python_call("set_video_moved", srcID, dstID).then(() => this.props.onInfo(tr("Moved: {path}", {
             path: this.props.data.filename
           }), true)).catch(backend_error);
         }
@@ -478,8 +482,8 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
           const filename = this.props.data.filename;
           const title = this.props.data.file_title;
           Fancybox.load( /*#__PURE__*/React.createElement(GenericFormRename, {
-            title: this.context.form_title_rename_video,
-            header: this.context.text_rename_video,
+            title: tr("Rename video"),
+            header: tr("Rename video"),
             description: filename,
             data: title,
             onClose: newTitle => {

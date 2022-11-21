@@ -28,11 +28,11 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../components/PathsI
 
         render() {
           return /*#__PURE__*/React.createElement(Dialog, {
-            title: this.context.form_title_edit_database_folders.format({
+            title: tr("Edit {count} folders for database: {name}", {
               count: this.state.paths.length,
               name: this.props.database.name
             }),
-            yes: this.context.text_save,
+            yes: tr("save"),
             action: this.onClose
           }, /*#__PURE__*/React.createElement(PathsInput, {
             onUpdate: this.onUpdate,

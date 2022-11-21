@@ -28,8 +28,7 @@ class Monitoring extends React.Component {
 			current += step;
 		}
 		const percent = Math.round((current * 100) / total);
-		const title =
-			monitoring.title || this.context.text_done.format({ count: current });
+		const title = monitoring.title || tr("{count} done", { count: current });
 		const jobClassID = "job " + monitoring.name;
 		return (
 			<div className="job horizontal">
@@ -140,7 +139,7 @@ class NotificationRenderer extends React.Component {
 		} else {
 			return (
 				<div key={i}>
-					<em>{this.context.text_notification_unknown}</em>: {message.message}
+					<em>{tr("unknown")}</em>: {message.message}
 				</div>
 			);
 		}
@@ -159,26 +158,26 @@ class NotificationRenderer extends React.Component {
 			<div key={i}>
 				<strong>
 					{message.name === "DatabaseSaved"
-						? this.context.text_database_saved
-						: this.context.text_database_loaded}
+						? tr("Database saved")
+						: tr("Database loaded")}
 				</strong>
-				:{this.context.text_nb_entries.format({ count: data.entries }) + ", "}
-				{this.context.text_nb_discarded.format({
+				:{tr("{count} entries", { count: data.entries }) + ", "}
+				{tr("{count} discarded", {
 					count: data.discarded,
 				}) + ", "}
-				{this.context.text_nb_unreadable_not_found.format({
+				{tr("{count} unreadable not found", {
 					count: data.unreadable_not_found,
 				}) + ", "}
-				{this.context.text_nb_unreadable_found.format({
+				{tr("{count} unreadable found", {
 					count: data.unreadable_found,
 				}) + ", "}
-				{this.context.text_nb_readable_not_found.format({
+				{tr("{count} readable not found", {
 					count: data.readable_not_found,
 				}) + ", "}
-				{this.context.text_nb_readable_found_without_thumbnails.format({
+				{tr("{count} readable found without thumbnails", {
 					count: data.readable_found_without_thumbnails,
 				}) + ", "}
-				{this.context.text_nb_valid.format({ count: data.valid })}
+				{tr("{count} valid", { count: data.valid })}
 			</div>
 		);
 	}
@@ -188,21 +187,21 @@ class NotificationRenderer extends React.Component {
 	DatabaseReady(app, message, i) {
 		return (
 			<div key={i}>
-				<strong>{this.context.text_notification_database_ready}</strong>
+				<strong>{tr("Database open!")}</strong>
 			</div>
 		);
 	}
 	Done(app, message, i) {
 		return (
 			<div key={i}>
-				<strong>{this.context.text_notification_done}</strong>
+				<strong>{tr("Done!")}</strong>
 			</div>
 		);
 	}
 	Cancelled(app, message, i) {
 		return (
 			<div key={i}>
-				<strong>{this.context.text_notification_cancelled}</strong>
+				<strong>{tr("Cancelled.")}</strong>
 			</div>
 		);
 	}
@@ -218,7 +217,7 @@ class NotificationRenderer extends React.Component {
 		const count = message.notification.count;
 		return (
 			<div key={i}>
-				{this.context.gui_home_collected_files.format({ count }).markdown(true)}
+				{tr("**Collected** {count} file(s)", { count }).markdown(true)}
 			</div>
 		);
 	}
@@ -229,7 +228,7 @@ class NotificationRenderer extends React.Component {
 				<div key={i}>
 					<div>
 						<strong>
-							{this.context.text_notification_missing_thumbnails.format({
+							{tr("Missing {count} thumbnails", {
 								count: names.length,
 							})}
 						</strong>
@@ -245,7 +244,7 @@ class NotificationRenderer extends React.Component {
 		} else {
 			return (
 				<div key={i}>
-					<em>{this.context.text_notification_no_missing_thumbnails}</em>
+					<em>{tr("No missing thumbnails!")}</em>
 				</div>
 			);
 		}
@@ -253,7 +252,7 @@ class NotificationRenderer extends React.Component {
 	ProfilingStart(app, message, i) {
 		return (
 			<div key={i}>
-				<span className="span-profiled">{this.context.text_profiling}</span>{" "}
+				<span className="span-profiled">{tr("PROFILING")}</span>{" "}
 				{message.notification.name}
 			</div>
 		);
@@ -262,10 +261,8 @@ class NotificationRenderer extends React.Component {
 		return (
 			<div key={i}>
 				<span className="span-profiled">
-					{message.notification.inplace
-						? `${this.context.text_profiling} / `
-						: ""}
-					{this.context.text_profiled}
+					{message.notification.inplace ? `${tr("PROFILING")} / ` : ""}
+					{tr("PROFILED")}
 				</span>{" "}
 				{message.notification.name} <span className="span-profiled">TIME</span>{" "}
 				{message.notification.time}
@@ -280,10 +277,12 @@ class NotificationRenderer extends React.Component {
 			<div key={i}>
 				<div>
 					<strong>
-						{(message.name === "VideoInfoErrors"
-							? this.context.text_nb_video_errors
-							: this.context.text_nb_thumbnail_errors
-						).format({ count: keys.length })}
+						{tr(
+							message.name === "VideoInfoErrors"
+								? "{count} video error(s)"
+								: "{count} thumbnail error(s)",
+							{ count: keys.length }
+						)}
 					</strong>
 					:
 				</div>
@@ -322,7 +321,7 @@ class NotificationRenderer extends React.Component {
 		} else if (total) {
 			return (
 				<div key={i}>
-					{this.context.gui_home_to_load}:{" "}
+					{tr("To load")}:{" "}
 					<strong>
 						{total} {label}
 					</strong>
@@ -332,7 +331,7 @@ class NotificationRenderer extends React.Component {
 			return (
 				<div key={i}>
 					<em>
-						{this.context.gui_home_to_load}: {this.context.text_nothing}
+						{tr("To load")}: {tr("nothing!")}
 					</em>
 				</div>
 			);
@@ -344,7 +343,7 @@ class NotificationRenderer extends React.Component {
 			return (
 				<div key={i}>
 					<strong>
-						{this.context.text_nb_miniatures_saved.format({
+						{tr("{count} miniature(s) saved.", {
 							count: total,
 						})}
 					</strong>
@@ -353,7 +352,7 @@ class NotificationRenderer extends React.Component {
 		} else {
 			return (
 				<div key={i}>
-					<em>{this.context.text_no_miniatures_saved}</em>
+					<em>{tr("No miniatures saved!")}</em>
 				</div>
 			);
 		}
@@ -420,11 +419,7 @@ export class HomePage extends React.Component {
 				</strong>
 			);
 		else if (this.state.loaded)
-			return (
-				<button onClick={this.displayVideos}>
-					{this.context.text_display_videos}
-				</button>
-			);
+			return <button onClick={this.displayVideos}>{tr("Display videos")}</button>;
 		else
 			return (
 				<button disabled={true}>

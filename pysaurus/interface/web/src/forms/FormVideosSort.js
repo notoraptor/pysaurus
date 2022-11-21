@@ -19,12 +19,18 @@ export class FormVideosSort extends React.Component {
 
 	render() {
 		return (
-			<FancyBox title={this.context.form_title_sort_videos}>
+			<FancyBox title={tr("Sort videos")}>
 				<div
 					id="form-videos-sort"
 					className="form absolute-plain vertical text-center p-2">
 					<div className="help mb-4">
-						{this.context.form_content_sort_videos.markdown()}
+						{tr(`
+Click on "+" to add a new sorting criterion.
+
+Click on "-" to remove a sorting criterion.
+
+Click on "sort" to validate, or close dialog to cancel.
+`).markdown()}
 					</div>
 					<div id="sorting" className="flex-grow-1 overflow-auto">
 						{this.renderSorting()}

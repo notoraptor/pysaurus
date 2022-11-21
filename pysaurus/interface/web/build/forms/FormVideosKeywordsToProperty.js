@@ -43,14 +43,14 @@ System.register(["../dialogs/Dialog.js", "../components/Cell.js", "../language.j
           }, this.props.prop_types.map((def, i) => /*#__PURE__*/React.createElement("option", {
             key: i,
             value: def.name
-          }, this.context.word_property, ": ", def.name)))), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("input", {
+          }, tr("Property"), ": ", def.name)))), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("input", {
             id: "only-empty",
             type: "checkbox",
             checked: this.state.onlyEmpty,
             onChange: this.onChangeEmpty
           }), " ", /*#__PURE__*/React.createElement("label", {
             htmlFor: "only-empty"
-          }, this.context.text_fill_videos_without_properties.format({
+          }, tr('only videos without values for property "{name}"', {
             name: this.state.field
           })))));
         }

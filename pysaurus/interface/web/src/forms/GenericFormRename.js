@@ -13,10 +13,7 @@ export class GenericFormRename extends React.Component {
 
 	render() {
 		return (
-			<Dialog
-				title={this.props.title}
-				yes={this.context.text_rename}
-				action={this.submit}>
+			<Dialog title={this.props.title} yes={tr("rename")} action={this.submit}>
 				<div className="form-rename text-center">
 					<h1>{this.props.header}</h1>
 					<h2>

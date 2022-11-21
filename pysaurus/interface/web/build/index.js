@@ -1,7 +1,7 @@
-System.register(["./App.js", "./utils/FancyboxManager.js", "./utils/Callbacks.js", "./utils/backend.js", "./utils/functions.js", "./utils/markdown.js"], function (_export, _context) {
+System.register(["./App.js", "./utils/FancyboxManager.js", "./utils/Callbacks.js", "./utils/backend.js", "./utils/functions.js", "./utils/markdown.js", "./language.js"], function (_export, _context) {
   "use strict";
 
-  var App, FancyboxManager, Callbacks, python_call, formatString, IdGenerator, markdownToReact;
+  var App, FancyboxManager, Callbacks, python_call, formatString, IdGenerator, markdownToReact, tr;
   return {
     setters: [function (_AppJs) {
       App = _AppJs.App;
@@ -16,6 +16,8 @@ System.register(["./App.js", "./utils/FancyboxManager.js", "./utils/Callbacks.js
       IdGenerator = _utilsFunctionsJs.IdGenerator;
     }, function (_utilsMarkdownJs) {
       markdownToReact = _utilsMarkdownJs.markdownToReact;
+    }, function (_languageJs) {
+      tr = _languageJs.tr;
     }],
     execute: function () {
       String.prototype.format = function (kwargs) {
@@ -47,6 +49,8 @@ System.register(["./App.js", "./utils/FancyboxManager.js", "./utils/Callbacks.js
       window.onkeydown = function (event) {
         KEYBOARD_MANAGER.call(event);
       };
+
+      window.tr = tr;
 
       document.body.onunload = function () {
         console.info("GUI closed!");

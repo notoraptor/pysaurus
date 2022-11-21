@@ -32,10 +32,10 @@ System.register(["../language.js", "../utils/backend.js"], function (_export, _c
           }, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
             className: "block",
             onClick: this.addFolder
-          }, this.context.gui_database_add_folder)), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
+          }, tr("Add folder"))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
             className: "block",
             onClick: this.addFile
-          }, this.context.gui_database_add_file)))), /*#__PURE__*/React.createElement("div", {
+          }, tr("Add file"))))), /*#__PURE__*/React.createElement("div", {
             className: "paths flex-grow-1 overflow-auto"
           }, /*#__PURE__*/React.createElement("table", {
             className: "table-layout-fixed"

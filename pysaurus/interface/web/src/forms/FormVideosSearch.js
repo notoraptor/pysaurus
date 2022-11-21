@@ -20,9 +20,14 @@ export class FormVideosSearch extends React.Component {
 
 	render() {
 		return (
-			<FancyBox title={this.context.form_title_search_videos}>
+			<FancyBox title={tr("Search videos")}>
 				<div className="form-videos-search text-center">
-					{this.context.form_content_search_videos.markdown()}
+					{tr(`
+Type text to search and choose how to search.
+
+You can also type text and then press enter
+to automatically select "AND" as search method.
+`).markdown()}
 					<p>
 						<input
 							type="text"
@@ -45,9 +50,7 @@ export class FormVideosSearch extends React.Component {
 							onChange={this.onChangeCond}
 							checked={this.state.cond === "and"}
 						/>
-						<label htmlFor="input-search-and">
-							{this.context.search_and}
-						</label>
+						<label htmlFor="input-search-and">{tr("all terms")}</label>
 					</p>
 					<p>
 						<input
@@ -58,9 +61,7 @@ export class FormVideosSearch extends React.Component {
 							onChange={this.onChangeCond}
 							checked={this.state.cond === "or"}
 						/>
-						<label htmlFor="input-search-or">
-							{this.context.search_or}
-						</label>
+						<label htmlFor="input-search-or">{tr("any term")}</label>
 					</p>
 					<p>
 						<input
@@ -72,7 +73,7 @@ export class FormVideosSearch extends React.Component {
 							checked={this.state.cond === "exact"}
 						/>
 						<label htmlFor="input-search-exact">
-							{this.context.search_exact_sentence}
+							{tr("exact sentence")}
 						</label>
 					</p>
 					<p>
@@ -84,9 +85,7 @@ export class FormVideosSearch extends React.Component {
 							onChange={this.onChangeCond}
 							checked={this.state.cond === "id"}
 						/>
-						<label htmlFor="input-search-id">
-							{this.context.search_id}
-						</label>
+						<label htmlFor="input-search-id">{tr("video ID")}</label>
 					</p>
 				</div>
 			</FancyBox>

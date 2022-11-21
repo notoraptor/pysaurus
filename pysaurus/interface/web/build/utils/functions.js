@@ -73,7 +73,7 @@ System.register([], function (_export, _context) {
 
           switch (propType) {
             case "bool":
-              if (value === "false") parsed = false;else if (value === "true") parsed = true;else throw this.lang.error_invalid_bool_value.format({
+              if (value === "false") parsed = false;else if (value === "true") parsed = true;else throw tr("Invalid bool value, expected: [false, true], got {value}", {
                 value
               });
               break;
@@ -85,7 +85,7 @@ System.register([], function (_export, _context) {
 
             case "float":
               parsed = parseFloat(value);
-              if (isNaN(parsed)) throw this.lang.error_parsing_float.format({
+              if (isNaN(parsed)) throw tr("Unable to parse floating value: {value}", {
                 value
               });
               break;
@@ -98,7 +98,7 @@ System.register([], function (_export, _context) {
               throw `Unknown property type: ${propType}`;
           }
 
-          if (propEnum && propEnum.indexOf(parsed) < 0) throw this.lang.error_parsing_enum.format({
+          if (propEnum && propEnum.indexOf(parsed) < 0) throw tr("Invalid enum value, expected: [{expected}], got {value}", {
             expected: propEnum.join(", "),
             value: value
           });

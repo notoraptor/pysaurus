@@ -76,7 +76,7 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
             onChange: event => this.onCheckAll(event, start, end)
           }), " ", /*#__PURE__*/React.createElement("label", {
             htmlFor: "group-view-select-all"
-          }, (allChecked ? this.context.text_all_groups_selected : this.context.text_groups_selected).format({
+          }, (allChecked ? tr("All {count} selected") : tr("{count} selected")).format({
             count: selection.size
           })), selection.size ? /*#__PURE__*/React.createElement("span", null, "\xA0", /*#__PURE__*/React.createElement(SettingIcon, {
             key: "options-for-selected",
@@ -149,7 +149,7 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
             }, entry.count));
           })) : /*#__PURE__*/React.createElement("div", {
             className: "absolute-plain no-groups text-center vertical"
-          }, /*#__PURE__*/React.createElement("strong", null, /*#__PURE__*/React.createElement("em", null, this.context.text_no_groups)))));
+          }, /*#__PURE__*/React.createElement("strong", null, /*#__PURE__*/React.createElement("em", null, tr("No groups"))))));
         }
 
         renderTitle() {
@@ -170,8 +170,8 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
 
         getActions() {
           return new Actions({
-            previous: new Action("Ctrl+ArrowUp", this.context.action_go_to_previous_group, this.previousGroup, Fancybox.isInactive),
-            next: new Action("Ctrl+ArrowDown", this.context.action_go_to_next_group, this.nextGroup, Fancybox.isInactive)
+            previous: new Action("Ctrl+ArrowUp", tr("Go to previous group"), this.previousGroup, Fancybox.isInactive),
+            next: new Action("Ctrl+ArrowDown", tr("Go to next group"), this.nextGroup, Fancybox.isInactive)
           }, this.context);
         }
 

@@ -39,8 +39,8 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../utils/
           const data = this.props.data;
           const hasThumbnail = data.with_thumbnails;
           return /*#__PURE__*/React.createElement(Dialog, {
-            title: this.context.form_edit_video_properties,
-            yes: this.context.text_save,
+            title: tr("Edit video properties"),
+            yes: tr("save"),
             action: this.onClose
           }, /*#__PURE__*/React.createElement("div", {
             className: "form-video-edit-properties horizontal"
@@ -53,7 +53,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../utils/
             src: data.thumbnail_path
           }) : /*#__PURE__*/React.createElement("div", {
             className: "no-thumbnail"
-          }, this.context.text_no_thumbnail)), /*#__PURE__*/React.createElement("div", {
+          }, tr("no thumbnail"))), /*#__PURE__*/React.createElement("div", {
             className: "filename p-1 mb-1"
           }, /*#__PURE__*/React.createElement("code", null, data.filename)), data.title === data.file_title ? "" : /*#__PURE__*/React.createElement("div", {
             className: "title mb-1"

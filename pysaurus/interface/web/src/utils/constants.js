@@ -61,7 +61,7 @@ class FieldMap {
 		for (let fieldInfo of fieldInfoList) {
 			if (this.fields.hasOwnProperty(fieldInfo.name))
 				throw new Error(
-					context.error_duplicated_field.format({
+					tr("Duplicated field: {name}", {
 						name: fieldInfo.name,
 					})
 				);
@@ -89,179 +89,164 @@ export function getFieldMap(context) {
 		[
 			new FieldInfo(
 				"audio_bit_rate",
-				context.attr_audio_bit_rate,
+				tr("audio bit rate"),
 				GroupPermission.ALL,
 				FieldType.int
 			),
 			new FieldInfo(
 				"audio_codec",
-				context.attr_audio_codec,
+				tr("audio codec"),
 				GroupPermission.ALL,
 				FieldType.str
 			),
 			new FieldInfo(
 				"audio_codec_description",
-				context.attr_audio_codec_description,
+				tr("audio codec description"),
 				GroupPermission.ALL,
 				FieldType.str
 			),
 			new FieldInfo(
 				"bit_depth",
-				context.attr_bit_depth,
+				tr("bit depth"),
 				GroupPermission.ALL,
 				FieldType.int
 			),
 			new FieldInfo(
 				"container_format",
-				context.attr_container_format,
+				tr("container format"),
 				GroupPermission.ALL,
 				FieldType.str
 			),
 			new FieldInfo(
 				"date",
-				context.attr_date,
+				tr("date modified"),
 				GroupPermission.ONLY_MANY,
 				FieldType.sortable
 			),
-			new FieldInfo("day", context.attr_day, GroupPermission.ALL, FieldType.str),
-			new FieldInfo(
-				"disk",
-				context.attr_disk,
-				GroupPermission.ALL,
-				FieldType.str
-			),
+			new FieldInfo("day", tr("day"), GroupPermission.ALL, FieldType.str),
+			new FieldInfo("disk", tr("disk"), GroupPermission.ALL, FieldType.str),
 			new FieldInfo(
 				"extension",
-				context.attr_extension,
+				tr("file extension"),
 				GroupPermission.ALL,
 				FieldType.str
 			),
 			new FieldInfo(
 				"file_size",
-				context.attr_file_size,
+				tr("file size (bytes)"),
 				GroupPermission.ONLY_MANY,
 				FieldType.int
 			),
 			new FieldInfo(
 				"file_title",
-				context.attr_file_title,
+				tr("file title"),
 				GroupPermission.ONLY_MANY,
 				FieldType.str
 			),
 			new FieldInfo(
 				"file_title_numeric",
-				context.attr_file_title_numeric,
+				tr("file title (with numbers)"),
 				GroupPermission.ONLY_MANY,
 				FieldType.sortable
 			),
 			new FieldInfo(
 				"filename",
-				context.attr_filename,
+				tr("file path"),
 				GroupPermission.ONLY_MANY,
 				FieldType.str
 			),
 			new FieldInfo(
 				"filename_numeric",
-				context.attr_filename_numeric,
+				tr("file path (with numbers)"),
 				GroupPermission.ONLY_MANY,
 				FieldType.sortable
 			),
 			new FieldInfo(
 				"frame_rate",
-				context.attr_frame_rate,
+				tr("frame rate"),
 				GroupPermission.ALL,
 				FieldType.float
 			),
-			new FieldInfo(
-				"height",
-				context.attr_height,
-				GroupPermission.ALL,
-				FieldType.int
-			),
+			new FieldInfo("height", tr("height"), GroupPermission.ALL, FieldType.int),
 			new FieldInfo(
 				"length",
-				context.attr_length,
+				tr("length"),
 				GroupPermission.ONLY_MANY,
 				FieldType.sortable
 			),
 			new FieldInfo(
 				"move_id",
-				context.attr_move_id,
+				tr("moved files (potentially)"),
 				GroupPermission.ONLY_MANY,
 				FieldType.unsortable
 			),
 			new FieldInfo(
 				"properties",
-				context.attr_properties,
+				tr("properties"),
 				GroupPermission.FORBIDDEN,
 				FieldType.unsortable
 			),
 			new FieldInfo(
 				"quality",
-				context.attr_quality,
+				tr("quality"),
 				GroupPermission.ONLY_MANY,
 				FieldType.float
 			),
 			new FieldInfo(
 				"sample_rate",
-				context.attr_sample_rate,
+				tr("sample rate"),
 				GroupPermission.ALL,
 				FieldType.int
 			),
 			new FieldInfo(
 				"similarity_id",
-				context.attr_similarity_id,
+				tr("similarity"),
 				GroupPermission.ONLY_MANY,
 				FieldType.unsortable
 			),
 			new FieldInfo(
 				"size",
-				context.attr_size,
+				tr("size"),
 				GroupPermission.ONLY_MANY,
 				FieldType.sortable
 			),
 			new FieldInfo(
 				"thumbnail_path",
-				context.attr_thumbnail_path,
+				tr("thumbnail path"),
 				GroupPermission.FORBIDDEN,
 				FieldType.unsortable
 			),
 			new FieldInfo(
 				"title",
-				context.attr_title,
+				tr("title"),
 				GroupPermission.ONLY_MANY,
 				FieldType.str
 			),
 			new FieldInfo(
 				"title_numeric",
-				context.attr_title_numeric,
+				tr("title (with numbers)"),
 				GroupPermission.ONLY_MANY,
 				FieldType.sortable
 			),
 			new FieldInfo(
 				"video_codec",
-				context.attr_video_codec,
+				tr("video codec"),
 				GroupPermission.ALL,
 				FieldType.str
 			),
 			new FieldInfo(
 				"video_codec_description",
-				context.attr_video_codec_description,
+				tr("video codec description"),
 				GroupPermission.ALL,
 				FieldType.str
 			),
 			new FieldInfo(
 				"video_id",
-				context.attr_video_id,
+				tr("video ID"),
 				GroupPermission.FORBIDDEN,
 				FieldType.int
 			),
-			new FieldInfo(
-				"width",
-				context.attr_width,
-				GroupPermission.ALL,
-				FieldType.int
-			),
+			new FieldInfo("width", tr("width"), GroupPermission.ALL, FieldType.int),
 			new FieldInfo(
 				"size_length",
 				"(size and length)",

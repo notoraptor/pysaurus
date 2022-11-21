@@ -32,12 +32,12 @@ System.register(["./FancyBox.js", "../language.js"], function (_export, _context
           }, /*#__PURE__*/React.createElement("button", {
             className: "block bold",
             onClick: this.yes
-          }, this.props.yes || this.context.word_yes)), /*#__PURE__*/React.createElement("div", {
+          }, this.props.yes || tr("yes"))), /*#__PURE__*/React.createElement("div", {
             className: "button flex-grow-1 p-2 no"
           }, /*#__PURE__*/React.createElement("button", {
             className: "block bold",
             onClick: Fancybox.close
-          }, this.props.no || this.context.word_cancel)))));
+          }, this.props.no || tr("cancel"))))));
         }
 
         yes() {

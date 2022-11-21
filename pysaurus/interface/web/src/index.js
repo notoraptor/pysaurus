@@ -4,6 +4,7 @@ import { Callbacks } from "./utils/Callbacks.js";
 import { python_call } from "./utils/backend.js";
 import { formatString, IdGenerator } from "./utils/functions.js";
 import { markdownToReact } from "./utils/markdown.js";
+import { tr } from "./language.js";
 
 String.prototype.format = function (kwargs) {
 	return formatString(this, kwargs);
@@ -33,6 +34,8 @@ window.APP_STATE = {
 window.onkeydown = function (event) {
 	KEYBOARD_MANAGER.call(event);
 };
+
+window.tr = tr;
 
 document.body.onunload = function () {
 	console.info("GUI closed!");

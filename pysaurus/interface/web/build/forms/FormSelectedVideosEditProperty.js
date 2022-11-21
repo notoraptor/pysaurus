@@ -63,7 +63,7 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js", "../language.j
           const propName = this.props.definition.name;
           const nbVideos = this.props.nbVideos;
           return /*#__PURE__*/React.createElement(Dialog, {
-            title: this.context.form_title_edit_property_for_videos.format({
+            title: tr('Edit property "{name}" for {count} video(s)', {
               name: propName,
               count: nbVideos
             }),
@@ -73,7 +73,7 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js", "../language.j
             className: "form-selected-videos-edit-property vertical flex-grow-1 text-center"
           }, /*#__PURE__*/React.createElement("div", {
             className: "bar titles flex-shrink-0 horizontal bold"
-          }, /*#__PURE__*/React.createElement("div", null, this.context.text_to_remove), /*#__PURE__*/React.createElement("div", null, this.context.text_current), /*#__PURE__*/React.createElement("div", null, this.context.text_to_add)), /*#__PURE__*/React.createElement("div", {
+          }, /*#__PURE__*/React.createElement("div", null, tr("To remove")), /*#__PURE__*/React.createElement("div", null, tr("Current")), /*#__PURE__*/React.createElement("div", null, tr("To add"))), /*#__PURE__*/React.createElement("div", {
             className: "bar panels horizontal flex-grow-1"
           }, /*#__PURE__*/React.createElement("div", {
             className: "remove"
@@ -87,7 +87,7 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js", "../language.j
             className: "horizontal"
           }, /*#__PURE__*/React.createElement("div", {
             className: "value"
-          }, this.context.text_all_values.format({
+          }, tr("all {count} values", {
             count: this.state.remove.length
           })), /*#__PURE__*/React.createElement("button", {
             onClick: this.unRemoveAll
@@ -97,7 +97,7 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js", "../language.j
             onClick: this.removeAll
           }, Characters.SMART_ARROW_LEFT), /*#__PURE__*/React.createElement("div", {
             className: "value"
-          }, this.context.text_all_values.format({
+          }, tr("all {count} values", {
             count: this.state.current.length
           })), this.props.definition.multiple ? /*#__PURE__*/React.createElement("button", {
             onClick: this.addAll
@@ -107,7 +107,7 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js", "../language.j
             onClick: this.unAddAll
           }, Characters.SMART_ARROW_LEFT), /*#__PURE__*/React.createElement("div", {
             className: "value"
-          }, this.context.text_all_values.format({
+          }, tr("all {count} values", {
             count: this.state.add.length
           }))) : /*#__PURE__*/React.createElement("div", null)), this.renderFormAdd()));
         }

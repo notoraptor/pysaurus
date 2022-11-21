@@ -47,7 +47,7 @@ export class FormSelectedVideosEditProperty extends React.Component {
 		const nbVideos = this.props.nbVideos;
 		return (
 			<Dialog
-				title={this.context.form_title_edit_property_for_videos.format({
+				title={tr('Edit property "{name}" for {count} video(s)', {
 					name: propName,
 					count: nbVideos,
 				})}
@@ -55,9 +55,9 @@ export class FormSelectedVideosEditProperty extends React.Component {
 				action={this.onClose}>
 				<div className="form-selected-videos-edit-property vertical flex-grow-1 text-center">
 					<div className="bar titles flex-shrink-0 horizontal bold">
-						<div>{this.context.text_to_remove}</div>
-						<div>{this.context.text_current}</div>
-						<div>{this.context.text_to_add}</div>
+						<div>{tr("To remove")}</div>
+						<div>{tr("Current")}</div>
+						<div>{tr("To add")}</div>
 					</div>
 					<div className="bar panels horizontal flex-grow-1">
 						<div className="remove">{this.renderRemove()}</div>
@@ -68,7 +68,7 @@ export class FormSelectedVideosEditProperty extends React.Component {
 						{this.state.remove.length > 1 ? (
 							<div className="horizontal">
 								<div className="value">
-									{this.context.text_all_values.format({
+									{tr("all {count} values", {
 										count: this.state.remove.length,
 									})}
 								</div>
@@ -85,7 +85,7 @@ export class FormSelectedVideosEditProperty extends React.Component {
 									{Characters.SMART_ARROW_LEFT}
 								</button>
 								<div className="value">
-									{this.context.text_all_values.format({
+									{tr("all {count} values", {
 										count: this.state.current.length,
 									})}
 								</div>
@@ -106,7 +106,7 @@ export class FormSelectedVideosEditProperty extends React.Component {
 									{Characters.SMART_ARROW_LEFT}
 								</button>
 								<div className="value">
-									{this.context.text_all_values.format({
+									{tr("all {count} values", {
 										count: this.state.add.length,
 									})}
 								</div>

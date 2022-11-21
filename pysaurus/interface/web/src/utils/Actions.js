@@ -12,7 +12,7 @@ export class Actions {
 			const shortcut = actions[name].shortcut.str;
 			if (shortcutToName.hasOwnProperty(shortcut))
 				throw new Error(
-					context.error_duplicated_shortcut.format({
+					tr("Duplicated shortcut {shortcut} for {name1} and {name2}", {
 						shortcut: shortcut,
 						name1: shortcutToName[shortcut],
 						name2: name,

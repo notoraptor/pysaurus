@@ -168,9 +168,7 @@ export class SetInput extends React.Component {
 		const controller = this.props.controller;
 		try {
 			if (controller.has(value))
-				window.alert(
-					this.context.alert_value_already_in_list.format({ value })
-				);
+				window.alert(tr("Value already in list: {value}", { value }));
 			else this.setState({ add: "" }, () => controller.add(value));
 		} catch (exception) {
 			window.alert(exception.toString());

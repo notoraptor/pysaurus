@@ -42,7 +42,7 @@ export class FormVideosGrouping extends React.Component {
 				<table className="from-videos-grouping first-td-text-right w-100">
 					<tbody>
 						<tr>
-							<td className="label">{this.context.text_field_type}</td>
+							<td className="label">{tr("Field type")}</td>
 							<td>
 								<input
 									id="field-type-property"
@@ -103,7 +103,9 @@ export class FormVideosGrouping extends React.Component {
 								</td>
 								<td>
 									<label htmlFor="allow-singletons">
-										{this.context.text_allow_singletons}
+										{tr(
+											"Allow singletons (groups with only 1 video)"
+										)}
 									</label>
 								</td>
 							</tr>
@@ -112,7 +114,9 @@ export class FormVideosGrouping extends React.Component {
 								<td>&nbsp;</td>
 								<td>
 									<em>
-										{this.context.text_singletons_auto_disabled}
+										{tr(
+											"Will look for groups with at least 2 videos."
+										)}
 									</em>
 								</td>
 							</tr>
@@ -120,7 +124,7 @@ export class FormVideosGrouping extends React.Component {
 						<tr>
 							<td className="label">
 								<label htmlFor="group-sorting">
-									{this.context.text_sort_using}
+									{tr("Sort using:")}
 								</label>
 							</td>
 							<td>
@@ -129,19 +133,15 @@ export class FormVideosGrouping extends React.Component {
 									id="group-sorting"
 									value={this.state.sorting}
 									onChange={this.onChangeSorting}>
-									<option value="field">
-										{this.context.text_field_value}
-									</option>
+									<option value="field">{tr("Field value")}</option>
 									{this.fieldIsString() ? (
 										<option value="length">
-											{this.context.text_field_value_length}
+											{tr("Field value length")}
 										</option>
 									) : (
 										""
 									)}
-									<option value="count">
-										{this.context.text_group_size}
-									</option>
+									<option value="count">{tr("Group size")}</option>
 								</select>
 							</td>
 						</tr>
@@ -156,7 +156,7 @@ export class FormVideosGrouping extends React.Component {
 							</td>
 							<td>
 								<label htmlFor="group-reverse">
-									{this.context.text_sort_reverse}
+									{tr("sort in reverse order")}
 								</label>
 							</td>
 						</tr>

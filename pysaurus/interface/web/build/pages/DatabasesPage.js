@@ -43,7 +43,7 @@ System.register(["../utils/backend.js", "../components/PathsInput.js", "../langu
           return /*#__PURE__*/React.createElement("div", {
             id: "databases",
             className: "text-center"
-          }, /*#__PURE__*/React.createElement("h1", null, this.context.gui_database_welcome.format({
+          }, /*#__PURE__*/React.createElement("h1", null, tr("Welcome to {name}", {
             name: window.PYTHON_APP_NAME
           })), /*#__PURE__*/React.createElement("table", {
             className: "w-100 table-layout-fixed"
@@ -51,24 +51,24 @@ System.register(["../utils/backend.js", "../components/PathsInput.js", "../langu
             className: "text-right"
           }, /*#__PURE__*/React.createElement("label", {
             htmlFor: "language"
-          }, this.context.text_choose_language, ":")), /*#__PURE__*/React.createElement("td", {
+          }, tr("Language:"), ":")), /*#__PURE__*/React.createElement("td", {
             className: "text-left"
           }, /*#__PURE__*/React.createElement("select", {
             id: "language",
-            value: this.context.__language__,
+            value: window.PYTHON_LANGUAGE,
             onChange: this.onChangeLanguage
           }, languages.map((language, index) => /*#__PURE__*/React.createElement("option", {
             key: index,
             value: language.name
-          }, language.name))))) : "", /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("h2", null, this.context.gui_database_create), /*#__PURE__*/React.createElement("div", {
+          }, language.name))))) : "", /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("h2", null, tr("Create a database")), /*#__PURE__*/React.createElement("div", {
             className: "p-1"
           }, /*#__PURE__*/React.createElement("input", {
             type: "text",
             className: "w-100",
             value: this.state.name,
             onChange: this.onChangeName,
-            placeholder: this.context.gui_database_name_placeholder
-          })), /*#__PURE__*/React.createElement("h3", null, this.context.gui_database_paths), /*#__PURE__*/React.createElement("div", {
+            placeholder: tr("Database name.")
+          })), /*#__PURE__*/React.createElement("h3", null, tr("Database folders and files")), /*#__PURE__*/React.createElement("div", {
             className: "vertical new-paths"
           }, /*#__PURE__*/React.createElement(PathsInput, {
             onUpdate: this.onUpdatePaths,
@@ -78,7 +78,7 @@ System.register(["../utils/backend.js", "../components/PathsInput.js", "../langu
           }, /*#__PURE__*/React.createElement("button", {
             className: "block",
             onClick: this.createDatabase
-          }, this.context.gui_database_button_create))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("h2", null, this.context.gui_database_open.format({
+          }, tr("create database")))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("h2", null, tr("Open a database ({count} available)", {
             count: this.props.parameters.databases.length
           })), /*#__PURE__*/React.createElement("div", {
             className: "p-1"
@@ -89,7 +89,7 @@ System.register(["../utils/backend.js", "../components/PathsInput.js", "../langu
             onChange: this.onChangeUpdate
           }), " ", /*#__PURE__*/React.createElement("label", {
             htmlFor: "update"
-          }, this.context.gui_database_update_after_opening)), /*#__PURE__*/React.createElement("h3", null, this.context.gui_database_click_to_open), this.props.parameters.databases.map((database, index) => /*#__PURE__*/React.createElement("div", {
+          }, tr("update after opening"))), /*#__PURE__*/React.createElement("h3", null, tr("Click on a database to open it")), this.props.parameters.databases.map((database, index) => /*#__PURE__*/React.createElement("div", {
             className: "p-1",
             key: index
           }, /*#__PURE__*/React.createElement("button", {

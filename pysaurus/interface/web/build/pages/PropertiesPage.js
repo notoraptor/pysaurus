@@ -75,17 +75,17 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             onClick: this.back
           }, "\u2B9C")), /*#__PURE__*/React.createElement("div", {
             className: "text-center flex-grow-1"
-          }, this.context.gui_properties_title)), /*#__PURE__*/React.createElement("hr", null), /*#__PURE__*/React.createElement("div", {
+          }, tr("Properties Management"))), /*#__PURE__*/React.createElement("hr", null), /*#__PURE__*/React.createElement("div", {
             className: "content horizontal"
           }, /*#__PURE__*/React.createElement("div", {
             className: "list text-center"
           }, /*#__PURE__*/React.createElement("h3", {
             className: "text-center"
-          }, this.context.gui_properties_current), this.renderPropTypes()), /*#__PURE__*/React.createElement("div", {
+          }, tr("Current properties")), this.renderPropTypes()), /*#__PURE__*/React.createElement("div", {
             className: "new"
           }, /*#__PURE__*/React.createElement("h3", {
             className: "text-center"
-          }, this.context.gui_properties_add_new), /*#__PURE__*/React.createElement("table", {
+          }, tr("Add a new property")), /*#__PURE__*/React.createElement("table", {
             className: "first-td-text-right w-100"
           }, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("label", {
             htmlFor: "prop-name"
@@ -104,29 +104,29 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             onChange: this.onChangeType
           }, /*#__PURE__*/React.createElement("option", {
             value: "bool"
-          }, this.context.text_boolean), /*#__PURE__*/React.createElement("option", {
+          }, tr("boolean")), /*#__PURE__*/React.createElement("option", {
             value: "int"
-          }, this.context.text_integer), /*#__PURE__*/React.createElement("option", {
+          }, tr("integer")), /*#__PURE__*/React.createElement("option", {
             value: "float"
-          }, this.context.text_float), /*#__PURE__*/React.createElement("option", {
+          }, tr("floating number")), /*#__PURE__*/React.createElement("option", {
             value: "str"
-          }, this.context.text_text)))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("input", {
+          }, tr("text"))))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("input", {
             type: "checkbox",
             id: "prop-multiple",
             checked: this.state.multiple,
             onChange: this.onChangeMultiple
           })), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("label", {
             htmlFor: "prop-multiple"
-          }, this.context.text_accept_many_values))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("input", {
+          }, tr("accept many values")))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("input", {
             type: "checkbox",
             id: "prop-enumeration",
             checked: this.state.enumeration,
             onChange: this.onChangeEnumeration
           })), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("label", {
             htmlFor: "prop-enumeration"
-          }, this.context.text_is_enumeration))), !this.state.multiple || this.state.enumeration ? /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("label", {
+          }, tr("Is enumeration")))), !this.state.multiple || this.state.enumeration ? /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("label", {
             htmlFor: "prop-default-" + this.state.type
-          }, this.state.enumeration ? this.state.multiple ? this.context.gui_properties_enumeration_values_multiple : this.context.gui_properties_enumeration_values : this.context.gui_properties_default_value)), /*#__PURE__*/React.createElement("td", null, this.renderDefaultInput())) : "", /*#__PURE__*/React.createElement("tr", {
+          }, this.state.enumeration ? this.state.multiple ? tr("Enumeration values (first is default)") : tr("Enumeration values") : tr("Default value"))), /*#__PURE__*/React.createElement("td", null, this.renderDefaultInput())) : "", /*#__PURE__*/React.createElement("tr", {
             className: "buttons"
           }, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
             className: "reset block",
@@ -148,7 +148,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             className: "name bold"
           }, def.name), /*#__PURE__*/React.createElement("td", {
             className: "type"
-          }, def.multiple ? /*#__PURE__*/React.createElement("span", null, this.context.text_one_or_many, "\xA0") : "", /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("code", null, def.type), " ", def.multiple ? this.context.word_values : this.context.word_value), def.enumeration ? /*#__PURE__*/React.createElement("span", null, "\xA0", this.context.word_in, " ", "{", def.enumeration.join(", "), "}") : ""), /*#__PURE__*/React.createElement("td", {
+          }, def.multiple ? /*#__PURE__*/React.createElement("span", null, tr("one or many"), "\xA0") : "", /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("code", null, def.type), " ", def.multiple ? tr("values") : tr("value")), def.enumeration ? /*#__PURE__*/React.createElement("span", null, "\xA0", tr("in"), " ", "{", def.enumeration.join(", "), "}") : ""), /*#__PURE__*/React.createElement("td", {
             className: "default"
           }, function () {
             if (def.multiple) {
@@ -270,10 +270,10 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
 
         deleteProperty(name) {
           Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
-            title: this.context.form_title_delete_property.format({
+            title: tr('Delete property "{name}"?', {
               name
             }),
-            yes: this.context.text_delete,
+            yes: tr("DELETE"),
             action: () => {
               python_call("delete_prop_type", name).catch(backend_error).then(definitions => {
                 const state = this.getDefaultInputState();
@@ -285,17 +285,17 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             className: "text-center",
             center: true,
             full: true
-          }, /*#__PURE__*/React.createElement("h3", null, this.context.form_content_delete_property.format({
+          }, /*#__PURE__*/React.createElement("h3", null, tr('Are you sure you want to delete property "{name}"?', {
             name
           })))));
         }
 
         convertPropertyToUnique(name) {
           Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
-            title: this.context.form_title_convert_to_unique_property.format({
+            title: tr('Convert to unique property "{name}"?', {
               name
             }),
-            yes: this.context.form_convert_to_unique_property_yes,
+            yes: tr("convert to unique"),
             action: () => {
               python_call("convert_prop_to_unique", name).then(definitions => {
                 const state = this.getDefaultInputState();
@@ -307,17 +307,17 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             className: "text-center",
             center: true,
             full: true
-          }, /*#__PURE__*/React.createElement("h3", null, this.context.form_confirm_convert_to_unique_property.format({
+          }, /*#__PURE__*/React.createElement("h3", null, tr('Are you sure you want to convert to unique property "{name}"?', {
             name
           })))));
         }
 
         convertPropertyToMultiple(name) {
           Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
-            title: this.context.form_title_convert_to_multiple_property.format({
+            title: tr('Convert to multiple property "{name}"?', {
               name
             }),
-            yes: this.context.form_convert_to_multiple_property_yes,
+            yes: tr("convert to multiple"),
             action: () => {
               python_call("convert_prop_to_multiple", name).then(definitions => {
                 const state = this.getDefaultInputState();
@@ -329,17 +329,17 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             className: "text-center",
             center: true,
             full: true
-          }, /*#__PURE__*/React.createElement("h3", null, this.context.form_confirm_convert_to_multiple_property.format({
+          }, /*#__PURE__*/React.createElement("h3", null, tr('Are you sure you want to convert to multiple property "{name}"?', {
             name
           })))));
         }
 
         renameProperty(name) {
           Fancybox.load( /*#__PURE__*/React.createElement(GenericFormRename, {
-            title: this.context.form_title_rename_property.format({
+            title: tr('Rename property "{name}"?', {
               name
             }),
-            header: this.context.text_rename_property,
+            header: tr("Rename property"),
             description: name,
             data: name,
             onClose: newName => {

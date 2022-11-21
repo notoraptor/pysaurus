@@ -158,38 +158,38 @@ export class VideosPage extends React.Component {
 		return (
 			<div id="videos" className="absolute-plain p-4 vertical">
 				<header className="horizontal flex-shrink-0">
-					<MenuPack title={this.context.menu_database}>
+					<MenuPack title={tr("Database ...")}>
 						<Menu title="Reload database ...">
 							{<ActionToMenuItem action={actions.reload} />}
 						</Menu>
 						<MenuItem action={this.renameDatabase}>
-							{this.context.action_rename_database.format({
+							{tr('Rename database "{name}" ...', {
 								name: this.state.database.name,
 							})}
 						</MenuItem>
 						<MenuItem action={this.editDatabaseFolders}>
-							{this.context.action_edit_database_folders.format({
+							{tr("Edit {count} database folders ...", {
 								count: this.state.database.folders.length,
 							})}
 						</MenuItem>
-						<Menu title={this.context.menu_close_database}>
+						<Menu title={tr("Close database ...")}>
 							<MenuItem action={this.closeDatabase}>
-								<strong>{this.context.action_close_database}</strong>
+								<strong>{tr("Close database")}</strong>
 							</MenuItem>
 						</Menu>
 						<MenuItem className="red-flag" action={this.deleteDatabase}>
-							{this.context.action_delete_database}
+							{tr("Delete database ...")}
 						</MenuItem>
 					</MenuPack>
-					<MenuPack title={this.context.menu_videos}>
-						<Menu title={this.context.menu_filter_videos}>
+					<MenuPack title={tr("Videos ...")}>
+						<Menu title={tr("Filter videos ...")}>
 							{<ActionToMenuItem action={actions.select} />}
 							{<ActionToMenuItem action={actions.group} />}
 							{<ActionToMenuItem action={actions.search} />}
 							{<ActionToMenuItem action={actions.sort} />}
 						</Menu>
 						{aFilterIsSet ? (
-							<Menu title={this.context.menu_reset_filters}>
+							<Menu title={tr("Reset filters ...")}>
 								{this.sourceIsSet() ? (
 									<ActionToMenuItem action={actions.unselect} />
 								) : (
@@ -226,16 +226,15 @@ export class VideosPage extends React.Component {
 						)}
 						{this.canFindSimilarVideos() ? (
 							<MenuItem action={this.findSimilarVideos}>
-								{this.context.action_search_similar_videos}
+								{tr("Search similar videos")}
 							</MenuItem>
 						) : (
 							""
 						)}
 						{this.canFindSimilarVideos() ? (
-							<Menu
-								title={this.context.menu_search_similar_videos_longer}>
+							<Menu title={tr("Search similar videos (longer) ...")}>
 								<MenuItem action={this.findSimilarVideosIgnoreCache}>
-									<strong>{this.context.action_ignore_cache}</strong>
+									<strong>{tr("Ignore cache")}</strong>
 								</MenuItem>
 							</Menu>
 						) : (
@@ -244,9 +243,7 @@ export class VideosPage extends React.Component {
 						{groupedByMoves ? (
 							<MenuItem action={this.confirmAllUniqueMoves}>
 								<strong>
-									<em>
-										{this.context.action_confirm_all_unique_moves}
-									</em>
+									<em>{tr("Confirm all unique moves")}</em>
 								</strong>
 							</MenuItem>
 						) : (
@@ -258,17 +255,17 @@ export class VideosPage extends React.Component {
 							</strong>
 						</MenuItem>
 					</MenuPack>
-					<MenuPack title={this.context.menu_properties}>
+					<MenuPack title={tr("Properties ...")}>
 						{<ActionToMenuItem action={actions.manageProperties} />}
 						{stringSetProperties.length ? (
 							<MenuItem action={this.fillWithKeywords}>
-								{this.context.action_put_keywords_into_property}
+								{tr("Put keywords into a property ...")}
 							</MenuItem>
 						) : (
 							""
 						)}
 						{this.state.prop_types.length > 5 ? (
-							<Menu title={this.context.menu_group_videos_by_property}>
+							<Menu title={tr("Group videos by property ...")}>
 								{this.state.prop_types.map((def, index) => (
 									<MenuItem
 										key={index}
@@ -286,16 +283,14 @@ export class VideosPage extends React.Component {
 									action={() =>
 										this.backendGroupVideos(def.name, true)
 									}>
-									{this.context.action_group_videos_by_property.format(
-										{
-											name: def.name,
-										}
-									)}
+									{tr("Group videos by property: {name}", {
+										name: def.name,
+									})}
 								</MenuItem>
 							))
 						)}
 						{stringProperties.length ? (
-							<Menu title={this.context.text_convert_to_lowercase}>
+							<Menu title={tr("Convert values to lowercase for ...")}>
 								{stringProperties.map((def, defIndex) => (
 									<MenuItem
 										key={defIndex}
@@ -308,7 +303,7 @@ export class VideosPage extends React.Component {
 							""
 						)}
 						{stringProperties.length ? (
-							<Menu title={this.context.text_convert_to_uppercase}>
+							<Menu title={tr("Convert values to uppercase for ...")}>
 								{stringProperties.map((def, defIndex) => (
 									<MenuItem
 										key={defIndex}
@@ -321,15 +316,15 @@ export class VideosPage extends React.Component {
 							""
 						)}
 					</MenuPack>
-					<MenuPack title={this.context.menu_predictors}>
+					<MenuPack title={tr("Predictors ...")}>
 						<MenuItem action={this.createPredictionProperty}>
-							{this.context.action_create_prediction_property}
+							{tr("1) Create a prediction property ...")}
 						</MenuItem>
 						<MenuItem action={this.populatePredictionProperty}>
-							{this.context.action_populate_prediction_property_manually}
+							{tr("2) Populate a prediction property manually ...")}
 						</MenuItem>
 						{predictionProperties.length ? (
-							<Menu title={this.context.menu_compute_prediction}>
+							<Menu title={tr("3) Compute prediction for property ...")}>
 								{predictionProperties.map((def, i) => (
 									<MenuItem
 										key={i}
@@ -344,7 +339,7 @@ export class VideosPage extends React.Component {
 							""
 						)}
 						{predictionProperties.length ? (
-							<Menu title={this.context.menu_apply_prediction}>
+							<Menu title={tr("4) Apply prediction from property ...")}>
 								{predictionProperties.map((def, i) => (
 									<MenuItem
 										key={i}
@@ -357,37 +352,37 @@ export class VideosPage extends React.Component {
 							""
 						)}
 					</MenuPack>
-					<MenuPack title={this.context.menu_navigation}>
-						<Menu title={this.context.menu_navigation_videos}>
+					<MenuPack title={tr("Navigation ...")}>
+						<Menu title={tr("Videos ...")}>
 							<ActionToMenuItem action={actions.previousPage} />
 							<ActionToMenuItem action={actions.nextPage} />
 						</Menu>
 						{this.groupIsSet() ? (
-							<Menu title={this.context.menu_navigation_groups}>
+							<Menu title={tr("Groups ...")}>
 								<MenuItem
 									action={this.previousGroup}
 									shortcut="Ctrl+ArrowUp">
-									{this.context.action_go_to_previous_group}
+									{tr("Go to previous group")}
 								</MenuItem>
 								<MenuItem
 									action={this.nextGroup}
 									shortcut="Ctrl+ArrowDown">
-									{this.context.action_go_to_next_group}
+									{tr("Go to next group")}
 								</MenuItem>
 							</Menu>
 						) : (
 							""
 						)}
 					</MenuPack>
-					<MenuPack title={this.context.menu_options}>
-						<Menu title={this.context.menu_page_size}>
+					<MenuPack title={tr("Options")}>
+						<Menu title={tr("Page size ...")}>
 							{PAGE_SIZES.map((count, index) => (
 								<MenuItemRadio
 									key={index}
 									checked={this.state.pageSize === count}
 									value={count}
 									action={this.setPageSize}>
-									{this.context.action_page_size.format({
+									{tr("{count} video(s) per page", {
 										count,
 									})}
 								</MenuItemRadio>
@@ -396,17 +391,17 @@ export class VideosPage extends React.Component {
 						<MenuItemCheck
 							checked={this.state.confirmDeletion}
 							action={this.confirmDeletionForNotFound}>
-							{this.context.action_confirm_deletion_for_entries_not_found}
+							{tr("confirm deletion for entries not found")}
 						</MenuItemCheck>
 						{languages.length > 1 ? (
-							<Menu title={this.context.text_choose_language + " ..."}>
+							<Menu title={tr("Language:") + " ..."}>
 								{languages.map((language, index) => (
 									<MenuItem
 										key={index}
 										action={() =>
 											this.props.app.setLanguage(language.name)
 										}>
-										{this.context.__language__ === language.name ? (
+										{window.PYTHON_LANGUAGE === language.name ? (
 											<strong>{language.name}</strong>
 										) : (
 											language.name
@@ -420,8 +415,8 @@ export class VideosPage extends React.Component {
 					</MenuPack>
 					<div className="pagination text-right">
 						<Pagination
-							singular={this.context.word_page}
-							plural={this.context.word_pages}
+							singular={tr("page")}
+							plural={tr("pages")}
 							nbPages={nbPages}
 							pageNumber={this.state.pageNumber}
 							key={this.state.pageNumber}
@@ -436,20 +431,18 @@ export class VideosPage extends React.Component {
 							<Collapsable
 								lite={false}
 								className="filter flex-shrink-0"
-								title={this.context.section_filter}>
+								title={tr("Filter")}>
 								{this.renderFilter()}
 							</Collapsable>
 							{this.state.path.length ? (
 								<Collapsable
 									lite={false}
 									className="filter flex-shrink-0"
-									title={this.context.section_classifier_path}>
+									title={tr("Classifier path")}>
 									{stringProperties.length ? (
 										<div className="path-menu text-center p-2">
 											<MenuPack
-												title={
-													this.context.menu_concatenate_path
-												}>
+												title={tr("Concatenate path into ...")}>
 												{stringProperties.map((def, i) => (
 													<MenuItem
 														key={i}
@@ -468,7 +461,7 @@ export class VideosPage extends React.Component {
 													onClick={
 														this.classifierReversePath
 													}>
-													{this.context.action_reverse_path}
+													{tr("reverse path")}
 												</button>
 											</div>
 										</div>
@@ -485,9 +478,7 @@ export class VideosPage extends React.Component {
 											{index === this.state.path.length - 1 ? (
 												<div className="icon">
 													<Cross
-														title={
-															this.context.text_unstack
-														}
+														title={tr("unstack")}
 														action={this.classifierUnstack}
 													/>
 												</div>
@@ -505,7 +496,7 @@ export class VideosPage extends React.Component {
 									<Collapsable
 										lite={false}
 										className="group absolute-plain vertical"
-										title={this.context.section_groups}>
+										title={tr("Groups")}>
 										<GroupView
 											groupDef={groupDef}
 											isClassified={!!this.state.path.length}
@@ -558,11 +549,11 @@ export class VideosPage extends React.Component {
 						{groupDef ? (
 							<div className="info group">
 								{groupDef.groups.length
-									? this.context.text_group.format({
+									? tr("Group {group}/{count}", {
 											group: groupDef.group_id + 1,
 											count: groupDef.groups.length,
 									  })
-									: this.context.text_no_group}
+									: tr("No groups")}
 							</div>
 						) : (
 							""
@@ -580,10 +571,10 @@ export class VideosPage extends React.Component {
 
 	renderFilter() {
 		const searchTypeTitle = {
-			exact: this.context.search_exact,
-			and: this.context.search_and,
-			or: this.context.search_or,
-			id: this.context.search_id,
+			exact: tr("exactly"),
+			and: tr("all terms"),
+			or: tr("any term"),
+			id: tr("video ID"),
 		};
 		const actions = this.getActions().actions;
 		const sources = this.state.sources;
@@ -623,22 +614,16 @@ export class VideosPage extends React.Component {
 					<tr>
 						<td>
 							{groupDef ? (
-								<div>{this.context.text_grouped}</div>
+								<div>{tr("Grouped")}</div>
 							) : (
-								<div className="no-filter">
-									{this.context.text_ungrouped}
-								</div>
+								<div className="no-filter">{tr("Ungrouped")}</div>
 							)}
 						</td>
 						<td>
 							<div>
 								<ActionToSettingIcon
 									action={actions.group}
-									title={
-										groupDef
-											? this.context.action_edit
-											: this.context.action_group
-									}
+									title={groupDef ? tr("Edit ...") : tr("Group ...")}
 								/>
 							</div>
 							{groupDef ? (
@@ -656,7 +641,7 @@ export class VideosPage extends React.Component {
 							{searchDef ? (
 								<div>
 									<div>
-										{this.context.text_searched.format({
+										{tr("Searched {text}", {
 											text: searchTypeTitle[searchDef.cond],
 										})}
 									</div>
@@ -666,9 +651,7 @@ export class VideosPage extends React.Component {
 									</div>
 								</div>
 							) : (
-								<div className="no-filter">
-									{this.context.text_no_search}
-								</div>
+								<div className="no-filter">{tr("No search")}</div>
 							)}
 						</td>
 						<td>
@@ -676,9 +659,7 @@ export class VideosPage extends React.Component {
 								<ActionToSettingIcon
 									action={actions.search}
 									title={
-										searchDef
-											? this.context.action_edit
-											: this.context.action_search
+										searchDef ? tr("Edit ...") : tr("Search ...")
 									}
 								/>
 							</div>
@@ -694,7 +675,7 @@ export class VideosPage extends React.Component {
 					{/** Sort **/}
 					<tr>
 						<td>
-							<div>{this.context.text_sorted_by}</div>
+							<div>{tr("Sorted by")}</div>
 							{sorting.map((val, i) => (
 								<div key={i}>
 									<strong>
@@ -729,12 +710,10 @@ export class VideosPage extends React.Component {
 									<div>Selected</div>
 									<div>
 										{selectedAll
-											? this.context.text_all_videos_selected.format(
-													{
-														count: selectionSize,
-													}
-											  )
-											: this.context.text_videos_selected.format({
+											? tr("All {count} video(s)", {
+													count: selectionSize,
+											  })
+											: tr("{count} / {total} video(s)", {
 													count: selectionSize,
 													total: realNbVideos,
 											  })}
@@ -742,27 +721,26 @@ export class VideosPage extends React.Component {
 									<div className="mb-1">
 										<button onClick={this.displayOnlySelected}>
 											{this.state.displayOnlySelected
-												? this.context.action_display_all_videos
-												: this.context
-														.action_display_selected_videos}
+												? tr("Display all videos")
+												: tr("Display only selected videos")}
 										</button>
 									</div>
 								</div>
 							) : (
-								<div>{this.context.text_no_videos_selected}</div>
+								<div>{tr("No videos selected")}</div>
 							)}
 							{selectedAll ? (
 								""
 							) : (
 								<div className="mb-1">
 									<button onClick={this.selectAll}>
-										{this.context.action_select_all}
+										{tr("select all")}
 									</button>
 								</div>
 							)}
 							{selectionSize ? (
 								<div className="mb-1">
-									<MenuPack title={this.context.menu_edit_properties}>
+									<MenuPack title={tr("Edit property ...")}>
 										{this.state.prop_types.map((def, index) => (
 											<MenuItem
 												key={index}
@@ -783,7 +761,7 @@ export class VideosPage extends React.Component {
 						<td>
 							{selectionSize ? (
 								<Cross
-									title={this.context.action_deselect_all}
+									title={tr("Deselect all")}
 									action={this.deselect}
 								/>
 							) : (
@@ -797,9 +775,7 @@ export class VideosPage extends React.Component {
 	}
 
 	getStatus() {
-		return this.state.status === undefined
-			? this.context.status_loaded
-			: this.state.status;
+		return this.state.status === undefined ? tr("Loaded.") : this.state.status;
 	}
 
 	getFields() {
@@ -812,91 +788,91 @@ export class VideosPage extends React.Component {
 			{
 				select: new Action(
 					"Ctrl+T",
-					this.context.action_select_videos,
+					tr("Select videos ..."),
 					this.selectVideos,
 					Fancybox.isInactive
 				),
 				group: new Action(
 					"Ctrl+G",
-					this.context.action_group_videos,
+					tr("Group ..."),
 					this.groupVideos,
 					Fancybox.isInactive
 				),
 				search: new Action(
 					"Ctrl+F",
-					this.context.action_search_videos,
+					tr("Search ..."),
 					this.searchVideos,
 					Fancybox.isInactive
 				),
 				sort: new Action(
 					"Ctrl+S",
-					this.context.action_sort_videos,
+					tr("Sort ..."),
 					this.sortVideos,
 					Fancybox.isInactive
 				),
 				unselect: new Action(
 					"Ctrl+Shift+T",
-					this.context.action_unselect_videos,
+					tr("Reset selection"),
 					this.unselectVideos,
 					Fancybox.isInactive
 				),
 				ungroup: new Action(
 					"Ctrl+Shift+G",
-					this.context.action_ungroup_videos,
+					tr("Reset group"),
 					this.resetGroup,
 					Fancybox.isInactive
 				),
 				unsearch: new Action(
 					"Ctrl+Shift+F",
-					this.context.action_unsearch_videos,
+					tr("Reset search"),
 					this.resetSearch,
 					Fancybox.isInactive
 				),
 				unsort: new Action(
 					"Ctrl+Shift+S",
-					this.context.action_unsort_videos,
+					tr("Reset sorting"),
 					this.resetSort,
 					Fancybox.isInactive
 				),
 				reload: new Action(
 					"Ctrl+R",
-					this.context.action_reload_database,
+					tr("Reload database ..."),
 					this.reloadDatabase,
 					Fancybox.isInactive
 				),
 				manageProperties: new Action(
 					"Ctrl+P",
-					this.context.action_manage_properties,
+					tr("Manage properties ..."),
 					this.manageProperties,
 					Fancybox.isInactive
 				),
 				openRandomVideo: new Action(
 					"Ctrl+O",
-					this.context.action_open_random_video,
+					tr("Open random video"),
 					this.openRandomVideo,
 					this.canOpenRandomVideo
 				),
 				openRandomPlayer: new Action(
 					"Ctrl+E",
-					this.context.action_open_random_player,
+					tr("Open random player"),
 					this.openRandomPlayer,
 					this.canOpenRandomPlayer
 				),
 				previousPage: new Action(
 					"Ctrl+ArrowLeft",
-					this.context.action_go_to_previous_page,
+					tr("Go to previous page"),
 					this.previousPage,
 					Fancybox.isInactive
 				),
 				nextPage: new Action(
 					"Ctrl+ArrowRight",
-					this.context.action_go_to_next_page,
+					tr("Go to next page"),
 					this.nextPage,
 					Fancybox.isInactive
 				),
 				playlist: new Action(
 					"Ctrl+L",
-					"play list",
+					tr("play list"),
 					this.playlist,
 					Fancybox.isInactive
 				),
@@ -917,8 +893,24 @@ export class VideosPage extends React.Component {
 
 	populatePredictionProperty() {
 		Fancybox.load(
-			<FancyBox title={this.context.form_title_populate_predictor_manually}>
-				{this.context.form_content_populate_predictor_manually.markdown()}
+			<FancyBox title={tr("Populate prediction property manually")}>
+				{tr(`
+Set:
+
+- **1** for video thumbnails that match what you expect
+- **0** for video thumbnails that don't match what you expect
+- **-1** (default) for videos to ignore
+
+Prediction computation will only use videos tagged with **1** and **0**,
+so you don't need to tag all of them.
+
+There is however some good practices:
+
+- Tag enough videos with **0** and **1** (e.g. 20 videos)
+- Try to tag same amount of videos for **0** and for **1** (e.g. 10 videos each)
+
+Once done, move you can compute prediction.
+`).markdown()}
 			</FancyBox>
 		);
 	}
@@ -990,7 +982,7 @@ export class VideosPage extends React.Component {
 					: this.state.selector
 			  ).toJSON()
 			: null;
-		if (!state.status) state.status = this.context.status_updated;
+		if (!state.status) state.status = tr("updated.");
 		python_call("backend", callargs, pageSize, pageNumber, selector)
 			.then((info) =>
 				this.setState(
@@ -1071,7 +1063,7 @@ export class VideosPage extends React.Component {
 	moveVideo(videoID, directory) {
 		Fancybox.load(
 			<FancyBox
-				title={this.context.form_title_move_file.format({
+				title={tr("Move file to {path}", {
 					path: directory,
 				})}
 				onClose={() => {
@@ -1086,12 +1078,10 @@ export class VideosPage extends React.Component {
 							onReady: (status) => {
 								Fancybox.close();
 								if (status === "Cancelled")
-									this.updateStatus(
-										this.context.status_video_not_moved
-									);
+									this.updateStatus(tr("Video not moved."));
 								else
 									this.updateStatus(
-										this.context.status_video_moved.format({
+										tr("Video moved to {directory}", {
 											directory,
 										}),
 										true
@@ -1132,7 +1122,7 @@ export class VideosPage extends React.Component {
 	}
 
 	resetStatus() {
-		this.setState({ status: this.context.status_ready });
+		this.setState({ status: tr("Ready.") });
 	}
 
 	unselectVideos() {
@@ -1215,10 +1205,13 @@ export class VideosPage extends React.Component {
 								],
 								{
 									pageNumber: 0,
-									status: this.context.status_prop_val_edited.format({
-										property: propertyName,
-										count: selectionSize,
-									}),
+									status: tr(
+										"Edited property {property} for {count} video(s).",
+										{
+											property: propertyName,
+											count: selectionSize,
+										}
+									),
 								}
 							);
 						}}
@@ -1271,8 +1264,8 @@ export class VideosPage extends React.Component {
 		const name = this.state.database.name;
 		Fancybox.load(
 			<GenericFormRename
-				title={this.context.form_title_rename_database.format({ name })}
-				header={this.context.text_rename_database}
+				title={tr('Rename database "{name}"', { name })}
+				header={tr("Rename database")}
 				description={name}
 				data={name}
 				onClose={(name) => {
@@ -1285,10 +1278,10 @@ export class VideosPage extends React.Component {
 	deleteDatabase() {
 		Fancybox.load(
 			<Dialog
-				title={this.context.dialog_delete_database.format({
+				title={tr("Delete database {name}", {
 					name: this.state.database.name,
 				})}
-				yes={this.context.text_delete}
+				yes={tr("DELETE")}
 				action={() => {
 					python_call("delete_database")
 						.then((databases) => this.props.app.dbHome(databases))
@@ -1296,10 +1289,16 @@ export class VideosPage extends React.Component {
 				}}>
 				<Cell center={true} full={true} className="text-center">
 					<h1>
-						{this.context.text_database}{" "}
+						{tr("Database")}{" "}
 						<span className="red-flag">{this.state.database.name}</span>
 					</h1>
-					{this.context.form_content_confirm_delete_database.markdown()}
+					{tr(`
+## Are you sure you want to delete this database?
+
+### Database entries and thumbnails will be deleted.
+
+### Video files won't be touched.
+`).markdown()}
 				</Cell>
 			</Dialog>
 		);
@@ -1308,8 +1307,8 @@ export class VideosPage extends React.Component {
 	confirmAllUniqueMoves() {
 		Fancybox.load(
 			<Dialog
-				title={this.context.action_confirm_all_unique_moves}
-				yes={this.context.text_move}
+				title={tr("Confirm all unique moves")}
+				yes={tr("move")}
 				action={() => {
 					python_call("confirm_unique_moves")
 						.then((nbMoved) =>
@@ -1318,7 +1317,19 @@ export class VideosPage extends React.Component {
 						.catch(backend_error);
 				}}>
 				<Cell center={true} full={true} className="text-center">
-					{this.context.form_content_confirm_unique_moves.markdown()}
+					{tr(`
+# Are you sure you want to confirm all unique moves?
+
+## Each not found video which has one unique other found video with
+
+same size and duration will be moved to the later.
+
+Properties and variable attributes will be copied
+
+from not found to found video, and
+
+not found video entry will be deleted.
+`).markdown()}
 				</Cell>
 			</Dialog>
 		);
@@ -1341,7 +1352,7 @@ export class VideosPage extends React.Component {
 			.then((filename) => {
 				APP_STATE.videoHistory.add(filename);
 				this.updateStatus(
-					this.context.status_randomly_opened.format({
+					tr("Randomly opened: {path}", {
 						path: filename,
 					}),
 					true,
@@ -1391,7 +1402,8 @@ export class VideosPage extends React.Component {
 					)
 						.then(() =>
 							this.backend(null, {
-								status: this.context.status_filled_property_with_keywords.format(
+								status: tr(
+									'Filled property "{name}" with video keywords.',
 									{
 										name: state.field,
 									}
@@ -1487,10 +1499,13 @@ export class VideosPage extends React.Component {
 						case "delete":
 							this.backend(["delete_property_value", name, values], {
 								groupSelection: new Set(),
-								status: this.context.status_prop_vals_deleted.format({
-									name: name,
-									values: values.join('", "'),
-								}),
+								status: tr(
+									'Property value deleted: "{name}" : "{values}"',
+									{
+										name: name,
+										values: values.join('", "'),
+									}
+								),
 							});
 							break;
 						case "edit":
@@ -1498,7 +1513,8 @@ export class VideosPage extends React.Component {
 								["edit_property_value", name, values, operation.value],
 								{
 									groupSelection: new Set(),
-									status: this.context.status_prop_vals_edited.format(
+									status: tr(
+										'Property value edited: "{name}" : "{values}" -> "{destination}"',
 										{
 											name: name,
 											values: values.join('", "'),
@@ -1513,11 +1529,14 @@ export class VideosPage extends React.Component {
 								["move_property_value", name, values, operation.move],
 								{
 									groupSelection: new Set(),
-									status: this.context.status_prop_val_moved.format({
-										values: values.join('", "'),
-										name: name,
-										destination: operation.move,
-									}),
+									status: tr(
+										'Property value moved: "{values}" from "{name}" to "{destination}"',
+										{
+											values: values.join('", "'),
+											name: name,
+											destination: operation.move,
+										}
+									),
 								}
 							);
 							break;

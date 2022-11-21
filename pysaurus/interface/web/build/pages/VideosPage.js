@@ -197,30 +197,30 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           }, /*#__PURE__*/React.createElement("header", {
             className: "horizontal flex-shrink-0"
           }, /*#__PURE__*/React.createElement(MenuPack, {
-            title: this.context.menu_database
+            title: tr("Database ...")
           }, /*#__PURE__*/React.createElement(Menu, {
             title: "Reload database ..."
           }, /*#__PURE__*/React.createElement(ActionToMenuItem, {
             action: actions.reload
           })), /*#__PURE__*/React.createElement(MenuItem, {
             action: this.renameDatabase
-          }, this.context.action_rename_database.format({
+          }, tr('Rename database "{name}" ...', {
             name: this.state.database.name
           })), /*#__PURE__*/React.createElement(MenuItem, {
             action: this.editDatabaseFolders
-          }, this.context.action_edit_database_folders.format({
+          }, tr("Edit {count} database folders ...", {
             count: this.state.database.folders.length
           })), /*#__PURE__*/React.createElement(Menu, {
-            title: this.context.menu_close_database
+            title: tr("Close database ...")
           }, /*#__PURE__*/React.createElement(MenuItem, {
             action: this.closeDatabase
-          }, /*#__PURE__*/React.createElement("strong", null, this.context.action_close_database))), /*#__PURE__*/React.createElement(MenuItem, {
+          }, /*#__PURE__*/React.createElement("strong", null, tr("Close database")))), /*#__PURE__*/React.createElement(MenuItem, {
             className: "red-flag",
             action: this.deleteDatabase
-          }, this.context.action_delete_database)), /*#__PURE__*/React.createElement(MenuPack, {
-            title: this.context.menu_videos
+          }, tr("Delete database ..."))), /*#__PURE__*/React.createElement(MenuPack, {
+            title: tr("Videos ...")
           }, /*#__PURE__*/React.createElement(Menu, {
-            title: this.context.menu_filter_videos
+            title: tr("Filter videos ...")
           }, /*#__PURE__*/React.createElement(ActionToMenuItem, {
             action: actions.select
           }), /*#__PURE__*/React.createElement(ActionToMenuItem, {
@@ -230,7 +230,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           }), /*#__PURE__*/React.createElement(ActionToMenuItem, {
             action: actions.sort
           })), aFilterIsSet ? /*#__PURE__*/React.createElement(Menu, {
-            title: this.context.menu_reset_filters
+            title: tr("Reset filters ...")
           }, this.sourceIsSet() ? /*#__PURE__*/React.createElement(ActionToMenuItem, {
             action: actions.unselect
           }) : "", this.groupIsSet() ? /*#__PURE__*/React.createElement(ActionToMenuItem, {
@@ -245,97 +245,97 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             action: actions.openRandomPlayer
           }) : "", this.canFindSimilarVideos() ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.findSimilarVideos
-          }, this.context.action_search_similar_videos) : "", this.canFindSimilarVideos() ? /*#__PURE__*/React.createElement(Menu, {
-            title: this.context.menu_search_similar_videos_longer
+          }, tr("Search similar videos")) : "", this.canFindSimilarVideos() ? /*#__PURE__*/React.createElement(Menu, {
+            title: tr("Search similar videos (longer) ...")
           }, /*#__PURE__*/React.createElement(MenuItem, {
             action: this.findSimilarVideosIgnoreCache
-          }, /*#__PURE__*/React.createElement("strong", null, this.context.action_ignore_cache))) : "", groupedByMoves ? /*#__PURE__*/React.createElement(MenuItem, {
+          }, /*#__PURE__*/React.createElement("strong", null, tr("Ignore cache")))) : "", groupedByMoves ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.confirmAllUniqueMoves
-          }, /*#__PURE__*/React.createElement("strong", null, /*#__PURE__*/React.createElement("em", null, this.context.action_confirm_all_unique_moves))) : "", /*#__PURE__*/React.createElement(MenuItem, {
+          }, /*#__PURE__*/React.createElement("strong", null, /*#__PURE__*/React.createElement("em", null, tr("Confirm all unique moves")))) : "", /*#__PURE__*/React.createElement(MenuItem, {
             action: this.playlist,
             shortcut: "Ctrl+L"
           }, /*#__PURE__*/React.createElement("strong", null, /*#__PURE__*/React.createElement("em", null, "Play list")))), /*#__PURE__*/React.createElement(MenuPack, {
-            title: this.context.menu_properties
+            title: tr("Properties ...")
           }, /*#__PURE__*/React.createElement(ActionToMenuItem, {
             action: actions.manageProperties
           }), stringSetProperties.length ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.fillWithKeywords
-          }, this.context.action_put_keywords_into_property) : "", this.state.prop_types.length > 5 ? /*#__PURE__*/React.createElement(Menu, {
-            title: this.context.menu_group_videos_by_property
+          }, tr("Put keywords into a property ...")) : "", this.state.prop_types.length > 5 ? /*#__PURE__*/React.createElement(Menu, {
+            title: tr("Group videos by property ...")
           }, this.state.prop_types.map((def, index) => /*#__PURE__*/React.createElement(MenuItem, {
             key: index,
             action: () => this.backendGroupVideos(def.name, true)
           }, def.name))) : this.state.prop_types.map((def, index) => /*#__PURE__*/React.createElement(MenuItem, {
             key: index,
             action: () => this.backendGroupVideos(def.name, true)
-          }, this.context.action_group_videos_by_property.format({
+          }, tr("Group videos by property: {name}", {
             name: def.name
           }))), stringProperties.length ? /*#__PURE__*/React.createElement(Menu, {
-            title: this.context.text_convert_to_lowercase
+            title: tr("Convert values to lowercase for ...")
           }, stringProperties.map((def, defIndex) => /*#__PURE__*/React.createElement(MenuItem, {
             key: defIndex,
             action: () => this.propToLowercase(def)
           }, def.name))) : "", stringProperties.length ? /*#__PURE__*/React.createElement(Menu, {
-            title: this.context.text_convert_to_uppercase
+            title: tr("Convert values to uppercase for ...")
           }, stringProperties.map((def, defIndex) => /*#__PURE__*/React.createElement(MenuItem, {
             key: defIndex,
             action: () => this.propToUppercase(def)
           }, def.name))) : ""), /*#__PURE__*/React.createElement(MenuPack, {
-            title: this.context.menu_predictors
+            title: tr("Predictors ...")
           }, /*#__PURE__*/React.createElement(MenuItem, {
             action: this.createPredictionProperty
-          }, this.context.action_create_prediction_property), /*#__PURE__*/React.createElement(MenuItem, {
+          }, tr("1) Create a prediction property ...")), /*#__PURE__*/React.createElement(MenuItem, {
             action: this.populatePredictionProperty
-          }, this.context.action_populate_prediction_property_manually), predictionProperties.length ? /*#__PURE__*/React.createElement(Menu, {
-            title: this.context.menu_compute_prediction
+          }, tr("2) Populate a prediction property manually ...")), predictionProperties.length ? /*#__PURE__*/React.createElement(Menu, {
+            title: tr("3) Compute prediction for property ...")
           }, predictionProperties.map((def, i) => /*#__PURE__*/React.createElement(MenuItem, {
             key: i,
             action: () => this.computePredictionProperty(def.name)
           }, def.name))) : "", predictionProperties.length ? /*#__PURE__*/React.createElement(Menu, {
-            title: this.context.menu_apply_prediction
+            title: tr("4) Apply prediction from property ...")
           }, predictionProperties.map((def, i) => /*#__PURE__*/React.createElement(MenuItem, {
             key: i,
             action: () => this.applyPrediction(def.name)
           }, def.name))) : ""), /*#__PURE__*/React.createElement(MenuPack, {
-            title: this.context.menu_navigation
+            title: tr("Navigation ...")
           }, /*#__PURE__*/React.createElement(Menu, {
-            title: this.context.menu_navigation_videos
+            title: tr("Videos ...")
           }, /*#__PURE__*/React.createElement(ActionToMenuItem, {
             action: actions.previousPage
           }), /*#__PURE__*/React.createElement(ActionToMenuItem, {
             action: actions.nextPage
           })), this.groupIsSet() ? /*#__PURE__*/React.createElement(Menu, {
-            title: this.context.menu_navigation_groups
+            title: tr("Groups ...")
           }, /*#__PURE__*/React.createElement(MenuItem, {
             action: this.previousGroup,
             shortcut: "Ctrl+ArrowUp"
-          }, this.context.action_go_to_previous_group), /*#__PURE__*/React.createElement(MenuItem, {
+          }, tr("Go to previous group")), /*#__PURE__*/React.createElement(MenuItem, {
             action: this.nextGroup,
             shortcut: "Ctrl+ArrowDown"
-          }, this.context.action_go_to_next_group)) : ""), /*#__PURE__*/React.createElement(MenuPack, {
-            title: this.context.menu_options
+          }, tr("Go to next group"))) : ""), /*#__PURE__*/React.createElement(MenuPack, {
+            title: tr("Options")
           }, /*#__PURE__*/React.createElement(Menu, {
-            title: this.context.menu_page_size
+            title: tr("Page size ...")
           }, PAGE_SIZES.map((count, index) => /*#__PURE__*/React.createElement(MenuItemRadio, {
             key: index,
             checked: this.state.pageSize === count,
             value: count,
             action: this.setPageSize
-          }, this.context.action_page_size.format({
+          }, tr("{count} video(s) per page", {
             count
           })))), /*#__PURE__*/React.createElement(MenuItemCheck, {
             checked: this.state.confirmDeletion,
             action: this.confirmDeletionForNotFound
-          }, this.context.action_confirm_deletion_for_entries_not_found), languages.length > 1 ? /*#__PURE__*/React.createElement(Menu, {
-            title: this.context.text_choose_language + " ..."
+          }, tr("confirm deletion for entries not found")), languages.length > 1 ? /*#__PURE__*/React.createElement(Menu, {
+            title: tr("Language:") + " ..."
           }, languages.map((language, index) => /*#__PURE__*/React.createElement(MenuItem, {
             key: index,
             action: () => this.props.app.setLanguage(language.name)
-          }, this.context.__language__ === language.name ? /*#__PURE__*/React.createElement("strong", null, language.name) : language.name))) : ""), /*#__PURE__*/React.createElement("div", {
+          }, window.PYTHON_LANGUAGE === language.name ? /*#__PURE__*/React.createElement("strong", null, language.name) : language.name))) : ""), /*#__PURE__*/React.createElement("div", {
             className: "pagination text-right"
           }, /*#__PURE__*/React.createElement(Pagination, {
-            singular: this.context.word_page,
-            plural: this.context.word_pages,
+            singular: tr("page"),
+            plural: tr("pages"),
             nbPages: nbPages,
             pageNumber: this.state.pageNumber,
             key: this.state.pageNumber,
@@ -351,15 +351,15 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           }, /*#__PURE__*/React.createElement(Collapsable, {
             lite: false,
             className: "filter flex-shrink-0",
-            title: this.context.section_filter
+            title: tr("Filter")
           }, this.renderFilter()), this.state.path.length ? /*#__PURE__*/React.createElement(Collapsable, {
             lite: false,
             className: "filter flex-shrink-0",
-            title: this.context.section_classifier_path
+            title: tr("Classifier path")
           }, stringProperties.length ? /*#__PURE__*/React.createElement("div", {
             className: "path-menu text-center p-2"
           }, /*#__PURE__*/React.createElement(MenuPack, {
-            title: this.context.menu_concatenate_path
+            title: tr("Concatenate path into ...")
           }, stringProperties.map((def, i) => /*#__PURE__*/React.createElement(MenuItem, {
             key: i,
             action: () => this.classifierConcatenate(def.name)
@@ -368,7 +368,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           }, /*#__PURE__*/React.createElement("button", {
             className: "block",
             onClick: this.classifierReversePath
-          }, this.context.action_reverse_path))) : "", this.state.path.map((value, index) => /*#__PURE__*/React.createElement("div", {
+          }, tr("reverse path")))) : "", this.state.path.map((value, index) => /*#__PURE__*/React.createElement("div", {
             key: index,
             className: "path-step horizontal px-2 py-1"
           }, /*#__PURE__*/React.createElement("div", {
@@ -376,14 +376,14 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           }, value.toString()), index === this.state.path.length - 1 ? /*#__PURE__*/React.createElement("div", {
             className: "icon"
           }, /*#__PURE__*/React.createElement(Cross, {
-            title: this.context.text_unstack,
+            title: tr("unstack"),
             action: this.classifierUnstack
           })) : ""))) : "", groupDef ? /*#__PURE__*/React.createElement("div", {
             className: "flex-grow-1 position-relative"
           }, /*#__PURE__*/React.createElement(Collapsable, {
             lite: false,
             className: "group absolute-plain vertical",
-            title: this.context.section_groups
+            title: tr("Groups")
           }, /*#__PURE__*/React.createElement(GroupView, {
             groupDef: groupDef,
             isClassified: !!this.state.path.length,
@@ -417,10 +417,10 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             className: "footer-information text-right"
           }, groupDef ? /*#__PURE__*/React.createElement("div", {
             className: "info group"
-          }, groupDef.groups.length ? this.context.text_group.format({
+          }, groupDef.groups.length ? tr("Group {group}/{count}", {
             group: groupDef.group_id + 1,
             count: groupDef.groups.length
-          }) : this.context.text_no_group) : "", /*#__PURE__*/React.createElement("div", {
+          }) : tr("No groups")) : "", /*#__PURE__*/React.createElement("div", {
             className: "info count"
           }, nbVideos, " video", nbVideos > 1 ? "s" : ""), /*#__PURE__*/React.createElement("div", {
             className: "info size"
@@ -431,10 +431,10 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
 
         renderFilter() {
           const searchTypeTitle = {
-            exact: this.context.search_exact,
-            and: this.context.search_and,
-            or: this.context.search_or,
-            id: this.context.search_id
+            exact: tr("exactly"),
+            and: tr("all terms"),
+            or: tr("any term"),
+            id: tr("video ID")
           };
           const actions = this.getActions().actions;
           const sources = this.state.sources;
@@ -453,58 +453,58 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             action: actions.select
           })), !compareSources(window.PYTHON_DEFAULT_SOURCES, sources) ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToCross, {
             action: actions.unselect
-          })) : "")), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, groupDef ? /*#__PURE__*/React.createElement("div", null, this.context.text_grouped) : /*#__PURE__*/React.createElement("div", {
+          })) : "")), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, groupDef ? /*#__PURE__*/React.createElement("div", null, tr("Grouped")) : /*#__PURE__*/React.createElement("div", {
             className: "no-filter"
-          }, this.context.text_ungrouped)), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToSettingIcon, {
+          }, tr("Ungrouped"))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToSettingIcon, {
             action: actions.group,
-            title: groupDef ? this.context.action_edit : this.context.action_group
+            title: groupDef ? tr("Edit ...") : tr("Group ...")
           })), groupDef ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToCross, {
             action: actions.ungroup
-          })) : "")), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, searchDef ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", null, this.context.text_searched.format({
+          })) : "")), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, searchDef ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", null, tr("Searched {text}", {
             text: searchTypeTitle[searchDef.cond]
           })), /*#__PURE__*/React.createElement("div", {
             className: "word-break-all"
           }, "\"", /*#__PURE__*/React.createElement("strong", null, searchDef.text), "\"")) : /*#__PURE__*/React.createElement("div", {
             className: "no-filter"
-          }, this.context.text_no_search)), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToSettingIcon, {
+          }, tr("No search"))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToSettingIcon, {
             action: actions.search,
-            title: searchDef ? this.context.action_edit : this.context.action_search
+            title: searchDef ? tr("Edit ...") : tr("Search ...")
           })), searchDef ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToCross, {
             action: actions.unsearch
-          })) : "")), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, this.context.text_sorted_by), sorting.map((val, i) => /*#__PURE__*/React.createElement("div", {
+          })) : "")), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, tr("Sorted by")), sorting.map((val, i) => /*#__PURE__*/React.createElement("div", {
             key: i
           }, /*#__PURE__*/React.createElement("strong", null, this.getFields().fields[val.substr(1)].title), " ", val[0] === "-" ? /*#__PURE__*/React.createElement("span", null, "\u25BC") : /*#__PURE__*/React.createElement("span", null, "\u25B2")))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToSettingIcon, {
             action: actions.sort
           })), sortingIsDefault ? "" : /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToCross, {
             action: actions.unsort
-          })))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, selectionSize ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", null, "Selected"), /*#__PURE__*/React.createElement("div", null, selectedAll ? this.context.text_all_videos_selected.format({
+          })))), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, selectionSize ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", null, "Selected"), /*#__PURE__*/React.createElement("div", null, selectedAll ? tr("All {count} video(s)", {
             count: selectionSize
-          }) : this.context.text_videos_selected.format({
+          }) : tr("{count} / {total} video(s)", {
             count: selectionSize,
             total: realNbVideos
           })), /*#__PURE__*/React.createElement("div", {
             className: "mb-1"
           }, /*#__PURE__*/React.createElement("button", {
             onClick: this.displayOnlySelected
-          }, this.state.displayOnlySelected ? this.context.action_display_all_videos : this.context.action_display_selected_videos))) : /*#__PURE__*/React.createElement("div", null, this.context.text_no_videos_selected), selectedAll ? "" : /*#__PURE__*/React.createElement("div", {
+          }, this.state.displayOnlySelected ? tr("Display all videos") : tr("Display only selected videos")))) : /*#__PURE__*/React.createElement("div", null, tr("No videos selected")), selectedAll ? "" : /*#__PURE__*/React.createElement("div", {
             className: "mb-1"
           }, /*#__PURE__*/React.createElement("button", {
             onClick: this.selectAll
-          }, this.context.action_select_all)), selectionSize ? /*#__PURE__*/React.createElement("div", {
+          }, tr("select all"))), selectionSize ? /*#__PURE__*/React.createElement("div", {
             className: "mb-1"
           }, /*#__PURE__*/React.createElement(MenuPack, {
-            title: this.context.menu_edit_properties
+            title: tr("Edit property ...")
           }, this.state.prop_types.map((def, index) => /*#__PURE__*/React.createElement(MenuItem, {
             key: index,
             action: () => this.editPropertiesForManyVideos(def.name)
           }, def.name)))) : ""), /*#__PURE__*/React.createElement("td", null, selectionSize ? /*#__PURE__*/React.createElement(Cross, {
-            title: this.context.action_deselect_all,
+            title: tr("Deselect all"),
             action: this.deselect
           }) : ""))));
         }
 
         getStatus() {
-          return this.state.status === undefined ? this.context.status_loaded : this.state.status;
+          return this.state.status === undefined ? tr("Loaded.") : this.state.status;
         }
 
         getFields() {
@@ -514,21 +514,21 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         getActions() {
           // 14 shortcuts currently.
           return new Actions({
-            select: new Action("Ctrl+T", this.context.action_select_videos, this.selectVideos, Fancybox.isInactive),
-            group: new Action("Ctrl+G", this.context.action_group_videos, this.groupVideos, Fancybox.isInactive),
-            search: new Action("Ctrl+F", this.context.action_search_videos, this.searchVideos, Fancybox.isInactive),
-            sort: new Action("Ctrl+S", this.context.action_sort_videos, this.sortVideos, Fancybox.isInactive),
-            unselect: new Action("Ctrl+Shift+T", this.context.action_unselect_videos, this.unselectVideos, Fancybox.isInactive),
-            ungroup: new Action("Ctrl+Shift+G", this.context.action_ungroup_videos, this.resetGroup, Fancybox.isInactive),
-            unsearch: new Action("Ctrl+Shift+F", this.context.action_unsearch_videos, this.resetSearch, Fancybox.isInactive),
-            unsort: new Action("Ctrl+Shift+S", this.context.action_unsort_videos, this.resetSort, Fancybox.isInactive),
-            reload: new Action("Ctrl+R", this.context.action_reload_database, this.reloadDatabase, Fancybox.isInactive),
-            manageProperties: new Action("Ctrl+P", this.context.action_manage_properties, this.manageProperties, Fancybox.isInactive),
-            openRandomVideo: new Action("Ctrl+O", this.context.action_open_random_video, this.openRandomVideo, this.canOpenRandomVideo),
-            openRandomPlayer: new Action("Ctrl+E", this.context.action_open_random_player, this.openRandomPlayer, this.canOpenRandomPlayer),
-            previousPage: new Action("Ctrl+ArrowLeft", this.context.action_go_to_previous_page, this.previousPage, Fancybox.isInactive),
-            nextPage: new Action("Ctrl+ArrowRight", this.context.action_go_to_next_page, this.nextPage, Fancybox.isInactive),
-            playlist: new Action("Ctrl+L", "play list", this.playlist, Fancybox.isInactive)
+            select: new Action("Ctrl+T", tr("Select videos ..."), this.selectVideos, Fancybox.isInactive),
+            group: new Action("Ctrl+G", tr("Group ..."), this.groupVideos, Fancybox.isInactive),
+            search: new Action("Ctrl+F", tr("Search ..."), this.searchVideos, Fancybox.isInactive),
+            sort: new Action("Ctrl+S", tr("Sort ..."), this.sortVideos, Fancybox.isInactive),
+            unselect: new Action("Ctrl+Shift+T", tr("Reset selection"), this.unselectVideos, Fancybox.isInactive),
+            ungroup: new Action("Ctrl+Shift+G", tr("Reset group"), this.resetGroup, Fancybox.isInactive),
+            unsearch: new Action("Ctrl+Shift+F", tr("Reset search"), this.resetSearch, Fancybox.isInactive),
+            unsort: new Action("Ctrl+Shift+S", tr("Reset sorting"), this.resetSort, Fancybox.isInactive),
+            reload: new Action("Ctrl+R", tr("Reload database ..."), this.reloadDatabase, Fancybox.isInactive),
+            manageProperties: new Action("Ctrl+P", tr("Manage properties ..."), this.manageProperties, Fancybox.isInactive),
+            openRandomVideo: new Action("Ctrl+O", tr("Open random video"), this.openRandomVideo, this.canOpenRandomVideo),
+            openRandomPlayer: new Action("Ctrl+E", tr("Open random player"), this.openRandomPlayer, this.canOpenRandomPlayer),
+            previousPage: new Action("Ctrl+ArrowLeft", tr("Go to previous page"), this.previousPage, Fancybox.isInactive),
+            nextPage: new Action("Ctrl+ArrowRight", tr("Go to next page"), this.nextPage, Fancybox.isInactive),
+            playlist: new Action("Ctrl+L", tr("play list"), this.playlist, Fancybox.isInactive)
           }, this.context);
         }
 
@@ -542,8 +542,24 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
 
         populatePredictionProperty() {
           Fancybox.load( /*#__PURE__*/React.createElement(FancyBox, {
-            title: this.context.form_title_populate_predictor_manually
-          }, this.context.form_content_populate_predictor_manually.markdown()));
+            title: tr("Populate prediction property manually")
+          }, tr(`
+Set:
+
+- **1** for video thumbnails that match what you expect
+- **0** for video thumbnails that don't match what you expect
+- **-1** (default) for videos to ignore
+
+Prediction computation will only use videos tagged with **1** and **0**,
+so you don't need to tag all of them.
+
+There is however some good practices:
+
+- Tag enough videos with **0** and **1** (e.g. 20 videos)
+- Try to tag same amount of videos for **0** and for **1** (e.g. 10 videos each)
+
+Once done, move you can compute prediction.
+`).markdown()));
         }
 
         computePredictionProperty(propName) {
@@ -597,7 +613,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           const pageNumber = state.pageNumber !== undefined ? state.pageNumber : this.state.pageNumber;
           const displayOnlySelected = state.displayOnlySelected !== undefined ? state.displayOnlySelected : this.state.displayOnlySelected;
           const selector = displayOnlySelected ? (state.selector !== undefined ? state.selector : this.state.selector).toJSON() : null;
-          if (!state.status) state.status = this.context.status_updated;
+          if (!state.status) state.status = tr("updated.");
           python_call("backend", callargs, pageSize, pageNumber, selector).then(info => this.setState(this.parametersToState(state, info), top ? this.scrollTop : undefined)).catch(backend_error);
         }
 
@@ -659,7 +675,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
 
         moveVideo(videoID, directory) {
           Fancybox.load( /*#__PURE__*/React.createElement(FancyBox, {
-            title: this.context.form_title_move_file.format({
+            title: tr("Move file to {path}", {
               path: directory
             }),
             onClose: () => {
@@ -674,7 +690,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
               command: ["move_video_file", videoID, directory],
               onReady: status => {
                 Fancybox.close();
-                if (status === "Cancelled") this.updateStatus(this.context.status_video_not_moved);else this.updateStatus(this.context.status_video_moved.format({
+                if (status === "Cancelled") this.updateStatus(tr("Video not moved."));else this.updateStatus(tr("Video moved to {directory}", {
                   directory
                 }), true);
               }
@@ -720,7 +736,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
 
         resetStatus() {
           this.setState({
-            status: this.context.status_ready
+            status: tr("Ready.")
           });
         }
 
@@ -776,7 +792,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             onClose: edition => {
               this.backend(["edit_property_for_videos", propertyName, videoIndices, edition.add, edition.remove], {
                 pageNumber: 0,
-                status: this.context.status_prop_val_edited.format({
+                status: tr("Edited property {property} for {count} video(s).", {
                   property: propertyName,
                   count: selectionSize
                 })
@@ -824,10 +840,10 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         renameDatabase() {
           const name = this.state.database.name;
           Fancybox.load( /*#__PURE__*/React.createElement(GenericFormRename, {
-            title: this.context.form_title_rename_database.format({
+            title: tr('Rename database "{name}"', {
               name
             }),
-            header: this.context.text_rename_database,
+            header: tr("Rename database"),
             description: name,
             data: name,
             onClose: name => {
@@ -840,10 +856,10 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
 
         deleteDatabase() {
           Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
-            title: this.context.dialog_delete_database.format({
+            title: tr("Delete database {name}", {
               name: this.state.database.name
             }),
-            yes: this.context.text_delete,
+            yes: tr("DELETE"),
             action: () => {
               python_call("delete_database").then(databases => this.props.app.dbHome(databases)).catch(backend_error);
             }
@@ -851,15 +867,21 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             center: true,
             full: true,
             className: "text-center"
-          }, /*#__PURE__*/React.createElement("h1", null, this.context.text_database, " ", /*#__PURE__*/React.createElement("span", {
+          }, /*#__PURE__*/React.createElement("h1", null, tr("Database"), " ", /*#__PURE__*/React.createElement("span", {
             className: "red-flag"
-          }, this.state.database.name)), this.context.form_content_confirm_delete_database.markdown())));
+          }, this.state.database.name)), tr(`
+## Are you sure you want to delete this database?
+
+### Database entries and thumbnails will be deleted.
+
+### Video files won't be touched.
+`).markdown())));
         }
 
         confirmAllUniqueMoves() {
           Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
-            title: this.context.action_confirm_all_unique_moves,
-            yes: this.context.text_move,
+            title: tr("Confirm all unique moves"),
+            yes: tr("move"),
             action: () => {
               python_call("confirm_unique_moves").then(nbMoved => this.updateStatus(`Moved ${nbMoved} video(s)`, true, true)).catch(backend_error);
             }
@@ -867,7 +889,19 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             center: true,
             full: true,
             className: "text-center"
-          }, this.context.form_content_confirm_unique_moves.markdown())));
+          }, tr(`
+# Are you sure you want to confirm all unique moves?
+
+## Each not found video which has one unique other found video with
+
+same size and duration will be moved to the later.
+
+Properties and variable attributes will be copied
+
+from not found to found video, and
+
+not found video entry will be deleted.
+`).markdown())));
         }
 
         resetGroup() {
@@ -891,7 +925,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         openRandomVideo() {
           python_call("open_random_video").then(filename => {
             APP_STATE.videoHistory.add(filename);
-            this.updateStatus(this.context.status_randomly_opened.format({
+            this.updateStatus(tr("Randomly opened: {path}", {
               path: filename
             }), true, true);
           }).catch(backend_error);
@@ -926,7 +960,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             prop_types: this.getStringSetProperties(this.state.prop_types),
             onClose: state => {
               python_call("fill_property_with_terms", state.field, state.onlyEmpty).then(() => this.backend(null, {
-                status: this.context.status_filled_property_with_keywords.format({
+                status: tr('Filled property "{name}" with video keywords.', {
                   name: state.field
                 })
               })).catch(backend_error);
@@ -1021,7 +1055,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
                 case "delete":
                   this.backend(["delete_property_value", name, values], {
                     groupSelection: new Set(),
-                    status: this.context.status_prop_vals_deleted.format({
+                    status: tr('Property value deleted: "{name}" : "{values}"', {
                       name: name,
                       values: values.join('", "')
                     })
@@ -1031,7 +1065,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
                 case "edit":
                   this.backend(["edit_property_value", name, values, operation.value], {
                     groupSelection: new Set(),
-                    status: this.context.status_prop_vals_edited.format({
+                    status: tr('Property value edited: "{name}" : "{values}" -> "{destination}"', {
                       name: name,
                       values: values.join('", "'),
                       destination: operation.value
@@ -1042,7 +1076,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
                 case "move":
                   this.backend(["move_property_value", name, values, operation.move], {
                     groupSelection: new Set(),
-                    status: this.context.status_prop_val_moved.format({
+                    status: tr('Property value moved: "{values}" from "{name}" to "{destination}"', {
                       values: values.join('", "'),
                       name: name,
                       destination: operation.move

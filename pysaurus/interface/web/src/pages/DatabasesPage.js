@@ -30,7 +30,7 @@ export class DatabasesPage extends React.Component {
 		return (
 			<div id="databases" className="text-center">
 				<h1>
-					{this.context.gui_database_welcome.format({
+					{tr("Welcome to {name}", {
 						name: window.PYTHON_APP_NAME,
 					})}
 				</h1>
@@ -38,14 +38,12 @@ export class DatabasesPage extends React.Component {
 					{languages.length > 1 ? (
 						<tr>
 							<td className="text-right">
-								<label htmlFor="language">
-									{this.context.text_choose_language}:
-								</label>
+								<label htmlFor="language">{tr("Language:")}:</label>
 							</td>
 							<td className="text-left">
 								<select
 									id="language"
-									value={this.context.__language__}
+									value={window.PYTHON_LANGUAGE}
 									onChange={this.onChangeLanguage}>
 									{languages.map((language, index) => (
 										<option key={index} value={language.name}>
@@ -60,19 +58,17 @@ export class DatabasesPage extends React.Component {
 					)}
 					<tr>
 						<td>
-							<h2>{this.context.gui_database_create}</h2>
+							<h2>{tr("Create a database")}</h2>
 							<div className="p-1">
 								<input
 									type="text"
 									className="w-100"
 									value={this.state.name}
 									onChange={this.onChangeName}
-									placeholder={
-										this.context.gui_database_name_placeholder
-									}
+									placeholder={tr("Database name.")}
 								/>
 							</div>
-							<h3>{this.context.gui_database_paths}</h3>
+							<h3>{tr("Database folders and files")}</h3>
 							<div className="vertical new-paths">
 								<PathsInput
 									onUpdate={this.onUpdatePaths}
@@ -81,13 +77,13 @@ export class DatabasesPage extends React.Component {
 							</div>
 							<div className="p-1">
 								<button className="block" onClick={this.createDatabase}>
-									{this.context.gui_database_button_create}
+									{tr("create database")}
 								</button>
 							</div>
 						</td>
 						<td>
 							<h2>
-								{this.context.gui_database_open.format({
+								{tr("Open a database ({count} available)", {
 									count: this.props.parameters.databases.length,
 								})}
 							</h2>
@@ -99,10 +95,10 @@ export class DatabasesPage extends React.Component {
 									onChange={this.onChangeUpdate}
 								/>{" "}
 								<label htmlFor="update">
-									{this.context.gui_database_update_after_opening}
+									{tr("update after opening")}
 								</label>
 							</div>
-							<h3>{this.context.gui_database_click_to_open}</h3>
+							<h3>{tr("Click on a database to open it")}</h3>
 							{this.props.parameters.databases.map((database, index) => (
 								<div className="p-1" key={index}>
 									<button

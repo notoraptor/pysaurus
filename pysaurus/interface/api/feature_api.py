@@ -13,7 +13,13 @@ from pysaurus.language.default_language import language_to_dict
 
 
 class FeatureAPI:
-    __slots__ = ("notifier", "application", "database", "PYTHON_LANG")
+    __slots__ = (
+        "notifier",
+        "application",
+        "database",
+        "PYTHON_LANG",
+        "PYTHON_LANGUAGE",
+    )
     PYTHON_DEFAULT_SOURCES = DEFAULT_SOURCE_DEF
     PYTHON_APP_NAME = Application.app_name
     PYTHON_HAS_EMBEDDED_PLAYER = False
@@ -24,6 +30,7 @@ class FeatureAPI:
         self.application = Application(self.notifier)
         self.database: Optional[Database] = None
         self.PYTHON_LANG = language_to_dict(self.application.lang)
+        self.PYTHON_LANGUAGE = self.application.lang.__language__
 
     # Utilities.
 
