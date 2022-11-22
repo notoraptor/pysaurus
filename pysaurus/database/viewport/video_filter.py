@@ -264,7 +264,14 @@ class LayerSearch(Layer):
             if search_def.cond == "exact":
                 selection_and = set.intersection(
                     set(data.videos),
-                    *(term_to_videos[term] for term in terms if term in term_to_videos),
+                    *(
+                        [
+                            term_to_videos[term]
+                            for term in terms
+                            if term in term_to_videos
+                        ]
+                        or [set()]
+                    ),
                 )
                 selection = (
                     video
@@ -274,7 +281,14 @@ class LayerSearch(Layer):
             elif search_def.cond == "and":
                 selection = set.intersection(
                     set(data.videos),
-                    *(term_to_videos[term] for term in terms if term in term_to_videos),
+                    *(
+                        [
+                            term_to_videos[term]
+                            for term in terms
+                            if term in term_to_videos
+                        ]
+                        or [set()]
+                    ),
                 )
             elif search_def.cond == "id":
                 (term,) = terms
@@ -288,7 +302,14 @@ class LayerSearch(Layer):
             else:
                 assert search_def.cond == "or"
                 selection = set(data.videos) & set.union(
-                    *(term_to_videos[term] for term in terms if term in term_to_videos)
+                    *(
+                        [
+                            term_to_videos[term]
+                            for term in terms
+                            if term in term_to_videos
+                        ]
+                        or [set()]
+                    )
                 )
             self.output = VideoArray(selection)
 
