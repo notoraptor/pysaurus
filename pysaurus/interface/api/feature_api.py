@@ -2,7 +2,6 @@ import sys
 from typing import Optional
 
 from pysaurus.application.application import Application
-from pysaurus.core import notifications
 from pysaurus.core.components import Duration, FileSize
 from pysaurus.core.functions import compute_nb_pages
 from pysaurus.database.database import Database
@@ -32,8 +31,6 @@ class FeatureAPI:
         self.PYTHON_LANG = language_to_dict(self.application.lang)
         self.PYTHON_LANGUAGE = self.application.lang.__language__
 
-    # Utilities.
-
     def _parse_video_selector(self, selector: dict, return_videos=False):
         if selector["all"]:
             exclude = set(selector["exclude"])
@@ -55,8 +52,6 @@ class FeatureAPI:
             )
         return output
 
-    # Constant getters.
-
     def get_constants(self):
         return {
             key: getattr(self, key) for key in dir(self) if key.startswith("PYTHON_")
@@ -75,8 +70,6 @@ class FeatureAPI:
 
     def set_language(self, name):
         return language_to_dict(self.application.open_language_from_name(name))
-
-    # Provider getters.
 
     def backend(self, callargs, page_size, page_number, selector=None):
         prev_sources = self.database.provider.get_sources()
@@ -156,8 +149,6 @@ class FeatureAPI:
             **extra,
         }
 
-    # Provider setters.
-
     def set_sources(self, paths):
         self.database.provider.set_sources(paths)
 
@@ -182,13 +173,11 @@ class FeatureAPI:
         self.database.provider.set_sort(sorting)
 
     def classifier_select_group(self, group_id):
-        prop_name = self.database.provider.get_grouping().field
         path = self.database.provider.get_classifier_path()
         value = self.database.provider.get_classifier_group_value(group_id)
         new_path = path + [value]
         self.database.provider.set_classifier_path(new_path)
         self.database.provider.set_group(0)
-        self.database.notifier.notify(notifications.PropertiesModified([prop_name]))
 
     def classifier_focus_prop_val(self, prop_name, field_value):
         self.set_groups(prop_name, True, "count", True, True)
@@ -199,19 +188,23 @@ class FeatureAPI:
         self.classifier_select_group(group_id)
 
     def classifier_back(self):
-        prop_name = self.database.provider.get_grouping().field
         path = self.database.provider.get_classifier_path()
         self.database.provider.set_classifier_path(path[:-1])
         self.database.provider.set_group(0)
-        self.database.notifier.notify(notifications.PropertiesModified([prop_name]))
 
-    # stable
     def classifier_reverse(self):
         path = list(reversed(self.database.provider.get_classifier_path()))
         self.database.provider.set_classifier_path(path)
         return path
 
-    # Database actions without modifications.
+    def classifier_concatenate_path(self, to_property):
+        path = self.database.provider.get_classifier_path()
+        from_property = self.database.provider.get_grouping().field
+        self.database.provider.set_classifier_path([])
+        self.database.provider.set_group(0)
+        self.database.move_concatenated_prop_val(
+            self.database.provider.get_all_videos(), path, from_property, to_property
+        )
 
     def choose_random_video(self):
         video = self.database.provider.get_random_found_video()
@@ -238,8 +231,6 @@ class FeatureAPI:
     def open_containing_folder(self, video_id):
         return str(self.database.get_video_filename(video_id).locate_file())
 
-    # Database getters.
-
     def get_prop_types(self):
         return self.database.describe_prop_types()
 
@@ -248,8 +239,6 @@ class FeatureAPI:
             name, self._parse_video_selector(selector)
         )
         return sorted(value_to_count.items())
-
-    # Database setters.
 
     def set_video_folders(self, paths):
         self.database.set_folders(paths)
@@ -288,8 +277,6 @@ class FeatureAPI:
     def convert_prop_to_multiple(self, name):
         self.database.convert_prop_to_multiple(name)
         return self.get_prop_types()
-
-    # Database setters + provider updated.
 
     def dismiss_similarity(self, video_id):
         self.database.set_similarity(video_id, -1)
@@ -330,15 +317,6 @@ class FeatureAPI:
     def move_property_value(self, old_name, values, new_name):
         self.database.move_property_value(
             self.database.provider.get_all_videos(), old_name, values, new_name
-        )
-
-    def classifier_concatenate_path(self, to_property):
-        path = self.database.provider.get_classifier_path()
-        from_property = self.database.provider.get_grouping().field
-        self.database.provider.set_classifier_path([])
-        self.database.provider.set_group(0)
-        self.database.move_concatenated_prop_val(
-            self.database.provider.get_all_videos(), path, from_property, to_property
         )
 
     def set_video_moved(self, from_id, to_id):

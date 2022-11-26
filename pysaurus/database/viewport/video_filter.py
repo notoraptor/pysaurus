@@ -1,10 +1,14 @@
+import random
 from abc import abstractmethod
-from typing import Dict, List, Sequence, Set
+from typing import Dict, Iterable, List, Sequence, Set
 
+from pysaurus.application import exceptions
 from pysaurus.core import functions
+from pysaurus.core.components import AbsolutePath
 from pysaurus.database.video import Video
 from pysaurus.database.video_sorting import VideoSorting
 from pysaurus.database.viewport.abstract_video_provider import AbstractVideoProvider
+from pysaurus.database.viewport.source_def import SourceDef
 from pysaurus.database.viewport.view_tools import (
     Group,
     GroupArray,
@@ -12,6 +16,8 @@ from pysaurus.database.viewport.view_tools import (
     SearchDef,
     VideoArray,
 )
+
+EMPTY_SET = set()
 
 
 class Layer:
@@ -26,26 +32,26 @@ class Layer:
         self.output = None
         self.to_update = False
 
-    def __log(self, *args, **kwargs):
+    def _log(self, *args, **kwargs):
         print(f"[{type(self).__name__}]", *args, **kwargs)
 
     def set_input(self, data):
         if self.input is not data:
             self.input = data
             self.to_update = True
-            self.__log("set_input")
+            self._log("set_input")
 
     def set_params(self, **params):
         if self.params != params:
             self.params = params
             self.to_update = True
-            self.__log("set_params", params)
+            self._log("set_params", params)
 
     def get_output(self):
         if self.to_update:
             self.run()
             self.to_update = False
-            self.__log("run")
+            self._log("run")
         return self.output
 
     @abstractmethod
@@ -62,12 +68,17 @@ class Layer:
 
 
 class LayerSource(Layer):
-    __slots__ = ()
-    output: Set[Video]
+    __slots__ = ("source_def",)
+    output: VideoArray
+
+    def __init__(self, database):
+        super().__init__(database)
+        self.source_def = SourceDef(self.params["sources"])
 
     def set_params(self, *, sources: Sequence[Sequence[str]]):
         if sources is None:
             super().set_params(**self.default_params())
+            self.source_def = SourceDef(self.params["sources"])
         else:
             valid_paths = set()
             for path in sources:
@@ -78,21 +89,31 @@ class LayerSource(Layer):
                     valid_paths.add(path)
             if valid_paths:
                 super().set_params(sources=sorted(valid_paths))
+                self.source_def = SourceDef(self.params["sources"])
 
     @classmethod
     def default_params(cls) -> Dict:
         return {"sources": [("readable",)]}
 
     def run(self):
-        source = []
+        videos = VideoArray()
         for path in self.params["sources"]:
-            source.extend(self.input.get_videos(*path))
-        unique_videos = set(source)
-        assert len(unique_videos) == len(source), (len(unique_videos), len(source))
-        self.output: Set[Video] = unique_videos
+            videos.extend(self.input.get_videos(*path))
+        self.output: VideoArray = videos
 
     def delete(self, video: Video):
         self.output.remove(video)
+
+    def get_random_video(self):
+        # At least one source should not have "not_found" flag
+        if self.source_def.has_source_without("not_found"):
+            # We search with cache length as maximum trials count
+            for _ in range(len(self.output)):
+                video = self.output[random.randrange(len(self.output))]
+                if video.found:
+                    self._log("get_random_video", video.filename)
+                    return video
+        raise exceptions.NoVideos()
 
 
 class _AbstractLayerGrouping(Layer):
@@ -128,7 +149,7 @@ class _AbstractLayerGrouping(Layer):
 
 class LayerGrouping(_AbstractLayerGrouping):
     __slots__ = ()
-    input: Set[Video]
+    input: VideoArray
     output: GroupArray
 
     def set_params(self, *, grouping: GroupDef):
@@ -140,7 +161,7 @@ class LayerGrouping(_AbstractLayerGrouping):
     def run(self):
         group_def: GroupDef = self.params["grouping"]
         if not group_def:
-            groups = [Group(None, list(self.input))]
+            groups = [Group(None, self.input)]
         else:
             grouped_videos = {}
             for video in self.input:
@@ -171,7 +192,7 @@ class LayerClassifier(_AbstractLayerGrouping):
     def _infer_grouping(self):
         return self.grouping_layer.params["grouping"].copy(allow_singletons=True)
 
-    def set_params(self, *, path: List, grouping: GroupDef):
+    def set_params(self, *, path: List, grouping: GroupDef = None):
         super().set_params(
             path=path, grouping=self._infer_grouping() if grouping is None else grouping
         )
@@ -258,60 +279,42 @@ class LayerSearch(Layer):
         if not search_def:
             self.output = self.input.videos
         else:
-            data = self.input
-            term_to_videos = self.database.indexer.get_index()
+            filenames = {video.filename for video in self.input.videos}
+            term_to_filenames = self.database.indexer.get_index()
             terms = functions.string_to_pieces(search_def.text)
+            self._log("search", search_def.cond, terms)
             if search_def.cond == "exact":
-                selection_and = set.intersection(
-                    set(data.videos),
-                    *(
-                        [
-                            term_to_videos[term]
-                            for term in terms
-                            if term in term_to_videos
-                        ]
-                        or [set()]
-                    ),
+                selection_and: Iterable[AbsolutePath] = set.intersection(
+                    set(filenames),
+                    *(term_to_filenames.get(term, EMPTY_SET) for term in terms),
                 )
-                selection = (
-                    video
-                    for video in selection_and
-                    if self.database.indexer.video_has_terms_exact(video, terms)
+                selection: Iterable[AbsolutePath] = (
+                    filename
+                    for filename in selection_and
+                    if self.database.indexer.filename_has_terms_exact(filename, terms)
                 )
             elif search_def.cond == "and":
-                selection = set.intersection(
-                    set(data.videos),
-                    *(
-                        [
-                            term_to_videos[term]
-                            for term in terms
-                            if term in term_to_videos
-                        ]
-                        or [set()]
-                    ),
+                selection: Iterable[AbsolutePath] = set.intersection(
+                    set(filenames),
+                    *(term_to_filenames.get(term, EMPTY_SET) for term in terms),
                 )
-            elif search_def.cond == "id":
+            elif search_def.cond == "or":
+                selection: Iterable[AbsolutePath] = set(filenames) & set.union(
+                    *(term_to_filenames.get(term, EMPTY_SET) for term in terms)
+                )
+            else:
+                assert search_def.cond == "id"
                 (term,) = terms
                 video_id = int(term)
                 # TODO Database.id_to_video used here
-                selection = (
-                    [self.database.id_to_video[video_id]]
+                selection: Iterable[AbsolutePath] = (
+                    [self.database.id_to_video[video_id].filename]
                     if video_id in self.database.id_to_video
                     else []
                 )
-            else:
-                assert search_def.cond == "or"
-                selection = set(data.videos) & set.union(
-                    *(
-                        [
-                            term_to_videos[term]
-                            for term in terms
-                            if term in term_to_videos
-                        ]
-                        or [set()]
-                    )
-                )
-            self.output = VideoArray(selection)
+            self.output = VideoArray(
+                self.input.videos.lookup(filename) for filename in selection
+            )
 
     def delete(self, video):
         if video in self.output:
@@ -342,18 +345,17 @@ class LayerSort(Layer):
             self.output.remove(video)
 
 
-_LAYER_NAMES_ = {
-    "source": LayerSource,
-    "grouping": LayerGrouping,
-    "classifier": LayerClassifier,
-    "group": LayerGroup,
-    "search": LayerSearch,
-    "sort": LayerSort,
-}
-
-
 class VideoSelector(AbstractVideoProvider):
     __slots__ = ("_database", "pipeline", "layers")
+
+    _LAYER_NAMES_ = {
+        "source": LayerSource,
+        "grouping": LayerGrouping,
+        "classifier": LayerClassifier,
+        "group": LayerGroup,
+        "search": LayerSearch,
+        "sort": LayerSort,
+    }
 
     def __init__(self, database):
         super().__init__(database)
@@ -436,12 +438,12 @@ class VideoSelector(AbstractVideoProvider):
 
     def reset_parameters(self, *layer_names: str):
         for layer_name in layer_names:
-            layer_cls = _LAYER_NAMES_[layer_name]
+            layer_cls = self._LAYER_NAMES_[layer_name]
             self.layers[layer_cls].set_params(**self.layers[layer_cls].default_params())
 
     def force_update(self, *layer_names: str):
         for layer_name in layer_names:
-            layer_cls = _LAYER_NAMES_[layer_name]
+            layer_cls = self._LAYER_NAMES_[layer_name]
             self.layers[layer_cls].to_update = True
 
     def get_classifier_stats(self):
@@ -458,3 +460,7 @@ class VideoSelector(AbstractVideoProvider):
     def get_all_videos(self):
         layer: LayerSource = self.layers[LayerSource]
         return layer.output
+
+    def get_random_found_video(self) -> Video:
+        layer: LayerSource = self.layers[LayerSource]
+        return layer.get_random_video()

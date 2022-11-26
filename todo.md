@@ -23,7 +23,7 @@ Bugs:
 - Cannot force kill a Python thread.
 - We read some duration as a negative too big number,
   while vlc detects real duration correctly.
-- videos terms detection sometimes split words that contains uppercases, but those words should not be split.
+- video terms detection sometimes split words that contains uppercases, but those words should not be split.
   - E.g. "FiLM" must not be split in "Dragon Ball Z - FiLM x 01 - A la poursuite de Garlic MULTi 1080p BluRay x265 - KHAYA"
 - If selected videos are emptied, it prints "selected -1 /0"
 - When opening grouping dialog and clicking to group button without anything else, grouping will not occure (attribute is not selected by default)
@@ -53,3 +53,6 @@ Optimizations:
 - Interface update is too slow on video properties edition or group/classifier changes.
   - Database backup and terms index update needs to be optimized.
 - Allow both to delete video or move video to trash
+- As video is hashed using filename, filename attribute should be non-mutable.
+  If we need to change filename (e.g. when renaming video), we should recreate
+  a new video object copied from old one with necessary changes applied to new one.

@@ -47,8 +47,10 @@ class LookupArray(Generic[T]):
 
     def append(self, value: T):
         self.__check_type(value)
+        key = self.__key_fn(value)
+        assert key not in self.__table, (value, key)
         self.__content.append(value)
-        self.__table[self.__key_fn(value)] = len(self.__content) - 1
+        self.__table[key] = len(self.__content) - 1
 
     def pop(self, index: int):
         if index < 0:

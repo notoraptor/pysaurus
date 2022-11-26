@@ -1,7 +1,7 @@
-System.register([], function (_export, _context) {
+System.register(["../language.js"], function (_export, _context) {
   "use strict";
 
-  var FieldInfo, FieldMap, GroupPermission, FieldType, PAGE_SIZES, VIDEO_DEFAULT_PAGE_SIZE, VIDEO_DEFAULT_PAGE_NUMBER, SOURCE_TREE, Characters;
+  var tr, FieldInfo, FieldMap, GroupPermission, FieldType, PAGE_SIZES, VIDEO_DEFAULT_PAGE_SIZE, VIDEO_DEFAULT_PAGE_NUMBER, SOURCE_TREE, Characters, SearchTypeTitle;
 
   function getFieldMap(context) {
     return new FieldMap([new FieldInfo("audio_bit_rate", tr("audio bit rate"), GroupPermission.ALL, FieldType.int), new FieldInfo("audio_codec", tr("audio codec"), GroupPermission.ALL, FieldType.str), new FieldInfo("audio_codec_description", tr("audio codec description"), GroupPermission.ALL, FieldType.str), new FieldInfo("bit_depth", tr("bit depth"), GroupPermission.ALL, FieldType.int), new FieldInfo("container_format", tr("container format"), GroupPermission.ALL, FieldType.str), new FieldInfo("date", tr("date modified"), GroupPermission.ONLY_MANY, FieldType.sortable), new FieldInfo("day", tr("day"), GroupPermission.ALL, FieldType.str), new FieldInfo("disk", tr("disk"), GroupPermission.ALL, FieldType.str), new FieldInfo("extension", tr("file extension"), GroupPermission.ALL, FieldType.str), new FieldInfo("file_size", tr("file size (bytes)"), GroupPermission.ONLY_MANY, FieldType.int), new FieldInfo("file_title", tr("file title"), GroupPermission.ONLY_MANY, FieldType.str), new FieldInfo("file_title_numeric", tr("file title (with numbers)"), GroupPermission.ONLY_MANY, FieldType.sortable), new FieldInfo("filename", tr("file path"), GroupPermission.ONLY_MANY, FieldType.str), new FieldInfo("filename_numeric", tr("file path (with numbers)"), GroupPermission.ONLY_MANY, FieldType.sortable), new FieldInfo("frame_rate", tr("frame rate"), GroupPermission.ALL, FieldType.float), new FieldInfo("height", tr("height"), GroupPermission.ALL, FieldType.int), new FieldInfo("length", tr("length"), GroupPermission.ONLY_MANY, FieldType.sortable), new FieldInfo("move_id", tr("moved files (potentially)"), GroupPermission.ONLY_MANY, FieldType.unsortable), new FieldInfo("properties", tr("properties"), GroupPermission.FORBIDDEN, FieldType.unsortable), new FieldInfo("quality", tr("quality"), GroupPermission.ONLY_MANY, FieldType.float), new FieldInfo("sample_rate", tr("sample rate"), GroupPermission.ALL, FieldType.int), new FieldInfo("similarity_id", tr("similarity"), GroupPermission.ONLY_MANY, FieldType.unsortable), new FieldInfo("size", tr("size"), GroupPermission.ONLY_MANY, FieldType.sortable), new FieldInfo("thumbnail_path", tr("thumbnail path"), GroupPermission.FORBIDDEN, FieldType.unsortable), new FieldInfo("title", tr("title"), GroupPermission.ONLY_MANY, FieldType.str), new FieldInfo("title_numeric", tr("title (with numbers)"), GroupPermission.ONLY_MANY, FieldType.sortable), new FieldInfo("video_codec", tr("video codec"), GroupPermission.ALL, FieldType.str), new FieldInfo("video_codec_description", tr("video codec description"), GroupPermission.ALL, FieldType.str), new FieldInfo("video_id", tr("video ID"), GroupPermission.FORBIDDEN, FieldType.int), new FieldInfo("width", tr("width"), GroupPermission.ALL, FieldType.int), new FieldInfo("size_length", "(size and length)", GroupPermission.ONLY_MANY, FieldType.sortable)], context);
@@ -10,7 +10,9 @@ System.register([], function (_export, _context) {
   _export("getFieldMap", getFieldMap);
 
   return {
-    setters: [],
+    setters: [function (_languageJs) {
+      tr = _languageJs.tr;
+    }],
     execute: function () {
       _export("GroupPermission", GroupPermission = {
         FORBIDDEN: 0,
@@ -130,6 +132,13 @@ System.register([], function (_export, _context) {
         SMART_ARROW_RIGHT: "\u2B9E",
         WARNING_SIGN: "\u26A0" // ⚠
 
+      });
+
+      _export("SearchTypeTitle", SearchTypeTitle = {
+        exact: tr("exactly"),
+        and: tr("all terms"),
+        or: tr("any term"),
+        id: tr("video ID")
       });
     }
   };

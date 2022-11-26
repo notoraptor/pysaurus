@@ -1,3 +1,5 @@
+import { tr } from "../language.js";
+
 export const GroupPermission = {
 	FORBIDDEN: 0,
 	ONLY_MANY: 1,
@@ -280,4 +282,11 @@ export const Characters = {
 	SMART_ARROW_LEFT: "\u2B9C",
 	SMART_ARROW_RIGHT: "\u2B9E",
 	WARNING_SIGN: "\u26A0", // ⚠
+};
+
+export const SearchTypeTitle = {
+	exact: tr("exactly"),
+	and: tr("all terms"),
+	or: tr("any term"),
+	id: tr("video ID"),
 };

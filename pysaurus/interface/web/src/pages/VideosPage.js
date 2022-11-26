@@ -32,6 +32,7 @@ import { FormNewPredictionProperty } from "../forms/FormNewPredictionProperty.js
 import { GenericFormRename } from "../forms/GenericFormRename.js";
 import { LangContext } from "../language.js";
 import { arrayEquals } from "../utils/functions.js";
+import {SearchTypeTitle} from "../utils/constants.js";
 
 function compareSources(sources1, sources2) {
 	if (sources1.length !== sources2.length) return false;
@@ -570,12 +571,6 @@ export class VideosPage extends React.Component {
 	}
 
 	renderFilter() {
-		const searchTypeTitle = {
-			exact: tr("exactly"),
-			and: tr("all terms"),
-			or: tr("any term"),
-			id: tr("video ID"),
-		};
 		const actions = this.getActions().actions;
 		const sources = this.state.sources;
 		const groupDef = this.state.groupDef;
@@ -601,7 +596,7 @@ export class VideosPage extends React.Component {
 							<div>
 								<ActionToSettingIcon action={actions.select} />
 							</div>
-							{!compareSources(window.PYTHON_DEFAULT_SOURCES, sources) ? (
+							{this.sourceIsSet() ? (
 								<div>
 									<ActionToCross action={actions.unselect} />
 								</div>
@@ -642,7 +637,7 @@ export class VideosPage extends React.Component {
 								<div>
 									<div>
 										{tr("Searched {text}", {
-											text: searchTypeTitle[searchDef.cond],
+											text: SearchTypeTitle[searchDef.cond],
 										})}
 									</div>
 									<div className="word-break-all">

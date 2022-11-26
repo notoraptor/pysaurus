@@ -1,7 +1,7 @@
 System.register(["../utils/constants.js", "../components/MenuPack.js", "../components/Pagination.js", "../components/Video.js", "../forms/FormVideosSource.js", "../forms/FormVideosGrouping.js", "../forms/FormVideosSearch.js", "../forms/FormVideosSort.js", "../components/GroupView.js", "../forms/FormPropertyEditSelectedValues.js", "../forms/FormVideosKeywordsToProperty.js", "../forms/FormSelectedVideosEditProperty.js", "../components/Collapsable.js", "../components/Cross.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/MenuItemRadio.js", "../components/Menu.js", "../utils/Selector.js", "../utils/Action.js", "../utils/Actions.js", "../components/ActionToMenuItem.js", "../components/ActionToSettingIcon.js", "../components/ActionToCross.js", "../utils/backend.js", "../dialogs/FancyBox.js", "./HomePage.js", "../forms/FormDatabaseEditFolders.js", "../dialogs/Dialog.js", "../components/Cell.js", "../forms/FormNewPredictionProperty.js", "../forms/GenericFormRename.js", "../language.js", "../utils/functions.js"], function (_export, _context) {
   "use strict";
 
-  var getFieldMap, PAGE_SIZES, SOURCE_TREE, MenuPack, Pagination, Video, FormVideosSource, FormVideosGrouping, FormVideosSearch, FormVideosSort, GroupView, FormPropertyEditSelectedValues, FormVideosKeywordsToProperty, FormSelectedVideosEditProperty, Collapsable, Cross, MenuItem, MenuItemCheck, MenuItemRadio, Menu, Selector, Action, Actions, ActionToMenuItem, ActionToSettingIcon, ActionToCross, backend_error, python_call, FancyBox, HomePage, FormDatabaseEditFolders, Dialog, Cell, FormNewPredictionProperty, GenericFormRename, LangContext, arrayEquals, VideosPage;
+  var getFieldMap, PAGE_SIZES, SOURCE_TREE, MenuPack, Pagination, Video, FormVideosSource, FormVideosGrouping, FormVideosSearch, FormVideosSort, GroupView, FormPropertyEditSelectedValues, FormVideosKeywordsToProperty, FormSelectedVideosEditProperty, Collapsable, Cross, MenuItem, MenuItemCheck, MenuItemRadio, Menu, Selector, Action, Actions, ActionToMenuItem, ActionToSettingIcon, ActionToCross, backend_error, python_call, FancyBox, HomePage, FormDatabaseEditFolders, Dialog, Cell, FormNewPredictionProperty, GenericFormRename, LangContext, arrayEquals, SearchTypeTitle, VideosPage;
 
   function compareSources(sources1, sources2) {
     if (sources1.length !== sources2.length) return false;
@@ -26,6 +26,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
       getFieldMap = _utilsConstantsJs.getFieldMap;
       PAGE_SIZES = _utilsConstantsJs.PAGE_SIZES;
       SOURCE_TREE = _utilsConstantsJs.SOURCE_TREE;
+      SearchTypeTitle = _utilsConstantsJs.SearchTypeTitle;
     }, function (_componentsMenuPackJs) {
       MenuPack = _componentsMenuPackJs.MenuPack;
     }, function (_componentsPaginationJs) {
@@ -430,12 +431,6 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
         }
 
         renderFilter() {
-          const searchTypeTitle = {
-            exact: tr("exactly"),
-            and: tr("all terms"),
-            or: tr("any term"),
-            id: tr("video ID")
-          };
           const actions = this.getActions().actions;
           const sources = this.state.sources;
           const groupDef = this.state.groupDef;
@@ -451,7 +446,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             key: index
           }, source.join(" ").replace("_", " ")))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToSettingIcon, {
             action: actions.select
-          })), !compareSources(window.PYTHON_DEFAULT_SOURCES, sources) ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToCross, {
+          })), this.sourceIsSet() ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToCross, {
             action: actions.unselect
           })) : "")), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, groupDef ? /*#__PURE__*/React.createElement("div", null, tr("Grouped")) : /*#__PURE__*/React.createElement("div", {
             className: "no-filter"
@@ -461,7 +456,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           })), groupDef ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToCross, {
             action: actions.ungroup
           })) : "")), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, searchDef ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", null, tr("Searched {text}", {
-            text: searchTypeTitle[searchDef.cond]
+            text: SearchTypeTitle[searchDef.cond]
           })), /*#__PURE__*/React.createElement("div", {
             className: "word-break-all"
           }, "\"", /*#__PURE__*/React.createElement("strong", null, searchDef.text), "\"")) : /*#__PURE__*/React.createElement("div", {
