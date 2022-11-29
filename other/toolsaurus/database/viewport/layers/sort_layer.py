@@ -74,7 +74,6 @@ class SortLayer(Layer):
                     count=len(readable_unreadable[1])
                 )
             )
-            self.database.set_message(", ".join(message) + ".")
 
         return VideoArray(readable_unreadable[0] + readable_unreadable[1])
 

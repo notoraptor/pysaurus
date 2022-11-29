@@ -148,4 +148,5 @@ export class FormVideoEditProperties extends React.Component {
 		}
 	}
 }
+
 FormVideoEditProperties.contextType = LangContext;

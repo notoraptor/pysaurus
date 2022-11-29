@@ -182,4 +182,5 @@ export class FormVideosSource extends React.Component {
 			this.props.onClose(this.state.paths.map((path) => path.split("-")));
 	}
 }
+
 FormVideosSource.contextType = LangContext;

@@ -53,9 +53,8 @@ class FieldInfo {
 class FieldMap {
 	/**
 	 * @param fieldInfoList {Array.<FieldInfo>}
-	 * @param context {Object}
 	 */
-	constructor(fieldInfoList, context) {
+	constructor(fieldInfoList) {
 		this.list = fieldInfoList;
 		this.allowed = [];
 		this.sortable = [];
@@ -86,179 +85,129 @@ class FieldMap {
 	}
 }
 
-export function getFieldMap(context) {
-	return new FieldMap(
-		[
-			new FieldInfo(
-				"audio_bit_rate",
-				tr("audio bit rate"),
-				GroupPermission.ALL,
-				FieldType.int
-			),
-			new FieldInfo(
-				"audio_codec",
-				tr("audio codec"),
-				GroupPermission.ALL,
-				FieldType.str
-			),
-			new FieldInfo(
-				"audio_codec_description",
-				tr("audio codec description"),
-				GroupPermission.ALL,
-				FieldType.str
-			),
-			new FieldInfo(
-				"bit_depth",
-				tr("bit depth"),
-				GroupPermission.ALL,
-				FieldType.int
-			),
-			new FieldInfo(
-				"container_format",
-				tr("container format"),
-				GroupPermission.ALL,
-				FieldType.str
-			),
-			new FieldInfo(
-				"date",
-				tr("date modified"),
-				GroupPermission.ONLY_MANY,
-				FieldType.sortable
-			),
-			new FieldInfo("day", tr("day"), GroupPermission.ALL, FieldType.str),
-			new FieldInfo("disk", tr("disk"), GroupPermission.ALL, FieldType.str),
-			new FieldInfo(
-				"extension",
-				tr("file extension"),
-				GroupPermission.ALL,
-				FieldType.str
-			),
-			new FieldInfo(
-				"file_size",
-				tr("file size (bytes)"),
-				GroupPermission.ONLY_MANY,
-				FieldType.int
-			),
-			new FieldInfo(
-				"file_title",
-				tr("file title"),
-				GroupPermission.ONLY_MANY,
-				FieldType.str
-			),
-			new FieldInfo(
-				"file_title_numeric",
-				tr("file title (with numbers)"),
-				GroupPermission.ONLY_MANY,
-				FieldType.sortable
-			),
-			new FieldInfo(
-				"filename",
-				tr("file path"),
-				GroupPermission.ONLY_MANY,
-				FieldType.str
-			),
-			new FieldInfo(
-				"filename_numeric",
-				tr("file path (with numbers)"),
-				GroupPermission.ONLY_MANY,
-				FieldType.sortable
-			),
-			new FieldInfo(
-				"frame_rate",
-				tr("frame rate"),
-				GroupPermission.ALL,
-				FieldType.float
-			),
-			new FieldInfo("height", tr("height"), GroupPermission.ALL, FieldType.int),
-			new FieldInfo(
-				"length",
-				tr("length"),
-				GroupPermission.ONLY_MANY,
-				FieldType.sortable
-			),
-			new FieldInfo(
-				"move_id",
-				tr("moved files (potentially)"),
-				GroupPermission.ONLY_MANY,
-				FieldType.unsortable
-			),
-			new FieldInfo(
-				"properties",
-				tr("properties"),
-				GroupPermission.FORBIDDEN,
-				FieldType.unsortable
-			),
-			new FieldInfo(
-				"quality",
-				tr("quality"),
-				GroupPermission.ONLY_MANY,
-				FieldType.float
-			),
-			new FieldInfo(
-				"sample_rate",
-				tr("sample rate"),
-				GroupPermission.ALL,
-				FieldType.int
-			),
-			new FieldInfo(
-				"similarity_id",
-				tr("similarity"),
-				GroupPermission.ONLY_MANY,
-				FieldType.unsortable
-			),
-			new FieldInfo(
-				"size",
-				tr("size"),
-				GroupPermission.ONLY_MANY,
-				FieldType.sortable
-			),
-			new FieldInfo(
-				"thumbnail_path",
-				tr("thumbnail path"),
-				GroupPermission.FORBIDDEN,
-				FieldType.unsortable
-			),
-			new FieldInfo(
-				"title",
-				tr("title"),
-				GroupPermission.ONLY_MANY,
-				FieldType.str
-			),
-			new FieldInfo(
-				"title_numeric",
-				tr("title (with numbers)"),
-				GroupPermission.ONLY_MANY,
-				FieldType.sortable
-			),
-			new FieldInfo(
-				"video_codec",
-				tr("video codec"),
-				GroupPermission.ALL,
-				FieldType.str
-			),
-			new FieldInfo(
-				"video_codec_description",
-				tr("video codec description"),
-				GroupPermission.ALL,
-				FieldType.str
-			),
-			new FieldInfo(
-				"video_id",
-				tr("video ID"),
-				GroupPermission.FORBIDDEN,
-				FieldType.int
-			),
-			new FieldInfo("width", tr("width"), GroupPermission.ALL, FieldType.int),
-			new FieldInfo(
-				"size_length",
-				"(size and length)",
-				GroupPermission.ONLY_MANY,
-				FieldType.sortable
-			),
-		],
-		context
-	);
-}
+export const FIELD_MAP = new FieldMap([
+	new FieldInfo(
+		"audio_bit_rate",
+		tr("audio bit rate"),
+		GroupPermission.ALL,
+		FieldType.int
+	),
+	new FieldInfo("audio_codec", tr("audio codec"), GroupPermission.ALL, FieldType.str),
+	new FieldInfo(
+		"audio_codec_description",
+		tr("audio codec description"),
+		GroupPermission.ALL,
+		FieldType.str
+	),
+	new FieldInfo("bit_depth", tr("bit depth"), GroupPermission.ALL, FieldType.int),
+	new FieldInfo(
+		"container_format",
+		tr("container format"),
+		GroupPermission.ALL,
+		FieldType.str
+	),
+	new FieldInfo(
+		"date",
+		tr("date modified"),
+		GroupPermission.ONLY_MANY,
+		FieldType.sortable
+	),
+	new FieldInfo("day", tr("day"), GroupPermission.ALL, FieldType.str),
+	new FieldInfo("disk", tr("disk"), GroupPermission.ALL, FieldType.str),
+	new FieldInfo(
+		"extension",
+		tr("file extension"),
+		GroupPermission.ALL,
+		FieldType.str
+	),
+	new FieldInfo(
+		"file_size",
+		tr("file size (bytes)"),
+		GroupPermission.ONLY_MANY,
+		FieldType.int
+	),
+	new FieldInfo(
+		"file_title",
+		tr("file title"),
+		GroupPermission.ONLY_MANY,
+		FieldType.str
+	),
+	new FieldInfo(
+		"file_title_numeric",
+		tr("file title (with numbers)"),
+		GroupPermission.ONLY_MANY,
+		FieldType.sortable
+	),
+	new FieldInfo(
+		"filename",
+		tr("file path"),
+		GroupPermission.ONLY_MANY,
+		FieldType.str
+	),
+	new FieldInfo(
+		"filename_numeric",
+		tr("file path (with numbers)"),
+		GroupPermission.ONLY_MANY,
+		FieldType.sortable
+	),
+	new FieldInfo("frame_rate", tr("frame rate"), GroupPermission.ALL, FieldType.float),
+	new FieldInfo("height", tr("height"), GroupPermission.ALL, FieldType.int),
+	new FieldInfo(
+		"length",
+		tr("length"),
+		GroupPermission.ONLY_MANY,
+		FieldType.sortable
+	),
+	new FieldInfo(
+		"move_id",
+		tr("moved files (potentially)"),
+		GroupPermission.ONLY_MANY,
+		FieldType.unsortable
+	),
+	new FieldInfo(
+		"properties",
+		tr("properties"),
+		GroupPermission.FORBIDDEN,
+		FieldType.unsortable
+	),
+	new FieldInfo("quality", tr("quality"), GroupPermission.ONLY_MANY, FieldType.float),
+	new FieldInfo("sample_rate", tr("sample rate"), GroupPermission.ALL, FieldType.int),
+	new FieldInfo(
+		"similarity_id",
+		tr("similarity"),
+		GroupPermission.ONLY_MANY,
+		FieldType.unsortable
+	),
+	new FieldInfo("size", tr("size"), GroupPermission.ONLY_MANY, FieldType.sortable),
+	new FieldInfo(
+		"thumbnail_path",
+		tr("thumbnail path"),
+		GroupPermission.FORBIDDEN,
+		FieldType.unsortable
+	),
+	new FieldInfo("title", tr("title"), GroupPermission.ONLY_MANY, FieldType.str),
+	new FieldInfo(
+		"title_numeric",
+		tr("title (with numbers)"),
+		GroupPermission.ONLY_MANY,
+		FieldType.sortable
+	),
+	new FieldInfo("video_codec", tr("video codec"), GroupPermission.ALL, FieldType.str),
+	new FieldInfo(
+		"video_codec_description",
+		tr("video codec description"),
+		GroupPermission.ALL,
+		FieldType.str
+	),
+	new FieldInfo("video_id", tr("video ID"), GroupPermission.FORBIDDEN, FieldType.int),
+	new FieldInfo("width", tr("width"), GroupPermission.ALL, FieldType.int),
+	new FieldInfo(
+		"size_length",
+		"(size and length)",
+		GroupPermission.ONLY_MANY,
+		FieldType.sortable
+	),
+]);
 
 export const PAGE_SIZES = [1, 10, 20, 50, 100];
 

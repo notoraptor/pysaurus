@@ -69,4 +69,5 @@ export class FormNewPredictionProperty extends React.Component {
 			this.props.onClose(this.state.title);
 	}
 }
+
 FormNewPredictionProperty.contextType = LangContext;

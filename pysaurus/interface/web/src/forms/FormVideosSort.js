@@ -1,4 +1,4 @@
-import { getFieldMap } from "../utils/constants.js";
+import { FIELD_MAP } from "../utils/constants.js";
 import { FancyBox } from "../dialogs/FancyBox.js";
 import { LangContext } from "../language.js";
 
@@ -14,7 +14,6 @@ export class FormVideosSort extends React.Component {
 		this.addCriterion = this.addCriterion.bind(this);
 		this.removeCriterion = this.removeCriterion.bind(this);
 		this.submit = this.submit.bind(this);
-		this.getFields = this.getFields.bind(this);
 	}
 
 	render() {
@@ -68,7 +67,7 @@ Click on "sort" to validate, or close dialog to cancel.
 					<select
 						value={field}
 						onChange={(event) => this.setField(index, event.target.value)}>
-						{this.getFields().sortable.map((entry, fieldIndex) => (
+						{FIELD_MAP.sortable.map((entry, fieldIndex) => (
 							<option key={fieldIndex} value={entry.name}>
 								{entry.title}
 							</option>
@@ -86,10 +85,6 @@ Click on "sort" to validate, or close dialog to cancel.
 				</p>
 			);
 		});
-	}
-
-	getFields() {
-		return getFieldMap(this.context);
 	}
 
 	setField(index, value) {
@@ -125,4 +120,5 @@ Click on "sort" to validate, or close dialog to cancel.
 		if (sorting.length) this.props.onClose(sorting);
 	}
 }
+
 FormVideosSort.contextType = LangContext;

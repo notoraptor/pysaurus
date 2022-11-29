@@ -1,4 +1,4 @@
-import { getFieldMap } from "../utils/constants.js";
+import { FIELD_MAP } from "../utils/constants.js";
 import { Dialog } from "../dialogs/Dialog.js";
 import { LangContext } from "../language.js";
 
@@ -30,7 +30,6 @@ export class FormVideosGrouping extends React.Component {
 		this.onChangeGroupReverse = this.onChangeGroupReverse.bind(this);
 		this.onClose = this.onClose.bind(this);
 		this.onChangeFieldType = this.onChangeFieldType.bind(this);
-		this.getFields = this.getFields.bind(this);
 		this.getStateField = this.getStateField.bind(this);
 		this.getStateAllowSingletons = this.getStateAllowSingletons.bind(this);
 	}
@@ -78,7 +77,7 @@ export class FormVideosGrouping extends React.Component {
 													{def.name}
 												</option>
 										  ))
-										: this.getFields().allowed.map(
+										: FIELD_MAP.allowed.map(
 												(fieldOption, index) => (
 													<option
 														key={index}
@@ -91,7 +90,7 @@ export class FormVideosGrouping extends React.Component {
 							</td>
 						</tr>
 						{this.state.isProperty ||
-						!this.getFields().fields[field].isOnlyMany() ? (
+						!FIELD_MAP.fields[field].isOnlyMany() ? (
 							<tr>
 								<td className="label">
 									<input
@@ -168,34 +167,30 @@ export class FormVideosGrouping extends React.Component {
 
 	getStateField() {
 		return this.state.field === undefined
-			? this.getFields().allowed[0].name
+			? FIELD_MAP.allowed[0].name
 			: this.state.field;
 	}
 
 	getStateAllowSingletons() {
 		return this.state.allowSingletons === undefined
-			? !this.getFields().allowed[0].isOnlyMany()
+			? !FIELD_MAP.allowed[0].isOnlyMany()
 			: this.state.allowSingletons;
-	}
-
-	getFields() {
-		return getFieldMap(this.context);
 	}
 
 	fieldIsString() {
 		const field = this.getStateField();
 		if (this.state.isProperty) return this.props.propertyMap[field].type === "str";
-		return this.getFields().fields[field].isString();
+		return FIELD_MAP.fields[field].isString();
 	}
 
 	onChangeFieldType(event) {
 		const isProperty = event.target.value === "true";
 		const field = isProperty
 			? this.props.prop_types[0].name
-			: this.getFields().allowed[0].name;
+			: FIELD_MAP.allowed[0].name;
 		const sorting = "field";
 		const reverse = false;
-		const allowSingletons = isProperty || !this.getFields().allowed[0].isOnlyMany();
+		const allowSingletons = isProperty || !FIELD_MAP.allowed[0].isOnlyMany();
 		this.setState({ isProperty, field, sorting, reverse, allowSingletons });
 	}
 
@@ -204,7 +199,7 @@ export class FormVideosGrouping extends React.Component {
 		const sorting = "field";
 		const reverse = false;
 		const allowSingletons =
-			this.state.isProperty || !this.getFields().fields[field].isOnlyMany();
+			this.state.isProperty || !FIELD_MAP.fields[field].isOnlyMany();
 		this.setState({ field, sorting, reverse, allowSingletons });
 	}
 
@@ -235,4 +230,5 @@ export class FormVideosGrouping extends React.Component {
 		);
 	}
 }
+
 FormVideosGrouping.contextType = LangContext;

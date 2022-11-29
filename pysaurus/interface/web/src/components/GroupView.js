@@ -1,4 +1,4 @@
-import { Characters, getFieldMap } from "../utils/constants.js";
+import { Characters, FIELD_MAP } from "../utils/constants.js";
 import { Pagination } from "./Pagination.js";
 import { SettingIcon } from "./SettingIcon.js";
 import { PlusIcon } from "./PlusIcon.js";
@@ -20,7 +20,6 @@ export class GroupView extends React.Component {
 		this.allChecked = this.allChecked.bind(this);
 		this.onCheckEntry = this.onCheckEntry.bind(this);
 		this.onCheckAll = this.onCheckAll.bind(this);
-		this.getFields = this.getFields.bind(this);
 		this.getActions = this.getActions.bind(this);
 		this.callbackIndex = -1;
 	}
@@ -193,7 +192,7 @@ export class GroupView extends React.Component {
 		const field = this.props.groupDef.field;
 		let title = this.props.groupDef.is_property
 			? `"${capitalizeFirstLetter(field)}"`
-			: capitalizeFirstLetter(this.getFields().fields[field].title);
+			: capitalizeFirstLetter(FIELD_MAP.fields[field].title);
 		if (this.props.groupDef.sorting === "length") title = `|| ${title} ||`;
 		else if (this.props.groupDef.sorting === "count") title = `${title} (#)`;
 		title = `${title} ${
@@ -228,10 +227,6 @@ export class GroupView extends React.Component {
 			},
 			this.context
 		);
-	}
-
-	getFields() {
-		return getFieldMap(this.context);
 	}
 
 	getNullIndex() {
@@ -334,6 +329,7 @@ export class GroupView extends React.Component {
 		this.props.onGroupViewState({ selection });
 	}
 }
+
 GroupView.contextType = LangContext;
 GroupView.propTypes = {
 	groupDef: PropTypes.shape({

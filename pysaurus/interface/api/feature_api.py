@@ -3,9 +3,8 @@ from typing import Optional
 
 from pysaurus.application.application import Application
 from pysaurus.core.components import Duration, FileSize
-from pysaurus.core.functions import compute_nb_pages
+from pysaurus.core.functions import apply_selector, compute_nb_pages
 from pysaurus.database.database import Database
-from pysaurus.database.properties import PropType
 from pysaurus.database.utils import DEFAULT_SOURCE_DEF
 from pysaurus.database.video_features import VideoFeatures
 from pysaurus.language.default_language import language_to_dict
@@ -32,25 +31,9 @@ class FeatureAPI:
         self.PYTHON_LANGUAGE = self.application.lang.__language__
 
     def _parse_video_selector(self, selector: dict, return_videos=False):
-        if selector["all"]:
-            exclude = set(selector["exclude"])
-            output = [
-                (video if return_videos else video.video_id)
-                for video in self.database.provider.get_view()
-                if video.video_id not in exclude
-            ]
-        else:
-            include = set(selector["include"])
-            output = (
-                [
-                    video
-                    for video in self.database.provider.get_view()
-                    if video.video_id in include
-                ]
-                if return_videos
-                else include
-            )
-        return output
+        return apply_selector(
+            selector, self.database.provider.get_view(), "video_id", return_videos
+        )
 
     def get_constants(self):
         return {
@@ -72,11 +55,7 @@ class FeatureAPI:
         return language_to_dict(self.application.open_language_from_name(name))
 
     def backend(self, callargs, page_size, page_number, selector=None):
-        prev_sources = self.database.provider.get_sources()
-        prev_grouping = self.database.provider.get_grouping()
-        prev_path = self.database.provider.get_classifier_path()
-        prev_group_id = self.database.provider.get_group()
-        prev_search = self.database.provider.get_search()
+        prev_state = self.database.provider.get_unordered_state()
 
         if callargs:
             ret = getattr(self, callargs[0])(*callargs[1:])
@@ -102,24 +81,8 @@ class FeatureAPI:
             if group_def and group_def["field"] == "similarity_id":
                 group_def["common"] = VideoFeatures.get_common_fields(view)
 
-        sources = self.database.provider.get_sources()
-        grouping = self.database.provider.get_grouping()
-        path = self.database.provider.get_classifier_path()
-        group_id = self.database.provider.get_group()
-        search = self.database.provider.get_search()
+        provider_changed = self.database.provider.get_unordered_state() != prev_state
 
-        provider_changed = (
-            prev_sources != sources
-            or prev_grouping != grouping
-            or prev_path != path
-            or prev_group_id != group_id
-            or prev_search != search
-        )
-
-        extra = {}
-        db_message = self.database.flush_message()
-        if db_message:
-            extra["status"] = db_message
         return {
             "pageSize": page_size,
             "pageNumber": page_number,
@@ -133,20 +96,18 @@ class FeatureAPI:
                     sum(video.raw_microseconds for video in view if video.readable)
                 )
             ),
-            "notFound": all("not_found" in source for source in sources),
-            "sources": sources,
+            "sources": self.database.provider.get_sources(),
             "groupDef": group_def,
             "searchDef": self.database.provider.get_search_def(),
             "sorting": self.database.provider.get_sort(),
             "videos": videos,
-            "path": path,
+            "path": self.database.provider.get_classifier_path(),
             "prop_types": self.database.describe_prop_types(),
             "database": {
                 "name": self.database.name,
                 "folders": [str(path) for path in sorted(self.database.video_folders)],
             },
             "viewChanged": provider_changed,
-            **extra,
         }
 
     def set_sources(self, paths):
@@ -173,29 +134,16 @@ class FeatureAPI:
         self.database.provider.set_sort(sorting)
 
     def classifier_select_group(self, group_id):
-        path = self.database.provider.get_classifier_path()
-        value = self.database.provider.get_classifier_group_value(group_id)
-        new_path = path + [value]
-        self.database.provider.set_classifier_path(new_path)
-        self.database.provider.set_group(0)
+        self.database.provider.classifier_select_group(group_id)
 
     def classifier_focus_prop_val(self, prop_name, field_value):
-        self.set_groups(prop_name, True, "count", True, True)
-        self.database.provider.get_view()
-        group_id = self.database.provider.convert_field_value_to_group_id(field_value)
-        self.database.provider.set_classifier_path([])
-        self.database.provider.get_view()
-        self.classifier_select_group(group_id)
+        self.database.provider.classifier_focus_prop_val(prop_name, field_value)
 
     def classifier_back(self):
-        path = self.database.provider.get_classifier_path()
-        self.database.provider.set_classifier_path(path[:-1])
-        self.database.provider.set_group(0)
+        self.database.provider.classifier_back()
 
     def classifier_reverse(self):
-        path = list(reversed(self.database.provider.get_classifier_path()))
-        self.database.provider.set_classifier_path(path)
-        return path
+        return self.database.provider.classifier_reverse()
 
     def classifier_concatenate_path(self, to_property):
         path = self.database.provider.get_classifier_path()
@@ -206,16 +154,8 @@ class FeatureAPI:
             self.database.provider.get_all_videos(), path, from_property, to_property
         )
 
-    def choose_random_video(self):
-        video = self.database.provider.get_random_found_video()
-        self.database.provider.reset_parameters(
-            "source", "grouping", "classifier", "group"
-        )
-        self.set_search(str(video.video_id), "id")
-        return video
-
     def open_random_video(self):
-        return str(self.choose_random_video().filename.open())
+        return str(self.database.provider.choose_random_video().filename.open())
 
     def playlist(self):
         return str(
@@ -235,10 +175,9 @@ class FeatureAPI:
         return self.database.describe_prop_types()
 
     def count_prop_values(self, name, selector):
-        value_to_count = self.database.count_property_values(
+        return self.database.count_property_values(
             name, self._parse_video_selector(selector)
         )
-        return sorted(value_to_count.items())
 
     def set_video_folders(self, paths):
         self.database.set_folders(paths)
@@ -253,13 +192,8 @@ class FeatureAPI:
     def prop_to_uppercase(self, prop_name):
         self.database.prop_to_uppercase(prop_name)
 
-    def add_prop_type(self, prop_name, prop_type, prop_default, prop_multiple):
-        if prop_type == "float":
-            if isinstance(prop_default, list):
-                prop_default = [float(element) for element in prop_default]
-            else:
-                prop_default = float(prop_default)
-        self.database.add_prop_type(PropType(prop_name, prop_default, prop_multiple))
+    def add_prop_type(self, prop_name: str, prop_type: str, definition, multiple: bool):
+        self.database.create_prop_type(prop_name, prop_type, definition, multiple)
         return self.get_prop_types()
 
     def delete_prop_type(self, name):

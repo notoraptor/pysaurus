@@ -128,4 +128,5 @@ to automatically select "AND" as search method.
 		this.props.onClose(criterion);
 	}
 }
+
 FormVideosSearch.contextType = LangContext;

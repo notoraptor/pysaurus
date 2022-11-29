@@ -1,13 +1,13 @@
 System.register(["../utils/constants.js", "../dialogs/FancyBox.js", "../language.js"], function (_export, _context) {
   "use strict";
 
-  var getFieldMap, FancyBox, LangContext, FormVideosSort;
+  var FIELD_MAP, FancyBox, LangContext, FormVideosSort;
 
   _export("FormVideosSort", void 0);
 
   return {
     setters: [function (_utilsConstantsJs) {
-      getFieldMap = _utilsConstantsJs.getFieldMap;
+      FIELD_MAP = _utilsConstantsJs.FIELD_MAP;
     }, function (_dialogsFancyBoxJs) {
       FancyBox = _dialogsFancyBoxJs.FancyBox;
     }, function (_languageJs) {
@@ -28,7 +28,6 @@ System.register(["../utils/constants.js", "../dialogs/FancyBox.js", "../language
           this.addCriterion = this.addCriterion.bind(this);
           this.removeCriterion = this.removeCriterion.bind(this);
           this.submit = this.submit.bind(this);
-          this.getFields = this.getFields.bind(this);
         }
 
         render() {
@@ -74,7 +73,7 @@ Click on "sort" to validate, or close dialog to cancel.
             }, "-"), /*#__PURE__*/React.createElement("select", {
               value: field,
               onChange: event => this.setField(index, event.target.value)
-            }, this.getFields().sortable.map((entry, fieldIndex) => /*#__PURE__*/React.createElement("option", {
+            }, FIELD_MAP.sortable.map((entry, fieldIndex) => /*#__PURE__*/React.createElement("option", {
               key: fieldIndex,
               value: entry.name
             }, entry.title))), /*#__PURE__*/React.createElement("input", {
@@ -86,10 +85,6 @@ Click on "sort" to validate, or close dialog to cancel.
               htmlFor: reverseID
             }, "reverse"));
           });
-        }
-
-        getFields() {
-          return getFieldMap(this.context);
         }
 
         setField(index, value) {

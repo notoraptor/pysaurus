@@ -1,7 +1,7 @@
 System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js", "./PlusIcon.js", "../utils/functions.js", "../utils/Actions.js", "../utils/Action.js", "../language.js"], function (_export, _context) {
   "use strict";
 
-  var Characters, getFieldMap, Pagination, SettingIcon, PlusIcon, capitalizeFirstLetter, Actions, Action, LangContext, GroupView;
+  var Characters, FIELD_MAP, Pagination, SettingIcon, PlusIcon, capitalizeFirstLetter, Actions, Action, LangContext, GroupView;
 
   function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
@@ -10,7 +10,7 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
   return {
     setters: [function (_utilsConstantsJs) {
       Characters = _utilsConstantsJs.Characters;
-      getFieldMap = _utilsConstantsJs.getFieldMap;
+      FIELD_MAP = _utilsConstantsJs.FIELD_MAP;
     }, function (_PaginationJs) {
       Pagination = _PaginationJs.Pagination;
     }, function (_SettingIconJs) {
@@ -40,7 +40,6 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
           this.allChecked = this.allChecked.bind(this);
           this.onCheckEntry = this.onCheckEntry.bind(this);
           this.onCheckAll = this.onCheckAll.bind(this);
-          this.getFields = this.getFields.bind(this);
           this.getActions = this.getActions.bind(this);
           this.callbackIndex = -1;
         }
@@ -154,7 +153,7 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
 
         renderTitle() {
           const field = this.props.groupDef.field;
-          let title = this.props.groupDef.is_property ? `"${capitalizeFirstLetter(field)}"` : capitalizeFirstLetter(this.getFields().fields[field].title);
+          let title = this.props.groupDef.is_property ? `"${capitalizeFirstLetter(field)}"` : capitalizeFirstLetter(FIELD_MAP.fields[field].title);
           if (this.props.groupDef.sorting === "length") title = `|| ${title} ||`;else if (this.props.groupDef.sorting === "count") title = `${title} (#)`;
           title = `${title} ${this.props.groupDef.reverse ? Characters.ARROW_DOWN : Characters.ARROW_UP}`;
           return title;
@@ -173,10 +172,6 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
             previous: new Action("Ctrl+ArrowUp", tr("Go to previous group"), this.previousGroup, Fancybox.isInactive),
             next: new Action("Ctrl+ArrowDown", tr("Go to next group"), this.nextGroup, Fancybox.isInactive)
           }, this.context);
-        }
-
-        getFields() {
-          return getFieldMap(this.context);
         }
 
         getNullIndex() {

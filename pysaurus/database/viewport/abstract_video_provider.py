@@ -93,6 +93,16 @@ class AbstractVideoProvider(metaclass=ABCMeta):
     def delete(self, video: Video):
         pass
 
+    def get_unordered_state(self):
+        """Get state excluding sorting state"""
+        return {
+            "sources": self.get_sources(),
+            "grouping": self.get_grouping(),
+            "path": self.get_classifier_path(),
+            "group": self.get_group(),
+            "search": self.get_search(),
+        }
+
     def refresh(self):
         self.force_update("source")
 
@@ -118,6 +128,44 @@ class AbstractVideoProvider(metaclass=ABCMeta):
         if not videos:
             raise exceptions.NoVideos()
         return videos[random.randrange(len(videos))]
+
+    def choose_random_video(self):
+        video = self.get_random_found_video()
+        self.reset_parameters("source", "grouping", "classifier", "group")
+        self.set_search(str(video.video_id), "id")
+        return video
+
+    def classifier_select_group(self, group_id: int):
+        path = self.get_classifier_path()
+        value = self.get_classifier_group_value(group_id)
+        new_path = path + [value]
+        self.set_classifier_path(new_path)
+        self.set_group(0)
+
+    def classifier_focus_prop_val(self, prop_name, field_value):
+        self.set_groups(
+            field=prop_name,
+            is_property=True,
+            sorting="count",
+            reverse=True,
+            allow_singletons=True,
+        )
+        self.get_view()
+        group_id = self.convert_field_value_to_group_id(field_value)
+        self.set_classifier_path([])
+        self.get_view()
+        # NB: here, classifier and grouping have same group array
+        self.classifier_select_group(group_id)
+
+    def classifier_back(self):
+        path = self.get_classifier_path()
+        self.set_classifier_path(path[:-1])
+        self.set_group(0)
+
+    def classifier_reverse(self):
+        path = list(reversed(self.get_classifier_path()))
+        self.set_classifier_path(path)
+        return path
 
     def register_notifications(self):
         self._database.notifier.set_manager(

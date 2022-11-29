@@ -44,6 +44,11 @@ Features:
 - Add an option "save to playlist" to save current view into a playlist.
 - Manage errors like read-only properties.
 - Add video property "date_added" for date when video was added to database.
+- Keep history of opened videos. Maybe use a dynamic video property "date_opened".
+- Clean a multiple string property from another (unique/multiple) string property.
+- Fill keywords from a specific string property to another multiple string property.
+- Allow to add plugins as video context menu.
+  - For each video, check if plugin is applicable. If so, add it as context menu (menu hierarchy, action for each menu)
 
 Optimizations:
 - Memory leaks in python code when running gui ?

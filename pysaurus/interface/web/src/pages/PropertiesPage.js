@@ -484,4 +484,5 @@ export class PropertiesPage extends React.Component {
 		};
 	}
 }
+
 PropertiesPage.contextType = LangContext;

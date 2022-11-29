@@ -366,4 +366,5 @@ export class FormSelectedVideosEditProperty extends React.Component {
 		this.props.onClose({ add: this.state.add, remove: this.state.remove });
 	}
 }
+
 FormSelectedVideosEditProperty.contextType = LangContext;

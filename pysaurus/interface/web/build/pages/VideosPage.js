@@ -1,7 +1,7 @@
 System.register(["../utils/constants.js", "../components/MenuPack.js", "../components/Pagination.js", "../components/Video.js", "../forms/FormVideosSource.js", "../forms/FormVideosGrouping.js", "../forms/FormVideosSearch.js", "../forms/FormVideosSort.js", "../components/GroupView.js", "../forms/FormPropertyEditSelectedValues.js", "../forms/FormVideosKeywordsToProperty.js", "../forms/FormSelectedVideosEditProperty.js", "../components/Collapsable.js", "../components/Cross.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/MenuItemRadio.js", "../components/Menu.js", "../utils/Selector.js", "../utils/Action.js", "../utils/Actions.js", "../components/ActionToMenuItem.js", "../components/ActionToSettingIcon.js", "../components/ActionToCross.js", "../utils/backend.js", "../dialogs/FancyBox.js", "./HomePage.js", "../forms/FormDatabaseEditFolders.js", "../dialogs/Dialog.js", "../components/Cell.js", "../forms/FormNewPredictionProperty.js", "../forms/GenericFormRename.js", "../language.js", "../utils/functions.js"], function (_export, _context) {
   "use strict";
 
-  var getFieldMap, PAGE_SIZES, SOURCE_TREE, MenuPack, Pagination, Video, FormVideosSource, FormVideosGrouping, FormVideosSearch, FormVideosSort, GroupView, FormPropertyEditSelectedValues, FormVideosKeywordsToProperty, FormSelectedVideosEditProperty, Collapsable, Cross, MenuItem, MenuItemCheck, MenuItemRadio, Menu, Selector, Action, Actions, ActionToMenuItem, ActionToSettingIcon, ActionToCross, backend_error, python_call, FancyBox, HomePage, FormDatabaseEditFolders, Dialog, Cell, FormNewPredictionProperty, GenericFormRename, LangContext, arrayEquals, SearchTypeTitle, VideosPage;
+  var FIELD_MAP, PAGE_SIZES, SearchTypeTitle, SOURCE_TREE, MenuPack, Pagination, Video, FormVideosSource, FormVideosGrouping, FormVideosSearch, FormVideosSort, GroupView, FormPropertyEditSelectedValues, FormVideosKeywordsToProperty, FormSelectedVideosEditProperty, Collapsable, Cross, MenuItem, MenuItemCheck, MenuItemRadio, Menu, Selector, Action, Actions, ActionToMenuItem, ActionToSettingIcon, ActionToCross, backend_error, python_call, FancyBox, HomePage, FormDatabaseEditFolders, Dialog, Cell, FormNewPredictionProperty, GenericFormRename, LangContext, arrayEquals, VideosPage;
 
   function compareSources(sources1, sources2) {
     if (sources1.length !== sources2.length) return false;
@@ -23,10 +23,10 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
 
   return {
     setters: [function (_utilsConstantsJs) {
-      getFieldMap = _utilsConstantsJs.getFieldMap;
+      FIELD_MAP = _utilsConstantsJs.FIELD_MAP;
       PAGE_SIZES = _utilsConstantsJs.PAGE_SIZES;
-      SOURCE_TREE = _utilsConstantsJs.SOURCE_TREE;
       SearchTypeTitle = _utilsConstantsJs.SearchTypeTitle;
+      SOURCE_TREE = _utilsConstantsJs.SOURCE_TREE;
     }, function (_componentsMenuPackJs) {
       MenuPack = _componentsMenuPackJs.MenuPack;
     }, function (_componentsPaginationJs) {
@@ -156,6 +156,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           this.deleteDatabase = this.deleteDatabase.bind(this);
           this.onGroupViewState = this.onGroupViewState.bind(this);
           this.notify = this.notify.bind(this);
+          this.allNotFound = this.allNotFound.bind(this);
           this.canOpenRandomVideo = this.canOpenRandomVideo.bind(this);
           this.canOpenRandomPlayer = this.canOpenRandomPlayer.bind(this);
           this.canFindSimilarVideos = this.canFindSimilarVideos.bind(this);
@@ -171,7 +172,6 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           this.nextGroup = this.nextGroup.bind(this);
           this.confirmAllUniqueMoves = this.confirmAllUniqueMoves.bind(this);
           this.getStatus = this.getStatus.bind(this);
-          this.getFields = this.getFields.bind(this);
           this.getActions = this.getActions.bind(this);
           this.playlist = this.playlist.bind(this);
           this.callbackIndex = -1;
@@ -468,7 +468,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             action: actions.unsearch
           })) : "")), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, tr("Sorted by")), sorting.map((val, i) => /*#__PURE__*/React.createElement("div", {
             key: i
-          }, /*#__PURE__*/React.createElement("strong", null, this.getFields().fields[val.substr(1)].title), " ", val[0] === "-" ? /*#__PURE__*/React.createElement("span", null, "\u25BC") : /*#__PURE__*/React.createElement("span", null, "\u25B2")))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToSettingIcon, {
+          }, /*#__PURE__*/React.createElement("strong", null, FIELD_MAP.fields[val.substr(1)].title), " ", val[0] === "-" ? /*#__PURE__*/React.createElement("span", null, "\u25BC") : /*#__PURE__*/React.createElement("span", null, "\u25B2")))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToSettingIcon, {
             action: actions.sort
           })), sortingIsDefault ? "" : /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToCross, {
             action: actions.unsort
@@ -500,10 +500,6 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
 
         getStatus() {
           return this.state.status === undefined ? tr("Loaded.") : this.state.status;
-        }
-
-        getFields() {
-          return getFieldMap(this.context);
         }
 
         getActions() {
@@ -581,8 +577,16 @@ Once done, move you can compute prediction.
           return !(this.state.sorting.length === 1 && this.state.sorting[0] === "-date");
         }
 
+        allNotFound() {
+          for (let source of this.state.sources) {
+            if (source.indexOf("not_found") < 0) return false;
+          }
+
+          return true;
+        }
+
         canOpenRandomVideo() {
-          return Fancybox.isInactive() && !this.state.notFound && this.state.totalNbVideos;
+          return Fancybox.isInactive() && !this.allNotFound() && this.state.totalNbVideos;
         }
 
         canOpenRandomPlayer() {
@@ -602,20 +606,30 @@ Once done, move you can compute prediction.
           KEYBOARD_MANAGER.unregister(this.callbackIndex);
           NOTIFICATION_MANAGER.unregister(this.notificationCallbackIndex);
         }
+        /**
+         * @param state {Object}
+         * @param field {String}
+         * @returns {*}
+         */
+
+
+        getStateField(state, field) {
+          return state[field] === undefined ? this.state[field] : state[field];
+        }
 
         backend(callargs, state = {}, top = true) {
-          const pageSize = state.pageSize !== undefined ? state.pageSize : this.state.pageSize;
-          const pageNumber = state.pageNumber !== undefined ? state.pageNumber : this.state.pageNumber;
-          const displayOnlySelected = state.displayOnlySelected !== undefined ? state.displayOnlySelected : this.state.displayOnlySelected;
-          const selector = displayOnlySelected ? (state.selector !== undefined ? state.selector : this.state.selector).toJSON() : null;
+          const pageSize = this.getStateField(state, "pageSize");
+          const pageNumber = this.getStateField(state, "pageNumber");
+          const displayOnlySelected = this.getStateField(state, "displayOnlySelected");
+          const selector = displayOnlySelected ? this.getStateField(state, "selector").toJSON() : null;
           if (!state.status) state.status = tr("updated.");
           python_call("backend", callargs, pageSize, pageNumber, selector).then(info => this.setState(this.parametersToState(state, info), top ? this.scrollTop : undefined)).catch(backend_error);
         }
 
         parametersToState(state, info) {
           if (info.groupDef) {
-            const groupPageSize = state.groupPageSize !== undefined ? state.groupPageSize : this.state.groupPageSize;
-            const groupPageNumber = state.groupPageNumber !== undefined ? state.groupPageNumber : this.state.groupPageNumber;
+            const groupPageSize = this.getStateField(state, "groupPageSize");
+            const groupPageNumber = this.getStateField(state, "groupPageNumber");
             const count = info.groupDef.groups.length;
             const nbPages = Math.floor(count / groupPageSize) + (count % groupPageSize ? 1 : 0);
             state.groupPageNumber = Math.min(Math.max(0, groupPageNumber), nbPages - 1);
@@ -780,20 +794,24 @@ Once done, move you can compute prediction.
         editPropertiesForManyVideos(propertyName) {
           const selectionSize = this.state.selector.size(this.state.realNbVideos);
           const videoIndices = this.state.selector.toJSON();
-          python_call("count_prop_values", propertyName, videoIndices).then(valuesAndCounts => Fancybox.load( /*#__PURE__*/React.createElement(FormSelectedVideosEditProperty, {
-            nbVideos: selectionSize,
-            definition: this.state.definitions[propertyName],
-            values: valuesAndCounts,
-            onClose: edition => {
-              this.backend(["edit_property_for_videos", propertyName, videoIndices, edition.add, edition.remove], {
-                pageNumber: 0,
-                status: tr("Edited property {property} for {count} video(s).", {
-                  property: propertyName,
-                  count: selectionSize
-                })
-              });
-            }
-          }))).catch(backend_error);
+          python_call("count_prop_values", propertyName, videoIndices).then(valueToCount => {
+            const valuesAndCounts = Object.entries(valueToCount);
+            valuesAndCounts.sort();
+            Fancybox.load( /*#__PURE__*/React.createElement(FormSelectedVideosEditProperty, {
+              nbVideos: selectionSize,
+              definition: this.state.definitions[propertyName],
+              values: valuesAndCounts,
+              onClose: edition => {
+                this.backend(["edit_property_for_videos", propertyName, videoIndices, edition.add, edition.remove], {
+                  pageNumber: 0,
+                  status: tr("Edited property {property} for {count} video(s).", {
+                    property: propertyName,
+                    count: selectionSize
+                  })
+                });
+              }
+            }));
+          }).catch(backend_error);
         }
 
         searchVideos() {

@@ -180,4 +180,5 @@ export class DatabasesPage extends React.Component {
 		this.setState({ paths });
 	}
 }
+
 DatabasesPage.contextType = LangContext;

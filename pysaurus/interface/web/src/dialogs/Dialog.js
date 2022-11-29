@@ -36,6 +36,7 @@ export class Dialog extends React.Component {
 		if (this.props.action) this.props.action();
 	}
 }
+
 Dialog.contextType = LangContext;
 Dialog.propTypes = {
 	title: PropTypes.string.isRequired,

@@ -7,6 +7,9 @@ from pysaurus.core.jsonable import Jsonable
 DefType = Union[bool, int, float, str, list, tuple]
 PropValueType = Union[bool, int, float, str, list]
 
+PROP_UNIT_TYPES = {bool, int, float, str}
+PROP_UNIT_TYPE_MAP = {t.__name__: t for t in PROP_UNIT_TYPES}
+
 
 class PropType(Jsonable):
     name: str

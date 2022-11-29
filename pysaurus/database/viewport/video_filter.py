@@ -1,10 +1,9 @@
 import random
 from abc import abstractmethod
-from typing import Dict, Iterable, List, Sequence, Set
+from typing import Dict, List, Sequence, Set
 
 from pysaurus.application import exceptions
 from pysaurus.core import functions
-from pysaurus.core.components import AbsolutePath
 from pysaurus.database.video import Video
 from pysaurus.database.video_sorting import VideoSorting
 from pysaurus.database.viewport.abstract_video_provider import AbstractVideoProvider
@@ -274,46 +273,15 @@ class LayerSearch(Layer):
         return {"search": SearchDef()}
 
     def run(self):
-        # TODO Move search logic as a method to (Json)Database, next to method query()?
         search_def: SearchDef = self.params["search"]
         if not search_def:
             self.output = self.input.videos
         else:
-            filenames = {video.filename for video in self.input.videos}
-            term_to_filenames = self.database.indexer.get_index()
-            terms = functions.string_to_pieces(search_def.text)
-            self._log("search", search_def.cond, terms)
-            if search_def.cond == "exact":
-                selection_and: Iterable[AbsolutePath] = set.intersection(
-                    set(filenames),
-                    *(term_to_filenames.get(term, EMPTY_SET) for term in terms),
-                )
-                selection: Iterable[AbsolutePath] = (
-                    filename
-                    for filename in selection_and
-                    if self.database.indexer.filename_has_terms_exact(filename, terms)
-                )
-            elif search_def.cond == "and":
-                selection: Iterable[AbsolutePath] = set.intersection(
-                    set(filenames),
-                    *(term_to_filenames.get(term, EMPTY_SET) for term in terms),
-                )
-            elif search_def.cond == "or":
-                selection: Iterable[AbsolutePath] = set(filenames) & set.union(
-                    *(term_to_filenames.get(term, EMPTY_SET) for term in terms)
-                )
-            else:
-                assert search_def.cond == "id"
-                (term,) = terms
-                video_id = int(term)
-                # TODO Database.id_to_video used here
-                selection: Iterable[AbsolutePath] = (
-                    [self.database.id_to_video[video_id].filename]
-                    if video_id in self.database.id_to_video
-                    else []
-                )
+            self._log("search", search_def)
             self.output = VideoArray(
-                self.input.videos.lookup(filename) for filename in selection
+                self.database.search(
+                    search_def.text, search_def.cond, self.input.videos
+                )
             )
 
     def delete(self, video):

@@ -1,13 +1,13 @@
 System.register(["../utils/constants.js", "../dialogs/Dialog.js", "../language.js"], function (_export, _context) {
   "use strict";
 
-  var getFieldMap, Dialog, LangContext, FormVideosGrouping;
+  var FIELD_MAP, Dialog, LangContext, FormVideosGrouping;
 
   _export("FormVideosGrouping", void 0);
 
   return {
     setters: [function (_utilsConstantsJs) {
-      getFieldMap = _utilsConstantsJs.getFieldMap;
+      FIELD_MAP = _utilsConstantsJs.FIELD_MAP;
     }, function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
     }, function (_languageJs) {
@@ -40,7 +40,6 @@ System.register(["../utils/constants.js", "../dialogs/Dialog.js", "../language.j
           this.onChangeGroupReverse = this.onChangeGroupReverse.bind(this);
           this.onClose = this.onClose.bind(this);
           this.onChangeFieldType = this.onChangeFieldType.bind(this);
-          this.getFields = this.getFields.bind(this);
           this.getStateField = this.getStateField.bind(this);
           this.getStateAllowSingletons = this.getStateAllowSingletons.bind(this);
         }
@@ -83,10 +82,10 @@ System.register(["../utils/constants.js", "../dialogs/Dialog.js", "../language.j
           }, this.state.isProperty ? this.props.prop_types.map((def, index) => /*#__PURE__*/React.createElement("option", {
             key: index,
             value: def.name
-          }, def.name)) : this.getFields().allowed.map((fieldOption, index) => /*#__PURE__*/React.createElement("option", {
+          }, def.name)) : FIELD_MAP.allowed.map((fieldOption, index) => /*#__PURE__*/React.createElement("option", {
             key: index,
             value: fieldOption.name
-          }, fieldOption.title))))), this.state.isProperty || !this.getFields().fields[field].isOnlyMany() ? /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
+          }, fieldOption.title))))), this.state.isProperty || !FIELD_MAP.fields[field].isOnlyMany() ? /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
             className: "label"
           }, /*#__PURE__*/React.createElement("input", {
             type: "checkbox",
@@ -123,29 +122,25 @@ System.register(["../utils/constants.js", "../dialogs/Dialog.js", "../language.j
         }
 
         getStateField() {
-          return this.state.field === undefined ? this.getFields().allowed[0].name : this.state.field;
+          return this.state.field === undefined ? FIELD_MAP.allowed[0].name : this.state.field;
         }
 
         getStateAllowSingletons() {
-          return this.state.allowSingletons === undefined ? !this.getFields().allowed[0].isOnlyMany() : this.state.allowSingletons;
-        }
-
-        getFields() {
-          return getFieldMap(this.context);
+          return this.state.allowSingletons === undefined ? !FIELD_MAP.allowed[0].isOnlyMany() : this.state.allowSingletons;
         }
 
         fieldIsString() {
           const field = this.getStateField();
           if (this.state.isProperty) return this.props.propertyMap[field].type === "str";
-          return this.getFields().fields[field].isString();
+          return FIELD_MAP.fields[field].isString();
         }
 
         onChangeFieldType(event) {
           const isProperty = event.target.value === "true";
-          const field = isProperty ? this.props.prop_types[0].name : this.getFields().allowed[0].name;
+          const field = isProperty ? this.props.prop_types[0].name : FIELD_MAP.allowed[0].name;
           const sorting = "field";
           const reverse = false;
-          const allowSingletons = isProperty || !this.getFields().allowed[0].isOnlyMany();
+          const allowSingletons = isProperty || !FIELD_MAP.allowed[0].isOnlyMany();
           this.setState({
             isProperty,
             field,
@@ -159,7 +154,7 @@ System.register(["../utils/constants.js", "../dialogs/Dialog.js", "../language.j
           const field = event.target.value;
           const sorting = "field";
           const reverse = false;
-          const allowSingletons = this.state.isProperty || !this.getFields().fields[field].isOnlyMany();
+          const allowSingletons = this.state.isProperty || !FIELD_MAP.fields[field].isOnlyMany();
           this.setState({
             field,
             sorting,

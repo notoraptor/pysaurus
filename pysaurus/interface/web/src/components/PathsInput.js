@@ -8,6 +8,7 @@ export class PathsInput extends React.Component {
 		this.addFile = this.addFile.bind(this);
 		this.removePath = this.removePath.bind(this);
 	}
+
 	render() {
 		const paths = this.props.data || [];
 		return (
@@ -86,6 +87,7 @@ export class PathsInput extends React.Component {
 		this.props.onUpdate(data);
 	}
 }
+
 PathsInput.contextType = LangContext;
 PathsInput.propTypes = {
 	data: PropTypes.arrayOf(PropTypes.string),

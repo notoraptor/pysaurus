@@ -45,6 +45,7 @@ class Monitoring extends React.Component {
 		);
 	}
 }
+
 Monitoring.contextType = LangContext;
 Monitoring.propTypes = {
 	monitoring: PropTypes.instanceOf(ProgressionMonitoring).isRequired,
@@ -129,6 +130,7 @@ class NotificationRenderer extends React.Component {
 		this.NbMiniatures = this.NbMiniatures.bind(this);
 		this.Message = this.Message.bind(this);
 	}
+
 	render() {
 		const app = this.props.app;
 		const message = this.props.message;
@@ -144,6 +146,7 @@ class NotificationRenderer extends React.Component {
 			);
 		}
 	}
+
 	JobStep(app, message, i) {
 		return (
 			<Monitoring
@@ -152,6 +155,7 @@ class NotificationRenderer extends React.Component {
 			/>
 		);
 	}
+
 	DatabaseLoaded(app, message, i) {
 		const data = message.notification;
 		return (
@@ -181,9 +185,11 @@ class NotificationRenderer extends React.Component {
 			</div>
 		);
 	}
+
 	DatabaseSaved(app, message, i) {
 		return this.DatabaseLoaded(app, message, i);
 	}
+
 	DatabaseReady(app, message, i) {
 		return (
 			<div key={i}>
@@ -191,6 +197,7 @@ class NotificationRenderer extends React.Component {
 			</div>
 		);
 	}
+
 	Done(app, message, i) {
 		return (
 			<div key={i}>
@@ -198,6 +205,7 @@ class NotificationRenderer extends React.Component {
 			</div>
 		);
 	}
+
 	Cancelled(app, message, i) {
 		return (
 			<div key={i}>
@@ -205,6 +213,7 @@ class NotificationRenderer extends React.Component {
 			</div>
 		);
 	}
+
 	End(app, message, i) {
 		const info = message.notification.message;
 		return (
@@ -213,6 +222,7 @@ class NotificationRenderer extends React.Component {
 			</div>
 		);
 	}
+
 	FinishedCollectingVideos(app, message, i) {
 		const count = message.notification.count;
 		return (
@@ -221,6 +231,7 @@ class NotificationRenderer extends React.Component {
 			</div>
 		);
 	}
+
 	MissingThumbnails(app, message, i) {
 		const names = message.notification.names;
 		if (names.length) {
@@ -249,6 +260,7 @@ class NotificationRenderer extends React.Component {
 			);
 		}
 	}
+
 	ProfilingStart(app, message, i) {
 		return (
 			<div key={i}>
@@ -257,6 +269,7 @@ class NotificationRenderer extends React.Component {
 			</div>
 		);
 	}
+
 	ProfilingEnd(app, message, i) {
 		return (
 			<div key={i}>
@@ -269,6 +282,7 @@ class NotificationRenderer extends React.Component {
 			</div>
 		);
 	}
+
 	VideoInfoErrors(app, message, i) {
 		const errors = message.notification.video_errors;
 		const keys = Object.keys(errors);
@@ -305,9 +319,11 @@ class NotificationRenderer extends React.Component {
 			</div>
 		);
 	}
+
 	VideoThumbnailErrors(app, message, i) {
 		return this.VideoInfoErrors(app, message, i);
 	}
+
 	JobToDo(app, message, i) {
 		const total = message.notification.total;
 		const label = message.notification.name;
@@ -337,6 +353,7 @@ class NotificationRenderer extends React.Component {
 			);
 		}
 	}
+
 	NbMiniatures(app, message, i) {
 		const total = message.notification.total;
 		if (total) {
@@ -357,6 +374,7 @@ class NotificationRenderer extends React.Component {
 			);
 		}
 	}
+
 	Message(app, message, i) {
 		return (
 			<div key={i}>
@@ -366,6 +384,7 @@ class NotificationRenderer extends React.Component {
 		);
 	}
 }
+
 NotificationRenderer.contextType = LangContext;
 
 const ACTIONS = {
@@ -482,6 +501,7 @@ export class HomePage extends React.Component {
 		this.setState(updates);
 	}
 }
+
 HomePage.contextType = LangContext;
 HomePage.propTypes = {
 	app: PropTypes.object.isRequired,

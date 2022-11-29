@@ -58,4 +58,5 @@ export class FormVideosKeywordsToProperty extends React.Component {
 		this.props.onClose(this.state);
 	}
 }
+
 FormVideosKeywordsToProperty.contextType = LangContext;

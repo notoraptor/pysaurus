@@ -244,6 +244,7 @@ export class FormPropertyEditSelectedValues extends React.Component {
 		});
 	}
 }
+
 FormPropertyEditSelectedValues.contextType = LangContext;
 FormPropertyEditSelectedValues.propTypes = {
 	definitions: PropTypes.object.isRequired,

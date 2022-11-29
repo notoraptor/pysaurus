@@ -824,6 +824,7 @@ export class Video extends React.Component {
 		}
 	}
 }
+
 Video.contextType = LangContext;
 Video.propTypes = {
 	data: PropTypes.object.isRequired,

@@ -1,6 +1,7 @@
 from typing import Dict, Iterable, List, Optional, Sequence, Set, Union
 
 from pysaurus.application import exceptions
+from pysaurus.core import functions
 from pysaurus.core.components import AbsolutePath, DateModified, PathType
 from pysaurus.core.notifications import Notification
 from pysaurus.core.notifier import DEFAULT_NOTIFIER, Notifier
@@ -13,7 +14,13 @@ from pysaurus.database.db_video_attribute import (
     QualityAttribute,
 )
 from pysaurus.database.json_backup import JsonBackup
-from pysaurus.database.properties import PropType, PropValueType
+from pysaurus.database.properties import (
+    DefType,
+    PROP_UNIT_TYPES,
+    PROP_UNIT_TYPE_MAP,
+    PropType,
+    PropValueType,
+)
 from pysaurus.database.video import Video
 from pysaurus.database.video_indexer import VideoIndexer
 
@@ -195,6 +202,52 @@ class JsonDatabase:
             else list(videos)
         )
 
+    def search(
+        self, text: str, cond: str = "and", videos: Sequence[Video] = None
+    ) -> Iterable[Video]:
+        if not text:
+            output = ()
+        else:
+            if videos is None:
+                filenames: Dict[AbsolutePath, Video] = self.videos
+            else:
+                filenames: Dict[AbsolutePath, Video] = {
+                    video.filename: video for video in videos
+                }
+            empty_set = set()
+            term_to_filenames = self.indexer.get_index()
+            terms = functions.string_to_pieces(text)
+            if cond == "exact":
+                selection_and: Iterable[AbsolutePath] = set.intersection(
+                    set(filenames),
+                    *(term_to_filenames.get(term, empty_set) for term in terms),
+                )
+                selection: Iterable[AbsolutePath] = (
+                    filename
+                    for filename in selection_and
+                    if self.indexer.filename_has_terms_exact(filename, terms)
+                )
+            elif cond == "and":
+                selection: Iterable[AbsolutePath] = set.intersection(
+                    set(filenames),
+                    *(term_to_filenames.get(term, empty_set) for term in terms),
+                )
+            elif cond == "or":
+                selection: Iterable[AbsolutePath] = set(filenames) & set.union(
+                    *(term_to_filenames.get(term, empty_set) for term in terms)
+                )
+            else:
+                assert cond == "id"
+                (term,) = terms
+                video_id = int(term)
+                selection: Iterable[AbsolutePath] = (
+                    [self.id_to_video[video_id].filename]
+                    if video_id in self.id_to_video
+                    else []
+                )
+            output = (filenames[filename] for filename in selection)
+        return output
+
     def _get_prop_types(self) -> Iterable[PropType]:
         return self.prop_types.values()
 
@@ -235,6 +288,24 @@ class JsonDatabase:
         self.prop_types[prop.name] = prop
         if save:
             self.save()
+
+    def create_prop_type(
+        self,
+        name: str,
+        prop_type: Union[str, type],
+        definition: DefType,
+        multiple: bool,
+        save=True,
+    ) -> None:
+        if isinstance(prop_type, str):
+            prop_type = PROP_UNIT_TYPE_MAP[prop_type]
+        assert prop_type in PROP_UNIT_TYPES
+        if prop_type is float:
+            if isinstance(definition, (list, tuple)):
+                definition = [float(element) for element in definition]
+            else:
+                definition = float(definition)
+        self.add_prop_type(PropType(name, definition, multiple), save)
 
     def remove_prop_type(self, name, save: bool = True) -> None:
         if name in self.prop_types:

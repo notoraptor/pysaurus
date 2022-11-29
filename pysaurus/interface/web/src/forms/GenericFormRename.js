@@ -59,6 +59,7 @@ export class GenericFormRename extends React.Component {
 			this.props.onClose(this.state.data);
 	}
 }
+
 GenericFormRename.propTypes = {
 	title: PropTypes.string.isRequired,
 	header: PropTypes.string.isRequired,

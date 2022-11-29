@@ -162,7 +162,7 @@ class PysaurusQtApplication(QWebEngineView):
                 self.player.resize(int(width * 3 / 4), int(height * 3 / 4))
 
     def _on_next_random_video(self):
-        video = self.interface.api.choose_random_video()
+        video = self.interface.api.database.provider.choose_random_video()
         self.interface.api._notify(NextRandomVideo())
         return video.filename.path
 

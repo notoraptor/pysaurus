@@ -42,14 +42,13 @@ except exceptions.CysaurusUnavailable:
 
 
 class Database(JsonDatabase):
-    __slots__ = ("__paths", "__message", "lang", "provider")
+    __slots__ = ("__paths", "lang", "provider")
 
     def __init__(self, path, folders=None, notifier=None, lang=None):
         # type: (PathType, Iterable[PathType], Notifier, DefaultLanguage) -> None
         # Paths
         self.__paths = DbPaths(path)
         # RAM data
-        self.__message = None
         self.lang = lang or DefaultLanguage
         self.provider: Optional[AbstractVideoProvider] = VideoSelector(self)
         # Set log file
@@ -658,14 +657,6 @@ class Database(JsonDatabase):
         if nb_moved:
             self.save()
         return nb_moved
-
-    def set_message(self, message: str):
-        self.__message = message
-
-    def flush_message(self):
-        message = self.__message
-        self.__message = None
-        return message
 
     def get_predictor(self, prop_name):
         return self.predictors.get(prop_name, None)

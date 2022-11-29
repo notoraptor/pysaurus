@@ -1,4 +1,9 @@
-import { getFieldMap, PAGE_SIZES, SOURCE_TREE } from "../utils/constants.js";
+import {
+	FIELD_MAP,
+	PAGE_SIZES,
+	SearchTypeTitle,
+	SOURCE_TREE,
+} from "../utils/constants.js";
 import { MenuPack } from "../components/MenuPack.js";
 import { Pagination } from "../components/Pagination.js";
 import { Video } from "../components/Video.js";
@@ -32,7 +37,6 @@ import { FormNewPredictionProperty } from "../forms/FormNewPredictionProperty.js
 import { GenericFormRename } from "../forms/GenericFormRename.js";
 import { LangContext } from "../language.js";
 import { arrayEquals } from "../utils/functions.js";
-import {SearchTypeTitle} from "../utils/constants.js";
 
 function compareSources(sources1, sources2) {
 	if (sources1.length !== sources2.length) return false;
@@ -112,6 +116,7 @@ export class VideosPage extends React.Component {
 		this.deleteDatabase = this.deleteDatabase.bind(this);
 		this.onGroupViewState = this.onGroupViewState.bind(this);
 		this.notify = this.notify.bind(this);
+		this.allNotFound = this.allNotFound.bind(this);
 		this.canOpenRandomVideo = this.canOpenRandomVideo.bind(this);
 		this.canOpenRandomPlayer = this.canOpenRandomPlayer.bind(this);
 		this.canFindSimilarVideos = this.canFindSimilarVideos.bind(this);
@@ -127,7 +132,6 @@ export class VideosPage extends React.Component {
 		this.nextGroup = this.nextGroup.bind(this);
 		this.confirmAllUniqueMoves = this.confirmAllUniqueMoves.bind(this);
 		this.getStatus = this.getStatus.bind(this);
-		this.getFields = this.getFields.bind(this);
 		this.getActions = this.getActions.bind(this);
 		this.playlist = this.playlist.bind(this);
 
@@ -674,7 +678,7 @@ export class VideosPage extends React.Component {
 							{sorting.map((val, i) => (
 								<div key={i}>
 									<strong>
-										{this.getFields().fields[val.substr(1)].title}
+										{FIELD_MAP.fields[val.substr(1)].title}
 									</strong>{" "}
 									{val[0] === "-" ? (
 										<span>&#9660;</span>
@@ -771,10 +775,6 @@ export class VideosPage extends React.Component {
 
 	getStatus() {
 		return this.state.status === undefined ? tr("Loaded.") : this.state.status;
-	}
-
-	getFields() {
-		return getFieldMap(this.context);
 	}
 
 	getActions() {
@@ -934,10 +934,15 @@ Once done, move you can compute prediction.
 		return !(this.state.sorting.length === 1 && this.state.sorting[0] === "-date");
 	}
 
+	allNotFound() {
+		for (let source of this.state.sources) {
+			if (source.indexOf("not_found") < 0) return false;
+		}
+		return true;
+	}
+
 	canOpenRandomVideo() {
-		return (
-			Fancybox.isInactive() && !this.state.notFound && this.state.totalNbVideos
-		);
+		return Fancybox.isInactive() && !this.allNotFound() && this.state.totalNbVideos;
 	}
 
 	canOpenRandomPlayer() {
@@ -962,20 +967,21 @@ Once done, move you can compute prediction.
 		NOTIFICATION_MANAGER.unregister(this.notificationCallbackIndex);
 	}
 
+	/**
+	 * @param state {Object}
+	 * @param field {String}
+	 * @returns {*}
+	 */
+	getStateField(state, field) {
+		return state[field] === undefined ? this.state[field] : state[field];
+	}
+
 	backend(callargs, state = {}, top = true) {
-		const pageSize =
-			state.pageSize !== undefined ? state.pageSize : this.state.pageSize;
-		const pageNumber =
-			state.pageNumber !== undefined ? state.pageNumber : this.state.pageNumber;
-		const displayOnlySelected =
-			state.displayOnlySelected !== undefined
-				? state.displayOnlySelected
-				: this.state.displayOnlySelected;
+		const pageSize = this.getStateField(state, "pageSize");
+		const pageNumber = this.getStateField(state, "pageNumber");
+		const displayOnlySelected = this.getStateField(state, "displayOnlySelected");
 		const selector = displayOnlySelected
-			? (state.selector !== undefined
-					? state.selector
-					: this.state.selector
-			  ).toJSON()
+			? this.getStateField(state, "selector").toJSON()
 			: null;
 		if (!state.status) state.status = tr("updated.");
 		python_call("backend", callargs, pageSize, pageNumber, selector)
@@ -990,14 +996,8 @@ Once done, move you can compute prediction.
 
 	parametersToState(state, info) {
 		if (info.groupDef) {
-			const groupPageSize =
-				state.groupPageSize !== undefined
-					? state.groupPageSize
-					: this.state.groupPageSize;
-			const groupPageNumber =
-				state.groupPageNumber !== undefined
-					? state.groupPageNumber
-					: this.state.groupPageNumber;
+			const groupPageSize = this.getStateField(state, "groupPageSize");
+			const groupPageNumber = this.getStateField(state, "groupPageNumber");
 			const count = info.groupDef.groups.length;
 			const nbPages =
 				Math.floor(count / groupPageSize) + (count % groupPageSize ? 1 : 0);
@@ -1183,7 +1183,9 @@ Once done, move you can compute prediction.
 		const selectionSize = this.state.selector.size(this.state.realNbVideos);
 		const videoIndices = this.state.selector.toJSON();
 		python_call("count_prop_values", propertyName, videoIndices)
-			.then((valuesAndCounts) =>
+			.then((valueToCount) => {
+				const valuesAndCounts = Object.entries(valueToCount);
+				valuesAndCounts.sort();
 				Fancybox.load(
 					<FormSelectedVideosEditProperty
 						nbVideos={selectionSize}
@@ -1211,8 +1213,8 @@ Once done, move you can compute prediction.
 							);
 						}}
 					/>
-				)
-			)
+				);
+			})
 			.catch(backend_error);
 	}
 
@@ -1581,4 +1583,5 @@ not found video entry will be deleted.
 			.catch(backend_error);
 	}
 }
+
 VideosPage.contextType = LangContext;
