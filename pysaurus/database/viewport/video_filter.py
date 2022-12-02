@@ -361,8 +361,19 @@ class VideoSelector(AbstractVideoProvider):
     def set_sources(self, paths):
         self.set_layer_params(LayerSource, sources=paths)
 
-    def set_groups(self, **group_def_args):
-        self.set_layer_params(LayerGrouping, grouping=GroupDef(**group_def_args))
+    def set_groups(
+        self, field, is_property=None, sorting=None, reverse=None, allow_singletons=None
+    ):
+        self.set_layer_params(
+            LayerGrouping,
+            grouping=GroupDef(
+                field=field,
+                is_property=is_property,
+                sorting=sorting,
+                reverse=reverse,
+                allow_singletons=allow_singletons,
+            ),
+        )
         self.set_layer_params(LayerGroup, group_id=0)
         self.reset_parameters("classifier", "search")
 

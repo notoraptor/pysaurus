@@ -52,8 +52,20 @@ class VideoProvider(AbstractVideoProvider):
     def set_sources(self, paths: Sequence[Sequence[str]]):
         self._source_layer.set_sources(paths)
 
-    def set_groups(self, **group_def_args):
-        self._grouping_layer.set_grouping(**GroupDef.get_args_from(group_def_args))
+    def set_groups(
+        self, field, is_property=None, sorting=None, reverse=None, allow_singletons=None
+    ):
+        self._grouping_layer.set_grouping(
+            **GroupDef.get_args_from(
+                dict(
+                    field=field,
+                    is_property=is_property,
+                    sorting=sorting,
+                    reverse=reverse,
+                    allow_singletons=allow_singletons,
+                )
+            )
+        )
         self._classifier_layer.reset_parameters()
         self._group_layer.set_group_id(0)
         self._search_layer.reset_parameters()

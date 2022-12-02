@@ -1,9 +1,9 @@
 import sys
-from typing import Optional
+from typing import Dict, Optional
 
 from pysaurus.application.application import Application
 from pysaurus.core.components import Duration, FileSize
-from pysaurus.core.functions import apply_selector, compute_nb_pages
+from pysaurus.core.functions import apply_selector, compute_nb_pages, extract_object
 from pysaurus.database.database import Database
 from pysaurus.database.utils import DEFAULT_SOURCE_DEF
 from pysaurus.database.video_features import VideoFeatures
@@ -17,6 +17,7 @@ class FeatureAPI:
         "database",
         "PYTHON_LANG",
         "PYTHON_LANGUAGE",
+        "_proxies",
     )
     PYTHON_DEFAULT_SOURCES = DEFAULT_SOURCE_DEF
     PYTHON_APP_NAME = Application.app_name
@@ -29,17 +30,51 @@ class FeatureAPI:
         self.database: Optional[Database] = None
         self.PYTHON_LANG = language_to_dict(self.application.lang)
         self.PYTHON_LANGUAGE = self.application.lang.__language__
+        # We must return value for proxy ending with "!"
+        self._proxies: Dict[str, str] = {
+            "classifier_back": "database.provider.classifier_back",
+            "classifier_focus_prop_val": "database.provider.classifier_focus_prop_val",
+            "classifier_reverse": "database.provider.classifier_reverse!",
+            "classifier_select_group": "database.provider.classifier_select_group",
+            "confirm_unique_moves": "database.confirm_unique_moves!",
+            "delete_video": "database.delete_video",
+            "get_prop_types": "database.describe_prop_types!",
+            "prop_to_lowercase": "database.prop_to_lowercase",
+            "prop_to_uppercase": "database.prop_to_uppercase",
+            "rename_database": "database.rename",
+            "set_group": "database.provider.set_group",
+            "set_groups": "database.provider.set_groups",
+            "set_search": "database.provider.set_search",
+            "set_sorting": "database.provider.set_sort",
+            "set_sources": "database.provider.set_sources",
+            "set_video_moved": "database.move_video_entry",
+            "set_video_properties": "database.set_video_properties",
+        }
+
+    def __run_feature__(self, name: str, *args):
+        assert not name.startswith("_")
+        if name in self._proxies:
+            path, return_value = self._proxies[name], False
+            if path.endswith("!"):
+                path = path[:-1]
+                return_value = True
+            ret = extract_object(self, path)(*args)
+            return ret if return_value else None
+        else:
+            return getattr(self, name)(*args)
 
     def _parse_video_selector(self, selector: dict, return_videos=False):
         return apply_selector(
             selector, self.database.provider.get_view(), "video_id", return_videos
         )
 
+    # cannot make proxy
     def get_constants(self):
         return {
             key: getattr(self, key) for key in dir(self) if key.startswith("PYTHON_")
         }
 
+    # cannot make proxy
     def get_app_state(self):
         return {
             "languages": [
@@ -51,14 +86,16 @@ class FeatureAPI:
             ],
         }
 
+    # cannot make proxy ?
     def set_language(self, name):
         return language_to_dict(self.application.open_language_from_name(name))
 
+    # cannot make proxy ?
     def backend(self, callargs, page_size, page_number, selector=None):
         prev_state = self.database.provider.get_unordered_state()
 
         if callargs:
-            ret = getattr(self, callargs[0])(*callargs[1:])
+            ret = self.__run_feature__(callargs[0], *callargs[1:])
             if ret is not None:
                 print("Ignored value returned by", callargs, file=sys.stderr)
                 print(type(ret), file=sys.stderr)
@@ -110,41 +147,7 @@ class FeatureAPI:
             "viewChanged": provider_changed,
         }
 
-    def set_sources(self, paths):
-        self.database.provider.set_sources(paths)
-
-    def set_groups(
-        self, field, is_property=None, sorting=None, reverse=None, allow_singletons=None
-    ):
-        self.database.provider.set_groups(
-            field=field,
-            is_property=is_property,
-            sorting=sorting,
-            reverse=reverse,
-            allow_singletons=allow_singletons,
-        )
-
-    def set_group(self, group_id):
-        self.database.provider.set_group(group_id)
-
-    def set_search(self, search_text: str, search_type: str):
-        self.database.provider.set_search(search_text, search_type)
-
-    def set_sorting(self, sorting):
-        self.database.provider.set_sort(sorting)
-
-    def classifier_select_group(self, group_id):
-        self.database.provider.classifier_select_group(group_id)
-
-    def classifier_focus_prop_val(self, prop_name, field_value):
-        self.database.provider.classifier_focus_prop_val(prop_name, field_value)
-
-    def classifier_back(self):
-        self.database.provider.classifier_back()
-
-    def classifier_reverse(self):
-        return self.database.provider.classifier_reverse()
-
+    # cannot make proxy ?
     def classifier_concatenate_path(self, to_property):
         path = self.database.provider.get_classifier_path()
         from_property = self.database.provider.get_grouping().field
@@ -154,107 +157,103 @@ class FeatureAPI:
             self.database.provider.get_all_videos(), path, from_property, to_property
         )
 
+    # cannot make proxy ?
     def open_random_video(self):
         return str(self.database.provider.choose_random_video().filename.open())
 
+    # cannot make proxy ?
     def playlist(self):
         return str(
             self.database.to_xspf_playlist(self.database.provider.get_view()).open()
         )
 
+    # TODO: abandon
     def open_random_player(self):
         raise NotImplementedError()
 
+    # cannot make proxy ?
     def open_video(self, video_id):
         self.database.get_video_filename(video_id).open()
 
+    # cannot make proxy ?
     def open_containing_folder(self, video_id):
         return str(self.database.get_video_filename(video_id).locate_file())
 
-    def get_prop_types(self):
-        return self.database.describe_prop_types()
-
+    # to make proxy
     def count_prop_values(self, name, selector):
         return self.database.count_property_values(
             name, self._parse_video_selector(selector)
         )
 
+    # cannot make proxy ?
     def set_video_folders(self, paths):
         self.database.set_folders(paths)
         self.database.provider.refresh()
 
-    def rename_database(self, name):
-        self.database.rename(name)
-
-    def prop_to_lowercase(self, prop_name):
-        self.database.prop_to_lowercase(prop_name)
-
-    def prop_to_uppercase(self, prop_name):
-        self.database.prop_to_uppercase(prop_name)
-
+    # multicall proxy
     def add_prop_type(self, prop_name: str, prop_type: str, definition, multiple: bool):
         self.database.create_prop_type(prop_name, prop_type, definition, multiple)
-        return self.get_prop_types()
+        return self.database.describe_prop_types()
 
+    # multicall proxy
     def delete_prop_type(self, name):
         self.database.remove_prop_type(name)
-        return self.get_prop_types()
+        return self.database.describe_prop_types()
 
+    # multicall proxy
     def rename_property(self, old_name, new_name):
         self.database.rename_prop_type(old_name, new_name)
-        return self.get_prop_types()
+        return self.database.describe_prop_types()
 
+    # multicall proxy
     def convert_prop_to_unique(self, name):
         self.database.convert_prop_to_unique(name)
-        return self.get_prop_types()
+        return self.database.describe_prop_types()
 
+    # multicall proxy
     def convert_prop_to_multiple(self, name):
         self.database.convert_prop_to_multiple(name)
-        return self.get_prop_types()
+        return self.database.describe_prop_types()
 
+    # to make proxy
     def dismiss_similarity(self, video_id):
         self.database.set_similarity(video_id, -1)
 
+    # to make proxy
     def reset_similarity(self, video_id):
         self.database.set_similarity(video_id, None)
 
-    def delete_video(self, video_id):
-        self.database.delete_video(video_id)
-
+    # cannot make proxy ?
     def rename_video(self, video_id, new_title):
         self.database.change_video_file_title(video_id, new_title)
         self.database.provider.refresh()
 
+    # to make proxy ?
     def edit_property_for_videos(self, name, selector, to_add, to_remove):
         self.database.edit_property_for_videos(
             name, self._parse_video_selector(selector), to_add, to_remove
         )
 
-    def set_video_properties(self, video_id, properties):
-        self.database.set_video_properties(video_id, properties)
-
+    # to make proxy ?
     def fill_property_with_terms(self, prop_name, only_empty=False):
         self.database.fill_property_with_terms(
             self.database.provider.get_all_videos(), prop_name, only_empty
         )
 
+    # to make proxy ?
     def delete_property_value(self, name, values):
         self.database.delete_property_value(
             self.database.provider.get_all_videos(), name, values
         )
 
+    # to make proxy ?
     def edit_property_value(self, name, old_values, new_value):
         self.database.edit_property_value(
             self.database.provider.get_all_videos(), name, old_values, new_value
         )
 
+    # to make proxy ?
     def move_property_value(self, old_name, values, new_name):
         self.database.move_property_value(
             self.database.provider.get_all_videos(), old_name, values, new_name
         )
-
-    def set_video_moved(self, from_id, to_id):
-        self.database.move_video_entry(from_id, to_id)
-
-    def confirm_unique_moves(self):
-        return self.database.confirm_unique_moves()

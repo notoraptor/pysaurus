@@ -89,9 +89,8 @@ class Interface(QObject):
     @pyqtSlot(str, result=str)
     def call(self, json_str):
         try:
-            func_name, func_args = json.loads(json_str)
-            assert not func_name.startswith("_")
-            result = {"error": False, "data": getattr(self.api, func_name)(*func_args)}
+            name, args = json.loads(json_str)
+            result = {"error": False, "data": self.api.__run_feature__(name, *args)}
         except (OSError, EnumerationError, exceptions.PysaurusError) as exception:
             traceback.print_tb(exception.__traceback__, file=sys.stderr)
             print(type(exception), exception, file=sys.stderr)

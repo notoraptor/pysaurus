@@ -1,7 +1,7 @@
 System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../components/Cell.js", "../utils/backend.js", "../utils/functions.js", "../forms/GenericFormRename.js", "../language.js"], function (_export, _context) {
   "use strict";
 
-  var ComponentPropController, SetInput, Dialog, Cell, backend_error, python_call, utilities, GenericFormRename, LangContext, PropertiesPage, DEFAULT_VALUES;
+  var ComponentPropController, SetInput, Dialog, Cell, backend_error, python_call, UTILITIES, GenericFormRename, LangContext, PropertiesPage, DEFAULT_VALUES;
 
   function getDefaultValue(propType, isEnum) {
     return isEnum ? [] : DEFAULT_VALUES[propType].toString();
@@ -21,7 +21,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
       backend_error = _utilsBackendJs.backend_error;
       python_call = _utilsBackendJs.python_call;
     }, function (_utilsFunctionsJs) {
-      utilities = _utilsFunctionsJs.utilities;
+      UTILITIES = _utilsFunctionsJs.UTILITIES;
     }, function (_formsGenericFormRenameJs) {
       GenericFormRename = _formsGenericFormRenameJs.GenericFormRename;
     }, function (_languageJs) {
@@ -257,7 +257,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
         submit() {
           try {
             let definition = this.state.defaultPropVal;
-            if (!this.state.enumeration) definition = utilities(this.context).parsePropValString(this.state.type, null, definition);
+            if (!this.state.enumeration) definition = UTILITIES.parsePropValString(this.state.type, null, definition);
             python_call("add_prop_type", this.state.name, this.state.type, definition, this.state.multiple).then(definitions => {
               const state = this.getDefaultInputState();
               state.definitions = definitions;

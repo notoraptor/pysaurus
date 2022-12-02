@@ -1,7 +1,7 @@
 System.register(["../dialogs/Dialog.js", "../language.js", "../utils/functions.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, LangContext, utilities, FormPropertyEditSelectedValues;
+  var Dialog, LangContext, UTILITIES, FormPropertyEditSelectedValues;
 
   _export("FormPropertyEditSelectedValues", void 0);
 
@@ -11,7 +11,7 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../utils/functions.j
     }, function (_languageJs) {
       LangContext = _languageJs.LangContext;
     }, function (_utilsFunctionsJs) {
-      utilities = _utilsFunctionsJs.utilities;
+      UTILITIES = _utilsFunctionsJs.UTILITIES;
     }],
     execute: function () {
       _export("FormPropertyEditSelectedValues", FormPropertyEditSelectedValues = class FormPropertyEditSelectedValues extends React.Component {
@@ -34,7 +34,7 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../utils/functions.j
         }
 
         render() {
-          const canMove = this.state.otherDefinitions.length && this.props.values.length === 1;
+          const canMove = this.state.otherDefinitions.length;
           const values = this.props.values;
           let title;
           if (values.length === 1) title = tr('Property "{name}", value "{value}"', {
@@ -75,8 +75,7 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../utils/functions.j
               return this.renderEdit();
 
             case "move":
-              if (this.props.values.length === 1) return this.renderMove();
-              break;
+              return this.renderMove();
 
             default:
               break;
@@ -189,7 +188,7 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../utils/functions.j
 
           try {
             this.setState({
-              value: utilities(this.context).parsePropValString(def.type, def.enumeration, event.target.value)
+              value: UTILITIES.parsePropValString(def.type, def.enumeration, event.target.value)
             });
           } catch (exception) {
             window.alert(exception.toString());

@@ -18,7 +18,9 @@ class AbstractVideoProvider(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def set_groups(self, **group_def_args):
+    def set_groups(
+        self, field, is_property=None, sorting=None, reverse=None, allow_singletons=None
+    ):
         pass
 
     @abstractmethod
@@ -162,7 +164,7 @@ class AbstractVideoProvider(metaclass=ABCMeta):
         self.set_classifier_path(path[:-1])
         self.set_group(0)
 
-    def classifier_reverse(self):
+    def classifier_reverse(self) -> list:
         path = list(reversed(self.get_classifier_path()))
         self.set_classifier_path(path)
         return path

@@ -11,7 +11,7 @@ from pysaurus.core.constants import WINDOWS_PATH_PREFIX
 from pysaurus.core.modules import FileSystem, System
 
 
-class AbsolutePath(object):
+class AbsolutePath:
     __slots__ = ("__path",)
 
     def __init__(self, path):

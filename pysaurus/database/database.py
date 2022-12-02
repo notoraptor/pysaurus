@@ -2,7 +2,7 @@ import os
 import sys
 from collections import Counter
 from multiprocessing import Pool
-from typing import Dict, Iterable, List, Optional, Set
+from typing import Dict, Iterable, List, Optional, Set, Tuple
 
 import ujson as json
 
@@ -510,10 +510,9 @@ class Database(JsonDatabase):
     def move_property_value(
         self, videos: Iterable[Video], old_name: str, values: list, new_name: str
     ) -> None:
-        (value,) = values
-        modified = self.__del_prop_val(videos, old_name, [value])
+        modified = self.__del_prop_val(videos, old_name, values)
         for video in modified:
-            self.merge_prop_values(video, new_name, [value])
+            self.merge_prop_values(video, new_name, values)
         if modified:
             self.save()
             self._notify_properties_modified([old_name, new_name], modified)
@@ -565,11 +564,11 @@ class Database(JsonDatabase):
 
     def count_property_values(
         self, name: str, video_indices: List[int]
-    ) -> Dict[object, int]:
+    ) -> List[Tuple[object, int]]:
         count = Counter()
         for video_id in set(video_indices):
             count.update(self.get_prop_values(self.__get_video_from_id(video_id), name))
-        return count
+        return sorted(count.items())
 
     def fill_property_with_terms(
         self, videos: Iterable[Video], prop_name: str, only_empty=False
@@ -647,7 +646,7 @@ class Database(JsonDatabase):
         to_video.similarity_id = from_video.similarity_id
         self.delete_video(from_id, save=save)
 
-    def confirm_unique_moves(self):
+    def confirm_unique_moves(self) -> int:
         nb_moved = 0
         for video in self.get_videos("readable", "not_found"):
             moves = video.moves

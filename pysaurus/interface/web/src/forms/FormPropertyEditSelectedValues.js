@@ -1,6 +1,6 @@
 import { Dialog } from "../dialogs/Dialog.js";
 import { LangContext } from "../language.js";
-import { utilities } from "../utils/functions.js";
+import { UTILITIES } from "../utils/functions.js";
 
 export class FormPropertyEditSelectedValues extends React.Component {
 	constructor(props) {
@@ -22,8 +22,7 @@ export class FormPropertyEditSelectedValues extends React.Component {
 	}
 
 	render() {
-		const canMove =
-			this.state.otherDefinitions.length && this.props.values.length === 1;
+		const canMove = this.state.otherDefinitions.length;
 		const values = this.props.values;
 		let title;
 		if (values.length === 1)
@@ -82,8 +81,7 @@ export class FormPropertyEditSelectedValues extends React.Component {
 			case "edit":
 				return this.renderEdit();
 			case "move":
-				if (this.props.values.length === 1) return this.renderMove();
-				break;
+				return this.renderMove();
 			default:
 				break;
 		}
@@ -209,7 +207,7 @@ export class FormPropertyEditSelectedValues extends React.Component {
 		const def = this.props.definitions[this.props.name];
 		try {
 			this.setState({
-				value: utilities(this.context).parsePropValString(
+				value: UTILITIES.parsePropValString(
 					def.type,
 					def.enumeration,
 					event.target.value

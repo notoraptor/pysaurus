@@ -1,7 +1,7 @@
 System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../utils/functions.js", "../language.js"], function (_export, _context) {
   "use strict";
 
-  var ComponentPropController, SetInput, Dialog, utilities, LangContext, FormVideoEditProperties;
+  var ComponentPropController, SetInput, Dialog, UTILITIES, LangContext, FormVideoEditProperties;
 
   _export("FormVideoEditProperties", void 0);
 
@@ -12,7 +12,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../utils/
     }, function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
     }, function (_utilsFunctionsJs) {
-      utilities = _utilsFunctionsJs.utilities;
+      UTILITIES = _utilsFunctionsJs.UTILITIES;
     }, function (_languageJs) {
       LangContext = _languageJs.LangContext;
     }],
@@ -115,7 +115,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../utils/
         onChange(event, def) {
           try {
             this.setState({
-              [def.name]: utilities(this.context).parsePropValString(def.type, def.enumeration, event.target.value)
+              [def.name]: UTILITIES.parsePropValString(def.type, def.enumeration, event.target.value)
             });
           } catch (exception) {
             window.alert(exception.toString());

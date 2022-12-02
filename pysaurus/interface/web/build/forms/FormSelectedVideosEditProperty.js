@@ -1,7 +1,7 @@
 System.register(["../dialogs/Dialog.js", "../utils/constants.js", "../language.js", "../utils/functions.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, Characters, LangContext, utilities, FormSelectedVideosEditProperty;
+  var Dialog, Characters, LangContext, UTILITIES, FormSelectedVideosEditProperty;
 
   _export("FormSelectedVideosEditProperty", void 0);
 
@@ -13,7 +13,7 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js", "../language.j
     }, function (_languageJs) {
       LangContext = _languageJs.LangContext;
     }, function (_utilsFunctionsJs) {
-      utilities = _utilsFunctionsJs.utilities;
+      UTILITIES = _utilsFunctionsJs.UTILITIES;
     }],
     execute: function () {
       _export("FormSelectedVideosEditProperty", FormSelectedVideosEditProperty = class FormSelectedVideosEditProperty extends React.Component {
@@ -47,16 +47,6 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js", "../language.j
           this.removeAll = this.removeAll.bind(this);
           this.addAll = this.addAll.bind(this);
           this.unAddAll = this.unAddAll.bind(this);
-        }
-
-        getMapping() {
-          const mapping = new Map();
-
-          for (let valueAndCount of this.props.values) {
-            mapping.set(valueAndCount[0], valueAndCount[1]);
-          }
-
-          return mapping;
         }
 
         render() {
@@ -147,14 +137,6 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js", "../language.j
           }, value)));
         }
 
-        getDefaultValue() {
-          const def = this.props.definition;
-          if (def.enumeration) return def.enumeration[0];
-          if (def.type === "bool") return "false";
-          if (def.type === "int") return "0";
-          return "";
-        }
-
         renderFormAdd() {
           const def = this.props.definition;
           let input;
@@ -195,12 +177,30 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js", "../language.j
           }, "add")));
         }
 
+        getMapping() {
+          const mapping = new Map();
+
+          for (let valueAndCount of this.props.values) {
+            mapping.set(valueAndCount[0], valueAndCount[1]);
+          }
+
+          return mapping;
+        }
+
+        getDefaultValue() {
+          const def = this.props.definition;
+          if (def.enumeration) return def.enumeration[0];
+          if (def.type === "bool") return "false";
+          if (def.type === "int") return "0";
+          return "";
+        }
+
         onEdit(event) {
           const def = this.props.definition;
 
           try {
             this.setState({
-              value: utilities(this.context).parsePropValString(def.type, def.enumeration, event.target.value)
+              value: UTILITIES.parsePropValString(def.type, def.enumeration, event.target.value)
             });
           } catch (exception) {
             window.alert(exception.toString());

@@ -1183,9 +1183,7 @@ Once done, move you can compute prediction.
 		const selectionSize = this.state.selector.size(this.state.realNbVideos);
 		const videoIndices = this.state.selector.toJSON();
 		python_call("count_prop_values", propertyName, videoIndices)
-			.then((valueToCount) => {
-				const valuesAndCounts = Object.entries(valueToCount);
-				valuesAndCounts.sort();
+			.then((valuesAndCounts) => {
 				Fancybox.load(
 					<FormSelectedVideosEditProperty
 						nbVideos={selectionSize}

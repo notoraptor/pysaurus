@@ -29,8 +29,7 @@ export class IdGenerator {
 }
 
 class Utilities {
-	constructor(lang) {
-		this.lang = lang;
+	constructor() {
 		this.parsePropValString = this.parsePropValString.bind(this);
 	}
 
@@ -76,9 +75,7 @@ class Utilities {
 	}
 }
 
-export function utilities(lang) {
-	return new Utilities(lang);
-}
+export const UTILITIES = new Utilities();
 
 export function arrayEquals(a, b) {
 	return (

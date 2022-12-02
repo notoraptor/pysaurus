@@ -1,6 +1,6 @@
 import { ComponentPropController, SetInput } from "../components/SetInput.js";
 import { Dialog } from "../dialogs/Dialog.js";
-import { utilities } from "../utils/functions.js";
+import { UTILITIES } from "../utils/functions.js";
 import { LangContext } from "../language.js";
 
 export class FormVideoEditProperties extends React.Component {
@@ -137,7 +137,7 @@ export class FormVideoEditProperties extends React.Component {
 	onChange(event, def) {
 		try {
 			this.setState({
-				[def.name]: utilities(this.context).parsePropValString(
+				[def.name]: UTILITIES.parsePropValString(
 					def.type,
 					def.enumeration,
 					event.target.value

@@ -1,7 +1,7 @@
 import { Dialog } from "../dialogs/Dialog.js";
 import { Characters } from "../utils/constants.js";
 import { LangContext } from "../language.js";
-import { utilities } from "../utils/functions.js";
+import { UTILITIES } from "../utils/functions.js";
 
 export class FormSelectedVideosEditProperty extends React.Component {
 	constructor(props) {
@@ -32,14 +32,6 @@ export class FormSelectedVideosEditProperty extends React.Component {
 		this.removeAll = this.removeAll.bind(this);
 		this.addAll = this.addAll.bind(this);
 		this.unAddAll = this.unAddAll.bind(this);
-	}
-
-	getMapping() {
-		const mapping = new Map();
-		for (let valueAndCount of this.props.values) {
-			mapping.set(valueAndCount[0], valueAndCount[1]);
-		}
-		return mapping;
 	}
 
 	render() {
@@ -162,14 +154,6 @@ export class FormSelectedVideosEditProperty extends React.Component {
 		));
 	}
 
-	getDefaultValue() {
-		const def = this.props.definition;
-		if (def.enumeration) return def.enumeration[0];
-		if (def.type === "bool") return "false";
-		if (def.type === "int") return "0";
-		return "";
-	}
-
 	renderFormAdd() {
 		const def = this.props.definition;
 		let input;
@@ -216,11 +200,27 @@ export class FormSelectedVideosEditProperty extends React.Component {
 		);
 	}
 
+	getMapping() {
+		const mapping = new Map();
+		for (let valueAndCount of this.props.values) {
+			mapping.set(valueAndCount[0], valueAndCount[1]);
+		}
+		return mapping;
+	}
+
+	getDefaultValue() {
+		const def = this.props.definition;
+		if (def.enumeration) return def.enumeration[0];
+		if (def.type === "bool") return "false";
+		if (def.type === "int") return "0";
+		return "";
+	}
+
 	onEdit(event) {
 		const def = this.props.definition;
 		try {
 			this.setState({
-				value: utilities(this.context).parsePropValString(
+				value: UTILITIES.parsePropValString(
 					def.type,
 					def.enumeration,
 					event.target.value

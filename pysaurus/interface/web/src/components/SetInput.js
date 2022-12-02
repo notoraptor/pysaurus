@@ -1,5 +1,5 @@
 import { LangContext } from "../language.js";
-import { utilities } from "../utils/functions.js";
+import { UTILITIES } from "../utils/functions.js";
 
 class SetController {
 	constructor() {
@@ -68,7 +68,7 @@ export class ComponentController extends SetController {
 export class ComponentPropController extends ComponentController {
 	constructor(app, field, propType, propEnum) {
 		super(app, field, (value) =>
-			utilities(app.context).parsePropValString(propType, propEnum, value)
+			UTILITIES.parsePropValString(propType, propEnum, value)
 		);
 	}
 }

@@ -1,7 +1,7 @@
 System.register([], function (_export, _context) {
   "use strict";
 
-  var IdGenerator, Utilities;
+  var IdGenerator, Utilities, UTILITIES;
 
   function capitalizeFirstLetter(str) {
     if (str.length === 0) return str;
@@ -25,10 +25,6 @@ System.register([], function (_export, _context) {
     return text;
   }
 
-  function utilities(lang) {
-    return new Utilities(lang);
-  }
-
   function arrayEquals(a, b) {
     return Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((val, index) => val === b[index]);
   }
@@ -37,7 +33,6 @@ System.register([], function (_export, _context) {
     capitalizeFirstLetter: capitalizeFirstLetter,
     formatString: formatString,
     IdGenerator: void 0,
-    utilities: utilities,
     arrayEquals: arrayEquals
   });
 
@@ -56,8 +51,7 @@ System.register([], function (_export, _context) {
       });
 
       Utilities = class Utilities {
-        constructor(lang) {
-          this.lang = lang;
+        constructor() {
           this.parsePropValString = this.parsePropValString.bind(this);
         }
         /**
@@ -106,6 +100,8 @@ System.register([], function (_export, _context) {
         }
 
       };
+
+      _export("UTILITIES", UTILITIES = new Utilities());
     }
   };
 });

@@ -265,3 +265,15 @@ def apply_selector(selector: dict, data: Iterable, key: str, return_data=False):
             else include
         )
     return output
+
+
+def extract_object(instance: object, path: str):
+    """Extract an attribute from instance using dot separated path.
+
+    E.g. extract_object(my_object, "attr1.attr2.attr3")
+    will return my_object.attr1.attr2.attr3
+    """
+    element = instance
+    for step in path.split("."):
+        element = getattr(element, step)
+    return element
