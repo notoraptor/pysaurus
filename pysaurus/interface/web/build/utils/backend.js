@@ -5,6 +5,16 @@ System.register([], function (_export, _context) {
     return window.backend_call(name, args);
   }
 
+  async function python_multiple_call(...calls) {
+    let ret = null;
+
+    for (let call of calls) {
+      ret = await python_call(...call);
+    }
+
+    return ret;
+  }
+
   function backend_error(error) {
     const desc = error.string || `${error.name}: ${error.message}`;
     window.alert(desc);
@@ -12,6 +22,7 @@ System.register([], function (_export, _context) {
 
   _export({
     python_call: python_call,
+    python_multiple_call: python_multiple_call,
     backend_error: backend_error
   });
 

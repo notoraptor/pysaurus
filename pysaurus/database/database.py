@@ -502,15 +502,11 @@ class Database(JsonDatabase):
             self._notify_properties_modified([name], modified)
         return modified
 
-    def delete_property_value(
-        self, videos: Iterable[Video], name: str, values: list
-    ) -> None:
-        self.__del_prop_val(videos, name, values)
+    def delete_property_value(self, name: str, values: list) -> None:
+        self.__del_prop_val(self.videos.values(), name, values)
 
-    def move_property_value(
-        self, videos: Iterable[Video], old_name: str, values: list, new_name: str
-    ) -> None:
-        modified = self.__del_prop_val(videos, old_name, values)
+    def move_property_value(self, old_name: str, values: list, new_name: str) -> None:
+        modified = self.__del_prop_val(self.videos.values(), old_name, values)
         for video in modified:
             self.merge_prop_values(video, new_name, values)
         if modified:
@@ -518,12 +514,12 @@ class Database(JsonDatabase):
             self._notify_properties_modified([old_name, new_name], modified)
 
     def edit_property_value(
-        self, videos: Iterable[Video], name: str, old_values: list, new_value: object
+        self, name: str, old_values: list, new_value: object
     ) -> bool:
         modified = []
         old_values = set(self.validate_prop_values(name, old_values))
         (new_value,) = self.validate_prop_values(name, [new_value])
-        for video in videos:
+        for video in self.videos.values():
             previous_values = set(self.get_prop_values(video, name))
             next_values = previous_values - old_values
             if len(previous_values) > len(next_values):
@@ -570,12 +566,10 @@ class Database(JsonDatabase):
             count.update(self.get_prop_values(self.__get_video_from_id(video_id), name))
         return sorted(count.items())
 
-    def fill_property_with_terms(
-        self, videos: Iterable[Video], prop_name: str, only_empty=False
-    ) -> None:
+    def fill_property_with_terms(self, prop_name: str, only_empty=False) -> None:
         assert self.has_prop_type(prop_name, with_type=str, multiple=True)
         modified = []
-        for video in videos:
+        for video in self.videos.values():
             values = set(self.get_prop_values(video, prop_name))
             if only_empty and values:
                 continue
@@ -689,6 +683,12 @@ class Database(JsonDatabase):
 
     def get_video_filename(self, video_id: int) -> AbsolutePath:
         return self.id_to_video[video_id].filename
+
+    def open_video(self, video_id: int):
+        self.id_to_video[video_id].filename.open()
+
+    def open_containing_folder(self, video_id: int) -> str:
+        return str(self.id_to_video[video_id].filename.locate_file())
 
     def get_videos_field(self, indices: Iterable[int], field: str) -> Iterable:
         return (getattr(self.id_to_video[video_id], field) for video_id in indices)

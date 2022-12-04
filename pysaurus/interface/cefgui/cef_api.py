@@ -14,7 +14,7 @@ class CefAPI(GuiAPI):
 
     def call(self, name, args, resolve, reject):
         try:
-            resolve.Call(getattr(self, name)(*args))
+            resolve.Call(self.__run_feature__(name, *args))
         except exceptions.PysaurusError as exc:
             traceback.print_tb(exc.__traceback__)
             print(f"{type(exc).__name__}:", exc, file=sys.stderr)

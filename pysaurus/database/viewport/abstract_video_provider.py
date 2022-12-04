@@ -3,7 +3,7 @@ from abc import ABCMeta, abstractmethod
 from typing import Sequence
 
 from pysaurus.application import exceptions
-from pysaurus.core import notifications
+from pysaurus.core import functions, notifications
 from pysaurus.database.video import Video
 
 
@@ -131,11 +131,13 @@ class AbstractVideoProvider(metaclass=ABCMeta):
             raise exceptions.NoVideos()
         return videos[random.randrange(len(videos))]
 
-    def choose_random_video(self):
+    def choose_random_video(self, open_video=True) -> str:
         video = self.get_random_found_video()
         self.reset_parameters("source", "grouping", "classifier", "group")
         self.set_search(str(video.video_id), "id")
-        return video
+        if open_video:
+            video.filename.open()
+        return video.filename.path
 
     def classifier_select_group(self, group_id: int):
         path = self.get_classifier_path()
@@ -168,6 +170,14 @@ class AbstractVideoProvider(metaclass=ABCMeta):
         path = list(reversed(self.get_classifier_path()))
         self.set_classifier_path(path)
         return path
+
+    def playlist(self) -> str:
+        return str(self._database.to_xspf_playlist(self.get_view()).open())
+
+    def select_from_view(self, selector: dict, return_videos=False):
+        return functions.apply_selector(
+            selector, self.get_view(), "video_id", return_videos
+        )
 
     def register_notifications(self):
         self._database.notifier.set_manager(

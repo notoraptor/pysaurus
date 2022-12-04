@@ -419,13 +419,13 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
         }
 
         reallyDismissSimilarity() {
-          python_call("dismiss_similarity", this.props.data.video_id).then(() => this.props.onInfo(tr("Current similarity cancelled: {path}", {
+          python_call("set_similarity", this.props.data.video_id, -1).then(() => this.props.onInfo(tr("Current similarity cancelled: {path}", {
             path: this.props.data.filename
           }), true)).catch(backend_error);
         }
 
         reallyResetSimilarity() {
-          python_call("reset_similarity", this.props.data.video_id).then(() => this.props.onInfo(tr("Current similarity reset: {path}", {
+          python_call("set_similarity", this.props.data.video_id, null).then(() => this.props.onInfo(tr("Current similarity reset: {path}", {
             path: this.props.data.filename
           }), true)).catch(backend_error);
         }

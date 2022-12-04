@@ -1,7 +1,7 @@
 import { ComponentPropController, SetInput } from "../components/SetInput.js";
 import { Dialog } from "../dialogs/Dialog.js";
 import { Cell } from "../components/Cell.js";
-import { backend_error, python_call } from "../utils/backend.js";
+import { backend_error, python_call, python_multiple_call } from "../utils/backend.js";
 import { UTILITIES } from "../utils/functions.js";
 import { GenericFormRename } from "../forms/GenericFormRename.js";
 import { LangContext } from "../language.js";
@@ -350,12 +350,15 @@ export class PropertiesPage extends React.Component {
 					null,
 					definition
 				);
-			python_call(
-				"add_prop_type",
-				this.state.name,
-				this.state.type,
-				definition,
-				this.state.multiple
+			python_multiple_call(
+				[
+					"create_prop_type",
+					this.state.name,
+					this.state.type,
+					definition,
+					this.state.multiple,
+				],
+				["describe_prop_types"]
 			)
 				.then((definitions) => {
 					const state = this.getDefaultInputState();
@@ -374,7 +377,10 @@ export class PropertiesPage extends React.Component {
 				title={tr('Delete property "{name}"?', { name })}
 				yes={tr("DELETE")}
 				action={() => {
-					python_call("delete_prop_type", name)
+					python_multiple_call(
+						["remove_prop_type", name],
+						["describe_prop_types"]
+					)
 						.catch(backend_error)
 						.then((definitions) => {
 							const state = this.getDefaultInputState();
@@ -401,7 +407,10 @@ export class PropertiesPage extends React.Component {
 				})}
 				yes={tr("convert to unique")}
 				action={() => {
-					python_call("convert_prop_to_unique", name)
+					python_multiple_call(
+						["convert_prop_to_unique", name],
+						["describe_prop_types"]
+					)
 						.then((definitions) => {
 							const state = this.getDefaultInputState();
 							state.definitions = definitions;
@@ -431,7 +440,10 @@ export class PropertiesPage extends React.Component {
 				})}
 				yes={tr("convert to multiple")}
 				action={() => {
-					python_call("convert_prop_to_multiple", name)
+					python_multiple_call(
+						["convert_prop_to_multiple", name],
+						["describe_prop_types"]
+					)
 						.then((definitions) => {
 							const state = this.getDefaultInputState();
 							state.definitions = definitions;
@@ -461,7 +473,10 @@ export class PropertiesPage extends React.Component {
 				description={name}
 				data={name}
 				onClose={(newName) => {
-					python_call("rename_property", name, newName)
+					python_multiple_call(
+						["rename_prop_type", name, newName],
+						["describe_prop_types"]
+					)
 						.then((definitions) => {
 							const state = this.getDefaultInputState();
 							state.definitions = definitions;

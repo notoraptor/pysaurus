@@ -122,7 +122,7 @@ System.register(["./pages/Test.js", "./pages/HomePage.js", "./pages/VideosPage.j
         }
 
         loadPropertiesPage() {
-          python_call("get_prop_types").then(definitions => this.loadPage("properties", {
+          python_call("describe_prop_types").then(definitions => this.loadPage("properties", {
             definitions: definitions
           })).catch(backend_error);
         }

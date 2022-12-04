@@ -10,7 +10,7 @@ Video class. Properties:
 
     (number of seconds) = duration / duration_time_base
 """
-from typing import Any, Dict, Iterable, Sequence, Set
+from typing import Any, Dict, Iterable, Set
 
 from pysaurus.core.classes import StringPrinter, StringedTuple, Text
 from pysaurus.core.compare import to_comparable
@@ -137,16 +137,14 @@ class Video(Jsonable):
         return set(errors)
 
     def extract_attributes(self, keys: Iterable[str]) -> Dict[str, Any]:
-        output = {}
+        out = {}
         for key in keys:
             if key.startswith(":"):
                 prop_name = key[1:]
-                output.setdefault("properties", {})[prop_name] = self.properties[
-                    prop_name
-                ]
+                out.setdefault("properties", {})[prop_name] = self.properties[prop_name]
             else:
-                output[key] = getattr(self, key)
-        return output
+                out[key] = getattr(self, key)
+        return out
 
     extension = property(lambda self: self.filename.extension)
     file_title = property(lambda self: Text(self.filename.file_title))
@@ -234,29 +232,6 @@ class Video(Jsonable):
                 else:
                     term_sources.append(val)
         return string_to_pieces(" ".join(term_sources), as_set=as_set)
-
-    @staticmethod
-    def has_terms_exact(self, terms):
-        # type: (Video, Sequence[str]) -> bool
-        return " ".join(terms) in " ".join(self.terms())
-
-    @staticmethod
-    def has_terms_and(self, terms):
-        # type: (Video, Sequence[str]) -> bool
-        video_terms = self.terms(as_set=True)
-        return all(term in video_terms for term in terms)
-
-    @staticmethod
-    def has_terms_or(self, terms):
-        # type: (Video, Sequence[str]) -> bool
-        video_terms = self.terms(as_set=True)
-        return any(term in video_terms for term in terms)
-
-    @staticmethod
-    def has_terms_id(self, terms):
-        # type: (Video, Sequence[str]) -> bool
-        (term,) = terms
-        return self.video_id == int(term)
 
     def update_properties(self, properties: dict) -> Set[str]:
         return {

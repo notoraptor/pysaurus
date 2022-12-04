@@ -1,4 +1,4 @@
-from typing import Iterable
+from typing import Iterable, Sequence
 
 from pysaurus.core import functions
 from pysaurus.core.functions import class_get_public_attributes, to_json_value
@@ -17,9 +17,28 @@ class VideoFeatures:
         return js
 
     @staticmethod
+    def has_terms_exact(self: Video, terms: Sequence[str]) -> bool:
+        return " ".join(terms) in " ".join(self.terms())
+
+    @staticmethod
+    def has_terms_and(self: Video, terms: Sequence[str]) -> bool:
+        video_terms = self.terms(as_set=True)
+        return all(term in video_terms for term in terms)
+
+    @staticmethod
+    def has_terms_or(self: Video, terms: Sequence[str]) -> bool:
+        video_terms = self.terms(as_set=True)
+        return any(term in video_terms for term in terms)
+
+    @staticmethod
+    def has_terms_id(self: Video, terms: Sequence[str]) -> bool:
+        (term,) = terms
+        return self.video_id == int(term)
+
+    @staticmethod
     def find(search: SearchDef, videos: Iterable[Video]) -> Iterable[Video]:
         terms = functions.string_to_pieces(search.text)
-        video_filter = getattr(Video, f"has_terms_{search.cond}")
+        video_filter = getattr(VideoFeatures, f"has_terms_{search.cond}")
         return (video for video in videos if video_filter(video, terms))
 
     @staticmethod

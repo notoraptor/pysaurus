@@ -86,6 +86,11 @@ class ToDict:
 
 
 class Text:
+    """Helper class to compare texts.
+
+    Compare case-insensitive then put lowercase first.
+    """
+
     __slots__ = ("value",)
 
     def __init__(self, value=""):
@@ -104,6 +109,7 @@ class Text:
         return self.value == other.value
 
     def __lt__(self, other):
+        # Compare case-insensitive then with lowercase < uppercase>.
         return (
             locale.strcoll(self.value.lower(), other.value.lower())
             or -locale.strcoll(self.value, other.value)

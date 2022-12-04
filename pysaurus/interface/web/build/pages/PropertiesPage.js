@@ -1,7 +1,7 @@
 System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../components/Cell.js", "../utils/backend.js", "../utils/functions.js", "../forms/GenericFormRename.js", "../language.js"], function (_export, _context) {
   "use strict";
 
-  var ComponentPropController, SetInput, Dialog, Cell, backend_error, python_call, UTILITIES, GenericFormRename, LangContext, PropertiesPage, DEFAULT_VALUES;
+  var ComponentPropController, SetInput, Dialog, Cell, backend_error, python_call, python_multiple_call, UTILITIES, GenericFormRename, LangContext, PropertiesPage, DEFAULT_VALUES;
 
   function getDefaultValue(propType, isEnum) {
     return isEnum ? [] : DEFAULT_VALUES[propType].toString();
@@ -20,6 +20,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
     }, function (_utilsBackendJs) {
       backend_error = _utilsBackendJs.backend_error;
       python_call = _utilsBackendJs.python_call;
+      python_multiple_call = _utilsBackendJs.python_multiple_call;
     }, function (_utilsFunctionsJs) {
       UTILITIES = _utilsFunctionsJs.UTILITIES;
     }, function (_formsGenericFormRenameJs) {
@@ -258,7 +259,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
           try {
             let definition = this.state.defaultPropVal;
             if (!this.state.enumeration) definition = UTILITIES.parsePropValString(this.state.type, null, definition);
-            python_call("add_prop_type", this.state.name, this.state.type, definition, this.state.multiple).then(definitions => {
+            python_multiple_call(["create_prop_type", this.state.name, this.state.type, definition, this.state.multiple], ["describe_prop_types"]).then(definitions => {
               const state = this.getDefaultInputState();
               state.definitions = definitions;
               this.setState(state);
@@ -275,7 +276,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             }),
             yes: tr("DELETE"),
             action: () => {
-              python_call("delete_prop_type", name).catch(backend_error).then(definitions => {
+              python_multiple_call(["remove_prop_type", name], ["describe_prop_types"]).catch(backend_error).then(definitions => {
                 const state = this.getDefaultInputState();
                 state.definitions = definitions;
                 this.setState(state);
@@ -297,7 +298,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             }),
             yes: tr("convert to unique"),
             action: () => {
-              python_call("convert_prop_to_unique", name).then(definitions => {
+              python_multiple_call(["convert_prop_to_unique", name], ["describe_prop_types"]).then(definitions => {
                 const state = this.getDefaultInputState();
                 state.definitions = definitions;
                 this.setState(state);
@@ -319,7 +320,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             }),
             yes: tr("convert to multiple"),
             action: () => {
-              python_call("convert_prop_to_multiple", name).then(definitions => {
+              python_multiple_call(["convert_prop_to_multiple", name], ["describe_prop_types"]).then(definitions => {
                 const state = this.getDefaultInputState();
                 state.definitions = definitions;
                 this.setState(state);
@@ -343,7 +344,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             description: name,
             data: name,
             onClose: newName => {
-              python_call("rename_property", name, newName).then(definitions => {
+              python_multiple_call(["rename_prop_type", name, newName], ["describe_prop_types"]).then(definitions => {
                 const state = this.getDefaultInputState();
                 state.definitions = definitions;
                 this.setState(state);

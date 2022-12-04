@@ -100,7 +100,7 @@ export class App extends React.Component {
 	}
 
 	loadPropertiesPage() {
-		python_call("get_prop_types")
+		python_call("describe_prop_types")
 			.then((definitions) =>
 				this.loadPage("properties", { definitions: definitions })
 			)
