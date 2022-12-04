@@ -794,13 +794,13 @@ Once done, move you can compute prediction.
         editPropertiesForManyVideos(propertyName) {
           const selectionSize = this.state.selector.size(this.state.realNbVideos);
           const videoIndices = this.state.selector.toJSON();
-          python_call("count_prop_values", propertyName, videoIndices).then(valuesAndCounts => {
+          python_call("apply_on_view", videoIndices, "count_property_values", propertyName).then(valuesAndCounts => {
             Fancybox.load( /*#__PURE__*/React.createElement(FormSelectedVideosEditProperty, {
               nbVideos: selectionSize,
               definition: this.state.definitions[propertyName],
               values: valuesAndCounts,
               onClose: edition => {
-                this.backend(["edit_property_for_videos", propertyName, videoIndices, edition.add, edition.remove], {
+                this.backend(["apply_on_view", videoIndices, "edit_property_for_videos", propertyName, edition.add, edition.remove], {
                   pageNumber: 0,
                   status: tr("Edited property {property} for {count} video(s).", {
                     property: propertyName,

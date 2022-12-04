@@ -533,14 +533,14 @@ class Database(JsonDatabase):
 
     def edit_property_for_videos(
         self,
+        videos: List[Video],
         name: str,
-        video_indices: List[int],
         values_to_add: list,
         values_to_remove: list,
     ) -> None:
         print(
             "Edit",
-            len(video_indices),
+            len(videos),
             "video props, add",
             values_to_add,
             "remove",
@@ -549,8 +549,7 @@ class Database(JsonDatabase):
         values_to_add = self.validate_prop_values(name, values_to_add)
         values_to_remove = set(self.validate_prop_values(name, values_to_remove))
         modified = []
-        for video_id in set(video_indices):
-            video = self.__get_video_from_id(video_id)
+        for video in videos:
             values = set(self.get_prop_values(video, name)) - values_to_remove
             self.set_prop_values(video, name, values)
             self.merge_prop_values(video, name, values_to_add)
@@ -559,11 +558,11 @@ class Database(JsonDatabase):
         self._notify_properties_modified([name], modified)
 
     def count_property_values(
-        self, name: str, video_indices: List[int]
+        self, videos: List[Video], name: str
     ) -> List[Tuple[object, int]]:
         count = Counter()
-        for video_id in set(video_indices):
-            count.update(self.get_prop_values(self.__get_video_from_id(video_id), name))
+        for video in videos:
+            count.update(self.get_prop_values(video, name))
         return sorted(count.items())
 
     def fill_property_with_terms(self, prop_name: str, only_empty=False) -> None:
@@ -606,7 +605,7 @@ class Database(JsonDatabase):
             self._notify_properties_modified([prop_name], modified)
 
     def move_concatenated_prop_val(
-        self, videos: Iterable[Video], path: list, from_property: str, to_property: str
+        self, path: list, from_property: str, to_property: str
     ) -> int:
         assert self.has_prop_type(from_property, multiple=True)
         assert self.has_prop_type(to_property, with_type=str)
@@ -616,7 +615,7 @@ class Database(JsonDatabase):
         )
         modified = []
         path_set = set(path)
-        for video in videos:
+        for video in self.videos.values():
             old_values = set(self.get_prop_values(video, from_property))
             new_values = old_values - path_set
             if len(old_values) == len(new_values) + len(path_set):

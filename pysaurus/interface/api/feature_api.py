@@ -32,6 +32,7 @@ class FeatureAPI:
         self.PYTHON_LANGUAGE = self.application.lang.__language__
         # We must return value for proxy ending with "!"
         self._proxies: Dict[str, str] = {
+            "apply_on_view": "database.provider.apply_on_view!",
             "classifier_back": "database.provider.classifier_back",
             "classifier_focus_prop_val": "database.provider.classifier_focus_prop_val",
             "classifier_reverse": "database.provider.classifier_reverse!",
@@ -61,6 +62,7 @@ class FeatureAPI:
             "set_similarity": "database.set_similarity",
             "set_sorting": "database.provider.set_sort",
             "set_sources": "database.provider.set_sources",
+            "set_video_folders": "database.set_folders",
             "set_video_moved": "database.move_video_entry",
             "set_video_properties": "database.set_video_properties",
         }
@@ -162,31 +164,13 @@ class FeatureAPI:
         from_property = self.database.provider.get_grouping().field
         self.database.provider.set_classifier_path([])
         self.database.provider.set_group(0)
-        self.database.move_concatenated_prop_val(
-            self.database.provider.get_all_videos(), path, from_property, to_property
-        )
+        self.database.move_concatenated_prop_val(path, from_property, to_property)
 
     # TODO: abandon
     def open_random_player(self):
         raise NotImplementedError()
 
-    # to make proxy
-    def count_prop_values(self, name, selector):
-        return self.database.count_property_values(
-            name, self.database.provider.select_from_view(selector)
-        )
-
-    # cannot make proxy ?
-    def set_video_folders(self, paths):
-        self.database.set_folders(paths)
-
     # cannot make proxy ?
     def rename_video(self, video_id, new_title):
         self.database.change_video_file_title(video_id, new_title)
         self.database.provider.refresh()
-
-    # to make proxy ?
-    def edit_property_for_videos(self, name, selector, to_add, to_remove):
-        self.database.edit_property_for_videos(
-            name, self.database.provider.select_from_view(selector), to_add, to_remove
-        )

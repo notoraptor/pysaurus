@@ -1182,7 +1182,12 @@ Once done, move you can compute prediction.
 	editPropertiesForManyVideos(propertyName) {
 		const selectionSize = this.state.selector.size(this.state.realNbVideos);
 		const videoIndices = this.state.selector.toJSON();
-		python_call("count_prop_values", propertyName, videoIndices)
+		python_call(
+			"apply_on_view",
+			videoIndices,
+			"count_property_values",
+			propertyName
+		)
 			.then((valuesAndCounts) => {
 				Fancybox.load(
 					<FormSelectedVideosEditProperty
@@ -1192,9 +1197,10 @@ Once done, move you can compute prediction.
 						onClose={(edition) => {
 							this.backend(
 								[
+									"apply_on_view",
+									videoIndices,
 									"edit_property_for_videos",
 									propertyName,
-									videoIndices,
 									edition.add,
 									edition.remove,
 								],

@@ -9,6 +9,7 @@ from pysaurus.database.video import Video
 
 class AbstractVideoProvider(metaclass=ABCMeta):
     __slots__ = ("_database",)
+    DB_CALLABLE_METHODS = {"count_property_values", "edit_property_for_videos"}
 
     def __init__(self, database):
         self._database = database
@@ -177,6 +178,12 @@ class AbstractVideoProvider(metaclass=ABCMeta):
     def select_from_view(self, selector: dict, return_videos=False):
         return functions.apply_selector(
             selector, self.get_view(), "video_id", return_videos
+        )
+
+    def apply_on_view(self, selector, db_fn_name, *db_fn_args):
+        assert db_fn_name in self.DB_CALLABLE_METHODS
+        return getattr(self._database, db_fn_name)(
+            self.select_from_view(selector, return_videos=True), *db_fn_args
         )
 
     def register_notifications(self):
