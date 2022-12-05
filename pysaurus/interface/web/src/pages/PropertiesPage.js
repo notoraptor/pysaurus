@@ -51,8 +51,8 @@ export class PropertiesPage extends React.Component {
 			<div id="properties">
 				<h2 className="horizontal ml-1 mr-1">
 					<div className="back position-relative">
-						<button className="block bold h-100 px-4" onClick={this.back}>
-							&#11164;
+						<button className="block h-100 px-4" onClick={this.back}>
+							<strong>&#11164;</strong>
 						</button>
 					</div>
 					<div className="text-center flex-grow-1">
@@ -160,9 +160,9 @@ export class PropertiesPage extends React.Component {
 								</td>
 								<td>
 									<button
-										className="submit bold block"
+										className="submit block"
 										onClick={this.submit}>
-										add
+										<strong>add</strong>
 									</button>
 								</td>
 							</tr>
@@ -187,7 +187,9 @@ export class PropertiesPage extends React.Component {
 				<tbody>
 					{this.state.definitions.map((def, index) => (
 						<tr key={index}>
-							<td className="name bold">{def.name}</td>
+							<td className="name">
+								<strong>{def.name}</strong>
+							</td>
 							<td className="type">
 								{def.multiple ? (
 									<span>{tr("one or many")}&nbsp;</span>

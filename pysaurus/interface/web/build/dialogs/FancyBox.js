@@ -30,9 +30,9 @@ System.register(["../utils/FancyboxManager.js"], function (_export, _context) {
           }, /*#__PURE__*/React.createElement("div", {
             className: "fancybox-header flex-shrink-0 horizontal p-2"
           }, /*#__PURE__*/React.createElement("div", {
-            className: "fancybox-title bold flex-grow-1 text-center",
+            className: "fancybox-title flex-grow-1 text-center",
             title: this.props.title
-          }, this.props.title), /*#__PURE__*/React.createElement("div", {
+          }, /*#__PURE__*/React.createElement("strong", null, this.props.title)), /*#__PURE__*/React.createElement("div", {
             className: "pl-2"
           }, /*#__PURE__*/React.createElement("button", {
             onClick: this.onClose

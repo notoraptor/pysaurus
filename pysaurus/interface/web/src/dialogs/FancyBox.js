@@ -18,9 +18,9 @@ export class FancyBox extends React.Component {
 				<div className="fancybox vertical">
 					<div className="fancybox-header flex-shrink-0 horizontal p-2">
 						<div
-							className="fancybox-title bold flex-grow-1 text-center"
+							className="fancybox-title flex-grow-1 text-center"
 							title={this.props.title}>
-							{this.props.title}
+							<strong>{this.props.title}</strong>
 						</div>
 						<div className="pl-2">
 							<button onClick={this.onClose}>&times;</button>

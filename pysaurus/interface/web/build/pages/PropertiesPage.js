@@ -74,9 +74,9 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
           }, /*#__PURE__*/React.createElement("div", {
             className: "back position-relative"
           }, /*#__PURE__*/React.createElement("button", {
-            className: "block bold h-100 px-4",
+            className: "block h-100 px-4",
             onClick: this.back
-          }, "\u2B9C")), /*#__PURE__*/React.createElement("div", {
+          }, /*#__PURE__*/React.createElement("strong", null, "\u2B9C"))), /*#__PURE__*/React.createElement("div", {
             className: "text-center flex-grow-1"
           }, tr("Properties Management"))), /*#__PURE__*/React.createElement("hr", null), /*#__PURE__*/React.createElement("div", {
             className: "content horizontal"
@@ -135,9 +135,9 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             className: "reset block",
             onClick: this.reset
           }, "reset")), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
-            className: "submit bold block",
+            className: "submit block",
             onClick: this.submit
-          }, "add")))))));
+          }, /*#__PURE__*/React.createElement("strong", null, "add"))))))));
         }
 
         renderPropTypes() {
@@ -148,8 +148,8 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
           }, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("th", null, "Name"), /*#__PURE__*/React.createElement("th", null, "Type"), /*#__PURE__*/React.createElement("th", null, "Default"), /*#__PURE__*/React.createElement("th", null, "Options"))), /*#__PURE__*/React.createElement("tbody", null, this.state.definitions.map((def, index) => /*#__PURE__*/React.createElement("tr", {
             key: index
           }, /*#__PURE__*/React.createElement("td", {
-            className: "name bold"
-          }, def.name), /*#__PURE__*/React.createElement("td", {
+            className: "name"
+          }, /*#__PURE__*/React.createElement("strong", null, def.name)), /*#__PURE__*/React.createElement("td", {
             className: "type"
           }, def.multiple ? /*#__PURE__*/React.createElement("span", null, tr("one or many"), "\xA0") : "", /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("code", null, def.type), " ", def.multiple ? tr("values") : tr("value")), def.enumeration ? /*#__PURE__*/React.createElement("span", null, "\xA0", tr("in"), " ", "{", def.enumeration.join(", "), "}") : ""), /*#__PURE__*/React.createElement("td", {
             className: "default"

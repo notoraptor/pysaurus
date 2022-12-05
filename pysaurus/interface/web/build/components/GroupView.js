@@ -59,8 +59,8 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
           }, /*#__PURE__*/React.createElement("div", {
             className: "header flex-shrink-0 text-center pt-2"
           }, /*#__PURE__*/React.createElement("div", {
-            className: "title bold pb-2"
-          }, this.renderTitle()), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Pagination, {
+            className: "title pb-2"
+          }, /*#__PURE__*/React.createElement("strong", null, this.renderTitle())), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Pagination, {
             singular: "page",
             plural: "pages",
             nbPages: this.getNbPages(),

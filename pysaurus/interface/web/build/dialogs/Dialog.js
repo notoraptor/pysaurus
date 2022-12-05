@@ -33,14 +33,14 @@ System.register(["./FancyBox.js", "../language.js", "../utils/FancyboxManager.js
           }, /*#__PURE__*/React.createElement("div", {
             className: "button flex-grow-1 p-2 yes"
           }, /*#__PURE__*/React.createElement("button", {
-            className: "block bold",
+            className: "block",
             onClick: this.yes
-          }, this.props.yes || tr("yes"))), /*#__PURE__*/React.createElement("div", {
+          }, /*#__PURE__*/React.createElement("strong", null, this.props.yes || tr("yes")))), /*#__PURE__*/React.createElement("div", {
             className: "button flex-grow-1 p-2 no"
           }, /*#__PURE__*/React.createElement("button", {
-            className: "block bold",
+            className: "block",
             onClick: Fancybox.close
-          }, this.props.no || tr("cancel"))))));
+          }, /*#__PURE__*/React.createElement("strong", null, this.props.no || tr("cancel")))))));
         }
 
         yes() {

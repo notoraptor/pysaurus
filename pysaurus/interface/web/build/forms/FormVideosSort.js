@@ -56,9 +56,9 @@ Click on "sort" to validate, or close dialog to cancel.
             className: "add flex-grow-1 mr-1",
             onClick: this.addCriterion
           }, "+"), /*#__PURE__*/React.createElement("button", {
-            className: "sort flex-grow-1 bold ml-2",
+            className: "sort flex-grow-1 ml-2",
             onClick: this.submit
-          }, "sort"))));
+          }, /*#__PURE__*/React.createElement("strong", null, "sort")))));
         }
 
         renderSorting() {

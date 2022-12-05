@@ -85,8 +85,8 @@ export class Video extends React.Component {
 											{tr("Open file")}
 										</MenuItem>
 									) : (
-										<div className="text-center bold">
-											{tr("(not found)")}
+										<div className="text-center">
+											<strong>{tr("(not found)")}</strong>
 										</div>
 									)}
 									{data.found ? (
@@ -373,8 +373,8 @@ export class Video extends React.Component {
 											{tr("Open file")}
 										</MenuItem>
 									) : (
-										<div className="text-center bold">
-											{tr("(not found)")}
+										<div className="text-center">
+											<strong>{tr("(not found)")}</strong>
 										</div>
 									)}
 									{data.found ? (
@@ -579,7 +579,7 @@ export class Video extends React.Component {
 				title={tr("Confirm deletion")}
 				yes={tr("DELETE")}
 				action={this.reallyDeleteVideo}>
-				<div className="form-delete-video text-center bold">
+				<div className="form-delete-video text-center">
 					{tr(
 						"## Are you sure you want to !!definitely!! delete this video?",
 						null,
@@ -612,7 +612,7 @@ export class Video extends React.Component {
 				title={tr("Dismiss similarity")}
 				yes={tr("dismiss")}
 				action={this.reallyDismissSimilarity}>
-				<div className="form-delete-video text-center bold">
+				<div className="form-delete-video text-center">
 					<h2>
 						{tr(
 							"Are you sure you want to dismiss similarity for this video?"
@@ -645,7 +645,7 @@ export class Video extends React.Component {
 				title={tr("Reset similarity")}
 				yes={tr("reset")}
 				action={this.reallyResetSimilarity}>
-				<div className="form-delete-video text-center bold">
+				<div className="form-delete-video text-center">
 					{tr(
 						`
 ## Are you sure you want to reset similarity for this video?

@@ -38,7 +38,9 @@ export class GroupView extends React.Component {
 		return (
 			<div className="group-view absolute-plain vertical">
 				<div className="header flex-shrink-0 text-center pt-2">
-					<div className="title bold pb-2">{this.renderTitle()}</div>
+					<div className="title pb-2">
+						<strong>{this.renderTitle()}</strong>
+					</div>
 					<div>
 						<Pagination
 							singular="page"

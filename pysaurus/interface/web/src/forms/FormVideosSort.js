@@ -45,10 +45,8 @@ Click on "sort" to validate, or close dialog to cancel.
 							onClick={this.addCriterion}>
 							+
 						</button>
-						<button
-							className="sort flex-grow-1 bold ml-2"
-							onClick={this.submit}>
-							sort
+						<button className="sort flex-grow-1 ml-2" onClick={this.submit}>
+							<strong>sort</strong>
 						</button>
 					</p>
 				</div>

@@ -110,8 +110,8 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
           }, data.found ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.openVideo
           }, tr("Open file")) : /*#__PURE__*/React.createElement("div", {
-            className: "text-center bold"
-          }, tr("(not found)")), data.found ? /*#__PURE__*/React.createElement(MenuItem, {
+            className: "text-center"
+          }, /*#__PURE__*/React.createElement("strong", null, tr("(not found)"))), data.found ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.openContainingFolder
           }, tr("Open containing folder")) : "", meta_title ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.copyMetaTitle
@@ -241,8 +241,8 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
           }, data.found ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.openVideo
           }, tr("Open file")) : /*#__PURE__*/React.createElement("div", {
-            className: "text-center bold"
-          }, tr("(not found)")), data.found ? /*#__PURE__*/React.createElement(MenuItem, {
+            className: "text-center"
+          }, /*#__PURE__*/React.createElement("strong", null, tr("(not found)"))), data.found ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.openContainingFolder
           }, tr("Open containing folder")) : "", /*#__PURE__*/React.createElement(MenuItem, {
             action: this.copyFileTitle
@@ -351,7 +351,7 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
             yes: tr("DELETE"),
             action: this.reallyDeleteVideo
           }, /*#__PURE__*/React.createElement("div", {
-            className: "form-delete-video text-center bold"
+            className: "form-delete-video text-center"
           }, tr("## Are you sure you want to !!definitely!! delete this video?", null, "markdown"), /*#__PURE__*/React.createElement("div", {
             className: "details overflow-auto px-2 py-1"
           }, /*#__PURE__*/React.createElement("code", {
@@ -373,7 +373,7 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
             yes: tr("dismiss"),
             action: this.reallyDismissSimilarity
           }, /*#__PURE__*/React.createElement("div", {
-            className: "form-delete-video text-center bold"
+            className: "form-delete-video text-center"
           }, /*#__PURE__*/React.createElement("h2", null, tr("Are you sure you want to dismiss similarity for this video?")), /*#__PURE__*/React.createElement("div", {
             className: "details overflow-auto px-2 py-1"
           }, /*#__PURE__*/React.createElement("code", {
@@ -395,7 +395,7 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
             yes: tr("reset"),
             action: this.reallyResetSimilarity
           }, /*#__PURE__*/React.createElement("div", {
-            className: "form-delete-video text-center bold"
+            className: "form-delete-video text-center"
           }, tr(`
 ## Are you sure you want to reset similarity for this video?
 
