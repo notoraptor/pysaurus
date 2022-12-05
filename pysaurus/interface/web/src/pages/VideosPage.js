@@ -35,8 +35,10 @@ import { Dialog } from "../dialogs/Dialog.js";
 import { Cell } from "../components/Cell.js";
 import { FormNewPredictionProperty } from "../forms/FormNewPredictionProperty.js";
 import { GenericFormRename } from "../forms/GenericFormRename.js";
-import { LangContext } from "../language.js";
+import { LangContext, tr } from "../language.js";
 import { arrayEquals } from "../utils/functions.js";
+import { Fancybox } from "../utils/FancyboxManager.js";
+import { APP_STATE } from "../utils/globals.js";
 
 function compareSources(sources1, sources2) {
 	if (sources1.length !== sources2.length) return false;
@@ -889,7 +891,8 @@ export class VideosPage extends React.Component {
 	populatePredictionProperty() {
 		Fancybox.load(
 			<FancyBox title={tr("Populate prediction property manually")}>
-				{tr(`
+				{tr(
+					`
 Set:
 
 - **1** for video thumbnails that match what you expect
@@ -905,7 +908,10 @@ There is however some good practices:
 - Try to tag same amount of videos for **0** and for **1** (e.g. 10 videos each)
 
 Once done, move you can compute prediction.
-`).markdown()}
+`,
+					null,
+					"markdown"
+				)}
 			</FancyBox>
 		);
 	}
@@ -1293,13 +1299,17 @@ Once done, move you can compute prediction.
 						{tr("Database")}{" "}
 						<span className="red-flag">{this.state.database.name}</span>
 					</h1>
-					{tr(`
+					{tr(
+						`
 ## Are you sure you want to delete this database?
 
 ### Database entries and thumbnails will be deleted.
 
 ### Video files won't be touched.
-`).markdown()}
+`,
+						null,
+						"markdown"
+					)}
 				</Cell>
 			</Dialog>
 		);
@@ -1318,7 +1328,8 @@ Once done, move you can compute prediction.
 						.catch(backend_error);
 				}}>
 				<Cell center={true} full={true} className="text-center">
-					{tr(`
+					{tr(
+						`
 # Are you sure you want to confirm all unique moves?
 
 ## Each not found video which has one unique other found video with
@@ -1330,7 +1341,10 @@ Properties and variable attributes will be copied
 from not found to found video, and
 
 not found video entry will be deleted.
-`).markdown()}
+`,
+						null,
+						"markdown"
+					)}
 				</Cell>
 			</Dialog>
 		);

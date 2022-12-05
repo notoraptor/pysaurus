@@ -1,7 +1,7 @@
 System.register(["../utils/constants.js", "../utils/backend.js", "../language.js"], function (_export, _context) {
   "use strict";
 
-  var Characters, backend_error, python_call, LangContext, ProgressionMonitoring, Monitoring, NotificationRenderer, HomePage, EndStatus, EndReady, NotificationCollector, ACTIONS;
+  var Characters, backend_error, python_call, LangContext, tr, ProgressionMonitoring, Monitoring, NotificationRenderer, HomePage, EndStatus, EndReady, NotificationCollector, ACTIONS;
 
   function collectEndNotification(app, notification) {
     const name = notification.name;
@@ -22,6 +22,7 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
       python_call = _utilsBackendJs.python_call;
     }, function (_languageJs) {
       LangContext = _languageJs.LangContext;
+      tr = _languageJs.tr;
     }],
     execute: function () {
       ProgressionMonitoring = class ProgressionMonitoring {
@@ -220,7 +221,7 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
             key: i
           }, tr("**Collected** {count} file(s)", {
             count
-          }).markdown(true));
+          }, "markdown-inline"));
         }
 
         MissingThumbnails(app, message, i) {

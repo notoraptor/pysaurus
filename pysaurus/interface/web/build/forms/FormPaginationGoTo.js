@@ -1,7 +1,7 @@
-System.register(["../dialogs/Dialog.js", "../components/Cell.js"], function (_export, _context) {
+System.register(["../dialogs/Dialog.js", "../components/Cell.js", "../utils/FancyboxManager.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, Cell, FormPaginationGoTo;
+  var Dialog, Cell, Fancybox, FormPaginationGoTo;
 
   _export("FormPaginationGoTo", void 0);
 
@@ -10,6 +10,8 @@ System.register(["../dialogs/Dialog.js", "../components/Cell.js"], function (_ex
       Dialog = _dialogsDialogJs.Dialog;
     }, function (_componentsCellJs) {
       Cell = _componentsCellJs.Cell;
+    }, function (_utilsFancyboxManagerJs) {
+      Fancybox = _utilsFancyboxManagerJs.Fancybox;
     }],
     execute: function () {
       _export("FormPaginationGoTo", FormPaginationGoTo = class FormPaginationGoTo extends React.Component {

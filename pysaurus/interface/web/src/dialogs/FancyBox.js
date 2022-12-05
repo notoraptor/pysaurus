@@ -1,3 +1,5 @@
+import { Fancybox } from "../utils/FancyboxManager.js";
+
 export class FancyBox extends React.Component {
 	/**
 	 * @param props {{title: str}}

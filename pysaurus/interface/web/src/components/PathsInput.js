@@ -1,4 +1,4 @@
-import { LangContext } from "../language.js";
+import { LangContext, tr } from "../language.js";
 import { backend_error, python_call } from "../utils/backend.js";
 
 export class PathsInput extends React.Component {

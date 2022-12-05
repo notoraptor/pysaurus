@@ -1,6 +1,7 @@
 import { Dialog } from "../dialogs/Dialog.js";
-import { LangContext } from "../language.js";
+import { LangContext, tr } from "../language.js";
 import { UTILITIES } from "../utils/functions.js";
+import { Fancybox } from "../utils/FancyboxManager.js";
 
 export class FormPropertyEditSelectedValues extends React.Component {
 	constructor(props) {
@@ -99,8 +100,9 @@ export class FormPropertyEditSelectedValues extends React.Component {
 					{
 						name: this.props.name,
 						value: this.valuesToString(),
-					}
-				).markdown()}
+					},
+					"markdown"
+				)}
 			</div>
 		);
 	}

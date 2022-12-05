@@ -1,6 +1,6 @@
 import { Characters } from "../utils/constants.js";
 import { backend_error, python_call } from "../utils/backend.js";
-import { LangContext } from "../language.js";
+import { LangContext, tr } from "../language.js";
 
 class ProgressionMonitoring {
 	constructor(name, total) {
@@ -227,7 +227,7 @@ class NotificationRenderer extends React.Component {
 		const count = message.notification.count;
 		return (
 			<div key={i}>
-				{tr("**Collected** {count} file(s)", { count }).markdown(true)}
+				{tr("**Collected** {count} file(s)", { count }, "markdown-inline")}
 			</div>
 		);
 	}

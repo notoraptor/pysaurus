@@ -9,6 +9,7 @@ import {
 	VIDEO_DEFAULT_PAGE_SIZE,
 } from "./utils/constants.js";
 import { LangContext } from "./language.js";
+import { APP_STATE } from "./utils/globals.js";
 
 export class App extends React.Component {
 	constructor(props) {

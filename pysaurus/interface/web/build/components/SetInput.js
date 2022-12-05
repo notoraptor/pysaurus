@@ -1,7 +1,7 @@
 System.register(["../language.js", "../utils/functions.js"], function (_export, _context) {
   "use strict";
 
-  var LangContext, UTILITIES, SetController, ComponentController, ComponentPropController, SetInput;
+  var LangContext, tr, UTILITIES, SetController, ComponentController, ComponentPropController, SetInput;
 
   function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
@@ -14,6 +14,7 @@ System.register(["../language.js", "../utils/functions.js"], function (_export, 
   return {
     setters: [function (_languageJs) {
       LangContext = _languageJs.LangContext;
+      tr = _languageJs.tr;
     }, function (_utilsFunctionsJs) {
       UTILITIES = _utilsFunctionsJs.UTILITIES;
     }],

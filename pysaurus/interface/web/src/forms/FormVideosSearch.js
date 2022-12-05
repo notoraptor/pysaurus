@@ -1,5 +1,6 @@
 import { FancyBox } from "../dialogs/FancyBox.js";
-import { LangContext } from "../language.js";
+import { LangContext, tr } from "../language.js";
+import { Fancybox } from "../utils/FancyboxManager.js";
 
 export class FormVideosSearch extends React.Component {
 	constructor(props) {
@@ -22,12 +23,16 @@ export class FormVideosSearch extends React.Component {
 		return (
 			<FancyBox title={tr("Search videos")}>
 				<div className="form-videos-search text-center">
-					{tr(`
+					{tr(
+						`
 Type text to search and choose how to search.
 
 You can also type text and then press enter
 to automatically select "AND" as search method.
-`).markdown()}
+`,
+						null,
+						"markdown"
+					)}
 					<p>
 						<input
 							type="text"

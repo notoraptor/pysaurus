@@ -1,6 +1,6 @@
 import { Dialog } from "../dialogs/Dialog.js";
 import { Cell } from "../components/Cell.js";
-import { LangContext } from "../language.js";
+import { LangContext, tr } from "../language.js";
 
 export class FormVideosKeywordsToProperty extends React.Component {
 	constructor(props) {

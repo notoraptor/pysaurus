@@ -1,7 +1,7 @@
-System.register(["../utils/constants.js", "../dialogs/FancyBox.js", "../language.js"], function (_export, _context) {
+System.register(["../utils/constants.js", "../dialogs/FancyBox.js", "../language.js", "../utils/FancyboxManager.js"], function (_export, _context) {
   "use strict";
 
-  var FIELD_MAP, FancyBox, LangContext, FormVideosSort;
+  var FIELD_MAP, FancyBox, LangContext, tr, Fancybox, FormVideosSort;
 
   _export("FormVideosSort", void 0);
 
@@ -12,6 +12,9 @@ System.register(["../utils/constants.js", "../dialogs/FancyBox.js", "../language
       FancyBox = _dialogsFancyBoxJs.FancyBox;
     }, function (_languageJs) {
       LangContext = _languageJs.LangContext;
+      tr = _languageJs.tr;
+    }, function (_utilsFancyboxManagerJs) {
+      Fancybox = _utilsFancyboxManagerJs.Fancybox;
     }],
     execute: function () {
       _export("FormVideosSort", FormVideosSort = class FormVideosSort extends React.Component {
@@ -44,7 +47,7 @@ Click on "+" to add a new sorting criterion.
 Click on "-" to remove a sorting criterion.
 
 Click on "sort" to validate, or close dialog to cancel.
-`).markdown()), /*#__PURE__*/React.createElement("div", {
+`, null, "markdown")), /*#__PURE__*/React.createElement("div", {
             id: "sorting",
             className: "flex-grow-1 overflow-auto"
           }, this.renderSorting()), /*#__PURE__*/React.createElement("p", {

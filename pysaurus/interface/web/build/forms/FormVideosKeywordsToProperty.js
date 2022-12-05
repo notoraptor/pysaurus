@@ -1,7 +1,7 @@
 System.register(["../dialogs/Dialog.js", "../components/Cell.js", "../language.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, Cell, LangContext, FormVideosKeywordsToProperty;
+  var Dialog, Cell, LangContext, tr, FormVideosKeywordsToProperty;
 
   _export("FormVideosKeywordsToProperty", void 0);
 
@@ -12,6 +12,7 @@ System.register(["../dialogs/Dialog.js", "../components/Cell.js", "../language.j
       Cell = _componentsCellJs.Cell;
     }, function (_languageJs) {
       LangContext = _languageJs.LangContext;
+      tr = _languageJs.tr;
     }],
     execute: function () {
       _export("FormVideosKeywordsToProperty", FormVideosKeywordsToProperty = class FormVideosKeywordsToProperty extends React.Component {

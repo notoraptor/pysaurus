@@ -1,7 +1,7 @@
-System.register(["../dialogs/FancyBox.js", "../language.js"], function (_export, _context) {
+System.register(["../dialogs/FancyBox.js", "../language.js", "../utils/FancyboxManager.js"], function (_export, _context) {
   "use strict";
 
-  var FancyBox, LangContext, FormVideosSearch;
+  var FancyBox, LangContext, tr, Fancybox, FormVideosSearch;
 
   _export("FormVideosSearch", void 0);
 
@@ -10,6 +10,9 @@ System.register(["../dialogs/FancyBox.js", "../language.js"], function (_export,
       FancyBox = _dialogsFancyBoxJs.FancyBox;
     }, function (_languageJs) {
       LangContext = _languageJs.LangContext;
+      tr = _languageJs.tr;
+    }, function (_utilsFancyboxManagerJs) {
+      Fancybox = _utilsFancyboxManagerJs.Fancybox;
     }],
     execute: function () {
       _export("FormVideosSearch", FormVideosSearch = class FormVideosSearch extends React.Component {
@@ -39,7 +42,7 @@ Type text to search and choose how to search.
 
 You can also type text and then press enter
 to automatically select "AND" as search method.
-`).markdown(), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("input", {
+`, null, "markdown"), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("input", {
             type: "text",
             id: "input-search",
             className: "block mb-2",

@@ -1,6 +1,6 @@
 import { Dialog } from "../dialogs/Dialog.js";
 import { Characters } from "../utils/constants.js";
-import { LangContext } from "../language.js";
+import { LangContext, tr } from "../language.js";
 import { UTILITIES } from "../utils/functions.js";
 
 export class FormSelectedVideosEditProperty extends React.Component {

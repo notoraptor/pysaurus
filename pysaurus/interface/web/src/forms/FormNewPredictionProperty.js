@@ -1,5 +1,6 @@
 import { Dialog } from "../dialogs/Dialog.js";
-import { LangContext } from "../language.js";
+import { LangContext, tr } from "../language.js";
+import { Fancybox } from "../utils/FancyboxManager.js";
 
 export class FormNewPredictionProperty extends React.Component {
 	constructor(props) {
@@ -20,11 +21,15 @@ export class FormNewPredictionProperty extends React.Component {
 				yes={tr("create")}
 				action={this.onClose}>
 				<div className="form-rename text-center">
-					{tr(`
+					{tr(
+						`
 # Property name:
 
 ## Final name will be \`<?{property name}>\`
-`).markdown()}
+`,
+						null,
+						"markdown"
+					)}
 					<p className="form">
 						<input
 							type="text"

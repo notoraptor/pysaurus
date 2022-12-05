@@ -1,7 +1,7 @@
-System.register(["../dialogs/FancyBox.js", "../language.js"], function (_export, _context) {
+System.register(["../dialogs/FancyBox.js", "../language.js", "../utils/FancyboxManager.js"], function (_export, _context) {
   "use strict";
 
-  var FancyBox, LangContext, FormVideosSource;
+  var FancyBox, LangContext, tr, Fancybox, FormVideosSource;
 
   function getSubTree(tree, entryName) {
     const steps = entryName.split("-");
@@ -59,6 +59,9 @@ System.register(["../dialogs/FancyBox.js", "../language.js"], function (_export,
       FancyBox = _dialogsFancyBoxJs.FancyBox;
     }, function (_languageJs) {
       LangContext = _languageJs.LangContext;
+      tr = _languageJs.tr;
+    }, function (_utilsFancyboxManagerJs) {
+      Fancybox = _utilsFancyboxManagerJs.Fancybox;
     }],
     execute: function () {
       _export("FormVideosSource", FormVideosSource = class FormVideosSource extends React.Component {

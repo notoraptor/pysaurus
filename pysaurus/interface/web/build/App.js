@@ -1,7 +1,7 @@
-System.register(["./pages/Test.js", "./pages/HomePage.js", "./pages/VideosPage.js", "./pages/PropertiesPage.js", "./pages/DatabasesPage.js", "./utils/backend.js", "./utils/constants.js", "./language.js"], function (_export, _context) {
+System.register(["./pages/Test.js", "./pages/HomePage.js", "./pages/VideosPage.js", "./pages/PropertiesPage.js", "./pages/DatabasesPage.js", "./utils/backend.js", "./utils/constants.js", "./language.js", "./utils/globals.js"], function (_export, _context) {
   "use strict";
 
-  var Test, HomePage, VideosPage, PropertiesPage, DatabasesPage, backend_error, python_call, VIDEO_DEFAULT_PAGE_NUMBER, VIDEO_DEFAULT_PAGE_SIZE, LangContext, App;
+  var Test, HomePage, VideosPage, PropertiesPage, DatabasesPage, backend_error, python_call, VIDEO_DEFAULT_PAGE_NUMBER, VIDEO_DEFAULT_PAGE_SIZE, LangContext, APP_STATE, App;
 
   _export("App", void 0);
 
@@ -24,6 +24,8 @@ System.register(["./pages/Test.js", "./pages/HomePage.js", "./pages/VideosPage.j
       VIDEO_DEFAULT_PAGE_SIZE = _utilsConstantsJs.VIDEO_DEFAULT_PAGE_SIZE;
     }, function (_languageJs) {
       LangContext = _languageJs.LangContext;
+    }, function (_utilsGlobalsJs) {
+      APP_STATE = _utilsGlobalsJs.APP_STATE;
     }],
     execute: function () {
       _export("App", App = class App extends React.Component {

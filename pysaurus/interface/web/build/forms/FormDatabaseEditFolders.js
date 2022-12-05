@@ -1,7 +1,7 @@
 System.register(["../dialogs/Dialog.js", "../language.js", "../components/PathsInput.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, LangContext, PathsInput, FormDatabaseEditFolders;
+  var Dialog, LangContext, tr, PathsInput, FormDatabaseEditFolders;
 
   _export("FormDatabaseEditFolders", void 0);
 
@@ -10,6 +10,7 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../components/PathsI
       Dialog = _dialogsDialogJs.Dialog;
     }, function (_languageJs) {
       LangContext = _languageJs.LangContext;
+      tr = _languageJs.tr;
     }, function (_componentsPathsInputJs) {
       PathsInput = _componentsPathsInputJs.PathsInput;
     }],

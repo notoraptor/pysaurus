@@ -1,10 +1,11 @@
 import { ComponentPropController, SetInput } from "../components/SetInput.js";
 import { Dialog } from "../dialogs/Dialog.js";
 import { Cell } from "../components/Cell.js";
-import { backend_error, python_call, python_multiple_call } from "../utils/backend.js";
+import { backend_error, python_multiple_call } from "../utils/backend.js";
 import { UTILITIES } from "../utils/functions.js";
 import { GenericFormRename } from "../forms/GenericFormRename.js";
-import { LangContext } from "../language.js";
+import { LangContext, tr } from "../language.js";
+import { Fancybox } from "../utils/FancyboxManager.js";
 
 const DEFAULT_VALUES = {
 	bool: false,

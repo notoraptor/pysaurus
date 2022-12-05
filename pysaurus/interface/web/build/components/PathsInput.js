@@ -1,13 +1,14 @@
 System.register(["../language.js", "../utils/backend.js"], function (_export, _context) {
   "use strict";
 
-  var LangContext, backend_error, python_call, PathsInput;
+  var LangContext, tr, backend_error, python_call, PathsInput;
 
   _export("PathsInput", void 0);
 
   return {
     setters: [function (_languageJs) {
       LangContext = _languageJs.LangContext;
+      tr = _languageJs.tr;
     }, function (_utilsBackendJs) {
       backend_error = _utilsBackendJs.backend_error;
       python_call = _utilsBackendJs.python_call;

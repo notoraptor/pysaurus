@@ -1,7 +1,7 @@
-System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEditProperties.js", "./Collapsable.js", "./MenuItem.js", "./Menu.js", "../utils/backend.js", "../utils/constants.js", "../language.js", "../forms/GenericFormRename.js"], function (_export, _context) {
+System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEditProperties.js", "./Collapsable.js", "./MenuItem.js", "./Menu.js", "../utils/backend.js", "../utils/constants.js", "../language.js", "../forms/GenericFormRename.js", "../utils/FancyboxManager.js", "../utils/globals.js"], function (_export, _context) {
   "use strict";
 
-  var MenuPack, Dialog, FormVideoEditProperties, Collapsable, MenuItem, Menu, backend_error, python_call, Characters, LangContext, GenericFormRename, Video;
+  var MenuPack, Dialog, FormVideoEditProperties, Collapsable, MenuItem, Menu, backend_error, python_call, Characters, LangContext, tr, GenericFormRename, Fancybox, APP_STATE, Video;
 
   function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
@@ -36,8 +36,13 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
       Characters = _utilsConstantsJs.Characters;
     }, function (_languageJs) {
       LangContext = _languageJs.LangContext;
+      tr = _languageJs.tr;
     }, function (_formsGenericFormRenameJs) {
       GenericFormRename = _formsGenericFormRenameJs.GenericFormRename;
+    }, function (_utilsFancyboxManagerJs) {
+      Fancybox = _utilsFancyboxManagerJs.Fancybox;
+    }, function (_utilsGlobalsJs) {
+      APP_STATE = _utilsGlobalsJs.APP_STATE;
     }],
     execute: function () {
       _export("Video", Video = class Video extends React.Component {
@@ -347,7 +352,7 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
             action: this.reallyDeleteVideo
           }, /*#__PURE__*/React.createElement("div", {
             className: "form-delete-video text-center bold"
-          }, tr("## Are you sure you want to !!definitely!! delete this video?").markdown(), /*#__PURE__*/React.createElement("div", {
+          }, tr("## Are you sure you want to !!definitely!! delete this video?", null, "markdown"), /*#__PURE__*/React.createElement("div", {
             className: "details overflow-auto px-2 py-1"
           }, /*#__PURE__*/React.createElement("code", {
             id: "filename"
@@ -395,7 +400,7 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
 ## Are you sure you want to reset similarity for this video?
 
 ### Video will then be re-compared at next similarity search
-`).markdown(), /*#__PURE__*/React.createElement("div", {
+`, null, "markdown"), /*#__PURE__*/React.createElement("div", {
             className: "details overflow-auto px-2 py-1"
           }, /*#__PURE__*/React.createElement("code", {
             id: "filename"

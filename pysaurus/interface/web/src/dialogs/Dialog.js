@@ -1,5 +1,6 @@
 import { FancyBox } from "./FancyBox.js";
-import { LangContext } from "../language.js";
+import { LangContext, tr } from "../language.js";
+import { Fancybox } from "../utils/FancyboxManager.js";
 
 export class Dialog extends React.Component {
 	constructor(props) {

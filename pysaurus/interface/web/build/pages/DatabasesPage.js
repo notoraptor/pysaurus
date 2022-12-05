@@ -1,7 +1,7 @@
 System.register(["../utils/backend.js", "../components/PathsInput.js", "../language.js"], function (_export, _context) {
   "use strict";
 
-  var backend_error, python_call, PathsInput, LangContext, DatabasesPage;
+  var backend_error, python_call, PathsInput, LangContext, tr, DatabasesPage;
 
   _export("DatabasesPage", void 0);
 
@@ -13,6 +13,7 @@ System.register(["../utils/backend.js", "../components/PathsInput.js", "../langu
       PathsInput = _componentsPathsInputJs.PathsInput;
     }, function (_languageJs) {
       LangContext = _languageJs.LangContext;
+      tr = _languageJs.tr;
     }],
     execute: function () {
       _export("DatabasesPage", DatabasesPage = class DatabasesPage extends React.Component {

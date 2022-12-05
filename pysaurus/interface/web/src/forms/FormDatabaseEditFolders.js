@@ -1,5 +1,5 @@
 import { Dialog } from "../dialogs/Dialog.js";
-import { LangContext } from "../language.js";
+import { LangContext, tr } from "../language.js";
 import { PathsInput } from "../components/PathsInput.js";
 
 export class FormDatabaseEditFolders extends React.Component {

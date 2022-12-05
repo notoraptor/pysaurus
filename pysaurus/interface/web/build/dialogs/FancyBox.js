@@ -1,12 +1,14 @@
-System.register([], function (_export, _context) {
+System.register(["../utils/FancyboxManager.js"], function (_export, _context) {
   "use strict";
 
-  var FancyBox;
+  var Fancybox, FancyBox;
 
   _export("FancyBox", void 0);
 
   return {
-    setters: [],
+    setters: [function (_utilsFancyboxManagerJs) {
+      Fancybox = _utilsFancyboxManagerJs.Fancybox;
+    }],
     execute: function () {
       _export("FancyBox", FancyBox = class FancyBox extends React.Component {
         /**

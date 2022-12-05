@@ -1,7 +1,7 @@
-System.register(["../utils/constants.js", "../components/SetInput.js", "../dialogs/Dialog.js", "../components/Cross.js"], function (_export, _context) {
+System.register(["../utils/constants.js", "../components/SetInput.js", "../dialogs/Dialog.js", "../components/Cross.js", "../utils/FancyboxManager.js"], function (_export, _context) {
   "use strict";
 
-  var PAGE_SIZES, ComponentController, SetInput, Dialog, Cross, Test;
+  var PAGE_SIZES, ComponentController, SetInput, Dialog, Cross, Fancybox, Test;
 
   _export("Test", void 0);
 
@@ -15,6 +15,8 @@ System.register(["../utils/constants.js", "../components/SetInput.js", "../dialo
       Dialog = _dialogsDialogJs.Dialog;
     }, function (_componentsCrossJs) {
       Cross = _componentsCrossJs.Cross;
+    }, function (_utilsFancyboxManagerJs) {
+      Fancybox = _utilsFancyboxManagerJs.Fancybox;
     }],
     execute: function () {
       _export("Test", Test = class Test extends React.Component {

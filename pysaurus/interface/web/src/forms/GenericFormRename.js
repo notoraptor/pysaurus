@@ -1,5 +1,6 @@
 import { Dialog } from "../dialogs/Dialog.js";
-import { LangContext } from "../language.js";
+import { LangContext, tr } from "../language.js";
+import { Fancybox } from "../utils/FancyboxManager.js";
 
 export class GenericFormRename extends React.Component {
 	constructor(props) {

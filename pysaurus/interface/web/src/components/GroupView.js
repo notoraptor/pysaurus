@@ -5,7 +5,8 @@ import { PlusIcon } from "./PlusIcon.js";
 import { capitalizeFirstLetter } from "../utils/functions.js";
 import { Actions } from "../utils/Actions.js";
 import { Action } from "../utils/Action.js";
-import { LangContext } from "../language.js";
+import { LangContext, tr } from "../language.js";
+import { Fancybox } from "../utils/FancyboxManager.js";
 
 export class GroupView extends React.Component {
 	constructor(props) {
@@ -60,10 +61,13 @@ export class GroupView extends React.Component {
 									}
 								/>{" "}
 								<label htmlFor="group-view-select-all">
-									{(allChecked
-										? tr("All {count} selected")
-										: tr("{count} selected")
-									).format({ count: selection.size })}
+									{allChecked
+										? tr("All {count} selected", {
+												count: selection.size,
+										  })
+										: tr("{count} selected", {
+												count: selection.size,
+										  })}
 								</label>
 								{selection.size ? (
 									<span>

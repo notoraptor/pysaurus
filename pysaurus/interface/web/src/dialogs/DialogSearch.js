@@ -1,5 +1,6 @@
 import { Cell } from "../components/Cell.js";
 import { Dialog } from "./Dialog.js";
+import { Fancybox } from "../utils/FancyboxManager.js";
 
 export class DialogSearch extends React.Component {
 	constructor(props) {

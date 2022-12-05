@@ -2,6 +2,7 @@ import { PAGE_SIZES } from "../utils/constants.js";
 import { ComponentController, SetInput } from "../components/SetInput.js";
 import { Dialog } from "../dialogs/Dialog.js";
 import { Cross } from "../components/Cross.js";
+import { Fancybox } from "../utils/FancyboxManager.js";
 
 export class Test extends React.Component {
 	constructor(props) {

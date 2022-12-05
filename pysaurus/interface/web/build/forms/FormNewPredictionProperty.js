@@ -1,7 +1,7 @@
-System.register(["../dialogs/Dialog.js", "../language.js"], function (_export, _context) {
+System.register(["../dialogs/Dialog.js", "../language.js", "../utils/FancyboxManager.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, LangContext, FormNewPredictionProperty;
+  var Dialog, LangContext, tr, Fancybox, FormNewPredictionProperty;
 
   _export("FormNewPredictionProperty", void 0);
 
@@ -10,6 +10,9 @@ System.register(["../dialogs/Dialog.js", "../language.js"], function (_export, _
       Dialog = _dialogsDialogJs.Dialog;
     }, function (_languageJs) {
       LangContext = _languageJs.LangContext;
+      tr = _languageJs.tr;
+    }, function (_utilsFancyboxManagerJs) {
+      Fancybox = _utilsFancyboxManagerJs.Fancybox;
     }],
     execute: function () {
       _export("FormNewPredictionProperty", FormNewPredictionProperty = class FormNewPredictionProperty extends React.Component {
@@ -37,7 +40,7 @@ System.register(["../dialogs/Dialog.js", "../language.js"], function (_export, _
 # Property name:
 
 ## Final name will be \`<?{property name}>\`
-`).markdown(), /*#__PURE__*/React.createElement("p", {
+`, null, "markdown"), /*#__PURE__*/React.createElement("p", {
             className: "form"
           }, /*#__PURE__*/React.createElement("input", {
             type: "text",

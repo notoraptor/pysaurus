@@ -1,7 +1,7 @@
-System.register(["../forms/FormPaginationGoTo.js", "../dialogs/DialogSearch.js", "../utils/functions.js"], function (_export, _context) {
+System.register(["../forms/FormPaginationGoTo.js", "../dialogs/DialogSearch.js", "../utils/functions.js", "../utils/FancyboxManager.js"], function (_export, _context) {
   "use strict";
 
-  var FormPaginationGoTo, DialogSearch, capitalizeFirstLetter, Pagination;
+  var FormPaginationGoTo, DialogSearch, capitalizeFirstLetter, Fancybox, Pagination;
 
   _export("Pagination", void 0);
 
@@ -12,6 +12,8 @@ System.register(["../forms/FormPaginationGoTo.js", "../dialogs/DialogSearch.js",
       DialogSearch = _dialogsDialogSearchJs.DialogSearch;
     }, function (_utilsFunctionsJs) {
       capitalizeFirstLetter = _utilsFunctionsJs.capitalizeFirstLetter;
+    }, function (_utilsFancyboxManagerJs) {
+      Fancybox = _utilsFancyboxManagerJs.Fancybox;
     }],
     execute: function () {
       _export("Pagination", Pagination = class Pagination extends React.Component {

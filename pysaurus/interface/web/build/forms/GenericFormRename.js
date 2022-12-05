@@ -1,7 +1,7 @@
-System.register(["../dialogs/Dialog.js", "../language.js"], function (_export, _context) {
+System.register(["../dialogs/Dialog.js", "../language.js", "../utils/FancyboxManager.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, LangContext, GenericFormRename;
+  var Dialog, LangContext, tr, Fancybox, GenericFormRename;
 
   _export("GenericFormRename", void 0);
 
@@ -10,6 +10,9 @@ System.register(["../dialogs/Dialog.js", "../language.js"], function (_export, _
       Dialog = _dialogsDialogJs.Dialog;
     }, function (_languageJs) {
       LangContext = _languageJs.LangContext;
+      tr = _languageJs.tr;
+    }, function (_utilsFancyboxManagerJs) {
+      Fancybox = _utilsFancyboxManagerJs.Fancybox;
     }],
     execute: function () {
       _export("GenericFormRename", GenericFormRename = class GenericFormRename extends React.Component {

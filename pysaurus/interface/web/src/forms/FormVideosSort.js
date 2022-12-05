@@ -1,6 +1,7 @@
 import { FIELD_MAP } from "../utils/constants.js";
 import { FancyBox } from "../dialogs/FancyBox.js";
-import { LangContext } from "../language.js";
+import { LangContext, tr } from "../language.js";
+import { Fancybox } from "../utils/FancyboxManager.js";
 
 export class FormVideosSort extends React.Component {
 	constructor(props) {
@@ -23,13 +24,17 @@ export class FormVideosSort extends React.Component {
 					id="form-videos-sort"
 					className="form absolute-plain vertical text-center p-2">
 					<div className="help mb-4">
-						{tr(`
+						{tr(
+							`
 Click on "+" to add a new sorting criterion.
 
 Click on "-" to remove a sorting criterion.
 
 Click on "sort" to validate, or close dialog to cancel.
-`).markdown()}
+`,
+							null,
+							"markdown"
+						)}
 					</div>
 					<div id="sorting" className="flex-grow-1 overflow-auto">
 						{this.renderSorting()}

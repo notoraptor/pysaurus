@@ -1,7 +1,7 @@
-System.register(["../dialogs/Dialog.js", "../language.js", "../utils/functions.js"], function (_export, _context) {
+System.register(["../dialogs/Dialog.js", "../language.js", "../utils/functions.js", "../utils/FancyboxManager.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, LangContext, UTILITIES, FormPropertyEditSelectedValues;
+  var Dialog, LangContext, tr, UTILITIES, Fancybox, FormPropertyEditSelectedValues;
 
   _export("FormPropertyEditSelectedValues", void 0);
 
@@ -10,8 +10,11 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../utils/functions.j
       Dialog = _dialogsDialogJs.Dialog;
     }, function (_languageJs) {
       LangContext = _languageJs.LangContext;
+      tr = _languageJs.tr;
     }, function (_utilsFunctionsJs) {
       UTILITIES = _utilsFunctionsJs.UTILITIES;
+    }, function (_utilsFancyboxManagerJs) {
+      Fancybox = _utilsFancyboxManagerJs.Fancybox;
     }],
     execute: function () {
       _export("FormPropertyEditSelectedValues", FormPropertyEditSelectedValues = class FormPropertyEditSelectedValues extends React.Component {
@@ -92,7 +95,7 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../utils/functions.j
 `, {
             name: this.props.name,
             value: this.valuesToString()
-          }).markdown());
+          }, "markdown"));
         }
 
         renderEdit() {

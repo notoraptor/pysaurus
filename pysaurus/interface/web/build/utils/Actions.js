@@ -1,12 +1,14 @@
-System.register([], function (_export, _context) {
+System.register(["../language.js"], function (_export, _context) {
   "use strict";
 
-  var Actions;
+  var tr, Actions;
 
   _export("Actions", void 0);
 
   return {
-    setters: [],
+    setters: [function (_languageJs) {
+      tr = _languageJs.tr;
+    }],
     execute: function () {
       _export("Actions", Actions = class Actions {
         /**

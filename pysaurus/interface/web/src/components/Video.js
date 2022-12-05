@@ -6,8 +6,10 @@ import { MenuItem } from "./MenuItem.js";
 import { Menu } from "./Menu.js";
 import { backend_error, python_call } from "../utils/backend.js";
 import { Characters } from "../utils/constants.js";
-import { LangContext } from "../language.js";
+import { LangContext, tr } from "../language.js";
 import { GenericFormRename } from "../forms/GenericFormRename.js";
+import { Fancybox } from "../utils/FancyboxManager.js";
+import { APP_STATE } from "../utils/globals.js";
 
 /**
  * Generate class name for common value of videos grouped by similarity
@@ -579,8 +581,10 @@ export class Video extends React.Component {
 				action={this.reallyDeleteVideo}>
 				<div className="form-delete-video text-center bold">
 					{tr(
-						"## Are you sure you want to !!definitely!! delete this video?"
-					).markdown()}
+						"## Are you sure you want to !!definitely!! delete this video?",
+						null,
+						"markdown"
+					)}
 					<div className="details overflow-auto px-2 py-1">
 						<code id="filename">{filename}</code>
 					</div>
@@ -642,11 +646,15 @@ export class Video extends React.Component {
 				yes={tr("reset")}
 				action={this.reallyResetSimilarity}>
 				<div className="form-delete-video text-center bold">
-					{tr(`
+					{tr(
+						`
 ## Are you sure you want to reset similarity for this video?
 
 ### Video will then be re-compared at next similarity search
-`).markdown()}
+`,
+						null,
+						"markdown"
+					)}
 					<div className="details overflow-auto px-2 py-1">
 						<code id="filename">{filename}</code>
 					</div>

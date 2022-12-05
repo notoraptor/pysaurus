@@ -1,7 +1,7 @@
-System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../components/Cell.js", "../utils/backend.js", "../utils/functions.js", "../forms/GenericFormRename.js", "../language.js"], function (_export, _context) {
+System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../components/Cell.js", "../utils/backend.js", "../utils/functions.js", "../forms/GenericFormRename.js", "../language.js", "../utils/FancyboxManager.js"], function (_export, _context) {
   "use strict";
 
-  var ComponentPropController, SetInput, Dialog, Cell, backend_error, python_call, python_multiple_call, UTILITIES, GenericFormRename, LangContext, PropertiesPage, DEFAULT_VALUES;
+  var ComponentPropController, SetInput, Dialog, Cell, backend_error, python_multiple_call, UTILITIES, GenericFormRename, LangContext, tr, Fancybox, PropertiesPage, DEFAULT_VALUES;
 
   function getDefaultValue(propType, isEnum) {
     return isEnum ? [] : DEFAULT_VALUES[propType].toString();
@@ -19,7 +19,6 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
       Cell = _componentsCellJs.Cell;
     }, function (_utilsBackendJs) {
       backend_error = _utilsBackendJs.backend_error;
-      python_call = _utilsBackendJs.python_call;
       python_multiple_call = _utilsBackendJs.python_multiple_call;
     }, function (_utilsFunctionsJs) {
       UTILITIES = _utilsFunctionsJs.UTILITIES;
@@ -27,6 +26,9 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
       GenericFormRename = _formsGenericFormRenameJs.GenericFormRename;
     }, function (_languageJs) {
       LangContext = _languageJs.LangContext;
+      tr = _languageJs.tr;
+    }, function (_utilsFancyboxManagerJs) {
+      Fancybox = _utilsFancyboxManagerJs.Fancybox;
     }],
     execute: function () {
       DEFAULT_VALUES = {

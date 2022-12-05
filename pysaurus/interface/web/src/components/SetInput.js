@@ -1,4 +1,4 @@
-import { LangContext } from "../language.js";
+import { LangContext, tr } from "../language.js";
 import { UTILITIES } from "../utils/functions.js";
 
 class SetController {

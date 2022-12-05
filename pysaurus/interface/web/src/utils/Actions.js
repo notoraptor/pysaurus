@@ -1,3 +1,5 @@
+import { tr } from "../language.js";
+
 export class Actions {
 	/**
 	 * @param actions {Object.<string, Action>}

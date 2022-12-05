@@ -1,16 +1,15 @@
-System.register(["../language.js"], function (_export, _context) {
+System.register(["../language.js", "./globals.js"], function (_export, _context) {
   "use strict";
 
-  var LangContext, FancyboxManager;
-
-  _export("FancyboxManager", void 0);
-
+  var LangContext, APP_STATE, FancyboxManager, Fancybox;
   return {
     setters: [function (_languageJs) {
       LangContext = _languageJs.LangContext;
+    }, function (_globalsJs) {
+      APP_STATE = _globalsJs.APP_STATE;
     }],
     execute: function () {
-      _export("FancyboxManager", FancyboxManager = class FancyboxManager {
+      FancyboxManager = class FancyboxManager {
         constructor(containerID) {
           this.containerID = containerID;
           this.loaded = false;
@@ -68,7 +67,10 @@ System.register(["../language.js"], function (_export, _context) {
           return !this.loaded;
         }
 
-      });
+      };
+      /** Global fancybox manager. Used to open/close a fancybox. */
+
+      _export("Fancybox", Fancybox = new FancyboxManager("fancybox"));
     }
   };
 });

@@ -1,6 +1,7 @@
 import { LangContext } from "../language.js";
+import { APP_STATE } from "./globals.js";
 
-export class FancyboxManager {
+class FancyboxManager {
 	constructor(containerID) {
 		this.containerID = containerID;
 		this.loaded = false;
@@ -66,3 +67,6 @@ export class FancyboxManager {
 		return !this.loaded;
 	}
 }
+
+/** Global fancybox manager. Used to open/close a fancybox. */
+export const Fancybox = new FancyboxManager("fancybox");

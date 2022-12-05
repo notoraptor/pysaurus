@@ -1,3 +1,5 @@
+import { tr } from "../language.js";
+
 export function capitalizeFirstLetter(str) {
 	if (str.length === 0) return str;
 	if (str.length === 1) return str.toUpperCase();

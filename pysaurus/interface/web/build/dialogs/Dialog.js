@@ -1,7 +1,7 @@
-System.register(["./FancyBox.js", "../language.js"], function (_export, _context) {
+System.register(["./FancyBox.js", "../language.js", "../utils/FancyboxManager.js"], function (_export, _context) {
   "use strict";
 
-  var FancyBox, LangContext, Dialog;
+  var FancyBox, LangContext, tr, Fancybox, Dialog;
 
   _export("Dialog", void 0);
 
@@ -10,6 +10,9 @@ System.register(["./FancyBox.js", "../language.js"], function (_export, _context
       FancyBox = _FancyBoxJs.FancyBox;
     }, function (_languageJs) {
       LangContext = _languageJs.LangContext;
+      tr = _languageJs.tr;
+    }, function (_utilsFancyboxManagerJs) {
+      Fancybox = _utilsFancyboxManagerJs.Fancybox;
     }],
     execute: function () {
       _export("Dialog", Dialog = class Dialog extends React.Component {

@@ -1,7 +1,7 @@
 System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../utils/functions.js", "../language.js"], function (_export, _context) {
   "use strict";
 
-  var ComponentPropController, SetInput, Dialog, UTILITIES, LangContext, FormVideoEditProperties;
+  var ComponentPropController, SetInput, Dialog, UTILITIES, LangContext, tr, FormVideoEditProperties;
 
   _export("FormVideoEditProperties", void 0);
 
@@ -15,6 +15,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../utils/
       UTILITIES = _utilsFunctionsJs.UTILITIES;
     }, function (_languageJs) {
       LangContext = _languageJs.LangContext;
+      tr = _languageJs.tr;
     }],
     execute: function () {
       _export("FormVideoEditProperties", FormVideoEditProperties = class FormVideoEditProperties extends React.Component {

@@ -1,7 +1,7 @@
 System.register(["../dialogs/Dialog.js", "../utils/constants.js", "../language.js", "../utils/functions.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, Characters, LangContext, UTILITIES, FormSelectedVideosEditProperty;
+  var Dialog, Characters, LangContext, tr, UTILITIES, FormSelectedVideosEditProperty;
 
   _export("FormSelectedVideosEditProperty", void 0);
 
@@ -12,6 +12,7 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js", "../language.j
       Characters = _utilsConstantsJs.Characters;
     }, function (_languageJs) {
       LangContext = _languageJs.LangContext;
+      tr = _languageJs.tr;
     }, function (_utilsFunctionsJs) {
       UTILITIES = _utilsFunctionsJs.UTILITIES;
     }],

@@ -1,7 +1,7 @@
 System.register(["../utils/constants.js", "../dialogs/Dialog.js", "../language.js"], function (_export, _context) {
   "use strict";
 
-  var FIELD_MAP, Dialog, LangContext, FormVideosGrouping;
+  var FIELD_MAP, Dialog, LangContext, tr, FormVideosGrouping;
 
   _export("FormVideosGrouping", void 0);
 
@@ -12,6 +12,7 @@ System.register(["../utils/constants.js", "../dialogs/Dialog.js", "../language.j
       Dialog = _dialogsDialogJs.Dialog;
     }, function (_languageJs) {
       LangContext = _languageJs.LangContext;
+      tr = _languageJs.tr;
     }],
     execute: function () {
       _export("FormVideosGrouping", FormVideosGrouping = class FormVideosGrouping extends React.Component {

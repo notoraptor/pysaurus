@@ -1,7 +1,7 @@
-System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js", "./PlusIcon.js", "../utils/functions.js", "../utils/Actions.js", "../utils/Action.js", "../language.js"], function (_export, _context) {
+System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js", "./PlusIcon.js", "../utils/functions.js", "../utils/Actions.js", "../utils/Action.js", "../language.js", "../utils/FancyboxManager.js"], function (_export, _context) {
   "use strict";
 
-  var Characters, FIELD_MAP, Pagination, SettingIcon, PlusIcon, capitalizeFirstLetter, Actions, Action, LangContext, GroupView;
+  var Characters, FIELD_MAP, Pagination, SettingIcon, PlusIcon, capitalizeFirstLetter, Actions, Action, LangContext, tr, Fancybox, GroupView;
 
   function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
@@ -25,6 +25,9 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
       Action = _utilsActionJs.Action;
     }, function (_languageJs) {
       LangContext = _languageJs.LangContext;
+      tr = _languageJs.tr;
+    }, function (_utilsFancyboxManagerJs) {
+      Fancybox = _utilsFancyboxManagerJs.Fancybox;
     }],
     execute: function () {
       _export("GroupView", GroupView = class GroupView extends React.Component {
@@ -75,7 +78,9 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
             onChange: event => this.onCheckAll(event, start, end)
           }), " ", /*#__PURE__*/React.createElement("label", {
             htmlFor: "group-view-select-all"
-          }, (allChecked ? tr("All {count} selected") : tr("{count} selected")).format({
+          }, allChecked ? tr("All {count} selected", {
+            count: selection.size
+          }) : tr("{count} selected", {
             count: selection.size
           })), selection.size ? /*#__PURE__*/React.createElement("span", null, "\xA0", /*#__PURE__*/React.createElement(SettingIcon, {
             key: "options-for-selected",

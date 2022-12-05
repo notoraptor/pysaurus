@@ -1,7 +1,7 @@
-System.register([], function (_export, _context) {
+System.register(["../language.js"], function (_export, _context) {
   "use strict";
 
-  var IdGenerator, Utilities, UTILITIES;
+  var tr, IdGenerator, Utilities, UTILITIES;
 
   function capitalizeFirstLetter(str) {
     if (str.length === 0) return str;
@@ -37,7 +37,9 @@ System.register([], function (_export, _context) {
   });
 
   return {
-    setters: [],
+    setters: [function (_languageJs) {
+      tr = _languageJs.tr;
+    }],
     execute: function () {
       _export("IdGenerator", IdGenerator = class IdGenerator {
         constructor() {

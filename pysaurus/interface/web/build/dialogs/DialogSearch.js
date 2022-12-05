@@ -1,7 +1,7 @@
-System.register(["../components/Cell.js", "./Dialog.js"], function (_export, _context) {
+System.register(["../components/Cell.js", "./Dialog.js", "../utils/FancyboxManager.js"], function (_export, _context) {
   "use strict";
 
-  var Cell, Dialog, DialogSearch;
+  var Cell, Dialog, Fancybox, DialogSearch;
 
   _export("DialogSearch", void 0);
 
@@ -10,6 +10,8 @@ System.register(["../components/Cell.js", "./Dialog.js"], function (_export, _co
       Cell = _componentsCellJs.Cell;
     }, function (_DialogJs) {
       Dialog = _DialogJs.Dialog;
+    }, function (_utilsFancyboxManagerJs) {
+      Fancybox = _utilsFancyboxManagerJs.Fancybox;
     }],
     execute: function () {
       _export("DialogSearch", DialogSearch = class DialogSearch extends React.Component {

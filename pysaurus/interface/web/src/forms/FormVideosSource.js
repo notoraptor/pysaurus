@@ -1,5 +1,6 @@
 import { FancyBox } from "../dialogs/FancyBox.js";
-import { LangContext } from "../language.js";
+import { LangContext, tr } from "../language.js";
+import { Fancybox } from "../utils/FancyboxManager.js";
 
 function getSubTree(tree, entryName) {
 	const steps = entryName.split("-");

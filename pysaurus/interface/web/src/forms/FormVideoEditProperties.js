@@ -1,7 +1,7 @@
 import { ComponentPropController, SetInput } from "../components/SetInput.js";
 import { Dialog } from "../dialogs/Dialog.js";
 import { UTILITIES } from "../utils/functions.js";
-import { LangContext } from "../language.js";
+import { LangContext, tr } from "../language.js";
 
 export class FormVideoEditProperties extends React.Component {
 	constructor(props) {
