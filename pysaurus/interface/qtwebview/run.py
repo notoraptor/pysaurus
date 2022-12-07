@@ -169,8 +169,8 @@ class PysaurusQtApplication(QWebEngineView):
 
 
 def generate_except_hook(qapp):
-    def except_hook(cls, exception, traceback):
-        sys.__excepthook__(cls, exception, traceback)
+    def except_hook(cls, exception, trace):
+        sys.__excepthook__(cls, exception, trace)
         qapp.exit(1)
 
     return except_hook

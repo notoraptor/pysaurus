@@ -169,8 +169,8 @@ class Runnable:
         """
         self.__lmm = launcher_method_name
 
-    def __call__(self, **kwargs):
-        launcher_method_name = self.__lmm
+    def __call__(self_, **kwargs):
+        launcher_method_name = self_.__lmm
 
         def decorator(fn):
             @functools.wraps(fn)
