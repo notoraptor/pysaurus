@@ -13,17 +13,7 @@ from pysaurus.application.utils import package_dir
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.enumeration import EnumerationError
 from pysaurus.core.modules import System
-from pysaurus.core.notifications import Notification
 from pysaurus.interface.api.gui_api import GuiAPI
-
-try:
-    from pysaurus.interface.qtwebview.player import Player
-
-    has_vlc = True
-except RuntimeError as exc:
-    print("Unable to import VLC player", file=sys.stderr)
-    print(f"{type(exc).__name__}: {exc}", file=sys.stderr)
-    has_vlc = False
 
 LevelType = QWebEnginePage.JavaScriptConsoleMessageLevel
 LEVEL = {
@@ -33,14 +23,8 @@ LEVEL = {
 }
 
 
-class NextRandomVideo(Notification):
-    __slots__ = ()
-
-
 class Api(GuiAPI):
     __slots__ = ("interface",)
-
-    PYTHON_HAS_EMBEDDED_PLAYER = has_vlc
 
     def __init__(self, interface):
         super().__init__()
@@ -72,19 +56,16 @@ class Api(GuiAPI):
             )
         )
 
-    def open_random_player(self):
-        self.interface.player_triggered.emit()
-
 
 class Interface(QObject):
+    __api_cls__ = Api
+
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.api = Api(self)
+        self.api = self.__api_cls__(self)
 
     # Slot set in Javascript code
     notified = pyqtSignal(str)
-    # Slot set in Python code below
-    player_triggered = pyqtSignal()
 
     @pyqtSlot(str, result=str)
     def call(self, json_str):
@@ -115,11 +96,13 @@ class CustomPage(QWebEnginePage):
 
 
 class PysaurusQtApplication(QWebEngineView):
+    __interface_cls__ = Interface
+
     def __init__(self, *, geometry=None):
         super().__init__()
 
         # setup interface
-        self.interface = Interface()
+        self.interface = self.__interface_cls__()
 
         # setup page
         html_path = AbsolutePath.join(
@@ -150,22 +133,6 @@ class PysaurusQtApplication(QWebEngineView):
             assert isinstance(geometry, (tuple, list))
             assert len(geometry) == 4
             self.setGeometry(*geometry)
-
-        # setup player
-        self.player = None
-        if has_vlc:
-            self.player = Player(on_next=self._on_next_random_video)
-            self.interface.player_triggered.connect(self.player.show)
-            if geometry:
-                _, _, width, height = geometry
-                self.player.resize(int(width * 3 / 4), int(height * 3 / 4))
-
-    def _on_next_random_video(self):
-        video_path = self.interface.api.database.provider.choose_random_video(
-            open_video=False
-        )
-        self.interface.api._notify(NextRandomVideo())
-        return video_path
 
 
 def generate_except_hook(qapp):

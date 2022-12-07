@@ -136,7 +136,6 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           this.manageProperties = this.manageProperties.bind(this);
           this.onVideoSelection = this.onVideoSelection.bind(this);
           this.openRandomVideo = this.openRandomVideo.bind(this);
-          this.openRandomPlayer = this.openRandomPlayer.bind(this);
           this.reloadDatabase = this.reloadDatabase.bind(this);
           this.resetGroup = this.resetGroup.bind(this);
           this.resetSearch = this.resetSearch.bind(this);
@@ -163,7 +162,6 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           this.notify = this.notify.bind(this);
           this.allNotFound = this.allNotFound.bind(this);
           this.canOpenRandomVideo = this.canOpenRandomVideo.bind(this);
-          this.canOpenRandomPlayer = this.canOpenRandomPlayer.bind(this);
           this.canFindSimilarVideos = this.canFindSimilarVideos.bind(this);
           this.createPredictionProperty = this.createPredictionProperty.bind(this);
           this.populatePredictionProperty = this.populatePredictionProperty.bind(this);
@@ -247,8 +245,6 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             action: actions.unsort
           }) : "") : "", this.canOpenRandomVideo() ? /*#__PURE__*/React.createElement(ActionToMenuItem, {
             action: actions.openRandomVideo
-          }) : "", this.canOpenRandomPlayer() ? /*#__PURE__*/React.createElement(ActionToMenuItem, {
-            action: actions.openRandomPlayer
           }) : "", this.canFindSimilarVideos() ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.findSimilarVideos
           }, tr("Search similar videos")) : "", this.canFindSimilarVideos() ? /*#__PURE__*/React.createElement(Menu, {
@@ -521,7 +517,6 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             reload: new Action("Ctrl+R", tr("Reload database ..."), this.reloadDatabase, Fancybox.isInactive),
             manageProperties: new Action("Ctrl+P", tr("Manage properties ..."), this.manageProperties, Fancybox.isInactive),
             openRandomVideo: new Action("Ctrl+O", tr("Open random video"), this.openRandomVideo, this.canOpenRandomVideo),
-            openRandomPlayer: new Action("Ctrl+E", tr("Open random player"), this.openRandomPlayer, this.canOpenRandomPlayer),
             previousPage: new Action("Ctrl+ArrowLeft", tr("Go to previous page"), this.previousPage, Fancybox.isInactive),
             nextPage: new Action("Ctrl+ArrowRight", tr("Go to next page"), this.nextPage, Fancybox.isInactive),
             playlist: new Action("Ctrl+L", tr("play list"), this.playlist, Fancybox.isInactive)
@@ -592,10 +587,6 @@ Once done, move you can compute prediction.
 
         canOpenRandomVideo() {
           return Fancybox.isInactive() && !this.allNotFound() && this.state.totalNbVideos;
-        }
-
-        canOpenRandomPlayer() {
-          return Fancybox.isInactive() && window.PYTHON_HAS_EMBEDDED_PLAYER && this.canOpenRandomVideo();
         }
 
         canFindSimilarVideos() {
@@ -949,10 +940,6 @@ not found video entry will be deleted.
 
         playlist() {
           python_call("playlist").then(filename => this.updateStatus(`Opened playlist: ${filename}`)).catch(backend_error);
-        }
-
-        openRandomPlayer() {
-          python_call("open_random_player").then(() => this.updateStatus("Random player opened!", true, true)).catch(backend_error);
         }
 
         reloadDatabase() {

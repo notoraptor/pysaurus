@@ -21,7 +21,6 @@ class FeatureAPI:
     )
     PYTHON_DEFAULT_SOURCES = DEFAULT_SOURCE_DEF
     PYTHON_APP_NAME = Application.app_name
-    PYTHON_HAS_EMBEDDED_PLAYER = False
     PYTHON_FEATURE_COMPARISON = True
 
     def __init__(self, notifier):
@@ -165,10 +164,6 @@ class FeatureAPI:
         self.database.provider.set_classifier_path([])
         self.database.provider.set_group(0)
         self.database.move_concatenated_prop_val(path, from_property, to_property)
-
-    # TODO: abandon
-    def open_random_player(self):
-        raise NotImplementedError()
 
     # cannot make proxy ?
     def rename_video(self, video_id, new_title):
