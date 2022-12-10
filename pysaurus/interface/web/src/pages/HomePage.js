@@ -11,10 +11,7 @@ class ProgressionMonitoring {
 	}
 
 	collectJobStep(notification) {
-		this.jobs.set(
-			notification.notification.channel,
-			notification.notification.step
-		);
+		this.jobs.set(notification.notification.channel, notification.notification.step);
 		this.title = notification.notification.title;
 	}
 }
@@ -35,12 +32,7 @@ class Monitoring extends React.Component {
 				<label htmlFor={jobClassID} className="pr-2">
 					{title} ({percent} %)
 				</label>
-				<progress
-					className="flex-grow-1"
-					id={jobClassID}
-					value={current}
-					max={total}
-				/>
+				<progress className="flex-grow-1" id={jobClassID} value={current} max={total} />
 			</div>
 		);
 	}
@@ -86,9 +78,7 @@ const NotificationCollector = {
 		app.collectNotification(notification, { jobMap });
 	},
 	JobStep: function (app, notification) {
-		const jobsAreAlreadyCollected = app.state.jobMap.get(
-			notification.notification.name
-		).jobs.size;
+		const jobsAreAlreadyCollected = app.state.jobMap.get(notification.notification.name).jobs.size;
 		const jobMap = new Map(app.state.jobMap);
 		jobMap.get(notification.notification.name).collectJobStep(notification);
 		app.collectNotification(notification, { jobMap }, !jobsAreAlreadyCollected);
@@ -148,24 +138,15 @@ class NotificationRenderer extends React.Component {
 	}
 
 	JobStep(app, message, i) {
-		return (
-			<Monitoring
-				monitoring={app.state.jobMap.get(message.notification.name)}
-				key={i}
-			/>
-		);
+		return <Monitoring monitoring={app.state.jobMap.get(message.notification.name)} key={i} />;
 	}
 
 	DatabaseLoaded(app, message, i) {
 		const data = message.notification;
 		return (
 			<div key={i}>
-				<strong>
-					{message.name === "DatabaseSaved"
-						? tr("Database saved")
-						: tr("Database loaded")}
-				</strong>
-				:{tr("{count} entries", { count: data.entries }) + ", "}
+				<strong>{message.name === "DatabaseSaved" ? tr("Database saved") : tr("Database loaded")}</strong>:
+				{tr("{count} entries", { count: data.entries }) + ", "}
 				{tr("{count} discarded", {
 					count: data.discarded,
 				}) + ", "}
@@ -225,11 +206,7 @@ class NotificationRenderer extends React.Component {
 
 	FinishedCollectingVideos(app, message, i) {
 		const count = message.notification.count;
-		return (
-			<div key={i}>
-				{tr("**Collected** {count} file(s)", { count }, "markdown-inline")}
-			</div>
-		);
+		return <div key={i}>{tr("**Collected** {count} file(s)", { count }, "markdown-inline")}</div>;
 	}
 
 	MissingThumbnails(app, message, i) {
@@ -264,8 +241,7 @@ class NotificationRenderer extends React.Component {
 	ProfilingStart(app, message, i) {
 		return (
 			<div key={i}>
-				<span className="span-profiled">{tr("PROFILING")}</span>{" "}
-				{message.notification.name}
+				<span className="span-profiled">{tr("PROFILING")}</span> {message.notification.name}
 			</div>
 		);
 	}
@@ -277,8 +253,7 @@ class NotificationRenderer extends React.Component {
 					{message.notification.inplace ? `${tr("PROFILING")} / ` : ""}
 					{tr("PROFILED")}
 				</span>{" "}
-				{message.notification.name} <span className="span-profiled">TIME</span>{" "}
-				{message.notification.time}
+				{message.notification.name} <span className="span-profiled">TIME</span> {message.notification.time}
 			</div>
 		);
 	}
@@ -378,8 +353,7 @@ class NotificationRenderer extends React.Component {
 	Message(app, message, i) {
 		return (
 			<div key={i}>
-				<strong>{Characters.WARNING_SIGN}</strong>{" "}
-				{message.notification.message}
+				<strong>{Characters.WARNING_SIGN}</strong> {message.notification.message}
 			</div>
 		);
 	}
@@ -420,9 +394,7 @@ export class HomePage extends React.Component {
 		return (
 			<div id="home" className="absolute-plain p-4 vertical">
 				<div className="text-center p-2">{this.renderInitialButton()}</div>
-				<div
-					id="notifications"
-					className="notifications flex-grow-1 overflow-auto">
+				<div id="notifications" className="notifications flex-grow-1 overflow-auto">
 					{this.renderMessages()}
 				</div>
 			</div>
@@ -431,28 +403,16 @@ export class HomePage extends React.Component {
 
 	renderInitialButton() {
 		if (this.props.parameters.onReady)
-			return (
-				<strong>
-					{this.state.status ||
-						ACTIONS[this.props.parameters.command[0]] + " ..."}
-				</strong>
-			);
-		else if (this.state.loaded)
-			return <button onClick={this.displayVideos}>{tr("Display videos")}</button>;
-		else
-			return (
-				<button disabled={true}>
-					{ACTIONS[this.props.parameters.command[0]]} ...
-				</button>
-			);
+			return <strong>{this.state.status || ACTIONS[this.props.parameters.command[0]] + " ..."}</strong>;
+		else if (this.state.loaded) return <button onClick={this.displayVideos}>{tr("Display videos")}</button>;
+		else return <button disabled={true}>{ACTIONS[this.props.parameters.command[0]]} ...</button>;
 	}
 
 	renderMessages() {
 		const output = this.state.messages.map((message, i) => (
 			<NotificationRenderer app={this} message={message} i={i} />
 		));
-		if (!this.state.loaded)
-			output.push(<div key={this.state.messages.length}>...</div>);
+		if (!this.state.loaded) output.push(<div key={this.state.messages.length}>...</div>);
 		return output;
 	}
 
@@ -475,8 +435,7 @@ export class HomePage extends React.Component {
 
 	notify(notification) {
 		const name = notification.name;
-		if (NotificationCollector[name])
-			return NotificationCollector[name](this, notification);
+		if (NotificationCollector[name]) return NotificationCollector[name](this, notification);
 		else this.collectNotification(notification);
 	}
 

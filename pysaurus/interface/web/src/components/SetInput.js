@@ -67,9 +67,7 @@ export class ComponentController extends SetController {
 
 export class ComponentPropController extends ComponentController {
 	constructor(app, field, propType, propEnum) {
-		super(app, field, (value) =>
-			UTILITIES.parsePropValString(propType, propEnum, value)
-		);
+		super(app, field, (value) => UTILITIES.parsePropValString(propType, propEnum, value));
 	}
 }
 
@@ -93,9 +91,7 @@ export class SetInput extends React.Component {
 						<tr className="form">
 							<td>
 								{this.props.values ? (
-									<select
-										value={this.state.add}
-										onChange={this.onChangeAdd}>
+									<select value={this.state.add} onChange={this.onChangeAdd}>
 										{this.props.values.map((value, index) => (
 											<option key={index} value={value}>
 												{value}
@@ -109,9 +105,7 @@ export class SetInput extends React.Component {
 										onChange={this.onChangeAdd}
 										onKeyDown={this.onInputAdd}
 										size="10"
-										{...(this.props.identifier
-											? { id: this.props.identifier }
-											: {})}
+										{...(this.props.identifier ? { id: this.props.identifier } : {})}
 									/>
 								)}
 							</td>
@@ -137,9 +131,7 @@ export class SetInput extends React.Component {
 				<tr className="item" key={i}>
 					<td>{value.toString()}</td>
 					<td>
-						<button
-							className="remove block"
-							onClick={() => this.remove(value)}>
+						<button className="remove block" onClick={() => this.remove(value)}>
 							-
 						</button>
 					</td>
@@ -167,8 +159,7 @@ export class SetInput extends React.Component {
 		if (!value.length) return;
 		const controller = this.props.controller;
 		try {
-			if (controller.has(value))
-				window.alert(tr("Value already in list: {value}", { value }));
+			if (controller.has(value)) window.alert(tr("Value already in list: {value}", { value }));
 			else this.setState({ add: "" }, () => controller.add(value));
 		} catch (exception) {
 			window.alert(exception.toString());

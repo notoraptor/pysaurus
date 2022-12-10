@@ -30,10 +30,7 @@ export class GroupView extends React.Component {
 		const selected = this.props.groupDef.group_id;
 		const isProperty = this.props.groupDef.is_property;
 		const start = this.props.pageSize * this.props.pageNumber;
-		const end = Math.min(
-			start + this.props.pageSize,
-			this.props.groupDef.groups.length
-		);
+		const end = Math.min(start + this.props.pageSize, this.props.groupDef.groups.length);
 		const allChecked = this.allChecked(start, end);
 		return (
 			<div className="group-view absolute-plain vertical">
@@ -58,9 +55,7 @@ export class GroupView extends React.Component {
 									id="group-view-select-all"
 									type="checkbox"
 									checked={allChecked}
-									onChange={(event) =>
-										this.onCheckAll(event, start, end)
-									}
+									onChange={(event) => this.onCheckAll(event, start, end)}
 								/>{" "}
 								<label htmlFor="group-view-select-all">
 									{allChecked
@@ -92,95 +87,70 @@ export class GroupView extends React.Component {
 				<div className="content position-relative flex-grow-1 overflow-auto">
 					{this.props.groupDef.groups.length ? (
 						<table className="second-td-text-right w-100 table-layout-fixed">
-							{this.props.groupDef.groups
-								.slice(start, end)
-								.map((entry, index) => {
-									index = start + index;
-									const buttons = [];
-									if (isProperty && entry.value !== null) {
-										if (!this.props.isClassified) {
-											buttons.push(
-												<input
-													type="checkbox"
-													checked={selection.has(index)}
-													onChange={(event) =>
-														this.onCheckEntry(event, index)
-													}
-												/>
-											);
-											buttons.push(" ");
-											if (!selection.size) {
-												buttons.push(
-													<SettingIcon
-														key="options"
-														title="Options ..."
-														action={(event) =>
-															this.openPropertyOptions(
-																event,
-																index
-															)
-														}
-													/>
-												);
-												buttons.push(" ");
-											}
-										}
+							{this.props.groupDef.groups.slice(start, end).map((entry, index) => {
+								index = start + index;
+								const buttons = [];
+								if (isProperty && entry.value !== null) {
+									if (!this.props.isClassified) {
+										buttons.push(
+											<input
+												type="checkbox"
+												checked={selection.has(index)}
+												onChange={(event) => this.onCheckEntry(event, index)}
+											/>
+										);
+										buttons.push(" ");
 										if (!selection.size) {
 											buttons.push(
-												<PlusIcon
-													key="add"
-													title="Add ..."
-													action={(event) =>
-														this.openPropertyPlus(
-															event,
-															index
-														)
-													}
+												<SettingIcon
+													key="options"
+													title="Options ..."
+													action={(event) => this.openPropertyOptions(event, index)}
 												/>
 											);
 											buttons.push(" ");
 										}
 									}
-									const classes = [
-										isProperty ? "property" : "attribute",
-									];
-									classes.push("clickable");
-									if (selected === index) {
-										classes.push("selected");
-										classes.push("bold");
+									if (!selection.size) {
+										buttons.push(
+											<PlusIcon
+												key="add"
+												title="Add ..."
+												action={(event) => this.openPropertyPlus(event, index)}
+											/>
+										);
+										buttons.push(" ");
 									}
-									if (entry.value === null) {
-										classes.push("all");
-										classes.push("bolder");
-									}
-									return (
-										<tr
-											className={classes.join(" ")}
-											key={index}
-											onClick={() =>
-												this.props.onGroupViewState({
-													groupID: index,
-												})
-											}>
-											<td
-												{...(isProperty
-													? {}
-													: { title: entry.value })}>
-												{buttons}
-												<span
-													key="value"
-													{...(isProperty
-														? { title: entry.value }
-														: {})}>
-													{entry.value === null
-														? "(none)"
-														: entry.value}
-												</span>
-											</td>
-											<td title={entry.count}>{entry.count}</td>
-										</tr>
-									);
-								})}
+								}
+								const classes = [isProperty ? "property" : "attribute"];
+								classes.push("clickable");
+								if (selected === index) {
+									classes.push("selected");
+									classes.push("bold");
+								}
+								if (entry.value === null) {
+									classes.push("all");
+									classes.push("bolder");
+								}
+								return (
+									<tr
+										className={classes.join(" ")}
+										key={index}
+										onClick={() =>
+											this.props.onGroupViewState({
+												groupID: index,
+											})
+										}>
+										<td {...(isProperty ? {} : { title: entry.value })}>
+											{buttons}
+											<span key="value" {...(isProperty ? { title: entry.value } : {})}>
+												{entry.value === null ? "(none)" : entry.value}
+											</span>
+										</td>
+										<td title={entry.count}>{entry.count}</td>
+									</tr>
+								);
+							})}
 						</table>
 					) : (
 						<div className="absolute-plain no-groups text-center vertical">
@@ -201,9 +171,7 @@ export class GroupView extends React.Component {
 			: capitalizeFirstLetter(FIELD_MAP.fields[field].title);
 		if (this.props.groupDef.sorting === "length") title = `|| ${title} ||`;
 		else if (this.props.groupDef.sorting === "count") title = `${title} (#)`;
-		title = `${title} ${
-			this.props.groupDef.reverse ? Characters.ARROW_DOWN : Characters.ARROW_UP
-		}`;
+		title = `${title} ${this.props.groupDef.reverse ? Characters.ARROW_DOWN : Characters.ARROW_UP}`;
 		return title;
 	}
 
@@ -224,30 +192,19 @@ export class GroupView extends React.Component {
 					this.previousGroup,
 					Fancybox.isInactive
 				),
-				next: new Action(
-					"Ctrl+ArrowDown",
-					tr("Go to next group"),
-					this.nextGroup,
-					Fancybox.isInactive
-				),
+				next: new Action("Ctrl+ArrowDown", tr("Go to next group"), this.nextGroup, Fancybox.isInactive),
 			},
 			this.context
 		);
 	}
 
 	getNullIndex() {
-		return this.props.groupDef.groups.length &&
-			this.props.groupDef.groups[0].value === null
-			? 0
-			: -1;
+		return this.props.groupDef.groups.length && this.props.groupDef.groups[0].value === null ? 0 : -1;
 	}
 
 	getNbPages() {
 		const count = this.props.groupDef.groups.length;
-		return (
-			Math.floor(count / this.props.pageSize) +
-			(count % this.props.pageSize ? 1 : 0)
-		);
+		return Math.floor(count / this.props.pageSize) + (count % this.props.pageSize ? 1 : 0);
 	}
 
 	openPropertyOptions(event, index) {
@@ -281,16 +238,14 @@ export class GroupView extends React.Component {
 
 	nextGroup() {
 		const groupID = this.props.groupDef.group_id;
-		if (groupID < this.props.groupDef.groups.length - 1)
-			this.props.onGroupViewState({ groupID: groupID + 1 });
+		if (groupID < this.props.groupDef.groups.length - 1) this.props.onGroupViewState({ groupID: groupID + 1 });
 	}
 
 	search(text) {
 		for (let index = 0; index < this.props.groupDef.groups.length; ++index) {
 			const value = this.props.groupDef.groups[index].value;
 			if (value === null) continue;
-			if (value.toString().toLowerCase().indexOf(text.trim().toLowerCase()) !== 0)
-				continue;
+			if (value.toString().toLowerCase().indexOf(text.trim().toLowerCase()) !== 0) continue;
 			const pageNumber = Math.floor(index / this.props.pageSize);
 			if (this.props.pageNumber !== pageNumber)
 				this.props.onGroupViewState({
@@ -344,9 +299,7 @@ GroupView.propTypes = {
 		is_property: PropTypes.bool.isRequired,
 		sorting: PropTypes.string.isRequired,
 		reverse: PropTypes.bool.isRequired,
-		groups: PropTypes.arrayOf(
-			PropTypes.shape({ value: PropTypes.any, count: PropTypes.number })
-		).isRequired,
+		groups: PropTypes.arrayOf(PropTypes.shape({ value: PropTypes.any, count: PropTypes.number })).isRequired,
 	}).isRequired,
 	isClassified: PropTypes.bool.isRequired,
 	// onOptions(index)

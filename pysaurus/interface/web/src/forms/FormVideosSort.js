@@ -20,9 +20,7 @@ export class FormVideosSort extends React.Component {
 	render() {
 		return (
 			<FancyBox title={tr("Sort videos")}>
-				<div
-					id="form-videos-sort"
-					className="form absolute-plain vertical text-center p-2">
+				<div id="form-videos-sort" className="form absolute-plain vertical text-center p-2">
 					<div className="help mb-4">
 						{tr(
 							`
@@ -40,9 +38,7 @@ Click on "sort" to validate, or close dialog to cancel.
 						{this.renderSorting()}
 					</div>
 					<p className="buttons flex-shrink-0 horizontal">
-						<button
-							className="add flex-grow-1 mr-1"
-							onClick={this.addCriterion}>
+						<button className="add flex-grow-1 mr-1" onClick={this.addCriterion}>
 							+
 						</button>
 						<button className="sort flex-grow-1 ml-2" onClick={this.submit}>
@@ -62,14 +58,10 @@ Click on "sort" to validate, or close dialog to cancel.
 			const reverseID = `reverse-${index}`;
 			return (
 				<p key={index} className="sorting">
-					<button
-						className="button-remove-sort"
-						onClick={() => this.removeCriterion(index)}>
+					<button className="button-remove-sort" onClick={() => this.removeCriterion(index)}>
 						-
 					</button>
-					<select
-						value={field}
-						onChange={(event) => this.setField(index, event.target.value)}>
+					<select value={field} onChange={(event) => this.setField(index, event.target.value)}>
 						{FIELD_MAP.sortable.map((entry, fieldIndex) => (
 							<option key={fieldIndex} value={entry.name}>
 								{entry.title}
@@ -80,9 +72,7 @@ Click on "sort" to validate, or close dialog to cancel.
 						type="checkbox"
 						id={reverseID}
 						checked={reverse}
-						onChange={(event) =>
-							this.setReverse(index, event.target.checked)
-						}
+						onChange={(event) => this.setReverse(index, event.target.checked)}
 					/>
 					<label htmlFor={reverseID}>reverse</label>
 				</p>

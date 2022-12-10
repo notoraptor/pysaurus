@@ -13,9 +13,7 @@ new QWebChannel(qt.webChannelTransport, function (channel) {
 						resolve(result.data);
 					}
 				})
-				.catch((error) =>
-					reject({ name: "javascript error", message: error.message })
-				);
+				.catch((error) => reject({ name: "javascript error", message: error.message }));
 		});
 	};
 	backend.notified.connect(function (raw) {

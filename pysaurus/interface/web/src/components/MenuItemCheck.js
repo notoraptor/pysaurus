@@ -12,9 +12,7 @@ export class MenuItemCheck extends React.Component {
 			<div className="menu-item horizontal" onClick={this.onClick}>
 				<div className="icon">
 					<div className="border">
-						<div
-							className={"check " + (checked ? "checked" : "not-checked")}
-						/>
+						<div className={"check " + (checked ? "checked" : "not-checked")} />
 					</div>
 				</div>
 				<div className="text">{this.props.children}</div>

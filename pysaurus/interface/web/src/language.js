@@ -20,10 +20,7 @@ export function tr(text, placeholders = null, markdown = null) {
 		let inline;
 		if (markdown === "markdown") inline = false;
 		else if (markdown === "markdown-inline") inline = true;
-		else
-			throw new Error(
-				`Unknown markdown hint: ${markdown}, expected "markdown" or "markdown-inline"`
-			);
+		else throw new Error(`Unknown markdown hint: ${markdown}, expected "markdown" or "markdown-inline"`);
 		text = markdownToReact(text, inline);
 	}
 	return text;

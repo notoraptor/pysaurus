@@ -16,10 +16,7 @@ export class FormNewPredictionProperty extends React.Component {
 
 	render() {
 		return (
-			<Dialog
-				title={tr("New prediction property")}
-				yes={tr("create")}
-				action={this.onClose}>
+			<Dialog title={tr("New prediction property")} yes={tr("create")} action={this.onClose}>
 				<div className="form-rename text-center">
 					{tr(
 						`
@@ -70,8 +67,7 @@ export class FormNewPredictionProperty extends React.Component {
 	}
 
 	submit() {
-		if (this.state.title && this.state.title !== this.props.title)
-			this.props.onClose(this.state.title);
+		if (this.state.title && this.state.title !== this.props.title) this.props.onClose(this.state.title);
 	}
 }
 

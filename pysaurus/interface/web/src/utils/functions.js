@@ -47,11 +47,7 @@ class Utilities {
 			case "bool":
 				if (value === "false") parsed = false;
 				else if (value === "true") parsed = true;
-				else
-					throw tr(
-						"Invalid bool value, expected: [false, true], got {value}",
-						{ value }
-					);
+				else throw tr("Invalid bool value, expected: [false, true], got {value}", { value });
 				break;
 			case "int":
 				parsed = parseInt(value);
@@ -59,8 +55,7 @@ class Utilities {
 				break;
 			case "float":
 				parsed = parseFloat(value);
-				if (isNaN(parsed))
-					throw tr("Unable to parse floating value: {value}", { value });
+				if (isNaN(parsed)) throw tr("Unable to parse floating value: {value}", { value });
 				break;
 			case "str":
 				parsed = value;
@@ -80,12 +75,7 @@ class Utilities {
 export const UTILITIES = new Utilities();
 
 export function arrayEquals(a, b) {
-	return (
-		Array.isArray(a) &&
-		Array.isArray(b) &&
-		a.length === b.length &&
-		a.every((val, index) => val === b[index])
-	);
+	return Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((val, index) => val === b[index]);
 }
 
 /**

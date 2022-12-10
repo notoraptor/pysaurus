@@ -27,37 +27,22 @@ export class Pagination extends React.Component {
 		const pageNumber = this.props.pageNumber;
 		return nbPages ? (
 			<span className="navigation py-1 text-center">
-				<button
-					className="first"
-					disabled={pageNumber === 0}
-					onClick={this.onFirst}>
+				<button className="first" disabled={pageNumber === 0} onClick={this.onFirst}>
 					&lt;&lt;
 				</button>
-				<button
-					className="previous"
-					disabled={pageNumber === 0}
-					onClick={this.onPrevious}>
+				<button className="previous" disabled={pageNumber === 0} onClick={this.onPrevious}>
 					&lt;
 				</button>
-				<span
-					{...(this.props.onSearch
-						? { className: "go", onClick: this.look }
-						: {})}>
+				<span {...(this.props.onSearch ? { className: "go", onClick: this.look } : {})}>
 					{capitalizeFirstLetter(singular)}
 				</span>
 				<span className="go clickable" onClick={this.go}>
 					{pageNumber + 1}/{nbPages}
 				</span>
-				<button
-					className="next"
-					disabled={pageNumber === nbPages - 1}
-					onClick={this.onNext}>
+				<button className="next" disabled={pageNumber === nbPages - 1} onClick={this.onNext}>
 					&gt;
 				</button>
-				<button
-					className="last"
-					disabled={pageNumber === nbPages - 1}
-					onClick={this.onLast}>
+				<button className="last" disabled={pageNumber === nbPages - 1} onClick={this.onLast}>
 					&gt;&gt;
 				</button>
 			</span>
@@ -98,16 +83,13 @@ export class Pagination extends React.Component {
 				nbPages={this.props.nbPages}
 				pageNumber={this.props.pageNumber}
 				onClose={(pageNumber) => {
-					if (pageNumber !== this.props.pageNumber)
-						this.props.onChange(pageNumber);
+					if (pageNumber !== this.props.pageNumber) this.props.onChange(pageNumber);
 				}}
 			/>
 		);
 	}
 
 	look() {
-		Fancybox.load(
-			<DialogSearch title={"Search first:"} onSearch={this.props.onSearch} />
-		);
+		Fancybox.load(<DialogSearch title={"Search first:"} onSearch={this.props.onSearch} />);
 	}
 }

@@ -36,9 +36,7 @@ export class PathsInput extends React.Component {
 										<code>{path}</code>
 									</td>
 									<td>
-										<button
-											className="block"
-											onClick={() => this.removePath(path)}>
+										<button className="block" onClick={() => this.removePath(path)}>
 											-
 										</button>
 									</td>

@@ -1,9 +1,4 @@
-import {
-	FIELD_MAP,
-	PAGE_SIZES,
-	SearchTypeTitle,
-	SOURCE_TREE,
-} from "../utils/constants.js";
+import { FIELD_MAP, PAGE_SIZES, SearchTypeTitle, SOURCE_TREE } from "../utils/constants.js";
 import { MenuPack } from "../components/MenuPack.js";
 import { Pagination } from "../components/Pagination.js";
 import { Video } from "../components/Video.js";
@@ -95,8 +90,7 @@ export class VideosPage extends React.Component {
 		this.updateStatus = this.updateStatus.bind(this);
 		this.backend = this.backend.bind(this);
 		this.findSimilarVideos = this.findSimilarVideos.bind(this);
-		this.findSimilarVideosIgnoreCache =
-			this.findSimilarVideosIgnoreCache.bind(this);
+		this.findSimilarVideosIgnoreCache = this.findSimilarVideosIgnoreCache.bind(this);
 		this.closeDatabase = this.closeDatabase.bind(this);
 		this.moveVideo = this.moveVideo.bind(this);
 		this.editDatabaseFolders = this.editDatabaseFolders.bind(this);
@@ -136,24 +130,16 @@ export class VideosPage extends React.Component {
 		const groupedByMoves = groupDef && groupDef.field === "move_id";
 		const stringSetProperties = this.getStringSetProperties(this.state.prop_types);
 		const stringProperties = this.getStringProperties(this.state.prop_types);
-		const predictionProperties = this.getPredictionProperties(
-			this.state.prop_types
-		);
+		const predictionProperties = this.getPredictionProperties(this.state.prop_types);
 		const actions = this.getActions().actions;
-		const aFilterIsSet =
-			this.sourceIsSet() ||
-			this.groupIsSet() ||
-			this.searchIsSet() ||
-			this.sortIsSet();
+		const aFilterIsSet = this.sourceIsSet() || this.groupIsSet() || this.searchIsSet() || this.sortIsSet();
 		const status = this.getStatus();
 
 		return (
 			<div id="videos" className="absolute-plain p-4 vertical">
 				<header className="horizontal flex-shrink-0">
 					<MenuPack title={tr("Database ...")}>
-						<Menu title="Reload database ...">
-							{<ActionToMenuItem action={actions.reload} />}
-						</Menu>
+						<Menu title="Reload database ...">{<ActionToMenuItem action={actions.reload} />}</Menu>
 						<MenuItem action={this.renameDatabase}>
 							{tr('Rename database "{name}" ...', {
 								name: this.state.database.name,
@@ -182,39 +168,17 @@ export class VideosPage extends React.Component {
 						</Menu>
 						{aFilterIsSet ? (
 							<Menu title={tr("Reset filters ...")}>
-								{this.sourceIsSet() ? (
-									<ActionToMenuItem action={actions.unselect} />
-								) : (
-									""
-								)}
-								{this.groupIsSet() ? (
-									<ActionToMenuItem action={actions.ungroup} />
-								) : (
-									""
-								)}
-								{this.searchIsSet() ? (
-									<ActionToMenuItem action={actions.unsearch} />
-								) : (
-									""
-								)}
-								{this.sortIsSet() ? (
-									<ActionToMenuItem action={actions.unsort} />
-								) : (
-									""
-								)}
+								{this.sourceIsSet() ? <ActionToMenuItem action={actions.unselect} /> : ""}
+								{this.groupIsSet() ? <ActionToMenuItem action={actions.ungroup} /> : ""}
+								{this.searchIsSet() ? <ActionToMenuItem action={actions.unsearch} /> : ""}
+								{this.sortIsSet() ? <ActionToMenuItem action={actions.unsort} /> : ""}
 							</Menu>
 						) : (
 							""
 						)}
-						{this.canOpenRandomVideo() ? (
-							<ActionToMenuItem action={actions.openRandomVideo} />
-						) : (
-							""
-						)}
+						{this.canOpenRandomVideo() ? <ActionToMenuItem action={actions.openRandomVideo} /> : ""}
 						{this.canFindSimilarVideos() ? (
-							<MenuItem action={this.findSimilarVideos}>
-								{tr("Search similar videos")}
-							</MenuItem>
+							<MenuItem action={this.findSimilarVideos}>{tr("Search similar videos")}</MenuItem>
 						) : (
 							""
 						)}
@@ -245,31 +209,21 @@ export class VideosPage extends React.Component {
 					<MenuPack title={tr("Properties ...")}>
 						{<ActionToMenuItem action={actions.manageProperties} />}
 						{stringSetProperties.length ? (
-							<MenuItem action={this.fillWithKeywords}>
-								{tr("Put keywords into a property ...")}
-							</MenuItem>
+							<MenuItem action={this.fillWithKeywords}>{tr("Put keywords into a property ...")}</MenuItem>
 						) : (
 							""
 						)}
 						{this.state.prop_types.length > 5 ? (
 							<Menu title={tr("Group videos by property ...")}>
 								{this.state.prop_types.map((def, index) => (
-									<MenuItem
-										key={index}
-										action={() =>
-											this.backendGroupVideos(def.name, true)
-										}>
+									<MenuItem key={index} action={() => this.backendGroupVideos(def.name, true)}>
 										{def.name}
 									</MenuItem>
 								))}
 							</Menu>
 						) : (
 							this.state.prop_types.map((def, index) => (
-								<MenuItem
-									key={index}
-									action={() =>
-										this.backendGroupVideos(def.name, true)
-									}>
+								<MenuItem key={index} action={() => this.backendGroupVideos(def.name, true)}>
 									{tr("Group videos by property: {name}", {
 										name: def.name,
 									})}
@@ -279,9 +233,7 @@ export class VideosPage extends React.Component {
 						{stringProperties.length ? (
 							<Menu title={tr("Convert values to lowercase for ...")}>
 								{stringProperties.map((def, defIndex) => (
-									<MenuItem
-										key={defIndex}
-										action={() => this.propToLowercase(def)}>
+									<MenuItem key={defIndex} action={() => this.propToLowercase(def)}>
 										{def.name}
 									</MenuItem>
 								))}
@@ -292,9 +244,7 @@ export class VideosPage extends React.Component {
 						{stringProperties.length ? (
 							<Menu title={tr("Convert values to uppercase for ...")}>
 								{stringProperties.map((def, defIndex) => (
-									<MenuItem
-										key={defIndex}
-										action={() => this.propToUppercase(def)}>
+									<MenuItem key={defIndex} action={() => this.propToUppercase(def)}>
 										{def.name}
 									</MenuItem>
 								))}
@@ -313,11 +263,7 @@ export class VideosPage extends React.Component {
 						{predictionProperties.length ? (
 							<Menu title={tr("3) Compute prediction for property ...")}>
 								{predictionProperties.map((def, i) => (
-									<MenuItem
-										key={i}
-										action={() =>
-											this.computePredictionProperty(def.name)
-										}>
+									<MenuItem key={i} action={() => this.computePredictionProperty(def.name)}>
 										{def.name}
 									</MenuItem>
 								))}
@@ -328,9 +274,7 @@ export class VideosPage extends React.Component {
 						{predictionProperties.length ? (
 							<Menu title={tr("4) Apply prediction from property ...")}>
 								{predictionProperties.map((def, i) => (
-									<MenuItem
-										key={i}
-										action={() => this.applyPrediction(def.name)}>
+									<MenuItem key={i} action={() => this.applyPrediction(def.name)}>
 										{def.name}
 									</MenuItem>
 								))}
@@ -346,14 +290,10 @@ export class VideosPage extends React.Component {
 						</Menu>
 						{this.groupIsSet() ? (
 							<Menu title={tr("Groups ...")}>
-								<MenuItem
-									action={this.previousGroup}
-									shortcut="Ctrl+ArrowUp">
+								<MenuItem action={this.previousGroup} shortcut="Ctrl+ArrowUp">
 									{tr("Go to previous group")}
 								</MenuItem>
-								<MenuItem
-									action={this.nextGroup}
-									shortcut="Ctrl+ArrowDown">
+								<MenuItem action={this.nextGroup} shortcut="Ctrl+ArrowDown">
 									{tr("Go to next group")}
 								</MenuItem>
 							</Menu>
@@ -375,19 +315,13 @@ export class VideosPage extends React.Component {
 								</MenuItemRadio>
 							))}
 						</Menu>
-						<MenuItemCheck
-							checked={this.state.confirmDeletion}
-							action={this.confirmDeletionForNotFound}>
+						<MenuItemCheck checked={this.state.confirmDeletion} action={this.confirmDeletionForNotFound}>
 							{tr("confirm deletion for entries not found")}
 						</MenuItemCheck>
 						{languages.length > 1 ? (
 							<Menu title={tr("Language:") + " ..."}>
 								{languages.map((language, index) => (
-									<MenuItem
-										key={index}
-										action={() =>
-											this.props.app.setLanguage(language.name)
-										}>
+									<MenuItem key={index} action={() => this.props.app.setLanguage(language.name)}>
 										{window.PYTHON_LANGUAGE === language.name ? (
 											<strong>{language.name}</strong>
 										) : (
@@ -415,10 +349,7 @@ export class VideosPage extends React.Component {
 				<div className="content position-relative flex-grow-1">
 					<div className="absolute-plain horizontal">
 						<div className="side-panel vertical">
-							<Collapsable
-								lite={false}
-								className="filter flex-shrink-0"
-								title={tr("Filter")}>
+							<Collapsable lite={false} className="filter flex-shrink-0" title={tr("Filter")}>
 								{this.renderFilter()}
 							</Collapsable>
 							{this.state.path.length ? (
@@ -428,26 +359,17 @@ export class VideosPage extends React.Component {
 									title={tr("Classifier path")}>
 									{stringProperties.length ? (
 										<div className="path-menu text-center p-2">
-											<MenuPack
-												title={tr("Concatenate path into ...")}>
+											<MenuPack title={tr("Concatenate path into ...")}>
 												{stringProperties.map((def, i) => (
 													<MenuItem
 														key={i}
-														action={() =>
-															this.classifierConcatenate(
-																def.name
-															)
-														}>
+														action={() => this.classifierConcatenate(def.name)}>
 														{def.name}
 													</MenuItem>
 												))}
 											</MenuPack>
 											<div className="pt-2">
-												<button
-													className="block"
-													onClick={
-														this.classifierReversePath
-													}>
+												<button className="block" onClick={this.classifierReversePath}>
 													{tr("reverse path")}
 												</button>
 											</div>
@@ -456,18 +378,11 @@ export class VideosPage extends React.Component {
 										""
 									)}
 									{this.state.path.map((value, index) => (
-										<div
-											key={index}
-											className="path-step horizontal px-2 py-1">
-											<div className="flex-grow-1">
-												{value.toString()}
-											</div>
+										<div key={index} className="path-step horizontal px-2 py-1">
+											<div className="flex-grow-1">{value.toString()}</div>
 											{index === this.state.path.length - 1 ? (
 												<div className="icon">
-													<Cross
-														title={tr("unstack")}
-														action={this.classifierUnstack}
-													/>
+													<Cross title={tr("unstack")} action={this.classifierUnstack} />
 												</div>
 											) : (
 												""
@@ -493,9 +408,7 @@ export class VideosPage extends React.Component {
 											onGroupViewState={this.onGroupViewState}
 											onOptions={this.editPropertyValue}
 											onPlus={
-												groupDef.is_property &&
-												this.state.definitions[groupDef.field]
-													.multiple
+												groupDef.is_property && this.state.definitions[groupDef.field].multiple
 													? this.classifierSelectGroup
 													: null
 											}
@@ -526,10 +439,7 @@ export class VideosPage extends React.Component {
 					</div>
 				</div>
 				<footer className="horizontal flex-shrink-0">
-					<div
-						className="footer-status clickable"
-						title={status}
-						onClick={this.resetStatus}>
+					<div className="footer-status clickable" title={status} onClick={this.resetStatus}>
 						{status}
 					</div>
 					<div className="footer-information text-right">
@@ -573,9 +483,7 @@ export class VideosPage extends React.Component {
 					<tr>
 						<td>
 							{sources.map((source, index) => (
-								<div key={index}>
-									{source.join(" ").replace("_", " ")}
-								</div>
+								<div key={index}>{source.join(" ").replace("_", " ")}</div>
 							))}
 						</td>
 						<td>
@@ -594,11 +502,7 @@ export class VideosPage extends React.Component {
 					{/** Grouping **/}
 					<tr>
 						<td>
-							{groupDef ? (
-								<div>{tr("Grouped")}</div>
-							) : (
-								<div className="no-filter">{tr("Ungrouped")}</div>
-							)}
+							{groupDef ? <div>{tr("Grouped")}</div> : <div className="no-filter">{tr("Ungrouped")}</div>}
 						</td>
 						<td>
 							<div>
@@ -639,9 +543,7 @@ export class VideosPage extends React.Component {
 							<div>
 								<ActionToSettingIcon
 									action={actions.search}
-									title={
-										searchDef ? tr("Edit ...") : tr("Search ...")
-									}
+									title={searchDef ? tr("Edit ...") : tr("Search ...")}
 								/>
 							</div>
 							{searchDef ? (
@@ -659,14 +561,8 @@ export class VideosPage extends React.Component {
 							<div>{tr("Sorted by")}</div>
 							{sorting.map((val, i) => (
 								<div key={i}>
-									<strong>
-										{FIELD_MAP.fields[val.substr(1)].title}
-									</strong>{" "}
-									{val[0] === "-" ? (
-										<span>&#9660;</span>
-									) : (
-										<span>&#9650;</span>
-									)}
+									<strong>{FIELD_MAP.fields[val.substr(1)].title}</strong>{" "}
+									{val[0] === "-" ? <span>&#9660;</span> : <span>&#9650;</span>}
 								</div>
 							))}
 						</td>
@@ -714,9 +610,7 @@ export class VideosPage extends React.Component {
 								""
 							) : (
 								<div className="mb-1">
-									<button onClick={this.selectAll}>
-										{tr("select all")}
-									</button>
+									<button onClick={this.selectAll}>{tr("select all")}</button>
 								</div>
 							)}
 							{selectionSize ? (
@@ -725,11 +619,7 @@ export class VideosPage extends React.Component {
 										{this.state.prop_types.map((def, index) => (
 											<MenuItem
 												key={index}
-												action={() =>
-													this.editPropertiesForManyVideos(
-														def.name
-													)
-												}>
+												action={() => this.editPropertiesForManyVideos(def.name)}>
 												{def.name}
 											</MenuItem>
 										))}
@@ -739,16 +629,7 @@ export class VideosPage extends React.Component {
 								""
 							)}
 						</td>
-						<td>
-							{selectionSize ? (
-								<Cross
-									title={tr("Deselect all")}
-									action={this.deselect}
-								/>
-							) : (
-								""
-							)}
-						</td>
+						<td>{selectionSize ? <Cross title={tr("Deselect all")} action={this.deselect} /> : ""}</td>
 					</tr>
 				</tbody>
 			</table>
@@ -763,60 +644,15 @@ export class VideosPage extends React.Component {
 		// 14 shortcuts currently.
 		return new Actions(
 			{
-				select: new Action(
-					"Ctrl+T",
-					tr("Select videos ..."),
-					this.selectVideos,
-					Fancybox.isInactive
-				),
-				group: new Action(
-					"Ctrl+G",
-					tr("Group ..."),
-					this.groupVideos,
-					Fancybox.isInactive
-				),
-				search: new Action(
-					"Ctrl+F",
-					tr("Search ..."),
-					this.searchVideos,
-					Fancybox.isInactive
-				),
-				sort: new Action(
-					"Ctrl+S",
-					tr("Sort ..."),
-					this.sortVideos,
-					Fancybox.isInactive
-				),
-				unselect: new Action(
-					"Ctrl+Shift+T",
-					tr("Reset selection"),
-					this.unselectVideos,
-					Fancybox.isInactive
-				),
-				ungroup: new Action(
-					"Ctrl+Shift+G",
-					tr("Reset group"),
-					this.resetGroup,
-					Fancybox.isInactive
-				),
-				unsearch: new Action(
-					"Ctrl+Shift+F",
-					tr("Reset search"),
-					this.resetSearch,
-					Fancybox.isInactive
-				),
-				unsort: new Action(
-					"Ctrl+Shift+S",
-					tr("Reset sorting"),
-					this.resetSort,
-					Fancybox.isInactive
-				),
-				reload: new Action(
-					"Ctrl+R",
-					tr("Reload database ..."),
-					this.reloadDatabase,
-					Fancybox.isInactive
-				),
+				select: new Action("Ctrl+T", tr("Select videos ..."), this.selectVideos, Fancybox.isInactive),
+				group: new Action("Ctrl+G", tr("Group ..."), this.groupVideos, Fancybox.isInactive),
+				search: new Action("Ctrl+F", tr("Search ..."), this.searchVideos, Fancybox.isInactive),
+				sort: new Action("Ctrl+S", tr("Sort ..."), this.sortVideos, Fancybox.isInactive),
+				unselect: new Action("Ctrl+Shift+T", tr("Reset selection"), this.unselectVideos, Fancybox.isInactive),
+				ungroup: new Action("Ctrl+Shift+G", tr("Reset group"), this.resetGroup, Fancybox.isInactive),
+				unsearch: new Action("Ctrl+Shift+F", tr("Reset search"), this.resetSearch, Fancybox.isInactive),
+				unsort: new Action("Ctrl+Shift+S", tr("Reset sorting"), this.resetSort, Fancybox.isInactive),
+				reload: new Action("Ctrl+R", tr("Reload database ..."), this.reloadDatabase, Fancybox.isInactive),
 				manageProperties: new Action(
 					"Ctrl+P",
 					tr("Manage properties ..."),
@@ -835,18 +671,8 @@ export class VideosPage extends React.Component {
 					this.previousPage,
 					Fancybox.isInactive
 				),
-				nextPage: new Action(
-					"Ctrl+ArrowRight",
-					tr("Go to next page"),
-					this.nextPage,
-					Fancybox.isInactive
-				),
-				playlist: new Action(
-					"Ctrl+L",
-					tr("play list"),
-					this.playlist,
-					Fancybox.isInactive
-				),
+				nextPage: new Action("Ctrl+ArrowRight", tr("Go to next page"), this.nextPage, Fancybox.isInactive),
+				playlist: new Action("Ctrl+L", tr("play list"), this.playlist, Fancybox.isInactive),
 			},
 			this.context
 		);
@@ -952,17 +778,10 @@ Once done, move you can compute prediction.
 		const pageSize = this.getStateField(state, "pageSize");
 		const pageNumber = this.getStateField(state, "pageNumber");
 		const displayOnlySelected = this.getStateField(state, "displayOnlySelected");
-		const selector = displayOnlySelected
-			? this.getStateField(state, "selector").toJSON()
-			: null;
+		const selector = displayOnlySelected ? this.getStateField(state, "selector").toJSON() : null;
 		if (!state.status) state.status = tr("updated.");
 		python_call("backend", callargs, pageSize, pageNumber, selector)
-			.then((info) =>
-				this.setState(
-					this.parametersToState(state, info),
-					top ? this.scrollTop : undefined
-				)
-			)
+			.then((info) => this.setState(this.parametersToState(state, info), top ? this.scrollTop : undefined))
 			.catch(backend_error);
 	}
 
@@ -971,8 +790,7 @@ Once done, move you can compute prediction.
 			const groupPageSize = this.getStateField(state, "groupPageSize");
 			const groupPageNumber = this.getStateField(state, "groupPageNumber");
 			const count = info.groupDef.groups.length;
-			const nbPages =
-				Math.floor(count / groupPageSize) + (count % groupPageSize ? 1 : 0);
+			const nbPages = Math.floor(count / groupPageSize) + (count % groupPageSize ? 1 : 0);
 			state.groupPageNumber = Math.min(Math.max(0, groupPageNumber), nbPages - 1);
 		}
 		if (info.viewChanged && !state.selector) state.selector = new Selector();
@@ -990,19 +808,11 @@ Once done, move you can compute prediction.
 
 	onGroupViewState(groupState) {
 		const state = {};
-		if (groupState.hasOwnProperty("pageSize"))
-			state.groupPageSize = groupState.pageSize;
-		if (groupState.hasOwnProperty("pageNumber"))
-			state.groupPageNumber = groupState.pageNumber;
-		if (groupState.hasOwnProperty("selection"))
-			state.groupSelection = groupState.selection;
-		const groupID = groupState.hasOwnProperty("groupID")
-			? groupState.groupID
-			: null;
-		this.setState(
-			state,
-			groupID === null ? undefined : () => this.selectGroup(groupID)
-		);
+		if (groupState.hasOwnProperty("pageSize")) state.groupPageSize = groupState.pageSize;
+		if (groupState.hasOwnProperty("pageNumber")) state.groupPageNumber = groupState.pageNumber;
+		if (groupState.hasOwnProperty("selection")) state.groupSelection = groupState.selection;
+		const groupID = groupState.hasOwnProperty("groupID") ? groupState.groupID : null;
+		this.setState(state, groupID === null ? undefined : () => this.selectGroup(groupID));
 	}
 
 	scrollTop() {
@@ -1019,9 +829,7 @@ Once done, move you can compute prediction.
 			if (this.state.displayOnlySelected)
 				this.backend(null, {
 					selector,
-					displayOnlySelected:
-						this.state.displayOnlySelected &&
-						selector.size(this.state.realNbVideos),
+					displayOnlySelected: this.state.displayOnlySelected && selector.size(this.state.realNbVideos),
 				});
 			else this.setState({ selector });
 		}
@@ -1044,8 +852,7 @@ Once done, move you can compute prediction.
 							command: ["move_video_file", videoID, directory],
 							onReady: (status) => {
 								Fancybox.close();
-								if (status === "Cancelled")
-									this.updateStatus(tr("Video not moved."));
+								if (status === "Cancelled") this.updateStatus(tr("Video not moved."));
 								else
 									this.updateStatus(
 										tr("Video moved to {directory}", {
@@ -1064,8 +871,7 @@ Once done, move you can compute prediction.
 	deselect() {
 		const selector = this.state.selector.clone();
 		selector.clear();
-		if (this.state.displayOnlySelected)
-			this.backend(null, { selector, displayOnlySelected: false });
+		if (this.state.displayOnlySelected) this.backend(null, { selector, displayOnlySelected: false });
 		else this.setState({ selector });
 	}
 
@@ -1136,30 +942,16 @@ Once done, move you can compute prediction.
 		);
 	}
 
-	backendGroupVideos(
-		field,
-		isProperty = false,
-		sorting = "count",
-		reverse = true,
-		allowSingletons = true
-	) {
-		this.backend(
-			["set_groups", field, isProperty, sorting, reverse, allowSingletons],
-			{
-				pageNumber: 0,
-			}
-		);
+	backendGroupVideos(field, isProperty = false, sorting = "count", reverse = true, allowSingletons = true) {
+		this.backend(["set_groups", field, isProperty, sorting, reverse, allowSingletons], {
+			pageNumber: 0,
+		});
 	}
 
 	editPropertiesForManyVideos(propertyName) {
 		const selectionSize = this.state.selector.size(this.state.realNbVideos);
 		const videoIndices = this.state.selector.toJSON();
-		python_call(
-			"apply_on_view",
-			videoIndices,
-			"count_property_values",
-			propertyName
-		)
+		python_call("apply_on_view", videoIndices, "count_property_values", propertyName)
 			.then((valuesAndCounts) => {
 				Fancybox.load(
 					<FormSelectedVideosEditProperty
@@ -1178,13 +970,10 @@ Once done, move you can compute prediction.
 								],
 								{
 									pageNumber: 0,
-									status: tr(
-										"Edited property {property} for {count} video(s).",
-										{
-											property: propertyName,
-											count: selectionSize,
-										}
-									),
+									status: tr("Edited property {property} for {count} video(s).", {
+										property: propertyName,
+										count: selectionSize,
+									}),
 								}
 							);
 						}}
@@ -1262,8 +1051,7 @@ Once done, move you can compute prediction.
 				}}>
 				<Cell center={true} full={true} className="text-center">
 					<h1>
-						{tr("Database")}{" "}
-						<span className="red-flag">{this.state.database.name}</span>
+						{tr("Database")} <span className="red-flag">{this.state.database.name}</span>
 					</h1>
 					{tr(
 						`
@@ -1288,9 +1076,7 @@ Once done, move you can compute prediction.
 				yes={tr("move")}
 				action={() => {
 					python_call("confirm_unique_moves")
-						.then((nbMoved) =>
-							this.updateStatus(`Moved ${nbMoved} video(s)`, true, true)
-						)
+						.then((nbMoved) => this.updateStatus(`Moved ${nbMoved} video(s)`, true, true))
 						.catch(backend_error);
 				}}>
 				<Cell center={true} full={true} className="text-center">
@@ -1370,19 +1156,12 @@ not found video entry will be deleted.
 			<FormVideosKeywordsToProperty
 				prop_types={this.getStringSetProperties(this.state.prop_types)}
 				onClose={(state) => {
-					python_call(
-						"fill_property_with_terms",
-						state.field,
-						state.onlyEmpty
-					)
+					python_call("fill_property_with_terms", state.field, state.onlyEmpty)
 						.then(() =>
 							this.backend(null, {
-								status: tr(
-									'Filled property "{name}" with video keywords.',
-									{
-										name: state.field,
-									}
-								),
+								status: tr('Filled property "{name}" with video keywords.', {
+									name: state.field,
+								}),
 							})
 						)
 						.catch(backend_error);
@@ -1392,8 +1171,7 @@ not found video entry will be deleted.
 	}
 
 	setPageSize(count) {
-		if (count !== this.state.pageSize)
-			this.backend(null, { pageSize: count, pageNumber: 0 });
+		if (count !== this.state.pageSize) this.backend(null, { pageSize: count, pageNumber: 0 });
 	}
 
 	confirmDeletionForNotFound(checked) {
@@ -1430,8 +1208,7 @@ not found video entry will be deleted.
 
 	nextGroup() {
 		const groupID = this.state.groupDef.group_id;
-		if (groupID < this.state.groupDef.groups.length - 1)
-			this.onGroupViewState({ groupID: groupID + 1 });
+		if (groupID < this.state.groupDef.groups.length - 1) this.onGroupViewState({ groupID: groupID + 1 });
 	}
 
 	getStringSetProperties(definitions) {
@@ -1474,46 +1251,31 @@ not found video entry will be deleted.
 						case "delete":
 							this.backend(["delete_property_value", name, values], {
 								groupSelection: new Set(),
-								status: tr(
-									'Property value deleted: "{name}" : "{values}"',
-									{
-										name: name,
-										values: values.join('", "'),
-									}
-								),
+								status: tr('Property value deleted: "{name}" : "{values}"', {
+									name: name,
+									values: values.join('", "'),
+								}),
 							});
 							break;
 						case "edit":
-							this.backend(
-								["edit_property_value", name, values, operation.value],
-								{
-									groupSelection: new Set(),
-									status: tr(
-										'Property value edited: "{name}" : "{values}" -> "{destination}"',
-										{
-											name: name,
-											values: values.join('", "'),
-											destination: operation.value,
-										}
-									),
-								}
-							);
+							this.backend(["edit_property_value", name, values, operation.value], {
+								groupSelection: new Set(),
+								status: tr('Property value edited: "{name}" : "{values}" -> "{destination}"', {
+									name: name,
+									values: values.join('", "'),
+									destination: operation.value,
+								}),
+							});
 							break;
 						case "move":
-							this.backend(
-								["move_property_value", name, values, operation.move],
-								{
-									groupSelection: new Set(),
-									status: tr(
-										'Property value moved: "{values}" from "{name}" to "{destination}"',
-										{
-											values: values.join('", "'),
-											name: name,
-											destination: operation.move,
-										}
-									),
-								}
-							);
+							this.backend(["move_property_value", name, values, operation.move], {
+								groupSelection: new Set(),
+								status: tr('Property value moved: "{values}" from "{name}" to "{destination}"', {
+									values: values.join('", "'),
+									name: name,
+									destination: operation.move,
+								}),
+							});
 							break;
 					}
 				}}

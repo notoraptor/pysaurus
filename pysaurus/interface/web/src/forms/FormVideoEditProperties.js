@@ -13,9 +13,7 @@ export class FormVideoEditProperties extends React.Component {
 		const properties = this.props.data.properties;
 		for (let def of this.props.definitions) {
 			const name = def.name;
-			this.state[name] = properties.hasOwnProperty(name)
-				? properties[name]
-				: def.defaultValue;
+			this.state[name] = properties.hasOwnProperty(name) ? properties[name] : def.defaultValue;
 		}
 		this.onClose = this.onClose.bind(this);
 		this.onChange = this.onChange.bind(this);
@@ -25,10 +23,7 @@ export class FormVideoEditProperties extends React.Component {
 		const data = this.props.data;
 		const hasThumbnail = data.with_thumbnails;
 		return (
-			<Dialog
-				title={tr("Edit video properties")}
-				yes={tr("save")}
-				action={this.onClose}>
+			<Dialog title={tr("Edit video properties")} yes={tr("save")} action={this.onClose}>
 				<div className="form-video-edit-properties horizontal">
 					<div className="info">
 						<div className="image">
@@ -56,47 +51,32 @@ export class FormVideoEditProperties extends React.Component {
 								let input;
 								if (def.multiple) {
 									let possibleValues = null;
-									if (def.enumeration)
-										possibleValues = def.enumeration;
-									else if (def.type === "bool")
-										possibleValues = [false, true];
+									if (def.enumeration) possibleValues = def.enumeration;
+									else if (def.type === "bool") possibleValues = [false, true];
 									const controller = new ComponentPropController(
 										this,
 										name,
 										def.type,
 										possibleValues
 									);
-									input = (
-										<SetInput
-											controller={controller}
-											values={possibleValues}
-										/>
-									);
+									input = <SetInput controller={controller} values={possibleValues} />;
 								} else if (def.enumeration) {
 									input = (
 										<select
 											value={this.state[name]}
-											onChange={(event) =>
-												this.onChange(event, def)
-											}>
-											{def.enumeration.map(
-												(value, valueIndex) => (
-													<option
-														key={valueIndex}
-														value={value}>
-														{value}
-													</option>
-												)
-											)}
+											onChange={(event) => this.onChange(event, def)}>
+											{def.enumeration.map((value, valueIndex) => (
+												<option key={valueIndex} value={value}>
+													{value}
+												</option>
+											))}
 										</select>
 									);
 								} else if (def.type === "bool") {
 									input = (
 										<select
 											value={this.state[name]}
-											onChange={(event) =>
-												this.onChange(event, def)
-											}>
+											onChange={(event) => this.onChange(event, def)}>
 											<option value="false">false</option>
 											<option value="true">true</option>
 										</select>
@@ -104,12 +84,8 @@ export class FormVideoEditProperties extends React.Component {
 								} else {
 									input = (
 										<input
-											type={
-												def.type === "int" ? "number" : "text"
-											}
-											onChange={(event) =>
-												this.onChange(event, def)
-											}
+											type={def.type === "int" ? "number" : "text"}
+											onChange={(event) => this.onChange(event, def)}
 											value={this.state[name]}
 										/>
 									);
@@ -137,11 +113,7 @@ export class FormVideoEditProperties extends React.Component {
 	onChange(event, def) {
 		try {
 			this.setState({
-				[def.name]: UTILITIES.parsePropValString(
-					def.type,
-					def.enumeration,
-					event.target.value
-				),
+				[def.name]: UTILITIES.parsePropValString(def.type, def.enumeration, event.target.value),
 			});
 		} catch (exception) {
 			window.alert(exception.toString());

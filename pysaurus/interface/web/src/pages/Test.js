@@ -18,11 +18,7 @@ export class Test extends React.Component {
 		const c = new ComponentController(this, "arr");
 		return (
 			<div>
-				<SetInput
-					identifier="entry"
-					controller={c}
-					values={["my", "name", "is", "Emninem"]}
-				/>
+				<SetInput identifier="entry" controller={c} values={["my", "name", "is", "Emninem"]} />
 				Hello! <Cross action={() => console.log("cross!")} />
 				<a href="https://google.fr">yayayayayaya!</a>
 				<input type="text" />
@@ -33,9 +29,7 @@ export class Test extends React.Component {
 
 	fancy() {
 		Fancybox.load(
-			<Dialog
-				title={"Test Fancy Box 2!"}
-				action={() => console.log("Choice: yes!")}>
+			<Dialog title={"Test Fancy Box 2!"} action={() => console.log("Choice: yes!")}>
 				<h1>hello world {this.state.pageSize}</h1>
 				<h1>hello world</h1>
 				<h1>hello world</h1>

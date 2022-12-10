@@ -77,9 +77,7 @@ to automatically select "AND" as search method.
 							onChange={this.onChangeCond}
 							checked={this.state.cond === "exact"}
 						/>
-						<label htmlFor="input-search-exact">
-							{tr("exact sentence")}
-						</label>
+						<label htmlFor="input-search-exact">{tr("exact sentence")}</label>
 					</p>
 					<p>
 						<input

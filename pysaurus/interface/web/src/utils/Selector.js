@@ -25,10 +25,7 @@ export class Selector {
 	}
 
 	has(value) {
-		return (
-			(this.all && !this.exclude.has(value)) ||
-			(!this.all && this.include.has(value))
-		);
+		return (this.all && !this.exclude.has(value)) || (!this.all && this.include.has(value));
 	}
 
 	add(value) {

@@ -41,24 +41,18 @@ export class FormPropertyEditSelectedValues extends React.Component {
 				<div className="form-property-edit-selected-values vertical flex-grow-1">
 					<div className="bar flex-shrink-0 text-center">
 						<button
-							className={`delete ${
-								this.state.form === "delete" ? "selected bolder" : ""
-							}`}
+							className={`delete ${this.state.form === "delete" ? "selected bolder" : ""}`}
 							onClick={this.setDelete}>
 							delete
 						</button>
 						<button
-							className={`edit ${
-								this.state.form === "edit" ? "selected bolder" : ""
-							}`}
+							className={`edit ${this.state.form === "edit" ? "selected bolder" : ""}`}
 							onClick={this.setEdit}>
 							edit
 						</button>
 						{canMove ? (
 							<button
-								className={`move ${
-									this.state.form === "move" ? "selected bolder" : ""
-								}`}
+								className={`move ${this.state.form === "move" ? "selected bolder" : ""}`}
 								onClick={this.setMove}>
 								move
 							</button>
@@ -66,8 +60,7 @@ export class FormPropertyEditSelectedValues extends React.Component {
 							""
 						)}
 					</div>
-					<div
-						className={`form position-relative flex-grow-1 text-center ${this.state.form}`}>
+					<div className={`form position-relative flex-grow-1 text-center ${this.state.form}`}>
 						{this.renderForm()}
 					</div>
 				</div>
@@ -158,14 +151,11 @@ export class FormPropertyEditSelectedValues extends React.Component {
 		return (
 			<div className="flex-grow-1">
 				<h3>
-					{tr(
-						'Move property "{name}" / {value} to another property of type "{type}".',
-						{
-							name: this.props.name,
-							value: this.valuesToString(),
-							type: def.type,
-						}
-					)}
+					{tr('Move property "{name}" / {value} to another property of type "{type}".', {
+						name: this.props.name,
+						value: this.valuesToString(),
+						type: def.type,
+					})}
 				</h3>
 				<div>
 					<select value={this.state.move} onChange={this.onMove}>
@@ -184,8 +174,7 @@ export class FormPropertyEditSelectedValues extends React.Component {
 		const def = this.props.definitions[this.props.name];
 		const otherDefinitions = [];
 		for (let other of Object.values(this.props.definitions)) {
-			if (def.name !== other.name && def.type === other.type)
-				otherDefinitions.push(other);
+			if (def.name !== other.name && def.type === other.type) otherDefinitions.push(other);
 		}
 		return otherDefinitions;
 	}
@@ -209,11 +198,7 @@ export class FormPropertyEditSelectedValues extends React.Component {
 		const def = this.props.definitions[this.props.name];
 		try {
 			this.setState({
-				value: UTILITIES.parsePropValString(
-					def.type,
-					def.enumeration,
-					event.target.value
-				),
+				value: UTILITIES.parsePropValString(def.type, def.enumeration, event.target.value),
 			});
 		} catch (exception) {
 			window.alert(exception.toString());

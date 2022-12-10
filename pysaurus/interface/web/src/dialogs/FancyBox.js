@@ -17,9 +17,7 @@ export class FancyBox extends React.Component {
 			<div className="fancybox-wrapper absolute-plain">
 				<div className="fancybox vertical">
 					<div className="fancybox-header flex-shrink-0 horizontal p-2">
-						<div
-							className="fancybox-title flex-grow-1 text-center"
-							title={this.props.title}>
+						<div className="fancybox-title flex-grow-1 text-center" title={this.props.title}>
 							<strong>{this.props.title}</strong>
 						</div>
 						<div className="pl-2">

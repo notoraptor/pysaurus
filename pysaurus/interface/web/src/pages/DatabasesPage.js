@@ -41,10 +41,7 @@ export class DatabasesPage extends React.Component {
 								<label htmlFor="language">{tr("Language:")}:</label>
 							</td>
 							<td className="text-left">
-								<select
-									id="language"
-									value={window.PYTHON_LANGUAGE}
-									onChange={this.onChangeLanguage}>
+								<select id="language" value={window.PYTHON_LANGUAGE} onChange={this.onChangeLanguage}>
 									{languages.map((language, index) => (
 										<option key={index} value={language.name}>
 											{language.name}
@@ -70,10 +67,7 @@ export class DatabasesPage extends React.Component {
 							</div>
 							<h3>{tr("Database folders and files")}</h3>
 							<div className="vertical new-paths">
-								<PathsInput
-									onUpdate={this.onUpdatePaths}
-									data={this.state.paths}
-								/>
+								<PathsInput onUpdate={this.onUpdatePaths} data={this.state.paths} />
 							</div>
 							<div className="p-1">
 								<button className="block" onClick={this.createDatabase}>
@@ -94,18 +88,12 @@ export class DatabasesPage extends React.Component {
 									checked={this.state.update}
 									onChange={this.onChangeUpdate}
 								/>{" "}
-								<label htmlFor="update">
-									{tr("update after opening")}
-								</label>
+								<label htmlFor="update">{tr("update after opening")}</label>
 							</div>
 							<h3>{tr("Click on a database to open it")}</h3>
 							{this.props.parameters.databases.map((database, index) => (
 								<div className="p-1" key={index}>
-									<button
-										className="block"
-										onClick={() =>
-											this.openDatabase(database.name)
-										}>
+									<button className="block" onClick={() => this.openDatabase(database.name)}>
 										{database.name}
 									</button>
 								</div>
@@ -164,12 +152,7 @@ export class DatabasesPage extends React.Component {
 
 	createDatabase() {
 		// TODO: flag `update` should be either reserved to update_database, or display as global flag into this page
-		this.props.app.dbUpdate(
-			"create_database",
-			this.state.name,
-			Array.from(this.state.paths),
-			this.state.update
-		);
+		this.props.app.dbUpdate("create_database", this.state.name, Array.from(this.state.paths), this.state.update);
 	}
 
 	openDatabase(name) {

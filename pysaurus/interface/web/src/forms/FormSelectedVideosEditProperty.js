@@ -64,27 +64,21 @@ export class FormSelectedVideosEditProperty extends React.Component {
 										count: this.state.remove.length,
 									})}
 								</div>
-								<button onClick={this.unRemoveAll}>
-									{Characters.SMART_ARROW_RIGHT}
-								</button>
+								<button onClick={this.unRemoveAll}>{Characters.SMART_ARROW_RIGHT}</button>
 							</div>
 						) : (
 							<div />
 						)}
 						{this.state.current.length > 1 ? (
 							<div className="horizontal">
-								<button onClick={this.removeAll}>
-									{Characters.SMART_ARROW_LEFT}
-								</button>
+								<button onClick={this.removeAll}>{Characters.SMART_ARROW_LEFT}</button>
 								<div className="value">
 									{tr("all {count} values", {
 										count: this.state.current.length,
 									})}
 								</div>
 								{this.props.definition.multiple ? (
-									<button onClick={this.addAll}>
-										{Characters.SMART_ARROW_RIGHT}
-									</button>
+									<button onClick={this.addAll}>{Characters.SMART_ARROW_RIGHT}</button>
 								) : (
 									""
 								)}
@@ -94,9 +88,7 @@ export class FormSelectedVideosEditProperty extends React.Component {
 						)}
 						{this.state.add.length > 1 ? (
 							<div className="horizontal">
-								<button onClick={this.unAddAll}>
-									{Characters.SMART_ARROW_LEFT}
-								</button>
+								<button onClick={this.unAddAll}>{Characters.SMART_ARROW_LEFT}</button>
 								<div className="value">
 									{tr("all {count} values", {
 										count: this.state.add.length,
@@ -117,9 +109,7 @@ export class FormSelectedVideosEditProperty extends React.Component {
 		return this.state.remove.map((value, index) => (
 			<div key={index} className="entry horizontal">
 				<div className="value">{value}</div>
-				<button onClick={() => this.unRemove(value)}>
-					{Characters.SMART_ARROW_RIGHT}
-				</button>
+				<button onClick={() => this.unRemove(value)}>{Characters.SMART_ARROW_RIGHT}</button>
 			</div>
 		));
 	}
@@ -127,18 +117,14 @@ export class FormSelectedVideosEditProperty extends React.Component {
 	renderCurrent() {
 		return this.state.current.map((value, index) => (
 			<div key={index} className="entry horizontal">
-				<button onClick={() => this.remove(value)}>
-					{Characters.SMART_ARROW_LEFT}
-				</button>
+				<button onClick={() => this.remove(value)}>{Characters.SMART_ARROW_LEFT}</button>
 				<div className="value">
 					{value}{" "}
 					<em>
 						<strong>({this.getMapping().get(value)})</strong>
 					</em>
 				</div>
-				<button onClick={() => this.add(value)}>
-					{Characters.SMART_ARROW_RIGHT}
-				</button>
+				<button onClick={() => this.add(value)}>{Characters.SMART_ARROW_RIGHT}</button>
 			</div>
 		));
 	}
@@ -190,9 +176,7 @@ export class FormSelectedVideosEditProperty extends React.Component {
 				<div />
 				<div className="horizontal">
 					<div>{input}</div>
-					<button
-						className="add-new-value flex-grow-1 ml-1"
-						onClick={this.onAddNewValue}>
+					<button className="add-new-value flex-grow-1 ml-1" onClick={this.onAddNewValue}>
 						add
 					</button>
 				</div>
@@ -220,11 +204,7 @@ export class FormSelectedVideosEditProperty extends React.Component {
 		const def = this.props.definition;
 		try {
 			this.setState({
-				value: UTILITIES.parsePropValString(
-					def.type,
-					def.enumeration,
-					event.target.value
-				),
+				value: UTILITIES.parsePropValString(def.type, def.enumeration, event.target.value),
 			});
 		} catch (exception) {
 			window.alert(exception.toString());

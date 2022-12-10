@@ -63,11 +63,7 @@ export class FormVideosSource extends React.Component {
 		return (
 			<FancyBox title="Select Videos">
 				{this.renderTree(this.props.tree)}
-				<p>
-					{this.state.paths.length
-						? tr("Currently selected:")
-						: tr("Currently selected: none")}
-				</p>
+				<p>{this.state.paths.length ? tr("Currently selected:") : tr("Currently selected: none")}</p>
 				{this.state.paths.length ? (
 					<ul>
 						{this.state.paths.map((path, index) => (
@@ -118,9 +114,7 @@ export class FormVideosSource extends React.Component {
 											value={"develop"}
 											checked={!hasPath}
 										/>{" "}
-										<label htmlFor={entryName + "1"}>
-											{tr("develop")}
-										</label>
+										<label htmlFor={entryName + "1"}>{tr("develop")}</label>
 									</div>
 									{hasPath ? "" : this.renderTree(subTree, entryName)}
 								</div>
@@ -179,8 +173,7 @@ export class FormVideosSource extends React.Component {
 
 	submit() {
 		Fancybox.close();
-		if (this.state.paths.length)
-			this.props.onClose(this.state.paths.map((path) => path.split("-")));
+		if (this.state.paths.length) this.props.onClose(this.state.paths.map((path) => path.split("-")));
 	}
 }
 

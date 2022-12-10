@@ -56,8 +56,7 @@ export class GenericFormRename extends React.Component {
 	}
 
 	submit() {
-		if (this.state.data && this.state.data !== this.props.data)
-			this.props.onClose(this.state.data);
+		if (this.state.data && this.state.data !== this.props.data) this.props.onClose(this.state.data);
 	}
 }
 

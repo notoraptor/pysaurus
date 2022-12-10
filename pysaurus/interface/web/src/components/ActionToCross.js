@@ -3,12 +3,7 @@ import { Action } from "../utils/Action.js";
 
 export function ActionToCross(props) {
 	const { action, title } = props;
-	return (
-		<Cross
-			title={`${title || action.title} (${action.shortcut.str})`}
-			action={action.callback}
-		/>
-	);
+	return <Cross title={`${title || action.title} (${action.shortcut.str})`} action={action.callback} />;
 }
 
 ActionToCross.propTypes = {

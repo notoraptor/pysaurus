@@ -176,9 +176,9 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
           }, data.extension)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", {
             title: data.file_size,
             className: cc(common.size)
-          }, data.size), " ", "/", " ", /*#__PURE__*/React.createElement("span", {
+          }, data.size), " ", "/ ", /*#__PURE__*/React.createElement("span", {
             className: cc(common.container_format)
-          }, data.container_format), " ", "(", /*#__PURE__*/React.createElement("span", {
+          }, data.container_format), " (", /*#__PURE__*/React.createElement("span", {
             title: data.video_codec_description,
             className: cc(common.video_codec)
           }, data.video_codec), ",", " ", /*#__PURE__*/React.createElement("span", {
@@ -192,7 +192,7 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
             className: cc(common.width)
           }, data.width), " x", " ", /*#__PURE__*/React.createElement("strong", {
             className: cc(common.height)
-          }, data.height), " ", "@", " ", /*#__PURE__*/React.createElement("span", {
+          }, data.height), " @", " ", /*#__PURE__*/React.createElement("span", {
             className: cc(common.frame_rate)
           }, data.frame_rate, " ", tr("fps")), ",", " ", /*#__PURE__*/React.createElement("span", {
             className: cc(common.bit_depth)
@@ -201,11 +201,11 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
           }, data.sample_rate, " ", tr("Hz")), ",", " ", /*#__PURE__*/React.createElement("span", {
             title: data.audio_bit_rate,
             className: cc(common.audio_bit_rate)
-          }, audio_bit_rate, " ", tr("Kb/s")), " ", "|", " ", /*#__PURE__*/React.createElement("strong", {
+          }, audio_bit_rate, " ", tr("Kb/s")), " ", "| ", /*#__PURE__*/React.createElement("strong", {
             className: cc(common.length)
-          }, data.length), " ", "| ", /*#__PURE__*/React.createElement("code", {
+          }, data.length), " |", " ", /*#__PURE__*/React.createElement("code", {
             className: cc(common.date)
-          }, data.date)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, "Audio"), ":", " ", data.audio_languages.length ? data.audio_languages.join(", ") : "(none)", " ", "| ", /*#__PURE__*/React.createElement("strong", null, "Subtitles"), ":", " ", data.subtitle_languages.length ? data.subtitle_languages.join(", ") : "(none)"), errors.length ? /*#__PURE__*/React.createElement("div", {
+          }, data.date)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, "Audio"), ":", " ", data.audio_languages.length ? data.audio_languages.join(", ") : "(none)", " |", " ", /*#__PURE__*/React.createElement("strong", null, "Subtitles"), ":", " ", data.subtitle_languages.length ? data.subtitle_languages.join(", ") : "(none)"), errors.length ? /*#__PURE__*/React.createElement("div", {
             className: "horizontal"
           }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, "Errors:"), "\xA0"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
             className: "property"

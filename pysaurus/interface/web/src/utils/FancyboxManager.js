@@ -15,9 +15,7 @@ class FancyboxManager {
 		return [
 			...document
 				.querySelector("main")
-				.querySelectorAll(
-					'a, button, input, textarea, select, details, [tabindex]:not([tabindex="-1"])'
-				),
+				.querySelectorAll('a, button, input, textarea, select, details, [tabindex]:not([tabindex="-1"])'),
 		].filter((el) => !el.hasAttribute("disabled"));
 	}
 
@@ -26,9 +24,7 @@ class FancyboxManager {
 		this.loaded = true;
 		this.manageOtherActiveElements();
 		ReactDOM.render(
-			<LangContext.Provider value={APP_STATE.lang}>
-				{component}
-			</LangContext.Provider>,
+			<LangContext.Provider value={APP_STATE.lang}>{component}</LangContext.Provider>,
 			document.getElementById(this.containerID)
 		);
 	}

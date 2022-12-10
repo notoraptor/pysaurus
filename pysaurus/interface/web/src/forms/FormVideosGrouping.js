@@ -77,20 +77,15 @@ export class FormVideosGrouping extends React.Component {
 													{def.name}
 												</option>
 										  ))
-										: FIELD_MAP.allowed.map(
-												(fieldOption, index) => (
-													<option
-														key={index}
-														value={fieldOption.name}>
-														{fieldOption.title}
-													</option>
-												)
-										  )}
+										: FIELD_MAP.allowed.map((fieldOption, index) => (
+												<option key={index} value={fieldOption.name}>
+													{fieldOption.title}
+												</option>
+										  ))}
 								</select>
 							</td>
 						</tr>
-						{this.state.isProperty ||
-						!FIELD_MAP.fields[field].isOnlyMany() ? (
+						{this.state.isProperty || !FIELD_MAP.fields[field].isOnlyMany() ? (
 							<tr>
 								<td className="label">
 									<input
@@ -102,9 +97,7 @@ export class FormVideosGrouping extends React.Component {
 								</td>
 								<td>
 									<label htmlFor="allow-singletons">
-										{tr(
-											"Allow singletons (groups with only 1 video)"
-										)}
+										{tr("Allow singletons (groups with only 1 video)")}
 									</label>
 								</td>
 							</tr>
@@ -112,19 +105,13 @@ export class FormVideosGrouping extends React.Component {
 							<tr>
 								<td>&nbsp;</td>
 								<td>
-									<em>
-										{tr(
-											"Will look for groups with at least 2 videos."
-										)}
-									</em>
+									<em>{tr("Will look for groups with at least 2 videos.")}</em>
 								</td>
 							</tr>
 						)}
 						<tr>
 							<td className="label">
-								<label htmlFor="group-sorting">
-									{tr("Sort using:")}
-								</label>
+								<label htmlFor="group-sorting">{tr("Sort using:")}</label>
 							</td>
 							<td>
 								<select
@@ -134,9 +121,7 @@ export class FormVideosGrouping extends React.Component {
 									onChange={this.onChangeSorting}>
 									<option value="field">{tr("Field value")}</option>
 									{this.fieldIsString() ? (
-										<option value="length">
-											{tr("Field value length")}
-										</option>
+										<option value="length">{tr("Field value length")}</option>
 									) : (
 										""
 									)}
@@ -154,9 +139,7 @@ export class FormVideosGrouping extends React.Component {
 								/>
 							</td>
 							<td>
-								<label htmlFor="group-reverse">
-									{tr("sort in reverse order")}
-								</label>
+								<label htmlFor="group-reverse">{tr("sort in reverse order")}</label>
 							</td>
 						</tr>
 					</tbody>
@@ -166,9 +149,7 @@ export class FormVideosGrouping extends React.Component {
 	}
 
 	getStateField() {
-		return this.state.field === undefined
-			? FIELD_MAP.allowed[0].name
-			: this.state.field;
+		return this.state.field === undefined ? FIELD_MAP.allowed[0].name : this.state.field;
 	}
 
 	getStateAllowSingletons() {
@@ -185,9 +166,7 @@ export class FormVideosGrouping extends React.Component {
 
 	onChangeFieldType(event) {
 		const isProperty = event.target.value === "true";
-		const field = isProperty
-			? this.props.prop_types[0].name
-			: FIELD_MAP.allowed[0].name;
+		const field = isProperty ? this.props.prop_types[0].name : FIELD_MAP.allowed[0].name;
 		const sorting = "field";
 		const reverse = false;
 		const allowSingletons = isProperty || !FIELD_MAP.allowed[0].isOnlyMany();
@@ -198,8 +177,7 @@ export class FormVideosGrouping extends React.Component {
 		const field = event.target.value;
 		const sorting = "field";
 		const reverse = false;
-		const allowSingletons =
-			this.state.isProperty || !FIELD_MAP.fields[field].isOnlyMany();
+		const allowSingletons = this.state.isProperty || !FIELD_MAP.fields[field].isOnlyMany();
 		this.setState({ field, sorting, reverse, allowSingletons });
 	}
 

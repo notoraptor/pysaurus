@@ -4,10 +4,7 @@ import { VideosPage } from "./pages/VideosPage.js";
 import { PropertiesPage } from "./pages/PropertiesPage.js";
 import { DatabasesPage } from "./pages/DatabasesPage.js";
 import { backend_error, python_call } from "./utils/backend.js";
-import {
-	VIDEO_DEFAULT_PAGE_NUMBER,
-	VIDEO_DEFAULT_PAGE_SIZE,
-} from "./utils/constants.js";
+import { VIDEO_DEFAULT_PAGE_NUMBER, VIDEO_DEFAULT_PAGE_SIZE } from "./utils/constants.js";
 import { LangContext } from "./language.js";
 import { APP_STATE } from "./utils/globals.js";
 
@@ -28,11 +25,7 @@ export class App extends React.Component {
 	}
 
 	render() {
-		return (
-			<LangContext.Provider value={this.state.lang}>
-				{this.renderPage()}
-			</LangContext.Provider>
-		);
+		return <LangContext.Provider value={this.state.lang}>{this.renderPage()}</LangContext.Provider>;
 	}
 
 	renderPage() {
@@ -40,12 +33,10 @@ export class App extends React.Component {
 		const page = this.state.page;
 		if (!page) return "Opening ...";
 		if (page === "test") return <Test app={this} parameters={parameters} />;
-		if (page === "databases")
-			return <DatabasesPage app={this} parameters={parameters} />;
+		if (page === "databases") return <DatabasesPage app={this} parameters={parameters} />;
 		if (page === "home") return <HomePage app={this} parameters={parameters} />;
 		if (page === "videos") return <VideosPage app={this} parameters={parameters} />;
-		if (page === "properties")
-			return <PropertiesPage app={this} parameters={parameters} />;
+		if (page === "properties") return <PropertiesPage app={this} parameters={parameters} />;
 	}
 
 	componentDidMount() {
@@ -81,11 +72,7 @@ export class App extends React.Component {
 	}
 
 	dbHome(appState = undefined) {
-		this.loadPage(
-			"databases",
-			appState,
-			appState ? { languages: appState.languages } : undefined
-		);
+		this.loadPage("databases", appState, appState ? { languages: appState.languages } : undefined);
 	}
 
 	dbUpdate(...command) {
@@ -102,9 +89,7 @@ export class App extends React.Component {
 
 	loadPropertiesPage() {
 		python_call("describe_prop_types")
-			.then((definitions) =>
-				this.loadPage("properties", { definitions: definitions })
-			)
+			.then((definitions) => this.loadPage("properties", { definitions: definitions }))
 			.catch(backend_error);
 	}
 }

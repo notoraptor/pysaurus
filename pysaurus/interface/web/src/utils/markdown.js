@@ -17,11 +17,7 @@ const underlineRule = {
 	// Finally transform this syntax node into a
 	// React element
 	react: function (node, output) {
-		return React.createElement(
-			"strong",
-			{ className: "red-flag" },
-			output(node.content)
-		);
+		return React.createElement("strong", { className: "red-flag" }, output(node.content));
 		// return React.DOM.u(null, output(node.content));
 	},
 };

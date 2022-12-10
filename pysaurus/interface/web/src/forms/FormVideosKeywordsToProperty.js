@@ -18,9 +18,7 @@ export class FormVideosKeywordsToProperty extends React.Component {
 			<Dialog title="Fill property" yes={"fill"} action={this.onClose}>
 				<Cell center={true} full={true} className="text-center">
 					<p>
-						<select
-							value={this.state.field}
-							onChange={this.onChangeGroupField}>
+						<select value={this.state.field} onChange={this.onChangeGroupField}>
 							{this.props.prop_types.map((def, i) => (
 								<option key={i} value={def.name}>
 									{tr("Property")}: {def.name}

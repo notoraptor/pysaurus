@@ -55,9 +55,7 @@ export class PropertiesPage extends React.Component {
 							<strong>&#11164;</strong>
 						</button>
 					</div>
-					<div className="text-center flex-grow-1">
-						{tr("Properties Management")}
-					</div>
+					<div className="text-center flex-grow-1">{tr("Properties Management")}</div>
 				</h2>
 				<hr />
 				<div className="content horizontal">
@@ -94,9 +92,7 @@ export class PropertiesPage extends React.Component {
 										onChange={this.onChangeType}>
 										<option value="bool">{tr("boolean")}</option>
 										<option value="int">{tr("integer")}</option>
-										<option value="float">
-											{tr("floating number")}
-										</option>
+										<option value="float">{tr("floating number")}</option>
 										<option value="str">{tr("text")}</option>
 									</select>
 								</td>
@@ -111,9 +107,7 @@ export class PropertiesPage extends React.Component {
 									/>
 								</td>
 								<td>
-									<label htmlFor="prop-multiple">
-										{tr("accept many values")}
-									</label>
+									<label htmlFor="prop-multiple">{tr("accept many values")}</label>
 								</td>
 							</tr>
 							<tr>
@@ -126,21 +120,16 @@ export class PropertiesPage extends React.Component {
 									/>
 								</td>
 								<td>
-									<label htmlFor="prop-enumeration">
-										{tr("Is enumeration")}
-									</label>
+									<label htmlFor="prop-enumeration">{tr("Is enumeration")}</label>
 								</td>
 							</tr>
 							{!this.state.multiple || this.state.enumeration ? (
 								<tr>
 									<td>
-										<label
-											htmlFor={"prop-default-" + this.state.type}>
+										<label htmlFor={"prop-default-" + this.state.type}>
 											{this.state.enumeration
 												? this.state.multiple
-													? tr(
-															"Enumeration values (first is default)"
-													  )
+													? tr("Enumeration values (first is default)")
 													: tr("Enumeration values")
 												: tr("Default value")}
 										</label>
@@ -152,16 +141,12 @@ export class PropertiesPage extends React.Component {
 							)}
 							<tr className="buttons">
 								<td>
-									<button
-										className="reset block"
-										onClick={this.reset}>
+									<button className="reset block" onClick={this.reset}>
 										reset
 									</button>
 								</td>
 								<td>
-									<button
-										className="submit block"
-										onClick={this.submit}>
+									<button className="submit block" onClick={this.submit}>
 										<strong>add</strong>
 									</button>
 								</td>
@@ -191,14 +176,9 @@ export class PropertiesPage extends React.Component {
 								<strong>{def.name}</strong>
 							</td>
 							<td className="type">
-								{def.multiple ? (
-									<span>{tr("one or many")}&nbsp;</span>
-								) : (
-									""
-								)}
+								{def.multiple ? <span>{tr("one or many")}&nbsp;</span> : ""}
 								<span>
-									<code>{def.type}</code>{" "}
-									{def.multiple ? tr("values") : tr("value")}
+									<code>{def.type}</code> {def.multiple ? tr("values") : tr("value")}
 								</span>
 								{def.enumeration ? (
 									<span>
@@ -223,16 +203,12 @@ export class PropertiesPage extends React.Component {
 							</td>
 							<td className="options">
 								<div>
-									<button
-										className="delete red-flag"
-										onClick={() => this.deleteProperty(def.name)}>
+									<button className="delete red-flag" onClick={() => this.deleteProperty(def.name)}>
 										delete
 									</button>
 								</div>
 								<div>
-									<button
-										className="rename"
-										onClick={() => this.renameProperty(def.name)}>
+									<button className="rename" onClick={() => this.renameProperty(def.name)}>
 										rename
 									</button>
 								</div>
@@ -240,9 +216,7 @@ export class PropertiesPage extends React.Component {
 									<div>
 										<button
 											className="convert-to-unique"
-											onClick={() =>
-												this.convertPropertyToUnique(def.name)
-											}>
+											onClick={() => this.convertPropertyToUnique(def.name)}>
 											convert to unique
 										</button>
 									</div>
@@ -250,9 +224,7 @@ export class PropertiesPage extends React.Component {
 									<div>
 										<button
 											className="convert-to-multiple"
-											onClick={() =>
-												this.convertPropertyToMultiple(def.name)
-											}>
+											onClick={() => this.convertPropertyToMultiple(def.name)}>
 											convert to multiple
 										</button>
 									</div>
@@ -267,18 +239,9 @@ export class PropertiesPage extends React.Component {
 
 	renderDefaultInput() {
 		if (this.state.enumeration) {
-			const controller = new ComponentPropController(
-				this,
-				"defaultPropVal",
-				this.state.type,
-				null
-			);
+			const controller = new ComponentPropController(this, "defaultPropVal", this.state.type, null);
 			return (
-				<SetInput
-					className="block"
-					identifier={"prop-default-" + this.state.type}
-					controller={controller}
-				/>
+				<SetInput className="block" identifier={"prop-default-" + this.state.type} controller={controller} />
 			);
 		}
 		if (this.state.type === "bool") {
@@ -326,8 +289,7 @@ export class PropertiesPage extends React.Component {
 
 	onChangeDefault(event) {
 		const defaultPropVal = event.target.value;
-		if (this.state.defaultPropVal !== defaultPropVal)
-			this.setState({ defaultPropVal });
+		if (this.state.defaultPropVal !== defaultPropVal) this.setState({ defaultPropVal });
 	}
 
 	onChangeMultiple(event) {
@@ -347,20 +309,9 @@ export class PropertiesPage extends React.Component {
 	submit() {
 		try {
 			let definition = this.state.defaultPropVal;
-			if (!this.state.enumeration)
-				definition = UTILITIES.parsePropValString(
-					this.state.type,
-					null,
-					definition
-				);
+			if (!this.state.enumeration) definition = UTILITIES.parsePropValString(this.state.type, null, definition);
 			python_multiple_call(
-				[
-					"create_prop_type",
-					this.state.name,
-					this.state.type,
-					definition,
-					this.state.multiple,
-				],
+				["create_prop_type", this.state.name, this.state.type, definition, this.state.multiple],
 				["describe_prop_types"]
 			)
 				.then((definitions) => {
@@ -380,10 +331,7 @@ export class PropertiesPage extends React.Component {
 				title={tr('Delete property "{name}"?', { name })}
 				yes={tr("DELETE")}
 				action={() => {
-					python_multiple_call(
-						["remove_prop_type", name],
-						["describe_prop_types"]
-					)
+					python_multiple_call(["remove_prop_type", name], ["describe_prop_types"])
 						.catch(backend_error)
 						.then((definitions) => {
 							const state = this.getDefaultInputState();
@@ -410,10 +358,7 @@ export class PropertiesPage extends React.Component {
 				})}
 				yes={tr("convert to unique")}
 				action={() => {
-					python_multiple_call(
-						["convert_prop_to_unique", name],
-						["describe_prop_types"]
-					)
+					python_multiple_call(["convert_prop_to_unique", name], ["describe_prop_types"])
 						.then((definitions) => {
 							const state = this.getDefaultInputState();
 							state.definitions = definitions;
@@ -423,12 +368,9 @@ export class PropertiesPage extends React.Component {
 				}}>
 				<Cell className="text-center" center={true} full={true}>
 					<h3>
-						{tr(
-							'Are you sure you want to convert to unique property "{name}"?',
-							{
-								name,
-							}
-						)}
+						{tr('Are you sure you want to convert to unique property "{name}"?', {
+							name,
+						})}
 					</h3>
 				</Cell>
 			</Dialog>
@@ -443,10 +385,7 @@ export class PropertiesPage extends React.Component {
 				})}
 				yes={tr("convert to multiple")}
 				action={() => {
-					python_multiple_call(
-						["convert_prop_to_multiple", name],
-						["describe_prop_types"]
-					)
+					python_multiple_call(["convert_prop_to_multiple", name], ["describe_prop_types"])
 						.then((definitions) => {
 							const state = this.getDefaultInputState();
 							state.definitions = definitions;
@@ -456,12 +395,9 @@ export class PropertiesPage extends React.Component {
 				}}>
 				<Cell className="text-center" center={true} full={true}>
 					<h3>
-						{tr(
-							'Are you sure you want to convert to multiple property "{name}"?',
-							{
-								name,
-							}
-						)}
+						{tr('Are you sure you want to convert to multiple property "{name}"?', {
+							name,
+						})}
 					</h3>
 				</Cell>
 			</Dialog>
@@ -476,10 +412,7 @@ export class PropertiesPage extends React.Component {
 				description={name}
 				data={name}
 				onClose={(newName) => {
-					python_multiple_call(
-						["rename_prop_type", name, newName],
-						["describe_prop_types"]
-					)
+					python_multiple_call(["rename_prop_type", name, newName], ["describe_prop_types"])
 						.then((definitions) => {
 							const state = this.getDefaultInputState();
 							state.definitions = definitions;
