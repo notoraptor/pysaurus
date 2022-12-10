@@ -22,7 +22,6 @@ from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
 from pysaurus.database import pattern_detection
 from pysaurus.database.db_features import DbFeatures
-from pysaurus.database.properties import PropType
 from pysaurus.interface.api import tk_utils
 from pysaurus.interface.api.feature_api import FeatureAPI
 from pysaurus.interface.api.parallel_notifier import ParallelNotifier
@@ -38,22 +37,32 @@ class GuiAPI(FeatureAPI):
         "threads_stop_flag",
         "copy_work",
         "monitor_notifications",
+        "tk_utils",
     )
 
     def __init__(self, monitor_notifications=True):
         self.multiprocessing_manager = multiprocessing.Manager()
         super().__init__(ParallelNotifier(self.multiprocessing_manager.Queue()))
-        self.monitor_thread = None  # type: Optional[threading.Thread]
-        self.db_loading_thread = None  # type: Optional[threading.Thread]
+        self.monitor_thread: Optional[threading.Thread] = None
+        self.db_loading_thread: Optional[threading.Thread] = None
         self.threads_stop_flag = False
         self.copy_work: Optional[FileCopier] = None
         self.notifier.call_default_if_no_manager()
         self.monitor_notifications = monitor_notifications
+        self.tk_utils = tk_utils
+        self._proxies.update(
+            {
+                "clipboard": "tk_utils.clipboard_set",
+                "select_directory": "tk_utils.select_directory!",
+                "select_files": "tk_utils.select_many_files_to_open!",
+                "select_file": "tk_utils.select_file_to_open!",
+            }
+        )
 
     # Public tasks
 
     def create_prediction_property(self, prop_name):
-        self.database.add_prop_type(PropType(f"<?{prop_name}>", [-1, 0, 1]))
+        self.database.create_prop_type(f"<?{prop_name}>", int, [-1, 0, 1], False)
 
     def cancel_copy(self):
         if self.copy_work is not None:
@@ -263,22 +272,3 @@ class GuiAPI(FeatureAPI):
             allow_singletons=True,
         )
         self.database.provider.refresh()
-
-    @staticmethod
-    def clipboard(text):
-        tk_utils.clipboard_set(text)
-
-    def clipboard_video_path(self, video_id):
-        tk_utils.clipboard_set(self.database.get_video_filename(video_id).path)
-
-    @staticmethod
-    def select_directory(default=None):
-        return tk_utils.select_directory(default)
-
-    @staticmethod
-    def select_files():
-        return tk_utils.select_many_files_to_open()
-
-    @staticmethod
-    def select_file():
-        return tk_utils.select_file_to_open()

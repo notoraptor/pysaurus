@@ -1,4 +1,9 @@
-import { FIELD_MAP, PAGE_SIZES, SearchTypeTitle, SOURCE_TREE } from "../utils/constants.js";
+import {
+	FIELD_MAP,
+	PAGE_SIZES,
+	SearchTypeTitle,
+	SOURCE_TREE,
+} from "../utils/constants.js";
 import { MenuPack } from "../components/MenuPack.js";
 import { Pagination } from "../components/Pagination.js";
 import { Video } from "../components/Video.js";

@@ -27,6 +27,7 @@ export class Video extends React.Component {
 		this.confirmDeletion = this.confirmDeletion.bind(this);
 		this.deleteVideo = this.deleteVideo.bind(this);
 		this.openContainingFolder = this.openContainingFolder.bind(this);
+		this.copyToClipboard = this.copyToClipboard.bind(this);
 		this.copyMetaTitle = this.copyMetaTitle.bind(this);
 		this.copyFileTitle = this.copyFileTitle.bind(this);
 		this.copyFilePath = this.copyFilePath.bind(this);
@@ -727,59 +728,28 @@ export class Video extends React.Component {
 	}
 
 	copyMetaTitle() {
-		const text = this.props.data.title;
-		python_call("clipboard", text)
-			.then(() => this.props.onInfo(tr("Copied to clipboard: {text}", { text })))
-			.catch(() =>
-				this.props.onInfo(
-					tr("Cannot copy meta title to clipboard: {text}", { text })
-				)
-			);
+		this.copyToClipboard("title");
 	}
 
 	copyFileTitle() {
-		const text = this.props.data.file_title;
+		this.copyToClipboard("file_title");
+	}
+
+	copyFilePath() {
+		this.copyToClipboard("filename");
+	}
+
+	copyVideoID() {
+		this.copyToClipboard("video_id");
+	}
+
+	copyToClipboard(field) {
+		const text = this.props.data[field];
 		python_call("clipboard", text)
 			.then(() => this.props.onInfo(tr("Copied to clipboard: {text}", { text })))
 			.catch(() =>
 				this.props.onInfo(
-					tr("Cannot copy meta title to clipboard: {text}", { text })
-				)
-			);
-	}
-
-	copyFilePath() {
-		python_call("clipboard_video_path", this.props.data.video_id).then(() =>
-			this.props
-				.onInfo(
-					tr("Copied to clipboard: {text}", {
-						text: this.props.data.filename,
-					})
-				)
-				.catch(() =>
-					this.props.onInfo(
-						tr("Cannot copy file path to clipboard: {text}", {
-							text: this.props.data.filename,
-						})
-					)
-				)
-		);
-	}
-
-	copyVideoID() {
-		python_call("clipboard", this.props.data.video_id)
-			.then(() =>
-				this.props.onInfo(
-					tr("Copied to clipboard: {text}", {
-						text: this.props.data.video_id,
-					})
-				)
-			)
-			.catch(() =>
-				this.props.onInfo(
-					tr("Cannot copy video ID to clipboard: {text}", {
-						text: this.props.data.video_id,
-					})
+					tr("Cannot copy {field} to clipboard: {text}", { field, text })
 				)
 			);
 	}
