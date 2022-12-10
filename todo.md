@@ -61,3 +61,4 @@ Optimizations:
 - As video is hashed using filename, filename attribute should be non-mutable.
   If we need to change filename (e.g. when renaming video), we should recreate
   a new video object copied from old one with necessary changes applied to new one.
+- If provider is grouping w/rt a property, and this property is deleted in property page, provider is not currently updated.

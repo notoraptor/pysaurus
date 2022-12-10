@@ -87,3 +87,23 @@ export function arrayEquals(a, b) {
 		a.every((val, index) => val === b[index])
 	);
 }
+
+/**
+ * Compare two lists of video sources.
+ * Each video source itself is a list of strings.
+ * @param sources1 {Array<Array<string>>} - a list of video sources
+ * @param sources2 {Array<Array<string>>} - another list of video sources
+ * @returns {boolean} - true if source1 == source2
+ */
+export function compareSources(sources1, sources2) {
+	if (sources1.length !== sources2.length) return false;
+	for (let i = 0; i < sources1.length; ++i) {
+		const path1 = sources1[i];
+		const path2 = sources2[i];
+		if (path1.length !== path2.length) return false;
+		for (let j = 0; j < path1.length; ++j) {
+			if (path1[j] !== path2[j]) return false;
+		}
+	}
+	return true;
+}

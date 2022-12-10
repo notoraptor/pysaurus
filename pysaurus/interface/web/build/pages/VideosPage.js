@@ -1,23 +1,7 @@
 System.register(["../utils/constants.js", "../components/MenuPack.js", "../components/Pagination.js", "../components/Video.js", "../forms/FormVideosSource.js", "../forms/FormVideosGrouping.js", "../forms/FormVideosSearch.js", "../forms/FormVideosSort.js", "../components/GroupView.js", "../forms/FormPropertyEditSelectedValues.js", "../forms/FormVideosKeywordsToProperty.js", "../forms/FormSelectedVideosEditProperty.js", "../components/Collapsable.js", "../components/Cross.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/MenuItemRadio.js", "../components/Menu.js", "../utils/Selector.js", "../utils/Action.js", "../utils/Actions.js", "../components/ActionToMenuItem.js", "../components/ActionToSettingIcon.js", "../components/ActionToCross.js", "../utils/backend.js", "../dialogs/FancyBox.js", "./HomePage.js", "../forms/FormDatabaseEditFolders.js", "../dialogs/Dialog.js", "../components/Cell.js", "../forms/FormNewPredictionProperty.js", "../forms/GenericFormRename.js", "../language.js", "../utils/functions.js", "../utils/FancyboxManager.js", "../utils/globals.js"], function (_export, _context) {
   "use strict";
 
-  var FIELD_MAP, PAGE_SIZES, SearchTypeTitle, SOURCE_TREE, MenuPack, Pagination, Video, FormVideosSource, FormVideosGrouping, FormVideosSearch, FormVideosSort, GroupView, FormPropertyEditSelectedValues, FormVideosKeywordsToProperty, FormSelectedVideosEditProperty, Collapsable, Cross, MenuItem, MenuItemCheck, MenuItemRadio, Menu, Selector, Action, Actions, ActionToMenuItem, ActionToSettingIcon, ActionToCross, backend_error, python_call, FancyBox, HomePage, FormDatabaseEditFolders, Dialog, Cell, FormNewPredictionProperty, GenericFormRename, LangContext, tr, arrayEquals, Fancybox, APP_STATE, VideosPage;
-
-  function compareSources(sources1, sources2) {
-    if (sources1.length !== sources2.length) return false;
-
-    for (let i = 0; i < sources1.length; ++i) {
-      const path1 = sources1[i];
-      const path2 = sources2[i];
-      if (path1.length !== path2.length) return false;
-
-      for (let j = 0; j < path1.length; ++j) {
-        if (path1[j] !== path2[j]) return false;
-      }
-    }
-
-    return true;
-  }
+  var FIELD_MAP, PAGE_SIZES, SearchTypeTitle, SOURCE_TREE, MenuPack, Pagination, Video, FormVideosSource, FormVideosGrouping, FormVideosSearch, FormVideosSort, GroupView, FormPropertyEditSelectedValues, FormVideosKeywordsToProperty, FormSelectedVideosEditProperty, Collapsable, Cross, MenuItem, MenuItemCheck, MenuItemRadio, Menu, Selector, Action, Actions, ActionToMenuItem, ActionToSettingIcon, ActionToCross, backend_error, python_call, FancyBox, HomePage, FormDatabaseEditFolders, Dialog, Cell, FormNewPredictionProperty, GenericFormRename, LangContext, tr, arrayEquals, compareSources, Fancybox, APP_STATE, VideosPage;
 
   _export("VideosPage", void 0);
 
@@ -95,6 +79,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
       tr = _languageJs.tr;
     }, function (_utilsFunctionsJs) {
       arrayEquals = _utilsFunctionsJs.arrayEquals;
+      compareSources = _utilsFunctionsJs.compareSources;
     }, function (_utilsFancyboxManagerJs) {
       Fancybox = _utilsFancyboxManagerJs.Fancybox;
     }, function (_utilsGlobalsJs) {

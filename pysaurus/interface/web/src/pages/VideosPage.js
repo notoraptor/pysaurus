@@ -1,9 +1,4 @@
-import {
-	FIELD_MAP,
-	PAGE_SIZES,
-	SearchTypeTitle,
-	SOURCE_TREE,
-} from "../utils/constants.js";
+import { FIELD_MAP, PAGE_SIZES, SearchTypeTitle, SOURCE_TREE } from "../utils/constants.js";
 import { MenuPack } from "../components/MenuPack.js";
 import { Pagination } from "../components/Pagination.js";
 import { Video } from "../components/Video.js";
@@ -36,22 +31,9 @@ import { Cell } from "../components/Cell.js";
 import { FormNewPredictionProperty } from "../forms/FormNewPredictionProperty.js";
 import { GenericFormRename } from "../forms/GenericFormRename.js";
 import { LangContext, tr } from "../language.js";
-import { arrayEquals } from "../utils/functions.js";
+import { arrayEquals, compareSources } from "../utils/functions.js";
 import { Fancybox } from "../utils/FancyboxManager.js";
 import { APP_STATE } from "../utils/globals.js";
-
-function compareSources(sources1, sources2) {
-	if (sources1.length !== sources2.length) return false;
-	for (let i = 0; i < sources1.length; ++i) {
-		const path1 = sources1[i];
-		const path2 = sources2[i];
-		if (path1.length !== path2.length) return false;
-		for (let j = 0; j < path1.length; ++j) {
-			if (path1[j] !== path2[j]) return false;
-		}
-	}
-	return true;
-}
 
 export class VideosPage extends React.Component {
 	constructor(props) {
