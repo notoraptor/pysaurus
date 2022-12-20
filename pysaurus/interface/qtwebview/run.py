@@ -161,21 +161,32 @@ def main():
     sys.excepthook = generate_except_hook(app)
     threading.excepthook = generate_thread_except_hook(app)
     # Set geometry.
-    screen_rect = app.desktop().screen().rect()
+    desktop = app.desktop()
+    dpix = desktop.logicalDpiX()
+    dpiy = desktop.logicalDpiY()
+    screen_rect = desktop.screen().rect()
     screen_center = screen_rect.center()
     width = (7 * screen_rect.width()) // 10
     height = (2 * screen_rect.height()) // 3
     x = screen_center.x() - width // 2
     y = screen_center.y() - height // 2
-    print(f"Window: size {width} x {height}, position ({x}; {y})", file=sys.stderr)
+    print(f"Window: size {width} x {height}", file=sys.stderr)
+    print(f"Window: DPI {dpix} x {dpiy}", file=sys.stderr)
+    print(
+        f"Window: IRL {width * 2.54 / dpix} x {height * 2.54 / dpiy} cm",
+        file=sys.stderr,
+    )
+    print(f"Window: pos ({x}; {y})", file=sys.stderr)
     view = PysaurusQtApplication(geometry=(x, y, width, height))
     # Set zoom.
     if System.is_windows():
-        # view.setZoomFactor(1.8)
-        screen_height = screen_rect.height()
-        base_height = 1080
-        if screen_height > base_height:
-            scale = (screen_height / base_height) * 0.9
+        settings = view.page().settings()
+        font_size = settings.fontSize(settings.FontSize.DefaultFontSize)
+        font_cm = font_size * 2.54 / dpiy
+        # Try to scale so that default font size is at least 0.35 cm height
+        scale = 0.35 / font_cm
+        print("Font", font_size, "cm", font_cm, "scale", scale)
+        if scale > 1:
             print("Scale", scale)
             view.setZoomFactor(scale)
     # Display.

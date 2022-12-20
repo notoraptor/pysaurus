@@ -14,8 +14,8 @@ REGEX_WORD_THEN_NUMBER = re.compile(r"([^0-9 ])([0-9])")
 REGEX_NUMBER_THEN_WORD = re.compile(r"([0-9])([^0-9 ])")
 REGEX_NUMBER = re.compile(r"([0-9]+)")
 REGEX_ATTRIBUTE = re.compile(r"^[a-zA-Z][a-zA-Z0-9_]*$")
-JSON_INTEGER_MIN = -(2 ** 31)
-JSON_INTEGER_MAX = 2 ** 31 - 1
+JSON_INTEGER_MIN = -(2**31)
+JSON_INTEGER_MAX = 2**31 - 1
 
 DISCARDED_CHARACTERS = r"@#\\/?$:!"
 

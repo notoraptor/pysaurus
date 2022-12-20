@@ -77,4 +77,4 @@ class Fraction:
         )
 
     def __pow__(self, power):
-        return Fraction(self.sign * self.num ** power, self.den ** power)
+        return Fraction(self.sign * self.num**power, self.den**power)
