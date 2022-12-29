@@ -28,3 +28,4 @@ new QWebChannel(qt.webChannelTransport, function (channel) {
 		System.import("./build/index.js");
 	});
 });
+window.QT = true;

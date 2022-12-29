@@ -21,10 +21,12 @@ System.register(["./App.js", "./utils/Callbacks.js", "./utils/backend.js"], func
         KEYBOARD_MANAGER.call(event);
       };
 
-      document.body.onunload = function () {
-        console.info("GUI closed!");
-        python_call("close_app");
-      };
+      if (!window.QT) {
+        document.body.onunload = function () {
+          console.info("GUI closed!");
+          python_call("close_app");
+        };
+      }
 
       ReactDOM.render( /*#__PURE__*/React.createElement(App, null), document.getElementById("root"));
     }

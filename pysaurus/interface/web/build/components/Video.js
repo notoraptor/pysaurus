@@ -49,6 +49,7 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
         constructor(props) {
           super(props);
           this.openVideo = this.openVideo.bind(this);
+          this.openVideoSurely = this.openVideoSurely.bind(this);
           this.confirmDeletion = this.confirmDeletion.bind(this);
           this.deleteVideo = this.deleteVideo.bind(this);
           this.openContainingFolder = this.openContainingFolder.bind(this);
@@ -112,7 +113,9 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
             action: this.openVideo
           }, tr("Open file")) : /*#__PURE__*/React.createElement("div", {
             className: "text-center"
-          }, /*#__PURE__*/React.createElement("strong", null, tr("(not found)"))), data.found ? /*#__PURE__*/React.createElement(MenuItem, {
+          }, /*#__PURE__*/React.createElement("strong", null, tr("(not found)"))), data.found && window.PYTHON_HAS_RUNTIME_VLC ? /*#__PURE__*/React.createElement(MenuItem, {
+            action: this.openVideoSurely
+          }, /*#__PURE__*/React.createElement("strong", null, /*#__PURE__*/React.createElement("em", null, tr("Open file anyway")))) : "", data.found ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.openContainingFolder
           }, tr("Open containing folder")) : "", meta_title ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.copyMetaTitle
@@ -322,6 +325,20 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
             APP_STATE.videoHistory.add(this.props.data.filename);
             this.props.onInfo(tr("Opened: {path}", {
               path: this.props.data.filename
+            }));
+          }).catch(error => {
+            backend_error(error);
+            this.props.onInfo(tr("Unable to open: {path}", {
+              path: this.props.data.filename
+            }));
+          });
+        }
+
+        openVideoSurely() {
+          python_call("open_video_surely", this.props.data.video_id).then(url => {
+            APP_STATE.videoHistory.add(this.props.data.filename);
+            this.props.onInfo(tr("Opened: {path}", {
+              path: url ? url : this.props.data.filename
             }));
           }).catch(error => {
             backend_error(error);

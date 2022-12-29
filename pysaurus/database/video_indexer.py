@@ -5,6 +5,9 @@ from pysaurus.core.functions import string_to_pieces
 from pysaurus.database.video import Video
 
 
+EMPTY_SET = set()
+
+
 class VideoIndexer:
     __slots__ = ("term_to_filenames", "filename_to_terms")
 
@@ -30,14 +33,14 @@ class VideoIndexer:
     def _remove_filename(self, filename: AbsolutePath) -> List[str]:
         old_terms = self.filename_to_terms.pop(filename)
         for term in old_terms:
-            self._remove_term_to_filename(term, filename)
+            if (
+                term in self.term_to_filenames
+                and filename in self.term_to_filenames[term]
+            ):
+                self.term_to_filenames[term].remove(filename)
+                if not self.term_to_filenames[term]:
+                    del self.term_to_filenames[term]
         return old_terms
-
-    def _remove_term_to_filename(self, term: str, filename: AbsolutePath):
-        if term in self.term_to_filenames and filename in self.term_to_filenames[term]:
-            self.term_to_filenames[term].remove(filename)
-            if not self.term_to_filenames[term]:
-                del self.term_to_filenames[term]
 
     def update_video(self, video: Video):
         self.remove_video(video)
@@ -58,5 +61,27 @@ class VideoIndexer:
     def get_index(self) -> Dict[str, Set[AbsolutePath]]:
         return self.term_to_filenames
 
-    def filename_has_terms_exact(self, filename: AbsolutePath, terms: Sequence[str]):
-        return " ".join(terms) in " ".join(self.filename_to_terms[filename])
+    def query_and(
+        self, filenames: Iterable[AbsolutePath], terms: Sequence[str]
+    ) -> Set[AbsolutePath]:
+        return set.intersection(
+            set(filenames),
+            *(self.term_to_filenames.get(term, EMPTY_SET) for term in terms),
+        )
+
+    def query_exact(
+        self, filenames: Iterable[AbsolutePath], terms: Sequence[str]
+    ) -> Iterable[AbsolutePath]:
+        joined_terms = " ".join(terms)
+        return (
+            filename
+            for filename in self.query_and(filenames, terms)
+            if joined_terms in " ".join(self.filename_to_terms[filename])
+        )
+
+    def query_or(
+        self, filenames: Iterable[AbsolutePath], terms: Sequence[str]
+    ) -> Set[AbsolutePath]:
+        return set(filenames) & set.union(
+            *(self.term_to_filenames.get(term, EMPTY_SET) for term in terms)
+        )

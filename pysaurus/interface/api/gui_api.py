@@ -1,5 +1,7 @@
 import multiprocessing
+import os
 import queue
+import subprocess
 import threading
 import time
 from abc import abstractmethod
@@ -10,6 +12,7 @@ from pysaurus.core.classes import Runnable
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.file_copier import FileCopier
 from pysaurus.core.functions import launch_thread
+from pysaurus.core.modules import System
 from pysaurus.core.notifications import (
     Cancelled,
     DatabaseReady,
@@ -22,11 +25,18 @@ from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
 from pysaurus.database import pattern_detection
 from pysaurus.database.db_features import DbFeatures
+from pysaurus.database.video_server import ServerLauncher
 from pysaurus.interface.api import tk_utils
 from pysaurus.interface.api.feature_api import FeatureAPI
 from pysaurus.interface.api.parallel_notifier import ParallelNotifier
 
 process = Runnable("_launch")
+
+
+if System.is_windows():
+    VLC_PATH = r"C:\Program Files\VideoLAN\VLC\vlc.exe"
+else:
+    VLC_PATH = "vlc"
 
 
 class GuiAPI(FeatureAPI):
@@ -38,6 +48,7 @@ class GuiAPI(FeatureAPI):
         "copy_work",
         "monitor_notifications",
         "tk_utils",
+        "server",
     )
 
     def __init__(self, monitor_notifications=True):
@@ -50,6 +61,8 @@ class GuiAPI(FeatureAPI):
         self.notifier.call_default_if_no_manager()
         self.monitor_notifications = monitor_notifications
         self.tk_utils = tk_utils
+        self.server = ServerLauncher(lambda: self.database)
+        self.server.start()
         self._proxies.update(
             {
                 "clipboard": "tk_utils.clipboard_set",
@@ -59,7 +72,41 @@ class GuiAPI(FeatureAPI):
             }
         )
 
+    @property
+    def PYTHON_HAS_RUNTIME_VLC(self):
+        if System.is_windows():
+            vlc_win_path = VLC_PATH
+            return os.path.isfile(vlc_win_path)
+        else:
+            # TODO
+            return False
+
+    @property
+    def PYTHON_SERVER_HOSTNAME(self):
+        return self.server.server_thread.hostname
+
+    @property
+    def PYTHON_SERVER_PORT(self):
+        return self.server.server_thread.port
+
     # Public tasks
+
+    def open_from_server(self, video_id):
+        url = f"http://{self.PYTHON_SERVER_HOSTNAME}:{self.PYTHON_SERVER_PORT}/video/{video_id}"
+        print("Running", VLC_PATH, url)
+
+        def play():
+            subprocess.run([VLC_PATH, url])
+
+        self._run_thread(play)
+        return url
+
+    def open_video_surely(self, video_id: int):
+        try:
+            self.database.open_video(video_id)
+            return None
+        except OSError:
+            return self.open_from_server(video_id)
 
     def create_prediction_property(self, prop_name):
         self.database.create_prop_type(f"<?{prop_name}>", int, [-1, 0, 1], False)
@@ -80,6 +127,7 @@ class GuiAPI(FeatureAPI):
         return self.get_app_state()
 
     def close_app(self):
+        print("Closing app ...")
         # Close threads.
         self.threads_stop_flag = True
         if self.monitor_thread:
@@ -90,6 +138,8 @@ class GuiAPI(FeatureAPI):
         self.notifier.queue = None
         self.notifier = None
         self.multiprocessing_manager = None
+        # Close server.
+        self.server.stop()
         # App closed.
         print("App closed.")
 

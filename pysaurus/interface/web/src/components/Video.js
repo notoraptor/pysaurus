@@ -24,6 +24,7 @@ export class Video extends React.Component {
 	constructor(props) {
 		super(props);
 		this.openVideo = this.openVideo.bind(this);
+		this.openVideoSurely = this.openVideoSurely.bind(this);
 		this.confirmDeletion = this.confirmDeletion.bind(this);
 		this.deleteVideo = this.deleteVideo.bind(this);
 		this.openContainingFolder = this.openContainingFolder.bind(this);
@@ -85,6 +86,15 @@ export class Video extends React.Component {
 										<div className="text-center">
 											<strong>{tr("(not found)")}</strong>
 										</div>
+									)}
+									{data.found && window.PYTHON_HAS_RUNTIME_VLC ? (
+										<MenuItem action={this.openVideoSurely}>
+											<strong>
+												<em>{tr("Open file anyway")}</em>
+											</strong>
+										</MenuItem>
+									) : (
+										""
 									)}
 									{data.found ? (
 										<MenuItem action={this.openContainingFolder}>
@@ -431,6 +441,26 @@ export class Video extends React.Component {
 				this.props.onInfo(
 					tr("Opened: {path}", {
 						path: this.props.data.filename,
+					})
+				);
+			})
+			.catch((error) => {
+				backend_error(error);
+				this.props.onInfo(
+					tr("Unable to open: {path}", {
+						path: this.props.data.filename,
+					})
+				);
+			});
+	}
+
+	openVideoSurely() {
+		python_call("open_video_surely", this.props.data.video_id)
+			.then((url) => {
+				APP_STATE.videoHistory.add(this.props.data.filename);
+				this.props.onInfo(
+					tr("Opened: {path}", {
+						path: url ? url : this.props.data.filename,
 					})
 				);
 			})

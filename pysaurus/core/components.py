@@ -180,6 +180,8 @@ class AbsolutePath:
                 from pysaurus.core.native.windows import get_short_path_name
 
                 path = get_short_path_name(self.standard_path)
+                if path is None:
+                    raise core_exceptions.NoShortPathError(self.__path)
                 print("AbsolutePath: opening Windows short path", path, file=sys.stderr)
             else:
                 path = self.__path
@@ -188,7 +190,8 @@ class AbsolutePath:
             raise core_exceptions.UnsupportedSystemError(System.platform())
         return self
 
-    def locate_file(self):
+    def locate_file_old(self):
+        # NB: Windows: does not work with very long paths in exFAT file systems.
         if System.is_windows():
             command = f'explorer /select,"{self.__path}"'
         elif System.is_mac():
@@ -209,6 +212,13 @@ class AbsolutePath:
 STDOUT: {stdout.strip()}
 STDERR: {stderr.strip()}"""
             )
+        return self.get_directory()
+
+    def locate_file(self):
+        # https://pypi.org/project/show-in-file-manager/
+        from showinfm import show_in_file_manager
+
+        show_in_file_manager(self.standard_path)
         return self.get_directory()
 
     def open_containing_folder(self):

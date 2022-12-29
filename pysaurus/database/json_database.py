@@ -214,33 +214,18 @@ class JsonDatabase:
                 filenames: Dict[AbsolutePath, Video] = {
                     video.filename: video for video in videos
                 }
-            empty_set = set()
-            term_to_filenames = self.indexer.get_index()
             terms = functions.string_to_pieces(text)
             if cond == "exact":
-                selection_and: Iterable[AbsolutePath] = set.intersection(
-                    set(filenames),
-                    *(term_to_filenames.get(term, empty_set) for term in terms),
-                )
-                selection: Iterable[AbsolutePath] = (
-                    filename
-                    for filename in selection_and
-                    if self.indexer.filename_has_terms_exact(filename, terms)
-                )
+                selection = self.indexer.query_exact(filenames, terms)
             elif cond == "and":
-                selection: Iterable[AbsolutePath] = set.intersection(
-                    set(filenames),
-                    *(term_to_filenames.get(term, empty_set) for term in terms),
-                )
+                selection = self.indexer.query_and(filenames, terms)
             elif cond == "or":
-                selection: Iterable[AbsolutePath] = set(filenames) & set.union(
-                    *(term_to_filenames.get(term, empty_set) for term in terms)
-                )
+                selection = self.indexer.query_or(filenames, terms)
             else:
                 assert cond == "id"
                 (term,) = terms
                 video_id = int(term)
-                selection: Iterable[AbsolutePath] = (
+                selection = (
                     [self.id_to_video[video_id].filename]
                     if video_id in self.id_to_video
                     else []

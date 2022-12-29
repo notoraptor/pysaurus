@@ -4,12 +4,12 @@ import sqlite3
 class Database:
     __slots__ = ("connection", "cursor")
 
-    def __init__(self, script_path: str, path: str):
+    def __init__(self, script_path: str, db_path: str):
         """
         Open (or create) and populate tables (if necessary)
         in database at given path.
         """
-        self.connection = sqlite3.connect(path)
+        self.connection = sqlite3.connect(db_path)
         self.connection.row_factory = sqlite3.Row
         self.cursor = self.connection.cursor()
         self.cursor.arraysize = 1000

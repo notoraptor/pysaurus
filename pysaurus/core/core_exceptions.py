@@ -12,3 +12,7 @@ class ZeroLengthError(ArithmeticError):
 
 class DiskSpaceError(OSError):
     pass
+
+
+class NoShortPathError(WindowsError):
+    pass

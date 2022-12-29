@@ -134,9 +134,14 @@ class PysaurusQtApplication(QWebEngineView):
             assert len(geometry) == 4
             self.setGeometry(*geometry)
 
+    def closeEvent(self, close_event) -> None:
+        self.interface.api.close_app()
+        return super().closeEvent(close_event)
+
 
 def generate_except_hook(qapp):
     def except_hook(cls, exception, trace):
+        print("[Qt] Error occuring.", file=sys.stderr)
         sys.__excepthook__(cls, exception, trace)
         qapp.exit(1)
 
