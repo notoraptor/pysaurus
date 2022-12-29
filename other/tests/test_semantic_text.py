@@ -1,4 +1,4 @@
-from pysaurus.database.semantic_text import (
+from pysaurus.core.semantic_text import (
     SemanticText,
     separate_characters_and_numbers,
 )

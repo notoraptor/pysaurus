@@ -1,5 +1,5 @@
 import itertools
-from typing import Optional
+from typing import Optional, Iterable, Union
 
 
 class CharClass:
@@ -28,7 +28,16 @@ class CharClass:
         self.char = char
         self.cls = cls
         self.rank = rnk
-        self.lower_rank = ord(char.lower()) if cls == self.CLS_ALPHA else None
+        self.lower_rank = ord(char.lower()) if cls == self.CLS_ALPHA else 0
+
+    def __hash__(self):
+        return hash(self.char)
+
+    def __eq__(self, other):
+        return self.char == other.char
+
+    def __lt__(self, other):
+        return (self.lower_rank - other.lower_rank or self.rank - other.rank) < 0
 
     def is_digit(self):
         return self.cls != self.CLS_ALPHA
@@ -68,7 +77,7 @@ class DigitAccumulator:
         return number
 
 
-def separate_characters_and_numbers(text: str):
+def separate_characters_and_numbers(text: str) -> Iterable[Union[CharClass, int]]:
     accumulator = DigitAccumulator()
     for character in text:
         wrapper = CharClass(character)
@@ -76,7 +85,7 @@ def separate_characters_and_numbers(text: str):
         if number is not None:
             yield number
         if wrapper.is_alpha():
-            yield character
+            yield wrapper
     number = accumulator.append(None)
     if number is not None:
         yield number
@@ -99,7 +108,7 @@ class SemanticText:
 
     __repr__ = __str__
 
-    def __lt__(self, other):
+    def _is_lesser_than(self, other):
         for e1, e2 in itertools.zip_longest(
             separate_characters_and_numbers(self.value),
             separate_characters_and_numbers(other.value),
@@ -118,3 +127,11 @@ class SemanticText:
             else:
                 return False
         return False
+
+    def __lt__(self, other):
+        ret = self._is_lesser_than(other)
+        print("=" * 80)
+        print("\t", self)
+        print("\t", "<" if ret else ">=")
+        print("\t", other)
+        return ret

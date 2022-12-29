@@ -23,7 +23,7 @@ from pysaurus.core.functions import (
 )
 from pysaurus.core.jsonable import Jsonable
 from pysaurus.core.modules import FNV64
-from pysaurus.database.semantic_text import SemanticText
+from pysaurus.core.semantic_text import SemanticText
 from pysaurus.database.video_runtime_info import VideoRuntimeInfo
 from pysaurus.database.video_sorting import VideoSorting
 
@@ -179,7 +179,7 @@ class Video(Jsonable):
         if self.meta_title
         else self.file_title_numeric
     )
-    filename_numeric = property(lambda self: SemanticText(self.filename.path))
+    filename_numeric = property(lambda self: SemanticText(self.filename.standard_path))
     meta_title_numeric = property(lambda self: SemanticText(self.meta_title.value))
     raw_seconds = property(lambda self: self.duration / self.duration_time_base)
     raw_microseconds = property(
