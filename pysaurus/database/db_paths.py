@@ -13,6 +13,7 @@ class DbPaths:
         "json_path",
         "miniatures_path",
         "log_path",
+        "index_path",
     )
 
     def __init__(self, path: PathType, create_thumb_folder=True):
@@ -21,6 +22,7 @@ class DbPaths:
         self.json_path = new_sub_file(self.db_folder, "json")
         self.miniatures_path = new_sub_file(self.db_folder, "miniatures.json")
         self.log_path = new_sub_file(self.db_folder, "log")
+        self.index_path = new_sub_file(self.db_folder, "db")
         if create_thumb_folder:
             self.thumb_folder.mkdir()
 
@@ -40,6 +42,8 @@ class DbPaths:
             FileSystem.rename(self.miniatures_path.path, new_paths.miniatures_path.path)
         if self.log_path.exists():
             FileSystem.rename(self.log_path.path, new_paths.log_path.path)
+        if self.index_path.exists():
+            FileSystem.rename(self.index_path.path, new_paths.index_path.path)
         self.db_folder.delete()
         print("Deleted", self.db_folder, file=sys.stderr)
         return new_paths

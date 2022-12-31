@@ -9,7 +9,12 @@ class Database:
         Open (or create) and populate tables (if necessary)
         in database at given path.
         """
-        self.connection = sqlite3.connect(db_path)
+        # NB: We must set check_same_thread to False, otherwise
+        # we may get following error:
+        # sqlite3.ProgrammingError:
+        # SQLite objects created in a thread can only be used in that same thread.
+        # The object was created in thread id <> and this is thread id <>.
+        self.connection = sqlite3.connect(db_path, check_same_thread=False)
         self.connection.row_factory = sqlite3.Row
         self.cursor = self.connection.cursor()
         self.cursor.arraysize = 1000

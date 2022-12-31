@@ -7,6 +7,7 @@ from pysaurus.core.notifications import Notification
 from pysaurus.core.notifier import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
+from pysaurus.database.abstract_video_indexer import AbstractVideoIndexer
 from pysaurus.database.db_cache import DbCache
 from pysaurus.database.db_settings import DbSettings
 from pysaurus.database.db_video_attribute import (
@@ -76,6 +77,7 @@ class JsonDatabase:
         path: PathType,
         folders: Optional[Iterable[PathType]] = None,
         notifier: Notifier = DEFAULT_NOTIFIER,
+        indexer: AbstractVideoIndexer = None,
     ):
         # Private data
         self.__backup = JsonBackup(path)
@@ -93,7 +95,7 @@ class JsonDatabase:
         self.id_to_video: Dict[int, Video] = {}
         self.quality_attribute = QualityAttribute(self)
         self.moves_attribute = PotentialMoveAttribute(self)
-        self.indexer = VideoIndexer()
+        self.indexer = indexer or VideoIndexer()
         # Initialize
         self.__load(folders)
         with Profiler("build index", self.notifier):

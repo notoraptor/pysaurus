@@ -26,6 +26,7 @@ from pysaurus.database.json_database import JsonDatabase
 from pysaurus.database.miniature_tools.group_computer import GroupComputer
 from pysaurus.database.miniature_tools.miniature import Miniature
 from pysaurus.database.special_properties import SpecialProperties
+from pysaurus.database.sql_index.sql_video_indexer import SqlVideoIndexer
 from pysaurus.database.utils import generate_temp_file_path
 from pysaurus.database.video import Video
 from pysaurus.database.video_runtime_info import VideoRuntimeInfo
@@ -55,7 +56,12 @@ class Database(JsonDatabase):
         notifier = notifier or DEFAULT_NOTIFIER
         notifier.set_log_path(self.__paths.log_path.path)
         # Load database
-        super().__init__(self.__paths.json_path, folders, notifier)
+        super().__init__(
+            self.__paths.json_path,
+            folders,
+            notifier,
+            indexer=SqlVideoIndexer(self.__paths.index_path.path),
+        )
         # Set special properties
         with Profiler("install special properties", notifier=self.notifier):
             SpecialProperties.install(self)

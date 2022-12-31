@@ -2,13 +2,13 @@ from typing import Dict, Iterable, List, Sequence, Set
 
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.functions import string_to_pieces
+from pysaurus.database.abstract_video_indexer import AbstractVideoIndexer
 from pysaurus.database.video import Video
-
 
 EMPTY_SET = set()
 
 
-class VideoIndexer:
+class VideoIndexer(AbstractVideoIndexer):
     __slots__ = ("term_to_filenames", "filename_to_terms")
 
     def __init__(self):
@@ -27,10 +27,7 @@ class VideoIndexer:
         for term in terms:
             self.term_to_filenames.setdefault(term, set()).add(video.filename)
 
-    def remove_video(self, video: Video):
-        self._remove_filename(video.filename)
-
-    def _remove_filename(self, filename: AbsolutePath) -> List[str]:
+    def _remove_filename(self, filename: AbsolutePath, pop=False) -> List[str]:
         old_terms = self.filename_to_terms.pop(filename)
         for term in old_terms:
             if (
@@ -40,14 +37,11 @@ class VideoIndexer:
                 self.term_to_filenames[term].remove(filename)
                 if not self.term_to_filenames[term]:
                     del self.term_to_filenames[term]
-        return old_terms
-
-    def update_video(self, video: Video):
-        self.remove_video(video)
-        self.add_video(video)
+        if pop:
+            return old_terms
 
     def replace_path(self, video: Video, old_path: AbsolutePath):
-        all_old_terms = self._remove_filename(old_path)
+        all_old_terms = self._remove_filename(old_path, pop=True)
         old_terms = string_to_pieces(str(old_path), as_set=True)
         new_terms = string_to_pieces(str(video.filename), as_set=True)
         pure_old_terms = old_terms - new_terms
