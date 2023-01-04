@@ -1,4 +1,5 @@
 import logging
+import os
 from typing import Dict, Iterable, List, Sequence, Set
 
 from pysaurus.core.components import AbsolutePath
@@ -12,27 +13,62 @@ logger = logging.getLogger(__name__)
 
 class SqlVideoIndexer(AbstractVideoIndexer):
 
-    __slots__ = ("database",)
-    TABLE = "filename_to_term"
+    __slots__ = ("database", "_to_build")
 
     def __init__(self, db_path: str):
+        self._to_build = not os.path.exists(db_path)
         self.database = VideoTermIndexDatabase(db_path)
         logger.info("New SQL video indexer")
 
     def build(self, videos: Iterable[Video]):
-        for video in videos:
-            self.add_video(video)
+        if self._to_build:
+            all_filenames = []
+            filename_id_to_terms = []
+            unique_terms = set()
+            for video in videos:
+                video_terms = video.terms()
+                all_filenames.append(video.filename.path)
+                filename_id_to_terms.append(video_terms)
+                unique_terms.update(video_terms)
+            all_terms = sorted(unique_terms)
+            term_to_id = {term: term_id for term_id, term in enumerate(all_terms)}
+            self.database.modify(
+                "INSERT INTO filename (filename_id, filename) " "VALUES (?, ?)",
+                enumerate(all_filenames),
+                many=True,
+            )
+            self.database.modify(
+                "INSERT INTO term (term_id, term) VALUES (?, ?)",
+                enumerate(all_terms),
+                many=True,
+            )
+            for (filename_id, terms) in enumerate(filename_id_to_terms):
+                logger.info(f"Indexing: {all_filenames[filename_id]}")
+                self.database.modify(
+                    "INSERT INTO filename_to_term (filename_id, term_id, term_rank) "
+                    "VALUES (?, ?, ?)",
+                    (
+                        (filename_id, term_to_id[term], term_rank)
+                        for term_rank, term in enumerate(terms)
+                    ),
+                    many=True,
+                )
+            self._to_build = False
 
     def add_video(self, video: Video):
-        if self.database.count_from_values(
-            self.TABLE, "filename", filename=video.filename.path
-        ):
-            logger.info(f"Video already indexed: {video.filename.path}")
-            return
         logger.info(f"Video indexing: {video.filename.path}")
+        filename_id = self.database.modify(
+            "INSERT INTO filename (filename) VALUES (?)", [video.filename.path]
+        )
         for term_rank, term in enumerate(video.terms()):
+            term_id = self.database.select_id_from_values(
+                "term", "term_id", term=term
+            ) or self.database.insert("term", term=term)
             self.database.insert(
-                self.TABLE, filename=video.filename.path, term=term, term_rank=term_rank
+                "filename_to_term",
+                filename_id=filename_id,
+                term_id=term_id,
+                term_rank=term_rank,
             )
 
     def _remove_filename(self, filename: AbsolutePath, pop=False) -> List[str]:
@@ -41,28 +77,29 @@ class SqlVideoIndexer(AbstractVideoIndexer):
             old_terms = [
                 row["term"]
                 for row in self.database.query(
-                    "SELECT term FROM filename_to_term "
-                    "WHERE filename = ? ORDER BY term_rank ASC",
+                    "SELECT t.term FROM term AS t "
+                    "JOIN filename_to_term AS j ON t.term_id = j.term_id "
+                    "JOIN filename AS f ON j.filename_id = f.filename_id "
+                    "WHERE f.filename = ? "
+                    "ORDER BY t.term_rank ASC",
                     [filename.path],
                 )
             ]
-        self.database.modify(
-            "DELETE FROM filename_to_term WHERE filename = ?", [filename.path]
-        )
+        self.database.modify("DELETE FROM filename WHERE filename = ?", [filename.path])
         if pop:
             return old_terms
 
     def replace_path(self, video: Video, old_path: AbsolutePath):
-        self.database.modify(
-            "DELETE FROM filename_to_term WHERE filename = ?", [old_path.path]
-        )
+        self.database.modify("DELETE FROM filename WHERE filename = ?", [old_path.path])
         self.add_video(video)
 
     def get_index(self) -> Dict[str, Set[AbsolutePath]]:
         index = {}
         for row in self.database.query(
-            "SELECT filename, term FROM filename_to_term "
-            "ORDER BY filename ASC, term_rank ASC"
+            "SELECT f.filename, t.term FROM filename AS f "
+            "JOIN filename_to_term AS j ON f.filename_id = j.filename_id "
+            "JOIN term AS t ON j.term_id = t.term_id "
+            "ORDER BY f.filename ASC, t.term_rank ASC"
         ):
             index.setdefault(AbsolutePath(row["filename"]), []).append(row["term"])
         return index
@@ -71,7 +108,11 @@ class SqlVideoIndexer(AbstractVideoIndexer):
         return (
             AbsolutePath(row["filename"])
             for row in self.database.query(
-                "SELECT filename FROM filename_to_term WHERE term = ?", [term]
+                "SELECT f.filename AS filename FROM filename AS f "
+                "JOIN filename_to_term AS j ON f.filename_id = j.filename_id "
+                "JOIN term AS t ON j.term_id = t.term_id "
+                "WHERE t.term = ?",
+                [term],
             )
         )
 
@@ -89,7 +130,11 @@ class SqlVideoIndexer(AbstractVideoIndexer):
         filenames = set(filenames)
         first_term, *other_terms = terms
         for row in self.database.query_all(
-            "SELECT filename, term_rank FROM filename_to_term WHERE term = ?",
+            "SELECT f.filename AS filename, j.term_rank AS term_rank "
+            "FROM filename AS f "
+            "JOIN filename_to_term AS j ON f.filename_id = j.filename_id "
+            "JOIN term AS t ON j.term_id = t.term_id "
+            "WHERE t.term = ?",
             [first_term],
         ):
             filename = AbsolutePath(row["filename"])
@@ -97,13 +142,15 @@ class SqlVideoIndexer(AbstractVideoIndexer):
             if filename in filenames:
                 found = True
                 for i, other_term in enumerate(other_terms):
-                    if not self.database.count_from_values(
-                        self.TABLE,
-                        "filename",
-                        filename=filename.path,
-                        term=other_term,
-                        term_rank=term_rank + i + 1,
-                    ):
+                    row_count = self.database.query_one(
+                        "SELECT COUNT(j.filename_id) AS count "
+                        "FROM filename AS f "
+                        "JOIN filename_to_term AS j ON f.filename_id = j.filename_id "
+                        "JOIN term AS t ON j.term_id = t.term_id "
+                        "WHERE f.filename = ? AND t.term = ? AND j.term_rank = ?",
+                        [filename.path, other_term, term_rank + i + 1],
+                    )
+                    if not row_count["count"]:
                         found = False
                         break
                 if found:

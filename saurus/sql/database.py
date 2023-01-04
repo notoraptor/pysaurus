@@ -22,12 +22,15 @@ class Database:
             self.cursor.executescript(script_file.read())
             self.connection.commit()
 
-    def modify(self, query, parameters=()):
+    def modify(self, query, parameters=(), many=False):
         """
         Execute a modification query (INSERT, UPDATE, etc).
         Return last inserted row ID, or None if no row was inserted.
         """
-        self.cursor.execute(query, parameters)
+        if many:
+            self.cursor.executemany(query, parameters)
+        else:
+            self.cursor.execute(query, parameters)
         self.connection.commit()
         return self.cursor.lastrowid
 
