@@ -124,9 +124,6 @@ class DatabaseReady(Terminated):
     __slots__ = ()
 
 
-# Database changes.
-
-
 class VideoDeleted(Notification):
     __slots__ = ("video",)
 

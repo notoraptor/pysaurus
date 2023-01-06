@@ -7,13 +7,14 @@ from typing import Dict, Iterable, List, Optional, Set, Tuple
 import ujson as json
 
 from pysaurus.application import exceptions
-from pysaurus.core import functions, job_notifications, notifications
+from pysaurus.core import functions, notifications
 from pysaurus.core.components import (
     AbsolutePath,
     DateModified,
     PathType,
 )
 from pysaurus.core.constants import CPU_COUNT, JPEG_EXTENSION, THUMBNAIL_EXTENSION
+from pysaurus.core.job_notifications import notify_job_start
 from pysaurus.core.job_utils import run_split_batch
 from pysaurus.core.modules import FileSystem, ImageUtils
 from pysaurus.core.notifier import DEFAULT_NOTIFIER, Notifier
@@ -21,7 +22,7 @@ from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
 from pysaurus.database import jobs_python
 from pysaurus.database.db_paths import DbPaths
-from pysaurus.database.jobs_python import job_image_to_jpeg
+from pysaurus.database.jobs_python import compress_thumbnails_to_jpeg
 from pysaurus.database.json_database import JsonDatabase
 from pysaurus.database.miniature_tools.group_computer import GroupComputer
 from pysaurus.database.miniature_tools.miniature import Miniature
@@ -153,18 +154,21 @@ class Database(JsonDatabase):
         if not files_to_update:
             return
 
-        job_notifier = job_notifications.CollectVideoInfos(
-            len(files_to_update), self.notifier
+        notify_job_start(
+            self.notifier,
+            backend_raptor.collect_video_info,
+            len(files_to_update),
+            "videos",
         )
         with Profiler(
             self.lang.profile_collect_video_infos.format(cpu_count=CPU_COUNT),
             notifier=self.notifier,
         ):
             results = run_split_batch(
-                backend_raptor.backend_video_infos,
+                backend_raptor.collect_video_info,
                 files_to_update,
                 CPU_COUNT,
-                [self.__paths.db_folder, job_notifier],
+                [self.__paths.db_folder, self.notifier],
             )
 
         videos = {}
@@ -268,8 +272,11 @@ class Database(JsonDatabase):
         del valid_thumb_names
         self.save()
 
-        job_notifier = job_notifications.CollectVideoThumbnails(
-            nb_videos_no_thumbs, self.notifier
+        notify_job_start(
+            self.notifier,
+            backend_raptor.collect_video_thumbnails,
+            nb_videos_no_thumbs,
+            "videos",
         )
         with Profiler(
             title=self.lang.profile_collect_video_thumbnails.format(
@@ -278,7 +285,7 @@ class Database(JsonDatabase):
             notifier=self.notifier,
         ):
             results = run_split_batch(
-                backend_raptor.backend_video_thumbnails,
+                backend_raptor.collect_video_thumbnails,
                 [
                     (video.filename.path, video.thumb_name)
                     for video in videos_without_thumbs
@@ -287,7 +294,7 @@ class Database(JsonDatabase):
                 [
                     self.__paths.db_folder,
                     self.__paths.thumb_folder.best_path,
-                    job_notifier,
+                    self.notifier,
                 ],
             )
 
@@ -341,17 +348,17 @@ class Database(JsonDatabase):
             if video.filename not in identifiers
         ]
 
-        job_notifier = job_notifications.CollectVideoMiniatures(
-            len(tasks), self.notifier
+        notify_job_start(
+            self.notifier, jobs_python.generate_video_miniatures, len(tasks), "videos"
         )
         if tasks:
             have_added = True
             with Profiler(self.lang.profile_generate_miniatures, self.notifier):
                 results = run_split_batch(
-                    jobs_python.job_generate_miniatures,
+                    jobs_python.generate_video_miniatures,
                     tasks,
                     CPU_COUNT,
-                    [job_notifier],
+                    [self.notifier],
                 )
             for local_array in results:
                 added_miniatures.extend(local_array)
@@ -412,12 +419,12 @@ class Database(JsonDatabase):
         if not png_paths:
             self.notifier.notify(notifications.Message("no thumbnail to compress"))
             return
-        job_notifier = job_notifications.CompressThumbnailsToJpeg(
-            len(png_paths), self.notifier
+        notify_job_start(
+            self.notifier, compress_thumbnails_to_jpeg, len(png_paths), "PNG thumbnails"
         )
-        tasks = [(path, i, job_notifier) for i, path in enumerate(png_paths)]
+        tasks = [(path, i, self.notifier) for i, path in enumerate(png_paths)]
         with Pool(CPU_COUNT) as p:
-            list(p.imap_unordered(job_image_to_jpeg, tasks))
+            list(p.imap_unordered(compress_thumbnails_to_jpeg, tasks))
 
     def rename(self, new_name) -> None:
         self.__paths = self.__paths.renamed(new_name)

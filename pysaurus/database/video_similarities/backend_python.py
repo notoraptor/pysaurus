@@ -1,8 +1,8 @@
 from multiprocessing import Pool
 from typing import List
 
-from pysaurus.core import job_notifications
 from pysaurus.core.constants import USABLE_CPU_COUNT
+from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.miniature_tools.miniature import Miniature
 
@@ -117,7 +117,7 @@ def compare_faster(
 
 
 def _comparison_jobs(
-    miniatures: List[Miniature], edges, limit: float, mds: int, job_notifier
+    miniatures: List[Miniature], edges, limit: float, mds: int, notifier
 ):
     nb_sequences = len(miniatures)
     for i in range(nb_sequences):
@@ -125,10 +125,12 @@ def _comparison_jobs(
             if edges[i * nb_sequences + j]:
                 edges[i * nb_sequences + j] = 0
                 yield miniatures[i], miniatures[j], i, j, limit, mds
-        job_notifier.progress(None, i + 1, nb_sequences)
+        notify_job_progress(
+            notifier, _compare_miniatures_from_python, None, i + 1, nb_sequences
+        )
 
 
-def _job_compare(job):
+def _compare_miniatures_from_python(job):
     mi, mj, i, j, limit, mds = job
     ok = compare_faster(mi, mj, mi.width, mi.height, mds) >= limit
     return (i, j) if ok else None
@@ -139,8 +141,11 @@ def classify_similarities_directed(miniatures, edges, limit, database):
     width = miniatures[0].width
     height = miniatures[0].height
     maximum_distance_score = SIMPLE_MAX_PIXEL_DISTANCE * width * height
-    job_notifier = job_notifications.CompareMiniaturesFromPython(
-        nb_sequences, database.notifier
+    notify_job_start(
+        database.notifier,
+        _compare_miniatures_from_python,
+        nb_sequences,
+        "videos (Python comparison)",
     )
     with Profiler(
         database.lang.profile_classify_similarities_python.format(
@@ -151,9 +156,13 @@ def classify_similarities_directed(miniatures, edges, limit, database):
         with Pool(USABLE_CPU_COUNT) as p:
             raw_output = list(
                 p.imap(
-                    _job_compare,
+                    _compare_miniatures_from_python,
                     _comparison_jobs(
-                        miniatures, edges, limit, maximum_distance_score, job_notifier
+                        miniatures,
+                        edges,
+                        limit,
+                        maximum_distance_score,
+                        database.notifier,
                     ),
                     chunksize=100,
                 )

@@ -1,7 +1,7 @@
 from typing import List
 
 from pysaurus.application.application import Application
-from pysaurus.database.machine_learning import predict, train
+from pysaurus.database.machine_learning import optimize_pattern_predictor, predict
 from pysaurus.database.miniature_tools.miniature import Miniature
 from pysaurus.database.video import Video
 
@@ -28,7 +28,7 @@ def main():
     for video_id, y in video_id_to_class.items():
         miniatures.append(video_id_to_miniature[video_id])
         classes.append(video_id_to_class[video_id])
-    theta = train(miniatures, classes)
+    theta = optimize_pattern_predictor(miniatures, classes)
     print("Predictions:")
     for i, (x, y) in enumerate(zip(miniatures, classes)):
         p = predict(x, theta)

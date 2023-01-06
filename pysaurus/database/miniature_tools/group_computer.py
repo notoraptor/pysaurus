@@ -1,9 +1,9 @@
 from multiprocessing import Pool
 from typing import List
 
-from pysaurus.core import job_notifications
 from pysaurus.core.classes import AbstractMatrix
 from pysaurus.core.constants import CPU_COUNT
+from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
 from pysaurus.core.notifier import DEFAULT_NOTIFIER
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.miniature_tools.decomposed_miniature import (
@@ -98,11 +98,16 @@ class GroupComputer:
             if len(group) >= self.group_min_size
         ]
 
-    def async_compute(self, context) -> DecomposedMiniature:
-        jobn: job_notifications.CollectMiniatureGroups
-        index_task, miniature, nb_all_tasks, jobn = context
+    def collect_miniature_groups(self, context) -> DecomposedMiniature:
+        index_task, miniature, nb_all_tasks, notifier = context
         if (index_task + 1) % self.print_step == 0:
-            jobn.progress(None, index_task + 1, nb_all_tasks)
+            notify_job_progress(
+                notifier,
+                self.collect_miniature_groups,
+                None,
+                index_task + 1,
+                nb_all_tasks,
+            )
         return DecomposedMiniature(miniature.identifier, self.group_pixels(miniature))
 
     def batch_compute_groups(
@@ -111,13 +116,21 @@ class GroupComputer:
         cpu_count = cpu_count or max(1, CPU_COUNT - 2)
         notifier = database.notifier if database else DEFAULT_NOTIFIER
         lang = database.lang if database else DefaultLanguage
-        jobn = job_notifications.CollectMiniatureGroups(len(miniatures), notifier)
-        tasks = [(i, m, len(miniatures), jobn) for i, m in enumerate(miniatures)]
+        notify_job_start(
+            notifier, self.collect_miniature_groups, len(miniatures), "miniatures"
+        )
+        tasks = [(i, m, len(miniatures), notifier) for i, m in enumerate(miniatures)]
         with Profiler(
             lang.profile_batch_compute_groups.format(n=len(tasks), cpu_count=cpu_count),
             notifier,
         ):
             with Pool(cpu_count) as p:
-                raw_output = list(p.imap(self.async_compute, tasks))
-        jobn.progress(None, len(miniatures), len(miniatures))
+                raw_output = list(p.imap(self.collect_miniature_groups, tasks))
+        notify_job_progress(
+            notifier,
+            self.collect_miniature_groups,
+            None,
+            len(miniatures),
+            len(miniatures),
+        )
         return raw_output

@@ -33,110 +33,46 @@ class JobStep(Notification):
         self.title = title
 
 
-class JobNotifications:
-    __slots__ = "name", "notifier"
-    __kind__ = "datas"
-
-    def __init__(self, total: int, notifier, title: str = None, pretty_total=None):
-        name = camel_case_to_snake_case(type(self).__name__).replace("_", " ")
-        if title is None:
-            if pretty_total is None:
-                pretty_total = f"{total} {self.__kind__}"
-            title = f"{name} ({pretty_total})"
-        self.name = name
-        self.notifier = notifier
-        self.notifier.notify(JobToDo(self.name, total, title))
-        if total:
-            self.notifier.notify(JobStep(self.name, None, 0, total, title=title))
-
-    def progress(
-        self,
-        channel: Optional[str],
-        channel_step: int,
-        channel_size: int,
-        *,
-        title: str = None,
-    ):
-        self.notifier.notify(
-            JobStep(self.name, channel, channel_step, channel_size, title=title)
+def _get_job_name(fn_or_name):
+    return (
+        camel_case_to_snake_case(
+            fn_or_name if isinstance(fn_or_name, str) else fn_or_name.__name__
         )
+        .replace("_", " ")
+        .strip()
+    )
 
 
-class CollectVideosFromFolders(JobNotifications):
-    __slots__ = ()
-    __kind__ = "folders"
+def _compute_job_title(title, description, expectation, total, kind):
+    if title is None:
+        assert description
+        if expectation is None:
+            assert total
+            assert kind
+            expectation = f"{total} {kind}"
+        title = f"{description} ({expectation})"
+    return title
 
 
-class CollectVideoInfos(JobNotifications):
-    __slots__ = ()
-    __kind__ = "videos"
+def notify_job_start(notifier, function, total, kind, expectation=None, title=None):
+    name = _get_job_name(function)
+    job_title = _compute_job_title(title, name, expectation, total, kind)
+    notifier.notify(JobToDo(name, total, job_title))
+    if total:
+        notifier.notify(JobStep(name, None, 0, total, title=job_title))
 
 
-class CollectVideoStreamLanguages(JobNotifications):
-    __slots__ = ()
-    __kind__ = "stream languages"
-
-
-class CollectVideoThumbnails(JobNotifications):
-    __slots__ = ()
-    __kind__ = "videos"
-
-
-class CompressThumbnailsToJpeg(JobNotifications):
-    __slots__ = ()
-    __kind__ = "PNG thumbnails"
-
-
-class CollectVideoMiniatures(JobNotifications):
-    __slots__ = ()
-    __kind__ = "videos"
-
-
-class CollectMiniatureGroups(JobNotifications):
-    __slots__ = ()
-    __kind__ = "miniatures"
-
-
-class CompareMiniatureGrays(JobNotifications):
-    __slots__ = ()
-    __kind__ = "miniatures"
-
-
-class CompareOldVsNewMiniatures(JobNotifications):
-    __slots__ = ()
-    __kind__ = "new miniatures"
-
-
-class CompareMiniatures(JobNotifications):
-    __slots__ = ()
-    __kind__ = "videos (C++ comparison)"
-
-
-class CompareMiniaturesFromPython(JobNotifications):
-    __slots__ = ()
-    __kind__ = "videos (Python comparison)"
-
-
-class LinkComparedMiniatures(JobNotifications):
-    __slots__ = ()
-    __kind__ = "positions"
-
-
-class LinkComparedVideos(JobNotifications):
-    __slots__ = ()
-    __kind__ = "videos"
-
-
-class CopyFile(JobNotifications):
-    __slots__ = ()
-    __kind__ = "bytes"
-
-
-class OptimizePatternPredictor(JobNotifications):
-    __slots__ = ()
-    __kind__ = "steps"
-
-
-class PredictPattern(JobNotifications):
-    __slots__ = ()
-    __kind__ = "videos"
+def notify_job_progress(
+    notifier,
+    function,
+    channel: Optional[str],
+    channel_step: int,
+    channel_size: int,
+    *,
+    title: str = None,
+):
+    notifier.notify(
+        JobStep(
+            _get_job_name(function), channel, channel_step, channel_size, title=title
+        )
+    )

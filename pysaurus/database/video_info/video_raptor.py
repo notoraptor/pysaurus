@@ -5,11 +5,12 @@ from pysaurus.application import exceptions
 from pysaurus.bin.symbols import RUN_VIDEO_RAPTOR_BATCH, RUN_VIDEO_RAPTOR_THUMBNAILS
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.custom_json_parser import parse_json
+from pysaurus.core.job_notifications import notify_job_progress
 from pysaurus.core.job_utils import Job
 
 
 def job_video_to_json(job):
-    input_file_name, output_file_name, job_count, job_id, jobn = job
+    input_file_name, output_file_name, job_count, job_id, notifier = job
 
     nb_read = 0
     nb_loaded = 0
@@ -41,17 +42,19 @@ def job_video_to_json(job):
                     end = True
             else:
                 step = int(line)
-                jobn.progress(job_id, step, job_count)
+                notify_job_progress(
+                    notifier, collect_video_info, job_id, step, job_count
+                )
     program_errors = process.stderr.read().decode().strip()
     if not end and program_errors:
         raise exceptions.VideoToJsonError(program_errors)
     assert nb_read == job_count
-    jobn.progress(job_id, job_count, job_count)
+    notify_job_progress(notifier, collect_video_info, job_id, job_count, job_count)
     return nb_loaded
 
 
 def job_video_thumbnails_to_json(job):
-    input_file_name, output_file_name, job_count, job_id, jobn = job
+    input_file_name, output_file_name, job_count, job_id, notifier = job
 
     nb_read = 0
     nb_loaded = 0
@@ -83,17 +86,21 @@ def job_video_thumbnails_to_json(job):
                     end = True
             else:
                 step = int(line)
-                jobn.progress(job_id, step, job_count)
+                notify_job_progress(
+                    notifier, collect_video_thumbnails, job_id, step, job_count
+                )
     program_errors = process.stderr.read().decode().strip()
     if not end and program_errors:
         raise exceptions.VideoThumbnailsToJsonError(program_errors)
     assert nb_read == job_count
-    jobn.progress(job_id, job_count, job_count)
+    notify_job_progress(
+        notifier, collect_video_thumbnails, job_id, job_count, job_count
+    )
     return nb_loaded
 
 
-def backend_video_infos(job: Job):
-    database_folder, job_notifier = job.args
+def collect_video_info(job: Job):
+    database_folder, notifier = job.args
     list_file_path = AbsolutePath.file_path(database_folder, str(job.id), "list")
     json_file_path = AbsolutePath.file_path(database_folder, str(job.id), "json")
 
@@ -107,7 +114,7 @@ def backend_video_infos(job: Job):
             json_file_path.path,
             len(job.batch),
             job.id,
-            job_notifier,
+            notifier,
         )
     )
     assert json_file_path.isfile()
@@ -118,8 +125,8 @@ def backend_video_infos(job: Job):
     return arr
 
 
-def backend_video_thumbnails(job: Job):
-    db_folder, thumb_folder, job_notifier = job.args
+def collect_video_thumbnails(job: Job):
+    db_folder, thumb_folder, notifier = job.args
     list_file_path = AbsolutePath.file_path(db_folder, job.id, "thumbnails.list")
     json_file_path = AbsolutePath.file_path(db_folder, job.id, "thumbnails.json")
 
@@ -133,7 +140,7 @@ def backend_video_thumbnails(job: Job):
             json_file_path.path,
             len(job.batch),
             job.id,
-            job_notifier,
+            notifier,
         )
     )
     assert json_file_path.isfile()

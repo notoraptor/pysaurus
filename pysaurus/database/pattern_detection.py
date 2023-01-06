@@ -1,12 +1,12 @@
 from typing import List
 
 from pysaurus.application.exceptions import PysaurusError
-from pysaurus.core import job_notifications
+from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
 from pysaurus.core.modules import ImageUtils
 from pysaurus.core.notifications import Message
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.database import Database
-from pysaurus.database.machine_learning import predict, train
+from pysaurus.database.machine_learning import optimize_pattern_predictor, predict
 from pysaurus.database.properties import PropType
 from pysaurus.database.video import Video
 
@@ -57,12 +57,15 @@ def compute_pattern_detector(db: Database, videos: List[Video], prop_name: str):
     for video_id, y in video_id_to_class.items():
         miniatures.append(video_id_to_miniature[video_id])
         classes.append(video_id_to_class[video_id])
-    theta = train(miniatures, classes, theta=db.get_predictor(prop_name), database=db)
+    theta = optimize_pattern_predictor(
+        miniatures, classes, theta=db.get_predictor(prop_name), database=db
+    )
     db.set_predictor(prop_name, theta)
     db.save()
 
 
-def apply_pattern_detector(db: Database, videos: List[Video], prop_name: str):
+def predict_pattern(db: Database, videos: List[Video], prop_name: str):
+    """Apply pattern detector."""
     theta = db.get_predictor(prop_name)
     if not theta:
         raise NoPredictor(prop_name)
@@ -71,13 +74,13 @@ def apply_pattern_detector(db: Database, videos: List[Video], prop_name: str):
     output_prop_name = "<!" + prop_name[2:]
     if not db.has_prop_type(output_prop_name):
         db.add_prop_type(PropType(output_prop_name, [0, 1]), save=False)
-    job_notifier = job_notifications.PredictPattern(len(videos), db.notifier)
+    notify_job_start(db.notifier, predict_pattern, len(videos), "videos")
     with Profiler(db.lang.profile_predict, db.notifier):
         for i, video in enumerate(videos):
             video.properties[output_prop_name] = int(
                 predict(video_id_to_miniature[video.video_id], theta) >= 0.5
             )
-            job_notifier.progress(None, i + 1, len(videos))
+            notify_job_progress(db.notifier, predict_pattern, None, i + 1, len(videos))
 
     db.save()
     return output_prop_name

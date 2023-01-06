@@ -1,10 +1,10 @@
 from multiprocessing import Pool
 from typing import Collection, Dict, List
 
-from pysaurus.core import job_notifications, notifications
+from pysaurus.core import notifications
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.constants import CPU_COUNT, JPEG_EXTENSION
-from pysaurus.core.job_notifications import JobNotifications
+from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
 from pysaurus.core.job_utils import Job
 from pysaurus.core.modules import ImageUtils
 from pysaurus.core.notifier import DEFAULT_NOTIFIER, Notifier
@@ -15,17 +15,17 @@ from pysaurus.database.video_runtime_info import VideoRuntimeInfo
 from saurus.language import say
 
 
-def job_collect_videos_stats(job: list) -> Dict[AbsolutePath, VideoRuntimeInfo]:
-    job_notifier: JobNotifications
-    path, job_id, job_notifier = job
+def collect_videos_from_folders(job: list) -> Dict[AbsolutePath, VideoRuntimeInfo]:
+    notifier: Notifier
+    path, job_id, notifier = job
     files = {}  # type: Dict[AbsolutePath, VideoRuntimeInfo]
     scan_path_for_videos(path, files)
-    job_notifier.progress(job_id, 1, 1)
+    notify_job_progress(notifier, collect_videos_from_folders, job_id, 1, 1)
     return files
 
 
-def job_generate_miniatures(job: Job) -> List[Miniature]:
-    jobn: JobNotifications = job.args[0]
+def generate_video_miniatures(job: Job) -> List[Miniature]:
+    notifier: Notifier = job.args[0]
     nb_videos = len(job.batch)
     miniatures = []
     for i, (file_name, thumbnail_path) in enumerate(job.batch):
@@ -35,8 +35,12 @@ def job_generate_miniatures(job: Job) -> List[Miniature]:
             )
         )
         if (i + 1) % 500 == 0:
-            jobn.progress(job.id, i + 1, nb_videos)
-    jobn.progress(job.id, nb_videos, nb_videos)
+            notify_job_progress(
+                notifier, generate_video_miniatures, job.id, i + 1, nb_videos
+            )
+    notify_job_progress(
+        notifier, generate_video_miniatures, job.id, nb_videos, nb_videos
+    )
     return miniatures
 
 
@@ -44,14 +48,14 @@ def collect_video_paths(
     sources: Collection[AbsolutePath], notifier: Notifier = DEFAULT_NOTIFIER
 ) -> Dict[AbsolutePath, VideoRuntimeInfo]:
     paths = {}  # type: Dict[AbsolutePath, VideoRuntimeInfo]
-    job_notifier = job_notifications.CollectVideosFromFolders(len(sources), notifier)
-    jobs = [[path, i, job_notifier] for i, path in enumerate(sources)]
+    notify_job_start(notifier, collect_videos_from_folders, len(sources), "folders")
+    jobs = [[path, i, notifier] for i, path in enumerate(sources)]
     with Profiler(
         title=say("Collect videos ({cpu_count} threads)", cpu_count=CPU_COUNT),
         notifier=notifier,
     ):
         with Pool(CPU_COUNT) as p:
-            for local_result in p.imap_unordered(job_collect_videos_stats, jobs):
+            for local_result in p.imap_unordered(collect_videos_from_folders, jobs):
                 paths.update(local_result)
     notifier.notify(notifications.FinishedCollectingVideos(paths))
     return paths
@@ -67,7 +71,7 @@ def image_to_jpeg(input_path):
     path.delete()
 
 
-def job_image_to_jpeg(job):
-    path, job_id, job_notifier = job
+def compress_thumbnails_to_jpeg(job):
+    path, job_id, notifier = job
     image_to_jpeg(path)
-    job_notifier.progress(job_id, 1, 1)
+    notify_job_progress(notifier, compress_thumbnails_to_jpeg, job_id, 1, 1)

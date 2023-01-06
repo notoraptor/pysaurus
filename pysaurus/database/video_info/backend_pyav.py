@@ -3,6 +3,7 @@ import sys
 
 import av
 
+from pysaurus.core.job_notifications import notify_job_progress
 from pysaurus.core.job_utils import Job
 from pysaurus.core.jsonable import Jsonable
 from pysaurus.database.video import Video
@@ -118,18 +119,18 @@ def get_thumbnail(filename, thumb_path, thumb_size=300):
     return None
 
 
-def backend_video_infos(job: Job):
-    _, job_notifier = job.args
+def collect_video_info(job: Job):
+    _, notifier = job.args
     count = len(job.batch)
     arr = []
     for i, file_name in enumerate(job.batch):
         arr.append(get_info(file_name))
-        job_notifier.progress(job.id, i + 1, count)
+        notify_job_progress(notifier, collect_video_info, job.id, i + 1, count)
     return arr
 
 
-def backend_video_thumbnails(job: Job):
-    db_folder, thumb_folder, job_notifier = job.args
+def collect_video_thumbnails(job: Job):
+    db_folder, thumb_folder, notifier = job.args
     thumb_folder = str(thumb_folder)
     count = len(job.batch)
     arr_errors = []
@@ -138,7 +139,7 @@ def backend_video_thumbnails(job: Job):
         d_err = get_thumbnail(file_name, thumb_path)
         if d_err:
             arr_errors.append(d_err)
-        job_notifier.progress(job.id, i + 1, count)
+        notify_job_progress(notifier, collect_video_thumbnails, job.id, i + 1, count)
     return arr_errors
 
 

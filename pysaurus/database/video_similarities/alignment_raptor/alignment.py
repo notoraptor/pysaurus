@@ -1,8 +1,8 @@
 from ctypes import c_int, pointer
 from typing import List
 
-from pysaurus.core import job_notifications
 from pysaurus.core.constants import VIDEO_BATCH_SIZE
+from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
 from pysaurus.core.native.clibrary import c_int_p
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.miniature_tools.miniature import Miniature
@@ -36,7 +36,9 @@ def classify_similarities_directed(
         ]
         native_sequence_pointers = [pointer(sequence) for sequence in native_sequences]
         pointer_array_type = PtrSequence * nb_sequences
-    jobn = job_notifications.CompareMiniatures(nb_sequences, database.notifier)
+    notify_job_start(
+        database.notifier, "compare_miniatures", nb_sequences, "videos (C++ comparison)"
+    )
     with Profiler(
         database.lang.profile_classify_similarities_native, database.notifier
     ):
@@ -54,6 +56,14 @@ def classify_similarities_directed(
                 edges,
                 sim_limit,
             )
-            jobn.progress(None, min(i_to, nb_sequences), nb_sequences)
+            notify_job_progress(
+                database.notifier,
+                "compare_miniatures",
+                None,
+                min(i_to, nb_sequences),
+                nb_sequences,
+            )
             cursor = i_to
-        jobn.progress(None, nb_sequences, nb_sequences)
+        notify_job_progress(
+            database.notifier, "compare_miniatures", None, nb_sequences, nb_sequences
+        )

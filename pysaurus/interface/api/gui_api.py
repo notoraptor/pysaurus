@@ -309,7 +309,7 @@ class GuiAPI(FeatureAPI):
 
     @process()
     def apply_predictor(self, prop_name):
-        output_prop_name = pattern_detection.apply_pattern_detector(
+        output_prop_name = pattern_detection.predict_pattern(
             self.database,
             self.database.get_videos("readable", "with_thumbnails"),
             prop_name,

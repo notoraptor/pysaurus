@@ -5,9 +5,10 @@ from typing import List, Set
 import numpy as np
 
 from pysaurus.application import exceptions
-from pysaurus.core import job_notifications, notifications
+from pysaurus.core import notifications
 from pysaurus.core.fraction import Fraction
 from pysaurus.core.functions import compute_nb_couples, get_end_index, get_start_index
+from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
 from pysaurus.core.notifier import Notifier
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.database import Database
@@ -62,17 +63,19 @@ class _GrayClassifier:
             get_end_index(grays, grays[i] + GRAY_DEC, i + 1) for i in range(len(grays))
         ]
 
-    def cross_comparisons(self, notifier: Notifier):
+    def compare_miniature_grays(self, notifier: Notifier):
         """Return sequence of couples of indices of classifiers to cross compare."""
         n = len(self.grays)
         t = self.j_limit
-        jobn = job_notifications.CompareMiniatureGrays(n, notifier)
+        notify_job_start(notifier, self.compare_miniature_grays, n, "miniatures")
         for i in range(n):
             for j in range(i + 1, t[i]):
                 yield i, j
             if (i + 1) % 1000 == 0:
-                jobn.progress(None, i + 1, n)
-        jobn.progress(None, n, n)
+                notify_job_progress(
+                    notifier, self.compare_miniature_grays, None, i + 1, n
+                )
+        notify_job_progress(notifier, self.compare_miniature_grays, None, n, n)
 
     @classmethod
     def classify(cls, miniatures: List[Miniature], miniature_indices: List[int] = None):
@@ -144,7 +147,7 @@ class DbFeatures:
             classifier_old = _GrayClassifier.classify(miniatures, old_miniature_indices)
 
             nb_cmp = self._collect_comparisons(classifier_new, cmp_map, nb_videos, db)
-            nb_cmp += self._cross_compare_classifiers(
+            nb_cmp += self.compare_old_vs_new_miniatures(
                 classifier_new, classifier_old, cmp_map, nb_videos, db
             )
 
@@ -286,7 +289,7 @@ class DbFeatures:
                                 a, b = b, a
                             self._cmp(cmp_map, a * nb_miniatures + b)
 
-            for r, c in classifier.cross_comparisons(db.notifier):
+            for r, c in classifier.compare_miniature_grays(db.notifier):
                 clr = classifier.classifiers[r]
                 clc = classifier.classifiers[c]
                 for x_r in range(len(clr.counts)):
@@ -304,7 +307,7 @@ class DbFeatures:
 
             return nb_cmp
 
-    def _cross_compare_classifiers(
+    def compare_old_vs_new_miniatures(
         self,
         classifier_left: _GrayClassifier,
         classifier_right: _GrayClassifier,
@@ -313,7 +316,9 @@ class DbFeatures:
         db: Database,
     ):
         n = len(classifier_left.grays)
-        jobn = job_notifications.CompareOldVsNewMiniatures(n, db.notifier)
+        notify_job_start(
+            db.notifier, self.compare_old_vs_new_miniatures, n, "new miniatures"
+        )
         with Profiler(db.lang.profile_compare_old_vs_new_miniatures, db.notifier):
             nb_cmp = 0
             for i_gray_left, gray_left in enumerate(classifier_left.grays):
@@ -347,8 +352,16 @@ class DbFeatures:
                                     a, b = b, a
                                 self._cmp(cmp_map, a * nb_miniatures + b)
                 if (i_gray_left + 1) % 10 == 0:
-                    jobn.progress(None, i_gray_left + 1, n)
-            jobn.progress(None, n, n)
+                    notify_job_progress(
+                        db.notifier,
+                        self.compare_old_vs_new_miniatures,
+                        None,
+                        i_gray_left + 1,
+                        n,
+                    )
+            notify_job_progress(
+                db.notifier, self.compare_old_vs_new_miniatures, None, n, n
+            )
             return nb_cmp
 
     def _cmp(self, cmp_map: Array, pos: int):
@@ -368,17 +381,25 @@ class DbFeatures:
         with Profiler(db.lang.profile_link_miniature_comparisons, db.notifier):
             if self.positions:
                 nb_pos = len(self.positions)
-                job_n = job_notifications.LinkComparedMiniatures(nb_pos, db.notifier)
+                notify_job_start(
+                    db.notifier, "link_compared_miniatures", nb_pos, "positions"
+                )
                 for index, pos in enumerate(self.positions):
                     if edges[pos]:
                         graph.connect(pos // nb_miniatures, pos % nb_miniatures)
-                    job_n.progress(None, index + 1, nb_pos)
+                    notify_job_progress(
+                        db.notifier, "link_compared_miniatures", None, index + 1, nb_pos
+                    )
                 self.positions.clear()
             else:
-                job_n = job_notifications.LinkComparedVideos(nb_miniatures, db.notifier)
+                notify_job_start(
+                    db.notifier, "link_compared_videos", nb_miniatures, "videos"
+                )
                 for i in range(nb_miniatures):
                     for j in range(i + 1, nb_miniatures):
                         if edges[i * nb_miniatures + j]:
                             graph.connect(i, j)
-                    job_n.progress(None, i + 1, nb_miniatures)
+                    notify_job_progress(
+                        db.notifier, "link_compared_videos", None, i + 1, nb_miniatures
+                    )
         return [group for group in graph.pop_groups() if len(group) > 1]
