@@ -1,6 +1,22 @@
 import sqlite3
 
 
+class DbID(int):
+    """Wrapper for database ID.
+
+    A database ID should always be evaluated to True if exists, even if its value is 0.
+
+    If a database ID does not exist, database class will return None.
+
+    This wrapper allows to use Python syntax (this_id or that_id) and make sure
+    this_id will be returned even if this_id is 0 (we expect this_id to be None if
+    related id is invalid or inexistent).
+    """
+
+    def __bool__(self):
+        return True
+
+
 class Database:
     __slots__ = ("connection", "cursor")
 
@@ -22,7 +38,7 @@ class Database:
             self.cursor.executescript(script_file.read())
             self.connection.commit()
 
-    def modify(self, query, parameters=(), many=False):
+    def modify(self, query, parameters=(), many=False) -> DbID:
         """
         Execute a modification query (INSERT, UPDATE, etc).
         Return last inserted row ID, or None if no row was inserted.
@@ -32,7 +48,7 @@ class Database:
         else:
             self.cursor.execute(query, parameters)
         self.connection.commit()
-        return self.cursor.lastrowid
+        return DbID(self.cursor.lastrowid)
 
     def query(self, query, parameters=()):
         self.cursor.execute(query, parameters)
@@ -80,7 +96,7 @@ class Database:
         if len(results) == 0:
             return None
         elif len(results) == 1:
-            return results[0][0]
+            return DbID(results[0][0])
         else:
             raise RuntimeError(f"Found {len(results)} entries for {table}.{column}")
 
@@ -102,7 +118,7 @@ class Database:
         if len(results) == 0:
             return None
         elif len(results) == 1:
-            return results[0][0]
+            return DbID(results[0][0])
         else:
             raise RuntimeError(f"Found {len(results)} entries for {table}.{column}")
 
