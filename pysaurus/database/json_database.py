@@ -1,10 +1,10 @@
 from typing import Dict, Iterable, List, Optional, Sequence, Set, Union
 
 from pysaurus.application import exceptions
-from pysaurus.core import functions
+from pysaurus.core import functions, notifying
 from pysaurus.core.components import AbsolutePath, DateModified, PathType
 from pysaurus.core.notifications import Notification
-from pysaurus.core.notifier import DEFAULT_NOTIFIER, Notifier
+from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.abstract_video_indexer import AbstractVideoIndexer
@@ -99,7 +99,9 @@ class JsonDatabase:
         # Initialize
         self.__load(folders)
         with Profiler("build index", self.notifier):
-            self.indexer.build(self.videos.values())
+            notifying.with_handler(
+                self.notifier, self.indexer.build, self.videos.values()
+            )
 
     @Profiler.profile_method()
     def __load(self, folders: Optional[Iterable[PathType]] = None):

@@ -48,7 +48,8 @@ class Database:
         else:
             self.cursor.execute(query, parameters)
         self.connection.commit()
-        return DbID(self.cursor.lastrowid)
+        last_id = self.cursor.lastrowid
+        return last_id if last_id is None else DbID(last_id)
 
     def query(self, query, parameters=()):
         self.cursor.execute(query, parameters)

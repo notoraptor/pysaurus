@@ -1,6 +1,6 @@
 from typing import Dict, Optional, Sequence
 
-from other.toolsaurus.database.viewport.layers import SourceLayer
+from other.toolsaurus.database.viewport.layers.source_layer import SourceLayer
 from other.toolsaurus.database.viewport.layers.classifier_layer import ClassifierLayer
 from other.toolsaurus.database.viewport.layers.group_layer import GroupLayer
 from other.toolsaurus.database.viewport.layers.grouping_layer import GroupingLayer

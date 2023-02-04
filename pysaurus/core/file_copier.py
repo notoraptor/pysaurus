@@ -4,7 +4,7 @@ from pysaurus.core import core_exceptions, notifications
 from pysaurus.core.components import AbsolutePath, FileSize
 from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
 from pysaurus.core.modules import FileSystem
-from pysaurus.core.notifier import DEFAULT_NOTIFIER, Notifier
+from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 
 
 class FileCopier:

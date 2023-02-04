@@ -3,7 +3,7 @@ from datetime import datetime
 
 from pysaurus.core.components import Duration
 from pysaurus.core.notifications import Notification
-from pysaurus.core.notifier import DEFAULT_NOTIFIER
+from pysaurus.core.notifying import DEFAULT_NOTIFIER
 
 
 class ProfilingStart(Notification):

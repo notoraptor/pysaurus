@@ -4,7 +4,7 @@ from typing import List
 from pysaurus.core.classes import AbstractMatrix
 from pysaurus.core.constants import CPU_COUNT
 from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
-from pysaurus.core.notifier import DEFAULT_NOTIFIER
+from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.miniature_tools.decomposed_miniature import (
     DecomposedMiniature,

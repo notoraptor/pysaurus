@@ -674,7 +674,7 @@ Once done, move you can compute prediction.
           }, /*#__PURE__*/React.createElement("div", {
             className: "absolute-plain vertical"
           }, /*#__PURE__*/React.createElement(HomePage, {
-            key: window.APP_STATE.idGenerator.next(),
+            key: APP_STATE.idGenerator.next(),
             app: this.props.app,
             parameters: {
               command: ["move_video_file", videoID, directory],

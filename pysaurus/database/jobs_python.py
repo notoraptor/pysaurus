@@ -7,7 +7,7 @@ from pysaurus.core.constants import CPU_COUNT, JPEG_EXTENSION
 from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
 from pysaurus.core.job_utils import Job
 from pysaurus.core.modules import ImageUtils
-from pysaurus.core.notifier import DEFAULT_NOTIFIER, Notifier
+from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.miniature_tools.miniature import Miniature
 from pysaurus.database.video_file_lister import scan_path_for_videos

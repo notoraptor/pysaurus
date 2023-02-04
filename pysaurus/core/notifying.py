@@ -30,6 +30,9 @@ class Notifier:
         self.__log_path = None
         self.__log_written = False
 
+    def __call__(self, notification):
+        return self.notify(notification)
+
     def set_log_path(self, path: Optional[str]):
         if self.__log_path != path:
             self.__log_written = False
@@ -90,3 +93,32 @@ class Notifier:
 
 
 DEFAULT_NOTIFIER = Notifier()
+
+
+GLOBAL_SETTING_LOG: bool = True
+GLOBAL_SETTING_HANDLER: Optional[Callable[[Notification], None]] = None
+
+
+def config(log=None, handler=None):
+    global GLOBAL_SETTING_LOG
+    global GLOBAL_SETTING_HANDLER
+    if log is not None:
+        GLOBAL_SETTING_LOG = bool(log)
+    if handler is not None:
+        assert callable(handler)
+    GLOBAL_SETTING_HANDLER = handler
+
+
+def notify(notification: Notification):
+    if GLOBAL_SETTING_LOG:
+        print(notification)
+    if GLOBAL_SETTING_HANDLER is not None:
+        GLOBAL_SETTING_HANDLER(notification)
+
+
+def with_handler(handler, function, *args):
+
+    config(handler=handler)
+    ret = function(*args)
+    config(handler=None)
+    return ret

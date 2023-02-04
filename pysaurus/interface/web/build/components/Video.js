@@ -508,9 +508,9 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
         }
 
         moveVideo() {
-          python_call("select_directory", window.APP_STATE.latestMoveFolder).then(directory => {
+          python_call("select_directory", APP_STATE.latestMoveFolder).then(directory => {
             if (directory) {
-              window.APP_STATE.latestMoveFolder = directory;
+              APP_STATE.latestMoveFolder = directory;
               this.props.onMove(this.props.data.video_id, directory);
             }
           }).catch(backend_error);

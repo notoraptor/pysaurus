@@ -9,7 +9,7 @@ from pysaurus.core import notifications
 from pysaurus.core.fraction import Fraction
 from pysaurus.core.functions import compute_nb_couples, get_end_index, get_start_index
 from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
-from pysaurus.core.notifier import Notifier
+from pysaurus.core.notifying import Notifier
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.database import Database
 from pysaurus.database.miniature_tools.graph import Graph

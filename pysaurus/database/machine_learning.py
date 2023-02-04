@@ -5,7 +5,7 @@ import numpy as np
 
 from pysaurus.core import notifications
 from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
-from pysaurus.core.notifier import DEFAULT_NOTIFIER
+from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.miniature_tools.miniature import Miniature
 from pysaurus.language.default_language import DefaultLanguage

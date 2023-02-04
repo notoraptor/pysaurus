@@ -17,7 +17,7 @@ from pysaurus.core.constants import CPU_COUNT, JPEG_EXTENSION, THUMBNAIL_EXTENSI
 from pysaurus.core.job_notifications import notify_job_start
 from pysaurus.core.job_utils import run_split_batch
 from pysaurus.core.modules import FileSystem, ImageUtils
-from pysaurus.core.notifier import DEFAULT_NOTIFIER, Notifier
+from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
 from pysaurus.database import jobs_python

@@ -846,7 +846,7 @@ Once done, move you can compute prediction.
 				}}>
 				<div className="absolute-plain vertical">
 					<HomePage
-						key={window.APP_STATE.idGenerator.next()}
+						key={APP_STATE.idGenerator.next()}
 						app={this.props.app}
 						parameters={{
 							command: ["move_video_file", videoID, directory],
