@@ -8,8 +8,8 @@ from PyQt5.QtWebChannel import QWebChannel
 from PyQt5.QtWebEngineWidgets import QWebEnginePage, QWebEngineView
 from PyQt5.QtWidgets import QApplication
 
+from pysaurus import package_dir
 from pysaurus.application import exceptions
-from pysaurus.application.utils import package_dir
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.enumeration import EnumerationError
 from pysaurus.core.modules import System

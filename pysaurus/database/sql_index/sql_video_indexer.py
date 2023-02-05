@@ -48,9 +48,6 @@ class SqlVideoIndexer(AbstractVideoIndexer):
                 many=True,
             )
             for (filename_id, terms) in enumerate(filename_id_to_terms):
-                global_notify_job_progress(
-                    "sql_build_index", None, filename_id + 1, len(all_filenames)
-                )
                 self.database.modify(
                     "INSERT INTO filename_to_term (filename_id, term_id, term_rank) "
                     "VALUES (?, ?, ?)",
@@ -59,6 +56,9 @@ class SqlVideoIndexer(AbstractVideoIndexer):
                         for term_rank, term in enumerate(terms)
                     ),
                     many=True,
+                )
+                global_notify_job_progress(
+                    "sql_build_index", None, filename_id + 1, len(all_filenames)
                 )
             self._to_build = False
 

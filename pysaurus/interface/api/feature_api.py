@@ -5,7 +5,6 @@ from pysaurus.application.application import Application
 from pysaurus.core.components import Duration, FileSize
 from pysaurus.core.functions import compute_nb_pages, extract_object
 from pysaurus.database.database import Database
-from pysaurus.database.utils import DEFAULT_SOURCE_DEF
 from pysaurus.database.video_features import VideoFeatures
 from pysaurus.language.default_language import language_to_dict
 
@@ -19,7 +18,7 @@ class FeatureAPI:
         "PYTHON_LANGUAGE",
         "_proxies",
     )
-    PYTHON_DEFAULT_SOURCES = DEFAULT_SOURCE_DEF
+    PYTHON_DEFAULT_SOURCES = [("readable",)]
     PYTHON_APP_NAME = Application.app_name
     PYTHON_FEATURE_COMPARISON = True
 

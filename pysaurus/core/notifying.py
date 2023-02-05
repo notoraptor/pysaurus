@@ -110,7 +110,7 @@ def config(log=None, handler=None):
 
 
 def notify(notification: Notification):
-    if GLOBAL_SETTING_LOG:
+    if GLOBAL_SETTING_LOG and GLOBAL_SETTING_HANDLER is None:
         print(notification)
     if GLOBAL_SETTING_HANDLER is not None:
         GLOBAL_SETTING_HANDLER(notification)

@@ -14,6 +14,7 @@ from pysaurus.core.components import (
     PathType,
 )
 from pysaurus.core.constants import CPU_COUNT, JPEG_EXTENSION, THUMBNAIL_EXTENSION
+from pysaurus.core.functions import generate_temp_file_path
 from pysaurus.core.job_notifications import notify_job_start
 from pysaurus.core.job_utils import run_split_batch
 from pysaurus.core.modules import FileSystem, ImageUtils
@@ -28,7 +29,6 @@ from pysaurus.database.miniature_tools.group_computer import GroupComputer
 from pysaurus.database.miniature_tools.miniature import Miniature
 from pysaurus.database.special_properties import SpecialProperties
 from pysaurus.database.sql_index.sql_video_indexer import SqlVideoIndexer
-from pysaurus.database.utils import generate_temp_file_path
 from pysaurus.database.video import Video
 from pysaurus.database.video_runtime_info import VideoRuntimeInfo
 from pysaurus.database.viewport.abstract_video_provider import AbstractVideoProvider

@@ -1,12 +1,13 @@
 import bisect
+import os
 import re
 import sys
+import tempfile
 import threading
 from typing import Iterable
 
 from pysaurus.core.modules import HTMLStripper
 
-# Datetime since timestamp 0.
 REGEX_NO_WORD = re.compile(r"(\W|_)+")
 REGEX_CONSECUTIVE_UPPER_CASES = re.compile("[A-Z]{2,}")
 REGEX_LOWER_THEN_UPPER_CASES = re.compile("([a-z0-9])([A-Z])")
@@ -277,3 +278,20 @@ def extract_object(instance: object, path: str):
     for step in path.split("."):
         element = getattr(element, step)
     return element
+
+
+TEMP_DIR = tempfile.gettempdir()
+TEMP_PREFIX = tempfile.gettempprefix() + "_pysaurus_"
+
+
+def generate_temp_file_path(extension) -> str:
+    temp_file_id = 0
+    while True:
+        temp_file_path = os.path.join(
+            TEMP_DIR, f"{TEMP_PREFIX}{temp_file_id}.{extension}"
+        )
+        try:
+            with open(temp_file_path, "x"):
+                return temp_file_path
+        except FileExistsError:
+            temp_file_id += 1

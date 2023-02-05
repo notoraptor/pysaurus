@@ -5,19 +5,23 @@ from typing import Dict, Iterable, List, Optional
 
 import ujson as json
 
+from pysaurus import package_dir
 from pysaurus.application import exceptions
-from pysaurus.application.config import Config
-from pysaurus.application.utils import package_dir
 from pysaurus.core import functions
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.custom_json_parser import parse_json
 from pysaurus.core.dict_file_format import dff_dump, dff_load
+from pysaurus.core.jsonable import Jsonable
 from pysaurus.core.modules import FileSystem
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.database.database import Database
 from pysaurus.language.default_language import DefaultLanguage, language_to_dict
 from pysaurus.language.language import Language
 from saurus.language import say
+
+
+class Config(Jsonable):
+    language = "english"
 
 
 class Application:

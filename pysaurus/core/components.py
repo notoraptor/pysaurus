@@ -302,7 +302,7 @@ class DateModified:
         return DateModified(datetime.now().timestamp())
 
 
-class Duration(object):
+class Duration:
     __slots__ = (
         "days",
         "hours",
@@ -392,7 +392,7 @@ class ShortDuration(Duration):
         return ":".join(view)
 
 
-class FileSize(object):
+class FileSize:
     __slots__ = ("__size", "__unit")
 
     def __init__(self, size):

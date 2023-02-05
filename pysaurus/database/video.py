@@ -231,7 +231,11 @@ class Video(Jsonable):
                     term_sources.extend(val)
                 else:
                     term_sources.append(val)
-        return string_to_pieces(" ".join(term_sources), as_set=as_set)
+        all_str = " ".join(term_sources)
+        t_all_str = string_to_pieces(all_str, as_set=False)
+        t_all_str_low = string_to_pieces(all_str.lower(), as_set=False)
+        t_all = t_all_str if t_all_str == t_all_str_low else (t_all_str + t_all_str_low)
+        return set(t_all) if as_set else t_all
 
     def update_properties(self, properties: dict) -> Set[str]:
         return {

@@ -5,7 +5,7 @@ import threading
 
 from cefpython3 import cefpython as cef
 
-from pysaurus.application.utils import package_dir
+from pysaurus import package_dir
 from pysaurus.interface.cefgui.cef_api import CefAPI
 
 

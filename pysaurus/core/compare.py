@@ -1,4 +1,6 @@
 class NegativeComparator:
+    """Helper class for reverse comparison"""
+
     __slots__ = ("value",)
 
     def __init__(self, value):
