@@ -15,7 +15,7 @@ from pysaurus.core.components import (
 )
 from pysaurus.core.constants import CPU_COUNT, JPEG_EXTENSION, THUMBNAIL_EXTENSION
 from pysaurus.core.functions import generate_temp_file_path
-from pysaurus.core.job_notifications import notify_job_start
+from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
 from pysaurus.core.job_utils import run_split_batch
 from pysaurus.core.modules import FileSystem, ImageUtils
 from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
@@ -142,6 +142,32 @@ class Database(JsonDatabase):
         self._update_videos_in_index(videos)
         self.notifier.notify(notifications.PropertiesModified(properties))
 
+    def _clean_thumbnails(self, thumb_names: List[str]):
+        notify_job_start(
+            self.notifier, self._clean_thumbnails, len(thumb_names), "thumbnails"
+        )
+        for i, thumb_name in enumerate(thumb_names):
+            png_path = AbsolutePath.file_path(
+                self.__paths.thumb_folder, thumb_name, THUMBNAIL_EXTENSION
+            )
+            jpg_path = AbsolutePath.file_path(
+                self.__paths.thumb_folder, thumb_name, JPEG_EXTENSION
+            )
+            png_deleted = False
+            jpg_deleted = False
+            if png_path.isfile():
+                png_path.delete()
+                assert not png_path.isfile()
+                png_deleted = True
+            if jpg_path.isfile():
+                jpg_path.delete()
+                assert not jpg_path.isfile()
+                jpg_deleted = True
+            assert png_deleted or jpg_deleted
+            notify_job_progress(
+                self.notifier, self._clean_thumbnails, None, i + 1, len(thumb_names)
+            )
+
     # Public methods.
 
     @Profiler.profile_method()
@@ -230,7 +256,9 @@ class Database(JsonDatabase):
             for video in self.get_videos("readable"):
                 thumb_name = video.thumb_name
                 if not video.found:
-                    video.runtime.has_thumbnail = thumb_name in existing_thumb_names
+                    if thumb_name in existing_thumb_names:
+                        video.runtime.has_thumbnail = True
+                        valid_thumb_names.add(thumb_name)
                 elif not video.unreadable_thumbnail:
                     if (
                         thumb_name in existing_thumb_names
@@ -253,6 +281,21 @@ class Database(JsonDatabase):
                     videos_without_thumbs.extend(vds)
         nb_videos_no_thumbs = len(videos_without_thumbs)
         del thumb_to_videos
+
+        thumbs_to_clean = [
+            thumb_name
+            for thumb_name in existing_thumb_names
+            if thumb_name not in valid_thumb_names
+        ]
+        if thumbs_to_clean:
+            self.notifier.notify(
+                notifications.Message(
+                    f"Valid thumbnails before ensuring: "
+                    f"{len(valid_thumb_names)} / {len(existing_thumb_names)}, "
+                    f"to clean {len(thumbs_to_clean)}"
+                )
+            )
+            self._clean_thumbnails(thumbs_to_clean)
 
         if not videos_without_thumbs:
             self.save()
