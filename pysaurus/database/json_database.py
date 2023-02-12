@@ -313,7 +313,7 @@ class JsonDatabase:
             self.prop_types[new_name] = prop_type
             for video in self.query():
                 if old_name in video.properties:
-                    video.properties[new_name] = video.properties.pop(old_name)
+                    video.edit_properties({new_name: video.properties.pop(old_name)})
             self.save()
 
     def convert_prop_to_unique(self, name) -> None:
@@ -328,9 +328,10 @@ class JsonDatabase:
             for video in self.query():
                 if name in video.properties:
                     if video.properties[name]:
-                        video.properties[name] = video.properties[name][0]
+                        video.edit_properties({name: video.properties[name][0]})
                     else:
-                        del video.properties[name]
+                        # delete property value
+                        video.edit_properties({name: None})
             self.save()
 
     def convert_prop_to_multiple(self, name) -> None:
@@ -341,7 +342,7 @@ class JsonDatabase:
             prop_type.multiple = True
             for video in self.query():
                 if name in video.properties:
-                    video.properties[name] = [video.properties[name]]
+                    video.edit_properties({name: [video.properties[name]]})
             self.save()
 
     def get_prop_values(self, video: Video, name: str, default=False) -> list:
@@ -358,12 +359,12 @@ class JsonDatabase:
         self, video: Video, name: str, values: Union[Sequence, Set]
     ) -> None:
         if not values:
-            video.properties.pop(name, None)
+            video.edit_properties({name: None})
         elif self.prop_types[name].multiple:
-            video.properties[name] = self.prop_types[name].validate(values)
+            video.edit_properties({name: self.prop_types[name].validate(values)})
         else:
             (value,) = values
-            video.properties[name] = self.prop_types[name].validate(value)
+            video.edit_properties({name: self.prop_types[name].validate(value)})
 
     def merge_prop_values(
         self, video: Video, name: str, values: Union[Sequence, Set]

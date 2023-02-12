@@ -237,6 +237,19 @@ class Video(Jsonable):
         t_all = t_all_str if t_all_str == t_all_str_low else (t_all_str + t_all_str_low)
         return set(t_all) if as_set else t_all
 
+    def edit_properties(self, properties: Dict[str, object]) -> Set[str]:
+        modified = set()
+        for name, value in properties.items():
+            if value is None:
+                if name in self.properties:
+                    modified.add(name)
+                    del self.properties[name]
+            else:
+                if name not in self.properties or self.properties[name] != value:
+                    modified.add(name)
+                self.properties[name] = value
+        return modified
+
     def update_properties(self, properties: dict) -> Set[str]:
         return {
             name

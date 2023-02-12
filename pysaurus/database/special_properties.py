@@ -49,4 +49,4 @@ class SpecialProperties:
     @classmethod
     def set(cls, video: Video):
         for prop in cls.properties:
-            video.properties[prop.name] = prop.get(video)
+            video.edit_properties({prop.name: prop.get(video)})

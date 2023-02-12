@@ -64,16 +64,14 @@ class SqlVideoIndexer(AbstractVideoIndexer):
 
     def add_video(self, video: Video):
         logger.info(f"Video indexing: {video.filename.path}")
-        filename_id = self.database.select_id_from_values(
-            "filename", "filename_id", filename=video.filename.path
-        ) or self.database.modify(
+        filename_id = self.database.modify(
             "INSERT INTO filename (filename) VALUES (?)", [video.filename.path]
         )
         for term_rank, term in enumerate(video.terms()):
             term_id = self.database.select_id_from_values(
                 "term", "term_id", term=term
             ) or self.database.insert("term", term=term)
-            self.database.insert_or_ignore(
+            self.database.insert(
                 "filename_to_term",
                 filename_id=filename_id,
                 term_id=term_id,

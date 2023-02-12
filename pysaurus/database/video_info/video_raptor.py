@@ -9,7 +9,7 @@ from pysaurus.core.job_notifications import notify_job_progress
 from pysaurus.core.job_utils import Job
 
 
-def job_video_to_json(job):
+def _job_video_to_json(job):
     input_file_name, output_file_name, job_count, job_id, notifier = job
 
     nb_read = 0
@@ -53,7 +53,7 @@ def job_video_to_json(job):
     return nb_loaded
 
 
-def job_video_thumbnails_to_json(job):
+def _job_video_thumbnails_to_json(job):
     input_file_name, output_file_name, job_count, job_id, notifier = job
 
     nb_read = 0
@@ -108,7 +108,7 @@ def collect_video_info(job: Job):
         for file_name in job.batch:
             file.write(f"{file_name}\n".encode())
 
-    job_video_to_json(
+    _job_video_to_json(
         (
             list_file_path.path,
             json_file_path.path,
@@ -134,7 +134,7 @@ def collect_video_thumbnails(job: Job):
         for file_path, thumb_name in job.batch:
             file.write(f"{file_path}\t{thumb_folder}\t{thumb_name}\t\n".encode())
 
-    nb_loaded = job_video_thumbnails_to_json(
+    nb_loaded = _job_video_thumbnails_to_json(
         (
             list_file_path.path,
             json_file_path.path,

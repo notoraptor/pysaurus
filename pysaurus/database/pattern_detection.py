@@ -77,8 +77,12 @@ def predict_pattern(db: Database, videos: List[Video], prop_name: str):
     notify_job_start(db.notifier, predict_pattern, len(videos), "videos")
     with Profiler(db.lang.profile_predict, db.notifier):
         for i, video in enumerate(videos):
-            video.properties[output_prop_name] = int(
-                predict(video_id_to_miniature[video.video_id], theta) >= 0.5
+            video.edit_properties(
+                {
+                    output_prop_name: int(
+                        predict(video_id_to_miniature[video.video_id], theta) >= 0.5
+                    )
+                }
             )
             notify_job_progress(db.notifier, predict_pattern, None, i + 1, len(videos))
 

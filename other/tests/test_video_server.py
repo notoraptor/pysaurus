@@ -1,6 +1,6 @@
 from flask import Flask, send_file
 
-from pysaurus.database.video_server import ServerLauncher
+from pysaurus.database.db_video_server import ServerLauncher
 
 TEST_PATH = (
     r"\\?\H:\donnees\torrents\anime\vostfr\[Elecman] Ikki Tousen Integral S1-S7 [BDRIP "

@@ -5,10 +5,18 @@ import av
 
 from pysaurus.core.job_notifications import notify_job_progress
 from pysaurus.core.job_utils import Job
-from pysaurus.core.jsonable import Jsonable
 from pysaurus.database.video import Video
 
+# TODO Try to not import Video here
 M = {jt.name: jt.short for jt in Video.__definitions__.values()}
+
+
+class NoVideoStream(RuntimeError):
+    pass
+
+
+class NoFrameFoundInMiddleOfVideo(RuntimeError):
+    pass
 
 
 def open_video(filename):
@@ -19,7 +27,7 @@ def open_video(filename):
         return av.open(filename, metadata_encoding="latin-1")
 
 
-def get_info(filename):
+def _get_info(filename):
     try:
         with open_video(filename) as container:
             video_streams = container.streams.video
@@ -85,15 +93,7 @@ def get_info(filename):
         return {M["filename"]: filename, M["errors"]: [f"{type(exc).__name__}: {exc}"]}
 
 
-class NoVideoStream(RuntimeError):
-    pass
-
-
-class NoFrameFoundInMiddleOfVideo(RuntimeError):
-    pass
-
-
-def get_thumbnail(filename, thumb_path, thumb_size=300):
+def _get_thumbnail(filename, thumb_path, thumb_size=300):
     try:
         with open_video(filename) as container:
             _video_streams = container.streams.video
@@ -124,7 +124,7 @@ def collect_video_info(job: Job):
     count = len(job.batch)
     arr = []
     for i, file_name in enumerate(job.batch):
-        arr.append(get_info(file_name))
+        arr.append(_get_info(file_name))
         notify_job_progress(notifier, collect_video_info, job.id, i + 1, count)
     return arr
 
@@ -136,47 +136,8 @@ def collect_video_thumbnails(job: Job):
     arr_errors = []
     for i, (file_name, thumb_name) in enumerate(job.batch):
         thumb_path = os.path.join(thumb_folder, f"{thumb_name}.png")
-        d_err = get_thumbnail(file_name, thumb_path)
+        d_err = _get_thumbnail(file_name, thumb_path)
         if d_err:
             arr_errors.append(d_err)
         notify_job_progress(notifier, collect_video_thumbnails, job.id, i + 1, count)
     return arr_errors
-
-
-class StreamInfo(Jsonable):
-    lang_code = ""
-    short_name = ""
-    long_name = ""
-
-
-class StreamsInfo:
-    def __init__(self, *, audio=(), subtitle=()):
-        self.audio = audio
-        self.subtitle = subtitle
-
-    @classmethod
-    def get(cls, filename):
-        with open_video(filename) as container:
-            return cls(
-                audio=[
-                    StreamInfo(
-                        lang_code=audio_stream.language,
-                        short_name=audio_stream.codec_context.codec.name,
-                        long_name=audio_stream.codec_context.codec.long_name,
-                    )
-                    for audio_stream in container.streams.audio
-                ],
-                subtitle=[
-                    StreamInfo(
-                        lang_code=subtitle_stream.language,
-                        short_name=subtitle_stream.codec_context.codec.name,
-                        long_name=subtitle_stream.codec_context.codec.long_name,
-                    )
-                    for subtitle_stream in container.streams.subtitles
-                ],
-            )
-
-    def __str__(self):
-        return f"audio {self.audio} subtitle {self.subtitle}"
-
-    __repr__ = __str__

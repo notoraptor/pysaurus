@@ -28,7 +28,7 @@ class VideoIndexer(AbstractVideoIndexer):
             self.term_to_filenames.setdefault(term, set()).add(video.filename)
 
     def _remove_filename(self, filename: AbsolutePath, pop=False) -> List[str]:
-        old_terms = self.filename_to_terms.pop(filename)
+        old_terms = self.filename_to_terms.pop(filename, [])
         for term in old_terms:
             if (
                 term in self.term_to_filenames

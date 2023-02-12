@@ -25,7 +25,7 @@ from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
 from pysaurus.database import pattern_detection
 from pysaurus.database.db_features import DbFeatures
-from pysaurus.database.video_server import ServerLauncher
+from pysaurus.database.db_video_server import ServerLauncher
 from pysaurus.interface.api import tk_utils
 from pysaurus.interface.api.feature_api import FeatureAPI
 from pysaurus.interface.api.parallel_notifier import ParallelNotifier

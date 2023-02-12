@@ -28,8 +28,8 @@ from pysaurus.database.json_database import JsonDatabase
 from pysaurus.database.miniature_tools.group_computer import GroupComputer
 from pysaurus.database.miniature_tools.miniature import Miniature
 from pysaurus.database.special_properties import SpecialProperties
-from pysaurus.database.sql_index.sql_video_indexer import SqlVideoIndexer
 from pysaurus.database.video import Video
+from pysaurus.database.video_indexer import VideoIndexer
 from pysaurus.database.video_runtime_info import VideoRuntimeInfo
 from pysaurus.database.viewport.abstract_video_provider import AbstractVideoProvider
 from pysaurus.database.viewport.video_filter import VideoSelector
@@ -61,7 +61,8 @@ class Database(JsonDatabase):
             self.__paths.json_path,
             folders,
             notifier,
-            indexer=SqlVideoIndexer(self.__paths.index_path.path),
+            # indexer=SqlVideoIndexer(self.__paths.index_path.path),
+            indexer=VideoIndexer(),
         )
         # Set special properties
         with Profiler("install special properties", notifier=self.notifier):
@@ -199,6 +200,7 @@ class Database(JsonDatabase):
 
         videos = {}
         unreadable = []
+        replaced = []
         for arr in results:
             for d in arr:
                 file_path = AbsolutePath.ensure(d["f"])
@@ -222,7 +224,8 @@ class Database(JsonDatabase):
                     # Set special properties
                     SpecialProperties.set(video_state)
                 videos[file_path] = video_state
-                self.videos.pop(file_path, None)
+                if file_path in self.videos:
+                    replaced.append(self.videos.pop(file_path))
                 video_state.runtime = all_files[file_path]
 
         assert len(videos) == len(files_to_update)
@@ -231,7 +234,7 @@ class Database(JsonDatabase):
             self.videos.update(videos)
             self.date = current_date
             self.save()
-            self._add_videos_to_index(videos.values())
+            self._update_videos_in_index(videos.values())
         if unreadable:
             self.notifier.notify(
                 notifications.VideoInfoErrors(
@@ -391,10 +394,11 @@ class Database(JsonDatabase):
             if video.filename not in identifiers
         ]
 
-        notify_job_start(
-            self.notifier, jobs_python.generate_video_miniatures, len(tasks), "videos"
-        )
         if tasks:
+            notify_job_start(
+                self.notifier, jobs_python.generate_video_miniatures, len(tasks),
+                "videos"
+            )
             have_added = True
             with Profiler(self.lang.profile_generate_miniatures, self.notifier):
                 results = run_split_batch(
