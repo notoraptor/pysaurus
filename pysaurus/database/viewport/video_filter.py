@@ -4,8 +4,6 @@ from typing import Dict, List, Sequence, Set
 
 from pysaurus.application import exceptions
 from pysaurus.core import functions
-from pysaurus.database.video import Video
-from pysaurus.database.video_sorting import VideoSorting
 from pysaurus.database.viewport.abstract_video_provider import AbstractVideoProvider
 from pysaurus.database.viewport.source_def import SourceDef
 from pysaurus.database.viewport.view_tools import (
@@ -15,6 +13,8 @@ from pysaurus.database.viewport.view_tools import (
     SearchDef,
     VideoArray,
 )
+from pysaurus.video.video import Video
+from pysaurus.video.video_sorting import VideoSorting
 
 EMPTY_SET = set()
 

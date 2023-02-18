@@ -1,6 +1,6 @@
 from pysaurus.application.application import Application as OldApp
 from pysaurus.core.profiling import Profiler
-from pysaurus.database.properties import PropType
+from pysaurus.properties.properties import PropType
 from saurus.sql import data
 from saurus.sql.application import Application as NewApp
 

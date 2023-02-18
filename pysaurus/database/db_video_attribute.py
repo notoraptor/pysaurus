@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from typing import Any, Dict
 
-from pysaurus.database.video import Video
+from pysaurus.video.video import Video
 
 
 class _DbVideoAttribute:

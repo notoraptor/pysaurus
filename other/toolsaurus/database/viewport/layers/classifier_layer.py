@@ -3,8 +3,8 @@ from typing import List, Set
 from other.toolsaurus.database.viewport.layers.grouping_layer import GroupingLayer
 from other.toolsaurus.database.viewport.layers.layer import Layer
 from pysaurus.core import functions
-from pysaurus.database.video import Video
 from pysaurus.database.viewport.view_tools import Group, GroupArray
+from pysaurus.video.video import Video
 
 
 class ClassifierLayer(Layer):

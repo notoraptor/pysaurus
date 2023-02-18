@@ -3,27 +3,27 @@ from typing import Dict, Iterable, List, Optional, Sequence, Set, Union
 from pysaurus.application import exceptions
 from pysaurus.core import functions, notifying
 from pysaurus.core.components import AbsolutePath, DateModified, PathType
+from pysaurus.core.json_backup import JsonBackup
 from pysaurus.core.notifications import Notification
 from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
-from pysaurus.database.abstract_video_indexer import AbstractVideoIndexer
 from pysaurus.database.db_cache import DbCache
 from pysaurus.database.db_settings import DbSettings
 from pysaurus.database.db_video_attribute import (
     PotentialMoveAttribute,
     QualityAttribute,
 )
-from pysaurus.database.json_backup import JsonBackup
-from pysaurus.database.properties import (
+from pysaurus.properties.properties import (
     DefType,
     PROP_UNIT_TYPES,
     PROP_UNIT_TYPE_MAP,
     PropType,
     PropValueType,
 )
-from pysaurus.database.video import Video
-from pysaurus.database.video_indexer import VideoIndexer
+from pysaurus.video.abstract_video_indexer import AbstractVideoIndexer
+from pysaurus.video.video import Video
+from pysaurus.video.video_indexer import VideoIndexer
 
 
 class DatabaseLoaded(Notification):

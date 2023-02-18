@@ -5,11 +5,11 @@ from pysaurus.core.functions import camel_case_to_snake_case
 from pysaurus.core.job_notifications import JobStep, JobToDo
 from pysaurus.core.notifying import Notifier
 from pysaurus.core.profiling import Profiler
-from pysaurus.database.miniature_tools.miniature import Miniature
 from pysaurus.database.video_similarities.backend_python import (
     SIMPLE_MAX_PIXEL_DISTANCE,
     compare_faster,
 )
+from pysaurus.miniature.miniature import Miniature
 
 
 class JobNotifications:

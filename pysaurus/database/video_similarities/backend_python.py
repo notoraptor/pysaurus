@@ -4,7 +4,7 @@ from typing import List
 from pysaurus.core.constants import USABLE_CPU_COUNT
 from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
 from pysaurus.core.profiling import Profiler
-from pysaurus.database.miniature_tools.miniature import Miniature
+from pysaurus.miniature.miniature import Miniature
 
 SIMPLE_MAX_PIXEL_DISTANCE = 255 * 3
 V = SIMPLE_MAX_PIXEL_DISTANCE
@@ -148,8 +148,9 @@ def classify_similarities_directed(miniatures, edges, limit, database):
         "videos (Python comparison)",
     )
     with Profiler(
-        database.lang.profile_classify_similarities_python.format(
-            cpu_count=USABLE_CPU_COUNT
+        database.say(
+            "Python images comparison ({cpu_count} thread(s))",
+            cpu_count=USABLE_CPU_COUNT,
         ),
         notifier=database.notifier,
     ):

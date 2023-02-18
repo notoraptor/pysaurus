@@ -29,9 +29,9 @@ from pysaurus.database.db_video_server import ServerLauncher
 from pysaurus.interface.api import tk_utils
 from pysaurus.interface.api.feature_api import FeatureAPI
 from pysaurus.interface.api.parallel_notifier import ParallelNotifier
+from saurus.language import say
 
 process = Runnable("_launch")
-
 
 if System.is_windows():
     VLC_PATH = r"C:\Program Files\VideoLAN\VLC\vlc.exe"
@@ -277,7 +277,7 @@ class GuiAPI(FeatureAPI):
             self.copy_work = FileCopier(
                 filename, dst, notifier=self.notifier, notify_end=False
             )
-            with Profiler(self.database.lang.profile_move, notifier=self.notifier):
+            with Profiler(say("Move"), notifier=self.notifier):
                 done = self.copy_work.move()
             self.copy_work = None
             if done:
@@ -291,9 +291,7 @@ class GuiAPI(FeatureAPI):
         except Exception as exc:
             self.database.notifier.notify(
                 End(
-                    self.database.lang.error_moving_file.format(
-                        name=type(exc).__name__, message=exc
-                    )
+                    say("Error {name}: {message}", name=type(exc).__name__, message=exc)
                 )
             )
         finally:

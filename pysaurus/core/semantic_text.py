@@ -1,5 +1,5 @@
 import itertools
-from typing import Optional, Iterable, Union
+from typing import Iterable, Optional, Union
 
 
 class CharClass:

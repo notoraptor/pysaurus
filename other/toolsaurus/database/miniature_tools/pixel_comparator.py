@@ -1,6 +1,6 @@
 from typing import Tuple
 
-from pysaurus.database.miniature_tools.pixel_comparator import AbstractPixelComparator
+from pysaurus.miniature.pixel_comparator import AbstractPixelComparator
 
 
 class ColorClassPixelComparator(AbstractPixelComparator):

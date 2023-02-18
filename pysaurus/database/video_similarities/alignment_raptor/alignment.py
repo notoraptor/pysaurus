@@ -5,7 +5,8 @@ from pysaurus.core.constants import VIDEO_BATCH_SIZE
 from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
 from pysaurus.core.native.clibrary import c_int_p
 from pysaurus.core.profiling import Profiler
-from pysaurus.database.miniature_tools.miniature import Miniature
+from pysaurus.miniature.miniature import Miniature
+from saurus.language import say
 from .symbols import (
     PtrPtrSequence,
     PtrSequence,
@@ -30,7 +31,7 @@ def classify_similarities_directed(
     miniatures: List[Miniature], edges, sim_limit, database
 ):
     nb_sequences = len(miniatures)
-    with Profiler(database.lang.profile_allocate_native_data, database.notifier):
+    with Profiler(say("Allocate native data"), database.notifier):
         native_sequences = [
             miniature_to_c_sequence(sequence) for sequence in miniatures
         ]
@@ -40,7 +41,8 @@ def classify_similarities_directed(
         database.notifier, "compare_miniatures", nb_sequences, "videos (C++ comparison)"
     )
     with Profiler(
-        database.lang.profile_classify_similarities_native, database.notifier
+        say("Finding similar images using simpler NATIVE comparison."),
+        database.notifier,
     ):
         cursor = 0
         while cursor < nb_sequences:

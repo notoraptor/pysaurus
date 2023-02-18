@@ -24,9 +24,9 @@ def html_to_file_path(html: str) -> str:
 
 
 def generate_except_hook(qapp, original_excepthook):
-    def except_hook(cls, exception, traceback):
+    def except_hook(cls, exception, trace):
         print("[Qt] uncaught error", file=sys.stderr)
-        original_excepthook(cls, exception, traceback)
+        original_excepthook(cls, exception, trace)
         qapp.exit(1)
 
     return except_hook

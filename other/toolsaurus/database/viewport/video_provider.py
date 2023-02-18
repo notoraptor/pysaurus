@@ -1,15 +1,15 @@
 from typing import Dict, Optional, Sequence
 
-from other.toolsaurus.database.viewport.layers.source_layer import SourceLayer
 from other.toolsaurus.database.viewport.layers.classifier_layer import ClassifierLayer
 from other.toolsaurus.database.viewport.layers.group_layer import GroupLayer
 from other.toolsaurus.database.viewport.layers.grouping_layer import GroupingLayer
 from other.toolsaurus.database.viewport.layers.layer import Layer
 from other.toolsaurus.database.viewport.layers.search_layer import SearchLayer
 from other.toolsaurus.database.viewport.layers.sort_layer import SortLayer
-from pysaurus.database.video import Video
+from other.toolsaurus.database.viewport.layers.source_layer import SourceLayer
 from pysaurus.database.viewport.abstract_video_provider import AbstractVideoProvider
 from pysaurus.database.viewport.view_tools import GroupDef, VideoArray
+from pysaurus.video.video import Video
 
 
 class VideoProvider(AbstractVideoProvider):

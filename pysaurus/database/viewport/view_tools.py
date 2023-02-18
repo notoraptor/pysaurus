@@ -5,7 +5,7 @@ from pysaurus.core.compare import to_comparable
 from pysaurus.core.enumeration import Enumeration
 from pysaurus.core.functions import get_default
 from pysaurus.core.lookup_array import LookupArray
-from pysaurus.database.video import Video
+from pysaurus.video.video import Video
 
 
 class VideoArray(LookupArray[Video]):

@@ -24,8 +24,8 @@ from pysaurus.core.functions import (
 from pysaurus.core.jsonable import Jsonable
 from pysaurus.core.modules import FNV64
 from pysaurus.core.semantic_text import SemanticText
-from pysaurus.database.video_runtime_info import VideoRuntimeInfo
-from pysaurus.database.video_sorting import VideoSorting
+from pysaurus.video.video_runtime_info import VideoRuntimeInfo
+from pysaurus.video.video_sorting import VideoSorting
 
 
 class Video(Jsonable):

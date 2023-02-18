@@ -1,6 +1,6 @@
 from typing import Dict, Sequence
 
-from pysaurus.database.video import Video
+from pysaurus.video.video import Video
 
 
 class _SourceFlag:

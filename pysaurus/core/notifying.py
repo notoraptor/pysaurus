@@ -94,7 +94,6 @@ class Notifier:
 
 DEFAULT_NOTIFIER = Notifier()
 
-
 GLOBAL_SETTING_LOG: bool = True
 GLOBAL_SETTING_HANDLER: Optional[Callable[[Notification], None]] = None
 
@@ -117,7 +116,6 @@ def notify(notification: Notification):
 
 
 def with_handler(handler, function, *args):
-
     config(handler=handler)
     ret = function(*args)
     config(handler=None)

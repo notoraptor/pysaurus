@@ -1,5 +1,5 @@
 from pysaurus.core.jsonable import Jsonable
-from pysaurus.database.video_info.backend_pyav import open_video
+from pysaurus.video_info.backend_pyav import open_video
 
 
 class StreamInfo(Jsonable):

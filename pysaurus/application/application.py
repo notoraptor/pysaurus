@@ -7,6 +7,11 @@ import ujson as json
 
 from pysaurus import package_dir
 from pysaurus.application import exceptions
+from pysaurus.application.language.default_language import (
+    DefaultLanguage,
+    language_to_dict,
+)
+from pysaurus.application.language.language import Language
 from pysaurus.core import functions
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.custom_json_parser import parse_json
@@ -15,8 +20,6 @@ from pysaurus.core.jsonable import Jsonable
 from pysaurus.core.modules import FileSystem
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.database.database import Database
-from pysaurus.language.default_language import DefaultLanguage, language_to_dict
-from pysaurus.language.language import Language
 from saurus.language import say
 
 
@@ -48,7 +51,7 @@ class Application:
                 self.languages[path] = None
         # Load default languages names.
         for entry in FileSystem.scandir(
-            os.path.join(package_dir(), "language", "default")
+            os.path.join(package_dir(), "application", "language", "default")
         ):
             path = AbsolutePath(entry.path)
             if path.isfile() and path.extension == "txt":

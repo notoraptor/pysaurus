@@ -13,7 +13,7 @@ from pysaurus.core.classes import ToDict
 from pysaurus.core.components import ShortDuration as Duration
 from pysaurus.core.functions import function_none
 from pysaurus.interface.qtwebview.jump_slider import JumpSlider
-from pysaurus.language.default_language import DefaultLanguage
+from saurus.language import say
 
 
 class MyEvent(ToDict):
@@ -101,14 +101,14 @@ class Player(QtWidgets.QMainWindow):
                 self.events.append(Stopped(True))
 
     def update_paused(self, per_mil):
-        self.play_button.setText(self.lang.player_text_play)
-        self.play_button.setToolTip(self.lang.player_tooltip_play)
+        self.play_button.setText(say("\u25B6"))
+        self.play_button.setToolTip(say("Play"))
         self.set_slider_display(per_mil)
         self.set_duration_display(per_mil)
 
     def update_resumed(self, per_mil):
-        self.play_button.setText(self.lang.player_text_pause)
-        self.play_button.setToolTip(self.lang.player_tooltip_pause)
+        self.play_button.setText(say("\u23F8"))
+        self.play_button.setToolTip(say("Pause"))
         self.set_slider_display(per_mil)
         self.set_duration_display(per_mil)
 
@@ -122,9 +122,8 @@ class Player(QtWidgets.QMainWindow):
         else:
             self.open_next()
 
-    def __init__(self, master=None, *, on_next=None, lang=None):
+    def __init__(self, master=None, *, on_next=None):
         super().__init__(master)
-        self.lang = lang or DefaultLanguage
         self.on_next = on_next if callable(on_next) else function_none
         self.play_list = []
         self.events = deque()
@@ -157,7 +156,7 @@ class Player(QtWidgets.QMainWindow):
 
         # UI.
 
-        self.setWindowTitle(self.lang.player_title)
+        self.setWindowTitle(say("Media Player"))
         self.setWindowModality(QtCore.Qt.ApplicationModal)
         self.resize(800, 600)
 
@@ -172,24 +171,24 @@ class Player(QtWidgets.QMainWindow):
         self.video_frame.setAutoFillBackground(True)
 
         self.position_slider = JumpSlider(self)
-        self.position_slider.setToolTip(self.lang.player_tooltip_position)
+        self.position_slider.setToolTip(say("Position"))
         self.position_slider.setMaximum(1000)
         self.position_slider.valueChanged.connect(self.set_position)
 
-        self.play_button = QtWidgets.QPushButton(self.lang.player_text_play)
-        self.play_button.setToolTip(self.lang.player_tooltip_play)
+        self.play_button = QtWidgets.QPushButton(say("\u25B6"))
+        self.play_button.setToolTip(say("Play"))
         self.play_button.clicked.connect(self.play_pause)
 
-        self.next_button = QtWidgets.QPushButton(self.lang.player_text_next)
+        self.next_button = QtWidgets.QPushButton(say("Next"))
         self.next_button.clicked.connect(self.next)
 
-        self.repeat_button = QtWidgets.QCheckBox(self.lang.player_text_repeat, self)
+        self.repeat_button = QtWidgets.QCheckBox(say("Repeat"), self)
         self.repeat_button.setStyleSheet("font-weight: bold;")
 
         self.duration_label = QtWidgets.QLabel(self)
 
         self.volume_slider = JumpSlider(self)
-        self.volume_slider.setToolTip(self.lang.player_tooltip_volume)
+        self.volume_slider.setToolTip(say("Volume"))
         self.volume_slider.setMaximum(100)
         self.volume_slider.setValue(self.media_player.audio_get_volume())
         self.volume_slider.valueChanged.connect(self.set_volume)

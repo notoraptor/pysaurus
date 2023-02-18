@@ -1,9 +1,7 @@
 from typing import Iterable, Sequence
 
-from pysaurus.core import functions
 from pysaurus.core.functions import class_get_public_attributes, to_json_value
-from pysaurus.database.video import Video
-from pysaurus.database.viewport.view_tools import SearchDef
+from pysaurus.video.video import Video
 
 
 class VideoFeatures:
@@ -34,12 +32,6 @@ class VideoFeatures:
     def has_terms_id(self: Video, terms: Sequence[str]) -> bool:
         (term,) = terms
         return self.video_id == int(term)
-
-    @staticmethod
-    def find(search: SearchDef, videos: Iterable[Video]) -> Iterable[Video]:
-        terms = functions.string_to_pieces(search.text)
-        video_filter = getattr(VideoFeatures, f"has_terms_{search.cond}")
-        return (video for video in videos if video_filter(video, terms))
 
     @staticmethod
     def get_common_fields(videos: Iterable[Video]):

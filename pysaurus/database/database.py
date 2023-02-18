@@ -7,6 +7,7 @@ from typing import Dict, Iterable, List, Optional, Set, Tuple
 import ujson as json
 
 from pysaurus.application import exceptions
+from pysaurus.application.language.default_language import DefaultLanguage
 from pysaurus.core import functions, notifications
 from pysaurus.core.components import (
     AbsolutePath,
@@ -25,20 +26,20 @@ from pysaurus.database import jobs_python
 from pysaurus.database.db_paths import DbPaths
 from pysaurus.database.jobs_python import compress_thumbnails_to_jpeg
 from pysaurus.database.json_database import JsonDatabase
-from pysaurus.database.miniature_tools.group_computer import GroupComputer
-from pysaurus.database.miniature_tools.miniature import Miniature
 from pysaurus.database.special_properties import SpecialProperties
-from pysaurus.database.video import Video
-from pysaurus.database.video_indexer import VideoIndexer
-from pysaurus.database.video_runtime_info import VideoRuntimeInfo
 from pysaurus.database.viewport.abstract_video_provider import AbstractVideoProvider
 from pysaurus.database.viewport.video_filter import VideoSelector
-from pysaurus.language.default_language import DefaultLanguage
+from pysaurus.miniature.group_computer import GroupComputer
+from pysaurus.miniature.miniature import Miniature
+from pysaurus.video.video import Video
+from pysaurus.video.video_indexer import VideoIndexer
+from pysaurus.video.video_runtime_info import VideoRuntimeInfo
+from saurus.language import say
 
 try:
-    from pysaurus.database.video_info import video_raptor as backend_raptor
+    from pysaurus.video_info import video_raptor as backend_raptor
 except exceptions.CysaurusUnavailable:
-    from pysaurus.database.video_info import backend_pyav as backend_raptor
+    from pysaurus.video_info import backend_pyav as backend_raptor
 
     print("Using fallback backend for videos info and thumbnails.", file=sys.stderr)
 
@@ -103,7 +104,7 @@ class Database(JsonDatabase):
     def __check_thumbnails_on_disk(self):
         # type: () -> Dict[str, DateModified]
         thumbs = {}
-        with Profiler(self.lang.profile_collect_thumbnails, self.notifier):
+        with Profiler(say("Collect thumbnails"), self.notifier):
             for entry in FileSystem.scandir(
                 self.__paths.thumb_folder.path
             ):  # type: os.DirEntry
@@ -188,7 +189,7 @@ class Database(JsonDatabase):
             "videos",
         )
         with Profiler(
-            self.lang.profile_collect_video_infos.format(cpu_count=CPU_COUNT),
+            say("Collect videos info ({cpu_count} threads)", cpu_count=CPU_COUNT),
             notifier=self.notifier,
         ):
             results = run_split_batch(
@@ -255,7 +256,7 @@ class Database(JsonDatabase):
         # Collect videos with and without thumbnails.
         existing_thumb_names = self.__check_thumbnails_on_disk()
 
-        with Profiler(self.lang.profile_check_video_thumbnails, notifier=self.notifier):
+        with Profiler(say("Check videos thumbnails"), notifier=self.notifier):
             for video in self.get_videos("readable"):
                 thumb_name = video.thumb_name
                 if not video.found:
@@ -273,9 +274,7 @@ class Database(JsonDatabase):
 
         # If a thumbnail name is associated to many videos,
         # consider these videos don't have thumbnails.
-        with Profiler(
-            self.lang.profile_check_unique_thumbnails, notifier=self.notifier
-        ):
+        with Profiler(say("Check unique thumbnails"), notifier=self.notifier):
             for valid_thumb_name, vds in thumb_to_videos.items():
                 if len(vds) == 1:
                     valid_thumb_names.add(valid_thumb_name)
@@ -325,8 +324,9 @@ class Database(JsonDatabase):
             "videos",
         )
         with Profiler(
-            title=self.lang.profile_collect_video_thumbnails.format(
-                cpu_count=CPU_COUNT
+            title=say(
+                "Get thumbnails from JSON through {cpu_count} thread(s)",
+                cpu_count=CPU_COUNT,
             ),
             notifier=self.notifier,
         ):
@@ -396,11 +396,13 @@ class Database(JsonDatabase):
 
         if tasks:
             notify_job_start(
-                self.notifier, jobs_python.generate_video_miniatures, len(tasks),
-                "videos"
+                self.notifier,
+                jobs_python.generate_video_miniatures,
+                len(tasks),
+                "videos",
             )
             have_added = True
-            with Profiler(self.lang.profile_generate_miniatures, self.notifier):
+            with Profiler(say("Generating miniatures."), self.notifier):
                 results = run_split_batch(
                     jobs_python.generate_video_miniatures,
                     tasks,
@@ -538,7 +540,7 @@ class Database(JsonDatabase):
         return modified
 
     def refresh(self, ensure_miniatures=False) -> None:
-        with Profiler(self.lang.profile_reset_thumbnail_errors, self.notifier):
+        with Profiler(say("Reset thumbnail errors"), self.notifier):
             for video in self.get_videos("readable", "found", "without_thumbnails"):
                 video.unreadable_thumbnail = False
         self.update()

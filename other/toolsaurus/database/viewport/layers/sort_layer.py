@@ -2,9 +2,10 @@ from typing import List, Sequence
 
 from other.toolsaurus.database.viewport.layers.layer import Layer
 from other.toolsaurus.database.viewport.layers.source_layer import SourceLayer
-from pysaurus.database.video import Video
-from pysaurus.database.video_sorting import VideoSorting
 from pysaurus.database.viewport.view_tools import VideoArray
+from pysaurus.video.video import Video
+from pysaurus.video.video_sorting import VideoSorting
+from saurus.language import say
 
 
 class SortLayer(Layer):
@@ -65,14 +66,10 @@ class SortLayer(Layer):
             message = []
             if readable_unreadable[0]:
                 message.append(
-                    self.database.lang.message_count_readable_sorted.format(
-                        count=len(readable_unreadable[0])
-                    )
+                    say("{count} readable sorted", count=len(readable_unreadable[0]))
                 )
             message.append(
-                self.database.lang.message_count_unreadable_not_sorted.format(
-                    count=len(readable_unreadable[1])
-                )
+                say("{count} unreadable not sorted", count=len(readable_unreadable[1]))
             )
 
         return VideoArray(readable_unreadable[0] + readable_unreadable[1])

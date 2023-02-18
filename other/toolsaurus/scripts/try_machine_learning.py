@@ -2,8 +2,8 @@ from typing import List
 
 from pysaurus.application.application import Application
 from pysaurus.database.machine_learning import optimize_pattern_predictor, predict
-from pysaurus.database.miniature_tools.miniature import Miniature
-from pysaurus.database.video import Video
+from pysaurus.miniature.miniature import Miniature
+from pysaurus.video.video import Video
 
 
 def main():

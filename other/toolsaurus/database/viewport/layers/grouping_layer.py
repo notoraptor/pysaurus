@@ -2,8 +2,8 @@ from typing import Dict, Optional
 
 from other.toolsaurus.database.viewport.layers.layer import Layer
 from pysaurus.core.components import AbsolutePath
-from pysaurus.database.video import Video
 from pysaurus.database.viewport.view_tools import Group, GroupArray, GroupDef
+from pysaurus.video.video import Video
 
 
 class GroupingLayer(Layer):

@@ -7,8 +7,8 @@ from pysaurus.core import notifications
 from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.profiling import Profiler
-from pysaurus.database.miniature_tools.miniature import Miniature
-from pysaurus.language.default_language import DefaultLanguage
+from pysaurus.miniature.miniature import Miniature
+from saurus.language import say
 
 
 def _miniature_to_x(m: Miniature) -> List:
@@ -54,9 +54,8 @@ def optimize_pattern_predictor(
     nb_convergence = 0
     nb_expected_convergence = 10
     notifier = database.notifier if database else DEFAULT_NOTIFIER
-    lang = database.lang if database else DefaultLanguage
     notify_job_start(notifier, optimize_pattern_predictor, nb_steps, "steps")
-    with Profiler(lang.profile_train, notifier):
+    with Profiler(say("Train"), notifier):
         with open("train.tsv", "w") as train_log:
             print("\t".join(f"t{i + 1}" for i in range(len(theta))), file=train_log)
             for step in range(nb_steps):
@@ -75,7 +74,8 @@ def optimize_pattern_predictor(
                         None,
                         nb_steps,
                         nb_steps,
-                        title=lang.job_step_predictor_opt_converged.format(
+                        title=say(
+                            "Converged, # {step}, \u00A9 {cost}, \u03b8 [{min_theta}; {max_theta}]",
                             step=(step + 1),
                             cost=c,
                             min_theta=min(theta),
@@ -96,7 +96,8 @@ def optimize_pattern_predictor(
                     None,
                     step + 1,
                     nb_steps,
-                    title=lang.job_step_predictor_opt.format(
+                    title=say(
+                        "# {step}, \u00A9 {cost}, \u03b8 [{min_theta}; {max_theta}]",
                         step=(step + 1),
                         cost=c,
                         min_theta=min(theta),
@@ -106,7 +107,7 @@ def optimize_pattern_predictor(
     if nb_convergence == nb_expected_convergence:
         notifier.notify(
             notifications.Message(
-                lang.message_predictor_opt_converged.format(count=nb_convergence)
+                say("Converged in {count} last steps.", count=nb_convergence)
             )
         )
     return list(theta)

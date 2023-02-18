@@ -2,7 +2,7 @@ from abc import ABCMeta, abstractmethod
 from typing import Dict, Iterable, List, Sequence, Set
 
 from pysaurus.core.components import AbsolutePath
-from pysaurus.database.video import Video
+from pysaurus.video.video import Video
 
 
 class AbstractVideoIndexer(metaclass=ABCMeta):

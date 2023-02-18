@@ -9,8 +9,8 @@ from pysaurus.core.components import AbsolutePath, PathType
 from pysaurus.core.modules import System
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.database import Database
-from pysaurus.database.miniature_tools.miniature import Miniature
-from pysaurus.database.video import Video
+from pysaurus.miniature.miniature import Miniature
+from pysaurus.video.video import Video
 
 
 class ExtendedDatabase(Database):

@@ -4,7 +4,7 @@ from typing import Dict
 from pysaurus.core import constants
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.modules import FileSystem
-from pysaurus.database.video_runtime_info import VideoRuntimeInfo
+from pysaurus.video.video_runtime_info import VideoRuntimeInfo
 
 
 def _scan_folder_for_videos(folder: str, files: Dict[AbsolutePath, VideoRuntimeInfo]):

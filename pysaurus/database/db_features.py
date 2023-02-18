@@ -12,8 +12,9 @@ from pysaurus.core.job_notifications import notify_job_progress, notify_job_star
 from pysaurus.core.notifying import Notifier
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.database import Database
-from pysaurus.database.miniature_tools.graph import Graph
-from pysaurus.database.miniature_tools.miniature import Miniature
+from pysaurus.miniature.graph import Graph
+from pysaurus.miniature.miniature import Miniature
+from saurus.language import say
 
 # from collections import deque
 
@@ -120,7 +121,7 @@ class DbFeatures:
             raise
 
     def find_similar_videos(self, db: Database, miniatures: List[Miniature] = None):
-        with Profiler(db.lang.profile_find_similar_videos, db.notifier):
+        with Profiler(say("Find similar videos."), db.notifier):
             if miniatures is None:
                 miniatures = db.ensure_miniatures(returns=True)  # type: List[Miniature]
             video_indices = [m.video_id for m in miniatures]
@@ -136,12 +137,12 @@ class DbFeatures:
 
             if not new_miniature_indices:
                 db.notifier.notify(
-                    notifications.Message(db.lang.message_similarity_no_new_videos)
+                    notifications.Message(say("No new videos to check."))
                 )
                 return
 
             nb_max_comparisons = compute_nb_couples(nb_videos)
-            with Profiler(db.lang.profile_allocate_edge_map, notifier=db.notifier):
+            with Profiler(say("Allocating edges map"), notifier=db.notifier):
                 cmp_map = self.generate_edges(nb_videos)
             classifier_new = _GrayClassifier.classify(miniatures, new_miniature_indices)
             classifier_old = _GrayClassifier.classify(miniatures, old_miniature_indices)
@@ -153,7 +154,8 @@ class DbFeatures:
 
             db.notifier.notify(
                 notifications.Message(
-                    db.lang.message_similarity_todo.format(
+                    say(
+                        "To do: {count} / {total} comparisons ({percent} %).",
                         count=nb_cmp,
                         total=nb_max_comparisons,
                         percent=(nb_cmp * 100 / nb_max_comparisons),
@@ -165,7 +167,8 @@ class DbFeatures:
 
             db.notifier.notify(
                 notifications.Message(
-                    db.lang.message_similarity_count_found.format(
+                    say(
+                        "Finally found {nb_similarities} new similarity groups with {nb_images} images.",
                         nb_similarities=len(sim_groups),
                         nb_images=sum(len(g) for g in sim_groups),
                     )
@@ -179,17 +182,18 @@ class DbFeatures:
                 max((sim_id for sim_id in prev_sims if sim_id is not None), default=0)
                 + 1
             )
-            with Profiler(db.lang.profile_merge_old_and_new_similarities, db.notifier):
+            with Profiler(say("Merge new similarities with old ones."), db.notifier):
                 sim_id_to_vid_ids = {}
                 for i in old_miniature_indices:
                     sim_id_to_vid_ids.setdefault(prev_sims[i], []).append(i)
                 sim_id_to_vid_ids.pop(-1, None)
                 db.notifier.notify(
                     notifications.Message(
-                        db.lang.message_similarity_count_old.format(
+                        say(
+                            "Found {count} old similarities.",
                             count=sum(
                                 1 for g in sim_id_to_vid_ids.values() if len(g) > 1
-                            )
+                            ),
                         )
                     )
                 )
@@ -206,8 +210,9 @@ class DbFeatures:
                 ]
                 db.notifier.notify(
                     notifications.Message(
-                        db.lang.message_similarity_count_final.format(
-                            count=len(new_sim_groups)
+                        say(
+                            "Found {count} total similarities after merging.",
+                            count=len(new_sim_groups),
                         )
                     )
                 )
@@ -228,8 +233,8 @@ class DbFeatures:
                     new_sim_indices.append(new_id)
                 db.notifier.notify(
                     notifications.Message(
-                        db.lang.message_similarity_count_pure_new.format(
-                            count=nb_new_indices
+                        say(
+                            "Found {count} pure new similarities.", count=nb_new_indices
                         )
                     )
                 )
@@ -263,7 +268,7 @@ class DbFeatures:
         nb_miniatures: int,
         db: Database,
     ):
-        with Profiler(db.lang.profile_collect_comparisons, db.notifier):
+        with Profiler(say("Collect comparisons."), db.notifier):
             nb_cmp = sum(
                 compute_nb_couples(len(group))
                 for clf in classifier.classifiers
@@ -319,7 +324,7 @@ class DbFeatures:
         notify_job_start(
             db.notifier, self.compare_old_vs_new_miniatures, n, "new miniatures"
         )
-        with Profiler(db.lang.profile_compare_old_vs_new_miniatures, db.notifier):
+        with Profiler(say("Cross compare classifiers."), db.notifier):
             nb_cmp = 0
             for i_gray_left, gray_left in enumerate(classifier_left.grays):
                 sub_classifier_left = classifier_left.classifiers[i_gray_left]
@@ -378,7 +383,7 @@ class DbFeatures:
         backend_sim.classify_similarities_directed(miniatures, edges, SIM_LIMIT, db)
         graph = Graph()
         nb_miniatures = len(miniatures)
-        with Profiler(db.lang.profile_link_miniature_comparisons, db.notifier):
+        with Profiler(say("Link videos ..."), db.notifier):
             if self.positions:
                 nb_pos = len(self.positions)
                 notify_job_start(

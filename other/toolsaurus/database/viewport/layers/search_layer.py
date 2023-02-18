@@ -2,10 +2,10 @@ from typing import Optional
 
 from other.toolsaurus.database.viewport.layers.layer import Layer
 from other.toolsaurus.database.viewport.layers.source_layer import SourceLayer
+from other.toolsaurus.modules import OtherVideoFeatures
 from pysaurus.core import functions
-from pysaurus.database.video import Video
-from pysaurus.database.video_features import VideoFeatures
 from pysaurus.database.viewport.view_tools import Group, SearchDef, VideoArray
+from pysaurus.video.video import Video
 
 
 class SearchLayer(Layer):
@@ -28,7 +28,7 @@ class SearchLayer(Layer):
             root = self._get_root()
             if isinstance(root, SourceLayer):
                 return self.__filter_from_root_layer(search_def, root, data)
-            return VideoArray(VideoFeatures.find(search_def, data.videos))
+            return VideoArray(OtherVideoFeatures.find(search_def, data.videos))
         return data.videos
 
     def __filter_from_root_layer(

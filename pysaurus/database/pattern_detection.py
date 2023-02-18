@@ -7,8 +7,9 @@ from pysaurus.core.notifications import Message
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.database import Database
 from pysaurus.database.machine_learning import optimize_pattern_predictor, predict
-from pysaurus.database.properties import PropType
-from pysaurus.database.video import Video
+from pysaurus.properties.properties import PropType
+from pysaurus.video.video import Video
+from saurus.language import say
 
 
 def _is_prediction_property(db: Database, name: str) -> bool:
@@ -31,9 +32,11 @@ class NoPredictor(PysaurusError):
     pass
 
 
-def compute_pattern_detector(db: Database, videos: List[Video], prop_name: str):
-    assert _is_prediction_property(db, prop_name)
-    video_id_to_miniature = {m.video_id: m for m in db.ensure_miniatures(returns=True)}
+def compute_pattern_detector(database: Database, videos: List[Video], prop_name: str):
+    assert _is_prediction_property(database, prop_name)
+    video_id_to_miniature = {
+        m.video_id: m for m in database.ensure_miniatures(returns=True)
+    }
     videos = [v for v in videos if v.video_id in video_id_to_miniature]
     classifier = {}
     for video in videos:
@@ -43,10 +46,12 @@ def compute_pattern_detector(db: Database, videos: List[Video], prop_name: str):
         raise NoVideoForClass0(prop_name)
     if 1 not in classifier:
         raise NoVideoForClass1(prop_name)
-    db.notifier.notify(
+    database.notifier.notify(
         Message(
-            db.lang.message_predictor_training_set.format(
-                count0=len(classifier[0]), count1=len(classifier[1])
+            say(
+                "Training set: false {count0}, true {count1}",
+                count0=len(classifier[0]),
+                count1=len(classifier[1]),
             )
         )
     )
@@ -58,24 +63,26 @@ def compute_pattern_detector(db: Database, videos: List[Video], prop_name: str):
         miniatures.append(video_id_to_miniature[video_id])
         classes.append(video_id_to_class[video_id])
     theta = optimize_pattern_predictor(
-        miniatures, classes, theta=db.get_predictor(prop_name), database=db
+        miniatures, classes, theta=database.get_predictor(prop_name), database=database
     )
-    db.set_predictor(prop_name, theta)
-    db.save()
+    database.set_predictor(prop_name, theta)
+    database.save()
 
 
-def predict_pattern(db: Database, videos: List[Video], prop_name: str):
+def predict_pattern(database: Database, videos: List[Video], prop_name: str):
     """Apply pattern detector."""
-    theta = db.get_predictor(prop_name)
+    theta = database.get_predictor(prop_name)
     if not theta:
         raise NoPredictor(prop_name)
-    video_id_to_miniature = {m.video_id: m for m in db.ensure_miniatures(returns=True)}
+    video_id_to_miniature = {
+        m.video_id: m for m in database.ensure_miniatures(returns=True)
+    }
     videos = [v for v in videos if v.video_id in video_id_to_miniature]
     output_prop_name = "<!" + prop_name[2:]
-    if not db.has_prop_type(output_prop_name):
-        db.add_prop_type(PropType(output_prop_name, [0, 1]), save=False)
-    notify_job_start(db.notifier, predict_pattern, len(videos), "videos")
-    with Profiler(db.lang.profile_predict, db.notifier):
+    if not database.has_prop_type(output_prop_name):
+        database.add_prop_type(PropType(output_prop_name, [0, 1]), save=False)
+    notify_job_start(database.notifier, predict_pattern, len(videos), "videos")
+    with Profiler(say("Predict"), database.notifier):
         for i, video in enumerate(videos):
             video.edit_properties(
                 {
@@ -84,9 +91,11 @@ def predict_pattern(db: Database, videos: List[Video], prop_name: str):
                     )
                 }
             )
-            notify_job_progress(db.notifier, predict_pattern, None, i + 1, len(videos))
+            notify_job_progress(
+                database.notifier, predict_pattern, None, i + 1, len(videos)
+            )
 
-    db.save()
+    database.save()
     return output_prop_name
 
 

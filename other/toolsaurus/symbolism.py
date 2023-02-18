@@ -118,11 +118,11 @@ class _Apply(Run):
     def __abs__(self):
         return _Apply(abs, self)
 
-    def __getitem__(self, item):
-        return _Apply(operator.getitem, self, item)
+    def __getitem__(self, item_):
+        return _Apply(operator.getitem, self, item_)
 
-    def __getattr__(self, item):
-        return _Apply(getattr, self, item)
+    def __getattr__(self, item_):
+        return _Apply(getattr, self, item_)
 
 
 class _And(_Apply):

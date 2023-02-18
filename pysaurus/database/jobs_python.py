@@ -9,9 +9,9 @@ from pysaurus.core.job_utils import Job
 from pysaurus.core.modules import ImageUtils
 from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.profiling import Profiler
-from pysaurus.database.miniature_tools.miniature import Miniature
-from pysaurus.database.video_file_lister import scan_path_for_videos
-from pysaurus.database.video_runtime_info import VideoRuntimeInfo
+from pysaurus.miniature.miniature import Miniature
+from pysaurus.video.video_file_lister import scan_path_for_videos
+from pysaurus.video.video_runtime_info import VideoRuntimeInfo
 from saurus.language import say
 
 

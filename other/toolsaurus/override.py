@@ -117,5 +117,5 @@ def override(arg):
         cls = arg
         return lambda fn: _override_decorator(fn, stack_length=1, parent_class=cls)
     elif inspect.isfunction(arg):
-        fn = arg
-        return _override_decorator(fn, stack_length=1)
+        fn_ = arg
+        return _override_decorator(fn_, stack_length=1)

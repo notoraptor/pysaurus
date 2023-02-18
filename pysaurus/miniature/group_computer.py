@@ -6,16 +6,16 @@ from pysaurus.core.constants import CPU_COUNT
 from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.profiling import Profiler
-from pysaurus.database.miniature_tools.decomposed_miniature import (
+from pysaurus.miniature.decomposed_miniature import (
     DecomposedMiniature,
 )
-from pysaurus.database.miniature_tools.graph import Graph
-from pysaurus.database.miniature_tools.miniature import Miniature
-from pysaurus.database.miniature_tools.pixel_comparator import (
+from pysaurus.miniature.graph import Graph
+from pysaurus.miniature.miniature import Miniature
+from pysaurus.miniature.pixel_comparator import (
     DistancePixelComparator,
 )
-from pysaurus.database.miniature_tools.pixel_group import PixelGroup
-from pysaurus.language.default_language import DefaultLanguage
+from pysaurus.miniature.pixel_group import PixelGroup
+from saurus.language import say
 
 
 class GroupComputer:
@@ -115,13 +115,16 @@ class GroupComputer:
     ) -> List[DecomposedMiniature]:
         cpu_count = cpu_count or max(1, CPU_COUNT - 2)
         notifier = database.notifier if database else DEFAULT_NOTIFIER
-        lang = database.lang if database else DefaultLanguage
         notify_job_start(
             notifier, self.collect_miniature_groups, len(miniatures), "miniatures"
         )
         tasks = [(i, m, len(miniatures), notifier) for i, m in enumerate(miniatures)]
         with Profiler(
-            lang.profile_batch_compute_groups.format(n=len(tasks), cpu_count=cpu_count),
+            say(
+                "batch_compute_groups(n={n}, cpu={cpu_count})",
+                n=len(tasks),
+                cpu_count=cpu_count,
+            ),
             notifier,
         ):
             with Pool(cpu_count) as p:

@@ -5,7 +5,7 @@ import av
 
 from pysaurus.core.job_notifications import notify_job_progress
 from pysaurus.core.job_utils import Job
-from pysaurus.database.video import Video
+from pysaurus.video.video import Video
 
 # TODO Try to not import Video here
 M = {jt.name: jt.short for jt in Video.__definitions__.values()}

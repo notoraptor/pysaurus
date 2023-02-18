@@ -2,11 +2,11 @@ import sys
 from typing import Dict, Optional
 
 from pysaurus.application.application import Application
+from pysaurus.application.language.default_language import language_to_dict
 from pysaurus.core.components import Duration, FileSize
 from pysaurus.core.functions import compute_nb_pages, extract_object
 from pysaurus.database.database import Database
-from pysaurus.database.video_features import VideoFeatures
-from pysaurus.language.default_language import language_to_dict
+from pysaurus.video.video_features import VideoFeatures
 
 
 class FeatureAPI:

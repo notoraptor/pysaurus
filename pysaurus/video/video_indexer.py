@@ -2,8 +2,8 @@ from typing import Dict, Iterable, List, Sequence, Set
 
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.functions import string_to_pieces
-from pysaurus.database.abstract_video_indexer import AbstractVideoIndexer
-from pysaurus.database.video import Video
+from pysaurus.video.abstract_video_indexer import AbstractVideoIndexer
+from pysaurus.video.video import Video
 
 EMPTY_SET = set()
 
