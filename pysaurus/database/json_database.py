@@ -2,7 +2,7 @@ from typing import Dict, Iterable, List, Optional, Sequence, Set, Union
 
 from pysaurus.application import exceptions
 from pysaurus.core import functions, notifying
-from pysaurus.core.components import AbsolutePath, DateModified, PathType
+from pysaurus.core.components import AbsolutePath, Date, PathType
 from pysaurus.core.json_backup import JsonBackup
 from pysaurus.core.notifications import Notification
 from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
@@ -84,7 +84,7 @@ class JsonDatabase:
         self.get_videos = DbCache(self)
         # Database content
         self.settings = DbSettings()
-        self.date = DateModified.now()
+        self.date = Date.now()
         self.folders: Set[AbsolutePath] = set()
         self.videos: Dict[AbsolutePath, Video] = {}
         self.prop_types: Dict[str, PropType] = {}
@@ -116,7 +116,7 @@ class JsonDatabase:
 
         # Parsing date.
         if "date" in json_dict:
-            self.date = DateModified(json_dict["date"])
+            self.date = Date(json_dict["date"])
 
         # Parsing folders.
         self.folders.update(AbsolutePath(path) for path in json_dict.get("folders", ()))

@@ -6,12 +6,12 @@ import sys
 from datetime import datetime
 from typing import Union
 
-from pysaurus.core import constants, core_exceptions
-from pysaurus.core.constants import WINDOWS_PATH_PREFIX
+from pysaurus.core import core_exceptions
 from pysaurus.core.modules import FileSystem, System
 
 
 class AbsolutePath:
+    WINDOWS_PATH_PREFIX = "\\\\?\\"
     __slots__ = ("__path",)
 
     def __init__(self, path):
@@ -20,19 +20,19 @@ class AbsolutePath:
         if (
             len(path) >= 260
             and System.is_windows()
-            and not path.startswith(WINDOWS_PATH_PREFIX)
+            and not path.startswith(self.WINDOWS_PATH_PREFIX)
         ):
-            path = WINDOWS_PATH_PREFIX + path
+            path = self.WINDOWS_PATH_PREFIX + path
         self.__path = path
 
     def is_standard(self):
-        return not self.__path.startswith(WINDOWS_PATH_PREFIX)
+        return not self.__path.startswith(self.WINDOWS_PATH_PREFIX)
 
     @property
     def standard_path(self):
         return (
-            self.__path[len(WINDOWS_PATH_PREFIX) :]
-            if self.__path.startswith(WINDOWS_PATH_PREFIX)
+            self.__path[len(self.WINDOWS_PATH_PREFIX) :]
+            if self.__path.startswith(self.WINDOWS_PATH_PREFIX)
             else self.__path
         )
 
@@ -116,7 +116,7 @@ class AbsolutePath:
         return AbsolutePath(os.path.dirname(self.__path))
 
     def get_date_modified(self):
-        return DateModified(self.get_mtime())
+        return Date(self.get_mtime())
 
     def get_mtime(self):
         return FileSystem.path.getmtime(self.__path)
@@ -176,7 +176,7 @@ class AbsolutePath:
         elif System.is_mac():
             subprocess.run(["open", self.__path])
         elif System.is_windows():
-            if self.__path.startswith(WINDOWS_PATH_PREFIX):
+            if self.__path.startswith(self.WINDOWS_PATH_PREFIX):
                 from pysaurus.core.native.windows import get_short_path_name
 
                 path = get_short_path_name(self.standard_path)
@@ -269,7 +269,7 @@ STDERR: {stderr.strip()}"""
 PathType = Union[AbsolutePath, str]
 
 
-class DateModified:
+class Date:
     __slots__ = ("time",)
 
     def __init__(self, float_timestamp):
@@ -299,7 +299,7 @@ class DateModified:
 
     @staticmethod
     def now():
-        return DateModified(datetime.now().timestamp())
+        return Date(datetime.now().timestamp())
 
 
 class Duration:
@@ -393,17 +393,30 @@ class ShortDuration(Duration):
 
 
 class FileSize:
+    BYTES = 1
+    KILO_BYTES = 1024
+    MEGA_BYTES = KILO_BYTES * KILO_BYTES
+    GIGA_BYTES = KILO_BYTES * MEGA_BYTES
+    TERA_BYTES = KILO_BYTES * GIGA_BYTES
+    SIZE_UNIT_TO_STRING = {
+        BYTES: "b",
+        KILO_BYTES: "Kb",
+        MEGA_BYTES: "Mb",
+        GIGA_BYTES: "Gb",
+        TERA_BYTES: "Tb",
+    }
+
     __slots__ = ("__size", "__unit")
 
     def __init__(self, size):
         # type: (int) -> None
         self.__size = size
-        self.__unit = constants.BYTES
+        self.__unit = self.BYTES
         for unit in (
-            constants.TERA_BYTES,
-            constants.GIGA_BYTES,
-            constants.MEGA_BYTES,
-            constants.KILO_BYTES,
+            self.TERA_BYTES,
+            self.GIGA_BYTES,
+            self.MEGA_BYTES,
+            self.KILO_BYTES,
         ):
             if size // unit:
                 self.__unit = unit
@@ -427,7 +440,7 @@ class FileSize:
         return isinstance(other, FileSize) and self.value < other.value
 
     def __str__(self):
-        return f"{round(self.nb_units, 2)} {constants.SIZE_UNIT_TO_STRING[self.__unit]}"
+        return f"{round(self.nb_units, 2)} {self.SIZE_UNIT_TO_STRING[self.__unit]}"
 
     def to_json(self):
         return str(self)

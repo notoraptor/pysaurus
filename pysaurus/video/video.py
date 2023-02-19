@@ -14,7 +14,7 @@ from typing import Any, Dict, Iterable, Set
 
 from pysaurus.core.classes import StringPrinter, StringedTuple, Text
 from pysaurus.core.compare import to_comparable
-from pysaurus.core.components import AbsolutePath, DateModified, Duration, FileSize
+from pysaurus.core.components import AbsolutePath, Date, Duration, FileSize
 from pysaurus.core.constants import JPEG_EXTENSION, PYTHON_ERROR_THUMBNAIL
 from pysaurus.core.functions import (
     class_get_public_attributes,
@@ -155,7 +155,7 @@ class Video(Jsonable):
     disk = property(
         lambda self: self.filename.get_drive_name() or self.runtime.driver_id
     )
-    date = property(lambda self: DateModified(self.runtime.mtime))
+    date = property(lambda self: Date(self.runtime.mtime))
 
     readable = property(lambda self: not self.unreadable)
     found = property(lambda self: self.runtime.is_file)

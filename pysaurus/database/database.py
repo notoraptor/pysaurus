@@ -11,7 +11,7 @@ from pysaurus.application.language.default_language import DefaultLanguage
 from pysaurus.core import functions, notifications
 from pysaurus.core.components import (
     AbsolutePath,
-    DateModified,
+    Date,
     PathType,
 )
 from pysaurus.core.constants import CPU_COUNT, JPEG_EXTENSION, THUMBNAIL_EXTENSION
@@ -102,7 +102,7 @@ class Database(JsonDatabase):
         return all_file_names
 
     def __check_thumbnails_on_disk(self):
-        # type: () -> Dict[str, DateModified]
+        # type: () -> Dict[str, Date]
         thumbs = {}
         with Profiler(say("Collect thumbnails"), self.notifier):
             for entry in FileSystem.scandir(
@@ -110,7 +110,7 @@ class Database(JsonDatabase):
             ):  # type: os.DirEntry
                 if entry.path.lower().endswith(f".{JPEG_EXTENSION}"):
                     name = entry.name
-                    thumbs[name[: -(len(JPEG_EXTENSION) + 1)]] = DateModified(
+                    thumbs[name[: -(len(JPEG_EXTENSION) + 1)]] = Date(
                         entry.stat().st_mtime
                     )
         return thumbs
@@ -174,7 +174,7 @@ class Database(JsonDatabase):
 
     @Profiler.profile_method()
     def update(self) -> None:
-        current_date = DateModified.now()
+        current_date = Date.now()
 
         all_files = jobs_python.collect_video_paths(self.folders, self.notifier)
         self._update_videos_not_found(all_files)

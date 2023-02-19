@@ -1,6 +1,6 @@
 from typing import Callable, Dict, Optional
 
-from pysaurus.core.components import DateModified
+from pysaurus.core.components import Date
 from pysaurus.core.notifications import Notification
 
 ManagerType = Callable[[Notification], None]
@@ -42,7 +42,7 @@ class Notifier:
         if self.__log_path:
             with open(self.__log_path, "a", encoding="utf-8") as file:
                 if not self.__log_written:
-                    file.write(f"\n########## LOG {DateModified.now()} ##########\n\n")
+                    file.write(f"\n########## LOG {Date.now()} ##########\n\n")
                     self.__log_written = True
                 line = f"{notification}\n"
                 file.write(line)
