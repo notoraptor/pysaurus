@@ -4,7 +4,7 @@ import sys
 import av
 
 from pysaurus.core.job_notifications import notify_job_progress
-from pysaurus.core.job_utils import Job
+from pysaurus.core.parallelization import Job
 from pysaurus.video.video import Video
 
 # TODO Try to not import Video here

@@ -16,9 +16,9 @@ from pysaurus.core.components import (
 from pysaurus.core.constants import JPEG_EXTENSION, THUMBNAIL_EXTENSION
 from pysaurus.core.functions import generate_temp_file_path
 from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
-from pysaurus.core.job_utils import parallelize, run_split_batch
 from pysaurus.core.modules import FileSystem, ImageUtils
 from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
+from pysaurus.core.parallelization import parallelize, run_split_batch
 from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
 from pysaurus.database import jobs_python

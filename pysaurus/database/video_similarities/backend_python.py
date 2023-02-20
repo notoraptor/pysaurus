@@ -1,7 +1,7 @@
 from typing import List
 
 from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
-from pysaurus.core.job_utils import USABLE_CPU_COUNT, parallelize
+from pysaurus.core.parallelization import USABLE_CPU_COUNT, parallelize
 from pysaurus.core.profiling import Profiler
 from pysaurus.miniature.miniature import Miniature
 

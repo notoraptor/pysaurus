@@ -2,8 +2,8 @@ from typing import List
 
 from pysaurus.core.classes import AbstractMatrix
 from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
-from pysaurus.core.job_utils import USABLE_CPU_COUNT, parallelize
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
+from pysaurus.core.parallelization import USABLE_CPU_COUNT, parallelize
 from pysaurus.core.profiling import Profiler
 from pysaurus.miniature.decomposed_miniature import (
     DecomposedMiniature,

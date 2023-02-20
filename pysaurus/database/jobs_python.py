@@ -4,9 +4,9 @@ from pysaurus.core import notifications
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.constants import JPEG_EXTENSION
 from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
-from pysaurus.core.job_utils import Job, parallelize
 from pysaurus.core.modules import ImageUtils
 from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
+from pysaurus.core.parallelization import Job, parallelize
 from pysaurus.core.profiling import Profiler
 from pysaurus.miniature.miniature import Miniature
 from pysaurus.video.video_file_lister import scan_path_for_videos

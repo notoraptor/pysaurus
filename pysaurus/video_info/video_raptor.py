@@ -6,7 +6,7 @@ from pysaurus.bin.symbols import RUN_VIDEO_RAPTOR_BATCH, RUN_VIDEO_RAPTOR_THUMBN
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.custom_json_parser import parse_json
 from pysaurus.core.job_notifications import notify_job_progress
-from pysaurus.core.job_utils import Job
+from pysaurus.core.parallelization import Job
 
 
 def _job_video_to_json(job):
