@@ -392,9 +392,17 @@ class DbFeatures:
                 for index, pos in enumerate(self.positions):
                     if edges[pos]:
                         graph.connect(pos // nb_miniatures, pos % nb_miniatures)
-                    notify_job_progress(
-                        db.notifier, "link_compared_miniatures", None, index + 1, nb_pos
-                    )
+                    if (index + 1) % 500 == 0:
+                        notify_job_progress(
+                            db.notifier,
+                            "link_compared_miniatures",
+                            None,
+                            index + 1,
+                            nb_pos,
+                        )
+                notify_job_progress(
+                    db.notifier, "link_compared_miniatures", None, nb_pos, nb_pos
+                )
                 self.positions.clear()
             else:
                 notify_job_start(
@@ -404,7 +412,19 @@ class DbFeatures:
                     for j in range(i + 1, nb_miniatures):
                         if edges[i * nb_miniatures + j]:
                             graph.connect(i, j)
-                    notify_job_progress(
-                        db.notifier, "link_compared_videos", None, i + 1, nb_miniatures
-                    )
+                    if (i + 1) % 500 == 0:
+                        notify_job_progress(
+                            db.notifier,
+                            "link_compared_videos",
+                            None,
+                            i + 1,
+                            nb_miniatures,
+                        )
+                notify_job_progress(
+                    db.notifier,
+                    "link_compared_videos",
+                    None,
+                    nb_miniatures,
+                    nb_miniatures,
+                )
         return [group for group in graph.pop_groups() if len(group) > 1]

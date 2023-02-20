@@ -1,8 +1,7 @@
-from multiprocessing import Pool
 from typing import List
 
-from pysaurus.core.constants import USABLE_CPU_COUNT
 from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
+from pysaurus.core.job_utils import USABLE_CPU_COUNT, parallelize
 from pysaurus.core.profiling import Profiler
 from pysaurus.miniature.miniature import Miniature
 
@@ -149,25 +148,24 @@ def classify_similarities_directed(miniatures, edges, limit, database):
     )
     with Profiler(
         database.say(
-            "Python images comparison ({cpu_count} thread(s))",
-            cpu_count=USABLE_CPU_COUNT,
+            "Python images comparison",
         ),
         notifier=database.notifier,
     ):
-        with Pool(USABLE_CPU_COUNT) as p:
-            raw_output = list(
-                p.imap(
-                    _compare_miniatures_from_python,
-                    _comparison_jobs(
-                        miniatures,
-                        edges,
-                        limit,
-                        maximum_distance_score,
-                        database.notifier,
-                    ),
-                    chunksize=100,
-                )
+        raw_output = list(
+            parallelize(
+                _compare_miniatures_from_python,
+                _comparison_jobs(
+                    miniatures,
+                    edges,
+                    limit,
+                    maximum_distance_score,
+                    database.notifier,
+                ),
+                cpu_count=USABLE_CPU_COUNT,
+                chunksize=100,
             )
+        )
     for couple in raw_output:
         if couple:
             i, j = couple

@@ -1,9 +1,8 @@
-from multiprocessing import Pool
 from typing import List
 
 from pysaurus.core.classes import AbstractMatrix
-from pysaurus.core.constants import CPU_COUNT
 from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
+from pysaurus.core.job_utils import USABLE_CPU_COUNT, parallelize
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.profiling import Profiler
 from pysaurus.miniature.decomposed_miniature import (
@@ -111,9 +110,8 @@ class GroupComputer:
         return DecomposedMiniature(miniature.identifier, self.group_pixels(miniature))
 
     def batch_compute_groups(
-        self, miniatures: List[Miniature], *, database=None, cpu_count=None
+        self, miniatures: List[Miniature], *, database=None
     ) -> List[DecomposedMiniature]:
-        cpu_count = cpu_count or max(1, CPU_COUNT - 2)
         notifier = database.notifier if database else DEFAULT_NOTIFIER
         notify_job_start(
             notifier, self.collect_miniature_groups, len(miniatures), "miniatures"
@@ -121,14 +119,14 @@ class GroupComputer:
         tasks = [(i, m, len(miniatures), notifier) for i, m in enumerate(miniatures)]
         with Profiler(
             say(
-                "batch_compute_groups(n={n}, cpu={cpu_count})",
+                "batch_compute_groups(n={n} miniature(s))",
                 n=len(tasks),
-                cpu_count=cpu_count,
             ),
             notifier,
         ):
-            with Pool(cpu_count) as p:
-                raw_output = list(p.imap(self.collect_miniature_groups, tasks))
+            raw_output = list(
+                parallelize(self.collect_miniature_groups, tasks, USABLE_CPU_COUNT)
+            )
         notify_job_progress(
             notifier,
             self.collect_miniature_groups,

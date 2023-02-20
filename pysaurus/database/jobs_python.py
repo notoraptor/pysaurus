@@ -1,11 +1,10 @@
-from multiprocessing import Pool
 from typing import Collection, Dict, List
 
 from pysaurus.core import notifications
 from pysaurus.core.components import AbsolutePath
-from pysaurus.core.constants import CPU_COUNT, JPEG_EXTENSION
+from pysaurus.core.constants import JPEG_EXTENSION
 from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
-from pysaurus.core.job_utils import Job
+from pysaurus.core.job_utils import Job, parallelize
 from pysaurus.core.modules import ImageUtils
 from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.profiling import Profiler
@@ -51,12 +50,13 @@ def collect_video_paths(
     notify_job_start(notifier, collect_videos_from_folders, len(sources), "folders")
     jobs = [[path, i, notifier] for i, path in enumerate(sources)]
     with Profiler(
-        title=say("Collect videos ({cpu_count} threads)", cpu_count=CPU_COUNT),
+        title=say("Collect videos"),
         notifier=notifier,
     ):
-        with Pool(CPU_COUNT) as p:
-            for local_result in p.imap_unordered(collect_videos_from_folders, jobs):
-                paths.update(local_result)
+        for local_result in parallelize(
+            collect_videos_from_folders, jobs, ordered=False
+        ):
+            paths.update(local_result)
     notifier.notify(notifications.FinishedCollectingVideos(paths))
     return paths
 

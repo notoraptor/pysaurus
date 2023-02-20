@@ -1,4 +1,5 @@
-import concurrent.futures
+import os
+from multiprocessing import Pool
 from typing import List
 
 
@@ -11,12 +12,16 @@ class Job:
         self.args = args or ()
 
 
-def run_split_batch(function, tasks, job_count, extra_args=None):
-    jobs = dispatch_tasks(tasks, job_count, extra_args)
+CPU_COUNT = os.cpu_count()
+USABLE_CPU_COUNT = max(1, CPU_COUNT - 2)
+
+
+def run_split_batch(function, tasks, *, job_count=CPU_COUNT, extra_args=None):
+    jobs = _dispatch_tasks(tasks, job_count, extra_args)
     return parallelize(function, jobs, job_count)
 
 
-def dispatch_tasks(tasks, job_count, extra_args=None):
+def _dispatch_tasks(tasks, job_count, extra_args=None):
     # type: (list, int, list) -> List[Job]
     """Split <tasks> into <job_count> jobs and associate each one
     with an unique job ID starting from <next_job_id>, so that
@@ -53,7 +58,7 @@ def dispatch_tasks(tasks, job_count, extra_args=None):
     return jobs
 
 
-def parallelize(function, jobs, cpu_count):
-    with concurrent.futures.ProcessPoolExecutor(max_workers=cpu_count) as executor:
-        results = list(executor.map(function, jobs))
-    return results
+def parallelize(function, jobs, cpu_count=CPU_COUNT, chunksize=1, ordered=True):
+    with Pool(cpu_count) as p:
+        mapper = p.imap if ordered else p.imap_unordered
+        yield from mapper(function, jobs, chunksize=chunksize)

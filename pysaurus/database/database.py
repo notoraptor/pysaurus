@@ -1,7 +1,6 @@
 import os
 import sys
 from collections import Counter
-from multiprocessing import Pool
 from typing import Dict, Iterable, List, Optional, Set, Tuple
 
 import ujson as json
@@ -14,10 +13,10 @@ from pysaurus.core.components import (
     Date,
     PathType,
 )
-from pysaurus.core.constants import CPU_COUNT, JPEG_EXTENSION, THUMBNAIL_EXTENSION
+from pysaurus.core.constants import JPEG_EXTENSION, THUMBNAIL_EXTENSION
 from pysaurus.core.functions import generate_temp_file_path
 from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
-from pysaurus.core.job_utils import run_split_batch
+from pysaurus.core.job_utils import parallelize, run_split_batch
 from pysaurus.core.modules import FileSystem, ImageUtils
 from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.path_tree import PathTree
@@ -189,14 +188,13 @@ class Database(JsonDatabase):
             "videos",
         )
         with Profiler(
-            say("Collect videos info ({cpu_count} threads)", cpu_count=CPU_COUNT),
+            say("Collect videos info"),
             notifier=self.notifier,
         ):
             results = run_split_batch(
                 backend_raptor.collect_video_info,
                 files_to_update,
-                CPU_COUNT,
-                [self.__paths.db_folder, self.notifier],
+                extra_args=[self.__paths.db_folder, self.notifier],
             )
 
         videos = {}
@@ -325,8 +323,7 @@ class Database(JsonDatabase):
         )
         with Profiler(
             title=say(
-                "Get thumbnails from JSON through {cpu_count} thread(s)",
-                cpu_count=CPU_COUNT,
+                "Get thumbnails from JSON",
             ),
             notifier=self.notifier,
         ):
@@ -336,8 +333,7 @@ class Database(JsonDatabase):
                     (video.filename.path, video.thumb_name)
                     for video in videos_without_thumbs
                 ],
-                CPU_COUNT,
-                [
+                extra_args=[
                     self.__paths.db_folder,
                     self.__paths.thumb_folder.best_path,
                     self.notifier,
@@ -406,8 +402,7 @@ class Database(JsonDatabase):
                 results = run_split_batch(
                     jobs_python.generate_video_miniatures,
                     tasks,
-                    CPU_COUNT,
-                    [self.notifier],
+                    extra_args=[self.notifier],
                 )
             for local_array in results:
                 added_miniatures.extend(local_array)
@@ -472,8 +467,7 @@ class Database(JsonDatabase):
             self.notifier, compress_thumbnails_to_jpeg, len(png_paths), "PNG thumbnails"
         )
         tasks = [(path, i, self.notifier) for i, path in enumerate(png_paths)]
-        with Pool(CPU_COUNT) as p:
-            list(p.imap_unordered(compress_thumbnails_to_jpeg, tasks))
+        list(parallelize(compress_thumbnails_to_jpeg, tasks, ordered=False))
 
     def rename(self, new_name) -> None:
         self.__paths = self.__paths.renamed(new_name)

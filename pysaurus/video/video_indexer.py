@@ -2,6 +2,10 @@ from typing import Dict, Iterable, List, Sequence, Set
 
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.functions import string_to_pieces
+from pysaurus.core.job_notifications import (
+    global_notify_job_progress,
+    global_notify_job_start,
+)
 from pysaurus.video.abstract_video_indexer import AbstractVideoIndexer
 from pysaurus.video.video import Video
 
@@ -16,10 +20,15 @@ class VideoIndexer(AbstractVideoIndexer):
         self.filename_to_terms: Dict[AbsolutePath, List[str]] = {}
 
     def build(self, videos: Iterable[Video]):
+        videos = videos if isinstance(videos, (list, tuple, set)) else list(videos)
         self.term_to_filenames.clear()
         self.filename_to_terms.clear()
-        for video in videos:
+        global_notify_job_start("build_index", len(videos), "videos")
+        for i, video in enumerate(videos):
             self.add_video(video)
+            if (i + 1) % 500 == 0:
+                global_notify_job_progress("build_index", None, i + 1, len(videos))
+        global_notify_job_progress("build_index", None, len(videos), len(videos))
 
     def add_video(self, video: Video):
         terms = video.terms()
