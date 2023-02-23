@@ -84,7 +84,7 @@ class LayerSource(Layer):
                 path = tuple(path)
                 if path not in valid_paths:
                     assert len(set(path)) == len(path)
-                    assert all(Video.is_flag(flag) for flag in path)
+                    assert all(flag in Video.__flags__ for flag in path)
                     valid_paths.add(path)
             if valid_paths:
                 super().set_params(sources=sorted(valid_paths))
@@ -221,7 +221,7 @@ class LayerClassifier(_AbstractLayerGrouping):
     ) -> GroupArray:
         classes = {}
         for video in videos:
-            for value in video.properties.get(prop_name, []):
+            for value in video.get_property(prop_name, []):
                 classes.setdefault(value, []).append(video)
         for value in path:
             classes.pop(value)

@@ -240,7 +240,11 @@ export class Video extends React.Component {
 								{audio_bit_rate} {tr("Kb/s")}
 							</span>{" "}
 							| <strong className={cc(common.length)}>{data.length}</strong> |{" "}
-							<code className={cc(common.date)}>{data.date}</code>
+							<code className={cc(common.date)}>{data.date}</code> |{" "}
+							<em>
+								(entry){" "}
+								<code className={cc(common.date_entry_modified)}>{data.date_entry_modified}</code>
+							</em>
 						</div>
 						<div>
 							<strong>Audio</strong>:{" "}
@@ -371,6 +375,11 @@ export class Video extends React.Component {
 							{" | "}
 							<div>
 								<code>{data.date}</code>
+							</div>
+							<div>
+								<em>
+									(entry) <code>{data.date_entry_modified}</code>
+								</em>
 							</div>
 						</div>
 						<div className="horizontal">

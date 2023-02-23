@@ -312,8 +312,8 @@ class JsonDatabase:
             prop_type.name = new_name
             self.prop_types[new_name] = prop_type
             for video in self.query():
-                if old_name in video.properties:
-                    video.edit_properties({new_name: video.properties.pop(old_name)})
+                if video.has_property(old_name):
+                    video.set_property(new_name, video.remove_property(old_name))
             self.save()
 
     def convert_prop_to_unique(self, name) -> None:
@@ -322,16 +322,16 @@ class JsonDatabase:
             if not prop_type.multiple:
                 raise exceptions.PropertyAlreadyUnique(name)
             for video in self.query():
-                if name in video.properties and len(video.properties[name]) > 1:
+                if video.has_property(name) and len(video.get_property(name)) > 1:
                     raise exceptions.PropertyToUniqueError(name, video)
             prop_type.multiple = False
             for video in self.query():
-                if name in video.properties:
-                    if video.properties[name]:
-                        video.edit_properties({name: video.properties[name][0]})
+                if video.has_property(name):
+                    if video.get_property(name):
+                        video.set_property(name, video.get_property(name)[0])
                     else:
                         # delete property value
-                        video.edit_properties({name: None})
+                        video.remove_property(name, None)
             self.save()
 
     def convert_prop_to_multiple(self, name) -> None:
@@ -341,14 +341,14 @@ class JsonDatabase:
                 raise exceptions.PropertyAlreadyMultiple(name)
             prop_type.multiple = True
             for video in self.query():
-                if name in video.properties:
-                    video.edit_properties({name: [video.properties[name]]})
+                if video.has_property(name):
+                    video.set_property(name, [video.get_property(name)])
             self.save()
 
     def get_prop_values(self, video: Video, name: str, default=False) -> list:
         values = []
-        if name in video.properties:
-            value = video.properties[name]
+        if video.has_property(name):
+            value = video.get_property(name)
             values = value if self.prop_types[name].multiple else [value]
         assert isinstance(values, list)
         if default and not values and not self.prop_types[name].multiple:
@@ -359,18 +359,18 @@ class JsonDatabase:
         self, video: Video, name: str, values: Union[Sequence, Set]
     ) -> None:
         if not values:
-            video.edit_properties({name: None})
+            video.remove_property(name, None)
         elif self.prop_types[name].multiple:
-            video.edit_properties({name: self.prop_types[name].validate(values)})
+            video.set_property(name, self.prop_types[name].validate(values))
         else:
             (value,) = values
-            video.edit_properties({name: self.prop_types[name].validate(value)})
+            video.set_property(name, self.prop_types[name].validate(value))
 
     def merge_prop_values(
         self, video: Video, name: str, values: Union[Sequence, Set]
     ) -> None:
         if self.prop_types[name].multiple:
-            values = video.properties.get(name, []) + list(values)
+            values = video.get_property(name, []) + list(values)
         self.set_prop_values(video, name, values)
 
     def validate_prop_values(self, name, values: list) -> list:

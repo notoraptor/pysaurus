@@ -40,7 +40,7 @@ def compute_pattern_detector(database: Database, videos: List[Video], prop_name:
     videos = [v for v in videos if v.video_id in video_id_to_miniature]
     classifier = {}
     for video in videos:
-        prop_val = video.properties.get(prop_name, -1)
+        prop_val = video.get_property(prop_name, -1)
         classifier.setdefault(prop_val, []).append(video)
     if 0 not in classifier:
         raise NoVideoForClass0(prop_name)
@@ -84,12 +84,9 @@ def predict_pattern(database: Database, videos: List[Video], prop_name: str):
     notify_job_start(database.notifier, predict_pattern, len(videos), "videos")
     with Profiler(say("Predict"), database.notifier):
         for i, video in enumerate(videos):
-            video.edit_properties(
-                {
-                    output_prop_name: int(
-                        predict(video_id_to_miniature[video.video_id], theta) >= 0.5
-                    )
-                }
+            video.set_property(
+                output_prop_name,
+                int(predict(video_id_to_miniature[video.video_id], theta) >= 0.5),
             )
             notify_job_progress(
                 database.notifier, predict_pattern, None, i + 1, len(videos)

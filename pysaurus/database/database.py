@@ -217,7 +217,7 @@ class Database(JsonDatabase):
                     # Get previous properties, if available
                     if file_path in self.videos and self.videos[file_path].readable:
                         old_video = self.videos[file_path]
-                        video_state.properties.update(old_video.properties)
+                        video_state.set_properties(old_video.properties)
                         video_state.similarity_id = old_video.similarity_id
                         video_state.video_id = old_video.video_id
                     # Set special properties
@@ -526,9 +526,9 @@ class Database(JsonDatabase):
         self.notifier.notify(notifications.FieldsModified(["move_id", "quality"]))
         return video.filename
 
-    def set_video_properties(self, video_id: int, properties) -> Set[str]:
+    def set_video_properties(self, video_id: int, properties: dict) -> Set[str]:
         video = self.__get_video_from_id(video_id)
-        modified = video.update_properties(properties)
+        modified = video.set_validated_properties(properties)
         self.save()
         self._notify_properties_modified(modified, [video])
         return modified

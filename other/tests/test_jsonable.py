@@ -52,14 +52,14 @@ class E(Jsonable):
 class F(Jsonable):
     a: set
 
-    def get_a(self):
+    def _get_a(self):
         return list(self.__json__["a"])
 
-    def to_dict_a(self, v):
+    def _to_dict_a(self, v):
         return tuple(sorted(v))
 
     @classmethod
-    def from_dict_a(cls, v):
+    def _from_dict_a(cls, v):
         return set(v)
 
 

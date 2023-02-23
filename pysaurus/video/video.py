@@ -35,6 +35,7 @@ class Video(Jsonable):
     video_id: ("j", int) = None
     runtime: ("R", VideoRuntimeInfo) = {}
     thumb_name: "i" = ""
+    date_entry_modified: ("m", float) = None
 
     unreadable: "U" = False
     audio_bit_rate: "r" = 0
@@ -61,6 +62,14 @@ class Video(Jsonable):
 
     __slots__ = ("discarded", "database")
     __protected__ = ("database", "runtime", "discarded")
+    __flags__ = {
+        "readable",
+        "unreadable",
+        "found",
+        "not_found",
+        "with_thumbnails",
+        "without_thumbnails",
+    }
 
     def __init__(self, database, **kwargs):
         super().__init__(**kwargs)
@@ -71,7 +80,7 @@ class Video(Jsonable):
         self.discarded = False
         self.database = database
         # Additional initialization.
-        self.update_properties(self.__json__["properties"])
+        self.set_validated_properties(self.__json__["properties"])
 
     def __str__(self):
         cls = type(self)
@@ -90,50 +99,52 @@ class Video(Jsonable):
     def __lt__(self, other):
         return self.filename < other.filename
 
-    def get_filename(self):
+    def _get_filename(self):
         return AbsolutePath(self.__json__["filename"])
 
-    def set_filename(self, data):
+    def _set_filename(self, data):
         assert isinstance(data, (str, AbsolutePath))
         self.__json__["filename"] = str(data)
 
-    def get_audio_codec(self):
+    def _get_audio_codec(self):
         return Text(self.__json__["audio_codec"])
 
-    def get_audio_codec_description(self):
+    def _get_audio_codec_description(self):
         return Text(self.__json__["audio_codec_description"])
 
-    def get_container_format(self):
+    def _get_container_format(self):
         return Text(self.__json__["container_format"])
 
-    def get_device_name(self):
+    def _get_device_name(self):
         return Text(self.__json__["device_name"])
 
-    def get_meta_title(self):
+    def _get_meta_title(self):
         return Text(html_to_title(self.__json__["meta_title"]))
 
-    def get_video_codec(self):
+    def _get_video_codec(self):
         return Text(self.__json__["video_codec"])
 
-    def get_video_codec_description(self):
+    def _get_video_codec_description(self):
         return Text(self.__json__["video_codec_description"])
 
-    def get_thumb_name(self):
+    def _get_thumb_name(self):
         if not self.__json__["thumb_name"]:
             self.__json__["thumb_name"] = FNV64.hash(self.filename.standard_path)
         return self.__json__["thumb_name"]
 
-    def set_properties(self, properties: dict):
-        self.__json__["properties"] = {
-            key: self.database.get_prop_val(key, value)
-            for key, value in properties.items()
-        }
+    def _get_date_entry_modified(self):
+        if self.__json__["date_entry_modified"] is None:
+            self.__json__["date_entry_modified"] = self.runtime.mtime
+        return Date(self.__json__["date_entry_modified"])
 
-    def to_dict_errors(self, errors):
+    def _set_properties(self, properties: dict):
+        raise NotImplementedError()
+
+    def _to_dict_errors(self, errors):
         return list(errors)
 
     @classmethod
-    def from_dict_errors(cls, errors):
+    def _from_dict_errors(cls, errors):
         return set(errors)
 
     def extract_attributes(self, keys: Iterable[str]) -> Dict[str, Any]:
@@ -141,7 +152,9 @@ class Video(Jsonable):
         for key in keys:
             if key.startswith(":"):
                 prop_name = key[1:]
-                out.setdefault("properties", {})[prop_name] = self.properties[prop_name]
+                out.setdefault("properties", {})[prop_name] = self.get_property(
+                    prop_name
+                )
             else:
                 out[key] = getattr(self, key)
         return out
@@ -237,47 +250,47 @@ class Video(Jsonable):
         t_all = t_all_str if t_all_str == t_all_str_low else (t_all_str + t_all_str_low)
         return set(t_all) if as_set else t_all
 
-    def edit_properties(self, properties: Dict[str, object]) -> Set[str]:
-        modified = set()
-        for name, value in properties.items():
-            if value is None:
-                if name in self.properties:
-                    modified.add(name)
-                    del self.properties[name]
-            else:
-                if name not in self.properties or self.properties[name] != value:
-                    modified.add(name)
-                self.properties[name] = value
-        return modified
-
-    def update_properties(self, properties: dict) -> Set[str]:
-        return {
-            name
-            for name, value in properties.items()
-            if self.update_property(name, value)
-        }
-
-    def update_property(self, name, value):
-        value = self.database.get_prop_val(name, value)
-        modified = name not in self.properties or self.properties[name] != value
-        self.properties[name] = value
-        return modified
-
-    def remove_property(self, name):
-        self.properties.pop(name, None)
-
     def to_comparable(self, sorting: VideoSorting) -> list:
         return [
             to_comparable(getattr(self, field), reverse) for field, reverse in sorting
         ]
 
-    @classmethod
-    def is_flag(cls, name):
-        return name in {
-            "readable",
-            "unreadable",
-            "found",
-            "not_found",
-            "with_thumbnails",
-            "without_thumbnails",
+    def has_property(self, name):
+        return name in self.properties
+
+    def get_property(self, name, *default):
+        return self.properties.get(name, *default) if default else self.properties[name]
+
+    def remove_property(self, name, *default):
+        self._save_date_entry_modified()
+        return self.properties.pop(name, *default)
+
+    def set_validated_properties(self, properties: Dict[str, Any]) -> Set[str]:
+        return self.set_properties(
+            {
+                name: self.database.get_prop_val(name, value)
+                for name, value in properties.items()
+            }
+        )
+
+    def set_properties(self, properties: Dict[str, Any]) -> Set[str]:
+        return {
+            name for name, value in properties.items() if self.set_property(name, value)
         }
+
+    def set_property(self, name, value) -> bool:
+        modified = False
+        if value is None:
+            if name in self.properties:
+                modified = True
+                del self.properties[name]
+        else:
+            if name not in self.properties or self.properties[name] != value:
+                modified = True
+            self.properties[name] = value
+        self._save_date_entry_modified(modified)
+        return modified
+
+    def _save_date_entry_modified(self, save=True):
+        if save:
+            self.date_entry_modified = Date.now().time

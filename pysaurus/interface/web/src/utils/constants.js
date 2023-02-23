@@ -92,6 +92,7 @@ export const FIELD_MAP = new FieldMap([
 	new FieldInfo("bit_depth", tr("bit depth"), GroupPermission.ALL, FieldType.int),
 	new FieldInfo("container_format", tr("container format"), GroupPermission.ALL, FieldType.str),
 	new FieldInfo("date", tr("date modified"), GroupPermission.ONLY_MANY, FieldType.sortable),
+	new FieldInfo("date_entry_modified", tr("date entry modified"), GroupPermission.ONLY_MANY, FieldType.sortable),
 	new FieldInfo("day", tr("day"), GroupPermission.ALL, FieldType.str),
 	new FieldInfo("disk", tr("disk"), GroupPermission.ALL, FieldType.str),
 	new FieldInfo("extension", tr("file extension"), GroupPermission.ALL, FieldType.str),

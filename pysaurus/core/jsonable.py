@@ -26,14 +26,10 @@ class Type:
     """
     name: typedef = default
         name: string, required
-        typedef: optional
-            Define attribute type and short name
-            If short not provided, set to None
-            If type not provided, set to default type
-            Typedef is either:
-                type: attribute type
-                short: str: attribute short name
-                (type, short) or (short, type): attribute type and short name
+        typedef: optional, attribute type (`type`) and short name (`str`). Either:
+            type: attribute type (short name set to None)
+            short: attribute short name (type set to default's type)
+            (type, short) or (short, type): attribute type and short name
         default: optional
             If not provided:
                 No default allowed: value required for this attribute.
@@ -43,9 +39,8 @@ class Type:
                 If type not provided, any type allowed.
             If provided:
                 Will be validated against attribute type
-                If type not provided, type is default type.
-    NB:
-        If one attribute has short name, then all attributes must have short names
+                If type not provided, type is default's type
+    NB: If one attribute has short name, then all attributes must have short names
     """
 
     __slots__ = (
@@ -64,7 +59,6 @@ class Type:
         if typedef is None:
             short, ktype = None, None
         elif isinstance(typedef, (tuple, list)):
-            assert len(typedef) == 2
             v1, v2 = typedef
             if isinstance(v1, str):
                 assert isinstance(v2, type)
@@ -79,7 +73,6 @@ class Type:
             assert isinstance(typedef, type)
             short, ktype = None, typedef
         if default:
-            assert len(default) == 1
             (default_value,) = default
             if ktype is None and default_value is not None:
                 ktype = type(default_value)
@@ -97,19 +90,15 @@ class Type:
             self.allowed_types = (int, float) if self.type is float else (self.type,)
 
     def __str__(self):
-        ret = self.name
-        if self.short:
-            ret += "(" + self.short + ")"
+        ret = self.name + (f"({self.short})" if self.short else "")
         ret += ": " + (self.type.__name__ if self.type else "Any")
-        if self.default:
-            ret += f" = {self.default[0]}"
+        ret += f" = {self.default[0]}" if self.default else ""
         return ret
 
     def __call__(self, *args):
         if len(args) == 0:
             return None if self.accepts_none() else self.new()
         else:
-            assert len(args) == 1
             (value,) = args
             if value is None:
                 if not self.accepts_none():
@@ -162,9 +151,10 @@ class JsonableType(Type):
             assert issubclass(self.type, Jsonable)
 
     def validate(self, value):
-        if isinstance(value, self.type):
-            return value
-        return self.type.from_dict(value)
+        return value if isinstance(value, self.type) else self.type.from_dict(value)
+
+    def new(self):
+        return self.validate(super().new())
 
     def standard_to_dict(self, obj, value):
         value = self(value)
@@ -175,17 +165,14 @@ class JsonableType(Type):
 
 
 def _get_type(key, annotation, *default):
-    attribute_type = Type(key, annotation, *default)
-    if issubclass(attribute_type.type, Jsonable):
-        typedef = (
-            attribute_type.type
-            if attribute_type.short is None
-            else (attribute_type.type, attribute_type.short)
+    attr_t = Type(key, annotation, *default)
+    if issubclass(attr_t.type, Jsonable):
+        attr_t = JsonableType(
+            attr_t.name,
+            (attr_t.type if attr_t.short is None else (attr_t.type, attr_t.short)),
+            *attr_t.default,
         )
-        attribute_type = JsonableType(
-            attribute_type.name, typedef, *attribute_type.default
-        )
-    return attribute_type
+    return attr_t
 
 
 class Shortener:
@@ -234,7 +221,7 @@ def generate_property(
         getter = prev_prop.fget
         setter = prev_prop.fset
 
-    name_getter = f"get_{key}"
+    name_getter = f"_get_{key}"
     if name_getter in namespace:
         getter = namespace.pop(name_getter)
     elif getter is None:
@@ -245,7 +232,7 @@ def generate_property(
         fn_get.__name__ = name_getter
         getter = fn_get
 
-    name_setter = f"set_{key}"
+    name_setter = f"_set_{key}"
     if name_setter in namespace:
         setter = namespace.pop(name_setter)
     elif setter is None:
@@ -267,6 +254,8 @@ class _MetaJSON(type):
 
     def __new__(mcs, name, bases, namespace):
         assert "__definitions__" not in namespace, "Reserved attribute: __definitions__"
+        assert "__shortener__" not in namespace, "Reserved attribute: __shortener__"
+
         annotations = namespace.get("__annotations__", {})
         attributes = {
             key: value for key, value in namespace.items() if is_attribute(key, value)
@@ -294,18 +283,18 @@ class _MetaJSON(type):
         if short:
             if len(short) != len(definitions):
                 raise TypeError(
-                    f"""short required for all or nothing.
-Got:      {', '.join(sorted(short))}
-Expected: {', '.join(sorted(definitions))}
-"""
+                    f"short required for all or nothing.\n"
+                    f"Got:      {', '.join(sorted(short))}\n"
+                    f"Expected: {', '.join(sorted(definitions))}"
                 )
             assert all(
                 key in short for key in definitions
             ), "missing attributes in short"
+            assert len(short) == len(set(short.values())), "Found common short names"
 
         for jt in definitions.values():
-            name_to_dict = f"to_dict_{jt.name}"
-            name_from_dict = f"from_dict_{jt.name}"
+            name_to_dict = f"_to_dict_{jt.name}"
+            name_from_dict = f"_from_dict_{jt.name}"
             if name_to_dict in namespace:
                 jt.to_dict = namespace.pop(name_to_dict)
                 if isinstance(jt.to_dict, (classmethod, staticmethod)):
@@ -317,22 +306,19 @@ Expected: {', '.join(sorted(definitions))}
                     jt.from_dict = jt.from_dict.__func__
                 assert callable(jt.from_dict)
 
+        prev_properties = {}
+        for base in reversed(get_bases(bases)):  # from ancient to recent base
+            for key in definitions:
+                if hasattr(base, key):
+                    prev_properties[key] = getattr(base, key)
+        assert all(isinstance(value, property) for value in prev_properties.values())
+
         namespace["__definitions__"] = {
             key: definitions[key] for key in sorted(definitions)
         }
         namespace["__shortener__"] = Shortener(short)
-
-        previous_properties = {}
-        for base in reversed(get_bases(bases)):
-            for key in definitions:
-                if hasattr(base, key):
-                    previous_properties[key] = getattr(base, key)
-        assert all(
-            isinstance(value, property) for value in previous_properties.values()
-        )
-
         for key in definitions:
-            namespace[key] = generate_property(namespace, key, previous_properties)
+            namespace[key] = generate_property(namespace, key, prev_properties)
         return type.__new__(mcs, name, bases, namespace)
 
 
@@ -340,15 +326,10 @@ class Jsonable(metaclass=_MetaJSON):
     __slots__ = ("__json__",)
 
     def __init__(self, **kwargs):
-        self.__json__ = {}
-        for key, checker in self.__definitions__.items():
-            if key in kwargs:
-                value = checker(kwargs.pop(key))
-            else:
-                value = checker()
-            self.__json__[key] = value
-        # if kwargs:
-        #     raise KeyError(kwargs)
+        self.__json__ = {
+            key: chk(kwargs[key]) if key in kwargs else chk()
+            for key, chk in self.__definitions__.items()
+        }
 
     def __bool__(self):
         return True
@@ -404,8 +385,7 @@ class Jsonable(metaclass=_MetaJSON):
         return self.__json__
 
     @classmethod
-    def from_json(cls, dct):
-        assert isinstance(dct, dict)
+    def from_json(cls, dct: dict):
         return cls(**dct)
 
     def to_dict(self):
@@ -418,7 +398,6 @@ class Jsonable(metaclass=_MetaJSON):
 
     @classmethod
     def from_dict(cls, dct: dict, **kwargs):
-        assert isinstance(dct, dict), type(dct)
         params = {}
         for short, value in dct.items():
             key = cls.__shortener__.from_short(short)

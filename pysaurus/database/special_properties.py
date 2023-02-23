@@ -19,7 +19,7 @@ class PropError(SpecialPropType):
         super().__init__("<error>", "", True)
 
     def get(self, video: Video):
-        return sorted(set(video.errors) | set(video.properties.get(self.name, ())))
+        return sorted(set(video.errors) | set(video.get_property(self.name, ())))
 
 
 class SpecialProperties:
@@ -44,9 +44,9 @@ class SpecialProperties:
 
     @classmethod
     def all_in(cls, video: Video):
-        return all(prop.name in video.properties for prop in cls.properties)
+        return all(video.has_property(prop.name) for prop in cls.properties)
 
     @classmethod
     def set(cls, video: Video):
         for prop in cls.properties:
-            video.edit_properties({prop.name: prop.get(video)})
+            video.set_property(prop.name, prop.get(video))
