@@ -18,7 +18,7 @@ cefpython3 = {version = "^66.1", markers = "sys_platform == 'win32'"}
 python-vlc = "^3.0.12118"
 av = "^8.0.3"
 show-in-file-manager = "^1.1.4"
-werkzeug = "^2.2.2"
+werkzeug = "^2.2.3"
 
 [tool.poetry.dev-dependencies]
 black = "^22.12.0"
