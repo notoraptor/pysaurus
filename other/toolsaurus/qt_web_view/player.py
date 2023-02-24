@@ -12,7 +12,7 @@ from PyQt5 import QtWidgets, QtCore, QtGui
 from pysaurus.core.classes import ToDict
 from pysaurus.core.components import ShortDuration as Duration
 from pysaurus.core.functions import function_none
-from pysaurus.interface.qtwebview.jump_slider import JumpSlider
+from other.toolsaurus.qt_web_view.jump_slider import JumpSlider
 from saurus.language import say
 
 
