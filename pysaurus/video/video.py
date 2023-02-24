@@ -62,7 +62,7 @@ class Video(Jsonable):
 
     __slots__ = ("discarded", "database")
     __protected__ = ("database", "runtime", "discarded")
-    __flags__ = {
+    FLAGS = {
         "readable",
         "unreadable",
         "found",

@@ -129,9 +129,4 @@ class SemanticText:
         return False
 
     def __lt__(self, other):
-        ret = self._is_lesser_than(other)
-        print("=" * 80)
-        print("\t", self)
-        print("\t", "<" if ret else ">=")
-        print("\t", other)
-        return ret
+        return self._is_lesser_than(other)

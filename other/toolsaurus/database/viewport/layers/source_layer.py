@@ -20,7 +20,7 @@ class SourceLayer(Layer):
                 path = tuple(path)
                 if path not in valid_paths:
                     assert len(set(path)) == len(path)
-                    assert all(flag in Video.__flags__ for flag in path)
+                    assert all(flag in Video.FLAGS for flag in path)
                     valid_paths.add(path)
             if valid_paths:
                 self._set_parameters(sources=sorted(valid_paths))
