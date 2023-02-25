@@ -6,6 +6,10 @@ from pysaurus.core import condlang
 from pysaurus.database.database import Database
 
 
+def _db_get_prop_types(db: Database):
+    return db.prop_types.values()
+
+
 def db_select(
     self: Database, entry: str, fields: Sequence[str], *cond, **kwargs
 ) -> namedtuple:
@@ -21,7 +25,7 @@ def db_select(
     elif entry == "property":
         attributes.add("name")
         cls_fields.add("name")
-        source = self._get_prop_types()
+        source = _db_get_prop_types(self)
         assert not properties
     else:
         raise ValueError(f"Unknown database entry: {entry}")

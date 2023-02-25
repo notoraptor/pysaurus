@@ -1,3 +1,4 @@
+from other.tests.try_condlang_on_database import _db_get_prop_types
 from pysaurus.application.application import Application as OldApp
 from pysaurus.core.profiling import Profiler
 from pysaurus.properties.properties import PropType
@@ -85,7 +86,7 @@ def main():
                 miniature_group_min_size=db.settings.miniature_group_min_size,
                 sources=[source.path for source in db.video_folders],
                 properties={
-                    prop.name: old_to_new_prop(prop) for prop in db._get_prop_types()
+                    prop.name: old_to_new_prop(prop) for prop in _db_get_prop_types(db)
                 },
                 videos={
                     video.filename.path: old_to_new_video(video)

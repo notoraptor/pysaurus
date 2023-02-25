@@ -237,9 +237,6 @@ class JsonDatabase:
             output = (filenames[filename] for filename in selection)
         return output
 
-    def _get_prop_types(self) -> Iterable[PropType]:
-        return self.prop_types.values()
-
     def has_prop_type(
         self, name, *, with_type=None, multiple=None, with_enum=None, default=None
     ) -> bool:
@@ -255,12 +252,6 @@ class JsonDatabase:
         if default is not None and pt.default != default:
             return False
         return True
-
-    def get_prop_val(self, name, value) -> PropValueType:
-        return self.prop_types[name](value)
-
-    def get_default_prop_val(self, name) -> PropValueType:
-        return self.prop_types[name].default
 
     def get_prop_names(self) -> Iterable[str]:
         return self.prop_types.keys()
@@ -300,7 +291,7 @@ class JsonDatabase:
         if name in self.prop_types:
             del self.prop_types[name]
             for video in self.query():
-                video.remove_property(name)
+                video.remove_property(name, None)
             if save:
                 self.save()
 
@@ -331,7 +322,7 @@ class JsonDatabase:
                         video.set_property(name, video.get_property(name)[0])
                     else:
                         # delete property value
-                        video.remove_property(name, None)
+                        video.remove_property(name)
             self.save()
 
     def convert_prop_to_multiple(self, name) -> None:
@@ -345,7 +336,9 @@ class JsonDatabase:
                     video.set_property(name, [video.get_property(name)])
             self.save()
 
-    def get_prop_values(self, video: Video, name: str, default=False) -> list:
+    def get_prop_values(
+        self, video: Video, name: str, default=False
+    ) -> List[PropValueType]:
         values = []
         if video.has_property(name):
             value = video.get_property(name)
@@ -373,13 +366,17 @@ class JsonDatabase:
             values = video.get_property(name, []) + list(values)
         self.set_prop_values(video, name, values)
 
-    def validate_prop_values(self, name, values: list) -> list:
+    def validate_prop_values(self, name, values: list) -> List[PropValueType]:
         prop_type = self.prop_types[name]
         if prop_type.multiple:
             values = prop_type.validate(values)
         else:
             values = [prop_type.validate(value) for value in values]
         return values
+
+    def get_prop_val(self, name, value=None) -> PropValueType:
+        pt = self.prop_types[name]
+        return pt.default if value is None else pt.validate(value)
 
     @Profiler.profile_method()
     def _remove_video_from_index(self, video):
