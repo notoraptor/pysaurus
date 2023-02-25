@@ -27,7 +27,7 @@ from pysaurus.database import pattern_detection
 from pysaurus.database.db_features import DbFeatures
 from pysaurus.database.db_video_server import ServerLauncher
 from pysaurus.interface.api import tk_utils
-from pysaurus.interface.api.feature_api import FeatureAPI
+from pysaurus.interface.api.feature_api import FeatureAPI, ProxyFeature
 from pysaurus.interface.api.parallel_notifier import ParallelNotifier
 from saurus.language import say
 
@@ -39,6 +39,11 @@ else:
     VLC_PATH = "vlc"
 
 
+class FromTk(ProxyFeature):
+    def __init__(self, method, returns=False):
+        super().__init__(getter=lambda: tk_utils, method=method, returns=returns)
+
+
 class GuiAPI(FeatureAPI):
     __slots__ = (
         "multiprocessing_manager",
@@ -47,7 +52,6 @@ class GuiAPI(FeatureAPI):
         "threads_stop_flag",
         "copy_work",
         "monitor_notifications",
-        "tk_utils",
         "server",
     )
 
@@ -60,15 +64,14 @@ class GuiAPI(FeatureAPI):
         self.copy_work: Optional[FileCopier] = None
         self.notifier.call_default_if_no_manager()
         self.monitor_notifications = monitor_notifications
-        self.tk_utils = tk_utils
         self.server = ServerLauncher(lambda: self.database)
         self.server.start()
         self._proxies.update(
             {
-                "clipboard": "tk_utils.clipboard_set",
-                "select_directory": "tk_utils.select_directory!",
-                "select_files": "tk_utils.select_many_files_to_open!",
-                "select_file": "tk_utils.select_file_to_open!",
+                "clipboard": FromTk(tk_utils.clipboard_set),
+                "select_directory": FromTk(tk_utils.select_directory, True),
+                "select_files": FromTk(tk_utils.select_many_files_to_open, True),
+                "select_file": FromTk(tk_utils.select_file_to_open, True),
             }
         )
 

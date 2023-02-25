@@ -1,12 +1,37 @@
 import sys
-from typing import Dict, Optional
+from typing import Any, Callable, Dict, Optional, Union
 
 from pysaurus.application.application import Application
 from pysaurus.application.language.default_language import language_to_dict
 from pysaurus.core.components import Duration, FileSize
 from pysaurus.core.functions import compute_nb_pages, extract_object
-from pysaurus.database.database import Database
+from pysaurus.database.database import Database as Db
+from pysaurus.database.viewport.abstract_video_provider import (
+    AbstractVideoProvider as View,
+)
 from pysaurus.video.video_features import VideoFeatures
+
+
+class ProxyFeature:
+    def __init__(self, getter: Callable[[], Any], method: Callable, returns=False):
+        self.proxy = (getter, method, returns)
+
+    def __call__(self, *args):
+        getter, method, returns = self.proxy
+        ret = getattr(getter(), method.__name__)(*args)
+        return ret if returns else None
+
+
+class FromDb(ProxyFeature):
+    def __init__(self, api, method, returns=False):
+        super().__init__(getter=lambda: api.database, method=method, returns=returns)
+
+
+class FromView(ProxyFeature):
+    def __init__(self, api, method, returns=False):
+        super().__init__(
+            getter=lambda: api.database.provider, method=method, returns=returns
+        )
 
 
 class FeatureAPI:
@@ -25,55 +50,60 @@ class FeatureAPI:
     def __init__(self, notifier):
         self.notifier = notifier
         self.application = Application(self.notifier)
-        self.database: Optional[Database] = None
+        self.database: Optional[Db] = None
         self.PYTHON_LANG = language_to_dict(self.application.lang)
         self.PYTHON_LANGUAGE = self.application.lang.__language__
         # We must return value for proxy ending with "!"
-        self._proxies: Dict[str, str] = {
-            "apply_on_view": "database.provider.apply_on_view!",
-            "classifier_back": "database.provider.classifier_back",
-            "classifier_focus_prop_val": "database.provider.classifier_focus_prop_val",
-            "classifier_reverse": "database.provider.classifier_reverse!",
-            "classifier_select_group": "database.provider.classifier_select_group",
-            "confirm_unique_moves": "database.confirm_unique_moves!",
-            "convert_prop_to_multiple": "database.convert_prop_to_multiple",
-            "convert_prop_to_unique": "database.convert_prop_to_unique",
-            "create_prop_type": "database.create_prop_type",
-            "delete_property_value": "database.delete_property_value",
-            "delete_video": "database.delete_video",
-            "describe_prop_types": "database.describe_prop_types!",
-            "edit_property_value": "database.edit_property_value",
-            "fill_property_with_terms": "database.fill_property_with_terms",
-            "move_property_value": "database.move_property_value",
-            "open_containing_folder": "database.open_containing_folder!",
-            "open_random_video": "database.provider.choose_random_video!",
-            "open_video": "database.open_video",
-            "playlist": "database.provider.playlist!",
-            "prop_to_lowercase": "database.prop_to_lowercase",
-            "prop_to_uppercase": "database.prop_to_uppercase",
-            "remove_prop_type": "database.remove_prop_type",
-            "rename_database": "database.rename",
-            "rename_prop_type": "database.rename_prop_type",
-            "set_group": "database.provider.set_group",
-            "set_groups": "database.provider.set_groups",
-            "set_search": "database.provider.set_search",
-            "set_similarity": "database.set_similarity",
-            "set_sorting": "database.provider.set_sort",
-            "set_sources": "database.provider.set_sources",
-            "set_video_folders": "database.set_folders",
-            "set_video_moved": "database.move_video_entry",
-            "set_video_properties": "database.set_video_properties",
+        self._proxies: Dict[str, Union[str, ProxyFeature]] = {
+            "apply_on_view": FromView(self, View.apply_on_view, True),
+            "classifier_back": FromView(self, View.classifier_back),
+            "classifier_focus_prop_val": FromView(self, View.classifier_focus_prop_val),
+            "classifier_reverse": FromView(self, View.classifier_reverse, True),
+            "classifier_select_group": FromView(self, View.classifier_select_group),
+            "confirm_unique_moves": FromDb(self, Db.confirm_unique_moves, True),
+            "convert_prop_to_multiple": FromDb(self, Db.convert_prop_to_multiple),
+            "convert_prop_to_unique": FromDb(self, Db.convert_prop_to_unique),
+            "create_prop_type": FromDb(self, Db.create_prop_type),
+            "delete_property_value": FromDb(self, Db.delete_property_value),
+            "delete_video": FromDb(self, Db.delete_video),
+            "describe_prop_types": FromDb(self, Db.describe_prop_types, True),
+            "edit_property_value": FromDb(self, Db.edit_property_value),
+            "fill_property_with_terms": FromDb(self, Db.fill_property_with_terms),
+            "move_property_value": FromDb(self, Db.move_property_value),
+            "open_containing_folder": FromDb(self, Db.open_containing_folder, True),
+            "open_random_video": FromView(self, View.choose_random_video, True),
+            "open_video": FromDb(self, Db.open_video),
+            "playlist": FromView(self, View.playlist, True),
+            "prop_to_lowercase": FromDb(self, Db.prop_to_lowercase),
+            "prop_to_uppercase": FromDb(self, Db.prop_to_uppercase),
+            "remove_prop_type": FromDb(self, Db.remove_prop_type),
+            "rename_database": FromDb(self, Db.rename),
+            "rename_prop_type": FromDb(self, Db.rename_prop_type),
+            "set_group": FromView(self, View.set_group),
+            "set_groups": FromView(self, View.set_groups),
+            "set_search": FromView(self, View.set_search),
+            "set_similarity": FromDb(self, Db.set_similarity),
+            "set_sorting": FromView(self, View.set_sort),
+            "set_sources": FromView(self, View.set_sources),
+            "set_video_folders": FromDb(self, Db.set_folders),
+            "set_video_moved": FromDb(self, Db.move_video_entry),
+            "set_video_properties": FromDb(self, Db.set_video_properties),
         }
 
     def __run_feature__(self, name: str, *args):
         assert not name.startswith("_")
         if name in self._proxies:
-            path, return_value = self._proxies[name], False
-            if path.endswith("!"):
-                path = path[:-1]
-                return_value = True
-            ret = extract_object(self, path)(*args)
-            return ret if return_value else None
+            run_def = self._proxies[name]
+            if isinstance(run_def, ProxyFeature):
+                return run_def(*args)
+            else:
+                # Keep old resolution code, if any.
+                path, return_value = self._proxies[name], False
+                if path.endswith("!"):
+                    path = path[:-1]
+                    return_value = True
+                ret = extract_object(self, path)(*args)
+                return ret if return_value else None
         else:
             return getattr(self, name)(*args)
 
