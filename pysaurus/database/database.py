@@ -36,9 +36,9 @@ from pysaurus.video.video_runtime_info import VideoRuntimeInfo
 from saurus.language import say
 
 try:
-    from pysaurus.video_info import video_raptor as backend_raptor
+    from pysaurus.video_raptor.video_raptor_native import VideoRaptor
 except exceptions.CysaurusUnavailable:
-    from pysaurus.video_info import backend_pyav as backend_raptor
+    from pysaurus.video_raptor.video_raptor_pyav import VideoRaptor
 
     print("Using fallback backend for videos info and thumbnails.", file=sys.stderr)
 
@@ -181,6 +181,7 @@ class Database(JsonDatabase):
         if not files_to_update:
             return
 
+        backend_raptor = VideoRaptor()
         notify_job_start(
             self.notifier,
             backend_raptor.collect_video_info,
@@ -202,6 +203,7 @@ class Database(JsonDatabase):
         replaced = []
         for arr in results:
             for d in arr:
+                d = Video.ensure_short_keys(d, backend_raptor.RETURNS_SHORT_KEYS)
                 file_path = AbsolutePath.ensure(d["f"])
                 if len(d) == 2:
                     video_state = Video(
@@ -315,6 +317,7 @@ class Database(JsonDatabase):
         del valid_thumb_names
         self.save()
 
+        backend_raptor = VideoRaptor()
         notify_job_start(
             self.notifier,
             backend_raptor.collect_video_thumbnails,
@@ -342,6 +345,7 @@ class Database(JsonDatabase):
 
         for arr in results:
             for d in arr:
+                d = Video.ensure_short_keys(d, backend_raptor.RETURNS_SHORT_KEYS)
                 assert len(d) == 2 and "f" in d and "e" in d
                 file_name = d["f"]
                 file_path = AbsolutePath.ensure(file_name)
@@ -506,6 +510,8 @@ class Database(JsonDatabase):
 
         del self.videos[video.filename]
         self.videos[path] = video
+        # TODO video.filename should be immutable
+        # We should instead copy video object with a new filename
         video.filename = path
         self.save()
         self.__notify_filename_modified(video, old_filename)

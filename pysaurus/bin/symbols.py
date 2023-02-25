@@ -6,6 +6,8 @@ from pysaurus.core.components import AbsolutePath
 from pysaurus.core.modules import System
 
 try:
+    # if os.path:
+    #     raise RuntimeError("Video raptor native deactivated")
     BIN_PATH = AbsolutePath.join(
         package_dir(), "bin", System.get_identifier()
     ).assert_dir()

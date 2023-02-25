@@ -189,6 +189,9 @@ class Shortener:
             self.to_short = self._to_short
             self.from_short = self._to_long
 
+    def is_short(self, key):
+        return key in self.__to_long and key not in self.__to_short
+
     @classmethod
     def _neutral(cls, key: str) -> str:
         return key
@@ -376,6 +379,14 @@ class Jsonable(metaclass=_MetaJSON):
 
     def extract_attributes(self, keys: Iterable[str]) -> Dict[str, Any]:
         return {key: getattr(self, key) for key in keys}
+
+    @classmethod
+    def ensure_short_keys(cls, dct: dict, keys_are_short: bool):
+        return (
+            dct
+            if keys_are_short
+            else {cls.__shortener__.to_short(key): value for key, value in dct.items()}
+        )
 
     @classmethod
     def get_args_from(cls, dictionary: dict):
