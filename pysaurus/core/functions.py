@@ -295,3 +295,11 @@ def generate_temp_file_path(extension) -> str:
                 return temp_file_path
         except FileExistsError:
             temp_file_id += 1
+
+
+def generate_infinite(value):
+    def gen():
+        while True:
+            yield value
+
+    return gen()

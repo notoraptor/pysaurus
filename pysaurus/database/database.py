@@ -14,7 +14,7 @@ from pysaurus.core.components import (
     PathType,
 )
 from pysaurus.core.constants import JPEG_EXTENSION, THUMBNAIL_EXTENSION
-from pysaurus.core.functions import generate_temp_file_path
+from pysaurus.core.functions import generate_infinite, generate_temp_file_path
 from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
 from pysaurus.core.modules import FileSystem, ImageUtils
 from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
@@ -754,12 +754,19 @@ class Database(JsonDatabase):
     def get_videos_field(self, indices: Iterable[int], field: str) -> Iterable:
         return (getattr(self.id_to_video[video_id], field) for video_id in indices)
 
-    def set_videos_field_with_same_value(
-        self, indices: Iterable[int], field: str, value
-    ) -> None:
-        for video_id in indices:
-            setattr(self.id_to_video[video_id], field, value)
+    def set_similarity_id(self, video_indices: Iterable[int], **kwargs) -> None:
+        """Set similarity ID for given videos
 
-    def set_videos_field(self, indices: Iterable[int], field, values: Iterable) -> None:
-        for video_id, value in zip(indices, values):
-            setattr(self.id_to_video[video_id], field, value)
+        :param video_indices: iterable of video indices to set
+        :param kwargs: one of following:
+            - values: similarity indices to set. Should be as long as video_indices.
+            - value: similarity ID to set for all video indices.
+        """
+        assert len(kwargs) == 1
+        if "values" in kwargs:
+            values: Iterable = kwargs["values"]
+        else:
+            assert "value" in kwargs
+            values: Iterable = generate_infinite(kwargs["value"])
+        for video_id, value in zip(video_indices, values):
+            self.id_to_video[video_id].similarity_id = value

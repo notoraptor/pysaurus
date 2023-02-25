@@ -112,12 +112,12 @@ class DbFeatures:
         miniatures = db.ensure_miniatures(returns=True)  # type: List[Miniature]
         video_indices = [m.video_id for m in miniatures]
         previous_sim = list(db.get_videos_field(video_indices, "similarity_id"))
-        db.set_videos_field_with_same_value(video_indices, "similarity_id", None)
+        db.set_similarity_id(video_indices, value=None)
         try:
             self.find_similar_videos(db, miniatures)
         except Exception:
             # Restore previous similarities.
-            db.set_videos_field(video_indices, "similarity_id", previous_sim)
+            db.set_similarity_id(video_indices, values=previous_sim)
             raise
 
     def find_similar_videos(self, db: Database, miniatures: List[Miniature] = None):
@@ -239,10 +239,9 @@ class DbFeatures:
                     )
                 )
 
-                db.set_videos_field_with_same_value(
+                db.set_similarity_id(
                     (video_indices[i] for i in new_miniature_indices),
-                    "similarity_id",
-                    -1,
+                    value=-1,
                 )
                 v_indices_to_set = []
                 s_indices_to_set = []
@@ -250,7 +249,7 @@ class DbFeatures:
                     for i in new_group:
                         v_indices_to_set.append(video_indices[i])
                         s_indices_to_set.append(new_id)
-                db.set_videos_field(v_indices_to_set, "similarity_id", s_indices_to_set)
+                db.set_similarity_id(v_indices_to_set, values=s_indices_to_set)
             # Save.
             db.save()
 
