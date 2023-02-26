@@ -20,15 +20,16 @@ class VideoIndexer(AbstractVideoIndexer):
         self.filename_to_terms: Dict[AbsolutePath, List[str]] = {}
 
     def build(self, videos: Iterable[Video]):
-        videos = videos if isinstance(videos, (list, tuple, set)) else list(videos)
+        self.filename_to_terms = {video.filename: video.terms() for video in videos}
+        nb_videos = len(self.filename_to_terms)
+        global_notify_job_start("build_index", nb_videos, "videos")
         self.term_to_filenames.clear()
-        self.filename_to_terms.clear()
-        global_notify_job_start("build_index", len(videos), "videos")
-        for i, video in enumerate(videos):
-            self.add_video(video)
+        for i, (filename, terms) in enumerate(self.filename_to_terms.items()):
+            for term in terms:
+                self.term_to_filenames.setdefault(term, set()).add(filename)
             if (i + 1) % 500 == 0:
-                global_notify_job_progress("build_index", None, i + 1, len(videos))
-        global_notify_job_progress("build_index", None, len(videos), len(videos))
+                global_notify_job_progress("build_index", None, i + 1, nb_videos)
+        global_notify_job_progress("build_index", None, nb_videos, nb_videos)
 
     def add_video(self, video: Video):
         terms = video.terms()
