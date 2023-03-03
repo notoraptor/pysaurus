@@ -3,7 +3,7 @@ import { HomePage } from "./pages/HomePage.js";
 import { VideosPage } from "./pages/VideosPage.js";
 import { PropertiesPage } from "./pages/PropertiesPage.js";
 import { DatabasesPage } from "./pages/DatabasesPage.js";
-import { backend_error, python_call } from "./utils/backend.js";
+import { backend_error, python_call, python_multiple_call } from "./utils/backend.js";
 import { VIDEO_DEFAULT_PAGE_NUMBER, VIDEO_DEFAULT_PAGE_SIZE } from "./utils/constants.js";
 import { LangContext } from "./language.js";
 import { APP_STATE } from "./utils/globals.js";
@@ -41,19 +41,19 @@ export class App extends React.Component {
 
 	componentDidMount() {
 		if (!this.state.page) {
-			python_call("get_app_state")
-				.then((appState) => this.dbHome(appState))
+			python_multiple_call(["get_language_names"], ["get_database_names"])
+				.then(([language_names, database_names]) => this.dbHome({ language_names, database_names }))
 				.catch(backend_error);
 		}
 	}
 
 	loadPage(pageName, parameters = undefined, otherState = undefined) {
-		parameters = parameters ? parameters : {};
-		const state = Object.assign({}, otherState || {}, {
-			page: pageName,
-			parameters: parameters,
-		});
-		this.setState(state);
+		this.setState(
+			Object.assign({}, otherState || {}, {
+				page: pageName,
+				parameters: parameters || {},
+			})
+		);
 	}
 
 	// Public methods for children components.
@@ -72,7 +72,13 @@ export class App extends React.Component {
 	}
 
 	dbHome(appState = undefined) {
-		this.loadPage("databases", appState, appState ? { languages: appState.languages } : undefined);
+		const localState = {};
+		if (appState.language_names) {
+			localState.languages = appState.language_names;
+		} else {
+			appState.language_names = this.getLanguages();
+		}
+		this.loadPage("databases", appState, localState);
 	}
 
 	dbUpdate(...command) {

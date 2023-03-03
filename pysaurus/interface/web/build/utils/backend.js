@@ -6,13 +6,14 @@ System.register([], function (_export, _context) {
   }
 
   async function python_multiple_call(...calls) {
-    let ret = null;
+    const outs = [];
 
     for (let call of calls) {
-      ret = await python_call(...call);
+      const ret = await python_call(...call);
+      if (ret !== null) outs.push(ret);
     }
 
-    return ret;
+    return outs.length ? outs.length === 1 ? outs[0] : outs : null;
   }
 
   function backend_error(error) {

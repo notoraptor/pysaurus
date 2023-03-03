@@ -4,7 +4,7 @@ import { LangContext, tr } from "../language.js";
 
 export class DatabasesPage extends React.Component {
 	constructor(props) {
-		// parameters: {databases: [{name, path}], languages: [{name, path}]}
+		// parameters: {databases: [name: str], languages: [name: str]}
 		// app: App
 		super(props);
 		this.state = {
@@ -24,7 +24,7 @@ export class DatabasesPage extends React.Component {
 	}
 
 	render() {
-		const languages = this.props.parameters.languages;
+		const languages = this.props.parameters.language_names;
 		const paths = Array.from(this.state.paths);
 		paths.sort();
 		return (
@@ -43,8 +43,8 @@ export class DatabasesPage extends React.Component {
 							<td className="text-left">
 								<select id="language" value={window.PYTHON_LANGUAGE} onChange={this.onChangeLanguage}>
 									{languages.map((language, index) => (
-										<option key={index} value={language.name}>
-											{language.name}
+										<option key={index} value={language}>
+											{language}
 										</option>
 									))}
 								</select>
@@ -78,7 +78,7 @@ export class DatabasesPage extends React.Component {
 						<td>
 							<h2>
 								{tr("Open a database ({count} available)", {
-									count: this.props.parameters.databases.length,
+									count: this.props.parameters.database_names.length,
 								})}
 							</h2>
 							<div className="p-1">
@@ -91,10 +91,10 @@ export class DatabasesPage extends React.Component {
 								<label htmlFor="update">{tr("update after opening")}</label>
 							</div>
 							<h3>{tr("Click on a database to open it")}</h3>
-							{this.props.parameters.databases.map((database, index) => (
+							{this.props.parameters.database_names.map((database, index) => (
 								<div className="p-1" key={index}>
-									<button className="block" onClick={() => this.openDatabase(database.name)}>
-										{database.name}
+									<button className="block" onClick={() => this.openDatabase(database)}>
+										{database}
 									</button>
 								</div>
 							))}

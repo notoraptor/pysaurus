@@ -122,12 +122,10 @@ class GuiAPI(FeatureAPI):
 
     def close_database(self):
         self.database = None
-        return self.get_app_state()
 
     def delete_database(self):
         assert self.application.delete_database_from_name(self.database.name)
         self.database = None
-        return self.get_app_state()
 
     def close_app(self):
         print("Closing app ...")
@@ -237,7 +235,7 @@ class GuiAPI(FeatureAPI):
         self._update_database()
 
     def _update_database(self):
-        self.database.refresh(ensure_miniatures=False)
+        self.database.refresh()
         self.database.provider.refresh()
 
     @process()

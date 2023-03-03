@@ -136,6 +136,9 @@ class Application:
     def get_language_paths(self) -> List[AbsolutePath]:
         return sorted(self.languages.keys())
 
+    def get_language_names(self) -> List[str]:
+        return sorted(path.title for path in self.languages.keys())
+
     def open_language(self, lang_path: AbsolutePath) -> DefaultLanguage:
         lang_path = AbsolutePath.ensure(lang_path)
         assert lang_path in self.languages

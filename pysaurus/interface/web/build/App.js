@@ -1,7 +1,7 @@
 System.register(["./pages/Test.js", "./pages/HomePage.js", "./pages/VideosPage.js", "./pages/PropertiesPage.js", "./pages/DatabasesPage.js", "./utils/backend.js", "./utils/constants.js", "./language.js", "./utils/globals.js"], function (_export, _context) {
   "use strict";
 
-  var Test, HomePage, VideosPage, PropertiesPage, DatabasesPage, backend_error, python_call, VIDEO_DEFAULT_PAGE_NUMBER, VIDEO_DEFAULT_PAGE_SIZE, LangContext, APP_STATE, App;
+  var Test, HomePage, VideosPage, PropertiesPage, DatabasesPage, backend_error, python_call, python_multiple_call, VIDEO_DEFAULT_PAGE_NUMBER, VIDEO_DEFAULT_PAGE_SIZE, LangContext, APP_STATE, App;
 
   _export("App", void 0);
 
@@ -19,6 +19,7 @@ System.register(["./pages/Test.js", "./pages/HomePage.js", "./pages/VideosPage.j
     }, function (_utilsBackendJs) {
       backend_error = _utilsBackendJs.backend_error;
       python_call = _utilsBackendJs.python_call;
+      python_multiple_call = _utilsBackendJs.python_multiple_call;
     }, function (_utilsConstantsJs) {
       VIDEO_DEFAULT_PAGE_NUMBER = _utilsConstantsJs.VIDEO_DEFAULT_PAGE_NUMBER;
       VIDEO_DEFAULT_PAGE_SIZE = _utilsConstantsJs.VIDEO_DEFAULT_PAGE_SIZE;
@@ -78,17 +79,18 @@ System.register(["./pages/Test.js", "./pages/HomePage.js", "./pages/VideosPage.j
 
         componentDidMount() {
           if (!this.state.page) {
-            python_call("get_app_state").then(appState => this.dbHome(appState)).catch(backend_error);
+            python_multiple_call(["get_language_names"], ["get_database_names"]).then(([language_names, database_names]) => this.dbHome({
+              language_names,
+              database_names
+            })).catch(backend_error);
           }
         }
 
         loadPage(pageName, parameters = undefined, otherState = undefined) {
-          parameters = parameters ? parameters : {};
-          const state = Object.assign({}, otherState || {}, {
+          this.setState(Object.assign({}, otherState || {}, {
             page: pageName,
-            parameters: parameters
-          });
-          this.setState(state);
+            parameters: parameters || {}
+          }));
         } // Public methods for children components.
 
 
@@ -106,9 +108,15 @@ System.register(["./pages/Test.js", "./pages/HomePage.js", "./pages/VideosPage.j
         }
 
         dbHome(appState = undefined) {
-          this.loadPage("databases", appState, appState ? {
-            languages: appState.languages
-          } : undefined);
+          const localState = {};
+
+          if (appState.language_names) {
+            localState.languages = appState.language_names;
+          } else {
+            appState.language_names = this.getLanguages();
+          }
+
+          this.loadPage("databases", appState, localState);
         }
 
         dbUpdate(...command) {

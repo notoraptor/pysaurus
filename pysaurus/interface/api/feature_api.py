@@ -34,6 +34,11 @@ class FromView(ProxyFeature):
         )
 
 
+class FromApp(ProxyFeature):
+    def __init__(self, api, method, returns=False):
+        super().__init__(getter=lambda: api.application, method=method, returns=returns)
+
+
 class FeatureAPI:
     __slots__ = (
         "notifier",
@@ -69,6 +74,8 @@ class FeatureAPI:
             "describe_prop_types": FromDb(self, Db.describe_prop_types, True),
             "edit_property_value": FromDb(self, Db.edit_property_value),
             "fill_property_with_terms": FromDb(self, Db.fill_property_with_terms),
+            "get_database_names": FromApp(self, Application.get_database_names, True),
+            "get_language_names": FromApp(self, Application.get_language_names, True),
             "move_property_value": FromDb(self, Db.move_property_value),
             "open_containing_folder": FromDb(self, Db.open_containing_folder, True),
             "open_random_video": FromView(self, View.choose_random_video, True),
@@ -111,18 +118,6 @@ class FeatureAPI:
     def get_constants(self):
         return {
             key: getattr(self, key) for key in dir(self) if key.startswith("PYTHON_")
-        }
-
-    # cannot make proxy
-    def get_app_state(self):
-        return {
-            "languages": [
-                {"name": path.title, "path": str(path)}
-                for path in self.application.get_language_paths()
-            ],
-            "databases": [
-                {"name": name} for name in self.application.get_database_names()
-            ],
         }
 
     # cannot make proxy ?

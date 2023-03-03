@@ -18,7 +18,7 @@ System.register(["../utils/backend.js", "../components/PathsInput.js", "../langu
     execute: function () {
       _export("DatabasesPage", DatabasesPage = class DatabasesPage extends React.Component {
         constructor(props) {
-          // parameters: {databases: [{name, path}], languages: [{name, path}]}
+          // parameters: {databases: [name: str], languages: [name: str]}
           // app: App
           super(props);
           this.state = {
@@ -38,7 +38,7 @@ System.register(["../utils/backend.js", "../components/PathsInput.js", "../langu
         }
 
         render() {
-          const languages = this.props.parameters.languages;
+          const languages = this.props.parameters.language_names;
           const paths = Array.from(this.state.paths);
           paths.sort();
           return /*#__PURE__*/React.createElement("div", {
@@ -60,8 +60,8 @@ System.register(["../utils/backend.js", "../components/PathsInput.js", "../langu
             onChange: this.onChangeLanguage
           }, languages.map((language, index) => /*#__PURE__*/React.createElement("option", {
             key: index,
-            value: language.name
-          }, language.name))))) : "", /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("h2", null, tr("Create a database")), /*#__PURE__*/React.createElement("div", {
+            value: language
+          }, language))))) : "", /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("h2", null, tr("Create a database")), /*#__PURE__*/React.createElement("div", {
             className: "p-1"
           }, /*#__PURE__*/React.createElement("input", {
             type: "text",
@@ -80,7 +80,7 @@ System.register(["../utils/backend.js", "../components/PathsInput.js", "../langu
             className: "block",
             onClick: this.createDatabase
           }, tr("create database")))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("h2", null, tr("Open a database ({count} available)", {
-            count: this.props.parameters.databases.length
+            count: this.props.parameters.database_names.length
           })), /*#__PURE__*/React.createElement("div", {
             className: "p-1"
           }, /*#__PURE__*/React.createElement("input", {
@@ -90,13 +90,13 @@ System.register(["../utils/backend.js", "../components/PathsInput.js", "../langu
             onChange: this.onChangeUpdate
           }), " ", /*#__PURE__*/React.createElement("label", {
             htmlFor: "update"
-          }, tr("update after opening"))), /*#__PURE__*/React.createElement("h3", null, tr("Click on a database to open it")), this.props.parameters.databases.map((database, index) => /*#__PURE__*/React.createElement("div", {
+          }, tr("update after opening"))), /*#__PURE__*/React.createElement("h3", null, tr("Click on a database to open it")), this.props.parameters.database_names.map((database, index) => /*#__PURE__*/React.createElement("div", {
             className: "p-1",
             key: index
           }, /*#__PURE__*/React.createElement("button", {
             className: "block",
-            onClick: () => this.openDatabase(database.name)
-          }, database.name)))))));
+            onClick: () => this.openDatabase(database)
+          }, database)))))));
         }
 
         onChangeLanguage(event) {

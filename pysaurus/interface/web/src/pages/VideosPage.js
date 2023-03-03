@@ -22,7 +22,7 @@ import { Actions } from "../utils/Actions.js";
 import { ActionToMenuItem } from "../components/ActionToMenuItem.js";
 import { ActionToSettingIcon } from "../components/ActionToSettingIcon.js";
 import { ActionToCross } from "../components/ActionToCross.js";
-import { backend_error, python_call } from "../utils/backend.js";
+import { backend_error, python_call, python_multiple_call } from "../utils/backend.js";
 import { FancyBox } from "../dialogs/FancyBox.js";
 import { HomePage } from "./HomePage.js";
 import { FormDatabaseEditFolders } from "../forms/FormDatabaseEditFolders.js";
@@ -321,12 +321,8 @@ export class VideosPage extends React.Component {
 						{languages.length > 1 ? (
 							<Menu title={tr("Language:") + " ..."}>
 								{languages.map((language, index) => (
-									<MenuItem key={index} action={() => this.props.app.setLanguage(language.name)}>
-										{window.PYTHON_LANGUAGE === language.name ? (
-											<strong>{language.name}</strong>
-										) : (
-											language.name
-										)}
+									<MenuItem key={index} action={() => this.props.app.setLanguage(language)}>
+										{window.PYTHON_LANGUAGE === language ? <strong>{language}</strong> : language}
 									</MenuItem>
 								))}
 							</Menu>
@@ -1045,8 +1041,8 @@ Once done, move you can compute prediction.
 				})}
 				yes={tr("DELETE")}
 				action={() => {
-					python_call("delete_database")
-						.then((databases) => this.props.app.dbHome(databases))
+					python_multiple_call(["delete_database"], ["get_database_names"])
+						.then((database_names) => this.props.app.dbHome({ database_names }))
 						.catch(backend_error);
 				}}>
 				<Cell center={true} full={true} className="text-center">
@@ -1318,8 +1314,8 @@ not found video entry will be deleted.
 	}
 
 	closeDatabase() {
-		python_call("close_database")
-			.then((databases) => this.props.app.dbHome(databases))
+		python_multiple_call(["close_database"], ["get_database_names"])
+			.then((database_names) => this.props.app.dbHome({ database_names }))
 			.catch(backend_error);
 	}
 }

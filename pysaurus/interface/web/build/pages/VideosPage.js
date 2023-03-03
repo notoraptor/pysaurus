@@ -1,7 +1,7 @@
 System.register(["../utils/constants.js", "../components/MenuPack.js", "../components/Pagination.js", "../components/Video.js", "../forms/FormVideosSource.js", "../forms/FormVideosGrouping.js", "../forms/FormVideosSearch.js", "../forms/FormVideosSort.js", "../components/GroupView.js", "../forms/FormPropertyEditSelectedValues.js", "../forms/FormVideosKeywordsToProperty.js", "../forms/FormSelectedVideosEditProperty.js", "../components/Collapsable.js", "../components/Cross.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/MenuItemRadio.js", "../components/Menu.js", "../utils/Selector.js", "../utils/Action.js", "../utils/Actions.js", "../components/ActionToMenuItem.js", "../components/ActionToSettingIcon.js", "../components/ActionToCross.js", "../utils/backend.js", "../dialogs/FancyBox.js", "./HomePage.js", "../forms/FormDatabaseEditFolders.js", "../dialogs/Dialog.js", "../components/Cell.js", "../forms/FormNewPredictionProperty.js", "../forms/GenericFormRename.js", "../language.js", "../utils/functions.js", "../utils/FancyboxManager.js", "../utils/globals.js"], function (_export, _context) {
   "use strict";
 
-  var FIELD_MAP, PAGE_SIZES, SearchTypeTitle, SOURCE_TREE, MenuPack, Pagination, Video, FormVideosSource, FormVideosGrouping, FormVideosSearch, FormVideosSort, GroupView, FormPropertyEditSelectedValues, FormVideosKeywordsToProperty, FormSelectedVideosEditProperty, Collapsable, Cross, MenuItem, MenuItemCheck, MenuItemRadio, Menu, Selector, Action, Actions, ActionToMenuItem, ActionToSettingIcon, ActionToCross, backend_error, python_call, FancyBox, HomePage, FormDatabaseEditFolders, Dialog, Cell, FormNewPredictionProperty, GenericFormRename, LangContext, tr, arrayEquals, compareSources, Fancybox, APP_STATE, VideosPage;
+  var FIELD_MAP, PAGE_SIZES, SearchTypeTitle, SOURCE_TREE, MenuPack, Pagination, Video, FormVideosSource, FormVideosGrouping, FormVideosSearch, FormVideosSort, GroupView, FormPropertyEditSelectedValues, FormVideosKeywordsToProperty, FormSelectedVideosEditProperty, Collapsable, Cross, MenuItem, MenuItemCheck, MenuItemRadio, Menu, Selector, Action, Actions, ActionToMenuItem, ActionToSettingIcon, ActionToCross, backend_error, python_call, python_multiple_call, FancyBox, HomePage, FormDatabaseEditFolders, Dialog, Cell, FormNewPredictionProperty, GenericFormRename, LangContext, tr, arrayEquals, compareSources, Fancybox, APP_STATE, VideosPage;
 
   _export("VideosPage", void 0);
 
@@ -60,6 +60,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
     }, function (_utilsBackendJs) {
       backend_error = _utilsBackendJs.backend_error;
       python_call = _utilsBackendJs.python_call;
+      python_multiple_call = _utilsBackendJs.python_multiple_call;
     }, function (_dialogsFancyBoxJs) {
       FancyBox = _dialogsFancyBoxJs.FancyBox;
     }, function (_HomePageJs) {
@@ -317,8 +318,8 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             title: tr("Language:") + " ..."
           }, languages.map((language, index) => /*#__PURE__*/React.createElement(MenuItem, {
             key: index,
-            action: () => this.props.app.setLanguage(language.name)
-          }, window.PYTHON_LANGUAGE === language.name ? /*#__PURE__*/React.createElement("strong", null, language.name) : language.name))) : ""), /*#__PURE__*/React.createElement("div", {
+            action: () => this.props.app.setLanguage(language)
+          }, window.PYTHON_LANGUAGE === language ? /*#__PURE__*/React.createElement("strong", null, language) : language))) : ""), /*#__PURE__*/React.createElement("div", {
             className: "pagination text-right"
           }, /*#__PURE__*/React.createElement(Pagination, {
             singular: tr("page"),
@@ -853,7 +854,9 @@ Once done, move you can compute prediction.
             }),
             yes: tr("DELETE"),
             action: () => {
-              python_call("delete_database").then(databases => this.props.app.dbHome(databases)).catch(backend_error);
+              python_multiple_call(["delete_database"], ["get_database_names"]).then(database_names => this.props.app.dbHome({
+                database_names
+              })).catch(backend_error);
             }
           }, /*#__PURE__*/React.createElement(Cell, {
             center: true,
@@ -1115,7 +1118,9 @@ not found video entry will be deleted.
         }
 
         closeDatabase() {
-          python_call("close_database").then(databases => this.props.app.dbHome(databases)).catch(backend_error);
+          python_multiple_call(["close_database"], ["get_database_names"]).then(database_names => this.props.app.dbHome({
+            database_names
+          })).catch(backend_error);
         }
 
       });
