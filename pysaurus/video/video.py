@@ -142,8 +142,9 @@ class Video(Jsonable):
         raise NotImplementedError()
 
     def _set_similarity_id(self, data):
-        self.__json__["similarity_id"] = data
-        self._save_date_entry_modified()
+        if self.__json__["similarity_id"] != data:
+            self.__json__["similarity_id"] = data
+            self._save_date_entry_modified()
 
     def _to_dict_errors(self, errors):
         return list(errors)
