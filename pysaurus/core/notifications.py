@@ -6,6 +6,13 @@ from pysaurus.core.classes import StringPrinter, ToDict
 class Notification(ToDict):
     __slots__ = ()
 
+    def describe(self) -> dict:
+        return {
+            "name": type(self).__name__,
+            "notification": self.to_dict(),
+            "message": str(self),
+        }
+
 
 class UnusedThumbnails(Notification):
     __slots__ = ("removed",)

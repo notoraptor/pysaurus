@@ -1,3 +1,4 @@
+import functools
 import multiprocessing
 import os
 import queue
@@ -166,6 +167,7 @@ class GuiAPI(FeatureAPI):
 
         if finish:
 
+            @functools.wraps(function)
             def run(*a, **k):
                 function(*a, **k)
                 self._finish_loading(f"Finished running: {function.__name__}")

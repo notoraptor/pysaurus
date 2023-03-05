@@ -31,10 +31,18 @@ class Api(GuiAPI):
         self.interface = interface  # type: Interface
 
     def _run_thread(self, function, *args, **kwargs):
+        """Override to make sure exceptions are sent to main thread.
+
+        We send exceptions to main thread so that main thread
+        can be closed if an error occurred in a derived thread.
+        """
+
         def wrapper():
             try:
                 function(*args, **kwargs)
             except Exception as exception:
+                # Use Qt interface to call Qt slot `Interface.throw`
+                # in main thread with raised exception as argument.
                 self.threads_stop_flag = True
                 QMetaObject.invokeMethod(
                     self.interface,
@@ -46,15 +54,7 @@ class Api(GuiAPI):
         return super()._run_thread(wrapper)
 
     def _notify(self, notification):
-        self.interface.notified.emit(
-            json.dumps(
-                {
-                    "name": type(notification).__name__,
-                    "notification": notification.to_dict(),
-                    "message": str(notification),
-                }
-            )
-        )
+        self.interface.notified.emit(json.dumps(notification.describe()))
 
 
 class Interface(QObject):
@@ -83,6 +83,13 @@ class Interface(QObject):
 
     @pyqtSlot(Exception)
     def throw(self, exception):
+        """Special slot used to raise an exception in main thread.
+
+        Used in Api._run_thread above. Allows to transfer an exception
+        occurred from a thread to main thread so that main thread
+        is notified with other thread exceptions, and then can
+        decide to close program if necessary.
+        """
         raise exception
 
 
@@ -160,7 +167,10 @@ def generate_thread_except_hook(qapp):
 def main():
     from multiprocessing import freeze_support
 
+    # Necessary to allow to create a distribuable standalone application.
+    # TODO Retrieve reference for this.
     freeze_support()
+
     # Initialize.
     app = QApplication.instance() or QApplication(sys.argv)
     sys.excepthook = generate_except_hook(app)
