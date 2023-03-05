@@ -1,4 +1,7 @@
-class PysaurusError(Exception):
+from pysaurus.core.core_exceptions import ApplicationError
+
+
+class PysaurusError(ApplicationError):
     pass
 
 
