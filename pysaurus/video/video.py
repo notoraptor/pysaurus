@@ -36,6 +36,7 @@ class Video(Jsonable):
     runtime: ("R", VideoRuntimeInfo) = {}
     thumb_name: "i" = ""
     date_entry_modified: ("m", float) = None
+    date_entry_opened: ("o", float) = None
 
     unreadable: "U" = False
     audio_bit_rate: "r" = 0
@@ -137,6 +138,11 @@ class Video(Jsonable):
         if self.__json__["date_entry_modified"] is None:
             self.__json__["date_entry_modified"] = self.runtime.mtime
         return Date(self.__json__["date_entry_modified"])
+
+    def _get_date_entry_opened(self):
+        if self.__json__["date_entry_opened"] is None:
+            self.__json__["date_entry_opened"] = self.runtime.mtime
+        return Date(self.__json__["date_entry_opened"])
 
     def _set_properties(self, properties: dict):
         raise NotImplementedError()
@@ -296,6 +302,10 @@ class Video(Jsonable):
             self.properties[name] = value
         self._save_date_entry_modified(modified)
         return modified
+
+    def open(self):
+        self.filename.open()
+        self.date_entry_opened = Date.now().time
 
     def _save_date_entry_modified(self, save=True):
         if save:

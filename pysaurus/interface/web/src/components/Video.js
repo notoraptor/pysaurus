@@ -241,9 +241,15 @@ export class Video extends React.Component {
 							</span>{" "}
 							| <strong className={cc(common.length)}>{data.length}</strong> |{" "}
 							<code className={cc(common.date)}>{data.date}</code> |{" "}
+						</div>
+						<div>
 							<em>
 								(entry){" "}
 								<code className={cc(common.date_entry_modified)}>{data.date_entry_modified}</code>
+							</em>{" "}
+							|{" "}
+							<em>
+								(opened) <code className={cc(common.date_entry_opened)}>{data.date_entry_opened}</code>
 							</em>
 						</div>
 						<div>
@@ -379,6 +385,10 @@ export class Video extends React.Component {
 							<div>
 								<em>
 									(entry) <code>{data.date_entry_modified}</code>
+								</em>{" "}
+								|{" "}
+								<em>
+									(opened) <code>{data.date_entry_opened}</code>
 								</em>
 							</div>
 						</div>
@@ -450,7 +460,8 @@ export class Video extends React.Component {
 				this.props.onInfo(
 					tr("Opened: {path}", {
 						path: this.props.data.filename,
-					})
+					}),
+					true
 				);
 			})
 			.catch((error) => {

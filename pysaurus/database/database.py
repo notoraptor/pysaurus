@@ -746,7 +746,9 @@ class Database(JsonDatabase):
         return self.id_to_video[video_id].filename
 
     def open_video(self, video_id: int):
-        self.id_to_video[video_id].filename.open()
+        self.id_to_video[video_id].open()
+        self.save()
+        self.notifier.notify(notifications.FieldsModified(["date_entry_opened"]))
 
     def open_containing_folder(self, video_id: int) -> str:
         return str(self.id_to_video[video_id].filename.locate_file())

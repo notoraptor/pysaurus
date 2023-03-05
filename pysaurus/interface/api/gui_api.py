@@ -214,8 +214,6 @@ class GuiAPI(FeatureAPI):
         # type: (Notification) -> None
         raise NotImplementedError()
 
-    # Protected versions of tasks
-
     @process()
     def create_database(self, name: str, folders: Sequence[str], update: bool):
         with Profiler("Create database", self.application.notifier):

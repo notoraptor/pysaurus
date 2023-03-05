@@ -208,9 +208,11 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
             className: cc(common.length)
           }, data.length), " |", " ", /*#__PURE__*/React.createElement("code", {
             className: cc(common.date)
-          }, data.date), " |", " ", /*#__PURE__*/React.createElement("em", null, "(entry)", " ", /*#__PURE__*/React.createElement("code", {
+          }, data.date), " |", " "), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("em", null, "(entry)", " ", /*#__PURE__*/React.createElement("code", {
             className: cc(common.date_entry_modified)
-          }, data.date_entry_modified))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, "Audio"), ":", " ", data.audio_languages.length ? data.audio_languages.join(", ") : "(none)", " |", " ", /*#__PURE__*/React.createElement("strong", null, "Subtitles"), ":", " ", data.subtitle_languages.length ? data.subtitle_languages.join(", ") : "(none)"), errors.length ? /*#__PURE__*/React.createElement("div", {
+          }, data.date_entry_modified)), " ", "|", " ", /*#__PURE__*/React.createElement("em", null, "(opened) ", /*#__PURE__*/React.createElement("code", {
+            className: cc(common.date_entry_opened)
+          }, data.date_entry_opened))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, "Audio"), ":", " ", data.audio_languages.length ? data.audio_languages.join(", ") : "(none)", " |", " ", /*#__PURE__*/React.createElement("strong", null, "Subtitles"), ":", " ", data.subtitle_languages.length ? data.subtitle_languages.join(", ") : "(none)"), errors.length ? /*#__PURE__*/React.createElement("div", {
             className: "horizontal"
           }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, "Errors:"), "\xA0"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
             className: "property"
@@ -282,7 +284,7 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
             className: "prepend"
           }, /*#__PURE__*/React.createElement("code", null, data.extension)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", {
             title: data.file_size
-          }, data.size)), " | ", /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("code", null, data.date)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("em", null, "(entry) ", /*#__PURE__*/React.createElement("code", null, data.date_entry_modified)))), /*#__PURE__*/React.createElement("div", {
+          }, data.size)), " | ", /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("code", null, data.date)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("em", null, "(entry) ", /*#__PURE__*/React.createElement("code", null, data.date_entry_modified)), " ", "|", " ", /*#__PURE__*/React.createElement("em", null, "(opened) ", /*#__PURE__*/React.createElement("code", null, data.date_entry_opened)))), /*#__PURE__*/React.createElement("div", {
             className: "horizontal"
           }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", null, tr("Video unreadable"), ":")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
             className: "property"
@@ -327,7 +329,7 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
             APP_STATE.videoHistory.add(this.props.data.filename);
             this.props.onInfo(tr("Opened: {path}", {
               path: this.props.data.filename
-            }));
+            }), true);
           }).catch(error => {
             backend_error(error);
             this.props.onInfo(tr("Unable to open: {path}", {

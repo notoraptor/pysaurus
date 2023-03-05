@@ -136,7 +136,7 @@ class AbstractVideoProvider(metaclass=ABCMeta):
         self.reset_parameters("source", "grouping", "classifier", "group")
         self.set_search(str(video.video_id), "id")
         if open_video:
-            video.filename.open()
+            self._database.open_video(video.video_id)
         return video.filename.path
 
     def classifier_select_group(self, group_id: int):
@@ -217,3 +217,7 @@ class AbstractVideoProvider(metaclass=ABCMeta):
         ):
             self.force_update("grouping")
             return True
+        # If a filename was modified, refresh entire provider.
+        if not is_property and "filename" in properties:
+            print("A filename was modified, refreshing provider.")
+            self.refresh()

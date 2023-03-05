@@ -86,6 +86,7 @@ class FeatureAPI:
             "remove_prop_type": FromDb(self, Db.remove_prop_type),
             "rename_database": FromDb(self, Db.rename),
             "rename_prop_type": FromDb(self, Db.rename_prop_type),
+            "rename_video": FromDb(self, Db.change_video_file_title),
             "set_group": FromView(self, View.set_group),
             "set_groups": FromView(self, View.set_groups),
             "set_search": FromView(self, View.set_search),
@@ -188,8 +189,3 @@ class FeatureAPI:
         self.database.provider.set_classifier_path([])
         self.database.provider.set_group(0)
         self.database.move_concatenated_prop_val(path, from_property, to_property)
-
-    # cannot make proxy ?
-    def rename_video(self, video_id, new_title):
-        self.database.change_video_file_title(video_id, new_title)
-        self.database.provider.refresh()
