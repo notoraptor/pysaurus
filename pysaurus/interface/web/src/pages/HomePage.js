@@ -384,7 +384,6 @@ export class HomePage extends React.Component {
 			messages: [],
 			jobMap: new Map(),
 		};
-		this.callbackIndex = -1;
 		this.notify = this.notify.bind(this);
 		this.displayVideos = this.displayVideos.bind(this);
 		this.collectNotification = this.collectNotification.bind(this);
@@ -417,7 +416,7 @@ export class HomePage extends React.Component {
 	}
 
 	componentDidMount() {
-		this.callbackIndex = NOTIFICATION_MANAGER.register(this.notify);
+		NOTIFICATION_MANAGER.installFrom(this);
 		python_call(...this.props.parameters.command).catch(backend_error);
 	}
 
@@ -430,7 +429,7 @@ export class HomePage extends React.Component {
 	}
 
 	componentWillUnmount() {
-		NOTIFICATION_MANAGER.unregister(this.callbackIndex);
+		NOTIFICATION_MANAGER.uninstallFrom(this);
 	}
 
 	notify(notification) {

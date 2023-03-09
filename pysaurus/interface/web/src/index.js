@@ -1,9 +1,10 @@
 import { App } from "./App.js";
 import { Callbacks } from "./utils/Callbacks.js";
 import { python_call } from "./utils/backend.js";
+import { NotificationManager } from "./utils/NotificationManager.js";
 
 /** NOTIFICATION_MANAGER.call is called from Python to send notifications to interface. */
-window.NOTIFICATION_MANAGER = new Callbacks();
+window.NOTIFICATION_MANAGER = new NotificationManager();
 
 /** Global keyboard manager. Used to react on shortcuts. */
 window.KEYBOARD_MANAGER = new Callbacks();

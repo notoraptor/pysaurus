@@ -346,7 +346,6 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
             messages: [],
             jobMap: new Map()
           };
-          this.callbackIndex = -1;
           this.notify = this.notify.bind(this);
           this.displayVideos = this.displayVideos.bind(this);
           this.collectNotification = this.collectNotification.bind(this);
@@ -385,7 +384,7 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
         }
 
         componentDidMount() {
-          this.callbackIndex = NOTIFICATION_MANAGER.register(this.notify);
+          NOTIFICATION_MANAGER.installFrom(this);
           python_call(...this.props.parameters.command).catch(backend_error);
         }
 
@@ -399,7 +398,7 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
         }
 
         componentWillUnmount() {
-          NOTIFICATION_MANAGER.unregister(this.callbackIndex);
+          NOTIFICATION_MANAGER.uninstallFrom(this);
         }
 
         notify(notification) {

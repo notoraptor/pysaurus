@@ -1,7 +1,7 @@
-System.register(["./App.js", "./utils/Callbacks.js", "./utils/backend.js"], function (_export, _context) {
+System.register(["./App.js", "./utils/Callbacks.js", "./utils/backend.js", "./utils/NotificationManager.js"], function (_export, _context) {
   "use strict";
 
-  var App, Callbacks, python_call;
+  var App, Callbacks, python_call, NotificationManager;
   return {
     setters: [function (_AppJs) {
       App = _AppJs.App;
@@ -9,10 +9,12 @@ System.register(["./App.js", "./utils/Callbacks.js", "./utils/backend.js"], func
       Callbacks = _utilsCallbacksJs.Callbacks;
     }, function (_utilsBackendJs) {
       python_call = _utilsBackendJs.python_call;
+    }, function (_utilsNotificationManagerJs) {
+      NotificationManager = _utilsNotificationManagerJs.NotificationManager;
     }],
     execute: function () {
       /** NOTIFICATION_MANAGER.call is called from Python to send notifications to interface. */
-      window.NOTIFICATION_MANAGER = new Callbacks();
+      window.NOTIFICATION_MANAGER = new NotificationManager();
       /** Global keyboard manager. Used to react on shortcuts. */
 
       window.KEYBOARD_MANAGER = new Callbacks();

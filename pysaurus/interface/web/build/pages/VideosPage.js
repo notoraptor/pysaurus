@@ -164,7 +164,6 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           this.getActions = this.getActions.bind(this);
           this.playlist = this.playlist.bind(this);
           this.callbackIndex = -1;
-          this.notificationCallbackIndex = -1;
         }
 
         render() {
@@ -581,12 +580,12 @@ Once done, move you can compute prediction.
 
         componentDidMount() {
           this.callbackIndex = KEYBOARD_MANAGER.register(this.getActions().onKeyPressed);
-          this.notificationCallbackIndex = NOTIFICATION_MANAGER.register(this.notify);
+          NOTIFICATION_MANAGER.installFrom(this);
         }
 
         componentWillUnmount() {
           KEYBOARD_MANAGER.unregister(this.callbackIndex);
-          NOTIFICATION_MANAGER.unregister(this.notificationCallbackIndex);
+          NOTIFICATION_MANAGER.uninstallFrom(this);
         }
         /**
          * @param state {Object}
