@@ -1,5 +1,5 @@
+import logging
 import os
-import sys
 from collections import Counter
 from typing import Dict, Iterable, List, Optional, Set, Tuple
 
@@ -35,12 +35,14 @@ from pysaurus.video.video_indexer import VideoIndexer
 from pysaurus.video.video_runtime_info import VideoRuntimeInfo
 from saurus.language import say
 
+logger = logging.getLogger(__name__)
+
 try:
     from pysaurus.video_raptor.video_raptor_native import VideoRaptor
 except exceptions.CysaurusUnavailable:
     from pysaurus.video_raptor.video_raptor_pyav import VideoRaptor
 
-    print("Using fallback backend for videos info and thumbnails.", file=sys.stderr)
+    logger.warning("Using fallback backend for videos info and thumbnails.")
 
 
 class Database(JsonDatabase):

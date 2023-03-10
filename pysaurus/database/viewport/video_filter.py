@@ -1,3 +1,4 @@
+import logging
 import random
 from abc import abstractmethod
 from typing import Dict, List, Sequence, Set
@@ -16,6 +17,7 @@ from pysaurus.database.viewport.view_tools import (
 from pysaurus.video.video import Video
 from pysaurus.video.video_sorting import VideoSorting
 
+logger = logging.getLogger(__name__)
 EMPTY_SET = set()
 
 
@@ -31,8 +33,8 @@ class Layer:
         self.output = None
         self.to_update = False
 
-    def _log(self, *args, **kwargs):
-        print(f"[{type(self).__name__}]", *args, **kwargs)
+    def _log(self, *args):
+        logger.debug(f"[{type(self).__name__}] {' '.join(str(arg) for arg in args)}")
 
     def set_input(self, data):
         if self.input is not data:
@@ -351,7 +353,7 @@ class VideoSelector(AbstractVideoProvider):
         for layer in self.pipeline:
             layer.set_input(data)
             data = layer.get_output()
-        print("----- selected -----")
+        logger.debug("[video-selector] selected")
         return data
 
     def delete(self, video):

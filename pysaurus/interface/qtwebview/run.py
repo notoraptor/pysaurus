@@ -1,6 +1,6 @@
+import logging
 import sys
 import threading
-import traceback
 
 import ujson as json
 from PyQt5.QtCore import QMetaObject, QObject, QUrl, Q_ARG, Qt, pyqtSignal, pyqtSlot
@@ -15,11 +15,13 @@ from pysaurus.core.enumeration import EnumerationError
 from pysaurus.core.modules import System
 from pysaurus.interface.api.gui_api import GuiAPI
 
+logger = logging.getLogger(__name__)
+
 LevelType = QWebEnginePage.JavaScriptConsoleMessageLevel
-LEVEL = {
-    LevelType.InfoMessageLevel: "info",
-    LevelType.WarningMessageLevel: "warning",
-    LevelType.ErrorMessageLevel: "error",
+LOG_LEVEL = {
+    LevelType.InfoMessageLevel: logger.info,
+    LevelType.WarningMessageLevel: logger.warning,
+    LevelType.ErrorMessageLevel: logger.error,
 }
 
 
@@ -73,8 +75,7 @@ class Interface(QObject):
             name, args = json.loads(json_str)
             result = {"error": False, "data": self.api.__run_feature__(name, *args)}
         except (OSError, EnumerationError, exceptions.PysaurusError) as exception:
-            traceback.print_tb(exception.__traceback__, file=sys.stderr)
-            print(type(exception), exception, file=sys.stderr)
+            logger.exception("API call exception")
             result = {
                 "error": True,
                 "data": {"name": type(exception).__name__, "message": str(exception)},
@@ -97,9 +98,9 @@ class CustomPage(QWebEnginePage):
     def javaScriptConsoleMessage(
         self, level: LevelType, message: str, line_number: int, source_id: str
     ):
-        file = sys.stdout if level == LevelType.InfoMessageLevel else sys.stderr
-        print(f"[JS:{LEVEL[level]}] {source_id}:{line_number}", file=file)
-        print(f"\t{message}", file=file)
+        log_fn = LOG_LEVEL[level]
+        log_fn(f"[JS:at] {source_id}:{line_number}")
+        log_fn(f"[JS] {message}")
 
 
 class PysaurusQtApplication(QWebEngineView):
@@ -116,7 +117,7 @@ class PysaurusQtApplication(QWebEngineView):
             package_dir(), "interface", "web", "index.html"
         ).assert_file()
         url = QUrl.fromLocalFile(html_path.path)
-        print("Loading", url)
+        logger.debug(f"Loading {url}")
         with open(html_path.path) as file:
             html = file.read()
         html = html.replace(
@@ -148,7 +149,7 @@ class PysaurusQtApplication(QWebEngineView):
 
 def generate_except_hook(qapp):
     def except_hook(cls, exception, trace):
-        print("[Qt] Error occuring.", file=sys.stderr)
+        logger.error("[Qt] Error occurring.")
         sys.__excepthook__(cls, exception, trace)
         qapp.exit(1)
 
@@ -157,7 +158,7 @@ def generate_except_hook(qapp):
 
 def generate_thread_except_hook(qapp):
     def thread_except_hook(arg):
-        print("[Qt] Error occurring in thread:", arg.thread.name, file=sys.stderr)
+        logger.error(f"[Qt] Error occurring in thread: {arg.thread.name}")
         sys.__excepthook__(arg.exc_type, arg.exc_value, arg.exc_traceback)
         qapp.exit(1)
 
@@ -185,13 +186,9 @@ def main():
     height = (2 * screen_rect.height()) // 3
     x = screen_center.x() - width // 2
     y = screen_center.y() - height // 2
-    print(f"Window: size {width} x {height}", file=sys.stderr)
-    print(f"Window: DPI {dpix} x {dpiy}", file=sys.stderr)
-    print(
-        f"Window: IRL {width * 2.54 / dpix} x {height * 2.54 / dpiy} cm",
-        file=sys.stderr,
-    )
-    print(f"Window: pos ({x}; {y})", file=sys.stderr)
+    logger.debug(f"Window: pos ({x}; {y}), size {width} x {height}")
+    logger.debug(f"Window: DPI {dpix} x {dpiy}")
+    logger.debug(f"Window: IRL {width * 2.54 / dpix} x {height * 2.54 / dpiy} cm")
     view = PysaurusQtApplication(geometry=(x, y, width, height))
     # Set zoom.
     if System.is_windows():
@@ -200,9 +197,8 @@ def main():
         font_cm = font_size * 2.54 / dpiy
         # Try to scale so that default font size is at least 0.35 cm height
         scale = 0.35 / font_cm
-        print("Font", font_size, "cm", font_cm, "scale", scale)
+        logger.debug(f"Window: font {font_size} cm {font_cm} scale {scale}")
         if scale > 1:
-            print("Scale", scale)
             view.setZoomFactor(scale)
     # Display.
     view.show()
@@ -210,4 +206,5 @@ def main():
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.NOTSET)
     main()

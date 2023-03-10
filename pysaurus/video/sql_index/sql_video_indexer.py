@@ -11,7 +11,6 @@ from pysaurus.video.abstract_video_indexer import AbstractVideoIndexer
 from pysaurus.video.sql_index.video_term_index_database import VideoTermIndexDatabase
 from pysaurus.video.video import Video
 
-logging.basicConfig(level=logging.NOTSET)
 logger = logging.getLogger(__name__)
 
 

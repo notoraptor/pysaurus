@@ -1,13 +1,15 @@
+import logging
 import os
 import pathlib
 import shutil
 import subprocess
-import sys
 from datetime import datetime
 from typing import Union
 
 from pysaurus.core import core_exceptions
 from pysaurus.core.modules import FileSystem, System
+
+logger = logging.getLogger(__name__)
 
 
 class AbsolutePath:
@@ -182,7 +184,7 @@ class AbsolutePath:
                 path = get_short_path_name(self.standard_path)
                 if path is None:
                     raise core_exceptions.NoShortPathError(self.__path)
-                print("AbsolutePath: opening Windows short path", path, file=sys.stderr)
+                logger.debug(f"AbsolutePath: opening Windows short path {path}")
             else:
                 path = self.__path
             FileSystem.startfile(path)

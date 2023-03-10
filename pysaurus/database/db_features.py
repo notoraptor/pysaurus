@@ -1,4 +1,5 @@
 import itertools
+import logging
 from ctypes import Array, c_bool
 from typing import List, Set
 
@@ -17,6 +18,7 @@ from pysaurus.miniature.miniature import Miniature
 from saurus.language import say
 
 # from collections import deque
+logger = logging.getLogger(__name__)
 
 try:
     from pysaurus.database.video_similarities.alignment_raptor import (
@@ -29,7 +31,7 @@ except exceptions.CysaurusUnavailable:
     import sys
 
     has_cpp = False
-    print("Using fallback backend for video similarities search.", file=sys.stderr)
+    logger.warning("Using fallback backend for video similarities search.")
 
 FRAC_SIM_LIMIT = Fraction(90, 100)
 FRAC_DST_LIMIT = Fraction(1) - FRAC_SIM_LIMIT

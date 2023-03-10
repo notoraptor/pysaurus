@@ -1,9 +1,11 @@
-import sys
+import logging
 
 from pysaurus.application import exceptions
 from pysaurus.core import functions
 from pysaurus.core.components import AbsolutePath, PathType
 from pysaurus.core.modules import FileSystem
+
+logger = logging.getLogger(__name__)
 
 
 class DbPaths:
@@ -45,7 +47,7 @@ class DbPaths:
         if self.index_path.exists():
             FileSystem.rename(self.index_path.path, new_paths.index_path.path)
         self.db_folder.delete()
-        print("Deleted", self.db_folder, file=sys.stderr)
+        logger.debug(f"Deleted {self.db_folder}")
         return new_paths
 
 

@@ -1,4 +1,4 @@
-import sys
+import logging
 from typing import List
 
 import numpy as np
@@ -9,6 +9,8 @@ from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.profiling import Profiler
 from pysaurus.miniature.miniature import Miniature
 from saurus.language import say
+
+logger = logging.getLogger(__name__)
 
 
 def _miniature_to_x(m: Miniature) -> List:
@@ -50,7 +52,7 @@ def optimize_pattern_predictor(
     else:
         assert len(theta) == xs.shape[1]
         theta = np.asarray(theta, dtype=np.float64)
-    print("xs", xs.shape, "ys", ys.shape, "theta", theta.shape, file=sys.stderr)
+    logger.debug(f"xs {xs.shape} ys {ys.shape} theta {theta.shape}")
     nb_convergence = 0
     nb_expected_convergence = 10
     notifier = database.notifier if database else DEFAULT_NOTIFIER

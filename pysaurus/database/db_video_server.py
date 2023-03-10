@@ -4,7 +4,6 @@ import threading
 from flask import Flask, send_file
 from werkzeug.serving import make_server
 
-logging.basicConfig(level=logging.NOTSET)
 logger = logging.getLogger(__name__)
 
 

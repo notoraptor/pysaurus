@@ -1,7 +1,9 @@
-import sys
+import logging
 from typing import Iterator
 
 import ujson as json
+
+logger = logging.getLogger(__name__)
 
 EMPTY_CHARACTERS = b" \t\v\r\n"
 ARRAY_START = ord("[")
@@ -250,6 +252,6 @@ def parse_json(path):
         with open(path, encoding="utf-8") as file:
             return json.load(file)
     except UnicodeDecodeError:
-        print("JSON: falling back to custom parser.", file=sys.stderr)
+        logger.debug("JSON: falling back to custom parser.")
         with open(path, "rb") as file:
             return custom_json_parse_file(file)

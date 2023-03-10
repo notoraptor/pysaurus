@@ -1,4 +1,4 @@
-import sys
+import logging
 from typing import Any, Callable, Dict, Optional, Union
 
 from pysaurus.application.application import Application
@@ -10,6 +10,8 @@ from pysaurus.database.viewport.abstract_video_provider import (
     AbstractVideoProvider as View,
 )
 from pysaurus.video.video_features import VideoFeatures
+
+logger = logging.getLogger(__name__)
 
 
 class ProxyFeature:
@@ -132,8 +134,8 @@ class FeatureAPI:
         if callargs:
             ret = self.__run_feature__(callargs[0], *callargs[1:])
             if ret is not None:
-                print("Ignored value returned by", callargs, file=sys.stderr)
-                print(type(ret), file=sys.stderr)
+                logger.warning(f"Ignored value returned by {callargs}")
+                logger.warning(type(ret))
 
         # Backend state.
         real_nb_videos = len(self.database.provider.get_view())

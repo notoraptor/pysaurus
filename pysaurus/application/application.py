@@ -1,5 +1,5 @@
+import logging
 import os
-import sys
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional
 
@@ -21,6 +21,8 @@ from pysaurus.core.modules import FileSystem
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.database.database import Database
 from saurus.language import say
+
+logger = logging.getLogger(__name__)
 
 
 class Config(Jsonable):
@@ -76,9 +78,7 @@ class Application:
         lang_path = AbsolutePath.join(self.lang_dir, f"{self.config.language}.txt")
         if lang_path not in self.languages:
             if self.config.language == DefaultLanguage.__language__:
-                print(
-                    "[Default language]", DefaultLanguage.__language__, file=sys.stderr
-                )
+                logger.debug(f"[Default language] {DefaultLanguage.__language__}")
                 dff_dump(language_to_dict(DefaultLanguage, extend=False), lang_path)
             else:
                 raise exceptions.MissingLanguageFile(self.config.language)

@@ -1,4 +1,5 @@
 import functools
+import logging
 import multiprocessing
 import os
 import queue
@@ -31,6 +32,8 @@ from pysaurus.interface.api import tk_utils
 from pysaurus.interface.api.feature_api import FeatureAPI, ProxyFeature
 from pysaurus.interface.api.parallel_notifier import ParallelNotifier
 from saurus.language import say
+
+logger = logging.getLogger(__name__)
 
 process = Runnable("_launch")
 
@@ -97,7 +100,7 @@ class GuiAPI(FeatureAPI):
 
     def open_from_server(self, video_id):
         url = f"http://{self.PYTHON_SERVER_HOSTNAME}:{self.PYTHON_SERVER_PORT}/video/{video_id}"
-        print("Running", VLC_PATH, url)
+        logger.debug(f"Running {VLC_PATH} {url}")
 
         def play():
             subprocess.run([VLC_PATH, url])
@@ -129,7 +132,7 @@ class GuiAPI(FeatureAPI):
         self.database = None
 
     def close_app(self):
-        print("Closing app ...")
+        logger.debug("Closing app ...")
         # Close threads.
         self.threads_stop_flag = True
         if self.monitor_thread:
@@ -143,7 +146,7 @@ class GuiAPI(FeatureAPI):
         # Close server.
         self.server.stop()
         # App closed.
-        print("App closed.")
+        logger.debug("App closed.")
 
     # Private methods.
 
@@ -157,7 +160,7 @@ class GuiAPI(FeatureAPI):
         kwargs: Dict = None,
         finish=True,
     ):
-        print("Running", function.__name__)
+        logger.debug(f"Running {function.__name__}")
         args = args or ()
         kwargs = kwargs or {}
         assert not self.monitor_thread
@@ -186,7 +189,7 @@ class GuiAPI(FeatureAPI):
             self.database.provider.register_notifications()
         self.notifier.notify(DatabaseReady())
         self.db_loading_thread = None
-        print(log_message)
+        logger.debug(log_message)
 
     def _consume_notifications(self):
         while True:
@@ -197,7 +200,7 @@ class GuiAPI(FeatureAPI):
         assert not self.notifier.queue.qsize()
 
     def _monitor_notifications(self):
-        print("Monitoring notifications ...")
+        logger.debug("Monitoring notifications ...")
         while True:
             if self.threads_stop_flag:
                 break
@@ -209,7 +212,7 @@ class GuiAPI(FeatureAPI):
             except queue.Empty:
                 time.sleep(1 / 100)
         self.monitor_thread = None
-        print("End monitoring.")
+        logger.debug("End monitoring.")
 
     @abstractmethod
     def _notify(self, notification):

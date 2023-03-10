@@ -1,11 +1,13 @@
+import logging
 import os
-import sys
 
 import av
 
 from pysaurus.core.job_notifications import notify_job_progress
 from pysaurus.core.parallelization import Job
 from pysaurus.video_raptor.abstract_video_raptor import AbstractVideoRaptor
+
+logger = logging.getLogger(__name__)
 
 
 class NoVideoStream(RuntimeError):
@@ -20,7 +22,7 @@ def open_video(filename):
     try:
         return av.open(filename)
     except UnicodeDecodeError:
-        print("Opening with metadata encoding latin-1", file=sys.stderr)
+        logger.debug("Opening with metadata encoding latin-1")
         return av.open(filename, metadata_encoding="latin-1")
 
 
