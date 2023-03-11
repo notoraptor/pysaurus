@@ -67,6 +67,9 @@ class Notifier:
         # type: (type, ManagerType) -> None
         self.__managers[notification_class] = function
 
+    def get_manager(self, notification):
+        return self.__managers.get(type(notification), None)
+
     def remove_manager(self, notification_class):
         # type: (type) -> None
         self.__managers.pop(notification_class, None)

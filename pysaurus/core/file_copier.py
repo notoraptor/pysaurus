@@ -8,7 +8,16 @@ from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 
 
 class FileCopier:
-    __slots__ = "cancel", "src", "dst", "buffer_size", "notifier", "total", "notify_end"
+    __slots__ = (
+        "cancel",
+        "src",
+        "dst",
+        "buffer_size",
+        "notifier",
+        "total",
+        "notify_end",
+        "terminated",
+    )
 
     def __init__(
         self,
@@ -43,25 +52,29 @@ class FileCopier:
         self.notifier = notifier
         self.cancel = False
         self.notify_end = notify_end
+        self.terminated = False
 
     def move(self):
-        src_drive = self.src.get_drive_name()
-        dst_drive = self.dst.get_drive_name()
-        if src_drive and dst_drive and src_drive == dst_drive:
-            FileSystem.rename(self.src.path, self.dst.path)
-            if self.src.exists():
-                raise FileExistsError(self.src)
-            if not self.dst.isfile():
-                raise core_exceptions.NotAFileError(self.dst)
-            if self.notify_end:
-                self.notifier.notify(notifications.Done())
-            ret = True
-        else:
-            ret = self.copy_file()
-        if ret:
+        try:
             src_stat = FileSystem.stat(self.src.path)
-            FileSystem.utime(self.dst.path, (src_stat.st_atime, src_stat.st_mtime))
-        return ret
+            src_drive = self.src.get_drive_name()
+            dst_drive = self.dst.get_drive_name()
+            if src_drive and dst_drive and src_drive == dst_drive:
+                FileSystem.rename(self.src.path, self.dst.path)
+                if self.src.exists():
+                    raise FileExistsError(self.src)
+                if not self.dst.isfile():
+                    raise core_exceptions.NotAFileError(self.dst)
+                if self.notify_end:
+                    self.notifier.notify(notifications.Done())
+                ret = True
+            else:
+                ret = self.copy_file()
+            if ret:
+                FileSystem.utime(self.dst.path, (src_stat.st_atime, src_stat.st_mtime))
+            return ret
+        finally:
+            self.terminated = True
 
     def copy_file(self):
         notify_job_start(

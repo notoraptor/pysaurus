@@ -21,8 +21,8 @@ from pysaurus.core.notifications import (
     Done,
     End,
     Notification,
-    Terminated,
 )
+from pysaurus.core.notifying import Notifier
 from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
 from pysaurus.database import pattern_detection
@@ -48,27 +48,48 @@ class FromTk(ProxyFeature):
         super().__init__(getter=lambda: tk_utils, method=method, returns=returns)
 
 
+class ProviderNotifier(Notifier):
+    __slots__ = ()
+
+    def __init__(self):
+        super().__init__()
+        # self.call_default_if_no_manager()
+
+    def manage(self, notification):
+        has_manager = self.get_manager(notification) is not None
+        logger.warning(f"[provider-notifier:{has_manager}] {notification}")
+
+
 class GuiAPI(FeatureAPI):
     __slots__ = (
         "multiprocessing_manager",
-        "monitor_thread",
-        "db_loading_thread",
+        "notification_thread",
+        "launched_thread",
         "threads_stop_flag",
         "copy_work",
         "monitor_notifications",
         "server",
+        "_provider_notifier",
     )
 
     def __init__(self, monitor_notifications=True):
         self.multiprocessing_manager = multiprocessing.Manager()
         super().__init__(ParallelNotifier(self.multiprocessing_manager.Queue()))
-        self.monitor_thread: Optional[threading.Thread] = None
-        self.db_loading_thread: Optional[threading.Thread] = None
+        self.notification_thread: Optional[threading.Thread] = None
+        self.launched_thread: Optional[threading.Thread] = None
         self.threads_stop_flag = False
         self.copy_work: Optional[FileCopier] = None
         self.notifier.call_default_if_no_manager()
         self.monitor_notifications = monitor_notifications
         self.server = ServerLauncher(lambda: self.database)
+        # Currently unused. Was here to receive provider notification managers
+        # instead of self.notifier, because self.notifier is used in multiprocessing,
+        # and we don't want to pickle provider in sub-processes
+        # (heavy, remember provider contains database, and some data can't be pickled)
+        self._provider_notifier = ProviderNotifier()
+
+        if self.monitor_notifications:
+            self.notification_thread = self._run_thread(self._monitor_notifications)
         self.server.start()
         self._proxies.update(
             {
@@ -119,15 +140,17 @@ class GuiAPI(FeatureAPI):
         self.database.create_prop_type(f"<?{prop_name}>", int, [-1, 0, 1], False)
 
     def cancel_copy(self):
-        if self.copy_work is not None:
+        if self.copy_work is not None and not self.copy_work.terminated:
             self.copy_work.cancel = True
         else:
             self.database.notifier.notify(Cancelled())
 
     def close_database(self):
+        self.notifier.clear_managers()
         self.database = None
 
     def delete_database(self):
+        self.notifier.clear_managers()
         assert self.application.delete_database_from_name(self.database.name)
         self.database = None
 
@@ -135,10 +158,10 @@ class GuiAPI(FeatureAPI):
         logger.debug("Closing app ...")
         # Close threads.
         self.threads_stop_flag = True
-        if self.monitor_thread:
-            self.monitor_thread.join()
-        if self.db_loading_thread:
-            self.db_loading_thread.join()
+        if self.notification_thread:
+            self.notification_thread.join()
+        if self.launched_thread:
+            self.launched_thread.join()
         # Close manager.
         self.notifier.queue = None
         self.notifier = None
@@ -147,8 +170,6 @@ class GuiAPI(FeatureAPI):
         self.server.stop()
         # App closed.
         logger.debug("App closed.")
-
-    # Private methods.
 
     def _run_thread(self, function, *args, **kwargs):
         return launch_thread(function, *args, **kwargs)
@@ -163,8 +184,8 @@ class GuiAPI(FeatureAPI):
         logger.debug(f"Running {function.__name__}")
         args = args or ()
         kwargs = kwargs or {}
-        assert not self.monitor_thread
-        assert not self.db_loading_thread
+        assert self.notification_thread
+        assert not self.launched_thread
         self.notifier.clear_managers()
         self._consume_notifications()
 
@@ -178,17 +199,14 @@ class GuiAPI(FeatureAPI):
         else:
             run = function
 
-        # Launch monitor thread.
-        if self.monitor_notifications:
-            self.monitor_thread = self._run_thread(self._monitor_notifications)
         # Then launch function.
-        self.db_loading_thread = self._run_thread(run, *args, **kwargs)
+        self.launched_thread = self._run_thread(run, *args, **kwargs)
 
     def _finish_loading(self, log_message):
         if self.database:
-            self.database.provider.register_notifications()
+            self.database.provider.register_notifications(self.notifier)
         self.notifier.notify(DatabaseReady())
-        self.db_loading_thread = None
+        self.launched_thread = None
         logger.debug(log_message)
 
     def _consume_notifications(self):
@@ -206,12 +224,11 @@ class GuiAPI(FeatureAPI):
                 break
             try:
                 notification = self.notifier.queue.get_nowait()
+                # self._provider_notifier.notify(notification)
                 self._notify(notification)
-                if isinstance(notification, Terminated):
-                    break
             except queue.Empty:
                 time.sleep(1 / 100)
-        self.monitor_thread = None
+        self.notification_thread = None
         logger.debug("End monitoring.")
 
     @abstractmethod
@@ -225,6 +242,7 @@ class GuiAPI(FeatureAPI):
             self.database = self.application.new_database(name, folders)
             if update:
                 self._update_database()
+            self.database.provider.register_notifications(self.notifier)
 
     @process()
     def open_database(self, name: str, update: bool):
@@ -232,6 +250,7 @@ class GuiAPI(FeatureAPI):
             self.database = self.application.open_database_from_name(name)
             if update:
                 self._update_database()
+            self.database.provider.register_notifications(self.notifier)
 
     @process()
     def update_database(self):
@@ -267,7 +286,7 @@ class GuiAPI(FeatureAPI):
 
     @process(finish=False)
     def move_video_file(self, video_id: int, directory: str):
-        self.database.provider.register_notifications()
+        self.database.provider.register_notifications(self.notifier)
         try:
             filename = self.database.get_video_filename(video_id)
             directory = AbsolutePath.ensure_directory(directory)
@@ -293,13 +312,14 @@ class GuiAPI(FeatureAPI):
             else:
                 self.notifier.notify(Cancelled())
         except Exception as exc:
-            self.database.notifier.notify(
+            logger.exception("Error when moving")
+            self.notifier.notify(
                 End(
                     say("Error {name}: {message}", name=type(exc).__name__, message=exc)
                 )
             )
         finally:
-            self.db_loading_thread = None
+            self.launched_thread = None
 
     @process()
     def compute_predictor(self, prop_name):

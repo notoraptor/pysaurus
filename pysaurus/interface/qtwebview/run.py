@@ -147,19 +147,21 @@ class PysaurusQtApplication(QWebEngineView):
         return super().closeEvent(close_event)
 
 
-def generate_except_hook(qapp):
+def generate_except_hook(qapp, api: Api):
     def except_hook(cls, exception, trace):
         logger.error("[Qt] Error occurring.")
         sys.__excepthook__(cls, exception, trace)
+        api.threads_stop_flag = True
         qapp.exit(1)
 
     return except_hook
 
 
-def generate_thread_except_hook(qapp):
+def generate_thread_except_hook(qapp, api: Api):
     def thread_except_hook(arg):
         logger.error(f"[Qt] Error occurring in thread: {arg.thread.name}")
         sys.__excepthook__(arg.exc_type, arg.exc_value, arg.exc_traceback)
+        api.threads_stop_flag = True
         qapp.exit(1)
 
     return thread_except_hook
@@ -174,8 +176,6 @@ def main():
 
     # Initialize.
     app = QApplication.instance() or QApplication(sys.argv)
-    sys.excepthook = generate_except_hook(app)
-    threading.excepthook = generate_thread_except_hook(app)
     # Set geometry.
     desktop = app.desktop()
     dpix = desktop.logicalDpiX()
@@ -200,6 +200,9 @@ def main():
         logger.debug(f"Window: font {font_size} cm {font_cm} scale {scale}")
         if scale > 1:
             view.setZoomFactor(scale)
+    # Set except hooks
+    sys.excepthook = generate_except_hook(app, view.interface.api)
+    threading.excepthook = generate_thread_except_hook(app, view.interface.api)
     # Display.
     view.show()
     sys.exit(app.exec_())

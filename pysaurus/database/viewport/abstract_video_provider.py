@@ -188,16 +188,17 @@ class AbstractVideoProvider(metaclass=ABCMeta):
             self.select_from_view(selector, return_videos=True), *db_fn_args
         )
 
-    def register_notifications(self):
-        self._database.notifier.set_manager(
-            notifications.VideoDeleted, self.on_video_deleted
-        )
-        self._database.notifier.set_manager(
-            notifications.FieldsModified, self.on_fields_modified
-        )
-        self._database.notifier.set_manager(
+    def register_notifications(self, notifier):
+        notifier.set_manager(notifications.VideoDeleted, self.on_video_deleted)
+        notifier.set_manager(notifications.FieldsModified, self.on_fields_modified)
+        notifier.set_manager(
             notifications.PropertiesModified, self.on_properties_modified
         )
+
+    def unregister_notifications(self, notifier):
+        notifier.remove_manager(notifications.VideoDeleted)
+        notifier.remove_manager(notifications.FieldsModified)
+        notifier.remove_manager(notifications.PropertiesModified)
 
     def on_video_deleted(self, notification: notifications.VideoDeleted):
         self.delete(notification.video)

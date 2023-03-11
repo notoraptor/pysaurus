@@ -350,6 +350,7 @@ class VideoSelector(AbstractVideoProvider):
 
     def get_view(self):
         data = self._database
+        logger.debug("[video-selector] selecting ...")
         for layer in self.pipeline:
             layer.set_input(data)
             data = layer.get_output()
