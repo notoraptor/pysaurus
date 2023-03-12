@@ -701,6 +701,8 @@ class Database(JsonDatabase):
                 to_video, prop_name, self.get_prop_values(from_video, prop_name)
             )
         to_video.similarity_id = from_video.similarity_id
+        to_video.date_entry_modified = from_video.date_entry_modified.time
+        to_video.date_entry_opened = from_video.date_entry_opened.time
         self.delete_video(from_id, save=save)
 
     def confirm_unique_moves(self) -> int:

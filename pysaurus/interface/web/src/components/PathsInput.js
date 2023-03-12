@@ -1,4 +1,4 @@
-import { LangContext, tr } from "../language.js";
+import { tr } from "../language.js";
 import { backend_error, python_call } from "../utils/backend.js";
 
 export class PathsInput extends React.Component {
@@ -6,6 +6,7 @@ export class PathsInput extends React.Component {
 		super(props);
 		this.addFolder = this.addFolder.bind(this);
 		this.addFile = this.addFile.bind(this);
+		this._extendPaths = this._extendPaths.bind(this);
 		this.removePath = this.removePath.bind(this);
 	}
 
@@ -50,31 +51,21 @@ export class PathsInput extends React.Component {
 	}
 
 	addFolder() {
-		python_call("select_directory")
-			.then((directory) => {
-				if (directory) {
-					const paths = new Set(this.props.data || []);
-					paths.add(directory);
-					const data = Array.from(paths);
-					data.sort();
-					this.props.onUpdate(data);
-				}
-			})
-			.catch(backend_error);
+		python_call("select_directory").then(this._extendPaths).catch(backend_error);
 	}
 
 	addFile() {
-		python_call("select_file")
-			.then((file) => {
-				if (file) {
-					const paths = new Set(this.props.data || []);
-					paths.add(file);
-					const data = Array.from(paths);
-					data.sort();
-					this.props.onUpdate(data);
-				}
-			})
-			.catch(backend_error);
+		python_call("select_file").then(this._extendPaths).catch(backend_error);
+	}
+
+	_extendPaths(path) {
+		if (path) {
+			const paths = new Set(this.props.data || []);
+			paths.add(path);
+			const data = Array.from(paths);
+			data.sort();
+			this.props.onUpdate(data);
+		}
 	}
 
 	removePath(path) {
@@ -86,7 +77,6 @@ export class PathsInput extends React.Component {
 	}
 }
 
-PathsInput.contextType = LangContext;
 PathsInput.propTypes = {
 	data: PropTypes.arrayOf(PropTypes.string),
 	// onUpdate(arr)

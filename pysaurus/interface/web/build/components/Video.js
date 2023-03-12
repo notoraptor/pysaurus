@@ -343,7 +343,7 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
             APP_STATE.videoHistory.add(this.props.data.filename);
             this.props.onInfo(tr("Opened: {path}", {
               path: url ? url : this.props.data.filename
-            }));
+            }), true);
           }).catch(error => {
             backend_error(error);
             this.props.onInfo(tr("Unable to open: {path}", {

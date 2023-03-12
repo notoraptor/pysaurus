@@ -595,7 +595,7 @@ Once done, move you can compute prediction.
 
 
         getStateField(state, field) {
-          return state[field] === undefined ? this.state[field] : state[field];
+          return state[field] === undefined ? this.state === undefined ? undefined : this.state[field] : state[field];
         }
 
         backend(callargs, state = {}, top = true) {
@@ -604,7 +604,37 @@ Once done, move you can compute prediction.
           const displayOnlySelected = this.getStateField(state, "displayOnlySelected");
           const selector = displayOnlySelected ? this.getStateField(state, "selector").toJSON() : null;
           if (!state.status) state.status = tr("updated.");
-          python_call("backend", callargs, pageSize, pageNumber, selector).then(info => this.setState(this.parametersToState(state, info), top ? this.scrollTop : undefined)).catch(backend_error);
+
+          const run = async () => {
+            if (callargs) await python_call(...callargs);
+            return await python_call("backend", pageSize, pageNumber, selector);
+          };
+
+          run().then(info => this.setState(this.parametersToState(state, info), top ? this.scrollTop : undefined)).catch(backend_error);
+        }
+
+        viewHasChanged(state, info) {
+          const prevSources = this.getStateField(state, "sources") || window.PYTHON_DEFAULT_SOURCES;
+          const nextSources = info.sources || [];
+          if (!compareSources(prevSources, nextSources)) return true;
+          const prevGroupDef = this.getStateField(state, "groupDef") || {};
+          const nextGroupDef = info.groupDef || {};
+
+          for (let field of ["field", "is_property", "sorting", "reverse", "allow_singletons", "group_id"]) {
+            if (prevGroupDef[field] !== nextGroupDef[field]) return true;
+          }
+
+          const prevPath = this.getStateField(state, "path") || [];
+          const nextPath = info.path || [];
+          if (prevPath.length !== nextPath.length) return true;
+
+          for (let i = 0; i < prevPath.length; ++i) {
+            if (prevPath[i] !== nextPath[i]) return true;
+          }
+
+          const prevSearchDef = this.getStateField(state, "searchDef") || {};
+          const nextSearchDef = info.searchDef || {};
+          return prevSearchDef.text !== nextSearchDef.text || prevSearchDef.cond !== nextSearchDef.cond;
         }
 
         parametersToState(state, info) {
@@ -616,7 +646,9 @@ Once done, move you can compute prediction.
             state.groupPageNumber = Math.min(Math.max(0, groupPageNumber), nbPages - 1);
           }
 
-          if (info.viewChanged && !state.selector) state.selector = new Selector();
+          const viewChanged = this.viewHasChanged(state, info);
+          console.log(`View changed? ${viewChanged ? "true" : "false"}`);
+          if (viewChanged) state.selector = new Selector();
           const definitions = {};
 
           for (let propType of info.prop_types) {
@@ -949,11 +981,9 @@ not found video entry will be deleted.
           Fancybox.load( /*#__PURE__*/React.createElement(FormVideosKeywordsToProperty, {
             prop_types: this.getStringSetProperties(this.state.prop_types),
             onClose: state => {
-              python_call("fill_property_with_terms", state.field, state.onlyEmpty).then(() => this.backend(null, {
-                status: tr('Filled property "{name}" with video keywords.', {
-                  name: state.field
-                })
-              })).catch(backend_error);
+              python_call("fill_property_with_terms", state.field, state.onlyEmpty).then(() => this.updateStatus(tr('Filled property "{name}" with video keywords.', {
+                name: state.field
+              }), true)).catch(backend_error);
             }
           }));
         }

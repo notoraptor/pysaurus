@@ -1,13 +1,12 @@
 System.register(["../language.js", "../utils/backend.js"], function (_export, _context) {
   "use strict";
 
-  var LangContext, tr, backend_error, python_call, PathsInput;
+  var tr, backend_error, python_call, PathsInput;
 
   _export("PathsInput", void 0);
 
   return {
     setters: [function (_languageJs) {
-      LangContext = _languageJs.LangContext;
       tr = _languageJs.tr;
     }, function (_utilsBackendJs) {
       backend_error = _utilsBackendJs.backend_error;
@@ -19,6 +18,7 @@ System.register(["../language.js", "../utils/backend.js"], function (_export, _c
           super(props);
           this.addFolder = this.addFolder.bind(this);
           this.addFile = this.addFile.bind(this);
+          this._extendPaths = this._extendPaths.bind(this);
           this.removePath = this.removePath.bind(this);
         }
 
@@ -49,27 +49,21 @@ System.register(["../language.js", "../utils/backend.js"], function (_export, _c
         }
 
         addFolder() {
-          python_call("select_directory").then(directory => {
-            if (directory) {
-              const paths = new Set(this.props.data || []);
-              paths.add(directory);
-              const data = Array.from(paths);
-              data.sort();
-              this.props.onUpdate(data);
-            }
-          }).catch(backend_error);
+          python_call("select_directory").then(this._extendPaths).catch(backend_error);
         }
 
         addFile() {
-          python_call("select_file").then(file => {
-            if (file) {
-              const paths = new Set(this.props.data || []);
-              paths.add(file);
-              const data = Array.from(paths);
-              data.sort();
-              this.props.onUpdate(data);
-            }
-          }).catch(backend_error);
+          python_call("select_file").then(this._extendPaths).catch(backend_error);
+        }
+
+        _extendPaths(path) {
+          if (path) {
+            const paths = new Set(this.props.data || []);
+            paths.add(path);
+            const data = Array.from(paths);
+            data.sort();
+            this.props.onUpdate(data);
+          }
         }
 
         removePath(path) {
@@ -82,7 +76,6 @@ System.register(["../language.js", "../utils/backend.js"], function (_export, _c
 
       });
 
-      PathsInput.contextType = LangContext;
       PathsInput.propTypes = {
         data: PropTypes.arrayOf(PropTypes.string),
         // onUpdate(arr)

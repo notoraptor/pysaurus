@@ -128,15 +128,7 @@ class FeatureAPI:
         return language_to_dict(self.application.open_language_from_name(name))
 
     # cannot make proxy ?
-    def backend(self, callargs, page_size, page_number, selector=None):
-        prev_state = self.database.provider.get_unordered_state()
-
-        if callargs:
-            ret = self.__run_feature__(callargs[0], *callargs[1:])
-            if ret is not None:
-                logger.warning(f"Ignored value returned by {callargs}")
-                logger.warning(type(ret))
-
+    def backend(self, page_size, page_number, selector=None):
         # Backend state.
         real_nb_videos = len(self.database.provider.get_view())
         if selector:
@@ -154,8 +146,6 @@ class FeatureAPI:
             videos = [VideoFeatures.to_json(view[index]) for index in range(start, end)]
             if group_def and group_def["field"] == "similarity_id":
                 group_def["common"] = VideoFeatures.get_common_fields(view)
-
-        provider_changed = self.database.provider.get_unordered_state() != prev_state
 
         return {
             "pageSize": page_size,
@@ -181,7 +171,6 @@ class FeatureAPI:
                 "name": self.database.name,
                 "folders": [str(path) for path in sorted(self.database.video_folders)],
             },
-            "viewChanged": provider_changed,
         }
 
     # cannot make proxy ?

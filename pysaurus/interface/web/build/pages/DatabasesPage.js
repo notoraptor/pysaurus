@@ -27,9 +27,6 @@ System.register(["../utils/backend.js", "../components/PathsInput.js", "../langu
             update: true
           };
           this.onChangeName = this.onChangeName.bind(this);
-          this.addFolder = this.addFolder.bind(this);
-          this.addFile = this.addFile.bind(this);
-          this.removePath = this.removePath.bind(this);
           this.createDatabase = this.createDatabase.bind(this);
           this.openDatabase = this.openDatabase.bind(this);
           this.onChangeUpdate = this.onChangeUpdate.bind(this);
@@ -116,38 +113,6 @@ System.register(["../utils/backend.js", "../components/PathsInput.js", "../langu
         onChangeUpdate(event) {
           this.setState({
             update: event.target.checked
-          });
-        }
-
-        addFolder() {
-          python_call("select_directory").then(directory => {
-            if (directory) {
-              const paths = new Set(this.state.paths);
-              paths.add(directory);
-              this.setState({
-                paths
-              });
-            }
-          }).catch(backend_error);
-        }
-
-        addFile() {
-          python_call("select_file").then(file => {
-            if (file) {
-              const paths = new Set(this.state.paths);
-              paths.add(file);
-              this.setState({
-                paths
-              });
-            }
-          }).catch(backend_error);
-        }
-
-        removePath(path) {
-          const paths = new Set(this.state.paths);
-          paths.delete(path);
-          this.setState({
-            paths
           });
         }
 

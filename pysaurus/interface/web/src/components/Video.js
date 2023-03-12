@@ -481,7 +481,8 @@ export class Video extends React.Component {
 				this.props.onInfo(
 					tr("Opened: {path}", {
 						path: url ? url : this.props.data.filename,
-					})
+					}),
+					true
 				);
 			})
 			.catch((error) => {
