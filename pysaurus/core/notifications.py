@@ -1,6 +1,7 @@
 from typing import Dict, Iterable, List
 
 from pysaurus.core.classes import StringPrinter, ToDict
+from pysaurus.video.fake_video import FakeVideo
 
 
 class Notification(ToDict):
@@ -136,10 +137,13 @@ class VideoDeleted(Notification):
 
     def __init__(self, video):
         super().__init__()
-        self.video = video
+        self.video = FakeVideo(video)
 
     def __str__(self):
         return f"{type(self).__name__}({self.video.filename})"
+
+    def to_dict(self, **extra):
+        return {"video": str(self.video.filename)}
 
 
 class FieldsModified(Notification):

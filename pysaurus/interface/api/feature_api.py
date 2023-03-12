@@ -1,4 +1,5 @@
 import logging
+from abc import abstractmethod
 from typing import Any, Callable, Dict, Optional, Union
 
 from pysaurus.application.application import Application
@@ -44,6 +45,7 @@ class FromApp(ProxyFeature):
 class FeatureAPI:
     __slots__ = (
         "notifier",
+        "local_notifier",
         "application",
         "database",
         "PYTHON_LANG",
@@ -54,8 +56,9 @@ class FeatureAPI:
     PYTHON_APP_NAME = Application.app_name
     PYTHON_FEATURE_COMPARISON = True
 
-    def __init__(self, notifier):
+    def __init__(self, notifier, local_notifier=None):
         self.notifier = notifier
+        self.local_notifier = local_notifier
         self.application = Application(self.notifier)
         self.database: Optional[Db] = None
         self.PYTHON_LANG = language_to_dict(self.application.lang)
@@ -117,6 +120,10 @@ class FeatureAPI:
         else:
             return getattr(self, name)(*args)
 
+    @abstractmethod
+    def _get_latest_notifications(self):
+        raise NotImplementedError()
+
     # cannot make proxy
     def get_constants(self):
         return {
@@ -129,7 +136,15 @@ class FeatureAPI:
 
     # cannot make proxy ?
     def backend(self, page_size, page_number, selector=None):
-        # Backend state.
+        """Return backend state."""
+        # Collect latest notifications if available.
+        if self.local_notifier:
+            try:
+                for notification in self._get_latest_notifications():
+                    self.local_notifier.notify(notification)
+            except NotImplementedError:
+                logger.warning("No implementation to get latest notifications")
+
         real_nb_videos = len(self.database.provider.get_view())
         if selector:
             view = self.database.provider.select_from_view(selector, return_videos=True)

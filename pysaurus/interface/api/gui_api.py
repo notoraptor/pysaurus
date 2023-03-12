@@ -73,8 +73,16 @@ class GuiAPI(FeatureAPI):
     )
 
     def __init__(self, monitor_notifications=True):
+        # Here to receive provider notification managers
+        # instead of self.notifier, because self.notifier is used in multiprocessing,
+        # and we don't want to pickle provider in sub-processes
+        # (heavy, remember provider contains database, and some data can't be pickled)
+        self._provider_notifier = ProviderNotifier()
         self.multiprocessing_manager = multiprocessing.Manager()
-        super().__init__(ParallelNotifier(self.multiprocessing_manager.Queue()))
+        super().__init__(
+            notifier=ParallelNotifier(self.multiprocessing_manager),
+            local_notifier=self._provider_notifier,
+        )
         self.notification_thread: Optional[threading.Thread] = None
         self.launched_thread: Optional[threading.Thread] = None
         self.threads_stop_flag = False
@@ -82,11 +90,6 @@ class GuiAPI(FeatureAPI):
         self.notifier.call_default_if_no_manager()
         self.monitor_notifications = monitor_notifications
         self.server = ServerLauncher(lambda: self.database)
-        # Currently unused. Was here to receive provider notification managers
-        # instead of self.notifier, because self.notifier is used in multiprocessing,
-        # and we don't want to pickle provider in sub-processes
-        # (heavy, remember provider contains database, and some data can't be pickled)
-        self._provider_notifier = ProviderNotifier()
 
         if self.monitor_notifications:
             self.notification_thread = self._run_thread(self._monitor_notifications)
@@ -117,8 +120,6 @@ class GuiAPI(FeatureAPI):
     def PYTHON_SERVER_PORT(self):
         return self.server.server_thread.port
 
-    # Public tasks
-
     def open_from_server(self, video_id):
         url = f"http://{self.PYTHON_SERVER_HOSTNAME}:{self.PYTHON_SERVER_PORT}/video/{video_id}"
         logger.debug(f"Running {VLC_PATH} {url}")
@@ -146,11 +147,11 @@ class GuiAPI(FeatureAPI):
             self.database.notifier.notify(Cancelled())
 
     def close_database(self):
-        self.notifier.clear_managers()
+        self._provider_notifier.clear_managers()
         self.database = None
 
     def delete_database(self):
-        self.notifier.clear_managers()
+        self._provider_notifier.clear_managers()
         assert self.application.delete_database_from_name(self.database.name)
         self.database = None
 
@@ -163,7 +164,7 @@ class GuiAPI(FeatureAPI):
         if self.launched_thread:
             self.launched_thread.join()
         # Close manager.
-        self.notifier.queue = None
+        self.notifier.close()
         self.notifier = None
         self.multiprocessing_manager = None
         # Close server.
@@ -186,7 +187,6 @@ class GuiAPI(FeatureAPI):
         kwargs = kwargs or {}
         assert self.notification_thread
         assert not self.launched_thread
-        self.notifier.clear_managers()
         self._consume_notifications()
 
         if finish:
@@ -203,19 +203,24 @@ class GuiAPI(FeatureAPI):
         self.launched_thread = self._run_thread(run, *args, **kwargs)
 
     def _finish_loading(self, log_message):
-        if self.database:
-            self.database.provider.register_notifications(self.notifier)
         self.notifier.notify(DatabaseReady())
         self.launched_thread = None
         logger.debug(log_message)
 
+    def _get_latest_notifications(self):
+        return self.__consume_shared_queue(self.notifier.local_queue)
+
     def _consume_notifications(self):
+        list(self.__consume_shared_queue(self.notifier.queue))
+
+    @classmethod
+    def __consume_shared_queue(cls, shared_queue):
         while True:
             try:
-                self.notifier.queue.get_nowait()
+                yield shared_queue.get_nowait()
             except queue.Empty:
                 break
-        assert not self.notifier.queue.qsize()
+        assert not shared_queue.qsize()
 
     def _monitor_notifications(self):
         logger.debug("Monitoring notifications ...")
@@ -242,7 +247,7 @@ class GuiAPI(FeatureAPI):
             self.database = self.application.new_database(name, folders)
             if update:
                 self._update_database()
-            self.database.provider.register_notifications(self.notifier)
+            self.database.provider.register_notifications(self._provider_notifier)
 
     @process()
     def open_database(self, name: str, update: bool):
@@ -250,7 +255,7 @@ class GuiAPI(FeatureAPI):
             self.database = self.application.open_database_from_name(name)
             if update:
                 self._update_database()
-            self.database.provider.register_notifications(self.notifier)
+            self.database.provider.register_notifications(self._provider_notifier)
 
     @process()
     def update_database(self):
@@ -286,7 +291,6 @@ class GuiAPI(FeatureAPI):
 
     @process(finish=False)
     def move_video_file(self, video_id: int, directory: str):
-        self.database.provider.register_notifications(self.notifier)
         try:
             filename = self.database.get_video_filename(video_id)
             directory = AbsolutePath.ensure_directory(directory)

@@ -5,6 +5,7 @@ from pysaurus.core.compare import to_comparable
 from pysaurus.core.enumeration import Enumeration
 from pysaurus.core.functions import get_default
 from pysaurus.core.lookup_array import LookupArray
+from pysaurus.video.fake_video import FakeVideo
 from pysaurus.video.video import Video
 
 
@@ -12,7 +13,7 @@ class VideoArray(LookupArray[Video]):
     __slots__ = ()
 
     def __init__(self, content=()):
-        super().__init__(Video, content, lambda video: video.filename)
+        super().__init__((Video, FakeVideo), content, lambda video: video.filename)
 
 
 class Group:

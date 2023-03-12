@@ -195,7 +195,8 @@ class AbstractVideoProvider(metaclass=ABCMeta):
             notifications.PropertiesModified, self.on_properties_modified
         )
 
-    def unregister_notifications(self, notifier):
+    @classmethod
+    def unregister_notifications(cls, notifier):
         notifier.remove_manager(notifications.VideoDeleted)
         notifier.remove_manager(notifications.FieldsModified)
         notifier.remove_manager(notifications.PropertiesModified)
