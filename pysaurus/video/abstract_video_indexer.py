@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from typing import Dict, Iterable, List, Sequence, Set
+from typing import Iterable, List, Sequence
 
 from pysaurus.core.components import AbsolutePath
 from pysaurus.video.video import Video
@@ -29,10 +29,6 @@ class AbstractVideoIndexer(metaclass=ABCMeta):
 
     @abstractmethod
     def replace_path(self, video: Video, old_path: AbsolutePath):
-        pass
-
-    @abstractmethod
-    def get_index(self) -> Dict[str, Set[AbsolutePath]]:
         pass
 
     @abstractmethod

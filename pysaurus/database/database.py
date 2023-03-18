@@ -79,12 +79,6 @@ class Database(JsonDatabase):
 
     # Private methods.
 
-    def _update_videos_not_found(
-        self, file_paths: Dict[AbsolutePath, VideoRuntimeInfo]
-    ):
-        for video_state in self.videos.values():
-            video_state.runtime.is_file = video_state.filename in file_paths
-
     def _find_video_paths_for_update(
         self, file_paths: Dict[AbsolutePath, VideoRuntimeInfo]
     ) -> List[str]:

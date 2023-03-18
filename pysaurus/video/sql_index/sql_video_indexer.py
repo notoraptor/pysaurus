@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Dict, Iterable, List, Sequence, Set
+from typing import Iterable, List, Sequence
 
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.job_notifications import (
@@ -101,17 +101,6 @@ class SqlVideoIndexer(AbstractVideoIndexer):
             "DELETE FROM filename WHERE filename = ?", [old_path.path]
         )
         self.add_video(video)
-
-    def get_index(self) -> Dict[str, Set[AbsolutePath]]:
-        index = {}
-        for row in self.sql_database.query(
-            "SELECT f.filename, t.term FROM filename AS f "
-            "JOIN filename_to_term AS j ON f.filename_id = j.filename_id "
-            "JOIN term AS t ON j.term_id = t.term_id "
-            "ORDER BY f.filename ASC, t.term_rank ASC"
-        ):
-            index.setdefault(AbsolutePath(row["filename"]), []).append(row["term"])
-        return index
 
     def _term_to_filenames(self, term: str) -> Iterable[AbsolutePath]:
         return (

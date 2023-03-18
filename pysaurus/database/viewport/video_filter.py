@@ -5,6 +5,7 @@ from typing import Dict, List, Sequence, Set
 
 from pysaurus.application import exceptions
 from pysaurus.core import functions
+from pysaurus.core.profiling import Profiler
 from pysaurus.database.viewport.abstract_video_provider import AbstractVideoProvider
 from pysaurus.database.viewport.source_def import SourceDef
 from pysaurus.database.viewport.view_tools import (
@@ -350,12 +351,11 @@ class VideoSelector(AbstractVideoProvider):
 
     def get_view(self):
         data = self._database
-        logger.debug("[video-selector] selecting ...")
-        for layer in self.pipeline:
-            layer.set_input(data)
-            data = layer.get_output()
-        logger.debug("[video-selector] selected")
-        return data
+        with Profiler("VideoSelector.get_view", self._database.notifier):
+            for layer in self.pipeline:
+                layer.set_input(data)
+                data = layer.get_output()
+            return data
 
     def delete(self, video):
         for layer in self.pipeline:

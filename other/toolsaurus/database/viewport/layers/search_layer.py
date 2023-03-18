@@ -3,7 +3,6 @@ from typing import Optional
 from other.toolsaurus.database.viewport.layers.layer import Layer
 from other.toolsaurus.database.viewport.layers.source_layer import SourceLayer
 from other.toolsaurus.modules import OtherVideoFeatures
-from pysaurus.core import functions
 from pysaurus.database.viewport.view_tools import Group, SearchDef, VideoArray
 from pysaurus.video.video import Video
 
@@ -34,28 +33,9 @@ class SearchLayer(Layer):
     def __filter_from_root_layer(
         self, search_def: SearchDef, source_layer: SourceLayer, data: Group
     ) -> VideoArray:
-        term_to_videos = source_layer.get_index()
-        terms = functions.string_to_pieces(search_def.text)
-        if search_def.cond == "exact":
-            selection_and = set(data.videos)
-            for term in terms:
-                selection_and &= term_to_videos.get(term, set())
-            video_filter = Video.has_terms_exact
-            selection = (video for video in selection_and if video_filter(video, terms))
-        elif search_def.cond == "and":
-            selection = set(data.videos)
-            for term in terms:
-                selection &= term_to_videos.get(term, set())
-        elif search_def.cond == "id":
-            (term,) = terms
-            video_id = int(term)
-            selection = (video for video in data.videos if video.video_id == video_id)
-        else:  # search_def.cond == 'or'
-            selection = set(term_to_videos.get(terms[0], set()))
-            for term in terms[1:]:
-                selection |= term_to_videos.get(term, set())
-            selection &= set(data.videos)
-        return VideoArray(selection)
+        return VideoArray(
+            self.database.search(search_def.text, search_def.cond, data.videos)
+        )
 
     def _remove_from_cache(self, cache: VideoArray, video: Video):
         if video in cache:

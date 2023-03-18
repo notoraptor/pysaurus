@@ -6,6 +6,7 @@ from pysaurus.application.application import Application
 from pysaurus.application.language.default_language import language_to_dict
 from pysaurus.core.components import Duration, FileSize
 from pysaurus.core.functions import compute_nb_pages, extract_object
+from pysaurus.core.profiling import Profiler
 from pysaurus.database.database import Database as Db
 from pysaurus.database.viewport.abstract_video_provider import (
     AbstractVideoProvider as View,
@@ -139,11 +140,12 @@ class FeatureAPI:
         """Return backend state."""
         # Collect latest notifications if available.
         if self.local_notifier:
-            try:
-                for notification in self._get_latest_notifications():
-                    self.local_notifier.notify(notification)
-            except NotImplementedError:
-                logger.warning("No implementation to get latest notifications")
+            with Profiler("Backend.latest_notifications", self.notifier):
+                try:
+                    for notification in self._get_latest_notifications():
+                        self.local_notifier.notify(notification)
+                except NotImplementedError:
+                    logger.warning("No implementation to get latest notifications")
 
         real_nb_videos = len(self.database.provider.get_view())
         if selector:

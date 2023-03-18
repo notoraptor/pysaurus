@@ -56,8 +56,9 @@ class ProviderNotifier(Notifier):
         # self.call_default_if_no_manager()
 
     def manage(self, notification):
-        has_manager = self.get_manager(notification) is not None
-        logger.warning(f"[provider-notifier:{has_manager}] {notification}")
+        # has_manager = self.get_manager(notification) is not None
+        # logger.warning(f"[provider-notifier:{has_manager}] {notification}")
+        pass
 
 
 class GuiAPI(FeatureAPI):

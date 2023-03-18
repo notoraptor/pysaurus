@@ -1,4 +1,4 @@
-from typing import Dict, Iterable, List, Optional, Sequence, Set, Union
+from typing import Container, Dict, Iterable, List, Optional, Sequence, Set, Union
 
 from pysaurus.application import exceptions
 from pysaurus.core import functions, notifying
@@ -57,7 +57,7 @@ class DatabaseSaved(DatabaseLoaded):
 class JsonDatabase:
     __slots__ = (
         "__backup",
-        "get_videos",
+        "__db_cache",
         "settings",
         "date",
         "folders",
@@ -69,7 +69,7 @@ class JsonDatabase:
         "id_to_video",
         "quality_attribute",
         "moves_attribute",
-        "indexer",
+        "__indexer",
     )
 
     def __init__(
@@ -81,7 +81,7 @@ class JsonDatabase:
     ):
         # Private data
         self.__backup = JsonBackup(path)
-        self.get_videos = DbCache(self)
+        self.__db_cache = DbCache(self)
         # Database content
         self.settings = DbSettings()
         self.date = Date.now()
@@ -95,12 +95,12 @@ class JsonDatabase:
         self.id_to_video: Dict[int, Video] = {}
         self.quality_attribute = QualityAttribute(self)
         self.moves_attribute = PotentialMoveAttribute(self)
-        self.indexer = indexer or VideoIndexer()
+        self.__indexer = indexer or VideoIndexer()
         # Initialize
         self.__load(folders)
         with Profiler("build index", self.notifier):
             notifying.with_handler(
-                self.notifier, self.indexer.build, self.videos.values()
+                self.notifier, self.__indexer.build, self.videos.values()
             )
 
     @Profiler.profile_method()
@@ -160,13 +160,10 @@ class JsonDatabase:
             {
                 "settings": self.settings.to_dict(),
                 "date": self.date.time,
-                "folders": sorted(folder.path for folder in self.folders),
+                "folders": [folder.path for folder in self.folders],
                 "prop_types": [prop.to_dict() for prop in self.prop_types.values()],
                 "predictors": self.predictors,
-                "videos": sorted(
-                    (video.to_dict() for video in self.videos.values()),
-                    key=lambda dct: dct["f"],
-                ),
+                "videos": [video.to_dict() for video in self.videos.values()],
             }
         )
         self.notifier.notify(DatabaseSaved(self))
@@ -194,6 +191,9 @@ class JsonDatabase:
     def set_path(self, path: PathType):
         self.__backup = JsonBackup(path)
 
+    def get_videos(self, *flags, **forced_flags):
+        return self.__db_cache(*flags, **forced_flags)
+
     def query(self, required: Dict[str, bool] = None) -> List[Video]:
         videos = self.videos.values()
         return (
@@ -220,11 +220,11 @@ class JsonDatabase:
                 }
             terms = functions.string_to_pieces(text)
             if cond == "exact":
-                selection = self.indexer.query_exact(filenames, terms)
+                selection = self.__indexer.query_exact(filenames, terms)
             elif cond == "and":
-                selection = self.indexer.query_and(filenames, terms)
+                selection = self.__indexer.query_and(filenames, terms)
             elif cond == "or":
-                selection = self.indexer.query_or(filenames, terms)
+                selection = self.__indexer.query_or(filenames, terms)
             else:
                 assert cond == "id"
                 (term,) = terms
@@ -380,18 +380,25 @@ class JsonDatabase:
 
     @Profiler.profile_method()
     def _remove_video_from_index(self, video):
-        self.indexer.remove_video(video)
+        self.__indexer.remove_video(video)
 
     @Profiler.profile_method()
     def _add_videos_to_index(self, videos):
         for video in videos:
-            self.indexer.add_video(video)
+            self.__indexer.add_video(video)
 
     @Profiler.profile_method()
     def _update_videos_in_index(self, videos):
         for video in videos:
-            self.indexer.update_video(video)
+            self.__indexer.update_video(video)
 
     @Profiler.profile_method()
     def _update_video_path_in_index(self, video, old_path: AbsolutePath):
-        self.indexer.replace_path(video, old_path)
+        self.__indexer.replace_path(video, old_path)
+
+    def _update_videos_not_found(
+        self, existing_paths: Container[AbsolutePath]
+    ):
+        """Use given container of existing paths to mark not found videos."""
+        for video_state in self.videos.values():
+            video_state.runtime.is_file = video_state.filename in existing_paths

@@ -48,6 +48,3 @@ class SourceLayer(Layer):
 
     def videos(self):
         return self._cache.values()
-
-    def get_index(self):
-        return self.database.indexer.get_index()

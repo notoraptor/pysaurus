@@ -62,9 +62,6 @@ class VideoIndexer(AbstractVideoIndexer):
         for new_term in self.filename_to_terms[video.filename]:
             self.term_to_filenames.setdefault(new_term, set()).add(video.filename)
 
-    def get_index(self) -> Dict[str, Set[AbsolutePath]]:
-        return self.term_to_filenames
-
     def query_and(
         self, filenames: Iterable[AbsolutePath], terms: Sequence[str]
     ) -> Set[AbsolutePath]:
