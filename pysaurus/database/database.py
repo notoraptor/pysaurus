@@ -30,9 +30,8 @@ from pysaurus.database.viewport.abstract_video_provider import AbstractVideoProv
 from pysaurus.database.viewport.video_filter import VideoSelector
 from pysaurus.miniature.group_computer import GroupComputer
 from pysaurus.miniature.miniature import Miniature
-from pysaurus.video.video import Video
+from pysaurus.video import Video, VideoRuntimeInfo
 from pysaurus.video.video_indexer import VideoIndexer
-from pysaurus.video.video_runtime_info import VideoRuntimeInfo
 from saurus.language import say
 
 logger = logging.getLogger(__name__)
@@ -202,7 +201,7 @@ class Database(JsonDatabase):
                 d = Video.ensure_short_keys(d, backend_raptor.RETURNS_SHORT_KEYS)
                 file_path = AbsolutePath.ensure(d["f"])
                 if len(d) == 2:
-                    video_state = Video(
+                    video_state = Video.from_keys(
                         filename=file_path.path,
                         file_size=file_path.get_size(),
                         errors=set(d["e"]),

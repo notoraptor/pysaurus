@@ -21,8 +21,8 @@ from pysaurus.properties.properties import (
     PropType,
     PropValueType,
 )
+from pysaurus.video import Video
 from pysaurus.video.abstract_video_indexer import AbstractVideoIndexer
-from pysaurus.video.video import Video
 from pysaurus.video.video_indexer import VideoIndexer
 
 
@@ -107,9 +107,11 @@ class JsonDatabase:
     def __load(self, folders: Optional[Iterable[PathType]] = None):
         to_save = False
 
-        json_dict = self.__backup.load()
-        if not isinstance(json_dict, dict):
-            raise exceptions.InvalidDatabaseJSON(self.__backup.path)
+        with Profiler("loading JSON file", self.notifier):
+            # Loading JSON file
+            json_dict = self.__backup.load()
+            if not isinstance(json_dict, dict):
+                raise exceptions.InvalidDatabaseJSON(self.__backup.path)
 
         # Parsing settings.
         self.settings.update(json_dict.get("settings", {}))
@@ -137,11 +139,14 @@ class JsonDatabase:
         }
 
         # Parsing videos.
-        folders_tree = PathTree(self.folders)
-        for video_dict in json_dict.get("videos", ()):
-            video_state = Video.from_dict(video_dict, database=self)
-            video_state.discarded = not folders_tree.in_folders(video_state.filename)
-            self.videos[video_state.filename] = video_state
+        with Profiler("parsing videos", self.notifier):
+            folders_tree = PathTree(self.folders)
+            for video_dict in json_dict.get("videos", ()):
+                video_state = Video.from_dict(video_dict, database=self)
+                video_state.discarded = not folders_tree.in_folders(
+                    video_state.filename
+                )
+                self.videos[video_state.filename] = video_state
 
         self.save(on_new_identifiers=to_save)
         self.notifier.notify(DatabaseLoaded(self))
@@ -396,9 +401,7 @@ class JsonDatabase:
     def _update_video_path_in_index(self, video, old_path: AbsolutePath):
         self.__indexer.replace_path(video, old_path)
 
-    def _update_videos_not_found(
-        self, existing_paths: Container[AbsolutePath]
-    ):
+    def _update_videos_not_found(self, existing_paths: Container[AbsolutePath]):
         """Use given container of existing paths to mark not found videos."""
         for video_state in self.videos.values():
             video_state.runtime.is_file = video_state.filename in existing_paths

@@ -4,7 +4,7 @@ from typing import Dict
 from pysaurus.core import constants
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.modules import FileSystem
-from pysaurus.video.video_runtime_info import VideoRuntimeInfo
+from pysaurus.video import VideoRuntimeInfo
 
 
 def _scan_folder_for_videos(folder: str, files: Dict[AbsolutePath, VideoRuntimeInfo]):
@@ -17,7 +17,7 @@ def _scan_folder_for_videos(folder: str, files: Dict[AbsolutePath, VideoRuntimeI
             in constants.VIDEO_SUPPORTED_EXTENSIONS
         ):
             stat = entry.stat()
-            files[AbsolutePath(entry.path)] = VideoRuntimeInfo(
+            files[AbsolutePath(entry.path)] = VideoRuntimeInfo.from_keys(
                 size=stat.st_size,
                 mtime=stat.st_mtime,
                 driver_id=stat.st_dev,
@@ -32,7 +32,7 @@ def scan_path_for_videos(
         _scan_folder_for_videos(path.path, files)
     elif path.extension in constants.VIDEO_SUPPORTED_EXTENSIONS:
         stat = FileSystem.stat(path.path)
-        files[path] = VideoRuntimeInfo(
+        files[path] = VideoRuntimeInfo.from_keys(
             size=stat.st_size,
             mtime=stat.st_mtime,
             driver_id=stat.st_dev,

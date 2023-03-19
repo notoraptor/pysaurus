@@ -1,7 +1,7 @@
 from typing import Iterable, Sequence
 
 from pysaurus.core.functions import class_get_public_attributes, to_json_value
-from pysaurus.video.video import Video
+from pysaurus.video import Video
 
 
 class VideoFeatures:

@@ -3,7 +3,7 @@ from typing import List
 from pysaurus.application.application import Application
 from pysaurus.database.machine_learning import optimize_pattern_predictor, predict
 from pysaurus.miniature.miniature import Miniature
-from pysaurus.video.video import Video
+from pysaurus.video import Video
 
 
 def main():

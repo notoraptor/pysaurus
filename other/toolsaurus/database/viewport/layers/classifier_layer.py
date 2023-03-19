@@ -4,7 +4,7 @@ from other.toolsaurus.database.viewport.layers.grouping_layer import GroupingLay
 from other.toolsaurus.database.viewport.layers.layer import Layer
 from pysaurus.core import functions
 from pysaurus.database.viewport.view_tools import Group, GroupArray
-from pysaurus.video.video import Video
+from pysaurus.video import Video
 
 
 class ClassifierLayer(Layer):

@@ -9,7 +9,7 @@ from other.toolsaurus.database.viewport.layers.sort_layer import SortLayer
 from other.toolsaurus.database.viewport.layers.source_layer import SourceLayer
 from pysaurus.database.viewport.abstract_video_provider import AbstractVideoProvider
 from pysaurus.database.viewport.view_tools import GroupDef, VideoArray
-from pysaurus.video.video import Video
+from pysaurus.video import Video
 
 
 class VideoProvider(AbstractVideoProvider):

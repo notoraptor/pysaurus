@@ -1,7 +1,7 @@
 from abc import abstractmethod
 
 from pysaurus.properties.properties import PropType
-from pysaurus.video.video import Video
+from pysaurus.video import Video
 
 
 class SpecialPropType(PropType):

@@ -14,7 +14,7 @@ from pysaurus.core.components import AbsolutePath, Duration, FileSize
 from pysaurus.core.functions import generate_temp_file_path
 from pysaurus.core.modules import ImageUtils, VideoClipping
 from pysaurus.database.viewport.view_tools import SearchDef
-from pysaurus.video.video import Video
+from pysaurus.video import Video
 from pysaurus.video.video_sorting import VideoSorting
 
 TEST_LIST_FILE_PATH = AbsolutePath(

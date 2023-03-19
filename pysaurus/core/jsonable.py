@@ -414,3 +414,7 @@ class Jsonable(metaclass=_MetaJSON):
             key = cls.__shortener__.from_short(short)
             params[key] = cls.__definitions__[key].from_dict(cls, value)
         return cls(**params, **kwargs)
+
+    @classmethod
+    def from_keys(cls, **kwargs):
+        return cls(**kwargs)

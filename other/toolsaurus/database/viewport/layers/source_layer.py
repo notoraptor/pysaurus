@@ -2,7 +2,7 @@ from typing import Dict, Sequence
 
 from other.toolsaurus.database.viewport.layers.layer import Layer
 from pysaurus.core.components import AbsolutePath
-from pysaurus.video.video import Video
+from pysaurus.video import Video
 
 
 class SourceLayer(Layer):

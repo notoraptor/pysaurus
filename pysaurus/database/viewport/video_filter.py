@@ -15,7 +15,7 @@ from pysaurus.database.viewport.view_tools import (
     SearchDef,
     VideoArray,
 )
-from pysaurus.video.video import Video
+from pysaurus.video import Video
 from pysaurus.video.video_sorting import VideoSorting
 
 logger = logging.getLogger(__name__)

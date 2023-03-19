@@ -7,9 +7,9 @@ from pysaurus.core.job_notifications import (
     global_notify_job_progress,
     global_notify_job_start,
 )
+from pysaurus.video import Video
 from pysaurus.video.abstract_video_indexer import AbstractVideoIndexer
 from pysaurus.video.sql_index.video_term_index_database import VideoTermIndexDatabase
-from pysaurus.video.video import Video
 
 logger = logging.getLogger(__name__)
 

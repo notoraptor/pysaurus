@@ -1,16 +1,4 @@
-"""
-Video class. Properties:
-
-- length: Return a Duration object representing the video duration.
-  Based on raw duration fields `duration` and `duration_time_base`, we have: ::
-
-    duration = (number of seconds) * duration_time_base
-
-  So: ::
-
-    (number of seconds) = duration / duration_time_base
-"""
-from typing import Any, Dict, Iterable, Set
+from typing import Any, Dict, Set
 
 from pysaurus.core.classes import StringPrinter, StringedTuple, Text
 from pysaurus.core.compare import to_comparable
@@ -18,50 +6,18 @@ from pysaurus.core.components import AbsolutePath, Date, Duration, FileSize
 from pysaurus.core.constants import JPEG_EXTENSION, PYTHON_ERROR_THUMBNAIL
 from pysaurus.core.functions import (
     class_get_public_attributes,
-    html_to_title,
     string_to_pieces,
 )
-from pysaurus.core.jsonable import Jsonable
 from pysaurus.core.modules import FNV64
+from pysaurus.core.schematizable import WithSchema
 from pysaurus.core.semantic_text import SemanticText
-from pysaurus.video.video_runtime_info import VideoRuntimeInfo
+from pysaurus.video.video_schema import VideoSchema
 from pysaurus.video.video_sorting import VideoSorting
 
 
-class Video(Jsonable):
-    filename: ("f", str) = None
-    file_size: "s" = 0
-    errors: "e" = set()
-    video_id: ("j", int) = None
-    runtime: ("R", VideoRuntimeInfo) = {}
-    thumb_name: "i" = ""
-    date_entry_modified: ("m", float) = None
-    date_entry_opened: ("o", float) = None
-
-    unreadable: "U" = False
-    audio_bit_rate: "r" = 0
-    audio_codec: "a" = ""
-    audio_codec_description: "A" = ""
-    bit_depth: "D" = 0
-    channels: "C" = 2
-    container_format: "c" = ""
-    device_name: "b" = ""
-    duration: "d" = 0.0
-    duration_time_base: "t" = 0
-    frame_rate_den: "y" = 0
-    frame_rate_num: "x" = 0
-    height: "h" = 0
-    meta_title: "n" = ""
-    properties: "p" = {}
-    sample_rate: "u" = 0
-    similarity_id: ("S", int) = None
-    video_codec: "v" = ""
-    video_codec_description: "V" = ""
-    width: "w" = 0
-    audio_languages: "l" = []
-    subtitle_languages: "L" = []
-
+class LazyVideo(WithSchema):
     __slots__ = ("discarded", "database")
+    SCHEMA = VideoSchema()
     __protected__ = ("database", "runtime", "discarded")
     FLAGS = {
         "readable",
@@ -72,16 +28,11 @@ class Video(Jsonable):
         "without_thumbnails",
     }
 
-    def __init__(self, database, **kwargs):
-        super().__init__(**kwargs)
-        self.__json__["duration"] = abs(self.__json__["duration"])
-        self.__json__["duration_time_base"] = self.__json__["duration_time_base"] or 1
-        self.__json__["frame_rate_den"] = self.__json__["frame_rate_den"] or 1
+    def __init__(self, database, short_dict: dict):
+        super().__init__(short_dict)
         # Runtime
         self.discarded = False
         self.database = database
-        # Additional initialization.
-        self.set_validated_properties(self.__json__["properties"])
 
     def __str__(self):
         cls = type(self)
@@ -100,77 +51,101 @@ class Video(Jsonable):
     def __lt__(self, other):
         return self.filename < other.filename
 
-    def _get_filename(self):
-        return AbsolutePath(self.__json__["filename"])
+    @property
+    def filename(self):
+        return AbsolutePath(self._get("filename"))
 
-    def _set_filename(self, data):
+    @filename.setter
+    def filename(self, data):
         assert isinstance(data, (str, AbsolutePath))
-        self.__json__["filename"] = str(data)
+        self._set("filename", str(data))
         self._save_date_entry_modified()
 
-    def _get_audio_codec(self):
-        return Text(self.__json__["audio_codec"])
+    file_size = property(lambda self: self._get("file_size"))
+    errors = property(lambda self: set(self._get("errors")))
 
-    def _get_audio_codec_description(self):
-        return Text(self.__json__["audio_codec_description"])
+    @property
+    def video_id(self):
+        return self._get("video_id")
 
-    def _get_container_format(self):
-        return Text(self.__json__["container_format"])
+    @video_id.setter
+    def video_id(self, data):
+        self._set("video_id", data)
 
-    def _get_device_name(self):
-        return Text(self.__json__["device_name"])
+    runtime = property(lambda self: self._get("runtime"))
 
-    def _get_meta_title(self):
-        return Text(html_to_title(self.__json__["meta_title"]))
+    @property
+    def thumb_name(self):
+        # Set if necessary, then get
+        if not self._get("thumb_name"):
+            self._set("thumb_name", FNV64.hash(self.filename.standard_path))
+        return self._get("thumb_name")
 
-    def _get_video_codec(self):
-        return Text(self.__json__["video_codec"])
+    @property
+    def date_entry_modified(self):
+        if self._get("date_entry_modified") is None:
+            self._set("date_entry_modified", self.runtime.mtime)
+        return Date(self._get("date_entry_modified"))
 
-    def _get_video_codec_description(self):
-        return Text(self.__json__["video_codec_description"])
+    @date_entry_modified.setter
+    def date_entry_modified(self, data):
+        self._set("date_entry_modified", data)
 
-    def _get_thumb_name(self):
-        if not self.__json__["thumb_name"]:
-            self.__json__["thumb_name"] = FNV64.hash(self.filename.standard_path)
-        return self.__json__["thumb_name"]
+    @property
+    def date_entry_opened(self):
+        if self._get("date_entry_opened") is None:
+            self._set("date_entry_opened", self.runtime.mtime)
+        return Date(self._get("date_entry_opened"))
 
-    def _get_date_entry_modified(self):
-        if self.__json__["date_entry_modified"] is None:
-            self.__json__["date_entry_modified"] = self.runtime.mtime
-        return Date(self.__json__["date_entry_modified"])
+    @date_entry_opened.setter
+    def date_entry_opened(self, data):
+        self._set("date_entry_opened", data)
 
-    def _get_date_entry_opened(self):
-        if self.__json__["date_entry_opened"] is None:
-            self.__json__["date_entry_opened"] = self.runtime.mtime
-        return Date(self.__json__["date_entry_opened"])
+    unreadable = property(lambda self: self._get("unreadable"))
+    audio_bit_rate = property(lambda self: self._get("audio_bit_rate"))
+    audio_codec = property(lambda self: Text(self._get("audio_codec")))
+    audio_codec_description = property(
+        lambda self: Text(self._get("audio_codec_description"))
+    )
+    bit_depth = property(lambda self: self._get("bit_depth"))
+    channels = property(lambda self: self._get("channels"))
+    container_format = property(lambda self: Text(self._get("container_format")))
+    device_name = property(lambda self: Text(self._get("device_name")))
+    duration = property(lambda self: abs(self._get("duration")))
+    duration_time_base = property(lambda self: self._get("duration_time_base") or 1)
+    frame_rate_den = property(lambda self: self._get("frame_rate_den") or 1)
+    frame_rate_num = property(lambda self: self._get("frame_rate_num"))
+    height = property(lambda self: self._get("height"))
+    meta_title = property(lambda self: Text(self._get("meta_title")))
 
-    def _set_properties(self, properties: dict):
-        raise NotImplementedError()
+    @property
+    def properties(self):
+        return {
+            name: self.database.get_prop_val(name, value)
+            for name, value in self._get("properties").items()
+        }
 
-    def _set_similarity_id(self, data):
-        if self.__json__["similarity_id"] != data:
-            self.__json__["similarity_id"] = data
+    sample_rate = property(lambda self: self._get("sample_rate"))
+
+    @property
+    def similarity_id(self):
+        return self._get("similarity_id")
+
+    @similarity_id.setter
+    def similarity_id(self, data):
+        if self._get("similarity_id") != data:
+            self._set("similarity_id", data)
             self._save_date_entry_modified()
 
-    def _to_dict_errors(self, errors):
-        return list(errors)
+    video_codec = property(lambda self: Text(self._get("video_codec")))
+    video_codec_description = property(
+        lambda self: Text(self._get("video_codec_description"))
+    )
+    width = property(lambda self: self._get("width"))
+    audio_languages = property(lambda self: self._get("audio_languages"))
+    subtitle_languages = property(lambda self: self._get("subtitle_languages"))
 
-    @classmethod
-    def _from_dict_errors(cls, errors):
-        return set(errors)
-
-    # Not implemented in LazyVideo
-    def extract_attributes(self, keys: Iterable[str]) -> Dict[str, Any]:
-        out = {}
-        for key in keys:
-            if key.startswith(":"):
-                prop_name = key[1:]
-                out.setdefault("properties", {})[prop_name] = self.get_property(
-                    prop_name
-                )
-            else:
-                out[key] = getattr(self, key)
-        return out
+    # Derived properties
 
     extension = property(lambda self: self.filename.extension)
     file_title = property(lambda self: Text(self.filename.file_title))
@@ -226,10 +201,12 @@ class Video(Jsonable):
 
     @unreadable_thumbnail.setter
     def unreadable_thumbnail(self, has_error):
+        errors = self.errors
         if has_error:
-            self.errors.add(PYTHON_ERROR_THUMBNAIL)
+            errors.add(PYTHON_ERROR_THUMBNAIL)
         elif PYTHON_ERROR_THUMBNAIL in self.errors:
-            self.errors.remove(PYTHON_ERROR_THUMBNAIL)
+            errors.remove(PYTHON_ERROR_THUMBNAIL)
+        self._set("errors", sorted(errors))
 
     @property
     def quality_compression(self):
@@ -269,14 +246,18 @@ class Video(Jsonable):
         ]
 
     def has_property(self, name):
-        return name in self.properties
+        return name in self._get("properties")
 
     def get_property(self, name, *default):
-        return self.properties.get(name, *default) if default else self.properties[name]
+        properties = self.properties
+        return properties.get(name, *default) if default else properties[name]
 
     def remove_property(self, name, *default):
         self._save_date_entry_modified()
-        return self.properties.pop(name, *default)
+        properties = self._get("properties")
+        popped = properties.pop(name, *default)
+        self._set("properties", properties)
+        return popped
 
     def set_validated_properties(self, properties: Dict[str, Any]) -> Set[str]:
         return self.set_properties(
@@ -293,21 +274,23 @@ class Video(Jsonable):
 
     def set_property(self, name, value) -> bool:
         modified = False
+        properties = self.properties
         if value is None:
-            if name in self.properties:
+            if name in properties:
                 modified = True
-                del self.properties[name]
+                del properties[name]
         else:
-            if name not in self.properties or self.properties[name] != value:
+            if name not in properties or properties[name] != value:
                 modified = True
-            self.properties[name] = value
+            properties[name] = value
+        self._set("properties", properties)
         self._save_date_entry_modified(modified)
         return modified
 
     def open(self):
         self.filename.open()
-        self.date_entry_opened = Date.now().time
+        self._set("date_entry_opened", Date.now().time)
 
     def _save_date_entry_modified(self, save=True):
         if save:
-            self.date_entry_modified = Date.now().time
+            self._set("date_entry_modified", Date.now().time)

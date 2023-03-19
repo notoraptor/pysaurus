@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from typing import Optional
 
-from pysaurus.video.video import Video
+from pysaurus.video import Video
 
 
 class Layer:

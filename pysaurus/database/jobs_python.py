@@ -9,8 +9,8 @@ from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.parallelization import Job, parallelize
 from pysaurus.core.profiling import Profiler
 from pysaurus.miniature.miniature import Miniature
+from pysaurus.video import VideoRuntimeInfo
 from pysaurus.video.video_file_lister import scan_path_for_videos
-from pysaurus.video.video_runtime_info import VideoRuntimeInfo
 from saurus.language import say
 
 

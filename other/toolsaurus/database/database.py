@@ -10,7 +10,7 @@ from pysaurus.core.modules import System
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.database import Database
 from pysaurus.miniature.miniature import Miniature
-from pysaurus.video.video import Video
+from pysaurus.video import Video
 
 
 class ExtendedDatabase(Database):

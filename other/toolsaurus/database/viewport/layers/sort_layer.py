@@ -3,7 +3,7 @@ from typing import List, Sequence
 from other.toolsaurus.database.viewport.layers.layer import Layer
 from other.toolsaurus.database.viewport.layers.source_layer import SourceLayer
 from pysaurus.database.viewport.view_tools import VideoArray
-from pysaurus.video.video import Video
+from pysaurus.video import Video
 from pysaurus.video.video_sorting import VideoSorting
 from saurus.language import say
 

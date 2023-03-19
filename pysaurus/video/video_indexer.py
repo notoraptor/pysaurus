@@ -6,8 +6,8 @@ from pysaurus.core.job_notifications import (
     global_notify_job_progress,
     global_notify_job_start,
 )
+from pysaurus.video import Video
 from pysaurus.video.abstract_video_indexer import AbstractVideoIndexer
-from pysaurus.video.video import Video
 
 EMPTY_SET = set()
 

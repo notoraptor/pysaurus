@@ -4,7 +4,7 @@ from other.toolsaurus.database.viewport.layers.layer import Layer
 from other.toolsaurus.database.viewport.layers.source_layer import SourceLayer
 from other.toolsaurus.modules import OtherVideoFeatures
 from pysaurus.database.viewport.view_tools import Group, SearchDef, VideoArray
-from pysaurus.video.video import Video
+from pysaurus.video import Video
 
 
 class SearchLayer(Layer):

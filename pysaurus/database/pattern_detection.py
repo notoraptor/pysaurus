@@ -8,7 +8,7 @@ from pysaurus.core.profiling import Profiler
 from pysaurus.database.database import Database
 from pysaurus.database.machine_learning import optimize_pattern_predictor, predict
 from pysaurus.properties.properties import PropType
-from pysaurus.video.video import Video
+from pysaurus.video import Video
 from saurus.language import say
 
 

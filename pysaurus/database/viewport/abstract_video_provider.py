@@ -4,7 +4,7 @@ from typing import Sequence
 
 from pysaurus.application import exceptions
 from pysaurus.core import functions, notifications
-from pysaurus.video.video import Video
+from pysaurus.video import Video
 
 
 class AbstractVideoProvider(metaclass=ABCMeta):

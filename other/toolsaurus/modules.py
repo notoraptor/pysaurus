@@ -5,7 +5,7 @@ from PIL import Image, ImageTk
 
 from pysaurus.core import functions
 from pysaurus.database.viewport.view_tools import SearchDef
-from pysaurus.video.video import Video
+from pysaurus.video import Video
 from pysaurus.video.video_features import VideoFeatures
 
 
