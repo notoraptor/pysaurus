@@ -92,8 +92,6 @@ class GuiAPI(FeatureAPI):
         self.monitor_notifications = monitor_notifications
         self.server = ServerLauncher(lambda: self.database)
 
-        if self.monitor_notifications:
-            self.notification_thread = self._run_thread(self._monitor_notifications)
         self.server.start()
         self._proxies.update(
             {
@@ -103,6 +101,14 @@ class GuiAPI(FeatureAPI):
                 "select_file": FromTk(tk_utils.select_file_to_open, True),
             }
         )
+
+    def __run_feature__(self, name: str, *args):
+        # Launch notification thread on first API call from frontend.
+        # This let time for frontend to be loaded before receiving notifications.
+        if self.monitor_notifications and self.notification_thread is None:
+            logger.debug("Starting notification thread")
+            self.notification_thread = self._run_thread(self._monitor_notifications)
+        return super().__run_feature__(name, *args)
 
     @property
     def PYTHON_HAS_RUNTIME_VLC(self):

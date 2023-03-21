@@ -113,13 +113,13 @@ class DbFeatures:
     def find_similar_videos_ignore_cache(self, db: Database):
         miniatures = db.ensure_miniatures(returns=True)  # type: List[Miniature]
         video_indices = [m.video_id for m in miniatures]
-        previous_sim = list(db.get_videos_field(video_indices, "similarity_id"))
-        db.set_similarity_id(video_indices, value=None)
+        previous_sim = list(db.read_videos_field(video_indices, "similarity_id"))
+        db.fill_videos_field(video_indices, "similarity_id", None)
         try:
             self.find_similar_videos(db, miniatures)
         except Exception:
             # Restore previous similarities.
-            db.set_similarity_id(video_indices, values=previous_sim)
+            db.write_videos_field(video_indices, "similarity_id", values=previous_sim)
             raise
 
     def find_similar_videos(self, db: Database, miniatures: List[Miniature] = None):
@@ -127,7 +127,7 @@ class DbFeatures:
             if miniatures is None:
                 miniatures = db.ensure_miniatures(returns=True)  # type: List[Miniature]
             video_indices = [m.video_id for m in miniatures]
-            prev_sims = list(db.get_videos_field(video_indices, "similarity_id"))
+            prev_sims = list(db.read_videos_field(video_indices, "similarity_id"))
             nb_videos = len(miniatures)
             new_miniature_indices = []
             old_miniature_indices = []
@@ -177,7 +177,7 @@ class DbFeatures:
                 )
             )
             # Sort new similarity groups by size then smallest duration.
-            lengths = list(db.get_videos_field(video_indices, "length"))
+            lengths = list(db.read_videos_field(video_indices, "length"))
             sim_groups.sort(key=lambda s: (len(s), min(lengths[x] for x in s)))
             # Get next similarity id to use.
             next_sim_id = (
@@ -241,17 +241,21 @@ class DbFeatures:
                     )
                 )
 
-                db.set_similarity_id(
+                db.fill_videos_field(
                     (video_indices[i] for i in new_miniature_indices),
-                    value=-1,
+                    "similarity_id",
+                    -1,
                 )
-                v_indices_to_set = []
-                s_indices_to_set = []
-                for new_id, new_group in zip(new_sim_indices, new_sim_groups):
+                for step, (new_id, new_group) in enumerate(
+                    zip(new_sim_indices, new_sim_groups)
+                ):
                     for i in new_group:
-                        v_indices_to_set.append(video_indices[i])
-                        s_indices_to_set.append(new_id)
-                db.set_similarity_id(v_indices_to_set, values=s_indices_to_set)
+                        db.set_video_similarity(
+                            video_indices[i],
+                            new_id,
+                            notify=(step == len(new_sim_indices) - 1),
+                            save=False,
+                        )
             # Save.
             db.save()
 

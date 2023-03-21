@@ -1,7 +1,8 @@
+import logging
 from typing import Container, Dict, Iterable, List, Optional, Sequence, Set, Union
 
 from pysaurus.application import exceptions
-from pysaurus.core import functions, notifying
+from pysaurus.core import functions, notifications, notifying
 from pysaurus.core.components import AbsolutePath, Date, PathType
 from pysaurus.core.json_backup import JsonBackup
 from pysaurus.core.notifications import Notification
@@ -14,6 +15,7 @@ from pysaurus.database.db_video_attribute import (
     PotentialMoveAttribute,
     QualityAttribute,
 )
+from pysaurus.database.special_properties import SpecialProperties
 from pysaurus.properties.properties import (
     DefType,
     PROP_UNIT_TYPES,
@@ -21,9 +23,12 @@ from pysaurus.properties.properties import (
     PropType,
     PropValueType,
 )
-from pysaurus.video import Video
+from pysaurus.video import Video, VideoRuntimeInfo
 from pysaurus.video.abstract_video_indexer import AbstractVideoIndexer
+from pysaurus.video.video_features import VideoFeatures
 from pysaurus.video.video_indexer import VideoIndexer
+
+logger = logging.getLogger(__name__)
 
 
 class DatabaseLoaded(Notification):
@@ -66,7 +71,7 @@ class JsonDatabase:
         "predictors",
         "iteration",
         "notifier",
-        "id_to_video",
+        "__id_to_video",
         "quality_attribute",
         "moves_attribute",
         "__indexer",
@@ -92,7 +97,7 @@ class JsonDatabase:
         # Runtime
         self.notifier = notifier
         self.iteration = 0
-        self.id_to_video: Dict[int, Video] = {}
+        self.__id_to_video: Dict[int, Video] = {}
         self.quality_attribute = QualityAttribute(self)
         self.moves_attribute = PotentialMoveAttribute(self)
         self.__indexer = indexer or VideoIndexer()
@@ -190,7 +195,9 @@ class JsonDatabase:
             video_state.video_id = next_id
             next_id += 1
             id_to_video[video_state.video_id] = video_state
-        self.id_to_video = id_to_video
+        self.__id_to_video = id_to_video
+        if without_identifiers:
+            logger.debug(f"Generating {len(without_identifiers)} new video indices.")
         return len(without_identifiers)
 
     def set_path(self, path: PathType):
@@ -235,8 +242,8 @@ class JsonDatabase:
                 (term,) = terms
                 video_id = int(term)
                 selection = (
-                    [self.id_to_video[video_id].filename]
-                    if video_id in self.id_to_video
+                    [self.__id_to_video[video_id].filename]
+                    if video_id in self.__id_to_video
                     else []
                 )
             output = (filenames[filename] for filename in selection)
@@ -342,8 +349,9 @@ class JsonDatabase:
             self.save()
 
     def get_prop_values(
-        self, video: Video, name: str, default=False
+        self, video_id: int, name: str, default=False
     ) -> List[PropValueType]:
+        video = self.__id_to_video[video_id]
         values = []
         if video.has_property(name):
             value = video.get_property(name)
@@ -354,8 +362,9 @@ class JsonDatabase:
         return values
 
     def set_prop_values(
-        self, video: Video, name: str, values: Union[Sequence, Set]
+        self, video_id: int, name: str, values: Union[Sequence, Set]
     ) -> None:
+        video = self.__id_to_video[video_id]
         if not values:
             video.remove_property(name, None)
         elif self.prop_types[name].multiple:
@@ -365,11 +374,12 @@ class JsonDatabase:
             video.set_property(name, self.prop_types[name].validate(value))
 
     def merge_prop_values(
-        self, video: Video, name: str, values: Union[Sequence, Set]
+        self, video_id: int, name: str, values: Union[Sequence, Set]
     ) -> None:
+        video = self.__id_to_video[video_id]
         if self.prop_types[name].multiple:
             values = video.get_property(name, []) + list(values)
-        self.set_prop_values(video, name, values)
+        self.set_prop_values(video.video_id, name, values)
 
     def validate_prop_values(self, name, values: list) -> List[PropValueType]:
         prop_type = self.prop_types[name]
@@ -405,3 +415,165 @@ class JsonDatabase:
         """Use given container of existing paths to mark not found videos."""
         for video_state in self.videos.values():
             video_state.runtime.is_file = video_state.filename in existing_paths
+
+    def set_folders(self, folders) -> None:
+        folders = sorted(AbsolutePath.ensure(folder) for folder in folders)
+        if folders == sorted(self.folders):
+            return
+        folders_tree = PathTree(folders)
+        for video in self.videos.values():
+            video.discarded = not folders_tree.in_folders(video.filename)
+        self.folders = set(folders)
+        self.save()
+
+    def get_all_video_indices(self) -> Iterable[int]:
+        return self.__id_to_video.keys()
+
+    def get_video_terms(self, video_id: int) -> Set[str]:
+        return self.__id_to_video[video_id].terms(as_set=True)
+
+    def delete_video_entry(self, video_id: int, save=True):
+        video = self.__id_to_video[video_id]
+        self.videos.pop(video.filename, None)
+        self.__id_to_video.pop(video.video_id, None)
+        if video.readable:
+            video.thumbnail_path.delete()
+        self._remove_video_from_index(video)
+        self.notifier.notify(notifications.VideoDeleted(video))
+        self._notify_fields_modified(["move_id", "quality"], save=save)
+
+    def get_video_filename(self, video_id: int) -> AbsolutePath:
+        return self.__id_to_video[video_id].filename
+
+    def _notify_properties_modified(self, properties, video_indices: Iterable[int]):
+        self.save()
+        self._update_videos_in_index(
+            (self.__id_to_video[video_id] for video_id in video_indices)
+        )
+        self.notifier.notify(notifications.PropertiesModified(properties))
+
+    def _notify_fields_modified(self, fields: Sequence[str], save=True):
+        if save:
+            self.save()
+        self.notifier.notify(notifications.FieldsModified(fields))
+
+    def set_video_properties(self, video_id: int, properties: dict) -> Set[str]:
+        video = self.__id_to_video[video_id]
+        modified = video.set_validated_properties(properties)
+        self._notify_properties_modified(modified, [video_id])
+        return modified
+
+    def has_video(self, filename: AbsolutePath) -> bool:
+        return filename in self.videos
+
+    def get_video_id(self, filename: PathType):
+        filename = AbsolutePath.ensure(filename)
+        if filename in self.videos:
+            return self.videos[filename].video_id
+        else:
+            return None
+
+    def read_video_field(self, video_id: int, field: str):
+        return getattr(self.__id_to_video[video_id], field)
+
+    def write_video_field(
+        self, video_id: int, field: str, value, notify=True, save=True
+    ):
+        setattr(self.__id_to_video[video_id], field, value)
+        if notify:
+            self._notify_fields_modified([field], save=save)
+
+    def write_videos_field(self, indices: Iterable[int], field: str, values: Iterable):
+        for video_id, value in zip(indices, values):
+            setattr(self.__id_to_video[video_id], field, value)
+
+    def fill_videos_field(self, indices: Iterable[int], field: str, value):
+        for video_id in indices:
+            setattr(self.__id_to_video[video_id], field, value)
+
+    def _find_video_paths_for_update(
+        self, file_paths: Dict[AbsolutePath, VideoRuntimeInfo]
+    ) -> List[str]:
+        all_file_names = []
+        for file_name, file_info in file_paths.items():
+            video: Video = self.videos.get(file_name, None)
+            if (
+                video is None
+                or file_info.mtime != video.runtime.mtime
+                or file_info.size != video.file_size
+                or file_info.driver_id != video.runtime.driver_id
+                or (video.readable and not SpecialProperties.all_in(video))
+            ):
+                all_file_names.append(file_name.path)
+        all_file_names.sort()
+        return all_file_names
+
+    def describe_videos(self, video_indices: Sequence[int]):
+        return [
+            VideoFeatures.to_json(self.__id_to_video[video_id])
+            for video_id in video_indices
+        ]
+
+    def _notify_filename_modified(self, video: Video, old_path: AbsolutePath):
+        self._notify_fields_modified(
+            (
+                "title",
+                "title_numeric",
+                "file_title",
+                "file_title_numeric",
+                "filename_numeric",
+                "disk",
+                "filename",
+            )
+        )
+        self._update_video_path_in_index(video, old_path)
+
+    def change_video_path(self, video_id: int, path: AbsolutePath) -> AbsolutePath:
+        path = AbsolutePath.ensure(path)
+        assert path.isfile()
+        video = self.__id_to_video[video_id]
+        assert video.readable
+        assert video.filename != path
+        old_filename = video.filename
+
+        del self.videos[video.filename]
+        self.videos[path] = video
+        # TODO video.filename should be immutable
+        # We should instead copy video object with a new filename
+        video.filename = path
+        self._notify_filename_modified(video, old_filename)
+
+        return old_filename
+
+    def move_video_entry(self, from_id, to_id, save=True):
+        from_video = self.__id_to_video[from_id]
+        to_video = self.__id_to_video[to_id]
+        assert not from_video.found
+        assert to_video.found
+        for prop_name in self.get_prop_names():
+            self.merge_prop_values(
+                to_id, prop_name, self.get_prop_values(from_id, prop_name)
+            )
+        to_video.similarity_id = from_video.similarity_id
+        to_video.date_entry_modified = from_video.date_entry_modified.time
+        to_video.date_entry_opened = from_video.date_entry_opened.time
+        self.delete_video_entry(from_id, save=save)
+
+    def read_videos_field(self, indices: Iterable[int], field: str) -> Iterable:
+        return (getattr(self.__id_to_video[video_id], field) for video_id in indices)
+
+    def open_video(self, video_id: int):
+        self.__id_to_video[video_id].open()
+        self._notify_fields_modified(["date_entry_opened"])
+
+    def get_common_fields(self, video_indices: Iterable[int]) -> dict:
+        return VideoFeatures.get_common_fields(
+            self.__id_to_video[video_id] for video_id in video_indices
+        )
+
+    def read_video_fields(self, video_id: int, fields: Sequence[str]) -> dict:
+        video = self.__id_to_video[video_id]
+        return {field: getattr(video, field) for field in fields}
+
+    def has_video_id(self, video_id: int) -> bool:
+        return video_id in self.__id_to_video

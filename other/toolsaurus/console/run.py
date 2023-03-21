@@ -89,22 +89,29 @@ class API:
     @fsigned
     def download_image(self, video_id: int) -> str:
         return ImageUtils.thumbnail_to_base64(
-            str(self.database.get_video_field(video_id, "thumbnail_path"))
+            str(self.database.read_video_field(video_id, "thumbnail_path"))
         )
 
     @fsigned
     def download_image_from_filename(self, filename: str) -> str:
         return ImageUtils.thumbnail_to_base64(
-            str(self.database.get_video_from_filename(filename).thumbnail_path)
+            str(
+                self.database.read_video_field(
+                    self.database.get_video_id(filename), "thumbnail_path"
+                )
+            )
         )
 
     @fsigned
     def open_image(self, video_id: int):
-        return self.database.get_video_field(video_id, "thumbnail_path").open()
+        return self.database.read_video_field(video_id, "thumbnail_path").open()
 
     @fsigned
     def open_image_from_filename(self, filename: str):
-        return self.database.get_video_from_filename(filename).thumbnail_path.open()
+        thumbnail_path = self.database.read_video_field(
+            self.database.get_video_id(filename), "thumbnail_path"
+        )
+        return thumbnail_path.open()
 
     @fsigned
     def clip(self, video_id: int, start: int, length: int) -> str:
@@ -112,7 +119,7 @@ class API:
             path=self.database.get_video_filename(video_id),
             time_start=start,
             clip_seconds=length,
-            unique_id=self.database.get_video_field(video_id, "thumb_name"),
+            unique_id=self.database.read_video_field(video_id, "thumb_name"),
         )
 
     @fsigned
@@ -125,7 +132,7 @@ class API:
 
     @fsigned
     def images(self, indices: str):
-        videos = []
+        videos: List[dict] = []
         errors = []
         unknown = []
         for piece in indices.strip().split():
@@ -137,7 +144,7 @@ class API:
                 else:
                     if self.database.has_video_id(video_id):
                         videos.append(
-                            self.database.get_video_fields(
+                            self.database.read_video_fields(
                                 video_id, ("filename", "thumbnail_path")
                             )
                         )
@@ -148,13 +155,13 @@ class API:
             file_content = """<html><body>%s</body></html>""" % (
                 "".join(
                     f"<div><div>"
-                    f'<img alt="{v.filename}" src="file://{v.thumbnail_path}"/>'
-                    f"</div><div><strong>{v.filename}</strong>"
+                    f'<img alt="{v["filename"]}" src="file://{v["thumbnail_path"]}"/>'
+                    f"</div><div><strong>{v['filename']}</strong>"
                     f"</div></div>"
                     for v in videos
                 )
             )
-            temp_file_path = generate_temp_file_path("html")
+            temp_file_path = AbsolutePath.ensure(generate_temp_file_path("html"))
             with open(temp_file_path.path, "w") as file:
                 file.write(file_content)
             temp_file_path.open()
@@ -162,7 +169,7 @@ class API:
             if videos:
                 printer.title("Images:")
                 for video in videos:
-                    printer.write(video.filename)
+                    printer.write(video["filename"])
             if errors:
                 printer.title("Invalid:")
                 for error in errors:
@@ -177,7 +184,7 @@ class API:
 
     @fsigned
     def playlist(self, indices: str) -> str:
-        videos = []
+        filenames = []
         errors = []
         unknown = []
         for piece in indices.strip().split():
@@ -188,16 +195,16 @@ class API:
                     errors.append(piece)
                 else:
                     if self.database.has_video_id(video_id):
-                        videos.append(
-                            self.database.get_video_fields(video_id, ["filename"])
+                        filenames.append(
+                            self.database.read_video_field(video_id, "filename")
                         )
                     else:
                         unknown.append(video_id)
         temp_file_path = None
-        if videos:
+        if filenames:
             tracks = "".join(
-                "<track><location>%s</location></track>" % video.filename.uri
-                for video in videos
+                "<track><location>%s</location></track>" % filename.uri
+                for filename in filenames
             )
             file_content = (
                 f'<?xml version="1.0" encoding="UTF-8"?>'
@@ -205,15 +212,15 @@ class API:
                 f"<trackList>{tracks}</trackList>"
                 f"</playlist>"
             )
-            temp_file_path = generate_temp_file_path("xspf")
+            temp_file_path = AbsolutePath.ensure(generate_temp_file_path("xspf"))
             with open(temp_file_path.path, "w") as file:
                 file.write(file_content)
             temp_file_path.open()
         with StringPrinter() as printer:
-            if videos:
+            if filenames:
                 printer.title("Playlist:")
-                for video in videos:
-                    printer.write(video.filename)
+                for filename in filenames:
+                    printer.write(filename)
             if errors:
                 printer.title("Invalid:")
                 for error in errors:
@@ -228,7 +235,7 @@ class API:
 
     @fsigned
     def open_from_filename(self, filename: str) -> AbsolutePath:
-        return self.database.get_video_from_filename(filename).filename.open()
+        return self.database.open_video(self.database.get_video_id(filename))
 
     @fsigned
     def delete(self, video_id: int) -> AbsolutePath:
@@ -246,9 +253,7 @@ class API:
 
     @fsigned
     def delete_from_filename(self, filename: str) -> AbsolutePath:
-        return self.database.delete_video(
-            self.database.get_video_from_filename(filename).video_id
-        )
+        return self.database.delete_video(self.database.get_video_id(filename))
 
     @fsigned
     def rename(self, video_id: int, new_title: str) -> int:
@@ -261,9 +266,11 @@ class API:
     def rename_from_filename(self, filename: str, new_title: str) -> (str, str):
         if new_title is None or not str(new_title):
             raise other.toolsaurus.application.exceptions.MissingVideoNewTitle()
-        video = self.database.get_video_from_filename(filename)  # type: Video
-        self.database.change_video_file_title(video.video_id, str(new_title))
-        return video.filename.path, video.filename.file_title
+        video_id = self.database.get_video_id(filename)
+        self.database.change_video_file_title(video_id, str(new_title))
+        filename = self.database.read_video_field(video_id, "filename")
+        file_title = self.database.read_video_field(video_id, "file_title")
+        return filename.path, file_title
 
     @fsigned
     def same_sizes(self) -> Dict[int, List[Video]]:

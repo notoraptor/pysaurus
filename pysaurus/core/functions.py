@@ -268,6 +268,15 @@ def apply_selector(selector: dict, data: Iterable, key: str, return_data=False):
     return output
 
 
+def apply_selector_to_data(selector: dict, data: Iterable) -> list:
+    if selector["all"]:
+        exclude = set(selector["exclude"])
+        output = [element for element in data if element not in exclude]
+    else:
+        output = selector["include"]
+    return output
+
+
 def extract_object(instance: object, path: str):
     """Extract an attribute from instance using dot separated path.
 

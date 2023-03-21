@@ -20,12 +20,6 @@ new QWebChannel(qt.webChannelTransport, function (channel) {
 		const notification = JSON.parse(raw);
 		window.NOTIFICATION_MANAGER.call(notification);
 	});
-	backend_call("get_constants", []).then((constants) => {
-		for (let entry of Object.entries(constants)) {
-			const [name, value] = entry;
-			window[name] = value;
-		}
-		System.import("./build/index.js");
-	});
+	System.import("./build/index.js");
 });
 window.QT = true;

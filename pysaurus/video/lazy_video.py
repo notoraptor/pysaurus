@@ -72,7 +72,13 @@ class LazyVideo(WithSchema):
     def video_id(self, data):
         self._set("video_id", data)
 
-    runtime = property(lambda self: self._get("runtime"))
+    @property
+    def runtime(self):
+        return self._get("runtime")
+
+    @runtime.setter
+    def runtime(self, data):
+        self._set("runtime", data.to_dict())
 
     @property
     def thumb_name(self):
@@ -80,6 +86,10 @@ class LazyVideo(WithSchema):
         if not self._get("thumb_name"):
             self._set("thumb_name", FNV64.hash(self.filename.standard_path))
         return self._get("thumb_name")
+
+    @thumb_name.setter
+    def thumb_name(self, data):
+        self._set("thumb_name", data)
 
     @property
     def date_entry_modified(self):

@@ -88,8 +88,11 @@ class AbstractVideoProvider(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def get_view(self):
+    def get_view(self) -> Sequence[Video]:
         pass
+
+    def get_view_indices(self) -> Sequence[int]:
+        return [video.video_id for video in self.get_view()]
 
     @abstractmethod
     def delete(self, video: Video):
@@ -154,10 +157,10 @@ class AbstractVideoProvider(metaclass=ABCMeta):
             reverse=True,
             allow_singletons=True,
         )
-        self.get_view()
+        self.get_view_indices()
         group_id = self.convert_field_value_to_group_id(field_value)
         self.set_classifier_path([])
-        self.get_view()
+        self.get_view_indices()
         # NB: here, classifier and grouping have same group array
         self.classifier_select_group(group_id)
 
@@ -172,12 +175,10 @@ class AbstractVideoProvider(metaclass=ABCMeta):
         return path
 
     def playlist(self) -> str:
-        return str(self._database.to_xspf_playlist(self.get_view()).open())
+        return str(self._database.to_xspf_playlist(self.get_view_indices()).open())
 
-    def select_from_view(self, selector: dict, return_videos=False):
-        return functions.apply_selector(
-            selector, self.get_view(), "video_id", return_videos
-        )
+    def select_indices_from_view(self, selector: dict):
+        return functions.apply_selector_to_data(selector, self.get_view_indices())
 
     def apply_on_view(self, selector, db_fn_name, *db_fn_args):
         callable_methods = {
@@ -185,7 +186,7 @@ class AbstractVideoProvider(metaclass=ABCMeta):
             "edit_property_for_videos": self._database.edit_property_for_videos,
         }
         return callable_methods[db_fn_name](
-            self.select_from_view(selector, return_videos=True), *db_fn_args
+            self.select_indices_from_view(selector), *db_fn_args
         )
 
     def register_notifications(self, notifier):

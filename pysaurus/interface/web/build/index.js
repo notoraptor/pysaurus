@@ -30,7 +30,14 @@ System.register(["./App.js", "./utils/Callbacks.js", "./utils/backend.js", "./ut
         };
       }
 
-      ReactDOM.render( /*#__PURE__*/React.createElement(App, null), document.getElementById("root"));
+      backend_call("get_constants", []).then(constants => {
+        for (let entry of Object.entries(constants)) {
+          const [name, value] = entry;
+          window[name] = value; // console.log(`${name}: ${value}`);
+        }
+
+        ReactDOM.render( /*#__PURE__*/React.createElement(App, null), document.getElementById("root"));
+      });
     }
   };
 });

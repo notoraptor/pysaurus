@@ -5,13 +5,16 @@ from typing import Any, Callable, Dict, Optional, Union
 from pysaurus.application.application import Application
 from pysaurus.application.language.default_language import language_to_dict
 from pysaurus.core.components import Duration, FileSize
-from pysaurus.core.functions import compute_nb_pages, extract_object
+from pysaurus.core.functions import (
+    apply_selector_to_data,
+    compute_nb_pages,
+    extract_object,
+)
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.database import Database as Db
 from pysaurus.database.viewport.abstract_video_provider import (
     AbstractVideoProvider as View,
 )
-from pysaurus.video.video_features import VideoFeatures
 
 logger = logging.getLogger(__name__)
 
@@ -96,7 +99,7 @@ class FeatureAPI:
             "set_group": FromView(self, View.set_group),
             "set_groups": FromView(self, View.set_groups),
             "set_search": FromView(self, View.set_search),
-            "set_similarity": FromDb(self, Db.set_similarity),
+            "set_similarity": FromDb(self, Db.set_video_similarity),
             "set_sorting": FromView(self, View.set_sort),
             "set_sources": FromView(self, View.set_sources),
             "set_video_folders": FromDb(self, Db.set_folders),
@@ -105,21 +108,22 @@ class FeatureAPI:
         }
 
     def __run_feature__(self, name: str, *args):
-        assert not name.startswith("_")
-        if name in self._proxies:
-            run_def = self._proxies[name]
-            if isinstance(run_def, ProxyFeature):
-                return run_def(*args)
+        with Profiler(f"ApiCall:{name}", self.notifier):
+            assert not name.startswith("_")
+            if name in self._proxies:
+                run_def = self._proxies[name]
+                if isinstance(run_def, ProxyFeature):
+                    return run_def(*args)
+                else:
+                    # Keep old resolution code, if any.
+                    path, return_value = self._proxies[name], False
+                    if path.endswith("!"):
+                        path = path[:-1]
+                        return_value = True
+                    ret = extract_object(self, path)(*args)
+                    return ret if return_value else None
             else:
-                # Keep old resolution code, if any.
-                path, return_value = self._proxies[name], False
-                if path.endswith("!"):
-                    path = path[:-1]
-                    return_value = True
-                ret = extract_object(self, path)(*args)
-                return ret if return_value else None
-        else:
-            return getattr(self, name)(*args)
+                return getattr(self, name)(*args)
 
     @abstractmethod
     def _get_latest_notifications(self):
@@ -147,12 +151,13 @@ class FeatureAPI:
                 except NotImplementedError:
                     logger.warning("No implementation to get latest notifications")
 
-        real_nb_videos = len(self.database.provider.get_view())
+        raw_view_indices = self.database.provider.get_view_indices()
+        real_nb_videos = len(raw_view_indices)
         if selector:
-            view = self.database.provider.select_from_view(selector, return_videos=True)
+            view_indices = apply_selector_to_data(selector, raw_view_indices)
         else:
-            view = self.database.provider.get_view()
-        nb_videos = len(view)
+            view_indices = raw_view_indices
+        nb_videos = len(view_indices)
         nb_pages = compute_nb_pages(nb_videos, page_size)
         videos = []
         group_def = self.database.provider.get_group_def()
@@ -160,9 +165,9 @@ class FeatureAPI:
             page_number = min(max(0, page_number), nb_pages - 1)
             start = page_size * page_number
             end = min(start + page_size, nb_videos)
-            videos = [VideoFeatures.to_json(view[index]) for index in range(start, end)]
+            videos = self.database.describe_videos(view_indices[start:end])
             if group_def and group_def["field"] == "similarity_id":
-                group_def["common"] = VideoFeatures.get_common_fields(view)
+                group_def["common"] = self.database.get_common_fields(view_indices)
 
         return {
             "pageSize": page_size,
@@ -171,10 +176,18 @@ class FeatureAPI:
             "realNbVideos": real_nb_videos,
             "totalNbVideos": len(self.database.provider.get_all_videos()),
             "nbPages": nb_pages,
-            "validSize": str(FileSize(sum(video.file_size for video in view))),
+            "validSize": str(
+                FileSize(
+                    sum(self.database.read_videos_field(view_indices, "file_size"))
+                )
+            ),
             "validLength": str(
                 Duration(
-                    sum(video.raw_microseconds for video in view if video.readable)
+                    sum(
+                        self.database.read_videos_field(
+                            view_indices, "raw_microseconds"
+                        )
+                    )
                 )
             ),
             "sources": self.database.provider.get_sources(),

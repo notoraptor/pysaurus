@@ -38,10 +38,7 @@ class VideoFeatures:
         videos = list(videos)
         if len(videos) < 2:
             return {}
-        types = set(type(video) for video in videos)
-        common_attributes = set.intersection(
-            *(class_get_public_attributes(typ, wrapper=set) for typ in types)
-        )
+        common_attributes = class_get_public_attributes(Video)
         first_video, *other_videos = videos
         return {
             key: all(

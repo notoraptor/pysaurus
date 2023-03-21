@@ -20,4 +20,11 @@ if (!window.QT) {
 	};
 }
 
-ReactDOM.render(<App />, document.getElementById("root"));
+backend_call("get_constants", []).then((constants) => {
+	for (let entry of Object.entries(constants)) {
+		const [name, value] = entry;
+		window[name] = value;
+		// console.log(`${name}: ${value}`);
+	}
+	ReactDOM.render(<App />, document.getElementById("root"));
+});

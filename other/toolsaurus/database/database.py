@@ -1,9 +1,7 @@
-from collections import namedtuple
-from typing import Iterable, List, Optional, Sequence, Union
+from typing import Iterable, List, Optional, Union
 
 import ujson as json
 
-import other.toolsaurus.application.exceptions
 from pysaurus.core import notifications
 from pysaurus.core.components import AbsolutePath, PathType
 from pysaurus.core.modules import System
@@ -50,30 +48,12 @@ class ExtendedDatabase(Database):
             database.refresh(ensure_miniatures)
         return database
 
-    def get_video_from_filename(self, filename, required=True):
-        # type: (PathType, bool) -> Optional[Video]
-        filename = AbsolutePath.ensure(filename)
-        if filename in self.videos:
-            return self.videos[filename]
-        if required:
-            raise other.toolsaurus.application.exceptions.UnknownVideoFilename(filename)
-        return None
-
     def get_unreadable_from_filename(self, filename, required=True):
         # type: (PathType, bool) -> Optional[Video]
-        video = self.get_video_from_filename(filename, required)
-        assert video.unreadable
-        return video
-
-    def get_unreadable_from_id(self, video_id, required=True):
-        # type: (int, bool) -> Optional[Video]
-        if video_id in self.id_to_video:
-            video = self.id_to_video[video_id]
-            assert video.unreadable
-            return video
-        if required:
-            raise other.toolsaurus.application.exceptions.UnknownVideoID(video_id)
-        return None
+        video_id = self.get_video_id(filename)
+        unreadable = self.read_video_field(video_id, "unreadable")
+        assert unreadable
+        return self.describe_videos([video_id])[0]
 
     def remove_videos_not_found(self):
         nb_removed = 0
@@ -112,22 +92,8 @@ class ExtendedDatabase(Database):
         with open(self.__paths.miniatures_path.path, "w") as output_file:
             json.dump([m.to_dict() for m in miniatures], output_file)
 
-    def get_video_id(self, filename):
-        return self.videos[AbsolutePath.ensure(filename)].video_id
-
-    def get_video_field(self, video_id: int, field: str):
-        return getattr(self.id_to_video[video_id], field)
-
-    def get_video_fields(self, video_id: int, fields: Sequence[str]) -> namedtuple:
-        cls = namedtuple("cls", fields)
-        vid = self.id_to_video[video_id]
-        return cls(**{field: getattr(vid, field) for field in fields})
-
     def get_video_string(self, video_id: int) -> str:
-        return str(self.id_to_video[video_id])
-
-    def has_video_id(self, video_id: int) -> bool:
-        return video_id in self.id_to_video
+        return self.describe_videos([video_id])[0]
 
 
 def load_list_file(list_file_path: Union[AbsolutePath, str]) -> Iterable[str]:

@@ -14,12 +14,11 @@ from pysaurus.core.components import (
     PathType,
 )
 from pysaurus.core.constants import JPEG_EXTENSION, THUMBNAIL_EXTENSION
-from pysaurus.core.functions import generate_infinite, generate_temp_file_path
+from pysaurus.core.functions import generate_temp_file_path
 from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
 from pysaurus.core.modules import FileSystem, ImageUtils
 from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.parallelization import parallelize, run_split_batch
-from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
 from pysaurus.database import jobs_python
 from pysaurus.database.db_paths import DbPaths
@@ -30,7 +29,7 @@ from pysaurus.database.viewport.abstract_video_provider import AbstractVideoProv
 from pysaurus.database.viewport.video_filter import VideoSelector
 from pysaurus.miniature.group_computer import GroupComputer
 from pysaurus.miniature.miniature import Miniature
-from pysaurus.video import Video, VideoRuntimeInfo
+from pysaurus.video import Video
 from pysaurus.video.video_indexer import VideoIndexer
 from saurus.language import say
 
@@ -78,23 +77,6 @@ class Database(JsonDatabase):
 
     # Private methods.
 
-    def _find_video_paths_for_update(
-        self, file_paths: Dict[AbsolutePath, VideoRuntimeInfo]
-    ) -> List[str]:
-        all_file_names = []
-        for file_name, file_info in file_paths.items():
-            video: Video = self.videos.get(file_name, None)
-            if (
-                video is None
-                or file_info.mtime != video.runtime.mtime
-                or file_info.size != video.file_size
-                or file_info.driver_id != video.runtime.driver_id
-                or (video.readable and not SpecialProperties.all_in(video))
-            ):
-                all_file_names.append(file_name.path)
-        all_file_names.sort()
-        return all_file_names
-
     def __check_thumbnails_on_disk(self):
         # type: () -> Dict[str, Date]
         thumbs = {}
@@ -115,28 +97,6 @@ class Database(JsonDatabase):
             for video in self.get_videos("readable", "found", "without_thumbnails")
         ]
         self.notifier.notify(notifications.MissingThumbnails(remaining_thumb_videos))
-
-    def __notify_filename_modified(self, video: Video, old_path: AbsolutePath):
-        self.notifier.notify(
-            notifications.FieldsModified(
-                (
-                    "title",
-                    "title_numeric",
-                    "file_title",
-                    "file_title_numeric",
-                    "filename_numeric",
-                    "disk",
-                    "filename",
-                )
-            )
-        )
-        self._update_video_path_in_index(video, old_path)
-
-    def _notify_properties_modified(
-        self, properties: Iterable[str], videos: Iterable[Video]
-    ):
-        self._update_videos_in_index(videos)
-        self.notifier.notify(notifications.PropertiesModified(properties))
 
     def _clean_thumbnails(self, thumb_names: List[str]):
         notify_job_start(
@@ -212,7 +172,9 @@ class Database(JsonDatabase):
                 else:
                     video_state = Video.from_dict(d, database=self)
                     # Get previous properties, if available
-                    if file_path in self.videos and self.videos[file_path].readable:
+                    if self.has_video(file_path) and self.read_video_field(
+                        self.get_video_id(file_path), "readable"
+                    ):
                         old_video = self.videos[file_path]
                         video_state.set_properties(old_video.properties)
                         video_state.similarity_id = old_video.similarity_id
@@ -220,7 +182,7 @@ class Database(JsonDatabase):
                     # Set special properties
                     SpecialProperties.set(video_state)
                 videos[file_path] = video_state
-                if file_path in self.videos:
+                if self.has_video(file_path):
                     replaced.append(self.videos.pop(file_path))
                 video_state.runtime = all_files[file_path]
 
@@ -373,7 +335,7 @@ class Database(JsonDatabase):
                 raise exceptions.InvalidMiniaturesJSON(self.__paths.miniatures_path)
             for dct in json_array:
                 identifier = AbsolutePath(dct["i"])
-                if identifier in self.videos and ImageUtils.DEFAULT_THUMBNAIL_SIZE == (
+                if self.has_video(identifier) and ImageUtils.DEFAULT_THUMBNAIL_SIZE == (
                     dct["w"],
                     dct["h"],
                 ):
@@ -473,66 +435,25 @@ class Database(JsonDatabase):
         self.notifier.set_log_path(self.__paths.log_path.path)
         self.set_path(self.__paths.json_path)
 
-    def set_folders(self, folders) -> None:
-        folders = sorted(AbsolutePath.ensure(folder) for folder in folders)
-        if folders == sorted(self.folders):
-            return
-        folders_tree = PathTree(folders)
-        for video in self.videos.values():
-            video.discarded = not folders_tree.in_folders(video.filename)
-        self.folders = set(folders)
-        self.save()
-
-    def set_similarity(self, video_id: int, value: Optional[int]):
-        video = self.__get_video_from_id(video_id)
-        video.similarity_id = value
-        self.save()
-        self.notifier.notify(notifications.FieldsModified(["similarity_id"]))
+    def set_video_similarity(
+        self, video_id: int, value: Optional[int], notify=True, save=True
+    ):
+        self.write_video_field(
+            video_id, "similarity_id", value, notify=notify, save=save
+        )
 
     def change_video_file_title(self, video_id: int, new_title: str) -> None:
         if functions.has_discarded_characters(new_title):
             raise exceptions.InvalidFileName(new_title)
-        video = self.__get_video_from_id(video_id)
-        if video.filename.file_title != new_title:
-            self.change_video_path(video_id, video.filename.new_title(new_title))
-
-    def change_video_path(self, video_id: int, path: AbsolutePath) -> AbsolutePath:
-        path = AbsolutePath.ensure(path)
-        assert path.isfile()
-        video = self.__get_video_from_id(video_id)
-        assert video.filename != path
-        old_filename = video.filename
-
-        del self.videos[video.filename]
-        self.videos[path] = video
-        # TODO video.filename should be immutable
-        # We should instead copy video object with a new filename
-        video.filename = path
-        self.save()
-        self.__notify_filename_modified(video, old_filename)
-
-        return old_filename
+        old_filename = self.get_video_filename(video_id)
+        if old_filename.file_title != new_title:
+            self.change_video_path(video_id, old_filename.new_title(new_title))
 
     def delete_video(self, video_id: int, save=True) -> AbsolutePath:
-        video = self.id_to_video[video_id]
-        video.filename.delete()
-        self.videos.pop(video.filename, None)
-        self.id_to_video.pop(video.video_id, None)
-        if video.readable:
-            video.thumbnail_path.delete()
-        if save:
-            self.save()
-        self._remove_video_from_index(video)
-        self.notifier.notify(notifications.VideoDeleted(video))
-        self.notifier.notify(notifications.FieldsModified(["move_id", "quality"]))
-        return video.filename
-
-    def set_video_properties(self, video_id: int, properties: dict) -> Set[str]:
-        video = self.__get_video_from_id(video_id)
-        modified = video.set_validated_properties(properties)
-        self.save()
-        self._notify_properties_modified(modified, [video])
-        return modified
+        video_filename = self.get_video_filename(video_id)
+        video_filename.delete()
+        self.delete_video_entry(video_id, save)
+        return video_filename
 
     def refresh(self, ensure_miniatures=False) -> None:
         with Profiler(say("Reset thumbnail errors"), self.notifier):
@@ -544,30 +465,28 @@ class Database(JsonDatabase):
             self.ensure_miniatures()
 
     def __del_prop_val(
-        self, videos: Iterable[Video], name: str, values: list
-    ) -> List[Video]:
+        self, video_indices: Iterable[int], name: str, values: list
+    ) -> List[int]:
         modified = []
         values = set(self.validate_prop_values(name, values))
-        for video in videos:
-            previous_values = set(self.get_prop_values(video, name))
+        for video_id in video_indices:
+            previous_values = set(self.get_prop_values(video_id, name))
             new_values = previous_values - values
             if len(previous_values) > len(new_values):
-                self.set_prop_values(video, name, new_values)
-                modified.append(video)
+                self.set_prop_values(video_id, name, new_values)
+                modified.append(video_id)
         if modified:
-            self.save()
             self._notify_properties_modified([name], modified)
         return modified
 
     def delete_property_value(self, name: str, values: list) -> None:
-        self.__del_prop_val(self.videos.values(), name, values)
+        self.__del_prop_val(self.get_all_video_indices(), name, values)
 
     def move_property_value(self, old_name: str, values: list, new_name: str) -> None:
-        modified = self.__del_prop_val(self.videos.values(), old_name, values)
-        for video in modified:
-            self.merge_prop_values(video, new_name, values)
+        modified = self.__del_prop_val(self.get_all_video_indices(), old_name, values)
+        for video_id in modified:
+            self.merge_prop_values(video_id, new_name, values)
         if modified:
-            self.save()
             self._notify_properties_modified([old_name, new_name], modified)
 
     def edit_property_value(
@@ -576,89 +495,87 @@ class Database(JsonDatabase):
         modified = []
         old_values = set(self.validate_prop_values(name, old_values))
         (new_value,) = self.validate_prop_values(name, [new_value])
-        for video in self.videos.values():
-            previous_values = set(self.get_prop_values(video, name))
+        for video_id in self.get_all_video_indices():
+            previous_values = set(self.get_prop_values(video_id, name))
             next_values = previous_values - old_values
             if len(previous_values) > len(next_values):
                 next_values.add(new_value)
-                self.set_prop_values(video, name, next_values)
-                modified.append(video)
+                self.set_prop_values(video_id, name, next_values)
+                modified.append(video_id)
         if modified:
-            self.save()
             self._notify_properties_modified([name], modified)
         return bool(modified)
 
     def edit_property_for_videos(
         self,
-        videos: List[Video],
+        video_indices: List[int],
         name: str,
         values_to_add: list,
         values_to_remove: list,
     ) -> None:
         print(
             "Edit",
-            len(videos),
+            len(video_indices),
             "video props, add",
             values_to_add,
             "remove",
             values_to_remove,
         )
-        values_to_add = self.validate_prop_values(name, values_to_add)
+        values_to_add = set(self.validate_prop_values(name, values_to_add))
         values_to_remove = set(self.validate_prop_values(name, values_to_remove))
-        modified = []
-        for video in videos:
-            values = set(self.get_prop_values(video, name)) - values_to_remove
-            self.set_prop_values(video, name, values)
-            self.merge_prop_values(video, name, values_to_add)
-            modified.append(video)
-        self.save()
+        modified: List[int] = []
+        for video_id in video_indices:
+            values = (
+                set(self.get_prop_values(video_id, name)) - values_to_remove
+            ) | values_to_add
+            self.set_prop_values(video_id, name, values)
+            modified.append(video_id)
         self._notify_properties_modified([name], modified)
 
     def count_property_values(
-        self, videos: List[Video], name: str
+        self, video_indices: List[int], name: str
     ) -> List[Tuple[object, int]]:
         count = Counter()
-        for video in videos:
-            count.update(self.get_prop_values(video, name))
+        for video_id in video_indices:
+            count.update(self.get_prop_values(video_id, name))
         return sorted(count.items())
 
     def fill_property_with_terms(self, prop_name: str, only_empty=False) -> None:
         assert self.has_prop_type(prop_name, with_type=str, multiple=True)
         modified = []
-        for video in self.videos.values():
-            values = set(self.get_prop_values(video, prop_name))
+        for video_id in self.get_all_video_indices():
+            values = set(self.get_prop_values(video_id, prop_name))
             if only_empty and values:
                 continue
-            self.set_prop_values(video, prop_name, values | video.terms(as_set=True))
-            modified.append(video)
+            self.set_prop_values(
+                video_id, prop_name, values | self.get_video_terms(video_id)
+            )
+            modified.append(video_id)
         if modified:
-            self.save()
             self._notify_properties_modified([prop_name], modified)
 
     def prop_to_lowercase(self, prop_name):
         assert self.has_prop_type(prop_name, with_type=str)
         modified = []
-        for video in self.query():
-            values = self.get_prop_values(video, prop_name)
+        for video_id in self.get_all_video_indices():
+            values = self.get_prop_values(video_id, prop_name)
             new_values = [value.strip().lower() for value in values]
             if values and new_values != values:
-                self.set_prop_values(video, prop_name, new_values)
-                modified.append(video)
+                self.set_prop_values(video_id, prop_name, new_values)
+                modified.append(video_id)
         if modified:
-            self.save()
             self._notify_properties_modified([prop_name], modified)
 
     def prop_to_uppercase(self, prop_name):
         assert self.has_prop_type(prop_name, with_type=str)
         modified = []
-        for video in self.query():
-            values = self.get_prop_values(video, prop_name)
+        for video_id in self.get_all_video_indices():
+            values = self.get_prop_values(video_id, prop_name)
             new_values = [value.strip().upper() for value in values]
             if values and new_values != values:
-                self.set_prop_values(video, prop_name, new_values)
-                modified.append(video)
+                self.set_prop_values(video_id, prop_name, new_values)
+                modified.append(video_id)
         if modified:
-            self.save()
             self._notify_properties_modified([prop_name], modified)
 
     def move_concatenated_prop_val(
@@ -672,38 +589,23 @@ class Database(JsonDatabase):
         )
         modified = []
         path_set = set(path)
-        for video in self.videos.values():
-            old_values = set(self.get_prop_values(video, from_property))
+        for video_id in self.get_all_video_indices():
+            old_values = set(self.get_prop_values(video_id, from_property))
             new_values = old_values - path_set
             if len(old_values) == len(new_values) + len(path_set):
-                self.set_prop_values(video, from_property, new_values)
-                self.merge_prop_values(video, to_property, [concat_path])
-                modified.append(video)
+                self.set_prop_values(video_id, from_property, new_values)
+                self.merge_prop_values(video_id, to_property, [concat_path])
+                modified.append(video_id)
         if modified:
-            self.save()
             self._notify_properties_modified([from_property, to_property], modified)
         return len(modified)
 
-    def move_video_entry(self, from_id, to_id, save=True):
-        from_video = self.__get_video_from_id(from_id)
-        to_video = self.__get_video_from_id(to_id)
-        assert not from_video.found
-        assert to_video.found
-        for prop_name in self.get_prop_names():
-            self.merge_prop_values(
-                to_video, prop_name, self.get_prop_values(from_video, prop_name)
-            )
-        to_video.similarity_id = from_video.similarity_id
-        to_video.date_entry_modified = from_video.date_entry_modified.time
-        to_video.date_entry_opened = from_video.date_entry_opened.time
-        self.delete_video(from_id, save=save)
-
     def confirm_unique_moves(self) -> int:
         nb_moved = 0
-        for video in self.get_videos("readable", "not_found"):
-            moves = video.moves
+        for video_id in list(self.get_all_video_indices()):
+            moves = self.read_video_field(video_id, "moves")
             if len(moves) == 1:
-                self.move_video_entry(video.video_id, moves[0]["video_id"], False)
+                self.move_video_entry(video_id, moves[0]["video_id"], False)
                 nb_moved += 1
         if nb_moved:
             self.save()
@@ -715,11 +617,10 @@ class Database(JsonDatabase):
     def set_predictor(self, prop_name: str, theta: List[float]):
         self.predictors[prop_name] = theta
 
-    @classmethod
-    def to_xspf_playlist(cls, videos: Iterable[Video]) -> AbsolutePath:
+    def to_xspf_playlist(self, video_indices: Iterable[int]) -> AbsolutePath:
         tracks = "".join(
-            f"<track><location>{video.filename.uri}</location></track>"
-            for video in videos
+            f"<track><location>{self.get_video_filename(video_id).uri}</location></track>"
+            for video_id in video_indices
         )
         file_content = (
             f'<?xml version="1.0" encoding="UTF-8"?>'
@@ -734,38 +635,5 @@ class Database(JsonDatabase):
 
     # Videos access and edition
 
-    def __get_video_from_id(self, video_id: int) -> Video:
-        video = self.id_to_video[video_id]
-        assert video.readable
-        return video
-
-    def get_video_filename(self, video_id: int) -> AbsolutePath:
-        return self.id_to_video[video_id].filename
-
-    def open_video(self, video_id: int):
-        self.id_to_video[video_id].open()
-        self.save()
-        self.notifier.notify(notifications.FieldsModified(["date_entry_opened"]))
-
     def open_containing_folder(self, video_id: int) -> str:
-        return str(self.id_to_video[video_id].filename.locate_file())
-
-    def get_videos_field(self, indices: Iterable[int], field: str) -> Iterable:
-        return (getattr(self.id_to_video[video_id], field) for video_id in indices)
-
-    def set_similarity_id(self, video_indices: Iterable[int], **kwargs) -> None:
-        """Set similarity ID for given videos
-
-        :param video_indices: iterable of video indices to set
-        :param kwargs: one of following:
-            - values: similarity indices to set. Should be as long as video_indices.
-            - value: similarity ID to set for all video indices.
-        """
-        assert len(kwargs) == 1
-        if "values" in kwargs:
-            values: Iterable = kwargs["values"]
-        else:
-            assert "value" in kwargs
-            values: Iterable = generate_infinite(kwargs["value"])
-        for video_id, value in zip(video_indices, values):
-            self.id_to_video[video_id].similarity_id = value
+        return str(self.get_video_filename(video_id).locate_file())

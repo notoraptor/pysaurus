@@ -34,7 +34,9 @@ class GroupingLayer(Layer):
         self._set_parameters(grouping=self.DEFAULT_GROUP_DEF)
 
     def _get_prop_vals(self, name, video_state):
-        return self.database.get_prop_values(video_state, name, default=True) or [None]
+        return self.database.get_prop_values(
+            video_state.video_id, name, default=True
+        ) or [None]
 
     def _filter(self, data: Dict[AbsolutePath, Video]) -> GroupArray:
         group_def = self.get_grouping()

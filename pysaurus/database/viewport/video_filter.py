@@ -125,7 +125,7 @@ class _AbstractLayerGrouping(Layer):
     def _get_grouping_values(self, video, group_def: GroupDef):
         if group_def.is_property:
             return self.database.get_prop_values(
-                video, group_def.field, default=True
+                video.video_id, group_def.field, default=True
             ) or [None]
         else:
             return [getattr(video, group_def.field)]
