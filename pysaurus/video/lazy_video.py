@@ -236,6 +236,14 @@ class LazyVideo(WithSchema):
             for video in self.database.moves_attribute(self)[1]
         ]
 
+    @property
+    def has_runtime_thumbnail(self):
+        return self.runtime.has_thumbnail
+
+    @has_runtime_thumbnail.setter
+    def has_runtime_thumbnail(self, value: bool):
+        self.runtime.has_thumbnail = bool(value)
+
     def terms(self, as_set=False):
         term_sources = [self.filename.path, str(self.meta_title)]
         for name, val in self.properties.items():

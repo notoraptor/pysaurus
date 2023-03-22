@@ -31,7 +31,6 @@ class ExtendedDatabase(Database):
         notifier=None,
         update=True,
         ensure_miniatures=True,
-        reset=False,
         clear_old_folders=False,
     ):
         paths = load_path_list_file(list_file_path)
@@ -42,8 +41,6 @@ class ExtendedDatabase(Database):
             notifier=notifier,
             clear_old_folders=clear_old_folders,
         )
-        if reset:
-            database.reset()
         if update:
             database.refresh(ensure_miniatures)
         return database
@@ -64,14 +61,6 @@ class ExtendedDatabase(Database):
         if nb_removed:
             self.notifier.notify(notifications.VideosNotFoundRemoved(nb_removed))
             self.save()
-
-    def reset(self, reset_thumbnails=False, reset_miniatures=False):
-        self.videos.clear()
-        self.__paths.json_path.delete()
-        if reset_miniatures:
-            self.__paths.miniatures_path.delete()
-        if reset_thumbnails:
-            self.__paths.thumb_folder.delete()
 
     def list_files(self, output_name):
         readable_videos = self.get_videos("readable")

@@ -122,11 +122,20 @@ class _AbstractLayerGrouping(Layer):
     __slots__ = ()
     output: GroupArray
 
+    def get_prop_values(self, video, name: str, default=False) -> List:
+        prop_is_multiple = self.database.has_prop_type(name, multiple=True)
+        values = []
+        if video.has_property(name):
+            value = video.get_property(name)
+            values = value if prop_is_multiple else [value]
+        assert isinstance(values, list)
+        if default and not values and not prop_is_multiple:
+            values = [self.database.get_prop_val(name)]
+        return values
+
     def _get_grouping_values(self, video, group_def: GroupDef):
         if group_def.is_property:
-            return self.database.get_prop_values(
-                video.video_id, group_def.field, default=True
-            ) or [None]
+            return self.get_prop_values(video, group_def.field, default=True) or [None]
         else:
             return [getattr(video, group_def.field)]
 

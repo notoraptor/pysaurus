@@ -487,6 +487,11 @@ class JsonDatabase:
         for video_id, value in zip(indices, values):
             setattr(self.__id_to_video[video_id], field, value)
 
+    def write_video_fields(self, video_id: int, **kwargs):
+        video = self.__id_to_video[video_id]
+        for key, value in kwargs.items():
+            setattr(video, key, value)
+
     def fill_videos_field(self, indices: Iterable[int], field: str, value):
         for video_id in indices:
             setattr(self.__id_to_video[video_id], field, value)

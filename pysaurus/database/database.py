@@ -307,9 +307,11 @@ class Database(JsonDatabase):
                 file_name = d["f"]
                 file_path = AbsolutePath.ensure(file_name)
                 thumb_errors[file_name] = d["e"]
-                video = self.videos[file_path]
-                video.unreadable_thumbnail = True
-                video.runtime.has_thumbnail = False
+                self.write_video_fields(
+                    self.get_video_id(file_path),
+                    unreadable_thumbnail=True,
+                    has_runtime_thumbnail=False,
+                )
 
         if thumb_errors:
             self.notifier.notify(notifications.VideoThumbnailErrors(thumb_errors))
