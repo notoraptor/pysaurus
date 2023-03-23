@@ -67,7 +67,7 @@ class JsonDatabase:
         "__date",
         "__folders",
         "__videos",
-        "prop_types",
+        "__prop_types",
         "__predictors",
         "iteration",
         "notifier",
@@ -92,7 +92,7 @@ class JsonDatabase:
         self.__date = Date.now()
         self.__folders: Set[AbsolutePath] = set()
         self.__videos: Dict[AbsolutePath, Video] = {}
-        self.prop_types: Dict[str, PropType] = {}
+        self.__prop_types: Dict[str, PropType] = {}
         self.__predictors: Dict[str, List[float]] = {}
         # Runtime
         self.notifier = notifier
@@ -145,7 +145,7 @@ class JsonDatabase:
         self.__predictors = {
             name: predictor
             for name, predictor in json_dict.get("predictors", {}).items()
-            if name in self.prop_types
+            if name in self.__prop_types
         }
 
         # Parsing videos.
@@ -179,7 +179,7 @@ class JsonDatabase:
                 "settings": self.settings.to_dict(),
                 "date": self.date.time,
                 "folders": [folder.path for folder in self.__folders],
-                "prop_types": [prop.to_dict() for prop in self.prop_types.values()],
+                "prop_types": [prop.to_dict() for prop in self.__prop_types.values()],
                 "predictors": self.__predictors,
                 "videos": [video.to_dict() for video in self.__videos.values()],
             }
@@ -263,9 +263,9 @@ class JsonDatabase:
     def has_prop_type(
         self, name, *, with_type=None, multiple=None, with_enum=None, default=None
     ) -> bool:
-        if name not in self.prop_types:
+        if name not in self.__prop_types:
             return False
-        pt = self.prop_types[name]
+        pt = self.__prop_types[name]
         if with_type is not None and pt.type is not with_type:
             return False
         if multiple is not None and pt.multiple is not multiple:
@@ -277,18 +277,18 @@ class JsonDatabase:
         return True
 
     def get_prop_names(self) -> Iterable[str]:
-        return self.prop_types.keys()
+        return self.__prop_types.keys()
 
     def describe_prop_types(self) -> List[dict]:
         return sorted(
-            (prop.describe() for prop in self.prop_types.values()),
+            (prop.describe() for prop in self.__prop_types.values()),
             key=lambda d: d["name"],
         )
 
     def add_prop_type(self, prop: PropType, save: bool = True) -> None:
-        if prop.name in self.prop_types:
+        if prop.name in self.__prop_types:
             raise exceptions.PropertyAlreadyExists(prop.name)
-        self.prop_types[prop.name] = prop
+        self.__prop_types[prop.name] = prop
         if save:
             self.save()
 
@@ -311,8 +311,8 @@ class JsonDatabase:
         self.add_prop_type(PropType(name, definition, multiple), save)
 
     def remove_prop_type(self, name, save: bool = True) -> None:
-        if name in self.prop_types:
-            del self.prop_types[name]
+        if name in self.__prop_types:
+            del self.__prop_types[name]
             for video in self.query():
                 video.remove_property(name, None)
             if save:
@@ -322,9 +322,9 @@ class JsonDatabase:
         if self.has_prop_type(old_name):
             if self.has_prop_type(new_name):
                 raise exceptions.PropertyAlreadyExists(new_name)
-            prop_type = self.prop_types.pop(old_name)
+            prop_type = self.__prop_types.pop(old_name)
             prop_type.name = new_name
-            self.prop_types[new_name] = prop_type
+            self.__prop_types[new_name] = prop_type
             for video in self.query():
                 if video.has_property(old_name):
                     video.set_property(new_name, video.remove_property(old_name))
@@ -332,7 +332,7 @@ class JsonDatabase:
 
     def convert_prop_to_unique(self, name) -> None:
         if self.has_prop_type(name):
-            prop_type = self.prop_types[name]
+            prop_type = self.__prop_types[name]
             if not prop_type.multiple:
                 raise exceptions.PropertyAlreadyUnique(name)
             for video in self.query():
@@ -350,7 +350,7 @@ class JsonDatabase:
 
     def convert_prop_to_multiple(self, name) -> None:
         if self.has_prop_type(name):
-            prop_type = self.prop_types[name]
+            prop_type = self.__prop_types[name]
             if prop_type.multiple:
                 raise exceptions.PropertyAlreadyMultiple(name)
             prop_type.multiple = True
@@ -366,10 +366,10 @@ class JsonDatabase:
         values = []
         if video.has_property(name):
             value = video.get_property(name)
-            values = value if self.prop_types[name].multiple else [value]
+            values = value if self.__prop_types[name].multiple else [value]
         assert isinstance(values, list)
-        if default and not values and not self.prop_types[name].multiple:
-            values = [self.prop_types[name].default]
+        if default and not values and not self.__prop_types[name].multiple:
+            values = [self.__prop_types[name].default]
         return values
 
     def set_prop_values(
@@ -378,22 +378,22 @@ class JsonDatabase:
         video = self.__id_to_video[video_id]
         if not values:
             video.remove_property(name, None)
-        elif self.prop_types[name].multiple:
-            video.set_property(name, self.prop_types[name].validate(values))
+        elif self.__prop_types[name].multiple:
+            video.set_property(name, self.__prop_types[name].validate(values))
         else:
             (value,) = values
-            video.set_property(name, self.prop_types[name].validate(value))
+            video.set_property(name, self.__prop_types[name].validate(value))
 
     def merge_prop_values(
         self, video_id: int, name: str, values: Union[Sequence, Set]
     ) -> None:
         video = self.__id_to_video[video_id]
-        if self.prop_types[name].multiple:
+        if self.__prop_types[name].multiple:
             values = video.get_property(name, []) + list(values)
         self.set_prop_values(video.video_id, name, values)
 
     def validate_prop_values(self, name, values: list) -> List[PropValueType]:
-        prop_type = self.prop_types[name]
+        prop_type = self.__prop_types[name]
         if prop_type.multiple:
             values = prop_type.validate(values)
         else:
@@ -401,7 +401,7 @@ class JsonDatabase:
         return values
 
     def get_prop_val(self, name, value=None) -> PropValueType:
-        pt = self.prop_types[name]
+        pt = self.__prop_types[name]
         return pt.default if value is None else pt.validate(value)
 
     @Profiler.profile_method()
