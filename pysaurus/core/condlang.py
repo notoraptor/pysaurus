@@ -1,7 +1,7 @@
 import ast
 import operator
 from abc import abstractmethod
-from typing import List
+from typing import Callable, Iterable, List
 
 
 def _in_(a, b):
@@ -49,11 +49,31 @@ __cmp_operations__ = {
 }
 
 
-class Run:
+class Apply:
+    __slots__ = ("names", "size", "function")
+
+    def __init__(self, names: Iterable[str], size: int, function: Callable = None):
+        self.names = [name.lower() for name in names]
+        self.size = size
+        self.function = function
+        assert self.names
+
+    def __str__(self):
+        names = " or ".join(self.names)
+        if len(self.names) > 1:
+            names = f"({names})"
+        inputs = ", ".join(f"p{i + 1}" for i in range(self.size))
+        return f"{names}({inputs})"
+
+    def run(self, *args, **kwargs):
+        return self.function(*args)
+
+
+class _Run:
     __slots__ = ("runs",)
 
     def __init__(self, *runs):
-        self.runs: List[Run] = list(runs)
+        self.runs: List[_Run] = list(runs)
 
     def __str__(self):
         return type(self).__name__
@@ -62,7 +82,7 @@ class Run:
     def __pretty__(run, prefix="") -> str:
         output = f"{prefix}{run}"
         for child in run.runs:
-            output += "\n" + Run.__pretty__(child, prefix=f"{prefix}\t")
+            output += "\n" + _Run.__pretty__(child, prefix=f"{prefix}\t")
         return output
 
     def pretty(self):
@@ -76,21 +96,23 @@ class Run:
         return self.run(**kwargs)
 
 
-class Function(Run):
+class _Function(_Run):
     __slots__ = ("function",)
 
     def __init__(self, function, *inputs):
         super().__init__(*inputs)
+        if not isinstance(function, Apply):
+            function = Apply([function.__name__], len(inputs), function)
         self.function = function
 
     def __str__(self):
-        return f"Function:{self.function.__name__}"
+        return f"Function:{self.function}"
 
     def run(self, **kwargs):
-        return self.function(*(run.run(**kwargs) for run in self.runs))
+        return self.function.run(*(run.run(**kwargs) for run in self.runs), **kwargs)
 
 
-class And(Run):
+class _And(_Run):
     __slots__ = ()
 
     def run(self, **kwargs):
@@ -102,7 +124,7 @@ class And(Run):
         return value
 
 
-class Or(Run):
+class _Or(_Run):
     __slots__ = ()
 
     def run(self, **kwargs):
@@ -114,7 +136,7 @@ class Or(Run):
         return value
 
 
-class Variable(Run):
+class _Variable(_Run):
     __slots__ = ("name",)
 
     def __init__(self, name: str):
@@ -128,7 +150,7 @@ class Variable(Run):
         return getattr(namespace, self.name)
 
 
-class Subscript(Run):
+class _Subscript(_Run):
     __slots__ = ()
 
     def __init__(self, data, item):
@@ -139,7 +161,7 @@ class Subscript(Run):
         return data.run(**kwargs)[item.run(**kwargs)]
 
 
-class Constant(Run):
+class _Constant(_Run):
     __slots__ = ("value",)
 
     def __init__(self, value):
@@ -153,81 +175,106 @@ class Constant(Run):
         return self.value
 
 
-def compute_ast(node: ast.AST):
-    if isinstance(node, ast.BoolOp):
-        if isinstance(node.op, ast.And):
-            run_cls = And
-        elif isinstance(node.op, ast.Or):
-            run_cls = Or
+class _Parser:
+    __slots__ = ("applies",)
+
+    def __init__(self, applies: Iterable[Apply]):
+        self.applies = {}
+        self._add_apply(Apply(["len", "count"], 1, len))
+        for apply in applies:
+            self._add_apply(apply)
+
+    def _add_apply(self, apply: Apply):
+        for name in apply.names:
+            if name in self.applies:
+                raise ValueError(
+                    f"Apply already registered for name {name}, "
+                    f"previous: {self.applies[name]}, other: {apply}"
+                )
+            self.applies[name] = apply
+
+    def compute_ast(self, node: ast.AST):
+        if isinstance(node, ast.BoolOp):
+            if isinstance(node.op, ast.And):
+                run_cls = _And
+            elif isinstance(node.op, ast.Or):
+                run_cls = _Or
+            else:
+                raise ValueError(f"Unknown boolop: {node.op}")
+            return run_cls(*(self.compute_ast(child) for child in node.values))
+        elif isinstance(node, ast.BinOp):
+            op = type(node.op)
+            if op not in __binary_operations__:
+                raise ValueError(f"Unknown binop: {node.op}")
+            return _Function(
+                __binary_operations__[op],
+                self.compute_ast(node.left),
+                self.compute_ast(node.right),
+            )
+        elif isinstance(node, ast.UnaryOp):
+            op = type(node.op)
+            if op not in __unary_operations__:
+                raise ValueError(f"Unknown unary op: {node.op}")
+            return _Function(__unary_operations__[op], self.compute_ast(node.operand))
+        elif isinstance(node, ast.Compare):
+            if len(node.ops) != 1:
+                raise ValueError("Chained comparisons not supported")
+            op = type(node.ops[0])
+            if op not in __cmp_operations__:
+                raise ValueError(f"Unknown cmpop: {node.ops[0]}")
+            return _Function(
+                __cmp_operations__[op],
+                self.compute_ast(node.left),
+                self.compute_ast(node.comparators[0]),
+            )
+        elif isinstance(node, ast.Name):
+            if not isinstance(node.ctx, ast.Load):
+                raise ValueError(
+                    f"Only readonly ast names supported, got: {ast.dump(node)}"
+                )
+            return _Variable(node.id)
+        elif isinstance(node, ast.Constant):
+            return _Constant(node.value)
+        elif isinstance(node, ast.Subscript):
+            if not isinstance(node.ctx, ast.Load):
+                raise ValueError(
+                    f"Only readonly ast subscripts supported, got {ast.dump(node)}"
+                )
+            return _Subscript(
+                self.compute_ast(node.value), self.compute_ast(node.slice)
+            )
+        elif isinstance(node, ast.Index):
+            return self.compute_ast(node.value)
+        elif isinstance(node, ast.Call):
+            if not (
+                isinstance(node.func, ast.Name) and isinstance(node.func.ctx, ast.Load)
+            ):
+                raise ValueError(
+                    f"Ast call supported for readonly function name, got {ast.dump(node)}"
+                )
+            name = node.func.id.lower()
+            if name not in self.applies:
+                raise ValueError(
+                    f"Unsupported call {name}, "
+                    f"available: {', '.join(sorted(self.applies))}"
+                )
+            apply = self.applies[name]
+            if not (len(node.args) == apply.size and len(node.keywords) == 0):
+                raise ValueError(
+                    f"Call expected {apply.size} args, got {len(node.args)}"
+                )
+            return _Function(apply, *(self.compute_ast(arg) for arg in node.args))
         else:
-            raise ValueError(f"Unknown boolop: {node.op}")
-        return run_cls(*(compute_ast(child) for child in node.values))
-    elif isinstance(node, ast.BinOp):
-        op = type(node.op)
-        if op not in __binary_operations__:
-            raise ValueError(f"Unknown binop: {node.op}")
-        return Function(
-            __binary_operations__[op], compute_ast(node.left), compute_ast(node.right)
-        )
-    elif isinstance(node, ast.UnaryOp):
-        op = type(node.op)
-        if op not in __unary_operations__:
-            raise ValueError(f"Unknown unary op: {node.op}")
-        return Function(__unary_operations__[op], compute_ast(node.operand))
-    elif isinstance(node, ast.Compare):
-        if len(node.ops) != 1:
-            raise ValueError("Chained comparisons not supported")
-        op = type(node.ops[0])
-        if op not in __cmp_operations__:
-            raise ValueError(f"Unknown cmpop: {node.ops[0]}")
-        return Function(
-            __cmp_operations__[op],
-            compute_ast(node.left),
-            compute_ast(node.comparators[0]),
-        )
-    elif isinstance(node, ast.Name):
-        if not isinstance(node.ctx, ast.Load):
-            raise ValueError(
-                f"Only readonly ast names supported, got: {ast.dump(node)}"
-            )
-        return Variable(node.id)
-    elif isinstance(node, ast.Constant):
-        return Constant(node.value)
-    elif isinstance(node, ast.Subscript):
-        if not isinstance(node.ctx, ast.Load):
-            raise ValueError(
-                f"Only readonly ast subscripts supported, got {ast.dump(node)}"
-            )
-        return Subscript(compute_ast(node.value), compute_ast(node.slice))
-    elif isinstance(node, ast.Index):
-        return compute_ast(node.value)
-    elif isinstance(node, ast.Call):
-        if not (
-            isinstance(node.func, ast.Name) and isinstance(node.func.ctx, ast.Load)
-        ):
-            raise ValueError(
-                f"Ast call supported for readonly function name, got {ast.dump(node)}"
-            )
-        name = node.func.id
-        if name.lower() not in ("len", "count"):
-            raise ValueError(
-                f"Only len() function call supported, got: {ast.dump(node)}"
-            )
-        if not (len(node.args) == 1 and len(node.keywords) == 0):
-            raise ValueError(
-                f"Only len(a) function call supported, got {ast.dump(node)}"
-            )
-        return Function(len, compute_ast(node.args[0]))
-    else:
-        raise ValueError(f"Unsupported ast: {ast.dump(node)}")
+            raise ValueError(f"Unsupported ast: {ast.dump(node)}")
 
 
-def cond_lang(code: str) -> Run:
+def cond_lang(code: str, applies: Iterable[Apply] = ()) -> _Run:
     syntax = ast.parse(code)
     assert len(syntax.body) == 1
     (body,) = syntax.body
     assert isinstance(body, ast.Expr)
-    return compute_ast(body.value)
+    parser = _Parser(applies)
+    return parser.compute_ast(body.value)
 
 
 __all__ = ["cond_lang"]

@@ -3,33 +3,6 @@ from typing import Any, Dict, Iterable
 from pysaurus.core.jsonable import Type
 
 
-class Schema:
-    __slots__ = ("schema",)
-
-    def __init__(self, types: Iterable[Type]):
-        self.schema: Dict[str, Type] = {t.name: t for t in types}
-
-    def get_from_short_dict(self, data: dict, name: str):
-        tp = self.schema[name]
-        sh = tp.short
-        if sh in data:
-            value = tp.from_dict(tp.type, data[sh])
-        else:
-            value = tp()
-        return value
-
-    def set_into_short_dict(self, data: dict, name: str, value: Any):
-        tp = self.schema[name]
-        data[tp.short] = value
-
-    def has_in_short_dict(self, data: dict, name: str):
-        tp = self.schema[name]
-        return tp.short in data
-
-    def get_short_key(self, name):
-        return self.schema[name].short
-
-
 class SchemaType(Type):
     def __init__(self, name, typedef, *default):
         super().__init__(name, typedef, *default)
@@ -50,6 +23,33 @@ class SchemaType(Type):
 
     def standard_from_dict(self, cls, value):
         return None if value is None else self.type.from_dict(value)
+
+
+class Schema:
+    __slots__ = ("schema",)
+
+    def __init__(self, types: Iterable[Type]):
+        self.schema: Dict[str, Type] = {t.name: t for t in types}
+
+    def get_from_short_dict(self, data: dict, name: str):
+        tp = self.schema[name]
+        sh = tp.short
+        if sh in data:
+            value = tp.from_dict(tp.type, data[sh])
+        else:
+            value = tp()
+        return value
+
+    def set_into_short_dict(self, data: dict, name: str, value: Any):
+        tp = self.schema[name]
+        data[tp.short] = tp.validate(value)
+
+    def has_in_short_dict(self, data: dict, name: str):
+        tp = self.schema[name]
+        return tp.short in data
+
+    def get_short_key(self, name):
+        return self.schema[name].short
 
 
 class WithSchema:

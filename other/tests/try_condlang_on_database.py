@@ -1,52 +1,70 @@
 from collections import namedtuple
-from typing import Sequence
+from typing import Iterable, Sequence, Union
 
 from pysaurus.application.application import Application
 from pysaurus.core import condlang
 from pysaurus.database.database import Database
+from pysaurus.video import Video
 
 
-def _db_get_prop_types(db: Database):
-    return db.prop_types.values()
+def _get_video_fields(
+    video: Video, attributes: Iterable[str], properties: Iterable[str] = None
+):
+    output = {key: getattr(video, key) for key in attributes}
+    if properties:
+        output["properties"] = {name: video.get_property(name) for name in properties}
+    return output
 
 
-def db_select(
-    self: Database, entry: str, fields: Sequence[str], *cond, **kwargs
+class GetProperty(condlang.Apply):
+    __slots__ = ()
+
+    def __init__(self):
+        super().__init__(["get_property"], 1)
+
+    def run(self, name: str, namespace: Video, **kwargs):
+        database = namespace.database
+        values = database.get_prop_values(namespace.video_id, name, default=True)
+        if database.has_prop_type(name, multiple=True):
+            return values
+        else:
+            value, = values
+            return value
+
+
+def db_select_videos(
+    self: Database,
+    *,
+    attributes: Sequence[str] = None,
+    properties: Sequence[str] = None,
+    where: Union[str, dict] = None
 ) -> namedtuple:
-    attributes = {field for field in fields if not field.startswith(":")}
-    properties = {field for field in fields if field.startswith(":")}
+    if not where:
+        return []
+
+    attributes = set(attributes or ()) | {"filename", "video_id"}
     cls_fields = set(attributes)
-    if entry == "video":
-        attributes.update(("filename", "video_id"))
-        cls_fields.update(("filename", "video_id"))
-        source = self.query()
-        if properties:
-            cls_fields.add("properties")
-    elif entry == "property":
-        attributes.add("name")
-        cls_fields.add("name")
-        source = _db_get_prop_types(self)
-        assert not properties
-    else:
-        raise ValueError(f"Unknown database entry: {entry}")
-    if cond:
-        (condition,) = cond
-        assert isinstance(condition, str)
-        test = condlang.cond_lang(condition)
+    if properties:
+        cls_fields.add("properties")
+
+    if isinstance(where, str):
+        assert isinstance(where, str)
+        test = condlang.cond_lang(where, applies=[GetProperty()])
         print(test.pretty())
 
-        def selector(el):
+        def selector(el: Video):
             return test(namespace=el)
 
     else:
+        assert isinstance(where, dict)
 
-        def selector(el):
-            return el.match_json(**kwargs)
+        def selector(el: Video):
+            return all(getattr(el, key) == value for key, value in where.items())
 
     cls = namedtuple("DbRow", cls_fields)
     return [
-        cls(**el.extract_attributes(attributes | properties))
-        for el in source
+        cls(**_get_video_fields(el, attributes, properties))
+        for el in self.query()
         if selector(el)
     ]
 
@@ -54,11 +72,10 @@ def db_select(
 def main():
     app = Application()
     db = app.open_database_from_name("adult videos")
-    cl = db_select(
+    cl = db_select_videos(
         db,
-        "video",
-        [":actress"],
-        'readable and "actress" in properties and len(properties["actress"]) > 1',
+        properties=["actress"],
+        where='len(get_property("actress")) > 1',
     )
     print(len(cl))
 
