@@ -73,7 +73,6 @@ class Database(JsonDatabase):
 
     name = property(lambda self: self.__paths.db_folder.title)
     thumbnail_folder = property(lambda self: self.__paths.thumb_folder)
-    video_folders = property(lambda self: list(self.folders))
 
     # Private methods.
 
@@ -130,7 +129,7 @@ class Database(JsonDatabase):
     def update(self) -> None:
         current_date = Date.now()
 
-        all_files = jobs_python.collect_video_paths(self.folders, self.notifier)
+        all_files = jobs_python.collect_video_paths(self.video_folders, self.notifier)
         self._update_videos_not_found(all_files)
         files_to_update = self._find_video_paths_for_update(all_files)
         if not files_to_update:
@@ -153,55 +152,17 @@ class Database(JsonDatabase):
                 extra_args=[self.__paths.db_folder, self.notifier],
             )
 
-        videos = {}
-        unreadable = []
-        replaced = []
-        for arr in results:
-            for d in arr:
-                d = Video.ensure_short_keys(d, backend_raptor.RETURNS_SHORT_KEYS)
-                file_path = AbsolutePath.ensure(d["f"])
-                if len(d) == 2:
-                    video_state = Video.from_keys(
-                        filename=file_path.path,
-                        file_size=file_path.get_size(),
-                        errors=set(d["e"]),
-                        unreadable=True,
-                        database=self,
-                    )
-                    unreadable.append(video_state)
-                else:
-                    video_state = Video.from_dict(d, database=self)
-                    # Get previous properties, if available
-                    if self.has_video(file_path) and self.read_video_field(
-                        self.get_video_id(file_path), "readable"
-                    ):
-                        old_video = self.videos[file_path]
-                        video_state.set_properties(old_video.properties)
-                        video_state.similarity_id = old_video.similarity_id
-                        video_state.video_id = old_video.video_id
-                    # Set special properties
-                    SpecialProperties.set(video_state)
-                videos[file_path] = video_state
-                if self.has_video(file_path):
-                    replaced.append(self.videos.pop(file_path))
-                video_state.runtime = all_files[file_path]
+        new: List[dict] = [
+            Video.ensure_short_keys(d, backend_raptor.RETURNS_SHORT_KEYS)
+            for arr in results
+            for d in arr
+        ]
+        assert len(files_to_update) == len(new)
 
-        assert len(videos) == len(files_to_update)
-
-        if videos:
-            self.videos.update(videos)
-            self.date = current_date
+        if new:
+            self.set_date(current_date)
+            self.write_new_videos(new, all_files)
             self.save()
-            self._update_videos_in_index(videos.values())
-        if unreadable:
-            self.notifier.notify(
-                notifications.VideoInfoErrors(
-                    {
-                        video_state.filename: video_state.errors
-                        for video_state in unreadable
-                    }
-                )
-            )
 
     @Profiler.profile_method()
     def ensure_thumbnails(self) -> None:
@@ -612,12 +573,6 @@ class Database(JsonDatabase):
         if nb_moved:
             self.save()
         return nb_moved
-
-    def get_predictor(self, prop_name):
-        return self.predictors.get(prop_name, None)
-
-    def set_predictor(self, prop_name: str, theta: List[float]):
-        self.predictors[prop_name] = theta
 
     def to_xspf_playlist(self, video_indices: Iterable[int]) -> AbsolutePath:
         tracks = "".join(

@@ -64,11 +64,11 @@ class JsonDatabase:
         "__backup",
         "__db_cache",
         "settings",
-        "date",
-        "folders",
-        "videos",
+        "__date",
+        "__folders",
+        "__videos",
         "prop_types",
-        "predictors",
+        "__predictors",
         "iteration",
         "notifier",
         "__id_to_video",
@@ -89,11 +89,11 @@ class JsonDatabase:
         self.__db_cache = DbCache(self)
         # Database content
         self.settings = DbSettings()
-        self.date = Date.now()
-        self.folders: Set[AbsolutePath] = set()
-        self.videos: Dict[AbsolutePath, Video] = {}
+        self.__date = Date.now()
+        self.__folders: Set[AbsolutePath] = set()
+        self.__videos: Dict[AbsolutePath, Video] = {}
         self.prop_types: Dict[str, PropType] = {}
-        self.predictors: Dict[str, List[float]] = {}
+        self.__predictors: Dict[str, List[float]] = {}
         # Runtime
         self.notifier = notifier
         self.iteration = 0
@@ -105,8 +105,11 @@ class JsonDatabase:
         self.__load(folders)
         with Profiler("build index", self.notifier):
             notifying.with_handler(
-                self.notifier, self.__indexer.build, self.videos.values()
+                self.notifier, self.__indexer.build, self.__videos.values()
             )
+
+    date = property(lambda self: self.__date)
+    video_folders = property(lambda self: list(self.__folders))
 
     @Profiler.profile_method()
     def __load(self, folders: Optional[Iterable[PathType]] = None):
@@ -123,21 +126,23 @@ class JsonDatabase:
 
         # Parsing date.
         if "date" in json_dict:
-            self.date = Date(json_dict["date"])
+            self.__date = Date(json_dict["date"])
 
         # Parsing folders.
-        self.folders.update(AbsolutePath(path) for path in json_dict.get("folders", ()))
+        self.__folders.update(
+            AbsolutePath(path) for path in json_dict.get("folders", ())
+        )
         if folders:
-            lb = len(self.folders)
-            self.folders.update(AbsolutePath.ensure(path) for path in folders)
-            to_save = to_save or lb != len(self.folders)
+            lb = len(self.__folders)
+            self.__folders.update(AbsolutePath.ensure(path) for path in folders)
+            to_save = to_save or lb != len(self.__folders)
 
         # Parsing video property types.
         for prop_dict in json_dict.get("prop_types", ()):
             self.add_prop_type(PropType.from_dict(prop_dict), save=False)
 
         # Parsing predictors
-        self.predictors = {
+        self.__predictors = {
             name: predictor
             for name, predictor in json_dict.get("predictors", {}).items()
             if name in self.prop_types
@@ -145,13 +150,13 @@ class JsonDatabase:
 
         # Parsing videos.
         with Profiler("parsing videos", self.notifier):
-            folders_tree = PathTree(self.folders)
+            folders_tree = PathTree(self.__folders)
             for video_dict in json_dict.get("videos", ()):
                 video_state = Video.from_dict(video_dict, database=self)
                 video_state.discarded = not folders_tree.in_folders(
                     video_state.filename
                 )
-                self.videos[video_state.filename] = video_state
+                self.__videos[video_state.filename] = video_state
 
         self.save(on_new_identifiers=to_save)
         self.notifier.notify(DatabaseLoaded(self))
@@ -160,7 +165,10 @@ class JsonDatabase:
     def save(self, on_new_identifiers=False):
         """Save database on disk.
 
-        :param on_new_identifiers: if True, save only if new video IDs were generated.
+        Parameters
+        ----------
+        on_new_identifiers:
+            if True, save only if new video IDs were generated.
         """
         if not self.__ensure_identifiers() and on_new_identifiers:
             return
@@ -170,10 +178,10 @@ class JsonDatabase:
             {
                 "settings": self.settings.to_dict(),
                 "date": self.date.time,
-                "folders": [folder.path for folder in self.folders],
+                "folders": [folder.path for folder in self.__folders],
                 "prop_types": [prop.to_dict() for prop in self.prop_types.values()],
-                "predictors": self.predictors,
-                "videos": [video.to_dict() for video in self.videos.values()],
+                "predictors": self.__predictors,
+                "videos": [video.to_dict() for video in self.__videos.values()],
             }
         )
         self.notifier.notify(DatabaseSaved(self))
@@ -182,7 +190,7 @@ class JsonDatabase:
     def __ensure_identifiers(self):
         id_to_video = {}  # type: Dict[int, Video]
         without_identifiers = []
-        for video_state in self.videos.values():
+        for video_state in self.__videos.values():
             if (
                 not isinstance(video_state.video_id, int)
                 or video_state.video_id in id_to_video
@@ -203,11 +211,14 @@ class JsonDatabase:
     def set_path(self, path: PathType):
         self.__backup = JsonBackup(path)
 
+    def set_date(self, date: Date):
+        self.__date = date
+
     def get_videos(self, *flags, **forced_flags):
         return self.__db_cache(*flags, **forced_flags)
 
     def query(self, required: Dict[str, bool] = None) -> List[Video]:
-        videos = self.videos.values()
+        videos = self.__videos.values()
         return (
             [
                 video
@@ -225,7 +236,7 @@ class JsonDatabase:
             output = ()
         else:
             if videos is None:
-                filenames: Dict[AbsolutePath, Video] = self.videos
+                filenames: Dict[AbsolutePath, Video] = self.__videos
             else:
                 filenames: Dict[AbsolutePath, Video] = {
                     video.filename: video for video in videos
@@ -413,17 +424,17 @@ class JsonDatabase:
 
     def _update_videos_not_found(self, existing_paths: Container[AbsolutePath]):
         """Use given container of existing paths to mark not found videos."""
-        for video_state in self.videos.values():
+        for video_state in self.__videos.values():
             video_state.runtime.is_file = video_state.filename in existing_paths
 
     def set_folders(self, folders) -> None:
         folders = sorted(AbsolutePath.ensure(folder) for folder in folders)
-        if folders == sorted(self.folders):
+        if folders == sorted(self.__folders):
             return
         folders_tree = PathTree(folders)
-        for video in self.videos.values():
+        for video in self.__videos.values():
             video.discarded = not folders_tree.in_folders(video.filename)
-        self.folders = set(folders)
+        self.__folders = set(folders)
         self.save()
 
     def get_all_video_indices(self) -> Iterable[int]:
@@ -434,7 +445,7 @@ class JsonDatabase:
 
     def delete_video_entry(self, video_id: int, save=True):
         video = self.__id_to_video[video_id]
-        self.videos.pop(video.filename, None)
+        self.__videos.pop(video.filename, None)
         self.__id_to_video.pop(video.video_id, None)
         if video.readable:
             video.thumbnail_path.delete()
@@ -464,12 +475,12 @@ class JsonDatabase:
         return modified
 
     def has_video(self, filename: AbsolutePath) -> bool:
-        return filename in self.videos
+        return filename in self.__videos
 
     def get_video_id(self, filename: PathType):
         filename = AbsolutePath.ensure(filename)
-        if filename in self.videos:
-            return self.videos[filename].video_id
+        if filename in self.__videos:
+            return self.__videos[filename].video_id
         else:
             return None
 
@@ -501,7 +512,7 @@ class JsonDatabase:
     ) -> List[str]:
         all_file_names = []
         for file_name, file_info in file_paths.items():
-            video: Video = self.videos.get(file_name, None)
+            video: Video = self.__videos.get(file_name, None)
             if (
                 video is None
                 or file_info.mtime != video.runtime.mtime
@@ -541,8 +552,8 @@ class JsonDatabase:
         assert video.filename != path
         old_filename = video.filename
 
-        del self.videos[video.filename]
-        self.videos[path] = video
+        del self.__videos[video.filename]
+        self.__videos[path] = video
         # TODO video.filename should be immutable
         # We should instead copy video object with a new filename
         video.filename = path
@@ -582,3 +593,53 @@ class JsonDatabase:
 
     def has_video_id(self, video_id: int) -> bool:
         return video_id in self.__id_to_video
+
+    def write_new_videos(
+        self,
+        dictionaries: List[dict],
+        runtime_info: Dict[AbsolutePath, VideoRuntimeInfo],
+    ) -> None:
+        videos: List[Video] = []
+        unreadable: List[Video] = []
+        for d in dictionaries:
+            file_path = AbsolutePath.ensure(d["f"])
+            if len(d) == 2:
+                video_state = Video.from_keys(
+                    filename=file_path.path,
+                    file_size=file_path.get_size(),
+                    errors=set(d["e"]),
+                    unreadable=True,
+                    database=self,
+                )
+                unreadable.append(video_state)
+            else:
+                video_state = Video.from_dict(d, database=self)
+                # Get previous properties, if available
+                if self.has_video(file_path) and self.read_video_field(
+                    self.get_video_id(file_path), "readable"
+                ):
+                    old_video = self.__videos[file_path]
+                    video_state.set_properties(old_video.properties)
+                    video_state.similarity_id = old_video.similarity_id
+                    video_state.video_id = old_video.video_id
+                # Set special properties
+                SpecialProperties.set(video_state)
+            video_state.runtime = runtime_info[file_path]
+            videos.append(video_state)
+        self.__videos.update({video.filename: video for video in videos})
+        self._update_videos_in_index(videos)
+        if unreadable:
+            self.notifier.notify(
+                notifications.VideoInfoErrors(
+                    {
+                        video_state.filename: video_state.errors
+                        for video_state in unreadable
+                    }
+                )
+            )
+
+    def get_predictor(self, prop_name):
+        return self.__predictors.get(prop_name, None)
+
+    def set_predictor(self, prop_name: str, theta: List[float]):
+        self.__predictors[prop_name] = theta
