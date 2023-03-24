@@ -26,10 +26,11 @@ class SchemaType(Type):
 
 
 class Schema:
-    __slots__ = ("schema",)
+    __slots__ = ("schema", "from_short")
 
     def __init__(self, types: Iterable[Type]):
         self.schema: Dict[str, Type] = {t.name: t for t in types}
+        self.from_short = {(t.short or t.name): t.name for t in self.schema.values()}
 
     def get_from_short_dict(self, data: dict, name: str):
         tp = self.schema[name]
@@ -51,13 +52,16 @@ class Schema:
     def get_short_key(self, name):
         return self.schema[name].short
 
+    def to_long_keys(self, short_dict: dict):
+        return {self.from_short[key]: value for key, value in short_dict.items()}
+
 
 class WithSchema:
     __slots__ = ("_d",)
     SCHEMA = Schema(())
 
-    def __init__(self, short_dict: dict, **kwargs):
-        self._d = short_dict
+    def __init__(self, short_dict: dict = None, **kwargs):
+        self._d = short_dict or {}
 
     def _get(self, name):
         return self.SCHEMA.get_from_short_dict(self._d, name)

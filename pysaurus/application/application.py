@@ -16,17 +16,19 @@ from pysaurus.core import functions
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.custom_json_parser import parse_json
 from pysaurus.core.dict_file_format import dff_dump, dff_load
-from pysaurus.core.jsonable import Jsonable
 from pysaurus.core.modules import FileSystem
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
+from pysaurus.core.schematizable import Schema, Type, WithSchema, schema_prop
 from pysaurus.database.database import Database
 from saurus.language import say
 
 logger = logging.getLogger(__name__)
 
 
-class Config(Jsonable):
-    language = "english"
+class Config(WithSchema):
+    __slots__ = ()
+    SCHEMA = Schema([Type("language", None, "english")])
+    language = schema_prop("language")
 
 
 class Application:
@@ -73,7 +75,7 @@ class Application:
         # Load config file.
         if self.config_path.exists():
             assert self.config_path.isfile()
-            self.config.update(parse_json(self.config_path))
+            self.config = Config(parse_json(self.config_path))
         # Load language.
         lang_path = AbsolutePath.join(self.lang_dir, f"{self.config.language}.txt")
         if lang_path not in self.languages:

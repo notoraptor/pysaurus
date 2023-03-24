@@ -3,16 +3,24 @@ from typing import Any, Optional, Tuple, Union
 
 from pysaurus.core.classes import AbstractMatrix
 from pysaurus.core.fraction import Fraction
-from pysaurus.core.jsonable import Jsonable
 from pysaurus.core.modules import ImageUtils
+from pysaurus.core.schematizable import Schema, Type, WithSchema, schema_prop
 
 Bytes = Union[bytes, bytearray]
 
 
-class GroupSignature(Jsonable):
-    r: int  # pixel_distance_radius
-    m: int  # group_min_size
-    n: int  # nb_groups
+class GroupSignature(WithSchema):
+    __slots__ = ()
+    SCHEMA = Schema(
+        (
+            Type("r", int),
+            Type("m", int),
+            Type("n", int),
+        )
+    )
+    r = schema_prop("r")  # pixel_distance_radius
+    m = schema_prop("m")  # group_min_size
+    n = schema_prop("n")  # nb_groups
 
 
 class Miniature(AbstractMatrix):

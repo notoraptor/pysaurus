@@ -122,7 +122,7 @@ class JsonDatabase:
                 raise exceptions.InvalidDatabaseJSON(self.__backup.path)
 
         # Parsing settings.
-        self.settings.update(json_dict.get("settings", {}))
+        self.settings = DbSettings(json_dict.get("settings", {}))
 
         # Parsing date.
         if "date" in json_dict:

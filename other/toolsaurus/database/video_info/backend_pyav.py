@@ -1,11 +1,19 @@
-from pysaurus.core.jsonable import Jsonable
+from pysaurus.core.schematizable import Schema, Type, WithSchema, schema_prop
 from pysaurus.video_raptor.video_raptor_pyav import open_video
 
 
-class StreamInfo(Jsonable):
-    lang_code = ""
-    short_name = ""
-    long_name = ""
+class StreamInfo(WithSchema):
+    __slots__ = ()
+    SCHEMA = Schema(
+        (
+            Type("lang_code", None, ""),
+            Type("short_name", None, ""),
+            Type("long_name", None, ""),
+        )
+    )
+    lang_code = schema_prop("lang_code")
+    short_name = schema_prop("short_name")
+    long_name = schema_prop("long_name")
 
 
 class StreamsInfo:
