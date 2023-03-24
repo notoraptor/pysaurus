@@ -66,7 +66,6 @@ def compute_pattern_detector(database: Database, videos: List[Video], prop_name:
         miniatures, classes, theta=database.get_predictor(prop_name), database=database
     )
     database.set_predictor(prop_name, theta)
-    database.save()
 
 
 def predict_pattern(database: Database, videos: List[Video], prop_name: str):

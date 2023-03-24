@@ -427,6 +427,57 @@ class JsonDatabase:
         for video_state in self.__videos.values():
             video_state.runtime.is_file = video_state.filename in existing_paths
 
+    def _notify_properties_modified(self, properties, video_indices: Iterable[int]):
+        self.save()
+        self._update_videos_in_index(
+            (self.__id_to_video[video_id] for video_id in video_indices)
+        )
+        self.notifier.notify(notifications.PropertiesModified(properties))
+
+    def _notify_fields_modified(self, fields: Sequence[str], save=True):
+        if save:
+            self.save()
+        self.notifier.notify(notifications.FieldsModified(fields))
+
+    def _notify_filename_modified(self, video: Video, old_path: AbsolutePath):
+        self._notify_fields_modified(
+            (
+                "title",
+                "title_numeric",
+                "file_title",
+                "file_title_numeric",
+                "filename_numeric",
+                "disk",
+                "filename",
+            )
+        )
+        self._update_video_path_in_index(video, old_path)
+
+    def _notify_missing_thumbnails(self):
+        remaining_thumb_videos = [
+            video.filename.path
+            for video in self.get_videos("readable", "found", "without_thumbnails")
+        ]
+        self.notifier.notify(notifications.MissingThumbnails(remaining_thumb_videos))
+        self.save()
+
+    def _find_video_paths_for_update(
+        self, file_paths: Dict[AbsolutePath, VideoRuntimeInfo]
+    ) -> List[str]:
+        all_file_names = []
+        for file_name, file_info in file_paths.items():
+            video: Video = self.__videos.get(file_name, None)
+            if (
+                video is None
+                or file_info.mtime != video.runtime.mtime
+                or file_info.size != video.file_size
+                or file_info.driver_id != video.runtime.driver_id
+                or (video.readable and not SpecialProperties.all_in(video))
+            ):
+                all_file_names.append(file_name.path)
+        all_file_names.sort()
+        return all_file_names
+
     def set_folders(self, folders) -> None:
         folders = sorted(AbsolutePath.ensure(folder) for folder in folders)
         if folders == sorted(self.__folders):
@@ -456,18 +507,6 @@ class JsonDatabase:
     def get_video_filename(self, video_id: int) -> AbsolutePath:
         return self.__id_to_video[video_id].filename
 
-    def _notify_properties_modified(self, properties, video_indices: Iterable[int]):
-        self.save()
-        self._update_videos_in_index(
-            (self.__id_to_video[video_id] for video_id in video_indices)
-        )
-        self.notifier.notify(notifications.PropertiesModified(properties))
-
-    def _notify_fields_modified(self, fields: Sequence[str], save=True):
-        if save:
-            self.save()
-        self.notifier.notify(notifications.FieldsModified(fields))
-
     def set_video_properties(self, video_id: int, properties: dict) -> Set[str]:
         video = self.__id_to_video[video_id]
         modified = video.set_validated_properties(properties)
@@ -476,6 +515,9 @@ class JsonDatabase:
 
     def has_video(self, filename: AbsolutePath) -> bool:
         return filename in self.__videos
+
+    def has_video_id(self, video_id: int) -> bool:
+        return video_id in self.__id_to_video
 
     def get_video_id(self, filename: PathType):
         filename = AbsolutePath.ensure(filename)
@@ -487,6 +529,13 @@ class JsonDatabase:
     def read_video_field(self, video_id: int, field: str):
         return getattr(self.__id_to_video[video_id], field)
 
+    def read_video_fields(self, video_id: int, fields: Sequence[str]) -> dict:
+        video = self.__id_to_video[video_id]
+        return {field: getattr(video, field) for field in fields}
+
+    def read_videos_field(self, indices: Iterable[int], field: str) -> Iterable:
+        return (getattr(self.__id_to_video[video_id], field) for video_id in indices)
+
     def write_video_field(
         self, video_id: int, field: str, value, notify=True, save=True
     ):
@@ -494,105 +543,14 @@ class JsonDatabase:
         if notify:
             self._notify_fields_modified([field], save=save)
 
-    def write_videos_field(self, indices: Iterable[int], field: str, values: Iterable):
-        for video_id, value in zip(indices, values):
-            setattr(self.__id_to_video[video_id], field, value)
-
     def write_video_fields(self, video_id: int, **kwargs):
         video = self.__id_to_video[video_id]
         for key, value in kwargs.items():
             setattr(video, key, value)
 
-    def fill_videos_field(self, indices: Iterable[int], field: str, value):
-        for video_id in indices:
+    def write_videos_field(self, indices: Iterable[int], field: str, values: Iterable):
+        for video_id, value in zip(indices, values):
             setattr(self.__id_to_video[video_id], field, value)
-
-    def _find_video_paths_for_update(
-        self, file_paths: Dict[AbsolutePath, VideoRuntimeInfo]
-    ) -> List[str]:
-        all_file_names = []
-        for file_name, file_info in file_paths.items():
-            video: Video = self.__videos.get(file_name, None)
-            if (
-                video is None
-                or file_info.mtime != video.runtime.mtime
-                or file_info.size != video.file_size
-                or file_info.driver_id != video.runtime.driver_id
-                or (video.readable and not SpecialProperties.all_in(video))
-            ):
-                all_file_names.append(file_name.path)
-        all_file_names.sort()
-        return all_file_names
-
-    def describe_videos(self, video_indices: Sequence[int]):
-        return [
-            VideoFeatures.to_json(self.__id_to_video[video_id])
-            for video_id in video_indices
-        ]
-
-    def _notify_filename_modified(self, video: Video, old_path: AbsolutePath):
-        self._notify_fields_modified(
-            (
-                "title",
-                "title_numeric",
-                "file_title",
-                "file_title_numeric",
-                "filename_numeric",
-                "disk",
-                "filename",
-            )
-        )
-        self._update_video_path_in_index(video, old_path)
-
-    def change_video_path(self, video_id: int, path: AbsolutePath) -> AbsolutePath:
-        path = AbsolutePath.ensure(path)
-        assert path.isfile()
-        video = self.__id_to_video[video_id]
-        assert video.readable
-        assert video.filename != path
-        old_filename = video.filename
-
-        del self.__videos[video.filename]
-        self.__videos[path] = video
-        # TODO video.filename should be immutable
-        # We should instead copy video object with a new filename
-        video.filename = path
-        self._notify_filename_modified(video, old_filename)
-
-        return old_filename
-
-    def move_video_entry(self, from_id, to_id, save=True):
-        from_video = self.__id_to_video[from_id]
-        to_video = self.__id_to_video[to_id]
-        assert not from_video.found
-        assert to_video.found
-        for prop_name in self.get_prop_names():
-            self.merge_prop_values(
-                to_id, prop_name, self.get_prop_values(from_id, prop_name)
-            )
-        to_video.similarity_id = from_video.similarity_id
-        to_video.date_entry_modified = from_video.date_entry_modified.time
-        to_video.date_entry_opened = from_video.date_entry_opened.time
-        self.delete_video_entry(from_id, save=save)
-
-    def read_videos_field(self, indices: Iterable[int], field: str) -> Iterable:
-        return (getattr(self.__id_to_video[video_id], field) for video_id in indices)
-
-    def open_video(self, video_id: int):
-        self.__id_to_video[video_id].open()
-        self._notify_fields_modified(["date_entry_opened"])
-
-    def get_common_fields(self, video_indices: Iterable[int]) -> dict:
-        return VideoFeatures.get_common_fields(
-            self.__id_to_video[video_id] for video_id in video_indices
-        )
-
-    def read_video_fields(self, video_id: int, fields: Sequence[str]) -> dict:
-        video = self.__id_to_video[video_id]
-        return {field: getattr(video, field) for field in fields}
-
-    def has_video_id(self, video_id: int) -> bool:
-        return video_id in self.__id_to_video
 
     def write_new_videos(
         self,
@@ -637,9 +595,61 @@ class JsonDatabase:
                     }
                 )
             )
+        self.save()
+
+    def fill_videos_field(self, indices: Iterable[int], field: str, value):
+        for video_id in indices:
+            setattr(self.__id_to_video[video_id], field, value)
+
+    def describe_videos(self, video_indices: Sequence[int]):
+        return [
+            VideoFeatures.to_json(self.__id_to_video[video_id])
+            for video_id in video_indices
+        ]
+
+    def change_video_path(self, video_id: int, path: AbsolutePath) -> AbsolutePath:
+        path = AbsolutePath.ensure(path)
+        assert path.isfile()
+        video = self.__id_to_video[video_id]
+        assert video.readable
+        assert video.filename != path
+        old_filename = video.filename
+
+        del self.__videos[video.filename]
+        self.__videos[path] = video
+        # TODO video.filename should be immutable
+        # We should instead copy video object with a new filename
+        video.filename = path
+        self._notify_filename_modified(video, old_filename)
+
+        return old_filename
+
+    def move_video_entry(self, from_id, to_id, save=True):
+        from_video = self.__id_to_video[from_id]
+        to_video = self.__id_to_video[to_id]
+        assert not from_video.found
+        assert to_video.found
+        for prop_name in self.get_prop_names():
+            self.merge_prop_values(
+                to_id, prop_name, self.get_prop_values(from_id, prop_name)
+            )
+        to_video.similarity_id = from_video.similarity_id
+        to_video.date_entry_modified = from_video.date_entry_modified.time
+        to_video.date_entry_opened = from_video.date_entry_opened.time
+        self.delete_video_entry(from_id, save=save)
+
+    def open_video(self, video_id: int):
+        self.__id_to_video[video_id].open()
+        self._notify_fields_modified(["date_entry_opened"])
+
+    def get_common_fields(self, video_indices: Iterable[int]) -> dict:
+        return VideoFeatures.get_common_fields(
+            self.__id_to_video[video_id] for video_id in video_indices
+        )
 
     def get_predictor(self, prop_name):
         return self.__predictors.get(prop_name, None)
 
     def set_predictor(self, prop_name: str, theta: List[float]):
         self.__predictors[prop_name] = theta
+        self.save()

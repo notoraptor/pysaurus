@@ -28,7 +28,7 @@ class GetProperty(condlang.Apply):
         if database.has_prop_type(name, multiple=True):
             return values
         else:
-            value, = values
+            (value,) = values
             return value
 
 

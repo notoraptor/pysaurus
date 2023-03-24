@@ -162,7 +162,7 @@ class ImageUtils:
         return output_image
 
     @staticmethod
-    def open_rgb_image(file_name):
+    def open_rgb_image(file_name) -> Image:
         image = Image.open(file_name)
         if image.mode != ImageUtils.IMAGE_RGB_MODE:
             image = image.convert(ImageUtils.IMAGE_RGB_MODE)

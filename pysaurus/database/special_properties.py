@@ -27,7 +27,7 @@ class SpecialProperties:
     properties = []
 
     @classmethod
-    def install(cls, database):
+    def install(cls, database) -> bool:
         to_save = False
         for expected in cls.properties:
             if not database.has_prop_type(
@@ -39,8 +39,7 @@ class SpecialProperties:
                 database.remove_prop_type(expected.name, save=False)
                 database.add_prop_type(expected, save=False)
                 to_save = True
-        if to_save:
-            database.save()
+        return to_save
 
     @classmethod
     def all_in(cls, video: Video):

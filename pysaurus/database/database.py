@@ -66,7 +66,8 @@ class Database(JsonDatabase):
         )
         # Set special properties
         with Profiler("install special properties", notifier=self.notifier):
-            SpecialProperties.install(self)
+            if SpecialProperties.install(self):
+                self.save()
         self.compress_thumbnails()
 
     # Properties.
@@ -89,13 +90,6 @@ class Database(JsonDatabase):
                         entry.stat().st_mtime
                     )
         return thumbs
-
-    def __notify_missing_thumbnails(self):
-        remaining_thumb_videos = [
-            video.filename.path
-            for video in self.get_videos("readable", "found", "without_thumbnails")
-        ]
-        self.notifier.notify(notifications.MissingThumbnails(remaining_thumb_videos))
 
     def _clean_thumbnails(self, thumb_names: List[str]):
         notify_job_start(
@@ -162,7 +156,6 @@ class Database(JsonDatabase):
         if new:
             self.set_date(current_date)
             self.write_new_videos(new, all_files)
-            self.save()
 
     @Profiler.profile_method()
     def ensure_thumbnails(self) -> None:
@@ -218,8 +211,7 @@ class Database(JsonDatabase):
             self._clean_thumbnails(thumbs_to_clean)
 
         if not videos_without_thumbs:
-            self.save()
-            self.__notify_missing_thumbnails()
+            self._notify_missing_thumbnails()
             return
 
         for video in videos_without_thumbs:
@@ -278,8 +270,7 @@ class Database(JsonDatabase):
             self.notifier.notify(notifications.VideoThumbnailErrors(thumb_errors))
 
         self.compress_thumbnails()
-        self.save()
-        self.__notify_missing_thumbnails()
+        self._notify_missing_thumbnails()
 
     @Profiler.profile_method()
     def ensure_miniatures(self, returns=False) -> Optional[List[Miniature]]:
