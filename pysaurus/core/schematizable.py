@@ -42,7 +42,7 @@ class Schema:
 
     def set_into_short_dict(self, data: dict, name: str, value: Any):
         tp = self.schema[name]
-        data[tp.short] = tp.validate(value)
+        data[tp.short] = value
 
     def has_in_short_dict(self, data: dict, name: str):
         tp = self.schema[name]
