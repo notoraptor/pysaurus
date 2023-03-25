@@ -160,24 +160,38 @@ class Database(JsonDatabase):
     @Profiler.profile_method()
     def ensure_thumbnails(self) -> None:
         valid_thumb_names: Set[str] = set()
-        videos_without_thumbs: List[Video] = []
-        thumb_to_videos: Dict[str, List[Video]] = {}
+        videos_without_thumbs: List[dict] = []
+        thumb_to_videos: Dict[str, List[dict]] = {}
         thumb_errors: Dict[str, List[str]] = {}
 
         # Collect videos with and without thumbnails.
         existing_thumb_names = self.__check_thumbnails_on_disk()
 
         with Profiler(say("Check videos thumbnails"), notifier=self.notifier):
-            for video in self.get_videos("readable"):
-                thumb_name = video.thumb_name
-                if not video.found:
+            for video in self.select_videos_fields(
+                [
+                    "date",
+                    "filename",
+                    "found",
+                    "thumb_name",
+                    "unreadable_thumbnail",
+                    "video_id",
+                ],
+                "readable",
+            ):
+                thumb_name = video["thumb_name"]
+                if not video["found"]:
                     if thumb_name in existing_thumb_names:
-                        video.runtime.has_thumbnail = True
+                        self.write_video_field(
+                            video["video_id"],
+                            "has_runtime_thumbnail",
+                            True,
+                        )
                         valid_thumb_names.add(thumb_name)
-                elif not video.unreadable_thumbnail:
+                elif not video["unreadable_thumbnail"]:
                     if (
                         thumb_name in existing_thumb_names
-                        and existing_thumb_names[thumb_name] > video.date
+                        and existing_thumb_names[thumb_name] > video["date"]
                     ):
                         thumb_to_videos.setdefault(thumb_name, []).append(video)
                     else:
@@ -188,8 +202,11 @@ class Database(JsonDatabase):
         with Profiler(say("Check unique thumbnails"), notifier=self.notifier):
             for valid_thumb_name, vds in thumb_to_videos.items():
                 if len(vds) == 1:
+                    video: dict = vds[0]
                     valid_thumb_names.add(valid_thumb_name)
-                    vds[0].runtime.has_thumbnail = True
+                    self.write_video_field(
+                        video["video_id"], "has_runtime_thumbnail", True
+                    )
                 else:
                     videos_without_thumbs.extend(vds)
         nb_videos_no_thumbs = len(videos_without_thumbs)
@@ -215,14 +232,15 @@ class Database(JsonDatabase):
             return
 
         for video in videos_without_thumbs:
-            base_thumb_name = video.thumb_name
+            base_thumb_name = video["thumb_name"]
             thumb_name_index = 0
             thumb_name = base_thumb_name
             while thumb_name in valid_thumb_names:
                 thumb_name = f"{base_thumb_name}_{thumb_name_index}"
                 thumb_name_index += 1
-            video.thumb_name = thumb_name
-            video.runtime.has_thumbnail = True
+            self.write_video_fields(
+                video["video_id"], thumb_name=thumb_name, has_runtime_thumbnail=True
+            )
             valid_thumb_names.add(thumb_name)
         del valid_thumb_names
         self.save()
@@ -243,7 +261,7 @@ class Database(JsonDatabase):
             results = run_split_batch(
                 backend_raptor.collect_video_thumbnails,
                 [
-                    (video.filename.path, video.thumb_name)
+                    (video["filename"].path, video["thumb_name"])
                     for video in videos_without_thumbs
                 ],
                 extra_args=[
@@ -416,9 +434,7 @@ class Database(JsonDatabase):
             for video in self.select_videos_fields(
                 ["video_id"], "readable", "found", "without_thumbnails"
             ):
-                self.write_video_field(
-                    video["video_id"], "unreadable_thumbnail", False, False, False
-                )
+                self.write_video_field(video["video_id"], "unreadable_thumbnail", False)
         self.update()
         self.ensure_thumbnails()
         if ensure_miniatures:

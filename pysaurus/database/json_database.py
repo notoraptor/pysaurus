@@ -44,15 +44,15 @@ class DatabaseLoaded(Notification):
 
     def __init__(self, database):
         super().__init__()
-        self.entries = len(database.query())
-        self.discarded = len(database.get_videos("discarded"))
-        self.unreadable_not_found = len(database.get_videos("unreadable", "not_found"))
-        self.unreadable_found = len(database.get_videos("unreadable", "found"))
-        self.readable_not_found = len(database.get_videos("readable", "not_found"))
-        self.readable_found_without_thumbnails = len(
-            database.get_videos("readable", "found", "without_thumbnails")
+        self.entries = database.count_videos()
+        self.discarded = database.count_videos("discarded")
+        self.unreadable_not_found = database.count_videos("unreadable", "not_found")
+        self.unreadable_found = database.count_videos("unreadable", "found")
+        self.readable_not_found = database.count_videos("readable", "not_found")
+        self.readable_found_without_thumbnails = database.count_videos(
+            "readable", "found", "without_thumbnails"
         )
-        self.valid = len(database.get_videos("readable", "found", "with_thumbnails"))
+        self.valid = database.count_videos("readable", "found", "with_thumbnails")
 
 
 class DatabaseSaved(DatabaseLoaded):
@@ -216,6 +216,12 @@ class JsonDatabase:
 
     def get_videos(self, *flags, **forced_flags):
         return self.__db_cache(*flags, **forced_flags)
+
+    def count_videos(self, *flags, **forced_flags) -> int:
+        if not flags and not forced_flags:
+            return len(self.__videos)
+        else:
+            return len(self.get_videos(*flags, **forced_flags))
 
     def select_videos_fields(
         self, fields: Sequence[str], *flags, **forced_flags
@@ -545,7 +551,7 @@ class JsonDatabase:
         return (getattr(self.__id_to_video[video_id], field) for video_id in indices)
 
     def write_video_field(
-        self, video_id: int, field: str, value, notify=True, save=True
+        self, video_id: int, field: str, value, notify=False, save=False
     ):
         setattr(self.__id_to_video[video_id], field, value)
         if notify:

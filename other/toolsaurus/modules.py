@@ -1,12 +1,7 @@
 import tkinter as tk
-from typing import Iterable, Tuple
+from typing import Tuple
 
 from PIL import Image, ImageTk
-
-from pysaurus.core import functions
-from pysaurus.database.viewport.view_tools import SearchDef
-from pysaurus.video import Video
-from pysaurus.video.video_features import VideoFeatures
 
 
 class Color:
@@ -68,11 +63,3 @@ class TreeUtils:
             return TreeUtils.get_source_from_dict(inp[seq[index]], seq, index + 1)
         else:
             return inp
-
-
-class OtherVideoFeatures(VideoFeatures):
-    @staticmethod
-    def find(search: SearchDef, videos: Iterable[Video]) -> Iterable[Video]:
-        terms = functions.string_to_pieces(search.text)
-        video_filter = getattr(VideoFeatures, f"has_terms_{search.cond}")
-        return (video for video in videos if video_filter(video, terms))

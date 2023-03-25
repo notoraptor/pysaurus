@@ -5,7 +5,6 @@ import other.toolsaurus.functions
 from other.toolsaurus.command_line_interface import command_line_interface
 from other.toolsaurus.database.database import ExtendedDatabase
 from other.toolsaurus.function_parser import FunctionParser, fdef, fsigned
-from other.toolsaurus.modules import OtherVideoFeatures
 from other.toolsaurus.printable import to_column, to_table
 from pysaurus import package_dir
 from pysaurus.core import functions
@@ -13,7 +12,6 @@ from pysaurus.core.classes import StringPrinter
 from pysaurus.core.components import AbsolutePath, Duration, FileSize
 from pysaurus.core.functions import generate_temp_file_path
 from pysaurus.core.modules import ImageUtils, VideoClipping
-from pysaurus.database.viewport.view_tools import SearchDef
 from pysaurus.video import Video
 from pysaurus.video.video_sorting import VideoSorting
 
@@ -54,10 +52,10 @@ class API:
     @fsigned
     def nb(self, query: str) -> int:
         if query == "entries":
-            return len(self.database.query())
+            return self.database.count_videos()
         if query == "discarded":
-            return len(self.database.get_videos("discarded"))
-        return len(self.database.get_videos(*query.strip().split()))
+            return self.database.count_videos("discarded")
+        return self.database.count_videos(*query.strip().split())
 
     @fsigned
     def nb_pages(self, query: str, page_size: int) -> int:
@@ -284,9 +282,7 @@ class API:
     @fsigned
     def find(self, terms: str) -> List[Video]:
         return sorted(
-            OtherVideoFeatures.find(
-                SearchDef(terms, "and"), self.database.get_valid_videos()
-            ),
+            self.database.search(terms),
             key=lambda video: video.date,
             reverse=True,
         )
@@ -407,20 +403,6 @@ class API:
         for video in self.not_found_from_folder(folder):
             self.delete(video.video_id)
 
-    @fsigned
-    def unreadable(self):
-        return sorted(
-            self.database.get_videos("unreadable", "found"),
-            key=lambda video: video.filename,
-        )
-
-    @fsigned
-    def missing_thumbnails(self):
-        return sorted(
-            self.database.get_videos("readable", "found", "without_thumbnails"),
-            key=lambda video: video.filename,
-        )
-
     @fdef(other.toolsaurus.functions.bool_type)
     def update(self, ensure_miniatures=False):
         self.database.refresh(ensure_miniatures)
@@ -475,12 +457,29 @@ class ConsoleParser(FunctionParser):
         )
 
     def missing_thumbnails(self):
-        return to_table(
-            self.api.missing_thumbnails(), Video, ("video_id", "size", "filename")
+        return self._get_table(
+            flags=("readable", "found", "without_thumbnails"),
+            fields=("video_id", "size", "filename"),
+            sort=["filename"],
         )
 
+    def _get_table(self, flags: list, fields: list, sort: list = None):
+        flags = list(flags)
+        fields = list(fields)
+        sort = list(sort) if sort else []
+        if sort:
+            fields = list(set(fields + sort))
+        videos = self.api.database.select_videos_fields(fields, *flags)
+        if sort:
+            videos = sorted(videos, key=lambda d: tuple(d[k] for k in sort))
+        return to_table(videos, Video, fields)
+
     def not_found(self):
-        return to_table(self.api.not_found(), Video, ("video_id", "filename"))
+        return self._get_table(
+            flags=("readable", "not_found"),
+            fields=("video_id", "filename"),
+            sort=["filename"],
+        )
 
     def not_found_from_folder(self, folder):
         return to_table(
@@ -488,7 +487,11 @@ class ConsoleParser(FunctionParser):
         )
 
     def unreadable(self):
-        return to_table(self.api.unreadable(), Video, ("video_id", "size", "filename"))
+        return self._get_table(
+            flags=("unreadable", "found"),
+            fields=("video_id", "size", "filename"),
+            sort=["filename"],
+        )
 
     def find_batch(self, path):
         batch_results = self.api.find_batch(path)
