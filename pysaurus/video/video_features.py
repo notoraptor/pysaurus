@@ -3,16 +3,13 @@ from typing import Iterable, Sequence
 from pysaurus.core.functions import class_get_public_attributes, to_json_value
 from pysaurus.video import Video
 
+VIDEO_FIELDS = class_get_public_attributes(Video)
+
 
 class VideoFeatures:
     @staticmethod
-    def to_json(self, **kwargs):
-        js = {
-            field: to_json_value(getattr(self, field))
-            for field in class_get_public_attributes(type(self))
-        }
-        js.update(kwargs)
-        return js
+    def to_json(self):
+        return {field: to_json_value(getattr(self, field)) for field in VIDEO_FIELDS}
 
     @staticmethod
     def has_terms_exact(self: Video, terms: Sequence[str]) -> bool:
@@ -38,12 +35,11 @@ class VideoFeatures:
         videos = list(videos)
         if len(videos) < 2:
             return {}
-        common_attributes = class_get_public_attributes(Video)
         first_video, *other_videos = videos
         return {
             key: all(
                 getattr(first_video, key) == getattr(other_video, key)
                 for other_video in other_videos
             )
-            for key in common_attributes
+            for key in VIDEO_FIELDS
         }

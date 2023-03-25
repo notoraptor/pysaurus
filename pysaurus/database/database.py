@@ -159,10 +159,10 @@ class Database(JsonDatabase):
 
     @Profiler.profile_method()
     def ensure_thumbnails(self) -> None:
-        valid_thumb_names = set()
-        videos_without_thumbs = []
+        valid_thumb_names: Set[str] = set()
+        videos_without_thumbs: List[Video] = []
         thumb_to_videos: Dict[str, List[Video]] = {}
-        thumb_errors = {}
+        thumb_errors: Dict[str, List[str]] = {}
 
         # Collect videos with and without thumbnails.
         existing_thumb_names = self.__check_thumbnails_on_disk()
@@ -298,11 +298,13 @@ class Database(JsonDatabase):
             have_removed = len(valid_dictionaries) != len(json_array)
             del json_array
 
-        available_videos = self.get_videos("readable", "with_thumbnails")
+        available_videos = self.select_videos_fields(
+            ["filename", "thumbnail_path", "video_id"], "readable", "with_thumbnails"
+        )
         tasks = [
-            (video.filename, video.thumbnail_path)
+            (video["filename"], video["thumbnail_path"])
             for video in available_videos
-            if video.filename not in identifiers
+            if video["filename"] not in identifiers
         ]
 
         if tasks:
@@ -358,8 +360,8 @@ class Database(JsonDatabase):
         if returns:
             miniatures = []
             for video in available_videos:
-                miniature = m_dict[video.filename.path]
-                miniature.video_id = video.video_id
+                miniature = m_dict[video["filename"].path]
+                miniature.video_id = video["video_id"]
                 miniatures.append(miniature)
             return miniatures
 
@@ -411,8 +413,12 @@ class Database(JsonDatabase):
 
     def refresh(self, ensure_miniatures=False) -> None:
         with Profiler(say("Reset thumbnail errors"), self.notifier):
-            for video in self.get_videos("readable", "found", "without_thumbnails"):
-                video.unreadable_thumbnail = False
+            for video in self.select_videos_fields(
+                ["video_id"], "readable", "found", "without_thumbnails"
+            ):
+                self.write_video_field(
+                    video["video_id"], "unreadable_thumbnail", False, False, False
+                )
         self.update()
         self.ensure_thumbnails()
         if ensure_miniatures:

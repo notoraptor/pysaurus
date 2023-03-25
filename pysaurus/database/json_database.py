@@ -1,5 +1,5 @@
 import logging
-from typing import Container, Dict, Iterable, List, Optional, Sequence, Set, Union
+from typing import Any, Container, Dict, Iterable, List, Optional, Sequence, Set, Union
 
 from pysaurus.application import exceptions
 from pysaurus.core import functions, notifications, notifying
@@ -216,6 +216,14 @@ class JsonDatabase:
 
     def get_videos(self, *flags, **forced_flags):
         return self.__db_cache(*flags, **forced_flags)
+
+    def select_videos_fields(
+        self, fields: Sequence[str], *flags, **forced_flags
+    ) -> Iterable[Dict[str, Any]]:
+        return (
+            {field: getattr(video, field) for field in fields}
+            for video in self.get_videos(*flags, **forced_flags)
+        )
 
     def query(self, required: Dict[str, bool] = None) -> List[Video]:
         videos = self.__videos.values()
@@ -601,6 +609,7 @@ class JsonDatabase:
         for video_id in indices:
             setattr(self.__id_to_video[video_id], field, value)
 
+    @Profiler.profile_method()
     def describe_videos(self, video_indices: Sequence[int]):
         return [
             VideoFeatures.to_json(self.__id_to_video[video_id])
@@ -642,6 +651,7 @@ class JsonDatabase:
         self.__id_to_video[video_id].open()
         self._notify_fields_modified(["date_entry_opened"])
 
+    @Profiler.profile_method()
     def get_common_fields(self, video_indices: Iterable[int]) -> dict:
         return VideoFeatures.get_common_fields(
             self.__id_to_video[video_id] for video_id in video_indices

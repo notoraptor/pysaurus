@@ -9,6 +9,20 @@ from pysaurus.video import Video
 
 class AbstractVideoProvider(metaclass=ABCMeta):
     __slots__ = ("_database",)
+    LAYER_SOURCE = "source"
+    LAYER_GROUPING = "grouping"
+    LAYER_CLASSIFIER = "classifier"
+    LAYER_GROUP = "group"
+    LAYER_SEARCH = "search"
+    LAYER_SORT = "sort"
+    LAYERS = {
+        LAYER_SOURCE,
+        LAYER_GROUPING,
+        LAYER_CLASSIFIER,
+        LAYER_GROUP,
+        LAYER_SEARCH,
+        LAYER_SORT,
+    }
 
     def __init__(self, database):
         self._database = database
@@ -48,15 +62,7 @@ class AbstractVideoProvider(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def convert_field_value_to_group_id(self, field_value):
-        pass
-
-    @abstractmethod
     def get_classifier_path(self):
-        pass
-
-    @abstractmethod
-    def get_classifier_group_value(self, group_id):
         pass
 
     @abstractmethod
@@ -72,6 +78,14 @@ class AbstractVideoProvider(metaclass=ABCMeta):
         pass
 
     @abstractmethod
+    def convert_field_value_to_group_id(self, field_value):
+        pass
+
+    @abstractmethod
+    def get_classifier_group_value(self, group_id):
+        pass
+
+    @abstractmethod
     def reset_parameters(self, *layer_names: str):
         pass
 
@@ -84,32 +98,19 @@ class AbstractVideoProvider(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def get_all_videos(self):
+    def count_source_videos(self):
         pass
 
     @abstractmethod
-    def get_view(self) -> Sequence[Video]:
-        pass
-
     def get_view_indices(self) -> Sequence[int]:
-        return [video.video_id for video in self.get_view()]
+        pass
 
     @abstractmethod
     def delete(self, video: Video):
         pass
 
-    def get_unordered_state(self):
-        """Get state excluding sorting state"""
-        return {
-            "sources": self.get_sources(),
-            "grouping": self.get_grouping(),
-            "path": self.get_classifier_path(),
-            "group": self.get_group(),
-            "search": self.get_search(),
-        }
-
     def refresh(self):
-        self.force_update("source")
+        self.force_update(self.LAYER_SOURCE)
 
     def get_group_def(self):
         group_def = self.get_grouping()
@@ -136,7 +137,12 @@ class AbstractVideoProvider(metaclass=ABCMeta):
 
     def choose_random_video(self, open_video=True) -> str:
         video = self.get_random_found_video()
-        self.reset_parameters("source", "grouping", "classifier", "group")
+        self.reset_parameters(
+            self.LAYER_SOURCE,
+            self.LAYER_GROUPING,
+            self.LAYER_CLASSIFIER,
+            self.LAYER_GROUP,
+        )
         self.set_search(str(video.video_id), "id")
         if open_video:
             self._database.open_video(video.video_id)
@@ -196,12 +202,6 @@ class AbstractVideoProvider(metaclass=ABCMeta):
             notifications.PropertiesModified, self.on_properties_modified
         )
 
-    @classmethod
-    def unregister_notifications(cls, notifier):
-        notifier.remove_manager(notifications.VideoDeleted)
-        notifier.remove_manager(notifications.FieldsModified)
-        notifier.remove_manager(notifications.PropertiesModified)
-
     def on_video_deleted(self, notification: notifications.VideoDeleted):
         self.delete(notification.video)
 
@@ -218,7 +218,7 @@ class AbstractVideoProvider(metaclass=ABCMeta):
             and group_def.is_property is is_property
             and group_def.field in properties
         ):
-            self.force_update("grouping")
+            self.force_update(self.LAYER_GROUPING)
             return True
         # If a filename was modified, refresh entire provider.
         if not is_property and "filename" in properties:

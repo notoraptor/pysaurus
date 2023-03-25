@@ -8,7 +8,7 @@ from other.toolsaurus.database.viewport.layers.search_layer import SearchLayer
 from other.toolsaurus.database.viewport.layers.sort_layer import SortLayer
 from other.toolsaurus.database.viewport.layers.source_layer import SourceLayer
 from pysaurus.database.viewport.abstract_video_provider import AbstractVideoProvider
-from pysaurus.database.viewport.view_tools import GroupDef, VideoArray
+from pysaurus.database.viewport.view_tools import GroupDef
 from pysaurus.video import Video
 
 
@@ -117,11 +117,11 @@ class VideoProvider(AbstractVideoProvider):
     def get_classifier_stats(self):
         return self._classifier_layer.get_stats()
 
-    def get_all_videos(self):
-        return self._source_layer.videos()
+    def count_source_videos(self):
+        return len(self._source_layer.videos())
 
-    def get_view(self) -> VideoArray:
-        return self._source_layer.run()
+    def get_view_indices(self) -> Sequence[int]:
+        return [video.video_id for video in self._source_layer.run()]
 
     def delete(self, video: Video):
         self._source_layer.delete_video(video)

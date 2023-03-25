@@ -1,5 +1,6 @@
 import functools
-from datetime import datetime
+import time
+from datetime import timedelta
 
 from pysaurus.core.components import Duration
 from pysaurus.core.notifications import Notification
@@ -25,8 +26,7 @@ class ProfilingEnd(Notification):
 class _Profile(Duration):
     __slots__ = ()
 
-    def __init__(self, time_start, time_end):
-        difference = time_end - time_start
+    def __init__(self, difference: timedelta):
         super().__init__(
             (difference.seconds + difference.days * 24 * 3600) * 1_000_000
             + difference.microseconds
@@ -44,11 +44,13 @@ class Profiler:
 
     def __enter__(self):
         self.__notifier.notify(ProfilingStart(self.__title))
-        self.__time_start = datetime.now()
+        self.__time_start = time.perf_counter_ns()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.__time_end = datetime.now()
-        profiling = _Profile(self.__time_start, self.__time_end)
+        self.__time_end = time.perf_counter_ns()
+        profiling = _Profile(
+            timedelta(microseconds=(self.__time_end - self.__time_start) / 1000)
+        )
         self.__notifier.notify(ProfilingEnd(self.__title, profiling))
 
     @staticmethod

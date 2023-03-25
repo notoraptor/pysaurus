@@ -174,7 +174,7 @@ class FeatureAPI:
             "pageNumber": page_number,
             "nbVideos": nb_videos,
             "realNbVideos": real_nb_videos,
-            "totalNbVideos": len(self.database.provider.get_all_videos()),
+            "totalNbVideos": self.database.provider.count_source_videos(),
             "nbPages": nb_pages,
             "validSize": str(
                 FileSize(

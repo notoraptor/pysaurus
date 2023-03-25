@@ -70,12 +70,13 @@ class Layer:
 
 
 class LayerSource(Layer):
-    __slots__ = ("source_def",)
+    __slots__ = ("source_def", "videos_found")
     output: VideoArray
 
     def __init__(self, database):
         super().__init__(database)
         self.source_def = SourceDef(self.params["sources"])
+        self.videos_found = VideoArray()
 
     def set_params(self, *, sources: Sequence[Sequence[str]]):
         if sources is None:
@@ -99,22 +100,25 @@ class LayerSource(Layer):
 
     def run(self):
         videos = VideoArray()
+        videos_found = VideoArray()
         for path in self.params["sources"]:
-            videos.extend(self.input.get_videos(*path))
+            source = self.input.get_videos(*path)
+            videos.extend(source)
+            if "unreadable" not in path and "not_found" not in path:
+                videos_found.extend(
+                    video for video in source if video.found and video.readable
+                )
         self.output: VideoArray = videos
+        self.videos_found = videos_found
 
     def delete(self, video: Video):
         self.output.remove(video)
+        if video in self.videos_found:
+            self.videos_found.remove(video)
 
     def get_random_video(self):
-        # At least one source should not have "not_found" flag
-        if self.source_def.has_source_without("not_found"):
-            # We search with cache length as maximum trials count
-            for _ in range(len(self.output)):
-                video = self.output[random.randrange(len(self.output))]
-                if video.found:
-                    self._log("get_random_video", video.filename)
-                    return video
+        if self.videos_found:
+            return self.videos_found[random.randrange(len(self.videos_found))]
         raise exceptions.NoVideos()
 
 
@@ -358,13 +362,14 @@ class VideoSelector(AbstractVideoProvider):
         params = {name: self.layers[layer_cls].params[name] for name in names}
         return next(iter(params.values())) if len(params) == 1 else params
 
-    def get_view(self):
+    def get_view_indices(self) -> Sequence[int]:
         data = self._database
         with Profiler("VideoSelector.get_view", self._database.notifier):
             for layer in self.pipeline:
-                layer.set_input(data)
-                data = layer.get_output()
-            return data
+                with Profiler(f"Filter{type(layer).__name__}", self._database.notifier):
+                    layer.set_input(data)
+                    data = layer.get_output()
+            return [video.video_id for video in data]
 
     def delete(self, video):
         for layer in self.pipeline:
@@ -387,7 +392,7 @@ class VideoSelector(AbstractVideoProvider):
             ),
         )
         self.set_layer_params(LayerGroup, group_id=0)
-        self.reset_parameters("classifier", "search")
+        self.reset_parameters(self.LAYER_CLASSIFIER, self.LAYER_SEARCH)
 
     def set_classifier_path(self, path):
         self.set_layer_params(LayerClassifier, path=path)
@@ -448,9 +453,9 @@ class VideoSelector(AbstractVideoProvider):
             for g in layer.output
         ]
 
-    def get_all_videos(self):
+    def count_source_videos(self):
         layer: LayerSource = self.layers[LayerSource]
-        return layer.output
+        return len(layer.output)
 
     def get_random_found_video(self) -> Video:
         layer: LayerSource = self.layers[LayerSource]
