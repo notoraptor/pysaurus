@@ -14,29 +14,23 @@ logger = logging.getLogger(__name__)
 
 class AbsolutePath:
     WINDOWS_PATH_PREFIX = "\\\\?\\"
-    __slots__ = ("__path",)
+    __slots__ = ("__path", "__len_prefix")
 
     def __init__(self, path):
         # type: (str) -> None
         path = os.path.abspath(path)
-        if (
-            len(path) >= 260
-            and System.is_windows()
-            and not path.startswith(self.WINDOWS_PATH_PREFIX)
-        ):
+        len_prefix = 0
+        if path.startswith(self.WINDOWS_PATH_PREFIX):
+            len_prefix = len(self.WINDOWS_PATH_PREFIX)
+        elif len(path) >= 260 and System.is_windows():
             path = self.WINDOWS_PATH_PREFIX + path
+            len_prefix = len(self.WINDOWS_PATH_PREFIX)
         self.__path = path
-
-    def is_standard(self):
-        return not self.__path.startswith(self.WINDOWS_PATH_PREFIX)
+        self.__len_prefix = len_prefix
 
     @property
     def standard_path(self):
-        return (
-            self.__path[len(self.WINDOWS_PATH_PREFIX) :]
-            if self.__path.startswith(self.WINDOWS_PATH_PREFIX)
-            else self.__path
-        )
+        return self.__path[self.__len_prefix :] if self.__len_prefix else self.__path
 
     @property
     def best_path(self):
@@ -85,7 +79,7 @@ class AbsolutePath:
         return self.standard_path
 
     def __repr__(self):
-        return repr(self.standard_path)
+        return f"AbsolutePath({repr(self.standard_path)})"
 
     def __hash__(self):
         return hash(self.standard_path)
@@ -178,7 +172,7 @@ class AbsolutePath:
         elif System.is_mac():
             subprocess.run(["open", self.__path])
         elif System.is_windows():
-            if self.__path.startswith(self.WINDOWS_PATH_PREFIX):
+            if self.__len_prefix:
                 from pysaurus.core.native.windows import get_short_path_name
 
                 path = get_short_path_name(self.standard_path)
