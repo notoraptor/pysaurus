@@ -88,13 +88,13 @@ class VideoProvider(AbstractVideoProvider):
     def get_grouping(self):
         return self._grouping_layer.get_grouping()
 
-    def convert_field_value_to_group_id(self, field_value):
+    def _convert_field_value_to_group_id(self, field_value):
         return self._grouping_layer.get_group_id(field_value)
 
     def get_classifier_path(self):
         return self._classifier_layer.get_path()
 
-    def get_classifier_group_value(self, group_id):
+    def _get_classifier_group_value(self, group_id):
         return self._classifier_layer.get_group_value(group_id)
 
     def get_group(self):
@@ -110,7 +110,7 @@ class VideoProvider(AbstractVideoProvider):
         for layer_name in layer_names:
             self._layer_names[layer_name].reset_parameters()
 
-    def force_update(self, *layer_names: str):
+    def _force_update(self, *layer_names: str):
         for layer_name in layer_names:
             self._layer_names[layer_name].request_update()
 

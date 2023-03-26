@@ -78,11 +78,11 @@ class AbstractVideoProvider(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def convert_field_value_to_group_id(self, field_value):
+    def _convert_field_value_to_group_id(self, field_value):
         pass
 
     @abstractmethod
-    def get_classifier_group_value(self, group_id):
+    def _get_classifier_group_value(self, group_id):
         pass
 
     @abstractmethod
@@ -90,7 +90,7 @@ class AbstractVideoProvider(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def force_update(self, *layer_names: str):
+    def _force_update(self, *layer_names: str):
         pass
 
     @abstractmethod
@@ -110,7 +110,7 @@ class AbstractVideoProvider(metaclass=ABCMeta):
         pass
 
     def refresh(self):
-        self.force_update(self.LAYER_SOURCE)
+        self._force_update(self.LAYER_SOURCE)
 
     def get_group_def(self):
         group_def = self.get_grouping()
@@ -138,7 +138,6 @@ class AbstractVideoProvider(metaclass=ABCMeta):
     def choose_random_video(self, open_video=True) -> str:
         video = self.get_random_found_video()
         self.reset_parameters(
-            self.LAYER_SOURCE,
             self.LAYER_GROUPING,
             self.LAYER_CLASSIFIER,
             self.LAYER_GROUP,
@@ -150,7 +149,7 @@ class AbstractVideoProvider(metaclass=ABCMeta):
 
     def classifier_select_group(self, group_id: int):
         path = self.get_classifier_path()
-        value = self.get_classifier_group_value(group_id)
+        value = self._get_classifier_group_value(group_id)
         new_path = path + [value]
         self.set_classifier_path(new_path)
         self.set_group(0)
@@ -164,7 +163,7 @@ class AbstractVideoProvider(metaclass=ABCMeta):
             allow_singletons=True,
         )
         self.get_view_indices()
-        group_id = self.convert_field_value_to_group_id(field_value)
+        group_id = self._convert_field_value_to_group_id(field_value)
         self.set_classifier_path([])
         self.get_view_indices()
         # NB: here, classifier and grouping have same group array
@@ -183,32 +182,30 @@ class AbstractVideoProvider(metaclass=ABCMeta):
     def playlist(self) -> str:
         return str(self._database.to_xspf_playlist(self.get_view_indices()).open())
 
-    def select_indices_from_view(self, selector: dict):
-        return functions.apply_selector_to_data(selector, self.get_view_indices())
-
     def apply_on_view(self, selector, db_fn_name, *db_fn_args):
         callable_methods = {
             "count_property_values": self._database.count_property_values,
             "edit_property_for_videos": self._database.edit_property_for_videos,
         }
         return callable_methods[db_fn_name](
-            self.select_indices_from_view(selector), *db_fn_args
+            functions.apply_selector_to_data(selector, self.get_view_indices()),
+            *db_fn_args
         )
 
     def register_notifications(self, notifier):
-        notifier.set_manager(notifications.VideoDeleted, self.on_video_deleted)
-        notifier.set_manager(notifications.FieldsModified, self.on_fields_modified)
+        notifier.set_manager(notifications.VideoDeleted, self._on_video_deleted)
+        notifier.set_manager(notifications.FieldsModified, self._on_fields_modified)
         notifier.set_manager(
-            notifications.PropertiesModified, self.on_properties_modified
+            notifications.PropertiesModified, self._on_properties_modified
         )
 
-    def on_video_deleted(self, notification: notifications.VideoDeleted):
+    def _on_video_deleted(self, notification: notifications.VideoDeleted):
         self.delete(notification.video)
 
-    def on_fields_modified(self, notification: notifications.FieldsModified):
+    def _on_fields_modified(self, notification: notifications.FieldsModified):
         self._manage_attributes_modified(notification.fields, False)
 
-    def on_properties_modified(self, notification: notifications.PropertiesModified):
+    def _on_properties_modified(self, notification: notifications.PropertiesModified):
         self._manage_attributes_modified(notification.fields, True)
 
     def _manage_attributes_modified(self, properties: Sequence[str], is_property=True):
@@ -218,8 +215,7 @@ class AbstractVideoProvider(metaclass=ABCMeta):
             and group_def.is_property is is_property
             and group_def.field in properties
         ):
-            self.force_update(self.LAYER_GROUPING)
-            return True
+            self._force_update(self.LAYER_GROUPING)
         # If a filename was modified, refresh entire provider.
         if not is_property and "filename" in properties:
             print("A filename was modified, refreshing provider.")

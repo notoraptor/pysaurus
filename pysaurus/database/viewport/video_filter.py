@@ -412,14 +412,14 @@ class VideoSelector(AbstractVideoProvider):
     def get_grouping(self):
         return self.get_layer_params(LayerGrouping, "grouping")
 
-    def convert_field_value_to_group_id(self, field_value):
+    def _convert_field_value_to_group_id(self, field_value):
         layer: LayerGrouping = self.layers[LayerGrouping]
         return layer.output.lookup_index(field_value)
 
     def get_classifier_path(self):
         return self.get_layer_params(LayerClassifier, "path")
 
-    def get_classifier_group_value(self, group_id):
+    def _get_classifier_group_value(self, group_id):
         layer: LayerClassifier = self.layers[LayerClassifier]
         return layer.output[group_id].field_value
 
@@ -437,7 +437,7 @@ class VideoSelector(AbstractVideoProvider):
             layer_cls = self._LAYER_NAMES_[layer_name]
             self.layers[layer_cls].set_params(**self.layers[layer_cls].default_params())
 
-    def force_update(self, *layer_names: str):
+    def _force_update(self, *layer_names: str):
         for layer_name in layer_names:
             layer_cls = self._LAYER_NAMES_[layer_name]
             self.layers[layer_cls].to_update = True
