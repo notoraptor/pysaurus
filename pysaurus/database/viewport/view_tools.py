@@ -1,4 +1,5 @@
-from typing import Iterable, List, Optional
+from abc import abstractmethod
+from typing import Iterable, List, Optional, Sequence
 
 from pysaurus.core.classes import ToDict
 from pysaurus.core.compare import to_comparable
@@ -16,12 +17,11 @@ class VideoArray(LookupArray[Video]):
         super().__init__((Video, FakeVideo), content, lambda video: video.filename)
 
 
-class Group:
-    __slots__ = "field_value", "videos"
+class GroupField:
+    __slots__ = ("field_value",)
 
-    def __init__(self, field_value=None, videos=()):
+    def __init__(self, field_value=None):
         self.field_value = field_value
-        self.videos = VideoArray(videos)
 
     def is_defined(self):
         return self.field_value is not None
@@ -31,12 +31,37 @@ class Group:
         return self.field_value
 
     @property
+    def length(self):
+        return len(str(self.field_value))
+
+    @property
+    @abstractmethod
+    def count(self):
+        raise NotImplementedError()
+
+
+class Group(GroupField):
+    __slots__ = ("videos",)
+
+    def __init__(self, field_value=None, videos: Sequence[Video] = ()):
+        super().__init__(field_value)
+        self.videos = VideoArray(videos)
+
+    @property
     def count(self):
         return len(self.videos)
 
+
+class GroupStat(GroupField):
+    __slots__ = ("_count",)
+
+    def __init__(self, field_value=None, count=0):
+        super().__init__(field_value)
+        self._count = count
+
     @property
-    def length(self):
-        return len(str(self.field_value))
+    def count(self):
+        return self._count
 
 
 class GroupArray(LookupArray[Group]):

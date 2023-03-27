@@ -1,4 +1,4 @@
-from typing import Iterable, List, Tuple, Union
+from typing import Iterable, List, Tuple
 
 
 class VideoSorting:
@@ -6,28 +6,30 @@ class VideoSorting:
     fields: List[str]
     reverse: List[bool]
 
-    def __init__(self, *raw: Union[str, List[str]]):
+    def __init__(self, sorting: Iterable[str]):
         self.fields = []
         self.reverse = []
-        for definition in self._to_string_list(*raw):
-            for piece in definition.split():
-                if piece[0] in "-+":
-                    field = piece[1:]
-                    descending = piece[0] == "-"
-                else:
-                    field = piece
-                    descending = False
-                self.fields.append(field)
-                self.reverse.append(descending)
+        for piece in sorting:
+            if piece[0] in "-+":
+                field = piece[1:]
+                descending = piece[0] == "-"
+            else:
+                field = piece
+                descending = False
+            self.fields.append(field)
+            self.reverse.append(descending)
+
+    def __len__(self):
+        return len(self.fields)
 
     def __iter__(self) -> Iterable[Tuple[str, bool]]:
         return iter(zip(self.fields, self.reverse))
 
-    @classmethod
-    def _to_string_list(cls, *args: Union[str, Iterable[str]]) -> Iterable[str]:
-        for arg in args:
-            if isinstance(arg, str):
-                yield arg
-            else:
-                for string in arg:
-                    yield string
+    def __eq__(self, other):
+        return self.fields == other.fields and self.reverse == other.reverse
+
+    def to_string_list(self):
+        return [
+            f"{'-' if reverse else '+'}{field}"
+            for field, reverse in zip(self.fields, self.reverse)
+        ]

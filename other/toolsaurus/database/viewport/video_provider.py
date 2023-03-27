@@ -114,7 +114,7 @@ class VideoProvider(AbstractVideoProvider):
         for layer_name in layer_names:
             self._layer_names[layer_name].request_update()
 
-    def get_classifier_stats(self):
+    def _get_classifier_stats(self):
         return self._classifier_layer.get_stats()
 
     def count_source_videos(self):

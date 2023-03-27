@@ -295,7 +295,7 @@ class API:
         return results
 
     @fsigned
-    def list(self, fields: str, page_size: int, page_number: int) -> List[Video]:
+    def list(self, fields: List[str], page_size: int, page_number: int) -> List[Video]:
         if page_size <= 0:
             raise other.toolsaurus.application.exceptions.InvalidPageSize(page_size)
         if page_number < 0:
@@ -448,7 +448,8 @@ class ConsoleParser(FunctionParser):
             self.api.find(terms), Video, ("date", "video_id", "size", "filename")
         )
 
-    def list(self, fields, page_size, page_number):
+    def list(self, fields: str, page_size, page_number):
+        fields = fields.split()
         sorting = VideoSorting(fields)
         return to_table(
             self.api.list(fields, page_size, page_number),

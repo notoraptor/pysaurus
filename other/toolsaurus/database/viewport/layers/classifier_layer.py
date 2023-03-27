@@ -63,7 +63,7 @@ class ClassifierLayer(Layer):
                 else:
                     field_value = [
                         video.get_property(
-                            cache.field, self.database.get_prop_val(cache.field)
+                            cache.field, self.database.new_prop_val(cache.field)
                         )
                     ]
             else:

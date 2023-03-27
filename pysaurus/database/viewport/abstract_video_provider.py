@@ -25,7 +25,9 @@ class AbstractVideoProvider(metaclass=ABCMeta):
     }
 
     def __init__(self, database):
-        self._database = database
+        from pysaurus.database.database import Database
+
+        self._database: Database = database
 
     @abstractmethod
     def set_sources(self, paths):
@@ -78,6 +80,10 @@ class AbstractVideoProvider(metaclass=ABCMeta):
         pass
 
     @abstractmethod
+    def reset_parameters(self, *layer_names: str):
+        pass
+
+    @abstractmethod
     def _convert_field_value_to_group_id(self, field_value):
         pass
 
@@ -86,15 +92,11 @@ class AbstractVideoProvider(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def reset_parameters(self, *layer_names: str):
-        pass
-
-    @abstractmethod
     def _force_update(self, *layer_names: str):
         pass
 
     @abstractmethod
-    def get_classifier_stats(self):
+    def _get_classifier_stats(self):
         pass
 
     @abstractmethod
@@ -117,7 +119,7 @@ class AbstractVideoProvider(metaclass=ABCMeta):
         return (
             group_def.to_dict(
                 group_id=self.get_group(),
-                groups=self.get_classifier_stats(),
+                groups=self._get_classifier_stats(),
             )
             if group_def
             else None

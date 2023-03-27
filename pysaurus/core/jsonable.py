@@ -88,6 +88,8 @@ class Type:
         self._get_default = None
         if self.type:
             self.allowed_types = (int, float) if self.type is float else (self.type,)
+        if self.short is None:
+            self.short = self.name
 
     def __str__(self):
         ret = self.name + (f"({self.short})" if self.short else "")

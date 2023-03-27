@@ -134,7 +134,7 @@ class _AbstractLayerGrouping(Layer):
             values = value if prop_is_multiple else [value]
         assert isinstance(values, list)
         if default and not values and not prop_is_multiple:
-            values = [self.database.get_prop_val(name)]
+            values = [self.database.new_prop_val(name)]
         return values
 
     def _get_grouping_values(self, video, group_def: GroupDef):
@@ -442,7 +442,7 @@ class VideoSelector(AbstractVideoProvider):
             layer_cls = self._LAYER_NAMES_[layer_name]
             self.layers[layer_cls].to_update = True
 
-    def get_classifier_stats(self):
+    def _get_classifier_stats(self):
         layer: LayerClassifier = self.layers[LayerClassifier]
         if layer.output.field and layer.output.is_property:
             converter = functions.identity

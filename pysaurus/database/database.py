@@ -26,6 +26,7 @@ from pysaurus.database.jobs_python import compress_thumbnails_to_jpeg
 from pysaurus.database.json_database import JsonDatabase
 from pysaurus.database.special_properties import SpecialProperties
 from pysaurus.database.viewport.abstract_video_provider import AbstractVideoProvider
+from pysaurus.database.viewport.compact_video_looker import CompactVideoLooker
 from pysaurus.database.viewport.video_filter import VideoSelector
 from pysaurus.miniature.group_computer import GroupComputer
 from pysaurus.miniature.miniature import Miniature
@@ -43,6 +44,9 @@ except exceptions.CysaurusUnavailable:
     logger.warning("Using fallback backend for videos info and thumbnails.")
 
 
+x = CompactVideoLooker
+
+
 class Database(JsonDatabase):
     __slots__ = ("__paths", "lang", "provider")
 
@@ -52,6 +56,7 @@ class Database(JsonDatabase):
         self.__paths = DbPaths(path)
         # RAM data
         self.lang = lang or DefaultLanguage
+        # self.provider: Optional[AbstractVideoProvider] = VideoSelector(self)
         self.provider: Optional[AbstractVideoProvider] = VideoSelector(self)
         # Set log file
         notifier = notifier or DEFAULT_NOTIFIER

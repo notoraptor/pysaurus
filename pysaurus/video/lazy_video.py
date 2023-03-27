@@ -131,7 +131,7 @@ class LazyVideo(WithSchema):
     @property
     def properties(self):
         return {
-            name: self.database.get_prop_val(name, value)
+            name: self.database.new_prop_val(name, value)
             for name, value in self._get("properties").items()
         }
 
@@ -280,7 +280,7 @@ class LazyVideo(WithSchema):
     def set_validated_properties(self, properties: Dict[str, Any]) -> Set[str]:
         return self.set_properties(
             {
-                name: self.database.get_prop_val(name, value)
+                name: self.database.new_prop_val(name, value)
                 for name, value in properties.items()
             }
         )

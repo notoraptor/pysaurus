@@ -27,6 +27,7 @@ from pysaurus.video import Video, VideoRuntimeInfo
 from pysaurus.video.abstract_video_indexer import AbstractVideoIndexer
 from pysaurus.video.video_features import VideoFeatures
 from pysaurus.video.video_indexer import VideoIndexer
+from pysaurus.video.video_sorting import VideoSorting
 
 logger = logging.getLogger(__name__)
 
@@ -243,6 +244,12 @@ class JsonDatabase:
             else list(videos)
         )
 
+    def sort_video_indices(self, indices: Iterable[int], sorting: VideoSorting):
+        return sorted(
+            indices,
+            key=lambda video_id: self.__id_to_video[video_id].to_comparable(sorting),
+        )
+
     def search(
         self, text: str, cond: str = "and", videos: Sequence[Video] = None
     ) -> Iterable[Video]:
@@ -398,6 +405,12 @@ class JsonDatabase:
             (value,) = values
             video.set_property(name, self.__prop_types[name].validate(value))
 
+    def set_video_properties(self, video_id: int, properties: dict) -> Set[str]:
+        video = self.__id_to_video[video_id]
+        modified = video.set_validated_properties(properties)
+        self._notify_properties_modified(modified, [video_id])
+        return modified
+
     def merge_prop_values(
         self, video_id: int, name: str, values: Union[Sequence, Set]
     ) -> None:
@@ -414,7 +427,7 @@ class JsonDatabase:
             values = [prop_type.validate(value) for value in values]
         return values
 
-    def get_prop_val(self, name, value=None) -> PropValueType:
+    def new_prop_val(self, name, value=None) -> PropValueType:
         pt = self.__prop_types[name]
         return pt.default if value is None else pt.validate(value)
 
@@ -520,12 +533,6 @@ class JsonDatabase:
 
     def get_video_filename(self, video_id: int) -> AbsolutePath:
         return self.__id_to_video[video_id].filename
-
-    def set_video_properties(self, video_id: int, properties: dict) -> Set[str]:
-        video = self.__id_to_video[video_id]
-        modified = video.set_validated_properties(properties)
-        self._notify_properties_modified(modified, [video_id])
-        return modified
 
     def has_video(self, filename: AbsolutePath) -> bool:
         return filename in self.__videos
