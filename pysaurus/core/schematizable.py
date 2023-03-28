@@ -24,13 +24,17 @@ class SchemaType(Type):
     def standard_from_dict(self, cls, value):
         return None if value is None else self.type.from_dict(value)
 
+    def to_linear(self):
+        return [self.short, self.type.SCHEMA.to_linear_type()]
+
 
 class Schema:
-    __slots__ = ("schema", "from_short")
+    __slots__ = ("schema", "from_short", "linear_type")
 
     def __init__(self, types: Iterable[Type]):
         self.schema: Dict[str, Type] = {t.name: t for t in types}
-        self.from_short = {(t.short or t.name): t.name for t in self.schema.values()}
+        self.from_short = {t.short: t.name for t in self.schema.values()}
+        self.linear_type = self.to_linear_type()
 
     def get_from_short_dict(self, data: dict, name: str):
         tp = self.schema[name]
@@ -54,6 +58,26 @@ class Schema:
 
     def to_long_keys(self, short_dict: dict):
         return {self.from_short[key]: value for key, value in short_dict.items()}
+
+    def to_linear_type(self):
+        return [self.schema[name].to_linear() for name in sorted(self.schema)]
+
+    @staticmethod
+    def _short_dict_to_linear(d: dict, linear_type: list) -> list:
+        return [
+            (Schema._short_dict_to_linear(d[short], desc) if desc else d[short])
+            if short in d
+            else None
+            for short, desc in linear_type
+        ]
+
+    @staticmethod
+    def _linear_to_short_dict(linear_type: list, linear_value: list) -> dict:
+        return {
+            short: (Schema._linear_to_short_dict(desc, value) if desc else value)
+            for ((short, desc), value) in zip(linear_type, linear_value)
+            if value is not None
+        }
 
 
 class WithSchema:
@@ -86,6 +110,15 @@ class WithSchema:
     @classmethod
     def from_dict(cls, dct: dict, **kwargs):
         return cls(short_dict=dct, **kwargs)
+
+    def _to_linear(self):
+        return Schema._short_dict_to_linear(self._d, self.SCHEMA.linear_type)
+
+    @classmethod
+    def _from_linear(cls, linear: list, **kwargs):
+        return cls.from_dict(
+            Schema._linear_to_short_dict(cls.SCHEMA.linear_type, linear), **kwargs
+        )
 
     @classmethod
     def from_keys(cls, **kwargs):

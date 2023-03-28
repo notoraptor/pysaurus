@@ -143,6 +143,9 @@ class Type:
     def standard_from_dict(self, cls, value):
         return self(value)
 
+    def to_linear(self):
+        return [self.short, False]
+
 
 class JsonableType(Type):
     def __init__(self, name, typedef, *default):
