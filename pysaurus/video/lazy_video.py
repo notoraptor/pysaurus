@@ -244,6 +244,8 @@ class LazyVideo(WithSchema):
     def has_runtime_thumbnail(self, value: bool):
         self.runtime.has_thumbnail = bool(value)
 
+    # Methods.
+
     def terms(self, as_set=False):
         term_sources = [self.filename.path, str(self.meta_title)]
         for name, val in self.properties.items():
