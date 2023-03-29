@@ -7,7 +7,6 @@ from pysaurus.core.notifications import Message
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.database import Database
 from pysaurus.database.machine_learning import optimize_pattern_predictor, predict
-from pysaurus.properties.properties import PropType
 from pysaurus.video import Video
 from saurus.language import say
 
@@ -79,7 +78,7 @@ def predict_pattern(database: Database, videos: List[Video], prop_name: str):
     videos = [v for v in videos if v.video_id in video_id_to_miniature]
     output_prop_name = "<!" + prop_name[2:]
     if not database.has_prop_type(output_prop_name):
-        database.add_prop_type(PropType(output_prop_name, [0, 1]), save=False)
+        database.create_prop_type(output_prop_name, int, [0, 1], False, save=False)
     notify_job_start(database.notifier, predict_pattern, len(videos), "videos")
     with Profiler(say("Predict"), database.notifier):
         for i, video in enumerate(videos):

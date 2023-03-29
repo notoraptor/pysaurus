@@ -163,6 +163,28 @@ class JsonDatabase:
         self.notifier.notify(DatabaseLoaded(self))
 
     @Profiler.profile_method()
+    def __ensure_identifiers(self):
+        id_to_video = {}  # type: Dict[int, Video]
+        without_identifiers = []
+        for video_state in self.__videos.values():
+            if (
+                not isinstance(video_state.video_id, int)
+                or video_state.video_id in id_to_video
+            ):
+                without_identifiers.append(video_state)
+            else:
+                id_to_video[video_state.video_id] = video_state
+        next_id = (max(id_to_video) + 1) if id_to_video else 0
+        for video_state in without_identifiers:
+            video_state.video_id = next_id
+            next_id += 1
+            id_to_video[video_state.video_id] = video_state
+        self.__id_to_video = id_to_video
+        if without_identifiers:
+            logger.debug(f"Generating {len(without_identifiers)} new video indices.")
+        return len(without_identifiers)
+
+    @Profiler.profile_method()
     def save(self, on_new_identifiers=False):
         """Save database on disk.
 
@@ -187,33 +209,28 @@ class JsonDatabase:
         )
         self.notifier.notify(DatabaseSaved(self))
 
-    @Profiler.profile_method()
-    def __ensure_identifiers(self):
-        id_to_video = {}  # type: Dict[int, Video]
-        without_identifiers = []
-        for video_state in self.__videos.values():
-            if (
-                not isinstance(video_state.video_id, int)
-                or video_state.video_id in id_to_video
-            ):
-                without_identifiers.append(video_state)
-            else:
-                id_to_video[video_state.video_id] = video_state
-        next_id = (max(id_to_video) + 1) if id_to_video else 0
-        for video_state in without_identifiers:
-            video_state.video_id = next_id
-            next_id += 1
-            id_to_video[video_state.video_id] = video_state
-        self.__id_to_video = id_to_video
-        if without_identifiers:
-            logger.debug(f"Generating {len(without_identifiers)} new video indices.")
-        return len(without_identifiers)
-
     def set_path(self, path: PathType):
         self.__backup = JsonBackup(path)
 
     def set_date(self, date: Date):
         self.__date = date
+
+    def set_folders(self, folders) -> None:
+        folders = sorted(AbsolutePath.ensure(folder) for folder in folders)
+        if folders == sorted(self.__folders):
+            return
+        folders_tree = PathTree(folders)
+        for video in self.__videos.values():
+            video.discarded = not folders_tree.in_folders(video.filename)
+        self.__folders = set(folders)
+        self.save()
+
+    def get_predictor(self, prop_name):
+        return self.__predictors.get(prop_name, None)
+
+    def set_predictor(self, prop_name: str, theta: List[float]):
+        self.__predictors[prop_name] = theta
+        self.save()
 
     def get_videos(self, *flags, **forced_flags):
         return self.__db_cache(*flags, **forced_flags)
@@ -296,9 +313,6 @@ class JsonDatabase:
         if default is not None and pt.default != default:
             return False
         return True
-
-    def get_prop_names(self) -> Iterable[str]:
-        return self.__prop_types.keys()
 
     def describe_prop_types(self) -> List[dict]:
         return sorted(
@@ -431,24 +445,6 @@ class JsonDatabase:
         pt = self.__prop_types[name]
         return pt.default if value is None else pt.validate(value)
 
-    @Profiler.profile_method()
-    def _remove_video_from_index(self, video):
-        self.__indexer.remove_video(video)
-
-    @Profiler.profile_method()
-    def _add_videos_to_index(self, videos):
-        for video in videos:
-            self.__indexer.add_video(video)
-
-    @Profiler.profile_method()
-    def _update_videos_in_index(self, videos):
-        for video in videos:
-            self.__indexer.update_video(video)
-
-    @Profiler.profile_method()
-    def _update_video_path_in_index(self, video, old_path: AbsolutePath):
-        self.__indexer.replace_path(video, old_path)
-
     def _update_videos_not_found(self, existing_paths: Container[AbsolutePath]):
         """Use given container of existing paths to mark not found videos."""
         for video_state in self.__videos.values():
@@ -456,7 +452,7 @@ class JsonDatabase:
 
     def _notify_properties_modified(self, properties, video_indices: Iterable[int]):
         self.save()
-        self._update_videos_in_index(
+        self.__indexer.update_videos(
             (self.__id_to_video[video_id] for video_id in video_indices)
         )
         self.notifier.notify(notifications.PropertiesModified(properties))
@@ -478,7 +474,7 @@ class JsonDatabase:
                 "filename",
             )
         )
-        self._update_video_path_in_index(video, old_path)
+        self.__indexer.replace_path(video, old_path)
 
     def _notify_missing_thumbnails(self):
         remaining_thumb_videos = [
@@ -505,34 +501,8 @@ class JsonDatabase:
         all_file_names.sort()
         return all_file_names
 
-    def set_folders(self, folders) -> None:
-        folders = sorted(AbsolutePath.ensure(folder) for folder in folders)
-        if folders == sorted(self.__folders):
-            return
-        folders_tree = PathTree(folders)
-        for video in self.__videos.values():
-            video.discarded = not folders_tree.in_folders(video.filename)
-        self.__folders = set(folders)
-        self.save()
-
     def get_all_video_indices(self) -> Iterable[int]:
         return self.__id_to_video.keys()
-
-    def get_video_terms(self, video_id: int) -> Set[str]:
-        return self.__id_to_video[video_id].terms(as_set=True)
-
-    def delete_video_entry(self, video_id: int, save=True):
-        video = self.__id_to_video[video_id]
-        self.__videos.pop(video.filename, None)
-        self.__id_to_video.pop(video.video_id, None)
-        if video.readable:
-            video.thumbnail_path.delete()
-        self._remove_video_from_index(video)
-        self.notifier.notify(notifications.VideoDeleted(video))
-        self._notify_fields_modified(["move_id", "quality"], save=save)
-
-    def get_video_filename(self, video_id: int) -> AbsolutePath:
-        return self.__id_to_video[video_id].filename
 
     def has_video(self, filename: AbsolutePath) -> bool:
         return filename in self.__videos
@@ -540,12 +510,18 @@ class JsonDatabase:
     def has_video_id(self, video_id: int) -> bool:
         return video_id in self.__id_to_video
 
+    def get_video_filename(self, video_id: int) -> AbsolutePath:
+        return self.__id_to_video[video_id].filename
+
     def get_video_id(self, filename: PathType):
         filename = AbsolutePath.ensure(filename)
         if filename in self.__videos:
             return self.__videos[filename].video_id
         else:
             return None
+
+    def get_video_terms(self, video_id: int) -> Set[str]:
+        return self.__id_to_video[video_id].terms(as_set=True)
 
     def read_video_field(self, video_id: int, field: str):
         return getattr(self.__id_to_video[video_id], field)
@@ -606,7 +582,7 @@ class JsonDatabase:
             video_state.runtime = runtime_info[file_path]
             videos.append(video_state)
         self.__videos.update({video.filename: video for video in videos})
-        self._update_videos_in_index(videos)
+        self.__indexer.update_videos(videos)
         if unreadable:
             self.notifier.notify(
                 notifications.VideoInfoErrors(
@@ -621,13 +597,6 @@ class JsonDatabase:
     def fill_videos_field(self, indices: Iterable[int], field: str, value):
         for video_id in indices:
             setattr(self.__id_to_video[video_id], field, value)
-
-    @Profiler.profile_method()
-    def describe_videos(self, video_indices: Sequence[int]):
-        return [
-            VideoFeatures.to_json(self.__id_to_video[video_id])
-            for video_id in video_indices
-        ]
 
     def change_video_path(self, video_id: int, path: AbsolutePath) -> AbsolutePath:
         path = AbsolutePath.ensure(path)
@@ -646,12 +615,22 @@ class JsonDatabase:
 
         return old_filename
 
+    def delete_video_entry(self, video_id: int, save=True):
+        video = self.__id_to_video[video_id]
+        self.__videos.pop(video.filename, None)
+        self.__id_to_video.pop(video.video_id, None)
+        if video.readable:
+            video.thumbnail_path.delete()
+        self.__indexer.remove_video(video)
+        self.notifier.notify(notifications.VideoDeleted(video))
+        self._notify_fields_modified(["move_id", "quality"], save=save)
+
     def move_video_entry(self, from_id, to_id, save=True):
         from_video = self.__id_to_video[from_id]
         to_video = self.__id_to_video[to_id]
         assert not from_video.found
         assert to_video.found
-        for prop_name in self.get_prop_names():
+        for prop_name in self.__prop_types.keys():
             self.merge_prop_values(
                 to_id, prop_name, self.get_prop_values(from_id, prop_name)
             )
@@ -665,14 +644,14 @@ class JsonDatabase:
         self._notify_fields_modified(["date_entry_opened"])
 
     @Profiler.profile_method()
+    def describe_videos(self, video_indices: Sequence[int]):
+        return [
+            VideoFeatures.to_json(self.__id_to_video[video_id])
+            for video_id in video_indices
+        ]
+
+    @Profiler.profile_method()
     def get_common_fields(self, video_indices: Iterable[int]) -> dict:
         return VideoFeatures.get_common_fields(
             self.__id_to_video[video_id] for video_id in video_indices
         )
-
-    def get_predictor(self, prop_name):
-        return self.__predictors.get(prop_name, None)
-
-    def set_predictor(self, prop_name: str, theta: List[float]):
-        self.__predictors[prop_name] = theta
-        self.save()

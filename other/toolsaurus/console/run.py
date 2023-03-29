@@ -114,7 +114,7 @@ class API:
     @fsigned
     def clip(self, video_id: int, start: int, length: int) -> str:
         return VideoClipping.video_clip_to_base64(
-            path=self.database.get_video_filename(video_id),
+            path=self.database.read_video_field(video_id, "filename"),
             time_start=start,
             clip_seconds=length,
             unique_id=self.database.read_video_field(video_id, "thumb_name"),
@@ -126,7 +126,7 @@ class API:
 
     @fsigned
     def open(self, video_id: int) -> AbsolutePath:
-        return self.database.get_video_filename(video_id).open()
+        return self.database.read_video_field(video_id, "filename").open()
 
     @fsigned
     def images(self, indices: str):

@@ -299,7 +299,7 @@ class GuiAPI(FeatureAPI):
     @process(finish=False)
     def move_video_file(self, video_id: int, directory: str):
         try:
-            filename = self.database.get_video_filename(video_id)
+            filename: AbsolutePath = self.database.read_video_field(video_id, "filename")
             directory = AbsolutePath.ensure_directory(directory)
             if not PathTree(self.database.video_folders).in_folders(directory):
                 raise exceptions.ForbiddenVideoFolder(
