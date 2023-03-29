@@ -77,20 +77,20 @@ def predict_pattern(database: Database, videos: List[Video], prop_name: str):
     }
     videos = [v for v in videos if v.video_id in video_id_to_miniature]
     output_prop_name = "<!" + prop_name[2:]
-    if not database.has_prop_type(output_prop_name):
-        database.create_prop_type(output_prop_name, int, [0, 1], False, save=False)
-    notify_job_start(database.notifier, predict_pattern, len(videos), "videos")
-    with Profiler(say("Predict"), database.notifier):
-        for i, video in enumerate(videos):
-            video.set_property(
-                output_prop_name,
-                int(predict(video_id_to_miniature[video.video_id], theta) >= 0.5),
-            )
-            notify_job_progress(
-                database.notifier, predict_pattern, None, i + 1, len(videos)
-            )
+    with database.to_save():
+        if not database.has_prop_type(output_prop_name):
+            database.create_prop_type(output_prop_name, int, [0, 1], False)
+        notify_job_start(database.notifier, predict_pattern, len(videos), "videos")
+        with Profiler(say("Predict"), database.notifier):
+            for i, video in enumerate(videos):
+                video.set_property(
+                    output_prop_name,
+                    int(predict(video_id_to_miniature[video.video_id], theta) >= 0.5),
+                )
+                notify_job_progress(
+                    database.notifier, predict_pattern, None, i + 1, len(videos)
+                )
 
-    database.save()
     return output_prop_name
 
 

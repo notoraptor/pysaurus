@@ -60,6 +60,24 @@ class DatabaseSaved(DatabaseLoaded):
     __slots__ = ()
 
 
+class _ToSave:
+    __slots__ = "database", "to_save"
+
+    def __init__(self, database, to_save=True):
+        self.database = database
+        self.to_save = to_save
+
+    def __enter__(self):
+        self.database.in_save_context = True
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.database.in_save_context = False
+        if self.to_save:
+            self.database.save()
+            logger.info("Saved in context.")
+
+
 class JsonDatabase:
     __slots__ = (
         "__backup",
@@ -76,6 +94,7 @@ class JsonDatabase:
         "quality_attribute",
         "moves_attribute",
         "__indexer",
+        "in_save_context",
     )
 
     def __init__(
@@ -102,6 +121,7 @@ class JsonDatabase:
         self.quality_attribute = QualityAttribute(self)
         self.moves_attribute = PotentialMoveAttribute(self)
         self.__indexer = indexer or VideoIndexer()
+        self.in_save_context = False
         # Initialize
         self.__load(folders)
         with Profiler("build index", self.notifier):
@@ -140,7 +160,9 @@ class JsonDatabase:
 
         # Parsing video property types.
         for prop_dict in json_dict.get("prop_types", ()):
-            self.add_prop_type(PropType.from_dict(prop_dict), save=False)
+            prop_type = PropType.from_dict(prop_dict)
+            assert prop_type.name not in self.__prop_types
+            self.__prop_types[prop_type.name] = prop_type
 
         # Parsing predictors
         self.__predictors = {
@@ -193,7 +215,12 @@ class JsonDatabase:
         on_new_identifiers:
             if True, save only if new video IDs were generated.
         """
-        if not self.__ensure_identifiers() and on_new_identifiers:
+        identifiers_updated = self.__ensure_identifiers()
+        if self.in_save_context:
+            logger.info("Saving deactivated in context.")
+            return
+        logger.info("Saving.")
+        if not identifiers_updated and on_new_identifiers:
             return
         self.iteration += 1
         # Save database.
@@ -208,6 +235,9 @@ class JsonDatabase:
             }
         )
         self.notifier.notify(DatabaseSaved(self))
+
+    def to_save(self, to_save=True):
+        return _ToSave(self, to_save=to_save)
 
     def set_path(self, path: PathType):
         self.__backup = JsonBackup(path)
@@ -320,12 +350,11 @@ class JsonDatabase:
             key=lambda d: d["name"],
         )
 
-    def add_prop_type(self, prop: PropType, save: bool = True) -> None:
+    def add_prop_type(self, prop: PropType) -> None:
         if prop.name in self.__prop_types:
             raise exceptions.PropertyAlreadyExists(prop.name)
         self.__prop_types[prop.name] = prop
-        if save:
-            self.save()
+        self.save()
 
     def create_prop_type(
         self,
@@ -333,7 +362,6 @@ class JsonDatabase:
         prop_type: Union[str, type],
         definition: DefType,
         multiple: bool,
-        save=True,
     ) -> None:
         if isinstance(prop_type, str):
             prop_type = PROP_UNIT_TYPE_MAP[prop_type]
@@ -343,15 +371,14 @@ class JsonDatabase:
                 definition = [float(element) for element in definition]
             else:
                 definition = float(definition)
-        self.add_prop_type(PropType(name, definition, multiple), save)
+        self.add_prop_type(PropType(name, definition, multiple))
 
-    def remove_prop_type(self, name, save: bool = True) -> None:
+    def remove_prop_type(self, name) -> None:
         if name in self.__prop_types:
             del self.__prop_types[name]
             for video in self.query():
                 video.remove_property(name, None)
-            if save:
-                self.save()
+            self.save()
 
     def rename_prop_type(self, old_name, new_name) -> None:
         if self.has_prop_type(old_name):
@@ -457,9 +484,8 @@ class JsonDatabase:
         )
         self.notifier.notify(notifications.PropertiesModified(properties))
 
-    def _notify_fields_modified(self, fields: Sequence[str], save=True):
-        if save:
-            self.save()
+    def _notify_fields_modified(self, fields: Sequence[str]):
+        self.save()
         self.notifier.notify(notifications.FieldsModified(fields))
 
     def _notify_filename_modified(self, video: Video, old_path: AbsolutePath):
@@ -533,12 +559,11 @@ class JsonDatabase:
     def read_videos_field(self, indices: Iterable[int], field: str) -> Iterable:
         return (getattr(self.__id_to_video[video_id], field) for video_id in indices)
 
-    def write_video_field(
-        self, video_id: int, field: str, value, notify=False, save=False
-    ):
+    def write_video_field(self, video_id: int, field: str, value, notify=False):
         setattr(self.__id_to_video[video_id], field, value)
         if notify:
-            self._notify_fields_modified([field], save=save)
+            with self.to_save(False):
+                self._notify_fields_modified([field])
 
     def write_video_fields(self, video_id: int, **kwargs):
         video = self.__id_to_video[video_id]
@@ -615,7 +640,7 @@ class JsonDatabase:
 
         return old_filename
 
-    def delete_video_entry(self, video_id: int, save=True):
+    def delete_video_entry(self, video_id: int):
         video = self.__id_to_video[video_id]
         self.__videos.pop(video.filename, None)
         self.__id_to_video.pop(video.video_id, None)
@@ -623,9 +648,9 @@ class JsonDatabase:
             video.thumbnail_path.delete()
         self.__indexer.remove_video(video)
         self.notifier.notify(notifications.VideoDeleted(video))
-        self._notify_fields_modified(["move_id", "quality"], save=save)
+        self._notify_fields_modified(["move_id", "quality"])
 
-    def move_video_entry(self, from_id, to_id, save=True):
+    def move_video_entry(self, from_id, to_id):
         from_video = self.__id_to_video[from_id]
         to_video = self.__id_to_video[to_id]
         assert not from_video.found
@@ -637,7 +662,7 @@ class JsonDatabase:
         to_video.similarity_id = from_video.similarity_id
         to_video.date_entry_modified = from_video.date_entry_modified.time
         to_video.date_entry_opened = from_video.date_entry_opened.time
-        self.delete_video_entry(from_id, save=save)
+        self.delete_video_entry(from_id)
 
     def open_video(self, video_id: int):
         self.__id_to_video[video_id].open()

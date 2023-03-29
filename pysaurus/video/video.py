@@ -309,13 +309,13 @@ class Video(Jsonable):
             if name not in self.properties or self.properties[name] != value:
                 modified = True
             self.properties[name] = value
-        self._save_date_entry_modified(modified)
+        if modified:
+            self._save_date_entry_modified()
         return modified
 
     def open(self):
         self.filename.open()
         self.date_entry_opened = Date.now().time
 
-    def _save_date_entry_modified(self, save=True):
-        if save:
-            self.date_entry_modified = Date.now().time
+    def _save_date_entry_modified(self):
+        self.date_entry_modified = Date.now().time

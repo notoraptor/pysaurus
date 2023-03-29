@@ -123,7 +123,7 @@ class DbFeatures:
             raise
 
     def find_similar_videos(self, db: Database, miniatures: List[Miniature] = None):
-        with Profiler(say("Find similar videos."), db.notifier):
+        with Profiler(say("Find similar videos."), db.notifier), db.to_save():
             if miniatures is None:
                 miniatures = db.ensure_miniatures(returns=True)  # type: List[Miniature]
             video_indices = [m.video_id for m in miniatures]
@@ -254,10 +254,7 @@ class DbFeatures:
                             video_indices[i],
                             new_id,
                             notify=(step == len(new_sim_indices) - 1),
-                            save=False,
                         )
-            # Save.
-            db.save()
 
     @classmethod
     def generate_edges(cls, nb_videos):

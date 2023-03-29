@@ -36,13 +36,12 @@ class SpecialProperties:
                 with_enum=expected.enumeration,
                 default=expected.default,
             ):
-                database.remove_prop_type(expected.name, save=False)
+                database.remove_prop_type(expected.name)
                 database.create_prop_type(
                     expected.name,
                     expected.type,
                     expected.definition,
                     expected.multiple,
-                    save=False,
                 )
                 to_save = True
         return to_save

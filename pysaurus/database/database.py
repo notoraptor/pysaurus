@@ -70,9 +70,10 @@ class Database(JsonDatabase):
             indexer=VideoIndexer(),
         )
         # Set special properties
-        with Profiler("install special properties", notifier=self.notifier):
-            if SpecialProperties.install(self):
-                self.save()
+        with Profiler(
+            "install special properties", notifier=self.notifier
+        ), self.to_save() as saver:
+            saver.to_save = SpecialProperties.install(self)
         self.compress_thumbnails()
 
     # Properties.
@@ -414,12 +415,8 @@ class Database(JsonDatabase):
         self.notifier.set_log_path(self.__paths.log_path.path)
         self.set_path(self.__paths.json_path)
 
-    def set_video_similarity(
-        self, video_id: int, value: Optional[int], notify=True, save=True
-    ):
-        self.write_video_field(
-            video_id, "similarity_id", value, notify=notify, save=save
-        )
+    def set_video_similarity(self, video_id: int, value: Optional[int], notify=True):
+        self.write_video_field(video_id, "similarity_id", value, notify=notify)
 
     def change_video_file_title(self, video_id: int, new_title: str) -> None:
         if functions.has_discarded_characters(new_title):
@@ -428,10 +425,10 @@ class Database(JsonDatabase):
         if old_filename.file_title != new_title:
             self.change_video_path(video_id, old_filename.new_title(new_title))
 
-    def delete_video(self, video_id: int, save=True) -> AbsolutePath:
+    def delete_video(self, video_id: int) -> AbsolutePath:
         video_filename: AbsolutePath = self.read_video_field(video_id, "filename")
         video_filename.delete()
-        self.delete_video_entry(video_id, save)
+        self.delete_video_entry(video_id)
         return video_filename
 
     def refresh(self, ensure_miniatures=False) -> None:
@@ -583,13 +580,13 @@ class Database(JsonDatabase):
 
     def confirm_unique_moves(self) -> int:
         nb_moved = 0
-        for video_id in list(self.get_all_video_indices()):
-            moves = self.read_video_field(video_id, "moves")
-            if len(moves) == 1:
-                self.move_video_entry(video_id, moves[0]["video_id"], False)
-                nb_moved += 1
-        if nb_moved:
-            self.save()
+        with self.to_save() as saver:
+            for video_id in list(self.get_all_video_indices()):
+                moves = self.read_video_field(video_id, "moves")
+                if len(moves) == 1:
+                    self.move_video_entry(video_id, moves[0]["video_id"])
+                    nb_moved += 1
+            saver.to_save = nb_moved
         return nb_moved
 
     def to_xspf_playlist(self, video_indices: Iterable[int]) -> AbsolutePath:

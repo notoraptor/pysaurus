@@ -54,13 +54,14 @@ class ExtendedDatabase(Database):
 
     def remove_videos_not_found(self):
         nb_removed = 0
-        for video in self.get_videos():
-            if not video.filename.isfile():
-                self.delete_video(video.video_id, save=False)
-                nb_removed += 1
-        if nb_removed:
-            self.notifier.notify(notifications.VideosNotFoundRemoved(nb_removed))
-            self.save()
+        with self.to_save() as saver:
+            for video in self.get_videos():
+                if not video.filename.isfile():
+                    self.delete_video(video.video_id)
+                    nb_removed += 1
+            if nb_removed:
+                self.notifier.notify(notifications.VideosNotFoundRemoved(nb_removed))
+                saver.to_save = nb_removed
 
     def list_files(self, output_name):
         readable_videos = self.get_videos("readable")

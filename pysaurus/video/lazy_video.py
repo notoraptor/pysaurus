@@ -304,13 +304,13 @@ class LazyVideo(WithSchema):
                 modified = True
             properties[name] = value
         self._set("properties", properties)
-        self._save_date_entry_modified(modified)
+        if modified:
+            self._save_date_entry_modified()
         return modified
 
     def open(self):
         self.filename.open()
         self._set("date_entry_opened", Date.now().time)
 
-    def _save_date_entry_modified(self, save=True):
-        if save:
-            self._set("date_entry_modified", Date.now().time)
+    def _save_date_entry_modified(self):
+        self._set("date_entry_modified", Date.now().time)
