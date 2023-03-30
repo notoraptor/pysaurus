@@ -479,9 +479,10 @@ class JsonDatabase:
 
     def _notify_properties_modified(self, properties, video_indices: Iterable[int]):
         self.save()
-        self.__indexer.update_videos(
-            (self.__id_to_video[video_id] for video_id in video_indices)
-        )
+        with Profiler("index update videos", self.notifier):
+            self.__indexer.update_videos(
+                (self.__id_to_video[video_id] for video_id in video_indices)
+            )
         self.notifier.notify(notifications.PropertiesModified(properties))
 
     def _notify_fields_modified(self, fields: Sequence[str]):

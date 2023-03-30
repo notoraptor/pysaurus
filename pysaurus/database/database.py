@@ -31,7 +31,9 @@ from pysaurus.database.viewport.video_filter import VideoSelector
 from pysaurus.miniature.group_computer import GroupComputer
 from pysaurus.miniature.miniature import Miniature
 from pysaurus.video import Video
-from pysaurus.video.video_indexer import VideoIndexer
+
+# from pysaurus.video.video_indexer import VideoIndexer
+from pysaurus.video.sql_index.sql_video_indexer import SqlVideoIndexer
 from saurus.language import say
 
 logger = logging.getLogger(__name__)
@@ -66,8 +68,8 @@ class Database(JsonDatabase):
             self.__paths.json_path,
             folders,
             notifier,
-            # indexer=SqlVideoIndexer(self.__paths.index_path.path),
-            indexer=VideoIndexer(),
+            indexer=SqlVideoIndexer(self.__paths.index_path.path),
+            # indexer=VideoIndexer(),
         )
         # Set special properties
         with Profiler(

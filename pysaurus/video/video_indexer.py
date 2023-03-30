@@ -37,7 +37,7 @@ class VideoIndexer(AbstractVideoIndexer):
         for term in terms:
             self.term_to_filenames.setdefault(term, set()).add(video.filename)
 
-    def _remove_filename(self, filename: AbsolutePath, pop=False) -> List[str]:
+    def _remove_filename(self, filename: AbsolutePath) -> None:
         old_terms = self.filename_to_terms.pop(filename, [])
         for term in old_terms:
             if (
@@ -47,8 +47,6 @@ class VideoIndexer(AbstractVideoIndexer):
                 self.term_to_filenames[term].remove(filename)
                 if not self.term_to_filenames[term]:
                     del self.term_to_filenames[term]
-        if pop:
-            return old_terms
 
     def replace_path(self, video: Video, old_path: AbsolutePath):
         all_old_terms = self._remove_filename(old_path, pop=True)

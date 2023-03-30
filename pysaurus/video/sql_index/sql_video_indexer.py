@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Iterable, List, Sequence
+from typing import Iterable, Sequence
 
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.job_notifications import (
@@ -24,20 +24,17 @@ class SqlVideoIndexer(AbstractVideoIndexer):
 
     def build(self, videos: Iterable[Video]):
         if self._to_build:
-            all_filenames = []
-            filename_id_to_terms = []
-            unique_terms = set()
-            for video in videos:
-                video_terms = video.terms()
-                all_filenames.append(video.filename.path)
-                filename_id_to_terms.append(video_terms)
-                unique_terms.update(video_terms)
-            global_notify_job_start("sql_build_index", len(all_filenames), "videos")
-            all_terms = sorted(unique_terms)
+            filename_and_terms = [
+                (video.filename.path, video.terms()) for video in videos
+            ]
+
+            all_terms = sorted(
+                set.union(*(set(couple[1]) for couple in filename_and_terms))
+            )
             term_to_id = {term: term_id for term_id, term in enumerate(all_terms)}
             self.sql_database.modify(
                 "INSERT INTO filename (filename_id, filename) " "VALUES (?, ?)",
-                enumerate(all_filenames),
+                enumerate(couple[0] for couple in filename_and_terms),
                 many=True,
             )
             self.sql_database.modify(
@@ -45,20 +42,97 @@ class SqlVideoIndexer(AbstractVideoIndexer):
                 enumerate(all_terms),
                 many=True,
             )
-            for (filename_id, terms) in enumerate(filename_id_to_terms):
+
+            nb_filenames = len(filename_and_terms)
+            step = 500
+            total = 0
+            global_notify_job_start("sql_build_index", nb_filenames, "videos")
+            for start in range(0, nb_filenames, step):
+                limit = min(start + step, nb_filenames)
+                total += limit - start
                 self.sql_database.modify(
                     "INSERT INTO filename_to_term (filename_id, term_id, term_rank) "
                     "VALUES (?, ?, ?)",
                     (
                         (filename_id, term_to_id[term], term_rank)
-                        for term_rank, term in enumerate(terms)
+                        for filename_id in range(start, limit)
+                        for term_rank, term in enumerate(
+                            filename_and_terms[filename_id][1]
+                        )
                     ),
                     many=True,
                 )
-                global_notify_job_progress(
-                    "sql_build_index", None, filename_id + 1, len(all_filenames)
-                )
+                global_notify_job_progress("sql_build_index", None, limit, nb_filenames)
+            assert nb_filenames == total
+            global_notify_job_progress(
+                "sql_build_index", None, nb_filenames, nb_filenames
+            )
             self._to_build = False
+
+    def update_videos(self, videos: Iterable[Video]):
+        filename_and_terms = [(video.filename.path, video.terms()) for video in videos]
+        logger.info(f"Indexing {len(filename_and_terms)} video(s).")
+        # Delete videos
+        self.sql_database.modify(
+            "DELETE FROM filename WHERE filename = ?",
+            ([couple[0]] for couple in filename_and_terms),
+            many=True,
+        )
+        # Then re-insert new videos
+        last_fid = self.sql_database.query_one(
+            "SELECT MAX(filename_id) AS last_id FROM filename"
+        )["last_id"]
+        next_f_indices = list(
+            range(last_fid + 1, last_fid + 1 + len(filename_and_terms))
+        )
+        self.sql_database.modify(
+            "INSERT INTO filename (filename_id, filename) VALUES (?, ?)",
+            (
+                (filename_id, filename)
+                for filename_id, (filename, _) in zip(
+                    next_f_indices, filename_and_terms
+                )
+            ),
+            many=True,
+        )
+        unique_terms = set.union(*(set(couple[1]) for couple in filename_and_terms))
+        term_to_id = {
+            row["term"]: row["term_id"]
+            for row in self.sql_database.query(
+                f"SELECT term_id, term FROM term WHERE "
+                f"term IN ({','.join('?' for _ in unique_terms)})",
+                tuple(unique_terms),
+            )
+        }
+        missing_terms = sorted(unique_terms - set(term_to_id))
+        if missing_terms:
+            last_tid = self.sql_database.query_one(
+                "SELECT MAX(term_id) AS last_id FROM term"
+            )["last_id"]
+            next_term_indices = list(
+                range(last_tid + 1, last_tid + 1 + len(missing_terms))
+            )
+            self.sql_database.modify(
+                "INSERT INTO term (term_id, term) VALUES (?,?)",
+                zip(next_term_indices, missing_terms),
+                many=True,
+            )
+            term_to_id.update(
+                {
+                    term: term_id
+                    for term, term_id in zip(missing_terms, next_term_indices)
+                }
+            )
+        self.sql_database.modify(
+            "INSERT INTO filename_to_term "
+            "(filename_id, term_id, term_rank) VALUES (?,?,?)",
+            (
+                (filename_id, term_to_id[term], term_rank)
+                for filename_id, (_, terms) in zip(next_f_indices, filename_and_terms)
+                for term_rank, term in enumerate(terms)
+            ),
+            many=True,
+        )
 
     def add_video(self, video: Video):
         logger.info(f"Video indexing: {video.filename.path}")
@@ -76,25 +150,10 @@ class SqlVideoIndexer(AbstractVideoIndexer):
                 term_rank=term_rank,
             )
 
-    def _remove_filename(self, filename: AbsolutePath, pop=False) -> List[str]:
-        old_terms = []
-        if pop:
-            old_terms = [
-                row["term"]
-                for row in self.sql_database.query(
-                    "SELECT t.term FROM term AS t "
-                    "JOIN filename_to_term AS j ON t.term_id = j.term_id "
-                    "JOIN filename AS f ON j.filename_id = f.filename_id "
-                    "WHERE f.filename = ? "
-                    "ORDER BY t.term_rank ASC",
-                    [filename.path],
-                )
-            ]
+    def _remove_filename(self, filename: AbsolutePath) -> None:
         self.sql_database.modify(
             "DELETE FROM filename WHERE filename = ?", [filename.path]
         )
-        if pop:
-            return old_terms
 
     def replace_path(self, video: Video, old_path: AbsolutePath):
         self.sql_database.modify(
