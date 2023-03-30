@@ -2,13 +2,10 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
   "use strict";
 
   var ComponentPropController, SetInput, Dialog, Cell, backend_error, python_multiple_call, UTILITIES, GenericFormRename, LangContext, tr, Fancybox, PropertiesPage, DEFAULT_VALUES;
-
   function getDefaultValue(propType, isEnum) {
     return isEnum ? [] : DEFAULT_VALUES[propType].toString();
   }
-
   _export("PropertiesPage", void 0);
-
   return {
     setters: [function (_componentsSetInputJs) {
       ComponentPropController = _componentsSetInputJs.ComponentPropController;
@@ -37,7 +34,6 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
         float: 0.0,
         str: ""
       };
-
       _export("PropertiesPage", PropertiesPage = class PropertiesPage extends React.Component {
         constructor(props) {
           // app: App
@@ -65,7 +61,6 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
           this.renameProperty = this.renameProperty.bind(this);
           this.getDefaultInputState = this.getDefaultInputState.bind(this);
         }
-
         render() {
           return /*#__PURE__*/React.createElement("div", {
             id: "properties"
@@ -139,7 +134,6 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             onClick: this.submit
           }, /*#__PURE__*/React.createElement("strong", null, "add"))))))));
         }
-
         renderPropTypes() {
           return /*#__PURE__*/React.createElement("table", {
             className: "w-100"
@@ -177,7 +171,6 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             onClick: () => this.convertPropertyToMultiple(def.name)
           }, "convert to multiple")))))));
         }
-
         renderDefaultInput() {
           if (this.state.enumeration) {
             const controller = new ComponentPropController(this, "defaultPropVal", this.state.type, null);
@@ -187,7 +180,6 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
               controller: controller
             });
           }
-
           if (this.state.type === "bool") {
             return /*#__PURE__*/React.createElement("select", {
               className: "prop-default block",
@@ -200,7 +192,6 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
               value: "true"
             }, "true"));
           }
-
           return /*#__PURE__*/React.createElement("input", {
             type: this.state.type === "int" ? "number" : "text",
             className: "prop-default block",
@@ -209,18 +200,15 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             value: this.state.defaultPropVal
           });
         }
-
         back() {
           this.props.app.loadVideosPage();
         }
-
         onChangeName(event) {
           const name = event.target.value;
           if (this.state.name !== name) this.setState({
             name
           });
         }
-
         onChangeType(event) {
           const value = event.target.value;
           if (this.state.type !== value) this.setState({
@@ -230,20 +218,17 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             multiple: false
           });
         }
-
         onChangeDefault(event) {
           const defaultPropVal = event.target.value;
           if (this.state.defaultPropVal !== defaultPropVal) this.setState({
             defaultPropVal
           });
         }
-
         onChangeMultiple(event) {
           this.setState({
             multiple: event.target.checked
           });
         }
-
         onChangeEnumeration(event) {
           const enumeration = event.target.checked;
           const defaultPropVal = getDefaultValue(this.state.type, enumeration);
@@ -252,11 +237,9 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             defaultPropVal
           });
         }
-
         reset() {
           this.setState(this.getDefaultInputState());
         }
-
         submit() {
           try {
             let definition = this.state.defaultPropVal;
@@ -270,7 +253,6 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             window.alert(exception.toString());
           }
         }
-
         deleteProperty(name) {
           Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
             title: tr('Delete property "{name}"?', {
@@ -292,7 +274,6 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             name
           })))));
         }
-
         convertPropertyToUnique(name) {
           Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
             title: tr('Convert to unique property "{name}"?', {
@@ -314,7 +295,6 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             name
           })))));
         }
-
         convertPropertyToMultiple(name) {
           Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
             title: tr('Convert to multiple property "{name}"?', {
@@ -336,7 +316,6 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             name
           })))));
         }
-
         renameProperty(name) {
           Fancybox.load( /*#__PURE__*/React.createElement(GenericFormRename, {
             title: tr('Rename property "{name}"?', {
@@ -354,7 +333,6 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             }
           }));
         }
-
         getDefaultInputState() {
           const defaultType = "str";
           return {
@@ -365,9 +343,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
             multiple: false
           };
         }
-
       });
-
       PropertiesPage.contextType = LangContext;
     }
   };

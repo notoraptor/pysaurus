@@ -2,9 +2,7 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../utils/functions.j
   "use strict";
 
   var Dialog, LangContext, tr, UTILITIES, Fancybox, FormPropertyEditSelectedValues;
-
   _export("FormPropertyEditSelectedValues", void 0);
-
   return {
     setters: [function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
@@ -35,7 +33,6 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../utils/functions.j
           this.onEditKeyDown = this.onEditKeyDown.bind(this);
           this.valuesToString = this.valuesToString.bind(this);
         }
-
         render() {
           const canMove = this.state.otherDefinitions.length;
           const values = this.props.values;
@@ -68,23 +65,18 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../utils/functions.j
             className: `form position-relative flex-grow-1 text-center ${this.state.form}`
           }, this.renderForm())));
         }
-
         renderForm() {
           switch (this.state.form) {
             case "delete":
               return this.renderDelete();
-
             case "edit":
               return this.renderEdit();
-
             case "move":
               return this.renderMove();
-
             default:
               break;
           }
         }
-
         renderDelete() {
           return /*#__PURE__*/React.createElement("div", {
             className: "flex-grow-1"
@@ -97,13 +89,11 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../utils/functions.j
             value: this.valuesToString()
           }, "markdown"));
         }
-
         renderEdit() {
           const name = this.props.name;
           const propVal = this.state.value;
           const def = this.props.definitions[name];
           let input;
-
           if (def.enumeration) {
             input = /*#__PURE__*/React.createElement("select", {
               value: propVal,
@@ -129,7 +119,6 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../utils/functions.j
               onKeyDown: this.onEditKeyDown
             });
           }
-
           return /*#__PURE__*/React.createElement("div", {
             className: "flex-grow-1"
           }, /*#__PURE__*/React.createElement("h3", null, tr('Edit property "{name}" / {value}', {
@@ -137,7 +126,6 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../utils/functions.j
             value: this.valuesToString()
           })), /*#__PURE__*/React.createElement("div", null, input));
         }
-
         renderMove() {
           const def = this.props.definitions[this.props.name];
           return /*#__PURE__*/React.createElement("div", {
@@ -154,41 +142,33 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../utils/functions.j
             value: other.name
           }, other.name)))));
         }
-
         getCompatibleDefinitions() {
           const def = this.props.definitions[this.props.name];
           const otherDefinitions = [];
-
           for (let other of Object.values(this.props.definitions)) {
             if (def.name !== other.name && def.type === other.type) otherDefinitions.push(other);
           }
-
           return otherDefinitions;
         }
-
         setDelete() {
           this.setState({
             form: "delete"
           });
         }
-
         setEdit() {
           this.setState({
             form: "edit",
             value: this.props.value
           });
         }
-
         setMove() {
           this.setState({
             form: "move",
             move: this.state.otherDefinitions[0].name
           });
         }
-
         onEdit(event) {
           const def = this.props.definitions[this.props.name];
-
           try {
             this.setState({
               value: UTILITIES.parsePropValString(def.type, def.enumeration, event.target.value)
@@ -197,24 +177,20 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../utils/functions.j
             window.alert(exception.toString());
           }
         }
-
         onEditKeyDown(event) {
           if (event.key === "Enter") {
             Fancybox.close();
             this.onClose();
           }
         }
-
         onMove(event) {
           this.setState({
             move: event.target.value
           });
         }
-
         onClose() {
           this.props.onClose(Object.assign({}, this.state));
         }
-
         valuesToString() {
           if (this.props.values.length === 1) return this.props.values[0].toString();
           return tr("{count} values ({first} ... {last})", {
@@ -223,9 +199,7 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../utils/functions.j
             last: this.props.values[this.props.values.length - 1]
           });
         }
-
       });
-
       FormPropertyEditSelectedValues.contextType = LangContext;
       FormPropertyEditSelectedValues.propTypes = {
         definitions: PropTypes.object.isRequired,

@@ -2,11 +2,8 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
   "use strict";
 
   var Characters, FIELD_MAP, Pagination, SettingIcon, PlusIcon, capitalizeFirstLetter, Actions, Action, LangContext, tr, Fancybox, GroupView;
-
-  function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
-
+  function _extends() { _extends = Object.assign ? Object.assign.bind() : function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
   _export("GroupView", void 0);
-
   return {
     setters: [function (_utilsConstantsJs) {
       Characters = _utilsConstantsJs.Characters;
@@ -46,7 +43,6 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
           this.getActions = this.getActions.bind(this);
           this.callbackIndex = -1;
         }
-
         render() {
           const selection = this.props.selection;
           const selected = this.props.groupDef.group_id;
@@ -93,7 +89,6 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
           }, this.props.groupDef.groups.slice(start, end).map((entry, index) => {
             index = start + index;
             const buttons = [];
-
             if (isProperty && entry.value !== null) {
               if (!this.props.isClassified) {
                 buttons.push( /*#__PURE__*/React.createElement("input", {
@@ -102,7 +97,6 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
                   onChange: event => this.onCheckEntry(event, index)
                 }));
                 buttons.push(" ");
-
                 if (!selection.size) {
                   buttons.push( /*#__PURE__*/React.createElement(SettingIcon, {
                     key: "options",
@@ -112,7 +106,6 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
                   buttons.push(" ");
                 }
               }
-
               if (!selection.size) {
                 buttons.push( /*#__PURE__*/React.createElement(PlusIcon, {
                   key: "add",
@@ -122,20 +115,16 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
                 buttons.push(" ");
               }
             }
-
             const classes = [isProperty ? "property" : "attribute"];
             classes.push("clickable");
-
             if (selected === index) {
               classes.push("selected");
               classes.push("bold");
             }
-
             if (entry.value === null) {
               classes.push("all");
               classes.push("bolder");
             }
-
             return /*#__PURE__*/React.createElement("tr", {
               className: classes.join(" "),
               key: index,
@@ -155,7 +144,6 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
             className: "absolute-plain no-groups text-center vertical"
           }, /*#__PURE__*/React.createElement("strong", null, /*#__PURE__*/React.createElement("em", null, tr("No groups"))))));
         }
-
         renderTitle() {
           const field = this.props.groupDef.field;
           let title = this.props.groupDef.is_property ? `"${capitalizeFirstLetter(field)}"` : capitalizeFirstLetter(FIELD_MAP.fields[field].title);
@@ -163,68 +151,56 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
           title = `${title} ${this.props.groupDef.reverse ? Characters.ARROW_DOWN : Characters.ARROW_UP}`;
           return title;
         }
-
         componentDidMount() {
           this.callbackIndex = KEYBOARD_MANAGER.register(this.getActions().onKeyPressed);
         }
-
         componentWillUnmount() {
           KEYBOARD_MANAGER.unregister(this.callbackIndex);
         }
-
         getActions() {
           return new Actions({
             previous: new Action("Ctrl+ArrowUp", tr("Go to previous group"), this.previousGroup, Fancybox.isInactive),
             next: new Action("Ctrl+ArrowDown", tr("Go to next group"), this.nextGroup, Fancybox.isInactive)
           }, this.context);
         }
-
         getNullIndex() {
           return this.props.groupDef.groups.length && this.props.groupDef.groups[0].value === null ? 0 : -1;
         }
-
         getNbPages() {
           const count = this.props.groupDef.groups.length;
           return Math.floor(count / this.props.pageSize) + (count % this.props.pageSize ? 1 : 0);
         }
-
         openPropertyOptions(event, index) {
           event.cancelBubble = true;
           event.stopPropagation();
           this.props.onOptions(new Set([index]));
         }
-
         openPropertyOptionsAll() {
           this.props.onOptions(this.props.selection);
         }
-
         openPropertyPlus(event, index) {
           event.cancelBubble = true;
           event.stopPropagation();
           if (this.props.onPlus) this.props.onPlus(index);
         }
-
         setPage(pageNumber) {
           if (this.props.pageNumber !== pageNumber) this.props.onGroupViewState({
             pageNumber: pageNumber,
             selection: new Set()
           });
         }
-
         previousGroup() {
           const groupID = this.props.groupDef.group_id;
           if (groupID > 0) this.props.onGroupViewState({
             groupID: groupID - 1
           });
         }
-
         nextGroup() {
           const groupID = this.props.groupDef.group_id;
           if (groupID < this.props.groupDef.groups.length - 1) this.props.onGroupViewState({
             groupID: groupID + 1
           });
         }
-
         search(text) {
           for (let index = 0; index < this.props.groupDef.groups.length; ++index) {
             const value = this.props.groupDef.groups[index].value;
@@ -239,34 +215,26 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
             return;
           }
         }
-
         allChecked(start, end) {
           const nullGroupIndex = this.getNullIndex();
-
           for (let i = start; i < end; ++i) {
             if (!this.props.selection.has(i) && i !== nullGroupIndex) return false;
           }
-
           return true;
         }
-
         onCheckEntry(event, index) {
           const selection = new Set(this.props.selection);
-
           if (event.target.checked) {
             selection.add(index);
           } else {
             selection.delete(index);
           }
-
           this.props.onGroupViewState({
             selection
           });
         }
-
         onCheckAll(event, start, end) {
           const selection = new Set(this.props.selection);
-
           if (event.target.checked) {
             for (let i = start; i < end; ++i) {
               selection.add(i);
@@ -276,15 +244,12 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
               selection.delete(i);
             }
           }
-
           selection.delete(this.getNullIndex());
           this.props.onGroupViewState({
             selection
           });
         }
-
       });
-
       GroupView.contextType = LangContext;
       GroupView.propTypes = {
         groupDef: PropTypes.shape({
@@ -309,7 +274,6 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
         selection: PropTypes.instanceOf(Set).isRequired,
         // state change
         onGroupViewState: PropTypes.func.isRequired // onGroupViewState({pageSize?, pageNumber?, selection?, groupID? => onSelect})
-
       };
     }
   };

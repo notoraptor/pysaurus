@@ -2,13 +2,10 @@ System.register(["./Shortcut.js"], function (_export, _context) {
   "use strict";
 
   var Shortcut, Action;
-
   function defaultIsActive() {
     return true;
   }
-
   _export("Action", void 0);
-
   return {
     setters: [function (_ShortcutJs) {
       Shortcut = _ShortcutJs.Shortcut;
@@ -28,7 +25,6 @@ System.register(["./Shortcut.js"], function (_export, _context) {
           this.callback = callback;
           this.isActive = filter || defaultIsActive;
         }
-
       });
     }
   };

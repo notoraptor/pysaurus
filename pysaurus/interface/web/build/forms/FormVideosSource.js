@@ -2,20 +2,15 @@ System.register(["../dialogs/FancyBox.js", "../language.js", "../utils/FancyboxM
   "use strict";
 
   var FancyBox, LangContext, tr, Fancybox, FormVideosSource;
-
   function getSubTree(tree, entryName) {
     const steps = entryName.split("-");
     let subTree = tree;
-
     for (let step of steps) subTree = subTree[step];
-
     return subTree;
   }
-
   function collectPaths(tree, collection, prefix = "") {
     if (tree) {
       if (prefix.length) collection.push(prefix);
-
       for (let name of Object.keys(tree)) {
         const entryName = prefix.length ? prefix + "-" + name : name;
         collectPaths(tree[name], collection, entryName);
@@ -24,36 +19,27 @@ System.register(["../dialogs/FancyBox.js", "../language.js", "../utils/FancyboxM
       collection.push(prefix);
     }
   }
-
   function addPaths(oldPaths, paths) {
     const newPaths = oldPaths.slice();
-
     for (let path of paths) {
       if (newPaths.indexOf(path) < 0) {
         newPaths.push(path);
       }
     }
-
     newPaths.sort();
     return newPaths;
   }
-
   function removePaths(oldPaths, paths) {
     let newPaths = oldPaths.slice();
-
     for (let path of paths) {
       const pos = newPaths.indexOf(path);
-
       if (pos >= 0) {
         newPaths.splice(pos, 1);
       }
     }
-
     return newPaths;
   }
-
   _export("FormVideosSource", void 0);
-
   return {
     setters: [function (_dialogsFancyBoxJs) {
       FancyBox = _dialogsFancyBoxJs.FancyBox;
@@ -79,7 +65,6 @@ System.register(["../dialogs/FancyBox.js", "../language.js", "../utils/FancyboxM
           this.onChangeCheckBox = this.onChangeCheckBox.bind(this);
           this.submit = this.submit.bind(this);
         }
-
         render() {
           return /*#__PURE__*/React.createElement(FancyBox, {
             title: "Select Videos"
@@ -92,7 +77,6 @@ System.register(["../dialogs/FancyBox.js", "../language.js", "../utils/FancyboxM
             onClick: this.submit
           }, tr("select"))));
         }
-
         renderTree(tree, prefix = "") {
           return /*#__PURE__*/React.createElement("ul", null, Object.keys(tree).map((name, index) => {
             const subTree = tree[name];
@@ -129,16 +113,13 @@ System.register(["../dialogs/FancyBox.js", "../language.js", "../utils/FancyboxM
             })));
           }));
         }
-
         hasPath(path) {
           return this.state.paths.indexOf(path) >= 0;
         }
-
         onChangeRadio(event) {
           const element = event.target;
           const name = element.name;
           const value = element.value;
-
           if (value === "select") {
             const pathsToRemove = [];
             collectPaths(getSubTree(this.props.tree, name), pathsToRemove, name);
@@ -154,30 +135,24 @@ System.register(["../dialogs/FancyBox.js", "../language.js", "../utils/FancyboxM
             });
           }
         }
-
         onChangeCheckBox(event) {
           const element = event.target;
           const name = element.name;
           let paths;
-
           if (element.checked) {
             paths = addPaths(this.state.paths, [name]);
           } else {
             paths = removePaths(this.state.paths, [name]);
           }
-
           this.setState({
             paths
           });
         }
-
         submit() {
           Fancybox.close();
           if (this.state.paths.length) this.props.onClose(this.state.paths.map(path => path.split("-")));
         }
-
       });
-
       FormVideosSource.contextType = LangContext;
     }
   };

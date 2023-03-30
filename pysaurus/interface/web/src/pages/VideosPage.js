@@ -556,7 +556,7 @@ export class VideosPage extends React.Component {
 							<div>{tr("Sorted by")}</div>
 							{sorting.map((val, i) => (
 								<div key={i}>
-									<strong>{FIELD_MAP.fields[val.substr(1)].title}</strong>{" "}
+									<strong>{FIELD_MAP.fields[val.substring(1)].title}</strong>{" "}
 									{val[0] === "-" ? <span>&#9660;</span> : <span>&#9650;</span>}
 								</div>
 							))}

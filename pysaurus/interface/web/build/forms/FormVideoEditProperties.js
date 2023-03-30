@@ -2,9 +2,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../utils/
   "use strict";
 
   var ComponentPropController, SetInput, Dialog, UTILITIES, LangContext, tr, FormVideoEditProperties;
-
   _export("FormVideoEditProperties", void 0);
-
   return {
     setters: [function (_componentsSetInputJs) {
       ComponentPropController = _componentsSetInputJs.ComponentPropController;
@@ -26,16 +24,13 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../utils/
           super(props);
           this.state = {};
           const properties = this.props.data.properties;
-
           for (let def of this.props.definitions) {
             const name = def.name;
             this.state[name] = properties.hasOwnProperty(name) ? properties[name] : def.defaultValue;
           }
-
           this.onClose = this.onClose.bind(this);
           this.onChange = this.onChange.bind(this);
         }
-
         render() {
           const data = this.props.data;
           const hasThumbnail = data.with_thumbnails;
@@ -65,7 +60,6 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../utils/
           }, this.props.definitions.map((def, index) => {
             const name = def.name;
             let input;
-
             if (def.multiple) {
               let possibleValues = null;
               if (def.enumeration) possibleValues = def.enumeration;else if (def.type === "bool") possibleValues = [false, true];
@@ -98,7 +92,6 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../utils/
                 value: this.state[name]
               });
             }
-
             return /*#__PURE__*/React.createElement("tr", {
               key: index
             }, /*#__PURE__*/React.createElement("td", {
@@ -108,11 +101,9 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../utils/
             }, input));
           })))));
         }
-
         onClose() {
           this.props.onClose(this.state);
         }
-
         onChange(event, def) {
           try {
             this.setState({
@@ -122,9 +113,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../utils/
             window.alert(exception.toString());
           }
         }
-
       });
-
       FormVideoEditProperties.contextType = LangContext;
     }
   };

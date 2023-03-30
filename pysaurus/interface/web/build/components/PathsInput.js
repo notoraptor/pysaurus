@@ -2,9 +2,7 @@ System.register(["../language.js", "../utils/backend.js"], function (_export, _c
   "use strict";
 
   var tr, backend_error, python_call, PathsInput;
-
   _export("PathsInput", void 0);
-
   return {
     setters: [function (_languageJs) {
       tr = _languageJs.tr;
@@ -21,7 +19,6 @@ System.register(["../language.js", "../utils/backend.js"], function (_export, _c
           this._extendPaths = this._extendPaths.bind(this);
           this.removePath = this.removePath.bind(this);
         }
-
         render() {
           const paths = this.props.data || [];
           return /*#__PURE__*/React.createElement("div", {
@@ -47,15 +44,12 @@ System.register(["../language.js", "../utils/backend.js"], function (_export, _c
             onClick: () => this.removePath(path)
           }, "-"))))))));
         }
-
         addFolder() {
           python_call("select_directory").then(this._extendPaths).catch(backend_error);
         }
-
         addFile() {
           python_call("select_file").then(this._extendPaths).catch(backend_error);
         }
-
         _extendPaths(path) {
           if (path) {
             const paths = new Set(this.props.data || []);
@@ -65,7 +59,6 @@ System.register(["../language.js", "../utils/backend.js"], function (_export, _c
             this.props.onUpdate(data);
           }
         }
-
         removePath(path) {
           const paths = new Set(this.props.data || []);
           paths.delete(path);
@@ -73,9 +66,7 @@ System.register(["../language.js", "../utils/backend.js"], function (_export, _c
           data.sort();
           this.props.onUpdate(data);
         }
-
       });
-
       PathsInput.propTypes = {
         data: PropTypes.arrayOf(PropTypes.string),
         // onUpdate(arr)

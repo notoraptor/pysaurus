@@ -15,9 +15,7 @@ System.register([], function (_export, _context) {
       className: "text"
     }, props.children));
   }
-
   _export("MenuItemRadio", MenuItemRadio);
-
   return {
     setters: [],
     execute: function () {

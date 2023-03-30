@@ -2,7 +2,6 @@ System.register(["./SettingIcon.js", "../utils/Action.js"], function (_export, _
   "use strict";
 
   var SettingIcon, Action;
-
   function ActionToSettingIcon(props) {
     const {
       action,
@@ -13,9 +12,7 @@ System.register(["./SettingIcon.js", "../utils/Action.js"], function (_export, _
       action: action.callback
     });
   }
-
   _export("ActionToSettingIcon", ActionToSettingIcon);
-
   return {
     setters: [function (_SettingIconJs) {
       SettingIcon = _SettingIconJs.SettingIcon;

@@ -2,9 +2,7 @@ System.register(["../utils/constants.js", "../dialogs/FancyBox.js", "../language
   "use strict";
 
   var FIELD_MAP, FancyBox, LangContext, tr, Fancybox, FormVideosSort;
-
   _export("FormVideosSort", void 0);
-
   return {
     setters: [function (_utilsConstantsJs) {
       FIELD_MAP = _utilsConstantsJs.FIELD_MAP;
@@ -32,7 +30,6 @@ System.register(["../utils/constants.js", "../dialogs/FancyBox.js", "../language
           this.removeCriterion = this.removeCriterion.bind(this);
           this.submit = this.submit.bind(this);
         }
-
         render() {
           return /*#__PURE__*/React.createElement(FancyBox, {
             title: tr("Sort videos")
@@ -60,7 +57,6 @@ Click on "sort" to validate, or close dialog to cancel.
             onClick: this.submit
           }, /*#__PURE__*/React.createElement("strong", null, "sort")))));
         }
-
         renderSorting() {
           return this.state.sorting.map((def, index) => {
             const direction = def.charAt(0);
@@ -89,7 +85,6 @@ Click on "sort" to validate, or close dialog to cancel.
             }, "reverse"));
           });
         }
-
         setField(index, value) {
           const sorting = this.state.sorting.slice();
           sorting[index] = `+${value}`;
@@ -97,7 +92,6 @@ Click on "sort" to validate, or close dialog to cancel.
             sorting
           });
         }
-
         setReverse(index, checked) {
           const sorting = this.state.sorting.slice();
           sorting[index] = (checked ? "-" : "+") + sorting[index].substr(1);
@@ -105,7 +99,6 @@ Click on "sort" to validate, or close dialog to cancel.
             sorting
           });
         }
-
         addCriterion() {
           const sorting = this.state.sorting.slice();
           sorting.push("+title");
@@ -113,7 +106,6 @@ Click on "sort" to validate, or close dialog to cancel.
             sorting
           });
         }
-
         removeCriterion(index) {
           const sorting = this.state.sorting.slice();
           sorting.splice(index, 1);
@@ -121,20 +113,15 @@ Click on "sort" to validate, or close dialog to cancel.
             sorting
           });
         }
-
         submit() {
           const sorting = [];
-
           for (let def of this.state.sorting) {
             if (sorting.indexOf(def) < 0) sorting.push(def);
           }
-
           Fancybox.close();
           if (sorting.length) this.props.onClose(sorting);
         }
-
       });
-
       FormVideosSort.contextType = LangContext;
     }
   };

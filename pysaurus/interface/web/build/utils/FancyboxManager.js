@@ -18,11 +18,9 @@ System.register(["../language.js", "./globals.js"], function (_export, _context)
           this.manageOtherActiveElements = this.manageOtherActiveElements.bind(this);
           this.isInactive = this.isInactive.bind(this);
         }
-
         static getFocusableElements() {
           return [...document.querySelector("main").querySelectorAll('a, button, input, textarea, select, details, [tabindex]:not([tabindex="-1"])')].filter(el => !el.hasAttribute("disabled"));
         }
-
         load(component) {
           if (this.loaded) throw "A fancy box is already displayed.";
           this.loaded = true;
@@ -31,17 +29,15 @@ System.register(["../language.js", "./globals.js"], function (_export, _context)
             value: APP_STATE.lang
           }, component), document.getElementById(this.containerID));
         }
-
         close() {
           this.loaded = false;
           this.manageOtherActiveElements();
           ReactDOM.unmountComponentAtNode(document.getElementById(this.containerID));
         }
+
         /**
          * Make sure all active elements are disabled if fancy box is displayed, and re-enabled when fancybox is closed.
          */
-
-
         manageOtherActiveElements() {
           if (this.loaded) {
             for (let element of FancyboxManager.getFocusableElements()) {
@@ -62,14 +58,11 @@ System.register(["../language.js", "./globals.js"], function (_export, _context)
             }
           }
         }
-
         isInactive() {
           return !this.loaded;
         }
-
       };
       /** Global fancybox manager. Used to open/close a fancybox. */
-
       _export("Fancybox", Fancybox = new FancyboxManager("fancybox"));
     }
   };

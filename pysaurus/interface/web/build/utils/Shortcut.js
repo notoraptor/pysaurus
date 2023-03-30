@@ -2,9 +2,7 @@ System.register([], function (_export, _context) {
   "use strict";
 
   var Shortcut;
-
   _export("Shortcut", void 0);
-
   return {
     setters: [],
     execute: function () {
@@ -22,16 +20,14 @@ System.register([], function (_export, _context) {
           this.shift = specialKeys.has("shift") || specialKeys.has("maj");
           this.key = pieces[pieces.length - 1];
         }
+
         /**
          * Returns true if event corresponds to shortcut.
          * @param event {KeyboardEvent}
          */
-
-
         isPressed(event) {
           return this.key === event.key.toLowerCase() && this.ctrl === event.ctrlKey && this.alt === event.altKey && this.shift === event.shiftKey;
         }
-
       });
     }
   };

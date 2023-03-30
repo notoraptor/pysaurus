@@ -14,9 +14,7 @@ System.register([], function (_export, _context) {
       className: "content"
     }, props.children));
   }
-
   _export("Menu", Menu);
-
   return {
     setters: [],
     execute: function () {

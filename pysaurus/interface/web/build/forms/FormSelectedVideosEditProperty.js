@@ -2,9 +2,7 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js", "../language.j
   "use strict";
 
   var Dialog, Characters, LangContext, tr, UTILITIES, FormSelectedVideosEditProperty;
-
   _export("FormSelectedVideosEditProperty", void 0);
-
   return {
     setters: [function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
@@ -25,11 +23,9 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js", "../language.j
           // onClose
           super(props);
           const current = [];
-
           for (let valueAndCount of this.props.values) {
             current.push(valueAndCount[0]);
           }
-
           this.state = {
             current: current,
             add: [],
@@ -49,7 +45,6 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js", "../language.j
           this.addAll = this.addAll.bind(this);
           this.unAddAll = this.unAddAll.bind(this);
         }
-
         render() {
           const propName = this.props.definition.name;
           const nbVideos = this.props.nbVideos;
@@ -102,7 +97,6 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js", "../language.j
             count: this.state.add.length
           }))) : /*#__PURE__*/React.createElement("div", null)), this.renderFormAdd()));
         }
-
         renderRemove() {
           return this.state.remove.map((value, index) => /*#__PURE__*/React.createElement("div", {
             key: index,
@@ -113,7 +107,6 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js", "../language.j
             onClick: () => this.unRemove(value)
           }, Characters.SMART_ARROW_RIGHT)));
         }
-
         renderCurrent() {
           return this.state.current.map((value, index) => /*#__PURE__*/React.createElement("div", {
             key: index,
@@ -126,7 +119,6 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js", "../language.j
             onClick: () => this.add(value)
           }, Characters.SMART_ARROW_RIGHT)));
         }
-
         renderAdd() {
           return this.state.add.map((value, index) => /*#__PURE__*/React.createElement("div", {
             key: index,
@@ -137,11 +129,9 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js", "../language.j
             className: "value"
           }, value)));
         }
-
         renderFormAdd() {
           const def = this.props.definition;
           let input;
-
           if (def.enumeration) {
             input = /*#__PURE__*/React.createElement("select", {
               onChange: this.onEdit,
@@ -167,7 +157,6 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js", "../language.j
               onKeyDown: this.onEditKeyDown
             });
           }
-
           return /*#__PURE__*/React.createElement("div", {
             className: "bar new flex-shrink-0 horizontal"
           }, /*#__PURE__*/React.createElement("div", null), /*#__PURE__*/React.createElement("div", null), /*#__PURE__*/React.createElement("div", {
@@ -177,17 +166,13 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js", "../language.j
             onClick: this.onAddNewValue
           }, "add")));
         }
-
         getMapping() {
           const mapping = new Map();
-
           for (let valueAndCount of this.props.values) {
             mapping.set(valueAndCount[0], valueAndCount[1]);
           }
-
           return mapping;
         }
-
         getDefaultValue() {
           const def = this.props.definition;
           if (def.enumeration) return def.enumeration[0];
@@ -195,10 +180,8 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js", "../language.j
           if (def.type === "int") return "0";
           return "";
         }
-
         onEdit(event) {
           const def = this.props.definition;
-
           try {
             this.setState({
               value: UTILITIES.parsePropValString(def.type, def.enumeration, event.target.value)
@@ -207,13 +190,11 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js", "../language.j
             window.alert(exception.toString());
           }
         }
-
         onEditKeyDown(event) {
           if (event.key === "Enter") {
             this.onAddNewValue();
           }
         }
-
         onAddNewValue() {
           if (this.state.value !== null) {
             if (this.props.definition.multiple) {
@@ -239,7 +220,6 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js", "../language.j
             }
           }
         }
-
         remove(value) {
           const current = new Set(this.state.current);
           const remove = new Set(this.state.remove);
@@ -254,7 +234,6 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js", "../language.j
             remove: newRemove
           });
         }
-
         removeAll() {
           const remove = new Set(this.state.remove);
           this.state.current.forEach(remove.add, remove);
@@ -266,7 +245,6 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js", "../language.j
             remove: newRemove
           });
         }
-
         add(value) {
           if (this.props.definition.multiple) {
             const current = new Set(this.state.current);
@@ -295,7 +273,6 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js", "../language.j
             });
           }
         }
-
         addAll() {
           const add = new Set(this.state.add);
           this.state.current.forEach(add.add, add);
@@ -307,7 +284,6 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js", "../language.j
             add: newAdd
           });
         }
-
         unRemove(value) {
           const current = new Set(this.state.current);
           const remove = new Set(this.state.remove);
@@ -322,7 +298,6 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js", "../language.j
             remove: newRemove
           });
         }
-
         unRemoveAll() {
           const current = new Set(this.state.current);
           this.state.remove.forEach(current.add, current);
@@ -334,13 +309,11 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js", "../language.j
             remove: newRemove
           });
         }
-
         unAdd(value) {
           const add = new Set(this.state.add);
           add.delete(value);
           const newAdd = Array.from(add);
           newAdd.sort();
-
           if (this.getMapping().has(value)) {
             const current = new Set(this.state.current);
             current.add(value);
@@ -356,16 +329,13 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js", "../language.j
             });
           }
         }
-
         unAddAll() {
           const current = new Set(this.state.current);
-
           for (let value of this.state.add) {
             if (this.getMapping().has(value)) {
               current.add(value);
             }
           }
-
           const newCurrent = Array.from(current);
           const newAdd = [];
           newCurrent.sort();
@@ -374,16 +344,13 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js", "../language.j
             add: newAdd
           });
         }
-
         onClose() {
           this.props.onClose({
             add: this.state.add,
             remove: this.state.remove
           });
         }
-
       });
-
       FormSelectedVideosEditProperty.contextType = LangContext;
     }
   };

@@ -2,9 +2,7 @@ System.register(["../dialogs/FancyBox.js", "../language.js", "../utils/FancyboxM
   "use strict";
 
   var FancyBox, LangContext, tr, Fancybox, FormVideosSearch;
-
   _export("FormVideosSearch", void 0);
-
   return {
     setters: [function (_dialogsFancyBoxJs) {
       FancyBox = _dialogsFancyBoxJs.FancyBox;
@@ -31,7 +29,6 @@ System.register(["../dialogs/FancyBox.js", "../language.js", "../utils/FancyboxM
           this.onInput = this.onInput.bind(this);
           this.onClose = this.onClose.bind(this);
         }
-
         render() {
           return /*#__PURE__*/React.createElement(FancyBox, {
             title: tr("Search videos")
@@ -90,22 +87,18 @@ to automatically select "AND" as search method.
             htmlFor: "input-search-id"
           }, tr("video ID")))));
         }
-
         componentDidMount() {
           document.querySelector("#input-search").focus();
         }
-
         onFocusInput(event) {
           event.target.select();
         }
-
         onChangeInput(event) {
           this.setState({
             text: event.target.value,
             cond: ""
           });
         }
-
         onChangeCond(event) {
           const text = this.state.text;
           const cond = event.target.value;
@@ -119,7 +112,6 @@ to automatically select "AND" as search method.
             });
           });
         }
-
         onInput(event) {
           if (event.key === "Enter") {
             if (this.state.text.length) {
@@ -133,14 +125,11 @@ to automatically select "AND" as search method.
             }
           }
         }
-
         onClose(criterion) {
           Fancybox.close();
           this.props.onClose(criterion);
         }
-
       });
-
       FormVideosSearch.contextType = LangContext;
     }
   };

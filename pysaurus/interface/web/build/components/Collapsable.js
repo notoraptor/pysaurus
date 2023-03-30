@@ -2,9 +2,7 @@ System.register(["../utils/constants.js"], function (_export, _context) {
   "use strict";
 
   var Characters, Collapsable;
-
   _export("Collapsable", void 0);
-
   return {
     setters: [function (_utilsConstantsJs) {
       Characters = _utilsConstantsJs.Characters;
@@ -18,7 +16,6 @@ System.register(["../utils/constants.js"], function (_export, _context) {
           };
           this.stack = this.stack.bind(this);
         }
-
         render() {
           const lite = this.props.lite !== undefined ? this.props.lite : true;
           return /*#__PURE__*/React.createElement("div", {
@@ -34,15 +31,12 @@ System.register(["../utils/constants.js"], function (_export, _context) {
             className: "content"
           }, this.props.children));
         }
-
         stack() {
           this.setState({
             stack: !this.state.stack
           });
         }
-
       });
-
       Collapsable.propTypes = {
         title: PropTypes.string,
         className: PropTypes.string,

@@ -2,9 +2,7 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../components/PathsI
   "use strict";
 
   var Dialog, LangContext, tr, PathsInput, FormDatabaseEditFolders;
-
   _export("FormDatabaseEditFolders", void 0);
-
   return {
     setters: [function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
@@ -26,7 +24,6 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../components/PathsI
           this.onUpdate = this.onUpdate.bind(this);
           this.onClose = this.onClose.bind(this);
         }
-
         render() {
           return /*#__PURE__*/React.createElement(Dialog, {
             title: tr("Edit {count} folders for database: {name}", {
@@ -40,19 +37,15 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../components/PathsI
             data: this.state.paths
           }));
         }
-
         onUpdate(paths) {
           this.setState({
             paths
           });
         }
-
         onClose() {
           this.props.onClose(this.state.paths);
         }
-
       });
-
       FormDatabaseEditFolders.contextType = LangContext;
       FormDatabaseEditFolders.propTypes = {
         database: PropTypes.shape({

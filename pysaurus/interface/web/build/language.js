@@ -2,7 +2,6 @@ System.register(["./utils/functions.js", "./utils/markdown.js"], function (_expo
   "use strict";
 
   var formatString, markdownToReact, LangContext;
-
   /**
    * Translate text
    * @param text {string} - text to translate
@@ -15,18 +14,14 @@ System.register(["./utils/functions.js", "./utils/markdown.js"], function (_expo
    */
   function tr(text, placeholders = null, markdown = null) {
     if (placeholders !== null) text = formatString(text, placeholders);
-
     if (markdown !== null) {
       let inline;
       if (markdown === "markdown") inline = false;else if (markdown === "markdown-inline") inline = true;else throw new Error(`Unknown markdown hint: ${markdown}, expected "markdown" or "markdown-inline"`);
       text = markdownToReact(text, inline);
     }
-
     return text;
   }
-
   _export("tr", tr);
-
   return {
     setters: [function (_utilsFunctionsJs) {
       formatString = _utilsFunctionsJs.formatString;

@@ -2,9 +2,7 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../utils/FancyboxMan
   "use strict";
 
   var Dialog, LangContext, tr, Fancybox, GenericFormRename;
-
   _export("GenericFormRename", void 0);
-
   return {
     setters: [function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
@@ -26,7 +24,6 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../utils/FancyboxMan
           this.submit = this.submit.bind(this);
           this.onFocusInput = this.onFocusInput.bind(this);
         }
-
         render() {
           return /*#__PURE__*/React.createElement(Dialog, {
             title: this.props.title,
@@ -48,34 +45,27 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../utils/FancyboxMan
             onFocus: this.onFocusInput
           }))));
         }
-
         componentDidMount() {
           document.querySelector("input#name").focus();
         }
-
         onFocusInput(event) {
           event.target.select();
         }
-
         onChange(event) {
           this.setState({
             data: event.target.value
           });
         }
-
         onKeyDown(event) {
           if (event.key === "Enter") {
             Fancybox.close();
             this.submit();
           }
         }
-
         submit() {
           if (this.state.data && this.state.data !== this.props.data) this.props.onClose(this.state.data);
         }
-
       });
-
       GenericFormRename.propTypes = {
         title: PropTypes.string.isRequired,
         header: PropTypes.string.isRequired,

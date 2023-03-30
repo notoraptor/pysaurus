@@ -2,7 +2,6 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
   "use strict";
 
   var Characters, backend_error, python_call, LangContext, tr, ProgressionMonitoring, Monitoring, NotificationRenderer, HomePage, EndStatus, EndReady, NotificationCollector, ACTIONS;
-
   function collectEndNotification(app, notification) {
     const name = notification.name;
     app.collectNotification(notification, {
@@ -11,9 +10,7 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
       ready: EndReady[name]
     });
   }
-
   _export("HomePage", void 0);
-
   return {
     setters: [function (_utilsConstantsJs) {
       Characters = _utilsConstantsJs.Characters;
@@ -32,23 +29,19 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
           this.title = null;
           this.jobs = new Map();
         }
-
         collectJobStep(notification) {
           this.jobs.set(notification.notification.channel, notification.notification.step);
           this.title = notification.notification.title;
         }
-
       };
       Monitoring = class Monitoring extends React.Component {
         render() {
           const monitoring = this.props.monitoring;
           const total = monitoring.total;
           let current = 0;
-
           for (let step of monitoring.jobs.values()) {
             current += step;
           }
-
           const percent = Math.round(current * 100 / total);
           const title = monitoring.title || tr("{count} done", {
             count: current
@@ -66,7 +59,6 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
             max: total
           }));
         }
-
       };
       Monitoring.contextType = LangContext;
       Monitoring.propTypes = {
@@ -109,12 +101,10 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
         ProfilingEnd: function (app, notification) {
           const messages = app.state.messages.slice();
           const lastIndex = messages.length - 1;
-
           if (messages.length && messages[lastIndex].name === "ProfilingStart" && messages[lastIndex].notification.name === notification.notification.name) {
             messages.pop();
             notification.notification.inplace = true;
           }
-
           messages.push(notification);
           app.setState({
             messages
@@ -142,13 +132,11 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
           this.NbMiniatures = this.NbMiniatures.bind(this);
           this.Message = this.Message.bind(this);
         }
-
         render() {
           const app = this.props.app;
           const message = this.props.message;
           const i = this.props.i;
           const name = message.name;
-
           if (this.hasOwnProperty(name)) {
             return this[name](app, message, i);
           } else {
@@ -157,14 +145,12 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
             }, /*#__PURE__*/React.createElement("em", null, tr("unknown")), ": ", message.message);
           }
         }
-
         JobStep(app, message, i) {
           return /*#__PURE__*/React.createElement(Monitoring, {
             monitoring: app.state.jobMap.get(message.notification.name),
             key: i
           });
         }
-
         DatabaseLoaded(app, message, i) {
           const data = message.notification;
           return /*#__PURE__*/React.createElement("div", {
@@ -185,36 +171,30 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
             count: data.valid
           }));
         }
-
         DatabaseSaved(app, message, i) {
           return this.DatabaseLoaded(app, message, i);
         }
-
         DatabaseReady(app, message, i) {
           return /*#__PURE__*/React.createElement("div", {
             key: i
           }, /*#__PURE__*/React.createElement("strong", null, tr("Database open!")));
         }
-
         Done(app, message, i) {
           return /*#__PURE__*/React.createElement("div", {
             key: i
           }, /*#__PURE__*/React.createElement("strong", null, tr("Done!")));
         }
-
         Cancelled(app, message, i) {
           return /*#__PURE__*/React.createElement("div", {
             key: i
           }, /*#__PURE__*/React.createElement("strong", null, tr("Cancelled.")));
         }
-
         End(app, message, i) {
           const info = message.notification.message;
           return /*#__PURE__*/React.createElement("div", {
             key: i
           }, /*#__PURE__*/React.createElement("strong", null, "Ended.", info ? ` ${info}` : ""));
         }
-
         FinishedCollectingVideos(app, message, i) {
           const count = message.notification.count;
           return /*#__PURE__*/React.createElement("div", {
@@ -223,10 +203,8 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
             count
           }, "markdown-inline"));
         }
-
         MissingThumbnails(app, message, i) {
           const names = message.notification.names;
-
           if (names.length) {
             return /*#__PURE__*/React.createElement("div", {
               key: i
@@ -241,7 +219,6 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
             }, /*#__PURE__*/React.createElement("em", null, tr("No missing thumbnails!")));
           }
         }
-
         ProfilingStart(app, message, i) {
           return /*#__PURE__*/React.createElement("div", {
             key: i
@@ -249,7 +226,6 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
             className: "span-profiled"
           }, tr("PROFILING")), " ", message.notification.name);
         }
-
         ProfilingEnd(app, message, i) {
           return /*#__PURE__*/React.createElement("div", {
             key: i
@@ -259,7 +235,6 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
             className: "span-profiled"
           }, "TIME"), " ", message.notification.time);
         }
-
         VideoInfoErrors(app, message, i) {
           const errors = message.notification.video_errors;
           const keys = Object.keys(errors);
@@ -274,16 +249,13 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
             key: indexError
           }, /*#__PURE__*/React.createElement("code", null, error))))))));
         }
-
         VideoThumbnailErrors(app, message, i) {
           return this.VideoInfoErrors(app, message, i);
         }
-
         JobToDo(app, message, i) {
           const total = message.notification.total;
           const label = message.notification.name;
           const title = message.notification.title;
-
           if (title) {
             return /*#__PURE__*/React.createElement("div", {
               key: i
@@ -298,10 +270,8 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
             }, /*#__PURE__*/React.createElement("em", null, tr("To load"), ": ", tr("nothing!")));
           }
         }
-
         NbMiniatures(app, message, i) {
           const total = message.notification.total;
-
           if (total) {
             return /*#__PURE__*/React.createElement("div", {
               key: i
@@ -314,13 +284,11 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
             }, /*#__PURE__*/React.createElement("em", null, tr("No miniatures saved!")));
           }
         }
-
         Message(app, message, i) {
           return /*#__PURE__*/React.createElement("div", {
             key: i
           }, /*#__PURE__*/React.createElement("strong", null, Characters.WARNING_SIGN), " ", message.notification.message);
         }
-
       };
       NotificationRenderer.contextType = LangContext;
       ACTIONS = {
@@ -333,7 +301,6 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
         compute_predictor: "Compute predictor",
         apply_predictor: "Predict"
       };
-
       _export("HomePage", HomePage = class HomePage extends React.Component {
         constructor(props) {
           // parameters: {command: [name, ...args]}
@@ -350,7 +317,6 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
           this.displayVideos = this.displayVideos.bind(this);
           this.collectNotification = this.collectNotification.bind(this);
         }
-
         render() {
           return /*#__PURE__*/React.createElement("div", {
             id: "home",
@@ -362,7 +328,6 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
             className: "notifications flex-grow-1 overflow-auto"
           }, this.renderMessages()));
         }
-
         renderInitialButton() {
           if (this.props.parameters.onReady) return /*#__PURE__*/React.createElement("strong", null, this.state.status || ACTIONS[this.props.parameters.command[0]] + " ...");else if (this.state.loaded) return /*#__PURE__*/React.createElement("button", {
             onClick: this.displayVideos
@@ -370,7 +335,6 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
             disabled: true
           }, ACTIONS[this.props.parameters.command[0]], " ...");
         }
-
         renderMessages() {
           const output = this.state.messages.map((message, i) => /*#__PURE__*/React.createElement(NotificationRenderer, {
             app: this,
@@ -382,33 +346,28 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
           }, "..."));
           return output;
         }
-
         componentDidMount() {
           NOTIFICATION_MANAGER.installFrom(this);
           python_call(...this.props.parameters.command).catch(backend_error);
         }
-
         componentDidUpdate() {
           const divNotifs = document.getElementById("notifications");
           divNotifs.scrollTop = divNotifs.scrollHeight;
-
           if (this.props.parameters.onReady && this.state.ready) {
             setTimeout(() => this.props.parameters.onReady(this.state.loaded), 500);
           }
         }
-
         componentWillUnmount() {
           NOTIFICATION_MANAGER.uninstallFrom(this);
         }
-
         notify(notification) {
           const name = notification.name;
           if (NotificationCollector[name]) return NotificationCollector[name](this, notification);else this.collectNotification(notification);
         }
-
         displayVideos() {
           this.props.app.loadVideosPage();
         }
+
         /**
          * Callback to collect notification.
          * Update component with given updates,
@@ -417,20 +376,15 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
          * @param updates {Object} - Object to update component
          * @param store {boolean} - If true, append notification to internal notification list.
          */
-
-
         collectNotification(notification, updates = {}, store = true) {
           if (store) {
             const messages = this.state.messages.slice();
             messages.push(notification);
             updates.messages = messages;
           }
-
           this.setState(updates);
         }
-
       });
-
       HomePage.contextType = LangContext;
       HomePage.propTypes = {
         app: PropTypes.object.isRequired,

@@ -2,9 +2,7 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
   "use strict";
 
   var MenuPack, Dialog, FormVideoEditProperties, Collapsable, MenuItem, Menu, backend_error, python_call, Characters, LangContext, tr, GenericFormRename, Fancybox, APP_STATE, Video;
-
-  function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
-
+  function _extends() { _extends = Object.assign ? Object.assign.bind() : function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
   /**
    * Generate class name for common value of videos grouped by similarity
    * @param value {boolean?}
@@ -13,9 +11,7 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
   function cc(value) {
     return value === undefined ? "" : value ? "common-true" : "common-false";
   }
-
   _export("Video", void 0);
-
   return {
     setters: [function (_MenuPackJs) {
       MenuPack = _MenuPackJs.MenuPack;
@@ -69,11 +65,9 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
           this.resetSimilarity = this.resetSimilarity.bind(this);
           this.reallyResetSimilarity = this.reallyResetSimilarity.bind(this);
         }
-
         render() {
           return this.props.data.readable ? this.renderVideo() : this.renderVideoState();
         }
-
         renderVideo() {
           const data = this.props.data;
           const audio_bit_rate = Math.round(data.audio_bit_rate / 1000);
@@ -224,7 +218,6 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
             onClick: () => this.confirmMove(data.video_id, data.moves[0].video_id)
           }, /*#__PURE__*/React.createElement("strong", null, tr("Confirm move to"), ":"), /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("code", null, data.moves[0].filename))) : "")));
         }
-
         renderVideoState() {
           const data = this.props.data;
           const errors = data.errors.slice();
@@ -293,7 +286,6 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
             key: elementIndex
           }, element.toString()))))))));
         }
-
         renderProperties() {
           const props = this.props.data.properties;
           const propDefs = this.props.propDefs;
@@ -323,7 +315,6 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
             }, tr("no value"))));
           }));
         }
-
         openVideo() {
           python_call("open_video", this.props.data.video_id).then(() => {
             APP_STATE.videoHistory.add(this.props.data.filename);
@@ -337,7 +328,6 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
             }));
           });
         }
-
         openVideoSurely() {
           python_call("open_video_surely", this.props.data.video_id).then(url => {
             APP_STATE.videoHistory.add(this.props.data.filename);
@@ -351,7 +341,6 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
             }));
           });
         }
-
         editProperties() {
           const data = this.props.data;
           Fancybox.load( /*#__PURE__*/React.createElement(FormVideoEditProperties, {
@@ -364,7 +353,6 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
             }
           }));
         }
-
         confirmDeletion() {
           const filename = this.props.data.filename;
           const thumbnail_path = this.props.data.thumbnail_path;
@@ -386,7 +374,6 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
             className: "no-thumbnail"
           }, tr("no thumbnail"))))));
         }
-
         dismissSimilarity() {
           const filename = this.props.data.filename;
           const thumbnail_path = this.props.data.thumbnail_path;
@@ -408,7 +395,6 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
             className: "no-thumbnail"
           }, tr("no thumbnail"))))));
         }
-
         resetSimilarity() {
           const filename = this.props.data.filename;
           const thumbnail_path = this.props.data.thumbnail_path;
@@ -434,29 +420,24 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
             className: "no-thumbnail"
           }, tr("no thumbnail"))))));
         }
-
         deleteVideo() {
           if (this.props.data.found || this.props.confirmDeletion) this.confirmDeletion();else this.reallyDeleteVideo();
         }
-
         reallyDeleteVideo() {
           python_call("delete_video", this.props.data.video_id).then(() => this.props.onInfo(tr("Video deleted! {path}", {
             path: this.props.data.filename
           }), true)).catch(backend_error);
         }
-
         reallyDismissSimilarity() {
           python_call("set_similarity", this.props.data.video_id, -1).then(() => this.props.onInfo(tr("Current similarity cancelled: {path}", {
             path: this.props.data.filename
           }), true)).catch(backend_error);
         }
-
         reallyResetSimilarity() {
           python_call("set_similarity", this.props.data.video_id, null).then(() => this.props.onInfo(tr("Current similarity reset: {path}", {
             path: this.props.data.filename
           }), true)).catch(backend_error);
         }
-
         openContainingFolder() {
           python_call("open_containing_folder", this.props.data.video_id).then(folder => {
             this.props.onInfo(tr("Opened folder: {path}", {
@@ -464,23 +445,18 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
             }));
           }).catch(backend_error);
         }
-
         copyMetaTitle() {
           this.copyToClipboard("title");
         }
-
         copyFileTitle() {
           this.copyToClipboard("file_title");
         }
-
         copyFilePath() {
           this.copyToClipboard("filename");
         }
-
         copyVideoID() {
           this.copyToClipboard("video_id");
         }
-
         copyToClipboard(field) {
           const text = this.props.data[field];
           python_call("clipboard", text).then(() => this.props.onInfo(tr("Copied to clipboard: {text}", {
@@ -490,13 +466,11 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
             text
           })));
         }
-
         confirmMove(srcID, dstID) {
           python_call("set_video_moved", srcID, dstID).then(() => this.props.onInfo(tr("Moved: {path}", {
             path: this.props.data.filename
           }), true)).catch(backend_error);
         }
-
         renameVideo() {
           const filename = this.props.data.filename;
           const title = this.props.data.file_title;
@@ -510,7 +484,6 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
             }
           }));
         }
-
         moveVideo() {
           python_call("select_directory", APP_STATE.latestMoveFolder).then(directory => {
             if (directory) {
@@ -519,15 +492,12 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
             }
           }).catch(backend_error);
         }
-
         onSelect(event) {
           if (this.props.onSelect) {
             this.props.onSelect(this.props.data.video_id, event.target.checked);
           }
         }
-
       });
-
       Video.contextType = LangContext;
       Video.propTypes = {
         data: PropTypes.object.isRequired,

@@ -2,9 +2,7 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../utils/FancyboxMan
   "use strict";
 
   var Dialog, LangContext, tr, Fancybox, FormNewPredictionProperty;
-
   _export("FormNewPredictionProperty", void 0);
-
   return {
     setters: [function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
@@ -28,7 +26,6 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../utils/FancyboxMan
           this.submit = this.submit.bind(this);
           this.onFocusInput = this.onFocusInput.bind(this);
         }
-
         render() {
           return /*#__PURE__*/React.createElement(Dialog, {
             title: tr("New prediction property"),
@@ -52,38 +49,30 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../utils/FancyboxMan
             onFocus: this.onFocusInput
           }))));
         }
-
         componentDidMount() {
           document.querySelector("input#name").focus();
         }
-
         onFocusInput(event) {
           event.target.select();
         }
-
         onChange(event) {
           this.setState({
             title: event.target.value
           });
         }
-
         onClose() {
           this.submit();
         }
-
         onKeyDown(event) {
           if (event.key === "Enter") {
             Fancybox.close();
             this.submit();
           }
         }
-
         submit() {
           if (this.state.title && this.state.title !== this.props.title) this.props.onClose(this.state.title);
         }
-
       });
-
       FormNewPredictionProperty.contextType = LangContext;
     }
   };

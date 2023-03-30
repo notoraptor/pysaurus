@@ -2,7 +2,6 @@ System.register(["../utils/constants.js", "./MicroButton.js"], function (_export
   "use strict";
 
   var Characters, MicroButton;
-
   function Cross(props) {
     return /*#__PURE__*/React.createElement(MicroButton, {
       type: "cross",
@@ -11,9 +10,7 @@ System.register(["../utils/constants.js", "./MicroButton.js"], function (_export
       action: props.action
     });
   }
-
   _export("Cross", Cross);
-
   return {
     setters: [function (_utilsConstantsJs) {
       Characters = _utilsConstantsJs.Characters;

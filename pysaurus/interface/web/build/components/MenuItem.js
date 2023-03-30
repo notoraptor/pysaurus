@@ -2,9 +2,7 @@ System.register([], function (_export, _context) {
   "use strict";
 
   var MenuItem;
-
   _export("MenuItem", void 0);
-
   return {
     setters: [],
     execute: function () {
@@ -13,7 +11,6 @@ System.register([], function (_export, _context) {
           super(props);
           this.onClick = this.onClick.bind(this);
         }
-
         render() {
           const classNames = ["menu-item horizontal"];
           if (this.props.className) classNames.push(this.props.className);
@@ -30,18 +27,14 @@ System.register([], function (_export, _context) {
             className: "shortcut"
           }, this.props.shortcut || "")));
         }
-
         onClick() {
           if (this.props.action) this.props.action();
         }
-
       });
-
       MenuItem.propTypes = {
         className: PropTypes.string,
         shortcut: PropTypes.string,
         action: PropTypes.func.isRequired // action()
-
       };
     }
   };

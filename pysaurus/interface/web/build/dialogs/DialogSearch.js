@@ -2,9 +2,7 @@ System.register(["../components/Cell.js", "./Dialog.js", "../utils/FancyboxManag
   "use strict";
 
   var Cell, Dialog, Fancybox, DialogSearch;
-
   _export("DialogSearch", void 0);
-
   return {
     setters: [function (_componentsCellJs) {
       Cell = _componentsCellJs.Cell;
@@ -25,7 +23,6 @@ System.register(["../components/Cell.js", "./Dialog.js", "../utils/FancyboxManag
           this.onInput = this.onInput.bind(this);
           this.onClose = this.onClose.bind(this);
         }
-
         render() {
           return /*#__PURE__*/React.createElement(Dialog, {
             title: this.props.title,
@@ -45,21 +42,17 @@ System.register(["../components/Cell.js", "./Dialog.js", "../utils/FancyboxManag
             value: this.state.text
           })));
         }
-
         componentDidMount() {
           document.querySelector("#input-search").focus();
         }
-
         onFocusInput(event) {
           event.target.select();
         }
-
         onChangeInput(event) {
           this.setState({
             text: event.target.value
           });
         }
-
         onInput(event) {
           if (event.key === "Enter" && this.state.text) {
             Fancybox.close();
@@ -67,13 +60,10 @@ System.register(["../components/Cell.js", "./Dialog.js", "../utils/FancyboxManag
             return true;
           }
         }
-
         onClose() {
           if (this.state.text) this.props.onSearch(this.state.text);
         }
-
       });
-
       DialogSearch.propTypes = {
         title: PropTypes.string.isRequired,
         // onSearch(str)

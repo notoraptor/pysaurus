@@ -2,9 +2,7 @@ System.register(["../forms/FormPaginationGoTo.js", "../dialogs/DialogSearch.js",
   "use strict";
 
   var FormPaginationGoTo, DialogSearch, capitalizeFirstLetter, Fancybox, Pagination;
-
   _export("Pagination", void 0);
-
   return {
     setters: [function (_formsFormPaginationGoToJs) {
       FormPaginationGoTo = _formsFormPaginationGoToJs.FormPaginationGoTo;
@@ -32,7 +30,6 @@ System.register(["../forms/FormPaginationGoTo.js", "../dialogs/DialogSearch.js",
           this.go = this.go.bind(this);
           this.look = this.look.bind(this);
         }
-
         render() {
           const singular = this.props.singular;
           const plural = this.props.plural;
@@ -66,31 +63,26 @@ System.register(["../forms/FormPaginationGoTo.js", "../dialogs/DialogSearch.js",
             className: "navigation py-1 text-center"
           }, /*#__PURE__*/React.createElement("em", null, "0 ", plural));
         }
-
         onFirst() {
           if (this.props.pageNumber !== 0) {
             this.props.onChange(0);
           }
         }
-
         onPrevious() {
           if (this.props.pageNumber > 0) {
             this.props.onChange(this.props.pageNumber - 1);
           }
         }
-
         onNext() {
           if (this.props.pageNumber < this.props.nbPages - 1) {
             this.props.onChange(this.props.pageNumber + 1);
           }
         }
-
         onLast() {
           if (this.props.pageNumber !== this.props.nbPages - 1) {
             this.props.onChange(this.props.nbPages - 1);
           }
         }
-
         go() {
           Fancybox.load( /*#__PURE__*/React.createElement(FormPaginationGoTo, {
             nbPages: this.props.nbPages,
@@ -100,14 +92,12 @@ System.register(["../forms/FormPaginationGoTo.js", "../dialogs/DialogSearch.js",
             }
           }));
         }
-
         look() {
           Fancybox.load( /*#__PURE__*/React.createElement(DialogSearch, {
             title: "Search first:",
             onSearch: this.props.onSearch
           }));
         }
-
       });
     }
   };

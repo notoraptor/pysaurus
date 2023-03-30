@@ -2,7 +2,6 @@ System.register(["./Cross.js", "../utils/Action.js"], function (_export, _contex
   "use strict";
 
   var Cross, Action;
-
   function ActionToCross(props) {
     const {
       action,
@@ -13,9 +12,7 @@ System.register(["./Cross.js", "../utils/Action.js"], function (_export, _contex
       action: action.callback
     });
   }
-
   _export("ActionToCross", ActionToCross);
-
   return {
     setters: [function (_CrossJs) {
       Cross = _CrossJs.Cross;

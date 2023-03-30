@@ -2,9 +2,7 @@ System.register(["../dialogs/Dialog.js", "../components/Cell.js", "../language.j
   "use strict";
 
   var Dialog, Cell, LangContext, tr, FormVideosKeywordsToProperty;
-
   _export("FormVideosKeywordsToProperty", void 0);
-
   return {
     setters: [function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
@@ -28,7 +26,6 @@ System.register(["../dialogs/Dialog.js", "../components/Cell.js", "../language.j
           this.onChangeEmpty = this.onChangeEmpty.bind(this);
           this.onClose = this.onClose.bind(this);
         }
-
         render() {
           return /*#__PURE__*/React.createElement(Dialog, {
             title: "Fill property",
@@ -55,25 +52,20 @@ System.register(["../dialogs/Dialog.js", "../components/Cell.js", "../language.j
             name: this.state.field
           })))));
         }
-
         onChangeGroupField(event) {
           this.setState({
             field: event.target.value
           });
         }
-
         onChangeEmpty(event) {
           this.setState({
             onlyEmpty: event.target.checked
           });
         }
-
         onClose() {
           this.props.onClose(this.state);
         }
-
       });
-
       FormVideosKeywordsToProperty.contextType = LangContext;
     }
   };

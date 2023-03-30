@@ -2,15 +2,12 @@ System.register(["../language.js", "../utils/functions.js"], function (_export, 
   "use strict";
 
   var LangContext, tr, UTILITIES, SetController, ComponentController, ComponentPropController, SetInput;
-
-  function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
-
+  function _extends() { _extends = Object.assign ? Object.assign.bind() : function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
   _export({
     ComponentController: void 0,
     ComponentPropController: void 0,
     SetInput: void 0
   });
-
   return {
     setters: [function (_languageJs) {
       LangContext = _languageJs.LangContext;
@@ -20,29 +17,25 @@ System.register(["../language.js", "../utils/functions.js"], function (_export, 
     }],
     execute: function () {
       SetController = class SetController {
-        constructor() {//
+        constructor() {
+          //
         }
-
         size() {
           return 0;
         }
-
         get(index) {
           return null;
         }
-
         has(value) {
           return false;
         }
-
-        add(value) {//
+        add(value) {
+          //
         }
-
-        remove(value) {//
+        remove(value) {
+          //
         }
-
       };
-
       _export("ComponentController", ComponentController = class ComponentController extends SetController {
         constructor(app, field, parser = null) {
           super();
@@ -50,20 +43,16 @@ System.register(["../language.js", "../utils/functions.js"], function (_export, 
           this.field = field;
           this.parser = parser;
         }
-
         size() {
           return this.app.state[this.field].length;
         }
-
         get(index) {
           return this.app.state[this.field][index];
         }
-
         has(value) {
           if (this.parser) value = this.parser(value);
           return this.app.state[this.field].indexOf(value) >= 0;
         }
-
         add(value) {
           const arr = this.app.state[this.field].slice();
           if (this.parser) value = this.parser(value);
@@ -72,29 +61,22 @@ System.register(["../language.js", "../utils/functions.js"], function (_export, 
             [this.field]: arr
           });
         }
-
         remove(toRemove) {
           if (this.parser) toRemove = this.parser(toRemove);
           const arr = [];
-
           for (let value of this.app.state[this.field]) {
             if (value !== toRemove) arr.push(value);
           }
-
           this.app.setState({
             [this.field]: arr
           });
         }
-
       });
-
       _export("ComponentPropController", ComponentPropController = class ComponentPropController extends ComponentController {
         constructor(app, field, propType, propEnum) {
           super(app, field, value => UTILITIES.parsePropValString(propType, propEnum, value));
         }
-
       });
-
       _export("SetInput", SetInput = class SetInput extends React.Component {
         constructor(props) {
           super(props);
@@ -107,7 +89,6 @@ System.register(["../language.js", "../utils/functions.js"], function (_export, 
           this.add = this.add.bind(this);
           this.remove = this.remove.bind(this);
         }
-
         render() {
           return /*#__PURE__*/React.createElement("div", {
             className: `set-input ${this.props.className || ""}`
@@ -134,12 +115,10 @@ System.register(["../language.js", "../utils/functions.js"], function (_export, 
             onClick: this.onAdd
           }, "+"))))));
         }
-
         renderList() {
           const output = [];
           const controller = this.props.controller;
           const size = controller.size();
-
           for (let i = 0; i < size; ++i) {
             const value = controller.get(i);
             output.push( /*#__PURE__*/React.createElement("tr", {
@@ -150,30 +129,24 @@ System.register(["../language.js", "../utils/functions.js"], function (_export, 
               onClick: () => this.remove(value)
             }, "-"))));
           }
-
           return output;
         }
-
         onChangeAdd(event) {
           this.setState({
             add: event.target.value
           });
         }
-
         onInputAdd(event) {
           if (event.key === "Enter") {
             this.add(this.state.add);
           }
         }
-
         onAdd() {
           this.add(this.state.add);
         }
-
         add(value) {
           if (!value.length) return;
           const controller = this.props.controller;
-
           try {
             if (controller.has(value)) window.alert(tr("Value already in list: {value}", {
               value
@@ -184,19 +157,15 @@ System.register(["../language.js", "../utils/functions.js"], function (_export, 
             window.alert(exception.toString());
           }
         }
-
         remove(value) {
           const controller = this.props.controller;
-
           try {
             if (controller.has(value)) controller.remove(value);
           } catch (e) {
             window.alert(e.toString());
           }
         }
-
       });
-
       SetInput.contextType = LangContext;
       SetInput.propTypes = {
         controller: PropTypes.instanceOf(SetController),

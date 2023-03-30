@@ -2,9 +2,7 @@ System.register(["./FancyBox.js", "../language.js", "../utils/FancyboxManager.js
   "use strict";
 
   var FancyBox, LangContext, tr, Fancybox, Dialog;
-
   _export("Dialog", void 0);
-
   return {
     setters: [function (_FancyBoxJs) {
       FancyBox = _FancyBoxJs.FancyBox;
@@ -20,7 +18,6 @@ System.register(["./FancyBox.js", "../language.js", "../utils/FancyboxManager.js
           super(props);
           this.yes = this.yes.bind(this);
         }
-
         render() {
           return /*#__PURE__*/React.createElement(FancyBox, {
             title: this.props.title
@@ -42,14 +39,11 @@ System.register(["./FancyBox.js", "../language.js", "../utils/FancyboxManager.js
             onClick: Fancybox.close
           }, /*#__PURE__*/React.createElement("strong", null, this.props.no || tr("cancel")))))));
         }
-
         yes() {
           Fancybox.close();
           if (this.props.action) this.props.action();
         }
-
       });
-
       Dialog.contextType = LangContext;
       Dialog.propTypes = {
         title: PropTypes.string.isRequired,

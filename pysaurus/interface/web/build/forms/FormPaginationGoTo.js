@@ -2,9 +2,7 @@ System.register(["../dialogs/Dialog.js", "../components/Cell.js", "../utils/Fanc
   "use strict";
 
   var Dialog, Cell, Fancybox, FormPaginationGoTo;
-
   _export("FormPaginationGoTo", void 0);
-
   return {
     setters: [function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
@@ -28,7 +26,6 @@ System.register(["../dialogs/Dialog.js", "../components/Cell.js", "../utils/Fanc
           this.onInput = this.onInput.bind(this);
           this.onClose = this.onClose.bind(this);
         }
-
         render() {
           return /*#__PURE__*/React.createElement(Dialog, {
             title: "Go to page:",
@@ -50,15 +47,12 @@ System.register(["../dialogs/Dialog.js", "../components/Cell.js", "../utils/Fanc
             onKeyDown: this.onInput
           }), " ", "/ ", this.props.nbPages));
         }
-
         componentDidMount() {
           document.querySelector("#input-go").focus();
         }
-
         onFocusInput(event) {
           event.target.select();
         }
-
         onChange(event) {
           const value = event.target.value;
           let pageNumber = (value || 1) - 1;
@@ -68,18 +62,15 @@ System.register(["../dialogs/Dialog.js", "../components/Cell.js", "../utils/Fanc
             pageNumber
           });
         }
-
         onInput(event) {
           if (event.key === "Enter") {
             Fancybox.close();
             this.props.onClose(this.state.pageNumber);
           }
         }
-
         onClose() {
           this.props.onClose(this.state.pageNumber);
         }
-
       });
     }
   };

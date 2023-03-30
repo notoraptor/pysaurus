@@ -2,9 +2,7 @@ System.register(["../utils/constants.js", "../components/SetInput.js", "../dialo
   "use strict";
 
   var PAGE_SIZES, ComponentController, SetInput, Dialog, Cross, Fancybox, Test;
-
   _export("Test", void 0);
-
   return {
     setters: [function (_utilsConstantsJs) {
       PAGE_SIZES = _utilsConstantsJs.PAGE_SIZES;
@@ -28,7 +26,6 @@ System.register(["../utils/constants.js", "../components/SetInput.js", "../dialo
             arr: ["a", "b", "ccc"]
           };
         }
-
         render() {
           const c = new ComponentController(this, "arr");
           return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(SetInput, {
@@ -45,14 +42,12 @@ System.register(["../utils/constants.js", "../components/SetInput.js", "../dialo
             onClick: () => this.fancy()
           }, "click here!"));
         }
-
         fancy() {
           Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
             title: "Test Fancy Box 2!",
             action: () => console.log("Choice: yes!")
           }, /*#__PURE__*/React.createElement("h1", null, "hello world ", this.state.pageSize), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world"), /*#__PURE__*/React.createElement("h1", null, "hello world")));
         }
-
       });
     }
   };

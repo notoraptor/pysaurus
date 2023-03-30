@@ -2,9 +2,7 @@ System.register(["../utils/backend.js", "../components/PathsInput.js", "../langu
   "use strict";
 
   var backend_error, python_call, PathsInput, LangContext, tr, DatabasesPage;
-
   _export("DatabasesPage", void 0);
-
   return {
     setters: [function (_utilsBackendJs) {
       backend_error = _utilsBackendJs.backend_error;
@@ -33,7 +31,6 @@ System.register(["../utils/backend.js", "../components/PathsInput.js", "../langu
           this.onChangeLanguage = this.onChangeLanguage.bind(this);
           this.onUpdatePaths = this.onUpdatePaths.bind(this);
         }
-
         render() {
           const languages = this.props.parameters.language_names;
           const paths = Array.from(this.state.paths);
@@ -95,44 +92,35 @@ System.register(["../utils/backend.js", "../components/PathsInput.js", "../langu
             onClick: () => this.openDatabase(database)
           }, database)))))));
         }
-
         onChangeLanguage(event) {
           this.props.app.setLanguage(event.target.value);
         }
-
         onChangeName(event) {
           const name = event.target.value;
-
           if (this.state.name !== name) {
             this.setState({
               name
             });
           }
         }
-
         onChangeUpdate(event) {
           this.setState({
             update: event.target.checked
           });
         }
-
         createDatabase() {
           // TODO: flag `update` should be either reserved to update_database, or display as global flag into this page
           this.props.app.dbUpdate("create_database", this.state.name, Array.from(this.state.paths), this.state.update);
         }
-
         openDatabase(name) {
           this.props.app.dbUpdate("open_database", name, this.state.update);
         }
-
         onUpdatePaths(paths) {
           this.setState({
             paths
           });
         }
-
       });
-
       DatabasesPage.contextType = LangContext;
     }
   };

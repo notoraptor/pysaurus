@@ -2,9 +2,7 @@ System.register(["../utils/FancyboxManager.js"], function (_export, _context) {
   "use strict";
 
   var Fancybox, FancyBox;
-
   _export("FancyBox", void 0);
-
   return {
     setters: [function (_utilsFancyboxManagerJs) {
       Fancybox = _utilsFancyboxManagerJs.Fancybox;
@@ -21,7 +19,6 @@ System.register(["../utils/FancyboxManager.js"], function (_export, _context) {
           this.checkShortcut = this.checkShortcut.bind(this);
           this.onClose = this.onClose.bind(this);
         }
-
         render() {
           return /*#__PURE__*/React.createElement("div", {
             className: "fancybox-wrapper absolute-plain"
@@ -40,32 +37,26 @@ System.register(["../utils/FancyboxManager.js"], function (_export, _context) {
             className: "fancybox-content position-relative overflow-auto flex-grow-1 p-2"
           }, this.props.children)));
         }
-
         componentDidMount() {
           this.callbackIndex = KEYBOARD_MANAGER.register(this.checkShortcut);
         }
-
         componentWillUnmount() {
           KEYBOARD_MANAGER.unregister(this.callbackIndex);
         }
+
         /**
          * @param event {KeyboardEvent}
          */
-
-
         checkShortcut(event) {
           if (event.key === "Escape") {
             this.onClose();
             return true;
           }
         }
-
         onClose() {
           if (!this.props.onClose || this.props.onClose()) Fancybox.close();
         }
-
       });
-
       FancyBox.propTypes = {
         title: PropTypes.string.isRequired,
         // onClose()

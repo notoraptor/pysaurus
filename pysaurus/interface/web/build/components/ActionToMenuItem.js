@@ -2,7 +2,6 @@ System.register(["./MenuItem.js", "../utils/Action.js"], function (_export, _con
   "use strict";
 
   var MenuItem, Action;
-
   function ActionToMenuItem(props) {
     const {
       action,
@@ -13,9 +12,7 @@ System.register(["./MenuItem.js", "../utils/Action.js"], function (_export, _con
       action: action.callback
     }, title || action.title);
   }
-
   _export("ActionToMenuItem", ActionToMenuItem);
-
   return {
     setters: [function (_MenuItemJs) {
       MenuItem = _MenuItemJs.MenuItem;

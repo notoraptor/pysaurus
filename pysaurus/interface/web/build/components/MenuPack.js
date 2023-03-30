@@ -12,9 +12,7 @@ System.register([], function (_export, _context) {
       className: "content"
     }, props.children));
   }
-
   _export("MenuPack", MenuPack);
-
   return {
     setters: [],
     execute: function () {

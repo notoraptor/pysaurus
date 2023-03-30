@@ -2,9 +2,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
   "use strict";
 
   var FIELD_MAP, PAGE_SIZES, SearchTypeTitle, SOURCE_TREE, MenuPack, Pagination, Video, FormVideosSource, FormVideosGrouping, FormVideosSearch, FormVideosSort, GroupView, FormPropertyEditSelectedValues, FormVideosKeywordsToProperty, FormSelectedVideosEditProperty, Collapsable, Cross, MenuItem, MenuItemCheck, MenuItemRadio, Menu, Selector, Action, Actions, ActionToMenuItem, ActionToSettingIcon, ActionToCross, backend_error, python_call, python_multiple_call, FancyBox, HomePage, FormDatabaseEditFolders, Dialog, Cell, FormNewPredictionProperty, GenericFormRename, LangContext, tr, arrayEquals, compareSources, Fancybox, APP_STATE, VideosPage;
-
   _export("VideosPage", void 0);
-
   return {
     setters: [function (_utilsConstantsJs) {
       FIELD_MAP = _utilsConstantsJs.FIELD_MAP;
@@ -165,7 +163,6 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
           this.playlist = this.playlist.bind(this);
           this.callbackIndex = -1;
         }
-
         render() {
           const languages = this.props.app.getLanguages();
           const nbVideos = this.state.nbVideos;
@@ -415,7 +412,6 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             className: "info length"
           }, validLength))));
         }
-
         renderFilter() {
           const actions = this.getActions().actions;
           const sources = this.state.sources;
@@ -454,7 +450,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             action: actions.unsearch
           })) : "")), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, tr("Sorted by")), sorting.map((val, i) => /*#__PURE__*/React.createElement("div", {
             key: i
-          }, /*#__PURE__*/React.createElement("strong", null, FIELD_MAP.fields[val.substr(1)].title), " ", val[0] === "-" ? /*#__PURE__*/React.createElement("span", null, "\u25BC") : /*#__PURE__*/React.createElement("span", null, "\u25B2")))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToSettingIcon, {
+          }, /*#__PURE__*/React.createElement("strong", null, FIELD_MAP.fields[val.substring(1)].title), " ", val[0] === "-" ? /*#__PURE__*/React.createElement("span", null, "\u25BC") : /*#__PURE__*/React.createElement("span", null, "\u25B2")))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToSettingIcon, {
             action: actions.sort
           })), sortingIsDefault ? "" : /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ActionToCross, {
             action: actions.unsort
@@ -483,11 +479,9 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             action: this.deselect
           }) : ""))));
         }
-
         getStatus() {
           return this.state.status === undefined ? tr("Loaded.") : this.state.status;
         }
-
         getActions() {
           // 14 shortcuts currently.
           return new Actions({
@@ -507,7 +501,6 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             playlist: new Action("Ctrl+L", tr("play list"), this.playlist, Fancybox.isInactive)
           }, this.context);
         }
-
         createPredictionProperty() {
           Fancybox.load( /*#__PURE__*/React.createElement(FormNewPredictionProperty, {
             onClose: name => {
@@ -515,7 +508,6 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             }
           }));
         }
-
         populatePredictionProperty() {
           Fancybox.load( /*#__PURE__*/React.createElement(FancyBox, {
             title: tr("Populate prediction property manually")
@@ -537,106 +529,84 @@ There is however some good practices:
 Once done, move you can compute prediction.
 `, null, "markdown")));
         }
-
         computePredictionProperty(propName) {
           this.props.app.dbUpdate("compute_predictor", propName);
         }
-
         applyPrediction(propName) {
           this.props.app.dbUpdate("apply_predictor", propName);
         }
-
         sourceIsSet() {
           return !compareSources(window.PYTHON_DEFAULT_SOURCES, this.state.sources);
         }
-
         groupIsSet() {
           return !!this.state.groupDef;
         }
-
         searchIsSet() {
           return !!this.state.searchDef;
         }
-
         sortIsSet() {
           return !(this.state.sorting.length === 1 && this.state.sorting[0] === "-date");
         }
-
         allNotFound() {
           for (let source of this.state.sources) {
             if (source.indexOf("not_found") < 0) return false;
           }
-
           return true;
         }
-
         canOpenRandomVideo() {
           return Fancybox.isInactive() && !this.allNotFound() && this.state.totalNbVideos;
         }
-
         canFindSimilarVideos() {
           return window.PYTHON_FEATURE_COMPARISON;
         }
-
         componentDidMount() {
           this.callbackIndex = KEYBOARD_MANAGER.register(this.getActions().onKeyPressed);
           NOTIFICATION_MANAGER.installFrom(this);
         }
-
         componentWillUnmount() {
           KEYBOARD_MANAGER.unregister(this.callbackIndex);
           NOTIFICATION_MANAGER.uninstallFrom(this);
         }
+
         /**
          * @param state {Object}
          * @param field {String}
          * @returns {*}
          */
-
-
         getStateField(state, field) {
           return state[field] === undefined ? this.state === undefined ? undefined : this.state[field] : state[field];
         }
-
         backend(callargs, state = {}, top = true) {
           const pageSize = this.getStateField(state, "pageSize");
           const pageNumber = this.getStateField(state, "pageNumber");
           const displayOnlySelected = this.getStateField(state, "displayOnlySelected");
           const selector = displayOnlySelected ? this.getStateField(state, "selector").toJSON() : null;
           if (!state.status) state.status = tr("updated.");
-
           const run = async () => {
             if (callargs) await python_call(...callargs);
             return await python_call("backend", pageSize, pageNumber, selector);
           };
-
           run().then(info => this.setState(this.parametersToState(state, info), top ? this.scrollTop : undefined)).catch(backend_error);
         }
-
         viewHasChanged(state, info) {
           const prevSources = this.getStateField(state, "sources") || window.PYTHON_DEFAULT_SOURCES;
           const nextSources = info.sources || [];
           if (!compareSources(prevSources, nextSources)) return true;
           const prevGroupDef = this.getStateField(state, "groupDef") || {};
           const nextGroupDef = info.groupDef || {};
-
           for (let field of ["field", "is_property", "sorting", "reverse", "allow_singletons", "group_id"]) {
             if (prevGroupDef[field] !== nextGroupDef[field]) return true;
           }
-
           const prevPath = this.getStateField(state, "path") || [];
           const nextPath = info.path || [];
           if (prevPath.length !== nextPath.length) return true;
-
           for (let i = 0; i < prevPath.length; ++i) {
             if (prevPath[i] !== nextPath[i]) return true;
           }
-
           const prevSearchDef = this.getStateField(state, "searchDef") || {};
           const nextSearchDef = info.searchDef || {};
           return prevSearchDef.text !== nextSearchDef.text || prevSearchDef.cond !== nextSearchDef.cond;
         }
-
         parametersToState(state, info) {
           if (info.groupDef) {
             const groupPageSize = this.getStateField(state, "groupPageSize");
@@ -645,24 +615,19 @@ Once done, move you can compute prediction.
             const nbPages = Math.floor(count / groupPageSize) + (count % groupPageSize ? 1 : 0);
             state.groupPageNumber = Math.min(Math.max(0, groupPageNumber), nbPages - 1);
           }
-
           const viewChanged = this.viewHasChanged(state, info);
           console.log(`View changed? ${viewChanged ? "true" : "false"}`);
           if (viewChanged) state.selector = new Selector();
           const definitions = {};
-
           for (let propType of info.prop_types) {
             definitions[propType.name] = propType;
           }
-
           state.definitions = definitions;
           return Object.assign(state, info);
         }
-
         notify(notification) {
           if (notification.name === "NextRandomVideo") this.backend(null, {});
         }
-
         onGroupViewState(groupState) {
           const state = {};
           if (groupState.hasOwnProperty("pageSize")) state.groupPageSize = groupState.pageSize;
@@ -671,14 +636,11 @@ Once done, move you can compute prediction.
           const groupID = groupState.hasOwnProperty("groupID") ? groupState.groupID : null;
           this.setState(state, groupID === null ? undefined : () => this.selectGroup(groupID));
         }
-
         scrollTop() {
           document.querySelector("#videos .videos").scrollTop = 0;
         }
-
         onVideoSelection(videoID, selected) {
           const selector = this.state.selector.clone();
-
           if (selected) {
             selector.add(videoID);
             this.setState({
@@ -694,7 +656,6 @@ Once done, move you can compute prediction.
             });
           }
         }
-
         moveVideo(videoID, directory) {
           Fancybox.load( /*#__PURE__*/React.createElement(FancyBox, {
             title: tr("Move file to {path}", {
@@ -719,7 +680,6 @@ Once done, move you can compute prediction.
             }
           }))));
         }
-
         deselect() {
           const selector = this.state.selector.clone();
           selector.clear();
@@ -730,7 +690,6 @@ Once done, move you can compute prediction.
             selector
           });
         }
-
         selectAll() {
           // Should not be called if displayOnlySelected is true.
           const selector = this.state.selector.clone();
@@ -741,13 +700,11 @@ Once done, move you can compute prediction.
             selector
           });
         }
-
         displayOnlySelected() {
           this.backend(null, {
             displayOnlySelected: !this.state.displayOnlySelected
           });
         }
-
         updateStatus(status, reload = false, top = false) {
           if (reload) this.backend(null, {
             status
@@ -755,19 +712,16 @@ Once done, move you can compute prediction.
             status
           });
         }
-
         resetStatus() {
           this.setState({
             status: tr("Ready.")
           });
         }
-
         unselectVideos() {
           this.backend(["set_sources", null], {
             pageNumber: 0
           });
         }
-
         selectVideos() {
           Fancybox.load( /*#__PURE__*/React.createElement(FormVideosSource, {
             tree: SOURCE_TREE,
@@ -779,7 +733,6 @@ Once done, move you can compute prediction.
             }
           }));
         }
-
         groupVideos() {
           const groupDef = this.state.groupDef || {
             field: null,
@@ -797,13 +750,11 @@ Once done, move you can compute prediction.
             }
           }));
         }
-
         backendGroupVideos(field, isProperty = false, sorting = "count", reverse = true, allowSingletons = true) {
           this.backend(["set_groups", field, isProperty, sorting, reverse, allowSingletons], {
             pageNumber: 0
           });
         }
-
         editPropertiesForManyVideos(propertyName) {
           const selectionSize = this.state.selector.size(this.state.realNbVideos);
           const videoIndices = this.state.selector.toJSON();
@@ -824,7 +775,6 @@ Once done, move you can compute prediction.
             }));
           }).catch(backend_error);
         }
-
         searchVideos() {
           const search_def = this.state.searchDef || {
             text: null,
@@ -840,7 +790,6 @@ Once done, move you can compute prediction.
             }
           }));
         }
-
         sortVideos() {
           Fancybox.load( /*#__PURE__*/React.createElement(FormVideosSort, {
             sorting: this.state.sorting,
@@ -851,7 +800,6 @@ Once done, move you can compute prediction.
             }
           }));
         }
-
         editDatabaseFolders() {
           Fancybox.load( /*#__PURE__*/React.createElement(FormDatabaseEditFolders, {
             database: this.state.database,
@@ -860,7 +808,6 @@ Once done, move you can compute prediction.
             }
           }));
         }
-
         renameDatabase() {
           const name = this.state.database.name;
           Fancybox.load( /*#__PURE__*/React.createElement(GenericFormRename, {
@@ -877,7 +824,6 @@ Once done, move you can compute prediction.
             }
           }));
         }
-
         deleteDatabase() {
           Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
             title: tr("Delete database {name}", {
@@ -903,7 +849,6 @@ Once done, move you can compute prediction.
 ### Video files won't be touched.
 `, null, "markdown"))));
         }
-
         confirmAllUniqueMoves() {
           Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
             title: tr("Confirm all unique moves"),
@@ -929,25 +874,21 @@ from not found to found video, and
 not found video entry will be deleted.
 `, null, "markdown"))));
         }
-
         resetGroup() {
           this.backend(["set_groups", ""], {
             pageNumber: 0
           });
         }
-
         resetSearch() {
           this.backend(["set_search", null, null], {
             pageNumber: 0
           });
         }
-
         resetSort() {
           this.backend(["set_sorting", null], {
             pageNumber: 0
           });
         }
-
         openRandomVideo() {
           python_call("open_random_video").then(filename => {
             APP_STATE.videoHistory.add(filename);
@@ -956,27 +897,21 @@ not found video entry will be deleted.
             }), true, true);
           }).catch(backend_error);
         }
-
         playlist() {
           python_call("playlist").then(filename => this.updateStatus(`Opened playlist: ${filename}`)).catch(backend_error);
         }
-
         reloadDatabase() {
           this.props.app.dbUpdate("update_database");
         }
-
         findSimilarVideos() {
           this.props.app.dbUpdate("find_similar_videos");
         }
-
         findSimilarVideosIgnoreCache() {
           this.props.app.dbUpdate("find_similar_videos_ignore_cache");
         }
-
         manageProperties() {
           this.props.app.loadPropertiesPage();
         }
-
         fillWithKeywords() {
           Fancybox.load( /*#__PURE__*/React.createElement(FormVideosKeywordsToProperty, {
             prop_types: this.getStringSetProperties(this.state.prop_types),
@@ -987,85 +922,70 @@ not found video entry will be deleted.
             }
           }));
         }
-
         setPageSize(count) {
           if (count !== this.state.pageSize) this.backend(null, {
             pageSize: count,
             pageNumber: 0
           });
         }
-
         confirmDeletionForNotFound(checked) {
           this.setState({
             confirmDeletion: checked
           });
         }
-
         changeGroup(groupNumber) {
           this.backend(["set_group", groupNumber], {
             pageNumber: 0
           });
         }
-
         selectGroup(value) {
           if (value === -1) this.resetGroup();else this.changeGroup(value);
         }
-
         changePage(pageNumber) {
           this.backend(null, {
             pageNumber
           });
         }
-
         previousPage() {
           const pageNumber = this.state.pageNumber - 1;
           if (pageNumber >= 0) this.changePage(pageNumber);
         }
-
         nextPage() {
           const pageNumber = this.state.pageNumber + 1;
           if (pageNumber < this.state.nbPages) this.changePage(pageNumber);
         }
-
         previousGroup() {
           const groupID = this.state.groupDef.group_id;
           if (groupID > 0) this.onGroupViewState({
             groupID: groupID - 1
           });
         }
-
         nextGroup() {
           const groupID = this.state.groupDef.group_id;
           if (groupID < this.state.groupDef.groups.length - 1) this.onGroupViewState({
             groupID: groupID + 1
           });
         }
-
         getStringSetProperties(definitions) {
           return definitions.filter(def => def.multiple && def.type === "str");
         }
-
         getStringProperties(definitions) {
           return definitions.filter(def => def.type === "str");
         }
-
         getPredictionProperties(definitions) {
           return definitions.filter(def => def.name.indexOf("<?") === 0 && def.name.indexOf(">") === def.name.length - 1 && def.type === "int" && def.defaultValue === -1 && !def.multiple && arrayEquals(def.enumeration, [-1, 0, 1]));
         }
+
         /**
          * @param indicesSet {Set}
          */
-
-
         editPropertyValue(indicesSet) {
           const groupDef = this.state.groupDef;
           const name = groupDef.field;
           const values = [];
           const indices = Array.from(indicesSet);
           indices.sort();
-
           for (let index of indices) values.push(groupDef.groups[index].value);
-
           Fancybox.load( /*#__PURE__*/React.createElement(FormPropertyEditSelectedValues, {
             definitions: this.state.definitions,
             name: name,
@@ -1081,7 +1001,6 @@ not found video entry will be deleted.
                     })
                   });
                   break;
-
                 case "edit":
                   this.backend(["edit_property_value", name, values, operation.value], {
                     groupSelection: new Set(),
@@ -1092,7 +1011,6 @@ not found video entry will be deleted.
                     })
                   });
                   break;
-
                 case "move":
                   this.backend(["move_property_value", name, values, operation.move], {
                     groupSelection: new Set(),
@@ -1107,53 +1025,43 @@ not found video entry will be deleted.
             }
           }));
         }
-
         classifierReversePath() {
           python_call("classifier_reverse").then(path => this.setState({
             path
           })).catch(backend_error);
         }
-
         classifierSelectGroup(index) {
           this.backend(["classifier_select_group", index], {
             pageNumber: 0
           });
         }
-
         classifierUnstack() {
           this.backend(["classifier_back"], {
             pageNumber: 0
           });
         }
-
         classifierConcatenate(outputPropertyName) {
           this.backend(["classifier_concatenate_path", outputPropertyName], {
             pageNumber: 0
           });
         }
-
         propToLowercase(def) {
           this.backend(["prop_to_lowercase", def.name]);
         }
-
         propToUppercase(def) {
           this.backend(["prop_to_uppercase", def.name]);
         }
-
         focusPropertyValue(propertyName, propertyValue) {
           this.backend(["classifier_focus_prop_val", propertyName, propertyValue], {
             pageNumber: 0
           });
         }
-
         closeDatabase() {
           python_multiple_call(["close_database"], ["get_database_names"]).then(database_names => this.props.app.dbHome({
             database_names
           })).catch(backend_error);
         }
-
       });
-
       VideosPage.contextType = LangContext;
     }
   };

@@ -2,9 +2,7 @@ System.register(["../utils/constants.js", "../dialogs/Dialog.js", "../language.j
   "use strict";
 
   var FIELD_MAP, Dialog, LangContext, tr, FormVideosGrouping;
-
   _export("FormVideosGrouping", void 0);
-
   return {
     setters: [function (_utilsConstantsJs) {
       FIELD_MAP = _utilsConstantsJs.FIELD_MAP;
@@ -44,7 +42,6 @@ System.register(["../utils/constants.js", "../dialogs/Dialog.js", "../language.j
           this.getStateField = this.getStateField.bind(this);
           this.getStateAllowSingletons = this.getStateAllowSingletons.bind(this);
         }
-
         render() {
           const field = this.getStateField();
           return /*#__PURE__*/React.createElement(Dialog, {
@@ -121,21 +118,17 @@ System.register(["../utils/constants.js", "../dialogs/Dialog.js", "../language.j
             htmlFor: "group-reverse"
           }, tr("sort in reverse order")))))));
         }
-
         getStateField() {
           return this.state.field === undefined ? FIELD_MAP.allowed[0].name : this.state.field;
         }
-
         getStateAllowSingletons() {
           return this.state.allowSingletons === undefined ? !FIELD_MAP.allowed[0].isOnlyMany() : this.state.allowSingletons;
         }
-
         fieldIsString() {
           const field = this.getStateField();
           if (this.state.isProperty) return this.props.propertyMap[field].type === "str";
           return FIELD_MAP.fields[field].isString();
         }
-
         onChangeFieldType(event) {
           const isProperty = event.target.value === "true";
           const field = isProperty ? this.props.prop_types[0].name : FIELD_MAP.allowed[0].name;
@@ -150,7 +143,6 @@ System.register(["../utils/constants.js", "../dialogs/Dialog.js", "../language.j
             allowSingletons
           });
         }
-
         onChangeGroupField(event) {
           const field = event.target.value;
           const sorting = "field";
@@ -163,26 +155,22 @@ System.register(["../utils/constants.js", "../dialogs/Dialog.js", "../language.j
             allowSingletons
           });
         }
-
         onChangeAllowSingletons(event) {
           this.setState({
             allowSingletons: event.target.checked
           });
         }
-
         onChangeSorting(event) {
           this.setState({
             sorting: event.target.value,
             reverse: false
           });
         }
-
         onChangeGroupReverse(event) {
           this.setState({
             reverse: event.target.checked
           });
         }
-
         onClose() {
           this.props.onClose(Object.assign({}, {
             isProperty: this.state.isProperty,
@@ -192,9 +180,7 @@ System.register(["../utils/constants.js", "../dialogs/Dialog.js", "../language.j
             allowSingletons: this.getStateAllowSingletons()
           }));
         }
-
       });
-
       FormVideosGrouping.contextType = LangContext;
     }
   };
