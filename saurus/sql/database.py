@@ -51,7 +51,9 @@ class Database:
         last_id = self.cursor.lastrowid
         return last_id if last_id is None else DbID(last_id)
 
-    def query(self, query, parameters=()):
+    def query(self, query, parameters=(), debug=False):
+        if debug:
+            print("QUERY:", query)
         self.cursor.execute(query, parameters)
         yield from self.cursor
 

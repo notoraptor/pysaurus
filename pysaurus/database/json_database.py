@@ -313,7 +313,8 @@ class JsonDatabase:
             if cond == "exact":
                 selection = self.__indexer.query_exact(filenames, terms)
             elif cond == "and":
-                selection = self.__indexer.query_and(filenames, terms)
+                with Profiler("query_and", self.notifier):
+                    selection = self.__indexer.query_and(filenames, terms)
             elif cond == "or":
                 selection = self.__indexer.query_or(filenames, terms)
             else:

@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from typing import Iterable, Sequence
+from typing import Iterable, List, Sequence
 
 from pysaurus.core.components import AbsolutePath
 from pysaurus.video import Video
@@ -17,7 +17,7 @@ class AbstractVideoIndexer(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def _remove_filename(self, filename: AbsolutePath) -> None:
+    def _remove_filename(self, filename: AbsolutePath, pop=False) -> List[str]:
         pass
 
     def remove_video(self, video: Video):

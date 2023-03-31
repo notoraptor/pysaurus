@@ -150,10 +150,25 @@ class SqlVideoIndexer(AbstractVideoIndexer):
                 term_rank=term_rank,
             )
 
-    def _remove_filename(self, filename: AbsolutePath) -> None:
+    def _remove_filename(self, filename: AbsolutePath, pop=False) -> List[str]:
+        old_terms = []
+        if pop:
+            old_terms = [
+                row["term"]
+                for row in self.sql_database.query(
+                    "SELECT t.term FROM term AS t "
+                    "JOIN filename_to_term AS j ON t.term_id = j.term_id "
+                    "JOIN filename AS f ON j.filename_id = f.filename_id "
+                    "WHERE f.filename = ? "
+                    "ORDER BY t.term_rank ASC",
+                    [filename.path],
+                )
+            ]
         self.sql_database.modify(
             "DELETE FROM filename WHERE filename = ?", [filename.path]
         )
+        if pop:
+            return old_terms
 
     def replace_path(self, video: Video, old_path: AbsolutePath):
         self.sql_database.modify(
@@ -176,9 +191,26 @@ class SqlVideoIndexer(AbstractVideoIndexer):
     def query_and(
         self, filenames: Iterable[AbsolutePath], terms: Sequence[str]
     ) -> Iterable[AbsolutePath]:
-        return set.intersection(
-            set(filenames), *(set(self._term_to_filenames(term)) for term in terms)
-        )
+        # TODO Better, with one query? https://dba.stackexchange.com/a/45516
+        terms = sorted(set(terms))
+        pieces_filename_to_term = []
+        pieces_terms = []
+        pieces_where = []
+        query = ["SELECT DISTINCT f.filename AS filename FROM filename AS f"]
+        for i, term in enumerate(terms):
+            pieces_filename_to_term.append(
+                f"JOIN filename_to_term AS j{i} ON f.filename_id = j{i}.filename_id"
+            )
+            pieces_terms.append(f"JOIN term as t{i} ON j{i}.term_id = t{i}.term_id")
+            pieces_where.append(f"t{i}.term = ?")
+        query.extend(pieces_filename_to_term)
+        query.extend(pieces_terms)
+        query.append("WHERE")
+        query.append(" AND ".join(pieces_where))
+        return set(filenames) & {
+            AbsolutePath(r["filename"])
+            for r in self.sql_database.query(" ".join(query), terms, debug=True)
+        }
 
     def query_exact(
         self, filenames: Iterable[AbsolutePath], terms: Sequence[str]

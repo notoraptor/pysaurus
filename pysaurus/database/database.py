@@ -26,14 +26,11 @@ from pysaurus.database.jobs_python import compress_thumbnails_to_jpeg
 from pysaurus.database.json_database import JsonDatabase
 from pysaurus.database.special_properties import SpecialProperties
 from pysaurus.database.viewport.abstract_video_provider import AbstractVideoProvider
-from pysaurus.database.viewport.compact_video_looker import CompactVideoLooker
 from pysaurus.database.viewport.video_filter import VideoSelector
 from pysaurus.miniature.group_computer import GroupComputer
 from pysaurus.miniature.miniature import Miniature
 from pysaurus.video import Video
-
-# from pysaurus.video.video_indexer import VideoIndexer
-from pysaurus.video.sql_index.sql_video_indexer import SqlVideoIndexer
+from pysaurus.video.video_indexer import VideoIndexer
 from saurus.language import say
 
 logger = logging.getLogger(__name__)
@@ -44,9 +41,6 @@ except exceptions.CysaurusUnavailable:
     from pysaurus.video_raptor.video_raptor_pyav import VideoRaptor
 
     logger.warning("Using fallback backend for videos info and thumbnails.")
-
-
-x = CompactVideoLooker
 
 
 class Database(JsonDatabase):
@@ -68,8 +62,7 @@ class Database(JsonDatabase):
             self.__paths.json_path,
             folders,
             notifier,
-            indexer=SqlVideoIndexer(self.__paths.index_path.path),
-            # indexer=VideoIndexer(),
+            indexer=VideoIndexer(),
         )
         # Set special properties
         with Profiler(
