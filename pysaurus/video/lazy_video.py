@@ -126,7 +126,10 @@ class LazyVideo(WithSchema):
     frame_rate_den = property(lambda self: self._get("frame_rate_den") or 1)
     frame_rate_num = property(lambda self: self._get("frame_rate_num"))
     height = property(lambda self: self._get("height"))
-    meta_title = property(lambda self: Text(self._get("meta_title")))
+
+    @property
+    def meta_title(self) -> Text:
+        return Text(self._get("meta_title"))
 
     @property
     def properties(self):
@@ -259,6 +262,22 @@ class LazyVideo(WithSchema):
         t_all_str_low = string_to_pieces(all_str.lower(), as_set=False)
         t_all = t_all_str if t_all_str == t_all_str_low else (t_all_str + t_all_str_low)
         return set(t_all) if as_set else t_all
+
+    def has_exact_text(self, text: str) -> bool:
+        text = text.lower()
+        return (
+            text in self.filename.path.lower()
+            or text in self.meta_title.value.lower()
+            or any(
+                (
+                    text in [v.lower() for v in val]
+                    if isinstance(val, list)
+                    else text == val.lower()
+                )
+                for name, val in self._get("properties").items()
+                if self.database.has_prop_type(name, with_type=str)
+            )
+        )
 
     def to_comparable(self, sorting: VideoSorting) -> list:
         return [

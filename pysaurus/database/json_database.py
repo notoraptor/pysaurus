@@ -311,12 +311,18 @@ class JsonDatabase:
                 }
             terms = functions.string_to_pieces(text)
             if cond == "exact":
-                selection = self.__indexer.query_exact(filenames, terms)
+                with Profiler(f"query exact: {text}", self.notifier):
+                    selection = (
+                        filename
+                        for filename in self.__indexer.query_and(filenames, terms)
+                        if self.__videos[filename].has_exact_text(text)
+                    )
             elif cond == "and":
-                with Profiler("query_and", self.notifier):
+                with Profiler(f"query_and: {text}", self.notifier):
                     selection = self.__indexer.query_and(filenames, terms)
             elif cond == "or":
-                selection = self.__indexer.query_or(filenames, terms)
+                with Profiler(f"query or: {text}", self.notifier):
+                    selection = self.__indexer.query_or(filenames, terms)
             else:
                 assert cond == "id"
                 (term,) = terms
@@ -475,8 +481,15 @@ class JsonDatabase:
 
     def _update_videos_not_found(self, existing_paths: Container[AbsolutePath]):
         """Use given container of existing paths to mark not found videos."""
+        modified = []
         for video_state in self.__videos.values():
-            video_state.runtime.is_file = video_state.filename in existing_paths
+            is_file = video_state.filename in existing_paths
+            if video_state.runtime.is_file is not is_file:
+                video_state.runtime.is_file = is_file
+                modified.append(video_state)
+        if modified:
+            with Profiler(f"update {len(modified)} videos not found", self.notifier):
+                self.__indexer.update_videos(modified)
 
     def _notify_properties_modified(self, properties, video_indices: Iterable[int]):
         self.save()
@@ -664,6 +677,7 @@ class JsonDatabase:
         to_video.similarity_id = from_video.similarity_id
         to_video.date_entry_modified = from_video.date_entry_modified.time
         to_video.date_entry_opened = from_video.date_entry_opened.time
+        self.__indexer.update_videos([to_video])
         self.delete_video_entry(from_id)
 
     def open_video(self, video_id: int):

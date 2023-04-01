@@ -150,25 +150,10 @@ class SqlVideoIndexer(AbstractVideoIndexer):
                 term_rank=term_rank,
             )
 
-    def _remove_filename(self, filename: AbsolutePath, pop=False) -> List[str]:
-        old_terms = []
-        if pop:
-            old_terms = [
-                row["term"]
-                for row in self.sql_database.query(
-                    "SELECT t.term FROM term AS t "
-                    "JOIN filename_to_term AS j ON t.term_id = j.term_id "
-                    "JOIN filename AS f ON j.filename_id = f.filename_id "
-                    "WHERE f.filename = ? "
-                    "ORDER BY t.term_rank ASC",
-                    [filename.path],
-                )
-            ]
+    def _remove_filename(self, filename: AbsolutePath) -> None:
         self.sql_database.modify(
             "DELETE FROM filename WHERE filename = ?", [filename.path]
         )
-        if pop:
-            return old_terms
 
     def replace_path(self, video: Video, old_path: AbsolutePath):
         self.sql_database.modify(
@@ -211,40 +196,6 @@ class SqlVideoIndexer(AbstractVideoIndexer):
             AbsolutePath(r["filename"])
             for r in self.sql_database.query(" ".join(query), terms, debug=True)
         }
-
-    def query_exact(
-        self, filenames: Iterable[AbsolutePath], terms: Sequence[str]
-    ) -> Iterable[AbsolutePath]:
-        selection = set()
-        filenames = set(filenames)
-        first_term, *other_terms = terms
-        for row in self.sql_database.query_all(
-            "SELECT f.filename AS filename, j.term_rank AS term_rank "
-            "FROM filename AS f "
-            "JOIN filename_to_term AS j ON f.filename_id = j.filename_id "
-            "JOIN term AS t ON j.term_id = t.term_id "
-            "WHERE t.term = ?",
-            [first_term],
-        ):
-            filename = AbsolutePath(row["filename"])
-            term_rank = row["term_rank"]
-            if filename in filenames:
-                found = True
-                for i, other_term in enumerate(other_terms):
-                    row_count = self.sql_database.query_one(
-                        "SELECT COUNT(j.filename_id) AS count "
-                        "FROM filename AS f "
-                        "JOIN filename_to_term AS j ON f.filename_id = j.filename_id "
-                        "JOIN term AS t ON j.term_id = t.term_id "
-                        "WHERE f.filename = ? AND t.term = ? AND j.term_rank = ?",
-                        [filename.path, other_term, term_rank + i + 1],
-                    )
-                    if not row_count["count"]:
-                        found = False
-                        break
-                if found:
-                    selection.add(filename)
-        return selection
 
     def query_or(
         self, filenames: Iterable[AbsolutePath], terms: Sequence[str]
