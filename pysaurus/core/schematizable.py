@@ -87,6 +87,9 @@ class WithSchema:
     def __init__(self, short_dict: dict = None, **kwargs):
         self._d = short_dict or {}
 
+    def __str__(self):
+        return f"{type(self).__name__}({self._d})"
+
     def _get(self, name):
         return self.SCHEMA.get_from_short_dict(self._d, name)
 
@@ -134,7 +137,7 @@ class WithSchema:
                 cls.SCHEMA.get_short_key(name): value
                 for name, value in key_kwargs.items()
             },
-            **other_kwargs
+            **other_kwargs,
         )
 
 

@@ -52,7 +52,7 @@ class Miniature(AbstractMatrix):
     def set_group_signature(
         self, pixel_distance_radius, group_min_size: int, nb_groups: int
     ):
-        self.group_signature = GroupSignature(
+        self.group_signature = GroupSignature.from_keys(
             r=pixel_distance_radius, m=group_min_size, n=nb_groups
         )
 
@@ -84,7 +84,7 @@ class Miniature(AbstractMatrix):
             width=dct["w"],
             height=dct["h"],
             identifier=dct["i"],
-            group_signature=(gs if gs is None else GroupSignature.from_dict(gs)),
+            group_signature=(GroupSignature.from_dict(gs) if gs else None),
         )
 
     @staticmethod

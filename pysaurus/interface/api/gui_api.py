@@ -338,7 +338,7 @@ class GuiAPI(FeatureAPI):
     def compute_predictor(self, prop_name):
         pattern_detection.compute_pattern_detector(
             self.database,
-            self.database.get_videos("readable", "with_thumbnails"),
+            self.database.get_cached_videos("readable", "with_thumbnails"),
             prop_name,
         )
 
@@ -346,7 +346,7 @@ class GuiAPI(FeatureAPI):
     def apply_predictor(self, prop_name):
         output_prop_name = pattern_detection.predict_pattern(
             self.database,
-            self.database.get_videos("readable", "with_thumbnails"),
+            self.database.get_cached_videos("readable", "with_thumbnails"),
             prop_name,
         )
         self.database.provider.set_groups(

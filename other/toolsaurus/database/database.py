@@ -7,15 +7,17 @@ from pysaurus.core.components import AbsolutePath, PathType
 from pysaurus.core.modules import System
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.database import Database
+from pysaurus.database.db_cache import DbCache
 from pysaurus.miniature.miniature import Miniature
 from pysaurus.video import Video
 
 
 class ExtendedDatabase(Database):
-    __slots__ = ("sys_is_case_insensitive",)
+    __slots__ = ("sys_is_case_insensitive", "__db_cache")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.__db_cache = DbCache(self)
         self.sys_is_case_insensitive = System.is_case_insensitive(
             self.__paths.db_folder.path
         )
@@ -84,6 +86,9 @@ class ExtendedDatabase(Database):
 
     def get_video_string(self, video_id: int) -> str:
         return self.describe_videos([video_id])[0]
+
+    def get_videos(self, *flags, **forced_flags):
+        return self.__db_cache(*flags, **forced_flags)
 
 
 def load_list_file(list_file_path: Union[AbsolutePath, str]) -> Iterable[str]:

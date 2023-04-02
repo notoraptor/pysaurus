@@ -102,7 +102,7 @@ class LayerSource(Layer):
         videos = VideoArray()
         videos_found = VideoArray()
         for path in self.params["sources"]:
-            source = self.input.get_videos(*path)
+            source = self.input.get_cached_videos(*path)
             videos.extend(source)
             if "unreadable" not in path and "not_found" not in path:
                 videos_found.extend(

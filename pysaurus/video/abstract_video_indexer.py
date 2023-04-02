@@ -43,3 +43,9 @@ class AbstractVideoIndexer(metaclass=ABCMeta):
         self, filenames: Iterable[AbsolutePath], terms: Sequence[str]
     ) -> Iterable[AbsolutePath]:
         pass
+
+    @abstractmethod
+    def query_flags(
+        self, filenames: Iterable[AbsolutePath], *flags, **forced_flags
+    ) -> Iterable[AbsolutePath]:
+        pass

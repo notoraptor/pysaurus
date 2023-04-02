@@ -26,6 +26,7 @@ class LazyVideo(WithSchema):
         "not_found",
         "with_thumbnails",
         "without_thumbnails",
+        "discarded",
     }
 
     def __init__(self, database, short_dict: dict):

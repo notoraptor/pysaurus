@@ -132,7 +132,7 @@ class AbstractVideoProvider(metaclass=ABCMeta):
     def get_random_found_video(self) -> Video:
         videos = []
         for path in self.get_sources():
-            videos.extend(self._database.get_videos(*path, found=True))
+            videos.extend(self._database.get_cached_videos(*path, found=True))
         if not videos:
             raise exceptions.NoVideos()
         return videos[random.randrange(len(videos))]

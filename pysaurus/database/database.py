@@ -62,7 +62,7 @@ class Database(JsonDatabase):
             self.__paths.json_path,
             folders,
             notifier,
-            indexer=VideoIndexer(),
+            indexer=VideoIndexer(notifier),
         )
         # Set special properties
         with Profiler(
@@ -168,6 +168,7 @@ class Database(JsonDatabase):
         # Collect videos with and without thumbnails.
         existing_thumb_names = self.__check_thumbnails_on_disk()
 
+        modified: List[int] = []
         with Profiler(say("Check videos thumbnails"), notifier=self.notifier):
             for video in self.select_videos_fields(
                 [
@@ -183,11 +184,12 @@ class Database(JsonDatabase):
                 thumb_name = video["thumb_name"]
                 if not video["found"]:
                     if thumb_name in existing_thumb_names:
-                        self.write_video_field(
+                        if self.write_video_field(
                             video["video_id"],
                             "has_runtime_thumbnail",
                             True,
-                        )
+                        ):
+                            modified.append(video["video_id"])
                         valid_thumb_names.add(thumb_name)
                 elif not video["unreadable_thumbnail"]:
                     if (
@@ -205,9 +207,10 @@ class Database(JsonDatabase):
                 if len(vds) == 1:
                     video: dict = vds[0]
                     valid_thumb_names.add(valid_thumb_name)
-                    self.write_video_field(
+                    if self.write_video_field(
                         video["video_id"], "has_runtime_thumbnail", True
-                    )
+                    ):
+                        modified.append(video["video_id"])
                 else:
                     videos_without_thumbs.extend(vds)
         nb_videos_no_thumbs = len(videos_without_thumbs)
@@ -226,10 +229,11 @@ class Database(JsonDatabase):
                     f"to clean {len(thumbs_to_clean)}"
                 )
             )
+            assert valid_thumb_names or not self.query()
             self._clean_thumbnails(thumbs_to_clean)
 
         if not videos_without_thumbs:
-            self._notify_missing_thumbnails()
+            self._notify_missing_thumbnails(modified)
             return
 
         for video in videos_without_thumbs:
@@ -239,9 +243,10 @@ class Database(JsonDatabase):
             while thumb_name in valid_thumb_names:
                 thumb_name = f"{base_thumb_name}_{thumb_name_index}"
                 thumb_name_index += 1
-            self.write_video_fields(
+            if self.write_video_fields(
                 video["video_id"], thumb_name=thumb_name, has_runtime_thumbnail=True
-            )
+            ):
+                modified.append(video["video_id"])
             valid_thumb_names.add(thumb_name)
         del valid_thumb_names
         self.save()
@@ -279,17 +284,19 @@ class Database(JsonDatabase):
                 file_name = d["f"]
                 file_path = AbsolutePath.ensure(file_name)
                 thumb_errors[file_name] = d["e"]
-                self.write_video_fields(
-                    self.get_video_id(file_path),
+                video_id = self.get_video_id(file_path)
+                if self.write_video_fields(
+                    video_id,
                     unreadable_thumbnail=True,
                     has_runtime_thumbnail=False,
-                )
+                ):
+                    modified.append(video_id)
 
         if thumb_errors:
             self.notifier.notify(notifications.VideoThumbnailErrors(thumb_errors))
 
         self.compress_thumbnails()
-        self._notify_missing_thumbnails()
+        self._notify_missing_thumbnails(modified)
 
     @Profiler.profile_method()
     def ensure_miniatures(self, returns=False) -> Optional[List[Miniature]]:
@@ -317,8 +324,12 @@ class Database(JsonDatabase):
             have_removed = len(valid_dictionaries) != len(json_array)
             del json_array
 
-        available_videos = self.select_videos_fields(
-            ["filename", "thumbnail_path", "video_id"], "readable", "with_thumbnails"
+        available_videos = list(
+            self.select_videos_fields(
+                ["filename", "thumbnail_path", "video_id"],
+                "readable",
+                "with_thumbnails",
+            )
         )
         tasks = [
             (video["filename"], video["thumbnail_path"])

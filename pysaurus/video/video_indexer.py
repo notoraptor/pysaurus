@@ -5,6 +5,8 @@ from pysaurus.core.job_notifications import (
     global_notify_job_progress,
     global_notify_job_start,
 )
+from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
+from pysaurus.core.profiling import Profiler
 from pysaurus.video import Video
 from pysaurus.video.abstract_video_indexer import AbstractVideoIndexer
 from pysaurus.video.tag import Tag
@@ -14,12 +16,14 @@ EMPTY_SET = set()
 
 
 class VideoIndexer(AbstractVideoIndexer):
-    __slots__ = ("term_to_filenames", "filename_to_terms")
+    __slots__ = ("term_to_filenames", "filename_to_terms", "notifier")
 
-    def __init__(self):
+    def __init__(self, notifier: Notifier = None):
+        self.notifier = notifier or DEFAULT_NOTIFIER
         self.term_to_filenames: Dict[Tag, Set[AbsolutePath]] = {}
         self.filename_to_terms: Dict[AbsolutePath, List[Tag]] = {}
 
+    @Profiler.profile_method("indexer_build")
     def build(self, videos: Iterable[Video]):
         self.filename_to_terms = {
             video.filename: video_to_tags(video) for video in videos
@@ -54,6 +58,7 @@ class VideoIndexer(AbstractVideoIndexer):
         self._remove_filename(old_path)
         self.add_video(video)
 
+    @Profiler.profile_method("indexer_update_videos")
     def update_videos(self, videos: Iterable[Video]):
         for video in videos:
             self._update_video(video)
@@ -77,6 +82,7 @@ class VideoIndexer(AbstractVideoIndexer):
         for pure_new_term in set_new_terms - common_terms:
             self.term_to_filenames.setdefault(pure_new_term, set()).add(video.filename)
 
+    @Profiler.profile_method()
     def query_and(
         self, filenames: Iterable[AbsolutePath], terms: Sequence[str]
     ) -> Set[AbsolutePath]:
@@ -86,10 +92,24 @@ class VideoIndexer(AbstractVideoIndexer):
             *(self.term_to_filenames.get(term, EMPTY_SET) for term in terms),
         )
 
+    @Profiler.profile_method()
     def query_or(
         self, filenames: Iterable[AbsolutePath], terms: Sequence[str]
     ) -> Set[AbsolutePath]:
         terms = terms_to_tags(terms, cls=list)
         return set(filenames) & set.union(
             *(self.term_to_filenames.get(term, EMPTY_SET) for term in terms)
+        )
+
+    @Profiler.profile_method()
+    def query_flags(
+        self, filenames: Iterable[AbsolutePath], *flags, **forced_flags
+    ) -> Iterable[AbsolutePath]:
+        required = {flag: True for flag in flags}
+        required.update(forced_flags)
+        required["discarded"] = required.get("discarded", False)
+        terms = [Tag(flag, value) for flag, value in required.items()]
+        return set.intersection(
+            set(filenames),
+            *(self.term_to_filenames.get(term, EMPTY_SET) for term in terms),
         )

@@ -51,7 +51,7 @@ class QualityAttribute(_DbVideoAttribute):
         self.max = {}
 
     def _update(self):
-        videos = list(self.database.get_videos("readable"))
+        videos = list(self.database.get_cached_videos("readable"))
         if not videos:
             self.min.clear()
             self.max.clear()
@@ -115,7 +115,7 @@ class PotentialMoveAttribute(_DbVideoAttribute):
         self.potential_moves.clear()
         self.move_groups.clear()
         groups = {}
-        for video in self.database.get_videos("readable"):
+        for video in self.database.get_cached_videos("readable"):
             groups.setdefault(_MoveKey(video), ([], []))[video.found].append(video)
         for key, (not_found, found) in groups.items():
             if not_found and found:

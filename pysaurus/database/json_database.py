@@ -9,7 +9,6 @@ from pysaurus.core.notifications import Notification
 from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
-from pysaurus.database.db_cache import DbCache
 from pysaurus.database.db_settings import DbSettings
 from pysaurus.database.db_video_attribute import (
     PotentialMoveAttribute,
@@ -81,7 +80,6 @@ class _ToSave:
 class JsonDatabase:
     __slots__ = (
         "__backup",
-        "__db_cache",
         "settings",
         "__date",
         "__folders",
@@ -106,7 +104,6 @@ class JsonDatabase:
     ):
         # Private data
         self.__backup = JsonBackup(path)
-        self.__db_cache = DbCache(self)
         # Database content
         self.settings = DbSettings()
         self.__date = Date.now()
@@ -124,10 +121,6 @@ class JsonDatabase:
         self.in_save_context = False
         # Initialize
         self.__load(folders)
-        with Profiler("build index", self.notifier):
-            notifying.with_handler(
-                self.notifier, self.__indexer.build, self.__videos.values()
-            )
 
     date = property(lambda self: self.__date)
     video_folders = property(lambda self: list(self.__folders))
@@ -181,6 +174,9 @@ class JsonDatabase:
                 )
                 self.__videos[video_state.filename] = video_state
 
+        notifying.with_handler(
+            self.notifier, self.__indexer.build, self.__videos.values()
+        )
         self.save(on_new_identifiers=to_save)
         self.notifier.notify(DatabaseLoaded(self))
 
@@ -262,21 +258,26 @@ class JsonDatabase:
         self.__predictors[prop_name] = theta
         self.save()
 
-    def get_videos(self, *flags, **forced_flags):
-        return self.__db_cache(*flags, **forced_flags)
+    def get_cached_videos(self, *flags, **forced_flags):
+        return [
+            self.__videos[filename]
+            for filename in self.__indexer.query_flags(
+                self.__videos, *flags, **forced_flags
+            )
+        ]
 
     def count_videos(self, *flags, **forced_flags) -> int:
         if not flags and not forced_flags:
             return len(self.__videos)
         else:
-            return len(self.get_videos(*flags, **forced_flags))
+            return len(self.get_cached_videos(*flags, **forced_flags))
 
     def select_videos_fields(
         self, fields: Sequence[str], *flags, **forced_flags
     ) -> Iterable[Dict[str, Any]]:
         return (
             {field: getattr(video, field) for field in fields}
-            for video in self.get_videos(*flags, **forced_flags)
+            for video in self.get_cached_videos(*flags, **forced_flags)
         )
 
     def query(self, required: Dict[str, bool] = None) -> List[Video]:
@@ -318,11 +319,9 @@ class JsonDatabase:
                         if self.__videos[filename].has_exact_text(text)
                     )
             elif cond == "and":
-                with Profiler(f"query_and: {text}", self.notifier):
-                    selection = self.__indexer.query_and(filenames, terms)
+                selection = self.__indexer.query_and(filenames, terms)
             elif cond == "or":
-                with Profiler(f"query or: {text}", self.notifier):
-                    selection = self.__indexer.query_or(filenames, terms)
+                selection = self.__indexer.query_or(filenames, terms)
             else:
                 assert cond == "id"
                 (term,) = terms
@@ -383,7 +382,7 @@ class JsonDatabase:
     def remove_prop_type(self, name) -> None:
         if name in self.__prop_types:
             del self.__prop_types[name]
-            for video in self.query():
+            for video in self.__videos.values():
                 video.remove_property(name, None)
             self.save()
 
@@ -394,7 +393,7 @@ class JsonDatabase:
             prop_type = self.__prop_types.pop(old_name)
             prop_type.name = new_name
             self.__prop_types[new_name] = prop_type
-            for video in self.query():
+            for video in self.__videos.values():
                 if video.has_property(old_name):
                     video.set_property(new_name, video.remove_property(old_name))
             self.save()
@@ -404,11 +403,11 @@ class JsonDatabase:
             prop_type = self.__prop_types[name]
             if not prop_type.multiple:
                 raise exceptions.PropertyAlreadyUnique(name)
-            for video in self.query():
+            for video in self.__videos.values():
                 if video.has_property(name) and len(video.get_property(name)) > 1:
                     raise exceptions.PropertyToUniqueError(name, video)
             prop_type.multiple = False
-            for video in self.query():
+            for video in self.__videos.values():
                 if video.has_property(name):
                     if video.get_property(name):
                         video.set_property(name, video.get_property(name)[0])
@@ -423,7 +422,7 @@ class JsonDatabase:
             if prop_type.multiple:
                 raise exceptions.PropertyAlreadyMultiple(name)
             prop_type.multiple = True
-            for video in self.query():
+            for video in self.__videos.values():
                 if video.has_property(name):
                     video.set_property(name, [video.get_property(name)])
             self.save()
@@ -488,15 +487,13 @@ class JsonDatabase:
                 video_state.runtime.is_file = is_file
                 modified.append(video_state)
         if modified:
-            with Profiler(f"update {len(modified)} videos not found", self.notifier):
-                self.__indexer.update_videos(modified)
+            self.__indexer.update_videos(modified)
 
     def _notify_properties_modified(self, properties, video_indices: Iterable[int]):
         self.save()
-        with Profiler("index update videos", self.notifier):
-            self.__indexer.update_videos(
-                (self.__id_to_video[video_id] for video_id in video_indices)
-            )
+        self.__indexer.update_videos(
+            (self.__id_to_video[video_id] for video_id in video_indices)
+        )
         self.notifier.notify(notifications.PropertiesModified(properties))
 
     def _notify_fields_modified(self, fields: Sequence[str]):
@@ -517,10 +514,15 @@ class JsonDatabase:
         )
         self.__indexer.replace_path(video, old_path)
 
-    def _notify_missing_thumbnails(self):
+    def _notify_missing_thumbnails(self, modified: Iterable[int] = ()):
+        self.__indexer.update_videos(
+            self.__id_to_video[video_id] for video_id in modified
+        )
         remaining_thumb_videos = [
             video.filename.path
-            for video in self.get_videos("readable", "found", "without_thumbnails")
+            for video in self.get_cached_videos(
+                "readable", "found", "without_thumbnails"
+            )
         ]
         self.notifier.notify(notifications.MissingThumbnails(remaining_thumb_videos))
         self.save()
@@ -574,16 +576,26 @@ class JsonDatabase:
     def read_videos_field(self, indices: Iterable[int], field: str) -> Iterable:
         return (getattr(self.__id_to_video[video_id], field) for video_id in indices)
 
-    def write_video_field(self, video_id: int, field: str, value, notify=False):
-        setattr(self.__id_to_video[video_id], field, value)
-        if notify:
-            with self.to_save(False):
-                self._notify_fields_modified([field])
+    def write_video_field(self, video_id: int, field: str, value, notify=False) -> bool:
+        video = self.__id_to_video[video_id]
+        previous_value = getattr(video, field)
+        modified = previous_value != value
+        if modified:
+            setattr(video, field, value)
+            if notify:
+                with self.to_save(False):
+                    self._notify_fields_modified([field])
+        return modified
 
-    def write_video_fields(self, video_id: int, **kwargs):
+    def write_video_fields(self, video_id: int, **kwargs) -> bool:
+        modified = False
         video = self.__id_to_video[video_id]
         for key, value in kwargs.items():
-            setattr(video, key, value)
+            previous_value = getattr(video, key)
+            if previous_value != value:
+                setattr(video, key, value)
+                modified = True
+        return modified
 
     def write_videos_field(self, indices: Iterable[int], field: str, values: Iterable):
         for video_id, value in zip(indices, values):

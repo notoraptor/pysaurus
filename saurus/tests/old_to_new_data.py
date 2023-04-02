@@ -88,8 +88,7 @@ def main():
                     for prop in db.describe_prop_types()
                 },
                 videos={
-                    video.filename.path: old_to_new_video(video)
-                    for video in db.query({})
+                    video.filename.path: old_to_new_video(video) for video in db.query()
                 },
             )
             with Profiler(f"Adding: {db.name}"):
