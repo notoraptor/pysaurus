@@ -235,10 +235,7 @@ class LazyVideo(WithSchema):
 
     @property
     def moves(self):
-        return [
-            {"video_id": video.video_id, "filename": video.filename}
-            for video in self.database.moves_attribute(self)[1]
-        ]
+        return self.database.moves_attribute(self)[1]
 
     @property
     def has_runtime_thumbnail(self):

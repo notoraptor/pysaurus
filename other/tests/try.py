@@ -2,6 +2,7 @@ from pysaurus.application.application import Application
 from pysaurus.core import functions
 from pysaurus.core.profiling import Profiler
 from pysaurus.video import Video
+from pysaurus.video.video_features import VideoFeatures
 
 
 class Val:
@@ -39,11 +40,7 @@ class Val:
         return hash((type(self), self.a, self.val))
 
     def __eq__(self, other):
-        return (
-            type(self) is type(other)
-            and self.a == other.a
-            and self.val == other.val
-        )
+        return type(self) is type(other) and self.a == other.a and self.val == other.val
 
 
 def main():
@@ -53,9 +50,21 @@ def main():
     #     ["filename", "thumbnail_path", "video_id"], "readable", "with_thumbnails"
     # ))
     # print(len(videos))
+    all_attributes = functions.class_get_public_attributes(Video, wrapper=sorted)
     print("Video attributes:", len(Val.__attrs__))
     for attribute in Val.__attrs__:
         print("\t", attribute)
+    print("Video all attributes:", all_attributes)
+    for attribute in all_attributes:
+        print("\t", attribute)
+
+    batch = 100
+    with Profiler("to_json"):
+        for _ in range(batch):
+            list(VideoFeatures.to_json(v) for v in database.query()[:100])
+    with Profiler("json"):
+        for _ in range(batch):
+            list(VideoFeatures.json(v) for v in database.query()[:100])
 
     filename_to_tags = {}
     tag_to_filenames = {}

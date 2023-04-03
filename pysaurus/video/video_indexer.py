@@ -10,7 +10,7 @@ from pysaurus.core.profiling import Profiler
 from pysaurus.video import Video
 from pysaurus.video.abstract_video_indexer import AbstractVideoIndexer
 from pysaurus.video.tag import Tag
-from pysaurus.video.video_utils import terms_to_tags, video_to_tags
+from pysaurus.video.video_utils import video_to_tags
 
 EMPTY_SET = set()
 
@@ -86,7 +86,7 @@ class VideoIndexer(AbstractVideoIndexer):
     def query_and(
         self, filenames: Iterable[AbsolutePath], terms: Sequence[str]
     ) -> Set[AbsolutePath]:
-        terms = terms_to_tags(terms, cls=list)
+        # terms = terms_to_tags(terms, cls=list)
         return set.intersection(
             set(filenames),
             *(self.term_to_filenames.get(term, EMPTY_SET) for term in terms),
@@ -96,7 +96,7 @@ class VideoIndexer(AbstractVideoIndexer):
     def query_or(
         self, filenames: Iterable[AbsolutePath], terms: Sequence[str]
     ) -> Set[AbsolutePath]:
-        terms = terms_to_tags(terms, cls=list)
+        # terms = terms_to_tags(terms, cls=list)
         return set(filenames) & set.union(
             *(self.term_to_filenames.get(term, EMPTY_SET) for term in terms)
         )

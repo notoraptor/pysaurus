@@ -5,9 +5,7 @@ from pysaurus.video.tag import Tag, Term
 
 
 def video_to_tags(video: Video) -> List[Tag]:
-    return [Term(term) for term in video.terms()] + [
-        Tag(flag, getattr(video, flag)) for flag in Video.FLAGS
-    ]
+    return video.terms() + [Tag(flag, getattr(video, flag)) for flag in Video.FLAGS]
 
 
 def terms_to_tags(terms: Iterable[str], cls=set) -> Iterable[Term]:

@@ -699,7 +699,7 @@ class JsonDatabase:
     @Profiler.profile_method()
     def describe_videos(self, video_indices: Sequence[int]):
         return [
-            VideoFeatures.to_json(self.__id_to_video[video_id])
+            VideoFeatures.json(self.__id_to_video[video_id])
             for video_id in video_indices
         ]
 

@@ -47,8 +47,8 @@ class QualityAttribute(_DbVideoAttribute):
 
     def __init__(self, database):
         super().__init__(database)
-        self.min = {}
-        self.max = {}
+        self.min = []
+        self.max = []
 
     def _update(self):
         videos = list(self.database.get_cached_videos("readable"))
@@ -56,31 +56,37 @@ class QualityAttribute(_DbVideoAttribute):
             self.min.clear()
             self.max.clear()
             return
-        self.min = {
-            field: min(getattr(video, field) for video in videos)
-            for field in self.FIELDS
-        }
-        self.max = {
-            field: max(getattr(video, field) for video in videos)
-            for field in self.FIELDS
-        }
+        self.min = [
+            min(getattr(video, field) for video in videos) for field in self.FIELDS
+        ]
+        self.max = [
+            max(getattr(video, field) for video in videos) for field in self.FIELDS
+        ]
 
     def _get(self, video: Video):
         if video.unreadable:
             return 0
-        total_quality = 0
-        for field, level in self.QUALITY_FIELDS:
-            value = getattr(video, field)
-            min_value = self.min[field]
-            max_value = self.max[field]
-            if min_value == max_value:
-                assert value == min_value, (value, min_value)
-                quality = 0
-            else:
-                quality = (value - min_value) / (max_value - min_value)
-                assert 0 <= quality <= 1, (quality, field, value, min_value, max_value)
-            total_quality += quality * level
-        return total_quality * 100 / self.TOTAL_LEVEL
+        # REFERENCE: For each field:
+        # if min_value == max_value:
+        #   assert value == min_value, (value, min_value)
+        #   quality = 0
+        # else:
+        #   quality = (value - min_value) / (max_value - min_value)
+        #   assert 0 <= quality <= 1, (quality, field, value, min_value, max_value)
+        return (
+            sum(
+                (
+                    0
+                    if self.min[i] == self.max[i]
+                    else (getattr(video, field) - self.min[i])
+                    / (self.max[i] - self.min[i])
+                )
+                * level
+                for i, (field, level) in enumerate(self.QUALITY_FIELDS)
+            )
+            * 100
+            / self.TOTAL_LEVEL
+        )
 
 
 class _MoveKey:
@@ -120,10 +126,13 @@ class PotentialMoveAttribute(_DbVideoAttribute):
         for key, (not_found, found) in groups.items():
             if not_found and found:
                 for video_not_found in not_found:
-                    self.potential_moves[video_not_found] = found
+                    self.potential_moves[video_not_found] = [
+                        {"video_id": video.video_id, "filename": video.filename}
+                        for video in found
+                    ]
                     self.move_groups[video_not_found] = key
                 for video in found:
                     self.move_groups[video] = key
 
     def _get(self, video: Video):
-        return self.move_groups.get(video, None), self.potential_moves.get(video, ())
+        return self.move_groups.get(video, None), self.potential_moves.get(video, [])
