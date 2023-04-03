@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Any, Dict
+from typing import Any, Dict, List, Tuple
 
 from pysaurus.video import Video
 
@@ -114,25 +114,25 @@ class PotentialMoveAttribute(_DbVideoAttribute):
 
     def __init__(self, database):
         super().__init__(database)
-        self.potential_moves = {}
-        self.move_groups = {}
+        self.potential_moves: Dict[Video, List[dict]] = {}
+        self.move_groups: Dict[Video, str] = {}
 
     def _update(self):
         self.potential_moves.clear()
         self.move_groups.clear()
-        groups = {}
+        groups: Dict[_MoveKey, Tuple[List[Video], List[Video]]] = {}
         for video in self.database.get_cached_videos("readable"):
             groups.setdefault(_MoveKey(video), ([], []))[video.found].append(video)
         for key, (not_found, found) in groups.items():
             if not_found and found:
                 for video_not_found in not_found:
                     self.potential_moves[video_not_found] = [
-                        {"video_id": video.video_id, "filename": video.filename}
+                        {"video_id": video.video_id, "filename": str(video.filename)}
                         for video in found
                     ]
-                    self.move_groups[video_not_found] = key
+                    self.move_groups[video_not_found] = key.string
                 for video in found:
-                    self.move_groups[video] = key
+                    self.move_groups[video] = key.string
 
     def _get(self, video: Video):
         return self.move_groups.get(video, None), self.potential_moves.get(video, [])
