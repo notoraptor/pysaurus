@@ -15,7 +15,7 @@ def main():
     prop_name = "<?newsensations>"
     classifier = {}
     for video in videos:
-        prop_val = video.get_property(prop_name, -1)
+        (prop_val,) = video.get_property(prop_name, -1)
         classifier.setdefault(prop_val, []).append(video)
     assert 0 in classifier
     assert 1 in classifier

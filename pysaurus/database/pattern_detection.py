@@ -39,7 +39,7 @@ def compute_pattern_detector(database: Database, videos: List[Video], prop_name:
     videos = [v for v in videos if v.video_id in video_id_to_miniature]
     classifier = {}
     for video in videos:
-        prop_val = video.get_property(prop_name, -1)
+        (prop_val,) = video.get_property(prop_name, -1)
         classifier.setdefault(prop_val, []).append(video)
     if 0 not in classifier:
         raise NoVideoForClass0(prop_name)

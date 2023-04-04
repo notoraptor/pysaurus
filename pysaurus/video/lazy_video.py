@@ -1,9 +1,9 @@
-from typing import Any, Dict, Set
+from typing import Any, Dict, List, Set
 
 from pysaurus.core.classes import StringPrinter, StringedTuple, Text
 from pysaurus.core.compare import to_comparable
 from pysaurus.core.components import AbsolutePath, Date, Duration, FileSize
-from pysaurus.core.constants import JPEG_EXTENSION, PYTHON_ERROR_THUMBNAIL
+from pysaurus.core.constants import JPEG_EXTENSION, PYTHON_ERROR_THUMBNAIL, UNDEFINED
 from pysaurus.core.functions import (
     class_get_public_attributes,
     string_to_pieces,
@@ -139,6 +139,14 @@ class LazyVideo(WithSchema):
             for name, value in self._get("properties").items()
         }
 
+    @property
+    def raw_properties(self) -> Dict[str, Any]:
+        return self._get("properties")
+
+    @raw_properties.setter
+    def raw_properties(self, properties: dict):
+        self._set("properties", properties)
+
     sample_rate = property(lambda self: self._get("sample_rate"))
 
     @property
@@ -249,10 +257,10 @@ class LazyVideo(WithSchema):
 
     def terms(self, as_set=False):
         term_sources = [self.filename.path, str(self.meta_title)]
-        for name, val in self.properties.items():
+        for name, val in self.raw_properties.items():
             if self.database.has_prop_type(name, with_type=str):
                 if isinstance(val, list):
-                    term_sources.extend(val)
+                    term_sources.extend(sorted(val))
                 else:
                     term_sources.append(val)
         all_str = " ".join(term_sources)
@@ -285,9 +293,10 @@ class LazyVideo(WithSchema):
     def has_property(self, name):
         return name in self._get("properties")
 
-    def get_property(self, name, *default):
-        properties = self.properties
-        return properties.get(name, *default) if default else properties[name]
+    def get_property(self, name, default_unit=UNDEFINED) -> List[Any]:
+        props = self.raw_properties
+        value = props.get(name, [] if default_unit is UNDEFINED else default_unit)
+        return value if isinstance(value, list) else [value]
 
     def remove_property(self, name, *default):
         self._save_date_entry_modified()

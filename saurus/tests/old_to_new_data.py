@@ -48,7 +48,7 @@ def old_to_new_video(video) -> data.Video:
             similarity_id=video.similarity_id,
             properties={
                 k: v if isinstance(v, list) else [v]
-                for k, v in video.properties.items()
+                for k, v in video.raw_properties.items()
             },
         )
         if video.readable

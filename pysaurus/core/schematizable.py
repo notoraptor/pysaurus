@@ -46,8 +46,7 @@ class Schema:
         return value
 
     def set_into_short_dict(self, data: dict, name: str, value: Any):
-        tp = self.schema[name]
-        data[tp.short] = value
+        data[self.schema[name].short] = value
 
     def has_in_short_dict(self, data: dict, name: str):
         tp = self.schema[name]

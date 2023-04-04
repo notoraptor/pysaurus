@@ -19,7 +19,7 @@ class PropError(SpecialPropType):
         super().__init__("<error>", "", True)
 
     def get(self, video: Video):
-        return sorted(set(video.errors) | set(video.get_property(self.name, ())))
+        return sorted(set(video.errors) | set(video.get_property(self.name)))
 
 
 class SpecialProperties:

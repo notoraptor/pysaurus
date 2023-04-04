@@ -1,5 +1,16 @@
 import logging
-from typing import Any, Container, Dict, Iterable, List, Optional, Sequence, Set, Union
+from typing import (
+    Any,
+    Container,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Union,
+)
 
 from pysaurus.application import exceptions
 from pysaurus.core import functions, notifications, notifying
@@ -350,6 +361,14 @@ class JsonDatabase:
             return False
         return True
 
+    def get_string_properties(self) -> Tuple[List[str], List[str]]:
+        # unique, multiple
+        output = ([], [])
+        for prop_type in self.__prop_types.values():
+            if prop_type.type is str:
+                output[prop_type.multiple].append(prop_type.name)
+        return output
+
     def describe_prop_types(self) -> List[dict]:
         return sorted(
             (prop.describe() for prop in self.__prop_types.values()),
@@ -410,7 +429,7 @@ class JsonDatabase:
             for video in self.__videos.values():
                 if video.has_property(name):
                     if video.get_property(name):
-                        video.set_property(name, video.get_property(name)[0])
+                        video.set_property(name, *video.get_property(name))
                     else:
                         # delete property value
                         video.remove_property(name)
@@ -424,7 +443,7 @@ class JsonDatabase:
             prop_type.multiple = True
             for video in self.__videos.values():
                 if video.has_property(name):
-                    video.set_property(name, [video.get_property(name)])
+                    video.set_property(name, video.get_property(name))
             self.save()
 
     def get_prop_values(
@@ -433,8 +452,7 @@ class JsonDatabase:
         video = self.__id_to_video[video_id]
         values = []
         if video.has_property(name):
-            value = video.get_property(name)
-            values = value if self.__prop_types[name].multiple else [value]
+            values = video.get_property(name)
         assert isinstance(values, list)
         if default and not values and not self.__prop_types[name].multiple:
             values = [self.__prop_types[name].default]
@@ -463,7 +481,7 @@ class JsonDatabase:
     ) -> None:
         video = self.__id_to_video[video_id]
         if self.__prop_types[name].multiple:
-            values = video.get_property(name, []) + list(values)
+            values = video.get_property(name) + list(values)
         self.set_prop_values(video.video_id, name, values)
 
     def validate_prop_values(self, name, values: list) -> List[PropValueType]:
@@ -477,6 +495,10 @@ class JsonDatabase:
     def new_prop_val(self, name, value=None) -> PropValueType:
         pt = self.__prop_types[name]
         return pt.default if value is None else pt.validate(value)
+
+    def default_prop_unit(self, name):
+        pt = self.__prop_types[name]
+        return None if pt.multiple else pt.default
 
     def _update_videos_not_found(self, existing_paths: Container[AbsolutePath]):
         """Use given container of existing paths to mark not found videos."""
@@ -626,7 +648,7 @@ class JsonDatabase:
                     self.get_video_id(file_path), "readable"
                 ):
                     old_video = self.__videos[file_path]
-                    video_state.set_properties(old_video.properties)
+                    video_state.raw_properties = old_video.raw_properties
                     video_state.similarity_id = old_video.similarity_id
                     video_state.video_id = old_video.video_id
                 # Set special properties

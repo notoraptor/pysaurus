@@ -130,8 +130,7 @@ class _AbstractLayerGrouping(Layer):
         prop_is_multiple = self.database.has_prop_type(name, multiple=True)
         values = []
         if video.has_property(name):
-            value = video.get_property(name)
-            values = value if prop_is_multiple else [value]
+            values = video.get_property(name)
         assert isinstance(values, list)
         if default and not values and not prop_is_multiple:
             values = [self.database.new_prop_val(name)]
@@ -237,7 +236,7 @@ class LayerClassifier(_AbstractLayerGrouping):
     ) -> GroupArray:
         classes = {}
         for video in videos:
-            for value in video.get_property(prop_name, []):
+            for value in video.get_property(prop_name):
                 classes.setdefault(value, []).append(video)
         for value in path:
             classes.pop(value)

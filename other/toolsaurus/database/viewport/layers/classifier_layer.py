@@ -42,7 +42,7 @@ class ClassifierLayer(Layer):
         assert self.parent and isinstance(self.parent, GroupingLayer)
         classes = {}
         for video in videos:
-            for value in video.get_property(prop_name, []):
+            for value in video.get_property(prop_name):
                 classes.setdefault(value, []).append(video)
         for value in values:
             classes.pop(value)
@@ -58,14 +58,9 @@ class ClassifierLayer(Layer):
             groups.append(cache[0])
         else:
             if cache.is_property:
-                if self.database.has_prop_type(cache.field, multiple=True):
-                    field_value = video.get_property(cache.field, None) or [None]
-                else:
-                    field_value = [
-                        video.get_property(
-                            cache.field, self.database.new_prop_val(cache.field)
-                        )
-                    ]
+                field_value = video.get_property(
+                    cache.field, self.database.default_prop_unit(cache.field)
+                )
             else:
                 field_value = [None]
             for value in field_value:
