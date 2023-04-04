@@ -34,13 +34,13 @@ class Val:
         self.v = video
         self.a = attr_id
 
-    val = property(lambda self: getattr(self.v, self.__attrs__[self.a]))
+    k = property(lambda self: getattr(self.v, self.__attrs__[self.a]))
 
     def __hash__(self):
-        return hash((type(self), self.a, self.val))
+        return hash((type(self), self.a, self.k))
 
     def __eq__(self, other):
-        return type(self) is type(other) and self.a == other.a and self.val == other.val
+        return type(self) is type(other) and self.a == other.a and self.k == other.k
 
 
 def main():
@@ -66,29 +66,33 @@ def main():
         for _ in range(batch):
             list(VideoFeatures.json(v) for v in database.query()[:100])
 
-    filename_to_tags = {}
-    tag_to_filenames = {}
     input("Hello?")
+    thing_to_filenames = {}
     with Profiler("collect video things"):
-        for i, video in enumerate(database.query()):
-            things = [Val(video, i) for i in range(len(Val.__attrs__))] + video.terms()
-            filename_to_tags[video.filename] = things
-            for thing in things:
-                try:
-                    tag_to_filenames.setdefault(thing, []).append(video.filename)
-                except Exception as exc:
-                    raise Exception(thing) from exc
-            if (i + 1) % 500 == 0:
-                print("Collecting video", i + 1)
+        with Profiler("Collect filename to tags"):
+            filename_to_things = {
+                video.filename: [Val(video, i) for i in range(len(Val.__attrs__))]
+                + video.terms()
+                for video in database.query()
+            }
+        with Profiler("Collect tag to filenames"):
+            for i, (filename, things) in enumerate(filename_to_things.items()):
+                for thing in things:
+                    try:
+                        thing_to_filenames.setdefault(thing, []).append(filename)
+                    except Exception as exc:
+                        raise Exception(thing) from exc
+                if (i + 1) % 500 == 0:
+                    print("Collecting video", i + 1)
 
     indexer = {
-        "filename_to_tags": filename_to_tags,
-        "tag_to_filenames": tag_to_filenames,
+        "filename_to_things": filename_to_things,
+        "thing_to_filenames": thing_to_filenames,
     }
     print("Finished collecting")
-    print("Videos:", len(filename_to_tags))
-    print("Total unique tags:", len(tag_to_filenames))
-    print("Total tags:", sum(len(tags) for tags in filename_to_tags.values()))
+    print("Videos:", len(filename_to_things))
+    print("Total unique tags:", len(thing_to_filenames))
+    print("Total tags:", sum(len(tags) for tags in filename_to_things.values()))
     input("Hello!")
 
 
