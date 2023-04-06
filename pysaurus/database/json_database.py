@@ -16,7 +16,6 @@ from pysaurus.application import exceptions
 from pysaurus.core import functions, notifications, notifying
 from pysaurus.core.components import AbsolutePath, Date, PathType
 from pysaurus.core.json_backup import JsonBackup
-from pysaurus.core.notifications import Notification
 from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
@@ -24,6 +23,11 @@ from pysaurus.database.db_settings import DbSettings
 from pysaurus.database.db_video_attribute import (
     PotentialMoveAttribute,
     QualityAttribute,
+)
+from pysaurus.database.json_database_utils import (
+    DatabaseLoaded,
+    DatabaseSaved,
+    DatabaseToSaveContext,
 )
 from pysaurus.database.special_properties import SpecialProperties
 from pysaurus.properties.properties import (
@@ -40,52 +44,6 @@ from pysaurus.video.video_indexer import VideoIndexer
 from pysaurus.video.video_sorting import VideoSorting
 
 logger = logging.getLogger(__name__)
-
-
-class DatabaseLoaded(Notification):
-    __slots__ = (
-        "entries",
-        "discarded",
-        "unreadable_not_found",
-        "unreadable_found",
-        "readable_not_found",
-        "valid",
-        "readable_found_without_thumbnails",
-    )
-
-    def __init__(self, database):
-        super().__init__()
-        self.entries = database.count_videos()
-        self.discarded = database.count_videos("discarded")
-        self.unreadable_not_found = database.count_videos("unreadable", "not_found")
-        self.unreadable_found = database.count_videos("unreadable", "found")
-        self.readable_not_found = database.count_videos("readable", "not_found")
-        self.readable_found_without_thumbnails = database.count_videos(
-            "readable", "found", "without_thumbnails"
-        )
-        self.valid = database.count_videos("readable", "found", "with_thumbnails")
-
-
-class DatabaseSaved(DatabaseLoaded):
-    __slots__ = ()
-
-
-class _ToSave:
-    __slots__ = "database", "to_save"
-
-    def __init__(self, database, to_save=True):
-        self.database = database
-        self.to_save = to_save
-
-    def __enter__(self):
-        self.database.in_save_context = True
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.database.in_save_context = False
-        if self.to_save:
-            self.database.save()
-            logger.info("Saved in context.")
 
 
 class JsonDatabase:
@@ -222,11 +180,13 @@ class JsonDatabase:
         on_new_identifiers:
             if True, save only if new video IDs were generated.
         """
+        # Update identifiers anyway
         identifiers_updated = self.__ensure_identifiers()
+        # Do not save if in save context
         if self.in_save_context:
             logger.info("Saving deactivated in context.")
             return
-        logger.info("Saving.")
+        # Save
         if not identifiers_updated and on_new_identifiers:
             return
         self.iteration += 1
@@ -244,7 +204,7 @@ class JsonDatabase:
         self.notifier.notify(DatabaseSaved(self))
 
     def to_save(self, to_save=True):
-        return _ToSave(self, to_save=to_save)
+        return DatabaseToSaveContext(self, to_save=to_save)
 
     def set_path(self, path: PathType):
         self.__backup = JsonBackup(path)

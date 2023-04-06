@@ -249,7 +249,6 @@ class Database(JsonDatabase):
                 modified.append(video["video_id"])
             valid_thumb_names.add(thumb_name)
         del valid_thumb_names
-        self.save()
 
         backend_raptor = VideoRaptor()
         notify_job_start(

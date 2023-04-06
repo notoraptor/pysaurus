@@ -16,7 +16,7 @@ from pysaurus.video.video_sorting import VideoSorting
 
 
 class LazyVideo(WithSchema):
-    __slots__ = ("discarded", "database")
+    __slots__ = ("__discarded", "database")
     SCHEMA = VideoSchema()
     __protected__ = ("database", "runtime", "discarded")
     FLAGS = {
@@ -32,7 +32,7 @@ class LazyVideo(WithSchema):
     def __init__(self, database, short_dict: dict):
         super().__init__(short_dict)
         # Runtime
-        self.discarded = False
+        self.__discarded = False
         self.database = database
 
     def __str__(self):
@@ -51,6 +51,14 @@ class LazyVideo(WithSchema):
 
     def __lt__(self, other):
         return self.filename < other.filename
+
+    @property
+    def discarded(self):
+        return self.__discarded
+
+    @discarded.setter
+    def discarded(self, discarded: bool):
+        self.__discarded = discarded
 
     @property
     def filename(self):

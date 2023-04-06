@@ -14,6 +14,6 @@ class ClosingApplication(Application):
         print(f"Closing {self.app_name}, saving databases.")
         for path, database in self.databases.items():
             if database:
-                print("Saving", path.file_title)
-                database.save()
+                with database.to_save():
+                    print("Saving", path.file_title)
         print(f"Closed {self.app_name}.")
