@@ -141,19 +141,21 @@ class LazyVideo(WithSchema):
         return Text(self._get("meta_title"))
 
     @property
-    def properties(self):
-        return {
-            name: self.database.new_prop_val(name, value)
-            for name, value in self._get("properties").items()
-        }
-
-    @property
-    def raw_properties(self) -> Dict[str, Any]:
+    def properties(self) -> Dict[str, List[Any]]:
         return self._get("properties")
 
-    @raw_properties.setter
-    def raw_properties(self, properties: dict):
+    @properties.setter
+    def properties(self, properties: Dict[str, List[Any]]):
         self._set("properties", properties)
+
+    @property
+    def json_properties(self):
+        return {
+            name: (
+                value if self.database.has_prop_type(name, multiple=True) else value[0]
+            )
+            for name, value in self._get("properties").items()
+        }
 
     sample_rate = property(lambda self: self._get("sample_rate"))
 
@@ -175,7 +177,7 @@ class LazyVideo(WithSchema):
     audio_languages = property(lambda self: self._get("audio_languages"))
     subtitle_languages = property(lambda self: self._get("subtitle_languages"))
 
-    # Derived properties
+    # Derived attributes
 
     extension = property(lambda self: self.filename.extension)
     file_title = property(lambda self: Text(self.filename.file_title))
@@ -265,12 +267,9 @@ class LazyVideo(WithSchema):
 
     def terms(self, as_set=False):
         term_sources = [self.filename.path, str(self.meta_title)]
-        for name, val in self.raw_properties.items():
+        for name, val in self.properties.items():
             if self.database.has_prop_type(name, with_type=str):
-                if isinstance(val, list):
-                    term_sources.extend(sorted(val))
-                else:
-                    term_sources.append(val)
+                term_sources.extend(val)
         all_str = " ".join(term_sources)
         t_all_str = string_to_pieces(all_str, as_set=False)
         t_all_str_low = string_to_pieces(all_str.lower(), as_set=False)
@@ -283,11 +282,7 @@ class LazyVideo(WithSchema):
             text in self.filename.path.lower()
             or text in self.meta_title.value.lower()
             or any(
-                (
-                    text in [v.lower() for v in val]
-                    if isinstance(val, list)
-                    else text == val.lower()
-                )
+                text in [v.lower() for v in val]
                 for name, val in self._get("properties").items()
                 if self.database.has_prop_type(name, with_type=str)
             )
@@ -302,21 +297,21 @@ class LazyVideo(WithSchema):
         return name in self._get("properties")
 
     def get_property(self, name, default_unit=UNDEFINED) -> List[Any]:
-        props = self.raw_properties
-        value = props.get(name, [] if default_unit is UNDEFINED else default_unit)
-        return value if isinstance(value, list) else [value]
+        props = self.properties
+        return props.get(name, [] if default_unit is UNDEFINED else [default_unit])
 
-    def remove_property(self, name, *default):
+    def remove_property(self, name) -> list:
         self._save_date_entry_modified()
         properties = self._get("properties")
-        popped = properties.pop(name, *default)
-        self._set("properties", properties)
+        popped = properties.pop(name, [])
+        if popped:
+            self._set("properties", properties)
         return popped
 
     def set_validated_properties(self, properties: Dict[str, Any]) -> Set[str]:
         return self.set_properties(
             {
-                name: self.database.new_prop_val(name, value)
+                name: self.database.new_prop_unit(name, value)
                 for name, value in properties.items()
             }
         )
@@ -327,18 +322,19 @@ class LazyVideo(WithSchema):
         }
 
     def set_property(self, name, value) -> bool:
+        assert value is not None
+        value = sorted(value) if isinstance(value, list) else [value]
         modified = False
         properties = self.properties
-        if value is None:
+        if self.database.value_is_default(name, value):
             if name in properties:
                 modified = True
                 del properties[name]
-        else:
-            if name not in properties or properties[name] != value:
-                modified = True
+        elif name not in properties or properties[name] != value:
+            modified = True
             properties[name] = value
-        self._set("properties", properties)
         if modified:
+            self._set("properties", properties)
             self._save_date_entry_modified()
         return modified
 

@@ -47,7 +47,7 @@ class VideoFeatures:
             "move_id": video.move_id,
             "moves": video.moves,
             "not_found": video.not_found,
-            "properties": video._get("properties"),
+            "properties": video.json_properties,
             "quality": video.quality,
             "readable": video.readable,
             "sample_rate": video.sample_rate,

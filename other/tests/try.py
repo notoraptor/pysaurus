@@ -22,13 +22,13 @@ class Val:
             "errors",
             "frame_rate_den",
             "frame_rate_num",
+            "json_properties",
             "meta_title",
             "meta_title_numeric",
             "moves",
             "properties",
             "quality_compression",
             "raw_microseconds",
-            "raw_properties",
             "raw_seconds",
             "subtitle_languages",
             "thumbnail_path",
@@ -73,13 +73,11 @@ class PropVal:
 
 class PropGetterFactory:
     def __init__(self, string_properties: Tuple[List[str], List[str]]):
-        self.p = string_properties
+        self.p = string_properties[0] + string_properties[1]
 
     def get_things(self, video: Video) -> List[PropVal]:
-        ps = video.raw_properties
-        return [PropVal(n, ps[n]) for n in self.p[0] if n in ps] + [
-            PropVal(n, v) for n in self.p[1] if n in ps for v in ps[n]
-        ]
+        ps = video.properties
+        return [PropVal(n, v) for n in self.p if n in ps for v in ps[n]]
 
 
 def _profile_video_to_json(database):
@@ -94,7 +92,7 @@ def _profile_video_to_json(database):
 
 def _check_prop_val(database, pgf):
     for video in database.query():
-        if video.raw_properties:
+        if video.properties:
             print(video.filename)
             for pv in pgf.get_things(video):
                 print("\t", pv)

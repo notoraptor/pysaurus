@@ -1,4 +1,5 @@
 import logging
+from typing import Callable, List, Union
 
 from pysaurus.core.notifications import Notification
 
@@ -51,3 +52,39 @@ class DatabaseToSaveContext:
         if self.to_save:
             self.database.save()
             logger.info("Saved in context.")
+
+
+def _patch_version_0(data: dict, version) -> bool:
+    if version > 0:
+        return False
+    if version == 0:
+        return True
+    assert version == -1
+    # Update video property values.
+    # Convert any non-list value to sorted list.
+    for video_dict in data.get("videos", ()):  # type: dict
+        for name in list(video_dict.get("p", ())):
+            values = video_dict["p"][name]
+            if values is not None:
+                if not isinstance(values, list):
+                    values = [values]
+                elif not values:
+                    values = None
+                else:
+                    values = sorted(values)
+            if values is None:
+                del video_dict["p"][name]
+            else:
+                video_dict["p"][name] = values
+    return True
+
+
+_PATCHS: List[Callable[[Union[dict, list], int], bool]] = [_patch_version_0]
+
+
+def patch_database_json(data: Union[dict, list], version):
+    for patch in _PATCHS:
+        print(patch.__name__)
+        if patch(data, version):
+            return
+    raise RuntimeError(f"No patch found for version {version}")

@@ -46,10 +46,7 @@ def old_to_new_video(video) -> data.Video:
             thumb_name=video.thumb_name,
             has_thumbnail=video.runtime.has_thumbnail,
             similarity_id=video.similarity_id,
-            properties={
-                k: v if isinstance(v, list) else [v]
-                for k, v in video.raw_properties.items()
-            },
+            properties=video.properties,
         )
         if video.readable
         else data.Video(

@@ -133,7 +133,7 @@ class _AbstractLayerGrouping(Layer):
             values = video.get_property(name)
         assert isinstance(values, list)
         if default and not values and not prop_is_multiple:
-            values = [self.database.new_prop_val(name)]
+            values = [self.database.new_prop_unit(name)]
         return values
 
     def _get_grouping_values(self, video, group_def: GroupDef):
