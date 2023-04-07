@@ -45,8 +45,12 @@ class Schema:
             value = tp()
         return value
 
-    def set_into_short_dict(self, data: dict, name: str, value: Any):
-        data[self.schema[name].short] = value
+    def set_into_short_dict(self, data: dict, name: str, value: Any) -> bool:
+        short = self.schema[name].short
+        modified = short not in data or data[short] != value
+        if modified:
+            data[short] = value
+        return modified
 
     def has_in_short_dict(self, data: dict, name: str):
         tp = self.schema[name]
@@ -92,8 +96,8 @@ class WithSchema:
     def _get(self, name):
         return self.SCHEMA.get_from_short_dict(self._d, name)
 
-    def _set(self, name, value):
-        self.SCHEMA.set_into_short_dict(self._d, name, value)
+    def _set(self, name, value) -> bool:
+        return self.SCHEMA.set_into_short_dict(self._d, name, value)
 
     def _has(self, name):
         return self.SCHEMA.has_in_short_dict(self._d, name)

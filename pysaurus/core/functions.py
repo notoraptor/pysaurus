@@ -4,7 +4,7 @@ import re
 import sys
 import tempfile
 import threading
-from typing import Iterable
+from typing import Iterable, List
 
 from pysaurus.core.modules import HTMLStripper
 
@@ -59,13 +59,10 @@ def camel_case_to_snake_case(name, split_upper_cases=True):
     return REGEX_LOWER_THEN_UPPER_CASES.sub(r"\1_\2", name).lower()
 
 
-def string_to_pieces(the_string, as_set=False):
-    builder = set if as_set else list
+def string_to_pieces(the_string) -> List[str]:
     the_string = camel_case_to_snake_case(the_string, split_upper_cases=False)
     the_string = split_words_and_numbers(the_string)
-    return builder(
-        piece.lower() for piece in REGEX_NO_WORD.sub(" ", the_string).split()
-    )
+    return [piece.lower() for piece in REGEX_NO_WORD.sub(" ", the_string).split()]
 
 
 def flat_to_coord(index, width):

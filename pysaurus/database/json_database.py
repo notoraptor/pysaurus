@@ -64,6 +64,8 @@ class JsonDatabase:
         "moves_attribute",
         "__indexer",
         "in_save_context",
+        "__removed",
+        "__modified",
     )
 
     def __init__(
@@ -74,7 +76,7 @@ class JsonDatabase:
         indexer: AbstractVideoIndexer = None,
     ):
         # Private data
-        self.__backup = JsonBackup(path)
+        self.__backup = JsonBackup(path, notifier)
         # Database content
         self.__version = 0
         self.settings = DbSettings()
@@ -91,6 +93,8 @@ class JsonDatabase:
         self.moves_attribute = PotentialMoveAttribute(self)
         self.__indexer = indexer or VideoIndexer()
         self.in_save_context = False
+        self.__removed: Set[Video] = set()
+        self.__modified: Set[Video] = set()
         # Initialize
         self.__load(folders)
 
@@ -200,9 +204,10 @@ class JsonDatabase:
         if self.in_save_context:
             logger.info("Saving deactivated in context.")
             return
-        # Save
+        # Do not save if we must save only on new identifiers.
         if not identifiers_updated and on_new_identifiers:
             return
+        # We can save. Make runtime updates.
         self.iteration += 1
         # Save database.
         self.__backup.save(
@@ -221,8 +226,34 @@ class JsonDatabase:
     def to_save(self, to_save=True):
         return DatabaseToSaveContext(self, to_save=to_save)
 
+    def register_modified(self, video: Video):
+        if video in self.__removed:
+            self.__removed.remove(video)
+        self.__modified.add(video)
+
+    def register_removed(self, video: Video):
+        if video in self.__modified:
+            self.__modified.remove(video)
+        self.__removed.add(video)
+
+    def register_replaced(self, new_video: Video, old_video: Video):
+        self.register_removed(old_video)
+        self.register_modified(new_video)
+
+    def flush_changes(self):
+        logger.info(
+            f"Flushed changes, "
+            f"{len(self.__removed)} removed, {len(self.__modified)} modified"
+        )
+        if self.__removed:
+            self.__indexer.remove_videos(self.__removed)
+        if self.__modified:
+            self.__indexer.update_videos(self.__modified)
+        self.__removed.clear()
+        self.__modified.clear()
+
     def set_path(self, path: PathType):
-        self.__backup = JsonBackup(path)
+        self.__backup = JsonBackup(path, self.notifier)
 
     def set_date(self, date: Date):
         self.__date = date
@@ -245,6 +276,7 @@ class JsonDatabase:
         self.save()
 
     def get_cached_videos(self, *flags, **forced_flags):
+        self.flush_changes()
         return [
             self.__videos[filename]
             for filename in self.__indexer.query_flags(
@@ -290,6 +322,7 @@ class JsonDatabase:
         if not text:
             output = ()
         else:
+            self.flush_changes()
             if videos is None:
                 filenames: Dict[AbsolutePath, Video] = self.__videos
             else:
@@ -442,7 +475,7 @@ class JsonDatabase:
 
     def set_video_properties(self, video_id: int, properties: dict) -> Set[str]:
         modified = self.__id_to_video[video_id].set_validated_properties(properties)
-        self._notify_properties_modified(modified, [video_id])
+        self._notify_properties_modified(modified)
         return modified
 
     def merge_prop_values(
@@ -477,27 +510,18 @@ class JsonDatabase:
 
     def _update_videos_not_found(self, existing_paths: Container[AbsolutePath]):
         """Use given container of existing paths to mark not found videos."""
-        modified = []
         for video_state in self.__videos.values():
-            is_file = video_state.filename in existing_paths
-            if video_state.runtime.is_file is not is_file:
-                video_state.runtime.is_file = is_file
-                modified.append(video_state)
-        if modified:
-            self.__indexer.update_videos(modified)
+            video_state.found = video_state.filename in existing_paths
 
-    def _notify_properties_modified(self, properties, video_indices: Iterable[int]):
+    def _notify_properties_modified(self, properties):
         self.save()
-        self.__indexer.update_videos(
-            (self.__id_to_video[video_id] for video_id in video_indices)
-        )
         self.notifier.notify(notifications.PropertiesModified(properties))
 
     def _notify_fields_modified(self, fields: Sequence[str]):
         self.save()
         self.notifier.notify(notifications.FieldsModified(fields))
 
-    def _notify_filename_modified(self, video: Video, old_path: AbsolutePath):
+    def _notify_filename_modified(self, new_video: Video, old_video: Video):
         self._notify_fields_modified(
             (
                 "title",
@@ -509,12 +533,9 @@ class JsonDatabase:
                 "filename",
             )
         )
-        self.__indexer.replace_path(video, old_path)
+        self.register_replaced(new_video, old_video)
 
-    def _notify_missing_thumbnails(self, modified: Iterable[int] = ()):
-        self.__indexer.update_videos(
-            self.__id_to_video[video_id] for video_id in modified
-        )
+    def _notify_missing_thumbnails(self):
         remaining_thumb_videos = [
             video.filename.path
             for video in self.get_cached_videos(
@@ -560,8 +581,8 @@ class JsonDatabase:
         else:
             return None
 
-    def get_video_terms(self, video_id: int) -> Set[str]:
-        return self.__id_to_video[video_id].terms(as_set=True)
+    def get_video_terms(self, video_id: int) -> List[str]:
+        return self.__id_to_video[video_id].terms()
 
     def read_video_field(self, video_id: int, field: str):
         return getattr(self.__id_to_video[video_id], field)
@@ -628,10 +649,10 @@ class JsonDatabase:
                     video_state.video_id = old_video.video_id
                 # Set special properties
                 SpecialProperties.set(video_state)
+            # Video modified, so automatically added to __modified.
             video_state.runtime = runtime_info[file_path]
             videos.append(video_state)
         self.__videos.update({video.filename: video for video in videos})
-        self.__indexer.update_videos(videos)
         if unreadable:
             self.notifier.notify(
                 notifications.VideoInfoErrors(
@@ -653,16 +674,13 @@ class JsonDatabase:
         video = self.__id_to_video[video_id]
         assert video.readable
         assert video.filename != path
-        old_filename = video.filename
 
         del self.__videos[video.filename]
-        self.__videos[path] = video
-        # TODO video.filename should be immutable
-        # We should instead copy video object with a new filename
-        video.filename = path
-        self._notify_filename_modified(video, old_filename)
+        new_video = video.with_new_filename(path)
+        self.__videos[new_video.filename] = new_video
+        self._notify_filename_modified(new_video, video)
 
-        return old_filename
+        return video.filename
 
     def delete_video_entry(self, video_id: int):
         video = self.__id_to_video[video_id]
@@ -670,7 +688,7 @@ class JsonDatabase:
         self.__id_to_video.pop(video.video_id, None)
         if video.readable:
             video.thumbnail_path.delete()
-        self.__indexer.remove_video(video)
+        self.register_removed(video)
         self.notifier.notify(notifications.VideoDeleted(video))
         self._notify_fields_modified(["move_id", "quality"])
 
@@ -686,7 +704,6 @@ class JsonDatabase:
         to_video.similarity_id = from_video.similarity_id
         to_video.date_entry_modified = from_video.date_entry_modified.time
         to_video.date_entry_opened = from_video.date_entry_opened.time
-        self.__indexer.update_videos([to_video])
         self.delete_video_entry(from_id)
 
     def open_video(self, video_id: int):

@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import Any, Dict, List, Set
 
 from pysaurus.core.classes import StringPrinter, StringedTuple, Text
@@ -29,11 +30,13 @@ class LazyVideo(WithSchema):
         "discarded",
     }
 
-    def __init__(self, database, short_dict: dict):
+    def __init__(self, database, short_dict: dict, discarded=False):
+        from pysaurus.database.json_database import JsonDatabase
+
         super().__init__(short_dict)
         # Runtime
-        self.__discarded = False
-        self.database = database
+        self.__discarded = discarded
+        self.database: JsonDatabase = database
 
     def __str__(self):
         cls = type(self)
@@ -52,23 +55,31 @@ class LazyVideo(WithSchema):
     def __lt__(self, other):
         return self.filename < other.filename
 
+    def _set(self, name, value) -> bool:
+        modified = super()._set(name, value)
+        if modified:
+            self.database.register_modified(self)
+        return modified
+
     @property
     def discarded(self):
         return self.__discarded
 
     @discarded.setter
     def discarded(self, discarded: bool):
-        self.__discarded = discarded
+        if self.__discarded != discarded:
+            self.__discarded = discarded
+            self.database.register_modified(self)
 
     @property
     def filename(self):
         return AbsolutePath(self._get("filename"))
 
-    @filename.setter
-    def filename(self, data):
-        assert isinstance(data, (str, AbsolutePath))
-        self._set("filename", str(data))
-        self._save_date_entry_modified()
+    def with_new_filename(self, filename):
+        assert isinstance(filename, (str, AbsolutePath))
+        d = deepcopy(self._d)
+        assert self.SCHEMA.set_into_short_dict(d, "filename", str(filename))
+        return LazyVideo(self.database, d, discarded=self.__discarded)
 
     file_size = property(lambda self: self._get("file_size"))
     errors = property(lambda self: set(self._get("errors")))
@@ -165,8 +176,7 @@ class LazyVideo(WithSchema):
 
     @similarity_id.setter
     def similarity_id(self, data):
-        if self._get("similarity_id") != data:
-            self._set("similarity_id", data)
+        if self._set("similarity_id", data):
             self._save_date_entry_modified()
 
     video_codec = property(lambda self: Text(self._get("video_codec")))
@@ -191,7 +201,17 @@ class LazyVideo(WithSchema):
     date = property(lambda self: Date(self.runtime.mtime))
 
     readable = property(lambda self: not self.unreadable)
-    found = property(lambda self: self.runtime.is_file)
+
+    @property
+    def found(self) -> bool:
+        return self.runtime.is_file
+
+    @found.setter
+    def found(self, is_file: bool):
+        if self.runtime.is_file != is_file:
+            self.runtime.is_file = is_file
+            self.database.register_modified(self)
+
     not_found = property(lambda self: not self.runtime.is_file)
     with_thumbnails = property(
         lambda self: not self.unreadable_thumbnail and self.runtime.has_thumbnail
@@ -261,20 +281,22 @@ class LazyVideo(WithSchema):
 
     @has_runtime_thumbnail.setter
     def has_runtime_thumbnail(self, value: bool):
-        self.runtime.has_thumbnail = bool(value)
+        value = bool(value)
+        if self.runtime.has_thumbnail != value:
+            self.runtime.has_thumbnail = value
+            self.database.register_modified(self)
 
     # Methods.
 
-    def terms(self, as_set=False):
+    def terms(self) -> List[str]:
         term_sources = [self.filename.path, str(self.meta_title)]
         for name, val in self.properties.items():
             if self.database.has_prop_type(name, with_type=str):
                 term_sources.extend(val)
         all_str = " ".join(term_sources)
-        t_all_str = string_to_pieces(all_str, as_set=False)
-        t_all_str_low = string_to_pieces(all_str.lower(), as_set=False)
-        t_all = t_all_str if t_all_str == t_all_str_low else (t_all_str + t_all_str_low)
-        return set(t_all) if as_set else t_all
+        t_all_str = string_to_pieces(all_str)
+        t_all_str_low = string_to_pieces(all_str.lower())
+        return t_all_str if t_all_str == t_all_str_low else (t_all_str + t_all_str_low)
 
     def has_exact_text(self, text: str) -> bool:
         text = text.lower()

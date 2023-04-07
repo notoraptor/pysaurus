@@ -1,4 +1,5 @@
 import logging
+from collections import namedtuple
 from typing import Callable, List, Union
 
 from pysaurus.core.notifications import Notification
@@ -52,6 +53,9 @@ class DatabaseToSaveContext:
         if self.to_save:
             self.database.save()
             logger.info("Saved in context.")
+
+
+DatabaseChanges = namedtuple("DatabaseChanges", ("removed", "replaced", "modified"))
 
 
 def _patch_version_0(data: dict, version) -> bool:

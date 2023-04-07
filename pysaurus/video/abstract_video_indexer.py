@@ -23,14 +23,18 @@ class AbstractVideoIndexer(metaclass=ABCMeta):
     def remove_video(self, video: Video):
         self._remove_filename(video.filename)
 
+    def remove_videos(self, videos: Iterable[Video]):
+        for video in videos:
+            self._remove_filename(video.filename)
+
     def update_videos(self, videos: Iterable[Video]):
         for video in videos:
             self.remove_video(video)
             self.add_video(video)
 
-    @abstractmethod
     def replace_path(self, video: Video, old_path: AbsolutePath):
-        pass
+        self._remove_filename(old_path)
+        self.add_video(video)
 
     @abstractmethod
     def query_and(

@@ -10,7 +10,7 @@ Video class. Properties:
 
     (number of seconds) = duration / duration_time_base
 """
-from typing import Any, Dict, Iterable, Set
+from typing import Any, Dict, Iterable, List, Set
 
 from pysaurus.core.classes import StringPrinter, StringedTuple, Text
 from pysaurus.core.compare import to_comparable
@@ -257,7 +257,7 @@ class Video(Jsonable):
     def has_runtime_thumbnail(self, value: bool):
         self.runtime.has_thumbnail = bool(value)
 
-    def terms(self, as_set=False):
+    def terms(self) -> List[str]:
         term_sources = [self.filename.path, str(self.meta_title)]
         for name, val in self.properties.items():
             if self.database.has_prop_type(name, with_type=str):
@@ -266,10 +266,9 @@ class Video(Jsonable):
                 else:
                     term_sources.append(val)
         all_str = " ".join(term_sources)
-        t_all_str = string_to_pieces(all_str, as_set=False)
-        t_all_str_low = string_to_pieces(all_str.lower(), as_set=False)
-        t_all = t_all_str if t_all_str == t_all_str_low else (t_all_str + t_all_str_low)
-        return set(t_all) if as_set else t_all
+        t_all_str = string_to_pieces(all_str)
+        t_all_str_low = string_to_pieces(all_str.lower())
+        return t_all_str if t_all_str == t_all_str_low else (t_all_str + t_all_str_low)
 
     def to_comparable(self, sorting: VideoSorting) -> list:
         return [

@@ -54,10 +54,6 @@ class VideoIndexer(AbstractVideoIndexer):
                 if not self.term_to_filenames[term]:
                     del self.term_to_filenames[term]
 
-    def replace_path(self, video: Video, old_path: AbsolutePath):
-        self._remove_filename(old_path)
-        self.add_video(video)
-
     @Profiler.profile_method("indexer_update_videos")
     def update_videos(self, videos: Iterable[Video]):
         for video in videos:

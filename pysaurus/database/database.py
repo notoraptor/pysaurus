@@ -1,7 +1,7 @@
 import logging
 import os
 from collections import Counter
-from typing import Dict, Iterable, List, Optional, Set, Tuple
+from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple
 
 import ujson as json
 
@@ -168,7 +168,6 @@ class Database(JsonDatabase):
         # Collect videos with and without thumbnails.
         existing_thumb_names = self.__check_thumbnails_on_disk()
 
-        modified: List[int] = []
         with Profiler(say("Check videos thumbnails"), notifier=self.notifier):
             for video in self.select_videos_fields(
                 [
@@ -184,12 +183,11 @@ class Database(JsonDatabase):
                 thumb_name = video["thumb_name"]
                 if not video["found"]:
                     if thumb_name in existing_thumb_names:
-                        if self.write_video_field(
+                        self.write_video_field(
                             video["video_id"],
                             "has_runtime_thumbnail",
                             True,
-                        ):
-                            modified.append(video["video_id"])
+                        )
                         valid_thumb_names.add(thumb_name)
                 elif not video["unreadable_thumbnail"]:
                     if (
@@ -207,10 +205,9 @@ class Database(JsonDatabase):
                 if len(vds) == 1:
                     video: dict = vds[0]
                     valid_thumb_names.add(valid_thumb_name)
-                    if self.write_video_field(
+                    self.write_video_field(
                         video["video_id"], "has_runtime_thumbnail", True
-                    ):
-                        modified.append(video["video_id"])
+                    )
                 else:
                     videos_without_thumbs.extend(vds)
         nb_videos_no_thumbs = len(videos_without_thumbs)
@@ -233,7 +230,7 @@ class Database(JsonDatabase):
             self._clean_thumbnails(thumbs_to_clean)
 
         if not videos_without_thumbs:
-            self._notify_missing_thumbnails(modified)
+            self._notify_missing_thumbnails()
             return
 
         for video in videos_without_thumbs:
@@ -243,10 +240,9 @@ class Database(JsonDatabase):
             while thumb_name in valid_thumb_names:
                 thumb_name = f"{base_thumb_name}_{thumb_name_index}"
                 thumb_name_index += 1
-            if self.write_video_fields(
+            self.write_video_fields(
                 video["video_id"], thumb_name=thumb_name, has_runtime_thumbnail=True
-            ):
-                modified.append(video["video_id"])
+            )
             valid_thumb_names.add(thumb_name)
         del valid_thumb_names
 
@@ -284,18 +280,17 @@ class Database(JsonDatabase):
                 file_path = AbsolutePath.ensure(file_name)
                 thumb_errors[file_name] = d["e"]
                 video_id = self.get_video_id(file_path)
-                if self.write_video_fields(
+                self.write_video_fields(
                     video_id,
                     unreadable_thumbnail=True,
                     has_runtime_thumbnail=False,
-                ):
-                    modified.append(video_id)
+                )
 
         if thumb_errors:
             self.notifier.notify(notifications.VideoThumbnailErrors(thumb_errors))
 
         self.compress_thumbnails()
-        self._notify_missing_thumbnails(modified)
+        self._notify_missing_thumbnails()
 
     @Profiler.profile_method()
     def ensure_miniatures(self, returns=False) -> Optional[List[Miniature]]:
@@ -459,7 +454,7 @@ class Database(JsonDatabase):
                 self.set_prop_values(video_id, name, new_values)
                 modified.append(video_id)
         if modified:
-            self._notify_properties_modified([name], modified)
+            self._notify_properties_modified([name])
         return modified
 
     def delete_property_value(self, name: str, values: list) -> None:
@@ -470,7 +465,7 @@ class Database(JsonDatabase):
         for video_id in modified:
             self.merge_prop_values(video_id, new_name, values)
         if modified:
-            self._notify_properties_modified([old_name, new_name], modified)
+            self._notify_properties_modified([old_name, new_name])
 
     def edit_property_value(
         self, name: str, old_values: list, new_value: object
@@ -486,7 +481,7 @@ class Database(JsonDatabase):
                 self.set_prop_values(video_id, name, next_values)
                 modified.append(video_id)
         if modified:
-            self._notify_properties_modified([name], modified)
+            self._notify_properties_modified([name])
         return bool(modified)
 
     def edit_property_for_videos(
@@ -506,14 +501,12 @@ class Database(JsonDatabase):
         )
         values_to_add = set(self.validate_prop_values(name, values_to_add))
         values_to_remove = set(self.validate_prop_values(name, values_to_remove))
-        modified: List[int] = []
         for video_id in video_indices:
             values = (
                 set(self.get_prop_values(video_id, name)) - values_to_remove
             ) | values_to_add
             self.set_prop_values(video_id, name, values)
-            modified.append(video_id)
-        self._notify_properties_modified([name], modified)
+        self._notify_properties_modified([name])
 
     def count_property_values(
         self, video_indices: List[int], name: str
@@ -527,39 +520,33 @@ class Database(JsonDatabase):
         assert self.has_prop_type(prop_name, with_type=str, multiple=True)
         modified = []
         for video_id in self.get_all_video_indices():
-            values = set(self.get_prop_values(video_id, prop_name))
+            values = self.get_prop_values(video_id, prop_name)
             if only_empty and values:
                 continue
             self.set_prop_values(
-                video_id, prop_name, values | self.get_video_terms(video_id)
+                video_id, prop_name, values + self.get_video_terms(video_id)
             )
             modified.append(video_id)
         if modified:
-            self._notify_properties_modified([prop_name], modified)
+            self._notify_properties_modified([prop_name])
 
     def prop_to_lowercase(self, prop_name):
-        assert self.has_prop_type(prop_name, with_type=str)
-        modified = []
-        for video_id in self.get_all_video_indices():
-            values = self.get_prop_values(video_id, prop_name)
-            new_values = [value.strip().lower() for value in values]
-            if values and new_values != values:
-                self.set_prop_values(video_id, prop_name, new_values)
-                modified.append(video_id)
-        if modified:
-            self._notify_properties_modified([prop_name], modified)
+        return self._edit_prop_value(prop_name, lambda value: value.strip().lower())
 
     def prop_to_uppercase(self, prop_name):
+        return self._edit_prop_value(prop_name, lambda value: value.strip().upper())
+
+    def _edit_prop_value(self, prop_name: str, function: Callable[[Any], Any]):
         assert self.has_prop_type(prop_name, with_type=str)
         modified = []
         for video_id in self.get_all_video_indices():
             values = self.get_prop_values(video_id, prop_name)
-            new_values = [value.strip().upper() for value in values]
+            new_values = [function(value) for value in values]
             if values and new_values != values:
                 self.set_prop_values(video_id, prop_name, new_values)
                 modified.append(video_id)
         if modified:
-            self._notify_properties_modified([prop_name], modified)
+            self._notify_properties_modified([prop_name])
 
     def move_concatenated_prop_val(
         self, path: list, from_property: str, to_property: str
@@ -580,7 +567,7 @@ class Database(JsonDatabase):
                 self.merge_prop_values(video_id, to_property, [concat_path])
                 modified.append(video_id)
         if modified:
-            self._notify_properties_modified([from_property, to_property], modified)
+            self._notify_properties_modified([from_property, to_property])
         return len(modified)
 
     def confirm_unique_moves(self) -> int:

@@ -71,12 +71,12 @@ class VideoFeatures:
 
     @staticmethod
     def has_terms_and(self: Video, terms: Sequence[str]) -> bool:
-        video_terms = self.terms(as_set=True)
+        video_terms = set(self.terms())
         return all(term in video_terms for term in terms)
 
     @staticmethod
     def has_terms_or(self: Video, terms: Sequence[str]) -> bool:
-        video_terms = self.terms(as_set=True)
+        video_terms = set(self.terms())
         return any(term in video_terms for term in terms)
 
     @staticmethod

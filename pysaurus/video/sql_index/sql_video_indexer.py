@@ -155,12 +155,6 @@ class SqlVideoIndexer(AbstractVideoIndexer):
             "DELETE FROM filename WHERE filename = ?", [filename.path]
         )
 
-    def replace_path(self, video: Video, old_path: AbsolutePath):
-        self.sql_database.modify(
-            "DELETE FROM filename WHERE filename = ?", [old_path.path]
-        )
-        self.add_video(video)
-
     def _term_to_filenames(self, term: str) -> Iterable[AbsolutePath]:
         return (
             AbsolutePath(row["filename"])

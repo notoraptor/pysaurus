@@ -80,6 +80,13 @@ class PropGetterFactory:
         return [PropVal(n, v) for n in self.p if n in ps for v in ps[n]]
 
 
+def _display_all_video_attributes():
+    all_attributes = functions.class_get_public_attributes(Video, wrapper=sorted)
+    print("Video all attributes:", len(all_attributes))
+    for attribute in all_attributes:
+        print("\t", attribute)
+
+
 def _profile_video_to_json(database):
     batch = 100
     with Profiler("to_json"):
@@ -106,13 +113,10 @@ def main():
     #     ["filename", "thumbnail_path", "video_id"], "readable", "with_thumbnails"
     # ))
     # print(len(videos))
-    all_attributes = functions.class_get_public_attributes(Video, wrapper=sorted)
     print("Video attributes:", len(Val.__attrs__))
     for attribute in Val.__attrs__:
         print("\t", attribute)
-    print("Video all attributes:", all_attributes)
-    for attribute in all_attributes:
-        print("\t", attribute)
+    # _display_all_video_attributes()
 
     pgf = PropGetterFactory(database.get_string_properties())
 
@@ -148,7 +152,7 @@ def main():
     print("Total tags:", sum(len(tags) for tags in filename_to_things.values()))
     print(
         "Example japanese",
-        len(thing_to_filenames.get(PropVal("category", "japanese"), ())),
+        len(thing_to_filenames.get(PropVal("certified category", "japanese"), ())),
     )
     input("Hello!")
 
