@@ -26,7 +26,7 @@ class ExtendedDatabase(Database):
         return self.get_videos("readable", "found", "with_thumbnails")
 
     @classmethod
-    @Profiler.profile()
+    @Profiler.profile_method()
     def load_from_list_file_path(
         cls,
         list_file_path,

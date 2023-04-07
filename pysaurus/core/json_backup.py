@@ -6,10 +6,11 @@ from pysaurus.core.profiling import Profiler
 
 
 class JsonBackup:
-    __slots__ = ("path",)
+    __slots__ = ("path", "notifier")
 
-    def __init__(self, path: PathType):
+    def __init__(self, path: PathType, notifier):
         self.path = AbsolutePath.ensure(path)
+        self.notifier = notifier
 
     def load(self, default=dict):
         data = default()
@@ -18,7 +19,7 @@ class JsonBackup:
                 data = json.load(output_file)
         return data
 
-    @Profiler.profile("JsonBackup.save")
+    @Profiler.profile_method("JsonBackup.save")
     def save(self, data):
         prev_path = AbsolutePath.file_path(
             self.path.get_directory(), self.path.title, "prev.json"

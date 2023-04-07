@@ -131,20 +131,22 @@ class Database(JsonDatabase):
             return
 
         backend_raptor = VideoRaptor()
-        notify_job_start(
-            self.notifier,
-            backend_raptor.collect_video_info,
-            len(files_to_update),
-            "videos",
-        )
         with Profiler(
             say("Collect videos info"),
             notifier=self.notifier,
         ):
-            results = run_split_batch(
+            notify_job_start(
+                self.notifier,
                 backend_raptor.collect_video_info,
-                files_to_update,
-                extra_args=[self.__paths.db_folder, self.notifier],
+                len(files_to_update),
+                "videos",
+            )
+            results = list(
+                run_split_batch(
+                    backend_raptor.collect_video_info,
+                    files_to_update,
+                    extra_args=[self.__paths.db_folder, self.notifier],
+                )
             )
 
         new: List[dict] = [
@@ -247,29 +249,31 @@ class Database(JsonDatabase):
         del valid_thumb_names
 
         backend_raptor = VideoRaptor()
-        notify_job_start(
-            self.notifier,
-            backend_raptor.collect_video_thumbnails,
-            nb_videos_no_thumbs,
-            "videos",
-        )
         with Profiler(
             title=say(
                 "Get thumbnails from JSON",
             ),
             notifier=self.notifier,
         ):
-            results = run_split_batch(
+            notify_job_start(
+                self.notifier,
                 backend_raptor.collect_video_thumbnails,
-                [
-                    (video["filename"].path, video["thumb_name"])
-                    for video in videos_without_thumbs
-                ],
-                extra_args=[
-                    self.__paths.db_folder,
-                    self.__paths.thumb_folder.best_path,
-                    self.notifier,
-                ],
+                nb_videos_no_thumbs,
+                "videos",
+            )
+            results = list(
+                run_split_batch(
+                    backend_raptor.collect_video_thumbnails,
+                    [
+                        (video["filename"].path, video["thumb_name"])
+                        for video in videos_without_thumbs
+                    ],
+                    extra_args=[
+                        self.__paths.db_folder,
+                        self.__paths.thumb_folder.best_path,
+                        self.notifier,
+                    ],
+                )
             )
 
         for arr in results:
@@ -332,18 +336,20 @@ class Database(JsonDatabase):
         ]
 
         if tasks:
-            notify_job_start(
-                self.notifier,
-                jobs_python.generate_video_miniatures,
-                len(tasks),
-                "videos",
-            )
             have_added = True
             with Profiler(say("Generating miniatures."), self.notifier):
-                results = run_split_batch(
+                notify_job_start(
+                    self.notifier,
                     jobs_python.generate_video_miniatures,
-                    tasks,
-                    extra_args=[self.notifier],
+                    len(tasks),
+                    "videos",
+                )
+                results = list(
+                    run_split_batch(
+                        jobs_python.generate_video_miniatures,
+                        tasks,
+                        extra_args=[self.notifier],
+                    )
                 )
             for local_array in results:
                 added_miniatures.extend(local_array)
