@@ -1,3 +1,4 @@
+import sys
 from typing import Optional
 
 from pysaurus.core import notifying
@@ -32,6 +33,46 @@ class JobStep(Notification):
         self.step = step
         self.total = total
         self.title = title
+
+
+class ConsoleJobProgress:
+    __slots__ = "job_to_do", "channels", "shift"
+
+    def __init__(self, job_to_do: JobToDo):
+        self.job_to_do = job_to_do
+        self.channels = {}
+        self.shift = 0
+        print(job_to_do)
+        self._progress(0)
+
+    @property
+    def done(self):
+        return self.job_to_do.total == sum(self.channels.values(), start=0)
+
+    def update(self, job_step: JobStep):
+        assert self.job_to_do.name == job_step.name
+        self.channels[job_step.channel] = job_step.step
+        self._progress(sum(self.channels.values()))
+
+    def _progress(self, step: int):
+        """Manual console progress bar.
+
+        NB: We cannot use tqdm here, because:
+        - tqdm object cannot be pickled across processes.
+        - I don't know how to recreate a tqdm attached to previous bar
+          (new tqdm object will automatically write on next line).
+        """
+        total = self.job_to_do.total
+        length_bar = 30
+        length_done = int(length_bar * step / total)
+        output = (
+            f"|{'█' * length_done}{' ' * (length_bar - length_done)}| "
+            f"{step}/{total} {self.job_to_do.title}"
+        )
+        sys.stdout.write(("\r" * self.shift) + output)
+        self.shift = len(output)
+        if step == total:
+            sys.stdout.write("\r\n")
 
 
 def _get_job_name(fn_or_name):

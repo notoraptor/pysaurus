@@ -14,6 +14,7 @@ from pysaurus.core.classes import Runnable
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.file_copier import FileCopier
 from pysaurus.core.functions import launch_thread
+from pysaurus.core.job_notifications import ConsoleJobProgress, JobStep, JobToDo
 from pysaurus.core.modules import System
 from pysaurus.core.notifications import (
     Cancelled,
@@ -24,7 +25,7 @@ from pysaurus.core.notifications import (
 )
 from pysaurus.core.notifying import Notifier
 from pysaurus.core.path_tree import PathTree
-from pysaurus.core.profiling import Profiler
+from pysaurus.core.profiling import Profiler, ProfilingEnd, ProfilingStart
 from pysaurus.database import pattern_detection
 from pysaurus.database.db_features import DbFeatures
 from pysaurus.database.db_video_server import ServerLauncher
@@ -59,6 +60,40 @@ class ProviderNotifier(Notifier):
         # has_manager = self.get_manager(notification) is not None
         # logger.warning(f"[provider-notifier:{has_manager}] {notification}")
         pass
+
+
+class ConsoleNotificationPrinter:
+    __slots__ = ("_prev_profiling_start", "progress")
+
+    def __init__(self):
+        self._prev_profiling_start: ProfilingStart = None
+        self.progress: ConsoleJobProgress = None
+
+    def print(self, notification):
+        prev_profiling_start = self._prev_profiling_start
+        self._prev_profiling_start = None
+        if isinstance(notification, ProfilingStart):
+            if prev_profiling_start:
+                print("!", prev_profiling_start)
+            self._prev_profiling_start = notification
+        elif isinstance(notification, ProfilingEnd):
+            if prev_profiling_start:
+                assert prev_profiling_start.name == notification.name
+                print(f"Profiled({notification.name}, {notification.time})")
+            else:
+                print(notification)
+        else:
+            if prev_profiling_start:
+                print("?", prev_profiling_start)
+
+            if isinstance(notification, JobToDo):
+                progress = self.progress
+                assert not progress or progress.done
+                self.progress = ConsoleJobProgress(notification)
+            elif isinstance(notification, JobStep):
+                self.progress.update(notification)
+            else:
+                print(notification)
 
 
 class GuiAPI(FeatureAPI):
@@ -231,12 +266,16 @@ class GuiAPI(FeatureAPI):
 
     def _monitor_notifications(self):
         logger.debug("Monitoring notifications ...")
+        # We are in a thread, with notifications handled sequentially,
+        # thus no need to be process-safe.
+        notification_printer = ConsoleNotificationPrinter()
         while True:
             if self.threads_stop_flag:
                 break
             try:
                 notification = self.notifier.queue.get_nowait()
                 # self._provider_notifier.notify(notification)
+                notification_printer.print(notification)
                 self._notify(notification)
             except queue.Empty:
                 time.sleep(1 / 100)
