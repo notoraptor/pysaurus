@@ -19,7 +19,6 @@ python-vlc = "^3.0.12118"
 av = "^8.0.3"
 show-in-file-manager = "^1.1.4"
 werkzeug = "^2.2.2"
-kivy = {extras = ["full"], version = "^2.1.0"}
 
 [tool.poetry.dev-dependencies]
 black = "^22.12.0"
