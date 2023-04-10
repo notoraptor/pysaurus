@@ -12,13 +12,13 @@ Pillow = "^9.0.1"
 ujson = "^5.2.0"
 tornado = "^6.1"
 Flask = "^2.0.1"
-PyQt5 = "^5.15.4"
-PyQtWebEngine = "^5.15.4"
 cefpython3 = {version = "^66.1", markers = "sys_platform == 'win32'"}
 python-vlc = "^3.0.12118"
 av = "^8.0.3"
 show-in-file-manager = "^1.1.4"
 werkzeug = "^2.2.2"
+pyqt6 = "^6.4.2"
+pyqt6-webengine = "^6.4.0"
 
 [tool.poetry.dev-dependencies]
 black = "^22.12.0"

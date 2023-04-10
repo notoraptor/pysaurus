@@ -3,10 +3,11 @@ import sys
 import threading
 
 import ujson as json
-from PyQt5.QtCore import QMetaObject, QObject, QUrl, Q_ARG, Qt, pyqtSignal, pyqtSlot
-from PyQt5.QtWebChannel import QWebChannel
-from PyQt5.QtWebEngineWidgets import QWebEnginePage, QWebEngineView
-from PyQt5.QtWidgets import QApplication
+from PyQt6.QtCore import QMetaObject, QObject, QUrl, Q_ARG, Qt, pyqtSignal, pyqtSlot
+from PyQt6.QtWebChannel import QWebChannel
+from PyQt6.QtWebEngineCore import QWebEnginePage
+from PyQt6.QtWebEngineWidgets import QWebEngineView
+from PyQt6.QtWidgets import QApplication
 
 from pysaurus import package_dir
 from pysaurus.application import exceptions
@@ -177,10 +178,10 @@ def main():
     # Initialize.
     app = QApplication.instance() or QApplication(sys.argv)
     # Set geometry.
-    desktop = app.desktop()
-    dpix = desktop.logicalDpiX()
-    dpiy = desktop.logicalDpiY()
-    screen_rect = desktop.screen().rect()
+    desktop = app.primaryScreen()
+    dpix = desktop.logicalDotsPerInchX()
+    dpiy = desktop.logicalDotsPerInchY()
+    screen_rect = desktop.availableGeometry()
     screen_center = screen_rect.center()
     width = (7 * screen_rect.width()) // 10
     height = (2 * screen_rect.height()) // 3
@@ -205,7 +206,7 @@ def main():
     threading.excepthook = generate_thread_except_hook(app, view.interface.api)
     # Display.
     view.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
 
 
 if __name__ == "__main__":
