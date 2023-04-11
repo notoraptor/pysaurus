@@ -56,7 +56,7 @@ class FeatureAPI:
         "PYTHON_LANGUAGE",
         "_proxies",
     )
-    PYTHON_DEFAULT_SOURCES = [("readable",)]
+    PYTHON_DEFAULT_SOURCES = [["readable"]]
     PYTHON_APP_NAME = Application.app_name
     PYTHON_FEATURE_COMPARISON = True
 

@@ -89,14 +89,14 @@ class LayerSource(Layer):
                 if path not in valid_paths:
                     assert len(set(path)) == len(path)
                     assert all(flag in Video.FLAGS for flag in path)
-                    valid_paths.add(path)
+                    valid_paths.add(list(path))
             if valid_paths:
                 super().set_params(sources=sorted(valid_paths))
                 self.source_def = SourceDef(self.params["sources"])
 
     @classmethod
     def default_params(cls) -> Dict:
-        return {"sources": [("readable",)]}
+        return {"sources": [["readable"]]}
 
     def run(self):
         videos = VideoArray()

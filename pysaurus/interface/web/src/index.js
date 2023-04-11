@@ -24,7 +24,8 @@ backend_call("get_constants", []).then((constants) => {
 	for (let entry of Object.entries(constants)) {
 		const [name, value] = entry;
 		window[name] = value;
-		// console.log(`${name}: ${value}`);
+		// console.log(["CONSTANT", name, value]);
 	}
-	ReactDOM.render(<App />, document.getElementById("root"));
+	const root = ReactDOM.createRoot(document.getElementById("root"));
+	root.render(<App />);
 });

@@ -1,8 +1,6 @@
 import logging
 import sys
-import threading
 
-import ujson as json
 from PyQt6.QtCore import QMetaObject, QObject, QUrl, Q_ARG, Qt, pyqtSignal, pyqtSlot
 from PyQt6.QtWebChannel import QWebChannel
 from PyQt6.QtWebEngineCore import QWebEnginePage
@@ -15,6 +13,7 @@ from pysaurus.core.components import AbsolutePath
 from pysaurus.core.enumeration import EnumerationError
 from pysaurus.core.modules import System
 from pysaurus.interface.api.gui_api import GuiAPI
+from pysaurus.interface.common.qt_utils import ExceptHookForQt
 
 logger = logging.getLogger(__name__)
 
@@ -50,14 +49,14 @@ class Api(GuiAPI):
                 QMetaObject.invokeMethod(
                     self.interface,
                     "throw",
-                    Qt.QueuedConnection,
+                    Qt.ConnectionType.QueuedConnection,
                     Q_ARG(Exception, exception),
                 )
 
         return super()._run_thread(wrapper)
 
     def _notify(self, notification):
-        self.interface.notified.emit(json.dumps(notification.describe()))
+        self.interface.notified.emit(notification.describe())
 
 
 class Interface(QObject):
@@ -68,12 +67,12 @@ class Interface(QObject):
         self.api = self.__api_cls__(self)
 
     # Slot set in Javascript code
-    notified = pyqtSignal(str)
+    notified = pyqtSignal('QVariantMap')
 
-    @pyqtSlot(str, result=str)
-    def call(self, json_str):
+    @pyqtSlot('QVariantList', result='QVariantMap')
+    def call(self, call_args):
         try:
-            name, args = json.loads(json_str)
+            name, args = call_args
             result = {"error": False, "data": self.api.__run_feature__(name, *args)}
         except (OSError, EnumerationError, exceptions.PysaurusError) as exception:
             logger.exception("API call exception")
@@ -81,7 +80,7 @@ class Interface(QObject):
                 "error": True,
                 "data": {"name": type(exception).__name__, "message": str(exception)},
             }
-        return json.dumps(result)
+        return result
 
     @pyqtSlot(Exception)
     def throw(self, exception):
@@ -148,24 +147,15 @@ class PysaurusQtApplication(QWebEngineView):
         return super().closeEvent(close_event)
 
 
-def generate_except_hook(qapp, api: Api):
-    def except_hook(cls, exception, trace):
-        logger.error("[Qt] Error occurring.")
-        sys.__excepthook__(cls, exception, trace)
-        api.threads_stop_flag = True
-        qapp.exit(1)
+class QtWebEngineExceptHook(ExceptHookForQt):
+    __slots__ = ("api",)
 
-    return except_hook
+    def __init__(self, qapp, api):
+        super().__init__(qapp)
+        self.api = api
 
-
-def generate_thread_except_hook(qapp, api: Api):
-    def thread_except_hook(arg):
-        logger.error(f"[Qt] Error occurring in thread: {arg.thread.name}")
-        sys.__excepthook__(arg.exc_type, arg.exc_value, arg.exc_traceback)
-        api.threads_stop_flag = True
-        qapp.exit(1)
-
-    return thread_except_hook
+    def cleanup(self):
+        self.api.threads_stop_flag = True
 
 
 def main():
@@ -202,8 +192,7 @@ def main():
         if scale > 1:
             view.setZoomFactor(scale)
     # Set except hooks
-    sys.excepthook = generate_except_hook(app, view.interface.api)
-    threading.excepthook = generate_thread_except_hook(app, view.interface.api)
+    QtWebEngineExceptHook(app, view.interface.api).register()
     # Display.
     view.show()
     sys.exit(app.exec())

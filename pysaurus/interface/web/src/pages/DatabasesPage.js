@@ -32,71 +32,76 @@ export class DatabasesPage extends React.Component {
 					})}
 				</h1>
 				<table className="w-100 table-layout-fixed">
-					{languages.length > 1 ? (
+					<tbody>
+						{languages.length > 1 ? (
+							<tr>
+								<td className="text-right">
+									<label htmlFor="language">{tr("Language:")}:</label>
+								</td>
+								<td className="text-left">
+									<select
+										id="language"
+										value={window.PYTHON_LANGUAGE}
+										onChange={this.onChangeLanguage}>
+										{languages.map((language, index) => (
+											<option key={index} value={language}>
+												{language}
+											</option>
+										))}
+									</select>
+								</td>
+							</tr>
+						) : (
+							""
+						)}
 						<tr>
-							<td className="text-right">
-								<label htmlFor="language">{tr("Language:")}:</label>
-							</td>
-							<td className="text-left">
-								<select id="language" value={window.PYTHON_LANGUAGE} onChange={this.onChangeLanguage}>
-									{languages.map((language, index) => (
-										<option key={index} value={language}>
-											{language}
-										</option>
-									))}
-								</select>
-							</td>
-						</tr>
-					) : (
-						""
-					)}
-					<tr>
-						<td>
-							<h2>{tr("Create a database")}</h2>
-							<div className="p-1">
-								<input
-									type="text"
-									className="w-100"
-									value={this.state.name}
-									onChange={this.onChangeName}
-									placeholder={tr("Database name.")}
-								/>
-							</div>
-							<h3>{tr("Database folders and files")}</h3>
-							<div className="vertical new-paths">
-								<PathsInput onUpdate={this.onUpdatePaths} data={this.state.paths} />
-							</div>
-							<div className="p-1">
-								<button className="block" onClick={this.createDatabase}>
-									{tr("create database")}
-								</button>
-							</div>
-						</td>
-						<td>
-							<h2>
-								{tr("Open a database ({count} available)", {
-									count: this.props.parameters.database_names.length,
-								})}
-							</h2>
-							<div className="p-1">
-								<input
-									type="checkbox"
-									id="update"
-									checked={this.state.update}
-									onChange={this.onChangeUpdate}
-								/>{" "}
-								<label htmlFor="update">{tr("update after opening")}</label>
-							</div>
-							<h3>{tr("Click on a database to open it")}</h3>
-							{this.props.parameters.database_names.map((database, index) => (
-								<div className="p-1" key={index}>
-									<button className="block" onClick={() => this.openDatabase(database)}>
-										{database}
+							<td>
+								<h2>{tr("Create a database")}</h2>
+								<div className="p-1">
+									<input
+										type="text"
+										className="w-100"
+										value={this.state.name}
+										onChange={this.onChangeName}
+										placeholder={tr("Database name.")}
+									/>
+								</div>
+								<h3>{tr("Database folders and files")}</h3>
+								<div className="vertical new-paths">
+									<PathsInput onUpdate={this.onUpdatePaths} data={this.state.paths} />
+								</div>
+								<div className="p-1">
+									<button className="block" onClick={this.createDatabase}>
+										{tr("create database")}
 									</button>
 								</div>
-							))}
-						</td>
-					</tr>
+							</td>
+							<td>
+								<h2>
+									{tr("Open a database ({count} available)", {
+										count: this.props.parameters.database_names.length,
+									})}
+								</h2>
+								<div className="p-1">
+									<input
+										type="checkbox"
+										id="update"
+										checked={this.state.update}
+										onChange={this.onChangeUpdate}
+									/>{" "}
+									<label htmlFor="update">{tr("update after opening")}</label>
+								</div>
+								<h3>{tr("Click on a database to open it")}</h3>
+								{this.props.parameters.database_names.map((database, index) => (
+									<div className="p-1" key={index}>
+										<button className="block" onClick={() => this.openDatabase(database)}>
+											{database}
+										</button>
+									</div>
+								))}
+							</td>
+						</tr>
+					</tbody>
 				</table>
 			</div>
 		);

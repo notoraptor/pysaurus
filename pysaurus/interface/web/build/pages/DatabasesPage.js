@@ -42,7 +42,7 @@ System.register(["../utils/backend.js", "../components/PathsInput.js", "../langu
             name: window.PYTHON_APP_NAME
           })), /*#__PURE__*/React.createElement("table", {
             className: "w-100 table-layout-fixed"
-          }, languages.length > 1 ? /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
+          }, /*#__PURE__*/React.createElement("tbody", null, languages.length > 1 ? /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
             className: "text-right"
           }, /*#__PURE__*/React.createElement("label", {
             htmlFor: "language"
@@ -90,7 +90,7 @@ System.register(["../utils/backend.js", "../components/PathsInput.js", "../langu
           }, /*#__PURE__*/React.createElement("button", {
             className: "block",
             onClick: () => this.openDatabase(database)
-          }, database)))))));
+          }, database))))))));
         }
         onChangeLanguage(event) {
           this.props.app.setLanguage(event.target.value);

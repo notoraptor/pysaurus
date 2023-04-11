@@ -16,18 +16,20 @@ export class PathsInput extends React.Component {
 			<div className="form-database-edit-folders flex-grow-1 position-relative">
 				<div className="absolute-plain vertical">
 					<table className="table-layout-fixed flex-shrink-0">
-						<tr>
-							<td>
-								<button className="block" onClick={this.addFolder}>
-									{tr("Add folder")}
-								</button>
-							</td>
-							<td>
-								<button className="block" onClick={this.addFile}>
-									{tr("Add file")}
-								</button>
-							</td>
-						</tr>
+						<tbody>
+							<tr>
+								<td>
+									<button className="block" onClick={this.addFolder}>
+										{tr("Add folder")}
+									</button>
+								</td>
+								<td>
+									<button className="block" onClick={this.addFile}>
+										{tr("Add file")}
+									</button>
+								</td>
+							</tr>
+						</tbody>
 					</table>
 					<div className="paths flex-grow-1 overflow-auto">
 						<table className="table-layout-fixed">

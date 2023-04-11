@@ -31,10 +31,11 @@ System.register(["./App.js", "./utils/Callbacks.js", "./utils/backend.js", "./ut
         for (let entry of Object.entries(constants)) {
           const [name, value] = entry;
           window[name] = value;
-          // console.log(`${name}: ${value}`);
+          // console.log(["CONSTANT", name, value]);
         }
 
-        ReactDOM.render( /*#__PURE__*/React.createElement(App, null), document.getElementById("root"));
+        const root = ReactDOM.createRoot(document.getElementById("root"));
+        root.render( /*#__PURE__*/React.createElement(App, null));
       });
     }
   };

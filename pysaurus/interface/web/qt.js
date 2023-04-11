@@ -4,9 +4,8 @@ new QWebChannel(qt.webChannelTransport, function (channel) {
 	window.backend_call = function (name, args) {
 		return new Promise((resolve, reject) => {
 			backend
-				.call(JSON.stringify([name, args]))
-				.then((raw) => {
-					const result = JSON.parse(raw);
+				.call([name, args])
+				.then((result) => {
 					if (result.error) {
 						reject(result.data);
 					} else {
@@ -16,8 +15,7 @@ new QWebChannel(qt.webChannelTransport, function (channel) {
 				.catch((error) => reject({ name: "javascript error", message: error.message }));
 		});
 	};
-	backend.notified.connect(function (raw) {
-		const notification = JSON.parse(raw);
+	backend.notified.connect(function (notification) {
 		window.NOTIFICATION_MANAGER.call(notification);
 	});
 	System.import("./build/index.js");

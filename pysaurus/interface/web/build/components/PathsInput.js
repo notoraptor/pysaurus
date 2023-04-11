@@ -27,13 +27,13 @@ System.register(["../language.js", "../utils/backend.js"], function (_export, _c
             className: "absolute-plain vertical"
           }, /*#__PURE__*/React.createElement("table", {
             className: "table-layout-fixed flex-shrink-0"
-          }, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
+          }, /*#__PURE__*/React.createElement("tbody", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
             className: "block",
             onClick: this.addFolder
           }, tr("Add folder"))), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
             className: "block",
             onClick: this.addFile
-          }, tr("Add file"))))), /*#__PURE__*/React.createElement("div", {
+          }, tr("Add file")))))), /*#__PURE__*/React.createElement("div", {
             className: "paths flex-grow-1 overflow-auto"
           }, /*#__PURE__*/React.createElement("table", {
             className: "table-layout-fixed"

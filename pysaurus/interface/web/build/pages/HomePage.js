@@ -1,15 +1,7 @@
 System.register(["../utils/constants.js", "../utils/backend.js", "../language.js"], function (_export, _context) {
   "use strict";
 
-  var Characters, backend_error, python_call, LangContext, tr, ProgressionMonitoring, Monitoring, NotificationRenderer, HomePage, EndStatus, EndReady, NotificationCollector, ACTIONS;
-  function collectEndNotification(app, notification) {
-    const name = notification.name;
-    app.collectNotification(notification, {
-      loaded: name,
-      status: EndStatus[name],
-      ready: EndReady[name]
-    });
-  }
+  var Characters, backend_error, python_call, LangContext, tr, ProgressionMonitoring, Monitoring, NotificationRenderer, HomePage, EndStatus, EndReady, ACTIONS;
   _export("HomePage", void 0);
   return {
     setters: [function (_utilsConstantsJs) {
@@ -75,41 +67,6 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
         Done: true,
         Cancelled: true,
         End: false
-      };
-      NotificationCollector = {
-        DatabaseReady: collectEndNotification,
-        Done: collectEndNotification,
-        Cancelled: collectEndNotification,
-        End: collectEndNotification,
-        JobToDo: function (app, notification) {
-          const name = notification.notification.name;
-          const total = notification.notification.total;
-          const jobMap = new Map(app.state.jobMap);
-          jobMap.set(name, new ProgressionMonitoring(name, total));
-          app.collectNotification(notification, {
-            jobMap
-          });
-        },
-        JobStep: function (app, notification) {
-          const jobsAreAlreadyCollected = app.state.jobMap.get(notification.notification.name).jobs.size;
-          const jobMap = new Map(app.state.jobMap);
-          jobMap.get(notification.notification.name).collectJobStep(notification);
-          app.collectNotification(notification, {
-            jobMap
-          }, !jobsAreAlreadyCollected);
-        },
-        ProfilingEnd: function (app, notification) {
-          const messages = app.state.messages.slice();
-          const lastIndex = messages.length - 1;
-          if (messages.length && messages[lastIndex].name === "ProfilingStart" && messages[lastIndex].notification.name === notification.notification.name) {
-            messages.pop();
-            notification.notification.inplace = true;
-          }
-          messages.push(notification);
-          app.setState({
-            messages
-          });
-        }
       };
       NotificationRenderer = class NotificationRenderer extends React.Component {
         constructor(props) {
@@ -314,8 +271,16 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
             jobMap: new Map()
           };
           this.notify = this.notify.bind(this);
-          this.displayVideos = this.displayVideos.bind(this);
+          this.onDatabaseReady = this.onDatabaseReady.bind(this);
+          this.onDone = this.onDone.bind(this);
+          this.onCancelled = this.onCancelled.bind(this);
+          this.onEnd = this.onEnd.bind(this);
+          this.onJobToDo = this.onJobToDo.bind(this);
+          this.onJobStep = this.onJobStep.bind(this);
+          this.onProfilingEnd = this.onProfilingEnd.bind(this);
+          this.collectEndNotification = this.collectEndNotification.bind(this);
           this.collectNotification = this.collectNotification.bind(this);
+          this.computeCollectedNotification = this.computeCollectedNotification.bind(this);
         }
         render() {
           return /*#__PURE__*/React.createElement("div", {
@@ -330,7 +295,7 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
         }
         renderInitialButton() {
           if (this.props.parameters.onReady) return /*#__PURE__*/React.createElement("strong", null, this.state.status || ACTIONS[this.props.parameters.command[0]] + " ...");else if (this.state.loaded) return /*#__PURE__*/React.createElement("button", {
-            onClick: this.displayVideos
+            onClick: () => this.props.app.loadVideosPage()
           }, tr("Display videos"));else return /*#__PURE__*/React.createElement("button", {
             disabled: true
           }, ACTIONS[this.props.parameters.command[0]], " ...");
@@ -339,7 +304,8 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
           const output = this.state.messages.map((message, i) => /*#__PURE__*/React.createElement(NotificationRenderer, {
             app: this,
             message: message,
-            i: i
+            i: i,
+            key: i
           }));
           if (!this.state.loaded) output.push( /*#__PURE__*/React.createElement("div", {
             key: this.state.messages.length
@@ -361,11 +327,63 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
           NOTIFICATION_MANAGER.uninstallFrom(this);
         }
         notify(notification) {
-          const name = notification.name;
-          if (NotificationCollector[name]) return NotificationCollector[name](this, notification);else this.collectNotification(notification);
+          this.collectNotification(notification);
         }
-        displayVideos() {
-          this.props.app.loadVideosPage();
+        onDatabaseReady(notification) {
+          this.collectEndNotification(notification);
+        }
+        onDone(notification) {
+          this.collectEndNotification(notification);
+        }
+        onCancelled(notification) {
+          this.collectEndNotification(notification);
+        }
+        onEnd(notification) {
+          this.collectEndNotification(notification);
+        }
+        onJobToDo(notification) {
+          this.setState(prevState => {
+            const name = notification.notification.name;
+            const total = notification.notification.total;
+            const jobMap = new Map(prevState.jobMap.entries());
+            jobMap.set(name, new ProgressionMonitoring(name, total));
+            return this.computeCollectedNotification(prevState, notification, {
+              jobMap
+            });
+          });
+        }
+        onJobStep(notification) {
+          this.setState(prevState => {
+            const previousMap = prevState.jobMap;
+            const jobsAreAlreadyCollected = previousMap.get(notification.notification.name).jobs.size;
+            const jobMap = new Map(previousMap.entries());
+            jobMap.get(notification.notification.name).collectJobStep(notification);
+            return this.computeCollectedNotification(prevState, notification, {
+              jobMap
+            }, !jobsAreAlreadyCollected);
+          });
+        }
+        onProfilingEnd(notification) {
+          this.setState(prevState => {
+            const messages = prevState.messages.slice();
+            const lastIndex = messages.length - 1;
+            if (messages.length && messages[lastIndex].name === "ProfilingStart" && messages[lastIndex].notification.name === notification.notification.name) {
+              messages.pop();
+              notification.notification.inplace = true;
+            }
+            messages.push(notification);
+            return {
+              messages
+            };
+          });
+        }
+        collectEndNotification(notification) {
+          const name = notification.name;
+          this.collectNotification(notification, {
+            loaded: name,
+            status: EndStatus[name],
+            ready: EndReady[name]
+          });
         }
 
         /**
@@ -377,12 +395,23 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
          * @param store {boolean} - If true, append notification to internal notification list.
          */
         collectNotification(notification, updates = {}, store = true) {
+          this.setState(prevState => this.computeCollectedNotification(prevState, notification, updates, store));
+        }
+
+        /**
+         * Callback to return new state based on previous state.
+         * Useful to enqueue successive state updates, waiting from previous update
+         * to be applied and then accessing to an up-to-date state.
+         * Necessary because notification management seems asynchronous,
+         * so, a notification callback may not have access to updated state.
+         */
+        computeCollectedNotification(prevState, notification, updates = {}, store = true) {
           if (store) {
-            const messages = this.state.messages.slice();
+            const messages = prevState.messages.slice();
             messages.push(notification);
             updates.messages = messages;
           }
-          this.setState(updates);
+          return updates;
         }
       });
       HomePage.contextType = LangContext;
