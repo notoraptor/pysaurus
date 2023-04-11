@@ -1,7 +1,7 @@
 import logging
 import os
 from collections import Counter
-from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple
+from typing import Any, Callable, Dict, Iterable, List, Optional, Set
 
 import ujson as json
 
@@ -516,11 +516,11 @@ class Database(JsonDatabase):
 
     def count_property_values(
         self, video_indices: List[int], name: str
-    ) -> List[Tuple[object, int]]:
+    ) -> List[List]:
         count = Counter()
         for video_id in video_indices:
             count.update(self.get_prop_values(video_id, name))
-        return sorted(count.items())
+        return sorted(list(item) for item in count.items())
 
     def fill_property_with_terms(self, prop_name: str, only_empty=False) -> None:
         assert self.has_prop_type(prop_name, with_type=str, multiple=True)

@@ -37,13 +37,16 @@ def classify_similarities_directed(
         ]
         native_sequence_pointers = [pointer(sequence) for sequence in native_sequences]
         pointer_array_type = PtrSequence * nb_sequences
-    notify_job_start(
-        database.notifier, "compare_miniatures", nb_sequences, "videos (C++ comparison)"
-    )
     with Profiler(
         say("Finding similar images using simpler NATIVE comparison."),
         database.notifier,
     ):
+        notify_job_start(
+            database.notifier,
+            "compare_miniatures",
+            nb_sequences,
+            "videos (C++ comparison)",
+        )
         cursor = 0
         while cursor < nb_sequences:
             i_from = cursor

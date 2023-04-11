@@ -86,7 +86,7 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
             className: "content position-relative flex-grow-1 overflow-auto"
           }, this.props.groupDef.groups.length ? /*#__PURE__*/React.createElement("table", {
             className: "second-td-text-right w-100 table-layout-fixed"
-          }, this.props.groupDef.groups.slice(start, end).map((entry, index) => {
+          }, /*#__PURE__*/React.createElement("tbody", null, this.props.groupDef.groups.slice(start, end).map((entry, index) => {
             index = start + index;
             const buttons = [];
             if (isProperty && entry.value !== null) {
@@ -140,7 +140,7 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
             } : {}), entry.value === null ? "(none)" : entry.value)), /*#__PURE__*/React.createElement("td", {
               title: entry.count
             }, entry.count));
-          })) : /*#__PURE__*/React.createElement("div", {
+          }))) : /*#__PURE__*/React.createElement("div", {
             className: "absolute-plain no-groups text-center vertical"
           }, /*#__PURE__*/React.createElement("strong", null, /*#__PURE__*/React.createElement("em", null, tr("No groups"))))));
         }

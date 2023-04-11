@@ -323,10 +323,10 @@ class DbFeatures:
         db: Database,
     ):
         n = len(classifier_left.grays)
-        notify_job_start(
-            db.notifier, self.compare_old_vs_new_miniatures, n, "new miniatures"
-        )
         with Profiler(say("Cross compare classifiers."), db.notifier):
+            notify_job_start(
+                db.notifier, self.compare_old_vs_new_miniatures, n, "new miniatures"
+            )
             nb_cmp = 0
             for i_gray_left, gray_left in enumerate(classifier_left.grays):
                 sub_classifier_left = classifier_left.classifiers[i_gray_left]

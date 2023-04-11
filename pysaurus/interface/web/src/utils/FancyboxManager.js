@@ -4,6 +4,7 @@ import { APP_STATE } from "./globals.js";
 class FancyboxManager {
 	constructor(containerID) {
 		this.containerID = containerID;
+		this.root = null;
 		this.loaded = false;
 		this.load = this.load.bind(this);
 		this.close = this.close.bind(this);
@@ -23,16 +24,15 @@ class FancyboxManager {
 		if (this.loaded) throw "A fancy box is already displayed.";
 		this.loaded = true;
 		this.manageOtherActiveElements();
-		ReactDOM.render(
-			<LangContext.Provider value={APP_STATE.lang}>{component}</LangContext.Provider>,
-			document.getElementById(this.containerID)
-		);
+		this.root = ReactDOM.createRoot(document.getElementById(this.containerID));
+		this.root.render(<LangContext.Provider value={APP_STATE.lang}>{component}</LangContext.Provider>);
 	}
 
 	close() {
 		this.loaded = false;
 		this.manageOtherActiveElements();
-		ReactDOM.unmountComponentAtNode(document.getElementById(this.containerID));
+		this.root.unmount();
+		this.root = null;
 	}
 
 	/**

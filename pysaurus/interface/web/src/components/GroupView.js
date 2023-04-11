@@ -87,70 +87,72 @@ export class GroupView extends React.Component {
 				<div className="content position-relative flex-grow-1 overflow-auto">
 					{this.props.groupDef.groups.length ? (
 						<table className="second-td-text-right w-100 table-layout-fixed">
-							{this.props.groupDef.groups.slice(start, end).map((entry, index) => {
-								index = start + index;
-								const buttons = [];
-								if (isProperty && entry.value !== null) {
-									if (!this.props.isClassified) {
-										buttons.push(
-											<input
-												type="checkbox"
-												checked={selection.has(index)}
-												onChange={(event) => this.onCheckEntry(event, index)}
-											/>
-										);
-										buttons.push(" ");
+							<tbody>
+								{this.props.groupDef.groups.slice(start, end).map((entry, index) => {
+									index = start + index;
+									const buttons = [];
+									if (isProperty && entry.value !== null) {
+										if (!this.props.isClassified) {
+											buttons.push(
+												<input
+													type="checkbox"
+													checked={selection.has(index)}
+													onChange={(event) => this.onCheckEntry(event, index)}
+												/>
+											);
+											buttons.push(" ");
+											if (!selection.size) {
+												buttons.push(
+													<SettingIcon
+														key="options"
+														title="Options ..."
+														action={(event) => this.openPropertyOptions(event, index)}
+													/>
+												);
+												buttons.push(" ");
+											}
+										}
 										if (!selection.size) {
 											buttons.push(
-												<SettingIcon
-													key="options"
-													title="Options ..."
-													action={(event) => this.openPropertyOptions(event, index)}
+												<PlusIcon
+													key="add"
+													title="Add ..."
+													action={(event) => this.openPropertyPlus(event, index)}
 												/>
 											);
 											buttons.push(" ");
 										}
 									}
-									if (!selection.size) {
-										buttons.push(
-											<PlusIcon
-												key="add"
-												title="Add ..."
-												action={(event) => this.openPropertyPlus(event, index)}
-											/>
-										);
-										buttons.push(" ");
+									const classes = [isProperty ? "property" : "attribute"];
+									classes.push("clickable");
+									if (selected === index) {
+										classes.push("selected");
+										classes.push("bold");
 									}
-								}
-								const classes = [isProperty ? "property" : "attribute"];
-								classes.push("clickable");
-								if (selected === index) {
-									classes.push("selected");
-									classes.push("bold");
-								}
-								if (entry.value === null) {
-									classes.push("all");
-									classes.push("bolder");
-								}
-								return (
-									<tr
-										className={classes.join(" ")}
-										key={index}
-										onClick={() =>
-											this.props.onGroupViewState({
-												groupID: index,
-											})
-										}>
-										<td {...(isProperty ? {} : { title: entry.value })}>
-											{buttons}
-											<span key="value" {...(isProperty ? { title: entry.value } : {})}>
-												{entry.value === null ? "(none)" : entry.value}
-											</span>
-										</td>
-										<td title={entry.count}>{entry.count}</td>
-									</tr>
-								);
-							})}
+									if (entry.value === null) {
+										classes.push("all");
+										classes.push("bolder");
+									}
+									return (
+										<tr
+											className={classes.join(" ")}
+											key={index}
+											onClick={() =>
+												this.props.onGroupViewState({
+													groupID: index,
+												})
+											}>
+											<td {...(isProperty ? {} : { title: entry.value })}>
+												{buttons}
+												<span key="value" {...(isProperty ? { title: entry.value } : {})}>
+													{entry.value === null ? "(none)" : entry.value}
+												</span>
+											</td>
+											<td title={entry.count}>{entry.count}</td>
+										</tr>
+									);
+								})}
+							</tbody>
 						</table>
 					) : (
 						<div className="absolute-plain no-groups text-center vertical">

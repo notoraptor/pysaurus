@@ -67,9 +67,9 @@ class Interface(QObject):
         self.api = self.__api_cls__(self)
 
     # Slot set in Javascript code
-    notified = pyqtSignal('QVariantMap')
+    notified = pyqtSignal("QVariantMap")
 
-    @pyqtSlot('QVariantList', result='QVariantMap')
+    @pyqtSlot("QVariantList", result="QVariantMap")
     def call(self, call_args):
         try:
             name, args = call_args

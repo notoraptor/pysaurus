@@ -12,6 +12,7 @@ System.register(["../language.js", "./globals.js"], function (_export, _context)
       FancyboxManager = class FancyboxManager {
         constructor(containerID) {
           this.containerID = containerID;
+          this.root = null;
           this.loaded = false;
           this.load = this.load.bind(this);
           this.close = this.close.bind(this);
@@ -25,14 +26,16 @@ System.register(["../language.js", "./globals.js"], function (_export, _context)
           if (this.loaded) throw "A fancy box is already displayed.";
           this.loaded = true;
           this.manageOtherActiveElements();
-          ReactDOM.render( /*#__PURE__*/React.createElement(LangContext.Provider, {
+          this.root = ReactDOM.createRoot(document.getElementById(this.containerID));
+          this.root.render( /*#__PURE__*/React.createElement(LangContext.Provider, {
             value: APP_STATE.lang
-          }, component), document.getElementById(this.containerID));
+          }, component));
         }
         close() {
           this.loaded = false;
           this.manageOtherActiveElements();
-          ReactDOM.unmountComponentAtNode(document.getElementById(this.containerID));
+          this.root.unmount();
+          this.root = null;
         }
 
         /**

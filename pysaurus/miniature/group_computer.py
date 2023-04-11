@@ -113,9 +113,6 @@ class GroupComputer:
         self, miniatures: List[Miniature], *, database=None
     ) -> List[DecomposedMiniature]:
         notifier = database.notifier if database else DEFAULT_NOTIFIER
-        notify_job_start(
-            notifier, self.collect_miniature_groups, len(miniatures), "miniatures"
-        )
         tasks = [(i, m, len(miniatures), notifier) for i, m in enumerate(miniatures)]
         with Profiler(
             say(
@@ -124,6 +121,9 @@ class GroupComputer:
             ),
             notifier,
         ):
+            notify_job_start(
+                notifier, self.collect_miniature_groups, len(miniatures), "miniatures"
+            )
             raw_output = list(
                 parallelize(self.collect_miniature_groups, tasks, USABLE_CPU_COUNT)
             )
