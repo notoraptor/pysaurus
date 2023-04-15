@@ -19,6 +19,8 @@ class SetInput(QWidget):
         self.__add_button = QPushButton("+")
         self.__grid = QGridLayout()
 
+        self.__grid.setSizeConstraint(QGridLayout.SizeConstraint.SetMinAndMaxSize)
+
         self.__text_input.returnPressed.connect(self.add_value)
         self.__add_button.clicked.connect(self.add_value)
         self.setLayout(self.__grid)
@@ -46,7 +48,6 @@ class SetInput(QWidget):
     def _draw(self):
         for content in self.__contents:
             self.__grid.removeWidget(content)
-            del content
         self.__contents.clear()
         i = 0
         for value in self.values:

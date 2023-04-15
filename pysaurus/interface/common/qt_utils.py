@@ -47,10 +47,10 @@ class Callback:
 
 
 class ExceptHookForQt:
-    __slots__ = ("qapp",)
+    __slots__ = ("qt_app",)
 
-    def __init__(self, qapp):
-        self.qapp = qapp
+    def __init__(self, qt_app):
+        self.qt_app = qt_app
 
     def register(self):
         sys.excepthook = self.sys_except_hook
@@ -60,13 +60,13 @@ class ExceptHookForQt:
         logger.error("[Qt] Error occurring.")
         sys.__excepthook__(cls, exception, trace)
         self.cleanup()
-        self.qapp.exit(1)
+        self.qt_app.exit(1)
 
     def thread_except_hook(self, arg):
         logger.error(f"[Qt] Error occurring in thread: {arg.thread.name}")
         sys.__excepthook__(arg.exc_type, arg.exc_value, arg.exc_traceback)
         self.cleanup()
-        self.qapp.exit(1)
+        self.qt_app.exit(1)
 
     @abstractmethod
     def cleanup(self):

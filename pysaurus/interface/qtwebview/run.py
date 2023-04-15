@@ -13,7 +13,7 @@ from pysaurus.core.components import AbsolutePath
 from pysaurus.core.enumeration import EnumerationError
 from pysaurus.core.modules import System
 from pysaurus.interface.api.gui_api import GuiAPI
-from pysaurus.interface.common.qt_utils import ExceptHookForQt
+from pysaurus.interface.common.qt_saurus_utils import PysaurusQtExceptHook
 
 logger = logging.getLogger(__name__)
 
@@ -147,17 +147,6 @@ class PysaurusQtApplication(QWebEngineView):
         return super().closeEvent(close_event)
 
 
-class QtWebEngineExceptHook(ExceptHookForQt):
-    __slots__ = ("api",)
-
-    def __init__(self, qapp, api):
-        super().__init__(qapp)
-        self.api = api
-
-    def cleanup(self):
-        self.api.threads_stop_flag = True
-
-
 def main():
     from multiprocessing import freeze_support
 
@@ -192,7 +181,7 @@ def main():
         if scale > 1:
             view.setZoomFactor(scale)
     # Set except hooks
-    QtWebEngineExceptHook(app, view.interface.api).register()
+    PysaurusQtExceptHook(app, view.interface.api).register()
     # Display.
     view.show()
     sys.exit(app.exec())

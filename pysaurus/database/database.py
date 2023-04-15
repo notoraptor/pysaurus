@@ -514,9 +514,7 @@ class Database(JsonDatabase):
             self.set_prop_values(video_id, name, values)
         self._notify_properties_modified([name])
 
-    def count_property_values(
-        self, video_indices: List[int], name: str
-    ) -> List[List]:
+    def count_property_values(self, video_indices: List[int], name: str) -> List[List]:
         count = Counter()
         for video_id in video_indices:
             count.update(self.get_prop_values(video_id, name))
