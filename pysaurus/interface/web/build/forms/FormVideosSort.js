@@ -1,18 +1,17 @@
-System.register(["../utils/constants.js", "../dialogs/FancyBox.js", "../language.js", "../utils/FancyboxManager.js"], function (_export, _context) {
+System.register(["../dialogs/FancyBox.js", "../language.js", "../utils/FancyboxManager.js", "../utils/constants.js"], function (_export, _context) {
   "use strict";
 
-  var FIELD_MAP, FancyBox, LangContext, tr, Fancybox, FormVideosSort;
+  var FancyBox, tr, Fancybox, FIELD_MAP, FormVideosSort;
   _export("FormVideosSort", void 0);
   return {
-    setters: [function (_utilsConstantsJs) {
-      FIELD_MAP = _utilsConstantsJs.FIELD_MAP;
-    }, function (_dialogsFancyBoxJs) {
+    setters: [function (_dialogsFancyBoxJs) {
       FancyBox = _dialogsFancyBoxJs.FancyBox;
     }, function (_languageJs) {
-      LangContext = _languageJs.LangContext;
       tr = _languageJs.tr;
     }, function (_utilsFancyboxManagerJs) {
       Fancybox = _utilsFancyboxManagerJs.Fancybox;
+    }, function (_utilsConstantsJs) {
+      FIELD_MAP = _utilsConstantsJs.FIELD_MAP;
     }],
     execute: function () {
       _export("FormVideosSort", FormVideosSort = class FormVideosSort extends React.Component {
@@ -122,7 +121,6 @@ Click on "sort" to validate, or close dialog to cancel.
           if (sorting.length) this.props.onClose(sorting);
         }
       });
-      FormVideosSort.contextType = LangContext;
     }
   };
 });

@@ -1,11 +1,10 @@
-import { Test } from "./pages/Test.js";
-import { HomePage } from "./pages/HomePage.js";
-import { VideosPage } from "./pages/VideosPage.js";
-import { PropertiesPage } from "./pages/PropertiesPage.js";
 import { DatabasesPage } from "./pages/DatabasesPage.js";
+import { HomePage } from "./pages/HomePage.js";
+import { PropertiesPage } from "./pages/PropertiesPage.js";
+import { Test } from "./pages/Test.js";
+import { VideosPage } from "./pages/VideosPage.js";
 import { backend_error, python_call, python_multiple_call } from "./utils/backend.js";
 import { VIDEO_DEFAULT_PAGE_NUMBER, VIDEO_DEFAULT_PAGE_SIZE } from "./utils/constants.js";
-import { LangContext } from "./language.js";
 import { APP_STATE } from "./utils/globals.js";
 
 export class App extends React.Component {
@@ -25,10 +24,6 @@ export class App extends React.Component {
 	}
 
 	render() {
-		return <LangContext.Provider value={this.state.lang}>{this.renderPage()}</LangContext.Provider>;
-	}
-
-	renderPage() {
 		const parameters = this.state.parameters;
 		const page = this.state.page;
 		if (!page) return "Opening ...";

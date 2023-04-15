@@ -1,16 +1,15 @@
-System.register(["./FancyBox.js", "../language.js", "../utils/FancyboxManager.js"], function (_export, _context) {
+System.register(["../language.js", "../utils/FancyboxManager.js", "./FancyBox.js"], function (_export, _context) {
   "use strict";
 
-  var FancyBox, LangContext, tr, Fancybox, Dialog;
+  var tr, Fancybox, FancyBox, Dialog;
   _export("Dialog", void 0);
   return {
-    setters: [function (_FancyBoxJs) {
-      FancyBox = _FancyBoxJs.FancyBox;
-    }, function (_languageJs) {
-      LangContext = _languageJs.LangContext;
+    setters: [function (_languageJs) {
       tr = _languageJs.tr;
     }, function (_utilsFancyboxManagerJs) {
       Fancybox = _utilsFancyboxManagerJs.Fancybox;
+    }, function (_FancyBoxJs) {
+      FancyBox = _FancyBoxJs.FancyBox;
     }],
     execute: function () {
       _export("Dialog", Dialog = class Dialog extends React.Component {
@@ -44,7 +43,6 @@ System.register(["./FancyBox.js", "../language.js", "../utils/FancyboxManager.js
           if (this.props.action) this.props.action();
         }
       });
-      Dialog.contextType = LangContext;
       Dialog.propTypes = {
         title: PropTypes.string.isRequired,
         // action()

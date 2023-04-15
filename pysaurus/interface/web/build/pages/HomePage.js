@@ -1,17 +1,16 @@
-System.register(["../utils/constants.js", "../utils/backend.js", "../language.js"], function (_export, _context) {
+System.register(["../language.js", "../utils/backend.js", "../utils/constants.js"], function (_export, _context) {
   "use strict";
 
-  var Characters, backend_error, python_call, LangContext, tr, ProgressionMonitoring, Monitoring, NotificationRenderer, HomePage, EndStatus, EndReady, ACTIONS;
+  var tr, backend_error, python_call, Characters, ProgressionMonitoring, Monitoring, NotificationRenderer, HomePage, EndStatus, EndReady, ACTIONS;
   _export("HomePage", void 0);
   return {
-    setters: [function (_utilsConstantsJs) {
-      Characters = _utilsConstantsJs.Characters;
+    setters: [function (_languageJs) {
+      tr = _languageJs.tr;
     }, function (_utilsBackendJs) {
       backend_error = _utilsBackendJs.backend_error;
       python_call = _utilsBackendJs.python_call;
-    }, function (_languageJs) {
-      LangContext = _languageJs.LangContext;
-      tr = _languageJs.tr;
+    }, function (_utilsConstantsJs) {
+      Characters = _utilsConstantsJs.Characters;
     }],
     execute: function () {
       ProgressionMonitoring = class ProgressionMonitoring {
@@ -52,7 +51,6 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
           }));
         }
       };
-      Monitoring.contextType = LangContext;
       Monitoring.propTypes = {
         monitoring: PropTypes.instanceOf(ProgressionMonitoring).isRequired
       };
@@ -247,7 +245,6 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
           }, /*#__PURE__*/React.createElement("strong", null, Characters.WARNING_SIGN), " ", message.notification.message);
         }
       };
-      NotificationRenderer.contextType = LangContext;
       ACTIONS = {
         update_database: "Update database",
         find_similar_videos: "Find similarities",
@@ -414,7 +411,6 @@ System.register(["../utils/constants.js", "../utils/backend.js", "../language.js
           return updates;
         }
       });
-      HomePage.contextType = LangContext;
       HomePage.propTypes = {
         app: PropTypes.object.isRequired,
         parameters: PropTypes.shape({

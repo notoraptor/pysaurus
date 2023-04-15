@@ -1,16 +1,15 @@
-System.register(["../dialogs/Dialog.js", "../utils/constants.js", "../language.js", "../utils/functions.js"], function (_export, _context) {
+System.register(["../dialogs/Dialog.js", "../language.js", "../utils/constants.js", "../utils/functions.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, Characters, LangContext, tr, UTILITIES, FormSelectedVideosEditProperty;
+  var Dialog, tr, Characters, UTILITIES, FormSelectedVideosEditProperty;
   _export("FormSelectedVideosEditProperty", void 0);
   return {
     setters: [function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
+    }, function (_languageJs) {
+      tr = _languageJs.tr;
     }, function (_utilsConstantsJs) {
       Characters = _utilsConstantsJs.Characters;
-    }, function (_languageJs) {
-      LangContext = _languageJs.LangContext;
-      tr = _languageJs.tr;
     }, function (_utilsFunctionsJs) {
       UTILITIES = _utilsFunctionsJs.UTILITIES;
     }],
@@ -351,7 +350,6 @@ System.register(["../dialogs/Dialog.js", "../utils/constants.js", "../language.j
           });
         }
       });
-      FormSelectedVideosEditProperty.contextType = LangContext;
     }
   };
 });

@@ -11,9 +11,8 @@ System.register(["../language.js"], function (_export, _context) {
       _export("Actions", Actions = class Actions {
         /**
          * @param actions {Object.<string, Action>}
-         * @param context {Object}
          */
-        constructor(actions, context) {
+        constructor(actions) {
           /** @type {Object.<string, Action>} */
           this.actions = actions;
           const shortcutToName = {};

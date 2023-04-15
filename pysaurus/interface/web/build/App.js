@@ -1,19 +1,19 @@
-System.register(["./pages/Test.js", "./pages/HomePage.js", "./pages/VideosPage.js", "./pages/PropertiesPage.js", "./pages/DatabasesPage.js", "./utils/backend.js", "./utils/constants.js", "./language.js", "./utils/globals.js"], function (_export, _context) {
+System.register(["./pages/DatabasesPage.js", "./pages/HomePage.js", "./pages/PropertiesPage.js", "./pages/Test.js", "./pages/VideosPage.js", "./utils/backend.js", "./utils/constants.js", "./utils/globals.js"], function (_export, _context) {
   "use strict";
 
-  var Test, HomePage, VideosPage, PropertiesPage, DatabasesPage, backend_error, python_call, python_multiple_call, VIDEO_DEFAULT_PAGE_NUMBER, VIDEO_DEFAULT_PAGE_SIZE, LangContext, APP_STATE, App;
+  var DatabasesPage, HomePage, PropertiesPage, Test, VideosPage, backend_error, python_call, python_multiple_call, VIDEO_DEFAULT_PAGE_NUMBER, VIDEO_DEFAULT_PAGE_SIZE, APP_STATE, App;
   _export("App", void 0);
   return {
-    setters: [function (_pagesTestJs) {
-      Test = _pagesTestJs.Test;
+    setters: [function (_pagesDatabasesPageJs) {
+      DatabasesPage = _pagesDatabasesPageJs.DatabasesPage;
     }, function (_pagesHomePageJs) {
       HomePage = _pagesHomePageJs.HomePage;
-    }, function (_pagesVideosPageJs) {
-      VideosPage = _pagesVideosPageJs.VideosPage;
     }, function (_pagesPropertiesPageJs) {
       PropertiesPage = _pagesPropertiesPageJs.PropertiesPage;
-    }, function (_pagesDatabasesPageJs) {
-      DatabasesPage = _pagesDatabasesPageJs.DatabasesPage;
+    }, function (_pagesTestJs) {
+      Test = _pagesTestJs.Test;
+    }, function (_pagesVideosPageJs) {
+      VideosPage = _pagesVideosPageJs.VideosPage;
     }, function (_utilsBackendJs) {
       backend_error = _utilsBackendJs.backend_error;
       python_call = _utilsBackendJs.python_call;
@@ -21,8 +21,6 @@ System.register(["./pages/Test.js", "./pages/HomePage.js", "./pages/VideosPage.j
     }, function (_utilsConstantsJs) {
       VIDEO_DEFAULT_PAGE_NUMBER = _utilsConstantsJs.VIDEO_DEFAULT_PAGE_NUMBER;
       VIDEO_DEFAULT_PAGE_SIZE = _utilsConstantsJs.VIDEO_DEFAULT_PAGE_SIZE;
-    }, function (_languageJs) {
-      LangContext = _languageJs.LangContext;
     }, function (_utilsGlobalsJs) {
       APP_STATE = _utilsGlobalsJs.APP_STATE;
     }],
@@ -43,11 +41,6 @@ System.register(["./pages/Test.js", "./pages/HomePage.js", "./pages/VideosPage.j
           this.getLanguages = this.getLanguages.bind(this);
         }
         render() {
-          return /*#__PURE__*/React.createElement(LangContext.Provider, {
-            value: this.state.lang
-          }, this.renderPage());
-        }
-        renderPage() {
           const parameters = this.state.parameters;
           const page = this.state.page;
           if (!page) return "Opening ...";

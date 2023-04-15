@@ -1,6 +1,3 @@
-import { LangContext } from "../language.js";
-import { APP_STATE } from "./globals.js";
-
 class FancyboxManager {
 	constructor(containerID) {
 		this.containerID = containerID;
@@ -25,7 +22,7 @@ class FancyboxManager {
 		this.loaded = true;
 		this.manageOtherActiveElements();
 		this.root = ReactDOM.createRoot(document.getElementById(this.containerID));
-		this.root.render(<LangContext.Provider value={APP_STATE.lang}>{component}</LangContext.Provider>);
+		this.root.render(component);
 	}
 
 	close() {

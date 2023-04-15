@@ -1,5 +1,5 @@
-import { Dialog } from "../dialogs/Dialog.js";
 import { Cell } from "../components/Cell.js";
+import { Dialog } from "../dialogs/Dialog.js";
 import { Fancybox } from "../utils/FancyboxManager.js";
 
 export class FormPaginationGoTo extends React.Component {

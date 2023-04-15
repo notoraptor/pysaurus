@@ -1,18 +1,17 @@
-System.register(["../dialogs/Dialog.js", "../language.js", "../utils/functions.js", "../utils/FancyboxManager.js"], function (_export, _context) {
+System.register(["../dialogs/Dialog.js", "../language.js", "../utils/FancyboxManager.js", "../utils/functions.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, LangContext, tr, UTILITIES, Fancybox, FormPropertyEditSelectedValues;
+  var Dialog, tr, Fancybox, UTILITIES, FormPropertyEditSelectedValues;
   _export("FormPropertyEditSelectedValues", void 0);
   return {
     setters: [function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
     }, function (_languageJs) {
-      LangContext = _languageJs.LangContext;
       tr = _languageJs.tr;
-    }, function (_utilsFunctionsJs) {
-      UTILITIES = _utilsFunctionsJs.UTILITIES;
     }, function (_utilsFancyboxManagerJs) {
       Fancybox = _utilsFancyboxManagerJs.Fancybox;
+    }, function (_utilsFunctionsJs) {
+      UTILITIES = _utilsFunctionsJs.UTILITIES;
     }],
     execute: function () {
       _export("FormPropertyEditSelectedValues", FormPropertyEditSelectedValues = class FormPropertyEditSelectedValues extends React.Component {
@@ -200,7 +199,6 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../utils/functions.j
           });
         }
       });
-      FormPropertyEditSelectedValues.contextType = LangContext;
       FormPropertyEditSelectedValues.propTypes = {
         definitions: PropTypes.object.isRequired,
         name: PropTypes.string.isRequired,

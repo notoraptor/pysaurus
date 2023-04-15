@@ -1,7 +1,7 @@
-System.register(["./MenuItem.js", "../utils/Action.js"], function (_export, _context) {
+System.register(["../utils/Action.js", "./MenuItem.js"], function (_export, _context) {
   "use strict";
 
-  var MenuItem, Action;
+  var Action, MenuItem;
   function ActionToMenuItem(props) {
     const {
       action,
@@ -14,10 +14,10 @@ System.register(["./MenuItem.js", "../utils/Action.js"], function (_export, _con
   }
   _export("ActionToMenuItem", ActionToMenuItem);
   return {
-    setters: [function (_MenuItemJs) {
-      MenuItem = _MenuItemJs.MenuItem;
-    }, function (_utilsActionJs) {
+    setters: [function (_utilsActionJs) {
       Action = _utilsActionJs.Action;
+    }, function (_MenuItemJs) {
+      MenuItem = _MenuItemJs.MenuItem;
     }],
     execute: function () {
       ActionToMenuItem.propTypes = {

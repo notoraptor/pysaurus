@@ -1,6 +1,6 @@
-import { Dialog } from "../dialogs/Dialog.js";
-import { LangContext, tr } from "../language.js";
 import { PathsInput } from "../components/PathsInput.js";
+import { Dialog } from "../dialogs/Dialog.js";
+import { tr } from "../language.js";
 
 export class FormDatabaseEditFolders extends React.Component {
 	constructor(props) {
@@ -37,7 +37,6 @@ export class FormDatabaseEditFolders extends React.Component {
 	}
 }
 
-FormDatabaseEditFolders.contextType = LangContext;
 FormDatabaseEditFolders.propTypes = {
 	database: PropTypes.shape({
 		name: PropTypes.string.isRequired,

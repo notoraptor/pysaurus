@@ -1,4 +1,4 @@
-import { LangContext, tr } from "../language.js";
+import { tr } from "../language.js";
 import { UTILITIES } from "../utils/functions.js";
 
 class SetController {
@@ -175,8 +175,6 @@ export class SetInput extends React.Component {
 		}
 	}
 }
-
-SetInput.contextType = LangContext;
 
 SetInput.propTypes = {
 	controller: PropTypes.instanceOf(SetController),

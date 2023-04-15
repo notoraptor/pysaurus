@@ -1,13 +1,9 @@
-System.register(["../language.js", "./globals.js"], function (_export, _context) {
+System.register([], function (_export, _context) {
   "use strict";
 
-  var LangContext, APP_STATE, FancyboxManager, Fancybox;
+  var FancyboxManager, Fancybox;
   return {
-    setters: [function (_languageJs) {
-      LangContext = _languageJs.LangContext;
-    }, function (_globalsJs) {
-      APP_STATE = _globalsJs.APP_STATE;
-    }],
+    setters: [],
     execute: function () {
       FancyboxManager = class FancyboxManager {
         constructor(containerID) {
@@ -27,9 +23,7 @@ System.register(["../language.js", "./globals.js"], function (_export, _context)
           this.loaded = true;
           this.manageOtherActiveElements();
           this.root = ReactDOM.createRoot(document.getElementById(this.containerID));
-          this.root.render( /*#__PURE__*/React.createElement(LangContext.Provider, {
-            value: APP_STATE.lang
-          }, component));
+          this.root.render(component);
         }
         close() {
           this.loaded = false;

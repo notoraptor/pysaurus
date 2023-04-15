@@ -1,6 +1,6 @@
 import { Dialog } from "../dialogs/Dialog.js";
+import { tr } from "../language.js";
 import { Characters } from "../utils/constants.js";
-import { LangContext, tr } from "../language.js";
 import { UTILITIES } from "../utils/functions.js";
 
 export class FormSelectedVideosEditProperty extends React.Component {
@@ -346,5 +346,3 @@ export class FormSelectedVideosEditProperty extends React.Component {
 		this.props.onClose({ add: this.state.add, remove: this.state.remove });
 	}
 }
-
-FormSelectedVideosEditProperty.contextType = LangContext;

@@ -1,7 +1,7 @@
-import { FormPaginationGoTo } from "../forms/FormPaginationGoTo.js";
 import { DialogSearch } from "../dialogs/DialogSearch.js";
-import { capitalizeFirstLetter } from "../utils/functions.js";
+import { FormPaginationGoTo } from "../forms/FormPaginationGoTo.js";
 import { Fancybox } from "../utils/FancyboxManager.js";
+import { capitalizeFirstLetter } from "../utils/functions.js";
 
 export class Pagination extends React.Component {
 	constructor(props) {

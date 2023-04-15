@@ -1,6 +1,6 @@
-import { Dialog } from "../dialogs/Dialog.js";
 import { Cell } from "../components/Cell.js";
-import { LangContext, tr } from "../language.js";
+import { Dialog } from "../dialogs/Dialog.js";
+import { tr } from "../language.js";
 
 export class FormVideosKeywordsToProperty extends React.Component {
 	constructor(props) {
@@ -56,5 +56,3 @@ export class FormVideosKeywordsToProperty extends React.Component {
 		this.props.onClose(this.state);
 	}
 }
-
-FormVideosKeywordsToProperty.contextType = LangContext;

@@ -1,15 +1,15 @@
-import { MenuPack } from "./MenuPack.js";
 import { Dialog } from "../dialogs/Dialog.js";
 import { FormVideoEditProperties } from "../forms/FormVideoEditProperties.js";
-import { Collapsable } from "./Collapsable.js";
-import { MenuItem } from "./MenuItem.js";
-import { Menu } from "./Menu.js";
+import { GenericFormRename } from "../forms/GenericFormRename.js";
+import { tr } from "../language.js";
+import { Fancybox } from "../utils/FancyboxManager.js";
 import { backend_error, python_call } from "../utils/backend.js";
 import { Characters } from "../utils/constants.js";
-import { LangContext, tr } from "../language.js";
-import { GenericFormRename } from "../forms/GenericFormRename.js";
-import { Fancybox } from "../utils/FancyboxManager.js";
 import { APP_STATE } from "../utils/globals.js";
+import { Collapsable } from "./Collapsable.js";
+import { Menu } from "./Menu.js";
+import { MenuItem } from "./MenuItem.js";
+import { MenuPack } from "./MenuPack.js";
 
 /**
  * Generate class name for common value of videos grouped by similarity
@@ -715,7 +715,6 @@ export class Video extends React.Component {
 	}
 }
 
-Video.contextType = LangContext;
 Video.propTypes = {
 	data: PropTypes.object.isRequired,
 	propDefs: PropTypes.arrayOf(PropTypes.object).isRequired,

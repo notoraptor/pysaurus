@@ -1,13 +1,13 @@
-System.register(["../dialogs/Dialog.js", "../components/Cell.js", "../utils/FancyboxManager.js"], function (_export, _context) {
+System.register(["../components/Cell.js", "../dialogs/Dialog.js", "../utils/FancyboxManager.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, Cell, Fancybox, FormPaginationGoTo;
+  var Cell, Dialog, Fancybox, FormPaginationGoTo;
   _export("FormPaginationGoTo", void 0);
   return {
-    setters: [function (_dialogsDialogJs) {
-      Dialog = _dialogsDialogJs.Dialog;
-    }, function (_componentsCellJs) {
+    setters: [function (_componentsCellJs) {
       Cell = _componentsCellJs.Cell;
+    }, function (_dialogsDialogJs) {
+      Dialog = _dialogsDialogJs.Dialog;
     }, function (_utilsFancyboxManagerJs) {
       Fancybox = _utilsFancyboxManagerJs.Fancybox;
     }],

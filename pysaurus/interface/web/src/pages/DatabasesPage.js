@@ -1,6 +1,5 @@
-import { backend_error, python_call } from "../utils/backend.js";
 import { PathsInput } from "../components/PathsInput.js";
-import { LangContext, tr } from "../language.js";
+import { tr } from "../language.js";
 
 export class DatabasesPage extends React.Component {
 	constructor(props) {
@@ -135,5 +134,3 @@ export class DatabasesPage extends React.Component {
 		this.setState({ paths });
 	}
 }
-
-DatabasesPage.contextType = LangContext;

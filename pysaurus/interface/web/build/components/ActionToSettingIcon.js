@@ -1,7 +1,7 @@
-System.register(["./SettingIcon.js", "../utils/Action.js"], function (_export, _context) {
+System.register(["../utils/Action.js", "./SettingIcon.js"], function (_export, _context) {
   "use strict";
 
-  var SettingIcon, Action;
+  var Action, SettingIcon;
   function ActionToSettingIcon(props) {
     const {
       action,
@@ -14,10 +14,10 @@ System.register(["./SettingIcon.js", "../utils/Action.js"], function (_export, _
   }
   _export("ActionToSettingIcon", ActionToSettingIcon);
   return {
-    setters: [function (_SettingIconJs) {
-      SettingIcon = _SettingIconJs.SettingIcon;
-    }, function (_utilsActionJs) {
+    setters: [function (_utilsActionJs) {
       Action = _utilsActionJs.Action;
+    }, function (_SettingIconJs) {
+      SettingIcon = _SettingIconJs.SettingIcon;
     }],
     execute: function () {
       ActionToSettingIcon.propTypes = {

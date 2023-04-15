@@ -1,31 +1,30 @@
-System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../components/Cell.js", "../utils/backend.js", "../utils/functions.js", "../forms/GenericFormRename.js", "../language.js", "../utils/FancyboxManager.js"], function (_export, _context) {
+System.register(["../components/Cell.js", "../components/SetInput.js", "../dialogs/Dialog.js", "../forms/GenericFormRename.js", "../language.js", "../utils/FancyboxManager.js", "../utils/backend.js", "../utils/functions.js"], function (_export, _context) {
   "use strict";
 
-  var ComponentPropController, SetInput, Dialog, Cell, backend_error, python_multiple_call, UTILITIES, GenericFormRename, LangContext, tr, Fancybox, PropertiesPage, DEFAULT_VALUES;
+  var Cell, ComponentPropController, SetInput, Dialog, GenericFormRename, tr, Fancybox, backend_error, python_multiple_call, UTILITIES, PropertiesPage, DEFAULT_VALUES;
   function getDefaultValue(propType, isEnum) {
     return isEnum ? [] : DEFAULT_VALUES[propType].toString();
   }
   _export("PropertiesPage", void 0);
   return {
-    setters: [function (_componentsSetInputJs) {
+    setters: [function (_componentsCellJs) {
+      Cell = _componentsCellJs.Cell;
+    }, function (_componentsSetInputJs) {
       ComponentPropController = _componentsSetInputJs.ComponentPropController;
       SetInput = _componentsSetInputJs.SetInput;
     }, function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
-    }, function (_componentsCellJs) {
-      Cell = _componentsCellJs.Cell;
+    }, function (_formsGenericFormRenameJs) {
+      GenericFormRename = _formsGenericFormRenameJs.GenericFormRename;
+    }, function (_languageJs) {
+      tr = _languageJs.tr;
+    }, function (_utilsFancyboxManagerJs) {
+      Fancybox = _utilsFancyboxManagerJs.Fancybox;
     }, function (_utilsBackendJs) {
       backend_error = _utilsBackendJs.backend_error;
       python_multiple_call = _utilsBackendJs.python_multiple_call;
     }, function (_utilsFunctionsJs) {
       UTILITIES = _utilsFunctionsJs.UTILITIES;
-    }, function (_formsGenericFormRenameJs) {
-      GenericFormRename = _formsGenericFormRenameJs.GenericFormRename;
-    }, function (_languageJs) {
-      LangContext = _languageJs.LangContext;
-      tr = _languageJs.tr;
-    }, function (_utilsFancyboxManagerJs) {
-      Fancybox = _utilsFancyboxManagerJs.Fancybox;
     }],
     execute: function () {
       DEFAULT_VALUES = {
@@ -344,7 +343,6 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../compon
           };
         }
       });
-      PropertiesPage.contextType = LangContext;
     }
   };
 });

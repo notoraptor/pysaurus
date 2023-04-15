@@ -1,7 +1,7 @@
 System.register(["../language.js", "../utils/functions.js"], function (_export, _context) {
   "use strict";
 
-  var LangContext, tr, UTILITIES, SetController, ComponentController, ComponentPropController, SetInput;
+  var tr, UTILITIES, SetController, ComponentController, ComponentPropController, SetInput;
   function _extends() { _extends = Object.assign ? Object.assign.bind() : function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
   _export({
     ComponentController: void 0,
@@ -10,7 +10,6 @@ System.register(["../language.js", "../utils/functions.js"], function (_export, 
   });
   return {
     setters: [function (_languageJs) {
-      LangContext = _languageJs.LangContext;
       tr = _languageJs.tr;
     }, function (_utilsFunctionsJs) {
       UTILITIES = _utilsFunctionsJs.UTILITIES;
@@ -166,7 +165,6 @@ System.register(["../language.js", "../utils/functions.js"], function (_export, 
           }
         }
       });
-      SetInput.contextType = LangContext;
       SetInput.propTypes = {
         controller: PropTypes.instanceOf(SetController),
         identifier: PropTypes.string,

@@ -1,15 +1,14 @@
-System.register(["../dialogs/Dialog.js", "../components/Cell.js", "../language.js"], function (_export, _context) {
+System.register(["../components/Cell.js", "../dialogs/Dialog.js", "../language.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, Cell, LangContext, tr, FormVideosKeywordsToProperty;
+  var Cell, Dialog, tr, FormVideosKeywordsToProperty;
   _export("FormVideosKeywordsToProperty", void 0);
   return {
-    setters: [function (_dialogsDialogJs) {
-      Dialog = _dialogsDialogJs.Dialog;
-    }, function (_componentsCellJs) {
+    setters: [function (_componentsCellJs) {
       Cell = _componentsCellJs.Cell;
+    }, function (_dialogsDialogJs) {
+      Dialog = _dialogsDialogJs.Dialog;
     }, function (_languageJs) {
-      LangContext = _languageJs.LangContext;
       tr = _languageJs.tr;
     }],
     execute: function () {
@@ -66,7 +65,6 @@ System.register(["../dialogs/Dialog.js", "../components/Cell.js", "../language.j
           this.props.onClose(this.state);
         }
       });
-      FormVideosKeywordsToProperty.contextType = LangContext;
     }
   };
 });

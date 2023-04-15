@@ -1,5 +1,5 @@
 import { FancyBox } from "../dialogs/FancyBox.js";
-import { LangContext, tr } from "../language.js";
+import { tr } from "../language.js";
 import { Fancybox } from "../utils/FancyboxManager.js";
 
 export class FormVideosSearch extends React.Component {
@@ -131,5 +131,3 @@ to automatically select "AND" as search method.
 		this.props.onClose(criterion);
 	}
 }
-
-FormVideosSearch.contextType = LangContext;

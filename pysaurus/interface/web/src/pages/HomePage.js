@@ -1,6 +1,6 @@
-import { Characters } from "../utils/constants.js";
+import { tr } from "../language.js";
 import { backend_error, python_call } from "../utils/backend.js";
-import { LangContext, tr } from "../language.js";
+import { Characters } from "../utils/constants.js";
 
 class ProgressionMonitoring {
 	constructor(name, total) {
@@ -38,7 +38,6 @@ class Monitoring extends React.Component {
 	}
 }
 
-Monitoring.contextType = LangContext;
 Monitoring.propTypes = {
 	monitoring: PropTypes.instanceOf(ProgressionMonitoring).isRequired,
 };
@@ -316,8 +315,6 @@ class NotificationRenderer extends React.Component {
 	}
 }
 
-NotificationRenderer.contextType = LangContext;
-
 const ACTIONS = {
 	update_database: "Update database",
 	find_similar_videos: "Find similarities",
@@ -493,7 +490,6 @@ export class HomePage extends React.Component {
 	}
 }
 
-HomePage.contextType = LangContext;
 HomePage.propTypes = {
 	app: PropTypes.object.isRequired,
 	parameters: PropTypes.shape({

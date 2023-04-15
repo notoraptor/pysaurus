@@ -1,8 +1,8 @@
-import { PAGE_SIZES } from "../utils/constants.js";
+import { Cross } from "../components/Cross.js";
 import { ComponentController, SetInput } from "../components/SetInput.js";
 import { Dialog } from "../dialogs/Dialog.js";
-import { Cross } from "../components/Cross.js";
 import { Fancybox } from "../utils/FancyboxManager.js";
+import { PAGE_SIZES } from "../utils/constants.js";
 
 export class Test extends React.Component {
 	constructor(props) {

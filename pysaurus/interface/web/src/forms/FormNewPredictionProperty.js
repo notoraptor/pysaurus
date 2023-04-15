@@ -1,5 +1,5 @@
 import { Dialog } from "../dialogs/Dialog.js";
-import { LangContext, tr } from "../language.js";
+import { tr } from "../language.js";
 import { Fancybox } from "../utils/FancyboxManager.js";
 
 export class FormNewPredictionProperty extends React.Component {
@@ -70,5 +70,3 @@ export class FormNewPredictionProperty extends React.Component {
 		if (this.state.title && this.state.title !== this.props.title) this.props.onClose(this.state.title);
 	}
 }
-
-FormNewPredictionProperty.contextType = LangContext;

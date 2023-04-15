@@ -1,5 +1,5 @@
 import { Dialog } from "../dialogs/Dialog.js";
-import { LangContext, tr } from "../language.js";
+import { tr } from "../language.js";
 import { Fancybox } from "../utils/FancyboxManager.js";
 
 export class GenericFormRename extends React.Component {
@@ -67,4 +67,3 @@ GenericFormRename.propTypes = {
 	data: PropTypes.string.isRequired,
 	onClose: PropTypes.func.isRequired,
 };
-GenericFormRename.contextType = LangContext;

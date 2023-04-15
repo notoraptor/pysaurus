@@ -1,7 +1,7 @@
 System.register(["../dialogs/FancyBox.js", "../language.js", "../utils/FancyboxManager.js"], function (_export, _context) {
   "use strict";
 
-  var FancyBox, LangContext, tr, Fancybox, FormVideosSource;
+  var FancyBox, tr, Fancybox, FormVideosSource;
   function getSubTree(tree, entryName) {
     const steps = entryName.split("-");
     let subTree = tree;
@@ -44,7 +44,6 @@ System.register(["../dialogs/FancyBox.js", "../language.js", "../utils/FancyboxM
     setters: [function (_dialogsFancyBoxJs) {
       FancyBox = _dialogsFancyBoxJs.FancyBox;
     }, function (_languageJs) {
-      LangContext = _languageJs.LangContext;
       tr = _languageJs.tr;
     }, function (_utilsFancyboxManagerJs) {
       Fancybox = _utilsFancyboxManagerJs.Fancybox;
@@ -153,7 +152,6 @@ System.register(["../dialogs/FancyBox.js", "../language.js", "../utils/FancyboxM
           if (this.state.paths.length) this.props.onClose(this.state.paths.map(path => path.split("-")));
         }
       });
-      FormVideosSource.contextType = LangContext;
     }
   };
 });

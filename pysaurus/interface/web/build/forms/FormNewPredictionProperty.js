@@ -1,13 +1,12 @@
 System.register(["../dialogs/Dialog.js", "../language.js", "../utils/FancyboxManager.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, LangContext, tr, Fancybox, FormNewPredictionProperty;
+  var Dialog, tr, Fancybox, FormNewPredictionProperty;
   _export("FormNewPredictionProperty", void 0);
   return {
     setters: [function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
     }, function (_languageJs) {
-      LangContext = _languageJs.LangContext;
       tr = _languageJs.tr;
     }, function (_utilsFancyboxManagerJs) {
       Fancybox = _utilsFancyboxManagerJs.Fancybox;
@@ -73,7 +72,6 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../utils/FancyboxMan
           if (this.state.title && this.state.title !== this.props.title) this.props.onClose(this.state.title);
         }
       });
-      FormNewPredictionProperty.contextType = LangContext;
     }
   };
 });

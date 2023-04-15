@@ -1,39 +1,39 @@
-import { FIELD_MAP, PAGE_SIZES, SearchTypeTitle, SOURCE_TREE } from "../utils/constants.js";
-import { MenuPack } from "../components/MenuPack.js";
-import { Pagination } from "../components/Pagination.js";
-import { Video } from "../components/Video.js";
-import { FormVideosSource } from "../forms/FormVideosSource.js";
-import { FormVideosGrouping } from "../forms/FormVideosGrouping.js";
-import { FormVideosSearch } from "../forms/FormVideosSearch.js";
-import { FormVideosSort } from "../forms/FormVideosSort.js";
-import { GroupView } from "../components/GroupView.js";
-import { FormPropertyEditSelectedValues } from "../forms/FormPropertyEditSelectedValues.js";
-import { FormVideosKeywordsToProperty } from "../forms/FormVideosKeywordsToProperty.js";
-import { FormSelectedVideosEditProperty } from "../forms/FormSelectedVideosEditProperty.js";
+import { ActionToCross } from "../components/ActionToCross.js";
+import { ActionToMenuItem } from "../components/ActionToMenuItem.js";
+import { ActionToSettingIcon } from "../components/ActionToSettingIcon.js";
+import { Cell } from "../components/Cell.js";
 import { Collapsable } from "../components/Collapsable.js";
 import { Cross } from "../components/Cross.js";
+import { GroupView } from "../components/GroupView.js";
+import { Menu } from "../components/Menu.js";
 import { MenuItem } from "../components/MenuItem.js";
 import { MenuItemCheck } from "../components/MenuItemCheck.js";
 import { MenuItemRadio } from "../components/MenuItemRadio.js";
-import { Menu } from "../components/Menu.js";
-import { Selector } from "../utils/Selector.js";
+import { MenuPack } from "../components/MenuPack.js";
+import { Pagination } from "../components/Pagination.js";
+import { Video } from "../components/Video.js";
+import { Dialog } from "../dialogs/Dialog.js";
+import { FancyBox } from "../dialogs/FancyBox.js";
+import { FormDatabaseEditFolders } from "../forms/FormDatabaseEditFolders.js";
+import { FormNewPredictionProperty } from "../forms/FormNewPredictionProperty.js";
+import { FormPropertyEditSelectedValues } from "../forms/FormPropertyEditSelectedValues.js";
+import { FormSelectedVideosEditProperty } from "../forms/FormSelectedVideosEditProperty.js";
+import { FormVideosGrouping } from "../forms/FormVideosGrouping.js";
+import { FormVideosKeywordsToProperty } from "../forms/FormVideosKeywordsToProperty.js";
+import { FormVideosSearch } from "../forms/FormVideosSearch.js";
+import { FormVideosSort } from "../forms/FormVideosSort.js";
+import { FormVideosSource } from "../forms/FormVideosSource.js";
+import { GenericFormRename } from "../forms/GenericFormRename.js";
+import { tr } from "../language.js";
 import { Action } from "../utils/Action.js";
 import { Actions } from "../utils/Actions.js";
-import { ActionToMenuItem } from "../components/ActionToMenuItem.js";
-import { ActionToSettingIcon } from "../components/ActionToSettingIcon.js";
-import { ActionToCross } from "../components/ActionToCross.js";
 import { backend_error, python_call, python_multiple_call } from "../utils/backend.js";
-import { FancyBox } from "../dialogs/FancyBox.js";
-import { HomePage } from "./HomePage.js";
-import { FormDatabaseEditFolders } from "../forms/FormDatabaseEditFolders.js";
-import { Dialog } from "../dialogs/Dialog.js";
-import { Cell } from "../components/Cell.js";
-import { FormNewPredictionProperty } from "../forms/FormNewPredictionProperty.js";
-import { GenericFormRename } from "../forms/GenericFormRename.js";
-import { LangContext, tr } from "../language.js";
-import { arrayEquals, compareSources } from "../utils/functions.js";
+import { FIELD_MAP, PAGE_SIZES, SearchTypeTitle, SOURCE_TREE } from "../utils/constants.js";
 import { Fancybox } from "../utils/FancyboxManager.js";
+import { arrayEquals, compareSources } from "../utils/functions.js";
 import { APP_STATE } from "../utils/globals.js";
+import { Selector } from "../utils/Selector.js";
+import { HomePage } from "./HomePage.js";
 
 export class VideosPage extends React.Component {
 	constructor(props) {
@@ -637,40 +637,37 @@ export class VideosPage extends React.Component {
 
 	getActions() {
 		// 14 shortcuts currently.
-		return new Actions(
-			{
-				select: new Action("Ctrl+T", tr("Select videos ..."), this.selectVideos, Fancybox.isInactive),
-				group: new Action("Ctrl+G", tr("Group ..."), this.groupVideos, Fancybox.isInactive),
-				search: new Action("Ctrl+F", tr("Search ..."), this.searchVideos, Fancybox.isInactive),
-				sort: new Action("Ctrl+S", tr("Sort ..."), this.sortVideos, Fancybox.isInactive),
-				unselect: new Action("Ctrl+Shift+T", tr("Reset selection"), this.unselectVideos, Fancybox.isInactive),
-				ungroup: new Action("Ctrl+Shift+G", tr("Reset group"), this.resetGroup, Fancybox.isInactive),
-				unsearch: new Action("Ctrl+Shift+F", tr("Reset search"), this.resetSearch, Fancybox.isInactive),
-				unsort: new Action("Ctrl+Shift+S", tr("Reset sorting"), this.resetSort, Fancybox.isInactive),
-				reload: new Action("Ctrl+R", tr("Reload database ..."), this.reloadDatabase, Fancybox.isInactive),
-				manageProperties: new Action(
-					"Ctrl+P",
-					tr("Manage properties ..."),
-					this.manageProperties,
-					Fancybox.isInactive
-				),
-				openRandomVideo: new Action(
-					"Ctrl+O",
-					tr("Open random video"),
-					this.openRandomVideo,
-					this.canOpenRandomVideo
-				),
-				previousPage: new Action(
-					"Ctrl+ArrowLeft",
-					tr("Go to previous page"),
-					this.previousPage,
-					Fancybox.isInactive
-				),
-				nextPage: new Action("Ctrl+ArrowRight", tr("Go to next page"), this.nextPage, Fancybox.isInactive),
-				playlist: new Action("Ctrl+L", tr("play list"), this.playlist, Fancybox.isInactive),
-			},
-			this.context
-		);
+		return new Actions({
+			select: new Action("Ctrl+T", tr("Select videos ..."), this.selectVideos, Fancybox.isInactive),
+			group: new Action("Ctrl+G", tr("Group ..."), this.groupVideos, Fancybox.isInactive),
+			search: new Action("Ctrl+F", tr("Search ..."), this.searchVideos, Fancybox.isInactive),
+			sort: new Action("Ctrl+S", tr("Sort ..."), this.sortVideos, Fancybox.isInactive),
+			unselect: new Action("Ctrl+Shift+T", tr("Reset selection"), this.unselectVideos, Fancybox.isInactive),
+			ungroup: new Action("Ctrl+Shift+G", tr("Reset group"), this.resetGroup, Fancybox.isInactive),
+			unsearch: new Action("Ctrl+Shift+F", tr("Reset search"), this.resetSearch, Fancybox.isInactive),
+			unsort: new Action("Ctrl+Shift+S", tr("Reset sorting"), this.resetSort, Fancybox.isInactive),
+			reload: new Action("Ctrl+R", tr("Reload database ..."), this.reloadDatabase, Fancybox.isInactive),
+			manageProperties: new Action(
+				"Ctrl+P",
+				tr("Manage properties ..."),
+				this.manageProperties,
+				Fancybox.isInactive
+			),
+			openRandomVideo: new Action(
+				"Ctrl+O",
+				tr("Open random video"),
+				this.openRandomVideo,
+				this.canOpenRandomVideo
+			),
+			previousPage: new Action(
+				"Ctrl+ArrowLeft",
+				tr("Go to previous page"),
+				this.previousPage,
+				Fancybox.isInactive
+			),
+			nextPage: new Action("Ctrl+ArrowRight", tr("Go to next page"), this.nextPage, Fancybox.isInactive),
+			playlist: new Action("Ctrl+L", tr("play list"), this.playlist, Fancybox.isInactive),
+		});
 	}
 
 	createPredictionProperty() {
@@ -1345,5 +1342,3 @@ not found video entry will be deleted.
 			.catch(backend_error);
 	}
 }
-
-VideosPage.contextType = LangContext;

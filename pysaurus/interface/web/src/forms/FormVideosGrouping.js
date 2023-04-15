@@ -1,6 +1,6 @@
-import { FIELD_MAP } from "../utils/constants.js";
 import { Dialog } from "../dialogs/Dialog.js";
-import { LangContext, tr } from "../language.js";
+import { tr } from "../language.js";
+import { FIELD_MAP } from "../utils/constants.js";
 
 export class FormVideosGrouping extends React.Component {
 	constructor(props) {
@@ -208,5 +208,3 @@ export class FormVideosGrouping extends React.Component {
 		);
 	}
 }
-
-FormVideosGrouping.contextType = LangContext;

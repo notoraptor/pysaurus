@@ -1,7 +1,7 @@
-System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEditProperties.js", "./Collapsable.js", "./MenuItem.js", "./Menu.js", "../utils/backend.js", "../utils/constants.js", "../language.js", "../forms/GenericFormRename.js", "../utils/FancyboxManager.js", "../utils/globals.js"], function (_export, _context) {
+System.register(["../dialogs/Dialog.js", "../forms/FormVideoEditProperties.js", "../forms/GenericFormRename.js", "../language.js", "../utils/FancyboxManager.js", "../utils/backend.js", "../utils/constants.js", "../utils/globals.js", "./Collapsable.js", "./Menu.js", "./MenuItem.js", "./MenuPack.js"], function (_export, _context) {
   "use strict";
 
-  var MenuPack, Dialog, FormVideoEditProperties, Collapsable, MenuItem, Menu, backend_error, python_call, Characters, LangContext, tr, GenericFormRename, Fancybox, APP_STATE, Video;
+  var Dialog, FormVideoEditProperties, GenericFormRename, tr, Fancybox, backend_error, python_call, Characters, APP_STATE, Collapsable, Menu, MenuItem, MenuPack, Video;
   function _extends() { _extends = Object.assign ? Object.assign.bind() : function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
   /**
    * Generate class name for common value of videos grouped by similarity
@@ -13,32 +13,31 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
   }
   _export("Video", void 0);
   return {
-    setters: [function (_MenuPackJs) {
-      MenuPack = _MenuPackJs.MenuPack;
-    }, function (_dialogsDialogJs) {
+    setters: [function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
     }, function (_formsFormVideoEditPropertiesJs) {
       FormVideoEditProperties = _formsFormVideoEditPropertiesJs.FormVideoEditProperties;
-    }, function (_CollapsableJs) {
-      Collapsable = _CollapsableJs.Collapsable;
-    }, function (_MenuItemJs) {
-      MenuItem = _MenuItemJs.MenuItem;
-    }, function (_MenuJs) {
-      Menu = _MenuJs.Menu;
+    }, function (_formsGenericFormRenameJs) {
+      GenericFormRename = _formsGenericFormRenameJs.GenericFormRename;
+    }, function (_languageJs) {
+      tr = _languageJs.tr;
+    }, function (_utilsFancyboxManagerJs) {
+      Fancybox = _utilsFancyboxManagerJs.Fancybox;
     }, function (_utilsBackendJs) {
       backend_error = _utilsBackendJs.backend_error;
       python_call = _utilsBackendJs.python_call;
     }, function (_utilsConstantsJs) {
       Characters = _utilsConstantsJs.Characters;
-    }, function (_languageJs) {
-      LangContext = _languageJs.LangContext;
-      tr = _languageJs.tr;
-    }, function (_formsGenericFormRenameJs) {
-      GenericFormRename = _formsGenericFormRenameJs.GenericFormRename;
-    }, function (_utilsFancyboxManagerJs) {
-      Fancybox = _utilsFancyboxManagerJs.Fancybox;
     }, function (_utilsGlobalsJs) {
       APP_STATE = _utilsGlobalsJs.APP_STATE;
+    }, function (_CollapsableJs) {
+      Collapsable = _CollapsableJs.Collapsable;
+    }, function (_MenuJs) {
+      Menu = _MenuJs.Menu;
+    }, function (_MenuItemJs) {
+      MenuItem = _MenuItemJs.MenuItem;
+    }, function (_MenuPackJs) {
+      MenuPack = _MenuPackJs.MenuPack;
     }],
     execute: function () {
       _export("Video", Video = class Video extends React.Component {
@@ -498,7 +497,6 @@ System.register(["./MenuPack.js", "../dialogs/Dialog.js", "../forms/FormVideoEdi
           }
         }
       });
-      Video.contextType = LangContext;
       Video.propTypes = {
         data: PropTypes.object.isRequired,
         propDefs: PropTypes.arrayOf(PropTypes.object).isRequired,

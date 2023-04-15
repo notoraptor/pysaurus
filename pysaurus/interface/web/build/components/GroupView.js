@@ -1,30 +1,29 @@
-System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js", "./PlusIcon.js", "../utils/functions.js", "../utils/Actions.js", "../utils/Action.js", "../language.js", "../utils/FancyboxManager.js"], function (_export, _context) {
+System.register(["../language.js", "../utils/Action.js", "../utils/Actions.js", "../utils/FancyboxManager.js", "../utils/constants.js", "../utils/functions.js", "./Pagination.js", "./PlusIcon.js", "./SettingIcon.js"], function (_export, _context) {
   "use strict";
 
-  var Characters, FIELD_MAP, Pagination, SettingIcon, PlusIcon, capitalizeFirstLetter, Actions, Action, LangContext, tr, Fancybox, GroupView;
+  var tr, Action, Actions, Fancybox, Characters, FIELD_MAP, capitalizeFirstLetter, Pagination, PlusIcon, SettingIcon, GroupView;
   function _extends() { _extends = Object.assign ? Object.assign.bind() : function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
   _export("GroupView", void 0);
   return {
-    setters: [function (_utilsConstantsJs) {
-      Characters = _utilsConstantsJs.Characters;
-      FIELD_MAP = _utilsConstantsJs.FIELD_MAP;
-    }, function (_PaginationJs) {
-      Pagination = _PaginationJs.Pagination;
-    }, function (_SettingIconJs) {
-      SettingIcon = _SettingIconJs.SettingIcon;
-    }, function (_PlusIconJs) {
-      PlusIcon = _PlusIconJs.PlusIcon;
-    }, function (_utilsFunctionsJs) {
-      capitalizeFirstLetter = _utilsFunctionsJs.capitalizeFirstLetter;
-    }, function (_utilsActionsJs) {
-      Actions = _utilsActionsJs.Actions;
+    setters: [function (_languageJs) {
+      tr = _languageJs.tr;
     }, function (_utilsActionJs) {
       Action = _utilsActionJs.Action;
-    }, function (_languageJs) {
-      LangContext = _languageJs.LangContext;
-      tr = _languageJs.tr;
+    }, function (_utilsActionsJs) {
+      Actions = _utilsActionsJs.Actions;
     }, function (_utilsFancyboxManagerJs) {
       Fancybox = _utilsFancyboxManagerJs.Fancybox;
+    }, function (_utilsConstantsJs) {
+      Characters = _utilsConstantsJs.Characters;
+      FIELD_MAP = _utilsConstantsJs.FIELD_MAP;
+    }, function (_utilsFunctionsJs) {
+      capitalizeFirstLetter = _utilsFunctionsJs.capitalizeFirstLetter;
+    }, function (_PaginationJs) {
+      Pagination = _PaginationJs.Pagination;
+    }, function (_PlusIconJs) {
+      PlusIcon = _PlusIconJs.PlusIcon;
+    }, function (_SettingIconJs) {
+      SettingIcon = _SettingIconJs.SettingIcon;
     }],
     execute: function () {
       _export("GroupView", GroupView = class GroupView extends React.Component {
@@ -161,7 +160,7 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
           return new Actions({
             previous: new Action("Ctrl+ArrowUp", tr("Go to previous group"), this.previousGroup, Fancybox.isInactive),
             next: new Action("Ctrl+ArrowDown", tr("Go to next group"), this.nextGroup, Fancybox.isInactive)
-          }, this.context);
+          });
         }
         getNullIndex() {
           return this.props.groupDef.groups.length && this.props.groupDef.groups[0].value === null ? 0 : -1;
@@ -250,7 +249,6 @@ System.register(["../utils/constants.js", "./Pagination.js", "./SettingIcon.js",
           });
         }
       });
-      GroupView.contextType = LangContext;
       GroupView.propTypes = {
         groupDef: PropTypes.shape({
           group_id: PropTypes.number.isRequired,

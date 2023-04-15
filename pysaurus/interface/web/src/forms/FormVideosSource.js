@@ -1,5 +1,5 @@
 import { FancyBox } from "../dialogs/FancyBox.js";
-import { LangContext, tr } from "../language.js";
+import { tr } from "../language.js";
 import { Fancybox } from "../utils/FancyboxManager.js";
 
 function getSubTree(tree, entryName) {
@@ -176,5 +176,3 @@ export class FormVideosSource extends React.Component {
 		if (this.state.paths.length) this.props.onClose(this.state.paths.map((path) => path.split("-")));
 	}
 }
-
-FormVideosSource.contextType = LangContext;

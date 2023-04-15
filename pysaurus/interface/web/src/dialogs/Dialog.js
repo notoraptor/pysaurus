@@ -1,6 +1,6 @@
-import { FancyBox } from "./FancyBox.js";
-import { LangContext, tr } from "../language.js";
+import { tr } from "../language.js";
 import { Fancybox } from "../utils/FancyboxManager.js";
+import { FancyBox } from "./FancyBox.js";
 
 export class Dialog extends React.Component {
 	constructor(props) {
@@ -38,7 +38,6 @@ export class Dialog extends React.Component {
 	}
 }
 
-Dialog.contextType = LangContext;
 Dialog.propTypes = {
 	title: PropTypes.string.isRequired,
 	// action()

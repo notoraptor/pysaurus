@@ -1,16 +1,15 @@
-System.register(["../utils/constants.js", "../dialogs/Dialog.js", "../language.js"], function (_export, _context) {
+System.register(["../dialogs/Dialog.js", "../language.js", "../utils/constants.js"], function (_export, _context) {
   "use strict";
 
-  var FIELD_MAP, Dialog, LangContext, tr, FormVideosGrouping;
+  var Dialog, tr, FIELD_MAP, FormVideosGrouping;
   _export("FormVideosGrouping", void 0);
   return {
-    setters: [function (_utilsConstantsJs) {
-      FIELD_MAP = _utilsConstantsJs.FIELD_MAP;
-    }, function (_dialogsDialogJs) {
+    setters: [function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
     }, function (_languageJs) {
-      LangContext = _languageJs.LangContext;
       tr = _languageJs.tr;
+    }, function (_utilsConstantsJs) {
+      FIELD_MAP = _utilsConstantsJs.FIELD_MAP;
     }],
     execute: function () {
       _export("FormVideosGrouping", FormVideosGrouping = class FormVideosGrouping extends React.Component {
@@ -181,7 +180,6 @@ System.register(["../utils/constants.js", "../dialogs/Dialog.js", "../language.j
           }));
         }
       });
-      FormVideosGrouping.contextType = LangContext;
     }
   };
 });

@@ -1,88 +1,87 @@
-System.register(["../utils/constants.js", "../components/MenuPack.js", "../components/Pagination.js", "../components/Video.js", "../forms/FormVideosSource.js", "../forms/FormVideosGrouping.js", "../forms/FormVideosSearch.js", "../forms/FormVideosSort.js", "../components/GroupView.js", "../forms/FormPropertyEditSelectedValues.js", "../forms/FormVideosKeywordsToProperty.js", "../forms/FormSelectedVideosEditProperty.js", "../components/Collapsable.js", "../components/Cross.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/MenuItemRadio.js", "../components/Menu.js", "../utils/Selector.js", "../utils/Action.js", "../utils/Actions.js", "../components/ActionToMenuItem.js", "../components/ActionToSettingIcon.js", "../components/ActionToCross.js", "../utils/backend.js", "../dialogs/FancyBox.js", "./HomePage.js", "../forms/FormDatabaseEditFolders.js", "../dialogs/Dialog.js", "../components/Cell.js", "../forms/FormNewPredictionProperty.js", "../forms/GenericFormRename.js", "../language.js", "../utils/functions.js", "../utils/FancyboxManager.js", "../utils/globals.js"], function (_export, _context) {
+System.register(["../components/ActionToCross.js", "../components/ActionToMenuItem.js", "../components/ActionToSettingIcon.js", "../components/Cell.js", "../components/Collapsable.js", "../components/Cross.js", "../components/GroupView.js", "../components/Menu.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/MenuItemRadio.js", "../components/MenuPack.js", "../components/Pagination.js", "../components/Video.js", "../dialogs/Dialog.js", "../dialogs/FancyBox.js", "../forms/FormDatabaseEditFolders.js", "../forms/FormNewPredictionProperty.js", "../forms/FormPropertyEditSelectedValues.js", "../forms/FormSelectedVideosEditProperty.js", "../forms/FormVideosGrouping.js", "../forms/FormVideosKeywordsToProperty.js", "../forms/FormVideosSearch.js", "../forms/FormVideosSort.js", "../forms/FormVideosSource.js", "../forms/GenericFormRename.js", "../language.js", "../utils/Action.js", "../utils/Actions.js", "../utils/backend.js", "../utils/constants.js", "../utils/FancyboxManager.js", "../utils/functions.js", "../utils/globals.js", "../utils/Selector.js", "./HomePage.js"], function (_export, _context) {
   "use strict";
 
-  var FIELD_MAP, PAGE_SIZES, SearchTypeTitle, SOURCE_TREE, MenuPack, Pagination, Video, FormVideosSource, FormVideosGrouping, FormVideosSearch, FormVideosSort, GroupView, FormPropertyEditSelectedValues, FormVideosKeywordsToProperty, FormSelectedVideosEditProperty, Collapsable, Cross, MenuItem, MenuItemCheck, MenuItemRadio, Menu, Selector, Action, Actions, ActionToMenuItem, ActionToSettingIcon, ActionToCross, backend_error, python_call, python_multiple_call, FancyBox, HomePage, FormDatabaseEditFolders, Dialog, Cell, FormNewPredictionProperty, GenericFormRename, LangContext, tr, arrayEquals, compareSources, Fancybox, APP_STATE, VideosPage;
+  var ActionToCross, ActionToMenuItem, ActionToSettingIcon, Cell, Collapsable, Cross, GroupView, Menu, MenuItem, MenuItemCheck, MenuItemRadio, MenuPack, Pagination, Video, Dialog, FancyBox, FormDatabaseEditFolders, FormNewPredictionProperty, FormPropertyEditSelectedValues, FormSelectedVideosEditProperty, FormVideosGrouping, FormVideosKeywordsToProperty, FormVideosSearch, FormVideosSort, FormVideosSource, GenericFormRename, tr, Action, Actions, backend_error, python_call, python_multiple_call, FIELD_MAP, PAGE_SIZES, SearchTypeTitle, SOURCE_TREE, Fancybox, arrayEquals, compareSources, APP_STATE, Selector, HomePage, VideosPage;
   _export("VideosPage", void 0);
   return {
-    setters: [function (_utilsConstantsJs) {
-      FIELD_MAP = _utilsConstantsJs.FIELD_MAP;
-      PAGE_SIZES = _utilsConstantsJs.PAGE_SIZES;
-      SearchTypeTitle = _utilsConstantsJs.SearchTypeTitle;
-      SOURCE_TREE = _utilsConstantsJs.SOURCE_TREE;
-    }, function (_componentsMenuPackJs) {
-      MenuPack = _componentsMenuPackJs.MenuPack;
-    }, function (_componentsPaginationJs) {
-      Pagination = _componentsPaginationJs.Pagination;
-    }, function (_componentsVideoJs) {
-      Video = _componentsVideoJs.Video;
-    }, function (_formsFormVideosSourceJs) {
-      FormVideosSource = _formsFormVideosSourceJs.FormVideosSource;
-    }, function (_formsFormVideosGroupingJs) {
-      FormVideosGrouping = _formsFormVideosGroupingJs.FormVideosGrouping;
-    }, function (_formsFormVideosSearchJs) {
-      FormVideosSearch = _formsFormVideosSearchJs.FormVideosSearch;
-    }, function (_formsFormVideosSortJs) {
-      FormVideosSort = _formsFormVideosSortJs.FormVideosSort;
-    }, function (_componentsGroupViewJs) {
-      GroupView = _componentsGroupViewJs.GroupView;
-    }, function (_formsFormPropertyEditSelectedValuesJs) {
-      FormPropertyEditSelectedValues = _formsFormPropertyEditSelectedValuesJs.FormPropertyEditSelectedValues;
-    }, function (_formsFormVideosKeywordsToPropertyJs) {
-      FormVideosKeywordsToProperty = _formsFormVideosKeywordsToPropertyJs.FormVideosKeywordsToProperty;
-    }, function (_formsFormSelectedVideosEditPropertyJs) {
-      FormSelectedVideosEditProperty = _formsFormSelectedVideosEditPropertyJs.FormSelectedVideosEditProperty;
+    setters: [function (_componentsActionToCrossJs) {
+      ActionToCross = _componentsActionToCrossJs.ActionToCross;
+    }, function (_componentsActionToMenuItemJs) {
+      ActionToMenuItem = _componentsActionToMenuItemJs.ActionToMenuItem;
+    }, function (_componentsActionToSettingIconJs) {
+      ActionToSettingIcon = _componentsActionToSettingIconJs.ActionToSettingIcon;
+    }, function (_componentsCellJs) {
+      Cell = _componentsCellJs.Cell;
     }, function (_componentsCollapsableJs) {
       Collapsable = _componentsCollapsableJs.Collapsable;
     }, function (_componentsCrossJs) {
       Cross = _componentsCrossJs.Cross;
+    }, function (_componentsGroupViewJs) {
+      GroupView = _componentsGroupViewJs.GroupView;
+    }, function (_componentsMenuJs) {
+      Menu = _componentsMenuJs.Menu;
     }, function (_componentsMenuItemJs) {
       MenuItem = _componentsMenuItemJs.MenuItem;
     }, function (_componentsMenuItemCheckJs) {
       MenuItemCheck = _componentsMenuItemCheckJs.MenuItemCheck;
     }, function (_componentsMenuItemRadioJs) {
       MenuItemRadio = _componentsMenuItemRadioJs.MenuItemRadio;
-    }, function (_componentsMenuJs) {
-      Menu = _componentsMenuJs.Menu;
-    }, function (_utilsSelectorJs) {
-      Selector = _utilsSelectorJs.Selector;
+    }, function (_componentsMenuPackJs) {
+      MenuPack = _componentsMenuPackJs.MenuPack;
+    }, function (_componentsPaginationJs) {
+      Pagination = _componentsPaginationJs.Pagination;
+    }, function (_componentsVideoJs) {
+      Video = _componentsVideoJs.Video;
+    }, function (_dialogsDialogJs) {
+      Dialog = _dialogsDialogJs.Dialog;
+    }, function (_dialogsFancyBoxJs) {
+      FancyBox = _dialogsFancyBoxJs.FancyBox;
+    }, function (_formsFormDatabaseEditFoldersJs) {
+      FormDatabaseEditFolders = _formsFormDatabaseEditFoldersJs.FormDatabaseEditFolders;
+    }, function (_formsFormNewPredictionPropertyJs) {
+      FormNewPredictionProperty = _formsFormNewPredictionPropertyJs.FormNewPredictionProperty;
+    }, function (_formsFormPropertyEditSelectedValuesJs) {
+      FormPropertyEditSelectedValues = _formsFormPropertyEditSelectedValuesJs.FormPropertyEditSelectedValues;
+    }, function (_formsFormSelectedVideosEditPropertyJs) {
+      FormSelectedVideosEditProperty = _formsFormSelectedVideosEditPropertyJs.FormSelectedVideosEditProperty;
+    }, function (_formsFormVideosGroupingJs) {
+      FormVideosGrouping = _formsFormVideosGroupingJs.FormVideosGrouping;
+    }, function (_formsFormVideosKeywordsToPropertyJs) {
+      FormVideosKeywordsToProperty = _formsFormVideosKeywordsToPropertyJs.FormVideosKeywordsToProperty;
+    }, function (_formsFormVideosSearchJs) {
+      FormVideosSearch = _formsFormVideosSearchJs.FormVideosSearch;
+    }, function (_formsFormVideosSortJs) {
+      FormVideosSort = _formsFormVideosSortJs.FormVideosSort;
+    }, function (_formsFormVideosSourceJs) {
+      FormVideosSource = _formsFormVideosSourceJs.FormVideosSource;
+    }, function (_formsGenericFormRenameJs) {
+      GenericFormRename = _formsGenericFormRenameJs.GenericFormRename;
+    }, function (_languageJs) {
+      tr = _languageJs.tr;
     }, function (_utilsActionJs) {
       Action = _utilsActionJs.Action;
     }, function (_utilsActionsJs) {
       Actions = _utilsActionsJs.Actions;
-    }, function (_componentsActionToMenuItemJs) {
-      ActionToMenuItem = _componentsActionToMenuItemJs.ActionToMenuItem;
-    }, function (_componentsActionToSettingIconJs) {
-      ActionToSettingIcon = _componentsActionToSettingIconJs.ActionToSettingIcon;
-    }, function (_componentsActionToCrossJs) {
-      ActionToCross = _componentsActionToCrossJs.ActionToCross;
     }, function (_utilsBackendJs) {
       backend_error = _utilsBackendJs.backend_error;
       python_call = _utilsBackendJs.python_call;
       python_multiple_call = _utilsBackendJs.python_multiple_call;
-    }, function (_dialogsFancyBoxJs) {
-      FancyBox = _dialogsFancyBoxJs.FancyBox;
-    }, function (_HomePageJs) {
-      HomePage = _HomePageJs.HomePage;
-    }, function (_formsFormDatabaseEditFoldersJs) {
-      FormDatabaseEditFolders = _formsFormDatabaseEditFoldersJs.FormDatabaseEditFolders;
-    }, function (_dialogsDialogJs) {
-      Dialog = _dialogsDialogJs.Dialog;
-    }, function (_componentsCellJs) {
-      Cell = _componentsCellJs.Cell;
-    }, function (_formsFormNewPredictionPropertyJs) {
-      FormNewPredictionProperty = _formsFormNewPredictionPropertyJs.FormNewPredictionProperty;
-    }, function (_formsGenericFormRenameJs) {
-      GenericFormRename = _formsGenericFormRenameJs.GenericFormRename;
-    }, function (_languageJs) {
-      LangContext = _languageJs.LangContext;
-      tr = _languageJs.tr;
+    }, function (_utilsConstantsJs) {
+      FIELD_MAP = _utilsConstantsJs.FIELD_MAP;
+      PAGE_SIZES = _utilsConstantsJs.PAGE_SIZES;
+      SearchTypeTitle = _utilsConstantsJs.SearchTypeTitle;
+      SOURCE_TREE = _utilsConstantsJs.SOURCE_TREE;
+    }, function (_utilsFancyboxManagerJs) {
+      Fancybox = _utilsFancyboxManagerJs.Fancybox;
     }, function (_utilsFunctionsJs) {
       arrayEquals = _utilsFunctionsJs.arrayEquals;
       compareSources = _utilsFunctionsJs.compareSources;
-    }, function (_utilsFancyboxManagerJs) {
-      Fancybox = _utilsFancyboxManagerJs.Fancybox;
     }, function (_utilsGlobalsJs) {
       APP_STATE = _utilsGlobalsJs.APP_STATE;
+    }, function (_utilsSelectorJs) {
+      Selector = _utilsSelectorJs.Selector;
+    }, function (_HomePageJs) {
+      HomePage = _HomePageJs.HomePage;
     }],
     execute: function () {
       _export("VideosPage", VideosPage = class VideosPage extends React.Component {
@@ -499,7 +498,7 @@ System.register(["../utils/constants.js", "../components/MenuPack.js", "../compo
             previousPage: new Action("Ctrl+ArrowLeft", tr("Go to previous page"), this.previousPage, Fancybox.isInactive),
             nextPage: new Action("Ctrl+ArrowRight", tr("Go to next page"), this.nextPage, Fancybox.isInactive),
             playlist: new Action("Ctrl+L", tr("play list"), this.playlist, Fancybox.isInactive)
-          }, this.context);
+          });
         }
         createPredictionProperty() {
           Fancybox.load( /*#__PURE__*/React.createElement(FormNewPredictionProperty, {
@@ -1062,7 +1061,6 @@ not found video entry will be deleted.
           })).catch(backend_error);
         }
       });
-      VideosPage.contextType = LangContext;
     }
   };
 });

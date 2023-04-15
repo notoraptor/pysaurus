@@ -1,16 +1,15 @@
-System.register(["../dialogs/Dialog.js", "../language.js", "../components/PathsInput.js"], function (_export, _context) {
+System.register(["../components/PathsInput.js", "../dialogs/Dialog.js", "../language.js"], function (_export, _context) {
   "use strict";
 
-  var Dialog, LangContext, tr, PathsInput, FormDatabaseEditFolders;
+  var PathsInput, Dialog, tr, FormDatabaseEditFolders;
   _export("FormDatabaseEditFolders", void 0);
   return {
-    setters: [function (_dialogsDialogJs) {
+    setters: [function (_componentsPathsInputJs) {
+      PathsInput = _componentsPathsInputJs.PathsInput;
+    }, function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
     }, function (_languageJs) {
-      LangContext = _languageJs.LangContext;
       tr = _languageJs.tr;
-    }, function (_componentsPathsInputJs) {
-      PathsInput = _componentsPathsInputJs.PathsInput;
     }],
     execute: function () {
       _export("FormDatabaseEditFolders", FormDatabaseEditFolders = class FormDatabaseEditFolders extends React.Component {
@@ -46,7 +45,6 @@ System.register(["../dialogs/Dialog.js", "../language.js", "../components/PathsI
           this.props.onClose(this.state.paths);
         }
       });
-      FormDatabaseEditFolders.contextType = LangContext;
       FormDatabaseEditFolders.propTypes = {
         database: PropTypes.shape({
           name: PropTypes.string.isRequired,

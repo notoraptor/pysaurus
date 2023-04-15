@@ -1,7 +1,7 @@
-System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../utils/functions.js", "../language.js"], function (_export, _context) {
+System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../language.js", "../utils/functions.js"], function (_export, _context) {
   "use strict";
 
-  var ComponentPropController, SetInput, Dialog, UTILITIES, LangContext, tr, FormVideoEditProperties;
+  var ComponentPropController, SetInput, Dialog, tr, UTILITIES, FormVideoEditProperties;
   _export("FormVideoEditProperties", void 0);
   return {
     setters: [function (_componentsSetInputJs) {
@@ -9,11 +9,10 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../utils/
       SetInput = _componentsSetInputJs.SetInput;
     }, function (_dialogsDialogJs) {
       Dialog = _dialogsDialogJs.Dialog;
+    }, function (_languageJs) {
+      tr = _languageJs.tr;
     }, function (_utilsFunctionsJs) {
       UTILITIES = _utilsFunctionsJs.UTILITIES;
-    }, function (_languageJs) {
-      LangContext = _languageJs.LangContext;
-      tr = _languageJs.tr;
     }],
     execute: function () {
       _export("FormVideoEditProperties", FormVideoEditProperties = class FormVideoEditProperties extends React.Component {
@@ -114,7 +113,6 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../utils/
           }
         }
       });
-      FormVideoEditProperties.contextType = LangContext;
     }
   };
 });

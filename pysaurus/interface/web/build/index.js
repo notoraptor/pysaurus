@@ -1,16 +1,16 @@
-System.register(["./App.js", "./utils/Callbacks.js", "./utils/backend.js", "./utils/NotificationManager.js"], function (_export, _context) {
+System.register(["./App.js", "./utils/Callbacks.js", "./utils/NotificationManager.js", "./utils/backend.js"], function (_export, _context) {
   "use strict";
 
-  var App, Callbacks, python_call, NotificationManager;
+  var App, Callbacks, NotificationManager, python_call;
   return {
     setters: [function (_AppJs) {
       App = _AppJs.App;
     }, function (_utilsCallbacksJs) {
       Callbacks = _utilsCallbacksJs.Callbacks;
-    }, function (_utilsBackendJs) {
-      python_call = _utilsBackendJs.python_call;
     }, function (_utilsNotificationManagerJs) {
       NotificationManager = _utilsNotificationManagerJs.NotificationManager;
+    }, function (_utilsBackendJs) {
+      python_call = _utilsBackendJs.python_call;
     }],
     execute: function () {
       /** NOTIFICATION_MANAGER.call is called from Python to send notifications to interface. */

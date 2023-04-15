@@ -1,7 +1,7 @@
 import { Dialog } from "../dialogs/Dialog.js";
-import { LangContext, tr } from "../language.js";
-import { UTILITIES } from "../utils/functions.js";
+import { tr } from "../language.js";
 import { Fancybox } from "../utils/FancyboxManager.js";
+import { UTILITIES } from "../utils/functions.js";
 
 export class FormPropertyEditSelectedValues extends React.Component {
 	constructor(props) {
@@ -230,7 +230,6 @@ export class FormPropertyEditSelectedValues extends React.Component {
 	}
 }
 
-FormPropertyEditSelectedValues.contextType = LangContext;
 FormPropertyEditSelectedValues.propTypes = {
 	definitions: PropTypes.object.isRequired,
 	name: PropTypes.string.isRequired,

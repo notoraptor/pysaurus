@@ -1,5 +1,5 @@
-import { Cross } from "./Cross.js";
 import { Action } from "../utils/Action.js";
+import { Cross } from "./Cross.js";
 
 export function ActionToCross(props) {
 	const { action, title } = props;

@@ -1,16 +1,12 @@
-System.register(["../utils/backend.js", "../components/PathsInput.js", "../language.js"], function (_export, _context) {
+System.register(["../components/PathsInput.js", "../language.js"], function (_export, _context) {
   "use strict";
 
-  var backend_error, python_call, PathsInput, LangContext, tr, DatabasesPage;
+  var PathsInput, tr, DatabasesPage;
   _export("DatabasesPage", void 0);
   return {
-    setters: [function (_utilsBackendJs) {
-      backend_error = _utilsBackendJs.backend_error;
-      python_call = _utilsBackendJs.python_call;
-    }, function (_componentsPathsInputJs) {
+    setters: [function (_componentsPathsInputJs) {
       PathsInput = _componentsPathsInputJs.PathsInput;
     }, function (_languageJs) {
-      LangContext = _languageJs.LangContext;
       tr = _languageJs.tr;
     }],
     execute: function () {
@@ -121,7 +117,6 @@ System.register(["../utils/backend.js", "../components/PathsInput.js", "../langu
           });
         }
       });
-      DatabasesPage.contextType = LangContext;
     }
   };
 });

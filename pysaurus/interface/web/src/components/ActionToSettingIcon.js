@@ -1,5 +1,5 @@
-import { SettingIcon } from "./SettingIcon.js";
 import { Action } from "../utils/Action.js";
+import { SettingIcon } from "./SettingIcon.js";
 
 export function ActionToSettingIcon(props) {
 	const { action, title } = props;

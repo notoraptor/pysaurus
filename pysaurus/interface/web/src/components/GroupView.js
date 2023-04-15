@@ -1,12 +1,12 @@
-import { Characters, FIELD_MAP } from "../utils/constants.js";
-import { Pagination } from "./Pagination.js";
-import { SettingIcon } from "./SettingIcon.js";
-import { PlusIcon } from "./PlusIcon.js";
-import { capitalizeFirstLetter } from "../utils/functions.js";
-import { Actions } from "../utils/Actions.js";
+import { tr } from "../language.js";
 import { Action } from "../utils/Action.js";
-import { LangContext, tr } from "../language.js";
+import { Actions } from "../utils/Actions.js";
 import { Fancybox } from "../utils/FancyboxManager.js";
+import { Characters, FIELD_MAP } from "../utils/constants.js";
+import { capitalizeFirstLetter } from "../utils/functions.js";
+import { Pagination } from "./Pagination.js";
+import { PlusIcon } from "./PlusIcon.js";
+import { SettingIcon } from "./SettingIcon.js";
 
 export class GroupView extends React.Component {
 	constructor(props) {
@@ -186,18 +186,10 @@ export class GroupView extends React.Component {
 	}
 
 	getActions() {
-		return new Actions(
-			{
-				previous: new Action(
-					"Ctrl+ArrowUp",
-					tr("Go to previous group"),
-					this.previousGroup,
-					Fancybox.isInactive
-				),
-				next: new Action("Ctrl+ArrowDown", tr("Go to next group"), this.nextGroup, Fancybox.isInactive),
-			},
-			this.context
-		);
+		return new Actions({
+			previous: new Action("Ctrl+ArrowUp", tr("Go to previous group"), this.previousGroup, Fancybox.isInactive),
+			next: new Action("Ctrl+ArrowDown", tr("Go to next group"), this.nextGroup, Fancybox.isInactive),
+		});
 	}
 
 	getNullIndex() {
@@ -293,7 +285,6 @@ export class GroupView extends React.Component {
 	}
 }
 
-GroupView.contextType = LangContext;
 GroupView.propTypes = {
 	groupDef: PropTypes.shape({
 		group_id: PropTypes.number.isRequired,

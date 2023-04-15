@@ -1,9 +1,6 @@
 import { formatString } from "./utils/functions.js";
 import { markdownToReact } from "./utils/markdown.js";
 
-/** Interface language in a React context . **/
-export const LangContext = React.createContext({});
-
 /**
  * Translate text
  * @param text {string} - text to translate

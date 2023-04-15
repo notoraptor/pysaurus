@@ -1,7 +1,7 @@
-import { FIELD_MAP } from "../utils/constants.js";
 import { FancyBox } from "../dialogs/FancyBox.js";
-import { LangContext, tr } from "../language.js";
+import { tr } from "../language.js";
 import { Fancybox } from "../utils/FancyboxManager.js";
+import { FIELD_MAP } from "../utils/constants.js";
 
 export class FormVideosSort extends React.Component {
 	constructor(props) {
@@ -113,5 +113,3 @@ Click on "sort" to validate, or close dialog to cancel.
 		if (sorting.length) this.props.onClose(sorting);
 	}
 }
-
-FormVideosSort.contextType = LangContext;

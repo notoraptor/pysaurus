@@ -1,7 +1,7 @@
 System.register(["./utils/functions.js", "./utils/markdown.js"], function (_export, _context) {
   "use strict";
 
-  var formatString, markdownToReact, LangContext;
+  var formatString, markdownToReact;
   /**
    * Translate text
    * @param text {string} - text to translate
@@ -28,9 +28,6 @@ System.register(["./utils/functions.js", "./utils/markdown.js"], function (_expo
     }, function (_utilsMarkdownJs) {
       markdownToReact = _utilsMarkdownJs.markdownToReact;
     }],
-    execute: function () {
-      /** Interface language in a React context . **/
-      _export("LangContext", LangContext = React.createContext({}));
-    }
+    execute: function () {}
   };
 });

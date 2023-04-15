@@ -1,5 +1,5 @@
-import { MenuItem } from "./MenuItem.js";
 import { Action } from "../utils/Action.js";
+import { MenuItem } from "./MenuItem.js";
 
 export function ActionToMenuItem(props) {
 	const { action, title } = props;
