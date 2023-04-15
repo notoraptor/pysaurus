@@ -15,7 +15,7 @@ from pysaurus.core.components import AbsolutePath
 from pysaurus.core.file_copier import FileCopier
 from pysaurus.core.functions import launch_thread
 from pysaurus.core.job_notifications import ConsoleJobProgress, JobStep, JobToDo
-from pysaurus.core.modules import System
+from pysaurus.core.modules import System as OS
 from pysaurus.core.notifications import (
     Cancelled,
     DatabaseReady,
@@ -30,7 +30,11 @@ from pysaurus.database import pattern_detection
 from pysaurus.database.db_features import DbFeatures
 from pysaurus.database.db_video_server import ServerLauncher
 from pysaurus.interface.api import tk_utils
-from pysaurus.interface.api.feature_api import FeatureAPI, ProxyFeature
+from pysaurus.interface.api.feature_api import (
+    FeatureAPI,
+    ProxyFeature,
+    YieldNotification,
+)
 from pysaurus.interface.api.parallel_notifier import ParallelNotifier
 from saurus.language import say
 
@@ -38,7 +42,7 @@ logger = logging.getLogger(__name__)
 
 process = Runnable("_launch")
 
-if System.is_windows():
+if OS.is_windows():
     VLC_PATH = r"C:\Program Files\VideoLAN\VLC\vlc.exe"
 else:
     VLC_PATH = "vlc"
@@ -128,16 +132,23 @@ class GuiAPI(FeatureAPI):
         self.server = ServerLauncher(lambda: self.database)
 
         self.server.start()
+        # TODO Check runtime VLC for other OS ?
+        self._constants.update(
+            {
+                "PYTHON_HAS_RUNTIME_VLC": OS.is_windows() and os.path.isfile(VLC_PATH),
+                "PYTHON_SERVER_HOSTNAME": self.server.server_thread.hostname,
+                "PYTHON_SERVER_PORT": self.server.server_thread.port,
+            }
+        )
         self._proxies.update(
             {
                 "clipboard": FromTk(tk_utils.clipboard_set),
                 "select_directory": FromTk(tk_utils.select_directory, True),
-                "select_files": FromTk(tk_utils.select_many_files_to_open, True),
                 "select_file": FromTk(tk_utils.select_file_to_open, True),
             }
         )
 
-    def __run_feature__(self, name: str, *args):
+    def __run_feature__(self, name: str, *args) -> Optional:
         # Launch notification thread on first API call from frontend.
         # This let time for frontend to be loaded before receiving notifications.
         if self.monitor_notifications and self.notification_thread is None:
@@ -145,25 +156,10 @@ class GuiAPI(FeatureAPI):
             self.notification_thread = self._run_thread(self._monitor_notifications)
         return super().__run_feature__(name, *args)
 
-    @property
-    def PYTHON_HAS_RUNTIME_VLC(self):
-        if System.is_windows():
-            vlc_win_path = VLC_PATH
-            return os.path.isfile(vlc_win_path)
-        else:
-            # TODO
-            return False
-
-    @property
-    def PYTHON_SERVER_HOSTNAME(self):
-        return self.server.server_thread.hostname
-
-    @property
-    def PYTHON_SERVER_PORT(self):
-        return self.server.server_thread.port
-
-    def open_from_server(self, video_id):
-        url = f"http://{self.PYTHON_SERVER_HOSTNAME}:{self.PYTHON_SERVER_PORT}/video/{video_id}"
+    def open_from_server(self, video_id) -> str:
+        hostname = self.server.server_thread.hostname
+        port = self.server.server_thread.port
+        url = f"http://{hostname}:{port}/video/{video_id}"
         logger.debug(f"Running {VLC_PATH} {url}")
 
         def play():
@@ -172,32 +168,32 @@ class GuiAPI(FeatureAPI):
         self._run_thread(play)
         return url
 
-    def open_video_surely(self, video_id: int):
+    def open_video_surely(self, video_id: int) -> Optional[str]:
         try:
             self.database.open_video(video_id)
             return None
         except OSError:
             return self.open_from_server(video_id)
 
-    def create_prediction_property(self, prop_name):
+    def create_prediction_property(self, prop_name) -> None:
         self.database.create_prop_type(f"<?{prop_name}>", int, [-1, 0, 1], False)
 
-    def cancel_copy(self):
+    def cancel_copy(self) -> None:
         if self.copy_work is not None and not self.copy_work.terminated:
             self.copy_work.cancel = True
         else:
             self.database.notifier.notify(Cancelled())
 
-    def close_database(self):
+    def close_database(self) -> None:
         self._provider_notifier.clear_managers()
         self.database = None
 
-    def delete_database(self):
+    def delete_database(self) -> None:
         self._provider_notifier.clear_managers()
         assert self.application.delete_database_from_name(self.database.name)
         self.database = None
 
-    def close_app(self):
+    def close_app(self) -> None:
         logger.debug("Closing app ...")
         # Close threads.
         self.threads_stop_flag = True
@@ -214,7 +210,7 @@ class GuiAPI(FeatureAPI):
         # App closed.
         logger.debug("App closed.")
 
-    def _run_thread(self, function, *args, **kwargs):
+    def _run_thread(self, function, *args, **kwargs) -> threading.Thread:
         return launch_thread(function, *args, **kwargs)
 
     def _launch(
@@ -223,7 +219,7 @@ class GuiAPI(FeatureAPI):
         args: Sequence = None,
         kwargs: Dict = None,
         finish=True,
-    ):
+    ) -> None:
         logger.debug(f"Running {function.__name__}")
         args = args or ()
         kwargs = kwargs or {}
@@ -244,19 +240,19 @@ class GuiAPI(FeatureAPI):
         # Then launch function.
         self.launched_thread = self._run_thread(run, *args, **kwargs)
 
-    def _finish_loading(self, log_message):
+    def _finish_loading(self, log_message) -> None:
         self.notifier.notify(DatabaseReady())
         self.launched_thread = None
         logger.debug(log_message)
 
-    def _get_latest_notifications(self):
+    def _get_latest_notifications(self) -> YieldNotification:
         return self.__consume_shared_queue(self.notifier.local_queue)
 
-    def _consume_notifications(self):
+    def _consume_notifications(self) -> None:
         list(self.__consume_shared_queue(self.notifier.queue))
 
     @classmethod
-    def __consume_shared_queue(cls, shared_queue):
+    def __consume_shared_queue(cls, shared_queue) -> YieldNotification:
         while True:
             try:
                 yield shared_queue.get_nowait()
@@ -264,7 +260,7 @@ class GuiAPI(FeatureAPI):
                 break
         assert not shared_queue.qsize()
 
-    def _monitor_notifications(self):
+    def _monitor_notifications(self) -> None:
         logger.debug("Monitoring notifications ...")
         # We are in a thread, with notifications handled sequentially,
         # thus no need to be process-safe.
@@ -283,12 +279,11 @@ class GuiAPI(FeatureAPI):
         logger.debug("End monitoring.")
 
     @abstractmethod
-    def _notify(self, notification):
-        # type: (Notification) -> None
+    def _notify(self, notification: Notification) -> None:
         raise NotImplementedError()
 
     @process()
-    def create_database(self, name: str, folders: Sequence[str], update: bool):
+    def create_database(self, name: str, folders: Sequence[str], update: bool) -> None:
         with Profiler("Create database", self.application.notifier):
             self.database = self.application.new_database(name, folders)
             if update:
@@ -296,7 +291,7 @@ class GuiAPI(FeatureAPI):
             self.database.provider.register_notifications(self._provider_notifier)
 
     @process()
-    def open_database(self, name: str, update: bool):
+    def open_database(self, name: str, update: bool) -> None:
         with Profiler("Open database", self.application.notifier):
             self.database = self.application.open_database_from_name(name)
             if update:
@@ -304,15 +299,15 @@ class GuiAPI(FeatureAPI):
             self.database.provider.register_notifications(self._provider_notifier)
 
     @process()
-    def update_database(self):
+    def update_database(self) -> None:
         self._update_database()
 
-    def _update_database(self):
+    def _update_database(self) -> None:
         self.database.refresh()
         self.database.provider.refresh()
 
     @process()
-    def find_similar_videos(self):
+    def find_similar_videos(self) -> None:
         DbFeatures().find_similar_videos(self.database)
         self.database.provider.set_groups(
             field="similarity_id",
@@ -324,7 +319,7 @@ class GuiAPI(FeatureAPI):
         self.database.provider.refresh()
 
     @process()
-    def find_similar_videos_ignore_cache(self):
+    def find_similar_videos_ignore_cache(self) -> None:
         DbFeatures().find_similar_videos_ignore_cache(self.database)
         self.database.provider.set_groups(
             field="similarity_id",
@@ -336,7 +331,7 @@ class GuiAPI(FeatureAPI):
         self.database.provider.refresh()
 
     @process(finish=False)
-    def move_video_file(self, video_id: int, directory: str):
+    def move_video_file(self, video_id: int, directory: str) -> None:
         try:
             filename: AbsolutePath = self.database.read_video_field(
                 video_id, "filename"
@@ -374,7 +369,7 @@ class GuiAPI(FeatureAPI):
             self.launched_thread = None
 
     @process()
-    def compute_predictor(self, prop_name):
+    def compute_predictor(self, prop_name) -> None:
         pattern_detection.compute_pattern_detector(
             self.database,
             self.database.get_cached_videos("readable", "with_thumbnails"),
@@ -382,7 +377,7 @@ class GuiAPI(FeatureAPI):
         )
 
     @process()
-    def apply_predictor(self, prop_name):
+    def apply_predictor(self, prop_name) -> None:
         output_prop_name = pattern_detection.predict_pattern(
             self.database,
             self.database.get_cached_videos("readable", "with_thumbnails"),

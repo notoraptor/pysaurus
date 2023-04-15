@@ -473,7 +473,7 @@ class JsonDatabase:
             (value,) = values
             video.set_property(name, self.__prop_types[name].validate(value))
 
-    def set_video_properties(self, video_id: int, properties: dict) -> Set[str]:
+    def set_video_properties(self, video_id: int, properties: dict) -> List[str]:
         modified = self.__id_to_video[video_id].set_validated_properties(properties)
         self._notify_properties_modified(modified)
         return modified
@@ -692,7 +692,7 @@ class JsonDatabase:
         self.notifier.notify(notifications.VideoDeleted(video))
         self._notify_fields_modified(["move_id", "quality"])
 
-    def move_video_entry(self, from_id, to_id):
+    def move_video_entry(self, from_id, to_id) -> None:
         from_video = self.__id_to_video[from_id]
         to_video = self.__id_to_video[to_id]
         assert not from_video.found
@@ -706,7 +706,7 @@ class JsonDatabase:
         to_video.date_entry_opened = from_video.date_entry_opened.time
         self.delete_video_entry(from_id)
 
-    def open_video(self, video_id: int):
+    def open_video(self, video_id: int) -> None:
         self.__id_to_video[video_id].open()
         self._notify_fields_modified(["date_entry_opened"])
 

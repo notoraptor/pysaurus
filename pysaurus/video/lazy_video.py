@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import Any, Dict, List, Set
+from typing import Any, Dict, List
 
 from pysaurus.core.classes import StringPrinter, StringedTuple, Text
 from pysaurus.core.compare import to_comparable
@@ -330,7 +330,7 @@ class LazyVideo(WithSchema):
             self._set("properties", properties)
         return popped
 
-    def set_validated_properties(self, properties: Dict[str, Any]) -> Set[str]:
+    def set_validated_properties(self, properties: Dict[str, Any]) -> List[str]:
         return self.set_properties(
             {
                 name: self.database.new_prop_unit(name, value)
@@ -338,10 +338,10 @@ class LazyVideo(WithSchema):
             }
         )
 
-    def set_properties(self, properties: Dict[str, Any]) -> Set[str]:
-        return {
+    def set_properties(self, properties: Dict[str, Any]) -> List[str]:
+        return [
             name for name, value in properties.items() if self.set_property(name, value)
-        }
+        ]
 
     def set_property(self, name, value) -> bool:
         assert value is not None

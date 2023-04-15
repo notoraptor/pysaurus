@@ -1,6 +1,6 @@
 import random
 from abc import ABCMeta, abstractmethod
-from typing import Sequence
+from typing import List, Optional, Sequence
 
 from pysaurus.application import exceptions
 from pysaurus.core import functions, notifications
@@ -30,33 +30,33 @@ class AbstractVideoProvider(metaclass=ABCMeta):
         self._database: Database = database
 
     @abstractmethod
-    def set_sources(self, paths):
+    def set_sources(self, paths) -> None:
         pass
 
     @abstractmethod
     def set_groups(
         self, field, is_property=None, sorting=None, reverse=None, allow_singletons=None
-    ):
+    ) -> None:
         pass
 
     @abstractmethod
-    def set_classifier_path(self, path):
+    def set_classifier_path(self, path) -> None:
         pass
 
     @abstractmethod
-    def set_group(self, group_id):
+    def set_group(self, group_id) -> None:
         pass
 
     @abstractmethod
-    def set_search(self, text, cond):
+    def set_search(self, text, cond) -> None:
         pass
 
     @abstractmethod
-    def set_sort(self, sorting):
+    def set_sort(self, sorting) -> None:
         pass
 
     @abstractmethod
-    def get_sources(self):
+    def get_sources(self) -> List[List[str]]:
         pass
 
     @abstractmethod
@@ -149,14 +149,14 @@ class AbstractVideoProvider(metaclass=ABCMeta):
             self._database.open_video(video.video_id)
         return video.filename.path
 
-    def classifier_select_group(self, group_id: int):
+    def classifier_select_group(self, group_id: int) -> None:
         path = self.get_classifier_path()
         value = self._get_classifier_group_value(group_id)
         new_path = path + [value]
         self.set_classifier_path(new_path)
         self.set_group(0)
 
-    def classifier_focus_prop_val(self, prop_name, field_value):
+    def classifier_focus_prop_val(self, prop_name, field_value) -> None:
         self.set_groups(
             field=prop_name,
             is_property=True,
@@ -171,12 +171,12 @@ class AbstractVideoProvider(metaclass=ABCMeta):
         # NB: here, classifier and grouping have same group array
         self.classifier_select_group(group_id)
 
-    def classifier_back(self):
+    def classifier_back(self) -> None:
         path = self.get_classifier_path()
         self.set_classifier_path(path[:-1])
         self.set_group(0)
 
-    def classifier_reverse(self) -> list:
+    def classifier_reverse(self) -> List:
         path = list(reversed(self.get_classifier_path()))
         self.set_classifier_path(path)
         return path
@@ -184,7 +184,7 @@ class AbstractVideoProvider(metaclass=ABCMeta):
     def playlist(self) -> str:
         return str(self._database.to_xspf_playlist(self.get_view_indices()).open())
 
-    def apply_on_view(self, selector, db_fn_name, *db_fn_args):
+    def apply_on_view(self, selector, db_fn_name, *db_fn_args) -> Optional:
         callable_methods = {
             "count_property_values": self._database.count_property_values,
             "edit_property_for_videos": self._database.edit_property_for_videos,

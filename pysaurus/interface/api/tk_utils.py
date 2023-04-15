@@ -28,14 +28,14 @@ def _string_or_empty(value):
     return value if isinstance(value, str) else ""
 
 
-def select_directory(default=None):
+def select_directory(default=None) -> str:
     with TkContext():
         return _string_or_empty(
             filedialog.askdirectory(mustexist=True, initialdir=default)
         )
 
 
-def select_file_to_open():
+def select_file_to_open() -> str:
     with TkContext():
         return _string_or_empty(filedialog.askopenfilename())
 
@@ -45,12 +45,12 @@ def select_many_files_to_open():
         return filedialog.askopenfilenames()
 
 
-def select_file_to_save():
+def select_file_to_save() -> str:
     with TkContext():
         return _string_or_empty(filedialog.asksaveasfilename())
 
 
-def clipboard_set(text: str):
+def clipboard_set(text: str) -> None:
     with TkContext() as ctx:
         ctx.root.clipboard_clear()
         ctx.root.clipboard_append(text)

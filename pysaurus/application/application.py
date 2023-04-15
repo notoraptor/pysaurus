@@ -59,19 +59,19 @@ class Application:
         ):
             path = AbsolutePath(entry.path)
             if path.isfile() and path.extension == "txt":
-                print("Checking embedded language", path.title)
+                logger.info(f"Checking embedded language {path.title}")
                 user_path = AbsolutePath.join(self.lang_dir, path.get_basename())
                 if user_path in self.languages:
                     if user_path.get_date_modified() < path.get_date_modified():
                         user_path.delete()
                         path.copy_file_to(user_path)
-                        print("Updated embedded language", path.title)
+                        logger.info(f"Updated embedded language {path.title}")
                     else:
-                        print("User language more up-to-date", path.title)
+                        logger.info(f"User language more up-to-date {path.title}")
                 else:
                     path.copy_file_to(user_path)
                     self.languages[user_path] = None
-                    print("Installed embedded language", path.title)
+                    logger.info(f"Installed embedded language {path.title}")
         # Load config file.
         if self.config_path.exists():
             assert self.config_path.isfile()
@@ -91,7 +91,7 @@ class Application:
     def _load_lang(self, lang_path: AbsolutePath):
         lang = Language(dff_load(lang_path), self.config.language)
         if lang.__updated__:
-            print("[language updated]", lang_path.title)
+            logger.info(f"[language updated] {lang_path.title}")
             dff_dump(language_to_dict(lang, extend=False), lang_path)
         return lang
 

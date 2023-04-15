@@ -421,7 +421,9 @@ class Database(JsonDatabase):
         self.notifier.set_log_path(self.__paths.log_path.path)
         self.set_path(self.__paths.json_path)
 
-    def set_video_similarity(self, video_id: int, value: Optional[int], notify=True):
+    def set_video_similarity(
+        self, video_id: int, value: Optional[int], notify=True
+    ) -> None:
         self.write_video_field(video_id, "similarity_id", value, notify=notify)
 
     def change_video_file_title(self, video_id: int, new_title: str) -> None:
@@ -534,13 +536,13 @@ class Database(JsonDatabase):
         if modified:
             self._notify_properties_modified([prop_name])
 
-    def prop_to_lowercase(self, prop_name):
+    def prop_to_lowercase(self, prop_name) -> None:
         return self._edit_prop_value(prop_name, lambda value: value.strip().lower())
 
-    def prop_to_uppercase(self, prop_name):
+    def prop_to_uppercase(self, prop_name) -> None:
         return self._edit_prop_value(prop_name, lambda value: value.strip().upper())
 
-    def _edit_prop_value(self, prop_name: str, function: Callable[[Any], Any]):
+    def _edit_prop_value(self, prop_name: str, function: Callable[[Any], Any]) -> None:
         assert self.has_prop_type(prop_name, with_type=str)
         modified = []
         for video_id in self.get_all_video_indices():

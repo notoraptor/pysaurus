@@ -1,15 +1,18 @@
+import inspect
 import logging
 from abc import abstractmethod
-from typing import Any, Callable, Dict, Optional, Union
+from typing import Any, Callable, Dict, Generator, Optional, Union
 
 from pysaurus.application.application import Application
 from pysaurus.application.language.default_language import language_to_dict
+from pysaurus.core.classes import StringPrinter
 from pysaurus.core.components import Duration, FileSize
 from pysaurus.core.functions import (
     apply_selector_to_data,
     compute_nb_pages,
     extract_object,
 )
+from pysaurus.core.notifying import Notification
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.database import Database as Db
 from pysaurus.database.viewport.abstract_video_provider import (
@@ -17,6 +20,8 @@ from pysaurus.database.viewport.abstract_video_provider import (
 )
 
 logger = logging.getLogger(__name__)
+
+YieldNotification = Generator[Notification, None, None]
 
 
 class ProxyFeature:
@@ -27,6 +32,26 @@ class ProxyFeature:
         getter, method, returns = self.proxy
         ret = getattr(getter(), method.__name__)(*args)
         return ret if returns else None
+
+    def __str__(self):
+        _, method, returns = self.proxy
+        return self.signature(method, returns)
+
+    @classmethod
+    def signature(cls, method, returns) -> str:
+        try:
+            ms = inspect.signature(method)
+            ret_ann = ms.return_annotation
+            ret_accounted = ""
+            if ret_ann is ms.empty:
+                ret_ann = "undefined"
+                if returns:
+                    ret_accounted = " (returned)"
+            elif not returns and ret_ann is not None:
+                ret_accounted = " (ignored)"
+            return f"{method.__qualname__} -> {ret_ann}" + ret_accounted
+        except Exception as exc:
+            raise Exception(method) from exc
 
 
 class FromDb(ProxyFeature):
@@ -52,21 +77,22 @@ class FeatureAPI:
         "local_notifier",
         "application",
         "database",
-        "PYTHON_LANG",
-        "PYTHON_LANGUAGE",
         "_proxies",
+        "_constants",
     )
-    PYTHON_DEFAULT_SOURCES = [["readable"]]
-    PYTHON_APP_NAME = Application.app_name
-    PYTHON_FEATURE_COMPARISON = True
 
     def __init__(self, notifier, local_notifier=None):
         self.notifier = notifier
         self.local_notifier = local_notifier
         self.application = Application(self.notifier)
         self.database: Optional[Db] = None
-        self.PYTHON_LANG = language_to_dict(self.application.lang)
-        self.PYTHON_LANGUAGE = self.application.lang.__language__
+        self._constants = {
+            "PYTHON_DEFAULT_SOURCES": [["readable"]],
+            "PYTHON_APP_NAME": self.application.app_name,
+            "PYTHON_FEATURE_COMPARISON": True,
+            "PYTHON_LANG": language_to_dict(self.application.lang),
+            "PYTHON_LANGUAGE": self.application.lang.__language__,
+        }
         # We must return value for proxy ending with "!"
         self._proxies: Dict[str, Union[str, ProxyFeature]] = {
             "apply_on_view": FromView(self, View.apply_on_view, True),
@@ -107,9 +133,21 @@ class FeatureAPI:
             "set_video_properties": FromDb(self, Db.set_video_properties),
         }
 
-    def __run_feature__(self, name: str, *args):
+    def __str__(self):
+        features = [(name, str(self._proxies[name])) for name in self._proxies] + [
+            (name, ProxyFeature.signature(getattr(self, name), True))
+            for name in dir(self)
+            if "a" <= name[0] <= "z" and inspect.ismethod(getattr(self, name))
+        ]
+        with StringPrinter() as printer:
+            printer.write(f"{type(self).__name__} ({len(features)})")
+            for _, feature in sorted(features):
+                printer.write(f"\t{feature}")
+            return str(printer)
+
+    def __run_feature__(self, name: str, *args) -> Optional:
         with Profiler(f"ApiCall:{name}", self.notifier):
-            assert not name.startswith("_")
+            assert "a" <= name[0] <= "z"
             if name in self._proxies:
                 run_def = self._proxies[name]
                 if isinstance(run_def, ProxyFeature):
@@ -123,24 +161,24 @@ class FeatureAPI:
                     ret = extract_object(self, path)(*args)
                     return ret if return_value else None
             else:
-                return getattr(self, name)(*args)
+                method = getattr(self, name)
+                assert inspect.ismethod(name)
+                return method(*args)
 
     @abstractmethod
-    def _get_latest_notifications(self):
+    def _get_latest_notifications(self) -> YieldNotification:
         raise NotImplementedError()
 
     # cannot make proxy
-    def get_constants(self):
-        return {
-            key: getattr(self, key) for key in dir(self) if key.startswith("PYTHON_")
-        }
+    def get_constants(self) -> Dict[str, Any]:
+        return self._constants
 
     # cannot make proxy ?
-    def set_language(self, name):
+    def set_language(self, name) -> Dict[str, str]:
         return language_to_dict(self.application.open_language_from_name(name))
 
     # cannot make proxy ?
-    def backend(self, page_size, page_number, selector=None):
+    def backend(self, page_size, page_number, selector=None) -> Dict[str, Any]:
         """Return backend state."""
         # Collect latest notifications if available.
         if self.local_notifier:
@@ -204,7 +242,7 @@ class FeatureAPI:
         }
 
     # cannot make proxy ?
-    def classifier_concatenate_path(self, to_property):
+    def classifier_concatenate_path(self, to_property) -> None:
         path = self.database.provider.get_classifier_path()
         from_property = self.database.provider.get_grouping().field
         self.database.provider.set_classifier_path([])

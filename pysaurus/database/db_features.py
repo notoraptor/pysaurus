@@ -170,7 +170,8 @@ class DbFeatures:
             db.notifier.notify(
                 notifications.Message(
                     say(
-                        "Finally found {nb_similarities} new similarity groups with {nb_images} images.",
+                        "Finally found {nb_similarities} new similarity groups "
+                        "with {nb_images} images.",
                         nb_similarities=len(sim_groups),
                         nb_images=sum(len(g) for g in sim_groups),
                     )
