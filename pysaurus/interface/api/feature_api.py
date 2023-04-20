@@ -162,7 +162,7 @@ class FeatureAPI:
                     return ret if return_value else None
             else:
                 method = getattr(self, name)
-                assert inspect.ismethod(name)
+                assert inspect.ismethod(method), name
                 return method(*args)
 
     @abstractmethod
@@ -190,7 +190,6 @@ class FeatureAPI:
                     logger.warning("No implementation to get latest notifications")
 
         raw_view_indices = self.database.provider.get_view_indices()
-        real_nb_videos = len(raw_view_indices)
         if selector:
             view_indices = apply_selector_to_data(selector, raw_view_indices)
         else:
@@ -208,12 +207,18 @@ class FeatureAPI:
                 group_def["common"] = self.database.get_common_fields(view_indices)
 
         return {
+            "database": {
+                "name": self.database.name,
+                "folders": [str(path) for path in sorted(self.database.video_folders)],
+            },
+            "prop_types": self.database.describe_prop_types(),
+            "videos": videos,
             "pageSize": page_size,
             "pageNumber": page_number,
-            "nbVideos": nb_videos,
-            "realNbVideos": real_nb_videos,
-            "totalNbVideos": self.database.provider.count_source_videos(),
             "nbPages": nb_pages,
+            "nbVideos": nb_videos,
+            "nbViewVideos": len(raw_view_indices),
+            "nbSourceVideos": self.database.provider.count_source_videos(),
             "validSize": str(
                 FileSize(
                     sum(self.database.read_videos_field(view_indices, "file_size"))
@@ -230,15 +235,9 @@ class FeatureAPI:
             ),
             "sources": self.database.provider.get_sources(),
             "groupDef": group_def,
+            "path": self.database.provider.get_classifier_path(),
             "searchDef": self.database.provider.get_search_def(),
             "sorting": self.database.provider.get_sort(),
-            "videos": videos,
-            "path": self.database.provider.get_classifier_path(),
-            "prop_types": self.database.describe_prop_types(),
-            "database": {
-                "name": self.database.name,
-                "folders": [str(path) for path in sorted(self.database.video_folders)],
-            },
         }
 
     # cannot make proxy ?

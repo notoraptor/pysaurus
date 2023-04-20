@@ -467,10 +467,10 @@ export class VideosPage extends React.Component {
 		const groupDef = this.state.groupDef;
 		const searchDef = this.state.searchDef;
 		const sorting = this.state.sorting;
-		const realNbVideos = this.state.realNbVideos;
-		const selectionSize = this.state.selector.size(realNbVideos);
+		const nbViewVideos = this.state.nbViewVideos;
+		const selectionSize = this.state.selector.size(nbViewVideos);
 		const sortingIsDefault = sorting.length === 1 && sorting[0] === "-date";
-		const selectedAll = realNbVideos === selectionSize;
+		const selectedAll = nbViewVideos === selectionSize;
 		return (
 			<table className="filter w-100">
 				<tbody>
@@ -587,7 +587,7 @@ export class VideosPage extends React.Component {
 											  })
 											: tr("{count} / {total} video(s)", {
 													count: selectionSize,
-													total: realNbVideos,
+													total: nbViewVideos,
 											  })}
 									</div>
 									<div className="mb-1">
@@ -740,7 +740,7 @@ Once done, move you can compute prediction.
 	}
 
 	canOpenRandomVideo() {
-		return Fancybox.isInactive() && !this.allNotFound() && this.state.totalNbVideos;
+		return Fancybox.isInactive() && !this.allNotFound() && this.state.nbSourceVideos;
 	}
 
 	canFindSimilarVideos() {
@@ -847,7 +847,7 @@ Once done, move you can compute prediction.
 			if (this.state.displayOnlySelected)
 				this.backend(null, {
 					selector,
-					displayOnlySelected: this.state.displayOnlySelected && selector.size(this.state.realNbVideos),
+					displayOnlySelected: this.state.displayOnlySelected && selector.size(this.state.nbViewVideos),
 				});
 			else this.setState({ selector });
 		}
@@ -967,7 +967,7 @@ Once done, move you can compute prediction.
 	}
 
 	editPropertiesForManyVideos(propertyName) {
-		const selectionSize = this.state.selector.size(this.state.realNbVideos);
+		const selectionSize = this.state.selector.size(this.state.nbViewVideos);
 		const videoIndices = this.state.selector.toJSON();
 		python_call("apply_on_view", videoIndices, "count_property_values", propertyName)
 			.then((valuesAndCounts) => {
