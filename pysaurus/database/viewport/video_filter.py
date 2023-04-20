@@ -118,7 +118,7 @@ class LayerSource(Layer):
 
     def get_random_video(self):
         if self.videos_found:
-            return self.videos_found[random.randrange(len(self.videos_found))]
+            return random.choice(self.videos_found)
         raise exceptions.NoVideos()
 
 
@@ -328,7 +328,7 @@ class LayerSort(Layer):
             self.output.remove(video)
 
 
-class VideoSelector(AbstractVideoProvider):
+class VideoFilter(AbstractVideoProvider):
     __slots__ = ("_database", "pipeline", "layers")
 
     _LAYER_NAMES_ = {

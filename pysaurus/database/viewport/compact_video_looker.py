@@ -9,7 +9,7 @@ from pysaurus.video import Video
 from pysaurus.video.video_sorting import VideoSorting
 
 
-class CompactVideoLooker(AbstractVideoProvider):
+class _CompactVideoFilter(AbstractVideoProvider):
     __slots__ = (
         "source_def",
         "group_def",
