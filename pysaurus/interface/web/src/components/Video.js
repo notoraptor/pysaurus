@@ -90,7 +90,7 @@ export class Video extends React.Component {
 									{data.found && window.PYTHON_HAS_RUNTIME_VLC ? (
 										<MenuItem action={this.openVideoSurely}>
 											<strong>
-												<em>{tr("Open file anyway")}</em>
+												<em>{tr("Open file from local server")}</em>
 											</strong>
 										</MenuItem>
 									) : (
@@ -475,15 +475,10 @@ export class Video extends React.Component {
 	}
 
 	openVideoSurely() {
-		python_call("open_video_surely", this.props.data.video_id)
+		python_call("open_from_server", this.props.data.video_id)
 			.then((url) => {
 				APP_STATE.videoHistory.add(this.props.data.filename);
-				this.props.onInfo(
-					tr("Opened: {path}", {
-						path: url ? url : this.props.data.filename,
-					}),
-					true
-				);
+				this.props.onInfo(tr("Opened: {path}", { path: url }), true);
 			})
 			.catch((error) => {
 				backend_error(error);

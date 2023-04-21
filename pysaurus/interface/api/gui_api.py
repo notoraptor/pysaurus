@@ -161,19 +161,8 @@ class GuiAPI(FeatureAPI):
         port = self.server.server_thread.port
         url = f"http://{hostname}:{port}/video/{video_id}"
         logger.debug(f"Running {VLC_PATH} {url}")
-
-        def play():
-            subprocess.run([VLC_PATH, url])
-
-        self._run_thread(play)
+        self._run_thread(subprocess.run, [VLC_PATH, url])
         return url
-
-    def open_video_surely(self, video_id: int) -> Optional[str]:
-        try:
-            self.database.open_video(video_id)
-            return None
-        except OSError:
-            return self.open_from_server(video_id)
 
     def create_prediction_property(self, prop_name) -> None:
         self.database.create_prop_type(f"<?{prop_name}>", int, [-1, 0, 1], False)

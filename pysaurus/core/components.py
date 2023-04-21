@@ -90,6 +90,9 @@ class AbsolutePath:
     def __lt__(self, other):
         return self.standard_path < other.standard_path
 
+    def __len__(self):
+        return len(self.__path)
+
     def exists(self):
         return FileSystem.path.exists(self.__path)
 

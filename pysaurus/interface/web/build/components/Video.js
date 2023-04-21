@@ -108,7 +108,7 @@ System.register(["../dialogs/Dialog.js", "../forms/FormVideoEditProperties.js", 
             className: "text-center"
           }, /*#__PURE__*/React.createElement("strong", null, tr("(not found)"))), data.found && window.PYTHON_HAS_RUNTIME_VLC ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.openVideoSurely
-          }, /*#__PURE__*/React.createElement("strong", null, /*#__PURE__*/React.createElement("em", null, tr("Open file anyway")))) : "", data.found ? /*#__PURE__*/React.createElement(MenuItem, {
+          }, /*#__PURE__*/React.createElement("strong", null, /*#__PURE__*/React.createElement("em", null, tr("Open file from local server")))) : "", data.found ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.openContainingFolder
           }, tr("Open containing folder")) : "", meta_title ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.copyMetaTitle
@@ -328,10 +328,10 @@ System.register(["../dialogs/Dialog.js", "../forms/FormVideoEditProperties.js", 
           });
         }
         openVideoSurely() {
-          python_call("open_video_surely", this.props.data.video_id).then(url => {
+          python_call("open_from_server", this.props.data.video_id).then(url => {
             APP_STATE.videoHistory.add(this.props.data.filename);
             this.props.onInfo(tr("Opened: {path}", {
-              path: url ? url : this.props.data.filename
+              path: url
             }), true);
           }).catch(error => {
             backend_error(error);

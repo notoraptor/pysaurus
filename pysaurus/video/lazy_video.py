@@ -246,6 +246,7 @@ class LazyVideo(WithSchema):
     quality = property(lambda self: self.database.quality_attribute(self))
     move_id = property(lambda self: self.database.moves_attribute(self)[0])
     size_length = property(lambda self: StringedTuple((self.size, self.length)))
+    filename_length = property(lambda self: len(self.filename))
 
     @property
     def unreadable_thumbnail(self):

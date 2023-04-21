@@ -101,6 +101,7 @@ export const FIELD_MAP = new FieldMap([
 	new FieldInfo("file_title", tr("file title"), GroupPermission.ONLY_MANY, FieldType.str),
 	new FieldInfo("file_title_numeric", tr("file title (with numbers)"), GroupPermission.ONLY_MANY, FieldType.sortable),
 	new FieldInfo("filename", tr("file path"), GroupPermission.ONLY_MANY, FieldType.str),
+	new FieldInfo("filename_length", tr("file path length"), GroupPermission.ONLY_MANY, FieldType.int),
 	new FieldInfo("filename_numeric", tr("file path (with numbers)"), GroupPermission.ONLY_MANY, FieldType.sortable),
 	new FieldInfo("frame_rate", tr("frame rate"), GroupPermission.ALL, FieldType.float),
 	new FieldInfo("height", tr("height"), GroupPermission.ALL, FieldType.int),
