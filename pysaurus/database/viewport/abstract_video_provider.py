@@ -4,11 +4,12 @@ from typing import List, Optional, Sequence
 
 from pysaurus.application import exceptions
 from pysaurus.core import functions, notifications
+from pysaurus.core.notifying import Notifier
 from pysaurus.video import Video
 
 
 class AbstractVideoProvider(metaclass=ABCMeta):
-    __slots__ = ("_database",)
+    __slots__ = ("_database", "_notifier")
     LAYER_SOURCE = "source"
     LAYER_GROUPING = "grouping"
     LAYER_CLASSIFIER = "classifier"
@@ -28,6 +29,16 @@ class AbstractVideoProvider(metaclass=ABCMeta):
         from pysaurus.database.database import Database
 
         self._database: Database = database
+        self._notifier = Notifier()
+        self._notifier.never_call_default_manager()
+        # Register notifications
+        self._notifier.set_manager(notifications.VideoDeleted, self._on_video_deleted)
+        self._notifier.set_manager(
+            notifications.FieldsModified, self._on_fields_modified
+        )
+        self._notifier.set_manager(
+            notifications.PropertiesModified, self._on_properties_modified
+        )
 
     @abstractmethod
     def set_sources(self, paths) -> None:
@@ -194,13 +205,6 @@ class AbstractVideoProvider(metaclass=ABCMeta):
             *db_fn_args
         )
 
-    def register_notifications(self, notifier):
-        notifier.set_manager(notifications.VideoDeleted, self._on_video_deleted)
-        notifier.set_manager(notifications.FieldsModified, self._on_fields_modified)
-        notifier.set_manager(
-            notifications.PropertiesModified, self._on_properties_modified
-        )
-
     def _on_video_deleted(self, notification: notifications.VideoDeleted):
         self.delete(notification.video)
 
@@ -222,3 +226,6 @@ class AbstractVideoProvider(metaclass=ABCMeta):
         if not is_property and "filename" in properties:
             print("A filename was modified, refreshing provider.")
             self.refresh()
+
+    def notify(self, notification: notifications.Notification):
+        return self._notifier.notify(notification)

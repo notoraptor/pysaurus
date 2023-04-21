@@ -23,7 +23,6 @@ from pysaurus.core.notifications import (
     End,
     Notification,
 )
-from pysaurus.core.notifying import Notifier
 from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler, ProfilingEnd, ProfilingStart
 from pysaurus.database import pattern_detection
@@ -51,19 +50,6 @@ else:
 class FromTk(ProxyFeature):
     def __init__(self, method, returns=False):
         super().__init__(getter=lambda: tk_utils, method=method, returns=returns)
-
-
-class ProviderNotifier(Notifier):
-    __slots__ = ()
-
-    def __init__(self):
-        super().__init__()
-        # self.call_default_if_no_manager()
-
-    def manage(self, notification):
-        # has_manager = self.get_manager(notification) is not None
-        # logger.warning(f"[provider-notifier:{has_manager}] {notification}")
-        pass
 
 
 class ConsoleNotificationPrinter:
@@ -109,7 +95,6 @@ class GuiAPI(FeatureAPI):
         "copy_work",
         "monitor_notifications",
         "server",
-        "_provider_notifier",
     )
 
     def __init__(self, monitor_notifications=True):
@@ -117,12 +102,8 @@ class GuiAPI(FeatureAPI):
         # instead of self.notifier, because self.notifier is used in multiprocessing,
         # and we don't want to pickle provider in sub-processes
         # (heavy, remember provider contains database, and some data can't be pickled)
-        self._provider_notifier = ProviderNotifier()
         self.multiprocessing_manager = multiprocessing.Manager()
-        super().__init__(
-            notifier=ParallelNotifier(self.multiprocessing_manager),
-            local_notifier=self._provider_notifier,
-        )
+        super().__init__(notifier=ParallelNotifier(self.multiprocessing_manager))
         self.notification_thread: Optional[threading.Thread] = None
         self.launched_thread: Optional[threading.Thread] = None
         self.threads_stop_flag = False
@@ -174,11 +155,9 @@ class GuiAPI(FeatureAPI):
             self.database.notifier.notify(Cancelled())
 
     def close_database(self) -> None:
-        self._provider_notifier.clear_managers()
         self.database = None
 
     def delete_database(self) -> None:
-        self._provider_notifier.clear_managers()
         assert self.application.delete_database_from_name(self.database.name)
         self.database = None
 
@@ -259,7 +238,6 @@ class GuiAPI(FeatureAPI):
                 break
             try:
                 notification = self.notifier.queue.get_nowait()
-                # self._provider_notifier.notify(notification)
                 notification_printer.print(notification)
                 self._notify(notification)
             except queue.Empty:
@@ -277,7 +255,6 @@ class GuiAPI(FeatureAPI):
             self.database = self.application.new_database(name, folders)
             if update:
                 self._update_database()
-            self.database.provider.register_notifications(self._provider_notifier)
 
     @process()
     def open_database(self, name: str, update: bool) -> None:
@@ -285,7 +262,6 @@ class GuiAPI(FeatureAPI):
             self.database = self.application.open_database_from_name(name)
             if update:
                 self._update_database()
-            self.database.provider.register_notifications(self._provider_notifier)
 
     @process()
     def update_database(self) -> None:

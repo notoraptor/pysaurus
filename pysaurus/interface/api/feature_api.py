@@ -74,16 +74,14 @@ class FromApp(ProxyFeature):
 class FeatureAPI:
     __slots__ = (
         "notifier",
-        "local_notifier",
         "application",
         "database",
         "_proxies",
         "_constants",
     )
 
-    def __init__(self, notifier, local_notifier=None):
+    def __init__(self, notifier):
         self.notifier = notifier
-        self.local_notifier = local_notifier
         self.application = Application(self.notifier)
         self.database: Optional[Db] = None
         self._constants = {
@@ -180,14 +178,13 @@ class FeatureAPI:
     # cannot make proxy ?
     def backend(self, page_size, page_number, selector=None) -> Dict[str, Any]:
         """Return backend state."""
-        # Collect latest notifications if available.
-        if self.local_notifier:
-            with Profiler("Backend.latest_notifications", self.notifier):
-                try:
-                    for notification in self._get_latest_notifications():
-                        self.local_notifier.notify(notification)
-                except NotImplementedError:
-                    logger.warning("No implementation to get latest notifications")
+        # Notify database provider with latest notifications.
+        with Profiler("Backend.latest_notifications", self.notifier):
+            try:
+                for notification in self._get_latest_notifications():
+                    self.database.provider.notify(notification)
+            except NotImplementedError:
+                logger.warning("No implementation to get latest notifications")
 
         raw_view_indices = self.database.provider.get_view_indices()
         if selector:
