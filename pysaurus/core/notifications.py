@@ -159,3 +159,7 @@ class FieldsModified(Notification):
 
 class PropertiesModified(FieldsModified):
     __slots__ = ()
+
+
+class DatabaseUpdated(Notification):
+    __slots__ = ()

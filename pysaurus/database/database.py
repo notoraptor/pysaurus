@@ -159,6 +159,7 @@ class Database(JsonDatabase):
         if new:
             self.set_date(current_date)
             self.write_new_videos(new, all_files)
+            self.notifier.notify(notifications.DatabaseUpdated())
 
     @Profiler.profile_method()
     def ensure_thumbnails(self) -> None:
@@ -295,6 +296,7 @@ class Database(JsonDatabase):
 
         self.compress_thumbnails()
         self._notify_missing_thumbnails()
+        self.notifier.notify(notifications.DatabaseUpdated())
 
     @Profiler.profile_method()
     def ensure_miniatures(self, returns=False) -> Optional[List[Miniature]]:

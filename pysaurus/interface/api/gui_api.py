@@ -19,6 +19,7 @@ from pysaurus.core.modules import System as OS
 from pysaurus.core.notifications import (
     Cancelled,
     DatabaseReady,
+    DatabaseUpdated,
     Done,
     End,
     Notification,
@@ -269,7 +270,6 @@ class GuiAPI(FeatureAPI):
 
     def _update_database(self) -> None:
         self.database.refresh()
-        self.database.provider.refresh()
 
     @process()
     def find_similar_videos(self) -> None:
@@ -281,7 +281,6 @@ class GuiAPI(FeatureAPI):
             reverse=False,
             allow_singletons=False,
         )
-        self.database.provider.refresh()
 
     @process()
     def find_similar_videos_ignore_cache(self) -> None:
@@ -293,7 +292,6 @@ class GuiAPI(FeatureAPI):
             reverse=False,
             allow_singletons=False,
         )
-        self.database.provider.refresh()
 
     @process(finish=False)
     def move_video_file(self, video_id: int, directory: str) -> None:
@@ -319,7 +317,7 @@ class GuiAPI(FeatureAPI):
                 old_path = self.database.change_video_path(video_id, dst)
                 if old_path:
                     old_path.delete()
-                self.database.provider.refresh()
+                self.notifier.notify(DatabaseUpdated())
                 self.notifier.notify(Done())
             else:
                 self.notifier.notify(Cancelled())
@@ -355,4 +353,3 @@ class GuiAPI(FeatureAPI):
             reverse=False,
             allow_singletons=True,
         )
-        self.database.provider.refresh()
