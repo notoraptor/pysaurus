@@ -31,8 +31,13 @@ class NoPredictor(PysaurusError):
     pass
 
 
-def compute_pattern_detector(database: Database, videos: List[Video], prop_name: str):
+def create_prediction_property(database: Database, prop_name: str):
+    database.create_prop_type(f"<?{prop_name}>", int, [-1, 0, 1], False)
+
+
+def compute_pattern_detector(database: Database, prop_name: str):
     assert _is_prediction_property(database, prop_name)
+    videos = database.get_cached_videos("readable", "with_thumbnails")
     video_id_to_miniature = {
         m.video_id: m for m in database.ensure_miniatures(returns=True)
     }

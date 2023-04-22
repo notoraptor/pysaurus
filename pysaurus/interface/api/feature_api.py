@@ -25,6 +25,8 @@ YieldNotification = Generator[Notification, None, None]
 
 
 class ProxyFeature:
+    __slots__ = ("proxy",)
+
     def __init__(self, getter: Callable[[], Any], method: Callable, returns=False):
         self.proxy = (getter, method, returns)
 
@@ -55,11 +57,15 @@ class ProxyFeature:
 
 
 class FromDb(ProxyFeature):
+    __slots__ = ()
+
     def __init__(self, api, method, returns=False):
         super().__init__(getter=lambda: api.database, method=method, returns=returns)
 
 
 class FromView(ProxyFeature):
+    __slots__ = ()
+
     def __init__(self, api, method, returns=False):
         super().__init__(
             getter=lambda: api.database.provider, method=method, returns=returns
@@ -67,6 +73,8 @@ class FromView(ProxyFeature):
 
 
 class FromApp(ProxyFeature):
+    __slots__ = ()
+
     def __init__(self, api, method, returns=False):
         super().__init__(getter=lambda: api.application, method=method, returns=returns)
 

@@ -18,6 +18,7 @@ from pysaurus.core.custom_json_parser import parse_json
 from pysaurus.core.dict_file_format import dff_dump, dff_load
 from pysaurus.core.modules import FileSystem
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
+from pysaurus.core.profiling import Profiler
 from pysaurus.core.schematizable import Schema, Type, WithSchema, schema_prop
 from pysaurus.database.database import Database
 from saurus.language import say
@@ -32,6 +33,17 @@ class Config(WithSchema):
 
 
 class Application:
+    __slots__ = (
+        "home_dir",
+        "app_dir",
+        "dbs_dir",
+        "lang_dir",
+        "config_path",
+        "config",
+        "databases",
+        "languages",
+        "notifier",
+    )
     app_name = "Pysaurus"
 
     def __init__(self, notifier=DEFAULT_NOTIFIER):
@@ -104,16 +116,20 @@ class Application:
     def get_database_names(self) -> List[str]:
         return sorted(path.title for path in self.databases.keys())
 
-    def open_database_from_name(self, name: str) -> Database:
+    @Profiler.profile_method()
+    def open_database_from_name(self, name: str, update=False) -> Database:
         path = AbsolutePath.join(self.dbs_dir, name)
         assert path in self.databases
         if not self.databases[path]:
             self.databases[path] = Database(
                 path, notifier=self.notifier, lang=self.lang
             )
+        if update:
+            self.databases[path].refresh()
         return self.databases[path]
 
-    def new_database(self, name, folders: Iterable[AbsolutePath]):
+    @Profiler.profile_method()
+    def new_database(self, name, folders: Iterable[AbsolutePath], update=False):
         if functions.has_discarded_characters(name):
             raise exceptions.InvalidDatabaseName(name)
         path = AbsolutePath.join(self.dbs_dir, name)
@@ -126,6 +142,8 @@ class Application:
         self.databases[path] = Database(
             path.mkdir(), folders=folders, notifier=self.notifier, lang=self.lang
         )
+        if update:
+            self.databases[path].refresh()
         return self.databases[path]
 
     def delete_database_from_name(self, name: str):

@@ -49,6 +49,8 @@ else:
 
 
 class FromTk(ProxyFeature):
+    __slots__ = ()
+
     def __init__(self, method, returns=False):
         super().__init__(getter=lambda: tk_utils, method=method, returns=returns)
 
@@ -147,7 +149,7 @@ class GuiAPI(FeatureAPI):
         return url
 
     def create_prediction_property(self, prop_name) -> None:
-        self.database.create_prop_type(f"<?{prop_name}>", int, [-1, 0, 1], False)
+        pattern_detection.create_prediction_property(self.database, prop_name)
 
     def cancel_copy(self) -> None:
         if self.copy_work is not None and not self.copy_work.terminated:
@@ -183,13 +185,9 @@ class GuiAPI(FeatureAPI):
         return launch_thread(function, *args, **kwargs)
 
     def _launch(
-        self,
-        function: Callable,
-        args: Sequence = None,
-        kwargs: Dict = None,
-        finish=True,
+        self, fn: Callable, args: Sequence = None, kwargs: Dict = None, finish=True
     ) -> None:
-        logger.debug(f"Running {function.__name__}")
+        logger.debug(f"Running {fn.__name__}")
         args = args or ()
         kwargs = kwargs or {}
         assert self.notification_thread
@@ -198,13 +196,13 @@ class GuiAPI(FeatureAPI):
 
         if finish:
 
-            @functools.wraps(function)
+            @functools.wraps(fn)
             def run(*a, **k):
-                function(*a, **k)
-                self._finish_loading(f"Finished running: {function.__name__}")
+                fn(*a, **k)
+                self._finish_loading(f"Finished running: {fn.__name__}")
 
         else:
-            run = function
+            run = fn
 
         # Then launch function.
         self.launched_thread = self._run_thread(run, *args, **kwargs)
@@ -252,23 +250,14 @@ class GuiAPI(FeatureAPI):
 
     @process()
     def create_database(self, name: str, folders: Sequence[str], update: bool) -> None:
-        with Profiler("Create database", self.application.notifier):
-            self.database = self.application.new_database(name, folders)
-            if update:
-                self._update_database()
+        self.database = self.application.new_database(name, folders, update)
 
     @process()
     def open_database(self, name: str, update: bool) -> None:
-        with Profiler("Open database", self.application.notifier):
-            self.database = self.application.open_database_from_name(name)
-            if update:
-                self._update_database()
+        self.database = self.application.open_database_from_name(name, update)
 
     @process()
     def update_database(self) -> None:
-        self._update_database()
-
-    def _update_database(self) -> None:
         self.database.refresh()
 
     @process()
@@ -333,11 +322,7 @@ class GuiAPI(FeatureAPI):
 
     @process()
     def compute_predictor(self, prop_name) -> None:
-        pattern_detection.compute_pattern_detector(
-            self.database,
-            self.database.get_cached_videos("readable", "with_thumbnails"),
-            prop_name,
-        )
+        pattern_detection.compute_pattern_detector(self.database, prop_name)
 
     @process()
     def apply_predictor(self, prop_name) -> None:
