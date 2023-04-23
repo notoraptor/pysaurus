@@ -1,7 +1,7 @@
 from pysaurus.core import functions
 
 
-def test_generate_infinite():
+def test_function_generate_infinite():
     limited_iterable = range(10)
     infinite_iterable = functions.generate_infinite(-1)
     output = [a * b for a, b in zip(limited_iterable, infinite_iterable)]

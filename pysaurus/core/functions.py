@@ -209,22 +209,6 @@ def indent_string_tree(tree: list, indent="", indentation="\t"):
     )
 
 
-def unpack_args(function):
-    """
-    Wraps a function with multiple args into a function with a tuple as args.
-
-    Decorator to wrap a function that receives multiple arguments f(*args)
-    into a function that receives only a sequence of arguments g(args)
-    """
-
-    def wrapper(args):
-        return function(*args)
-
-    wrapper.__name__ = function.__name__
-
-    return wrapper
-
-
 def apply_selector(selector: dict, data: Iterable, key: str, return_data=False):
     """Filter data using given selector.
 
