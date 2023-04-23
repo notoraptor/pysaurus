@@ -26,10 +26,6 @@ class GroupComputer:
         "radius",
     )
 
-    @classmethod
-    def compute_similarity_percent(cls, pixel_distance_radius: int) -> float:
-        return (255 - pixel_distance_radius) * 100 / 255
-
     def __init__(
         self,
         *,
@@ -46,6 +42,49 @@ class GroupComputer:
         self.group_min_size = group_min_size
         self.pixel_comparator = DistancePixelComparator(similarity_percent)
         self.print_step = print_step
+
+    @classmethod
+    def compute_similarity_percent(cls, pixel_distance_radius: int) -> float:
+        return (255 - pixel_distance_radius) * 100 / 255
+
+    def batch_compute_groups(
+        self, miniatures: List[Miniature], *, database=None
+    ) -> List[DecomposedMiniature]:
+        notifier = database.notifier if database else DEFAULT_NOTIFIER
+        tasks = [(i, m, len(miniatures), notifier) for i, m in enumerate(miniatures)]
+        with Profiler(
+            say(
+                "batch_compute_groups(n={n} miniature(s))",
+                n=len(tasks),
+            ),
+            notifier,
+        ):
+            notify_job_start(
+                notifier, self.collect_miniature_groups, len(miniatures), "miniatures"
+            )
+            raw_output = list(
+                parallelize(self.collect_miniature_groups, tasks, USABLE_CPU_COUNT)
+            )
+        notify_job_progress(
+            notifier,
+            self.collect_miniature_groups,
+            None,
+            len(miniatures),
+            len(miniatures),
+        )
+        return raw_output
+
+    def collect_miniature_groups(self, context) -> DecomposedMiniature:
+        index_task, miniature, nb_all_tasks, notifier = context
+        if (index_task + 1) % self.print_step == 0:
+            notify_job_progress(
+                notifier,
+                self.collect_miniature_groups,
+                None,
+                index_task + 1,
+                nb_all_tasks,
+            )
+        return DecomposedMiniature(miniature.identifier, self.group_pixels(miniature))
 
     def group_pixels(self, miniature: AbstractMatrix) -> List[PixelGroup]:
         width = miniature.width
@@ -96,42 +135,3 @@ class GroupComputer:
             for group_id, group in enumerate(graph.pop_groups())
             if len(group) >= self.group_min_size
         ]
-
-    def collect_miniature_groups(self, context) -> DecomposedMiniature:
-        index_task, miniature, nb_all_tasks, notifier = context
-        if (index_task + 1) % self.print_step == 0:
-            notify_job_progress(
-                notifier,
-                self.collect_miniature_groups,
-                None,
-                index_task + 1,
-                nb_all_tasks,
-            )
-        return DecomposedMiniature(miniature.identifier, self.group_pixels(miniature))
-
-    def batch_compute_groups(
-        self, miniatures: List[Miniature], *, database=None
-    ) -> List[DecomposedMiniature]:
-        notifier = database.notifier if database else DEFAULT_NOTIFIER
-        tasks = [(i, m, len(miniatures), notifier) for i, m in enumerate(miniatures)]
-        with Profiler(
-            say(
-                "batch_compute_groups(n={n} miniature(s))",
-                n=len(tasks),
-            ),
-            notifier,
-        ):
-            notify_job_start(
-                notifier, self.collect_miniature_groups, len(miniatures), "miniatures"
-            )
-            raw_output = list(
-                parallelize(self.collect_miniature_groups, tasks, USABLE_CPU_COUNT)
-            )
-        notify_job_progress(
-            notifier,
-            self.collect_miniature_groups,
-            None,
-            len(miniatures),
-            len(miniatures),
-        )
-        return raw_output
