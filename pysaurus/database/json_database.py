@@ -8,7 +8,6 @@ from typing import (
     Optional,
     Sequence,
     Set,
-    Tuple,
     Union,
 )
 
@@ -241,13 +240,11 @@ class JsonDatabase:
         self.register_modified(new_video)
 
     def flush_changes(self):
-        logger.info(
-            f"Flushed changes, "
-            f"{len(self.__removed)} removed, {len(self.__modified)} modified"
-        )
         if self.__removed:
+            logger.info(f"Flushed {len(self.__removed)} removed")
             self.__indexer.remove_videos(self.__removed)
         if self.__modified:
+            logger.info(f"Flushed {len(self.__modified)} modified")
             self.__indexer.update_videos(self.__modified)
         self.__removed.clear()
         self.__modified.clear()
@@ -369,13 +366,8 @@ class JsonDatabase:
             return False
         return True
 
-    def get_string_properties(self) -> Tuple[List[str], List[str]]:
-        # unique, multiple
-        output = ([], [])
-        for prop_type in self.__prop_types.values():
-            if prop_type.type is str:
-                output[prop_type.multiple].append(prop_type.name)
-        return output
+    def get_string_properties(self) -> List[str]:
+        return [pt.name for pt in self.__prop_types.values() if pt.type is str]
 
     def describe_prop_types(self) -> List[dict]:
         return sorted(
