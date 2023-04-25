@@ -2,16 +2,16 @@ from typing import Any
 
 
 class Tag:
-    __slots__ = ("tag",)
+    __slots__ = ("t",)
 
     def __init__(self, key: str, value: Any):
-        self.tag = (key, value)
+        self.t = (key, value)
 
-    key = property(lambda self: self.tag[0])
-    val = property(lambda self: self.tag[1])
+    key = property(lambda self: self.t[0])
+    val = property(lambda self: self.t[1])
 
     def __str__(self):
-        return f"{type(self).__name__}{self.tag}"
+        return f"{type(self).__name__}{self.t}"
 
     __repr__ = __str__
 
@@ -19,13 +19,13 @@ class Tag:
         return self.val
 
     def __hash__(self):
-        return hash(self.tag)
+        return hash(self.t)
 
     def __eq__(self, other):
-        return self.tag == other.tag
+        return self.t == other.t
 
     def __lt__(self, other):
-        return self.tag < other.tag
+        return self.t < other.t
 
 
 class Term(Tag):
