@@ -134,7 +134,7 @@ class SqlVideoIndexer(AbstractVideoIndexer):
             many=True,
         )
 
-    def add_video(self, video: Video):
+    def _add_video(self, video: Video):
         logger.info(f"Video indexing: {video.filename.path}")
         filename_id = self.sql_database.modify(
             "INSERT INTO filename (filename) VALUES (?)", [video.filename.path]

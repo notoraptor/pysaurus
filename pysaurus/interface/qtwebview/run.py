@@ -186,7 +186,9 @@ def main():
     PysaurusQtExceptHook(app, view.interface.api).register()
     # Display.
     view.show()
-    sys.exit(app.exec())
+    ret = app.exec()
+    view.interface.api.__close__()
+    sys.exit(ret)
 
 
 if __name__ == "__main__":

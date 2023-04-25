@@ -1,3 +1,4 @@
+import pickle
 from typing import Dict, Iterable, List, Sequence, Set
 
 from pysaurus.core.components import AbsolutePath
@@ -16,17 +17,52 @@ EMPTY_SET = set()
 
 
 class VideoIndexer(AbstractVideoIndexer):
-    __slots__ = ("term_to_filenames", "filename_to_terms", "notifier")
+    __slots__ = (
+        "term_to_filenames",
+        "filename_to_terms",
+        "notifier",
+        "built",
+        "index_path",
+    )
 
-    def __init__(self, notifier: Notifier = None):
+    def __init__(self, notifier: Notifier = None, index_path: AbsolutePath = None):
         self.notifier = notifier or DEFAULT_NOTIFIER
-        self.term_to_filenames: Dict[Tag, Set[AbsolutePath]] = {}
-        self.filename_to_terms: Dict[AbsolutePath, List[Tag]] = {}
+        self.term_to_filenames: Dict[Tag, Set[str]] = {}
+        self.filename_to_terms: Dict[str, List[Tag]] = {}
+        self.built = False
+        self.index_path = index_path
+
+    def _can_save(self) -> bool:
+        return True
+
+    @Profiler.profile_method("VideoIndexer.save")
+    def _save(self):
+        with open(self.index_path.path, "wb") as file:
+            pickle.dump(
+                (self.term_to_filenames, self.filename_to_terms, self.built), file
+            )
+
+    @Profiler.profile_method("VideoIndexer.load")
+    def _load(self):
+        with open(self.index_path.path, "rb") as file:
+            term_to_filenames, filename_to_terms, built = pickle.load(file)
+        self.term_to_filenames = term_to_filenames
+        self.filename_to_terms = filename_to_terms
+        self.built = built
+
+    def close(self):
+        self.notifier = None
+        return super().close()
 
     @Profiler.profile_method("indexer_build")
     def build(self, videos: Iterable[Video]):
+        if self.index_path and self.index_path.isfile():
+            self._load()
+        if self.built:
+            return
+
         self.filename_to_terms = {
-            video.filename: video_to_tags(video) for video in videos
+            video.filename.path: video_to_tags(video) for video in videos
         }
         nb_videos = len(self.filename_to_terms)
         global_notify_job_start("build_index", nb_videos, "videos")
@@ -37,14 +73,26 @@ class VideoIndexer(AbstractVideoIndexer):
             if (i + 1) % 500 == 0:
                 global_notify_job_progress("build_index", None, i + 1, nb_videos)
         global_notify_job_progress("build_index", None, nb_videos, nb_videos)
+        self.built = True
 
-    def add_video(self, video: Video):
+        self._save()
+
+    @Profiler.profile_method()
+    def update_videos(self, videos: Iterable[Video]):
+        return super().update_videos(videos)
+
+    @Profiler.profile_method()
+    def remove_videos(self, videos: Iterable[Video]):
+        return super().remove_videos(videos)
+
+    def _add_video(self, video: Video):
         terms = video_to_tags(video)
-        self.filename_to_terms[video.filename] = terms
+        self.filename_to_terms[video.filename.path] = terms
         for term in terms:
-            self.term_to_filenames.setdefault(term, set()).add(video.filename)
+            self.term_to_filenames.setdefault(term, set()).add(video.filename.path)
 
     def _remove_filename(self, filename: AbsolutePath) -> None:
+        filename = filename.path
         for term in self.filename_to_terms.pop(filename, []):
             if (
                 term in self.term_to_filenames
@@ -54,15 +102,10 @@ class VideoIndexer(AbstractVideoIndexer):
                 if not self.term_to_filenames[term]:
                     del self.term_to_filenames[term]
 
-    @Profiler.profile_method("indexer_update_videos")
-    def update_videos(self, videos: Iterable[Video]):
-        for video in videos:
-            self._update_video(video)
-
     def _update_video(self, video: Video):
         new_terms = video_to_tags(video)
-        old_terms = self.filename_to_terms.pop(video.filename, ())
-        self.filename_to_terms[video.filename] = new_terms
+        old_terms = self.filename_to_terms.pop(video.filename.path, ())
+        self.filename_to_terms[video.filename.path] = new_terms
         set_new_terms = set(new_terms)
         common_terms = set()
         for old_term in old_terms:
@@ -70,22 +113,27 @@ class VideoIndexer(AbstractVideoIndexer):
                 common_terms.add(old_term)
             elif (
                 old_term in self.term_to_filenames
-                and video.filename in self.term_to_filenames[old_term]
+                and video.filename.path in self.term_to_filenames[old_term]
             ):
-                self.term_to_filenames[old_term].remove(video.filename)
+                self.term_to_filenames[old_term].remove(video.filename.path)
                 if not self.term_to_filenames[old_term]:
                     del self.term_to_filenames[old_term]
         for pure_new_term in set_new_terms - common_terms:
-            self.term_to_filenames.setdefault(pure_new_term, set()).add(video.filename)
+            self.term_to_filenames.setdefault(pure_new_term, set()).add(
+                video.filename.path
+            )
 
     @Profiler.profile_method()
     def query_and(
         self, filenames: Iterable[AbsolutePath], terms: Sequence[str]
     ) -> Set[AbsolutePath]:
         # terms = terms_to_tags(terms, cls=list)
-        return set.intersection(
-            set(filenames),
-            *(self.term_to_filenames.get(term, EMPTY_SET) for term in terms),
+        base = {filename.path for filename in filenames}
+        return AbsolutePath.map(
+            set.intersection(
+                base,
+                *(self.term_to_filenames.get(term, EMPTY_SET) for term in terms),
+            )
         )
 
     @Profiler.profile_method()
@@ -93,8 +141,12 @@ class VideoIndexer(AbstractVideoIndexer):
         self, filenames: Iterable[AbsolutePath], terms: Sequence[str]
     ) -> Set[AbsolutePath]:
         # terms = terms_to_tags(terms, cls=list)
-        return set(filenames) & set.union(
-            *(self.term_to_filenames.get(term, EMPTY_SET) for term in terms)
+        base = {filename.path for filename in filenames}
+        return AbsolutePath.map(
+            base
+            & set.union(
+                *(self.term_to_filenames.get(term, EMPTY_SET) for term in terms)
+            )
         )
 
     @Profiler.profile_method()
@@ -105,7 +157,10 @@ class VideoIndexer(AbstractVideoIndexer):
         required.update(forced_flags)
         required["discarded"] = required.get("discarded", False)
         terms = [Tag(flag, value) for flag, value in required.items()]
-        return set.intersection(
-            set(filenames),
-            *(self.term_to_filenames.get(term, EMPTY_SET) for term in terms),
+        base = {filename.path for filename in filenames}
+        return AbsolutePath.map(
+            set.intersection(
+                base,
+                *(self.term_to_filenames.get(term, EMPTY_SET) for term in terms),
+            )
         )

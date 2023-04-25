@@ -151,9 +151,12 @@ class JsonDatabase:
         with Profiler("parsing videos", self.notifier):
             folders_tree = PathTree(self.__folders)
             for video_dict in json_dict.get("videos", ()):
-                video_state = Video.from_dict(video_dict, database=self)
-                video_state.discarded = not folders_tree.in_folders(
-                    video_state.filename
+                video_state = Video.from_dict(
+                    video_dict,
+                    database=self,
+                    discarded=not folders_tree.in_folders(
+                        AbsolutePath(video_dict["f"])
+                    ),
                 )
                 self.__videos[video_state.filename] = video_state
 
@@ -221,6 +224,10 @@ class JsonDatabase:
             }
         )
         self.notifier.notify(DatabaseSaved(self))
+
+    def __close__(self):
+        """Close database."""
+        self.__indexer.close()
 
     def to_save(self, to_save=True):
         return DatabaseToSaveContext(self, to_save=to_save)

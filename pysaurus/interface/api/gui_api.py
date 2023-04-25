@@ -98,6 +98,7 @@ class GuiAPI(FeatureAPI):
         "copy_work",
         "monitor_notifications",
         "server",
+        "_closed",
     )
 
     def __init__(self, monitor_notifications=True):
@@ -114,6 +115,7 @@ class GuiAPI(FeatureAPI):
         self.notifier.call_default_if_no_manager()
         self.monitor_notifications = monitor_notifications
         self.server = ServerLauncher(lambda: self.database)
+        self._closed = False
 
         self.server.start()
         # TODO Check runtime VLC for other OS ?
@@ -180,6 +182,16 @@ class GuiAPI(FeatureAPI):
         self.server.stop()
         # App closed.
         logger.debug("App closed.")
+
+    def __close__(self):
+        """Close GUI API."""
+        if self._closed:
+            print("[gui api] already closed.")
+            return
+        self.threads_stop_flag = True
+        self.application.__close__()
+        self._closed = True
+        print("[gui api] closed.")
 
     def _run_thread(self, function, *args, **kwargs) -> threading.Thread:
         return launch_thread(function, *args, **kwargs)

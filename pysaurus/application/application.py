@@ -174,3 +174,9 @@ class Application:
     def save_config(self):
         with open(self.config_path.path, "w") as file:
             json.dump(self.config.to_json(), file)
+
+    def __close__(self):
+        """Close application."""
+        for database in self.databases.values():
+            if database:
+                database.__close__()

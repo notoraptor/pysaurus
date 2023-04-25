@@ -62,7 +62,7 @@ class Database(JsonDatabase):
             self.__paths.json_path,
             folders,
             notifier,
-            indexer=VideoIndexer(notifier),
+            indexer=VideoIndexer(notifier, self.__paths.index_pkl_path),
         )
         # Set special properties
         with Profiler(

@@ -8,33 +8,46 @@ from pysaurus.video import Video
 class AbstractVideoIndexer(metaclass=ABCMeta):
     __slots__ = ()
 
-    @abstractmethod
-    def add_video(self, video: Video):
-        pass
-
-    @abstractmethod
-    def build(self, videos: Iterable[Video]):
-        pass
-
-    @abstractmethod
-    def _remove_filename(self, filename: AbsolutePath) -> None:
-        pass
-
-    def remove_video(self, video: Video):
-        self._remove_filename(video.filename)
+    def update_videos(self, videos: Iterable[Video]):
+        for video in videos:
+            self._update_video(video)
 
     def remove_videos(self, videos: Iterable[Video]):
         for video in videos:
             self._remove_filename(video.filename)
 
-    def update_videos(self, videos: Iterable[Video]):
-        for video in videos:
-            self.remove_video(video)
-            self.add_video(video)
+    def close(self):
+        """Close indexer."""
+        if self._can_save():
+            self._save()
 
-    def replace_path(self, video: Video, old_path: AbsolutePath):
-        self._remove_filename(old_path)
-        self.add_video(video)
+    def _update_video(self, video: Video):
+        self._remove_filename(video.filename)
+        self._add_video(video)
+
+    @abstractmethod
+    def _can_save(self) -> bool:
+        return False
+
+    @abstractmethod
+    def _save(self):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def _load(self):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def build(self, videos: Iterable[Video]):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def _add_video(self, video: Video):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def _remove_filename(self, filename: AbsolutePath) -> None:
+        raise NotImplementedError()
 
     @abstractmethod
     def query_and(

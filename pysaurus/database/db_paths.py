@@ -16,6 +16,7 @@ class DbPaths:
         "miniatures_path",
         "log_path",
         "index_path",
+        "index_pkl_path",
     )
 
     def __init__(self, path: PathType, create_thumb_folder=True):
@@ -25,6 +26,7 @@ class DbPaths:
         self.miniatures_path = new_sub_file(self.db_folder, "miniatures.json")
         self.log_path = new_sub_file(self.db_folder, "log")
         self.index_path = new_sub_file(self.db_folder, "db")
+        self.index_pkl_path = new_sub_file(self.db_folder, "index.pkl")
         if create_thumb_folder:
             self.thumb_folder.mkdir()
 
