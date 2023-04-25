@@ -212,7 +212,7 @@ class LazyVideo(WithSchema):
             self.runtime.is_file = is_file
             self.database.register_modified(self)
 
-    not_found = property(lambda self: not self.runtime.is_file)
+    not_found = property(lambda self: not self.found)
     with_thumbnails = property(
         lambda self: not self.unreadable_thumbnail and self.runtime.has_thumbnail
     )
@@ -266,9 +266,8 @@ class LazyVideo(WithSchema):
         if self.unreadable:
             return 0
         basic_file_size = (
-            self.width * self.height * self.frame_rate * 3
-            + self.sample_rate * self.channels * 2
-            # todo: why x 2 ?
+            self.width * self.height * self.frame_rate * 3  # 3 bytes (rgb) per pixel
+            + self.sample_rate * self.channels * 2  # TODO 2 bytes per sample?
         ) * self.raw_seconds
         return self.file_size / basic_file_size
 

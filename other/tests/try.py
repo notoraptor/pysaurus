@@ -1,6 +1,6 @@
-from typing import List, Tuple
+from typing import List
 
-from pysaurus.application.application import Application
+from other.tests.utils_testing import get_database
 from pysaurus.core import functions
 from pysaurus.core.job_notifications import (
     global_notify_job_progress,
@@ -9,6 +9,15 @@ from pysaurus.core.job_notifications import (
 from pysaurus.core.profiling import Profiler
 from pysaurus.video import Video
 from pysaurus.video.video_features import VideoFeatures
+
+SAME_ORDER_FIELD = {
+    "length": "raw_seconds",
+    "not_found": "!found",
+    "raw_microseconds": "raw_seconds",
+    "readable": "!unreadable",
+    "size": "file_size",
+    "without_thumbnails": "!with_thumbnails",
+}
 
 
 class Val:
@@ -20,8 +29,10 @@ class Val:
             "duration",
             "duration_time_base",
             "errors",
+            "filename_length",
             "frame_rate_den",
             "frame_rate_num",
+            "has_runtime_thumbnail",
             "json_properties",
             "meta_title",
             "meta_title_numeric",
@@ -29,11 +40,13 @@ class Val:
             "properties",
             "quality_compression",
             "raw_microseconds",
-            "raw_seconds",
             "subtitle_languages",
+            "thumb_name",
             "thumbnail_path",
+            "unreadable_thumbnail",
             "video_id",
-        ],
+        ]
+        + list(SAME_ORDER_FIELD),
         wrapper=sorted,
     )
 
@@ -72,12 +85,17 @@ class PropVal:
 
 
 class PropGetterFactory:
-    def __init__(self, string_properties: Tuple[List[str], List[str]]):
-        self.p = string_properties[0] + string_properties[1]
+    def __init__(self, string_properties: List[str]):
+        self.p = string_properties
+        self.z = list(enumerate(self.p))
+        self.n_to_i = {n: i for i, n in self.z}
 
     def get_things(self, video: Video) -> List[PropVal]:
         ps = video.properties
-        return [PropVal(n, v) for n in self.p if n in ps for v in ps[n]]
+        return [PropVal(i, v) for i, n in self.z if n in ps for v in ps[n]]
+
+    def thing(self, n, v):
+        return PropVal(self.n_to_i[n], v)
 
 
 def _display_all_video_attributes():
@@ -107,21 +125,12 @@ def _check_prop_val(database, pgf):
 
 
 def main():
-    application = Application()
-    database = application.open_database_from_name("adult videos")
-    # videos = list(database.select_videos_fields(
-    #     ["filename", "thumbnail_path", "video_id"], "readable", "with_thumbnails"
-    # ))
-    # print(len(videos))
+    database = get_database()
     print("Video attributes:", len(Val.__attrs__))
     for attribute in Val.__attrs__:
         print("\t", attribute)
-    # _display_all_video_attributes()
 
     pgf = PropGetterFactory(database.get_string_properties())
-
-    # _profile_video_to_json(database)
-    # _check_prop_val(database, pgf)
 
     input("Hello?")
     thing_to_filenames = {}
@@ -152,10 +161,19 @@ def main():
     print("Total tags:", sum(len(tags) for tags in filename_to_things.values()))
     print(
         "Example japanese",
-        len(thing_to_filenames.get(PropVal("certified category", "japanese"), ())),
+        len(thing_to_filenames.get(pgf.thing("certified category", "japanese"), ())),
     )
     input("Hello!")
 
 
+def main2():
+    db = get_database()
+    videos = db.query()
+    videos.sort(key=lambda v: v.quality)
+    for video in (videos[0], videos[-1]):
+        print(video.filename)
+        print(video.quality, video.quality_compression)
+
+
 if __name__ == "__main__":
-    main()
+    main2()

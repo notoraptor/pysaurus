@@ -34,11 +34,11 @@ class QualityAttribute(_DbVideoAttribute):
     __slots__ = "min", "max"
 
     QUALITY_FIELDS = (
-        ("quality_compression", 6),
-        ("height", 5),
-        ("width", 4),
-        ("raw_seconds", 3),
-        ("frame_rate", 2),
+        ("quality_compression", 6),  # 0, 1 ?
+        ("height", 5),  # 0, 16/9 4k => 2160 ?
+        ("width", 4),  # 0, 16/9 4k => 3840 ?
+        ("raw_seconds", 3),  # 0, 30 minutes ?
+        ("frame_rate", 2),  # 0, 60 fps ?
         ("file_size", 1),
         ("audio_bit_rate", 0.5),
     )

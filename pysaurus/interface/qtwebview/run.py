@@ -167,8 +167,10 @@ def main():
     x = screen_center.x() - width // 2
     y = screen_center.y() - height // 2
     logger.debug(f"Window: pos ({x}; {y}), size {width} x {height}")
-    logger.debug(f"Window: DPI {dpix} x {dpiy}")
-    logger.debug(f"Window: IRL {width * 2.54 / dpix} x {height * 2.54 / dpiy} cm")
+    logger.debug(
+        f"Window: DPI {dpix} x {dpiy}, "
+        f"IRL {width * 2.54 / dpix} x {height * 2.54 / dpiy} cm"
+    )
     view = PysaurusQtApplication(geometry=(x, y, width, height))
     # Set zoom.
     if System.is_windows():
