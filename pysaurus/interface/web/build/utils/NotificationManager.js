@@ -16,7 +16,7 @@ System.register(["./Callbacks.js"], function (_export, _context) {
           this.callbackIDToNotification = new Map();
         }
         installFrom(object) {
-          console.log(`Installing from ${object.constructor.name}`);
+          // console.log(`Installing from ${object.constructor.name}`);
           const callbackIndices = [];
           for (let name of Object.getOwnPropertyNames(Object.getPrototypeOf(object)).filter(name => object[name] instanceof Function && (name === GENERIC_CALLBACK_NAME || name.length && name.charAt(0) === name.charAt(0).toUpperCase() || name.length > 2 && name.startsWith("on")))) {
             const element = object[name];
@@ -28,8 +28,9 @@ System.register(["./Callbacks.js"], function (_export, _context) {
             }
             this.notificationCallbacks.get(notificationName).push(callbackID);
             this.callbackIDToNotification.set(callbackID, notificationName);
-            console.log(`[notif/cbk:${callbackID}] ${object.constructor.name}: on ${notificationName}`);
+            // console.log(`[notif/cbk:${callbackID}] ${object.constructor.name}: on ${notificationName}`);
           }
+
           object.__notification_manager_data = callbackIndices;
         }
         uninstallFrom(object) {
@@ -43,8 +44,9 @@ System.register(["./Callbacks.js"], function (_export, _context) {
             if (newNotifCbIDs.length) {
               this.notificationCallbacks.set(notificationName, newNotifCbIDs);
             }
-            console.log(`[removed/notif/cbk:${callbackID}] ${object.constructor.name}: on ${notificationName}`);
+            // console.log(`[removed/notif/cbk:${callbackID}] ${object.constructor.name}: on ${notificationName}`);
           }
+
           object.__notification_manager_data = [];
         }
         call(notification) {
@@ -64,7 +66,7 @@ System.register(["./Callbacks.js"], function (_export, _context) {
               callback(notification);
             }
           } else {
-            console.warn(`Unhandled notification: ${name}: ${JSON.stringify(notification)}`);
+            // console.warn(`Unhandled notification: ${name}: ${JSON.stringify(notification)}`);
           }
         }
       });

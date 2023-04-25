@@ -10,7 +10,7 @@ export class NotificationManager {
 	}
 
 	installFrom(object) {
-		console.log(`Installing from ${object.constructor.name}`);
+		// console.log(`Installing from ${object.constructor.name}`);
 		const callbackIndices = [];
 		for (let name of Object.getOwnPropertyNames(Object.getPrototypeOf(object)).filter(
 			(name) =>
@@ -28,7 +28,7 @@ export class NotificationManager {
 			}
 			this.notificationCallbacks.get(notificationName).push(callbackID);
 			this.callbackIDToNotification.set(callbackID, notificationName);
-			console.log(`[notif/cbk:${callbackID}] ${object.constructor.name}: on ${notificationName}`);
+			// console.log(`[notif/cbk:${callbackID}] ${object.constructor.name}: on ${notificationName}`);
 		}
 		object.__notification_manager_data = callbackIndices;
 	}
@@ -44,7 +44,7 @@ export class NotificationManager {
 			if (newNotifCbIDs.length) {
 				this.notificationCallbacks.set(notificationName, newNotifCbIDs);
 			}
-			console.log(`[removed/notif/cbk:${callbackID}] ${object.constructor.name}: on ${notificationName}`);
+			// console.log(`[removed/notif/cbk:${callbackID}] ${object.constructor.name}: on ${notificationName}`);
 		}
 		object.__notification_manager_data = [];
 	}
@@ -66,7 +66,7 @@ export class NotificationManager {
 				callback(notification);
 			}
 		} else {
-			console.warn(`Unhandled notification: ${name}: ${JSON.stringify(notification)}`);
+			// console.warn(`Unhandled notification: ${name}: ${JSON.stringify(notification)}`);
 		}
 	}
 }

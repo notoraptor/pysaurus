@@ -101,7 +101,7 @@ export const FIELD_MAP = new FieldMap([
 	new FieldInfo("file_title", tr("file title"), GroupPermission.ONLY_MANY, FieldType.str),
 	new FieldInfo("file_title_numeric", tr("file title (with numbers)"), GroupPermission.ONLY_MANY, FieldType.sortable),
 	new FieldInfo("filename", tr("file path"), GroupPermission.ONLY_MANY, FieldType.str),
-	new FieldInfo("filename_length", tr("file path length"), GroupPermission.ONLY_MANY, FieldType.int),
+	new FieldInfo("filename_length", tr("file path length"), GroupPermission.FORBIDDEN, FieldType.int),
 	new FieldInfo("filename_numeric", tr("file path (with numbers)"), GroupPermission.ONLY_MANY, FieldType.sortable),
 	new FieldInfo("frame_rate", tr("frame rate"), GroupPermission.ALL, FieldType.float),
 	new FieldInfo("height", tr("height"), GroupPermission.ALL, FieldType.int),
@@ -112,6 +112,7 @@ export const FIELD_MAP = new FieldMap([
 	new FieldInfo("sample_rate", tr("sample rate"), GroupPermission.ALL, FieldType.int),
 	new FieldInfo("similarity_id", tr("similarity"), GroupPermission.ONLY_MANY, FieldType.unsortable),
 	new FieldInfo("size", tr("size"), GroupPermission.ONLY_MANY, FieldType.sortable),
+	new FieldInfo("size_length", "(size and length)", GroupPermission.ONLY_MANY, FieldType.sortable),
 	new FieldInfo("thumbnail_path", tr("thumbnail path"), GroupPermission.FORBIDDEN, FieldType.unsortable),
 	new FieldInfo("title", tr("title"), GroupPermission.ONLY_MANY, FieldType.str),
 	new FieldInfo("title_numeric", tr("title (with numbers)"), GroupPermission.ONLY_MANY, FieldType.sortable),
@@ -119,7 +120,6 @@ export const FIELD_MAP = new FieldMap([
 	new FieldInfo("video_codec_description", tr("video codec description"), GroupPermission.ALL, FieldType.str),
 	new FieldInfo("video_id", tr("video ID"), GroupPermission.FORBIDDEN, FieldType.int),
 	new FieldInfo("width", tr("width"), GroupPermission.ALL, FieldType.int),
-	new FieldInfo("size_length", "(size and length)", GroupPermission.ONLY_MANY, FieldType.sortable),
 ]);
 
 export const PAGE_SIZES = [1, 10, 20, 50, 100];

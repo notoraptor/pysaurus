@@ -91,6 +91,7 @@ System.register(["../language.js", "../utils/Action.js", "../utils/Actions.js", 
             if (isProperty && entry.value !== null) {
               if (!this.props.isClassified) {
                 buttons.push( /*#__PURE__*/React.createElement("input", {
+                  key: "check-group",
                   type: "checkbox",
                   checked: selection.has(index),
                   onChange: event => this.onCheckEntry(event, index)

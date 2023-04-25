@@ -95,6 +95,7 @@ export class GroupView extends React.Component {
 										if (!this.props.isClassified) {
 											buttons.push(
 												<input
+													key="check-group"
 													type="checkbox"
 													checked={selection.has(index)}
 													onChange={(event) => this.onCheckEntry(event, index)}
