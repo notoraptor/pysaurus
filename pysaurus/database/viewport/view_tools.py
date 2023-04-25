@@ -1,10 +1,9 @@
-from abc import abstractmethod
-from typing import Iterable, List, Optional, Sequence
+from typing import Iterable, List, Optional
 
 from pysaurus.core.classes import ToDict
-from pysaurus.core.compare import to_comparable
+from pysaurus.core.compare import NegativeComparator
 from pysaurus.core.enumeration import Enumeration
-from pysaurus.core.functions import get_default
+from pysaurus.core.functions import get_default, identity
 from pysaurus.core.lookup_array import LookupArray
 from pysaurus.video import Video
 from pysaurus.video.fake_video import FakeVideo
@@ -17,11 +16,12 @@ class VideoArray(LookupArray[Video]):
         super().__init__((Video, FakeVideo), content, lambda video: video.filename)
 
 
-class GroupField:
-    __slots__ = ("field_value",)
+class Group:
+    __slots__ = ("field_value", "videos")
 
-    def __init__(self, field_value=None):
+    def __init__(self, field_value=None, videos: Iterable[Video] = ()):
         self.field_value = field_value
+        self.videos = videos if isinstance(videos, set) else set(videos)
 
     def is_defined(self):
         return self.field_value is not None
@@ -35,33 +35,8 @@ class GroupField:
         return len(str(self.field_value))
 
     @property
-    @abstractmethod
-    def count(self):
-        raise NotImplementedError()
-
-
-class Group(GroupField):
-    __slots__ = ("videos",)
-
-    def __init__(self, field_value=None, videos: Sequence[Video] = ()):
-        super().__init__(field_value)
-        self.videos = VideoArray(videos)
-
-    @property
     def count(self):
         return len(self.videos)
-
-
-class GroupStat(GroupField):
-    __slots__ = ("_count",)
-
-    def __init__(self, field_value=None, count=0):
-        super().__init__(field_value)
-        self._count = count
-
-    @property
-    def count(self):
-        return self._count
 
 
 class GroupArray(LookupArray[Group]):
@@ -74,7 +49,15 @@ class GroupArray(LookupArray[Group]):
 
 
 class GroupDef(ToDict):
-    __slots__ = "field", "is_property", "sorting", "reverse", "allow_singletons"
+    __slots__ = (
+        "field",
+        "is_property",
+        "sorting",
+        "reverse",
+        "allow_singletons",
+        "_int_reverse",
+        "_fn_reverse",
+    )
     __print_none__ = True
 
     FIELD = "field"
@@ -94,6 +77,8 @@ class GroupDef(ToDict):
         self.sorting = sorting.strip() if sorting else self.FIELD
         self.reverse = bool(reverse)
         self.allow_singletons = bool(allow_singletons)
+        self._int_reverse = -1 if self.reverse else 1
+        self._fn_reverse = NegativeComparator if self.reverse else identity
         assert self.sorting in (self.FIELD, self.LENGTH, self.COUNT)
 
     def __bool__(self):
@@ -115,18 +100,26 @@ class GroupDef(ToDict):
             allow_singletons=get_default(allow_singletons, self.allow_singletons),
         )
 
-    def sort(self, groups: Iterable[Group]) -> List[Group]:
-        return sorted(
-            groups,
-            key=lambda group: (
-                group.is_defined(),
-                to_comparable(getattr(group, self.sorting), self.reverse),
-                # Add group field value in any case.
-                # If sorting is not field, then we will use group field
-                # to sort groups with same sorting value
-                to_comparable(group.field, self.reverse),
-            ),
-        )
+    def _generate_sort_key(self):
+        if self.sorting == self.FIELD:
+            return lambda group: (
+                group.field_value is not None,
+                self._fn_reverse(group.field_value),
+            )
+        else:
+            # If sorting is not field, we will use group field
+            # to sort groups with same sorting value.
+            return lambda group: (
+                group.field_value is not None,
+                getattr(group, self.sorting) * self._int_reverse,
+                self._fn_reverse(group.field_value),
+            )
+
+    def sorted(self, groups: Iterable[Group]) -> List[Group]:
+        return sorted(groups, key=self._generate_sort_key())
+
+    def sort_inplace(self, groups: List[Group]):
+        groups.sort(key=self._generate_sort_key())
 
 
 class SearchDef(ToDict):

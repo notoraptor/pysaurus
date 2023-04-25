@@ -201,7 +201,7 @@ class _CompactVideoFilter(AbstractVideoProvider):
                         classifier_stats.setdefault(getattr(video, g_field), []).append(
                             video
                         )
-                self._classifier_stats = self.group_def.sort(
+                self._classifier_stats = self.group_def.sorted(
                     Group(field, group_videos)
                     for field, group_videos in classifier_stats.items()
                     if self.group_def.allow_singletons or len(group_videos) > 1
