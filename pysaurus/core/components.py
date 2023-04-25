@@ -242,6 +242,10 @@ STDERR: {stderr.strip()}"""
         return path if isinstance(path, AbsolutePath) else AbsolutePath(str(path))
 
     @staticmethod
+    def map(iterable):
+        return map(AbsolutePath.ensure, iterable)
+
+    @staticmethod
     def ensure_directory(path):
         path = AbsolutePath.ensure(path)
         if not path.isdir():
