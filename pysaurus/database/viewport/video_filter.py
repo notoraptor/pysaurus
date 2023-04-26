@@ -13,13 +13,22 @@ from pysaurus.database.viewport.view_tools import (
     GroupArray,
     GroupDef,
     SearchDef,
-    VideoArray,
 )
 from pysaurus.video import Video
 from pysaurus.video.video_sorting import VideoSorting
 
 logger = logging.getLogger(__name__)
 EMPTY_SET = set()
+
+
+class _VideoArray(list):
+    __slots__ = ()
+
+    def remove(self, video: Video):
+        try:
+            return super().remove(video)
+        except ValueError:
+            logger.exception(f"Video not found: {video.filename}")
 
 
 class Layer:
@@ -51,9 +60,10 @@ class Layer:
 
     def get_output(self):
         if self.to_update:
-            self.run()
+            with Profiler(f"[{type(self).__name__}] run", self.database.notifier):
+                self.run()
             self.to_update = False
-            self._log("run")
+            # self._log("run")
         return self.output
 
     @abstractmethod
@@ -71,12 +81,12 @@ class Layer:
 
 class LayerSource(Layer):
     __slots__ = ("source_def", "videos_found")
-    output: VideoArray
+    output: Set[Video]
 
     def __init__(self, database):
         super().__init__(database)
         self.source_def = SourceDef(self.params["sources"])
-        self.videos_found = VideoArray()
+        self.videos_found = _VideoArray()
 
     def set_params(self, *, sources: Sequence[Sequence[str]]):
         if sources is None:
@@ -89,9 +99,9 @@ class LayerSource(Layer):
                 if path not in valid_paths:
                     assert len(set(path)) == len(path)
                     assert all(flag in Video.FLAGS for flag in path)
-                    valid_paths.add(list(path))
+                    valid_paths.add(path)
             if valid_paths:
-                super().set_params(sources=sorted(valid_paths))
+                super().set_params(sources=[list(src) for src in sorted(valid_paths)])
                 self.source_def = SourceDef(self.params["sources"])
 
     @classmethod
@@ -99,22 +109,26 @@ class LayerSource(Layer):
         return {"sources": [["readable"]]}
 
     def run(self):
-        videos = VideoArray()
-        videos_found = VideoArray()
+        videos = set()
+        videos_found = _VideoArray()
         for path in self.params["sources"]:
             source = self.input.get_cached_videos(*path)
-            videos.extend(source)
+            videos.update(source)
             if "unreadable" not in path and "not_found" not in path:
                 videos_found.extend(
                     video for video in source if video.found and video.readable
                 )
-        self.output: VideoArray = videos
+        self.output: Set[Video] = videos
         self.videos_found = videos_found
 
     def delete(self, video: Video):
         self.output.remove(video)
-        if video in self.videos_found:
-            self.videos_found.remove(video)
+        # Video deletion is a rare/not massive operation compared to other.
+        # So, we can accept to delete from a list,
+        # event if it's not efficient and may be slow.
+        # TODO What if deletion becomes massive/frequent?
+        # TODO What if videos list is very long ?
+        self.videos_found.remove(video)
 
     def get_random_video(self):
         if self.videos_found:
@@ -126,19 +140,16 @@ class _AbstractLayerGrouping(Layer):
     __slots__ = ()
     output: GroupArray
 
-    def get_prop_values(self, video, name: str, default=False) -> List:
-        prop_is_multiple = self.database.has_prop_type(name, multiple=True)
-        values = []
-        if video.has_property(name):
-            values = video.get_property(name)
+    def get_prop_values(self, video, name: str) -> List:
+        values = video.get_property(name)
         assert isinstance(values, list)
-        if default and not values and not prop_is_multiple:
+        if not values and not self.database.has_prop_type(name, multiple=True):
             values = [self.database.new_prop_unit(name)]
         return values
 
     def _get_grouping_values(self, video, group_def: GroupDef):
         if group_def.is_property:
-            return self.get_prop_values(video, group_def.field, default=True) or [None]
+            return self.get_prop_values(video, group_def.field) or [None]
         else:
             return [getattr(video, group_def.field)]
 
@@ -163,7 +174,7 @@ class _AbstractLayerGrouping(Layer):
 
 class LayerGrouping(_AbstractLayerGrouping):
     __slots__ = ()
-    input: VideoArray
+    input: Set[Video]
     output: GroupArray
 
     def set_params(self, *, grouping: GroupDef):
@@ -178,19 +189,24 @@ class LayerGrouping(_AbstractLayerGrouping):
             groups = [Group(None, self.input)]
         else:
             grouped_videos = {}
-            for video in self.input:
-                for value in self._get_grouping_values(video, group_def):
-                    grouped_videos.setdefault(value, []).append(video)
+            with Profiler("Grouping:group videos", self.database.notifier):
+                for video in self.input:
+                    for value in self._get_grouping_values(video, group_def):
+                        grouped_videos.setdefault(value, set()).add(video)
             # hack
             if not group_def.is_property and group_def.field == "similarity_id":
                 # Remove None (not checked) and -1 (not similar) videos.
                 grouped_videos.pop(None, None)
                 grouped_videos.pop(-1, None)
-            groups = group_def.sort(
-                Group(field_value, videos)
-                for field_value, videos in grouped_videos.items()
-                if group_def.allow_singletons or len(videos) > 1
-            )
+            with Profiler("Grouping:get groups", self.database.notifier):
+                if group_def.allow_singletons:
+                    groups = [Group(f, vs) for f, vs in grouped_videos.items()]
+                else:
+                    groups = [
+                        Group(f, vs) for f, vs in grouped_videos.items() if len(vs) > 1
+                    ]
+            with Profiler("Grouping:sort groups", self.database.notifier):
+                group_def.sort_inplace(groups)
         self.output = GroupArray(group_def.field, group_def.is_property, groups)
 
 
@@ -243,7 +259,7 @@ class LayerClassifier(_AbstractLayerGrouping):
         return GroupArray(
             prop_name,
             True,
-            self.params["grouping"].sort(
+            self.params["grouping"].sorted(
                 [Group(None, videos)]
                 + [
                     Group(field_value, group_videos)
@@ -279,7 +295,7 @@ class LayerGroup(Layer):
 class LayerSearch(Layer):
     __slots__ = ()
     input: Group
-    output: VideoArray
+    output: Set[Video]
 
     def set_params(self, *, search: SearchDef):
         super().set_params(search=search)
@@ -293,7 +309,7 @@ class LayerSearch(Layer):
             self.output = self.input.videos
         else:
             self._log("search", search_def)
-            self.output = VideoArray(
+            self.output = set(
                 self.database.search(
                     search_def.text, search_def.cond, self.input.videos
                 )
@@ -306,8 +322,8 @@ class LayerSearch(Layer):
 
 class LayerSort(Layer):
     __slots__ = ()
-    input: VideoArray
-    output: VideoArray
+    input: Set[Video]
+    output: _VideoArray
 
     def set_params(self, *, sorting: List[str]):
         super().set_params(
@@ -319,13 +335,13 @@ class LayerSort(Layer):
 
     def run(self):
         sorting = VideoSorting(self.params["sorting"])
-        self.output = VideoArray(
+        self.output = _VideoArray(
             sorted(self.input, key=lambda video: video.to_comparable(sorting))
         )
 
     def delete(self, video):
-        if video in self.output:
-            self.output.remove(video)
+        # See commentary in pysaurus.database.viewport.video_filter.LayerSource.delete
+        self.output.remove(video)
 
 
 class VideoFilter(AbstractVideoProvider):
@@ -365,9 +381,8 @@ class VideoFilter(AbstractVideoProvider):
         data = self._database
         with Profiler("VideoSelector.get_view", self._database.notifier):
             for layer in self.pipeline:
-                with Profiler(f"Filter{type(layer).__name__}", self._database.notifier):
-                    layer.set_input(data)
-                    data = layer.get_output()
+                layer.set_input(data)
+                data = layer.get_output()
             return [video.video_id for video in data]
 
     def delete(self, video):
