@@ -1,3 +1,4 @@
+import logging
 from typing import List
 
 from other.tests.utils_testing import get_database
@@ -167,6 +168,7 @@ def main():
 
 
 def main2():
+    logging.basicConfig(level=logging.NOTSET)
     db = get_database()
     videos = db.query()
     videos.sort(key=lambda v: v.quality)
@@ -175,5 +177,15 @@ def main2():
         print(video.quality, video.quality_compression)
 
 
+def main3():
+    path = r"N:\donnees\autres\p\Yuahentai - her recipe is for a creampie.mp4"
+    import pprint
+    from pysaurus.video_raptor.video_raptor_pyav import VideoRaptor
+
+    vr = VideoRaptor()
+    info = vr._get_info(path)
+    pprint.pprint(info)
+
+
 if __name__ == "__main__":
-    main2()
+    main3()

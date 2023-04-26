@@ -4,6 +4,7 @@ from pysaurus.core.job_notifications import notify_job_progress, notify_job_star
 from pysaurus.core.parallelization import USABLE_CPU_COUNT, parallelize
 from pysaurus.core.profiling import Profiler
 from pysaurus.miniature.miniature import Miniature
+from saurus.language import say
 
 SIMPLE_MAX_PIXEL_DISTANCE = 255 * 3
 V = SIMPLE_MAX_PIXEL_DISTANCE
@@ -147,7 +148,7 @@ def classify_similarities_directed(miniatures, edges, limit, database):
         "videos (Python comparison)",
     )
     with Profiler(
-        database.say(
+        say(
             "Python images comparison",
         ),
         notifier=database.notifier,
