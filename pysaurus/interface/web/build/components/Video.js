@@ -185,6 +185,8 @@ System.register(["../dialogs/Dialog.js", "../forms/FormVideoEditProperties.js", 
           }, /*#__PURE__*/React.createElement("code", null, "Quality")), /*#__PURE__*/React.createElement("div", {
             className: cc(common.quality)
           }, /*#__PURE__*/React.createElement("strong", null, /*#__PURE__*/React.createElement("em", null, data.quality)), " ", "%")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", {
+            className: cc(common.length)
+          }, data.length), " |", " ", /*#__PURE__*/React.createElement("strong", {
             className: cc(common.width)
           }, data.width), " x", " ", /*#__PURE__*/React.createElement("strong", {
             className: cc(common.height)
@@ -194,14 +196,12 @@ System.register(["../dialogs/Dialog.js", "../forms/FormVideoEditProperties.js", 
             className: cc(common.bit_depth)
           }, data.bit_depth, " ", tr("bits")), " ", "|", " ", /*#__PURE__*/React.createElement("span", {
             className: cc(common.sample_rate)
-          }, data.sample_rate, " ", tr("Hz")), ",", " ", /*#__PURE__*/React.createElement("span", {
+          }, data.sample_rate, " ", tr("Hz"), " x ", data.audio_bits || "32?", " ", tr("bits"), " (", data.channels, " ", tr("channels"), ")"), ",", " ", /*#__PURE__*/React.createElement("span", {
             title: data.audio_bit_rate,
             className: cc(common.audio_bit_rate)
-          }, audio_bit_rate, " ", tr("Kb/s")), " ", "| ", /*#__PURE__*/React.createElement("strong", {
-            className: cc(common.length)
-          }, data.length), " |", " ", /*#__PURE__*/React.createElement("code", {
+          }, audio_bit_rate, " ", tr("Kb/s"))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("code", {
             className: cc(common.date)
-          }, data.date), " |", " "), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("em", null, "(entry)", " ", /*#__PURE__*/React.createElement("code", {
+          }, data.date), " |", " ", /*#__PURE__*/React.createElement("em", null, "(entry)", " ", /*#__PURE__*/React.createElement("code", {
             className: cc(common.date_entry_modified)
           }, data.date_entry_modified)), " ", "|", " ", /*#__PURE__*/React.createElement("em", null, "(opened) ", /*#__PURE__*/React.createElement("code", {
             className: cc(common.date_entry_opened)

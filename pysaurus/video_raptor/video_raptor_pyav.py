@@ -90,6 +90,7 @@ class VideoRaptor(AbstractVideoRaptor):
                     d["audio_bit_rate"] = acc.bit_rate or 0
                     d["audio_codec"] = acc.codec.name
                     d["audio_codec_description"] = acc.codec.long_name
+                    d["audio_bits"] = audio_streams[0].format.bits
                 if meta_title is not None:
                     d["meta_title"] = meta_title
                 if errors:

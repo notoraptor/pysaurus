@@ -14,6 +14,7 @@ class VideoFeatures:
     @staticmethod
     def json(video: Video) -> dict:
         return {
+            "audio_bits": video.audio_bits,
             "audio_bit_rate": video.audio_bit_rate,
             "audio_codec": video.audio_codec.value,
             "audio_codec_description": video.audio_codec_description.value,

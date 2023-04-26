@@ -86,6 +86,7 @@ class FieldMap {
 }
 
 export const FIELD_MAP = new FieldMap([
+	new FieldInfo("audio_bits", tr("audio bits per sample"), GroupPermission.ALL, FieldType.int),
 	new FieldInfo("audio_bit_rate", tr("audio bit rate"), GroupPermission.ALL, FieldType.int),
 	new FieldInfo("audio_codec", tr("audio codec"), GroupPermission.ALL, FieldType.str),
 	new FieldInfo("audio_codec_description", tr("audio codec description"), GroupPermission.ALL, FieldType.str),

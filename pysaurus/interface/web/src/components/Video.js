@@ -222,6 +222,7 @@ export class Video extends React.Component {
 							</div>
 						</div>
 						<div>
+							<strong className={cc(common.length)}>{data.length}</strong> |{" "}
 							<strong className={cc(common.width)}>{data.width}</strong> x{" "}
 							<strong className={cc(common.height)}>{data.height}</strong> @{" "}
 							<span className={cc(common.frame_rate)}>
@@ -233,16 +234,15 @@ export class Video extends React.Component {
 							</span>{" "}
 							|{" "}
 							<span className={cc(common.sample_rate)}>
-								{data.sample_rate} {tr("Hz")}
+								{data.sample_rate} {tr("Hz")} x {data.audio_bits || "32?"} {tr("bits")} ({data.channels} {tr("channels")})
 							</span>
 							,{" "}
 							<span title={data.audio_bit_rate} className={cc(common.audio_bit_rate)}>
 								{audio_bit_rate} {tr("Kb/s")}
-							</span>{" "}
-							| <strong className={cc(common.length)}>{data.length}</strong> |{" "}
-							<code className={cc(common.date)}>{data.date}</code> |{" "}
+							</span>
 						</div>
 						<div>
+							<code className={cc(common.date)}>{data.date}</code> |{" "}
 							<em>
 								(entry){" "}
 								<code className={cc(common.date_entry_modified)}>{data.date_entry_modified}</code>

@@ -186,6 +186,7 @@ class LazyVideo(WithSchema):
     width = property(lambda self: self._get("width"))
     audio_languages = property(lambda self: self._get("audio_languages"))
     subtitle_languages = property(lambda self: self._get("subtitle_languages"))
+    audio_bits = property(lambda self: self._get("audio_bits"))
 
     # Derived attributes
 

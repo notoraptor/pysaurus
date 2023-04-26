@@ -556,10 +556,16 @@ class JsonDatabase:
                 or file_info.size != video.file_size
                 or file_info.driver_id != video.runtime.driver_id
                 or (video.readable and not SpecialProperties.all_in(video))
+                or self._video_must_be_updated(video)
             ):
                 all_file_names.append(file_name.path)
         all_file_names.sort()
         return all_file_names
+
+    @classmethod
+    def _video_must_be_updated(cls, video: Video):
+        # A video readable with existing audio stream must have valid audio bits
+        return video.readable and video.audio_codec and video.audio_bits is None
 
     def get_all_video_indices(self) -> Iterable[int]:
         return self.__id_to_video.keys()
@@ -631,7 +637,7 @@ class JsonDatabase:
                 video_state = Video.from_keys(
                     filename=file_path.path,
                     file_size=file_path.get_size(),
-                    errors=set(d["e"]),
+                    errors=sorted(d["e"]),
                     unreadable=True,
                     database=self,
                 )
@@ -646,12 +652,16 @@ class JsonDatabase:
                     video_state.properties = old_video.properties
                     video_state.similarity_id = old_video.similarity_id
                     video_state.video_id = old_video.video_id
+                    video_state.thumb_name = old_video.thumb_name
+                    video_state.unreadable_thumbnail = old_video.unreadable_thumbnail
+                    video_state.date_entry_opened = old_video.date_entry_opened.time
                 # Set special properties
                 SpecialProperties.set(video_state)
             # Video modified, so automatically added to __modified.
             video_state.runtime = runtime_info[file_path]
             videos.append(video_state)
         self.__videos.update({video.filename: video for video in videos})
+        self.save()
         if unreadable:
             self.notifier.notify(
                 notifications.VideoInfoErrors(
@@ -661,7 +671,6 @@ class JsonDatabase:
                     }
                 )
             )
-        self.save()
 
     def fill_videos_field(self, indices: Iterable[int], field: str, value):
         for video_id in indices:

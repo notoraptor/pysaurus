@@ -39,5 +39,6 @@ class VideoSchema(Schema):
                 Type("width", "w", 0),
                 Type("audio_languages", "l", []),
                 Type("subtitle_languages", "L", []),
+                Type("audio_bits", ("B", int), None),
             ]
         )
