@@ -54,7 +54,6 @@ export class Video extends React.Component {
 		const audio_bit_rate = Math.round(data.audio_bit_rate / 1000);
 		data.extension = data.extension.toUpperCase();
 		data.frame_rate = Math.round(data.frame_rate);
-		data.quality = Math.round(data.quality * 100) / 100;
 		const title = data.title;
 		const file_title = data.file_title;
 		const meta_title = title === file_title ? null : title;
@@ -212,11 +211,11 @@ export class Video extends React.Component {
 								)
 							</div>
 							<div className="prepend">
-								<code>Quality</code>
+								<code>Bit rate</code>
 							</div>
-							<div className={cc(common.quality)}>
+							<div className={cc(common.bit_rate)}>
 								<strong>
-									<em>{data.quality}</em>
+									<em>{data.bit_rate}/s</em>
 								</strong>{" "}
 								%
 							</div>
@@ -234,7 +233,8 @@ export class Video extends React.Component {
 							</span>{" "}
 							|{" "}
 							<span className={cc(common.sample_rate)}>
-								{data.sample_rate} {tr("Hz")} x {data.audio_bits || "32?"} {tr("bits")} ({data.channels} {tr("channels")})
+								{data.sample_rate} {tr("Hz")} x {data.audio_bits || "32?"} {tr("bits")} ({data.channels}{" "}
+								{tr("channels")})
 							</span>
 							,{" "}
 							<span title={data.audio_bit_rate} className={cc(common.audio_bit_rate)}>

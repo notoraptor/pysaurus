@@ -46,59 +46,61 @@ export class FormVideoEditProperties extends React.Component {
 					</div>
 					<div className="properties flex-grow-1">
 						<table className="first-td-text-right w-100">
-							{this.props.definitions.map((def, index) => {
-								const name = def.name;
-								let input;
-								if (def.multiple) {
-									let possibleValues = null;
-									if (def.enumeration) possibleValues = def.enumeration;
-									else if (def.type === "bool") possibleValues = [false, true];
-									const controller = new ComponentPropController(
-										this,
-										name,
-										def.type,
-										possibleValues
+							<tbody>
+								{this.props.definitions.map((def, index) => {
+									const name = def.name;
+									let input;
+									if (def.multiple) {
+										let possibleValues = null;
+										if (def.enumeration) possibleValues = def.enumeration;
+										else if (def.type === "bool") possibleValues = [false, true];
+										const controller = new ComponentPropController(
+											this,
+											name,
+											def.type,
+											possibleValues
+										);
+										input = <SetInput controller={controller} values={possibleValues} />;
+									} else if (def.enumeration) {
+										input = (
+											<select
+												value={this.state[name]}
+												onChange={(event) => this.onChange(event, def)}>
+												{def.enumeration.map((value, valueIndex) => (
+													<option key={valueIndex} value={value}>
+														{value}
+													</option>
+												))}
+											</select>
+										);
+									} else if (def.type === "bool") {
+										input = (
+											<select
+												value={this.state[name]}
+												onChange={(event) => this.onChange(event, def)}>
+												<option value="false">false</option>
+												<option value="true">true</option>
+											</select>
+										);
+									} else {
+										input = (
+											<input
+												type={def.type === "int" ? "number" : "text"}
+												onChange={(event) => this.onChange(event, def)}
+												value={this.state[name]}
+											/>
+										);
+									}
+									return (
+										<tr key={index}>
+											<td className="label">
+												<strong>{name}</strong>
+											</td>
+											<td className="input">{input}</td>
+										</tr>
 									);
-									input = <SetInput controller={controller} values={possibleValues} />;
-								} else if (def.enumeration) {
-									input = (
-										<select
-											value={this.state[name]}
-											onChange={(event) => this.onChange(event, def)}>
-											{def.enumeration.map((value, valueIndex) => (
-												<option key={valueIndex} value={value}>
-													{value}
-												</option>
-											))}
-										</select>
-									);
-								} else if (def.type === "bool") {
-									input = (
-										<select
-											value={this.state[name]}
-											onChange={(event) => this.onChange(event, def)}>
-											<option value="false">false</option>
-											<option value="true">true</option>
-										</select>
-									);
-								} else {
-									input = (
-										<input
-											type={def.type === "int" ? "number" : "text"}
-											onChange={(event) => this.onChange(event, def)}
-											value={this.state[name]}
-										/>
-									);
-								}
-								return (
-									<tr key={index}>
-										<td className="label">
-											<strong>{name}</strong>
-										</td>
-										<td className="input">{input}</td>
-									</tr>
-								);
-							})}
+								})}
+							</tbody>
 						</table>
 					</div>
 				</div>

@@ -66,91 +66,93 @@ export class PropertiesPage extends React.Component {
 					<div className="new">
 						<h3 className="text-center">{tr("Add a new property")}</h3>
 						<table className="first-td-text-right w-100">
-							<tr>
-								<td>
-									<label htmlFor="prop-name">Name:</label>
-								</td>
-								<td>
-									<input
-										type="text"
-										id="prop-name"
-										className="block"
-										value={this.state.name}
-										onChange={this.onChangeName}
-									/>
-								</td>
-							</tr>
-							<tr>
-								<td>
-									<label htmlFor="prop-type">Type:</label>
-								</td>
-								<td>
-									<select
-										id="prop-type"
-										className="block"
-										value={this.state.type}
-										onChange={this.onChangeType}>
-										<option value="bool">{tr("boolean")}</option>
-										<option value="int">{tr("integer")}</option>
-										<option value="float">{tr("floating number")}</option>
-										<option value="str">{tr("text")}</option>
-									</select>
-								</td>
-							</tr>
-							<tr>
-								<td>
-									<input
-										type="checkbox"
-										id="prop-multiple"
-										checked={this.state.multiple}
-										onChange={this.onChangeMultiple}
-									/>
-								</td>
-								<td>
-									<label htmlFor="prop-multiple">{tr("accept many values")}</label>
-								</td>
-							</tr>
-							<tr>
-								<td>
-									<input
-										type="checkbox"
-										id="prop-enumeration"
-										checked={this.state.enumeration}
-										onChange={this.onChangeEnumeration}
-									/>
-								</td>
-								<td>
-									<label htmlFor="prop-enumeration">{tr("Is enumeration")}</label>
-								</td>
-							</tr>
-							{!this.state.multiple || this.state.enumeration ? (
+							<tbody>
 								<tr>
 									<td>
-										<label htmlFor={"prop-default-" + this.state.type}>
-											{this.state.enumeration
-												? this.state.multiple
-													? tr("Enumeration values (first is default)")
-													: tr("Enumeration values")
-												: tr("Default value")}
-										</label>
+										<label htmlFor="prop-name">Name:</label>
 									</td>
-									<td>{this.renderDefaultInput()}</td>
+									<td>
+										<input
+											type="text"
+											id="prop-name"
+											className="block"
+											value={this.state.name}
+											onChange={this.onChangeName}
+										/>
+									</td>
 								</tr>
-							) : (
-								""
-							)}
-							<tr className="buttons">
-								<td>
-									<button className="reset block" onClick={this.reset}>
-										reset
-									</button>
-								</td>
-								<td>
-									<button className="submit block" onClick={this.submit}>
-										<strong>add</strong>
-									</button>
-								</td>
-							</tr>
+								<tr>
+									<td>
+										<label htmlFor="prop-type">Type:</label>
+									</td>
+									<td>
+										<select
+											id="prop-type"
+											className="block"
+											value={this.state.type}
+											onChange={this.onChangeType}>
+											<option value="bool">{tr("boolean")}</option>
+											<option value="int">{tr("integer")}</option>
+											<option value="float">{tr("floating number")}</option>
+											<option value="str">{tr("text")}</option>
+										</select>
+									</td>
+								</tr>
+								<tr>
+									<td>
+										<input
+											type="checkbox"
+											id="prop-multiple"
+											checked={this.state.multiple}
+											onChange={this.onChangeMultiple}
+										/>
+									</td>
+									<td>
+										<label htmlFor="prop-multiple">{tr("accept many values")}</label>
+									</td>
+								</tr>
+								<tr>
+									<td>
+										<input
+											type="checkbox"
+											id="prop-enumeration"
+											checked={this.state.enumeration}
+											onChange={this.onChangeEnumeration}
+										/>
+									</td>
+									<td>
+										<label htmlFor="prop-enumeration">{tr("Is enumeration")}</label>
+									</td>
+								</tr>
+								{!this.state.multiple || this.state.enumeration ? (
+									<tr>
+										<td>
+											<label htmlFor={"prop-default-" + this.state.type}>
+												{this.state.enumeration
+													? this.state.multiple
+														? tr("Enumeration values (first is default)")
+														: tr("Enumeration values")
+													: tr("Default value")}
+											</label>
+										</td>
+										<td>{this.renderDefaultInput()}</td>
+									</tr>
+								) : (
+									""
+								)}
+								<tr className="buttons">
+									<td>
+										<button className="reset block" onClick={this.reset}>
+											reset
+										</button>
+									</td>
+									<td>
+										<button className="submit block" onClick={this.submit}>
+											<strong>add</strong>
+										</button>
+									</td>
+								</tr>
+							</tbody>
 						</table>
 					</div>
 				</div>

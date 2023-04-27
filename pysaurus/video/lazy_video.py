@@ -244,7 +244,6 @@ class LazyVideo(WithSchema):
             self.database.thumbnail_folder, self.thumb_name, JPEG_EXTENSION
         )
     )
-    quality = property(lambda self: self.database.quality_attribute(self))
     move_id = property(lambda self: self.database.moves_attribute(self)[0])
     size_length = property(lambda self: StringedTuple((self.size, self.length)))
     filename_length = property(lambda self: len(self.filename))
@@ -263,14 +262,23 @@ class LazyVideo(WithSchema):
         self._set("errors", sorted(errors))
 
     @property
-    def quality_compression(self):
-        if self.unreadable:
-            return 0
-        basic_file_size = (
-            self.width * self.height * self.frame_rate * 3  # 3 bytes (rgb) per pixel
-            + self.sample_rate * self.channels * 2  # TODO 2 bytes per sample?
-        ) * self.raw_seconds
-        return self.file_size / basic_file_size
+    def expected_raw_size(self):
+        return FileSize(
+            (
+                self.frame_rate
+                * self.width
+                * self.height
+                * 3
+                * (self.bit_depth or 8)
+                / 8
+                + self.sample_rate * (self.audio_bits or 32) / 8
+            )
+            * self.raw_seconds
+        )
+
+    @property
+    def bit_rate(self):
+        return FileSize(self.file_size * self.duration_time_base / self.duration)
 
     @property
     def moves(self):

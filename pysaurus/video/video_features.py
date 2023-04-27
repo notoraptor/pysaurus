@@ -14,12 +14,13 @@ class VideoFeatures:
     @staticmethod
     def json(video: Video) -> dict:
         return {
-            "audio_bits": video.audio_bits,
             "audio_bit_rate": video.audio_bit_rate,
+            "audio_bits": video.audio_bits,
             "audio_codec": video.audio_codec.value,
             "audio_codec_description": video.audio_codec_description.value,
             "audio_languages": video.audio_languages,
             "bit_depth": video.bit_depth,
+            "bit_rate": str(video.bit_rate),
             "channels": video.channels,
             "container_format": video.container_format.value,
             "date": str(video.date),
@@ -49,7 +50,6 @@ class VideoFeatures:
             "moves": video.moves,
             "not_found": video.not_found,
             "properties": video.json_properties,
-            "quality": video.quality,
             "readable": video.readable,
             "sample_rate": video.sample_rate,
             "similarity_id": video.similarity_id,

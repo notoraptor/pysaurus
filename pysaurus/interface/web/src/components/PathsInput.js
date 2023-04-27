@@ -33,18 +33,20 @@ export class PathsInput extends React.Component {
 					</table>
 					<div className="paths flex-grow-1 overflow-auto">
 						<table className="table-layout-fixed">
-							{paths.map((path, index) => (
-								<tr key={index}>
-									<td>
-										<code>{path}</code>
-									</td>
-									<td>
-										<button className="block" onClick={() => this.removePath(path)}>
-											-
-										</button>
-									</td>
-								</tr>
-							))}
+							<tbody>
+								{paths.map((path, index) => (
+									<tr key={index}>
+										<td>
+											<code>{path}</code>
+										</td>
+										<td>
+											<button className="block" onClick={() => this.removePath(path)}>
+												-
+											</button>
+										</td>
+									</tr>
+								))}
+							</tbody>
 						</table>
 					</div>
 				</div>

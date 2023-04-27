@@ -72,7 +72,6 @@ System.register(["../dialogs/Dialog.js", "../forms/FormVideoEditProperties.js", 
           const audio_bit_rate = Math.round(data.audio_bit_rate / 1000);
           data.extension = data.extension.toUpperCase();
           data.frame_rate = Math.round(data.frame_rate);
-          data.quality = Math.round(data.quality * 100) / 100;
           const title = data.title;
           const file_title = data.file_title;
           const meta_title = title === file_title ? null : title;
@@ -182,9 +181,9 @@ System.register(["../dialogs/Dialog.js", "../forms/FormVideoEditProperties.js", 
             className: cc(common.audio_codec)
           }, data.audio_codec), ")"), /*#__PURE__*/React.createElement("div", {
             className: "prepend"
-          }, /*#__PURE__*/React.createElement("code", null, "Quality")), /*#__PURE__*/React.createElement("div", {
-            className: cc(common.quality)
-          }, /*#__PURE__*/React.createElement("strong", null, /*#__PURE__*/React.createElement("em", null, data.quality)), " ", "%")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", {
+          }, /*#__PURE__*/React.createElement("code", null, "Bit rate")), /*#__PURE__*/React.createElement("div", {
+            className: cc(common.bit_rate)
+          }, /*#__PURE__*/React.createElement("strong", null, /*#__PURE__*/React.createElement("em", null, data.bit_rate, "/s")), " ", "%")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", {
             className: cc(common.length)
           }, data.length), " |", " ", /*#__PURE__*/React.createElement("strong", {
             className: cc(common.width)

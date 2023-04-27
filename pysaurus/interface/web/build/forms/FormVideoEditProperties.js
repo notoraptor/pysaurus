@@ -56,7 +56,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../langua
             className: "properties flex-grow-1"
           }, /*#__PURE__*/React.createElement("table", {
             className: "first-td-text-right w-100"
-          }, this.props.definitions.map((def, index) => {
+          }, /*#__PURE__*/React.createElement("tbody", null, this.props.definitions.map((def, index) => {
             const name = def.name;
             let input;
             if (def.multiple) {
@@ -98,7 +98,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../langua
             }, /*#__PURE__*/React.createElement("strong", null, name)), /*#__PURE__*/React.createElement("td", {
               className: "input"
             }, input));
-          })))));
+          }))))));
         }
         onClose() {
           this.props.onClose(this.state);

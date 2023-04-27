@@ -86,10 +86,11 @@ class FieldMap {
 }
 
 export const FIELD_MAP = new FieldMap([
-	new FieldInfo("audio_bits", tr("audio bits per sample"), GroupPermission.ALL, FieldType.int),
 	new FieldInfo("audio_bit_rate", tr("audio bit rate"), GroupPermission.ALL, FieldType.int),
+	new FieldInfo("audio_bits", tr("audio bits per sample"), GroupPermission.ALL, FieldType.int),
 	new FieldInfo("audio_codec", tr("audio codec"), GroupPermission.ALL, FieldType.str),
 	new FieldInfo("audio_codec_description", tr("audio codec description"), GroupPermission.ALL, FieldType.str),
+	new FieldInfo("bit_rate", tr("bit rate"), GroupPermission.ONLY_MANY, FieldType.sortable),
 	new FieldInfo("bit_depth", tr("bit depth"), GroupPermission.ALL, FieldType.int),
 	new FieldInfo("container_format", tr("container format"), GroupPermission.ALL, FieldType.str),
 	new FieldInfo("date", tr("date modified"), GroupPermission.ONLY_MANY, FieldType.sortable),
@@ -109,7 +110,6 @@ export const FIELD_MAP = new FieldMap([
 	new FieldInfo("length", tr("length"), GroupPermission.ONLY_MANY, FieldType.sortable),
 	new FieldInfo("move_id", tr("moved files (potentially)"), GroupPermission.ONLY_MANY, FieldType.unsortable),
 	new FieldInfo("properties", tr("properties"), GroupPermission.FORBIDDEN, FieldType.unsortable),
-	new FieldInfo("quality", tr("quality"), GroupPermission.ONLY_MANY, FieldType.float),
 	new FieldInfo("sample_rate", tr("sample rate"), GroupPermission.ALL, FieldType.int),
 	new FieldInfo("similarity_id", tr("similarity"), GroupPermission.ONLY_MANY, FieldType.unsortable),
 	new FieldInfo("size", tr("size"), GroupPermission.ONLY_MANY, FieldType.sortable),

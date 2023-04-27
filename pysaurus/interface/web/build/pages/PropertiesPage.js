@@ -84,7 +84,7 @@ System.register(["../components/Cell.js", "../components/SetInput.js", "../dialo
             className: "text-center"
           }, tr("Add a new property")), /*#__PURE__*/React.createElement("table", {
             className: "first-td-text-right w-100"
-          }, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("label", {
+          }, /*#__PURE__*/React.createElement("tbody", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("label", {
             htmlFor: "prop-name"
           }, "Name:")), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("input", {
             type: "text",
@@ -131,7 +131,7 @@ System.register(["../components/Cell.js", "../components/SetInput.js", "../dialo
           }, "reset")), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
             className: "submit block",
             onClick: this.submit
-          }, /*#__PURE__*/React.createElement("strong", null, "add"))))))));
+          }, /*#__PURE__*/React.createElement("strong", null, "add")))))))));
         }
         renderPropTypes() {
           return /*#__PURE__*/React.createElement("table", {

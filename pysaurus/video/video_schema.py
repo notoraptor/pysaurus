@@ -22,7 +22,7 @@ class VideoSchema(Schema):
                 Type("audio_codec", "a", ""),
                 Type("audio_codec_description", "A", ""),
                 Type("bit_depth", "D", 0),
-                Type("channels", "C", 2),
+                Type("channels", "C", 0),
                 Type("container_format", "c", ""),
                 Type("device_name", "b", ""),
                 Type("duration", "d", 0.0),
@@ -39,6 +39,6 @@ class VideoSchema(Schema):
                 Type("width", "w", 0),
                 Type("audio_languages", "l", []),
                 Type("subtitle_languages", "L", []),
-                Type("audio_bits", ("B", int), None),
+                Type("audio_bits", "B", 0),
             ]
         )

@@ -170,11 +170,28 @@ def main():
 def main2():
     logging.basicConfig(level=logging.NOTSET)
     db = get_database()
-    videos = db.query()
-    videos.sort(key=lambda v: v.quality)
-    for video in (videos[0], videos[-1]):
+    videos = db.query({"readable": True})
+    videos.sort(key=lambda v: v.bit_rate)
+    vs = [
+        v
+        for v in videos
+        if v.filename.path
+        == r"N:\donnees\autres\p\Yuahentai - her recipe is for a creampie.mp4"
+    ]
+    (v,) = vs
+    for video in (videos[0], videos[-1], v):
         print(video.filename)
-        print(video.quality, video.quality_compression)
+        print("\tframe_rate", video.frame_rate)
+        print("\twidth", video.width)
+        print("\theight", video.height)
+        print("\tbit_depth", video.bit_depth)
+        print("\taudio_codec", video.audio_codec)
+        print("\tsample_rate", video.sample_rate)
+        print("\taudio_bits", video.audio_bits)
+        print("\traw_seconds", video.raw_seconds, video.length)
+        print("\tfile_size", video.size)
+        print("\texpected_raw_size", video.expected_raw_size)
+        print("\tbit_rate", video.bit_rate, "/ s")
 
 
 def main3():
@@ -188,4 +205,4 @@ def main3():
 
 
 if __name__ == "__main__":
-    main3()
+    main2()

@@ -21,7 +21,6 @@ from pysaurus.core.profiling import Profiler
 from pysaurus.database.db_settings import DbSettings
 from pysaurus.database.db_video_attribute import (
     PotentialMoveAttribute,
-    QualityAttribute,
 )
 from pysaurus.database.json_database_utils import (
     DatabaseLoaded,
@@ -59,7 +58,6 @@ class JsonDatabase:
         "iteration",
         "notifier",
         "__id_to_video",
-        "quality_attribute",
         "moves_attribute",
         "__indexer",
         "in_save_context",
@@ -88,7 +86,6 @@ class JsonDatabase:
         self.notifier = notifier
         self.iteration = 0
         self.__id_to_video: Dict[int, Video] = {}
-        self.quality_attribute = QualityAttribute(self)
         self.moves_attribute = PotentialMoveAttribute(self)
         self.__indexer = indexer or VideoIndexer()
         self.in_save_context = False
@@ -565,7 +562,7 @@ class JsonDatabase:
     @classmethod
     def _video_must_be_updated(cls, video: Video):
         # A video readable with existing audio stream must have valid audio bits
-        return video.readable and video.audio_codec and video.audio_bits is None
+        return video.readable and video.audio_codec and not video.audio_bits
 
     def get_all_video_indices(self) -> Iterable[int]:
         return self.__id_to_video.keys()

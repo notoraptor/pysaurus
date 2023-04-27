@@ -37,12 +37,12 @@ System.register(["../language.js", "../utils/backend.js"], function (_export, _c
             className: "paths flex-grow-1 overflow-auto"
           }, /*#__PURE__*/React.createElement("table", {
             className: "table-layout-fixed"
-          }, paths.map((path, index) => /*#__PURE__*/React.createElement("tr", {
+          }, /*#__PURE__*/React.createElement("tbody", null, paths.map((path, index) => /*#__PURE__*/React.createElement("tr", {
             key: index
           }, /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("code", null, path)), /*#__PURE__*/React.createElement("td", null, /*#__PURE__*/React.createElement("button", {
             className: "block",
             onClick: () => this.removePath(path)
-          }, "-"))))))));
+          }, "-")))))))));
         }
         addFolder() {
           python_call("select_directory").then(this._extendPaths).catch(backend_error);
