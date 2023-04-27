@@ -4,6 +4,7 @@ import re
 import sys
 import tempfile
 import threading
+import types
 from typing import Iterable, List
 
 from pysaurus.core.modules import HTMLStripper
@@ -14,15 +15,31 @@ REGEX_LOWER_THEN_UPPER_CASES = re.compile("([a-z0-9])([A-Z])")
 REGEX_WORD_THEN_NUMBER = re.compile(r"([^0-9 ])([0-9])")
 REGEX_NUMBER_THEN_WORD = re.compile(r"([0-9])([^0-9 ])")
 REGEX_NUMBER = re.compile(r"([0-9]+)")
-REGEX_ATTRIBUTE = re.compile(r"^[a-zA-Z][a-zA-Z0-9_]*$")
+REGEX_ATTRIBUTE = re.compile(r"^[a-z][a-zA-Z0-9_]*$")
 JSON_INTEGER_MIN = -(2**31)
 JSON_INTEGER_MAX = 2**31 - 1
 
 DISCARDED_CHARACTERS = r"@#\\/?$:!"
 
 
-def is_valid_attribute_name(key):
+__fn_types__ = (
+    types.FunctionType,
+    types.MethodType,
+    types.BuiltinMethodType,
+    types.BuiltinFunctionType,
+    types.ClassMethodDescriptorType,
+    classmethod,
+    staticmethod,
+    property,
+)
+
+
+def is_attribute_name(key):
     return REGEX_ATTRIBUTE.match(key)
+
+
+def is_attribute_value(key, value):
+    return REGEX_ATTRIBUTE.match(key) and not isinstance(value, __fn_types__)
 
 
 def has_discarded_characters(txt: str):

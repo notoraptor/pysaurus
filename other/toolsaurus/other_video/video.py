@@ -12,6 +12,8 @@ Video class. Properties:
 """
 from typing import Any, Dict, Iterable, List, Set
 
+from other.toolsaurus.jsonable import Jsonable
+from other.toolsaurus.other_video.video_runtime_info import VideoRuntimeInfo
 from pysaurus.core.classes import StringPrinter, StringedTuple, Text
 from pysaurus.core.compare import to_comparable
 from pysaurus.core.components import AbsolutePath, Date, Duration, FileSize
@@ -21,10 +23,8 @@ from pysaurus.core.functions import (
     html_to_title,
     string_to_pieces,
 )
-from pysaurus.core.jsonable import Jsonable
 from pysaurus.core.modules import FNV64
 from pysaurus.core.semantic_text import SemanticText
-from pysaurus.video.video_runtime_info import VideoRuntimeInfo
 from pysaurus.video.video_sorting import VideoSorting
 
 

@@ -1,4 +1,4 @@
-from pysaurus.core.jsonable import Jsonable
+from other.toolsaurus.jsonable import Jsonable
 
 
 class VideoRuntimeInfo(Jsonable):

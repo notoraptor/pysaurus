@@ -1,4 +1,5 @@
-from pysaurus.core.schematizable import Schema, Type, WithSchema, schema_prop
+from pysaurus.core.json_type import Type
+from pysaurus.core.schematizable import Schema, WithSchema, schema_prop
 
 
 class DbSettings(WithSchema):

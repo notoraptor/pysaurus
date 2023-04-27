@@ -2,7 +2,8 @@ from typing import Union
 
 from pysaurus.application import exceptions
 from pysaurus.core.enumeration import Enumeration
-from pysaurus.core.schematizable import Schema, Type, WithSchema, schema_prop
+from pysaurus.core.json_type import Type
+from pysaurus.core.schematizable import Schema, WithSchema, schema_prop
 
 DefType = Union[bool, int, float, str, list, tuple]
 PropValueType = Union[bool, int, float, str, list]

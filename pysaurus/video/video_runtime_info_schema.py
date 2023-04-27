@@ -1,4 +1,4 @@
-from pysaurus.core.jsonable import Type
+from pysaurus.core.json_type import Type
 from pysaurus.core.schematizable import Schema
 
 

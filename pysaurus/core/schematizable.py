@@ -1,6 +1,6 @@
 from typing import Any, Dict, Iterable
 
-from pysaurus.core.jsonable import Type
+from pysaurus.core.json_type import Type
 
 
 class SchemaType(Type):

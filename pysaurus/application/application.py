@@ -16,10 +16,11 @@ from pysaurus.core import functions
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.custom_json_parser import parse_json
 from pysaurus.core.dict_file_format import dff_dump, dff_load
+from pysaurus.core.json_type import Type
 from pysaurus.core.modules import FileSystem
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.profiling import Profiler
-from pysaurus.core.schematizable import Schema, Type, WithSchema, schema_prop
+from pysaurus.core.schematizable import Schema, WithSchema, schema_prop
 from pysaurus.database.database import Database
 from saurus.language import say
 

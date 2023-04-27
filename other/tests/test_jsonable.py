@@ -1,6 +1,7 @@
 import pytest
 
-from pysaurus.core.jsonable import Jsonable, Type
+from other.toolsaurus.jsonable import Jsonable
+from pysaurus.core.json_type import Type
 
 
 class A(Jsonable):

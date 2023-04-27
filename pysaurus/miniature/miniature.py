@@ -3,8 +3,9 @@ from typing import Any, Optional, Tuple, Union
 
 from pysaurus.core.classes import AbstractMatrix
 from pysaurus.core.fraction import Fraction
+from pysaurus.core.json_type import Type
 from pysaurus.core.modules import ImageUtils
-from pysaurus.core.schematizable import Schema, Type, WithSchema, schema_prop
+from pysaurus.core.schematizable import Schema, WithSchema, schema_prop
 
 Bytes = Union[bytes, bytearray]
 
