@@ -123,6 +123,11 @@ class VideoIndexer(AbstractVideoIndexer):
                 video.filename.path
             )
 
+    def indexed_videos(self, videos: Iterable[Video]) -> Sequence[Video]:
+        return [
+            video for video in videos if video.filename.path in self.filename_to_terms
+        ]
+
     @Profiler.profile_method()
     def query_and(
         self, filenames: Iterable[AbsolutePath], terms: Sequence[str]

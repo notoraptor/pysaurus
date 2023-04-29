@@ -244,6 +244,14 @@ class JsonDatabase:
         self.register_modified(new_video)
 
     def flush_changes(self):
+        # Prepare updating moves_attribute if having removed or added videos.
+        nb_added = len(self.__modified) - len(
+            self.__indexer.indexed_videos(self.__modified)
+        )
+        self.moves_attribute.force_update = bool(
+            self.moves_attribute.force_update or self.__removed or nb_added
+        )
+
         if self.__removed:
             logger.info(f"Flushed {len(self.__removed)} removed")
             self.__indexer.remove_videos(self.__removed)

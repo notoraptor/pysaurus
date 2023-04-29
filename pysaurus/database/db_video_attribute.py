@@ -1,7 +1,10 @@
+import logging
 from abc import abstractmethod
 from typing import Any, Dict, List, Tuple
 
 from pysaurus.video import Video
+
+logger = logging.getLogger(__name__)
 
 
 class _DbVideoAttribute:
@@ -51,14 +54,22 @@ class _MoveKey:
 
 
 class PotentialMoveAttribute(_DbVideoAttribute):
-    __slots__ = "potential_moves", "move_groups"
+    __slots__ = "potential_moves", "move_groups", "force_update"
 
     def __init__(self, database):
         super().__init__(database)
         self.potential_moves: Dict[Video, List[dict]] = {}
         self.move_groups: Dict[Video, str] = {}
+        self.force_update = True
+
+    def __call__(self, video: Video):
+        if self.force_update:
+            self._update()
+            self.force_update = False
+        return self._get(video)
 
     def _update(self):
+        logger.debug(f"[{type(self).__name__}] moves updated.")
         self.potential_moves.clear()
         self.move_groups.clear()
         groups: Dict[_MoveKey, Tuple[List[Video], List[Video]]] = {}

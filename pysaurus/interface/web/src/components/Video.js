@@ -216,8 +216,7 @@ export class Video extends React.Component {
 							<div className={cc(common.bit_rate)}>
 								<strong>
 									<em>{data.bit_rate}/s</em>
-								</strong>{" "}
-								%
+								</strong>
 							</div>
 						</div>
 						<div>

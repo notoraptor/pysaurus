@@ -183,7 +183,7 @@ System.register(["../dialogs/Dialog.js", "../forms/FormVideoEditProperties.js", 
             className: "prepend"
           }, /*#__PURE__*/React.createElement("code", null, "Bit rate")), /*#__PURE__*/React.createElement("div", {
             className: cc(common.bit_rate)
-          }, /*#__PURE__*/React.createElement("strong", null, /*#__PURE__*/React.createElement("em", null, data.bit_rate, "/s")), " ", "%")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", {
+          }, /*#__PURE__*/React.createElement("strong", null, /*#__PURE__*/React.createElement("em", null, data.bit_rate, "/s")))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", {
             className: cc(common.length)
           }, data.length), " |", " ", /*#__PURE__*/React.createElement("strong", {
             className: cc(common.width)

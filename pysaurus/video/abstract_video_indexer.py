@@ -50,6 +50,10 @@ class AbstractVideoIndexer(metaclass=ABCMeta):
         raise NotImplementedError()
 
     @abstractmethod
+    def indexed_videos(self, videos: Iterable[Video]) -> Sequence[Video]:
+        raise NotImplementedError()
+
+    @abstractmethod
     def query_and(
         self, filenames: Iterable[AbsolutePath], terms: Sequence[str]
     ) -> Iterable[AbsolutePath]:

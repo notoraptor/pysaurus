@@ -1,4 +1,5 @@
 import logging
+import multiprocessing
 import os
 from collections import Counter
 from typing import Any, Callable, Dict, Iterable, List, Optional, Set
@@ -44,12 +45,15 @@ except exceptions.CysaurusUnavailable:
 
 
 class Database(JsonDatabase):
-    __slots__ = ("__paths", "lang", "provider")
+    __slots__ = ("__paths", "lang", "provider", "_initial_pid")
 
     def __init__(self, path, folders=None, notifier=None, lang=None):
         # type: (PathType, Iterable[PathType], Notifier, DefaultLanguage) -> None
         # Paths
         self.__paths = DbPaths(path)
+        self._initial_pid = multiprocessing.current_process().pid
+        logger.debug(f"Loaded database {self.name} in process {self._initial_pid}")
+        assert self._initial_pid is not None
         # RAM data
         self.lang = lang or DefaultLanguage
         # self.provider: Optional[AbstractVideoProvider] = VideoSelector(self)
@@ -70,6 +74,18 @@ class Database(JsonDatabase):
         ), self.to_save() as saver:
             saver.to_save = SpecialProperties.install(self)
         self.compress_thumbnails()
+
+    def __getattribute__(self, item):
+        attribute = super().__getattribute__(item)
+        if callable(attribute):
+            name = super().__getattribute__("name")
+            prev_pid = super().__getattribute__("_initial_pid")
+            curr_pid = multiprocessing.current_process().pid
+            assert prev_pid == curr_pid, (
+                f"Database {name}: method {item} called in different processes "
+                f"(expected {prev_pid}, got {curr_pid})"
+            )
+        return attribute
 
     # Properties.
 
