@@ -45,10 +45,9 @@ class VideoIndexer(AbstractVideoIndexer):
     @Profiler.profile_method("VideoIndexer.load")
     def _load(self):
         with open(self.index_path.path, "rb") as file:
-            term_to_filenames, filename_to_terms, built = pickle.load(file)
-        self.term_to_filenames = term_to_filenames
-        self.filename_to_terms = filename_to_terms
-        self.built = built
+            self.term_to_filenames, self.filename_to_terms, self.built = pickle.load(
+                file
+            )
 
     def close(self):
         self.notifier = None
@@ -58,7 +57,12 @@ class VideoIndexer(AbstractVideoIndexer):
     def build(self, videos: Iterable[Video]):
         if self.index_path and self.index_path.isfile():
             self._load()
-        if self.built:
+        videos = [
+            video
+            for video in videos
+            if video.filename.path not in self.filename_to_terms
+        ]
+        if self.built and not videos:
             return
 
         self.filename_to_terms = {

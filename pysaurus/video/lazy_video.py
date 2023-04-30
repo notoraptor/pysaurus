@@ -1,3 +1,4 @@
+import os
 from copy import deepcopy
 from typing import Any, Dict, List
 
@@ -79,7 +80,14 @@ class LazyVideo(WithSchema):
         assert isinstance(filename, (str, AbsolutePath))
         d = deepcopy(self._d)
         assert self.SCHEMA.set_into_short_dict(d, "filename", str(filename))
-        return LazyVideo(self.database, d, discarded=self.__discarded)
+        video = LazyVideo(self.database, d, discarded=self.__discarded)
+
+        stats = os.stat(video.filename.path)
+        runtime = video.runtime
+        runtime.driver_id = stats.st_dev
+        video.runtime = runtime
+        video._save_date_entry_modified()
+        return video
 
     file_size = property(lambda self: self._get("file_size"))
     errors = property(lambda self: set(self._get("errors")))

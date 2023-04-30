@@ -34,9 +34,8 @@ class PathTree(PathTreeNode):
         current.termination = True
 
     def in_folders(self, path: AbsolutePath):
-        pieces = path.standard_path.split(os.sep)
         current = self
-        for i, piece in enumerate(pieces):
+        for piece in path.standard_path.split(os.sep):
             if piece in current.children:
                 current = current.children[piece]
             else:
