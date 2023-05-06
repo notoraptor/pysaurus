@@ -3,6 +3,7 @@ import os
 
 import av
 
+from pysaurus.core.constants import JPEG_EXTENSION
 from pysaurus.core.job_notifications import notify_job_progress
 from pysaurus.core.parallelization import Job
 from pysaurus.video_raptor.abstract_video_raptor import AbstractVideoRaptor
@@ -140,7 +141,7 @@ class VideoRaptor(AbstractVideoRaptor):
         count = len(job.batch)
         arr_errors = []
         for i, (file_name, thumb_name) in enumerate(job.batch):
-            thumb_path = os.path.join(thumb_folder, f"{thumb_name}.png")
+            thumb_path = os.path.join(thumb_folder, f"{thumb_name}.{JPEG_EXTENSION}")
             d_err = self._get_thumbnail(file_name, thumb_path)
             if d_err:
                 arr_errors.append(d_err)

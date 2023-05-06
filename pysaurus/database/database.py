@@ -32,6 +32,7 @@ from pysaurus.miniature.group_computer import GroupComputer
 from pysaurus.miniature.miniature import Miniature
 from pysaurus.video import Video
 from pysaurus.video.video_indexer import VideoIndexer
+from pysaurus.video_raptor.video_raptor_pyav import VideoRaptor as PythonVideoRaptor
 from saurus.language import say
 
 logger = logging.getLogger(__name__)
@@ -39,8 +40,7 @@ logger = logging.getLogger(__name__)
 try:
     from pysaurus.video_raptor.video_raptor_native import VideoRaptor
 except exceptions.CysaurusUnavailable:
-    from pysaurus.video_raptor.video_raptor_pyav import VideoRaptor
-
+    VideoRaptor = PythonVideoRaptor
     logger.warning("Using fallback backend for videos info and thumbnails.")
 
 
@@ -265,7 +265,10 @@ class Database(JsonDatabase):
             valid_thumb_names.add(thumb_name)
         del valid_thumb_names
 
-        backend_raptor = VideoRaptor()
+        # Use Python video raptor to collect thumbnails.
+        # Python video raptor can directly collect thumbnails into JPEG format,
+        # without going through PNG->JPEG pipeline.
+        backend_raptor = PythonVideoRaptor()
         with Profiler(
             title=say(
                 "Get thumbnails from JSON",
