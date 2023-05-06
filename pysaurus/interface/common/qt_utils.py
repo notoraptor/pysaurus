@@ -11,18 +11,21 @@ Types = Union[Type, Sequence[Type]]
 
 
 class TypeValidator:
-    __slots__ = "types", "wrapper", "parser"
+    __slots__ = "__types", "__wrapper", "__parser"
 
     def __init__(self, types: Types, wrapper: Callable = None, parser: Callable = None):
-        self.types = types
-        self.wrapper = wrapper
-        self.parser = parser or (
-            self.types if isinstance(self.types, type) else identity
+        self.__types = types
+        self.__wrapper = wrapper
+        self.__parser = parser or (
+            self.__types if isinstance(self.__types, type) else identity
         )
 
     def __call__(self, value):
-        assert isinstance(value, self.types)
-        return value if self.wrapper is None else self.wrapper(value)
+        assert isinstance(value, self.__types)
+        return value if self.__wrapper is None else self.__wrapper(value)
+
+    def parse(self, text: str):
+        return self.__parser(text)
 
 
 def parse_bool(value: str):
@@ -33,7 +36,7 @@ TYPE_VALIDATORS = {
     str: TypeValidator(str),
     bool: TypeValidator(bool, parser=parse_bool),
     int: TypeValidator(int),
-    float: TypeValidator((bool, int, float), float),
+    float: TypeValidator((bool, int, float), float, float),
 }
 
 

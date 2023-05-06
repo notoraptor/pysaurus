@@ -41,6 +41,7 @@ class ParallelNotifier(Notifier):
         self.progress = SharedObject(mp_manager)
 
     def _print(self, notification):
+        # Unused
         prev_profiling_start = self._prev_profiling_start.get()
         if isinstance(notification, profiling.ProfilingStart):
             if prev_profiling_start:
