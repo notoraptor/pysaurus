@@ -28,13 +28,13 @@ ffprobe -v quiet -print_format json -show_format -show_streams "<video-file>" > 
 - Remember entry edition and add an option to sort by date edited.
 - Add an option "save to playlist" to save current view into a playlist.
 - Keep history of opened videos. Maybe use a dynamic video property "date_opened".
+- Error when deleting a database:
+  - FileNotFoundError: [Errno 2] No such file or directory: '<database>.log'
 
 # TODO:
 
 ## Bugs:
 
-- Error when deleting a database:
-  - FileNotFoundError: [Errno 2] No such file or directory: '<database>.log'
 - Interface:
   - Does Database write on the right log file when deleting or changing database ?
   - top of centered text in fancy box is not shown if window is too small 

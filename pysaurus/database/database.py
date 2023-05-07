@@ -460,6 +460,9 @@ class Database(JsonDatabase):
         self.delete_video_entry(video_id)
         return video_filename
 
+    def reopen(self):
+        self.notifier.set_log_path(self.__paths.log_path.path)
+
     def refresh(self, ensure_miniatures=False) -> None:
         with Profiler(say("Reset thumbnail errors"), self.notifier):
             for video in self.select_videos_fields(

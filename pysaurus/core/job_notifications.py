@@ -64,7 +64,7 @@ class ConsoleJobProgress:
         """
         total = self.job_to_do.total
         length_bar = 30
-        length_done = int(length_bar * step / total)
+        length_done = int(length_bar * step / total) if total else length_bar
         output = (
             f"|{'█' * length_done}{' ' * (length_bar - length_done)}| "
             f"{step}/{total} {self.job_to_do.title}"
@@ -89,8 +89,8 @@ def _compute_job_title(title, description, expectation, total, kind):
     if title is None:
         assert description
         if expectation is None:
-            assert total
-            assert kind
+            # assert total
+            # assert kind
             expectation = f"{total} {kind}"
         title = f"{description} ({expectation})"
     return title

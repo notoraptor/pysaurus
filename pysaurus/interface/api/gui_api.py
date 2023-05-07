@@ -160,6 +160,7 @@ class GuiAPI(FeatureAPI):
             self.database.notifier.notify(Cancelled())
 
     def close_database(self) -> None:
+        self.database.notifier.set_log_path(None)
         self.database = None
 
     def delete_database(self) -> None:

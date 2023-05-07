@@ -125,6 +125,8 @@ class Application:
             self.databases[path] = Database(
                 path, notifier=self.notifier, lang=self.lang
             )
+        else:
+            self.databases[path].reopen()
         if update:
             self.databases[path].refresh()
         return self.databases[path]
@@ -150,8 +152,9 @@ class Application:
     def delete_database_from_name(self, name: str):
         path = AbsolutePath.join(self.dbs_dir, name)
         if path in self.databases:
+            database = self.databases.pop(path)
+            database.notifier.set_log_path(None)
             path.delete()
-            del self.databases[path]
             return True
 
     def get_language_paths(self) -> List[AbsolutePath]:
