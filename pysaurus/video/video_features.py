@@ -12,7 +12,7 @@ class VideoFeatures:
         return {field: to_json_value(getattr(self, field)) for field in VIDEO_FIELDS}
 
     @staticmethod
-    def json(video: Video) -> dict:
+    def json(video: Video, with_moves=False) -> dict:
         return {
             "audio_bit_rate": video.audio_bit_rate,
             "audio_bits": video.audio_bits,
@@ -46,8 +46,8 @@ class VideoFeatures:
             "length": str(video.length),
             "meta_title": video.meta_title.value,
             "meta_title_numeric": str(video.meta_title_numeric),
-            "move_id": video.move_id,
-            "moves": video.moves,
+            "move_id": video.move_id if with_moves else None,
+            "moves": video.moves if with_moves else None,
             "not_found": video.not_found,
             "properties": video.json_properties,
             "readable": video.readable,

@@ -203,12 +203,16 @@ class FeatureAPI:
         nb_pages = compute_nb_pages(nb_videos, page_size)
         videos = []
         group_def = self.database.provider.get_group_def()
+        grouped_by_similarity = group_def and group_def["field"] == "similarity_id"
+        grouped_by_moves = group_def and group_def["field"] == "move_id"
         if nb_videos:
             page_number = min(max(0, page_number), nb_pages - 1)
             start = page_size * page_number
             end = min(start + page_size, nb_videos)
-            videos = self.database.describe_videos(view_indices[start:end])
-            if group_def and group_def["field"] == "similarity_id":
+            videos = self.database.describe_videos(
+                view_indices[start:end], with_moves=grouped_by_moves
+            )
+            if grouped_by_similarity:
                 group_def["common"] = self.database.get_common_fields(view_indices)
 
         return {

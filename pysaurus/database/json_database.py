@@ -728,9 +728,9 @@ class JsonDatabase:
         self._notify_fields_modified(["date_entry_opened"])
 
     @Profiler.profile_method()
-    def describe_videos(self, video_indices: Sequence[int]):
+    def describe_videos(self, video_indices: Sequence[int], with_moves=False):
         return [
-            VideoFeatures.json(self.__id_to_video[video_id])
+            VideoFeatures.json(self.__id_to_video[video_id], with_moves)
             for video_id in video_indices
         ]
 
