@@ -302,9 +302,9 @@ class GuiAPI(FeatureAPI):
                 video_id, "filename"
             )
             directory = AbsolutePath.ensure_directory(directory)
-            if not PathTree(self.database.video_folders).in_folders(directory):
+            if not PathTree(self.database.get_folders()).in_folders(directory):
                 raise exceptions.ForbiddenVideoFolder(
-                    directory, self.database.video_folders
+                    directory, list(self.database.get_folders())
                 )
             dst = AbsolutePath.file_path(
                 directory, filename.file_title, filename.extension

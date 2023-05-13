@@ -76,10 +76,10 @@ def main():
             new_app = NewApp()
             collection = data.Collection(
                 name=db.name,
-                date_updated=db.date.time,
+                date_updated=db.get_date().time,
                 miniature_pixel_distance_radius=db.settings.miniature_pixel_distance_radius,
                 miniature_group_min_size=db.settings.miniature_group_min_size,
-                sources=[source.path for source in db.video_folders],
+                sources=[source.path for source in db.get_folders()],
                 properties={
                     prop["name"]: old_to_new_prop(prop)
                     for prop in db.describe_prop_types()

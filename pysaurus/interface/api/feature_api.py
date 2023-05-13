@@ -218,7 +218,7 @@ class FeatureAPI:
         return {
             "database": {
                 "name": self.database.name,
-                "folders": [str(path) for path in sorted(self.database.video_folders)],
+                "folders": sorted(str(path) for path in self.database.get_folders()),
             },
             "prop_types": self.database.describe_prop_types(),
             "videos": videos,

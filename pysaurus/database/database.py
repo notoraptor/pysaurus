@@ -140,7 +140,9 @@ class Database(JsonDatabase):
     def update(self) -> None:
         current_date = Date.now()
 
-        all_files = jobs_python.collect_video_paths(self.video_folders, self.notifier)
+        all_files = jobs_python.collect_video_paths(
+            list(self.get_folders()), self.notifier
+        )
         self._update_videos_not_found(all_files)
         files_to_update = self._find_video_paths_for_update(all_files)
         if not files_to_update:

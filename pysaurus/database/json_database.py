@@ -94,9 +94,6 @@ class JsonDatabase:
         # Initialize
         self.__load(folders)
 
-    date = property(lambda self: self.__date)
-    video_folders = property(lambda self: list(self.__folders))
-
     @Profiler.profile_method()
     def __load(self, folders: Optional[Iterable[PathType]] = None):
         to_save = False
@@ -217,7 +214,7 @@ class JsonDatabase:
             {
                 "version": self.__version,
                 "settings": self.settings.to_dict(),
-                "date": self.date.time,
+                "date": self.__date.time,
                 "folders": [folder.path for folder in self.__folders],
                 "prop_types": [prop.to_dict() for prop in self.__prop_types.values()],
                 "predictors": self.__predictors,
@@ -271,6 +268,9 @@ class JsonDatabase:
     def set_date(self, date: Date):
         self.__date = date
 
+    def get_date(self) -> Date:
+        return self.__date
+
     def set_folders(self, folders) -> None:
         folders = sorted(AbsolutePath.ensure(folder) for folder in folders)
         if folders == sorted(self.__folders):
@@ -280,6 +280,9 @@ class JsonDatabase:
             video.discarded = not folders_tree.in_folders(video.filename)
         self.__folders = set(folders)
         self.save()
+
+    def get_folders(self) -> Iterable[AbsolutePath]:
+        return iter(self.__folders)
 
     def get_predictor(self, prop_name):
         return self.__predictors.get(prop_name, None)
