@@ -163,7 +163,9 @@ class _CompactVideoFilter(AbstractVideoProvider):
 
             # 1. source
             videos = [
-                video for video in db.query() if self.source_def.contains_video(video)
+                video
+                for video in db.get_cached_videos()
+                if self.source_def.contains_video(video)
             ]
             self._nb_source_videos = len(videos)
 
@@ -184,17 +186,21 @@ class _CompactVideoFilter(AbstractVideoProvider):
                     classifier_set = set(self.classifier_path)
                     for video in videos:
                         property_values = set(
-                            db.get_prop_values(video.video_id, g_field, True)
+                            db.get_prop_values(video.video_id, g_field)
                         )
+                        if not property_values:
+                            default = db.default_prop_unit(g_field)
+                            if default is not None:
+                                property_values.add(default)
                         if classifier_set.issubset(property_values):
                             for value in property_values - classifier_set:
                                 classifier_stats.setdefault(value, []).append(video)
                             classifier_stats.setdefault(None, []).append(video)
                 elif self.group_def.is_property:
                     for video in videos:
-                        for value in db.get_prop_values(
-                            video.video_id, g_field, True
-                        ) or [None]:
+                        for value in db.get_prop_values(video.video_id, g_field) or [
+                            db.default_prop_unit(g_field)
+                        ]:
                             classifier_stats.setdefault(value, []).append(video)
                 else:
                     for video in videos:

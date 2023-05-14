@@ -21,7 +21,7 @@ class DbCache:
             self.cache.clear()
             self.iteration = self.database.iteration
         if key not in self.cache:
-            self.cache[key] = self.database.query(required)
+            self.cache[key] = self.database.get_cached_videos(**required)
         else:
             logger.debug(f"Cached {key}")
         return self.cache[key]

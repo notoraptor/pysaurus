@@ -80,8 +80,6 @@ class Video(Jsonable):
         # Runtime
         self.discarded = False
         self.database = database
-        # Additional initialization.
-        self.set_validated_properties(self.__json__["properties"])
 
     def __str__(self):
         cls = type(self)
@@ -283,14 +281,6 @@ class Video(Jsonable):
     def remove_property(self, name, *default):
         self._save_date_entry_modified()
         return self.properties.pop(name, *default)
-
-    def set_validated_properties(self, properties: Dict[str, Any]) -> Set[str]:
-        return self.set_properties(
-            {
-                name: self.database.new_prop_unit(name, value)
-                for name, value in properties.items()
-            }
-        )
 
     def set_properties(self, properties: Dict[str, Any]) -> Set[str]:
         return {

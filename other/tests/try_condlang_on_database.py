@@ -24,11 +24,11 @@ class GetProperty(condlang.Apply):
 
     def run(self, name: str, namespace: Video, **kwargs):
         database = namespace.database
-        values = database.get_prop_values(namespace.video_id, name, default=True)
+        values = database.get_prop_values(namespace.video_id, name)
         if database.has_prop_type(name, multiple=True):
             return values
         else:
-            (value,) = values
+            (value,) = values or (database.default_prop_unit(name),)
             return value
 
 
@@ -64,7 +64,7 @@ def db_select_videos(
     cls = namedtuple("DbRow", cls_fields)
     return [
         cls(**_get_video_fields(el, attributes, properties))
-        for el in self.query()
+        for el in self.get_cached_videos()
         if selector(el)
     ]
 

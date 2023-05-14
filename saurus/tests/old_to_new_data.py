@@ -70,7 +70,7 @@ def main():
     with Profiler("Adding databases"):
         for database_name in old_app.get_database_names():
             db = old_app.open_database_from_name(database_name)
-            info = (database_name, len(db.query()))
+            info = (database_name, len(db.get_cached_videos()))
             report.append(info)
             print("[loading]", *info)
             new_app = NewApp()
@@ -85,7 +85,8 @@ def main():
                     for prop in db.describe_prop_types()
                 },
                 videos={
-                    video.filename.path: old_to_new_video(video) for video in db.query()
+                    video.filename.path: old_to_new_video(video)
+                    for video in db.get_cached_videos()
                 },
             )
             with Profiler(f"Adding: {db.name}"):

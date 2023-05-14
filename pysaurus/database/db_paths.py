@@ -15,7 +15,7 @@ class DbPaths:
         "json_path",
         "miniatures_path",
         "log_path",
-        "index_path",
+        "index_sql_path",
         "index_pkl_path",
     )
 
@@ -25,7 +25,7 @@ class DbPaths:
         self.json_path = new_sub_file(self.db_folder, "json")
         self.miniatures_path = new_sub_file(self.db_folder, "miniatures.json")
         self.log_path = new_sub_file(self.db_folder, "log")
-        self.index_path = new_sub_file(self.db_folder, "db")
+        self.index_sql_path = new_sub_file(self.db_folder, "db")
         self.index_pkl_path = new_sub_file(self.db_folder, "index.pkl")
         if create_thumb_folder:
             self.thumb_folder.mkdir()
@@ -46,8 +46,8 @@ class DbPaths:
             FileSystem.rename(self.miniatures_path.path, new_paths.miniatures_path.path)
         if self.log_path.exists():
             FileSystem.rename(self.log_path.path, new_paths.log_path.path)
-        if self.index_path.exists():
-            FileSystem.rename(self.index_path.path, new_paths.index_path.path)
+        if self.index_sql_path.exists():
+            FileSystem.rename(self.index_sql_path.path, new_paths.index_sql_path.path)
         self.db_folder.delete()
         logger.debug(f"Deleted {self.db_folder}")
         return new_paths

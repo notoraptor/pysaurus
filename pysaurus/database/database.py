@@ -247,7 +247,7 @@ class Database(JsonDatabase):
                     f"to clean {len(thumbs_to_clean)}"
                 )
             )
-            assert valid_thumb_names or not self.query()
+            assert valid_thumb_names or not self.get_cached_videos()
             self._clean_thumbnails(thumbs_to_clean)
 
         if not videos_without_thumbs:

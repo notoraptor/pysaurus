@@ -284,21 +284,24 @@ class JsonDatabase:
     def get_folders(self) -> Iterable[AbsolutePath]:
         return iter(self.__folders)
 
-    def get_predictor(self, prop_name):
-        return self.__predictors.get(prop_name, None)
-
     def set_predictor(self, prop_name: str, theta: List[float]):
         self.__predictors[prop_name] = theta
         self.save()
 
-    def get_cached_videos(self, *flags, **forced_flags):
-        self.flush_changes()
-        return [
-            self.__videos[filename]
-            for filename in self.__indexer.query_flags(
-                self.__videos, *flags, **forced_flags
-            )
-        ]
+    def get_predictor(self, prop_name):
+        return self.__predictors.get(prop_name, None)
+
+    def get_cached_videos(self, *flags, **forced_flags) -> List[Video]:
+        if flags or forced_flags:
+            self.flush_changes()
+            return [
+                self.__videos[filename]
+                for filename in self.__indexer.query_flags(
+                    self.__videos, *flags, **forced_flags
+                )
+            ]
+        else:
+            return list(self.__videos.values())
 
     def count_videos(self, *flags, **forced_flags) -> int:
         if not flags and not forced_flags:
@@ -312,24 +315,6 @@ class JsonDatabase:
         return (
             {field: getattr(video, field) for field in fields}
             for video in self.get_cached_videos(*flags, **forced_flags)
-        )
-
-    def query(self, required: Dict[str, bool] = None) -> List[Video]:
-        videos = self.__videos.values()
-        return (
-            [
-                video
-                for video in videos
-                if all(getattr(video, flag) is required[flag] for flag in required)
-            ]
-            if required
-            else list(videos)
-        )
-
-    def sort_video_indices(self, indices: Iterable[int], sorting: VideoSorting):
-        return sorted(
-            indices,
-            key=lambda video_id: self.__id_to_video[video_id].to_comparable(sorting),
         )
 
     def search(
@@ -369,6 +354,12 @@ class JsonDatabase:
             output = (filenames[filename] for filename in selection)
         return output
 
+    def sort_video_indices(self, indices: Iterable[int], sorting: VideoSorting):
+        return sorted(
+            indices,
+            key=lambda video_id: self.__id_to_video[video_id].to_comparable(sorting),
+        )
+
     def has_prop_type(
         self, name, *, with_type=None, multiple=None, with_enum=None, default=None
     ) -> bool:
@@ -394,12 +385,6 @@ class JsonDatabase:
             key=lambda d: d["name"],
         )
 
-    def add_prop_type(self, prop: PropType) -> None:
-        if prop.name in self.__prop_types:
-            raise exceptions.PropertyAlreadyExists(prop.name)
-        self.__prop_types[prop.name] = prop
-        self.save()
-
     def create_prop_type(
         self,
         name: str,
@@ -415,7 +400,12 @@ class JsonDatabase:
                 definition = [float(element) for element in definition]
             else:
                 definition = float(definition)
-        self.add_prop_type(PropType(name, definition, multiple))
+        prop = PropType(name, definition, multiple)
+        assert prop.type is prop_type
+        if prop.name in self.__prop_types:
+            raise exceptions.PropertyAlreadyExists(prop.name)
+        self.__prop_types[prop.name] = prop
+        self.save()
 
     def remove_prop_type(self, name) -> None:
         if name in self.__prop_types:
@@ -463,14 +453,8 @@ class JsonDatabase:
             # for videos having this property.
             self.save()
 
-    def get_prop_values(
-        self, video_id: int, name: str, default=False
-    ) -> List[PropValueType]:
-        values = self.__id_to_video[video_id].get_property(name)
-        assert isinstance(values, list)
-        if default and not values and not self.__prop_types[name].multiple:
-            values = [self.__prop_types[name].default]
-        return values
+    def get_prop_values(self, video_id: int, name: str) -> List[PropValueType]:
+        return self.__id_to_video[video_id].get_property(name)
 
     def set_prop_values(
         self, video_id: int, name: str, values: Union[Sequence, Set]
@@ -485,7 +469,12 @@ class JsonDatabase:
             video.set_property(name, self.__prop_types[name].validate(value))
 
     def set_video_properties(self, video_id: int, properties: dict) -> List[str]:
-        modified = self.__id_to_video[video_id].set_validated_properties(properties)
+        modified = self.__id_to_video[video_id].set_properties(
+            {
+                name: self.__prop_types[name].validate(value)
+                for name, value in properties.items()
+            }
+        )
         self._notify_properties_modified(modified)
         return modified
 
@@ -506,10 +495,6 @@ class JsonDatabase:
         else:
             values = [prop_type.validate(value) for value in values]
         return values
-
-    def new_prop_unit(self, name, value=None) -> PropValueType:
-        pt = self.__prop_types[name]
-        return pt.default if value is None else pt.validate(value)
 
     def default_prop_unit(self, name):
         pt = self.__prop_types[name]

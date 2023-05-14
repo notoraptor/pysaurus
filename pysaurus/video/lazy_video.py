@@ -347,14 +347,6 @@ class LazyVideo(WithSchema):
             self._set("properties", properties)
         return popped
 
-    def set_validated_properties(self, properties: Dict[str, Any]) -> List[str]:
-        return self.set_properties(
-            {
-                name: self.database.new_prop_unit(name, value)
-                for name, value in properties.items()
-            }
-        )
-
     def set_properties(self, properties: Dict[str, Any]) -> List[str]:
         return [
             name for name, value in properties.items() if self.set_property(name, value)
