@@ -88,3 +88,9 @@ class PotentialMoveAttribute(_DbVideoAttribute):
 
     def _get(self, video: Video):
         return self.move_groups.get(video, None), self.potential_moves.get(video, [])
+
+    def get_move_id(self, video: Video):
+        return self(video)[0]
+
+    def get_moves(self, video: Video):
+        return self(video)[1]

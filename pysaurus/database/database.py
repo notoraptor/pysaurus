@@ -452,12 +452,12 @@ class Database(JsonDatabase):
     def change_video_file_title(self, video_id: int, new_title: str) -> None:
         if functions.has_discarded_characters(new_title):
             raise exceptions.InvalidFileName(new_title)
-        old_filename: AbsolutePath = self.read_video_field(video_id, "filename")
+        old_filename: AbsolutePath = self.get_video_filename(video_id)
         if old_filename.file_title != new_title:
             self.change_video_path(video_id, old_filename.new_title(new_title))
 
     def delete_video(self, video_id: int) -> AbsolutePath:
-        video_filename: AbsolutePath = self.read_video_field(video_id, "filename")
+        video_filename: AbsolutePath = self.get_video_filename(video_id)
         video_filename.delete()
         self.delete_video_entry(video_id)
         return video_filename

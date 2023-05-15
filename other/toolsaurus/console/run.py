@@ -114,7 +114,7 @@ class API:
     @fsigned
     def clip(self, video_id: int, start: int, length: int) -> str:
         return VideoClipping.video_clip_to_base64(
-            path=self.database.read_video_field(video_id, "filename"),
+            path=self.database.get_video_filename(video_id),
             time_start=start,
             clip_seconds=length,
             unique_id=self.database.read_video_field(video_id, "thumb_name"),
@@ -126,7 +126,7 @@ class API:
 
     @fsigned
     def open(self, video_id: int) -> AbsolutePath:
-        return self.database.read_video_field(video_id, "filename").open()
+        return self.database.get_video_filename(video_id).open()
 
     @fsigned
     def images(self, indices: str):
@@ -193,9 +193,7 @@ class API:
                     errors.append(piece)
                 else:
                     if self.database.has_video_id(video_id):
-                        filenames.append(
-                            self.database.read_video_field(video_id, "filename")
-                        )
+                        filenames.append(self.database.get_video_filename(video_id))
                     else:
                         unknown.append(video_id)
         temp_file_path = None
@@ -266,7 +264,7 @@ class API:
             raise other.toolsaurus.application.exceptions.MissingVideoNewTitle()
         video_id = self.database.get_video_id(filename)
         self.database.change_video_file_title(video_id, str(new_title))
-        filename = self.database.read_video_field(video_id, "filename")
+        filename = self.database.get_video_filename(video_id)
         file_title = self.database.read_video_field(video_id, "file_title")
         return filename.path, file_title
 

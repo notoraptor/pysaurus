@@ -567,8 +567,12 @@ class JsonDatabase:
     def get_all_video_indices(self) -> Iterable[int]:
         return self.__id_to_video.keys()
 
-    def has_video(self, filename: AbsolutePath) -> bool:
-        return filename in self.__videos
+    def has_video(self, filename: AbsolutePath, **with_fields) -> bool:
+        video = self.__videos.get(filename)
+        return video and (
+            not with_fields
+            or all(getattr(video, key) == value for key, value in with_fields.items())
+        )
 
     def has_video_id(self, video_id: int) -> bool:
         return video_id in self.__id_to_video
@@ -642,9 +646,7 @@ class JsonDatabase:
             else:
                 video_state = Video.from_dict(d, database=self)
                 # Get previous properties, if available
-                if self.has_video(file_path) and self.read_video_field(
-                    self.get_video_id(file_path), "readable"
-                ):
+                if self.has_video(file_path, readable=True):
                     old_video = self.__videos[file_path]
                     video_state.properties = old_video.properties
                     video_state.similarity_id = old_video.similarity_id
