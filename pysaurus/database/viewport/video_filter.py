@@ -345,7 +345,7 @@ class LayerSort(Layer):
 
 
 class VideoFilter(AbstractVideoProvider):
-    __slots__ = ("_database", "pipeline", "layers")
+    __slots__ = ("pipeline", "layers")
 
     _LAYER_NAMES_ = {
         "source": LayerSource,
