@@ -77,7 +77,9 @@ def optimize_pattern_predictor(
                         nb_steps,
                         nb_steps,
                         title=say(
-                            "Converged, # {step}, \u00A9 {cost}, \u03b8 [{min_theta}; {max_theta}]",
+                            "Converged, # {step}, "
+                            "\u00A9 {cost}, "
+                            "\u03b8 [{min_theta}; {max_theta}]",
                             step=(step + 1),
                             cost=c,
                             min_theta=min(theta),

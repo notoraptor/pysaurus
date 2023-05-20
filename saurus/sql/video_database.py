@@ -21,7 +21,7 @@ class VideoDatabase(Database):
             "collection",
             name=collection.name,
             date_updated=collection.date_updated,
-            miniature_pixel_distance_radius=collection.miniature_pixel_distance_radius,
+            miniature_pixel_distance_radius=collection.miniature_pixel_dst_radius,
             miniature_group_min_size=collection.miniature_group_min_size,
         )
         # Collection sources

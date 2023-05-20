@@ -21,7 +21,6 @@ JSON_INTEGER_MAX = 2**31 - 1
 
 DISCARDED_CHARACTERS = r"@#\\/?$:!"
 
-
 __fn_types__ = (
     types.FunctionType,
     types.MethodType,
@@ -138,10 +137,6 @@ def html_to_title(title):
 
 def identity(value):
     return value
-
-
-def function_none(*args, **kwargs):
-    return None
 
 
 get_start_index = bisect.bisect_left

@@ -43,7 +43,8 @@ class ServerLauncher:
     def stop(self):
         self.server_thread.shutdown()
 
-    def _home(self):
+    @classmethod
+    def _home(cls):
         return "Pysaurus Video Server"
 
     def _video(self, video_id):

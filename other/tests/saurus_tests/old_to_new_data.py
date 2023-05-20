@@ -77,7 +77,7 @@ def main():
             collection = data.Collection(
                 name=db.name,
                 date_updated=db.get_date().time,
-                miniature_pixel_distance_radius=db.settings.miniature_pixel_distance_radius,
+                miniature_pixel_dst_radius=db.settings.miniature_pixel_distance_radius,
                 miniature_group_min_size=db.settings.miniature_group_min_size,
                 sources=[source.path for source in db.get_folders()],
                 properties={

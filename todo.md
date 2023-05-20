@@ -9,7 +9,7 @@ ffprobe -v quiet -print_format json -show_format -show_streams "<video-file>" > 
 - Using SQL instead of JSON could it make code faster and easier to maintain ?
   - No. It may speed up code to select sources, but I don't think it will help 
     when searching videos by terms.
-- Qt player based on VLC is not longer available in interface. Moved into `other`
+- Qt player based on VLC is no longer available in interface. Moved into `other`
   - Qt player may freeze unexpectedly when requiring next video
   - We read some duration as a negative too big number, 
     while vlc detects real duration correctly.
@@ -53,7 +53,7 @@ ffprobe -v quiet -print_format json -show_format -show_streams "<video-file>" > 
     from interface, as a shortcut instead of multiple interface clicks.
     - Does that mean interface is not ergonomic?
 - Allow user to add shortcuts (under Shift control, e.g. "Shift + N") to either:
-  - set a unique property
+  - edit a unique property
   - add a value to a multiple property
 - Manage errors like read-only properties.
 - Add video property "date_added" for date when video was added to database.

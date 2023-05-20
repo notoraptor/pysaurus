@@ -1,9 +1,10 @@
-from typing import Callable, Dict, Optional
+from typing import Callable, Dict, Optional, TypeVar
 
 from pysaurus.core.components import Date
 from pysaurus.core.notifications import Notification
 
-ManagerType = Callable[[Notification], None]
+N = TypeVar("N", bound=Notification)
+ManagerType = Callable[[N], None]
 
 
 class Notifier:

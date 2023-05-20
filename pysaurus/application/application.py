@@ -20,7 +20,7 @@ from pysaurus.core.json_type import Type
 from pysaurus.core.modules import FileSystem
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.profiling import Profiler
-from pysaurus.core.schematizable import Schema, WithSchema, schema_prop
+from pysaurus.core.schematizable import Schema, WithSchema
 from pysaurus.database.database import Database
 from saurus.language import say
 
@@ -30,7 +30,14 @@ logger = logging.getLogger(__name__)
 class Config(WithSchema):
     __slots__ = ()
     SCHEMA = Schema([Type("language", None, "english")])
-    language = schema_prop("language")
+
+    @property
+    def language(self):
+        return self._get("language")
+
+    @language.setter
+    def language(self, v):
+        self._set("language", v)
 
 
 class Application:

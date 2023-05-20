@@ -250,7 +250,8 @@ class _Parser:
                 isinstance(node.func, ast.Name) and isinstance(node.func.ctx, ast.Load)
             ):
                 raise ValueError(
-                    f"Ast call supported for readonly function name, got {ast.dump(node)}"
+                    f"Ast call supported for readonly function name, "
+                    f"got {ast.dump(node)}"
                 )
             name = node.func.id.lower()
             if name not in self.applies:

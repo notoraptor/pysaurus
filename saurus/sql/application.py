@@ -65,13 +65,15 @@ class Application:
         for r_vid in tqdm(
             self.db.query_all(
                 "SELECT "
-                "v.video_id, v.filename, v.file_size, v.mtime, v.driver_id, v.is_file, "
-                "v.readable, v.audio_bit_rate, v.audio_codec, v.audio_codec_description, "
-                "v.bit_depth, v.channels, v.container_format, v.device_name, v.duration, "
-                "v.duration_time_base, v.frame_rate_den, v.frame_rate_num, v.height, "
-                "v.meta_title, v.sample_rate, v.video_codec, v.video_codec_description, "
+                "v.video_id, v.filename, v.file_size, v.mtime, v.driver_id, "
+                "v.is_file, v.readable, v.audio_bit_rate, v.audio_codec, "
+                "v.audio_codec_description, v.bit_depth, v.channels, "
+                "v.container_format, v.device_name, v.duration, v.duration_time_base, "
+                "v.frame_rate_den, v.frame_rate_num, v.height, v.meta_title, "
+                "v.sample_rate, v.video_codec, v.video_codec_description, "
                 "v.width, c.thumb_name, c.has_thumbnail, c.similarity_id "
-                "FROM video AS v JOIN collection_to_video AS c ON v.video_id = c.video_id "
+                "FROM video AS v "
+                "JOIN collection_to_video AS c ON v.video_id = c.video_id "
                 "WHERE c.collection_id = ?",
                 [collection_id],
             )
@@ -146,7 +148,7 @@ class Application:
             collection_id=collection_id,
             name=r_col["name"],
             date_updated=r_col["date_updated"],
-            miniature_pixel_distance_radius=r_col["miniature_pixel_distance_radius"],
+            miniature_pixel_dst_radius=r_col["miniature_pixel_distance_radius"],
             miniature_group_min_size=r_col["miniature_group_min_size"],
             sources=sources,
             properties=properties,

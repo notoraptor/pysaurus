@@ -24,8 +24,8 @@ def run_split_batch(function, tasks, *, job_count=CPU_COUNT, extra_args=None):
 def _dispatch_tasks(tasks, job_count, extra_args=None):
     # type: (list, int, list) -> List[Job]
     """Split <tasks> into <job_count> jobs and associate each one
-    with an unique job ID starting from <next_job_id>, so that
-    each job could assign an unique ID to each of his task by
+    with a unique job ID starting from <next_job_id>, so that
+    each job could assign a unique ID to each of his task by
     incrementing his job ID when managing his tasks.
     :param tasks: a list of tasks to split.
     :param job_count: number of jobs.

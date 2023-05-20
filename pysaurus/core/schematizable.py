@@ -66,18 +66,18 @@ class Schema:
         return [self.schema[name].to_linear() for name in sorted(self.schema)]
 
     @staticmethod
-    def _short_dict_to_linear(d: dict, linear_type: list) -> list:
+    def short_dict_to_linear(d: dict, linear_type: list) -> list:
         return [
-            (Schema._short_dict_to_linear(d[short], desc) if desc else d[short])
+            (Schema.short_dict_to_linear(d[short], desc) if desc else d[short])
             if short in d
             else None
             for short, desc in linear_type
         ]
 
     @staticmethod
-    def _linear_to_short_dict(linear_type: list, linear_value: list) -> dict:
+    def linear_to_short_dict(linear_type: list, linear_value: list) -> dict:
         return {
-            short: (Schema._linear_to_short_dict(desc, value) if desc else value)
+            short: (Schema.linear_to_short_dict(desc, value) if desc else value)
             for ((short, desc), value) in zip(linear_type, linear_value)
             if value is not None
         }
@@ -118,12 +118,12 @@ class WithSchema:
         return cls(short_dict=dct, **kwargs)
 
     def _to_linear(self):
-        return Schema._short_dict_to_linear(self._d, self.SCHEMA.linear_type)
+        return Schema.short_dict_to_linear(self._d, self.SCHEMA.linear_type)
 
     @classmethod
     def _from_linear(cls, linear: list, **kwargs):
         return cls.from_dict(
-            Schema._linear_to_short_dict(cls.SCHEMA.linear_type, linear), **kwargs
+            Schema.linear_to_short_dict(cls.SCHEMA.linear_type, linear), **kwargs
         )
 
     @classmethod

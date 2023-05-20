@@ -26,7 +26,7 @@ def thread_excepthook(arg):
 
 
 def main():
-    # Use cef.ExceptHook to shutdown all CEF processes on error.
+    # Use cef.ExceptHook to shut down all CEF processes on error.
     sys.excepthook = cef.ExceptHook
     threading.excepthook = thread_excepthook
     entry_path = os.path.normpath(

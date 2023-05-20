@@ -615,7 +615,9 @@ class Database(JsonDatabase):
 
     def to_xspf_playlist(self, video_indices: Iterable[int]) -> AbsolutePath:
         tracks = "".join(
-            f"<track><location>{self.get_video_filename(video_id).uri}</location></track>"
+            f"<track>"
+            f"<location>{self.get_video_filename(video_id).uri}</location>"
+            f"</track>"
             for video_id in video_indices
         )
         file_content = (

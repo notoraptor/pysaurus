@@ -15,7 +15,7 @@ from pysaurus.core.components import AbsolutePath
 from pysaurus.core.file_copier import FileCopier
 from pysaurus.core.functions import launch_thread
 from pysaurus.core.job_notifications import ConsoleJobProgress, JobStep, JobToDo
-from pysaurus.core.modules import System as OS
+from pysaurus.core.modules import System
 from pysaurus.core.notifications import (
     Cancelled,
     DatabaseReady,
@@ -42,7 +42,7 @@ logger = logging.getLogger(__name__)
 
 process = Runnable("_launch")
 
-if OS.is_windows():
+if System.is_windows():
     VLC_PATH = r"C:\Program Files\VideoLAN\VLC\vlc.exe"
 else:
     VLC_PATH = "vlc"
@@ -59,8 +59,8 @@ class ConsoleNotificationPrinter:
     __slots__ = ("_prev_profiling_start", "progress")
 
     def __init__(self):
-        self._prev_profiling_start: ProfilingStart = None
-        self.progress: ConsoleJobProgress = None
+        self._prev_profiling_start: Optional[ProfilingStart] = None
+        self.progress: Optional[ConsoleJobProgress] = None
 
     def print(self, notification):
         prev_profiling_start = self._prev_profiling_start
@@ -118,10 +118,11 @@ class GuiAPI(FeatureAPI):
         self._closed = False
 
         self.server.start()
-        # TODO Check runtime VLC for other OS ?
+        # TODO Check runtime VLC for other operating systems ?
         self._constants.update(
             {
-                "PYTHON_HAS_RUNTIME_VLC": OS.is_windows() and os.path.isfile(VLC_PATH),
+                "PYTHON_HAS_RUNTIME_VLC": System.is_windows()
+                and os.path.isfile(VLC_PATH),
                 "PYTHON_SERVER_HOSTNAME": self.server.server_thread.hostname,
                 "PYTHON_SERVER_PORT": self.server.server_thread.port,
             }
