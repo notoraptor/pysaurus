@@ -48,12 +48,10 @@ class ServerLauncher:
         return "Pysaurus Video Server"
 
     def _video(self, video_id):
+        # TODO An error here does not stop the program.
+        video_id = int(video_id)
         logger.info(f"Required video ID {video_id}")
         database = self.db_getter()
-        if database:
-            videos = list(database.search(str(video_id), "id"))
-            if videos:
-                (video,) = videos
-                logger.info(f"Found video: {video.filename}")
-                return send_file(video.filename.path)
-        raise RuntimeError(f"Unknown video: {video_id}")
+        filename = database.get_video_filename(video_id)
+        logger.info(f"Found video: {filename}")
+        return send_file(filename.path)

@@ -1,4 +1,4 @@
-from typing import List
+from typing import Dict, List
 
 from pysaurus.application.exceptions import PysaurusError
 from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
@@ -7,7 +7,6 @@ from pysaurus.core.notifications import Message
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.database import Database
 from pysaurus.database.machine_learning import optimize_pattern_predictor, predict
-from pysaurus.video import Video
 from saurus.language import say
 
 
@@ -37,15 +36,18 @@ def create_prediction_property(database: Database, prop_name: str):
 
 def compute_pattern_detector(database: Database, prop_name: str):
     assert _is_prediction_property(database, prop_name)
-    videos = database.get_cached_videos("readable", "with_thumbnails")
     video_id_to_miniature = {
         m.video_id: m for m in database.ensure_miniatures(returns=True)
     }
-    videos = [v for v in videos if v.video_id in video_id_to_miniature]
-    classifier = {}
-    for video in videos:
-        (prop_val,) = video.get_property(prop_name, -1)
-        classifier.setdefault(prop_val, []).append(video)
+    video_indices = [
+        video_id
+        for video_id in database.search_flags("readable", "with_thumbnails")
+        if video_id in video_id_to_miniature
+    ]
+    classifier: Dict[int, List[int]] = {}
+    for video_id in video_indices:
+        (prop_val,) = database.get_prop_values(video_id, prop_name) or [-1]
+        classifier.setdefault(prop_val, []).append(video_id)
     if 0 not in classifier:
         raise NoVideoForClass0(prop_name)
     if 1 not in classifier:
@@ -59,8 +61,8 @@ def compute_pattern_detector(database: Database, prop_name: str):
             )
         )
     )
-    video_id_to_class = {video.video_id: False for video in classifier[0]}
-    video_id_to_class.update({video.video_id: True for video in classifier[1]})
+    video_id_to_class = {video_id: False for video_id in classifier[0]}
+    video_id_to_class.update({video_id: True for video_id in classifier[1]})
     miniatures = []
     classes = []
     for video_id, y in video_id_to_class.items():
@@ -72,7 +74,7 @@ def compute_pattern_detector(database: Database, prop_name: str):
     database.set_predictor(prop_name, theta)
 
 
-def predict_pattern(database: Database, videos: List[Video], prop_name: str):
+def predict_pattern(database: Database, prop_name: str):
     """Apply pattern detector."""
     theta = database.get_predictor(prop_name)
     if not theta:
@@ -80,20 +82,27 @@ def predict_pattern(database: Database, videos: List[Video], prop_name: str):
     video_id_to_miniature = {
         m.video_id: m for m in database.ensure_miniatures(returns=True)
     }
-    videos = [v for v in videos if v.video_id in video_id_to_miniature]
+    video_indices = [
+        video_id
+        for video_id in database.search_flags("readable", "with_thumbnails")
+        if video_id in video_id_to_miniature
+    ]
     output_prop_name = "<!" + prop_name[2:]
     with database.to_save():
         if not database.has_prop_type(output_prop_name):
             database.create_prop_type(output_prop_name, int, [0, 1], False)
-        notify_job_start(database.notifier, predict_pattern, len(videos), "videos")
+        notify_job_start(
+            database.notifier, predict_pattern, len(video_indices), "videos"
+        )
         with Profiler(say("Predict"), database.notifier):
-            for i, video in enumerate(videos):
-                video.set_property(
+            for i, video_id in enumerate(video_indices):
+                database.set_prop_values(
+                    video_id,
                     output_prop_name,
-                    int(predict(video_id_to_miniature[video.video_id], theta) >= 0.5),
+                    [int(predict(video_id_to_miniature[video_id], theta) >= 0.5)],
                 )
                 notify_job_progress(
-                    database.notifier, predict_pattern, None, i + 1, len(videos)
+                    database.notifier, predict_pattern, None, i + 1, len(video_indices)
                 )
 
     return output_prop_name

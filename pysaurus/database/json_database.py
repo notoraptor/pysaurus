@@ -317,8 +317,13 @@ class JsonDatabase:
             for video in self.get_cached_videos(*flags, **forced_flags)
         )
 
+    def search_flags(self, *flags, **forced_flags) -> List[int]:
+        return [
+            video.video_id for video in self.get_cached_videos(*flags, **forced_flags)
+        ]
+
     def search(
-        self, text: str, cond: str = "and", videos: Sequence[Video] = None
+        self, text: str, cond: str = "and", videos: Sequence[int] = None
     ) -> Iterable[Video]:
         if not text:
             output = ()
@@ -328,7 +333,8 @@ class JsonDatabase:
                 filenames: Dict[AbsolutePath, Video] = self.__videos
             else:
                 filenames: Dict[AbsolutePath, Video] = {
-                    video.filename: video for video in videos
+                    self.__id_to_video[video_id].filename: self.__id_to_video[video_id]
+                    for video_id in videos
                 }
             terms = functions.string_to_pieces(text)
             if cond == "exact":
@@ -574,8 +580,12 @@ class JsonDatabase:
             or all(getattr(video, key) == value for key, value in with_fields.items())
         )
 
-    def has_video_id(self, video_id: int) -> bool:
-        return video_id in self.__id_to_video
+    def has_video_id(self, video_id: int, **with_fields) -> bool:
+        video = self.__id_to_video.get(video_id)
+        return video and (
+            not with_fields
+            or all(getattr(video, key) == value for key, value in with_fields.items())
+        )
 
     def get_video_filename(self, video_id: int) -> AbsolutePath:
         return self.__id_to_video[video_id].filename

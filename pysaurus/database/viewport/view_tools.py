@@ -19,7 +19,7 @@ class VideoArray(LookupArray[Video]):
 class Group:
     __slots__ = ("field_value", "videos")
 
-    def __init__(self, field_value=None, videos: Iterable[Video] = ()):
+    def __init__(self, field_value=None, videos: Iterable[int] = ()):
         self.field_value = field_value
         self.videos = videos if isinstance(videos, set) else set(videos)
 

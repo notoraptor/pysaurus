@@ -143,25 +143,25 @@ class AbstractVideoProvider(metaclass=ABCMeta):
         search_def = self.get_search()
         return search_def.to_dict() if search_def else None
 
-    def get_random_found_video(self) -> Video:
-        videos = []
+    def get_random_found_video_id(self) -> int:
+        video_indices = []
         for path in self.get_sources():
-            videos.extend(self._database.get_cached_videos(*path, found=True))
-        if not videos:
+            video_indices.extend(self._database.search_flags(*path, found=True))
+        if not video_indices:
             raise exceptions.NoVideos()
-        return videos[random.randrange(len(videos))]
+        return video_indices[random.randrange(len(video_indices))]
 
     def choose_random_video(self, open_video=True) -> str:
-        video = self.get_random_found_video()
+        video_id = self.get_random_found_video_id()
         self.reset_parameters(
             self.LAYER_GROUPING,
             self.LAYER_CLASSIFIER,
             self.LAYER_GROUP,
         )
-        self.set_search(str(video.video_id), "id")
+        self.set_search(str(video_id), "id")
         if open_video:
-            self._database.open_video(video.video_id)
-        return video.filename.path
+            self._database.open_video(video_id)
+        return self._database.get_video_filename(video_id).path
 
     def classifier_select_group(self, group_id: int) -> None:
         path = self.get_classifier_path()
