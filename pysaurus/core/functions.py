@@ -1,4 +1,5 @@
 import bisect
+import logging
 import os
 import re
 import sys
@@ -8,6 +9,9 @@ import types
 from typing import Iterable, List
 
 from pysaurus.core.modules import HTMLStripper
+
+logger = logging.getLogger(__name__)
+
 
 REGEX_NO_WORD = re.compile(r"(\W|_)+")
 REGEX_CONSECUTIVE_UPPER_CASES = re.compile("[A-Z]{2,}")
@@ -305,3 +309,13 @@ def generate_infinite(value):
             yield value
 
     return gen()
+
+
+def remove_from_list(arr: List, el, silently=True):
+    try:
+        return arr.remove(el)
+    except ValueError:
+        if silently:
+            logger.exception(f"Element not found: {el}")
+        else:
+            raise

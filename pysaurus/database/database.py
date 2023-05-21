@@ -94,8 +94,7 @@ class Database(JsonDatabase):
 
     # Private methods.
 
-    def __check_thumbnails_on_disk(self):
-        # type: () -> Dict[str, Date]
+    def __check_thumbnails_on_disk(self) -> Dict[str, Date]:
         thumbs = {}
         with Profiler(say("Collect thumbnails"), self.notifier):
             for entry in FileSystem.scandir(
