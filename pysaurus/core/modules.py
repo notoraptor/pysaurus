@@ -37,13 +37,26 @@ class HTMLStripper(HTMLParser):
         """
         return " ".join(self.fed)
 
-    @classmethod
-    def strip(cls, msg):
-        """Remove HTML tags from given message and return stripped message."""
-        html_stripper = HTMLStripper()
-        html_stripper.feed(msg)
-        return html_stripper.get_data()
-
+    @staticmethod
+    def clean(title: str) -> str:
+        """
+        Remove HTML tags, simple and double starting/ending quotes from given string.
+        :param title: text to clear
+        :return: cleared text
+        TODO Unused (video meta titles never cleaned?)
+        """
+        if title:
+            html_stripper = HTMLStripper()
+            html_stripper.feed(title)
+            title = html_stripper.get_data()
+            strip_again = True
+            while strip_again:
+                strip_again = False
+                for character in ('"', "'"):
+                    if title.startswith(character) and title.endswith(character):
+                        title = title.strip(character)
+                        strip_again = True
+        return title
 
 class System:
     @staticmethod

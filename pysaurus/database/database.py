@@ -1,6 +1,5 @@
 import logging
 import multiprocessing
-import os
 from collections import Counter
 from typing import Any, Callable, Dict, Iterable, List, Optional, Set
 
@@ -15,7 +14,7 @@ from pysaurus.core.components import (
     PathType,
 )
 from pysaurus.core.constants import JPEG_EXTENSION, THUMBNAIL_EXTENSION
-from pysaurus.core.functions import generate_temp_file_path
+from pysaurus.core.file_utils import collect_file_titles, create_xspf_playlist
 from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
 from pysaurus.core.modules import FileSystem, ImageUtils
 from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
@@ -92,43 +91,18 @@ class Database(JsonDatabase):
     name = property(lambda self: self.__paths.db_folder.title)
     thumbnail_folder = property(lambda self: self.__paths.thumb_folder)
 
-    # Private methods.
-
-    def __check_thumbnails_on_disk(self) -> Dict[str, Date]:
-        thumbs = {}
-        with Profiler(say("Collect thumbnails"), self.notifier):
-            for entry in FileSystem.scandir(
-                self.__paths.thumb_folder.path
-            ):  # type: os.DirEntry
-                if entry.path.lower().endswith(f".{JPEG_EXTENSION}"):
-                    name = entry.name
-                    thumbs[name[: -(len(JPEG_EXTENSION) + 1)]] = Date(
-                        entry.stat().st_mtime
-                    )
-        return thumbs
-
     def _clean_thumbnails(self, thumb_names: List[str]):
         notify_job_start(
             self.notifier, self._clean_thumbnails, len(thumb_names), "thumbnails"
         )
         for i, thumb_name in enumerate(thumb_names):
-            png_path = AbsolutePath.file_path(
-                self.__paths.thumb_folder, thumb_name, THUMBNAIL_EXTENSION
-            )
-            jpg_path = AbsolutePath.file_path(
-                self.__paths.thumb_folder, thumb_name, JPEG_EXTENSION
-            )
-            png_deleted = False
-            jpg_deleted = False
-            if png_path.isfile():
-                png_path.delete()
-                assert not png_path.isfile()
-                png_deleted = True
-            if jpg_path.isfile():
-                jpg_path.delete()
-                assert not jpg_path.isfile()
-                jpg_deleted = True
-            assert png_deleted or jpg_deleted
+            for ext in (THUMBNAIL_EXTENSION, JPEG_EXTENSION):
+                path = AbsolutePath.file_path(
+                    self.__paths.thumb_folder, thumb_name, ext
+                )
+                if path.isfile():
+                    path.delete()
+                    assert not path.isfile()
             notify_job_progress(
                 self.notifier, self._clean_thumbnails, None, i + 1, len(thumb_names)
             )
@@ -185,8 +159,11 @@ class Database(JsonDatabase):
         thumb_to_videos: Dict[str, List[dict]] = {}
         thumb_errors: Dict[str, List[str]] = {}
 
-        # Collect videos with and without thumbnails.
-        existing_thumb_names = self.__check_thumbnails_on_disk()
+        # Get available thumbnails.
+        with Profiler("Collect existing thumbnails", self.notifier):
+            existing_thumb_names = collect_file_titles(
+                self.__paths.thumb_folder, JPEG_EXTENSION
+            )
 
         with Profiler(say("Check videos thumbnails"), notifier=self.notifier):
             for video in self.select_videos_fields(
@@ -203,10 +180,9 @@ class Database(JsonDatabase):
                 thumb_name = video["thumb_name"]
                 if not video["found"]:
                     if thumb_name in existing_thumb_names:
-                        self.write_video_field(
+                        self.write_video_fields(
                             video["video_id"],
-                            "has_runtime_thumbnail",
-                            True,
+                            has_runtime_thumbnail=True,
                         )
                         valid_thumb_names.add(thumb_name)
                 elif not video["unreadable_thumbnail"]:
@@ -225,8 +201,8 @@ class Database(JsonDatabase):
                 if len(vds) == 1:
                     video: dict = vds[0]
                     valid_thumb_names.add(valid_thumb_name)
-                    self.write_video_field(
-                        video["video_id"], "has_runtime_thumbnail", True
+                    self.write_video_fields(
+                        video["video_id"], has_runtime_thumbnail=True
                     )
                 else:
                     videos_without_thumbs.extend(vds)
@@ -446,7 +422,9 @@ class Database(JsonDatabase):
     def set_video_similarity(
         self, video_id: int, value: Optional[int], notify=True
     ) -> None:
-        self.write_video_field(video_id, "similarity_id", value, notify=notify)
+        self.write_video_fields(video_id, similarity_id=value)
+        if notify:
+            self._notify_fields_modified(["similarity_id"])
 
     def change_video_file_title(self, video_id: int, new_title: str) -> None:
         if functions.has_discarded_characters(new_title):
@@ -469,7 +447,7 @@ class Database(JsonDatabase):
             for video in self.select_videos_fields(
                 ["video_id"], "readable", "found", "without_thumbnails"
             ):
-                self.write_video_field(video["video_id"], "unreadable_thumbnail", False)
+                self.write_video_fields(video["video_id"], unreadable_thumbnail=False)
         self.update()
         self.ensure_thumbnails()
         if ensure_miniatures:
@@ -591,8 +569,8 @@ class Database(JsonDatabase):
         modified = []
         path_set = set(path)
         for video_id in self.get_all_video_indices():
-            old_values = set(self.get_prop_values(video_id, from_property))
-            new_values = old_values - path_set
+            old_values = self.get_prop_values(video_id, from_property)
+            new_values = [v for v in old_values if v not in path_set]
             if len(old_values) == len(new_values) + len(path_set):
                 self.set_prop_values(video_id, from_property, new_values)
                 self.merge_prop_values(video_id, to_property, [concat_path])
@@ -602,35 +580,15 @@ class Database(JsonDatabase):
         return len(modified)
 
     def confirm_unique_moves(self) -> int:
-        nb_moved = 0
         with self.to_save() as saver:
-            for video_id in list(self.get_all_video_indices()):
-                moves = self.read_video_field(video_id, "moves")
-                if len(moves) == 1:
-                    self.move_video_entry(video_id, moves[0]["video_id"])
-                    nb_moved += 1
-            saver.to_save = nb_moved
-        return nb_moved
+            unique_moves = list(self.moves_attribute.get_unique_moves())
+            for video_id, moves in unique_moves:
+                self.move_video_entry(video_id, moves[0]["video_id"])
+            saver.to_save = len(unique_moves)
+        return len(unique_moves)
 
     def to_xspf_playlist(self, video_indices: Iterable[int]) -> AbsolutePath:
-        tracks = "".join(
-            f"<track>"
-            f"<location>{self.get_video_filename(video_id).uri}</location>"
-            f"</track>"
-            for video_id in video_indices
-        )
-        file_content = (
-            f'<?xml version="1.0" encoding="UTF-8"?>'
-            f'<playlist version="1" xmlns="http://xspf.org/ns/0/">'
-            f"<trackList>{tracks}</trackList>"
-            f"</playlist>"
-        )
-        temp_file_path = generate_temp_file_path("xspf")
-        with open(temp_file_path, "w") as file:
-            file.write(file_content)
-        return AbsolutePath(temp_file_path)
-
-    # Videos access and edition
+        return create_xspf_playlist(map(self.get_video_filename, video_indices))
 
     def open_containing_folder(self, video_id: int) -> str:
         return str(self.get_video_filename(video_id).locate_file())

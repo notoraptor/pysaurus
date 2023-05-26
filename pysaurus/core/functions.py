@@ -1,14 +1,11 @@
 import bisect
 import logging
-import os
 import re
 import sys
 import tempfile
 import threading
 import types
 from typing import Iterable, List
-
-from pysaurus.core.modules import HTMLStripper
 
 logger = logging.getLogger(__name__)
 
@@ -118,25 +115,6 @@ def launch_thread(function, *args, **kwargs):
     )
     thread.start()
     return thread
-
-
-def html_to_title(title):
-    # type: (str) -> str
-    """
-    Remove HTML tags, simple and double starting/ending quotes from given string.
-    :param title: text to clear
-    :return: cleared text
-    """
-    if title:
-        title = HTMLStripper.strip(title)
-        strip_again = True
-        while strip_again:
-            strip_again = False
-            for character in ('"', "'"):
-                if title.startswith(character) and title.endswith(character):
-                    title = title.strip(character)
-                    strip_again = True
-    return title
 
 
 def identity(value):
@@ -286,23 +264,6 @@ def extract_object(instance: object, path: str):
     return element
 
 
-TEMP_DIR = tempfile.gettempdir()
-TEMP_PREFIX = tempfile.gettempprefix() + "_pysaurus_"
-
-
-def generate_temp_file_path(extension) -> str:
-    temp_file_id = 0
-    while True:
-        temp_file_path = os.path.join(
-            TEMP_DIR, f"{TEMP_PREFIX}{temp_file_id}.{extension}"
-        )
-        try:
-            with open(temp_file_path, "x"):
-                return temp_file_path
-        except FileExistsError:
-            temp_file_id += 1
-
-
 def generate_infinite(value):
     def gen():
         while True:
@@ -319,3 +280,14 @@ def remove_from_list(arr: List, el, silently=True):
             logger.exception(f"Element not found: {el}")
         else:
             raise
+
+
+def generate_temporary_file(basename="pysaurus", suffix=".pkl"):
+    """Generate a temporary file where data could be saved.
+    Create an empty file without collision.
+    Return name of generated file.
+    """
+    with tempfile.NamedTemporaryFile(
+        prefix=f"{basename}_", suffix=suffix, delete=False
+    ) as tf:
+        return tf.name

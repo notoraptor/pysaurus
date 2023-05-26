@@ -610,17 +610,6 @@ class JsonDatabase:
     def read_videos_field(self, indices: Iterable[int], field: str) -> Iterable:
         return (getattr(self.__id_to_video[video_id], field) for video_id in indices)
 
-    def write_video_field(self, video_id: int, field: str, value, notify=False) -> bool:
-        video = self.__id_to_video[video_id]
-        previous_value = getattr(video, field)
-        modified = previous_value != value
-        if modified:
-            setattr(video, field, value)
-            if notify:
-                with self.to_save(False):
-                    self._notify_fields_modified([field])
-        return modified
-
     def write_video_fields(self, video_id: int, **kwargs) -> bool:
         modified = False
         video = self.__id_to_video[video_id]

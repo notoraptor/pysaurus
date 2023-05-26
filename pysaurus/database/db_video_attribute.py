@@ -94,3 +94,11 @@ class PotentialMoveAttribute(_DbVideoAttribute):
 
     def get_moves(self, video: Video):
         return self(video)[1]
+
+    def get_unique_moves(self):
+        self(None)
+        return (
+            (video.video_id, moves)
+            for video, moves in self.potential_moves.items()
+            if len(moves) == 1
+        )
