@@ -130,7 +130,7 @@ class Application:
         assert path in self.databases
         if not self.databases[path]:
             self.databases[path] = Database(
-                path, notifier=self.notifier, lang=self.lang
+                path, notifier=self.notifier
             )
         else:
             self.databases[path].reopen()
@@ -150,7 +150,7 @@ class Application:
         if path.exists():
             raise exceptions.DatabasePathUnavailable(path)
         self.databases[path] = Database(
-            path.mkdir(), folders=folders, notifier=self.notifier, lang=self.lang
+            path.mkdir(), folders=folders, notifier=self.notifier
         )
         if update:
             self.databases[path].refresh()

@@ -6,7 +6,6 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Set
 import ujson as json
 
 from pysaurus.application import exceptions
-from pysaurus.application.language.default_language import DefaultLanguage
 from pysaurus.core import functions, notifications
 from pysaurus.core.components import AbsolutePath, Date, PathType
 from pysaurus.core.constants import JPEG_EXTENSION, THUMBNAIL_EXTENSION
@@ -43,10 +42,10 @@ except exceptions.CysaurusUnavailable:
 
 
 class Database(JsonDatabase):
-    __slots__ = ("lang", "provider", "_initial_pid")
+    __slots__ = ("provider", "_initial_pid")
 
-    def __init__(self, path, folders=None, notifier=None, lang=None):
-        # type: (PathType, Iterable[PathType], Notifier, DefaultLanguage) -> None
+    def __init__(self, path, folders=None, notifier=None):
+        # type: (PathType, Iterable[PathType], Notifier) -> None
         path = AbsolutePath.ensure(path)
 
         self._initial_pid = multiprocessing.current_process().pid
@@ -56,7 +55,6 @@ class Database(JsonDatabase):
         # Load database
         super().__init__(path, folders, notifier or DEFAULT_NOTIFIER)
         # RAM data
-        self.lang = lang or DefaultLanguage
         self.provider: Optional[AbstractVideoProvider] = VideoFilter(self)
 
         # Set special properties
