@@ -1,15 +1,5 @@
 import logging
-from typing import (
-    Any,
-    Container,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Sequence,
-    Set,
-    Union,
-)
+from typing import Any, Container, Dict, Iterable, List, Optional, Sequence, Set, Union
 
 from pysaurus.application import exceptions
 from pysaurus.core import functions, notifications, notifying
@@ -18,10 +8,9 @@ from pysaurus.core.json_backup import JsonBackup
 from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
+from pysaurus.database.db_paths import DatabasePathDef, DatabasePaths
 from pysaurus.database.db_settings import DbSettings
-from pysaurus.database.db_video_attribute import (
-    PotentialMoveAttribute,
-)
+from pysaurus.database.db_video_attribute import PotentialMoveAttribute
 from pysaurus.database.json_database_utils import (
     DatabaseLoaded,
     DatabaseSaved,
@@ -44,12 +33,17 @@ from pysaurus.video.video_sorting import VideoSorting
 
 logger = logging.getLogger(__name__)
 
-
-DB_JSON_PATH = "json_path"
+DB_JSON_PATH = DatabasePathDef("json_path", "json")
+DB_LOG_PATH = DatabasePathDef("log_path", "log")
+DB_THUMB_FOLDER = DatabasePathDef("thumb_folder", "thumbnails")
+DB_MINIATURES_PATH = DatabasePathDef("miniatures_path", "miniatures.json")
+DB_INDEX_SQL_PATH = DatabasePathDef("index_sql_path", "db")
+DB_INDEX_PKL_PATH = DatabasePathDef("index_pkl_path", "index.pkl")
 
 
 class JsonDatabase:
     __slots__ = (
+        "ways",
         "__backup",
         "__version",
         "settings",
@@ -70,13 +64,23 @@ class JsonDatabase:
 
     def __init__(
         self,
-        path: PathType,
+        db_folder: PathType,
         folders: Optional[Iterable[PathType]] = None,
         notifier: Notifier = DEFAULT_NOTIFIER,
         indexer: AbstractVideoIndexer = None,
     ):
+        db_folder = AbsolutePath.ensure_directory(db_folder)
+        self.ways = DatabasePaths(db_folder)
+        self.ways.define(DB_JSON_PATH)
+        self.ways.define(DB_LOG_PATH)
+        self.ways.define(DB_THUMB_FOLDER, True, True)
+        self.ways.define(DB_MINIATURES_PATH)
+        self.ways.define(DB_INDEX_SQL_PATH)
+        self.ways.define(DB_INDEX_PKL_PATH)
+        # Set log file
+        notifier.set_log_path(self.ways.get(DB_LOG_PATH).path)
         # Private data
-        self.__backup = JsonBackup(path, notifier)
+        self.__backup = JsonBackup(self.ways.get(DB_JSON_PATH), notifier)
         # Database content
         self.__version = 0
         self.settings = DbSettings()
@@ -90,7 +94,9 @@ class JsonDatabase:
         self.iteration = 0
         self.__id_to_video: Dict[int, Video] = {}
         self.moves_attribute = PotentialMoveAttribute(self)
-        self.__indexer = indexer or VideoIndexer()
+        self.__indexer = indexer or VideoIndexer(
+            self.notifier, self.ways.get(DB_INDEX_PKL_PATH)
+        )
         self.in_save_context = False
         self.__removed: Set[Video] = set()
         self.__modified: Set[Video] = set()
@@ -265,8 +271,10 @@ class JsonDatabase:
         self.__removed.clear()
         self.__modified.clear()
 
-    def set_path(self, path: PathType):
-        self.__backup = JsonBackup(path, self.notifier)
+    def rename(self, new_name: str) -> None:
+        self.ways = self.ways.renamed(new_name)
+        self.notifier.set_log_path(self.ways.get(DB_LOG_PATH).path)
+        self.__backup = JsonBackup(self.ways.get(DB_JSON_PATH), self.notifier)
 
     def set_date(self, date: Date):
         self.__date = date

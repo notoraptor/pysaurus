@@ -38,6 +38,7 @@ class Notifier:
         if self.__log_path != path:
             self.__log_written = False
         self.__log_path = path
+        print(f"{type(self).__name__}: logging into: {self.__log_path}")
 
     def log(self, notification):
         if self.__log_path:

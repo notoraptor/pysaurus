@@ -8,11 +8,7 @@ import ujson as json
 from pysaurus.application import exceptions
 from pysaurus.application.language.default_language import DefaultLanguage
 from pysaurus.core import functions, notifications
-from pysaurus.core.components import (
-    AbsolutePath,
-    Date,
-    PathType,
-)
+from pysaurus.core.components import AbsolutePath, Date, PathType
 from pysaurus.core.constants import JPEG_EXTENSION, THUMBNAIL_EXTENSION
 from pysaurus.core.file_utils import collect_file_titles, create_xspf_playlist
 from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
@@ -21,16 +17,19 @@ from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.parallelization import parallelize, run_split_batch
 from pysaurus.core.profiling import Profiler
 from pysaurus.database import jobs_python
-from pysaurus.database.db_paths import DbPaths
 from pysaurus.database.jobs_python import compress_thumbnails_to_jpeg
-from pysaurus.database.json_database import JsonDatabase
+from pysaurus.database.json_database import (
+    DB_LOG_PATH,
+    DB_MINIATURES_PATH,
+    DB_THUMB_FOLDER,
+    JsonDatabase,
+)
 from pysaurus.database.special_properties import SpecialProperties
 from pysaurus.database.viewport.abstract_video_provider import AbstractVideoProvider
 from pysaurus.database.viewport.video_filter import VideoFilter
 from pysaurus.miniature.group_computer import GroupComputer
 from pysaurus.miniature.miniature import Miniature
 from pysaurus.video import Video
-from pysaurus.video.video_indexer import VideoIndexer
 from pysaurus.video_raptor.video_raptor_pyav import VideoRaptor as PythonVideoRaptor
 from saurus.language import say
 
@@ -43,42 +42,29 @@ except exceptions.CysaurusUnavailable:
     logger.warning("Using fallback backend for videos info and thumbnails.")
 
 
-DB_THUMB_FOLDER = "thumb_folder"
-DB_MINIATURES_PATH = "miniatures_path"
-DB_LOG_PATH = "log_path"
-DB_INDEX_SQL_PATH = "index_sql_path"
-DB_INDEX_PKL_PATH = "index_pkl_path"
-
-
 class Database(JsonDatabase):
-    __slots__ = ("__paths", "lang", "provider", "_initial_pid")
+    __slots__ = ("lang", "provider", "_initial_pid")
 
     def __init__(self, path, folders=None, notifier=None, lang=None):
         # type: (PathType, Iterable[PathType], Notifier, DefaultLanguage) -> None
-        # Paths
-        self.__paths = DbPaths(path)
+
         self._initial_pid = multiprocessing.current_process().pid
         logger.debug(f"Loaded database {self.name} in process {self._initial_pid}")
         assert self._initial_pid is not None
+
         # RAM data
         self.lang = lang or DefaultLanguage
-        # self.provider: Optional[AbstractVideoProvider] = VideoSelector(self)
         self.provider: Optional[AbstractVideoProvider] = VideoFilter(self)
-        # Set log file
-        notifier = notifier or DEFAULT_NOTIFIER
-        notifier.set_log_path(self.__paths.log_path.path)
+
         # Load database
-        super().__init__(
-            self.__paths.json_path,
-            folders,
-            notifier,
-            indexer=VideoIndexer(notifier, self.__paths.index_pkl_path),
-        )
+        super().__init__(path, folders, notifier or DEFAULT_NOTIFIER)
+
         # Set special properties
         with Profiler(
             "install special properties", notifier=self.notifier
         ), self.to_save() as saver:
             saver.to_save = SpecialProperties.install(self)
+        # Compress thumbnails if necessary.
         self.compress_thumbnails()
 
     def __getattribute__(self, item):
@@ -95,8 +81,8 @@ class Database(JsonDatabase):
 
     # Properties.
 
-    name = property(lambda self: self.__paths.db_folder.title)
-    thumbnail_folder = property(lambda self: self.__paths.thumb_folder)
+    name = property(lambda self: self.ways.db_folder.title)
+    thumbnail_folder = property(lambda self: self.ways.get(DB_THUMB_FOLDER))
 
     @Profiler.profile_method()
     def update(self) -> None:
@@ -111,10 +97,7 @@ class Database(JsonDatabase):
             return
 
         backend_raptor = VideoRaptor()
-        with Profiler(
-            say("Collect videos info"),
-            notifier=self.notifier,
-        ):
+        with Profiler(say("Collect videos info"), notifier=self.notifier):
             notify_job_start(
                 self.notifier,
                 backend_raptor.collect_video_info,
@@ -125,7 +108,7 @@ class Database(JsonDatabase):
                 run_split_batch(
                     backend_raptor.collect_video_info,
                     files_to_update,
-                    extra_args=[self.__paths.db_folder, self.notifier],
+                    extra_args=[self.ways.db_folder, self.notifier],
                 )
             )
 
@@ -147,12 +130,12 @@ class Database(JsonDatabase):
         videos_without_thumbs: List[dict] = []
         thumb_to_videos: Dict[str, List[dict]] = {}
         thumb_errors: Dict[str, List[str]] = {}
+        thumb_folder = self.ways.get(DB_THUMB_FOLDER)
+        db_folder = self.ways.db_folder
 
         # Get available thumbnails.
         with Profiler("Collect existing thumbnails", self.notifier):
-            existing_thumb_names = collect_file_titles(
-                self.__paths.thumb_folder, JPEG_EXTENSION
-            )
+            existing_thumb_names = collect_file_titles(thumb_folder, JPEG_EXTENSION)
 
         with Profiler(say("Check videos thumbnails"), notifier=self.notifier):
             for video in self.select_videos_fields(
@@ -170,8 +153,7 @@ class Database(JsonDatabase):
                 if not video["found"]:
                     if thumb_name in existing_thumb_names:
                         self.write_video_fields(
-                            video["video_id"],
-                            has_runtime_thumbnail=True,
+                            video["video_id"], has_runtime_thumbnail=True
                         )
                         valid_thumb_names.add(thumb_name)
                 elif not video["unreadable_thumbnail"]:
@@ -235,12 +217,7 @@ class Database(JsonDatabase):
         # Python video raptor can directly collect thumbnails into JPEG format,
         # without going through PNG->JPEG pipeline.
         backend_raptor = PythonVideoRaptor()
-        with Profiler(
-            title=say(
-                "Get thumbnails from JSON",
-            ),
-            notifier=self.notifier,
-        ):
+        with Profiler(title=say("Get thumbnails from JSON"), notifier=self.notifier):
             notify_job_start(
                 self.notifier,
                 backend_raptor.collect_video_thumbnails,
@@ -254,11 +231,7 @@ class Database(JsonDatabase):
                         (video["filename"].path, video["thumb_name"])
                         for video in videos_without_thumbs
                     ],
-                    extra_args=[
-                        self.__paths.db_folder,
-                        self.__paths.thumb_folder.best_path,
-                        self.notifier,
-                    ],
+                    extra_args=[db_folder, thumb_folder.best_path, self.notifier],
                 )
             )
 
@@ -271,9 +244,7 @@ class Database(JsonDatabase):
                 thumb_errors[file_name] = d["e"]
                 video_id = self.get_video_id(file_path)
                 self.write_video_fields(
-                    video_id,
-                    unreadable_thumbnail=True,
-                    has_runtime_thumbnail=False,
+                    video_id, unreadable_thumbnail=True, has_runtime_thumbnail=False
                 )
 
         if thumb_errors:
@@ -290,14 +261,13 @@ class Database(JsonDatabase):
         added_miniatures = []
         have_removed = False
         have_added = False
+        miniatures_path = self.ways.get(DB_MINIATURES_PATH)
 
-        if self.__paths.miniatures_path.exists():
-            with open(
-                self.__paths.miniatures_path.assert_file().path
-            ) as miniatures_file:
+        if miniatures_path.exists():
+            with open(miniatures_path.assert_file().path) as miniatures_file:
                 json_array = json.load(miniatures_file)
             if not isinstance(json_array, list):
-                raise exceptions.InvalidMiniaturesJSON(self.__paths.miniatures_path)
+                raise exceptions.InvalidMiniaturesJSON(miniatures_path)
             for dct in json_array:
                 identifier = AbsolutePath(dct["i"])
                 if self.has_video(identifier) and ImageUtils.DEFAULT_THUMBNAIL_SIZE == (
@@ -369,7 +339,7 @@ class Database(JsonDatabase):
                 )
 
         if have_removed or have_added:
-            with open(self.__paths.miniatures_path.path, "w") as output_file:
+            with open(miniatures_path.path, "w") as output_file:
                 json.dump([m.to_dict() for m in available_miniatures], output_file)
 
         self.notifier.notify(notifications.NbMiniatures(len(available_miniatures)))
@@ -385,7 +355,7 @@ class Database(JsonDatabase):
     @Profiler.profile_method()
     def compress_thumbnails(self):
         png_paths = []
-        for entry in FileSystem.scandir(self.__paths.thumb_folder.path):
+        for entry in FileSystem.scandir(self.ways.get(DB_THUMB_FOLDER).path):
             path = AbsolutePath(entry.path)
             if (
                 path.extension == THUMBNAIL_EXTENSION
@@ -410,7 +380,7 @@ class Database(JsonDatabase):
         for i, thumb_name in enumerate(thumb_names):
             for ext in (THUMBNAIL_EXTENSION, JPEG_EXTENSION):
                 path = AbsolutePath.file_path(
-                    self.__paths.thumb_folder, thumb_name, ext
+                    self.ways.get(DB_THUMB_FOLDER), thumb_name, ext
                 )
                 if path.isfile():
                     path.delete()
@@ -418,11 +388,6 @@ class Database(JsonDatabase):
             notify_job_progress(
                 self.notifier, self._clean_thumbnails, None, i + 1, len(thumb_names)
             )
-
-    def rename(self, new_name) -> None:
-        self.__paths = self.__paths.renamed(new_name)
-        self.notifier.set_log_path(self.__paths.log_path.path)
-        self.set_path(self.__paths.json_path)
 
     def set_video_similarity(
         self, video_id: int, value: Optional[int], notify=True
@@ -447,7 +412,7 @@ class Database(JsonDatabase):
         return video_filename
 
     def reopen(self):
-        self.notifier.set_log_path(self.__paths.log_path.path)
+        self.notifier.set_log_path(self.ways.get(DB_LOG_PATH).path)
 
     def refresh(self, ensure_miniatures=False) -> None:
         with Profiler(say("Reset thumbnail errors"), self.notifier):
@@ -602,7 +567,7 @@ class Database(JsonDatabase):
 
     def get_thumbnail(self, video_id):
         return AbsolutePath.file_path(
-            self.__paths.thumb_folder,
+            self.ways.get(DB_THUMB_FOLDER),
             self.read_video_field(video_id, "thumb_name"),
             JPEG_EXTENSION,
         )
