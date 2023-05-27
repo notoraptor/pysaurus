@@ -147,21 +147,12 @@ def classify_similarities_directed(miniatures, edges, limit, database):
         nb_sequences,
         "videos (Python comparison)",
     )
-    with Profiler(
-        say(
-            "Python images comparison",
-        ),
-        notifier=database.notifier,
-    ):
+    with Profiler(say("Python images comparison"), notifier=database.notifier):
         raw_output = list(
             parallelize(
                 _compare_miniatures_from_python,
                 _comparison_jobs(
-                    miniatures,
-                    edges,
-                    limit,
-                    maximum_distance_score,
-                    database.notifier,
+                    miniatures, edges, limit, maximum_distance_score, database.notifier
                 ),
                 cpu_count=USABLE_CPU_COUNT,
                 chunksize=100,

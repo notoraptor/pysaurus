@@ -48,10 +48,7 @@ def collect_video_paths(
 ) -> Dict[AbsolutePath, VideoRuntimeInfo]:
     paths = {}  # type: Dict[AbsolutePath, VideoRuntimeInfo]
     jobs = [[path, i, notifier] for i, path in enumerate(sources)]
-    with Profiler(
-        title=say("Collect videos"),
-        notifier=notifier,
-    ):
+    with Profiler(title=say("Collect videos"), notifier=notifier):
         notify_job_start(notifier, collect_videos_from_folders, len(sources), "folders")
         for local_result in parallelize(
             collect_videos_from_folders, jobs, ordered=False

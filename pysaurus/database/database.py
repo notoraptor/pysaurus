@@ -47,17 +47,17 @@ class Database(JsonDatabase):
 
     def __init__(self, path, folders=None, notifier=None, lang=None):
         # type: (PathType, Iterable[PathType], Notifier, DefaultLanguage) -> None
+        path = AbsolutePath.ensure(path)
 
         self._initial_pid = multiprocessing.current_process().pid
-        logger.debug(f"Loaded database {self.name} in process {self._initial_pid}")
+        logger.debug(f"Loaded database {path.title} in process {self._initial_pid}")
         assert self._initial_pid is not None
-
-        # RAM data
-        self.lang = lang or DefaultLanguage
-        self.provider: Optional[AbstractVideoProvider] = VideoFilter(self)
 
         # Load database
         super().__init__(path, folders, notifier or DEFAULT_NOTIFIER)
+        # RAM data
+        self.lang = lang or DefaultLanguage
+        self.provider: Optional[AbstractVideoProvider] = VideoFilter(self)
 
         # Set special properties
         with Profiler(

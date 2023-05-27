@@ -140,8 +140,7 @@ class VideoIndexer(AbstractVideoIndexer):
         base = {filename.path for filename in filenames}
         return AbsolutePath.map(
             set.intersection(
-                base,
-                *(self.term_to_filenames.get(term, EMPTY_SET) for term in terms),
+                base, *(self.term_to_filenames.get(term, EMPTY_SET) for term in terms)
             )
         )
 
@@ -169,7 +168,6 @@ class VideoIndexer(AbstractVideoIndexer):
         base = {filename.path for filename in filenames}
         return AbsolutePath.map(
             set.intersection(
-                base,
-                *(self.term_to_filenames.get(term, EMPTY_SET) for term in terms),
+                base, *(self.term_to_filenames.get(term, EMPTY_SET) for term in terms)
             )
         )

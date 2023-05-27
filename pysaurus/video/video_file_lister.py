@@ -37,8 +37,5 @@ def scan_path_for_videos(
     elif path.extension in constants.VIDEO_SUPPORTED_EXTENSIONS:
         stat = FileSystem.stat(path.path)
         files[path] = VideoRuntimeInfo.from_keys(
-            size=stat.st_size,
-            mtime=stat.st_mtime,
-            driver_id=stat.st_dev,
-            is_file=True,
+            size=stat.st_size, mtime=stat.st_mtime, driver_id=stat.st_dev, is_file=True
         )

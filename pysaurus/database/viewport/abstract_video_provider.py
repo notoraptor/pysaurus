@@ -132,8 +132,7 @@ class AbstractVideoProvider(metaclass=ABCMeta):
         group_def = self.get_grouping()
         return (
             group_def.to_dict(
-                group_id=self.get_group(),
-                groups=self._get_classifier_stats(),
+                group_id=self.get_group(), groups=self._get_classifier_stats()
             )
             if group_def
             else None
@@ -154,9 +153,7 @@ class AbstractVideoProvider(metaclass=ABCMeta):
     def choose_random_video(self, open_video=True) -> str:
         video_id = self.get_random_found_video_id()
         self.reset_parameters(
-            self.LAYER_GROUPING,
-            self.LAYER_CLASSIFIER,
-            self.LAYER_GROUP,
+            self.LAYER_GROUPING, self.LAYER_CLASSIFIER, self.LAYER_GROUP
         )
         self.set_search(str(video_id), "id")
         if open_video:

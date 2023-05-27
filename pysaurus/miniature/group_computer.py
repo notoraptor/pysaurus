@@ -5,14 +5,10 @@ from pysaurus.core.job_notifications import notify_job_progress, notify_job_star
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.parallelization import USABLE_CPU_COUNT, parallelize
 from pysaurus.core.profiling import Profiler
-from pysaurus.miniature.decomposed_miniature import (
-    DecomposedMiniature,
-)
+from pysaurus.miniature.decomposed_miniature import DecomposedMiniature
 from pysaurus.miniature.graph import Graph
 from pysaurus.miniature.miniature import Miniature
-from pysaurus.miniature.pixel_comparator import (
-    DistancePixelComparator,
-)
+from pysaurus.miniature.pixel_comparator import DistancePixelComparator
 from pysaurus.miniature.pixel_group import PixelGroup
 from saurus.language import say
 
@@ -53,11 +49,7 @@ class GroupComputer:
         notifier = database.notifier if database else DEFAULT_NOTIFIER
         tasks = [(i, m, len(miniatures), notifier) for i, m in enumerate(miniatures)]
         with Profiler(
-            say(
-                "batch_compute_groups(n={n} miniature(s))",
-                n=len(tasks),
-            ),
-            notifier,
+            say("batch_compute_groups(n={n} miniature(s))", n=len(tasks)), notifier
         ):
             notify_job_start(
                 notifier, self.collect_miniature_groups, len(miniatures), "miniatures"

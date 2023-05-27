@@ -12,13 +12,7 @@ Bytes = Union[bytes, bytearray]
 
 class GroupSignature(WithSchema):
     __slots__ = ()
-    SCHEMA = Schema(
-        (
-            Type("r", int),
-            Type("m", int),
-            Type("n", int),
-        )
-    )
+    SCHEMA = Schema((Type("r", int), Type("m", int), Type("n", int)))
     r = schema_prop("r")  # pixel_distance_radius
     m = schema_prop("m")  # group_min_size
     n = schema_prop("n")  # nb_groups

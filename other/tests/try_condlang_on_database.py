@@ -73,9 +73,7 @@ def main():
     app = Application()
     db = app.open_database_from_name("adult videos")
     cl = db_select_videos(
-        db,
-        properties=["actress"],
-        where='len(get_property("actress")) > 1',
+        db, properties=["actress"], where='len(get_property("actress")) > 1'
     )
     print(len(cl))
 

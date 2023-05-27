@@ -347,8 +347,7 @@ class DbFeatures:
                             sub_classifier_right.counts, count_left - 40
                         )
                         i_end_count_right = get_end_index(
-                            sub_classifier_right.counts,
-                            count_left + 40,
+                            sub_classifier_right.counts, count_left + 40
                         )
                         for i_count_right in range(
                             i_start_count_right, i_end_count_right

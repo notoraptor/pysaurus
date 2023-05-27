@@ -92,8 +92,7 @@ class Database:
         """
         assert None not in where_parameters
         self.cursor.execute(
-            f"SELECT {column} FROM {table} WHERE {where_query}",
-            where_parameters,
+            f"SELECT {column} FROM {table} WHERE {where_query}", where_parameters
         )
         results = self.cursor.fetchall()
         if len(results) == 0:
@@ -114,8 +113,7 @@ class Database:
                 where_parameters.append(value)
         where_query = " AND ".join(where_pieces)
         self.cursor.execute(
-            f"SELECT {column} FROM {table} WHERE {where_query}",
-            where_parameters,
+            f"SELECT {column} FROM {table} WHERE {where_query}", where_parameters
         )
         results = self.cursor.fetchall()
         if len(results) == 0:
@@ -129,8 +127,7 @@ class Database:
         """Select and return count from a table."""
         assert None not in where_parameters
         self.cursor.execute(
-            f"SELECT COUNT({column}) FROM {table} WHERE {where_query}",
-            where_parameters,
+            f"SELECT COUNT({column}) FROM {table} WHERE {where_query}", where_parameters
         )
         return self.cursor.fetchone()[0]
 
@@ -145,7 +142,6 @@ class Database:
                 where_parameters.append(value)
         where_query = " AND ".join(where_pieces)
         self.cursor.execute(
-            f"SELECT COUNT({column}) FROM {table} WHERE {where_query}",
-            where_parameters,
+            f"SELECT COUNT({column}) FROM {table} WHERE {where_query}", where_parameters
         )
         return self.cursor.fetchone()[0]

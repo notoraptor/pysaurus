@@ -8,12 +8,7 @@ from pysaurus.core import functions
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.viewport.abstract_video_provider import AbstractVideoProvider
 from pysaurus.database.viewport.source_def import SourceDef
-from pysaurus.database.viewport.view_tools import (
-    Group,
-    GroupArray,
-    GroupDef,
-    SearchDef,
-)
+from pysaurus.database.viewport.view_tools import Group, GroupArray, GroupDef, SearchDef
 from pysaurus.video import Video
 from pysaurus.video.video_sorting import VideoSorting
 

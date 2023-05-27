@@ -38,10 +38,7 @@ class SpecialProperties:
             ):
                 database.remove_prop_type(expected.name)
                 database.create_prop_type(
-                    expected.name,
-                    expected.type,
-                    expected.definition,
-                    expected.multiple,
+                    expected.name, expected.type, expected.definition, expected.multiple
                 )
                 to_save = True
         return to_save

@@ -1,7 +1,4 @@
-from pysaurus.core.semantic_text import (
-    SemanticText,
-    separate_characters_and_numbers,
-)
+from pysaurus.core.semantic_text import SemanticText, separate_characters_and_numbers
 
 
 def test_simple_semantic():

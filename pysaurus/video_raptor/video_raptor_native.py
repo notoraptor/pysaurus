@@ -115,13 +115,7 @@ class VideoRaptor(AbstractVideoRaptor):
                 file.write(f"{file_name}\n".encode())
 
         self._job_video_to_json(
-            (
-                list_file_path.path,
-                json_file_path.path,
-                len(job.batch),
-                job.id,
-                notifier,
-            )
+            (list_file_path.path, json_file_path.path, len(job.batch), job.id, notifier)
         )
         assert json_file_path.isfile()
         arr = parse_json(json_file_path)
@@ -140,13 +134,7 @@ class VideoRaptor(AbstractVideoRaptor):
                 file.write(f"{file_path}\t{thumb_folder}\t{thumb_name}\t\n".encode())
 
         nb_loaded = self._job_video_thumbnails_to_json(
-            (
-                list_file_path.path,
-                json_file_path.path,
-                len(job.batch),
-                job.id,
-                notifier,
-            )
+            (list_file_path.path, json_file_path.path, len(job.batch), job.id, notifier)
         )
         assert json_file_path.isfile()
         arr = parse_json(json_file_path)

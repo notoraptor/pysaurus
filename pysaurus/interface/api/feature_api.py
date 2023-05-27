@@ -80,13 +80,7 @@ class FromApp(ProxyFeature):
 
 
 class FeatureAPI:
-    __slots__ = (
-        "notifier",
-        "application",
-        "database",
-        "_proxies",
-        "_constants",
-    )
+    __slots__ = ("notifier", "application", "database", "_proxies", "_constants")
 
     def __init__(self, notifier):
         self.notifier = notifier

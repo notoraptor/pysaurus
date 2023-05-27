@@ -6,10 +6,7 @@ from pysaurus.core.classes import StringPrinter, StringedTuple, Text
 from pysaurus.core.compare import to_comparable
 from pysaurus.core.components import AbsolutePath, Date, Duration, FileSize
 from pysaurus.core.constants import JPEG_EXTENSION, PYTHON_ERROR_THUMBNAIL, UNDEFINED
-from pysaurus.core.functions import (
-    class_get_public_attributes,
-    string_to_pieces,
-)
+from pysaurus.core.functions import class_get_public_attributes, string_to_pieces
 from pysaurus.core.modules import FNV64
 from pysaurus.core.schematizable import WithSchema
 from pysaurus.core.semantic_text import SemanticText

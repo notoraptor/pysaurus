@@ -338,10 +338,7 @@ class GuiAPI(FeatureAPI):
 
     @process()
     def apply_predictor(self, prop_name) -> None:
-        output_prop_name = pattern_detection.predict_pattern(
-            self.database,
-            prop_name,
-        )
+        output_prop_name = pattern_detection.predict_pattern(self.database, prop_name)
         self.database.provider.set_groups(
             field=output_prop_name,
             is_property=True,
