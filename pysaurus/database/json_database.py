@@ -45,6 +45,9 @@ from pysaurus.video.video_sorting import VideoSorting
 logger = logging.getLogger(__name__)
 
 
+DB_JSON_PATH = "json_path"
+
+
 class JsonDatabase:
     __slots__ = (
         "__backup",
@@ -674,7 +677,13 @@ class JsonDatabase:
         for video_id in indices:
             setattr(self.__id_to_video[video_id], field, value)
 
-    def change_video_path(self, video_id: int, path: AbsolutePath) -> AbsolutePath:
+    def change_video_entry_filename(
+        self, video_id: int, path: AbsolutePath
+    ) -> AbsolutePath:
+        """Map video to new path in database.
+
+        Return the previous path related to video.
+        """
         path = AbsolutePath.ensure(path)
         assert path.isfile()
         video = self.__id_to_video[video_id]

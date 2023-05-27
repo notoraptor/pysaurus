@@ -43,6 +43,13 @@ except exceptions.CysaurusUnavailable:
     logger.warning("Using fallback backend for videos info and thumbnails.")
 
 
+DB_THUMB_FOLDER = "thumb_folder"
+DB_MINIATURES_PATH = "miniatures_path"
+DB_LOG_PATH = "log_path"
+DB_INDEX_SQL_PATH = "index_sql_path"
+DB_INDEX_PKL_PATH = "index_pkl_path"
+
+
 class Database(JsonDatabase):
     __slots__ = ("__paths", "lang", "provider", "_initial_pid")
 
@@ -90,24 +97,6 @@ class Database(JsonDatabase):
 
     name = property(lambda self: self.__paths.db_folder.title)
     thumbnail_folder = property(lambda self: self.__paths.thumb_folder)
-
-    def _clean_thumbnails(self, thumb_names: List[str]):
-        notify_job_start(
-            self.notifier, self._clean_thumbnails, len(thumb_names), "thumbnails"
-        )
-        for i, thumb_name in enumerate(thumb_names):
-            for ext in (THUMBNAIL_EXTENSION, JPEG_EXTENSION):
-                path = AbsolutePath.file_path(
-                    self.__paths.thumb_folder, thumb_name, ext
-                )
-                if path.isfile():
-                    path.delete()
-                    assert not path.isfile()
-            notify_job_progress(
-                self.notifier, self._clean_thumbnails, None, i + 1, len(thumb_names)
-            )
-
-    # Public methods.
 
     @Profiler.profile_method()
     def update(self) -> None:
@@ -414,6 +403,22 @@ class Database(JsonDatabase):
         tasks = [(path, i, self.notifier) for i, path in enumerate(png_paths)]
         list(parallelize(compress_thumbnails_to_jpeg, tasks, ordered=False))
 
+    def _clean_thumbnails(self, thumb_names: List[str]):
+        notify_job_start(
+            self.notifier, self._clean_thumbnails, len(thumb_names), "thumbnails"
+        )
+        for i, thumb_name in enumerate(thumb_names):
+            for ext in (THUMBNAIL_EXTENSION, JPEG_EXTENSION):
+                path = AbsolutePath.file_path(
+                    self.__paths.thumb_folder, thumb_name, ext
+                )
+                if path.isfile():
+                    path.delete()
+                    assert not path.isfile()
+            notify_job_progress(
+                self.notifier, self._clean_thumbnails, None, i + 1, len(thumb_names)
+            )
+
     def rename(self, new_name) -> None:
         self.__paths = self.__paths.renamed(new_name)
         self.notifier.set_log_path(self.__paths.log_path.path)
@@ -431,7 +436,9 @@ class Database(JsonDatabase):
             raise exceptions.InvalidFileName(new_title)
         old_filename: AbsolutePath = self.get_video_filename(video_id)
         if old_filename.file_title != new_title:
-            self.change_video_path(video_id, old_filename.new_title(new_title))
+            self.change_video_entry_filename(
+                video_id, old_filename.new_title(new_title)
+            )
 
     def delete_video(self, video_id: int) -> AbsolutePath:
         video_filename: AbsolutePath = self.get_video_filename(video_id)
@@ -453,6 +460,16 @@ class Database(JsonDatabase):
         if ensure_miniatures:
             self.ensure_miniatures()
 
+    def delete_property_value(self, name: str, values: list) -> None:
+        self.__del_prop_val(self.get_all_video_indices(), name, values)
+
+    def move_property_value(self, old_name: str, values: list, new_name: str) -> None:
+        modified = self.__del_prop_val(self.get_all_video_indices(), old_name, values)
+        for video_id in modified:
+            self.merge_prop_values(video_id, new_name, values)
+        if modified:
+            self._notify_properties_modified([old_name, new_name])
+
     def __del_prop_val(
         self, video_indices: Iterable[int], name: str, values: list
     ) -> List[int]:
@@ -467,16 +484,6 @@ class Database(JsonDatabase):
         if modified:
             self._notify_properties_modified([name])
         return modified
-
-    def delete_property_value(self, name: str, values: list) -> None:
-        self.__del_prop_val(self.get_all_video_indices(), name, values)
-
-    def move_property_value(self, old_name: str, values: list, new_name: str) -> None:
-        modified = self.__del_prop_val(self.get_all_video_indices(), old_name, values)
-        for video_id in modified:
-            self.merge_prop_values(video_id, new_name, values)
-        if modified:
-            self._notify_properties_modified([old_name, new_name])
 
     def edit_property_value(
         self, name: str, old_values: list, new_value: object
@@ -592,3 +599,10 @@ class Database(JsonDatabase):
 
     def open_containing_folder(self, video_id: int) -> str:
         return str(self.get_video_filename(video_id).locate_file())
+
+    def get_thumbnail(self, video_id):
+        return AbsolutePath.file_path(
+            self.__paths.thumb_folder,
+            self.read_video_field(video_id, "thumb_name"),
+            JPEG_EXTENSION,
+        )

@@ -72,7 +72,7 @@ class AbsolutePath:
         return basename if index_dot < 0 else basename[:index_dot]
 
     @property
-    def extension(self):
+    def extension(self) -> str:
         return os.path.splitext(self.__path)[1][1:].lower()
 
     def __str__(self):

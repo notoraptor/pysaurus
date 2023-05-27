@@ -58,6 +58,7 @@ class HTMLStripper(HTMLParser):
                         strip_again = True
         return title
 
+
 class System:
     @staticmethod
     def is_windows():

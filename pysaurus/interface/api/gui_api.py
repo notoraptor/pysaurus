@@ -315,7 +315,7 @@ class GuiAPI(FeatureAPI):
                 done = self.copy_work.move()
             self.copy_work = None
             if done:
-                old_path = self.database.change_video_path(video_id, dst)
+                old_path = self.database.change_video_entry_filename(video_id, dst)
                 if old_path:
                     old_path.delete()
                 self.notifier.notify(DatabaseUpdated())
