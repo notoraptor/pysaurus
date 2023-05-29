@@ -129,9 +129,7 @@ class Application:
         path = AbsolutePath.join(self.dbs_dir, name)
         assert path in self.databases
         if not self.databases[path]:
-            self.databases[path] = Database(
-                path, notifier=self.notifier
-            )
+            self.databases[path] = Database(path, notifier=self.notifier)
         else:
             self.databases[path].reopen()
         if update:

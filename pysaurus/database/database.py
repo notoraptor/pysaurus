@@ -66,6 +66,7 @@ class Database(JsonDatabase):
         self.compress_thumbnails()
 
     def __getattribute__(self, item):
+        # TODO This method is for debugging, should be removed in production.
         attribute = super().__getattribute__(item)
         if callable(attribute):
             name = super().__getattribute__("name")
@@ -191,7 +192,7 @@ class Database(JsonDatabase):
                     f"to clean {len(thumbs_to_clean)}"
                 )
             )
-            assert valid_thumb_names or not self.get_cached_videos()
+            assert valid_thumb_names or not self.count_videos()
             self._clean_thumbnails(thumbs_to_clean)
 
         if not videos_without_thumbs:
@@ -563,7 +564,7 @@ class Database(JsonDatabase):
     def open_containing_folder(self, video_id: int) -> str:
         return str(self.get_video_filename(video_id).locate_file())
 
-    def get_thumbnail(self, video_id):
+    def get_thumbnail_path(self, video_id) -> AbsolutePath:
         return AbsolutePath.file_path(
             self.ways.get(DB_THUMB_FOLDER),
             self.read_video_field(video_id, "thumb_name"),

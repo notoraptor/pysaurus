@@ -27,8 +27,8 @@ def test_source_def():
     assert not sd.has_source_without("with_thumbnails")
 
     db = get_database()
-    vs = db.get_cached_videos("readable")
-    vsf = db.get_cached_videos("unreadable", "found")
+    vs = db._get_cached_videos("readable")
+    vsf = db._get_cached_videos("unreadable", "found")
     assert vs
     assert vsf
     assert sd.contains_video(vs[0])

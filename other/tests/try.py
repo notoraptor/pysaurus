@@ -110,14 +110,14 @@ def _profile_video_to_json(database):
     batch = 100
     with Profiler("to_json"):
         for _ in range(batch):
-            list(VideoFeatures.to_json(v) for v in database.get_cached_videos()[:100])
+            list(VideoFeatures.to_json(v) for v in database._get_cached_videos()[:100])
     with Profiler("json"):
         for _ in range(batch):
-            list(VideoFeatures.json(v) for v in database.get_cached_videos()[:100])
+            list(VideoFeatures.json(v) for v in database._get_cached_videos()[:100])
 
 
 def _check_prop_val(database, pgf):
-    for video in database.get_cached_videos():
+    for video in database._get_cached_videos():
         if video.properties:
             print(video.filename)
             for pv in pgf.get_things(video):
@@ -141,7 +141,7 @@ def main():
                 video.filename: [Val(video, i) for i in range(len(Val.__attrs__))]
                 + pgf.get_things(video)
                 + video.terms()
-                for video in database.get_cached_videos()
+                for video in database._get_cached_videos()
             }
         nb_videos = len(filename_to_things)
         with Profiler("Collect tag to filenames"):
@@ -170,7 +170,7 @@ def main():
 def main2():
     logging.basicConfig(level=logging.NOTSET)
     db = get_database()
-    videos = db.get_cached_videos(**{"readable": True})
+    videos = db._get_cached_videos(**{"readable": True})
     videos.sort(key=lambda v: v.bit_rate)
     vs = [
         v

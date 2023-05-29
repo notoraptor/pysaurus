@@ -302,7 +302,7 @@ class JsonDatabase:
     def get_predictor(self, prop_name):
         return self.__predictors.get(prop_name, None)
 
-    def get_cached_videos(self, *flags, **forced_flags) -> List[Video]:
+    def _get_cached_videos(self, *flags, **forced_flags) -> List[Video]:
         if flags or forced_flags:
             self.flush_changes()
             return [
@@ -318,19 +318,19 @@ class JsonDatabase:
         if not flags and not forced_flags:
             return len(self.__videos)
         else:
-            return len(self.get_cached_videos(*flags, **forced_flags))
+            return len(self._get_cached_videos(*flags, **forced_flags))
 
     def select_videos_fields(
         self, fields: Sequence[str], *flags, **forced_flags
     ) -> Iterable[Dict[str, Any]]:
         return (
             {field: getattr(video, field) for field in fields}
-            for video in self.get_cached_videos(*flags, **forced_flags)
+            for video in self._get_cached_videos(*flags, **forced_flags)
         )
 
     def search_flags(self, *flags, **forced_flags) -> List[int]:
         return [
-            video.video_id for video in self.get_cached_videos(*flags, **forced_flags)
+            video.video_id for video in self._get_cached_videos(*flags, **forced_flags)
         ]
 
     def search(
@@ -551,7 +551,7 @@ class JsonDatabase:
     def _notify_missing_thumbnails(self):
         remaining_thumb_videos = [
             video.filename.path
-            for video in self.get_cached_videos(
+            for video in self._get_cached_videos(
                 "readable", "found", "without_thumbnails"
             )
         ]
