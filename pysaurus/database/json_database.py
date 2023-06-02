@@ -82,7 +82,7 @@ class JsonDatabase:
         # Private data
         self.__backup = JsonBackup(self.ways.get(DB_JSON_PATH), notifier)
         # Database content
-        self.__version = 0
+        self.__version = 1
         self.settings = DbSettings()
         self.__date = Date.now()
         self.__folders: Set[AbsolutePath] = set()

@@ -59,10 +59,8 @@ DatabaseChanges = namedtuple("DatabaseChanges", ("removed", "replaced", "modifie
 
 
 def _patch_version_0(data: dict, version) -> bool:
-    if version > 0:
+    if version >= 0:
         return False
-    if version == 0:
-        return True
     assert version == -1
     # Update video property values.
     # Convert any non-list value to sorted list.
@@ -83,7 +81,20 @@ def _patch_version_0(data: dict, version) -> bool:
     return True
 
 
-_PATCHS: List[Callable[[Union[dict, list], int], bool]] = [_patch_version_0]
+def _patch_version_1(data: dict, version) -> bool:
+    if version >= 1:
+        return False
+    # Remove video["R"]["t"] (video.runtime.has_thumbnail)
+    for video_dict in data.get("videos", ()):  # type: dict
+        if "R" in video_dict:
+            video_dict["R"].pop("t", None)
+    return True
+
+
+_PATCHS: List[Callable[[Union[dict, list], int], bool]] = [
+    _patch_version_0,
+    _patch_version_1,
+]
 
 
 def patch_database_json(data: Union[dict, list], version):

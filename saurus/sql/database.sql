@@ -89,9 +89,7 @@ CREATE TABLE IF NOT EXISTS collection_to_video (
 	collection_id INTEGER REFERENCES collection(collection_id) ON DELETE CASCADE,
 	video_id INTEGER REFERENCES video(video_id) ON DELETE CASCADE,
 	thumb_name TEXT NOT NULL DEFAULT "",
-	has_thumbnail INTEGER NOT NULL DEFAULT 0,
 	similarity_id INTEGER,
-	CHECK (has_thumbnail IN (0, 1)),
 	UNIQUE (collection_id, video_id),
 	UNIQUE (collection_id, thumb_name)
 );

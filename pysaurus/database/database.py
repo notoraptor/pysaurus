@@ -151,9 +151,6 @@ class Database(JsonDatabase):
                 thumb_name = video["thumb_name"]
                 if not video["found"]:
                     if thumb_name in existing_thumb_names:
-                        self.write_video_fields(
-                            video["video_id"], has_runtime_thumbnail=True
-                        )
                         valid_thumb_names.add(thumb_name)
                 elif not video["unreadable_thumbnail"]:
                     if (
@@ -169,11 +166,7 @@ class Database(JsonDatabase):
         with Profiler(say("Check unique thumbnails"), notifier=self.notifier):
             for valid_thumb_name, vds in thumb_to_videos.items():
                 if len(vds) == 1:
-                    video: dict = vds[0]
                     valid_thumb_names.add(valid_thumb_name)
-                    self.write_video_fields(
-                        video["video_id"], has_runtime_thumbnail=True
-                    )
                 else:
                     videos_without_thumbs.extend(vds)
         nb_videos_no_thumbs = len(videos_without_thumbs)
@@ -206,9 +199,7 @@ class Database(JsonDatabase):
             while thumb_name in valid_thumb_names:
                 thumb_name = f"{base_thumb_name}_{thumb_name_index}"
                 thumb_name_index += 1
-            self.write_video_fields(
-                video["video_id"], thumb_name=thumb_name, has_runtime_thumbnail=True
-            )
+            self.write_video_fields(video["video_id"], thumb_name=thumb_name)
             valid_thumb_names.add(thumb_name)
         del valid_thumb_names
 
@@ -242,9 +233,7 @@ class Database(JsonDatabase):
                 file_path = AbsolutePath.ensure(file_name)
                 thumb_errors[file_name] = d["e"]
                 video_id = self.get_video_id(file_path)
-                self.write_video_fields(
-                    video_id, unreadable_thumbnail=True, has_runtime_thumbnail=False
-                )
+                self.write_video_fields(video_id, unreadable_thumbnail=True)
 
         if thumb_errors:
             self.notifier.notify(notifications.VideoThumbnailErrors(thumb_errors))
@@ -413,7 +402,7 @@ class Database(JsonDatabase):
     def reopen(self):
         self.notifier.set_log_path(self.ways.get(DB_LOG_PATH).path)
 
-    def refresh(self, ensure_miniatures=False) -> None:
+    def refresh(self) -> None:
         with Profiler(say("Reset thumbnail errors"), self.notifier):
             for video in self.select_videos_fields(
                 ["video_id"], "readable", "found", "without_thumbnails"
@@ -421,8 +410,6 @@ class Database(JsonDatabase):
                 self.write_video_fields(video["video_id"], unreadable_thumbnail=False)
         self.update()
         self.ensure_thumbnails()
-        if ensure_miniatures:
-            self.ensure_miniatures()
 
     def delete_property_value(self, name: str, values: list) -> None:
         self.__del_prop_val(self.get_all_video_indices(), name, values)

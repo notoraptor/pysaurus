@@ -49,7 +49,6 @@ class Video:
     subtitle_languages: Sequence[str] = field(default_factory=list)
     # collection data
     thumb_name: str = ""
-    has_thumbnail: bool = False
     similarity_id: int = None
     properties: Dict[str, Sequence[str]] = field(default_factory=dict)
 

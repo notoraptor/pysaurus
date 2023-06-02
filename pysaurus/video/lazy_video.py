@@ -219,9 +219,7 @@ class LazyVideo(WithSchema):
             self.database.register_modified(self)
 
     not_found = property(lambda self: not self.found)
-    with_thumbnails = property(
-        lambda self: not self.unreadable_thumbnail and self.runtime.has_thumbnail
-    )
+    with_thumbnails = property(lambda self: not self.unreadable_thumbnail)
     without_thumbnails = property(lambda self: not self.with_thumbnails)
 
     frame_rate = property(lambda self: self.frame_rate_num / self.frame_rate_den)
@@ -283,22 +281,15 @@ class LazyVideo(WithSchema):
 
     @property
     def bit_rate(self):
-        return FileSize(self.file_size * self.duration_time_base / self.duration)
+        return FileSize(
+            self.file_size * self.duration_time_base / self.duration
+            if self.duration
+            else 0
+        )
 
     @property
     def moves(self):
         return self.database.moves_attribute(self.video_id)[1]
-
-    @property
-    def has_runtime_thumbnail(self):
-        return self.runtime.has_thumbnail
-
-    @has_runtime_thumbnail.setter
-    def has_runtime_thumbnail(self, value: bool):
-        value = bool(value)
-        if self.runtime.has_thumbnail != value:
-            self.runtime.has_thumbnail = value
-            self.database.register_modified(self)
 
     # Methods.
 

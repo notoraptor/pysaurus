@@ -44,7 +44,6 @@ def old_to_new_video(video) -> data.Video:
             audio_languages=video.audio_languages,
             subtitle_languages=video.subtitle_languages,
             thumb_name=video.thumb_name,
-            has_thumbnail=video.runtime.has_thumbnail,
             similarity_id=video.similarity_id,
             properties=video.properties,
         )
@@ -58,7 +57,6 @@ def old_to_new_video(video) -> data.Video:
             is_file=video.runtime.is_file,
             readable=video.readable,
             errors=video.errors,
-            has_thumbnail=video.runtime.has_thumbnail,
             thumb_name=video.thumb_name,
         )
     )

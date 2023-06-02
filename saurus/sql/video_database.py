@@ -120,7 +120,6 @@ class VideoDatabase(Database):
             collection_id=collection.collection_id,
             video_id=video_id,
             thumb_name=video.thumb_name,
-            has_thumbnail=video.has_thumbnail,
             similarity_id=video.similarity_id,
         )
         # video property value

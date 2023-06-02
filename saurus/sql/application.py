@@ -71,7 +71,7 @@ class Application:
                 "v.container_format, v.device_name, v.duration, v.duration_time_base, "
                 "v.frame_rate_den, v.frame_rate_num, v.height, v.meta_title, "
                 "v.sample_rate, v.video_codec, v.video_codec_description, "
-                "v.width, c.thumb_name, c.has_thumbnail, c.similarity_id "
+                "v.width, c.thumb_name, c.similarity_id "
                 "FROM video AS v "
                 "JOIN collection_to_video AS c ON v.video_id = c.video_id "
                 "WHERE c.collection_id = ?",
@@ -105,8 +105,7 @@ class Application:
                 video_codec_description=r_vid[22],
                 width=r_vid[23],
                 thumb_name=r_vid[24],
-                has_thumbnail=r_vid[25],
-                similarity_id=r_vid[26],
+                similarity_id=r_vid[25],
                 errors=[
                     row[0]
                     for row in self.db.query_all(

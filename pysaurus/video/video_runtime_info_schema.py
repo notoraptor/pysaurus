@@ -12,6 +12,5 @@ class VideoRuntimeInfoSchema(Schema):
                 Type("mtime", "m", 0.0),
                 Type("driver_id", (int, "d"), None),
                 Type("is_file", "f", False),
-                Type("has_thumbnail", "t", False),
             ]
         )

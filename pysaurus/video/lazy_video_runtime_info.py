@@ -10,4 +10,3 @@ class LazyVideoRuntimeInfo(WithSchema):
     mtime = schema_prop("mtime")
     driver_id = schema_prop("driver_id")
     is_file = schema_prop("is_file")
-    has_thumbnail = schema_prop("has_thumbnail")

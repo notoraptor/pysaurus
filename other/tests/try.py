@@ -33,7 +33,6 @@ class Val:
             "filename_length",
             "frame_rate_den",
             "frame_rate_num",
-            "has_runtime_thumbnail",
             "json_properties",
             "meta_title",
             "meta_title_numeric",
