@@ -247,6 +247,9 @@ class LazyVideo(WithSchema):
             self.database.thumbnail_folder, self.thumb_name, JPEG_EXTENSION
         )
     )
+    thumbnail_base64 = property(
+        lambda self: self.database.get_thumbnail_base64(self.filename)
+    )
     move_id = property(lambda self: self.database.moves_attribute(self.video_id)[0])
     size_length = property(lambda self: StringedTuple((self.size, self.length)))
     filename_length = property(lambda self: len(self.filename))

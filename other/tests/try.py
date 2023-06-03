@@ -42,7 +42,6 @@ class Val:
             "raw_microseconds",
             "subtitle_languages",
             "thumb_name",
-            "thumbnail_path",
             "unreadable_thumbnail",
             "video_id",
         ]

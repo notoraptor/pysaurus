@@ -114,7 +114,7 @@ class VideoRaptor(AbstractVideoRaptor):
                 for frame in container.decode(video_stream):
                     image = frame.to_image()
                     image.thumbnail((thumb_size, thumb_size))
-                    image.save(thumb_path)
+                    image.save(thumb_path, format="JPEG")
                     thumbnail_saved = True
                     break
                 if not thumbnail_saved:

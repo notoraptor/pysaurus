@@ -236,6 +236,10 @@ STDERR: {stderr.strip()}"""
             raise core_exceptions.NotAFileError(self)
         return self
 
+    def read_binary_file(self):
+        with open(self.__path, "rb") as file:
+            return file.read()
+
     @staticmethod
     def ensure(path):
         # type: (Union[str, AbsolutePath]) -> AbsolutePath

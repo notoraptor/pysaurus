@@ -8,7 +8,11 @@ import ujson as json
 from pysaurus.application import exceptions
 from pysaurus.core import functions, notifications
 from pysaurus.core.components import AbsolutePath, Date, PathType
-from pysaurus.core.constants import JPEG_EXTENSION, THUMBNAIL_EXTENSION
+from pysaurus.core.constants import (
+    JPEG_EXTENSION,
+    PYTHON_ERROR_THUMBNAIL,
+    THUMBNAIL_EXTENSION,
+)
 from pysaurus.core.file_utils import collect_file_titles, create_xspf_playlist
 from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
 from pysaurus.core.modules import FileSystem, ImageUtils
@@ -21,9 +25,11 @@ from pysaurus.database.json_database import (
     DB_LOG_PATH,
     DB_MINIATURES_PATH,
     DB_THUMB_FOLDER,
+    DB_THUMB_SQL_PATH,
     JsonDatabase,
 )
 from pysaurus.database.special_properties import SpecialProperties
+from pysaurus.database.thubmnail_database.thumbnail_manager import ThumbnailManager
 from pysaurus.database.viewport.abstract_video_provider import AbstractVideoProvider
 from pysaurus.database.viewport.video_filter import VideoFilter
 from pysaurus.miniature.group_computer import GroupComputer
@@ -42,7 +48,7 @@ except exceptions.CysaurusUnavailable:
 
 
 class Database(JsonDatabase):
-    __slots__ = ("provider", "_initial_pid")
+    __slots__ = ("provider", "thumbnail_manager", "_initial_pid")
 
     def __init__(self, path, folders=None, notifier=None):
         # type: (PathType, Iterable[PathType], Notifier) -> None
@@ -64,6 +70,17 @@ class Database(JsonDatabase):
             saver.to_save = SpecialProperties.install(self)
         # Compress thumbnails if necessary.
         self.compress_thumbnails()
+        # Initialize thumbnail manager.
+        thumb_sql_path: AbsolutePath = self.ways.get(DB_THUMB_SQL_PATH)
+        to_build = not thumb_sql_path.exists()
+        self.thumbnail_manager = ThumbnailManager(thumb_sql_path)
+        if to_build:
+            with Profiler("Build thumbnail SQL database", self.notifier):
+                self.thumbnail_manager.build(
+                    self.select_videos_fields(
+                        ["filename", "thumbnail_path"], "readable"
+                    )
+                )
 
     def __getattribute__(self, item):
         # TODO This method is for debugging, should be removed in production.
@@ -122,6 +139,44 @@ class Database(JsonDatabase):
             self.set_date(current_date)
             self.write_new_videos(new, all_files)
             self.notifier.notify(notifications.DatabaseUpdated())
+
+    @Profiler.profile_method()
+    def ensure_sql_thumbnails(self) -> None:
+        # Remove absent videos from thumbnail manager.
+        # Add missing thumbnails in thumbnail manager.
+        missing_thumbs = []
+        for video in self.select_videos_fields(
+            ["filename", "video_id"], "readable", "found"
+        ):
+            self.write_video_fields(video["video_id"], unreadable_thumbnail=False)
+            if not self.thumbnail_manager.has(video["filename"]):
+                missing_thumbs.append(video)
+
+        thumb_errors = {}
+        self.notifier.notify(
+            notifications.Message(f"Missing thumbs in SQL: {len(missing_thumbs)}")
+        )
+        notify_job_start(
+            self.notifier, self.ensure_sql_thumbnails, len(missing_thumbs), "thumbnails"
+        )
+        for i, video in enumerate(missing_thumbs):
+            err = self.thumbnail_manager.save(video["filename"])
+            if err:
+                self.add_video_errors(
+                    video["video_id"], PYTHON_ERROR_THUMBNAIL, *err["errors"]
+                )
+                thumb_errors[err["filename"]] = err["errors"]
+            notify_job_progress(
+                self.notifier,
+                self.ensure_sql_thumbnails,
+                None,
+                i + 1,
+                len(missing_thumbs),
+            )
+        if thumb_errors:
+            self.notifier.notify(notifications.VideoThumbnailErrors(thumb_errors))
+        self._notify_missing_thumbnails()
+        self.notifier.notify(notifications.DatabaseUpdated())
 
     @Profiler.profile_method()
     def ensure_thumbnails(self) -> None:
@@ -269,13 +324,11 @@ class Database(JsonDatabase):
 
         available_videos = list(
             self.select_videos_fields(
-                ["filename", "thumbnail_path", "video_id"],
-                "readable",
-                "with_thumbnails",
+                ["filename", "video_id"], "readable", "with_thumbnails"
             )
         )
         tasks = [
-            (video["filename"], video["thumbnail_path"])
+            (video["filename"], self.thumbnail_manager.get_blob(video["filename"]))
             for video in available_videos
             if video["filename"] not in identifiers
         ]
@@ -403,13 +456,8 @@ class Database(JsonDatabase):
         self.notifier.set_log_path(self.ways.get(DB_LOG_PATH).path)
 
     def refresh(self) -> None:
-        with Profiler(say("Reset thumbnail errors"), self.notifier):
-            for video in self.select_videos_fields(
-                ["video_id"], "readable", "found", "without_thumbnails"
-            ):
-                self.write_video_fields(video["video_id"], unreadable_thumbnail=False)
         self.update()
-        self.ensure_thumbnails()
+        self.ensure_sql_thumbnails()
 
     def delete_property_value(self, name: str, values: list) -> None:
         self.__del_prop_val(self.get_all_video_indices(), name, values)
@@ -551,9 +599,8 @@ class Database(JsonDatabase):
     def open_containing_folder(self, video_id: int) -> str:
         return str(self.get_video_filename(video_id).locate_file())
 
-    def get_thumbnail_path(self, video_id) -> AbsolutePath:
-        return AbsolutePath.file_path(
-            self.ways.get(DB_THUMB_FOLDER),
-            self.read_video_field(video_id, "thumb_name"),
-            JPEG_EXTENSION,
+    def get_thumbnail_base64(self, filename: AbsolutePath) -> str:
+        return (
+            "data:image/jpeg;base64,"
+            + self.thumbnail_manager.get_base64(filename).decode()
         )

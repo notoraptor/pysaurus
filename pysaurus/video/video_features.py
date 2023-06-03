@@ -56,7 +56,7 @@ class VideoFeatures:
             "size": str(video.size),
             "size_length": str(video.size_length),
             "subtitle_languages": video.subtitle_languages,
-            "thumbnail_path": str(video.thumbnail_path),
+            "thumbnail_path": video.thumbnail_base64,
             "title": video.title.value,
             "title_numeric": str(video.title_numeric),
             "video_codec": video.video_codec.value,

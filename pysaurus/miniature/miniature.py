@@ -1,4 +1,5 @@
 import base64
+from io import BytesIO
 from typing import Any, Optional, Tuple, Union
 
 from pysaurus.core.classes import AbstractMatrix
@@ -86,6 +87,23 @@ class Miniature(AbstractMatrix):
     def from_file_name(file_name, dimensions, identifier=None):
         # type: (str, Tuple[int, int], Optional[Any]) -> Miniature
         image = ImageUtils.open_rgb_image(file_name)
+        thumbnail = image.resize(dimensions)
+        width, height = dimensions
+        size = width * height
+        red = bytearray(size)
+        green = bytearray(size)
+        blue = bytearray(size)
+        for i, (r, g, b) in enumerate(thumbnail.getdata()):
+            red[i] = r
+            green[i] = g
+            blue[i] = b
+        return Miniature(red, green, blue, width, height, identifier)
+
+    @staticmethod
+    def from_file_data(binary_data, dimensions, identifier=None):
+        # type: (bytes, Tuple[int, int], Optional[Any]) -> Miniature
+        blob = BytesIO(binary_data)
+        image = ImageUtils.open_rgb_image(blob)
         thumbnail = image.resize(dimensions)
         width, height = dimensions
         size = width * height
