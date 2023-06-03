@@ -293,6 +293,9 @@ class LazyVideo(WithSchema):
 
     # Methods.
 
+    def add_errors(self, errors):
+        self._set("errors", sorted(self.errors | set(errors)))
+
     def terms(self) -> List[str]:
         term_sources = [self.filename.path, str(self.meta_title)]
         for name, val in self.properties.items():

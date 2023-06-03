@@ -635,6 +635,9 @@ class JsonDatabase:
         for video_id, value in zip(indices, values):
             setattr(self.__id_to_video[video_id], field, value)
 
+    def add_video_errors(self, video_id: int, *errors: Iterable[str]):
+        self.__id_to_video[video_id].add_errors(errors)
+
     def write_new_videos(
         self,
         dictionaries: List[dict],
