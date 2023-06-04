@@ -101,7 +101,7 @@ class VideoRaptor(AbstractVideoRaptor):
             return {"filename": filename, "errors": [f"{type(exc).__name__}: {exc}"]}
 
     @classmethod
-    def _get_thumbnail(cls, filename, thumb_path, thumb_size=300):
+    def get_thumbnail(cls, filename, thumb_path, thumb_size=300):
         try:
             with open_video(filename) as container:
                 _video_streams = container.streams.video
@@ -142,7 +142,7 @@ class VideoRaptor(AbstractVideoRaptor):
         arr_errors = []
         for i, (file_name, thumb_name) in enumerate(job.batch):
             thumb_path = os.path.join(thumb_folder, f"{thumb_name}.{JPEG_EXTENSION}")
-            d_err = self._get_thumbnail(file_name, thumb_path)
+            d_err = self.get_thumbnail(file_name, thumb_path)
             if d_err:
                 arr_errors.append(d_err)
             notify_job_progress(

@@ -8,6 +8,8 @@ from pysaurus.video_raptor.video_raptor_pyav import VideoRaptor
 
 
 class ThumbnailManager:
+    __slots__ = ("thumb_db", "raptor")
+
     def __init__(self, db_path: AbsolutePath):
         self.thumb_db = ThumbnailDatabase(db_path.path)
         self.raptor = VideoRaptor()
@@ -37,29 +39,22 @@ class ThumbnailManager:
             "video_to_thumbnail", "filename", "filename = ?", [filename.path]
         )
 
-    def get_blob(self, filename: AbsolutePath):
+    def get_blob(self, filename: AbsolutePath, wrapper=None):
         rows = self.thumb_db.query_all(
             "SELECT thumbnail FROM video_to_thumbnail WHERE filename = ?",
             [filename.path],
         )
         if rows:
             (row,) = rows
-            return row["thumbnail"]
+            return wrapper(row["thumbnail"]) if wrapper else row["thumbnail"]
         return None
 
     def get_base64(self, filename: AbsolutePath):
-        rows = self.thumb_db.query_all(
-            "SELECT thumbnail FROM video_to_thumbnail WHERE filename = ?",
-            [filename.path],
-        )
-        if rows:
-            (row,) = rows
-            return base64.b64encode(row["thumbnail"])
-        return None
+        return self.get_blob(filename, wrapper=base64.b64encode)
 
     def save(self, video_filename: AbsolutePath) -> Optional[dict]:
         blob = BytesIO()
-        err = self.raptor._get_thumbnail(video_filename.path, blob)
+        err = self.raptor.get_thumbnail(video_filename.path, blob)
         if not err:
             self.thumb_db.modify(
                 "INSERT OR IGNORE INTO video_to_thumbnail "

@@ -13,7 +13,7 @@ from pysaurus.core.constants import (
     PYTHON_ERROR_THUMBNAIL,
     THUMBNAIL_EXTENSION,
 )
-from pysaurus.core.file_utils import collect_file_titles, create_xspf_playlist
+from pysaurus.core.file_utils import create_xspf_playlist
 from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
 from pysaurus.core.modules import FileSystem, ImageUtils
 from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
@@ -175,125 +175,6 @@ class Database(JsonDatabase):
             )
         if thumb_errors:
             self.notifier.notify(notifications.VideoThumbnailErrors(thumb_errors))
-        self._notify_missing_thumbnails()
-        self.notifier.notify(notifications.DatabaseUpdated())
-
-    @Profiler.profile_method()
-    def ensure_thumbnails(self) -> None:
-        valid_thumb_names: Set[str] = set()
-        videos_without_thumbs: List[dict] = []
-        thumb_to_videos: Dict[str, List[dict]] = {}
-        thumb_errors: Dict[str, List[str]] = {}
-        thumb_folder = self.ways.get(DB_THUMB_FOLDER)
-        db_folder = self.ways.db_folder
-
-        # Get available thumbnails.
-        with Profiler("Collect existing thumbnails", self.notifier):
-            existing_thumb_names = collect_file_titles(thumb_folder, JPEG_EXTENSION)
-
-        with Profiler(say("Check videos thumbnails"), notifier=self.notifier):
-            for video in self.select_videos_fields(
-                [
-                    "date",
-                    "filename",
-                    "found",
-                    "thumb_name",
-                    "unreadable_thumbnail",
-                    "video_id",
-                ],
-                "readable",
-            ):
-                thumb_name = video["thumb_name"]
-                if not video["found"]:
-                    if thumb_name in existing_thumb_names:
-                        valid_thumb_names.add(thumb_name)
-                elif not video["unreadable_thumbnail"]:
-                    if (
-                        thumb_name in existing_thumb_names
-                        and existing_thumb_names[thumb_name] > video["date"]
-                    ):
-                        thumb_to_videos.setdefault(thumb_name, []).append(video)
-                    else:
-                        videos_without_thumbs.append(video)
-
-        # If a thumbnail name is associated to many videos,
-        # consider these videos don't have thumbnails.
-        with Profiler(say("Check unique thumbnails"), notifier=self.notifier):
-            for valid_thumb_name, vds in thumb_to_videos.items():
-                if len(vds) == 1:
-                    valid_thumb_names.add(valid_thumb_name)
-                else:
-                    videos_without_thumbs.extend(vds)
-        nb_videos_no_thumbs = len(videos_without_thumbs)
-        del thumb_to_videos
-
-        thumbs_to_clean = [
-            thumb_name
-            for thumb_name in existing_thumb_names
-            if thumb_name not in valid_thumb_names
-        ]
-        if thumbs_to_clean:
-            self.notifier.notify(
-                notifications.Message(
-                    f"Valid thumbnails before ensuring: "
-                    f"{len(valid_thumb_names)} / {len(existing_thumb_names)}, "
-                    f"to clean {len(thumbs_to_clean)}"
-                )
-            )
-            assert valid_thumb_names or not self.count_videos()
-            self._clean_thumbnails(thumbs_to_clean)
-
-        if not videos_without_thumbs:
-            self._notify_missing_thumbnails()
-            return
-
-        for video in videos_without_thumbs:
-            base_thumb_name = video["thumb_name"]
-            thumb_name_index = 0
-            thumb_name = base_thumb_name
-            while thumb_name in valid_thumb_names:
-                thumb_name = f"{base_thumb_name}_{thumb_name_index}"
-                thumb_name_index += 1
-            self.write_video_fields(video["video_id"], thumb_name=thumb_name)
-            valid_thumb_names.add(thumb_name)
-        del valid_thumb_names
-
-        # Use Python video raptor to collect thumbnails.
-        # Python video raptor can directly collect thumbnails into JPEG format,
-        # without going through PNG->JPEG pipeline.
-        backend_raptor = PythonVideoRaptor()
-        with Profiler(title=say("Get thumbnails from JSON"), notifier=self.notifier):
-            notify_job_start(
-                self.notifier,
-                backend_raptor.collect_video_thumbnails,
-                nb_videos_no_thumbs,
-                "videos",
-            )
-            results = list(
-                run_split_batch(
-                    backend_raptor.collect_video_thumbnails,
-                    [
-                        (video["filename"].path, video["thumb_name"])
-                        for video in videos_without_thumbs
-                    ],
-                    extra_args=[db_folder, thumb_folder.best_path, self.notifier],
-                )
-            )
-
-        for arr in results:
-            for d in arr:
-                d = Video.ensure_short_keys(d, backend_raptor.RETURNS_SHORT_KEYS)
-                assert len(d) == 2 and "f" in d and "e" in d
-                file_name = d["f"]
-                file_path = AbsolutePath.ensure(file_name)
-                thumb_errors[file_name] = d["e"]
-                video_id = self.get_video_id(file_path)
-                self.write_video_fields(video_id, unreadable_thumbnail=True)
-
-        if thumb_errors:
-            self.notifier.notify(notifications.VideoThumbnailErrors(thumb_errors))
-
-        self.compress_thumbnails()
         self._notify_missing_thumbnails()
         self.notifier.notify(notifications.DatabaseUpdated())
 
