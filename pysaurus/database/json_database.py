@@ -574,7 +574,7 @@ class JsonDatabase:
                 or (video.readable and not SpecialProperties.all_in(video))
                 or self._video_must_be_updated(video)
             ):
-                all_file_names.append(file_name.path)
+                all_file_names.append(file_name.standard_path)
         all_file_names.sort()
         return all_file_names
 
