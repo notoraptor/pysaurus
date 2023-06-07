@@ -8,19 +8,14 @@ import ujson as json
 from pysaurus.application import exceptions
 from pysaurus.core import functions, notifications
 from pysaurus.core.components import AbsolutePath, Date, PathType
-from pysaurus.core.constants import (
-    JPEG_EXTENSION,
-    PYTHON_ERROR_THUMBNAIL,
-    THUMBNAIL_EXTENSION,
-)
+from pysaurus.core.constants import PYTHON_ERROR_THUMBNAIL
 from pysaurus.core.file_utils import create_xspf_playlist
 from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
-from pysaurus.core.modules import FileSystem, ImageUtils
+from pysaurus.core.modules import ImageUtils
 from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
-from pysaurus.core.parallelization import parallelize, run_split_batch
+from pysaurus.core.parallelization import run_split_batch
 from pysaurus.core.profiling import Profiler
 from pysaurus.database import jobs_python
-from pysaurus.database.jobs_python import compress_thumbnails_to_jpeg
 from pysaurus.database.json_database import (
     DB_LOG_PATH,
     DB_MINIATURES_PATH,
@@ -68,8 +63,6 @@ class Database(JsonDatabase):
             "install special properties", notifier=self.notifier
         ), self.to_save() as saver:
             saver.to_save = SpecialProperties.install(self)
-        # Compress thumbnails if necessary.
-        self.compress_thumbnails()
         # Initialize thumbnail manager.
         thumb_sql_path: AbsolutePath = self.ways.get(DB_THUMB_SQL_PATH)
         to_build = not thumb_sql_path.exists()
@@ -273,43 +266,6 @@ class Database(JsonDatabase):
                 miniature.video_id = video["video_id"]
                 miniatures.append(miniature)
             return miniatures
-
-    @Profiler.profile_method()
-    def compress_thumbnails(self):
-        png_paths = []
-        for entry in FileSystem.scandir(self.ways.get(DB_THUMB_FOLDER).path):
-            path = AbsolutePath(entry.path)
-            if (
-                path.extension == THUMBNAIL_EXTENSION
-                and not AbsolutePath.file_path(
-                    path.get_directory(), path.title, JPEG_EXTENSION
-                ).exists()
-            ):
-                png_paths.append(path.path)
-        if not png_paths:
-            self.notifier.notify(notifications.Message("no thumbnail to compress"))
-            return
-        notify_job_start(
-            self.notifier, compress_thumbnails_to_jpeg, len(png_paths), "PNG thumbnails"
-        )
-        tasks = [(path, i, self.notifier) for i, path in enumerate(png_paths)]
-        list(parallelize(compress_thumbnails_to_jpeg, tasks, ordered=False))
-
-    def _clean_thumbnails(self, thumb_names: List[str]):
-        notify_job_start(
-            self.notifier, self._clean_thumbnails, len(thumb_names), "thumbnails"
-        )
-        for i, thumb_name in enumerate(thumb_names):
-            for ext in (THUMBNAIL_EXTENSION, JPEG_EXTENSION):
-                path = AbsolutePath.file_path(
-                    self.ways.get(DB_THUMB_FOLDER), thumb_name, ext
-                )
-                if path.isfile():
-                    path.delete()
-                    assert not path.isfile()
-            notify_job_progress(
-                self.notifier, self._clean_thumbnails, None, i + 1, len(thumb_names)
-            )
 
     def set_video_similarity(
         self, video_id: int, value: Optional[int], notify=True
