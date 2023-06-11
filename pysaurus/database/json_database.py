@@ -603,25 +603,11 @@ class JsonDatabase:
     def get_video_filename(self, video_id: int) -> AbsolutePath:
         return self.__id_to_video[video_id].filename
 
-    def get_video_id(self, filename: PathType):
-        filename = AbsolutePath.ensure(filename)
-        if filename in self.__videos:
-            return self.__videos[filename].video_id
-        else:
-            return None
-
     def get_video_terms(self, video_id: int) -> List[str]:
         return self.__id_to_video[video_id].terms()
 
     def read_video_field(self, video_id: int, field: str):
         return getattr(self.__id_to_video[video_id], field)
-
-    def read_video_fields(self, video_id: int, fields: Sequence[str]) -> dict:
-        video = self.__id_to_video[video_id]
-        return {field: getattr(video, field) for field in fields}
-
-    def read_videos_field(self, indices: Iterable[int], field: str) -> Iterable:
-        return (getattr(self.__id_to_video[video_id], field) for video_id in indices)
 
     def write_video_fields(self, video_id: int, **kwargs) -> bool:
         modified = False

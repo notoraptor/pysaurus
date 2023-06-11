@@ -224,15 +224,17 @@ class FeatureAPI:
             "nbSourceVideos": self.database.provider.count_source_videos(),
             "validSize": str(
                 FileSize(
-                    sum(self.database.read_videos_field(view_indices, "file_size"))
+                    sum(
+                        self.database.read_video_field(video_id, "file_size")
+                        for video_id in view_indices
+                    )
                 )
             ),
             "validLength": str(
                 Duration(
                     sum(
-                        self.database.read_videos_field(
-                            view_indices, "raw_microseconds"
-                        )
+                        self.database.read_video_field(video_id, "raw_microseconds")
+                        for video_id in view_indices
                     )
                 )
             ),

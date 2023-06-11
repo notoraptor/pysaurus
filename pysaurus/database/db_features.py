@@ -113,7 +113,9 @@ class DbFeatures:
     def find_similar_videos_ignore_cache(self, db: Database):
         miniatures = db.ensure_miniatures(returns=True)  # type: List[Miniature]
         video_indices = [m.video_id for m in miniatures]
-        previous_sim = list(db.read_videos_field(video_indices, "similarity_id"))
+        previous_sim = [
+            db.read_video_field(video_id, "similarity_id") for video_id in video_indices
+        ]
         db.fill_videos_field(video_indices, "similarity_id", None)
         try:
             self.find_similar_videos(db, miniatures)
@@ -127,7 +129,10 @@ class DbFeatures:
             if miniatures is None:
                 miniatures = db.ensure_miniatures(returns=True)  # type: List[Miniature]
             video_indices = [m.video_id for m in miniatures]
-            prev_sims = list(db.read_videos_field(video_indices, "similarity_id"))
+            prev_sims = [
+                db.read_video_field(video_id, "similarity_id")
+                for video_id in video_indices
+            ]
             nb_videos = len(miniatures)
             new_miniature_indices = []
             old_miniature_indices = []
@@ -178,7 +183,9 @@ class DbFeatures:
                 )
             )
             # Sort new similarity groups by size then smallest duration.
-            lengths = list(db.read_videos_field(video_indices, "length"))
+            lengths = [
+                db.read_video_field(video_id, "length") for video_id in video_indices
+            ]
             sim_groups.sort(key=lambda s: (len(s), min(lengths[x] for x in s)))
             # Get next similarity id to use.
             next_sim_id = (
