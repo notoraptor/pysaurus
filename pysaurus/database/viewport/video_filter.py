@@ -155,7 +155,8 @@ class _AbstractLayerGrouping(Layer):
             groups.append(self.output[0])
         else:
             for value in self.video_id_to_values.pop(video_id, ()):
-                groups.append(self.output.lookup(value))
+                if self.output.contains_key(value):
+                    groups.append(self.output.lookup(value))
         for group in groups:
             if video_id in group.videos:
                 group.videos.remove(video_id)
