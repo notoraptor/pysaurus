@@ -62,3 +62,9 @@ class ThumbnailManager:
                 [video_filename.path, blob.getvalue()],
             )
         return err
+
+    def rename(self, old_path: AbsolutePath, new_path: AbsolutePath):
+        self.thumb_db.modify(
+            "UPDATE video_to_thumbnail SET filename = ? WHERE filename = ?",
+            (new_path.path, old_path.path),
+        )

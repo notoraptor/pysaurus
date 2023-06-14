@@ -692,6 +692,7 @@ class JsonDatabase:
         del self.__videos[video.filename]
         new_video = video.with_new_filename(path)
         self.__videos[new_video.filename] = new_video
+        self.__id_to_video[video_id] = new_video
         self._notify_filename_modified(new_video, video)
 
         return video.filename

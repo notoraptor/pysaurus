@@ -279,9 +279,11 @@ class Database(JsonDatabase):
             raise exceptions.InvalidFileName(new_title)
         old_filename: AbsolutePath = self.get_video_filename(video_id)
         if old_filename.file_title != new_title:
-            self.change_video_entry_filename(
+            old_path = self.change_video_entry_filename(
                 video_id, old_filename.new_title(new_title)
             )
+            new_path = self.get_video_filename(video_id)
+            self.thumbnail_manager.rename(old_path, new_path)
 
     def delete_video(self, video_id: int) -> AbsolutePath:
         video_filename: AbsolutePath = self.get_video_filename(video_id)

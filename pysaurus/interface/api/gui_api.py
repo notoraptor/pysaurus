@@ -316,6 +316,7 @@ class GuiAPI(FeatureAPI):
             self.copy_work = None
             if done:
                 old_path = self.database.change_video_entry_filename(video_id, dst)
+                self.database.thumbnail_manager.rename(old_path, dst)
                 if old_path:
                     old_path.delete()
                 self.notifier.notify(DatabaseUpdated())
