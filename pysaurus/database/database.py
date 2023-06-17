@@ -289,6 +289,7 @@ class Database(JsonDatabase):
         video_filename: AbsolutePath = self.get_video_filename(video_id)
         video_filename.delete()
         self.delete_video_entry(video_id)
+        self.thumbnail_manager.delete(video_filename)
         return video_filename
 
     def reopen(self):

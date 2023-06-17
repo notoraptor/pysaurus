@@ -68,3 +68,8 @@ class ThumbnailManager:
             "UPDATE video_to_thumbnail SET filename = ? WHERE filename = ?",
             (new_path.path, old_path.path),
         )
+
+    def delete(self, path: AbsolutePath):
+        self.thumb_db.modify(
+            "DELETE FROM video_to_thumbnail WHERE filename = ?", [path.path]
+        )

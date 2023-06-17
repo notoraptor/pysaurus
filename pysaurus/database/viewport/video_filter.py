@@ -239,7 +239,14 @@ class LayerClassifier(_AbstractLayerGrouping):
         else:
             path = self.params["path"]
             videos = set.intersection(
-                *(set(data.lookup(value).videos) for value in path)
+                *(
+                    [
+                        set(data.lookup(value).videos)
+                        for value in path
+                        if data.contains_key(value)
+                    ]
+                    or [set()]
+                )
             )
             assert videos, path
             self.output = self._classify_videos(videos, data.field, path)
