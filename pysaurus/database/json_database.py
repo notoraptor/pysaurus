@@ -18,6 +18,7 @@ from pysaurus.database.json_database_utils import (
     patch_database_json,
 )
 from pysaurus.database.special_properties import SpecialProperties
+from pysaurus.database.thubmnail_database.thumbnail_manager import ThumbnailManager
 from pysaurus.properties.properties import (
     DefType,
     PROP_UNIT_TYPES,
@@ -61,6 +62,7 @@ class JsonDatabase:
         "in_save_context",
         "__removed",
         "__modified",
+        "thumbnail_manager",
     )
 
     def __init__(
@@ -104,6 +106,17 @@ class JsonDatabase:
         self.__modified: Set[Video] = set()
         # Initialize
         self.__load(folders)
+        # Initialize thumbnail manager.
+        thumb_sql_path: AbsolutePath = self.ways.get(DB_THUMB_SQL_PATH)
+        to_build = not thumb_sql_path.exists()
+        self.thumbnail_manager = ThumbnailManager(thumb_sql_path)
+        if to_build:
+            with Profiler("Build thumbnail SQL database", self.notifier):
+                self.thumbnail_manager.build(
+                    self.select_videos_fields(
+                        ["filename", "thumbnail_path"], "readable"
+                    )
+                )
 
     @Profiler.profile_method()
     def __load(self, folders: Optional[Iterable[PathType]] = None):
@@ -695,6 +708,8 @@ class JsonDatabase:
         self.__id_to_video[video_id] = new_video
         self._notify_filename_modified(new_video, video)
 
+        self.thumbnail_manager.rename(video.filename, new_video.filename)
+
         return video.filename
 
     def delete_video_entry(self, video_id: int):
@@ -706,6 +721,7 @@ class JsonDatabase:
         self.register_removed(video)
         self.notifier.notify(notifications.VideoDeleted(video))
         self._notify_fields_modified(["move_id", "quality"])
+        self.thumbnail_manager.delete(video.filename)
 
     def move_video_entry(self, from_id, to_id) -> None:
         from_video = self.__id_to_video[from_id]
@@ -720,6 +736,14 @@ class JsonDatabase:
         to_video.date_entry_modified = from_video.date_entry_modified.time
         to_video.date_entry_opened = from_video.date_entry_opened.time
         self.delete_video_entry(from_id)
+
+    def confirm_unique_moves(self) -> int:
+        with self.to_save() as saver:
+            unique_moves = list(self.moves_attribute.get_unique_moves())
+            for video_id, moves in unique_moves:
+                self.move_video_entry(video_id, moves[0]["video_id"])
+            saver.to_save = len(unique_moves)
+        return len(unique_moves)
 
     def open_video(self, video_id: int) -> None:
         self.__id_to_video[video_id].open()
@@ -737,3 +761,18 @@ class JsonDatabase:
         return VideoFeatures.get_common_fields(
             self.__id_to_video[video_id] for video_id in video_indices
         )
+
+    def get_thumbnail_base64(self, filename: AbsolutePath) -> str:
+        return (
+            "data:image/jpeg;base64,"
+            + self.thumbnail_manager.get_base64(filename).decode()
+        )
+
+    def get_thumbnail_blob(self, filename: AbsolutePath):
+        return self.thumbnail_manager.get_blob(filename)
+
+    def has_thumbnail(self, filename: AbsolutePath) -> bool:
+        return self.thumbnail_manager.has(filename)
+
+    def save_thumbnail(self, filename: AbsolutePath) -> Optional[dict]:
+        return self.thumbnail_manager.save(filename)

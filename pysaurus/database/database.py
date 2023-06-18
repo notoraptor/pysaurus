@@ -20,11 +20,9 @@ from pysaurus.database.json_database import (
     DB_LOG_PATH,
     DB_MINIATURES_PATH,
     DB_THUMB_FOLDER,
-    DB_THUMB_SQL_PATH,
     JsonDatabase,
 )
 from pysaurus.database.special_properties import SpecialProperties
-from pysaurus.database.thubmnail_database.thumbnail_manager import ThumbnailManager
 from pysaurus.database.viewport.abstract_video_provider import AbstractVideoProvider
 from pysaurus.database.viewport.video_filter import VideoFilter
 from pysaurus.miniature.group_computer import GroupComputer
@@ -43,7 +41,7 @@ except exceptions.CysaurusUnavailable:
 
 
 class Database(JsonDatabase):
-    __slots__ = ("provider", "thumbnail_manager", "_initial_pid")
+    __slots__ = ("provider", "_initial_pid")
 
     def __init__(self, path, folders=None, notifier=None):
         # type: (PathType, Iterable[PathType], Notifier) -> None
@@ -55,6 +53,7 @@ class Database(JsonDatabase):
 
         # Load database
         super().__init__(path, folders, notifier or DEFAULT_NOTIFIER)
+
         # RAM data
         self.provider: Optional[AbstractVideoProvider] = VideoFilter(self)
 
@@ -63,17 +62,6 @@ class Database(JsonDatabase):
             "install special properties", notifier=self.notifier
         ), self.to_save() as saver:
             saver.to_save = SpecialProperties.install(self)
-        # Initialize thumbnail manager.
-        thumb_sql_path: AbsolutePath = self.ways.get(DB_THUMB_SQL_PATH)
-        to_build = not thumb_sql_path.exists()
-        self.thumbnail_manager = ThumbnailManager(thumb_sql_path)
-        if to_build:
-            with Profiler("Build thumbnail SQL database", self.notifier):
-                self.thumbnail_manager.build(
-                    self.select_videos_fields(
-                        ["filename", "thumbnail_path"], "readable"
-                    )
-                )
 
     def __getattribute__(self, item):
         # TODO This method is for debugging, should be removed in production.
@@ -142,7 +130,7 @@ class Database(JsonDatabase):
             ["filename", "video_id"], "readable", "found"
         ):
             self.write_video_fields(video["video_id"], unreadable_thumbnail=False)
-            if not self.thumbnail_manager.has(video["filename"]):
+            if not self.has_thumbnail(video["filename"]):
                 missing_thumbs.append(video)
 
         thumb_errors = {}
@@ -153,7 +141,7 @@ class Database(JsonDatabase):
             self.notifier, self.ensure_sql_thumbnails, len(missing_thumbs), "thumbnails"
         )
         for i, video in enumerate(missing_thumbs):
-            err = self.thumbnail_manager.save(video["filename"])
+            err = self.save_thumbnail(video["filename"])
             if err:
                 self.add_video_errors(
                     video["video_id"], PYTHON_ERROR_THUMBNAIL, *err["errors"]
@@ -202,7 +190,7 @@ class Database(JsonDatabase):
             )
         )
         tasks = [
-            (video["filename"], self.thumbnail_manager.get_blob(video["filename"]))
+            (video["filename"], self.get_thumbnail_blob(video["filename"]))
             for video in available_videos
             if video["filename"] not in identifiers
         ]
@@ -279,17 +267,14 @@ class Database(JsonDatabase):
             raise exceptions.InvalidFileName(new_title)
         old_filename: AbsolutePath = self.get_video_filename(video_id)
         if old_filename.file_title != new_title:
-            old_path = self.change_video_entry_filename(
+            self.change_video_entry_filename(
                 video_id, old_filename.new_title(new_title)
             )
-            new_path = self.get_video_filename(video_id)
-            self.thumbnail_manager.rename(old_path, new_path)
 
     def delete_video(self, video_id: int) -> AbsolutePath:
         video_filename: AbsolutePath = self.get_video_filename(video_id)
         video_filename.delete()
         self.delete_video_entry(video_id)
-        self.thumbnail_manager.delete(video_filename)
         return video_filename
 
     def reopen(self):
@@ -425,22 +410,8 @@ class Database(JsonDatabase):
             self._notify_properties_modified([from_property, to_property])
         return len(modified)
 
-    def confirm_unique_moves(self) -> int:
-        with self.to_save() as saver:
-            unique_moves = list(self.moves_attribute.get_unique_moves())
-            for video_id, moves in unique_moves:
-                self.move_video_entry(video_id, moves[0]["video_id"])
-            saver.to_save = len(unique_moves)
-        return len(unique_moves)
-
     def to_xspf_playlist(self, video_indices: Iterable[int]) -> AbsolutePath:
         return create_xspf_playlist(map(self.get_video_filename, video_indices))
 
     def open_containing_folder(self, video_id: int) -> str:
         return str(self.get_video_filename(video_id).locate_file())
-
-    def get_thumbnail_base64(self, filename: AbsolutePath) -> str:
-        return (
-            "data:image/jpeg;base64,"
-            + self.thumbnail_manager.get_base64(filename).decode()
-        )

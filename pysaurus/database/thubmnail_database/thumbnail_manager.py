@@ -1,6 +1,6 @@
 import base64
 from io import BytesIO
-from typing import Optional
+from typing import Iterable, Optional
 
 from pysaurus.core.components import AbsolutePath
 from pysaurus.database.thubmnail_database.thumbnail_database import ThumbnailDatabase
@@ -14,7 +14,7 @@ class ThumbnailManager:
         self.thumb_db = ThumbnailDatabase(db_path.path)
         self.raptor = VideoRaptor()
 
-    def build(self, videos: dict):
+    def build(self, videos: Iterable[dict]):
         thumbnail_path_to_filenames = {}
         for video in videos:
             thumbnail_path_to_filenames.setdefault(video["thumbnail_path"], []).append(

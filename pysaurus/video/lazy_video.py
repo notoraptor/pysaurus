@@ -250,7 +250,6 @@ class LazyVideo(WithSchema):
     thumbnail_base64 = property(
         lambda self: self.database.get_thumbnail_base64(self.filename)
     )
-    move_id = property(lambda self: self.database.moves_attribute(self.video_id)[0])
     size_length = property(lambda self: StringedTuple((self.size, self.length)))
     filename_length = property(lambda self: len(self.filename))
 
@@ -289,6 +288,10 @@ class LazyVideo(WithSchema):
             if self.duration
             else 0
         )
+
+    @property
+    def move_id(self):
+        return self.database.moves_attribute(self.video_id)[0]
 
     @property
     def moves(self):
