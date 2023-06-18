@@ -5,7 +5,7 @@ from typing import Any, Dict, List
 from pysaurus.core.classes import StringPrinter, StringedTuple, Text
 from pysaurus.core.compare import to_comparable
 from pysaurus.core.components import AbsolutePath, Date, Duration, FileSize
-from pysaurus.core.constants import JPEG_EXTENSION, PYTHON_ERROR_THUMBNAIL, UNDEFINED
+from pysaurus.core.constants import PYTHON_ERROR_THUMBNAIL, UNDEFINED
 from pysaurus.core.functions import class_get_public_attributes, string_to_pieces
 from pysaurus.core.modules import FNV64
 from pysaurus.core.schematizable import WithSchema
@@ -242,11 +242,7 @@ class LazyVideo(WithSchema):
     raw_microseconds = property(
         lambda self: self.duration * 1000000 / self.duration_time_base
     )
-    thumbnail_path = property(
-        lambda self: AbsolutePath.file_path(
-            self.database.thumbnail_folder, self.thumb_name, JPEG_EXTENSION
-        )
-    )
+    thumbnail_path = property(lambda self: self.database.old_get_thumbnail_path(self))
     thumbnail_base64 = property(
         lambda self: self.database.get_thumbnail_base64(self.filename)
     )

@@ -19,7 +19,6 @@ from pysaurus.database import jobs_python
 from pysaurus.database.json_database import (
     DB_LOG_PATH,
     DB_MINIATURES_PATH,
-    DB_THUMB_FOLDER,
     JsonDatabase,
 )
 from pysaurus.database.special_properties import SpecialProperties
@@ -79,7 +78,6 @@ class Database(JsonDatabase):
     # Properties.
 
     name = property(lambda self: self.ways.db_folder.title)
-    thumbnail_folder = property(lambda self: self.ways.get(DB_THUMB_FOLDER))
 
     @Profiler.profile_method()
     def update(self) -> None:
@@ -122,7 +120,7 @@ class Database(JsonDatabase):
             self.notifier.notify(notifications.DatabaseUpdated())
 
     @Profiler.profile_method()
-    def ensure_sql_thumbnails(self) -> None:
+    def ensure_thumbnails(self) -> None:
         # Remove absent videos from thumbnail manager.
         # Add missing thumbnails in thumbnail manager.
         missing_thumbs = []
@@ -138,7 +136,7 @@ class Database(JsonDatabase):
             notifications.Message(f"Missing thumbs in SQL: {len(missing_thumbs)}")
         )
         notify_job_start(
-            self.notifier, self.ensure_sql_thumbnails, len(missing_thumbs), "thumbnails"
+            self.notifier, self.ensure_thumbnails, len(missing_thumbs), "thumbnails"
         )
         for i, video in enumerate(missing_thumbs):
             err = self.save_thumbnail(video["filename"])
@@ -148,11 +146,7 @@ class Database(JsonDatabase):
                 )
                 thumb_errors[err["filename"]] = err["errors"]
             notify_job_progress(
-                self.notifier,
-                self.ensure_sql_thumbnails,
-                None,
-                i + 1,
-                len(missing_thumbs),
+                self.notifier, self.ensure_thumbnails, None, i + 1, len(missing_thumbs)
             )
         if thumb_errors:
             self.notifier.notify(notifications.VideoThumbnailErrors(thumb_errors))
@@ -282,7 +276,7 @@ class Database(JsonDatabase):
 
     def refresh(self) -> None:
         self.update()
-        self.ensure_sql_thumbnails()
+        self.ensure_thumbnails()
 
     def delete_property_value(self, name: str, values: list) -> None:
         self.__del_prop_val(self.get_all_video_indices(), name, values)

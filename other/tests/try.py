@@ -9,7 +9,6 @@ from pysaurus.core.job_notifications import (
 )
 from pysaurus.core.profiling import Profiler
 from pysaurus.video import Video
-from pysaurus.video.video_features import VideoFeatures
 
 SAME_ORDER_FIELD = {
     "length": "raw_seconds",
@@ -102,16 +101,6 @@ def _display_all_video_attributes():
     print("Video all attributes:", len(all_attributes))
     for attribute in all_attributes:
         print("\t", attribute)
-
-
-def _profile_video_to_json(database):
-    batch = 100
-    with Profiler("to_json"):
-        for _ in range(batch):
-            list(VideoFeatures.to_json(v) for v in database._get_cached_videos()[:100])
-    with Profiler("json"):
-        for _ in range(batch):
-            list(VideoFeatures.json(v) for v in database._get_cached_videos()[:100])
 
 
 def _check_prop_val(database, pgf):

@@ -4,6 +4,7 @@ from typing import Any, Container, Dict, Iterable, List, Optional, Sequence, Set
 from pysaurus.application import exceptions
 from pysaurus.core import functions, notifications, notifying
 from pysaurus.core.components import AbsolutePath, Date, PathType
+from pysaurus.core.constants import JPEG_EXTENSION
 from pysaurus.core.json_backup import JsonBackup
 from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.path_tree import PathTree
@@ -54,7 +55,6 @@ class JsonDatabase:
         "__videos",
         "__prop_types",
         "__predictors",
-        "iteration",
         "notifier",
         "__id_to_video",
         "moves_attribute",
@@ -62,7 +62,7 @@ class JsonDatabase:
         "in_save_context",
         "__removed",
         "__modified",
-        "thumbnail_manager",
+        "__thumb_mgr",
     )
 
     def __init__(
@@ -95,7 +95,6 @@ class JsonDatabase:
         self.__predictors: Dict[str, List[float]] = {}
         # Runtime
         self.notifier = notifier
-        self.iteration = 0
         self.__id_to_video: Dict[int, Video] = {}
         self.moves_attribute = PotentialMoveAttribute(self)
         self.__indexer = indexer or VideoIndexer(
@@ -109,10 +108,10 @@ class JsonDatabase:
         # Initialize thumbnail manager.
         thumb_sql_path: AbsolutePath = self.ways.get(DB_THUMB_SQL_PATH)
         to_build = not thumb_sql_path.exists()
-        self.thumbnail_manager = ThumbnailManager(thumb_sql_path)
+        self.__thumb_mgr = ThumbnailManager(thumb_sql_path)
         if to_build:
             with Profiler("Build thumbnail SQL database", self.notifier):
-                self.thumbnail_manager.build(
+                self.__thumb_mgr.build(
                     self.select_videos_fields(
                         ["filename", "thumbnail_path"], "readable"
                     )
@@ -231,9 +230,7 @@ class JsonDatabase:
         # Do not save if we must save only on new identifiers.
         if not identifiers_updated and on_new_identifiers:
             return
-        # We can save. Make runtime updates.
-        self.iteration += 1
-        # Save database.
+        # We can save. Save database.
         self.__backup.save(
             {
                 "version": self.__version,
@@ -708,7 +705,7 @@ class JsonDatabase:
         self.__id_to_video[video_id] = new_video
         self._notify_filename_modified(new_video, video)
 
-        self.thumbnail_manager.rename(video.filename, new_video.filename)
+        self.__thumb_mgr.rename(video.filename, new_video.filename)
 
         return video.filename
 
@@ -717,11 +714,11 @@ class JsonDatabase:
         self.__videos.pop(video.filename, None)
         self.__id_to_video.pop(video.video_id, None)
         if video.readable:
-            video.thumbnail_path.delete()
+            self.old_get_thumbnail_path(video).delete()
         self.register_removed(video)
         self.notifier.notify(notifications.VideoDeleted(video))
         self._notify_fields_modified(["move_id", "quality"])
-        self.thumbnail_manager.delete(video.filename)
+        self.__thumb_mgr.delete(video.filename)
 
     def move_video_entry(self, from_id, to_id) -> None:
         from_video = self.__id_to_video[from_id]
@@ -762,17 +759,21 @@ class JsonDatabase:
             self.__id_to_video[video_id] for video_id in video_indices
         )
 
+    def old_get_thumbnail_path(self, video: Video):
+        return AbsolutePath.file_path(
+            self.ways.get(DB_THUMB_FOLDER), video.thumb_name, JPEG_EXTENSION
+        )
+
     def get_thumbnail_base64(self, filename: AbsolutePath) -> str:
         return (
-            "data:image/jpeg;base64,"
-            + self.thumbnail_manager.get_base64(filename).decode()
+            "data:image/jpeg;base64," + self.__thumb_mgr.get_base64(filename).decode()
         )
 
     def get_thumbnail_blob(self, filename: AbsolutePath):
-        return self.thumbnail_manager.get_blob(filename)
+        return self.__thumb_mgr.get_blob(filename)
 
     def has_thumbnail(self, filename: AbsolutePath) -> bool:
-        return self.thumbnail_manager.has(filename)
+        return self.__thumb_mgr.has(filename)
 
     def save_thumbnail(self, filename: AbsolutePath) -> Optional[dict]:
-        return self.thumbnail_manager.save(filename)
+        return self.__thumb_mgr.save(filename)
