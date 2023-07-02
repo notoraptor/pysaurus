@@ -77,3 +77,16 @@ ffprobe -v quiet -print_format json -show_format -show_streams "<video-file>" > 
   a new video object copied from old one with necessary changes applied to new one.
 - If provider is grouping w/rt a property, and this property is deleted in property page,
   provider is not currently updated.
+
+Filter by
+- source
+  - all(flag is True for flag in flags_1) or all(flag is True for flag in flags_n)
+- group by field
+  - counter(video[field] for video in database)
+  - sort counter by count, field, or field string length
+- classify by path in group field
+  - selection = (video for video in database if path in video[field])
+  - counter(video[field] for video in selection)
+- search
+- sort
+- select
