@@ -103,7 +103,7 @@ class _GrayClassifier:
         )
 
 
-class DbFeatures:
+class DbSimilarVideos:
     __slots__ = ("positions",)
 
     def __init__(self):
@@ -150,12 +150,12 @@ class DbFeatures:
 
             nb_max_comparisons = compute_nb_couples(nb_videos)
             with Profiler(say("Allocating edges map"), notifier=db.notifier):
-                cmp_map = self.generate_edges(nb_videos)
+                cmp_map = self._generate_edges(nb_videos)
             classifier_new = _GrayClassifier.classify(miniatures, new_miniature_indices)
             classifier_old = _GrayClassifier.classify(miniatures, old_miniature_indices)
 
             nb_cmp = self._collect_comparisons(classifier_new, cmp_map, nb_videos, db)
-            nb_cmp += self.compare_old_vs_new_miniatures(
+            nb_cmp += self._compare_old_vs_new_miniatures(
                 classifier_new, classifier_old, cmp_map, nb_videos, db
             )
 
@@ -265,7 +265,7 @@ class DbFeatures:
                         )
 
     @classmethod
-    def generate_edges(cls, nb_videos):
+    def _generate_edges(cls, nb_videos):
         if has_cpp:
             return (c_bool * (nb_videos * nb_videos))()
         else:
@@ -322,7 +322,7 @@ class DbFeatures:
 
             return nb_cmp
 
-    def compare_old_vs_new_miniatures(
+    def _compare_old_vs_new_miniatures(
         self,
         classifier_left: _GrayClassifier,
         classifier_right: _GrayClassifier,
@@ -333,7 +333,7 @@ class DbFeatures:
         n = len(classifier_left.grays)
         with Profiler(say("Cross compare classifiers."), db.notifier):
             notify_job_start(
-                db.notifier, self.compare_old_vs_new_miniatures, n, "new miniatures"
+                db.notifier, self._compare_old_vs_new_miniatures, n, "new miniatures"
             )
             nb_cmp = 0
             for i_gray_left, gray_left in enumerate(classifier_left.grays):
@@ -368,13 +368,13 @@ class DbFeatures:
                 if (i_gray_left + 1) % 10 == 0:
                     notify_job_progress(
                         db.notifier,
-                        self.compare_old_vs_new_miniatures,
+                        self._compare_old_vs_new_miniatures,
                         None,
                         i_gray_left + 1,
                         n,
                     )
             notify_job_progress(
-                db.notifier, self.compare_old_vs_new_miniatures, None, n, n
+                db.notifier, self._compare_old_vs_new_miniatures, None, n, n
             )
             return nb_cmp
 

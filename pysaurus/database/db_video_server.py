@@ -7,7 +7,7 @@ from werkzeug.serving import make_server
 logger = logging.getLogger(__name__)
 
 
-class ServerThread(threading.Thread):
+class _ServerThread(threading.Thread):
     def __init__(self, appl):
         # Make thread a daemon to be sure it is closed if sys.exit is called.
         # (2022/12/29) https://stackoverflow.com/a/38805873
@@ -34,7 +34,7 @@ class ServerLauncher:
         self.application = Flask(__name__)
         self.application.route("/")(self._home)
         self.application.route("/video/<video_id>")(self._video)
-        self.server_thread = ServerThread(self.application)
+        self.server_thread = _ServerThread(self.application)
 
     def start(self):
         self.server_thread.start()

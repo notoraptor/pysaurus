@@ -26,9 +26,9 @@ from pysaurus.core.notifications import (
 )
 from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler, ProfilingEnd, ProfilingStart
-from pysaurus.database import pattern_detection
-from pysaurus.database.db_features import DbFeatures
 from pysaurus.database.db_video_server import ServerLauncher
+from pysaurus.database.features.db_pattern_detection import DbPatternDetection
+from pysaurus.database.features.db_similar_videos import DbSimilarVideos
 from pysaurus.interface.api import tk_utils
 from pysaurus.interface.api.feature_api import (
     FeatureAPI,
@@ -152,7 +152,7 @@ class GuiAPI(FeatureAPI):
         return url
 
     def create_prediction_property(self, prop_name) -> None:
-        pattern_detection.create_prediction_property(self.database, prop_name)
+        DbPatternDetection.create_prediction_property(self.database, prop_name)
 
     def cancel_copy(self) -> None:
         if self.copy_work is not None and not self.copy_work.terminated:
@@ -276,7 +276,7 @@ class GuiAPI(FeatureAPI):
 
     @process()
     def find_similar_videos(self) -> None:
-        DbFeatures().find_similar_videos(self.database)
+        DbSimilarVideos().find_similar_videos(self.database)
         self.database.provider.set_groups(
             field="similarity_id",
             is_property=False,
@@ -287,7 +287,7 @@ class GuiAPI(FeatureAPI):
 
     @process()
     def find_similar_videos_ignore_cache(self) -> None:
-        DbFeatures().find_similar_videos_ignore_cache(self.database)
+        DbSimilarVideos().find_similar_videos_ignore_cache(self.database)
         self.database.provider.set_groups(
             field="similarity_id",
             is_property=False,
@@ -334,11 +334,11 @@ class GuiAPI(FeatureAPI):
 
     @process()
     def compute_predictor(self, prop_name) -> None:
-        pattern_detection.compute_pattern_detector(self.database, prop_name)
+        DbPatternDetection.compute_pattern_detector(self.database, prop_name)
 
     @process()
     def apply_predictor(self, prop_name) -> None:
-        output_prop_name = pattern_detection.predict_pattern(self.database, prop_name)
+        output_prop_name = DbPatternDetection.predict_pattern(self.database, prop_name)
         self.database.provider.set_groups(
             field=output_prop_name,
             is_property=True,
