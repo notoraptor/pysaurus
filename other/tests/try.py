@@ -103,13 +103,17 @@ def _display_all_video_attributes():
         print("\t", attribute)
 
 
+def _get_string_properties(database):
+    return [pt["name"] for pt in database.describe_prop_types() if pt["type"] == "str"]
+
+
 def main():
     database = get_database()
     print("Video attributes:", len(Val.__attrs__))
     for attribute in Val.__attrs__:
         print("\t", attribute)
 
-    pgf = PropGetterFactory(database.get_string_properties())
+    pgf = PropGetterFactory(_get_string_properties(database))
 
     input("Hello?")
     thing_to_filenames = {}

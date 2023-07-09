@@ -398,9 +398,6 @@ class JsonDatabase:
             return False
         return True
 
-    def get_string_properties(self) -> List[str]:
-        return [pt.name for pt in self.__prop_types.values() if pt.type is str]
-
     def describe_prop_types(self) -> List[dict]:
         return sorted(
             (prop.describe() for prop in self.__prop_types.values()),
