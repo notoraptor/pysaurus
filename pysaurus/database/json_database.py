@@ -487,16 +487,6 @@ class JsonDatabase:
             (value,) = values
             video.set_property(name, self.__prop_types[name].validate(value))
 
-    def set_video_properties(self, video_id: int, properties: dict) -> List[str]:
-        modified = self.__id_to_video[video_id].set_properties(
-            {
-                name: self.__prop_types[name].validate(value)
-                for name, value in properties.items()
-            }
-        )
-        self._notify_properties_modified(modified)
-        return modified
-
     def merge_prop_values(
         self, video_id: int, name: str, values: Union[Sequence, Set]
     ) -> None:
@@ -514,6 +504,16 @@ class JsonDatabase:
         else:
             values = [prop_type.validate(value) for value in values]
         return values
+
+    def set_video_properties(self, video_id: int, properties: dict) -> List[str]:
+        modified = self.__id_to_video[video_id].set_properties(
+            {
+                name: self.__prop_types[name].validate(value)
+                for name, value in properties.items()
+            }
+        )
+        self._notify_properties_modified(modified)
+        return modified
 
     def default_prop_unit(self, name):
         pt = self.__prop_types[name]
