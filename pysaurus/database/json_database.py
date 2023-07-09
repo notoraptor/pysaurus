@@ -340,11 +340,6 @@ class JsonDatabase:
             for video in self._get_cached_videos(*flags, **forced_flags)
         )
 
-    def search_flags(self, *flags, **forced_flags) -> List[int]:
-        return [
-            video.video_id for video in self._get_cached_videos(*flags, **forced_flags)
-        ]
-
     def search(
         self, text: str, cond: str = "and", videos: Sequence[int] = None
     ) -> Iterable[Video]:
@@ -765,9 +760,8 @@ class JsonDatabase:
         )
 
     def get_thumbnail_base64(self, filename: AbsolutePath) -> str:
-        return (
-            "data:image/jpeg;base64," + self.__thumb_mgr.get_base64(filename).decode()
-        )
+        data = self.__thumb_mgr.get_base64(filename)
+        return ("data:image/jpeg;base64," + data.decode()) if data else None
 
     def get_thumbnail_blob(self, filename: AbsolutePath):
         return self.__thumb_mgr.get_blob(filename)

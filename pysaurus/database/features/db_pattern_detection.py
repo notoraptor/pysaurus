@@ -37,9 +37,11 @@ class DbPatternDetection:
             m.video_id: m for m in database.ensure_miniatures(returns=True)
         }
         video_indices = [
-            video_id
-            for video_id in database.search_flags("readable", "with_thumbnails")
-            if video_id in video_id_to_miniature
+            video["video_id"]
+            for video in database.select_videos_fields(
+                ["video_id"], "readable", "with_thumbnails"
+            )
+            if video["video_id"] in video_id_to_miniature
         ]
         classifier: Dict[int, List[int]] = {}
         for video_id in video_indices:
@@ -83,9 +85,11 @@ class DbPatternDetection:
             m.video_id: m for m in database.ensure_miniatures(returns=True)
         }
         video_indices = [
-            video_id
-            for video_id in database.search_flags("readable", "with_thumbnails")
-            if video_id in video_id_to_miniature
+            video["video_id"]
+            for video in database.select_videos_fields(
+                ["video_id"], "readable", "with_thumbnails"
+            )
+            if video["video_id"] in video_id_to_miniature
         ]
         output_prop_name = "<!" + prop_name[2:]
         with database.to_save():

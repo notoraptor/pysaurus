@@ -97,7 +97,10 @@ class LayerSource(Layer):
         video_indices: Set[int] = set()
         video_indices_found: List[int] = []
         for path in self.params["sources"]:
-            source = self.input.search_flags(*path)
+            source = [
+                video["video_id"]
+                for video in self.input.select_videos_fields(["video_id"], *path)
+            ]
             video_indices.update(source)
             if "unreadable" not in path and "not_found" not in path:
                 video_indices_found.extend(
