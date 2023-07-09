@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS application (
 CREATE TABLE IF NOT EXISTS collection (
 	collection_id INTEGER PRIMARY KEY AUTOINCREMENT,
 	name TEXT NOT NULL,
+	version INTEGER NOT NULL DEFAULT -1,
 	date_updated DOUBLE NOT NULL,
 	miniature_pixel_distance_radius INTEGER NOT NULL DEFAULT 6,
 	miniature_group_min_size INTEGER NOT NULL DEFAULT 0,
