@@ -68,7 +68,7 @@ def main():
     with Profiler("Adding databases"):
         for database_name in old_app.get_database_names():
             db = old_app.open_database_from_name(database_name)
-            info = (database_name, len(db._get_cached_videos()))
+            info = (database_name, db.count_videos())
             report.append(info)
             print("[loading]", *info)
             new_app = NewApp()

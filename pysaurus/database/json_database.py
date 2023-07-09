@@ -342,10 +342,8 @@ class JsonDatabase:
 
     def search(
         self, text: str, cond: str = "and", videos: Sequence[int] = None
-    ) -> Iterable[Video]:
-        if not text:
-            output = ()
-        else:
+    ) -> Iterable[int]:
+        if text:
             self.flush_changes()
             if videos is None:
                 filenames: Dict[AbsolutePath, Video] = self.__videos
@@ -375,8 +373,8 @@ class JsonDatabase:
                     if video_id in self.__id_to_video
                     else []
                 )
-            output = (filenames[filename] for filename in selection)
-        return output
+            return (filenames[filename].video_id for filename in selection)
+        return ()
 
     def sort_video_indices(self, indices: Iterable[int], sorting: VideoSorting):
         return sorted(
@@ -557,9 +555,9 @@ class JsonDatabase:
 
     def _notify_missing_thumbnails(self):
         remaining_thumb_videos = [
-            video.filename.path
-            for video in self._get_cached_videos(
-                "readable", "found", "without_thumbnails"
+            video["filename"].path
+            for video in self.select_videos_fields(
+                ["filename"], "readable", "found", "without_thumbnails"
             )
         ]
         self.notifier.notify(notifications.MissingThumbnails(remaining_thumb_videos))

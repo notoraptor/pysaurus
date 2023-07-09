@@ -103,15 +103,6 @@ def _display_all_video_attributes():
         print("\t", attribute)
 
 
-def _check_prop_val(database, pgf):
-    for video in database._get_cached_videos():
-        if video.properties:
-            print(video.filename)
-            for pv in pgf.get_things(video):
-                print("\t", pv)
-            break
-
-
 def main():
     database = get_database()
     print("Video attributes:", len(Val.__attrs__))

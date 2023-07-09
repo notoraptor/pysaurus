@@ -318,8 +318,8 @@ class LayerSearch(Layer):
         else:
             self._log("search", search_def)
             self.output = {
-                video.video_id
-                for video in self.database.search(
+                video_id
+                for video_id in self.database.search(
                     search_def.text, search_def.cond, self.input.videos
                 )
             }
