@@ -106,7 +106,9 @@ class LayerSource(Layer):
                 video_indices_found.extend(
                     video_id
                     for video_id in source
-                    if self.input.has_video_id(video_id, found=True, readable=True)
+                    if self.input.has_video(
+                        video_id=video_id, found=True, readable=True
+                    )
                 )
         self.output = video_indices
         self.video_indices_found = video_indices_found
