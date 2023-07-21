@@ -763,3 +763,9 @@ class JsonDatabase:
 
     def save_thumbnail(self, filename: AbsolutePath) -> Optional[dict]:
         return self.__thumb_mgr.save(filename)
+
+    def save_existing_thumbnails(self, filename_to_thumb_name: Dict[str, str]):
+        self.__thumb_mgr.save_existing_thumbnails(filename_to_thumb_name)
+
+    def raptor(self):
+        return self.__thumb_mgr.raptor

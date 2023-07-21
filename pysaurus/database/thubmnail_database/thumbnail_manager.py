@@ -1,6 +1,6 @@
 import base64
 from io import BytesIO
-from typing import Iterable, Optional
+from typing import Dict, Iterable, Optional
 
 from pysaurus.core.components import AbsolutePath
 from pysaurus.database.thubmnail_database.thumbnail_database import ThumbnailDatabase
@@ -31,6 +31,17 @@ class ThumbnailManager:
                 (filename.path, thumb_path.read_binary_file())
                 for filename, thumb_path in filename_and_thumbnail_path
             ),
+            many=True,
+        )
+
+    def save_existing_thumbnails(self, filename_to_thumb_name: Dict[str, str]):
+        self.thumb_db.modify(
+            "INSERT OR IGNORE INTO video_to_thumbnail "
+            "(filename, thumbnail) VALUES (?, ?)",
+            [
+                (filename, AbsolutePath(thumb_path).read_binary_file())
+                for filename, thumb_path in filename_to_thumb_name.items()
+            ],
             many=True,
         )
 

@@ -272,13 +272,15 @@ def generate_infinite(value):
     return gen()
 
 
-def remove_from_list(arr: List, el, silently=True):
+def remove_from_list(arr: List, el, on_error=0):
     try:
         return arr.remove(el)
     except ValueError:
-        if silently:
+        if on_error == 0:
+            pass
+        elif on_error == 1:
             logger.exception(f"Element not found: {el}")
-        else:
+        else:  # on_error not in (0, 1)
             raise
 
 

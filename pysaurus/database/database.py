@@ -1,6 +1,8 @@
 import logging
 import multiprocessing
+import tempfile
 from collections import Counter
+from multiprocessing import Pool
 from typing import Any, Callable, Dict, Iterable, List, Optional, Set
 
 import ujson as json
@@ -10,7 +12,7 @@ from pysaurus.core import functions, notifications
 from pysaurus.core.components import AbsolutePath, Date, PathType
 from pysaurus.core.constants import PYTHON_ERROR_THUMBNAIL
 from pysaurus.core.file_utils import create_xspf_playlist
-from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
+from pysaurus.core.job_notifications import notify_job_start
 from pysaurus.core.modules import ImageUtils
 from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.parallelization import run_split_batch
@@ -135,19 +137,46 @@ class Database(JsonDatabase):
         self.notifier.notify(
             notifications.Message(f"Missing thumbs in SQL: {len(missing_thumbs)}")
         )
-        notify_job_start(
-            self.notifier, self.ensure_thumbnails, len(missing_thumbs), "thumbnails"
-        )
-        for i, video in enumerate(missing_thumbs):
-            err = self.save_thumbnail(video["filename"])
-            if err:
-                self.add_video_errors(
-                    video["video_id"], PYTHON_ERROR_THUMBNAIL, *err["errors"]
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            # Generate thumbnail filenames as long as tasks
+            tasks = [
+                (
+                    self.notifier,
+                    i,
+                    video["filename"].path,
+                    AbsolutePath.file_path(tmp_dir, i, "jpg").path,
                 )
-                thumb_errors[err["filename"]] = err["errors"]
-            notify_job_progress(
-                self.notifier, self.ensure_thumbnails, None, i + 1, len(missing_thumbs)
-            )
+                for i, video in enumerate(missing_thumbs)
+            ]
+            # Generate thumbnail files
+            filename_to_video = {
+                video["filename"].path: video for video in missing_thumbs
+            }
+            expected_thumbs = {
+                filename: thumb_path for _, _, filename, thumb_path in tasks
+            }
+            raptor = self.raptor()
+            with Profiler(say("Generate thumbnail files"), self.notifier):
+                notify_job_start(
+                    self.notifier, raptor.run_thumbnail_task, len(tasks), "thumbnails"
+                )
+                with Pool() as p:
+                    errors = list(p.starmap(raptor.run_thumbnail_task, tasks))
+            for err in errors:
+                if err:
+                    del expected_thumbs[err["filename"]]
+                    video = filename_to_video[err["filename"]]
+                    self.add_video_errors(
+                        video["video_id"], PYTHON_ERROR_THUMBNAIL, *err["errors"]
+                    )
+                    thumb_errors[err["filename"]] = err["errors"]
+            # Save thumbnails into thumb manager
+            with Profiler(say("save thumbnails to db"), self.notifier):
+                self.save_existing_thumbnails(expected_thumbs)
+            logger.info(f"Thumbnails generated, deleting temp dir {tmp_dir}")
+            # Delete thumbnail files (done at context exit)
+
         if thumb_errors:
             self.notifier.notify(notifications.VideoThumbnailErrors(thumb_errors))
         self._notify_missing_thumbnails()

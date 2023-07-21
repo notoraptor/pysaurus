@@ -126,6 +126,13 @@ class VideoRaptor(AbstractVideoRaptor):
             }
         return None
 
+    def run_thumbnail_task(
+        self, notifier, task_id, filename, thumb_path, thumb_size=300
+    ):
+        err = self.get_thumbnail(filename, thumb_path, thumb_size)
+        notify_job_progress(notifier, self.run_thumbnail_task, task_id, 1, 1)
+        return err
+
     def collect_video_info(self, job: Job) -> list:
         _, notifier = job.args
         count = len(job.batch)

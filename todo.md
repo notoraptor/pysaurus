@@ -77,6 +77,8 @@ ffprobe -v quiet -print_format json -show_format -show_streams "<video-file>" > 
   a new video object copied from old one with necessary changes applied to new one.
 - If provider is grouping w/rt a property, and this property is deleted in property page,
   provider is not currently updated.
+- Moving files is very slow, especially for a large batch of moves.
+  - Maybe open moving progression in a dedicated panel (homepage with progress bars) ?
 
 Filter by
 - source
