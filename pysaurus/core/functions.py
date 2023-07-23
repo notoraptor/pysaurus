@@ -272,16 +272,11 @@ def generate_infinite(value):
     return gen()
 
 
-def remove_from_list(arr: List, el, on_error=0):
+def remove_from_list(arr: List, el):
     try:
         return arr.remove(el)
     except ValueError:
-        if on_error == 0:
-            pass
-        elif on_error == 1:
-            logger.exception(f"Element not found: {el}")
-        else:  # on_error not in (0, 1)
-            raise
+        pass
 
 
 def generate_temporary_file(basename="pysaurus", suffix=".pkl"):

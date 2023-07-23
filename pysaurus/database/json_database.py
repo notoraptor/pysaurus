@@ -697,9 +697,8 @@ class JsonDatabase:
         return video.filename
 
     def delete_video_entry(self, video_id: int):
-        video = self.__id_to_video[video_id]
+        video = self.__id_to_video.pop(video_id)
         self.__videos.pop(video.filename, None)
-        self.__id_to_video.pop(video.video_id, None)
         if video.readable:
             self.old_get_thumbnail_path(video).delete()
         self.register_removed(video)
