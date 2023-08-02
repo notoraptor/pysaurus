@@ -68,7 +68,7 @@ class Database(JsonDatabase):
         # TODO This method is for debugging, should be removed in production.
         attribute = super().__getattribute__(item)
         if callable(attribute):
-            name = super().__getattribute__("name")
+            name = super().__getattribute__("get_name")()
             prev_pid = super().__getattribute__("_initial_pid")
             curr_pid = multiprocessing.current_process().pid
             assert prev_pid == curr_pid, (
@@ -76,10 +76,6 @@ class Database(JsonDatabase):
                 f"(expected {prev_pid}, got {curr_pid})"
             )
         return attribute
-
-    # Properties.
-
-    name = property(lambda self: self.ways.db_folder.title)
 
     @Profiler.profile_method()
     def update(self) -> None:

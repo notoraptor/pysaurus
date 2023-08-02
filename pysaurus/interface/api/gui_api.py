@@ -165,7 +165,7 @@ class GuiAPI(FeatureAPI):
         self.database = None
 
     def delete_database(self) -> None:
-        assert self.application.delete_database_from_name(self.database.name)
+        assert self.application.delete_database_from_name(self.database.get_name())
         self.database = None
 
     def close_app(self) -> None:

@@ -288,6 +288,9 @@ class JsonDatabase:
         self.notifier.set_log_path(self.ways.get(DB_LOG_PATH).path)
         self.__backup = JsonBackup(self.ways.get(DB_JSON_PATH), self.notifier)
 
+    def get_name(self):
+        return self.ways.db_folder.title
+
     def set_date(self, date: Date):
         self.__date = date
 

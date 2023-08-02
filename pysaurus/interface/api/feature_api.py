@@ -211,7 +211,7 @@ class FeatureAPI:
 
         return {
             "database": {
-                "name": self.database.name,
+                "name": self.database.get_name(),
                 "folders": sorted(str(path) for path in self.database.get_folders()),
             },
             "prop_types": self.database.describe_prop_types(),

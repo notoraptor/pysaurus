@@ -92,3 +92,37 @@ Filter by
 - search
 - sort
 - select
+
+Database
+- version: int
+- date: float?
+- folders: list of str
+- settings: dict
+  - key: setting name
+  - val: setting value: either:
+    - single value
+    - multiple values
+- prop type (many)
+  - name: str
+  - definition: either:
+    - str|bool|int|float
+    - list of (str|bool|int|float)
+  - multiple: bool
+- video (many)
+  - filename: str
+  - meta_title: str
+  - attribute (many): either:
+    - single value (e.g. width)
+    - multiple values (e.g. errors)
+  - prop val: dict:
+    - key: prop type -> name
+    - value: set of values (stored as a list?)
+  - thumbnail
+  - miniature
+  - terms: list of str, split from:
+    - filename (immutable)
+    - meta_title (immutable)
+    - each string prop val
+- term: dict
+  - key: term (str)
+  - value: videos: list of (video identifier: filename or ID)

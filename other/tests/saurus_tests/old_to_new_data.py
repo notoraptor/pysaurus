@@ -73,7 +73,7 @@ def main():
             print("[loading]", *info)
             new_app = NewApp()
             collection = data.Collection(
-                name=db.name,
+                name=db.get_name(),
                 date_updated=db.get_date().time,
                 miniature_pixel_dst_radius=db.settings.miniature_pixel_distance_radius,
                 miniature_group_min_size=db.settings.miniature_group_min_size,
@@ -87,7 +87,7 @@ def main():
                     for video in db._get_cached_videos()
                 },
             )
-            with Profiler(f"Adding: {db.name}"):
+            with Profiler(f"Adding: {db.get_name()}"):
                 new_app.db.add_collection(collection=collection)
     print()
     nb_total_entries = 0

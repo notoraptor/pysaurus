@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from typing import List
 
 from pysaurus.properties.properties import PropType
 from pysaurus.video import Video
@@ -24,7 +25,7 @@ class PropError(SpecialPropType):
 
 class SpecialProperties:
     # properties = [PropError()]
-    properties = []
+    properties: List[PropType] = []
 
     @classmethod
     def install(cls, database) -> bool:
