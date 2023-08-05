@@ -9,9 +9,9 @@ from pysaurus.core.json_backup import JsonBackup
 from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
-from pysaurus.database.db_paths import DatabasePathDef, DatabasePaths
 from pysaurus.database.db_settings import DbSettings
 from pysaurus.database.db_video_attribute import PotentialMoveAttribute
+from pysaurus.database.db_way_def import DbWays
 from pysaurus.database.json_database_utils import (
     DatabaseLoaded,
     DatabaseSaved,
@@ -34,14 +34,6 @@ from pysaurus.video.video_indexer import VideoIndexer
 from pysaurus.video.video_sorting import VideoSorting
 
 logger = logging.getLogger(__name__)
-
-DB_JSON_PATH = DatabasePathDef("json_path", "json")
-DB_LOG_PATH = DatabasePathDef("log_path", "log")
-DB_THUMB_FOLDER = DatabasePathDef("thumb_folder", "thumbnails")
-DB_THUMB_SQL_PATH = DatabasePathDef("thumb_sql_path", "thumbnails.sql.db")
-DB_MINIATURES_PATH = DatabasePathDef("miniatures_path", "miniatures.json")
-DB_INDEX_SQL_PATH = DatabasePathDef("index_sql_path", "db")
-DB_INDEX_PKL_PATH = DatabasePathDef("index_pkl_path", "index.pkl")
 
 
 class JsonDatabase:
@@ -73,18 +65,11 @@ class JsonDatabase:
         indexer: AbstractVideoIndexer = None,
     ):
         db_folder = AbsolutePath.ensure_directory(db_folder)
-        self.ways = DatabasePaths(db_folder)
-        self.ways.define(DB_JSON_PATH)
-        self.ways.define(DB_LOG_PATH)
-        self.ways.define(DB_THUMB_FOLDER, True, True)
-        self.ways.define(DB_THUMB_SQL_PATH)
-        self.ways.define(DB_MINIATURES_PATH)
-        self.ways.define(DB_INDEX_SQL_PATH)
-        self.ways.define(DB_INDEX_PKL_PATH)
+        self.ways = DbWays(db_folder)
         # Set log file
-        notifier.set_log_path(self.ways.get(DB_LOG_PATH).path)
+        notifier.set_log_path(self.ways.db_log_path.path)
         # Private data
-        self.__backup = JsonBackup(self.ways.get(DB_JSON_PATH), notifier)
+        self.__backup = JsonBackup(self.ways.db_json_path, notifier)
         # Database content
         self.__version = 1
         self.settings = DbSettings()
@@ -98,7 +83,7 @@ class JsonDatabase:
         self.__id_to_video: Dict[int, Video] = {}
         self.moves_attribute = PotentialMoveAttribute(self)
         self.__indexer = indexer or VideoIndexer(
-            self.notifier, self.ways.get(DB_INDEX_PKL_PATH)
+            self.notifier, self.ways.db_index_pkl_path
         )
         self.in_save_context = False
         self.__removed: Set[Video] = set()
@@ -106,7 +91,7 @@ class JsonDatabase:
         # Initialize
         self.__load(folders)
         # Initialize thumbnail manager.
-        thumb_sql_path: AbsolutePath = self.ways.get(DB_THUMB_SQL_PATH)
+        thumb_sql_path: AbsolutePath = self.ways.db_thumb_sql_path
         to_build = not thumb_sql_path.exists()
         self.__thumb_mgr = ThumbnailManager(thumb_sql_path)
         if to_build:
@@ -285,8 +270,8 @@ class JsonDatabase:
 
     def rename(self, new_name: str) -> None:
         self.ways = self.ways.renamed(new_name)
-        self.notifier.set_log_path(self.ways.get(DB_LOG_PATH).path)
-        self.__backup = JsonBackup(self.ways.get(DB_JSON_PATH), self.notifier)
+        self.notifier.set_log_path(self.ways.db_log_path.path)
+        self.__backup = JsonBackup(self.ways.db_json_path, self.notifier)
 
     def get_name(self):
         return self.ways.db_folder.title
@@ -750,7 +735,7 @@ class JsonDatabase:
 
     def old_get_thumbnail_path(self, video: Video):
         return AbsolutePath.file_path(
-            self.ways.get(DB_THUMB_FOLDER), video.thumb_name, JPEG_EXTENSION
+            self.ways.db_thumb_folder, video.thumb_name, JPEG_EXTENSION
         )
 
     def get_thumbnail_base64(self, filename: AbsolutePath) -> str:

@@ -17,8 +17,8 @@ python-vlc = "^3.0.12118"
 av = "^8.0.3"
 show-in-file-manager = "^1.1.4"
 werkzeug = "^2.2.2"
-pyqt6 = "^6.4.2"
-pyqt6-webengine = "^6.4.0"
+pyqt6 = "^6.5.2"
+pyqt6-webengine = "^6.5.0"
 
 [tool.poetry.dev-dependencies]
 black = "^22.12.0"

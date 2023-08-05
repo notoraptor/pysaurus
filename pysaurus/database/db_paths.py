@@ -46,6 +46,11 @@ class DatabasePaths:
         self.db_folder: AbsolutePath = AbsolutePath.ensure_directory(folder)
         self.paths: Dict[str, DatabasePath] = {}
 
+    def __iter__(self):
+        yield ".", self.db_folder
+        for key, value in self.paths.items():
+            yield str(key), value.path
+
     def define_file(self, name: str, extension: str) -> AbsolutePath:
         assert name not in self.paths
         self.paths[name] = DatabasePath(self.db_folder, name, extension)

@@ -18,11 +18,7 @@ from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.parallelization import run_split_batch
 from pysaurus.core.profiling import Profiler
 from pysaurus.database import jobs_python
-from pysaurus.database.json_database import (
-    DB_LOG_PATH,
-    DB_MINIATURES_PATH,
-    JsonDatabase,
-)
+from pysaurus.database.json_database import JsonDatabase
 from pysaurus.database.special_properties import SpecialProperties
 from pysaurus.database.viewport.abstract_video_provider import AbstractVideoProvider
 from pysaurus.database.viewport.video_filter import VideoFilter
@@ -185,7 +181,7 @@ class Database(JsonDatabase):
         added_miniatures = []
         have_removed = False
         have_added = False
-        miniatures_path = self.ways.get(DB_MINIATURES_PATH)
+        miniatures_path = self.ways.db_miniatures_path
 
         if miniatures_path.exists():
             with open(miniatures_path.assert_file().path) as miniatures_file:
@@ -296,7 +292,7 @@ class Database(JsonDatabase):
         return video_filename
 
     def reopen(self):
-        self.notifier.set_log_path(self.ways.get(DB_LOG_PATH).path)
+        self.notifier.set_log_path(self.ways.db_log_path.path)
 
     def refresh(self) -> None:
         self.update()

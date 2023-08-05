@@ -94,6 +94,7 @@ Filter by
 - select
 
 Database
+- name: str
 - version: int
 - date: float?
 - folders: list of str
