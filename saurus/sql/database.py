@@ -10,7 +10,7 @@ class DbID(int):
 
     This wrapper allows to use Python syntax (this_id or that_id) and make sure
     this_id will be returned even if this_id is 0 (we expect this_id to be None if
-    related id is invalid or inexistent).
+    related id is invalid or non-existent).
     """
 
     def __bool__(self):

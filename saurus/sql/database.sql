@@ -100,6 +100,7 @@ CREATE TABLE IF NOT EXISTS video_thumbnail (
     thumbnail BLOB NOT NULL,
     UNIQUE (video_id)
 );
+-- Currently unused. Thumb table is in a separate database.
 
 CREATE VIRTUAL TABLE video_text USING fts5(video_id, content);
 -- Virtual table can use INSERT, UPDATE, DELETE.

@@ -9,7 +9,7 @@ from pysaurus.database.db_settings import DbSettings
 from pysaurus.database.db_way_def import DbWays
 from pysaurus.properties.properties import PropType
 from pysaurus.video import Video
-from saurus.sql.pysaurus_collection import PysaurusDatabase
+from saurus.sql.pysaurus_database import PysaurusDatabase
 from saurus.sql.pysaurus_program import PysaurusProgram
 
 
