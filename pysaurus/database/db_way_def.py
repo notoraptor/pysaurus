@@ -18,7 +18,7 @@ class DbWays(DatabasePaths):
         super().__init__(folder)
         self.define(DB_JSON_PATH)
         self.define(DB_LOG_PATH)
-        self.define(DB_THUMB_FOLDER, is_folder=True, create_folder=True)
+        self.define(DB_THUMB_FOLDER, is_folder=True, create_folder=False)
         self.define(DB_THUMB_SQL_PATH)
         self.define(DB_MINIATURES_PATH)
         self.define(DB_INDEX_SQL_PATH)

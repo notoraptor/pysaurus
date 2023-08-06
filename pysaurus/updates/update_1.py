@@ -25,10 +25,6 @@ def get_video_text(video: Video, prop_names: List[str]):
     )
 
 
-def get_none(i, video, key):
-    return None
-
-
 def get_i(i, video, key):
     return i
 
@@ -107,49 +103,49 @@ VIDEO_FIELD_GETTER = {
 }
 
 
-def main(notifier):
-    tested_db_name = "adult videos"
+def export_db_to_sql(db_name: str, db_path: AbsolutePath, notifier):
+    ways = DbWays(db_path)
 
-    application = PysaurusProgram()
-    db_name_to_path = {path.title: path for path in application.get_database_paths()}
-    assert tested_db_name in db_name_to_path, db_name_to_path.keys()
-    for db_name in sorted(db_name_to_path):
-        print(db_name)
-    ways = DbWays(db_name_to_path[tested_db_name])
-    for name, path in ways:
-        print(name, path)
+    # Clean thumb folder if empty
+    thumb_folder = ways.db_thumb_folder
+    if thumb_folder.isdir():
+        if not thumb_folder.listdir():
+            print(f"[{db_name}] Thumb folder is empty, deleting")
+            thumb_folder.delete()
+            assert not thumb_folder.exists()
+
+    # Delete previous SQL file if existing
     sql_path = ways.db_sql_path
     if sql_path.exists():
         sql_path.delete()
-        print("Deleting old sql path")
+        print(f"[{db_name}] Deleted old sql path")
     assert not sql_path.exists()
     new_db = PysaurusDatabase(sql_path.path)
     assert sql_path.isfile()
 
+    # Load database JSON
     json_backup = JsonBackup(ways.db_json_path, notifier)
     json_dict = json_backup.load()
     assert isinstance(json_dict, dict)
 
-    version = json_dict.get("version", -1)
-    settings = DbSettings(json_dict.get("settings", {}))
-    date = json_dict.get("date")
-    sources = [AbsolutePath(path) for path in json_dict.get("folders", ())]
-    with Profiler("Get videos", notifier):
+    # Format data for SQL tables
+    with Profiler(f"[{db_name}] Get and format data", notifier):
+        version = json_dict.get("version", -1)
+        settings = DbSettings(json_dict.get("settings", {}))
+        date = json_dict.get("date")
+        sources = [AbsolutePath(path) for path in json_dict.get("folders", ())]
         videos = sorted(
             Video(None, video_dict) for video_dict in json_dict.get("videos", ())
         )
-    with Profiler(f"Get video lines ({len(videos)} videos)", notifier):
         video_lines = [
             [VIDEO_FIELD_GETTER[field](i, video, field) for field in VIDEO_FIELDS]
             for i, video in enumerate(videos)
         ]
-    with Profiler("Get video errors", notifier):
         video_errors = [
             (i, error)
             for i, video in enumerate(videos)
             for error in sorted(video._get("errors"))
         ]
-    with Profiler("Get video languages", notifier):
         video_audio_languages = [
             (i, "a", lang_code, r)
             for i, video in enumerate(videos)
@@ -160,7 +156,6 @@ def main(notifier):
             for i, video in enumerate(videos)
             for r, lang_code in enumerate(video._get("subtitle_languages"))
         ]
-    with Profiler("Get property types and values", notifier):
         prop_types = sorted(
             (
                 PropType.from_dict(prop_dict)
@@ -188,36 +183,36 @@ def main(notifier):
             )
             for property_value in format_prop_val(values, pt_name_to_type[name])
         ]
-    with Profiler("Get video texts", notifier):
         video_texts = [
             (video_id, get_video_text(video, string_props))
             for video_id, video in enumerate(videos)
         ]
 
-    new_db.modify(
-        "INSERT INTO collection ("
-        "collection_id, "
-        "name, "
-        "version, "
-        "date_updated, "
-        "miniature_pixel_distance_radius, "
-        "miniature_group_min_size) "
-        "VALUES(?,?,?,?,?,?)",
-        [
-            0,
-            tested_db_name,
-            version,
-            date,
-            settings.miniature_pixel_distance_radius,
-            settings.miniature_group_min_size,
-        ],
-    )
-    new_db.modify(
-        "INSERT INTO collection_source (source) VALUES(?)",
-        [(path.path,) for path in sources],
-        many=True,
-    )
-    with Profiler("Insert videos", notifier):
+    # Save data into SQL table
+    with Profiler(f"[{db_name}] Insert into SQL database", notifier):
+        new_db.modify(
+            "INSERT INTO collection ("
+            "collection_id, "
+            "name, "
+            "version, "
+            "date_updated, "
+            "miniature_pixel_distance_radius, "
+            "miniature_group_min_size) "
+            "VALUES(?,?,?,?,?,?)",
+            [
+                0,
+                db_name,
+                version,
+                date,
+                settings.miniature_pixel_distance_radius,
+                settings.miniature_group_min_size,
+            ],
+        )
+        new_db.modify(
+            "INSERT INTO collection_source (source) VALUES(?)",
+            [(path.path,) for path in sources],
+            many=True,
+        )
         new_db.modify(
             f"INSERT INTO video "
             f"({','.join(VIDEO_FIELDS)}) "
@@ -225,20 +220,17 @@ def main(notifier):
             video_lines,
             many=True,
         )
-    with Profiler("Insert video errors", notifier):
         new_db.modify(
             "INSERT INTO video_error (video_id, error) VALUES (?, ?)",
             video_errors,
             many=True,
         )
-    with Profiler("Insert video languages", notifier):
         new_db.modify(
             "INSERT INTO video_language (video_id, stream, lang_code, rank) "
             "VALUES (?, ?, ?, ?)",
             video_audio_languages + video_subtitle_languages,
             many=True,
         )
-    with Profiler("Insert prop types", notifier):
         new_db.modify(
             "INSERT INTO property (property_id, name, type, multiple) "
             "VALUES (?, ?, ?, ?)",
@@ -251,19 +243,25 @@ def main(notifier):
             prop_enums,
             many=True,
         )
-    with Profiler("Insert video property values", notifier):
         new_db.modify(
             "INSERT INTO video_property_value (video_id, property_id, property_value) "
             "VALUES (?, ?, ?)",
             video_property_values,
             many=True,
         )
-    with Profiler("Insert video texts", notifier):
         new_db.modify(
             "INSERT INTO video_text (video_id, content) VALUES(?, ?)",
             video_texts,
             many=True,
         )
+
+
+def main(notifier):
+    application = PysaurusProgram()
+    db_name_to_path = {path.title: path for path in application.get_database_paths()}
+    for db_name in sorted(db_name_to_path):
+        with Profiler(f"[{db_name}] export", notifier):
+            export_db_to_sql(db_name, db_name_to_path[db_name], notifier)
 
 
 if __name__ == "__main__":
