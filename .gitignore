@@ -18,3 +18,4 @@ webrtc_event_logs/
 /build
 /.*
 /tests/*.png
+ignored
