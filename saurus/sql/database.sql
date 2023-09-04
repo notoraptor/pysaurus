@@ -44,12 +44,14 @@ CREATE TABLE IF NOT EXISTS video (
 	mtime DOUBLE NOT NULL DEFAULT 0.0,
 	driver_id INTEGER,
 	is_file INTEGER NOT NULL DEFAULT 0,
+	discarded INTEGER NOT NULL DEFAULT 0,
 	-- mutable
 	date_entry_modified DOUBLE,
 	date_entry_opened DOUBLE,
 	similarity_id INTEGER,
 	-- constraints
 	CHECK (is_file IN (0, 1)),
+	CHECK (discarded IN (0, 1)),
 	CHECK (unreadable IN (0, 1)),
 	UNIQUE (filename)
 );

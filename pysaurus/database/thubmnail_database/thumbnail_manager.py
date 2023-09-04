@@ -1,6 +1,6 @@
 import base64
 from io import BytesIO
-from typing import Dict, Iterable, Optional
+from typing import Dict, Iterable, List, Optional, Set
 
 from pysaurus.core.components import AbsolutePath
 from pysaurus.database.thubmnail_database.thumbnail_database import ThumbnailDatabase
@@ -50,6 +50,17 @@ class ThumbnailManager:
             "video_to_thumbnail", "filename", "filename = ?", [filename.path]
         )
 
+    def filter(self, filenames: Iterable[str]) -> Set[str]:
+        if not isinstance(filenames, (list, tuple, set)):
+            filenames = list(filenames)
+        return {
+            row["filename"]
+            for row in self.thumb_db.query(
+                f"SELECT filename FROM video_to_thumbnail WHERE filename in ({','.join(['?'] * len(filenames))})",
+                filenames,
+            )
+        }
+
     def get_blob(self, filename: AbsolutePath, wrapper=None):
         rows = self.thumb_db.query_all(
             "SELECT thumbnail FROM video_to_thumbnail WHERE filename = ?",
@@ -83,4 +94,15 @@ class ThumbnailManager:
     def delete(self, path: AbsolutePath):
         self.thumb_db.modify(
             "DELETE FROM video_to_thumbnail WHERE filename = ?", [path.path]
+        )
+
+    def clean_thumbnails(self, paths: List[AbsolutePath]):
+        paths = set(paths)
+        absent = [
+            row
+            for row in self.thumb_db.query("SELECT filename FROM video_to_thumbnail")
+            if AbsolutePath(row["filename"]) not in paths
+        ]
+        self.thumb_db.modify(
+            "DELETE FROM video_to_thumbnail WHERE filename = ?", absent, many=True
         )

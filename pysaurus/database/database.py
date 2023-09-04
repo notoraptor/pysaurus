@@ -24,7 +24,7 @@ from pysaurus.database.viewport.abstract_video_provider import AbstractVideoProv
 from pysaurus.database.viewport.video_filter import VideoFilter
 from pysaurus.miniature.group_computer import GroupComputer
 from pysaurus.miniature.miniature import Miniature
-from pysaurus.video import Video
+from pysaurus.video import VIDEO_SCHEMA
 from pysaurus.video_raptor.video_raptor_pyav import VideoRaptor as PythonVideoRaptor
 from saurus.language import say
 
@@ -102,7 +102,7 @@ class Database(JsonDatabase):
             )
 
         new: List[dict] = [
-            Video.ensure_short_keys(d, backend_raptor.RETURNS_SHORT_KEYS)
+            VIDEO_SCHEMA.ensure_short_keys(d, backend_raptor.RETURNS_SHORT_KEYS)
             for arr in results
             for d in arr
         ]
@@ -116,6 +116,13 @@ class Database(JsonDatabase):
     @Profiler.profile_method()
     def ensure_thumbnails(self) -> None:
         # Remove absent videos from thumbnail manager.
+        self.clean_thumbnails(
+            [
+                video["filename"]
+                for video in self.select_videos_fields(["filename"], "readable")
+            ]
+        )
+
         # Add missing thumbnails in thumbnail manager.
         missing_thumbs = []
         for video in self.select_videos_fields(

@@ -754,5 +754,8 @@ class JsonDatabase:
     def save_existing_thumbnails(self, filename_to_thumb_name: Dict[str, str]):
         self.__thumb_mgr.save_existing_thumbnails(filename_to_thumb_name)
 
+    def clean_thumbnails(self, paths: List[AbsolutePath]):
+        self.__thumb_mgr.clean_thumbnails(paths)
+
     def raptor(self):
         return self.__thumb_mgr.raptor

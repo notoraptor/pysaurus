@@ -82,6 +82,13 @@ class Schema:
             if value is not None
         }
 
+    def ensure_short_keys(self, dct: dict, keys_are_short: bool):
+        return (
+            dct
+            if keys_are_short
+            else {self.get_short_key(key): value for key, value in dct.items()}
+        )
+
 
 class WithSchema:
     __slots__ = ("_d",)
@@ -101,14 +108,6 @@ class WithSchema:
 
     def _has(self, name):
         return self.SCHEMA.has_in_short_dict(self._d, name)
-
-    @classmethod
-    def ensure_short_keys(cls, dct: dict, keys_are_short: bool):
-        return (
-            dct
-            if keys_are_short
-            else {cls.SCHEMA.get_short_key(key): value for key, value in dct.items()}
-        )
 
     def to_dict(self):
         return self._d
