@@ -29,6 +29,7 @@ class GroupComputer:
         similarity_percent=None,
         pixel_distance_radius: int = None,
         print_step=500,
+        normalizer=0,
     ):
         assert (similarity_percent is None) ^ (pixel_distance_radius is None)
         if pixel_distance_radius is not None:
@@ -36,7 +37,7 @@ class GroupComputer:
         self.similarity = similarity_percent
         self.radius = pixel_distance_radius
         self.group_min_size = group_min_size
-        self.pixel_comparator = DistancePixelComparator(similarity_percent)
+        self.pixel_comparator = DistancePixelComparator(similarity_percent, normalizer)
         self.print_step = print_step
 
     @classmethod

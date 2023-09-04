@@ -166,7 +166,8 @@ class VideoClipping:
 class ImageUtils:
     IMAGE_RGB_MODE = "RGB"
     IMAGE_GRAY_MODE = "L"
-    DEFAULT_THUMBNAIL_SIZE = (32, 32)
+    DEFAULT_THUMBNAIL_DIMENSION = 32
+    DEFAULT_THUMBNAIL_SIZE = (DEFAULT_THUMBNAIL_DIMENSION, DEFAULT_THUMBNAIL_DIMENSION)
 
     @staticmethod
     def __save_image(mode, size, data, name):

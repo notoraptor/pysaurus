@@ -42,3 +42,6 @@ class VideoSchema(Schema):
                 Type("audio_bits", "B", 0),
             ]
         )
+
+
+VIDEO_SCHEMA = VideoSchema()

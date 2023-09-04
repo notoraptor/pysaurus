@@ -10,13 +10,13 @@ from pysaurus.core.functions import class_get_public_attributes, string_to_piece
 from pysaurus.core.modules import FNV64
 from pysaurus.core.schematizable import WithSchema
 from pysaurus.core.semantic_text import SemanticText
-from pysaurus.video.video_schema import VideoSchema
+from pysaurus.video.video_schema import VIDEO_SCHEMA
 from pysaurus.video.video_sorting import VideoSorting
 
 
 class LazyVideo(WithSchema):
     __slots__ = ("__discarded", "database")
-    SCHEMA = VideoSchema()
+    SCHEMA = VIDEO_SCHEMA
     __protected__ = ("database", "runtime", "discarded")
     FLAGS = {
         "readable",
@@ -55,7 +55,7 @@ class LazyVideo(WithSchema):
 
     def _set(self, name, value) -> bool:
         modified = super()._set(name, value)
-        if modified:
+        if modified and self.database:
             self.database.register_modified(self)
         return modified
 

@@ -1,13 +1,18 @@
 """To SQL."""
-from typing import List
 
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.json_backup import JsonBackup
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
+from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.db_settings import DbSettings
 from pysaurus.database.db_way_def import DbWays
 from pysaurus.properties.properties import PropType
+from pysaurus.updates.video_inliner import (
+    get_all_fields,
+    get_all_getters,
+    get_video_text,
+)
 from pysaurus.video import Video
 from saurus.sql.pysaurus_database import PysaurusDatabase
 from saurus.sql.pysaurus_program import PysaurusProgram
@@ -15,92 +20,6 @@ from saurus.sql.pysaurus_program import PysaurusProgram
 
 def format_prop_val(values, typ):
     return ((int(v) if typ is bool else v) for v in values)
-
-
-def get_video_text(video: Video, prop_names: List[str]):
-    properties = video._get("properties")
-    return (
-        f"{video._get('filename')};{video._get('meta_title')};"
-        f"{';'.join(v for name in prop_names for v in properties.get(name, ()))}"
-    )
-
-
-def get_i(i, video, key):
-    return i
-
-
-def get_default(i, video: Video, key):
-    return video._get(key)
-
-
-def get_field(i, video: Video, key):
-    return getattr(video, key)
-
-
-def get_runtime(i, video: Video, key):
-    return video.runtime._get(key)
-
-
-VIDEO_FIELDS = [
-    "video_id",
-    "filename",
-    "file_size",
-    "unreadable",
-    "audio_bit_rate",
-    "audio_bits",
-    "audio_codec",
-    "audio_codec_description",
-    "bit_depth",
-    "channels",
-    "container_format",
-    "device_name",
-    "duration",
-    "duration_time_base",
-    "frame_rate_den",
-    "frame_rate_num",
-    "height",
-    "meta_title",
-    "sample_rate",
-    "video_codec",
-    "video_codec_description",
-    "width",
-    "mtime",
-    "driver_id",
-    "is_file",
-    "date_entry_modified",
-    "date_entry_opened",
-    "similarity_id",
-]
-VIDEO_FIELD_GETTER = {
-    "video_id": get_i,
-    "filename": get_default,
-    "file_size": get_default,
-    "unreadable": get_default,
-    "audio_bit_rate": get_default,
-    "audio_bits": get_default,
-    "audio_codec": get_default,
-    "audio_codec_description": get_default,
-    "bit_depth": get_default,
-    "channels": get_default,
-    "container_format": get_default,
-    "device_name": get_default,
-    "duration": get_field,
-    "duration_time_base": get_field,
-    "frame_rate_den": get_field,
-    "frame_rate_num": get_default,
-    "height": get_default,
-    "meta_title": get_default,
-    "sample_rate": get_default,
-    "video_codec": get_default,
-    "video_codec_description": get_default,
-    "width": get_default,
-    "mtime": get_runtime,
-    "driver_id": get_runtime,
-    "is_file": get_runtime,
-    "date_entry_modified": get_default,
-    "date_entry_opened": get_default,
-    "similarity_id": get_default,
-}
 
 
 def export_db_to_sql(db_name: str, db_path: AbsolutePath, notifier):
@@ -134,11 +53,20 @@ def export_db_to_sql(db_name: str, db_path: AbsolutePath, notifier):
         settings = DbSettings(json_dict.get("settings", {}))
         date = json_dict.get("date")
         sources = [AbsolutePath(path) for path in json_dict.get("folders", ())]
+        source_tree = PathTree(sources)
+
+        def get_discarded(idx, vd: Video, fd):
+            return not source_tree.in_folders(vd.filename)
+
+        video_field_getter = get_all_getters()
+        video_field_getter["discarded"] = get_discarded
+        video_fields = get_all_fields()
+
         videos = sorted(
             Video(None, video_dict) for video_dict in json_dict.get("videos", ())
         )
         video_lines = [
-            [VIDEO_FIELD_GETTER[field](i, video, field) for field in VIDEO_FIELDS]
+            [video_field_getter[field](i, video, field) for field in video_fields]
             for i, video in enumerate(videos)
         ]
         video_errors = [
@@ -215,8 +143,8 @@ def export_db_to_sql(db_name: str, db_path: AbsolutePath, notifier):
         )
         new_db.modify(
             f"INSERT INTO video "
-            f"({','.join(VIDEO_FIELDS)}) "
-            f"VALUES ({','.join('?' for _ in VIDEO_FIELDS)})",
+            f"({','.join(video_fields)}) "
+            f"VALUES ({','.join('?' for _ in video_fields)})",
             video_lines,
             many=True,
         )
