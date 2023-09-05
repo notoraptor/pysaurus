@@ -12,18 +12,52 @@ B = V / 2.0
 V_PLUS_B = V + B
 
 
-def moderate(x: float):
-    return V_PLUS_B * x / (x + B)
-
-
-def pixel_distance(p1, x, y, p2, local_x, local_y, width):
-    index_p1 = x + y * width
-    index_p2 = local_x + local_y * width
-    return moderate(
-        abs(p1.r[index_p1] - p2.r[index_p2])
-        + abs(p1.g[index_p1] - p2.g[index_p2])
-        + abs(p1.b[index_p1] - p2.b[index_p2])
+def classify_similarities_directed(miniatures, edges, limit, notifier):
+    nb_sequences = len(miniatures)
+    width = miniatures[0].width
+    height = miniatures[0].height
+    maximum_distance_score = SIMPLE_MAX_PIXEL_DISTANCE * width * height
+    notify_job_start(
+        notifier,
+        _compare_miniatures_from_python,
+        nb_sequences,
+        "videos (Python comparison)",
     )
+    with Profiler(say("Python images comparison"), notifier=notifier):
+        raw_output = list(
+            parallelize(
+                _compare_miniatures_from_python,
+                _comparison_jobs(
+                    miniatures, edges, limit, maximum_distance_score, notifier
+                ),
+                cpu_count=USABLE_CPU_COUNT,
+                chunksize=100,
+            )
+        )
+    for couple in raw_output:
+        if couple:
+            i, j = couple
+            edges[i * nb_sequences + j] = 1
+
+
+def _comparison_jobs(
+    miniatures: List[Miniature], edges, limit: float, mds: int, notifier
+):
+    nb_sequences = len(miniatures)
+    for i in range(nb_sequences):
+        for j in range(i + 1, nb_sequences):
+            if edges[i * nb_sequences + j]:
+                edges[i * nb_sequences + j] = 0
+                yield miniatures[i], miniatures[j], i, j, limit, mds
+        notify_job_progress(
+            notifier, _compare_miniatures_from_python, None, i + 1, nb_sequences
+        )
+
+
+def _compare_miniatures_from_python(job):
+    mi, mj, i, j, limit, mds = job
+    ok = compare_faster(mi, mj, mi.width, mi.height, mds) >= limit
+    return (i, j) if ok else None
 
 
 def compare_faster(
@@ -116,49 +150,15 @@ def compare_faster(
     return (maximum_distance_score - total_distance) / maximum_distance_score
 
 
-def _comparison_jobs(
-    miniatures: List[Miniature], edges, limit: float, mds: int, notifier
-):
-    nb_sequences = len(miniatures)
-    for i in range(nb_sequences):
-        for j in range(i + 1, nb_sequences):
-            if edges[i * nb_sequences + j]:
-                edges[i * nb_sequences + j] = 0
-                yield miniatures[i], miniatures[j], i, j, limit, mds
-        notify_job_progress(
-            notifier, _compare_miniatures_from_python, None, i + 1, nb_sequences
-        )
-
-
-def _compare_miniatures_from_python(job):
-    mi, mj, i, j, limit, mds = job
-    ok = compare_faster(mi, mj, mi.width, mi.height, mds) >= limit
-    return (i, j) if ok else None
-
-
-def classify_similarities_directed(miniatures, edges, limit, database):
-    nb_sequences = len(miniatures)
-    width = miniatures[0].width
-    height = miniatures[0].height
-    maximum_distance_score = SIMPLE_MAX_PIXEL_DISTANCE * width * height
-    notify_job_start(
-        database.notifier,
-        _compare_miniatures_from_python,
-        nb_sequences,
-        "videos (Python comparison)",
+def pixel_distance(p1, x, y, p2, local_x, local_y, width):
+    index_p1 = x + y * width
+    index_p2 = local_x + local_y * width
+    return moderate(
+        abs(p1.r[index_p1] - p2.r[index_p2])
+        + abs(p1.g[index_p1] - p2.g[index_p2])
+        + abs(p1.b[index_p1] - p2.b[index_p2])
     )
-    with Profiler(say("Python images comparison"), notifier=database.notifier):
-        raw_output = list(
-            parallelize(
-                _compare_miniatures_from_python,
-                _comparison_jobs(
-                    miniatures, edges, limit, maximum_distance_score, database.notifier
-                ),
-                cpu_count=USABLE_CPU_COUNT,
-                chunksize=100,
-            )
-        )
-    for couple in raw_output:
-        if couple:
-            i, j = couple
-            edges[i * nb_sequences + j] = 1
+
+
+def moderate(x: float):
+    return V_PLUS_B * x / (x + B)

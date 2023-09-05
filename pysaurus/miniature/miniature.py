@@ -2,6 +2,8 @@ import base64
 from io import BytesIO
 from typing import Any, Optional, Tuple, Union
 
+import numpy as np
+
 from pysaurus.core.classes import AbstractMatrix
 from pysaurus.core.fraction import Fraction
 from pysaurus.core.json_type import Type
@@ -17,6 +19,17 @@ class GroupSignature(WithSchema):
     r = schema_prop("r")  # pixel_distance_radius
     m = schema_prop("m")  # group_min_size
     n = schema_prop("n")  # nb_groups
+
+
+class NumpyMiniature:
+    __slots__ = "r", "g", "b", "width", "height"
+
+    def __init__(self, r: Bytes, g: Bytes, b: Bytes, width: int, height: int):
+        self.width = width
+        self.height = height
+        self.r = np.asarray(r, dtype=np.float32).reshape((height, width))
+        self.g = np.asarray(g, dtype=np.float32).reshape((height, width))
+        self.b = np.asarray(b, dtype=np.float32).reshape((height, width))
 
 
 class Miniature(AbstractMatrix):
@@ -37,6 +50,9 @@ class Miniature(AbstractMatrix):
 
     size = property(lambda self: self.width * self.height)
     nb_pixels = property(lambda self: len(self.r))
+
+    def to_numpy(self) -> NumpyMiniature:
+        return NumpyMiniature(self.r, self.g, self.b, self.width, self.height)
 
     def has_group_signature(self, pixel_distance_radius: int, group_min_size: int):
         return (

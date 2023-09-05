@@ -33,7 +33,7 @@ except exceptions.CysaurusUnavailable:
     has_cpp = False
     logger.warning("Using fallback backend for video similarities search.")
 
-FRAC_SIM_LIMIT = Fraction(90, 100)
+FRAC_SIM_LIMIT = Fraction(89, 100)
 FRAC_DST_LIMIT = Fraction(1) - FRAC_SIM_LIMIT
 SIM_LIMIT = float(FRAC_SIM_LIMIT)
 DST_LIMIT = float(FRAC_DST_LIMIT)
@@ -389,7 +389,9 @@ class DbSimilarVideos:
 
     def _find_similar_miniatures(self, miniatures, edges, db):
         # type: (List[Miniature], Array[c_bool], Database) -> List[Set[int]]
-        backend_sim.classify_similarities_directed(miniatures, edges, SIM_LIMIT, db)
+        backend_sim.classify_similarities_directed(
+            miniatures, edges, SIM_LIMIT, db.notifier
+        )
         graph = Graph()
         nb_miniatures = len(miniatures)
         with Profiler(say("Link videos ..."), db.notifier):

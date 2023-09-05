@@ -28,24 +28,20 @@ def miniature_to_c_sequence(self, score=0.0, classification=-1):
 
 
 def classify_similarities_directed(
-    miniatures: List[Miniature], edges, sim_limit, database
+    miniatures: List[Miniature], edges, sim_limit, notifier
 ):
     nb_sequences = len(miniatures)
-    with Profiler(say("Allocate native data"), database.notifier):
+    with Profiler(say("Allocate native data"), notifier):
         native_sequences = [
             miniature_to_c_sequence(sequence) for sequence in miniatures
         ]
         native_sequence_pointers = [pointer(sequence) for sequence in native_sequences]
         pointer_array_type = PtrSequence * nb_sequences
     with Profiler(
-        say("Finding similar images using simpler NATIVE comparison."),
-        database.notifier,
+        say("Finding similar images using simpler NATIVE comparison."), notifier
     ):
         notify_job_start(
-            database.notifier,
-            "compare_miniatures",
-            nb_sequences,
-            "videos (C++ comparison)",
+            notifier, "compare_miniatures", nb_sequences, "videos (C++ comparison)"
         )
         cursor = 0
         while cursor < nb_sequences:
@@ -62,7 +58,7 @@ def classify_similarities_directed(
                 sim_limit,
             )
             notify_job_progress(
-                database.notifier,
+                notifier,
                 "compare_miniatures",
                 None,
                 min(i_to, nb_sequences),
@@ -70,5 +66,5 @@ def classify_similarities_directed(
             )
             cursor = i_to
         notify_job_progress(
-            database.notifier, "compare_miniatures", None, nb_sequences, nb_sequences
+            notifier, "compare_miniatures", None, nb_sequences, nb_sequences
         )
