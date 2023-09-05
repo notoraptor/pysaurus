@@ -66,6 +66,7 @@ def _compare_miniatures_from_numpy(job):
 # preallocate empty array and assign slice by chrisaycock
 # https://stackoverflow.com/a/42642326 (2023/09/05)
 
+
 def shift_top_left(arr, fill_value=np.inf):
     result = np.empty_like(arr)
     result[0] = fill_value

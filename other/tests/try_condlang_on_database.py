@@ -1,10 +1,10 @@
 from collections import namedtuple
 from typing import Iterable, Sequence, Union
 
-from pysaurus.application.application import Application
 from pysaurus.core import condlang
 from pysaurus.database.database import Database
 from pysaurus.video import Video
+from .utils_testing import get_database
 
 
 def _get_video_fields(
@@ -70,8 +70,7 @@ def db_select_videos(
 
 
 def main():
-    app = Application()
-    db = app.open_database_from_name("adult videos")
+    db = get_database()
     cl = db_select_videos(
         db, properties=["actress"], where='len(get_property("actress")) > 1'
     )

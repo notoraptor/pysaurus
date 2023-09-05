@@ -13,6 +13,7 @@ from pysaurus.core.modules import ImageUtils
 from pysaurus.database.db_way_def import DbWays
 from pysaurus.database.thubmnail_database.thumbnail_manager import ThumbnailManager
 from saurus.sql.pysaurus_program import PysaurusProgram
+from .utils_testing import DB_NAME
 
 
 def blob_to_image(binary_data) -> Image:
@@ -166,13 +167,11 @@ class NearPixelHash:
         )
 
 
-DB_NAME = "adult videos"
 OUTPUT_PATH = "ignored/hash.json"
 
 
 def main_0():
     interval_lengths = [v for v in range(1, 256) if not 255 % v]
-    unit_classes = []
     print(len(interval_lengths), interval_lengths)
     for interval_length in interval_lengths:
         expected_nb_classes = 256 // interval_length + bool(256 % interval_length)
