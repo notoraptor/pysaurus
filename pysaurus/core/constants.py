@@ -5,6 +5,7 @@ THUMBNAIL_EXTENSION = "png"
 JPEG_EXTENSION = "jpg"
 VIDEO_SUPPORTED_EXTENSIONS = frozenset(
     (
+        # "!qB".lower(),  # qbittorrent incomplete downloads. TODO Should not be parsed
         "3g2",
         "3gp",
         "asf",

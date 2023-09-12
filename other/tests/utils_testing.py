@@ -3,7 +3,7 @@ from pysaurus.database.database import Database
 
 
 with open("ignored/db_name.txt") as file:
-    DB_NAME = file.read()
+    DB_NAME = file.read().strip()
 
 
 def get_database() -> Database:

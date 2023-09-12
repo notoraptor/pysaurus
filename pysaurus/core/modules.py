@@ -4,12 +4,15 @@ import platform
 import sys
 from html.parser import HTMLParser
 from io import BytesIO
+from typing import Any, Iterator, Sequence, Tuple
 
 from PIL import Image
 from moviepy.video.io.VideoFileClip import VideoFileClip
 
 from pysaurus.core import core_exceptions
 from pysaurus.core.constants import THUMBNAIL_EXTENSION
+
+ImagePosition = Tuple[Any, int, int]
 
 
 class HTMLStripper(HTMLParser):
@@ -184,6 +187,11 @@ class ImageUtils:
         return image
 
     @staticmethod
+    def from_blob(binary_data) -> Image:
+        blob = BytesIO(binary_data)
+        return ImageUtils.open_rgb_image(blob)
+
+    @staticmethod
     def save_gray_image(width, height, data, name):
         # Data must be a list of gray values in [0; 255].
         return ImageUtils.__save_image(
@@ -204,6 +212,12 @@ class ImageUtils:
         return image
 
     @staticmethod
+    def new_rgb_surface(width: int, height: int, r: int, g: int, b: int):
+        image = Image.new("RGB", (width, height))
+        image.putdata([(r, g, b)] * (width * height))
+        return image
+
+    @staticmethod
     def thumbnail_to_base64(thumb_path: str):
         if not FileSystem.path.isfile(thumb_path):
             return None
@@ -212,6 +226,91 @@ class ImageUtils:
         image.save(buffered, format=THUMBNAIL_EXTENSION)
         image_string = base64.b64encode(buffered.getvalue())
         return image_string
+
+    @staticmethod
+    def get_near_front_pixels(
+        width: int, height: int
+    ) -> Iterator[Tuple[ImagePosition, Sequence[ImagePosition]]]:
+        # x, y:
+
+        # 0, 0
+        yield (0, 0), ((0, 0), (1, 0), (0, 1), (1, 1))
+        # width - 1, 0
+        yield (
+            (width - 1, 0),
+            ((width - 2, 0), (width - 1, 0), (width - 2, 1), (width - 1, 1)),
+        )
+        # 0, height - 1
+        yield (
+            (0, height - 1),
+            ((0, height - 1), (1, height - 1), (0, height - 2), (1, height - 2)),
+        )
+        # width - 1, height - 1
+        yield (
+            (width - 1, height - 1),
+            (
+                (width - 2, height - 1),
+                (width - 1, height - 1),
+                (width - 2, height - 2),
+                (width - 1, height - 2),
+            ),
+        )
+
+        for x in range(1, width - 1):
+            # x, 0
+            yield (
+                (x, 0),
+                ((x - 1, 0), (x, 0), (x + 1, 0), (x - 1, 1), (x, 1), (x + 1, 1)),
+            )
+            # x, height - 1
+            yield (
+                (x, height - 1),
+                (
+                    (x - 1, height - 1),
+                    (x, height - 1),
+                    (x + 1, height - 1),
+                    (x - 1, height - 2),
+                    (x, height - 2),
+                    (x + 1, height - 2),
+                ),
+            )
+        for y in range(1, height - 1):
+            # 0, y
+            yield (
+                (0, y),
+                ((0, y - 1), (1, y - 1), (0, y), (1, y), (0, y + 1), (1, y + 1)),
+            )
+            # width - 1, y
+            yield (
+                (width - 1, y),
+                (
+                    (width - 2, y - 1),
+                    (width - 1, y - 1),
+                    (width - 2, y),
+                    (width - 1, y),
+                    (width - 2, y + 1),
+                    (width - 1, y + 1),
+                ),
+            )
+        # x in [1; width - 2], y in [1; height - 2]
+        remaining_size = (width - 2) * (height - 2)
+        for index in range(0, remaining_size):
+            x = index % (width - 2) + 1
+            y = index // (width - 2) + 1
+            yield (
+                (x, y),
+                (
+                    (x - 1, y - 1),
+                    (x, y - 1),
+                    (x + 1, y - 1),
+                    (x - 1, y),
+                    (x, y),
+                    (x + 1, y),
+                    (x - 1, y + 1),
+                    (x, y + 1),
+                    (x + 1, y + 1),
+                ),
+            )
 
 
 class FNV64:
