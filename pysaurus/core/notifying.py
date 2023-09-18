@@ -1,3 +1,4 @@
+import sys
 from typing import Callable, Dict, Optional, TypeVar
 
 from pysaurus.core.components import Date
@@ -97,7 +98,14 @@ class Notifier:
             default_manager(notification)
 
 
-DEFAULT_NOTIFIER = Notifier()
+class _StderrNotifier(Notifier):
+    __slots__ = ()
+
+    def manage(self, notification):
+        print(notification, file=sys.stderr)
+
+
+DEFAULT_NOTIFIER = _StderrNotifier()
 
 GLOBAL_SETTING_LOG: bool = True
 GLOBAL_SETTING_HANDLER: Optional[Callable[[Notification], None]] = None

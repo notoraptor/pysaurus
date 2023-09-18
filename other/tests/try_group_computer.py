@@ -206,7 +206,7 @@ def essay():
                 "SELECT filename, thumbnail FROM video_to_thumbnail"
             ):
                 image = blob_to_image(row["thumbnail"])
-                thumbnail = image.resize(ImageUtils.DEFAULT_THUMBNAIL_SIZE)
+                thumbnail = image.resize(ImageUtils.THUMBNAIL_SIZE)
                 computation.append(
                     (
                         row["filename"],

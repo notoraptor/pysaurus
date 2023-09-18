@@ -30,7 +30,7 @@ def generate_video_miniatures(job: Job) -> List[Miniature]:
     for i, (file_name, thumb_data) in enumerate(job.batch):
         miniatures.append(
             Miniature.from_file_data(
-                thumb_data, ImageUtils.DEFAULT_THUMBNAIL_SIZE, file_name.path
+                thumb_data, ImageUtils.THUMBNAIL_SIZE, file_name.path
             )
         )
         if (i + 1) % 500 == 0:

@@ -125,7 +125,7 @@ class DbPatternDetection:
 
     @staticmethod  # Unused
     def _generate_pattern_heatmap(theta: List[float]):
-        w, h = ImageUtils.DEFAULT_THUMBNAIL_SIZE
+        w, h = ImageUtils.THUMBNAIL_SIZE
         size = w * h
         assert len(theta) == 3 * size + 1
         pixel_thetas = theta[:-1]

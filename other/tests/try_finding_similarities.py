@@ -21,7 +21,7 @@ def blob_to_image(binary_data) -> Image:
     return ImageUtils.open_rgb_image(blob)
 
 
-W = ImageUtils.DEFAULT_THUMBNAIL_DIMENSION
+W = ImageUtils.THUMBNAIL_DIMENSION
 
 
 def hash_image(thumbnail: Image):
@@ -217,7 +217,7 @@ def main_1():
                 )
             ):
                 image = blob_to_image(row["thumbnail"])
-                thumbnail = image.resize(ImageUtils.DEFAULT_THUMBNAIL_SIZE)
+                thumbnail = image.resize(ImageUtils.THUMBNAIL_SIZE)
                 computation.append(
                     [
                         hash_image(thumbnail),
@@ -266,7 +266,7 @@ def main_1_1():
                 )
             ):
                 image = blob_to_image(row["thumbnail"])
-                thumbnail = image.resize(ImageUtils.DEFAULT_THUMBNAIL_SIZE)
+                thumbnail = image.resize(ImageUtils.THUMBNAIL_SIZE)
                 computation.append([near_hasher.hash(thumbnail), row["filename"]])
                 bar.update(1)
 

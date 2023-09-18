@@ -199,7 +199,7 @@ class Database(JsonDatabase):
                 identifier = AbsolutePath(dct["i"])
                 if self.has_video(
                     filename=identifier
-                ) and ImageUtils.DEFAULT_THUMBNAIL_SIZE == (dct["w"], dct["h"]):
+                ) and ImageUtils.THUMBNAIL_SIZE == (dct["w"], dct["h"]):
                     identifiers.add(identifier)
                     valid_dictionaries.append(dct)
             have_removed = len(valid_dictionaries) != len(json_array)
