@@ -54,6 +54,41 @@ DIM = ImageUtils.THUMBNAIL_DIMENSION
 HALF = DIM // 2
 SIZE = (DIM, DIM)
 
+
+def _clip_color(value):
+    return min(max(0, value), 255)
+
+
+def equalize_image(image):
+    data = list(image.getdata())
+    grays = sorted({int(sum(p) / 3) for p in data})
+    if len(grays) < 2:
+        return ImageUtils.new_rgb_image([(0, 0, 0)] * len(data), *image.size)
+    best_distance = 255 / (len(grays) - 1)
+    new_grays = [round(i * best_distance) for i in range(len(grays))]
+    old_to_new_gray = {gray: new_gray for gray, new_gray in zip(grays, new_grays)}
+    output = []
+    for pixel in data:
+        old_gray = int(sum(pixel) / 3)
+        distance = old_to_new_gray[old_gray] - old_gray
+        output.append(
+            (
+                _clip_color(pixel[0] + distance),
+                _clip_color(pixel[1] + distance),
+                _clip_color(pixel[2] + distance),
+            )
+        )
+    return ImageUtils.new_rgb_image(output, *image.size)
+
+
+EXPECTED = 128
+
+
+def normalize_brightness(vector: list):
+    diff = EXPECTED - sum(vector) / len(vector)
+    return [v + diff for v in vector]
+
+
 def main_old():
     metric = "euclidean"
     nb_trees = 100
@@ -108,8 +143,11 @@ def main_old():
         ):
             image = ImageUtils.from_blob(row["thumbnail"])
             thumbnail = image.resize(SIZE)
+            # equalized = equalize_image(thumbnail)
             normalized = thumbnail.filter(blur)
-            vector = [round(sum(pixel)/3) for pixel in normalized.getdata()]
+            vector = [round(sum(pixel) / 3) for pixel in normalized.getdata()]
+            # vector = normalize_brightness(vector)
+            # vector = equalize_to_grayscale(normalized.getdata())
             vectors.append((row["filename"], vector))
             bar.update(1)
 
@@ -137,9 +175,7 @@ def main_old():
 
     output = {}
     for i, (ids, dsts) in results:
-        d = {
-            vectors[j][0]: dst for j, dst in zip(ids, dsts) if i != j and dst <= max_dst
-        }
+        d = {vectors[j][0]: dst for j, dst in zip(ids, dsts) if i != j}
         if d:
             output[vectors[i][0]] = d
 
@@ -155,15 +191,19 @@ def main_old():
 
     with Profiler("Check expected similarities"):
         for filename, linked_filenames in similarities.items():
-            assert filename in output, filename
+            if filename not in output:
+                print("Missing all", video_to_sim[filename], file=sys.stderr)
+                continue
             for linked_filename in sorted(linked_filenames):
-                if (
-                    linked_filename not in output[filename]
-                    and filename not in output[linked_filename]
+                if linked_filename not in output[filename] and (
+                    linked_filename not in output
+                    or filename not in output[linked_filename]
                 ):
+                    v1 = [v for f, v in vectors if f == filename][0]
+                    v2 = [v for f, v in vectors if f == linked_filename][0]
                     print("Missing", video_to_sim[filename], file=sys.stderr)
-                    print("\t", filename, file=sys.stderr)
-                    print("\t", linked_filename, file=sys.stderr)
+                    print("\t", sum(v1) / len(v1), filename, file=sys.stderr)
+                    print("\t", sum(v2) / len(v2), linked_filename, file=sys.stderr)
 
 
 if __name__ == "__main__":
