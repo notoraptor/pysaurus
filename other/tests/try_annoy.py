@@ -31,181 +31,307 @@ ProfilingEnded(main, 04m 48s 981723µs)
 import json
 import math
 import sys
+from abc import ABC, abstractmethod
+from typing import Any, Dict, Iterable, List, Sequence, Set, Tuple
 
 from PIL import ImageFilter
+from PIL.Image import Image
 from annoy import AnnoyIndex
 from tqdm import tqdm, trange
 
 from other.tests.utils_testing import DB_NAME
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.modules import ImageUtils
-from pysaurus.core.profiling import Profiler
+from pysaurus.core.profiling import InlineProfiler, Profiler
 from pysaurus.database.db_way_def import DbWays
+from pysaurus.database.features.db_similar_videos import SIM_LIMIT
 from pysaurus.database.thubmnail_database.thumbnail_manager import ThumbnailManager
+from pysaurus.database.video_similarities.backend_numpy import SimilarityComparator
+from pysaurus.miniature.graph import Graph
+from pysaurus.miniature.miniature import NumpyMiniature
 from saurus.sql.pysaurus_program import PysaurusProgram
 
-METRIC = "euclidean"
-NB_TREES = 100
-NB_NEAR = 20
-BLUR_SIZE = 1
-ANNOY_SEED = 1234567890
 
-DIM = ImageUtils.THUMBNAIL_DIMENSION
-HALF = DIM // 2
-SIZE = (DIM, DIM)
+class AbstractImageProvider(ABC):
+    __slots__ = ()
 
+    @abstractmethod
+    def count(self) -> int:
+        pass
 
-def _clip_color(value):
-    return min(max(0, value), 255)
+    @abstractmethod
+    def items(self) -> Iterable[Tuple[Any, Image]]:
+        pass
 
 
-def equalize_image(image):
-    data = list(image.getdata())
-    grays = sorted({int(sum(p) / 3) for p in data})
-    if len(grays) < 2:
-        return ImageUtils.new_rgb_image([(0, 0, 0)] * len(data), *image.size)
-    best_distance = 255 / (len(grays) - 1)
-    new_grays = [round(i * best_distance) for i in range(len(grays))]
-    old_to_new_gray = {gray: new_gray for gray, new_gray in zip(grays, new_grays)}
-    output = []
-    for pixel in data:
-        old_gray = int(sum(pixel) / 3)
-        distance = old_to_new_gray[old_gray] - old_gray
-        output.append(
-            (
-                _clip_color(pixel[0] + distance),
-                _clip_color(pixel[1] + distance),
-                _clip_color(pixel[2] + distance),
-            )
+class ApproximateComparator:
+    __slots__ = ("vectors", "vector_size")
+    DIM = 16
+    SIZE = (DIM, DIM)
+
+    NB_TREES = 175
+    NB_NEAR = 20
+    ANNOY_SEED = 1234567890
+
+    def __init__(self, imp: AbstractImageProvider):
+        blur = ImageFilter.BoxBlur(1)
+        vector_size = 3 * self.DIM * self.DIM
+        vectors = []
+        with tqdm(total=imp.count(), desc="Get vectors") as bar:
+            for i, (identifier, image) in enumerate(imp.items()):
+                thumbnail = image.resize(self.SIZE)
+                normalized = thumbnail.filter(blur)
+                vector = [v for pixel in normalized.getdata() for v in pixel]
+                vectors.append((identifier, vector))
+                bar.update(1)
+        assert all(
+            len(vector[1]) == vector_size
+            for vector in tqdm(vectors, desc="check vectors")
         )
-    return ImageUtils.new_rgb_image(output, *image.size)
+        self.vectors = vectors
+        self.vector_size = vector_size
 
+    def get_comparable_images(self) -> Dict[Any, Dict[Any, float]]:
+        vectors = self.vectors
+        vector_size = self.vector_size
 
-EXPECTED = 128
+        nb_trees = self.NB_TREES
+        nb_near = self.NB_NEAR
+        annoy_seed = self.ANNOY_SEED
+        metric = "angular"
+        max_angular = math.sqrt(2)
+        max_dst = max_angular * 0.3
 
-
-def normalize_brightness(vector: list):
-    diff = EXPECTED - sum(vector) / len(vector)
-    return [v + diff for v in vector]
-
-
-def main_old():
-    metric = "euclidean"
-    nb_trees = 100
-    nb_near = 20
-    blur = ImageFilter.BoxBlur(1)
-    vector_size = DIM * DIM
-    max_euclidean = 255 * math.sqrt(vector_size)
-    max_dst = max_euclidean * 0.20
-    annoy_seed = 1234567890
-
-    application = PysaurusProgram()
-    db_name_to_path = {path.title: path for path in application.get_database_paths()}
-    db_path = db_name_to_path[DB_NAME]
-    ways = DbWays(db_path)
-    thumb_sql_path = ways.db_thumb_sql_path
-    assert thumb_sql_path.isfile()
-    thumb_manager = ThumbnailManager(thumb_sql_path)
-
-    with Profiler("Get pre-computed similarities"):
-        with open(ways.db_json_path.path) as json_file:
-            content = json.load(json_file)
-        groups = {}
-        for video in content.get("videos", ()):
-            groups.setdefault(video.get("S", None), []).append(
-                AbsolutePath(video["f"]).path
-            )
-        groups.pop(-1)
-        groups.pop(None)
-        sim_groups = [
-            (value, videos) for value, videos in groups.items() if len(videos) > 1
-        ]
-    print("Similarities", len(sim_groups), file=sys.stderr)
-    similarities = {}
-    video_to_sim = {}
-    nb_similar_videos = 0
-    for value, videos in sim_groups:
-        videos.sort()
-        similarities.setdefault(videos[0], set()).update(videos[1:])
-        video_to_sim[videos[0]] = value
-        nb_similar_videos += len(videos)
-    print("Similar videos", nb_similar_videos, file=sys.stderr)
-
-    nb_images = thumb_manager.thumb_db.query_one(
-        "SELECT COUNT(filename) FROM video_to_thumbnail"
-    )[0]
-    vectors = []
-    with tqdm(total=nb_images, desc="get vectors") as bar:
-        for i, row in enumerate(
-            thumb_manager.thumb_db.query(
-                "SELECT filename, thumbnail FROM video_to_thumbnail"
-            )
+        # Build Annoy index
+        t = AnnoyIndex(vector_size, metric)
+        t.set_seed(annoy_seed)
+        for i, (filename, vector) in tqdm(
+            list(enumerate(vectors)), desc="Add items to Annoy"
         ):
-            image = ImageUtils.from_blob(row["thumbnail"])
-            thumbnail = image.resize(SIZE)
-            # equalized = equalize_image(thumbnail)
-            normalized = thumbnail.filter(blur)
-            vector = [round(sum(pixel) / 3) for pixel in normalized.getdata()]
-            # vector = normalize_brightness(vector)
-            # vector = equalize_to_grayscale(normalized.getdata())
-            vectors.append((row["filename"], vector))
-            bar.update(1)
+            t.add_item(i, vector)
 
-    assert all(
-        len(vector[1]) == vector_size for vector in tqdm(vectors, desc="check vectors")
+        with InlineProfiler("Build Annoy trees"):
+            t.build(nb_trees)
+
+        # Get nearest neighbors for each vector.
+        results = [
+            (i, t.get_nns_by_item(i, nb_near, include_distances=True))
+            for i in trange(len(vectors), desc="Search in Annoy index")
+        ]
+
+        output = {}
+        for i, (near_indices, near_distances) in results:
+            d = {
+                vectors[j][0]: dst
+                for j, dst in zip(near_indices, near_distances)
+                if i != j and dst <= max_dst
+            }
+            if d:
+                output[vectors[i][0]] = d
+        return output
+
+    def get_comparable_images_euclidian(self) -> Dict[Any, Dict[Any, float]]:
+        vectors = self.vectors
+        vector_size = self.vector_size
+
+        nb_trees = self.NB_TREES
+        nb_near = self.NB_NEAR
+        annoy_seed = self.ANNOY_SEED
+        metric = "euclidean"
+        max_euclidian = 255 * math.sqrt(vector_size)
+        max_dst = max_euclidian * 0.175
+
+        # Build Annoy index
+        t = AnnoyIndex(vector_size, metric)
+        t.set_seed(annoy_seed)
+        for i, (filename, vector) in tqdm(
+            list(enumerate(vectors)), desc="Add items to Annoy"
+        ):
+            t.add_item(i, vector)
+
+        with InlineProfiler("Build Annoy trees"):
+            t.build(nb_trees)
+
+        # Get nearest neighbors for each vector.
+        results = [
+            (i, t.get_nns_by_item(i, nb_near, include_distances=True))
+            for i in trange(len(vectors), desc="Search in Annoy index")
+        ]
+
+        output = {}
+        for i, (near_indices, near_distances) in results:
+            d = {
+                vectors[j][0]: dst
+                for j, dst in zip(near_indices, near_distances)
+                if i != j and dst <= max_dst
+            }
+            if d:
+                output[vectors[i][0]] = d
+        return output
+
+
+def compare_images(
+    imp: AbstractImageProvider, output: Dict[Any, Sequence[Any]]
+) -> List[Set[Any]]:
+    nb_images = imp.count()
+    numpy_miniatures = {}
+    with tqdm(total=nb_images, desc="Generate numpy miniatures") as pbar:
+        for identifier, image in imp.items():
+            numpy_miniatures[identifier] = NumpyMiniature.from_image(
+                image.resize(ImageUtils.THUMBNAIL_SIZE)
+            )
+            pbar.update(1)
+    assert len(numpy_miniatures) == nb_images
+
+    graph = Graph()
+    nb_todo = sum(len(d) for d in output.values())
+    sim_cmp = SimilarityComparator(
+        SIM_LIMIT, ImageUtils.THUMBNAIL_DIMENSION, ImageUtils.THUMBNAIL_DIMENSION
     )
+    with tqdm(total=nb_todo, desc="Make real comparisons using Numpy") as bar:
+        for filename, linked_filenames in output.items():
+            p1 = numpy_miniatures[filename]
+            for linked_filename in linked_filenames:
+                p2 = numpy_miniatures[linked_filename]
+                if sim_cmp.are_similar(p1, p2):
+                    graph.connect(filename, linked_filename)
+                bar.update(1)
 
-    # Build Annoy index
-    t = AnnoyIndex(vector_size, metric)
-    t.set_seed(annoy_seed)
-    for i, (filename, vector) in tqdm(
-        list(enumerate(vectors)), desc="Add items to Annoy"
-    ):
-        t.add_item(i, vector)
+    groups = [group for group in graph.pop_groups() if len(group) > 1]
+    return groups
 
-    with Profiler("Build Annoy trees"):
-        t.build(nb_trees)
-    with Profiler("Save Annoy to disk"):
-        t.save("ignored/test.ann")
 
-    results = [
-        (i, t.get_nns_by_item(i, nb_near, include_distances=True))
-        for i in trange(len(vectors), desc="Search in Annoy index")
-    ]
+class LocalImageProvider(AbstractImageProvider):
+    def __init__(self):
+        application = PysaurusProgram()
+        db_name_to_path = {
+            path.title: path for path in application.get_database_paths()
+        }
+        db_path = db_name_to_path[DB_NAME]
+        self.ways = DbWays(db_path)
+        thumb_sql_path = self.ways.db_thumb_sql_path
+        assert thumb_sql_path.isfile()
+        self.thumb_manager = ThumbnailManager(thumb_sql_path)
+        self.nb_images = self.thumb_manager.thumb_db.query_one(
+            "SELECT COUNT(filename) FROM video_to_thumbnail"
+        )[0]
 
-    output = {}
-    for i, (ids, dsts) in results:
-        d = {vectors[j][0]: dst for j, dst in zip(ids, dsts) if i != j}
-        if d:
-            output[vectors[i][0]] = d
+    def count(self) -> int:
+        return self.nb_images
 
-    assert output
-    nb_expected_sims = nb_similar_videos
-    nb_detected_sims = sum(len(fs) for fs in output.values())
-    print("Expected sims", nb_expected_sims, file=sys.stderr)
-    print("Detected sims", nb_detected_sims, file=sys.stderr)
-    print("Truth rate", nb_expected_sims * 100 / nb_detected_sims, "%", file=sys.stderr)
+    def items(self) -> Iterable[Tuple[Any, Image]]:
+        for row in self.thumb_manager.thumb_db.query(
+            "SELECT filename, thumbnail FROM video_to_thumbnail"
+        ):
+            yield row["filename"], ImageUtils.from_blob(row["thumbnail"])
 
-    with open(f"ignored/results_{metric}_dict.json", "w") as file:
-        json.dump(output, file, indent=1)
 
-    with Profiler("Check expected similarities"):
-        for filename, linked_filenames in similarities.items():
-            if filename not in output:
-                print("Missing all", video_to_sim[filename], file=sys.stderr)
-                continue
-            for linked_filename in sorted(linked_filenames):
-                if linked_filename not in output[filename] and (
-                    linked_filename not in output
-                    or filename not in output[linked_filename]
-                ):
-                    v1 = [v for f, v in vectors if f == filename][0]
-                    v2 = [v for f, v in vectors if f == linked_filename][0]
-                    print("Missing", video_to_sim[filename], file=sys.stderr)
-                    print("\t", sum(v1) / len(v1), filename, file=sys.stderr)
-                    print("\t", sum(v2) / len(v2), linked_filename, file=sys.stderr)
+class Checker:
+    __slots__ = ("video_to_sim", "sim_groups", "ways")
+
+    def __init__(self, ways):
+        with InlineProfiler("Get pre-computed similarities"):
+            with open(ways.db_json_path.path) as json_file:
+                content = json.load(json_file)
+            groups = {}
+            for video in content.get("videos", ()):
+                groups.setdefault(video.get("S", None), []).append(
+                    AbsolutePath(video["f"]).path
+                )
+            groups.pop(-1)
+            groups.pop(None)
+            sim_groups = sorted(
+                (
+                    (value, sorted(videos))
+                    for value, videos in groups.items()
+                    if len(videos) > 1
+                ),
+                key=lambda c: c[0],
+            )
+            video_to_sim = {
+                filename: value
+                for value, filenames in sim_groups
+                for filename in filenames
+            }
+
+        self.ways = ways
+        self.video_to_sim = video_to_sim
+        self.sim_groups = sim_groups
+
+    def save(self, output, metric):
+        with open(f"ignored/results_{metric}_dict.json", "w") as file:
+            json.dump(output, file, indent=1)
+
+    def check(self, output, new_sim_groups):
+        video_to_sim = self.video_to_sim
+        sim_groups = self.sim_groups
+
+        nb_similar_videos = sum(len(videos) for _, videos in sim_groups)
+        print("Similarities", len(sim_groups), file=sys.stderr)
+        print("Similar videos", nb_similar_videos, file=sys.stderr)
+        if new_sim_groups:
+            nb_new_similar_videos = sum(len(group) for group in new_sim_groups)
+            nb_new_similar_groups = len(new_sim_groups)
+            print("New similarities", nb_new_similar_groups, file=sys.stderr)
+            print("New similar videos", nb_new_similar_videos)
+
+        with InlineProfiler("Check new sim groups"):
+            for group in new_sim_groups:
+                old_sims = {video_to_sim.get(filename, -1) for filename in group}
+                if len(old_sims) != 1:
+                    print("Bad group", file=sys.stderr)
+                    for filename in group:
+                        print(
+                            "\t",
+                            video_to_sim.get(filename, -1),
+                            filename,
+                            file=sys.stderr,
+                        )
+
+        with Profiler("Check expected similarities"):
+            for sim_id, videos in sim_groups:
+                filename, *linked_filenames = videos
+                for linked_filename in linked_filenames:
+                    has_l = filename in output and linked_filename in output[filename]
+                    has_r = (
+                        linked_filename in output
+                        and filename in output[linked_filename]
+                    )
+                    if not has_l and not has_r:
+                        print("Missing", sim_id, file=sys.stderr)
+                        print("\t", filename, file=sys.stderr)
+                        print("\t", linked_filename, file=sys.stderr)
+
+
+def main_new():
+    imp = LocalImageProvider()
+    chk = Checker(imp.ways)
+    ac = ApproximateComparator(imp)
+
+    output_angular = ac.get_comparable_images()
+    # chk.check(output_angular, [])
+
+    output_euclidian = ac.get_comparable_images_euclidian()
+    # chk.check(output_euclidian, [])
+
+    all_filenames = sorted(set(output_angular) | set(output_euclidian))
+    combined = {
+        filename: sorted(
+            set(output_angular.get(filename, ()))
+            & set(output_euclidian.get(filename, ()))
+        )
+        for filename in all_filenames
+    }
+    chk.check(combined, [])
+
+    final_output = {}
+    similarities = compare_images(imp, combined)
+    for group in similarities:
+        group = list(group)
+        final_output[group[0]] = set(group[1:])
+    chk.check(final_output, similarities)
 
 
 if __name__ == "__main__":
     with Profiler("main"):
-        main_old()
+        main_new()

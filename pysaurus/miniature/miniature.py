@@ -31,6 +31,19 @@ class NumpyMiniature:
         self.g = np.asarray(g, dtype=np.float32).reshape((height, width))
         self.b = np.asarray(b, dtype=np.float32).reshape((height, width))
 
+    @classmethod
+    def from_image(cls, thumbnail):
+        width, height = thumbnail.size
+        size = width * height
+        red = bytearray(size)
+        green = bytearray(size)
+        blue = bytearray(size)
+        for i, (r, g, b) in enumerate(thumbnail.getdata()):
+            red[i] = r
+            green[i] = g
+            blue[i] = b
+        return cls(red, green, blue, width, height)
+
 
 class Miniature(AbstractMatrix):
     __slots__ = ("identifier", "r", "g", "b", "i", "group_signature", "video_id")
@@ -116,6 +129,19 @@ class Miniature(AbstractMatrix):
     def _img_to_mnt(image, dimensions: Tuple[int, int], identifier: Optional[Any]):
         thumbnail = image.resize(dimensions)
         width, height = dimensions
+        size = width * height
+        red = bytearray(size)
+        green = bytearray(size)
+        blue = bytearray(size)
+        for i, (r, g, b) in enumerate(thumbnail.getdata()):
+            red[i] = r
+            green[i] = g
+            blue[i] = b
+        return Miniature(red, green, blue, width, height, identifier)
+
+    @staticmethod
+    def from_image(thumbnail, identifier: Optional[Any] = None):
+        width, height = thumbnail.size
         size = width * height
         red = bytearray(size)
         green = bytearray(size)

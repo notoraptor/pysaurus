@@ -135,12 +135,10 @@ def shift_bottom_right(arr, fill_value=np.inf):
 RGB = namedtuple("RGB", ("r", "g", "b"))
 
 
-def np_dst(p1, top_left):
+def np_dst(rgb1, rgb2):
     return np.nan_to_num(
         moderate(
-            np.abs(p1.r - top_left.r)
-            + np.abs(p1.g - top_left.g)
-            + np.abs(p1.b - top_left.b)
+            np.abs(rgb1.r - rgb2.r) + np.abs(rgb1.g - rgb2.g) + np.abs(rgb1.b - rgb2.b)
         ),
         nan=np.inf,
     )
@@ -197,6 +195,17 @@ def compare_faster(p1: NumpyMiniature, p2: NumpyMiniature, maximum_distance_scor
         )
     )
     return (maximum_distance_score - total_distance) / maximum_distance_score
+
+
+class SimilarityComparator:
+    __slots__ = ("max_dst_score", "limit")
+
+    def __init__(self, limit, width, height):
+        self.limit = limit
+        self.max_dst_score = SIMPLE_MAX_PIXEL_DISTANCE * width * height
+
+    def are_similar(self, p1: NumpyMiniature, p2: NumpyMiniature) -> bool:
+        return compare_faster(p1, p2, self.max_dst_score) >= self.limit
 
 
 def moderate(x: float):

@@ -162,3 +162,19 @@ def pixel_distance(p1, x, y, p2, local_x, local_y, width):
 
 def moderate(x: float):
     return V_PLUS_B * x / (x + B)
+
+
+class SimilarityComparator:
+    __slots__ = ("max_dst_score", "limit", "width", "height")
+
+    def __init__(self, limit, width, height):
+        self.width = width
+        self.height = height
+        self.limit = limit
+        self.max_dst_score = SIMPLE_MAX_PIXEL_DISTANCE * width * height
+
+    def are_similar(self, p1: Miniature, p2: Miniature) -> bool:
+        return (
+            compare_faster(p1, p2, self.width, self.height, self.max_dst_score)
+            >= self.limit
+        )

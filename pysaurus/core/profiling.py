@@ -41,17 +41,30 @@ class _Profile(Duration):
         )
 
 
-class Profiler:
-    __slots__ = "__title", "__time_start", "__time_end", "__notifier"
+class _InlineProfile(Notification):
+    __slots__ = "title", "time"
 
-    def __init__(self, title, notifier=None):
+    def __init__(self, title, duration):
+        self.title = title
+        self.time = duration
+
+    def __str__(self):
+        return f"Profiled({self.title}, {self.time})"
+
+
+class Profiler:
+    __slots__ = "__title", "__time_start", "__time_end", "__notifier", "__inline"
+
+    def __init__(self, title, notifier=None, inline=False):
         self.__title = title
         self.__notifier = notifier or DEFAULT_NOTIFIER
         self.__time_start = None
         self.__time_end = None
+        self.__inline = inline
 
     def __enter__(self):
-        self.__notifier.notify(ProfilingStart(self.__title))
+        if not self.__inline:
+            self.__notifier.notify(ProfilingStart(self.__title))
         self.__time_start = time.perf_counter_ns()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -59,7 +72,10 @@ class Profiler:
         profiling = _Profile(
             timedelta(microseconds=(self.__time_end - self.__time_start) / 1000)
         )
-        self.__notifier.notify(ProfilingEnd(self.__title, profiling))
+        if self.__inline:
+            self.__notifier.notify(_InlineProfile(self.__title, profiling))
+        else:
+            self.__notifier.notify(ProfilingEnd(self.__title, profiling))
 
     @staticmethod
     def profile(title=None):
@@ -88,3 +104,10 @@ class Profiler:
             return wrapper
 
         return decorator_profile
+
+
+class InlineProfiler(Profiler):
+    __slots__ = ()
+
+    def __init__(self, title, notifier=None):
+        super().__init__(title, notifier, True)
