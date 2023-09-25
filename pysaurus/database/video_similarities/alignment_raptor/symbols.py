@@ -36,3 +36,7 @@ fn_classifySimilaritiesSelected = _dll_video_raptor.prototype(
     None,
     [PtrPtrSequence, c_int, c_int, c_int, c_int, c_int, c_double, c_int_p],
 )
+
+fn_compareSimilarSequences = _dll_video_raptor.prototype(
+    "compareSimilarSequences", c_double, [PtrSequence, PtrSequence, c_int, c_int, c_int]
+)

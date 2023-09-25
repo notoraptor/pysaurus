@@ -32,8 +32,11 @@ import json
 import math
 import sys
 from abc import ABC, abstractmethod
+from ctypes import pointer
 from typing import Any, Dict, Iterable, List, Sequence, Set, Tuple
 
+import nmslib
+import numpy as np
 from PIL import ImageFilter
 from PIL.Image import Image
 from annoy import AnnoyIndex
@@ -41,15 +44,24 @@ from tqdm import tqdm, trange
 
 from other.tests.utils_testing import DB_NAME
 from pysaurus.core.components import AbsolutePath
+from pysaurus.core.fraction import Fraction
 from pysaurus.core.modules import ImageUtils
 from pysaurus.core.profiling import InlineProfiler, Profiler
 from pysaurus.database.db_way_def import DbWays
-from pysaurus.database.features.db_similar_videos import SIM_LIMIT
 from pysaurus.database.thubmnail_database.thumbnail_manager import ThumbnailManager
+from pysaurus.database.video_similarities.alignment_raptor.alignment import (
+    miniature_to_c_sequence,
+)
+from pysaurus.database.video_similarities.alignment_raptor.symbols import (
+    fn_compareSimilarSequences,
+)
 from pysaurus.database.video_similarities.backend_numpy import SimilarityComparator
 from pysaurus.miniature.graph import Graph
-from pysaurus.miniature.miniature import NumpyMiniature
+from pysaurus.miniature.miniature import Miniature, NumpyMiniature
 from saurus.sql.pysaurus_program import PysaurusProgram
+
+SIM_LIMIT = float(Fraction(89, 100))
+SIMPLE_MAX_PIXEL_DISTANCE = 255 * 3
 
 
 class AbstractImageProvider(ABC):
@@ -65,12 +77,14 @@ class AbstractImageProvider(ABC):
 
 
 class ApproximateComparator:
-    __slots__ = ("vectors", "vector_size")
+    __slots__ = ("vectors", "vector_size", "data")
     DIM = 16
     SIZE = (DIM, DIM)
 
-    NB_TREES = 175
+    NB_TREES = 200
     NB_NEAR = 20
+    NB_NEAR_NMSLIB = 15
+    NMSLIB_POST = 0
     ANNOY_SEED = 1234567890
 
     def __init__(self, imp: AbstractImageProvider):
@@ -90,6 +104,7 @@ class ApproximateComparator:
         )
         self.vectors = vectors
         self.vector_size = vector_size
+        self.data = np.asarray([vector[1] for vector in self.vectors], dtype=np.float32)
 
     def get_comparable_images(self) -> Dict[Any, Dict[Any, float]]:
         vectors = self.vectors
@@ -169,6 +184,44 @@ class ApproximateComparator:
                 output[vectors[i][0]] = d
         return output
 
+    def use_nmslib(self):
+        data = self.data
+
+        index = nmslib.init(method="hnsw", space="cosinesimil")
+        index.addDataPointBatch(data)
+        index.createIndex({"post": self.NMSLIB_POST}, print_progress=True)
+
+        neighbours = [
+            index.knnQuery(data[i], k=self.NB_NEAR_NMSLIB)
+            for i in trange(len(self.vectors), desc="find neighbors")
+        ]
+        output = {
+            self.vectors[i][0]: {
+                self.vectors[j][0]: dst for j, dst in zip(ids, distances)
+            }
+            for i, (ids, distances) in enumerate(neighbours)
+        }
+        return output
+
+    def use_nmslib_euclidean(self):
+        data = self.data
+
+        index = nmslib.init(method="hnsw", space="l2")
+        index.addDataPointBatch(data)
+        index.createIndex({"post": self.NMSLIB_POST}, print_progress=True)
+
+        neighbours = [
+            index.knnQuery(data[i], k=self.NB_NEAR_NMSLIB)
+            for i in trange(len(self.vectors), desc="find neighbors")
+        ]
+        output = {
+            self.vectors[i][0]: {
+                self.vectors[j][0]: dst for j, dst in zip(ids, distances)
+            }
+            for i, (ids, distances) in enumerate(neighbours)
+        }
+        return output
+
 
 def compare_images(
     imp: AbstractImageProvider, output: Dict[Any, Sequence[Any]]
@@ -193,6 +246,65 @@ def compare_images(
             p1 = numpy_miniatures[filename]
             for linked_filename in linked_filenames:
                 p2 = numpy_miniatures[linked_filename]
+                if sim_cmp.are_similar(p1, p2):
+                    graph.connect(filename, linked_filename)
+                bar.update(1)
+
+    groups = [group for group in graph.pop_groups() if len(group) > 1]
+    return groups
+
+
+class CppSimilarityComparator:
+    __slots__ = ("max_dst_score", "limit", "width", "height")
+
+    def __init__(self, limit, width, height):
+        self.width = width
+        self.height = height
+        self.limit = limit
+        self.max_dst_score = SIMPLE_MAX_PIXEL_DISTANCE * width * height
+
+    def are_similar(self, p1, p2) -> bool:
+        return (
+            fn_compareSimilarSequences(
+                p1, p2, self.width, self.height, self.max_dst_score
+            )
+            >= self.limit
+        )
+
+
+def compare_images_native(
+    imp: AbstractImageProvider, output: Dict[Any, Sequence[Any]]
+) -> List[Set[Any]]:
+    nb_images = imp.count()
+    miniatures = {}
+    with tqdm(total=nb_images, desc="Generate numpy miniatures") as pbar:
+        for identifier, image in imp.items():
+            miniatures[identifier] = Miniature.from_image(
+                image.resize(ImageUtils.THUMBNAIL_SIZE)
+            )
+            pbar.update(1)
+    assert len(miniatures) == nb_images
+
+    with InlineProfiler("Generate native sequences"):
+        native_sequences = {
+            identifier: miniature_to_c_sequence(sequence)
+            for identifier, sequence in miniatures.items()
+        }
+        native_sequence_pointers = {
+            identifier: pointer(sequence)
+            for identifier, sequence in native_sequences.items()
+        }
+
+    graph = Graph()
+    nb_todo = sum(len(d) for d in output.values())
+    sim_cmp = CppSimilarityComparator(
+        SIM_LIMIT, ImageUtils.THUMBNAIL_DIMENSION, ImageUtils.THUMBNAIL_DIMENSION
+    )
+    with tqdm(total=nb_todo, desc="Make real comparisons using Numpy") as bar:
+        for filename, linked_filenames in output.items():
+            p1 = native_sequence_pointers[filename]
+            for linked_filename in linked_filenames:
+                p2 = native_sequence_pointers[linked_filename]
                 if sim_cmp.are_similar(p1, p2):
                     graph.connect(filename, linked_filename)
                 bar.update(1)
@@ -266,6 +378,10 @@ class Checker:
         video_to_sim = self.video_to_sim
         sim_groups = self.sim_groups
 
+        print(
+            "Comparisons to do", sum(len(d) for d in output.values()), file=sys.stderr
+        )
+
         nb_similar_videos = sum(len(videos) for _, videos in sim_groups)
         print("Similarities", len(sim_groups), file=sys.stderr)
         print("Similar videos", nb_similar_videos, file=sys.stderr)
@@ -273,7 +389,7 @@ class Checker:
             nb_new_similar_videos = sum(len(group) for group in new_sim_groups)
             nb_new_similar_groups = len(new_sim_groups)
             print("New similarities", nb_new_similar_groups, file=sys.stderr)
-            print("New similar videos", nb_new_similar_videos)
+            print("New similar videos", nb_new_similar_videos, file=sys.stderr)
 
         with InlineProfiler("Check new sim groups"):
             for group in new_sim_groups:
@@ -287,6 +403,12 @@ class Checker:
                             filename,
                             file=sys.stderr,
                         )
+                else:
+                    (sim,) = list(old_sims)
+                    if sim == -1:
+                        print("New group", file=sys.stderr)
+                        for filename in group:
+                            print("\t", filename, file=sys.stderr)
 
         with Profiler("Check expected similarities"):
             for sim_id, videos in sim_groups:
@@ -308,11 +430,11 @@ def main_new():
     chk = Checker(imp.ways)
     ac = ApproximateComparator(imp)
 
-    output_angular = ac.get_comparable_images()
-    # chk.check(output_angular, [])
+    output_angular = ac.use_nmslib()
+    chk.check(output_angular, [])
 
-    output_euclidian = ac.get_comparable_images_euclidian()
-    # chk.check(output_euclidian, [])
+    output_euclidian = ac.use_nmslib_euclidean()
+    chk.check(output_euclidian, [])
 
     all_filenames = sorted(set(output_angular) | set(output_euclidian))
     combined = {
@@ -325,7 +447,7 @@ def main_new():
     chk.check(combined, [])
 
     final_output = {}
-    similarities = compare_images(imp, combined)
+    similarities = compare_images_native(imp, combined)
     for group in similarities:
         group = list(group)
         final_output[group[0]] = set(group[1:])

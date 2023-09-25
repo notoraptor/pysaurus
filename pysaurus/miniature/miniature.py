@@ -142,12 +142,5 @@ class Miniature(AbstractMatrix):
     @staticmethod
     def from_image(thumbnail, identifier: Optional[Any] = None):
         width, height = thumbnail.size
-        size = width * height
-        red = bytearray(size)
-        green = bytearray(size)
-        blue = bytearray(size)
-        for i, (r, g, b) in enumerate(thumbnail.getdata()):
-            red[i] = r
-            green[i] = g
-            blue[i] = b
-        return Miniature(red, green, blue, width, height, identifier)
+        r, g, b = thumbnail.split()
+        return Miniature(r.tobytes(), g.tobytes(), b.tobytes(), width, height, identifier)
