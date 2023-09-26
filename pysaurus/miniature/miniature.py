@@ -143,4 +143,6 @@ class Miniature(AbstractMatrix):
     def from_image(thumbnail, identifier: Optional[Any] = None):
         width, height = thumbnail.size
         r, g, b = thumbnail.split()
-        return Miniature(r.tobytes(), g.tobytes(), b.tobytes(), width, height, identifier)
+        return Miniature(
+            r.tobytes(), g.tobytes(), b.tobytes(), width, height, identifier
+        )
