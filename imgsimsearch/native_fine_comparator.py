@@ -1,5 +1,5 @@
 from ctypes import pointer
-from typing import Dict, Any, Sequence, List, Set
+from typing import Any, Dict, List, Sequence, Set
 
 from tqdm import tqdm
 
@@ -14,7 +14,7 @@ from pysaurus.database.video_similarities.alignment_raptor.symbols import (
 )
 from pysaurus.miniature.miniature import Miniature
 
-SIM_LIMIT = 0.89
+SIM_LIMIT = 89 / 100
 SIMPLE_MAX_PIXEL_DISTANCE = 255 * 3
 THUMBNAIL_DIMENSION = 32
 THUMBNAIL_SIZE = (THUMBNAIL_DIMENSION, THUMBNAIL_DIMENSION)
