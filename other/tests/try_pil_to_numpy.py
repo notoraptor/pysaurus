@@ -50,10 +50,10 @@ def main():
     image = Image.new("RGB", s, color=(255, 255, 0))
     image2 = Image.new("RGB", s, color=(255, 255, 255))
     r, g, b = image.split()
-    print(set(r.tobytes()))
-    print(set(g.tobytes()))
-    print(set(b.tobytes()))
-    return
+    # print(set(r.tobytes()))
+    # print(set(g.tobytes()))
+    # print(set(b.tobytes()))
+
     # n_r = np.asarray(r, dtype=np.float32)
     # n_g = np.asarray(g, dtype=np.float32)
     # n_b = np.asarray(b, dtype=np.float32)
@@ -109,6 +109,8 @@ def main():
         for _ in range(batch):
             c = compare_numba_numpy(r1, r2, mds)
     print(c, file=sys.stderr)
+
+    return
 
     with Profiler("Python"):
         for _ in range(batch):
