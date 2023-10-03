@@ -1,4 +1,6 @@
-from typing import Iterable, Tuple, Any
+import json
+import os
+from typing import Any, Iterable, Tuple
 
 from PIL.Image import Image
 
@@ -10,8 +12,9 @@ from pysaurus.database.db_way_def import DbWays
 from pysaurus.database.thubmnail_database.thumbnail_manager import ThumbnailManager
 from saurus.sql.pysaurus_program import PysaurusProgram
 
-with open("ignored/db_name.txt") as file:
-    DB_NAME = file.read().strip()
+with open(os.path.join(os.path.dirname(__file__), "ignored/db_name.json")) as file:
+    DB_INFO = json.load(file)
+    DB_NAME = DB_INFO["name"]
 
 
 def get_database() -> Database:
@@ -33,6 +36,7 @@ class LocalImageProvider(AbstractImageProvider):
         self.nb_images = self.thumb_manager.thumb_db.query_one(
             "SELECT COUNT(filename) FROM video_to_thumbnail"
         )[0]
+        self.db_name = DB_NAME
 
     def count(self) -> int:
         return self.nb_images

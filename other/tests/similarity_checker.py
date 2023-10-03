@@ -17,8 +17,8 @@ class Checker:
                 groups.setdefault(video.get("S", None), []).append(
                     AbsolutePath(video["f"]).path
                 )
-            groups.pop(-1)
-            groups.pop(None)
+            groups.pop(-1, None)
+            groups.pop(None, None)
             sim_groups = sorted(
                 (
                     (value, sorted(videos))
@@ -79,6 +79,7 @@ class Checker:
 
         with Profiler("Check expected similarities"):
             for sim_id, videos in sim_groups:
+                missing_is_printed = False
                 filename, *linked_filenames = videos
                 for linked_filename in linked_filenames:
                     has_l = filename in output and linked_filename in output[filename]
@@ -87,6 +88,8 @@ class Checker:
                         and filename in output[linked_filename]
                     )
                     if not has_l and not has_r:
-                        print("Missing", sim_id, file=sys.stderr)
-                        print("\t", filename, file=sys.stderr)
-                        print("\t", linked_filename, file=sys.stderr)
+                        if not missing_is_printed:
+                            print("Missing", sim_id, file=sys.stderr)
+                            print("\t*", filename, file=sys.stderr)
+                            missing_is_printed = True
+                        print("\t ", linked_filename, file=sys.stderr)

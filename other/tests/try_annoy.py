@@ -60,8 +60,8 @@ def main_new():
     final_output = {}
     similarities = compare_images_native(imp, combined)
     for group in similarities:
-        group = list(group)
-        final_output[group[0]] = set(group[1:])
+        for identifier in group:
+            final_output[identifier] = set(group) - {identifier}
     chk.check(final_output, similarities)
 
 
