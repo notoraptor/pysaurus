@@ -17,7 +17,7 @@ class DbID(int):
         return True
 
 
-class Database:
+class SaurusSQLiteConnection:
     __slots__ = ("connection", "cursor")
 
     def __init__(self, script_path: str, db_path: str):

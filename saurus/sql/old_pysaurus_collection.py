@@ -39,7 +39,7 @@ from saurus.sql.pysaurus_database import PysaurusDatabase
 logger = logging.getLogger(__name__)
 
 
-class PysaurusCollection(OldDatabase):
+class OldPysaurusCollection(OldDatabase):
     __slots__ = ("db",)
 
     def __init__(self, path, folders=None, notifier=DEFAULT_NOTIFIER):

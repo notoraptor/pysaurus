@@ -1,9 +1,9 @@
 import os
 
-from saurus.sql.database import Database
+from saurus.sql.saurus_sqlite_connection import SaurusSQLiteConnection
 
 
-class PysaurusDatabase(Database):
+class PysaurusDatabase(SaurusSQLiteConnection):
     __slots__ = ()
 
     def __init__(self, db_path: str):

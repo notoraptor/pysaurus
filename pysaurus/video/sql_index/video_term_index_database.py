@@ -1,9 +1,9 @@
 import os
 
-from saurus.sql.database import Database
+from saurus.sql.saurus_sqlite_connection import SaurusSQLiteConnection
 
 
-class VideoTermIndexDatabase(Database):
+class VideoTermIndexDatabase(SaurusSQLiteConnection):
     __slots__ = ()
     DATABASE_SCRIPT_FILE = os.path.join(os.path.dirname(__file__), "sql_index.sql")
 
