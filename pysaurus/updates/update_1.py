@@ -1,12 +1,14 @@
 """To SQL."""
+import sys
 
-from pysaurus.core.components import AbsolutePath
+from pysaurus.core.components import AbsolutePath, FileSize
 from pysaurus.core.json_backup import JsonBackup
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.db_settings import DbSettings
 from pysaurus.database.db_way_def import DbWays
+from pysaurus.database.thubmnail_database.thumbnail_manager import ThumbnailManager
 from pysaurus.properties.properties import PropType
 from pysaurus.updates.video_inliner import (
     get_all_fields,
@@ -18,26 +20,32 @@ from saurus.sql.pysaurus_connection import PysaurusConnection
 from saurus.sql.pysaurus_program import PysaurusProgram
 
 
-def format_prop_val(values, typ):
-    return ((int(v) if typ is bool else v) for v in values)
+def main(notifier):
+    application = PysaurusProgram()
+    for db_path in sorted(application.get_database_paths()):
+        db_name = db_path.title
+        with Profiler(f"[{db_name}] export", notifier):
+            export_db_to_sql(db_path, notifier)
 
 
-def export_db_to_sql(db_name: str, db_path: AbsolutePath, notifier):
+def export_db_to_sql(db_path: AbsolutePath, notifier):
+    db_name = db_path.title
     ways = DbWays(db_path)
 
     # Clean thumb folder if empty
     thumb_folder = ways.db_thumb_folder
     if thumb_folder.isdir():
         if not thumb_folder.listdir():
-            print(f"[{db_name}] Thumb folder is empty, deleting")
+            print(f"[{db_name}] Thumb folder is empty, deleting", file=sys.stderr)
             thumb_folder.delete()
             assert not thumb_folder.exists()
 
     # Delete previous SQL file if existing
     sql_path = ways.db_sql_path
     if sql_path.exists():
+        prev_size = FileSize(sql_path.get_size())
         sql_path.delete()
-        print(f"[{db_name}] Deleted old sql path")
+        print(f"[{db_name}] Deleted old sql path ({prev_size})", file=sys.stderr)
     assert not sql_path.exists()
     new_db = PysaurusConnection(sql_path.path)
     assert sql_path.isfile()
@@ -55,8 +63,8 @@ def export_db_to_sql(db_name: str, db_path: AbsolutePath, notifier):
         sources = [AbsolutePath(path) for path in json_dict.get("folders", ())]
         source_tree = PathTree(sources)
 
-        def get_discarded(idx, vd: Video, fd):
-            return not source_tree.in_folders(vd.filename)
+        def get_discarded(local_video_id, local_video: Video, local_field):
+            return not source_tree.in_folders(local_video.filename)
 
         video_field_getter = get_all_getters()
         video_field_getter["discarded"] = get_discarded
@@ -183,13 +191,33 @@ def export_db_to_sql(db_name: str, db_path: AbsolutePath, notifier):
             many=True,
         )
 
+    # Move thumbnails into new SQL database
+    with Profiler(f"[{db_name}] Move thumbnails", notifier):
+        video_filename_to_id = {
+            video.filename.path: i for i, video in enumerate(videos)
+        }
+        thumb_sql_path = ways.db_thumb_sql_path
+        assert thumb_sql_path.isfile()
+        thm = ThumbnailManager(ways.db_thumb_sql_path)
+        with Profiler(f"[{db_name}] read thumbnails", notifier):
+            thumbs = [
+                (video_filename_to_id[row["filename"]], row["thumbnail"])
+                for row in thm.thumb_db.query(
+                    "SELECT filename, thumbnail FROM video_to_thumbnail"
+                )
+            ]
+        with Profiler(f"[{db_name}]write thumbnails", notifier):
+            new_db.modify(
+                "INSERT INTO video_thumbnail (video_id, thumbnail) VALUES(?, ?)",
+                thumbs,
+                many=True,
+            )
 
-def main(notifier):
-    application = PysaurusProgram()
-    db_name_to_path = {path.title: path for path in application.get_database_paths()}
-    for db_name in sorted(db_name_to_path):
-        with Profiler(f"[{db_name}] export", notifier):
-            export_db_to_sql(db_name, db_name_to_path[db_name], notifier)
+    print(f"[{db_name}] Finished, {FileSize(sql_path.get_size())}", file=sys.stderr)
+
+
+def format_prop_val(values, typ):
+    return ((int(v) if typ is bool else v) for v in values)
 
 
 if __name__ == "__main__":
