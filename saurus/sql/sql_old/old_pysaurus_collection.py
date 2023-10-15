@@ -34,7 +34,7 @@ from pysaurus.updates.video_inliner import (
 from pysaurus.video import Video, VideoRuntimeInfo
 from pysaurus.video.video_sorting import VideoSorting
 from saurus.language import say
-from saurus.sql.pysaurus_database import PysaurusDatabase
+from saurus.sql.pysaurus_collection import PysaurusCollection
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ class OldPysaurusCollection(OldDatabase):
         path = AbsolutePath.ensure_directory(path)
         self.notifier = notifier
         self.ways = DbWays(path)
-        self.db = PysaurusDatabase(self.ways.db_folder.path)
+        self.db = PysaurusCollection(self.ways.db_folder.path)
         self.__thumb_mgr = ThumbnailManager(self.ways.db_thumb_sql_path)
         self.notifier.set_log_path(self.ways.db_log_path.path)
         self.__load(folders)

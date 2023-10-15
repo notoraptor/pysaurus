@@ -9,11 +9,6 @@ from pysaurus.core.modules import FileSystem
 from saurus.language import say
 
 
-class CollectionStrings:
-    def __init__(self, collection_path: AbsolutePath):
-        pass
-
-
 class PysaurusProgram:
     __slots__ = (
         "home_dir",
@@ -36,8 +31,8 @@ class PysaurusProgram:
             if entry.is_dir():
                 self.databases[AbsolutePath(entry.path)] = None
         # Load config
-        self.config_path = AbsolutePath.join(self.app_dir, "config.json")
         self.config = Config()
+        self.config_path = AbsolutePath.join(self.app_dir, "config.json")
         if self.config_path.exists():
             assert self.config_path.isfile()
             self.config = Config(parse_json(self.config_path))
