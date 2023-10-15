@@ -14,7 +14,7 @@ from pysaurus.updates.video_inliner import (
     get_video_text,
 )
 from pysaurus.video import Video
-from saurus.sql.pysaurus_collection import PysaurusCollection
+from saurus.sql.pysaurus_connection import PysaurusConnection
 from saurus.sql.pysaurus_program import PysaurusProgram
 
 
@@ -39,7 +39,7 @@ def export_db_to_sql(db_name: str, db_path: AbsolutePath, notifier):
         sql_path.delete()
         print(f"[{db_name}] Deleted old sql path")
     assert not sql_path.exists()
-    new_db = PysaurusCollection(sql_path.path)
+    new_db = PysaurusConnection(sql_path.path)
     assert sql_path.isfile()
 
     # Load database JSON

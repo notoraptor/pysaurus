@@ -3,7 +3,7 @@ import os
 from saurus.sql.saurus_sqlite_connection import SaurusSQLiteConnection
 
 
-class PysaurusCollection(SaurusSQLiteConnection):
+class PysaurusConnection(SaurusSQLiteConnection):
     __slots__ = ()
 
     def __init__(self, db_path: str):
