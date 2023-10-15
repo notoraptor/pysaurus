@@ -102,10 +102,13 @@ class GuiAPI(FeatureAPI):
     )
 
     def __init__(self, monitor_notifications=True):
-        # Here to receive provider notification managers
-        # instead of self.notifier, because self.notifier is used in multiprocessing,
-        # and we don't want to pickle provider in sub-processes
-        # (heavy, remember provider contains database, and some data can't be pickled)
+        """
+        *** Reminder ***
+        When using multiprocessing, make sure to not share anything,
+        especially objects linked to database, because
+        database may contain data that can't be pickled.
+        E.g. Do not share database provider.
+        """
         self.multiprocessing_manager = multiprocessing.Manager()
         super().__init__(notifier=ParallelNotifier(self.multiprocessing_manager))
         self.notification_thread: Optional[threading.Thread] = None
