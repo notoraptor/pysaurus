@@ -106,30 +106,3 @@ class _StderrNotifier(Notifier):
 
 
 DEFAULT_NOTIFIER = _StderrNotifier()
-
-GLOBAL_SETTING_LOG: bool = True
-GLOBAL_SETTING_HANDLER: Optional[Callable[[Notification], None]] = None
-
-
-def config(log=None, handler=None):
-    global GLOBAL_SETTING_LOG
-    global GLOBAL_SETTING_HANDLER
-    if log is not None:
-        GLOBAL_SETTING_LOG = bool(log)
-    if handler is not None:
-        assert callable(handler)
-    GLOBAL_SETTING_HANDLER = handler
-
-
-def notify(notification: Notification):
-    if GLOBAL_SETTING_LOG and GLOBAL_SETTING_HANDLER is None:
-        print(notification)
-    if GLOBAL_SETTING_HANDLER is not None:
-        GLOBAL_SETTING_HANDLER(notification)
-
-
-def with_handler(handler, function, *args):
-    config(handler=handler)
-    ret = function(*args)
-    config(handler=None)
-    return ret

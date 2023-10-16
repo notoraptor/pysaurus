@@ -224,10 +224,10 @@ class GuiAPI(FeatureAPI):
         logger.debug(log_message)
 
     def _get_latest_notifications(self) -> YieldNotification:
-        return Informer.default().consume(PROVIDER_QUEUE)
+        return self.notifier.consume(PROVIDER_QUEUE)
 
     def _consume_notifications(self) -> None:
-        list(Informer.default().consume(MAIN_QUEUE))
+        list(self.notifier.consume(MAIN_QUEUE))
 
     @classmethod
     def __consume_shared_queue(cls, shared_queue) -> YieldNotification:
@@ -247,7 +247,7 @@ class GuiAPI(FeatureAPI):
             if self.threads_stop_flag:
                 break
             try:
-                notification = Informer.default().next_or_crash()
+                notification = self.notifier.next_or_crash()
                 if self.database:
                     Informer.log(str(self.database.ways.db_log_path), notification)
                 notification_printer.print(notification)

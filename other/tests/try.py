@@ -3,10 +3,7 @@ from typing import List
 
 from other.tests.utils_testing import get_database
 from pysaurus.core import functions
-from pysaurus.core.job_notifications import (
-    global_notify_job_progress,
-    global_notify_job_start,
-)
+from pysaurus.core.informer import Informer
 from pysaurus.core.profiling import Profiler
 from pysaurus.video import Video
 
@@ -108,6 +105,7 @@ def _get_string_properties(database):
 
 
 def main():
+    notifier = Informer.default()
     database = get_database()
     print("Video attributes:", len(Val.__attrs__))
     for attribute in Val.__attrs__:
@@ -127,7 +125,7 @@ def main():
             }
         nb_videos = len(filename_to_things)
         with Profiler("Collect tag to filenames"):
-            global_notify_job_start("collect_tags", nb_videos, "videos")
+            notifier.task("collect_tags", nb_videos, "videos")
             for i, (filename, things) in enumerate(filename_to_things.items()):
                 for thing in things:
                     try:
@@ -135,8 +133,8 @@ def main():
                     except Exception as exc:
                         raise Exception(thing) from exc
                 if (i + 1) % 500 == 0:
-                    global_notify_job_progress("collect_tags", None, i + 1, nb_videos)
-            global_notify_job_progress("collect_tags", None, nb_videos, nb_videos)
+                    notifier.progress("collect_tags", i + 1, nb_videos)
+            notifier.progress("collect_tags", nb_videos, nb_videos)
 
     print("Finished collecting")
     print("Videos:", len(filename_to_things))

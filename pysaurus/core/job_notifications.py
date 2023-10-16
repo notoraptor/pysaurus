@@ -1,7 +1,6 @@
 import sys
 from typing import Optional
 
-from pysaurus.core import notifying
 from pysaurus.core.functions import camel_case_to_snake_case
 from pysaurus.core.notifications import Notification
 
@@ -117,21 +116,4 @@ def notify_job_progress(
         JobStep(
             _get_job_name(function), channel, channel_step, channel_size, title=title
         )
-    )
-
-
-def global_notify_job_start(function, total, kind, expectation=None, title=None):
-    return notify_job_start(notifying, function, total, kind, expectation, title)
-
-
-def global_notify_job_progress(
-    function,
-    channel: Optional[str],
-    channel_step: int,
-    channel_size: int,
-    *,
-    title: str = None,
-):
-    return notify_job_progress(
-        notifying, function, channel, channel_step, channel_size, title=title
     )

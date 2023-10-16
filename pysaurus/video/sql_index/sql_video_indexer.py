@@ -3,10 +3,7 @@ import os
 from typing import Iterable, Sequence
 
 from pysaurus.core.components import AbsolutePath
-from pysaurus.core.job_notifications import (
-    global_notify_job_progress,
-    global_notify_job_start,
-)
+from pysaurus.core.informer import Informer
 from pysaurus.video import Video
 from pysaurus.video.abstract_video_indexer import AbstractVideoIndexer
 from pysaurus.video.sql_index.video_term_index_database import VideoTermIndexDatabase
@@ -46,7 +43,9 @@ class SqlVideoIndexer(AbstractVideoIndexer):
             nb_filenames = len(filename_and_terms)
             step = 500
             total = 0
-            global_notify_job_start("sql_build_index", nb_filenames, "videos")
+
+            notifier = Informer.default()
+            notifier.task("sql_build_index", nb_filenames, "videos")
             for start in range(0, nb_filenames, step):
                 limit = min(start + step, nb_filenames)
                 total += limit - start
@@ -62,11 +61,9 @@ class SqlVideoIndexer(AbstractVideoIndexer):
                     ),
                     many=True,
                 )
-                global_notify_job_progress("sql_build_index", None, limit, nb_filenames)
+                notifier.progress("sql_build_index", limit, nb_filenames)
             assert nb_filenames == total
-            global_notify_job_progress(
-                "sql_build_index", None, nb_filenames, nb_filenames
-            )
+            notifier.progress("sql_build_index", nb_filenames, nb_filenames)
             self._to_build = False
 
     def update_videos(self, videos: Iterable[Video]):

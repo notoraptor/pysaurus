@@ -2,10 +2,7 @@ import pickle
 from typing import Dict, Iterable, List, Sequence, Set
 
 from pysaurus.core.components import AbsolutePath
-from pysaurus.core.job_notifications import (
-    global_notify_job_progress,
-    global_notify_job_start,
-)
+from pysaurus.core.informer import Informer
 from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.profiling import Profiler
 from pysaurus.video import Video
@@ -57,6 +54,7 @@ class VideoIndexer(AbstractVideoIndexer):
 
     @Profiler.profile_method("indexer_build")
     def build(self, videos: Iterable[Video]):
+        notifier = Informer.default()
         if self.index_path and self.index_path.isfile():
             self._load()
         videos = [
@@ -71,14 +69,14 @@ class VideoIndexer(AbstractVideoIndexer):
             video.filename.path: video_to_tags(video) for video in videos
         }
         nb_videos = len(self.filename_to_terms)
-        global_notify_job_start("build_index", nb_videos, "videos")
+        notifier.task("build_index", nb_videos, "videos")
         self.term_to_filenames.clear()
         for i, (filename, terms) in enumerate(self.filename_to_terms.items()):
             for term in terms:
                 self.term_to_filenames.setdefault(term, set()).add(filename)
             if (i + 1) % 500 == 0:
-                global_notify_job_progress("build_index", None, i + 1, nb_videos)
-        global_notify_job_progress("build_index", None, nb_videos, nb_videos)
+                notifier.progress("build_index", i + 1, nb_videos)
+        notifier.progress("build_index", nb_videos, nb_videos)
         self.built = True
 
         self._save()

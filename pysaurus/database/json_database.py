@@ -2,7 +2,7 @@ import logging
 from typing import Any, Container, Dict, Iterable, List, Optional, Sequence, Set, Union
 
 from pysaurus.application import exceptions
-from pysaurus.core import functions, notifications, notifying
+from pysaurus.core import functions, notifications
 from pysaurus.core.components import AbsolutePath, Date, PathType
 from pysaurus.core.constants import JPEG_EXTENSION
 from pysaurus.core.json_backup import JsonBackup
@@ -165,9 +165,7 @@ class JsonDatabase:
             }
 
         # Build indexer
-        notifying.with_handler(
-            self.notifier, self.__indexer.build, self.__videos.values()
-        )
+        self.__indexer.build(self.__videos.values())
 
         # Finish loading
         self.save(on_new_identifiers=not to_save)
