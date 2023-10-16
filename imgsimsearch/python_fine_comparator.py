@@ -1,4 +1,4 @@
-from typing import Dict, Any, Sequence, List, Set
+from typing import Any, Dict, List, Sequence, Set
 
 from tqdm import tqdm
 

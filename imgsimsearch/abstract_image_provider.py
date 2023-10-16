@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Iterable, Tuple, Any
+from typing import Any, Iterable, Tuple
 
 from PIL.Image import Image
 
