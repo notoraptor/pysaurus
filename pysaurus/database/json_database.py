@@ -66,8 +66,6 @@ class JsonDatabase:
     ):
         db_folder = AbsolutePath.ensure_directory(db_folder)
         self.ways = DbWays(db_folder)
-        # Set log file
-        notifier.set_log_path(self.ways.db_log_path.path)
         # Private data
         self.__backup = JsonBackup(self.ways.db_json_path, notifier)
         # Database content
@@ -270,7 +268,6 @@ class JsonDatabase:
 
     def rename(self, new_name: str) -> None:
         self.ways = self.ways.renamed(new_name)
-        self.notifier.set_log_path(self.ways.db_log_path.path)
         self.__backup = JsonBackup(self.ways.db_json_path, self.notifier)
 
     def get_name(self):

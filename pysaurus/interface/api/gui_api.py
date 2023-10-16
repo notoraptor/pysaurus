@@ -1,6 +1,5 @@
 import functools
 import logging
-import multiprocessing
 import os
 import queue
 import subprocess
@@ -14,6 +13,7 @@ from pysaurus.core.classes import Runnable
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.file_copier import FileCopier
 from pysaurus.core.functions import launch_thread
+from pysaurus.core.informer import Informer, MAIN_QUEUE, PROVIDER_QUEUE
 from pysaurus.core.job_notifications import ConsoleJobProgress, JobStep, JobToDo
 from pysaurus.core.modules import System
 from pysaurus.core.notifications import (
@@ -35,7 +35,6 @@ from pysaurus.interface.api.feature_api import (
     ProxyFeature,
     YieldNotification,
 )
-from pysaurus.interface.api.parallel_notifier import ParallelNotifier
 from saurus.language import say
 
 logger = logging.getLogger(__name__)
@@ -109,13 +108,11 @@ class GuiAPI(FeatureAPI):
         database may contain data that can't be pickled.
         E.g. Do not share database provider.
         """
-        self.multiprocessing_manager = multiprocessing.Manager()
-        super().__init__(notifier=ParallelNotifier(self.multiprocessing_manager))
+        super().__init__(notifier=Informer.default())
         self.notification_thread: Optional[threading.Thread] = None
         self.launched_thread: Optional[threading.Thread] = None
         self.threads_stop_flag = False
         self.copy_work: Optional[FileCopier] = None
-        self.notifier.call_default_if_no_manager()
         self.monitor_notifications = monitor_notifications
         self.server = ServerLauncher(lambda: self.database)
         self._closed = False
@@ -164,7 +161,6 @@ class GuiAPI(FeatureAPI):
             self.database.notifier.notify(Cancelled())
 
     def close_database(self) -> None:
-        self.database.notifier.set_log_path(None)
         self.database = None
 
     def delete_database(self) -> None:
@@ -180,9 +176,7 @@ class GuiAPI(FeatureAPI):
         if self.launched_thread:
             self.launched_thread.join()
         # Close manager.
-        self.notifier.close()
         self.notifier = None
-        self.multiprocessing_manager = None
         # Close server.
         self.server.stop()
         # App closed.
@@ -230,10 +224,10 @@ class GuiAPI(FeatureAPI):
         logger.debug(log_message)
 
     def _get_latest_notifications(self) -> YieldNotification:
-        return self.__consume_shared_queue(self.notifier.local_queue)
+        return Informer.default().consume(PROVIDER_QUEUE)
 
     def _consume_notifications(self) -> None:
-        list(self.__consume_shared_queue(self.notifier.queue))
+        list(Informer.default().consume(MAIN_QUEUE))
 
     @classmethod
     def __consume_shared_queue(cls, shared_queue) -> YieldNotification:
@@ -253,7 +247,9 @@ class GuiAPI(FeatureAPI):
             if self.threads_stop_flag:
                 break
             try:
-                notification = self.notifier.queue.get_nowait()
+                notification = Informer.default().next_or_crash()
+                if self.database:
+                    Informer.log(str(self.database.ways.db_log_path), notification)
                 notification_printer.print(notification)
                 self._notify(notification)
             except queue.Empty:

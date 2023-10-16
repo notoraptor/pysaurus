@@ -49,7 +49,6 @@ class OldPysaurusCollection(OldDatabase):
         self.ways = DbWays(path)
         self.db = PysaurusConnection(self.ways.db_folder.path)
         self.__thumb_mgr = ThumbnailManager(self.ways.db_thumb_sql_path)
-        self.notifier.set_log_path(self.ways.db_log_path.path)
         self.__load(folders)
 
     def __load(self, folders=None):

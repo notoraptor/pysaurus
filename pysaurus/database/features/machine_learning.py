@@ -40,7 +40,7 @@ def optimize_pattern_predictor(
     theta: List[float] = None,
     alpha: float = 32,
     nb_steps: int = 5000,
-    database=None,
+    notifier=DEFAULT_NOTIFIER,
 ) -> List[float]:
     """Train"""
     assert len(miniatures) == len(ys) > 1
@@ -55,7 +55,6 @@ def optimize_pattern_predictor(
     logger.debug(f"xs {xs.shape} ys {ys.shape} theta {theta.shape}")
     nb_convergence = 0
     nb_expected_convergence = 10
-    notifier = database.notifier if database else DEFAULT_NOTIFIER
     notify_job_start(notifier, optimize_pattern_predictor, nb_steps, "steps")
     with Profiler(say("Train"), notifier):
         with open("train.tsv", "w") as train_log:

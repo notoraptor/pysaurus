@@ -40,7 +40,7 @@ except exceptions.CysaurusUnavailable:
 class Database(JsonDatabase):
     __slots__ = ("provider", "_initial_pid")
 
-    def __init__(self, path, folders=None, notifier=None):
+    def __init__(self, path, folders=None, notifier=DEFAULT_NOTIFIER):
         # type: (PathType, Iterable[PathType], Notifier) -> None
         path = AbsolutePath.ensure(path)
 
@@ -49,7 +49,7 @@ class Database(JsonDatabase):
         assert self._initial_pid is not None
 
         # Load database
-        super().__init__(path, folders, notifier or DEFAULT_NOTIFIER)
+        super().__init__(path, folders, notifier)
 
         # RAM data
         self.provider: Optional[AbstractVideoProvider] = VideoFilter(self)
@@ -255,7 +255,9 @@ class Database(JsonDatabase):
                 group_min_size=self.settings.miniature_group_min_size,
                 pixel_distance_radius=self.settings.miniature_pixel_distance_radius,
             )
-            for dm in group_computer.batch_compute_groups(m_no_groups, database=self):
+            for dm in group_computer.batch_compute_groups(
+                m_no_groups, notifier=self.notifier
+            ):
                 m_dict[dm.miniature_identifier].set_group_signature(
                     self.settings.miniature_pixel_distance_radius,
                     self.settings.miniature_group_min_size,
@@ -299,7 +301,7 @@ class Database(JsonDatabase):
         return video_filename
 
     def reopen(self):
-        self.notifier.set_log_path(self.ways.db_log_path.path)
+        pass
 
     def refresh(self) -> None:
         self.update()

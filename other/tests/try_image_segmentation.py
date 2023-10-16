@@ -1,19 +1,9 @@
-import sys
-
 from pysaurus.core.classes import AbstractMatrix
 from pysaurus.core.components import AbsolutePath, Date
 from pysaurus.core.display import Display
 from pysaurus.core.modules import ImageUtils
-from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.profiling import Profiler
 from pysaurus.miniature.group_computer import GroupComputer
-
-
-def warn(notification):
-    return print(notification, file=sys.stderr)
-
-
-DEFAULT_NOTIFIER.set_default_manager(warn)
 
 
 class PysaurusImage(AbstractMatrix):

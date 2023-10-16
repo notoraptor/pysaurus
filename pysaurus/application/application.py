@@ -158,7 +158,6 @@ class Application:
         path = AbsolutePath.join(self.dbs_dir, name)
         if path in self.databases:
             database = self.databases.pop(path)
-            database.notifier.set_log_path(None)
             path.delete()
             return True
 

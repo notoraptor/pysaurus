@@ -71,7 +71,7 @@ class DbPatternDetection:
             miniatures,
             classes,
             theta=database.get_predictor(prop_name),
-            database=database,
+            notifier=database.notifier,
         )
         database.set_predictor(prop_name, theta)
 

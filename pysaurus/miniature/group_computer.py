@@ -45,9 +45,8 @@ class GroupComputer:
         return (255 - pixel_distance_radius) * 100 / 255
 
     def batch_compute_groups(
-        self, miniatures: List[Miniature], *, database=None
+        self, miniatures: List[Miniature], *, notifier=DEFAULT_NOTIFIER
     ) -> List[DecomposedMiniature]:
-        notifier = database.notifier if database else DEFAULT_NOTIFIER
         tasks = [(i, m, len(miniatures), notifier) for i, m in enumerate(miniatures)]
         with Profiler(
             say("batch_compute_groups(n={n} miniature(s))", n=len(tasks)), notifier

@@ -25,8 +25,10 @@ class VideoIndexer(AbstractVideoIndexer):
         "index_path",
     )
 
-    def __init__(self, notifier: Notifier = None, index_path: AbsolutePath = None):
-        self.notifier = notifier or DEFAULT_NOTIFIER
+    def __init__(
+        self, notifier: Notifier = DEFAULT_NOTIFIER, index_path: AbsolutePath = None
+    ):
+        self.notifier = notifier
         self.term_to_filenames: Dict[Tag, Set[str]] = {}
         self.filename_to_terms: Dict[str, List[Tag]] = {}
         self.built = False
@@ -50,8 +52,8 @@ class VideoIndexer(AbstractVideoIndexer):
             )
 
     def close(self):
+        super().close()
         self.notifier = None
-        return super().close()
 
     @Profiler.profile_method("indexer_build")
     def build(self, videos: Iterable[Video]):

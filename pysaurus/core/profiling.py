@@ -55,9 +55,9 @@ class _InlineProfile(Notification):
 class Profiler:
     __slots__ = "__title", "__time_start", "__time_end", "__notifier", "__inline"
 
-    def __init__(self, title, notifier=None, inline=False):
+    def __init__(self, title, notifier=DEFAULT_NOTIFIER, inline=False):
         self.__title = title
-        self.__notifier = notifier or DEFAULT_NOTIFIER
+        self.__notifier = notifier
         self.__time_start = None
         self.__time_end = None
         self.__inline = inline

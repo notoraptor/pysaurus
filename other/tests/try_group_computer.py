@@ -10,7 +10,6 @@ from other.tests.try_finding_similarities import DB_NAME, W, blob_to_image
 from pysaurus.core.classes import AbstractMatrix
 from pysaurus.core.components import AbsolutePath, Date
 from pysaurus.core.modules import ImageUtils
-from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.db_settings import DbSettings
 from pysaurus.database.db_way_def import DbWays
@@ -18,13 +17,6 @@ from pysaurus.database.thubmnail_database.thumbnail_manager import ThumbnailMana
 from pysaurus.miniature.group_computer import GroupComputer
 from pysaurus.miniature.pixel_group import PixelGroup
 from saurus.sql.pysaurus_program import PysaurusProgram
-
-
-def warn(notification):
-    return print(notification, file=sys.stderr)
-
-
-DEFAULT_NOTIFIER.set_default_manager(warn)
 
 
 class PysaurusImage(AbstractMatrix):
