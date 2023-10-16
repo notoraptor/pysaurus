@@ -19,6 +19,10 @@ def get_field(i, video: Video, key):
     return getattr(video, key)
 
 
+def get_filename(i, video: Video, key):
+    return video.filename.path
+
+
 def get_runtime(i, video: Video, key):
     return video.runtime._get(key)
 
@@ -57,7 +61,7 @@ VIDEO_FIELDS = [
 VIDEO_FIELDS_NO_VIDEO_ID = VIDEO_FIELDS[1:]
 VIDEO_FIELD_GETTER = {
     "video_id": get_i,
-    "filename": get_default,
+    "filename": get_filename,
     "file_size": get_default,
     "unreadable": get_default,
     "audio_bit_rate": get_default,

@@ -23,7 +23,6 @@ from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.database import Database as OldDatabase
 from pysaurus.database.db_way_def import DbWays
-from pysaurus.database.thubmnail_database.thumbnail_manager import ThumbnailManager
 from pysaurus.miniature.miniature import Miniature
 from pysaurus.properties.properties import DefType, PropValueType
 from pysaurus.updates.video_inliner import (
@@ -47,8 +46,7 @@ class OldPysaurusCollection(OldDatabase):
         path = AbsolutePath.ensure_directory(path)
         self.notifier = notifier
         self.ways = DbWays(path)
-        self.db = PysaurusConnection(self.ways.db_folder.path)
-        self.__thumb_mgr = ThumbnailManager(self.ways.db_thumb_sql_path)
+        self.db = PysaurusConnection(self.ways.db_sql_path.path)
         self.__load(folders)
 
     def __load(self, folders=None):
@@ -472,7 +470,7 @@ class OldPysaurusCollection(OldDatabase):
 
         # Update database.
         video_fields = get_flatten_fields()
-        filename_to_video = {video._get("filename"): video for video in videos}
+        filename_to_video = {video.filename.path: video for video in videos}
         filename_to_video_id = {
             row["filename"]: row["video_id"]
             for row in self.db.query(
@@ -608,3 +606,12 @@ class OldPysaurusCollection(OldDatabase):
 
     def save_thumbnail(self, filename: AbsolutePath) -> Optional[dict]:
         return super().save_thumbnail(filename)
+
+    def save_existing_thumbnails(self, filename_to_thumb_name: Dict[str, str]):
+        super().save_existing_thumbnails(filename_to_thumb_name)
+
+    def clean_thumbnails(self, paths: List[AbsolutePath]):
+        super().clean_thumbnails(paths)
+
+    def raptor(self):
+        return super().raptor()
