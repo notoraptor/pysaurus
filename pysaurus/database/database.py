@@ -18,13 +18,13 @@ from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.parallelization import run_split_batch
 from pysaurus.core.profiling import Profiler
 from pysaurus.database import jobs_python
+from pysaurus.database.algorithms.videos import Videos
 from pysaurus.database.json_database import JsonDatabase
 from pysaurus.database.special_properties import SpecialProperties
 from pysaurus.database.viewport.abstract_video_provider import AbstractVideoProvider
 from pysaurus.database.viewport.video_filter import VideoFilter
 from pysaurus.miniature.group_computer import GroupComputer
 from pysaurus.miniature.miniature import Miniature
-from pysaurus.video import VIDEO_SCHEMA
 from pysaurus.video_raptor.video_raptor_pyav import VideoRaptor as PythonVideoRaptor
 from saurus.language import say
 
@@ -77,36 +77,13 @@ class Database(JsonDatabase):
     def update(self) -> None:
         current_date = Date.now()
 
-        all_files = jobs_python.collect_video_paths(
-            list(self.get_folders()), self.notifier
-        )
+        all_files = Videos.get_runtime_info_from_paths(self.get_folders())
+
         self._update_videos_not_found(all_files)
+
         files_to_update = self._find_video_paths_for_update(all_files)
-        if not files_to_update:
-            return
 
-        backend_raptor = VideoRaptor()
-        with Profiler(say("Collect videos info"), notifier=self.notifier):
-            notify_job_start(
-                self.notifier,
-                backend_raptor.collect_video_info,
-                len(files_to_update),
-                "videos",
-            )
-            results = list(
-                run_split_batch(
-                    backend_raptor.collect_video_info,
-                    files_to_update,
-                    extra_args=[self.ways.db_folder, self.notifier],
-                )
-            )
-
-        new: List[dict] = [
-            VIDEO_SCHEMA.ensure_short_keys(d, backend_raptor.RETURNS_SHORT_KEYS)
-            for arr in results
-            for d in arr
-        ]
-        assert len(files_to_update) == len(new)
+        new = Videos.get_info_from_filenames(files_to_update)
 
         if new:
             self.set_date(current_date)

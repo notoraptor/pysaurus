@@ -106,8 +106,7 @@ def get_flatten_fields():
 
 def flatten_video(video: Video):
     return [
-        VIDEO_FIELD_GETTER[field](None, video, field)
-        for field in get_flatten_fields()
+        VIDEO_FIELD_GETTER[field](None, video, field) for field in get_flatten_fields()
     ]
 
 

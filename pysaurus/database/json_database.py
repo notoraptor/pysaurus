@@ -32,6 +32,7 @@ from pysaurus.video.abstract_video_indexer import AbstractVideoIndexer
 from pysaurus.video.video_features import VideoFeatures
 from pysaurus.video.video_indexer import VideoIndexer
 from pysaurus.video.video_sorting import VideoSorting
+from saurus.sql.sql_old.video_entry import VideoEntry
 
 logger = logging.getLogger(__name__)
 
@@ -612,24 +613,26 @@ class JsonDatabase:
 
     def write_new_videos(
         self,
-        dictionaries: List[dict],
+        video_entries: List[VideoEntry],
         runtime_info: Dict[AbsolutePath, VideoRuntimeInfo],
     ) -> None:
         videos: List[Video] = []
         unreadable: List[Video] = []
-        for d in dictionaries:
-            file_path = AbsolutePath.ensure(d["f"])
-            if len(d) == 2:
+        for entry in video_entries:
+            file_path = AbsolutePath.ensure(entry.filename)
+            if entry.unreadable:
                 video_state = Video.from_keys(
                     filename=file_path.path,
                     file_size=file_path.get_size(),
-                    errors=sorted(d["e"]),
+                    errors=sorted(entry.errors),
                     unreadable=True,
                     database=self,
                 )
                 unreadable.append(video_state)
             else:
-                video_state = Video.from_dict(d, database=self)
+                video_state = Video.from_keys(
+                    **entry.to_formatted_dict(), database=self
+                )
                 # Get previous properties, if available
                 if self.has_video(filename=file_path, readable=True):
                     old_video = self.__videos[file_path]

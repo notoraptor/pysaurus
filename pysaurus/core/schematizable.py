@@ -59,6 +59,9 @@ class Schema:
     def get_short_key(self, name):
         return self.schema[name].short
 
+    def get_long_key(self, short) -> str:
+        return self.from_short[short]
+
     def to_long_keys(self, short_dict: dict):
         return {self.from_short[key]: value for key, value in short_dict.items()}
 
@@ -87,6 +90,13 @@ class Schema:
             dct
             if keys_are_short
             else {self.get_short_key(key): value for key, value in dct.items()}
+        )
+
+    def ensure_long_keys(self, dct: dict, keys_are_short: bool):
+        return (
+            {self.get_long_key(key): value for key, value in dct.items()}
+            if keys_are_short
+            else dct
         )
 
 

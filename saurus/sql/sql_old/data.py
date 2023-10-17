@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
 from typing import Dict, Sequence
 
+from saurus.sql.sql_old.video_entry import VideoEntry
+
 
 @dataclass
 class Property:
@@ -16,47 +18,6 @@ class Property:
 
 
 @dataclass
-class Video:
-    # table columns: constant data
-    video_id: int
-    filename: str
-    file_size: int = 0
-    unreadable: bool = False
-    audio_bit_rate: int = 0
-    audio_bits: int = 0
-    audio_codec: str = ""
-    audio_codec_description: str = ""
-    bit_depth: int = 0
-    channels: int = 0
-    container_format: str = ""
-    device_name: str = ""
-    duration: float = 0.0
-    duration_time_base: int = 0
-    frame_rate_den: int = 0
-    frame_rate_num: int = 0
-    height: int = 0
-    meta_title: str = ""
-    sample_rate: int = 0
-    video_codec: str = ""
-    video_codec_description: str = ""
-    width: int = 0
-    # table columns: runtime frozen data
-    mtime: float = 0.0
-    driver_id: int = None
-    is_file: bool = False
-    discarded: float = False
-    # related data
-    errors: Sequence[str] = field(default_factory=list)
-    audio_languages: Sequence[str] = field(default_factory=list)
-    subtitle_languages: Sequence[str] = field(default_factory=list)
-    # collection data
-    date_entry_modified: float = None
-    date_entry_opened: float = None
-    similarity_id: int = None
-    properties: Dict[str, Sequence[str]] = field(default_factory=dict)
-
-
-@dataclass
 class Collection:
     name: str
     date_updated: float
@@ -64,5 +25,5 @@ class Collection:
     miniature_group_min_size: int = 0
     sources: Sequence[str] = field(default_factory=list)
     properties: Dict[str, Property] = field(default_factory=dict)
-    videos: Dict[str, Video] = field(default_factory=dict)
+    videos: Dict[str, VideoEntry] = field(default_factory=dict)
     collection_id: int = None
