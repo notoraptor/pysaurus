@@ -21,15 +21,16 @@ class Video:
     video_id: int
     filename: str
     file_size: int = 0
-    readable: bool = False
+    unreadable: bool = False
     audio_bit_rate: int = 0
+    audio_bits: int = 0
     audio_codec: str = ""
     audio_codec_description: str = ""
     bit_depth: int = 0
-    channels: int = 2
+    channels: int = 0
     container_format: str = ""
     device_name: str = ""
-    duration: int = 0
+    duration: float = 0.0
     duration_time_base: int = 0
     frame_rate_den: int = 0
     frame_rate_num: int = 0
@@ -41,14 +42,16 @@ class Video:
     width: int = 0
     # table columns: runtime frozen data
     mtime: float = 0.0
-    driver_id: int = 0
+    driver_id: int = None
     is_file: bool = False
+    discarded: float = False
     # related data
     errors: Sequence[str] = field(default_factory=list)
     audio_languages: Sequence[str] = field(default_factory=list)
     subtitle_languages: Sequence[str] = field(default_factory=list)
     # collection data
-    thumb_name: str = ""
+    date_entry_modified: float = None
+    date_entry_opened: float = None
     similarity_id: int = None
     properties: Dict[str, Sequence[str]] = field(default_factory=dict)
 

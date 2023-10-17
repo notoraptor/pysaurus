@@ -32,6 +32,7 @@ from pysaurus.updates.video_inliner import (
 )
 from pysaurus.video import Video, VideoRuntimeInfo
 from pysaurus.video.video_sorting import VideoSorting
+from pysaurus.video_raptor.video_raptor_pyav import VideoRaptor
 from saurus.language import say
 from saurus.sql.pysaurus_connection import PysaurusConnection
 
@@ -102,9 +103,11 @@ class OldPysaurusCollection(OldDatabase):
                 "WHERE discarded = 0 AND unreadable = 0 AND is_file = 1"
             )
         }
-        existing_filenames = set(filename_to_video)
-        existing_thumbs = self.__thumb_mgr.filter(existing_filenames)
-        missing_thumbs = sorted(existing_filenames - existing_thumbs)
+        missing_thumbs = sorted(row["filename"] for row in self.db.query(
+            "SELECT filename FROM video WHERE "
+            "discarded = 0 AND unreadable = 0 AND is_file = 1 AND video_id NOT IN "
+            "(SELECT video_id FROM video_thumbnail)"
+        ))
         # Generate new thumbs.
         thumb_errors = {}
         self.notifier.notify(
@@ -125,7 +128,7 @@ class OldPysaurusCollection(OldDatabase):
             expected_thumbs = {
                 filename: thumb_path for _, _, filename, thumb_path in tasks
             }
-            raptor = self.__thumb_mgr.raptor
+            raptor = VideoRaptor()
             with Profiler(say("Generate thumbnail files"), self.notifier):
                 notify_job_start(
                     self.notifier, raptor.run_thumbnail_task, len(tasks), "thumbnails"
@@ -149,7 +152,15 @@ class OldPysaurusCollection(OldDatabase):
             )
             # Save thumbnails into thumb manager
             with Profiler(say("save thumbnails to db"), self.notifier):
-                self.__thumb_mgr.save_existing_thumbnails(expected_thumbs)
+                self.db.modify(
+                    "INSERT OR IGNORE INTO video_thumbnail "
+                    "(video_id, thumbnail) VALUES (?, ?)",
+                    [
+                        (filename_to_video[filename]["video_id"], AbsolutePath(thumb_path).read_binary_file())
+                        for filename, thumb_path in expected_thumbs.items()
+                    ],
+                    many=True,
+                )
             logger.info(f"Thumbnails generated, deleting temp dir {tmp_dir}")
             # Delete thumbnail files (done at context exit)
 
@@ -476,7 +487,7 @@ class OldPysaurusCollection(OldDatabase):
             for row in self.db.query(
                 f"SELECT video_id, filename FROM video "
                 f"WHERE filename in ({','.join(['?'] * len(videos))})",
-                [video._get("filename") for video in videos],
+                [video.filename.path for video in videos],
             )
         }
         new_filenames = [
