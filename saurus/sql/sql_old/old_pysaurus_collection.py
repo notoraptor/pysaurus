@@ -103,11 +103,14 @@ class OldPysaurusCollection(OldDatabase):
                 "WHERE discarded = 0 AND unreadable = 0 AND is_file = 1"
             )
         }
-        missing_thumbs = sorted(row["filename"] for row in self.db.query(
-            "SELECT filename FROM video WHERE "
-            "discarded = 0 AND unreadable = 0 AND is_file = 1 AND video_id NOT IN "
-            "(SELECT video_id FROM video_thumbnail)"
-        ))
+        missing_thumbs = sorted(
+            row["filename"]
+            for row in self.db.query(
+                "SELECT filename FROM video WHERE "
+                "discarded = 0 AND unreadable = 0 AND is_file = 1 AND video_id NOT IN "
+                "(SELECT video_id FROM video_thumbnail)"
+            )
+        )
         # Generate new thumbs.
         thumb_errors = {}
         self.notifier.notify(
@@ -156,7 +159,10 @@ class OldPysaurusCollection(OldDatabase):
                     "INSERT OR IGNORE INTO video_thumbnail "
                     "(video_id, thumbnail) VALUES (?, ?)",
                     [
-                        (filename_to_video[filename]["video_id"], AbsolutePath(thumb_path).read_binary_file())
+                        (
+                            filename_to_video[filename]["video_id"],
+                            AbsolutePath(thumb_path).read_binary_file(),
+                        )
                         for filename, thumb_path in expected_thumbs.items()
                     ],
                     many=True,
