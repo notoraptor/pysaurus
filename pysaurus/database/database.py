@@ -2,7 +2,6 @@ import logging
 import multiprocessing
 import tempfile
 from collections import Counter
-from multiprocessing import Pool
 from typing import Any, Callable, Dict, Iterable, List, Optional, Set
 
 import ujson as json
@@ -109,47 +108,33 @@ class Database(JsonDatabase):
             if not self.has_thumbnail(video["filename"]):
                 missing_thumbs.append(video)
 
+        expected_thumbs = {}
         thumb_errors = {}
         self.notifier.notify(
             notifications.Message(f"Missing thumbs in SQL: {len(missing_thumbs)}")
         )
-
         with tempfile.TemporaryDirectory() as tmp_dir:
-            # Generate thumbnail filenames as long as tasks
-            tasks = [
-                (
-                    self.notifier,
-                    i,
-                    video["filename"].path,
-                    AbsolutePath.file_path(tmp_dir, i, "jpg").path,
-                )
-                for i, video in enumerate(missing_thumbs)
-            ]
-            # Generate thumbnail files
             filename_to_video = {
                 video["filename"].path: video for video in missing_thumbs
             }
-            expected_thumbs = {
-                filename: thumb_path for _, _, filename, thumb_path in tasks
-            }
-            raptor = self.raptor()
-            with Profiler(say("Generate thumbnail files"), self.notifier):
-                notify_job_start(
-                    self.notifier, raptor.run_thumbnail_task, len(tasks), "thumbnails"
-                )
-                with Pool() as p:
-                    errors = list(p.starmap(raptor.run_thumbnail_task, tasks))
-            for err in errors:
-                if err:
-                    del expected_thumbs[err["filename"]]
-                    video = filename_to_video[err["filename"]]
+            results = Videos.get_thumbnails(
+                [video["filename"] for video in missing_thumbs], tmp_dir
+            )
+            for filename, result in results.items():
+                if result.errors:
                     self.add_video_errors(
-                        video["video_id"], PYTHON_ERROR_THUMBNAIL, *err["errors"]
+                        filename_to_video[filename]["video_id"],
+                        PYTHON_ERROR_THUMBNAIL,
+                        *result.errors,
                     )
-                    thumb_errors[err["filename"]] = err["errors"]
+                    thumb_errors[filename] = result.errors
+                else:
+                    expected_thumbs[filename] = result.thumbnail_path
+
             # Save thumbnails into thumb manager
             with Profiler(say("save thumbnails to db"), self.notifier):
                 self.save_existing_thumbnails(expected_thumbs)
+
             logger.info(f"Thumbnails generated, deleting temp dir {tmp_dir}")
             # Delete thumbnail files (done at context exit)
 
