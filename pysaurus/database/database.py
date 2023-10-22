@@ -9,7 +9,6 @@ import ujson as json
 from pysaurus.application import exceptions
 from pysaurus.core import functions, notifications
 from pysaurus.core.components import AbsolutePath, PathType
-from pysaurus.core.constants import PYTHON_ERROR_THUMBNAIL
 from pysaurus.core.modules import ImageUtils
 from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.profiling import Profiler
@@ -83,7 +82,6 @@ class Database(JsonDatabase):
         for video in self.select_videos_fields(
             ["filename", "video_id"], "readable", "found"
         ):
-            self.write_video_fields(video["video_id"], unreadable_thumbnail=False)
             if not self.has_thumbnail(video["filename"]):
                 missing_thumbs.append(video)
 
@@ -102,9 +100,7 @@ class Database(JsonDatabase):
             for filename, result in results.items():
                 if result.errors:
                     self.add_video_errors(
-                        filename_to_video[filename]["video_id"],
-                        PYTHON_ERROR_THUMBNAIL,
-                        *result.errors,
+                        filename_to_video[filename]["video_id"], *result.errors
                     )
                     thumb_errors[filename] = result.errors
                 else:

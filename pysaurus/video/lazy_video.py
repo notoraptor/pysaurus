@@ -5,7 +5,7 @@ from typing import Any, Dict, List
 from pysaurus.core.classes import StringPrinter, StringedTuple, Text
 from pysaurus.core.compare import to_comparable
 from pysaurus.core.components import AbsolutePath, Date, Duration, FileSize
-from pysaurus.core.constants import PYTHON_ERROR_THUMBNAIL, UNDEFINED
+from pysaurus.core.constants import UNDEFINED
 from pysaurus.core.functions import class_get_public_attributes, string_to_pieces
 from pysaurus.core.modules import FNV64
 from pysaurus.core.schematizable import WithSchema
@@ -219,7 +219,7 @@ class LazyVideo(WithSchema):
             self.database.register_modified(self)
 
     not_found = property(lambda self: not self.found)
-    with_thumbnails = property(lambda self: not self.unreadable_thumbnail)
+    with_thumbnails = property(lambda self: self.database.has_thumbnail(self.filename))
     without_thumbnails = property(lambda self: not self.with_thumbnails)
 
     frame_rate = property(lambda self: self.frame_rate_num / self.frame_rate_den)
@@ -248,19 +248,6 @@ class LazyVideo(WithSchema):
     )
     size_length = property(lambda self: StringedTuple((self.size, self.length)))
     filename_length = property(lambda self: len(self.filename))
-
-    @property
-    def unreadable_thumbnail(self):
-        return PYTHON_ERROR_THUMBNAIL in self.errors
-
-    @unreadable_thumbnail.setter
-    def unreadable_thumbnail(self, has_error):
-        errors = self.errors
-        if has_error:
-            errors.add(PYTHON_ERROR_THUMBNAIL)
-        elif PYTHON_ERROR_THUMBNAIL in self.errors:
-            errors.remove(PYTHON_ERROR_THUMBNAIL)
-        self._set("errors", sorted(errors))
 
     @property
     def expected_raw_size(self):

@@ -38,7 +38,6 @@ class Val:
             "raw_microseconds",
             "subtitle_languages",
             "thumb_name",
-            "unreadable_thumbnail",
             "video_id",
         ]
         + list(SAME_ORDER_FIELD),

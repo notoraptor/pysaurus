@@ -5,7 +5,6 @@ from typing import Dict, Iterable, List
 
 from pysaurus.application import exceptions
 from pysaurus.core.components import AbsolutePath
-from pysaurus.core.constants import PYTHON_ERROR_THUMBNAIL
 from pysaurus.core.informer import Informer
 from pysaurus.core.parallelization import run_split_batch
 from pysaurus.core.profiling import Profiler
@@ -101,8 +100,6 @@ class Videos:
                 errors = list(p.starmap(raptor.run_thumbnail_task, tasks))
         for err in errors:
             if err:
-                expected_thumbs[err["filename"]].errors = list(err["errors"]) + [
-                    PYTHON_ERROR_THUMBNAIL
-                ]
+                expected_thumbs[err["filename"]].errors = list(err["errors"])
 
         return expected_thumbs

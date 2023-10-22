@@ -64,7 +64,7 @@ class JsonDatabase(AbstractDatabase):
     ):
         super().__init__(db_folder, notifier=notifier)
         # Database content
-        self.__version = 1
+        self.__version = 2
         self.settings = DbSettings()
         self.__date = Date.now()
         self.__folders: Set[AbsolutePath] = set()
@@ -631,7 +631,6 @@ class JsonDatabase(AbstractDatabase):
                     video_state.similarity_id = old_video.similarity_id
                     video_state.video_id = old_video.video_id
                     video_state.thumb_name = old_video.thumb_name
-                    video_state.unreadable_thumbnail = old_video.unreadable_thumbnail
                     video_state.date_entry_opened = old_video.date_entry_opened.time
                 # Set special properties
                 SpecialProperties.set(video_state)

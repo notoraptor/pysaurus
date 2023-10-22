@@ -16,7 +16,6 @@ from typing import (
 
 from pysaurus.core import notifications
 from pysaurus.core.components import AbsolutePath, Date
-from pysaurus.core.constants import PYTHON_ERROR_THUMBNAIL
 from pysaurus.core.job_notifications import notify_job_start
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.path_tree import PathTree
@@ -85,13 +84,6 @@ class OldPysaurusCollection(OldDatabase):
 
     def ensure_thumbnails(self) -> None:
         # super().ensure_thumbnails()
-        # Remove PYTHON_ERROR_THUMBNAIL errors.
-        self.db.modify(
-            "DELETE FROM video_error WHERE error = ? AND video_id NOT IN "
-            "(SELECT video_id FROM video WHERE "
-            "discarded = 1 OR unreadable = 1 OR is_file = 0)",
-            [PYTHON_ERROR_THUMBNAIL],
-        )
         # Get missing thumbs.
         filename_to_video = {
             row["filename"]: row
@@ -140,7 +132,6 @@ class OldPysaurusCollection(OldDatabase):
                 if err:
                     del expected_thumbs[err["filename"]]
                     video = filename_to_video[err["filename"]]
-                    video_errors.append((video["video_id"], PYTHON_ERROR_THUMBNAIL))
                     video_errors.extend(
                         (video["video_id"], verr) for verr in err["errors"]
                     )

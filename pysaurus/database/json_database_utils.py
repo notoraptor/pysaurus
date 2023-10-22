@@ -1,7 +1,9 @@
 import logging
+import sys
 from collections import namedtuple
 from typing import Callable, List, Union
 
+from pysaurus.core.constants import PYTHON_ERROR_THUMBNAIL
 from pysaurus.core.notifications import Notification
 
 logger = logging.getLogger(__name__)
@@ -91,9 +93,22 @@ def _patch_version_1(data: dict, version) -> bool:
     return True
 
 
+def _patch_version_2(data: dict, version) -> bool:
+    if version >= 2:
+        return False
+    # Remove PYTHON_ERROR_THUMBNAIL error
+    for video_dict in data.get("videos", ()):  # type: dict
+        if PYTHON_ERROR_THUMBNAIL in video_dict.get("e", ()):
+            errors = sorted(set(video_dict["e"]) - {PYTHON_ERROR_THUMBNAIL})
+            video_dict["e"] = errors
+            print("-PYTHON_ERROR_THUMBNAILS", video_dict["f"], file=sys.stderr)
+    return True
+
+
 _PATCHS: List[Callable[[Union[dict, list], int], bool]] = [
     _patch_version_0,
     _patch_version_1,
+    _patch_version_2,
 ]
 
 
