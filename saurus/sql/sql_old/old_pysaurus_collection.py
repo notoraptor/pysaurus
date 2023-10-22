@@ -175,8 +175,8 @@ class OldPysaurusCollection(OldDatabase):
         self._notify_missing_thumbnails()
         self.notifier.notify(notifications.DatabaseUpdated())
 
-    def ensure_miniatures(self, returns=False) -> Optional[List[Miniature]]:
-        return super().ensure_miniatures(returns)
+    def ensure_miniatures(self) -> List[Miniature]:
+        return super().ensure_miniatures()
 
     def set_video_similarity(
         self, video_id: int, value: Optional[int], notify=True

@@ -2,7 +2,7 @@ import logging
 import multiprocessing
 import tempfile
 from collections import Counter
-from typing import Any, Callable, Dict, Iterable, List, Optional, Set
+from typing import Any, Callable, Dict, Iterable, List, Optional
 
 import ujson as json
 
@@ -11,18 +11,15 @@ from pysaurus.core import functions, notifications
 from pysaurus.core.components import AbsolutePath, Date, PathType
 from pysaurus.core.constants import PYTHON_ERROR_THUMBNAIL
 from pysaurus.core.file_utils import create_xspf_playlist
-from pysaurus.core.job_notifications import notify_job_start
 from pysaurus.core.modules import ImageUtils
 from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
-from pysaurus.core.parallelization import run_split_batch
 from pysaurus.core.profiling import Profiler
-from pysaurus.database import jobs_python
+from pysaurus.database.algorithms.miniatures import Miniatures
 from pysaurus.database.algorithms.videos import Videos
 from pysaurus.database.json_database import JsonDatabase
 from pysaurus.database.special_properties import SpecialProperties
 from pysaurus.database.viewport.abstract_video_provider import AbstractVideoProvider
 from pysaurus.database.viewport.video_filter import VideoFilter
-from pysaurus.miniature.group_computer import GroupComputer
 from pysaurus.miniature.miniature import Miniature
 from pysaurus.video_raptor.video_raptor_pyav import VideoRaptor as PythonVideoRaptor
 from saurus.language import say
@@ -75,16 +72,11 @@ class Database(JsonDatabase):
     @Profiler.profile_method()
     def update(self) -> None:
         current_date = Date.now()
-
         all_files = Videos.get_runtime_info_from_paths(self.get_folders())
-
         self._update_videos_not_found(all_files)
-
         files_to_update = self._find_video_paths_for_update(all_files)
-
-        new = Videos.get_info_from_filenames(files_to_update)
-
-        if new:
+        if files_to_update:
+            new = Videos.get_info_from_filenames(files_to_update)
             self.set_date(current_date)
             self.write_new_videos(new, all_files)
             self.notifier.notify(notifications.DatabaseUpdated())
@@ -144,28 +136,15 @@ class Database(JsonDatabase):
         self.notifier.notify(notifications.DatabaseUpdated())
 
     @Profiler.profile_method()
-    def ensure_miniatures(self, returns=False) -> Optional[List[Miniature]]:
-        identifiers = set()  # type: Set[AbsolutePath]
-        valid_dictionaries = []
-        added_miniatures = []
-        have_removed = False
-        have_added = False
+    def ensure_miniatures(self) -> List[Miniature]:
         miniatures_path = self.ways.db_miniatures_path
-
-        if miniatures_path.exists():
-            with open(miniatures_path.assert_file().path) as miniatures_file:
-                json_array = json.load(miniatures_file)
-            if not isinstance(json_array, list):
-                raise exceptions.InvalidMiniaturesJSON(miniatures_path)
-            for dct in json_array:
-                identifier = AbsolutePath(dct["i"])
-                if self.has_video(
-                    filename=identifier
-                ) and ImageUtils.THUMBNAIL_SIZE == (dct["w"], dct["h"]):
-                    identifiers.add(identifier)
-                    valid_dictionaries.append(dct)
-            have_removed = len(valid_dictionaries) != len(json_array)
-            del json_array
+        prev_miniatures = Miniatures.read_miniatures_file(miniatures_path)
+        valid_miniatures = {
+            filename: miniature
+            for filename, miniature in prev_miniatures.items()
+            if self.has_video(filename=filename)
+            and ImageUtils.THUMBNAIL_SIZE == (miniature.width, miniature.height)
+        }
 
         available_videos = list(
             self.select_videos_fields(
@@ -175,70 +154,35 @@ class Database(JsonDatabase):
         tasks = [
             (video["filename"], self.get_thumbnail_blob(video["filename"]))
             for video in available_videos
-            if video["filename"] not in identifiers
+            if video["filename"] not in valid_miniatures
         ]
 
+        added_miniatures = []
         if tasks:
-            have_added = True
             with Profiler(say("Generating miniatures."), self.notifier):
-                notify_job_start(
-                    self.notifier,
-                    jobs_python.generate_video_miniatures,
-                    len(tasks),
-                    "videos",
-                )
-                results = list(
-                    run_split_batch(
-                        jobs_python.generate_video_miniatures,
-                        tasks,
-                        extra_args=[self.notifier],
-                    )
-                )
-            for local_array in results:
-                added_miniatures.extend(local_array)
-            del results
+                added_miniatures = Miniatures.get_miniatures(tasks)
 
-        valid_miniatures = [Miniature.from_dict(d) for d in valid_dictionaries]
-        available_miniatures = valid_miniatures + added_miniatures
-        m_dict = {
-            m.identifier: m for m in available_miniatures
-        }  # type: Dict[str, Miniature]
+        m_dict: Dict[str, Miniature] = {
+            m.identifier: m
+            for source in (valid_miniatures.values(), added_miniatures)
+            for m in source
+        }
 
-        m_no_groups = [
-            m
-            for m in valid_miniatures
-            if not m.has_group_signature(
-                self.settings.miniature_pixel_distance_radius,
-                self.settings.miniature_group_min_size,
-            )
-        ] + added_miniatures
-        if m_no_groups:
-            group_computer = GroupComputer(
-                group_min_size=self.settings.miniature_group_min_size,
-                pixel_distance_radius=self.settings.miniature_pixel_distance_radius,
-            )
-            for dm in group_computer.batch_compute_groups(
-                m_no_groups, notifier=self.notifier
-            ):
-                m_dict[dm.miniature_identifier].set_group_signature(
-                    self.settings.miniature_pixel_distance_radius,
-                    self.settings.miniature_group_min_size,
-                    len(dm.pixel_groups),
-                )
+        Miniatures.update_group_signatures(
+            m_dict,
+            self.settings.miniature_pixel_distance_radius,
+            self.settings.miniature_group_min_size,
+        )
 
-        if have_removed or have_added:
+        if len(valid_miniatures) != len(prev_miniatures) or len(added_miniatures):
             with open(miniatures_path.path, "w") as output_file:
-                json.dump([m.to_dict() for m in available_miniatures], output_file)
+                json.dump([m.to_dict() for m in m_dict.values()], output_file)
 
-        self.notifier.notify(notifications.NbMiniatures(len(available_miniatures)))
+        self.notifier.notify(notifications.NbMiniatures(len(m_dict)))
 
-        if returns:
-            miniatures = []
-            for video in available_videos:
-                miniature = m_dict[video["filename"].path]
-                miniature.video_id = video["video_id"]
-                miniatures.append(miniature)
-            return miniatures
+        for m in m_dict.values():
+            m.video_id = self.get_video_id(m.identifier)
+        return list(m_dict.values())
 
     def set_video_similarity(
         self, video_id: int, value: Optional[int], notify=True

@@ -33,9 +33,7 @@ class DbPatternDetection:
     @classmethod
     def compute_pattern_detector(cls, database: Database, prop_name: str):
         assert cls._is_prediction_property(database, prop_name)
-        video_id_to_miniature = {
-            m.video_id: m for m in database.ensure_miniatures(returns=True)
-        }
+        video_id_to_miniature = {m.video_id: m for m in database.ensure_miniatures()}
         video_indices = [
             video["video_id"]
             for video in database.select_videos_fields(
@@ -81,9 +79,7 @@ class DbPatternDetection:
         theta = database.get_predictor(prop_name)
         if not theta:
             raise NoPredictor(prop_name)
-        video_id_to_miniature = {
-            m.video_id: m for m in database.ensure_miniatures(returns=True)
-        }
+        video_id_to_miniature = {m.video_id: m for m in database.ensure_miniatures()}
         video_indices = [
             video["video_id"]
             for video in database.select_videos_fields(

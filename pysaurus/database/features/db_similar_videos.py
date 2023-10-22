@@ -111,7 +111,7 @@ class DbSimilarVideos:
         self.positions = None
 
     def find_similar_videos_ignore_cache(self, db: Database):
-        miniatures = db.ensure_miniatures(returns=True)  # type: List[Miniature]
+        miniatures = db.ensure_miniatures()  # type: List[Miniature]
         video_indices = [m.video_id for m in miniatures]
         previous_sim = [
             db.read_video_field(video_id, "similarity_id") for video_id in video_indices
@@ -127,7 +127,7 @@ class DbSimilarVideos:
     def find_similar_videos(self, db: Database, miniatures: List[Miniature] = None):
         with Profiler(say("Find similar videos."), db.notifier), db.to_save():
             if miniatures is None:
-                miniatures = db.ensure_miniatures(returns=True)  # type: List[Miniature]
+                miniatures = db.ensure_miniatures()  # type: List[Miniature]
             video_indices = [m.video_id for m in miniatures]
             prev_sims = [
                 db.read_video_field(video_id, "similarity_id")

@@ -587,6 +587,9 @@ class JsonDatabase:
     def get_video_filename(self, video_id: int) -> AbsolutePath:
         return self.__id_to_video[video_id].filename
 
+    def get_video_id(self, filename) -> int:
+        return self.__videos[AbsolutePath.ensure(filename)].video_id
+
     def read_video_field(self, video_id: int, field: str):
         return getattr(self.__id_to_video[video_id], field)
 
