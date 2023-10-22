@@ -9,9 +9,9 @@ from pysaurus.core.json_backup import JsonBackup
 from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
+from pysaurus.database.abstract_database import AbstractDatabase
 from pysaurus.database.db_settings import DbSettings
 from pysaurus.database.db_video_attribute import PotentialMoveAttribute
-from pysaurus.database.db_way_def import DbWays
 from pysaurus.database.json_database_utils import (
     DatabaseLoaded,
     DatabaseSaved,
@@ -37,10 +37,8 @@ from saurus.sql.sql_old.video_entry import VideoEntry
 logger = logging.getLogger(__name__)
 
 
-class JsonDatabase:
+class JsonDatabase(AbstractDatabase):
     __slots__ = (
-        "ways",
-        "__backup",
         "__version",
         "settings",
         "__date",
@@ -48,7 +46,6 @@ class JsonDatabase:
         "__videos",
         "__prop_types",
         "__predictors",
-        "notifier",
         "__id_to_video",
         "moves_attribute",
         "__indexer",
@@ -65,10 +62,7 @@ class JsonDatabase:
         notifier: Notifier = DEFAULT_NOTIFIER,
         indexer: AbstractVideoIndexer = None,
     ):
-        db_folder = AbsolutePath.ensure_directory(db_folder)
-        self.ways = DbWays(db_folder)
-        # Private data
-        self.__backup = JsonBackup(self.ways.db_json_path, notifier)
+        super().__init__(db_folder, notifier=notifier)
         # Database content
         self.__version = 1
         self.settings = DbSettings()
@@ -78,7 +72,6 @@ class JsonDatabase:
         self.__prop_types: Dict[str, PropType] = {}
         self.__predictors: Dict[str, List[float]] = {}
         # Runtime
-        self.notifier = notifier
         self.__id_to_video: Dict[int, Video] = {}
         self.moves_attribute = PotentialMoveAttribute(self)
         self.__indexer = indexer or VideoIndexer(
@@ -107,9 +100,10 @@ class JsonDatabase:
 
         with Profiler("loading JSON file", self.notifier):
             # Loading JSON file
-            json_dict = self.__backup.load()
+            backup = JsonBackup(self.ways.db_json_path, self.notifier)
+            json_dict = backup.load()
             if not isinstance(json_dict, dict):
-                raise exceptions.InvalidDatabaseJSON(self.__backup.path)
+                raise exceptions.InvalidDatabaseJSON(backup.path)
 
         # Parsing version.
         version = json_dict.get("version", -1)
@@ -213,7 +207,8 @@ class JsonDatabase:
         if not identifiers_updated and on_new_identifiers:
             return
         # We can save. Save database.
-        self.__backup.save(
+        backup = JsonBackup(self.ways.db_json_path, self.notifier)
+        backup.save(
             {
                 "version": self.__version,
                 "settings": self.settings.to_dict(),
@@ -264,13 +259,6 @@ class JsonDatabase:
             self.__indexer.update_videos(self.__modified)
         self.__removed.clear()
         self.__modified.clear()
-
-    def rename(self, new_name: str) -> None:
-        self.ways = self.ways.renamed(new_name)
-        self.__backup = JsonBackup(self.ways.db_json_path, self.notifier)
-
-    def get_name(self):
-        return self.ways.db_folder.title
 
     def set_date(self, date: Date):
         self.__date = date
@@ -685,7 +673,7 @@ class JsonDatabase:
 
         return video.filename
 
-    def delete_video_entry(self, video_id: int):
+    def delete_video_entry(self, video_id: int) -> None:
         video = self.__id_to_video.pop(video_id)
         self.__videos.pop(video.filename, None)
         if video.readable:

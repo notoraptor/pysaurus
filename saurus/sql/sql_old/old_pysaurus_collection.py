@@ -83,9 +83,6 @@ class OldPysaurusCollection(OldDatabase):
                     )
                     logger.info(f"Un-discarded {len(allowed)} video(s).")
 
-    def update(self) -> None:
-        super().update()
-
     def ensure_thumbnails(self) -> None:
         # super().ensure_thumbnails()
         # Remove PYTHON_ERROR_THUMBNAIL errors.
@@ -186,9 +183,6 @@ class OldPysaurusCollection(OldDatabase):
     def change_video_file_title(self, video_id: int, new_title: str) -> None:
         super().change_video_file_title(video_id, new_title)
 
-    def delete_video(self, video_id: int) -> AbsolutePath:
-        return super().delete_video(video_id)
-
     def reopen(self):
         super().reopen()
 
@@ -237,12 +231,6 @@ class OldPysaurusCollection(OldDatabase):
     ) -> int:
         return super().move_concatenated_prop_val(path, from_property, to_property)
 
-    def to_xspf_playlist(self, video_indices: Iterable[int]) -> AbsolutePath:
-        return super().to_xspf_playlist(video_indices)
-
-    def open_containing_folder(self, video_id: int) -> str:
-        return super().open_containing_folder(video_id)
-
     def save(self, on_new_identifiers=False):
         return super().save(on_new_identifiers)
 
@@ -263,12 +251,6 @@ class OldPysaurusCollection(OldDatabase):
 
     def flush_changes(self):
         super().flush_changes()
-
-    def rename(self, new_name: str) -> None:
-        super().rename(new_name)
-
-    def get_name(self):
-        return super().get_name()
 
     def set_date(self, date: Date):
         # super().set_date(date)

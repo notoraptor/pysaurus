@@ -8,9 +8,8 @@ import ujson as json
 
 from pysaurus.application import exceptions
 from pysaurus.core import functions, notifications
-from pysaurus.core.components import AbsolutePath, Date, PathType
+from pysaurus.core.components import AbsolutePath, PathType
 from pysaurus.core.constants import PYTHON_ERROR_THUMBNAIL
-from pysaurus.core.file_utils import create_xspf_playlist
 from pysaurus.core.modules import ImageUtils
 from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.profiling import Profiler
@@ -68,18 +67,6 @@ class Database(JsonDatabase):
                 f"(expected {prev_pid}, got {curr_pid})"
             )
         return attribute
-
-    @Profiler.profile_method()
-    def update(self) -> None:
-        current_date = Date.now()
-        all_files = Videos.get_runtime_info_from_paths(self.get_folders())
-        self._update_videos_not_found(all_files)
-        files_to_update = self._find_video_paths_for_update(all_files)
-        if files_to_update:
-            new = Videos.get_info_from_filenames(files_to_update)
-            self.set_date(current_date)
-            self.write_new_videos(new, all_files)
-            self.notifier.notify(notifications.DatabaseUpdated())
 
     @Profiler.profile_method()
     def ensure_thumbnails(self) -> None:
@@ -199,12 +186,6 @@ class Database(JsonDatabase):
             self.change_video_entry_filename(
                 video_id, old_filename.new_title(new_title)
             )
-
-    def delete_video(self, video_id: int) -> AbsolutePath:
-        video_filename: AbsolutePath = self.get_video_filename(video_id)
-        video_filename.delete()
-        self.delete_video_entry(video_id)
-        return video_filename
 
     def reopen(self):
         pass
@@ -338,9 +319,3 @@ class Database(JsonDatabase):
         if modified:
             self._notify_properties_modified([from_property, to_property])
         return len(modified)
-
-    def to_xspf_playlist(self, video_indices: Iterable[int]) -> AbsolutePath:
-        return create_xspf_playlist(map(self.get_video_filename, video_indices))
-
-    def open_containing_folder(self, video_id: int) -> str:
-        return str(self.get_video_filename(video_id).locate_file())
