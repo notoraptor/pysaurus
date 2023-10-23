@@ -266,9 +266,6 @@ class JsonDatabase(AbstractDatabase):
     def set_date(self, date: Date):
         self.__date = date
 
-    def get_date(self) -> Date:
-        return self.__date
-
     def set_folders(self, folders) -> None:
         folders = sorted(AbsolutePath.ensure(folder) for folder in folders)
         if folders == sorted(self.__folders):
@@ -351,6 +348,7 @@ class JsonDatabase(AbstractDatabase):
             return (filenames[filename].video_id for filename in selection)
         return ()
 
+    # provider
     def sort_video_indices(self, indices: Iterable[int], sorting: VideoSorting):
         return sorted(
             indices,
@@ -490,6 +488,7 @@ class JsonDatabase(AbstractDatabase):
         self._notify_properties_modified(modified)
         return modified
 
+    # provider
     def default_prop_unit(self, name):
         pt = self.__prop_types[name]
         return None if pt.multiple else pt.default
@@ -750,6 +749,3 @@ class JsonDatabase(AbstractDatabase):
 
     def clean_thumbnails(self, paths: List[AbsolutePath]):
         self.__thumb_mgr.clean_thumbnails(paths)
-
-    def raptor(self):
-        return self.__thumb_mgr.raptor

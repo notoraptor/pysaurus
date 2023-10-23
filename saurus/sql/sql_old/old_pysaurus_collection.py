@@ -232,9 +232,6 @@ class OldPysaurusCollection(OldDatabase):
         # super().set_date(date)
         self.db.modify("UPDATE collection SET date_updated = ?", [date.time])
 
-    def get_date(self) -> Date:
-        return super().get_date()
-
     def set_folders(self, folders) -> None:
         super().set_folders(folders)
 
@@ -250,9 +247,6 @@ class OldPysaurusCollection(OldDatabase):
 
     def get_predictor(self, prop_name):
         return super().get_predictor(prop_name)
-
-    def _get_cached_videos(self, *flags, **forced_flags) -> List[Video]:
-        return super()._get_cached_videos(*flags, **forced_flags)
 
     def count_videos(self, *flags, **forced_flags) -> int:
         return super().count_videos(*flags, **forced_flags)
@@ -575,6 +569,3 @@ class OldPysaurusCollection(OldDatabase):
 
     def save_existing_thumbnails(self, filename_to_thumb_name: Dict[str, str]):
         super().save_existing_thumbnails(filename_to_thumb_name)
-
-    def raptor(self):
-        return super().raptor()
