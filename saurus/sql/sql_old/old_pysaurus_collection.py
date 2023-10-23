@@ -22,7 +22,6 @@ from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.database import Database as OldDatabase
 from pysaurus.database.db_way_def import DbWays
-from pysaurus.miniature.miniature import Miniature
 from pysaurus.properties.properties import DefType, PropValueType
 from pysaurus.updates.video_inliner import (
     flatten_video,
@@ -163,22 +162,8 @@ class OldPysaurusCollection(OldDatabase):
         self._notify_missing_thumbnails()
         self.notifier.notify(notifications.DatabaseUpdated())
 
-    def ensure_miniatures(self) -> List[Miniature]:
-        return super().ensure_miniatures()
-
-    def set_video_similarity(
-        self, video_id: int, value: Optional[int], notify=True
-    ) -> None:
-        super().set_video_similarity(video_id, value, notify)
-
-    def change_video_file_title(self, video_id: int, new_title: str) -> None:
-        super().change_video_file_title(video_id, new_title)
-
     def reopen(self):
         super().reopen()
-
-    def refresh(self) -> None:
-        super().refresh()
 
     def delete_property_value(self, name: str, values: list) -> None:
         super().delete_property_value(name, values)
@@ -359,17 +344,8 @@ class OldPysaurusCollection(OldDatabase):
             many=True,
         )
 
-    def _notify_properties_modified(self, properties):
-        super()._notify_properties_modified(properties)
-
-    def _notify_fields_modified(self, fields: Sequence[str]):
-        super()._notify_fields_modified(fields)
-
     def _notify_filename_modified(self, new_video: Video, old_video: Video):
         super()._notify_filename_modified(new_video, old_video)
-
-    def _notify_missing_thumbnails(self):
-        super()._notify_missing_thumbnails()
 
     def _find_video_paths_for_update(
         self, file_paths: Dict[AbsolutePath, VideoRuntimeInfo]

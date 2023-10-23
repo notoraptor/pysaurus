@@ -505,11 +505,11 @@ class JsonDatabase(AbstractDatabase):
 
     def _notify_properties_modified(self, properties):
         self.save()
-        self.notifier.notify(notifications.PropertiesModified(properties))
+        super()._notify_properties_modified(properties)
 
     def _notify_fields_modified(self, fields: Sequence[str]):
         self.save()
-        self.notifier.notify(notifications.FieldsModified(fields))
+        super()._notify_fields_modified(fields)
 
     def _notify_filename_modified(self, new_video: Video, old_video: Video):
         self._notify_fields_modified(
@@ -587,7 +587,7 @@ class JsonDatabase(AbstractDatabase):
     def read_video_field(self, video_id: int, field: str):
         return getattr(self.__id_to_video[video_id], field)
 
-    def write_video_fields(self, video_id: int, **kwargs) -> bool:
+    def write_video_fields(self, video_id: int, **kwargs):
         modified = False
         video = self.__id_to_video[video_id]
         for key, value in kwargs.items():

@@ -4,7 +4,6 @@ from collections import Counter
 from typing import Any, Callable, Iterable, List, Optional
 
 from pysaurus.application import exceptions
-from pysaurus.core import functions
 from pysaurus.core.components import AbsolutePath, PathType
 from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.profiling import Profiler
@@ -59,45 +58,13 @@ class Database(JsonDatabase):
             )
         return attribute
 
-    def set_video_similarity(
-        self, video_id: int, value: Optional[int], notify=True
-    ) -> None:
-        self.write_video_fields(video_id, similarity_id=value)
-        if notify:
-            self._notify_fields_modified(["similarity_id"])
-
-    def change_video_file_title(self, video_id: int, new_title: str) -> None:
-        if functions.has_discarded_characters(new_title):
-            raise exceptions.InvalidFileName(new_title)
-        old_filename: AbsolutePath = self.get_video_filename(video_id)
-        if old_filename.file_title != new_title:
-            self.change_video_entry_filename(
-                video_id, old_filename.new_title(new_title)
-            )
-
     def reopen(self):
         pass
 
-    def refresh(self) -> None:
-        self.update()
-        self.ensure_thumbnails()
-
-    def delete_property_value(self, name: str, values: list) -> None:
-        self.__del_prop_val(self.get_all_video_indices(), name, values)
-
-    def move_property_value(self, old_name: str, values: list, new_name: str) -> None:
-        modified = self.__del_prop_val(self.get_all_video_indices(), old_name, values)
-        for video_id in modified:
-            self.merge_prop_values(video_id, new_name, values)
-        if modified:
-            self._notify_properties_modified([old_name, new_name])
-
-    def __del_prop_val(
-        self, video_indices: Iterable[int], name: str, values: list
-    ) -> List[int]:
+    def delete_property_value(self, name: str, values: list) -> List[int]:
         modified = []
         values = set(self.validate_prop_values(name, values))
-        for video_id in video_indices:
+        for video_id in self.get_all_video_indices():
             previous_values = set(self.get_prop_values(video_id, name))
             new_values = previous_values - values
             if len(previous_values) > len(new_values):
@@ -106,6 +73,13 @@ class Database(JsonDatabase):
         if modified:
             self._notify_properties_modified([name])
         return modified
+
+    def move_property_value(self, old_name: str, values: list, new_name: str) -> None:
+        modified = self.delete_property_value(old_name, values)
+        for video_id in modified:
+            self.merge_prop_values(video_id, new_name, values)
+        if modified:
+            self._notify_properties_modified([old_name, new_name])
 
     def edit_property_value(
         self, name: str, old_values: list, new_value: object

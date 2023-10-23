@@ -1,11 +1,12 @@
 import logging
 import tempfile
 from abc import ABC, abstractmethod
-from typing import Any, Container, Dict, Iterable, List, Sequence
+from typing import Any, Container, Dict, Iterable, List, Optional, Sequence
 
 import ujson as json
 
-from pysaurus.core import notifications
+from pysaurus.application import exceptions
+from pysaurus.core import functions, notifications
 from pysaurus.core.components import AbsolutePath, Date, PathType
 from pysaurus.core.file_utils import create_xspf_playlist
 from pysaurus.core.modules import ImageUtils
@@ -98,11 +99,22 @@ class AbstractDatabase(ABC):
     def get_video_id(self, filename) -> int:
         raise NotImplementedError()
 
+    @abstractmethod
+    def write_video_fields(self, video_id: int, **kwargs):
+        raise NotImplementedError()
+
+    @abstractmethod
     def write_new_videos(
         self,
         video_entries: List[VideoEntry],
         runtime_info: Dict[AbsolutePath, VideoRuntimeInfo],
     ) -> None:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def change_video_entry_filename(
+        self, video_id: int, path: AbsolutePath
+    ) -> AbsolutePath:
         raise NotImplementedError()
 
     def open_containing_folder(self, video_id: int) -> str:
@@ -120,6 +132,12 @@ class AbstractDatabase(ABC):
     def _notify_missing_thumbnails(self) -> None:
         remaining_thumb_videos = list(self._get_collectable_missing_thumbnails())
         self.notifier.notify(notifications.MissingThumbnails(remaining_thumb_videos))
+
+    def _notify_fields_modified(self, fields: Sequence[str]):
+        self.notifier.notify(notifications.FieldsModified(fields))
+
+    def _notify_properties_modified(self, properties):
+        self.notifier.notify(notifications.PropertiesModified(properties))
 
     @Profiler.profile_method()
     def update(self) -> None:
@@ -213,3 +231,23 @@ class AbstractDatabase(ABC):
         for m in m_dict.values():
             m.video_id = self.get_video_id(m.identifier)
         return list(m_dict.values())
+
+    def set_video_similarity(
+        self, video_id: int, value: Optional[int], notify=True
+    ) -> None:
+        self.write_video_fields(video_id, similarity_id=value)
+        if notify:
+            self._notify_fields_modified(["similarity_id"])
+
+    def change_video_file_title(self, video_id: int, new_title: str) -> None:
+        if functions.has_discarded_characters(new_title):
+            raise exceptions.InvalidFileName(new_title)
+        old_filename: AbsolutePath = self.get_video_filename(video_id)
+        if old_filename.file_title != new_title:
+            self.change_video_entry_filename(
+                video_id, old_filename.new_title(new_title)
+            )
+
+    def refresh(self) -> None:
+        self.update()
+        self.ensure_thumbnails()
