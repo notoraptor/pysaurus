@@ -14,7 +14,7 @@ def main():
     for i, filename in enumerate(DB_INFO["filenames"]):
         blob = lip.thumb_manager.get_blob(AbsolutePath(filename))
         image = ImageUtils.from_blob(blob)
-        output_image = AbsolutePath.join(output_folder, f"image{i+1}.jpg")
+        output_image = AbsolutePath.join(output_folder, f"image{i + 1}.jpg")
         image.save(output_image.path)
 
 

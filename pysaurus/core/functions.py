@@ -9,7 +9,6 @@ from typing import Iterable, List
 
 logger = logging.getLogger(__name__)
 
-
 REGEX_NO_WORD = re.compile(r"(\W|_)+")
 REGEX_CONSECUTIVE_UPPER_CASES = re.compile("[A-Z]{2,}")
 REGEX_LOWER_THEN_UPPER_CASES = re.compile("([a-z0-9])([A-Z])")

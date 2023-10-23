@@ -1,26 +1,18 @@
 import logging
 import multiprocessing
-import tempfile
 from collections import Counter
-from typing import Any, Callable, Dict, Iterable, List, Optional
-
-import ujson as json
+from typing import Any, Callable, Iterable, List, Optional
 
 from pysaurus.application import exceptions
-from pysaurus.core import functions, notifications
+from pysaurus.core import functions
 from pysaurus.core.components import AbsolutePath, PathType
-from pysaurus.core.modules import ImageUtils
 from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.profiling import Profiler
-from pysaurus.database.algorithms.miniatures import Miniatures
-from pysaurus.database.algorithms.videos import Videos
 from pysaurus.database.json_database import JsonDatabase
 from pysaurus.database.special_properties import SpecialProperties
 from pysaurus.database.viewport.abstract_video_provider import AbstractVideoProvider
 from pysaurus.database.viewport.video_filter import VideoFilter
-from pysaurus.miniature.miniature import Miniature
 from pysaurus.video_raptor.video_raptor_pyav import VideoRaptor as PythonVideoRaptor
-from saurus.language import say
 
 logger = logging.getLogger(__name__)
 
@@ -66,106 +58,6 @@ class Database(JsonDatabase):
                 f"(expected {prev_pid}, got {curr_pid})"
             )
         return attribute
-
-    @Profiler.profile_method()
-    def ensure_thumbnails(self) -> None:
-        # Remove absent videos from thumbnail manager.
-        self.clean_thumbnails(
-            [
-                video["filename"]
-                for video in self.select_videos_fields(["filename"], "readable")
-            ]
-        )
-
-        # Add missing thumbnails in thumbnail manager.
-        missing_thumbs = []
-        for video in self.select_videos_fields(
-            ["filename", "video_id"], "readable", "found"
-        ):
-            if not self.has_thumbnail(video["filename"]):
-                missing_thumbs.append(video)
-
-        expected_thumbs = {}
-        thumb_errors = {}
-        self.notifier.notify(
-            notifications.Message(f"Missing thumbs in SQL: {len(missing_thumbs)}")
-        )
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            filename_to_video = {
-                video["filename"].path: video for video in missing_thumbs
-            }
-            results = Videos.get_thumbnails(
-                [video["filename"] for video in missing_thumbs], tmp_dir
-            )
-            for filename, result in results.items():
-                if result.errors:
-                    self.add_video_errors(
-                        filename_to_video[filename]["video_id"], *result.errors
-                    )
-                    thumb_errors[filename] = result.errors
-                else:
-                    expected_thumbs[filename] = result.thumbnail_path
-
-            # Save thumbnails into thumb manager
-            with Profiler(say("save thumbnails to db"), self.notifier):
-                self.save_existing_thumbnails(expected_thumbs)
-
-            logger.info(f"Thumbnails generated, deleting temp dir {tmp_dir}")
-            # Delete thumbnail files (done at context exit)
-
-        if thumb_errors:
-            self.notifier.notify(notifications.VideoThumbnailErrors(thumb_errors))
-        self._notify_missing_thumbnails()
-        self.notifier.notify(notifications.DatabaseUpdated())
-
-    @Profiler.profile_method()
-    def ensure_miniatures(self) -> List[Miniature]:
-        miniatures_path = self.ways.db_miniatures_path
-        prev_miniatures = Miniatures.read_miniatures_file(miniatures_path)
-        valid_miniatures = {
-            filename: miniature
-            for filename, miniature in prev_miniatures.items()
-            if self.has_video(filename=filename)
-            and ImageUtils.THUMBNAIL_SIZE == (miniature.width, miniature.height)
-        }
-
-        available_videos = list(
-            self.select_videos_fields(
-                ["filename", "video_id"], "readable", "with_thumbnails"
-            )
-        )
-        tasks = [
-            (video["filename"], self.get_thumbnail_blob(video["filename"]))
-            for video in available_videos
-            if video["filename"] not in valid_miniatures
-        ]
-
-        added_miniatures = []
-        if tasks:
-            with Profiler(say("Generating miniatures."), self.notifier):
-                added_miniatures = Miniatures.get_miniatures(tasks)
-
-        m_dict: Dict[str, Miniature] = {
-            m.identifier: m
-            for source in (valid_miniatures.values(), added_miniatures)
-            for m in source
-        }
-
-        Miniatures.update_group_signatures(
-            m_dict,
-            self.settings.miniature_pixel_distance_radius,
-            self.settings.miniature_group_min_size,
-        )
-
-        if len(valid_miniatures) != len(prev_miniatures) or len(added_miniatures):
-            with open(miniatures_path.path, "w") as output_file:
-                json.dump([m.to_dict() for m in m_dict.values()], output_file)
-
-        self.notifier.notify(notifications.NbMiniatures(len(m_dict)))
-
-        for m in m_dict.values():
-            m.video_id = self.get_video_id(m.identifier)
-        return list(m_dict.values())
 
     def set_video_similarity(
         self, video_id: int, value: Optional[int], notify=True

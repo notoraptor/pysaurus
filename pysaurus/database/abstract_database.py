@@ -1,15 +1,26 @@
+import logging
+import tempfile
 from abc import ABC, abstractmethod
-from typing import Container, Dict, Iterable, List
+from typing import Any, Container, Dict, Iterable, List, Sequence
+
+import ujson as json
 
 from pysaurus.core import notifications
 from pysaurus.core.components import AbsolutePath, Date, PathType
 from pysaurus.core.file_utils import create_xspf_playlist
+from pysaurus.core.modules import ImageUtils
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.profiling import Profiler
+from pysaurus.database.algorithms.miniatures import Miniatures
 from pysaurus.database.algorithms.videos import Videos
+from pysaurus.database.db_settings import DbSettings
 from pysaurus.database.db_way_def import DbWays
+from pysaurus.miniature.miniature import Miniature
 from pysaurus.video import VideoRuntimeInfo
+from saurus.language import say
 from saurus.sql.sql_old.video_entry import VideoEntry
+
+logger = logging.getLogger(__name__)
 
 
 class AbstractDatabase(ABC):
@@ -53,6 +64,40 @@ class AbstractDatabase(ABC):
     ) -> List[str]:
         raise NotImplementedError()
 
+    @abstractmethod
+    def add_video_errors(self, video_id: int, *errors: Iterable[str]) -> None:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def save_existing_thumbnails(self, filename_to_thumb_name: Dict[str, str]) -> None:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def _get_collectable_missing_thumbnails(self) -> Dict[str, int]:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def has_video(self, **fields) -> bool:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def select_videos_fields(
+        self, fields: Sequence[str], *flags, **forced_flags
+    ) -> Iterable[Dict[str, Any]]:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_settings(self) -> DbSettings:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_thumbnail_blob(self, filename: AbsolutePath):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_video_id(self, filename) -> int:
+        raise NotImplementedError()
+
     def write_new_videos(
         self,
         video_entries: List[VideoEntry],
@@ -72,6 +117,10 @@ class AbstractDatabase(ABC):
     def to_xspf_playlist(self, video_indices: Iterable[int]) -> AbsolutePath:
         return create_xspf_playlist(map(self.get_video_filename, video_indices))
 
+    def _notify_missing_thumbnails(self) -> None:
+        remaining_thumb_videos = list(self._get_collectable_missing_thumbnails())
+        self.notifier.notify(notifications.MissingThumbnails(remaining_thumb_videos))
+
     @Profiler.profile_method()
     def update(self) -> None:
         current_date = Date.now()
@@ -83,3 +132,84 @@ class AbstractDatabase(ABC):
             self.set_date(current_date)
             self.write_new_videos(new, all_files)
             self.notifier.notify(notifications.DatabaseUpdated())
+
+    @Profiler.profile_method()
+    def ensure_thumbnails(self) -> None:
+        # Add missing thumbnails in thumbnail manager.
+        missing_thumbs = self._get_collectable_missing_thumbnails()
+
+        expected_thumbs = {}
+        thumb_errors = {}
+        self.notifier.notify(
+            notifications.Message(f"Missing thumbs in SQL: {len(missing_thumbs)}")
+        )
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            results = Videos.get_thumbnails(list(missing_thumbs), tmp_dir)
+            for filename, result in results.items():
+                if result.errors:
+                    self.add_video_errors(missing_thumbs[filename], *result.errors)
+                    thumb_errors[filename] = result.errors
+                else:
+                    expected_thumbs[filename] = result.thumbnail_path
+
+            # Save thumbnails into thumb manager
+            with Profiler(say("save thumbnails to db"), self.notifier):
+                self.save_existing_thumbnails(expected_thumbs)
+
+            logger.info(f"Thumbnails generated, deleting temp dir {tmp_dir}")
+            # Delete thumbnail files (done at context exit)
+
+        if thumb_errors:
+            self.notifier.notify(notifications.VideoThumbnailErrors(thumb_errors))
+        self._notify_missing_thumbnails()
+        self.notifier.notify(notifications.DatabaseUpdated())
+
+    @Profiler.profile_method()
+    def ensure_miniatures(self) -> List[Miniature]:
+        miniatures_path = self.ways.db_miniatures_path
+        prev_miniatures = Miniatures.read_miniatures_file(miniatures_path)
+        valid_miniatures = {
+            filename: miniature
+            for filename, miniature in prev_miniatures.items()
+            if self.has_video(filename=filename)
+            and ImageUtils.THUMBNAIL_SIZE == (miniature.width, miniature.height)
+        }
+
+        available_videos = list(
+            self.select_videos_fields(
+                ["filename", "video_id"], "readable", "with_thumbnails"
+            )
+        )
+        tasks = [
+            (video["filename"], self.get_thumbnail_blob(video["filename"]))
+            for video in available_videos
+            if video["filename"] not in valid_miniatures
+        ]
+
+        added_miniatures = []
+        if tasks:
+            with Profiler(say("Generating miniatures."), self.notifier):
+                added_miniatures = Miniatures.get_miniatures(tasks)
+
+        m_dict: Dict[str, Miniature] = {
+            m.identifier: m
+            for source in (valid_miniatures.values(), added_miniatures)
+            for m in source
+        }
+
+        settings = self.get_settings()
+        Miniatures.update_group_signatures(
+            m_dict,
+            settings.miniature_pixel_distance_radius,
+            settings.miniature_group_min_size,
+        )
+
+        if len(valid_miniatures) != len(prev_miniatures) or len(added_miniatures):
+            with open(miniatures_path.path, "w") as output_file:
+                json.dump([m.to_dict() for m in m_dict.values()], output_file)
+
+        self.notifier.notify(notifications.NbMiniatures(len(m_dict)))
+
+        for m in m_dict.values():
+            m.video_id = self.get_video_id(m.identifier)
+        return list(m_dict.values())

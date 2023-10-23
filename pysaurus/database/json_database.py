@@ -260,6 +260,9 @@ class JsonDatabase(AbstractDatabase):
         self.__removed.clear()
         self.__modified.clear()
 
+    def get_settings(self) -> DbSettings:
+        return self.settings
+
     def set_date(self, date: Date):
         self.__date = date
 
@@ -522,14 +525,17 @@ class JsonDatabase(AbstractDatabase):
         )
         self.register_replaced(new_video, old_video)
 
-    def _notify_missing_thumbnails(self):
-        remaining_thumb_videos = [
-            video["filename"].path
+    def _get_collectable_missing_thumbnails(self) -> Dict[str, int]:
+        return {
+            video["filename"].path: video["video_id"]
             for video in self.select_videos_fields(
-                ["filename"], "readable", "found", "without_thumbnails"
+                ["filename", "video_id"], "readable", "found"
             )
-        ]
-        self.notifier.notify(notifications.MissingThumbnails(remaining_thumb_videos))
+            if not self.has_thumbnail(video["filename"])
+        }
+
+    def _notify_missing_thumbnails(self) -> None:
+        super()._notify_missing_thumbnails()
         self.save()
 
     def _find_video_paths_for_update(
@@ -599,7 +605,7 @@ class JsonDatabase(AbstractDatabase):
         for video_id in indices:
             setattr(self.__id_to_video[video_id], field, value)
 
-    def add_video_errors(self, video_id: int, *errors: Iterable[str]):
+    def add_video_errors(self, video_id: int, *errors: Iterable[str]) -> None:
         self.__id_to_video[video_id].add_errors(errors)
 
     def write_new_videos(
@@ -739,7 +745,7 @@ class JsonDatabase(AbstractDatabase):
     def save_thumbnail(self, filename: AbsolutePath) -> Optional[dict]:
         return self.__thumb_mgr.save(filename)
 
-    def save_existing_thumbnails(self, filename_to_thumb_name: Dict[str, str]):
+    def save_existing_thumbnails(self, filename_to_thumb_name: Dict[str, str]) -> None:
         self.__thumb_mgr.save_existing_thumbnails(filename_to_thumb_name)
 
     def clean_thumbnails(self, paths: List[AbsolutePath]):

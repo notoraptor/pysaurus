@@ -75,7 +75,7 @@ class Videos:
 
     @classmethod
     def get_thumbnails(
-        cls, video_paths: List[AbsolutePath], working_directory: str
+        cls, video_paths: List[str], working_directory: str
     ) -> Dict[str, ThumbnailResult]:
         notifier = Informer.default()
         # Generate thumbnail filenames and tasks
@@ -83,7 +83,7 @@ class Videos:
             (
                 notifier,
                 i,
-                filename.path,
+                filename,
                 AbsolutePath.file_path(working_directory, i, "jpg").path,
             )
             for i, filename in enumerate(video_paths)

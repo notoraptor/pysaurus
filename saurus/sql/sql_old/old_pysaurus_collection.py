@@ -600,8 +600,5 @@ class OldPysaurusCollection(OldDatabase):
     def save_existing_thumbnails(self, filename_to_thumb_name: Dict[str, str]):
         super().save_existing_thumbnails(filename_to_thumb_name)
 
-    def clean_thumbnails(self, paths: List[AbsolutePath]):
-        super().clean_thumbnails(paths)
-
     def raptor(self):
         return super().raptor()
