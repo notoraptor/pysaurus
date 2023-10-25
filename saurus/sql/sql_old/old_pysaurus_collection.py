@@ -18,7 +18,6 @@ from pysaurus.updates.video_inliner import (
     get_video_text,
 )
 from pysaurus.video import Video, VideoRuntimeInfo
-from pysaurus.video.video_sorting import VideoSorting
 from pysaurus.video_raptor.video_raptor_pyav import VideoRaptor
 from saurus.language import say
 from saurus.sql.pysaurus_connection import PysaurusConnection
@@ -230,14 +229,6 @@ class OldPysaurusCollection(OldDatabase):
     ) -> Iterable[Dict[str, Any]]:
         return super().select_videos_fields(fields, *flags, **forced_flags)
 
-    def search(
-        self, text: str, cond: str = "and", videos: Sequence[int] = None
-    ) -> Iterable[int]:
-        return super().search(text, cond, videos)
-
-    def sort_video_indices(self, indices: Iterable[int], sorting: VideoSorting):
-        return super().sort_video_indices(indices, sorting)
-
     def has_prop_type(
         self, name, *, with_type=None, multiple=None, with_enum=None, default=None
     ) -> bool:
@@ -292,9 +283,6 @@ class OldPysaurusCollection(OldDatabase):
     def set_video_properties(self, video_id: int, properties: dict) -> List[str]:
         return super().set_video_properties(video_id, properties)
 
-    def default_prop_unit(self, name):
-        return super().default_prop_unit(name)
-
     def value_is_default(self, name: str, value: list) -> bool:
         return super().value_is_default(name, value)
 
@@ -311,9 +299,6 @@ class OldPysaurusCollection(OldDatabase):
             ],
             many=True,
         )
-
-    def _notify_filename_modified(self, new_video: Video, old_video: Video):
-        super()._notify_filename_modified(new_video, old_video)
 
     def _find_video_paths_for_update(
         self, file_paths: Dict[AbsolutePath, VideoRuntimeInfo]
