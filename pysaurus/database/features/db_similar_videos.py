@@ -116,7 +116,9 @@ class DbSimilarVideos:
         previous_sim = [
             db.read_video_field(video_id, "similarity_id") for video_id in video_indices
         ]
-        db.fill_videos_field(video_indices, "similarity_id", None)
+        db.write_videos_field(
+            video_indices, "similarity_id", (None for _ in video_indices)
+        )
         try:
             self.find_similar_videos(db, miniatures)
         except Exception:
@@ -249,10 +251,10 @@ class DbSimilarVideos:
                     )
                 )
 
-                db.fill_videos_field(
+                db.write_videos_field(
                     (video_indices[i] for i in new_miniature_indices),
                     "similarity_id",
-                    -1,
+                    (-1 for _ in new_miniature_indices),
                 )
                 for step, (new_id, new_group) in enumerate(
                     zip(new_sim_indices, new_sim_groups)

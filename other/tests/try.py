@@ -120,7 +120,7 @@ def main():
                 video.filename: [Val(video, i) for i in range(len(Val.__attrs__))]
                 + pgf.get_things(video)
                 + video.terms()
-                for video in database._get_cached_videos()
+                for video in database._jsondb_get_cached_videos()
             }
         nb_videos = len(filename_to_things)
         with Profiler("Collect tag to filenames"):
@@ -149,7 +149,7 @@ def main():
 def main2():
     logging.basicConfig(level=logging.NOTSET)
     db = get_database()
-    videos = db._get_cached_videos(**{"readable": True})
+    videos = db._jsondb_get_cached_videos(**{"readable": True})
     videos.sort(key=lambda v: v.bit_rate)
     vs = [
         v

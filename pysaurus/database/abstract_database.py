@@ -39,6 +39,10 @@ class AbstractDatabase(ABC):
         return self.ways.db_folder.title
 
     @abstractmethod
+    def set_folders(self, folders) -> None:
+        raise NotImplementedError()
+
+    @abstractmethod
     def get_folders(self) -> Iterable[AbsolutePath]:
         raise NotImplementedError()
 
@@ -47,7 +51,7 @@ class AbstractDatabase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_video_filename(self, video_id: int) -> AbsolutePath:
+    def read_video_field(self, video_id: int, field: str) -> Any:
         raise NotImplementedError()
 
     @abstractmethod
@@ -100,7 +104,7 @@ class AbstractDatabase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def write_video_fields(self, video_id: int, **kwargs):
+    def write_videos_field(self, indices: Iterable[int], field: str, values: Iterable):
         raise NotImplementedError()
 
     @abstractmethod
@@ -116,6 +120,9 @@ class AbstractDatabase(ABC):
         self, video_id: int, path: AbsolutePath
     ) -> AbsolutePath:
         raise NotImplementedError()
+
+    def get_video_filename(self, video_id: int) -> AbsolutePath:
+        return AbsolutePath.ensure(self.read_video_field(video_id, "filename"))
 
     def open_containing_folder(self, video_id: int) -> str:
         return str(self.get_video_filename(video_id).locate_file())
@@ -235,7 +242,7 @@ class AbstractDatabase(ABC):
     def set_video_similarity(
         self, video_id: int, value: Optional[int], notify=True
     ) -> None:
-        self.write_video_fields(video_id, similarity_id=value)
+        self.write_videos_field([video_id], "similarity_id", [value])
         if notify:
             self._notify_fields_modified(["similarity_id"])
 

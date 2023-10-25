@@ -53,7 +53,7 @@ class DatabaseToSaveContext:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.database.in_save_context = False
         if self.to_save:
-            self.database.save()
+            self.database.jsondb_save()
             logger.info("Saved in context.")
 
 

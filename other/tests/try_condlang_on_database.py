@@ -64,7 +64,7 @@ def db_select_videos(
     cls = namedtuple("DbRow", cls_fields)
     return [
         cls(**_get_video_fields(el, attributes, properties))
-        for el in self._get_cached_videos()
+        for el in self._jsondb_get_cached_videos()
         if selector(el)
     ]
 

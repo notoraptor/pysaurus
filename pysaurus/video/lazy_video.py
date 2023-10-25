@@ -56,7 +56,7 @@ class LazyVideo(WithSchema):
     def _set(self, name, value) -> bool:
         modified = super()._set(name, value)
         if modified and self.database:
-            self.database.register_modified(self)
+            self.database.jsondb_register_modified(self)
         return modified
 
     @property
@@ -67,7 +67,7 @@ class LazyVideo(WithSchema):
     def discarded(self, discarded: bool):
         if self.__discarded != discarded:
             self.__discarded = discarded
-            self.database.register_modified(self)
+            self.database.jsondb_register_modified(self)
 
     @property
     def filename(self):
@@ -216,10 +216,12 @@ class LazyVideo(WithSchema):
     def found(self, is_file: bool):
         if self.runtime.is_file != is_file:
             self.runtime.is_file = is_file
-            self.database.register_modified(self)
+            self.database.jsondb_register_modified(self)
 
     not_found = property(lambda self: not self.found)
-    with_thumbnails = property(lambda self: self.database.has_thumbnail(self.filename))
+    with_thumbnails = property(
+        lambda self: self.database.jsondb_has_thumbnail(self.filename)
+    )
     without_thumbnails = property(lambda self: not self.with_thumbnails)
 
     frame_rate = property(lambda self: self.frame_rate_num / self.frame_rate_den)
@@ -242,9 +244,8 @@ class LazyVideo(WithSchema):
     raw_microseconds = property(
         lambda self: self.duration * 1000000 / self.duration_time_base
     )
-    thumbnail_path = property(lambda self: self.database.old_get_thumbnail_path(self))
     thumbnail_base64 = property(
-        lambda self: self.database.get_thumbnail_base64(self.filename)
+        lambda self: self.database.jsondb_get_thumbnail_base64(self.filename)
     )
     size_length = property(lambda self: StringedTuple((self.size, self.length)))
     filename_length = property(lambda self: len(self.filename))

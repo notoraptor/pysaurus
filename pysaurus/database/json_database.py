@@ -163,7 +163,7 @@ class JsonDatabase(AbstractDatabase):
         self.__indexer.build(self.__videos.values())
 
         # Finish loading
-        self.save(on_new_identifiers=not to_save)
+        self.jsondb_save(on_new_identifiers=not to_save)
         self.notifier.notify(DatabaseLoaded(self))
 
     @Profiler.profile_method()
@@ -189,7 +189,7 @@ class JsonDatabase(AbstractDatabase):
         return len(without_identifiers)
 
     @Profiler.profile_method()
-    def save(self, on_new_identifiers=False):
+    def jsondb_save(self, on_new_identifiers=False):
         """Save database on disk.
 
         Parameters
@@ -228,21 +228,21 @@ class JsonDatabase(AbstractDatabase):
     def to_save(self, to_save=True):
         return DatabaseToSaveContext(self, to_save=to_save)
 
-    def register_modified(self, video: Video):
+    def jsondb_register_modified(self, video: Video):
         if video in self.__removed:
             self.__removed.remove(video)
         self.__modified.add(video)
 
-    def register_removed(self, video: Video):
+    def _jsondb_register_removed(self, video: Video):
         if video in self.__modified:
             self.__modified.remove(video)
         self.__removed.add(video)
 
-    def register_replaced(self, new_video: Video, old_video: Video):
-        self.register_removed(old_video)
-        self.register_modified(new_video)
+    def _jsondb_register_replaced(self, new_video: Video, old_video: Video):
+        self._jsondb_register_removed(old_video)
+        self.jsondb_register_modified(new_video)
 
-    def flush_changes(self):
+    def _jsondb_flush_changes(self):
         # Prepare updating moves_attribute if having removed or added videos.
         nb_added = len(self.__modified) - len(
             self.__indexer.indexed_videos(self.__modified)
@@ -260,6 +260,18 @@ class JsonDatabase(AbstractDatabase):
         self.__removed.clear()
         self.__modified.clear()
 
+    def _jsondb_get_cached_videos(self, *flags, **forced_flags) -> List[Video]:
+        if flags or forced_flags:
+            self._jsondb_flush_changes()
+            return [
+                self.__videos[filename]
+                for filename in self.__indexer.query_flags(
+                    self.__videos, *flags, **forced_flags
+                )
+            ]
+        else:
+            return list(self.__videos.values())
+
     def get_settings(self) -> DbSettings:
         return self.settings
 
@@ -274,49 +286,38 @@ class JsonDatabase(AbstractDatabase):
         for video in self.__videos.values():
             video.discarded = not folders_tree.in_folders(video.filename)
         self.__folders = set(folders)
-        self.save()
+        self.jsondb_save()
 
     def get_folders(self) -> Iterable[AbsolutePath]:
         return iter(self.__folders)
 
     def set_predictor(self, prop_name: str, theta: List[float]):
         self.__predictors[prop_name] = theta
-        self.save()
+        self.jsondb_save()
 
     def get_predictor(self, prop_name):
         return self.__predictors.get(prop_name, None)
-
-    def _get_cached_videos(self, *flags, **forced_flags) -> List[Video]:
-        if flags or forced_flags:
-            self.flush_changes()
-            return [
-                self.__videos[filename]
-                for filename in self.__indexer.query_flags(
-                    self.__videos, *flags, **forced_flags
-                )
-            ]
-        else:
-            return list(self.__videos.values())
 
     def count_videos(self, *flags, **forced_flags) -> int:
         if not flags and not forced_flags:
             return len(self.__videos)
         else:
-            return len(self._get_cached_videos(*flags, **forced_flags))
+            return len(self._jsondb_get_cached_videos(*flags, **forced_flags))
 
     def select_videos_fields(
         self, fields: Sequence[str], *flags, **forced_flags
     ) -> Iterable[Dict[str, Any]]:
         return (
             {field: getattr(video, field) for field in fields}
-            for video in self._get_cached_videos(*flags, **forced_flags)
+            for video in self._jsondb_get_cached_videos(*flags, **forced_flags)
         )
 
+    # provider
     def search(
         self, text: str, cond: str = "and", videos: Sequence[int] = None
     ) -> Iterable[int]:
         if text:
-            self.flush_changes()
+            self._jsondb_flush_changes()
             if videos is None:
                 filenames: Dict[AbsolutePath, Video] = self.__videos
             else:
@@ -397,14 +398,14 @@ class JsonDatabase(AbstractDatabase):
         if prop.name in self.__prop_types:
             raise exceptions.PropertyAlreadyExists(prop.name)
         self.__prop_types[prop.name] = prop
-        self.save()
+        self.jsondb_save()
 
     def remove_prop_type(self, name) -> None:
         if name in self.__prop_types:
             del self.__prop_types[name]
             for video in self.__videos.values():
                 video.remove_property(name)
-            self.save()
+            self.jsondb_save()
 
     def rename_prop_type(self, old_name, new_name) -> None:
         if self.has_prop_type(old_name):
@@ -416,7 +417,7 @@ class JsonDatabase(AbstractDatabase):
             for video in self.__videos.values():
                 if video.has_property(old_name):
                     video.set_property(new_name, video.remove_property(old_name))
-            self.save()
+            self.jsondb_save()
 
     def convert_prop_to_unique(self, name) -> None:
         if self.has_prop_type(name):
@@ -432,7 +433,7 @@ class JsonDatabase(AbstractDatabase):
             # There should be nothing more to do.
             # For each video having this property,
             # there should already be a list with exactly 1 value.
-            self.save()
+            self.jsondb_save()
 
     def convert_prop_to_multiple(self, name) -> None:
         if self.has_prop_type(name):
@@ -443,7 +444,7 @@ class JsonDatabase(AbstractDatabase):
             # There should be nothing more to do.
             # Property value should already be a list
             # for videos having this property.
-            self.save()
+            self.jsondb_save()
 
     def get_prop_values(self, video_id: int, name: str) -> List[PropValueType]:
         return self.__id_to_video[video_id].get_property(name)
@@ -503,11 +504,11 @@ class JsonDatabase(AbstractDatabase):
             video_state.found = video_state.filename in existing_paths
 
     def _notify_properties_modified(self, properties):
-        self.save()
+        self.jsondb_save()
         super()._notify_properties_modified(properties)
 
     def _notify_fields_modified(self, fields: Sequence[str]):
-        self.save()
+        self.jsondb_save()
         super()._notify_fields_modified(fields)
 
     def _notify_filename_modified(self, new_video: Video, old_video: Video):
@@ -522,7 +523,7 @@ class JsonDatabase(AbstractDatabase):
                 "filename",
             )
         )
-        self.register_replaced(new_video, old_video)
+        self._jsondb_register_replaced(new_video, old_video)
 
     def _get_collectable_missing_thumbnails(self) -> Dict[str, int]:
         return {
@@ -530,12 +531,12 @@ class JsonDatabase(AbstractDatabase):
             for video in self.select_videos_fields(
                 ["filename", "video_id"], "readable", "found"
             )
-            if not self.has_thumbnail(video["filename"])
+            if not self.jsondb_has_thumbnail(video["filename"])
         }
 
     def _notify_missing_thumbnails(self) -> None:
         super()._notify_missing_thumbnails()
-        self.save()
+        self.jsondb_save()
 
     def _find_video_paths_for_update(
         self, file_paths: Dict[AbsolutePath, VideoRuntimeInfo]
@@ -577,31 +578,14 @@ class JsonDatabase(AbstractDatabase):
     def get_video_terms(self, video_id: int) -> List[str]:
         return self.__id_to_video[video_id].terms()
 
-    def get_video_filename(self, video_id: int) -> AbsolutePath:
-        return self.__id_to_video[video_id].filename
-
     def get_video_id(self, filename) -> int:
         return self.__videos[AbsolutePath.ensure(filename)].video_id
 
-    def read_video_field(self, video_id: int, field: str):
+    def read_video_field(self, video_id: int, field: str) -> Any:
         return getattr(self.__id_to_video[video_id], field)
-
-    def write_video_fields(self, video_id: int, **kwargs):
-        modified = False
-        video = self.__id_to_video[video_id]
-        for key, value in kwargs.items():
-            previous_value = getattr(video, key)
-            if previous_value != value:
-                setattr(video, key, value)
-                modified = True
-        return modified
 
     def write_videos_field(self, indices: Iterable[int], field: str, values: Iterable):
         for video_id, value in zip(indices, values):
-            setattr(self.__id_to_video[video_id], field, value)
-
-    def fill_videos_field(self, indices: Iterable[int], field: str, value):
-        for video_id in indices:
             setattr(self.__id_to_video[video_id], field, value)
 
     def add_video_errors(self, video_id: int, *errors: Iterable[str]) -> None:
@@ -643,7 +627,7 @@ class JsonDatabase(AbstractDatabase):
             video_state.runtime = runtime_info[file_path]
             videos.append(video_state)
         self.__videos.update({video.filename: video for video in videos})
-        self.save()
+        self.jsondb_save()
         if unreadable:
             self.notifier.notify(
                 notifications.VideoInfoErrors(
@@ -681,8 +665,8 @@ class JsonDatabase(AbstractDatabase):
         video = self.__id_to_video.pop(video_id)
         self.__videos.pop(video.filename, None)
         if video.readable:
-            self.old_get_thumbnail_path(video).delete()
-        self.register_removed(video)
+            self._old_get_thumbnail_path(video).delete()
+        self._jsondb_register_removed(video)
         self.notifier.notify(notifications.VideoDeleted(video))
         self._notify_fields_modified(["move_id", "quality"])
         self.__thumb_mgr.delete(video.filename)
@@ -726,26 +710,23 @@ class JsonDatabase(AbstractDatabase):
             self.__id_to_video[video_id] for video_id in video_indices
         )
 
-    def old_get_thumbnail_path(self, video: Video):
+    def _old_get_thumbnail_path(self, video: Video):
         return AbsolutePath.file_path(
             self.ways.db_thumb_folder, video.thumb_name, JPEG_EXTENSION
         )
 
-    def get_thumbnail_base64(self, filename: AbsolutePath) -> str:
-        data = self.__thumb_mgr.get_base64(filename)
-        return ("data:image/jpeg;base64," + data.decode()) if data else None
-
     def get_thumbnail_blob(self, filename: AbsolutePath):
         return self.__thumb_mgr.get_blob(filename)
-
-    def has_thumbnail(self, filename: AbsolutePath) -> bool:
-        return self.__thumb_mgr.has(filename)
-
-    def save_thumbnail(self, filename: AbsolutePath) -> Optional[dict]:
-        return self.__thumb_mgr.save(filename)
 
     def save_existing_thumbnails(self, filename_to_thumb_name: Dict[str, str]) -> None:
         self.__thumb_mgr.save_existing_thumbnails(filename_to_thumb_name)
 
-    def clean_thumbnails(self, paths: List[AbsolutePath]):
+    def jsondb_get_thumbnail_base64(self, filename: AbsolutePath) -> str:
+        data = self.__thumb_mgr.get_base64(filename)
+        return ("data:image/jpeg;base64," + data.decode()) if data else None
+
+    def jsondb_has_thumbnail(self, filename: AbsolutePath) -> bool:
+        return self.__thumb_mgr.has(filename)
+
+    def __unused_clean_thumbnails(self, paths: List[AbsolutePath]):
         self.__thumb_mgr.clean_thumbnails(paths)

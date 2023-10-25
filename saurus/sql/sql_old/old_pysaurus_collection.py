@@ -1,18 +1,7 @@
 import logging
 import tempfile
 from multiprocessing import Pool
-from typing import (
-    Any,
-    Callable,
-    Container,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Sequence,
-    Set,
-    Union,
-)
+from typing import Any, Callable, Container, Dict, Iterable, List, Sequence, Set, Union
 
 from pysaurus.core import notifications
 from pysaurus.core.components import AbsolutePath, Date
@@ -207,26 +196,11 @@ class OldPysaurusCollection(OldDatabase):
     ) -> int:
         return super().move_concatenated_prop_val(path, from_property, to_property)
 
-    def save(self, on_new_identifiers=False):
-        return super().save(on_new_identifiers)
-
     def __close__(self):
         super().__close__()
 
     def to_save(self, to_save=True):
         return super().to_save(to_save)
-
-    def register_modified(self, video: Video):
-        super().register_modified(video)
-
-    def register_removed(self, video: Video):
-        super().register_removed(video)
-
-    def register_replaced(self, new_video: Video, old_video: Video):
-        super().register_replaced(new_video, old_video)
-
-    def flush_changes(self):
-        super().flush_changes()
 
     def set_date(self, date: Date):
         # super().set_date(date)
@@ -385,20 +359,11 @@ class OldPysaurusCollection(OldDatabase):
     def get_video_terms(self, video_id: int) -> List[str]:
         return super().get_video_terms(video_id)
 
-    def get_video_filename(self, video_id: int) -> AbsolutePath:
-        return super().get_video_filename(video_id)
-
     def read_video_field(self, video_id: int, field: str):
         return super().read_video_field(video_id, field)
 
-    def write_video_fields(self, video_id: int, **kwargs) -> bool:
-        return super().write_video_fields(video_id, **kwargs)
-
     def write_videos_field(self, indices: Iterable[int], field: str, values: Iterable):
         super().write_videos_field(indices, field, values)
-
-    def fill_videos_field(self, indices: Iterable[int], field: str, value):
-        super().fill_videos_field(indices, field, value)
 
     def add_video_errors(self, video_id: int, *errors: Iterable[str]):
         super().add_video_errors(video_id, *errors)
@@ -552,20 +517,8 @@ class OldPysaurusCollection(OldDatabase):
     def get_common_fields(self, video_indices: Iterable[int]) -> dict:
         return super().get_common_fields(video_indices)
 
-    def old_get_thumbnail_path(self, video: Video):
-        return super().old_get_thumbnail_path(video)
-
-    def get_thumbnail_base64(self, filename: AbsolutePath) -> str:
-        return super().get_thumbnail_base64(filename)
-
     def get_thumbnail_blob(self, filename: AbsolutePath):
         return super().get_thumbnail_blob(filename)
-
-    def has_thumbnail(self, filename: AbsolutePath) -> bool:
-        return super().has_thumbnail(filename)
-
-    def save_thumbnail(self, filename: AbsolutePath) -> Optional[dict]:
-        return super().save_thumbnail(filename)
 
     def save_existing_thumbnails(self, filename_to_thumb_name: Dict[str, str]):
         super().save_existing_thumbnails(filename_to_thumb_name)
