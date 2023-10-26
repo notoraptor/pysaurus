@@ -5,15 +5,6 @@ from pysaurus.core.compare import NegativeComparator
 from pysaurus.core.enumeration import Enumeration
 from pysaurus.core.functions import get_default, identity
 from pysaurus.core.lookup_array import LookupArray
-from pysaurus.video import Video
-from pysaurus.video.fake_video import FakeVideo
-
-
-class VideoArray(LookupArray[Video]):
-    __slots__ = ()
-
-    def __init__(self, content=()):
-        super().__init__((Video, FakeVideo), content, lambda video: video.filename)
 
 
 class Group:
