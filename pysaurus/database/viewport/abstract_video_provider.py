@@ -5,7 +5,6 @@ from typing import List, Optional, Sequence
 from pysaurus.application import exceptions
 from pysaurus.core import functions, notifications
 from pysaurus.core.notifying import Notifier
-from pysaurus.video import Video
 
 
 class AbstractVideoProvider(metaclass=ABCMeta):
@@ -122,7 +121,7 @@ class AbstractVideoProvider(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def delete(self, video: Video):
+    def delete(self, video_id: int):
         pass
 
     def refresh(self):
@@ -214,7 +213,7 @@ class AbstractVideoProvider(metaclass=ABCMeta):
         self.refresh()
 
     def _on_video_deleted(self, notification: notifications.VideoDeleted):
-        self.delete(notification.video)
+        self.delete(notification.video_id)
 
     def _on_fields_modified(self, notification: notifications.FieldsModified):
         self._manage_attributes_modified(notification.fields, False)

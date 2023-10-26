@@ -394,12 +394,12 @@ class VideoFilter(AbstractVideoProvider):
                 data = layer.get_output()
             return data
 
-    def delete(self, video):
+    def delete(self, video_id: int):
         for layer in self.pipeline:
             with Profiler(
                 f"Deleting video in {type(layer).__name__}", self._database.notifier
             ):
-                layer.delete(video.video_id)
+                layer.delete(video_id)
 
     def set_sources(self, paths):
         self.set_layer_params(LayerSource, sources=paths)

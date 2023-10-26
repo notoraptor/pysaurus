@@ -156,7 +156,6 @@ class AbstractDatabase(ABC):
             new = Videos.get_info_from_filenames(files_to_update)
             self.set_date(current_date)
             self.write_new_videos(new, all_files)
-            self.notifier.notify(notifications.DatabaseUpdated())
 
     @Profiler.profile_method()
     def ensure_thumbnails(self) -> None:
@@ -186,8 +185,6 @@ class AbstractDatabase(ABC):
 
         if thumb_errors:
             self.notifier.notify(notifications.VideoThumbnailErrors(thumb_errors))
-        self._notify_missing_thumbnails()
-        self.notifier.notify(notifications.DatabaseUpdated())
 
     @Profiler.profile_method()
     def ensure_miniatures(self) -> List[Miniature]:
@@ -258,3 +255,5 @@ class AbstractDatabase(ABC):
     def refresh(self) -> None:
         self.update()
         self.ensure_thumbnails()
+        self._notify_missing_thumbnails()
+        self.notifier.notify(notifications.DatabaseUpdated())

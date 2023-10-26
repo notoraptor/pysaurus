@@ -1,7 +1,6 @@
 from typing import Dict, Iterable, List
 
 from pysaurus.core.classes import StringPrinter, ToDict
-from pysaurus.video.fake_video import FakeVideo
 
 
 class Notification(ToDict):
@@ -13,35 +12,6 @@ class Notification(ToDict):
             "notification": self.to_dict(),
             "message": str(self),
         }
-
-
-class UnusedThumbnails(Notification):
-    __slots__ = ("removed",)
-
-    def __init__(self, removed):
-        # type: (int) -> None
-        super().__init__()
-        self.removed = removed
-
-
-class VideosNotFoundRemoved(UnusedThumbnails):
-    __slots__ = ()
-
-
-class CollectingFiles(Notification):
-    __slots__ = ("folder",)
-
-    def __init__(self, folder):
-        super().__init__()
-        self.folder = str(folder)
-
-
-class FolderNotFound(CollectingFiles):
-    __slots__ = ()
-
-
-class PathIgnored(CollectingFiles):
-    __slots__ = ()
 
 
 class FinishedCollectingVideos(Notification):
@@ -59,10 +29,10 @@ class NbMiniatures(Notification):
         self.total = total
 
 
-class MissingVideos(Notification):
+class MissingThumbnails(Notification):
     __slots__ = ("names",)
 
-    def __init__(self, file_names):
+    def __init__(self, file_names: List[str]):
         super().__init__()
         self.names = sorted(str(file_name) for file_name in file_names)
 
@@ -72,10 +42,6 @@ class MissingVideos(Notification):
             for name in sorted(self.names):
                 printer.write(f"\t{name}")
             return str(printer)
-
-
-class MissingThumbnails(MissingVideos):
-    __slots__ = ()
 
 
 class VideoInfoErrors(Notification):
@@ -133,17 +99,18 @@ class DatabaseReady(Terminated):
 
 
 class VideoDeleted(Notification):
-    __slots__ = ("video",)
+    __slots__ = ("filename", "video_id")
 
-    def __init__(self, video):
+    def __init__(self, filename: str, video_id: int):
         super().__init__()
-        self.video = FakeVideo(video)
+        self.filename = filename
+        self.video_id = video_id
 
     def __str__(self):
-        return f"{type(self).__name__}({self.video.filename})"
+        return f"{type(self).__name__}({self.filename})"
 
     def to_dict(self, **extra):
-        return {"video": str(self.video.filename)}
+        return {"video": str(self.filename)}
 
 
 class FieldsModified(Notification):
