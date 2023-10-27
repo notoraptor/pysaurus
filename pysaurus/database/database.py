@@ -129,7 +129,7 @@ class Database(JsonDatabase):
         return sorted(list(item) for item in count.items())
 
     def fill_property_with_terms(self, prop_name: str, only_empty=False) -> None:
-        assert self.has_prop_type(prop_name, with_type=str, multiple=True)
+        assert self.select_prop_types(name=prop_name, with_type=str, multiple=True)
         modified = []
         for video_id in self.get_all_video_indices():
             values = self.get_prop_values(video_id, prop_name)
@@ -149,7 +149,7 @@ class Database(JsonDatabase):
         return self._edit_prop_value(prop_name, lambda value: value.strip().upper())
 
     def _edit_prop_value(self, prop_name: str, function: Callable[[Any], Any]) -> None:
-        assert self.has_prop_type(prop_name, with_type=str)
+        assert self.select_prop_types(name=prop_name, with_type=str)
         modified = []
         for video_id in self.get_all_video_indices():
             values = self.get_prop_values(video_id, prop_name)
@@ -163,8 +163,8 @@ class Database(JsonDatabase):
     def move_concatenated_prop_val(
         self, path: list, from_property: str, to_property: str
     ) -> int:
-        assert self.has_prop_type(from_property, multiple=True)
-        assert self.has_prop_type(to_property, with_type=str)
+        assert self.select_prop_types(name=from_property, multiple=True)
+        assert self.select_prop_types(name=to_property, with_type=str)
         self.validate_prop_values(from_property, path)
         (concat_path,) = self.validate_prop_values(
             to_property, [" ".join(str(value) for value in path)]

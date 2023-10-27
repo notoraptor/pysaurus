@@ -226,19 +226,10 @@ class OldPysaurusCollection(OldDatabase):
     ) -> Iterable[Dict[str, Any]]:
         return super().select_videos_fields(fields, *flags, **forced_flags)
 
-    def has_prop_type(
-        self, name, *, with_type=None, multiple=None, with_enum=None, default=None
-    ) -> bool:
-        return super().has_prop_type(
-            name,
-            with_type=with_type,
-            multiple=multiple,
-            with_enum=with_enum,
-            default=default,
-        )
-
-    def describe_prop_types(self) -> List[dict]:
-        return super().describe_prop_types()
+    def select_prop_types(
+        self, *, name=None, with_type=None, multiple=None, with_enum=None, default=None
+    ) -> List[dict]:
+        pass
 
     def create_prop_type(
         self,

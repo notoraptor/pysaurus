@@ -59,14 +59,6 @@ class _AbstractJsonDatabase(AbstractDatabase):
         raise NotImplementedError()
 
     @abstractmethod
-    def has_prop_type(self, name, with_type, multiple, with_enum, default):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def describe_prop_types(self):
-        raise NotImplementedError()
-
-    @abstractmethod
     def create_prop_type(self, name, prop_type, definition, multiple):
         raise NotImplementedError()
 
@@ -424,27 +416,24 @@ class _JsonDatabase(_AbstractJsonDatabase):
             fields = ["video_id"]
         return ({field: getattr(video, field) for field in fields} for video in videos)
 
-    def has_prop_type(
-        self, name, *, with_type=None, multiple=None, with_enum=None, default=None
-    ) -> bool:
-        if name not in self._prop_types:
-            return False
-        pt = self._prop_types[name]
-        if with_type is not None and pt.type is not with_type:
-            return False
-        if multiple is not None and pt.multiple is not multiple:
-            return False
-        if with_enum is not None and not pt.is_enum(with_enum):
-            return False
-        if default is not None and pt.default != default:
-            return False
-        return True
-
-    def describe_prop_types(self) -> List[dict]:
-        return sorted(
-            (prop.describe() for prop in self._prop_types.values()),
-            key=lambda d: d["name"],
-        )
+    def select_prop_types(
+        self, *, name=None, with_type=None, multiple=None, with_enum=None, default=None
+    ) -> List[dict]:
+        if name is with_type is multiple is with_enum is default is None:
+            prop_types = self._prop_types.values()
+        else:
+            prop_types = (
+                pt
+                for pt in self._prop_types.values()
+                if (
+                    (name is None or pt.name == name)
+                    and (with_type is None or pt.type is with_type)
+                    and (multiple is None or pt.multiple is multiple)
+                    and (with_enum is None or pt.is_enum(with_enum))
+                    and (default is None or pt.default == default)
+                )
+            )
+        return sorted((prop.describe() for prop in prop_types), key=lambda d: d["name"])
 
     def create_prop_type(
         self,
@@ -476,8 +465,8 @@ class _JsonDatabase(_AbstractJsonDatabase):
             self.jsondb_save()
 
     def rename_prop_type(self, old_name, new_name) -> None:
-        if self.has_prop_type(old_name):
-            if self.has_prop_type(new_name):
+        if self.select_prop_types(name=old_name):
+            if self.select_prop_types(name=new_name):
                 raise exceptions.PropertyAlreadyExists(new_name)
             prop_type = self._prop_types.pop(old_name)
             prop_type.name = new_name
@@ -488,7 +477,7 @@ class _JsonDatabase(_AbstractJsonDatabase):
             self.jsondb_save()
 
     def convert_prop_multiplicity(self, name: str, multiple: bool) -> None:
-        if self.has_prop_type(name):
+        if self.select_prop_types(name=name):
             prop_type = self._prop_types[name]
             if prop_type.multiple is multiple:
                 raise exceptions.PropertyAlreadyMultiple(name, multiple)
