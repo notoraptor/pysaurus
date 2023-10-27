@@ -121,6 +121,9 @@ class AbstractDatabase(ABC):
     ) -> AbsolutePath:
         raise NotImplementedError()
 
+    def count_videos(self, *flags, **forced_flags) -> int:
+        return sum(1 for _ in self.select_videos_fields([], *flags, **forced_flags))
+
     def get_video_filename(self, video_id: int) -> AbsolutePath:
         return AbsolutePath.ensure(self.read_video_field(video_id, "filename"))
 

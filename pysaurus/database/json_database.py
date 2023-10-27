@@ -38,7 +38,7 @@ from saurus.sql.sql_old.video_entry import VideoEntry
 logger = logging.getLogger(__name__)
 
 
-class _ABJ(AbstractDatabase):
+class _AbstractJsonDatabase(AbstractDatabase):
     __slots__ = ()
 
     @abstractmethod
@@ -56,10 +56,6 @@ class _ABJ(AbstractDatabase):
 
     @abstractmethod
     def get_predictor(self, prop_name):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def count_videos(self, flags, forced_flags):
         raise NotImplementedError()
 
     @abstractmethod
@@ -83,11 +79,7 @@ class _ABJ(AbstractDatabase):
         raise NotImplementedError()
 
     @abstractmethod
-    def convert_prop_to_unique(self, name):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def convert_prop_to_multiple(self, name):
+    def convert_prop_multiplicity(self, name, multiple):
         raise NotImplementedError()
 
     @abstractmethod
@@ -148,7 +140,7 @@ class _ABJ(AbstractDatabase):
         raise NotImplementedError()
 
 
-class _JsonDatabase(_ABJ):
+class _JsonDatabase(_AbstractJsonDatabase):
     __slots__ = (
         "_version",
         "settings",
@@ -192,7 +184,7 @@ class _JsonDatabase(_ABJ):
         self._removed: Set[Video] = set()
         self._modified: Set[Video] = set()
         # Initialize
-        self.__load(folders)
+        self.__jsondb_load(folders)
         # Initialize thumbnail manager.
         thumb_sql_path: AbsolutePath = self.ways.db_thumb_sql_path
         to_build = not thumb_sql_path.exists()
@@ -206,7 +198,7 @@ class _JsonDatabase(_ABJ):
                 )
 
     @Profiler.profile_method()
-    def __load(self, folders: Optional[Iterable[PathType]] = None):
+    def __jsondb_load(self, folders: Optional[Iterable[PathType]] = None):
         to_save = False
 
         with Profiler("loading JSON file", self.notifier):
@@ -332,13 +324,6 @@ class _JsonDatabase(_ABJ):
         )
         self.notifier.notify(DatabaseSaved(self))
 
-    def __close__(self):
-        """Close database."""
-        self._indexer.close()
-
-    def to_save(self, to_save=True):
-        return DatabaseToSaveContext(self, to_save=to_save)
-
     def jsondb_register_modified(self, video: Video):
         if video in self._removed:
             self._removed.remove(video)
@@ -371,6 +356,18 @@ class _JsonDatabase(_ABJ):
         self._removed.clear()
         self._modified.clear()
 
+    def _jsondb_old_get_thumbnail_path(self, video: Video):
+        return AbsolutePath.file_path(
+            self.ways.db_thumb_folder, video.thumb_name, JPEG_EXTENSION
+        )
+
+    def jsondb_get_thumbnail_base64(self, filename: AbsolutePath) -> str:
+        data = self._thumb_mgr.get_base64(filename)
+        return ("data:image/jpeg;base64," + data.decode()) if data else None
+
+    def jsondb_has_thumbnail(self, filename: AbsolutePath) -> bool:
+        return self._thumb_mgr.has(filename)
+
     def _jsondb_get_cached_videos(self, *flags, **forced_flags) -> List[Video]:
         if flags or forced_flags:
             self._jsondb_flush_changes()
@@ -382,6 +379,13 @@ class _JsonDatabase(_ABJ):
             ]
         else:
             return list(self._videos.values())
+
+    def __close__(self):
+        """Close database."""
+        self._indexer.close()
+
+    def to_save(self, to_save=True):
+        return DatabaseToSaveContext(self, to_save=to_save)
 
     def get_settings(self) -> DbSettings:
         return self.settings
@@ -409,19 +413,16 @@ class _JsonDatabase(_ABJ):
     def get_predictor(self, prop_name):
         return self._predictors.get(prop_name, None)
 
-    def count_videos(self, *flags, **forced_flags) -> int:
-        if not flags and not forced_flags:
-            return len(self._videos)
-        else:
-            return len(self._jsondb_get_cached_videos(*flags, **forced_flags))
-
     def select_videos_fields(
         self, fields: Sequence[str], *flags, **forced_flags
     ) -> Iterable[Dict[str, Any]]:
-        return (
-            {field: getattr(video, field) for field in fields}
-            for video in self._jsondb_get_cached_videos(*flags, **forced_flags)
-        )
+        if not flags and not forced_flags:
+            videos = self._videos.values()
+        else:
+            videos = self._jsondb_get_cached_videos(*flags, **forced_flags)
+        if not fields:
+            fields = ["video_id"]
+        return ({field: getattr(video, field) for field in fields} for video in videos)
 
     def has_prop_type(
         self, name, *, with_type=None, multiple=None, with_enum=None, default=None
@@ -486,31 +487,21 @@ class _JsonDatabase(_ABJ):
                     video.set_property(new_name, video.remove_property(old_name))
             self.jsondb_save()
 
-    def convert_prop_to_unique(self, name) -> None:
+    def convert_prop_multiplicity(self, name: str, multiple: bool) -> None:
         if self.has_prop_type(name):
             prop_type = self._prop_types[name]
-            if not prop_type.multiple:
-                raise exceptions.PropertyAlreadyUnique(name)
-            for video in self._videos.values():
-                if video.has_property(name) and len(video.get_property(name)) != 1:
-                    raise exceptions.PropertyToUniqueError(
-                        str(video.filename), name, video.get_property(name)
-                    )
-            prop_type.multiple = False
-            # There should be nothing more to do.
-            # For each video having this property,
-            # there should already be a list with exactly 1 value.
-            self.jsondb_save()
-
-    def convert_prop_to_multiple(self, name) -> None:
-        if self.has_prop_type(name):
-            prop_type = self._prop_types[name]
-            if prop_type.multiple:
-                raise exceptions.PropertyAlreadyMultiple(name)
-            prop_type.multiple = True
-            # There should be nothing more to do.
-            # Property value should already be a list
-            # for videos having this property.
+            if prop_type.multiple is multiple:
+                raise exceptions.PropertyAlreadyMultiple(name, multiple)
+            if not multiple:
+                # Convert from multiple to unique.
+                # Make sure videos does have only 1 value for this property.
+                for video in self._videos.values():
+                    if video.has_property(name) and len(video.get_property(name)) != 1:
+                        raise exceptions.PropertyToUniqueError(
+                            str(video.filename), name, video.get_property(name)
+                        )
+                pass
+            prop_type.multiple = multiple
             self.jsondb_save()
 
     def get_prop_values(self, video_id: int, name: str) -> List[PropValueType]:
@@ -573,7 +564,7 @@ class _JsonDatabase(_ABJ):
         self.jsondb_save()
         super()._notify_fields_modified(fields)
 
-    def _jsondb_notify_filename_modified(self, new_video: Video, old_video: Video):
+    def _notify_filename_modified(self, new_video: Video, old_video: Video):
         self._notify_fields_modified(
             (
                 "title",
@@ -717,7 +708,7 @@ class _JsonDatabase(_ABJ):
         new_video = video.with_new_filename(path)
         self._videos[new_video.filename] = new_video
         self._id_to_video[video_id] = new_video
-        self._jsondb_notify_filename_modified(new_video, video)
+        self._notify_filename_modified(new_video, video)
 
         self._thumb_mgr.rename(video.filename, new_video.filename)
 
@@ -777,18 +768,6 @@ class _JsonDatabase(_ABJ):
 
     def save_existing_thumbnails(self, filename_to_thumb_name: Dict[str, str]) -> None:
         self._thumb_mgr.save_existing_thumbnails(filename_to_thumb_name)
-
-    def _jsondb_old_get_thumbnail_path(self, video: Video):
-        return AbsolutePath.file_path(
-            self.ways.db_thumb_folder, video.thumb_name, JPEG_EXTENSION
-        )
-
-    def jsondb_get_thumbnail_base64(self, filename: AbsolutePath) -> str:
-        data = self._thumb_mgr.get_base64(filename)
-        return ("data:image/jpeg;base64," + data.decode()) if data else None
-
-    def jsondb_has_thumbnail(self, filename: AbsolutePath) -> bool:
-        return self._thumb_mgr.has(filename)
 
 
 class JsonDatabase(_JsonDatabase):

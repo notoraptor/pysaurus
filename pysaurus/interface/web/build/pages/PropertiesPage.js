@@ -280,7 +280,7 @@ System.register(["../components/Cell.js", "../components/SetInput.js", "../dialo
             }),
             yes: tr("convert to unique"),
             action: () => {
-              python_multiple_call(["convert_prop_to_unique", name], ["describe_prop_types"]).then(definitions => {
+              python_multiple_call(["convert_prop_multiplicity", name, false], ["describe_prop_types"]).then(definitions => {
                 const state = this.getDefaultInputState();
                 state.definitions = definitions;
                 this.setState(state);
@@ -301,7 +301,7 @@ System.register(["../components/Cell.js", "../components/SetInput.js", "../dialo
             }),
             yes: tr("convert to multiple"),
             action: () => {
-              python_multiple_call(["convert_prop_to_multiple", name], ["describe_prop_types"]).then(definitions => {
+              python_multiple_call(["convert_prop_multiplicity", name, true], ["describe_prop_types"]).then(definitions => {
                 const state = this.getDefaultInputState();
                 state.definitions = definitions;
                 this.setState(state);

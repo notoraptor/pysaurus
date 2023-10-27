@@ -34,9 +34,9 @@ class OldPysaurusCollection(OldDatabase):
         self.notifier = notifier
         self.ways = DbWays(path)
         self.db = PysaurusConnection(self.ways.db_sql_path.path)
-        self.__load(folders)
+        self._load(folders)
 
-    def __load(self, folders=None):
+    def _load(self, folders=None):
         if folders:
             new_folders = [AbsolutePath.ensure(path) for path in folders]
             old_folders = set(self.get_folders())
@@ -221,9 +221,6 @@ class OldPysaurusCollection(OldDatabase):
     def get_predictor(self, prop_name):
         return super().get_predictor(prop_name)
 
-    def count_videos(self, *flags, **forced_flags) -> int:
-        return super().count_videos(*flags, **forced_flags)
-
     def select_videos_fields(
         self, fields: Sequence[str], *flags, **forced_flags
     ) -> Iterable[Dict[str, Any]]:
@@ -258,11 +255,8 @@ class OldPysaurusCollection(OldDatabase):
     def rename_prop_type(self, old_name, new_name) -> None:
         super().rename_prop_type(old_name, new_name)
 
-    def convert_prop_to_unique(self, name) -> None:
-        super().convert_prop_to_unique(name)
-
-    def convert_prop_to_multiple(self, name) -> None:
-        super().convert_prop_to_multiple(name)
+    def convert_prop_multiplicity(self, name: str, multiple: bool) -> None:
+        super().convert_prop_multiplicity(name, multiple)
 
     def get_prop_values(self, video_id: int, name: str) -> List[PropValueType]:
         return super().get_prop_values(video_id, name)
