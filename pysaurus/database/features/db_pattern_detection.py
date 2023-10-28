@@ -96,7 +96,7 @@ class DbPatternDetection:
             )
             with Profiler(say("Predict"), database.notifier):
                 for i, video_id in enumerate(video_indices):
-                    database.set_prop_values(
+                    database.update_prop_values(
                         video_id,
                         output_prop_name,
                         [int(predict(video_id_to_miniature[video_id], theta) >= 0.5)],

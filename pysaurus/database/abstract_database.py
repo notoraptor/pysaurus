@@ -26,6 +26,9 @@ logger = logging.getLogger(__name__)
 
 class AbstractDatabase(ABC):
     __slots__ = ("ways", "notifier")
+    REMOVE = DELETE = -1
+    REPLACE = SET = EDIT = 0
+    ADD = APPEND = MERGE = 1
 
     def __init__(self, db_folder: PathType, notifier=DEFAULT_NOTIFIER):
         db_folder = AbsolutePath.ensure_directory(db_folder)
@@ -260,3 +263,7 @@ class AbstractDatabase(ABC):
         self.ensure_thumbnails()
         self._notify_missing_thumbnails()
         self.notifier.notify(notifications.DatabaseUpdated())
+
+    @abstractmethod
+    def open_video(self, video_id):
+        raise NotImplementedError()

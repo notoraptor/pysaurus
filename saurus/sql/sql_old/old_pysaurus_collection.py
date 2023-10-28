@@ -1,7 +1,7 @@
 import logging
 import tempfile
 from multiprocessing import Pool
-from typing import Any, Callable, Container, Dict, Iterable, List, Sequence, Set, Union
+from typing import Any, Callable, Container, Dict, Iterable, List, Sequence, Union
 
 from pysaurus.core import notifications
 from pysaurus.core.components import AbsolutePath, Date
@@ -229,7 +229,7 @@ class OldPysaurusCollection(OldDatabase):
     def select_prop_types(
         self, *, name=None, with_type=None, multiple=None, with_enum=None, default=None
     ) -> List[dict]:
-        pass
+        return super().select_prop_types()
 
     def create_prop_type(
         self,
@@ -252,24 +252,11 @@ class OldPysaurusCollection(OldDatabase):
     def get_prop_values(self, video_id: int, name: str) -> List[PropValueType]:
         return super().get_prop_values(video_id, name)
 
-    def set_prop_values(
-        self, video_id: int, name: str, values: Union[Sequence, Set]
-    ) -> None:
-        super().set_prop_values(video_id, name, values)
-
-    def merge_prop_values(
-        self, video_id: int, name: str, values: Union[Sequence, Set]
-    ) -> None:
-        super().merge_prop_values(video_id, name, values)
-
     def validate_prop_values(self, name, values: list) -> List[PropValueType]:
         return super().validate_prop_values(name, values)
 
     def set_video_properties(self, video_id: int, properties: dict) -> List[str]:
         return super().set_video_properties(video_id, properties)
-
-    def value_is_default(self, name: str, value: list) -> bool:
-        return super().value_is_default(name, value)
 
     def _update_videos_not_found(self, existing_paths: Container[AbsolutePath]):
         # super()._update_videos_not_found(existing_paths)

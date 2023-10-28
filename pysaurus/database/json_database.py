@@ -1,6 +1,17 @@
 import logging
 from abc import abstractmethod
-from typing import Any, Container, Dict, Iterable, List, Optional, Sequence, Set, Union
+from typing import (
+    Any,
+    Collection,
+    Container,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Set,
+    Union,
+)
 
 from pysaurus.application import exceptions
 from pysaurus.core import functions, notifications
@@ -79,23 +90,11 @@ class _AbstractJsonDatabase(AbstractDatabase):
         raise NotImplementedError()
 
     @abstractmethod
-    def set_prop_values(self, video_id, name, values):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def merge_prop_values(self, video_id, name, values):
-        raise NotImplementedError()
-
-    @abstractmethod
     def validate_prop_values(self, name, values):
         raise NotImplementedError()
 
     @abstractmethod
     def set_video_properties(self, video_id, properties):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def value_is_default(self, name, value):
         raise NotImplementedError()
 
     @classmethod
@@ -117,10 +116,6 @@ class _AbstractJsonDatabase(AbstractDatabase):
 
     @abstractmethod
     def confirm_unique_moves(self):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def open_video(self, video_id):
         raise NotImplementedError()
 
     @abstractmethod
@@ -372,6 +367,10 @@ class _JsonDatabase(_AbstractJsonDatabase):
         else:
             return list(self._videos.values())
 
+    def jsondb_prop_val_is_default(self, name: str, value: list) -> bool:
+        pt = self._prop_types[name]
+        return (not value) if pt.multiple else (value == [pt.default])
+
     def __close__(self):
         """Close database."""
         self._indexer.close()
@@ -496,27 +495,24 @@ class _JsonDatabase(_AbstractJsonDatabase):
     def get_prop_values(self, video_id: int, name: str) -> List[PropValueType]:
         return self._id_to_video[video_id].get_property(name)
 
-    def set_prop_values(
-        self, video_id: int, name: str, values: Union[Sequence, Set]
-    ) -> None:
+    def update_prop_values(
+        self, video_id: int, name: str, values: Collection, action: int = 0
+    ):
+        assert action in (-1, 0, 1)
+        pt = self.get_prop_type(name)
         video = self._id_to_video[video_id]
-        if not values:
+        if action == -1 or (action == 0 and not values):
             video.remove_property(name)
-        elif self._prop_types[name].multiple:
-            video.set_property(name, self._prop_types[name].validate(values))
-        else:
-            (value,) = values
-            video.set_property(name, self._prop_types[name].validate(value))
-
-    def merge_prop_values(
-        self, video_id: int, name: str, values: Union[Sequence, Set]
-    ) -> None:
-        pt = self._prop_types[name]
-        if pt.multiple:
-            values = pt.validate(
-                self._id_to_video[video_id].get_property(name) + list(values)
-            )
-        self.set_prop_values(video_id, name, values)
+        elif values:
+            if pt.multiple:
+                if action == 0:
+                    video.set_property(name, pt.validate(values))
+                else:
+                    new_values = pt.validate(video.get_property(name) + list(values))
+                    video.set_property(name, new_values)
+            else:
+                (value,) = values
+                video.set_property(name, pt.validate(value))
 
     def validate_prop_values(self, name, values: list) -> List[PropValueType]:
         prop_type = self._prop_types[name]
@@ -535,10 +531,6 @@ class _JsonDatabase(_AbstractJsonDatabase):
         )
         self._notify_properties_modified(modified)
         return modified
-
-    def value_is_default(self, name: str, value: list) -> bool:
-        pt = self._prop_types[name]
-        return (not value) if pt.multiple else (value == [pt.default])
 
     def _update_videos_not_found(self, existing_paths: Container[AbsolutePath]):
         """Use given container of existing paths to mark not found videos."""
@@ -719,8 +711,8 @@ class _JsonDatabase(_AbstractJsonDatabase):
         assert not from_video.found
         assert to_video.found
         for prop_name in self._prop_types.keys():
-            self.merge_prop_values(
-                to_id, prop_name, self.get_prop_values(from_id, prop_name)
+            self.update_prop_values(
+                to_id, prop_name, self.get_prop_values(from_id, prop_name), self.MERGE
             )
         to_video.similarity_id = from_video.similarity_id
         to_video.date_entry_modified = from_video.date_entry_modified.time
@@ -757,6 +749,9 @@ class _JsonDatabase(_AbstractJsonDatabase):
 
     def save_existing_thumbnails(self, filename_to_thumb_name: Dict[str, str]) -> None:
         self._thumb_mgr.save_existing_thumbnails(filename_to_thumb_name)
+
+    def get_prop_type(self, name) -> PropType:
+        return self._prop_types[name]
 
 
 class JsonDatabase(_JsonDatabase):
@@ -805,7 +800,7 @@ class JsonDatabase(_JsonDatabase):
         )
 
     def default_prop_unit(self, name):
-        pt = self._prop_types[name]
+        pt = self.get_prop_type(name)
         return None if pt.multiple else pt.default
 
     def __unused_clean_thumbnails(self, paths: List[AbsolutePath]):

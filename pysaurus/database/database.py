@@ -68,7 +68,7 @@ class Database(JsonDatabase):
             previous_values = set(self.get_prop_values(video_id, name))
             new_values = previous_values - values
             if len(previous_values) > len(new_values):
-                self.set_prop_values(video_id, name, new_values)
+                self.update_prop_values(video_id, name, new_values)
                 modified.append(video_id)
         if modified:
             self._notify_properties_modified([name])
@@ -77,7 +77,7 @@ class Database(JsonDatabase):
     def move_property_value(self, old_name: str, values: list, new_name: str) -> None:
         modified = self.delete_property_value(old_name, values)
         for video_id in modified:
-            self.merge_prop_values(video_id, new_name, values)
+            self.update_prop_values(video_id, new_name, values, self.MERGE)
         if modified:
             self._notify_properties_modified([old_name, new_name])
 
@@ -92,7 +92,7 @@ class Database(JsonDatabase):
             next_values = previous_values - old_values
             if len(previous_values) > len(next_values):
                 next_values.add(new_value)
-                self.set_prop_values(video_id, name, next_values)
+                self.update_prop_values(video_id, name, next_values)
                 modified.append(video_id)
         if modified:
             self._notify_properties_modified([name])
@@ -119,7 +119,7 @@ class Database(JsonDatabase):
             values = (
                 set(self.get_prop_values(video_id, name)) - values_to_remove
             ) | values_to_add
-            self.set_prop_values(video_id, name, values)
+            self.update_prop_values(video_id, name, values)
         self._notify_properties_modified([name])
 
     def count_property_values(self, video_indices: List[int], name: str) -> List[List]:
@@ -135,7 +135,7 @@ class Database(JsonDatabase):
             values = self.get_prop_values(video_id, prop_name)
             if only_empty and values:
                 continue
-            self.set_prop_values(
+            self.update_prop_values(
                 video_id, prop_name, values + self.get_video_terms(video_id)
             )
             modified.append(video_id)
@@ -155,7 +155,7 @@ class Database(JsonDatabase):
             values = self.get_prop_values(video_id, prop_name)
             new_values = [function(value) for value in values]
             if values and new_values != values:
-                self.set_prop_values(video_id, prop_name, new_values)
+                self.update_prop_values(video_id, prop_name, new_values)
                 modified.append(video_id)
         if modified:
             self._notify_properties_modified([prop_name])
@@ -175,8 +175,10 @@ class Database(JsonDatabase):
             old_values = self.get_prop_values(video_id, from_property)
             new_values = [v for v in old_values if v not in path_set]
             if len(old_values) == len(new_values) + len(path_set):
-                self.set_prop_values(video_id, from_property, new_values)
-                self.merge_prop_values(video_id, to_property, [concat_path])
+                self.update_prop_values(video_id, from_property, new_values)
+                self.update_prop_values(
+                    video_id, to_property, [concat_path], self.MERGE
+                )
                 modified.append(video_id)
         if modified:
             self._notify_properties_modified([from_property, to_property])

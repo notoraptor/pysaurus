@@ -340,7 +340,7 @@ class LazyVideo(WithSchema):
         value = sorted(value) if isinstance(value, list) else [value]
         modified = False
         properties = self.properties
-        if self.database.value_is_default(name, value):
+        if self.database.jsondb_prop_val_is_default(name, value):
             if name in properties:
                 modified = True
                 del properties[name]
