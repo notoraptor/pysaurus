@@ -103,10 +103,6 @@ class _AbstractJsonDatabase(AbstractDatabase):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_all_video_indices(self):
-        raise NotImplementedError()
-
-    @abstractmethod
     def get_video_terms(self, video_id):
         raise NotImplementedError()
 
@@ -404,17 +400,6 @@ class _JsonDatabase(_AbstractJsonDatabase):
     def get_predictor(self, prop_name):
         return self._predictors.get(prop_name, None)
 
-    def select_videos_fields(
-        self, fields: Sequence[str], *flags, **forced_flags
-    ) -> Iterable[Dict[str, Any]]:
-        if not flags and not forced_flags:
-            videos = self._videos.values()
-        else:
-            videos = self._jsondb_get_cached_videos(*flags, **forced_flags)
-        if not fields:
-            fields = ["video_id"]
-        return ({field: getattr(video, field) for field in fields} for video in videos)
-
     def select_prop_types(
         self, *, name=None, with_type=None, multiple=None, with_enum=None, default=None
     ) -> List[dict]:
@@ -537,6 +522,33 @@ class _JsonDatabase(_AbstractJsonDatabase):
         for video_state in self._videos.values():
             video_state.found = video_state.filename in existing_paths
 
+    def _get_collectable_missing_thumbnails(self) -> Dict[str, int]:
+        return {
+            video["filename"].path: video["video_id"]
+            for video in self.select_videos_fields(
+                ["filename", "video_id"], "readable", "found"
+            )
+            if not self.jsondb_has_thumbnail(video["filename"])
+        }
+
+    def _find_video_paths_for_update(
+        self, file_paths: Dict[AbsolutePath, VideoRuntimeInfo]
+    ) -> List[str]:
+        all_file_names = []
+        for file_name, file_info in file_paths.items():
+            video: Video = self._videos.get(file_name, None)
+            if (
+                video is None
+                or file_info.mtime != video.runtime.mtime
+                or file_info.size != video.file_size
+                or file_info.driver_id != video.runtime.driver_id
+                or (video.readable and not SpecialProperties.all_in(video))
+                or self._video_must_be_updated(video)
+            ):
+                all_file_names.append(file_name.standard_path)
+        all_file_names.sort()
+        return all_file_names
+
     def _notify_properties_modified(self, properties):
         self.jsondb_save()
         super()._notify_properties_modified(properties)
@@ -559,44 +571,25 @@ class _JsonDatabase(_AbstractJsonDatabase):
         )
         self._jsondb_register_replaced(new_video, old_video)
 
-    def _get_collectable_missing_thumbnails(self) -> Dict[str, int]:
-        return {
-            video["filename"].path: video["video_id"]
-            for video in self.select_videos_fields(
-                ["filename", "video_id"], "readable", "found"
-            )
-            if not self.jsondb_has_thumbnail(video["filename"])
-        }
-
     def _notify_missing_thumbnails(self) -> None:
         super()._notify_missing_thumbnails()
         self.jsondb_save()
-
-    def _find_video_paths_for_update(
-        self, file_paths: Dict[AbsolutePath, VideoRuntimeInfo]
-    ) -> List[str]:
-        all_file_names = []
-        for file_name, file_info in file_paths.items():
-            video: Video = self._videos.get(file_name, None)
-            if (
-                video is None
-                or file_info.mtime != video.runtime.mtime
-                or file_info.size != video.file_size
-                or file_info.driver_id != video.runtime.driver_id
-                or (video.readable and not SpecialProperties.all_in(video))
-                or self._video_must_be_updated(video)
-            ):
-                all_file_names.append(file_name.standard_path)
-        all_file_names.sort()
-        return all_file_names
 
     @classmethod
     def _video_must_be_updated(cls, video: Video):
         # A video readable with existing audio stream must have valid audio bits
         return video.readable and video.audio_codec and not video.audio_bits
 
-    def get_all_video_indices(self) -> Iterable[int]:
-        return self._id_to_video.keys()
+    def select_videos_fields(
+        self, fields: Sequence[str], *flags, **forced_flags
+    ) -> Iterable[Dict[str, Any]]:
+        if not flags and not forced_flags:
+            videos = self._videos.values()
+        else:
+            videos = self._jsondb_get_cached_videos(*flags, **forced_flags)
+        if not fields:
+            fields = ["video_id"]
+        return ({field: getattr(video, field) for field in fields} for video in videos)
 
     def has_video(self, **fields) -> bool:
         video = None

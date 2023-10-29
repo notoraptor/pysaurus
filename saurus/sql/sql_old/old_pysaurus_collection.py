@@ -307,9 +307,6 @@ class OldPysaurusCollection(OldDatabase):
             not video["unreadable"] and video["audio_codec"] and not video["audio_bits"]
         )
 
-    def get_all_video_indices(self) -> Iterable[int]:
-        return super().get_all_video_indices()
-
     def has_video(self, **fields) -> bool:
         return super().has_video(**fields)
 

@@ -267,3 +267,6 @@ class AbstractDatabase(ABC):
     @abstractmethod
     def open_video(self, video_id):
         raise NotImplementedError()
+
+    def get_all_video_indices(self) -> Iterable[int]:
+        return (item["video_id"] for item in self.select_videos_fields([]))
