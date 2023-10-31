@@ -7,7 +7,7 @@ from pysaurus.application import exceptions
 from pysaurus.core.components import AbsolutePath, PathType
 from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.profiling import Profiler
-from pysaurus.database.json_database import JsonDatabase
+from pysaurus.database.jsdb.json_database import JsonDatabase
 from pysaurus.database.special_properties import SpecialProperties
 from pysaurus.database.viewport.abstract_video_provider import AbstractVideoProvider
 from pysaurus.database.viewport.video_filter import VideoFilter
@@ -42,8 +42,8 @@ class Database(JsonDatabase):
         # Set special properties
         with Profiler(
             "install special properties", notifier=self.notifier
-        ), self.to_save() as saver:
-            saver.to_save = SpecialProperties.install(self)
+        ), self.to_save():
+            SpecialProperties.install(self)
 
     def __getattribute__(self, item):
         # TODO This method is for debugging, should be removed in production.

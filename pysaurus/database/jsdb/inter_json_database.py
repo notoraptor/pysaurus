@@ -1,5 +1,4 @@
 import logging
-from abc import abstractmethod
 from typing import (
     Any,
     Collection,
@@ -14,22 +13,17 @@ from typing import (
 )
 
 from pysaurus.application import exceptions
-from pysaurus.core import functions, notifications
+from pysaurus.core import notifications
 from pysaurus.core.components import AbsolutePath, Date, PathType
 from pysaurus.core.constants import JPEG_EXTENSION
 from pysaurus.core.json_backup import JsonBackup
 from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
-from pysaurus.database.abstract_database import AbstractDatabase
 from pysaurus.database.db_settings import DbSettings
 from pysaurus.database.db_video_attribute import PotentialMoveAttribute
-from pysaurus.database.json_database_utils import (
-    DatabaseLoaded,
-    DatabaseSaved,
-    DatabaseToSaveContext,
-    patch_database_json,
-)
+from pysaurus.database.jsdb.abstract_json_database import AbstractJsonDatabase
+from pysaurus.database.json_database_utils import DatabaseLoaded, patch_database_json
 from pysaurus.database.special_properties import SpecialProperties
 from pysaurus.database.thubmnail_database.thumbnail_manager import ThumbnailManager
 from pysaurus.properties.properties import (
@@ -43,87 +37,12 @@ from pysaurus.video import Video, VideoRuntimeInfo
 from pysaurus.video.abstract_video_indexer import AbstractVideoIndexer
 from pysaurus.video.video_features import VideoFeatures
 from pysaurus.video.video_indexer import VideoIndexer
-from pysaurus.video.video_sorting import VideoSorting
 from saurus.sql.sql_old.video_entry import VideoEntry
 
 logger = logging.getLogger(__name__)
 
 
-class _AbstractJsonDatabase(AbstractDatabase):
-    __slots__ = ()
-
-    @abstractmethod
-    def __close__(self):
-        """Close database."""
-        raise NotImplementedError()
-
-    @abstractmethod
-    def to_save(self, to_save):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def set_predictor(self, prop_name, theta):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def get_predictor(self, prop_name):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def create_prop_type(self, name, prop_type, definition, multiple):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def remove_prop_type(self, name):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def rename_prop_type(self, old_name, new_name):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def convert_prop_multiplicity(self, name, multiple):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def get_prop_values(self, video_id, name):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def validate_prop_values(self, name, values):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def set_video_properties(self, video_id, properties):
-        raise NotImplementedError()
-
-    @classmethod
-    @abstractmethod
-    def _video_must_be_updated(cls, video):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def get_video_terms(self, video_id):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def move_video_entry(self, from_id, to_id):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def confirm_unique_moves(self):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def describe_videos(self, video_indices, with_moves):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def get_common_fields(self, video_indices):
-        raise NotImplementedError()
-
-
-class _JsonDatabase(_AbstractJsonDatabase):
+class InterJsonDatabase(AbstractJsonDatabase):
     __slots__ = (
         "_version",
         "settings",
@@ -135,7 +54,6 @@ class _JsonDatabase(_AbstractJsonDatabase):
         "_id_to_video",
         "moves_attribute",
         "_indexer",
-        "in_save_context",
         "_removed",
         "_modified",
         "_thumb_mgr",
@@ -163,7 +81,6 @@ class _JsonDatabase(_AbstractJsonDatabase):
         self._indexer = indexer or VideoIndexer(
             self.notifier, self.ways.db_index_pkl_path
         )
-        self.in_save_context = False
         self._removed: Set[Video] = set()
         self._modified: Set[Video] = set()
         # Initialize
@@ -249,7 +166,8 @@ class _JsonDatabase(_AbstractJsonDatabase):
         self._indexer.build(self._videos.values())
 
         # Finish loading
-        self.jsondb_save(on_new_identifiers=not to_save)
+        if to_save or self._jsondb_ensure_identifiers():
+            self.save()
         self.notifier.notify(DatabaseLoaded(self))
 
     @Profiler.profile_method()
@@ -273,39 +191,6 @@ class _JsonDatabase(_AbstractJsonDatabase):
         if without_identifiers:
             logger.debug(f"Generating {len(without_identifiers)} new video indices.")
         return len(without_identifiers)
-
-    @Profiler.profile_method()
-    def jsondb_save(self, on_new_identifiers=False):
-        """Save database on disk.
-
-        Parameters
-        ----------
-        on_new_identifiers:
-            if True, save only if new video IDs were generated.
-        """
-        # Update identifiers anyway
-        identifiers_updated = self._jsondb_ensure_identifiers()
-        # Do not save if in save context
-        if self.in_save_context:
-            logger.info("Saving deactivated in context.")
-            return
-        # Do not save if we must save only on new identifiers.
-        if not identifiers_updated and on_new_identifiers:
-            return
-        # We can save. Save database.
-        backup = JsonBackup(self.ways.db_json_path, self.notifier)
-        backup.save(
-            {
-                "version": self._version,
-                "settings": self.settings.to_dict(),
-                "date": self._date.time,
-                "folders": [folder.path for folder in self._folders],
-                "prop_types": [prop.to_dict() for prop in self._prop_types.values()],
-                "predictors": self._predictors,
-                "videos": [video.to_dict() for video in self._videos.values()],
-            }
-        )
-        self.notifier.notify(DatabaseSaved(self))
 
     def jsondb_register_modified(self, video: Video):
         if video in self._removed:
@@ -367,12 +252,24 @@ class _JsonDatabase(_AbstractJsonDatabase):
         pt = self._prop_types[name]
         return (not value) if pt.multiple else (value == [pt.default])
 
+    @Profiler.profile_method()
+    def _save(self):
+        """Save database on disk."""
+        JsonBackup(self.ways.db_json_path, self.notifier).save(
+            {
+                "version": self._version,
+                "settings": self.settings.to_dict(),
+                "date": self._date.time,
+                "folders": [folder.path for folder in self._folders],
+                "prop_types": [prop.to_dict() for prop in self._prop_types.values()],
+                "predictors": self._predictors,
+                "videos": [video.to_dict() for video in self._videos.values()],
+            }
+        )
+
     def __close__(self):
         """Close database."""
         self._indexer.close()
-
-    def to_save(self, to_save=True):
-        return DatabaseToSaveContext(self, to_save=to_save)
 
     def get_settings(self) -> DbSettings:
         return self.settings
@@ -388,14 +285,14 @@ class _JsonDatabase(_AbstractJsonDatabase):
         for video in self._videos.values():
             video.discarded = not folders_tree.in_folders(video.filename)
         self._folders = set(folders)
-        self.jsondb_save()
+        self.save()
 
     def get_folders(self) -> Iterable[AbsolutePath]:
         return iter(self._folders)
 
     def set_predictor(self, prop_name: str, theta: List[float]):
         self._predictors[prop_name] = theta
-        self.jsondb_save()
+        self.save()
 
     def get_predictor(self, prop_name):
         return self._predictors.get(prop_name, None)
@@ -439,14 +336,14 @@ class _JsonDatabase(_AbstractJsonDatabase):
         if prop.name in self._prop_types:
             raise exceptions.PropertyAlreadyExists(prop.name)
         self._prop_types[prop.name] = prop
-        self.jsondb_save()
+        self.save()
 
     def remove_prop_type(self, name) -> None:
         if name in self._prop_types:
             del self._prop_types[name]
             for video in self._videos.values():
                 video.remove_property(name)
-            self.jsondb_save()
+            self.save()
 
     def rename_prop_type(self, old_name, new_name) -> None:
         if self.select_prop_types(name=old_name):
@@ -458,7 +355,7 @@ class _JsonDatabase(_AbstractJsonDatabase):
             for video in self._videos.values():
                 if video.has_property(old_name):
                     video.set_property(new_name, video.remove_property(old_name))
-            self.jsondb_save()
+            self.save()
 
     def convert_prop_multiplicity(self, name: str, multiple: bool) -> None:
         if self.select_prop_types(name=name):
@@ -475,7 +372,7 @@ class _JsonDatabase(_AbstractJsonDatabase):
                         )
                 pass
             prop_type.multiple = multiple
-            self.jsondb_save()
+            self.save()
 
     def get_prop_values(self, video_id: int, name: str) -> List[PropValueType]:
         return self._id_to_video[video_id].get_property(name)
@@ -550,11 +447,11 @@ class _JsonDatabase(_AbstractJsonDatabase):
         return all_file_names
 
     def _notify_properties_modified(self, properties):
-        self.jsondb_save()
+        self.save()
         super()._notify_properties_modified(properties)
 
     def _notify_fields_modified(self, fields: Sequence[str]):
-        self.jsondb_save()
+        self.save()
         super()._notify_fields_modified(fields)
 
     def _notify_filename_modified(self, new_video: Video, old_video: Video):
@@ -573,7 +470,7 @@ class _JsonDatabase(_AbstractJsonDatabase):
 
     def _notify_missing_thumbnails(self) -> None:
         super()._notify_missing_thumbnails()
-        self.jsondb_save()
+        self.save()
 
     @classmethod
     def _video_must_be_updated(cls, video: Video):
@@ -654,7 +551,8 @@ class _JsonDatabase(_AbstractJsonDatabase):
             video_state.runtime = runtime_info[file_path]
             videos.append(video_state)
         self._videos.update({video.filename: video for video in videos})
-        self.jsondb_save()
+        self._jsondb_ensure_identifiers()
+        self.save()
         if unreadable:
             self.notifier.notify(
                 notifications.VideoInfoErrors(
@@ -713,11 +611,11 @@ class _JsonDatabase(_AbstractJsonDatabase):
         self.delete_video_entry(from_id)
 
     def confirm_unique_moves(self) -> int:
-        with self.to_save() as saver:
-            unique_moves = list(self.moves_attribute.get_unique_moves())
-            for video_id, moves in unique_moves:
-                self.move_video_entry(video_id, moves[0]["video_id"])
-            saver.to_save = len(unique_moves)
+        unique_moves = list(self.moves_attribute.get_unique_moves())
+        if unique_moves:
+            with self.to_save():
+                for video_id, moves in unique_moves:
+                    self.move_video_entry(video_id, moves[0]["video_id"])
         return len(unique_moves)
 
     def open_video(self, video_id: int) -> None:
@@ -745,56 +643,3 @@ class _JsonDatabase(_AbstractJsonDatabase):
 
     def get_prop_type(self, name) -> PropType:
         return self._prop_types[name]
-
-
-class JsonDatabase(_JsonDatabase):
-    """With methods used in database provider."""
-
-    def search(
-        self, text: str, cond: str = "and", videos: Sequence[int] = None
-    ) -> Iterable[int]:
-        if text:
-            self._jsondb_flush_changes()
-            if videos is None:
-                filenames: Dict[AbsolutePath, Video] = self._videos
-            else:
-                filenames: Dict[AbsolutePath, Video] = {
-                    self._id_to_video[video_id].filename: self._id_to_video[video_id]
-                    for video_id in videos
-                }
-            terms = functions.string_to_pieces(text)
-            if cond == "exact":
-                with Profiler(f"query exact: {text}", self.notifier):
-                    selection = (
-                        filename
-                        for filename in self._indexer.query_and(filenames, terms)
-                        if self._videos[filename].has_exact_text(text)
-                    )
-            elif cond == "and":
-                selection = self._indexer.query_and(filenames, terms)
-            elif cond == "or":
-                selection = self._indexer.query_or(filenames, terms)
-            else:
-                assert cond == "id"
-                (term,) = terms
-                video_id = int(term)
-                selection = (
-                    [self._id_to_video[video_id].filename]
-                    if video_id in self._id_to_video
-                    else []
-                )
-            return (filenames[filename].video_id for filename in selection)
-        return ()
-
-    def sort_video_indices(self, indices: Iterable[int], sorting: VideoSorting):
-        return sorted(
-            indices,
-            key=lambda video_id: self._id_to_video[video_id].to_comparable(sorting),
-        )
-
-    def default_prop_unit(self, name):
-        pt = self.get_prop_type(name)
-        return None if pt.multiple else pt.default
-
-    def __unused_clean_thumbnails(self, paths: List[AbsolutePath]):
-        self._thumb_mgr.clean_thumbnails(paths)

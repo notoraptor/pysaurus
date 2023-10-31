@@ -198,9 +198,6 @@ class OldPysaurusCollection(OldDatabase):
     def __close__(self):
         super().__close__()
 
-    def to_save(self, to_save=True):
-        return super().to_save(to_save)
-
     def set_date(self, date: Date):
         # super().set_date(date)
         self.db.modify("UPDATE collection SET date_updated = ?", [date.time])

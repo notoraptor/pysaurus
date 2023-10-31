@@ -38,13 +38,12 @@ class DatabaseSaved(DatabaseLoaded):
 
 
 class DatabaseToSaveContext:
-    __slots__ = "database", "to_save"
+    __slots__ = ("database",)
 
-    def __init__(self, database, to_save=True):
-        from pysaurus.database.json_database import JsonDatabase
+    def __init__(self, database):
+        from pysaurus.database.abstract_database import AbstractDatabase
 
-        self.database: JsonDatabase = database
-        self.to_save = to_save
+        self.database: AbstractDatabase = database
 
     def __enter__(self):
         self.database.in_save_context = True
@@ -52,9 +51,8 @@ class DatabaseToSaveContext:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.database.in_save_context = False
-        if self.to_save:
-            self.database.jsondb_save()
-            logger.info("Saved in context.")
+        self.database.save()
+        logger.info("Saved in context.")
 
 
 DatabaseChanges = namedtuple("DatabaseChanges", ("removed", "replaced", "modified"))

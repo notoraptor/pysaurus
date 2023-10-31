@@ -16,6 +16,7 @@ from pysaurus.database.algorithms.miniatures import Miniatures
 from pysaurus.database.algorithms.videos import Videos
 from pysaurus.database.db_settings import DbSettings
 from pysaurus.database.db_way_def import DbWays
+from pysaurus.database.json_database_utils import DatabaseSaved, DatabaseToSaveContext
 from pysaurus.miniature.miniature import Miniature
 from pysaurus.video import VideoRuntimeInfo
 from saurus.language import say
@@ -25,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 class AbstractDatabase(ABC):
-    __slots__ = ("ways", "notifier")
+    __slots__ = ("ways", "notifier", "in_save_context")
     REMOVE = DELETE = -1
     REPLACE = SET = EDIT = 0
     ADD = APPEND = MERGE = 1
@@ -34,6 +35,7 @@ class AbstractDatabase(ABC):
         db_folder = AbsolutePath.ensure_directory(db_folder)
         self.ways = DbWays(db_folder)
         self.notifier = notifier
+        self.in_save_context = False
 
     def rename(self, new_name: str) -> None:
         self.ways = self.ways.renamed(new_name)
@@ -270,3 +272,37 @@ class AbstractDatabase(ABC):
 
     def get_all_video_indices(self) -> Iterable[int]:
         return (item["video_id"] for item in self.select_videos_fields([]))
+
+    def to_save(self):
+        """Return a save context.
+
+        Save context forbids any save while in context,
+        and make a save as long as we exit the context.
+
+        This is useful if a piece of code may generate many save calls
+        while we just want one final save at the end.
+        """
+        return DatabaseToSaveContext(self)
+
+    def save(self):
+        """Save database.
+
+        Do not save if we're in a save context returned by to_save().
+        Otherwise, save using private method _save().
+        """
+        # Do not save if in save context
+        if self.in_save_context:
+            logger.info("Saving deactivated in context.")
+            return
+        # We can save. Save database.
+        self._save()
+        # Notify database is saved.
+        self.notifier.notify(DatabaseSaved(self))
+
+    def _save(self):
+        """Actually saves database.
+
+        Do nothing by default, as database may have automatic save.
+        If your database must be manually saved, consider overriding this method.
+        """
+        pass

@@ -29,7 +29,7 @@ class LazyVideo(WithSchema):
     }
 
     def __init__(self, database, short_dict: dict, discarded=False):
-        from pysaurus.database.json_database import JsonDatabase
+        from pysaurus.database.jsdb.json_database import JsonDatabase
 
         super().__init__(short_dict)
         # Runtime
