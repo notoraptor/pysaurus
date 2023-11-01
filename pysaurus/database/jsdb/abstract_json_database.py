@@ -45,10 +45,6 @@ class AbstractJsonDatabase(AbstractDatabase, metaclass=ABCMeta):
     def validate_prop_values(self, name, values):
         raise NotImplementedError()
 
-    @abstractmethod
-    def set_video_properties(self, video_id, properties):
-        raise NotImplementedError()
-
     @classmethod
     @abstractmethod
     def _video_must_be_updated(cls, video):

@@ -34,7 +34,6 @@ class Database(JsonDatabase):
         # Load database
         super().__init__(path, folders, notifier)
 
-
         # Set special properties
         with Profiler(
             "install special properties", notifier=self.notifier

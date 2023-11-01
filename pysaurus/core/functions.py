@@ -5,7 +5,7 @@ import sys
 import tempfile
 import threading
 import types
-from typing import Iterable, List
+from typing import Iterable, List, Collection
 
 logger = logging.getLogger(__name__)
 
@@ -287,3 +287,7 @@ def generate_temporary_file(basename="pysaurus", suffix=".pkl"):
         prefix=f"{basename}_", suffix=suffix, delete=False
     ) as tf:
         return tf.name
+
+
+def make_collection(something) -> Collection:
+    return something if isinstance(something, (list, tuple, set)) else [something]

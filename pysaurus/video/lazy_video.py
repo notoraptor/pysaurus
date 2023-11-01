@@ -330,11 +330,6 @@ class LazyVideo(WithSchema):
             self._set("properties", properties)
         return popped
 
-    def set_properties(self, properties: Dict[str, Any]) -> List[str]:
-        return [
-            name for name, value in properties.items() if self.set_property(name, value)
-        ]
-
     def set_property(self, name, value) -> bool:
         assert value is not None
         value = sorted(value) if isinstance(value, list) else [value]

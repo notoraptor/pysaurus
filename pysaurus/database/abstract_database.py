@@ -1,7 +1,7 @@
 import logging
 import tempfile
 from abc import ABC, abstractmethod
-from typing import Any, Container, Dict, Iterable, List, Optional, Sequence
+from typing import Any, Collection, Container, Dict, Iterable, List, Optional, Sequence
 
 import ujson as json
 
@@ -9,6 +9,7 @@ from pysaurus.application import exceptions
 from pysaurus.core import functions, notifications
 from pysaurus.core.components import AbsolutePath, Date, PathType
 from pysaurus.core.file_utils import create_xspf_playlist
+from pysaurus.core.functions import make_collection
 from pysaurus.core.modules import ImageUtils
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.profiling import Profiler
@@ -32,7 +33,12 @@ class AbstractDatabase(ABC):
     REPLACE = SET = EDIT = 0
     ADD = APPEND = MERGE = 1
 
-    def __init__(self, db_folder: PathType, provider: AbstractVideoProvider, notifier=DEFAULT_NOTIFIER):
+    def __init__(
+        self,
+        db_folder: PathType,
+        provider: AbstractVideoProvider,
+        notifier=DEFAULT_NOTIFIER,
+    ):
         db_folder = AbsolutePath.ensure_directory(db_folder)
         self.ways = DbWays(db_folder)
         self.notifier = notifier
@@ -126,6 +132,16 @@ class AbstractDatabase(ABC):
     def change_video_entry_filename(
         self, video_id: int, path: AbsolutePath
     ) -> AbsolutePath:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def open_video(self, video_id):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def update_prop_values(
+        self, video_id: int, name: str, values: Collection, action: int = 0
+    ):
         raise NotImplementedError()
 
     def count_videos(self, *flags, **forced_flags) -> int:
@@ -268,10 +284,6 @@ class AbstractDatabase(ABC):
         self._notify_missing_thumbnails()
         self.provider.refresh()
 
-    @abstractmethod
-    def open_video(self, video_id):
-        raise NotImplementedError()
-
     def get_all_video_indices(self) -> Iterable[int]:
         return (item["video_id"] for item in self.select_videos_fields([]))
 
@@ -308,3 +320,12 @@ class AbstractDatabase(ABC):
         If your database must be manually saved, consider overriding this method.
         """
         pass
+
+    def set_video_properties(self, video_id: int, properties: dict) -> List[str]:
+        modified = [
+            name
+            for name, values in properties.items()
+            if self.update_prop_values(video_id, name, make_collection(values))
+        ]
+        self._notify_properties_modified(modified)
+        return modified

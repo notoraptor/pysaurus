@@ -249,9 +249,6 @@ class OldPysaurusCollection(OldDatabase):
     def validate_prop_values(self, name, values: list) -> List[PropValueType]:
         return super().validate_prop_values(name, values)
 
-    def set_video_properties(self, video_id: int, properties: dict) -> List[str]:
-        return super().set_video_properties(video_id, properties)
-
     def _update_videos_not_found(self, existing_paths: Container[AbsolutePath]):
         # super()._update_videos_not_found(existing_paths)
         rows = self.db.query_all(

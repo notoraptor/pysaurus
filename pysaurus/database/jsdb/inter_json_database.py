@@ -378,22 +378,24 @@ class InterJsonDatabase(AbstractJsonDatabase):
 
     def update_prop_values(
         self, video_id: int, name: str, values: Collection, action: int = 0
-    ):
+    ) -> bool:
         assert action in (-1, 0, 1)
         pt = self.get_prop_type(name)
         video = self._id_to_video[video_id]
+        modified = False
         if action == -1 or (action == 0 and not values):
-            video.remove_property(name)
+            modified = video.remove_property(name)
         elif values:
             if pt.multiple:
                 if action == 0:
-                    video.set_property(name, pt.validate(values))
+                    modified = video.set_property(name, pt.validate(values))
                 else:
                     new_values = pt.validate(video.get_property(name) + list(values))
-                    video.set_property(name, new_values)
+                    modified = video.set_property(name, new_values)
             else:
                 (value,) = values
-                video.set_property(name, pt.validate(value))
+                modified = video.set_property(name, pt.validate(value))
+        return modified
 
     def validate_prop_values(self, name, values: list) -> List[PropValueType]:
         prop_type = self._prop_types[name]
@@ -402,16 +404,6 @@ class InterJsonDatabase(AbstractJsonDatabase):
         else:
             values = [prop_type.validate(value) for value in values]
         return values
-
-    def set_video_properties(self, video_id: int, properties: dict) -> List[str]:
-        modified = self._id_to_video[video_id].set_properties(
-            {
-                name: self._prop_types[name].validate(value)
-                for name, value in properties.items()
-            }
-        )
-        self._notify_properties_modified(modified)
-        return modified
 
     def _update_videos_not_found(self, existing_paths: Container[AbsolutePath]):
         """Use given container of existing paths to mark not found videos."""
