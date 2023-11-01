@@ -591,7 +591,7 @@ class InterJsonDatabase(AbstractJsonDatabase):
         if video.readable:
             self._jsondb_old_get_thumbnail_path(video).delete()
         self._jsondb_register_removed(video)
-        self.notifier.notify(notifications.VideoDeleted(video.filename.path, video_id))
+        self.provider.delete(video_id)
         self._notify_fields_modified(["move_id", "quality"])
         self._thumb_mgr.delete(video.filename)
 

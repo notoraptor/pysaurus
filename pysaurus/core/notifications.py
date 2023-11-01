@@ -98,21 +98,6 @@ class DatabaseReady(Terminated):
     __slots__ = ()
 
 
-class VideoDeleted(Notification):
-    __slots__ = ("filename", "video_id")
-
-    def __init__(self, filename: str, video_id: int):
-        super().__init__()
-        self.filename = filename
-        self.video_id = video_id
-
-    def __str__(self):
-        return f"{type(self).__name__}({self.filename})"
-
-    def to_dict(self, **extra):
-        return {"video": str(self.filename)}
-
-
 class FieldsModified(Notification):
     __slots__ = ("fields",)
     __props__ = ("modified",)
