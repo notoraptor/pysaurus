@@ -109,6 +109,12 @@ class DbSimilarVideos:
         # self.positions = deque()
         self.positions = None
 
+    def find(self, db, ignore_cache: bool) -> None:
+        if ignore_cache:
+            return self.find_similar_videos_ignore_cache(db)
+        else:
+            return self.find_similar_videos(db)
+
     def find_similar_videos_ignore_cache(self, db: Database):
         miniatures = db.ensure_miniatures()  # type: List[Miniature]
         video_indices = [m.video_id for m in miniatures]

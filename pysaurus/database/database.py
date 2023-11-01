@@ -1,7 +1,7 @@
 import logging
 import multiprocessing
 from collections import Counter
-from typing import Any, Callable, Iterable, List, Optional
+from typing import Any, Callable, Iterable, List
 
 from pysaurus.application import exceptions
 from pysaurus.core.components import AbsolutePath, PathType
@@ -9,7 +9,6 @@ from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.jsdb.json_database import JsonDatabase
 from pysaurus.database.special_properties import SpecialProperties
-from pysaurus.database.viewport.abstract_video_provider import AbstractVideoProvider
 from pysaurus.database.viewport.video_filter import VideoFilter
 from pysaurus.video_raptor.video_raptor_pyav import VideoRaptor as PythonVideoRaptor
 
@@ -37,7 +36,7 @@ class Database(JsonDatabase):
         super().__init__(path, folders, notifier)
 
         # RAM data
-        self.provider: Optional[AbstractVideoProvider] = VideoFilter(self)
+        self.provider = VideoFilter(self)
 
         # Set special properties
         with Profiler(

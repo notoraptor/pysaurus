@@ -1162,7 +1162,7 @@ not found video entry will be deleted.
 	}
 
 	findSimilarVideosIgnoreCache() {
-		this.props.app.dbUpdate("find_similar_videos_ignore_cache");
+		this.props.app.dbUpdate("find_similar_videos", true);
 	}
 
 	manageProperties() {

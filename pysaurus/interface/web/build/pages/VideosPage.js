@@ -906,7 +906,7 @@ not found video entry will be deleted.
           this.props.app.dbUpdate("find_similar_videos");
         }
         findSimilarVideosIgnoreCache() {
-          this.props.app.dbUpdate("find_similar_videos_ignore_cache");
+          this.props.app.dbUpdate("find_similar_videos", true);
         }
         manageProperties() {
           this.props.app.loadPropertiesPage();
