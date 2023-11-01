@@ -1,8 +1,11 @@
+import logging
 from abc import ABCMeta, abstractmethod
 from typing import Iterable, Sequence
 
 from pysaurus.core.components import AbsolutePath
 from pysaurus.video import Video
+
+logger = logging.getLogger(__name__)
 
 
 class AbstractVideoIndexer(metaclass=ABCMeta):
@@ -16,9 +19,9 @@ class AbstractVideoIndexer(metaclass=ABCMeta):
         for video in videos:
             self._remove_filename(video.filename)
 
-    def close(self):
-        """Close indexer."""
+    def save(self):
         if self._can_save():
+            logger.info("Indexer saved.")
             self._save()
 
     def _update_video(self, video: Video):

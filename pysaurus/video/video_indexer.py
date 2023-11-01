@@ -48,10 +48,6 @@ class VideoIndexer(AbstractVideoIndexer):
                 file
             )
 
-    def close(self):
-        super().close()
-        self.notifier = None
-
     @Profiler.profile_method("indexer_build")
     def build(self, videos: Iterable[Video]):
         notifier = Informer.default()
@@ -80,14 +76,6 @@ class VideoIndexer(AbstractVideoIndexer):
         self.built = True
 
         self._save()
-
-    @Profiler.profile_method()
-    def update_videos(self, videos: Iterable[Video]):
-        return super().update_videos(videos)
-
-    @Profiler.profile_method()
-    def remove_videos(self, videos: Iterable[Video]):
-        return super().remove_videos(videos)
 
     def _add_video(self, video: Video):
         terms = video_to_tags(video)

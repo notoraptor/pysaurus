@@ -221,6 +221,8 @@ class InterJsonDatabase(AbstractJsonDatabase):
         if self._modified:
             logger.info(f"Flushed {len(self._modified)} modified")
             self._indexer.update_videos(self._modified)
+        if self._removed or self._modified:
+            self._indexer.save()
         self._removed.clear()
         self._modified.clear()
 
@@ -266,10 +268,6 @@ class InterJsonDatabase(AbstractJsonDatabase):
                 "videos": [video.to_dict() for video in self._videos.values()],
             }
         )
-
-    def __close__(self):
-        """Close database."""
-        self._indexer.close()
 
     def get_settings(self) -> DbSettings:
         return self.settings

@@ -195,9 +195,6 @@ class OldPysaurusCollection(OldDatabase):
     ) -> int:
         return super().move_concatenated_prop_val(path, from_property, to_property)
 
-    def __close__(self):
-        super().__close__()
-
     def set_date(self, date: Date):
         # super().set_date(date)
         self.db.modify("UPDATE collection SET date_updated = ?", [date.time])

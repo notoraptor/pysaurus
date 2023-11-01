@@ -1,15 +1,17 @@
+import logging
 from abc import ABCMeta, abstractmethod
 
 from pysaurus.database.abstract_database import AbstractDatabase
+
+logger = logging.getLogger(__name__)
 
 
 class AbstractJsonDatabase(AbstractDatabase, metaclass=ABCMeta):
     __slots__ = ()
 
-    @abstractmethod
     def __close__(self):
         """Close database."""
-        raise NotImplementedError()
+        logger.info(f"Database closed: {self.get_name()}")
 
     @abstractmethod
     def set_predictor(self, prop_name, theta):
