@@ -3,8 +3,8 @@ import time
 from datetime import timedelta
 
 from pysaurus.core.components import Duration
+from pysaurus.core.informer import Informer
 from pysaurus.core.notifications import Notification
-from pysaurus.core.notifying import DEFAULT_NOTIFIER
 
 
 class ProfilingStart(Notification):
@@ -55,9 +55,9 @@ class _InlineProfile(Notification):
 class Profiler:
     __slots__ = "__title", "__time_start", "__time_end", "__notifier", "__inline"
 
-    def __init__(self, title, notifier=DEFAULT_NOTIFIER, inline=False):
+    def __init__(self, title, notifier=None, inline=False):
         self.__title = title
-        self.__notifier = notifier
+        self.__notifier = notifier or Informer.default()
         self.__time_start = None
         self.__time_end = None
         self.__inline = inline

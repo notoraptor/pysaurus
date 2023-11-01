@@ -45,7 +45,7 @@ class Layer:
 
     def get_output(self):
         if self.to_update:
-            with Profiler(f"[{type(self).__name__}] run", self.database.notifier):
+            with Profiler(f"[{type(self).__name__}] run"):
                 self.run()
             self.to_update = False
             # self._log("run")
@@ -190,7 +190,7 @@ class LayerGrouping(_AbstractLayerGrouping):
             groups = [Group(None, self.input)]
         else:
             grouped_videos: Dict[Any, Set[int]] = {}
-            with Profiler("Grouping:group videos", self.database.notifier):
+            with Profiler("Grouping:group videos"):
                 for video_id in self.input:
                     for value in self._get_grouping_values(video_id):
                         grouped_videos.setdefault(value, set()).add(video_id)
@@ -199,14 +199,14 @@ class LayerGrouping(_AbstractLayerGrouping):
                 # Remove None (not checked) and -1 (not similar) videos.
                 grouped_videos.pop(None, None)
                 grouped_videos.pop(-1, None)
-            with Profiler("Grouping:get groups", self.database.notifier):
+            with Profiler("Grouping:get groups"):
                 if group_def.allow_singletons:
                     groups = [Group(f, vs) for f, vs in grouped_videos.items()]
                 else:
                     groups = [
                         Group(f, vs) for f, vs in grouped_videos.items() if len(vs) > 1
                     ]
-            with Profiler("Grouping:sort groups", self.database.notifier):
+            with Profiler("Grouping:sort groups"):
                 group_def.sort_inplace(groups)
         self.output = GroupArray(group_def.field, group_def.is_property, groups)
 
@@ -388,7 +388,7 @@ class VideoFilter(AbstractVideoProvider):
 
     def get_view_indices(self) -> Sequence[int]:
         data = self._database
-        with Profiler("VideoSelector.get_view", self._database.notifier):
+        with Profiler("VideoSelector.get_view"):
             for layer in self.pipeline:
                 layer.set_input(data)
                 data = layer.get_output()
@@ -396,9 +396,7 @@ class VideoFilter(AbstractVideoProvider):
 
     def delete(self, video_id: int):
         for layer in self.pipeline:
-            with Profiler(
-                f"Deleting video in {type(layer).__name__}", self._database.notifier
-            ):
+            with Profiler(f"Deleting video in {type(layer).__name__}"):
                 layer.delete(video_id)
 
     def set_sources(self, paths):

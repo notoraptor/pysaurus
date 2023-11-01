@@ -1,7 +1,7 @@
 from typing import Dict, List
 
 from pysaurus.application.exceptions import PysaurusError
-from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
+from pysaurus.core.informer import Informer
 from pysaurus.core.modules import ImageUtils
 from pysaurus.core.notifications import Message
 from pysaurus.core.profiling import Profiler
@@ -33,6 +33,7 @@ class DbPatternDetection:
     @classmethod
     def compute_pattern_detector(cls, database: Database, prop_name: str):
         assert cls._is_prediction_property(database, prop_name)
+        notifier = Informer.default()
         video_id_to_miniature = {m.video_id: m for m in database.ensure_miniatures()}
         video_indices = [
             video["video_id"]
@@ -49,7 +50,7 @@ class DbPatternDetection:
             raise NoVideoForClass0(prop_name)
         if 1 not in classifier:
             raise NoVideoForClass1(prop_name)
-        database.notifier.notify(
+        notifier.notify(
             Message(
                 say(
                     "Training set: false {count0}, true {count1}",
@@ -69,13 +70,14 @@ class DbPatternDetection:
             miniatures,
             classes,
             theta=database.get_predictor(prop_name),
-            notifier=database.notifier,
+            notifier=Informer.default(),
         )
         database.set_predictor(prop_name, theta)
 
     @classmethod
     def predict_pattern(cls, database: Database, prop_name: str):
         """Apply pattern detector."""
+        notifier = Informer.default()
         theta = database.get_predictor(prop_name)
         if not theta:
             raise NoPredictor(prop_name)
@@ -91,23 +93,15 @@ class DbPatternDetection:
         with database.to_save():
             if not database.select_prop_types(name=output_prop_name):
                 database.create_prop_type(output_prop_name, int, [0, 1], False)
-            notify_job_start(
-                database.notifier, cls.predict_pattern, len(video_indices), "videos"
-            )
-            with Profiler(say("Predict"), database.notifier):
+            notifier.task(cls.predict_pattern, len(video_indices), "videos")
+            with Profiler(say("Predict")):
                 for i, video_id in enumerate(video_indices):
                     database.update_prop_values(
                         video_id,
                         output_prop_name,
                         [int(predict(video_id_to_miniature[video_id], theta) >= 0.5)],
                     )
-                    notify_job_progress(
-                        database.notifier,
-                        cls.predict_pattern,
-                        None,
-                        i + 1,
-                        len(video_indices),
-                    )
+                    notifier.progress(cls.predict_pattern, i + 1, len(video_indices))
 
         return output_prop_name
 

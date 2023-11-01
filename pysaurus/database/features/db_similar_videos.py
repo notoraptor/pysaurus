@@ -9,8 +9,8 @@ from pysaurus.application import exceptions
 from pysaurus.core import notifications
 from pysaurus.core.fraction import Fraction
 from pysaurus.core.functions import compute_nb_couples, get_end_index, get_start_index
-from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
-from pysaurus.core.notifying import Notifier
+from pysaurus.core.informer import Informer
+from pysaurus.core.job_notifications import notify_job_progress
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.database import Database
 from pysaurus.miniature.graph import Graph
@@ -66,18 +66,17 @@ class _GrayClassifier:
             get_end_index(grays, grays[i] + GRAY_DEC, i + 1) for i in range(len(grays))
         ]
 
-    def compare_miniature_grays(self, notifier: Notifier):
+    def compare_miniature_grays(self):
         """Return sequence of couples of indices of classifiers to cross compare."""
+        notifier = Informer.default()
         n = len(self.grays)
         t = self.j_limit
-        notify_job_start(notifier, self.compare_miniature_grays, n, "miniatures")
+        notifier.task(self.compare_miniature_grays, n, "miniatures")
         for i in range(n):
             for j in range(i + 1, t[i]):
                 yield i, j
             if (i + 1) % 1000 == 0:
-                notify_job_progress(
-                    notifier, self.compare_miniature_grays, None, i + 1, n
-                )
+                notifier.progress(self.compare_miniature_grays, i + 1, n)
         notify_job_progress(notifier, self.compare_miniature_grays, None, n, n)
 
     @classmethod
@@ -127,7 +126,8 @@ class DbSimilarVideos:
             raise
 
     def find_similar_videos(self, db: Database, miniatures: List[Miniature] = None):
-        with Profiler(say("Find similar videos."), db.notifier), db.to_save():
+        notifier = Informer.default()
+        with Profiler(say("Find similar videos.")), db.to_save():
             if miniatures is None:
                 miniatures = db.ensure_miniatures()  # type: List[Miniature]
             video_indices = [m.video_id for m in miniatures]
@@ -145,23 +145,21 @@ class DbSimilarVideos:
                     old_miniature_indices.append(i)
 
             if not new_miniature_indices:
-                db.notifier.notify(
-                    notifications.Message(say("No new videos to check."))
-                )
+                notifier.notify(notifications.Message(say("No new videos to check.")))
                 return
 
             nb_max_comparisons = compute_nb_couples(nb_videos)
-            with Profiler(say("Allocating edges map"), notifier=db.notifier):
+            with Profiler(say("Allocating edges map")):
                 cmp_map = self._generate_edges(nb_videos)
             classifier_new = _GrayClassifier.classify(miniatures, new_miniature_indices)
             classifier_old = _GrayClassifier.classify(miniatures, old_miniature_indices)
 
-            nb_cmp = self._collect_comparisons(classifier_new, cmp_map, nb_videos, db)
+            nb_cmp = self._collect_comparisons(classifier_new, cmp_map, nb_videos)
             nb_cmp += self._compare_old_vs_new_miniatures(
-                classifier_new, classifier_old, cmp_map, nb_videos, db
+                classifier_new, classifier_old, cmp_map, nb_videos
             )
 
-            db.notifier.notify(
+            notifier.notify(
                 notifications.Message(
                     say(
                         "To do: {count} / {total} comparisons ({percent} %).",
@@ -174,7 +172,7 @@ class DbSimilarVideos:
 
             sim_groups = self._find_similar_miniatures(miniatures, cmp_map, db)
 
-            db.notifier.notify(
+            notifier.notify(
                 notifications.Message(
                     say(
                         "Finally found {nb_similarities} new similarity groups "
@@ -194,12 +192,12 @@ class DbSimilarVideos:
                 max((sim_id for sim_id in prev_sims if sim_id is not None), default=0)
                 + 1
             )
-            with Profiler(say("Merge new similarities with old ones."), db.notifier):
+            with Profiler(say("Merge new similarities with old ones.")):
                 sim_id_to_vid_ids = {}
                 for i in old_miniature_indices:
                     sim_id_to_vid_ids.setdefault(prev_sims[i], []).append(i)
                 sim_id_to_vid_ids.pop(-1, None)
-                db.notifier.notify(
+                notifier.notify(
                     notifications.Message(
                         say(
                             "Found {count} old similarities.",
@@ -220,7 +218,7 @@ class DbSimilarVideos:
                 new_sim_groups = [
                     group for group in graph.pop_groups() if len(group) > 1
                 ]
-                db.notifier.notify(
+                notifier.notify(
                     notifications.Message(
                         say(
                             "Found {count} total similarities after merging.",
@@ -243,7 +241,7 @@ class DbSimilarVideos:
                     else:
                         new_id = min(old_indices)
                     new_sim_indices.append(new_id)
-                db.notifier.notify(
+                notifier.notify(
                     notifications.Message(
                         say(
                             "Found {count} pure new similarities.", count=nb_new_indices
@@ -274,13 +272,9 @@ class DbSimilarVideos:
             return np.zeros(nb_videos * nb_videos, dtype=np.uint32)
 
     def _collect_comparisons(
-        self,
-        classifier: _GrayClassifier,
-        cmp_map: Array,
-        nb_miniatures: int,
-        db: Database,
+        self, classifier: _GrayClassifier, cmp_map: Array, nb_miniatures: int
     ):
-        with Profiler(say("Collect comparisons."), db.notifier):
+        with Profiler(say("Collect comparisons.")):
             nb_cmp = sum(
                 compute_nb_couples(len(group))
                 for clf in classifier.classifiers
@@ -306,7 +300,7 @@ class DbSimilarVideos:
                                 a, b = b, a
                             self._cmp(cmp_map, a * nb_miniatures + b)
 
-            for r, c in classifier.compare_miniature_grays(db.notifier):
+            for r, c in classifier.compare_miniature_grays():
                 clr = classifier.classifiers[r]
                 clc = classifier.classifiers[c]
                 for x_r in range(len(clr.counts)):
@@ -330,13 +324,11 @@ class DbSimilarVideos:
         classifier_right: _GrayClassifier,
         cmp_map: Array,
         nb_miniatures: int,
-        db: Database,
     ):
+        notifier = Informer.default()
         n = len(classifier_left.grays)
-        with Profiler(say("Cross compare classifiers."), db.notifier):
-            notify_job_start(
-                db.notifier, self._compare_old_vs_new_miniatures, n, "new miniatures"
-            )
+        with Profiler(say("Cross compare classifiers.")):
+            notifier.task(self._compare_old_vs_new_miniatures, n, "new miniatures")
             nb_cmp = 0
             for i_gray_left, gray_left in enumerate(classifier_left.grays):
                 sub_classifier_left = classifier_left.classifiers[i_gray_left]
@@ -368,16 +360,10 @@ class DbSimilarVideos:
                                     a, b = b, a
                                 self._cmp(cmp_map, a * nb_miniatures + b)
                 if (i_gray_left + 1) % 10 == 0:
-                    notify_job_progress(
-                        db.notifier,
-                        self._compare_old_vs_new_miniatures,
-                        None,
-                        i_gray_left + 1,
-                        n,
+                    notifier.progress(
+                        self._compare_old_vs_new_miniatures, i_gray_left + 1, n
                     )
-            notify_job_progress(
-                db.notifier, self._compare_old_vs_new_miniatures, None, n, n
-            )
+            notifier.progress(self._compare_old_vs_new_miniatures, n, n)
             return nb_cmp
 
     def _cmp(self, cmp_map: Array, pos: int):
@@ -391,53 +377,30 @@ class DbSimilarVideos:
 
     def _find_similar_miniatures(self, miniatures, edges, db):
         # type: (List[Miniature], Array[c_bool], Database) -> List[Set[int]]
+        notifier = Informer.default()
         backend_sim.classify_similarities_directed(
-            miniatures, edges, SIM_LIMIT, db.notifier
+            miniatures, edges, SIM_LIMIT, notifier
         )
         graph = Graph()
         nb_miniatures = len(miniatures)
-        with Profiler(say("Link videos ..."), db.notifier):
+        with Profiler(say("Link videos ...")):
             if self.positions:
                 nb_pos = len(self.positions)
-                notify_job_start(
-                    db.notifier, "link_compared_miniatures", nb_pos, "positions"
-                )
+                notifier.task("link_compared_miniatures", nb_pos, "positions")
                 for index, pos in enumerate(self.positions):
                     if edges[pos]:
                         graph.connect(pos // nb_miniatures, pos % nb_miniatures)
                     if (index + 1) % 500 == 0:
-                        notify_job_progress(
-                            db.notifier,
-                            "link_compared_miniatures",
-                            None,
-                            index + 1,
-                            nb_pos,
-                        )
-                notify_job_progress(
-                    db.notifier, "link_compared_miniatures", None, nb_pos, nb_pos
-                )
+                        notifier.progress("link_compared_miniatures", index + 1, nb_pos)
+                notifier.progress("link_compared_miniatures", nb_pos, nb_pos)
                 self.positions.clear()
             else:
-                notify_job_start(
-                    db.notifier, "link_compared_videos", nb_miniatures, "videos"
-                )
+                notifier.task("link_compared_videos", nb_miniatures, "videos")
                 for i in range(nb_miniatures):
                     for j in range(i + 1, nb_miniatures):
                         if edges[i * nb_miniatures + j]:
                             graph.connect(i, j)
                     if (i + 1) % 500 == 0:
-                        notify_job_progress(
-                            db.notifier,
-                            "link_compared_videos",
-                            None,
-                            i + 1,
-                            nb_miniatures,
-                        )
-                notify_job_progress(
-                    db.notifier,
-                    "link_compared_videos",
-                    None,
-                    nb_miniatures,
-                    nb_miniatures,
-                )
+                        notifier.progress("link_compared_videos", i + 1, nb_miniatures)
+                notifier.progress("link_compared_videos", nb_miniatures, nb_miniatures)
         return [group for group in graph.pop_groups() if len(group) > 1]
