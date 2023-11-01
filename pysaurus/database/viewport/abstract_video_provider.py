@@ -3,12 +3,11 @@ from abc import ABCMeta, abstractmethod
 from typing import List, Optional, Sequence
 
 from pysaurus.application import exceptions
-from pysaurus.core import functions, notifications
-from pysaurus.core.notifying import Notifier
+from pysaurus.core import functions
 
 
 class AbstractVideoProvider(metaclass=ABCMeta):
-    __slots__ = ("_database", "_notifier")
+    __slots__ = ("_database",)
     LAYER_SOURCE = "source"
     LAYER_GROUPING = "grouping"
     LAYER_CLASSIFIER = "classifier"
@@ -28,8 +27,6 @@ class AbstractVideoProvider(metaclass=ABCMeta):
         from pysaurus.database.database import Database
 
         self._database: Database = database
-        self._notifier = Notifier()
-        self._notifier.never_call_default_manager()
 
     @abstractmethod
     def set_sources(self, paths) -> None:
@@ -210,6 +207,3 @@ class AbstractVideoProvider(metaclass=ABCMeta):
         if not is_property and "filename" in properties:
             print("A filename was modified, refreshing provider.")
             self.refresh()
-
-    def notify(self, notification: notifications.Notification):
-        return self._notifier.notify(notification)

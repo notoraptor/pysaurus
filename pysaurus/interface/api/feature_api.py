@@ -1,6 +1,5 @@
 import inspect
 import logging
-from abc import abstractmethod
 from typing import Any, Callable, Dict, Generator, Optional, Union
 
 from pysaurus.application.application import Application
@@ -164,10 +163,6 @@ class FeatureAPI:
                 assert inspect.ismethod(method), name
                 return method(*args)
 
-    @abstractmethod
-    def _get_latest_notifications(self) -> YieldNotification:
-        raise NotImplementedError()
-
     # cannot make proxy
     def get_constants(self) -> Dict[str, Any]:
         return self._constants
@@ -179,14 +174,6 @@ class FeatureAPI:
     # cannot make proxy ?
     def backend(self, page_size, page_number, selector=None) -> Dict[str, Any]:
         """Return backend state."""
-        # Notify database provider with latest notifications.
-        with Profiler("Backend.latest_notifications", self.notifier):
-            try:
-                for notification in self._get_latest_notifications():
-                    self.database.provider.notify(notification)
-            except NotImplementedError:
-                logger.warning("No implementation to get latest notifications")
-
         raw_view_indices = self.database.provider.get_view_indices()
         if selector:
             view_indices = apply_selector_to_data(selector, raw_view_indices)

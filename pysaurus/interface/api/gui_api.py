@@ -13,7 +13,7 @@ from pysaurus.core.classes import Runnable
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.file_copier import FileCopier
 from pysaurus.core.functions import launch_thread
-from pysaurus.core.informer import Informer, MAIN_QUEUE, PROVIDER_QUEUE
+from pysaurus.core.informer import Informer, MAIN_QUEUE
 from pysaurus.core.job_notifications import ConsoleJobProgress, JobStep, JobToDo
 from pysaurus.core.modules import System
 from pysaurus.core.notifications import (
@@ -221,9 +221,6 @@ class GuiAPI(FeatureAPI):
         self.notifier.notify(DatabaseReady())
         self.launched_thread = None
         logger.debug(log_message)
-
-    def _get_latest_notifications(self) -> YieldNotification:
-        return self.notifier.consume(PROVIDER_QUEUE)
 
     def _consume_notifications(self) -> None:
         list(self.notifier.consume(MAIN_QUEUE))
