@@ -151,10 +151,10 @@ class AbstractDatabase(ABC):
         self.notifier.notify(notifications.MissingThumbnails(remaining_thumb_videos))
 
     def _notify_fields_modified(self, fields: Sequence[str]):
-        self.notifier.notify(notifications.FieldsModified(fields))
+        self.provider.manage_attributes_modified(list(fields), is_property=False)
 
     def _notify_properties_modified(self, properties):
-        self.notifier.notify(notifications.PropertiesModified(properties))
+        self.provider.manage_attributes_modified(list(properties), is_property=True)
 
     @Profiler.profile_method()
     def update(self) -> None:

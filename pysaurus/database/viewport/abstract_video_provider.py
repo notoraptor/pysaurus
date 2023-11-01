@@ -30,13 +30,6 @@ class AbstractVideoProvider(metaclass=ABCMeta):
         self._database: Database = database
         self._notifier = Notifier()
         self._notifier.never_call_default_manager()
-        # Register notifications
-        self._notifier.set_manager(
-            notifications.FieldsModified, self._on_fields_modified
-        )
-        self._notifier.set_manager(
-            notifications.PropertiesModified, self._on_properties_modified
-        )
 
     @abstractmethod
     def set_sources(self, paths) -> None:
@@ -205,13 +198,7 @@ class AbstractVideoProvider(metaclass=ABCMeta):
             *db_fn_args
         )
 
-    def _on_fields_modified(self, notification: notifications.FieldsModified):
-        self._manage_attributes_modified(notification.fields, False)
-
-    def _on_properties_modified(self, notification: notifications.PropertiesModified):
-        self._manage_attributes_modified(notification.fields, True)
-
-    def _manage_attributes_modified(self, properties: Sequence[str], is_property=True):
+    def manage_attributes_modified(self, properties: Sequence[str], is_property=True):
         group_def = self.get_grouping()
         if (
             group_def

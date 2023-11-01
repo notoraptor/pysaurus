@@ -1,4 +1,4 @@
-from typing import Dict, Iterable, List
+from typing import Dict, List
 
 from pysaurus.core.classes import StringPrinter, ToDict
 
@@ -95,19 +95,4 @@ class Cancelled(Terminated):
 
 
 class DatabaseReady(Terminated):
-    __slots__ = ()
-
-
-class FieldsModified(Notification):
-    __slots__ = ("fields",)
-    __props__ = ("modified",)
-
-    modified = property(lambda self: sorted(self.fields))
-
-    def __init__(self, properties: Iterable[str]):
-        super().__init__()
-        self.fields = set(properties)
-
-
-class PropertiesModified(FieldsModified):
     __slots__ = ()
