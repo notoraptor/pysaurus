@@ -19,7 +19,6 @@ from pysaurus.core.modules import System
 from pysaurus.core.notifications import (
     Cancelled,
     DatabaseReady,
-    DatabaseUpdated,
     Done,
     End,
     Notification,
@@ -306,7 +305,7 @@ class GuiAPI(FeatureAPI):
                 old_path = self.database.change_video_entry_filename(video_id, dst)
                 if old_path:
                     old_path.delete()
-                self.notifier.notify(DatabaseUpdated())
+                self.database.provider.refresh()
                 self.notifier.notify(Done())
             else:
                 self.notifier.notify(Cancelled())

@@ -17,6 +17,7 @@ from pysaurus.database.algorithms.videos import Videos
 from pysaurus.database.db_settings import DbSettings
 from pysaurus.database.db_way_def import DbWays
 from pysaurus.database.json_database_utils import DatabaseSaved, DatabaseToSaveContext
+from pysaurus.database.viewport.abstract_video_provider import AbstractVideoProvider
 from pysaurus.miniature.miniature import Miniature
 from pysaurus.video import VideoRuntimeInfo
 from saurus.language import say
@@ -26,16 +27,17 @@ logger = logging.getLogger(__name__)
 
 
 class AbstractDatabase(ABC):
-    __slots__ = ("ways", "notifier", "in_save_context")
+    __slots__ = ("ways", "notifier", "in_save_context", "provider")
     REMOVE = DELETE = -1
     REPLACE = SET = EDIT = 0
     ADD = APPEND = MERGE = 1
 
-    def __init__(self, db_folder: PathType, notifier=DEFAULT_NOTIFIER):
+    def __init__(self, db_folder: PathType, provider: AbstractVideoProvider, notifier=DEFAULT_NOTIFIER):
         db_folder = AbsolutePath.ensure_directory(db_folder)
         self.ways = DbWays(db_folder)
         self.notifier = notifier
         self.in_save_context = False
+        self.provider = provider
 
     def rename(self, new_name: str) -> None:
         self.ways = self.ways.renamed(new_name)
@@ -264,7 +266,7 @@ class AbstractDatabase(ABC):
         self.update()
         self.ensure_thumbnails()
         self._notify_missing_thumbnails()
-        self.notifier.notify(notifications.DatabaseUpdated())
+        self.provider.refresh()
 
     @abstractmethod
     def open_video(self, video_id):

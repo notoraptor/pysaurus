@@ -9,7 +9,6 @@ from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.jsdb.json_database import JsonDatabase
 from pysaurus.database.special_properties import SpecialProperties
-from pysaurus.database.viewport.video_filter import VideoFilter
 from pysaurus.video_raptor.video_raptor_pyav import VideoRaptor as PythonVideoRaptor
 
 logger = logging.getLogger(__name__)
@@ -22,7 +21,7 @@ except exceptions.CysaurusUnavailable:
 
 
 class Database(JsonDatabase):
-    __slots__ = ("provider", "_initial_pid")
+    __slots__ = ("_initial_pid",)
 
     def __init__(self, path, folders=None, notifier=DEFAULT_NOTIFIER):
         # type: (PathType, Iterable[PathType], Notifier) -> None
@@ -35,8 +34,6 @@ class Database(JsonDatabase):
         # Load database
         super().__init__(path, folders, notifier)
 
-        # RAM data
-        self.provider = VideoFilter(self)
 
         # Set special properties
         with Profiler(

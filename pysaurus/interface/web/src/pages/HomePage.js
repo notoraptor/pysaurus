@@ -348,7 +348,6 @@ export class HomePage extends React.Component {
 		this.onProfilingEnd = this.onProfilingEnd.bind(this);
 		this.collectEndNotification = this.collectEndNotification.bind(this);
 		this.collectNotification = this.collectNotification.bind(this);
-		this.onDatabaseUpdated = this.onDatabaseUpdated.bind(this);
 		this.computeCollectedNotification = this.computeCollectedNotification.bind(this);
 	}
 
@@ -398,10 +397,6 @@ export class HomePage extends React.Component {
 
 	notify(notification) {
 		this.collectNotification(notification);
-	}
-
-	onDatabaseUpdated(notification) {
-		// skip
 	}
 
 	onDatabaseReady(notification) {

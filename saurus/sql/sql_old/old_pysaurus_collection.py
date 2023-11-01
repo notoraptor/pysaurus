@@ -148,7 +148,7 @@ class OldPysaurusCollection(OldDatabase):
         if thumb_errors:
             self.notifier.notify(notifications.VideoThumbnailErrors(thumb_errors))
         self._notify_missing_thumbnails()
-        self.notifier.notify(notifications.DatabaseUpdated())
+        self.provider.refresh()
 
     def reopen(self):
         super().reopen()

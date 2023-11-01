@@ -26,6 +26,7 @@ from pysaurus.database.jsdb.abstract_json_database import AbstractJsonDatabase
 from pysaurus.database.json_database_utils import DatabaseLoaded, patch_database_json
 from pysaurus.database.special_properties import SpecialProperties
 from pysaurus.database.thubmnail_database.thumbnail_manager import ThumbnailManager
+from pysaurus.database.viewport.video_filter import VideoFilter
 from pysaurus.properties.properties import (
     DefType,
     PROP_UNIT_TYPES,
@@ -66,7 +67,7 @@ class InterJsonDatabase(AbstractJsonDatabase):
         notifier: Notifier = DEFAULT_NOTIFIER,
         indexer: AbstractVideoIndexer = None,
     ):
-        super().__init__(db_folder, notifier=notifier)
+        super().__init__(db_folder, notifier=notifier, provider=VideoFilter(self))
         # Database content
         self._version = 2
         self.settings = DbSettings()
