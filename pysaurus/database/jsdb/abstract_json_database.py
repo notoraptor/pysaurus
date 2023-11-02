@@ -63,10 +63,6 @@ class AbstractJsonDatabase(AbstractDatabase, metaclass=ABCMeta):
         raise NotImplementedError()
 
     @abstractmethod
-    def describe_videos(self, video_indices, with_moves):
-        raise NotImplementedError()
-
-    @abstractmethod
     def get_common_fields(self, video_indices):
         raise NotImplementedError()
 

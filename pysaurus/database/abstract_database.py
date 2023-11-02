@@ -64,10 +64,6 @@ class AbstractDatabase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def read_video_field(self, video_id: int, field: str) -> Any:
-        raise NotImplementedError()
-
-    @abstractmethod
     def delete_video_entry(self, video_id: int) -> None:
         raise NotImplementedError()
 
@@ -95,25 +91,11 @@ class AbstractDatabase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def has_video(self, **fields) -> bool:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def select_videos_fields(
-        self, fields: Sequence[str], *flags, **forced_flags
-    ) -> Iterable[Dict[str, Any]]:
-        raise NotImplementedError()
-
-    @abstractmethod
     def get_settings(self) -> DbSettings:
         raise NotImplementedError()
 
     @abstractmethod
     def get_thumbnail_blob(self, filename: AbsolutePath):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def get_video_id(self, filename) -> int:
         raise NotImplementedError()
 
     @abstractmethod
@@ -142,6 +124,16 @@ class AbstractDatabase(ABC):
     def update_prop_values(
         self, video_id: int, name: str, values: Collection, action: int = 0
     ):
+        raise NotImplementedError()
+
+    def get_videos(
+        self,
+        *,
+        include: Sequence[str] = None,
+        exclude: Sequence[str] = None,
+        with_moves: bool = False,
+        where: dict = None,
+    ) -> List[dict]:
         raise NotImplementedError()
 
     def count_videos(self, *flags, **forced_flags) -> int:
@@ -329,3 +321,26 @@ class AbstractDatabase(ABC):
         ]
         self._notify_properties_modified(modified)
         return modified
+
+    @Profiler.profile_method()
+    def describe_videos(self, video_indices: Sequence[int], with_moves=False):
+        return self.get_videos(with_moves=with_moves, where={"video_id": video_indices})
+
+    def get_video_id(self, filename) -> int:
+        (ret,) = self.get_videos(
+            include=["video_id"], where={"filename": AbsolutePath.ensure(filename)}
+        )
+        return ret["video_id"]
+
+    def has_video(self, **fields) -> bool:
+        return bool(self.get_videos(include=(), where=fields))
+
+    def read_video_field(self, video_id: int, field: str) -> Any:
+        (ret,) = self.get_videos(include=[field], where={"video_id": video_id})
+        return ret[field]
+
+    def select_videos_fields(
+        self, fields: Sequence[str], *flags, **forced_flags
+    ) -> Iterable[Dict[str, Any]]:
+        forced_flags.update({flag: True for flag in flags})
+        return self.get_videos(include=fields, where=forced_flags)

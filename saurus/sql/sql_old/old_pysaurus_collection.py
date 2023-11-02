@@ -1,7 +1,7 @@
 import logging
 import tempfile
 from multiprocessing import Pool
-from typing import Any, Callable, Container, Dict, Iterable, List, Sequence, Union
+from typing import Any, Callable, Container, Dict, Iterable, List, Union
 
 from pysaurus.core import notifications
 from pysaurus.core.components import AbsolutePath, Date
@@ -215,11 +215,6 @@ class OldPysaurusCollection(OldDatabase):
     def get_predictor(self, prop_name):
         return super().get_predictor(prop_name)
 
-    def select_videos_fields(
-        self, fields: Sequence[str], *flags, **forced_flags
-    ) -> Iterable[Dict[str, Any]]:
-        return super().select_videos_fields(fields, *flags, **forced_flags)
-
     def select_prop_types(
         self, *, name=None, with_type=None, multiple=None, with_enum=None, default=None
     ) -> List[dict]:
@@ -298,14 +293,8 @@ class OldPysaurusCollection(OldDatabase):
             not video["unreadable"] and video["audio_codec"] and not video["audio_bits"]
         )
 
-    def has_video(self, **fields) -> bool:
-        return super().has_video(**fields)
-
     def get_video_terms(self, video_id: int) -> List[str]:
         return super().get_video_terms(video_id)
-
-    def read_video_field(self, video_id: int, field: str):
-        return super().read_video_field(video_id, field)
 
     def write_videos_field(self, indices: Iterable[int], field: str, values: Iterable):
         super().write_videos_field(indices, field, values)
@@ -455,9 +444,6 @@ class OldPysaurusCollection(OldDatabase):
 
     def open_video(self, video_id: int) -> None:
         super().open_video(video_id)
-
-    def describe_videos(self, video_indices: Sequence[int], with_moves=False):
-        return super().describe_videos(video_indices, with_moves)
 
     def get_common_fields(self, video_indices: Iterable[int]) -> dict:
         return super().get_common_fields(video_indices)

@@ -1,6 +1,5 @@
 import logging
 from typing import (
-    Any,
     Collection,
     Container,
     Dict,
@@ -36,7 +35,7 @@ from pysaurus.properties.properties import (
 )
 from pysaurus.video import Video, VideoRuntimeInfo
 from pysaurus.video.abstract_video_indexer import AbstractVideoIndexer
-from pysaurus.video.video_features import VideoFeatures
+from pysaurus.video.video_features import VIDEO_FIELDS, VideoFeatures
 from pysaurus.video.video_indexer import VideoIndexer
 from saurus.sql.sql_old.video_entry import VideoEntry
 
@@ -468,36 +467,73 @@ class InterJsonDatabase(AbstractJsonDatabase):
         # A video readable with existing audio stream must have valid audio bits
         return video.readable and video.audio_codec and not video.audio_bits
 
-    def select_videos_fields(
-        self, fields: Sequence[str], *flags, **forced_flags
-    ) -> Iterable[Dict[str, Any]]:
-        if not flags and not forced_flags:
-            videos = self._videos.values()
-        else:
-            videos = self._jsondb_get_cached_videos(*flags, **forced_flags)
-        if not fields:
-            fields = ["video_id"]
-        return ({field: getattr(video, field) for field in fields} for video in videos)
+    def get_videos(
+        self,
+        *,
+        include: Sequence[str] = None,
+        exclude: Sequence[str] = None,
+        with_moves: bool = False,
+        where: dict = None,
+    ) -> List[dict]:
+        where = where or {}
+        # where["discarded"] = where.get("discarded", False)
+        q_flags = {key: value for key, value in where.items() if key in Video.FLAGS}
+        q_other = {key: value for key, value in where.items() if key not in Video.FLAGS}
+        q_video_id = q_other.pop("video_id", None)
 
-    def has_video(self, **fields) -> bool:
-        video = None
-        if "filename" in fields:
-            video = self._videos.get(fields.pop("filename"))
-        elif "video_id" in fields:
-            video = self._id_to_video.get(fields.pop("video_id"))
-        return video and (
-            not fields
-            or all(getattr(video, field) == value for field, value in fields.items())
-        )
+        flagged_videos = self._videos.values()
+        if q_flags:
+            flagged_videos = self._jsondb_get_cached_videos(**q_flags)
+
+        indexed_videos = flagged_videos
+        if q_video_id is not None:
+            if isinstance(q_video_id, int):
+                q_video_id = {q_video_id}
+            else:
+                assert isinstance(q_video_id, (list, tuple, set))
+                if not isinstance(q_video_id, set):
+                    q_video_id = set(q_video_id)
+            indexed_videos = (
+                video for video in flagged_videos if video.video_id in q_video_id
+            )
+
+        videos = indexed_videos
+        if q_other:
+            videos = (
+                video
+                for video in indexed_videos
+                if all(getattr(video, key) == value for key, value in q_other.items())
+            )
+
+        if include is None and exclude is None:
+            # Whatever with_moves will be used later.
+            fields = None
+        elif include is None and exclude is not None and not with_moves:
+            exclude = set(exclude) | {"moves", "move_id"}
+            fields = set(VIDEO_FIELDS) - exclude
+        elif include is None and exclude is not None and with_moves:
+            fields = set(VIDEO_FIELDS) - set(exclude)
+        elif include is not None and exclude is None and not with_moves:
+            fields = set(include) - {"moves", "move_id"}
+        elif include is not None and exclude is None and with_moves:
+            fields = set(include) | {"moves", "move_id"}
+        elif include is not None and exclude is not None and not with_moves:
+            exclude = set(exclude) | {"moves", "move_id"}
+            fields = set(include) - exclude
+        else:
+            assert include is not None and exclude is not None and with_moves
+            include = set(include) | {"moves", "move_id"}
+            fields = include - set(exclude)
+
+        if fields is None:
+            return [VideoFeatures.json(video, with_moves) for video in videos]
+        elif fields:
+            return [{key: getattr(video, key) for key in fields} for video in videos]
+        else:
+            return [{"video_id": video.video_id} for video in videos]
 
     def get_video_terms(self, video_id: int) -> List[str]:
         return self._id_to_video[video_id].terms()
-
-    def get_video_id(self, filename) -> int:
-        return self._videos[AbsolutePath.ensure(filename)].video_id
-
-    def read_video_field(self, video_id: int, field: str) -> Any:
-        return getattr(self._id_to_video[video_id], field)
 
     def write_videos_field(self, indices: Iterable[int], field: str, values: Iterable):
         for video_id, value in zip(indices, values):
@@ -612,13 +648,6 @@ class InterJsonDatabase(AbstractJsonDatabase):
     def open_video(self, video_id: int) -> None:
         self._id_to_video[video_id].open()
         self._notify_fields_modified(["date_entry_opened"])
-
-    @Profiler.profile_method()
-    def describe_videos(self, video_indices: Sequence[int], with_moves=False):
-        return [
-            VideoFeatures.json(self._id_to_video[video_id], with_moves)
-            for video_id in video_indices
-        ]
 
     @Profiler.profile_method()
     def get_common_fields(self, video_indices: Iterable[int]) -> dict:
