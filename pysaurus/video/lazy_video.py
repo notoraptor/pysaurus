@@ -17,7 +17,13 @@ from pysaurus.video.video_sorting import VideoSorting
 class LazyVideo(WithSchema):
     __slots__ = ("__discarded", "database")
     SCHEMA = VIDEO_SCHEMA
-    __protected__ = ("database", "runtime", "discarded")
+    __protected__ = (
+        "database",
+        "runtime",
+        "discarded",
+        "thumbnail_base64",
+        "thumbnail_blob",
+    )
     FLAGS = {
         "readable",
         "unreadable",
@@ -248,6 +254,9 @@ class LazyVideo(WithSchema):
     )
     thumbnail_base64 = property(
         lambda self: self.database.jsondb_get_thumbnail_base64(self.filename)
+    )
+    thumbnail_blob = property(
+        lambda self: self.database.jsondb_get_thumbnail_blob(self.filename)
     )
     size_length = property(lambda self: StringedTuple((self.size, self.length)))
     filename_length = property(lambda self: len(self.filename))

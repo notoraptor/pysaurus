@@ -195,6 +195,26 @@ class FeatureAPI:
             if grouped_by_similarity:
                 group_def["common"] = self.database.get_common_fields(view_indices)
 
+        with Profiler("Backend:size"):
+            size = FileSize(
+                sum(
+                    row["file_size"]
+                    for row in self.database.get_videos(
+                        include=["file_size"], where={"video_id": view_indices}
+                    )
+                )
+            )
+
+        with Profiler("Backend:duration"):
+            duration = Duration(
+                sum(
+                    row["raw_microseconds"]
+                    for row in self.database.get_videos(
+                        include=["raw_microseconds"], where={"video_id": view_indices}
+                    )
+                )
+            )
+
         return {
             "database": {
                 "name": self.database.get_name(),
@@ -208,22 +228,8 @@ class FeatureAPI:
             "nbVideos": nb_videos,
             "nbViewVideos": len(raw_view_indices),
             "nbSourceVideos": self.database.provider.count_source_videos(),
-            "validSize": str(
-                FileSize(
-                    sum(
-                        self.database.read_video_field(video_id, "file_size")
-                        for video_id in view_indices
-                    )
-                )
-            ),
-            "validLength": str(
-                Duration(
-                    sum(
-                        self.database.read_video_field(video_id, "raw_microseconds")
-                        for video_id in view_indices
-                    )
-                )
-            ),
+            "validSize": str(size),
+            "validLength": str(duration),
             "sources": self.database.provider.get_sources(),
             "groupDef": group_def,
             "path": self.database.provider.get_classifier_path(),

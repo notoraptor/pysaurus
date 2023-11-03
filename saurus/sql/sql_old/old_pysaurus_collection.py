@@ -448,8 +448,5 @@ class OldPysaurusCollection(OldDatabase):
     def get_common_fields(self, video_indices: Iterable[int]) -> dict:
         return super().get_common_fields(video_indices)
 
-    def get_thumbnail_blob(self, filename: AbsolutePath):
-        return super().get_thumbnail_blob(filename)
-
-    def save_existing_thumbnails(self, filename_to_thumb_name: Dict[str, str]):
-        super().save_existing_thumbnails(filename_to_thumb_name)
+    def insert_new_thumbnails(self, filename_to_thumb_name: Dict[str, str]):
+        super().insert_new_thumbnails(filename_to_thumb_name)

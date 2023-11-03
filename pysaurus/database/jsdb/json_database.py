@@ -57,8 +57,8 @@ class JsonDatabase(InterJsonDatabase):
         )
 
     def default_prop_unit(self, name):
-        pt = self.get_prop_type(name)
-        return None if pt.multiple else pt.default
+        (pt,) = self.select_prop_types(name=name)
+        return None if pt["multiple"] else pt["defaultValue"]
 
     def __unused_clean_thumbnails(self, paths: List[AbsolutePath]):
         self._thumb_mgr.clean_thumbnails(paths)

@@ -83,7 +83,7 @@ class AbstractDatabase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def save_existing_thumbnails(self, filename_to_thumb_name: Dict[str, str]) -> None:
+    def insert_new_thumbnails(self, filename_to_thumb_name: Dict[str, str]) -> None:
         raise NotImplementedError()
 
     @abstractmethod
@@ -92,10 +92,6 @@ class AbstractDatabase(ABC):
 
     @abstractmethod
     def get_settings(self) -> DbSettings:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def get_thumbnail_blob(self, filename: AbsolutePath):
         raise NotImplementedError()
 
     @abstractmethod
@@ -126,11 +122,19 @@ class AbstractDatabase(ABC):
     ):
         raise NotImplementedError()
 
+    @abstractmethod
+    def get_prop_values(self, video_id, name):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_prop_names(self) -> Iterable[str]:
+        raise NotImplementedError()
+
+    @abstractmethod
     def get_videos(
         self,
         *,
         include: Sequence[str] = None,
-        exclude: Sequence[str] = None,
         with_moves: bool = False,
         where: dict = None,
     ) -> List[dict]:
@@ -140,7 +144,8 @@ class AbstractDatabase(ABC):
         return sum(1 for _ in self.select_videos_fields([], *flags, **forced_flags))
 
     def get_video_filename(self, video_id: int) -> AbsolutePath:
-        return AbsolutePath.ensure(self.read_video_field(video_id, "filename"))
+        (row,) = self.get_videos(include=["filename"], where={"video_id": video_id})
+        return AbsolutePath.ensure(row["filename"])
 
     def open_containing_folder(self, video_id: int) -> str:
         return str(self.get_video_filename(video_id).locate_file())
@@ -196,7 +201,7 @@ class AbstractDatabase(ABC):
 
             # Save thumbnails into thumb manager
             with Profiler(say("save thumbnails to db"), self.notifier):
-                self.save_existing_thumbnails(expected_thumbs)
+                self.insert_new_thumbnails(expected_thumbs)
 
             logger.info(f"Thumbnails generated, deleting temp dir {tmp_dir}")
             # Delete thumbnail files (done at context exit)
@@ -215,15 +220,19 @@ class AbstractDatabase(ABC):
             and ImageUtils.THUMBNAIL_SIZE == (miniature.width, miniature.height)
         }
 
-        available_videos = list(
-            self.select_videos_fields(
-                ["filename", "video_id"], "readable", "with_thumbnails"
+        missing_filenames = [
+            video["filename"]
+            for video in self.select_videos_fields(
+                ["filename"], "readable", "with_thumbnails"
             )
-        )
-        tasks = [
-            (video["filename"], self.get_thumbnail_blob(video["filename"]))
-            for video in available_videos
             if video["filename"] not in valid_miniatures
+        ]
+        tasks = [
+            (video["filename"], video["thumbnail_blob"])
+            for video in self.get_videos(
+                include=("filename", "thumbnail_blob"),
+                where={"filename": missing_filenames},
+            )
         ]
 
         added_miniatures = []
@@ -344,3 +353,78 @@ class AbstractDatabase(ABC):
     ) -> Iterable[Dict[str, Any]]:
         forced_flags.update({flag: True for flag in flags})
         return self.get_videos(include=fields, where=forced_flags)
+
+    def move_video_entry(self, from_id, to_id) -> None:
+        (from_data,) = self.get_videos(
+            include=("similarity_id", "date_entry_modified", "date_entry_opened"),
+            where={"video_id": from_id, "found": False},
+        )
+        assert self.has_video(video_id=to_id, found=True)
+        for prop_name in self.get_prop_names():
+            self.update_prop_values(
+                to_id, prop_name, self.get_prop_values(from_id, prop_name), self.MERGE
+            )
+        self.write_videos_field([to_id], "similarity_id", [from_data["similarity_id"]])
+        self.write_videos_field(
+            [to_id], "date_entry_modified", [from_data["date_entry_modified"].time]
+        )
+        self.write_videos_field(
+            [to_id], "date_entry_opened", [from_data["date_entry_opened"].time]
+        )
+
+        self.delete_video_entry(from_id)
+
+    def __close__(self):
+        """Close database."""
+        logger.info(f"Database closed: {self.get_name()}")
+
+    @abstractmethod
+    def set_predictor(self, prop_name, theta):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_predictor(self, prop_name):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def create_prop_type(self, name, prop_type, definition, multiple):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def remove_prop_type(self, name):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def rename_prop_type(self, old_name, new_name):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def convert_prop_multiplicity(self, name, multiple):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def validate_prop_values(self, name, values):
+        raise NotImplementedError()
+
+    @classmethod
+    @abstractmethod
+    def _video_must_be_updated(cls, video):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_video_terms(self, video_id):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def confirm_unique_moves(self):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_common_fields(self, video_indices):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def select_prop_types(
+        self, *, name=None, with_type=None, multiple=None, with_enum=None, default=None
+    ):
+        pass

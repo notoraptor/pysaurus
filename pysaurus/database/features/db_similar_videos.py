@@ -119,7 +119,10 @@ class DbSimilarVideos:
         miniatures = db.ensure_miniatures()  # type: List[Miniature]
         video_indices = [m.video_id for m in miniatures]
         previous_sim = [
-            db.read_video_field(video_id, "similarity_id") for video_id in video_indices
+            row["similarity_id"]
+            for row in db.get_videos(
+                include=["similarity_id"], where={"video_id": video_indices}
+            )
         ]
         db.write_videos_field(
             video_indices, "similarity_id", (None for _ in video_indices)
@@ -138,8 +141,10 @@ class DbSimilarVideos:
                 miniatures = db.ensure_miniatures()  # type: List[Miniature]
             video_indices = [m.video_id for m in miniatures]
             prev_sims = [
-                db.read_video_field(video_id, "similarity_id")
-                for video_id in video_indices
+                row["similarity_id"]
+                for row in db.get_videos(
+                    include=["similarity_id"], where={"video_id": video_indices}
+                )
             ]
             nb_videos = len(miniatures)
             new_miniature_indices = []
@@ -190,7 +195,10 @@ class DbSimilarVideos:
             )
             # Sort new similarity groups by size then smallest duration.
             lengths = [
-                db.read_video_field(video_id, "length") for video_id in video_indices
+                row["length"]
+                for row in db.get_videos(
+                    include=["length"], where={"video_id": video_indices}
+                )
             ]
             sim_groups.sort(key=lambda s: (len(s), min(lengths[x] for x in s)))
             # Get next similarity id to use.

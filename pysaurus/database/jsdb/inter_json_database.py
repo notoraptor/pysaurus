@@ -19,9 +19,9 @@ from pysaurus.core.json_backup import JsonBackup
 from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
+from pysaurus.database.abstract_database import AbstractDatabase
 from pysaurus.database.db_settings import DbSettings
 from pysaurus.database.db_video_attribute import PotentialMoveAttribute
-from pysaurus.database.jsdb.abstract_json_database import AbstractJsonDatabase
 from pysaurus.database.json_database_utils import DatabaseLoaded, patch_database_json
 from pysaurus.database.special_properties import SpecialProperties
 from pysaurus.database.thubmnail_database.thumbnail_manager import ThumbnailManager
@@ -35,14 +35,14 @@ from pysaurus.properties.properties import (
 )
 from pysaurus.video import Video, VideoRuntimeInfo
 from pysaurus.video.abstract_video_indexer import AbstractVideoIndexer
-from pysaurus.video.video_features import VIDEO_FIELDS, VideoFeatures
+from pysaurus.video.video_features import VideoFeatures
 from pysaurus.video.video_indexer import VideoIndexer
 from saurus.sql.sql_old.video_entry import VideoEntry
 
 logger = logging.getLogger(__name__)
 
 
-class InterJsonDatabase(AbstractJsonDatabase):
+class InterJsonDatabase(AbstractDatabase):
     __slots__ = (
         "_version",
         "settings",
@@ -295,6 +295,9 @@ class InterJsonDatabase(AbstractJsonDatabase):
     def get_predictor(self, prop_name):
         return self._predictors.get(prop_name, None)
 
+    def get_prop_names(self) -> Iterable[str]:
+        return self._prop_types.keys()
+
     def select_prop_types(
         self, *, name=None, with_type=None, multiple=None, with_enum=None, default=None
     ) -> List[dict]:
@@ -379,7 +382,7 @@ class InterJsonDatabase(AbstractJsonDatabase):
         self, video_id: int, name: str, values: Collection, action: int = 0
     ) -> bool:
         assert action in (-1, 0, 1)
-        pt = self.get_prop_type(name)
+        pt = self._prop_types[name]
         video = self._id_to_video[video_id]
         modified = False
         if action == -1 or (action == 0 and not values):
@@ -467,11 +470,31 @@ class InterJsonDatabase(AbstractJsonDatabase):
         # A video readable with existing audio stream must have valid audio bits
         return video.readable and video.audio_codec and not video.audio_bits
 
+    def _jsondb_get_videos_from_identifiers(self, where: dict):
+        q_video_id = where.pop("video_id", [])
+        q_filename = where.pop("filename", [])
+
+        if isinstance(q_video_id, int):
+            q_video_id = [q_video_id]
+        if isinstance(q_filename, AbsolutePath):
+            q_filename = [q_filename]
+
+        nb_expected = len(q_video_id) + len(q_filename)
+        found = [
+            self._id_to_video[video_id]
+            for video_id in q_video_id
+            if video_id in self._id_to_video
+        ] + [
+            self._videos[filename]
+            for filename in q_filename
+            if filename in self._videos
+        ]
+        return found, nb_expected
+
     def get_videos(
         self,
         *,
         include: Sequence[str] = None,
-        exclude: Sequence[str] = None,
         with_moves: bool = False,
         where: dict = None,
     ) -> List[dict]:
@@ -479,58 +502,38 @@ class InterJsonDatabase(AbstractJsonDatabase):
         # where["discarded"] = where.get("discarded", False)
         q_flags = {key: value for key, value in where.items() if key in Video.FLAGS}
         q_other = {key: value for key, value in where.items() if key not in Video.FLAGS}
-        q_video_id = q_other.pop("video_id", None)
 
-        flagged_videos = self._videos.values()
-        if q_flags:
-            flagged_videos = self._jsondb_get_cached_videos(**q_flags)
+        i_videos, nb_expected = self._jsondb_get_videos_from_identifiers(q_other)
+        if not nb_expected:
+            base_videos = self._videos.values()
+            if q_flags:
+                base_videos = self._jsondb_get_cached_videos(**q_flags)
+        else:
+            base_videos = i_videos
+            if q_flags:
+                base_videos = (
+                    video
+                    for video in i_videos
+                    if all(
+                        getattr(video, flag) is value for flag, value in q_flags.items()
+                    )
+                )
 
-        indexed_videos = flagged_videos
-        if q_video_id is not None:
-            if isinstance(q_video_id, int):
-                q_video_id = {q_video_id}
-            else:
-                assert isinstance(q_video_id, (list, tuple, set))
-                if not isinstance(q_video_id, set):
-                    q_video_id = set(q_video_id)
-            indexed_videos = (
-                video for video in flagged_videos if video.video_id in q_video_id
-            )
-
-        videos = indexed_videos
+        videos = base_videos
         if q_other:
             videos = (
                 video
-                for video in indexed_videos
+                for video in base_videos
                 if all(getattr(video, key) == value for key, value in q_other.items())
             )
 
-        if include is None and exclude is None:
-            # Whatever with_moves will be used later.
-            fields = None
-        elif include is None and exclude is not None and not with_moves:
-            exclude = set(exclude) | {"moves", "move_id"}
-            fields = set(VIDEO_FIELDS) - exclude
-        elif include is None and exclude is not None and with_moves:
-            fields = set(VIDEO_FIELDS) - set(exclude)
-        elif include is not None and exclude is None and not with_moves:
-            fields = set(include) - {"moves", "move_id"}
-        elif include is not None and exclude is None and with_moves:
-            fields = set(include) | {"moves", "move_id"}
-        elif include is not None and exclude is not None and not with_moves:
-            exclude = set(exclude) | {"moves", "move_id"}
-            fields = set(include) - exclude
-        else:
-            assert include is not None and exclude is not None and with_moves
-            include = set(include) | {"moves", "move_id"}
-            fields = include - set(exclude)
-
-        if fields is None:
+        if include is None:
+            # Return all, use with_moves.
             return [VideoFeatures.json(video, with_moves) for video in videos]
-        elif fields:
-            return [{key: getattr(video, key) for key in fields} for video in videos]
         else:
-            return [{"video_id": video.video_id} for video in videos]
+            # Use include, ignore with_moves
+            fields = include or ("video_id",)
+            return [{key: getattr(video, key) for key in fields} for video in videos]
 
     def get_video_terms(self, video_id: int) -> List[str]:
         return self._id_to_video[video_id].terms()
@@ -619,23 +622,9 @@ class InterJsonDatabase(AbstractJsonDatabase):
         if video.readable:
             self._jsondb_old_get_thumbnail_path(video).delete()
         self._jsondb_register_removed(video)
+        self._thumb_mgr.delete(video.filename)
         self.provider.delete(video_id)
         self._notify_fields_modified(["move_id", "quality"])
-        self._thumb_mgr.delete(video.filename)
-
-    def move_video_entry(self, from_id, to_id) -> None:
-        from_video = self._id_to_video[from_id]
-        to_video = self._id_to_video[to_id]
-        assert not from_video.found
-        assert to_video.found
-        for prop_name in self._prop_types.keys():
-            self.update_prop_values(
-                to_id, prop_name, self.get_prop_values(from_id, prop_name), self.MERGE
-            )
-        to_video.similarity_id = from_video.similarity_id
-        to_video.date_entry_modified = from_video.date_entry_modified.time
-        to_video.date_entry_opened = from_video.date_entry_opened.time
-        self.delete_video_entry(from_id)
 
     def confirm_unique_moves(self) -> int:
         unique_moves = list(self.moves_attribute.get_unique_moves())
@@ -655,11 +644,8 @@ class InterJsonDatabase(AbstractJsonDatabase):
             self._id_to_video[video_id] for video_id in video_indices
         )
 
-    def get_thumbnail_blob(self, filename: AbsolutePath):
-        return self._thumb_mgr.get_blob(filename)
-
-    def save_existing_thumbnails(self, filename_to_thumb_name: Dict[str, str]) -> None:
+    def insert_new_thumbnails(self, filename_to_thumb_name: Dict[str, str]) -> None:
         self._thumb_mgr.save_existing_thumbnails(filename_to_thumb_name)
 
-    def get_prop_type(self, name) -> PropType:
-        return self._prop_types[name]
+    def jsondb_get_thumbnail_blob(self, filename: AbsolutePath):
+        return self._thumb_mgr.get_blob(filename)
