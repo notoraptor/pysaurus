@@ -9,9 +9,8 @@ from pysaurus.core.job_notifications import notify_job_start
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
-from pysaurus.database.database import Database as OldDatabase
+from pysaurus.database.abstract_database import AbstractDatabase
 from pysaurus.database.db_settings import DbSettings
-from pysaurus.database.db_way_def import DbWays
 from pysaurus.properties.properties import DefType, PropValueType
 from pysaurus.updates.video_inliner import (
     flatten_video,
@@ -22,7 +21,6 @@ from pysaurus.video import Video, VideoRuntimeInfo
 from pysaurus.video_raptor.video_raptor_pyav import VideoRaptor
 from saurus.language import say
 from saurus.sql.pysaurus_connection import PysaurusConnection
-from pysaurus.database.abstract_database import AbstractDatabase
 
 logger = logging.getLogger(__name__)
 
@@ -174,9 +172,6 @@ class OldPysaurusCollection(AbstractDatabase):
             self.notifier.notify(notifications.VideoThumbnailErrors(thumb_errors))
         self._notify_missing_thumbnails()
         self.provider.refresh()
-
-    def reopen(self):
-        super().reopen()
 
     def set_date(self, date: Date):
         # super().set_date(date)

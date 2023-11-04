@@ -1,7 +1,6 @@
 import logging
 from typing import (
     Collection,
-    Container,
     Dict,
     Iterable,
     List,
@@ -408,11 +407,6 @@ class JsonDatabase(AbstractDatabase):
         else:
             values = [prop_type.validate(value) for value in values]
         return values
-
-    def _update_videos_not_found(self, existing_paths: Container[AbsolutePath]):
-        """Use given container of existing paths to mark not found videos."""
-        for video_state in self._videos.values():
-            video_state.found = video_state.filename in existing_paths
 
     def _get_collectable_missing_thumbnails(self) -> Dict[str, int]:
         return {

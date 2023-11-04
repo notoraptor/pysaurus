@@ -81,11 +81,6 @@ class AbstractDatabase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def _update_videos_not_found(self, existing_paths: Container[AbsolutePath]):
-        """Use given container of existing paths to mark not found videos."""
-        raise NotImplementedError()
-
-    @abstractmethod
     def add_video_errors(self, video_id: int, *errors: Iterable[str]) -> None:
         raise NotImplementedError()
 
@@ -315,6 +310,13 @@ class AbstractDatabase(ABC):
         for m in m_dict.values():
             m.video_id = self.get_video_id(m.identifier)
         return list(m_dict.values())
+
+    def _update_videos_not_found(self, existing_paths: Container[AbsolutePath]):
+        """Use given container of existing paths to mark not found videos."""
+        rows = self.get_videos(include=["video_id", "filename"])
+        indices = [row["video_id"] for row in rows]
+        founds = [row["filename"] in existing_paths for row in rows]
+        self.write_videos_field(indices, "found", founds)
 
     def _find_video_paths_for_update(
         self, file_paths: Dict[AbsolutePath, VideoRuntimeInfo]
