@@ -1,7 +1,19 @@
 import logging
 import tempfile
 from abc import ABC, abstractmethod
-from typing import Any, Collection, Container, Dict, Iterable, List, Optional, Sequence
+from collections import Counter
+from typing import (
+    Any,
+    Callable,
+    Collection,
+    Container,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+)
 
 import ujson as json
 
@@ -45,11 +57,12 @@ class AbstractDatabase(ABC):
         self.in_save_context = False
         self.provider = provider
 
-    def rename(self, new_name: str) -> None:
-        self.ways = self.ways.renamed(new_name)
-
-    def get_name(self) -> str:
-        return self.ways.db_folder.title
+    # abstract methods
+    # database management
+    # others
+    # prop types
+    # prop values
+    # videos
 
     @abstractmethod
     def set_folders(self, folders) -> None:
@@ -138,6 +151,57 @@ class AbstractDatabase(ABC):
         with_moves: bool = False,
         where: dict = None,
     ) -> List[dict]:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def set_predictor(self, prop_name, theta):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_predictor(self, prop_name):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def create_prop_type(self, name, prop_type, definition, multiple):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def remove_prop_type(self, name):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def rename_prop_type(self, old_name, new_name):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def convert_prop_multiplicity(self, name, multiple):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def validate_prop_values(self, name, values):
+        raise NotImplementedError()
+
+    @classmethod
+    @abstractmethod
+    def _video_must_be_updated(cls, video):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_video_terms(self, video_id):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_unique_moves(self) -> List[Tuple[int, int]]:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_common_fields(self, video_indices):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def select_prop_types(
+        self, *, name=None, with_type=None, multiple=None, with_enum=None, default=None
+    ):
         raise NotImplementedError()
 
     def count_videos(self, *flags, **forced_flags) -> int:
@@ -378,53 +442,146 @@ class AbstractDatabase(ABC):
         """Close database."""
         logger.info(f"Database closed: {self.get_name()}")
 
-    @abstractmethod
-    def set_predictor(self, prop_name, theta):
-        raise NotImplementedError()
+    def rename(self, new_name: str) -> None:
+        self.ways = self.ways.renamed(new_name)
 
-    @abstractmethod
-    def get_predictor(self, prop_name):
-        raise NotImplementedError()
+    def get_name(self) -> str:
+        return self.ways.db_folder.title
 
-    @abstractmethod
-    def create_prop_type(self, name, prop_type, definition, multiple):
-        raise NotImplementedError()
+    def confirm_unique_moves(self) -> int:
+        unique_moves = self.get_unique_moves()
+        if unique_moves:
+            with self.to_save():
+                for video_id, dst_id in unique_moves:
+                    self.move_video_entry(video_id, dst_id)
+        return len(unique_moves)
 
-    @abstractmethod
-    def remove_prop_type(self, name):
-        raise NotImplementedError()
+    def delete_property_value(self, name: str, values: list) -> List[int]:
+        modified = []
+        values = set(self.validate_prop_values(name, values))
+        for video_id in self.get_all_video_indices():
+            previous_values = set(self.get_prop_values(video_id, name))
+            new_values = previous_values - values
+            if len(previous_values) > len(new_values):
+                self.update_prop_values(video_id, name, new_values)
+                modified.append(video_id)
+        if modified:
+            self._notify_properties_modified([name])
+        return modified
 
-    @abstractmethod
-    def rename_prop_type(self, old_name, new_name):
-        raise NotImplementedError()
+    def move_property_value(self, old_name: str, values: list, new_name: str) -> None:
+        modified = self.delete_property_value(old_name, values)
+        for video_id in modified:
+            self.update_prop_values(video_id, new_name, values, self.MERGE)
+        if modified:
+            self._notify_properties_modified([old_name, new_name])
 
-    @abstractmethod
-    def convert_prop_multiplicity(self, name, multiple):
-        raise NotImplementedError()
+    def edit_property_value(
+        self, name: str, old_values: list, new_value: object
+    ) -> bool:
+        modified = []
+        old_values = set(self.validate_prop_values(name, old_values))
+        (new_value,) = self.validate_prop_values(name, [new_value])
+        for video_id in self.get_all_video_indices():
+            previous_values = set(self.get_prop_values(video_id, name))
+            next_values = previous_values - old_values
+            if len(previous_values) > len(next_values):
+                next_values.add(new_value)
+                self.update_prop_values(video_id, name, next_values)
+                modified.append(video_id)
+        if modified:
+            self._notify_properties_modified([name])
+        return bool(modified)
 
-    @abstractmethod
-    def validate_prop_values(self, name, values):
-        raise NotImplementedError()
+    def edit_property_for_videos(
+        self,
+        video_indices: List[int],
+        name: str,
+        values_to_add: list,
+        values_to_remove: list,
+    ) -> None:
+        print(
+            "Edit",
+            len(video_indices),
+            "video props, add",
+            values_to_add,
+            "remove",
+            values_to_remove,
+        )
+        values_to_add = set(self.validate_prop_values(name, values_to_add))
+        values_to_remove = set(self.validate_prop_values(name, values_to_remove))
+        for video_id in video_indices:
+            values = (
+                set(self.get_prop_values(video_id, name)) - values_to_remove
+            ) | values_to_add
+            self.update_prop_values(video_id, name, values)
+        self._notify_properties_modified([name])
 
-    @classmethod
-    @abstractmethod
-    def _video_must_be_updated(cls, video):
-        raise NotImplementedError()
+    def count_property_values(self, video_indices: List[int], name: str) -> List[List]:
+        count = Counter()
+        for video_id in video_indices:
+            count.update(self.get_prop_values(video_id, name))
+        return sorted(list(item) for item in count.items())
 
-    @abstractmethod
-    def get_video_terms(self, video_id):
-        raise NotImplementedError()
+    def fill_property_with_terms(self, prop_name: str, only_empty=False) -> None:
+        assert self.select_prop_types(name=prop_name, with_type=str, multiple=True)
+        modified = []
+        for video_id in self.get_all_video_indices():
+            values = self.get_prop_values(video_id, prop_name)
+            if only_empty and values:
+                continue
+            self.update_prop_values(
+                video_id, prop_name, values + self.get_video_terms(video_id)
+            )
+            modified.append(video_id)
+        if modified:
+            self._notify_properties_modified([prop_name])
 
-    @abstractmethod
-    def confirm_unique_moves(self):
-        raise NotImplementedError()
+    def _edit_prop_value(self, prop_name: str, function: Callable[[Any], Any]) -> None:
+        assert self.select_prop_types(name=prop_name, with_type=str)
+        modified = []
+        for video_id in self.get_all_video_indices():
+            values = self.get_prop_values(video_id, prop_name)
+            new_values = [function(value) for value in values]
+            if values and new_values != values:
+                self.update_prop_values(video_id, prop_name, new_values)
+                modified.append(video_id)
+        if modified:
+            self._notify_properties_modified([prop_name])
 
-    @abstractmethod
-    def get_common_fields(self, video_indices):
-        raise NotImplementedError()
+    def prop_to_lowercase(self, prop_name) -> None:
+        return self._edit_prop_value(prop_name, lambda value: value.strip().lower())
 
-    @abstractmethod
-    def select_prop_types(
-        self, *, name=None, with_type=None, multiple=None, with_enum=None, default=None
-    ):
+    def prop_to_uppercase(self, prop_name) -> None:
+        return self._edit_prop_value(prop_name, lambda value: value.strip().upper())
+
+    def move_concatenated_prop_val(
+        self, path: list, from_property: str, to_property: str
+    ) -> int:
+        assert self.select_prop_types(name=from_property, multiple=True)
+        assert self.select_prop_types(name=to_property, with_type=str)
+        self.validate_prop_values(from_property, path)
+        (concat_path,) = self.validate_prop_values(
+            to_property, [" ".join(str(value) for value in path)]
+        )
+        modified = []
+        path_set = set(path)
+        for video_id in self.get_all_video_indices():
+            old_values = self.get_prop_values(video_id, from_property)
+            new_values = [v for v in old_values if v not in path_set]
+            if len(old_values) == len(new_values) + len(path_set):
+                self.update_prop_values(video_id, from_property, new_values)
+                self.update_prop_values(
+                    video_id, to_property, [concat_path], self.MERGE
+                )
+                modified.append(video_id)
+        if modified:
+            self._notify_properties_modified([from_property, to_property])
+        return len(modified)
+
+    def reopen(self):
         pass
+
+    def default_prop_unit(self, name):
+        (pt,) = self.select_prop_types(name=name)
+        return None if pt["multiple"] else pt["defaultValue"]

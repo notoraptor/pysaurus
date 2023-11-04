@@ -1,7 +1,7 @@
 import logging
 import tempfile
 from multiprocessing import Pool
-from typing import Any, Callable, Container, Dict, Iterable, List, Union
+from typing import Collection, Container, Dict, Iterable, List, Sequence, Tuple, Union
 
 from pysaurus.core import notifications
 from pysaurus.core.components import AbsolutePath, Date
@@ -10,6 +10,7 @@ from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.database import Database as OldDatabase
+from pysaurus.database.db_settings import DbSettings
 from pysaurus.database.db_way_def import DbWays
 from pysaurus.properties.properties import DefType, PropValueType
 from pysaurus.updates.video_inliner import (
@@ -21,20 +22,44 @@ from pysaurus.video import Video, VideoRuntimeInfo
 from pysaurus.video_raptor.video_raptor_pyav import VideoRaptor
 from saurus.language import say
 from saurus.sql.pysaurus_connection import PysaurusConnection
+from pysaurus.database.abstract_database import AbstractDatabase
 
 logger = logging.getLogger(__name__)
 
 
-class OldPysaurusCollection(OldDatabase):
+class OldPysaurusCollection(AbstractDatabase):
     __slots__ = ("db",)
 
     def __init__(self, path, folders=None, notifier=DEFAULT_NOTIFIER):
-        # super().__init__(path, folders, notifier)
-        path = AbsolutePath.ensure_directory(path)
-        self.notifier = notifier
-        self.ways = DbWays(path)
+        super().__init__(path, None, notifier)
         self.db = PysaurusConnection(self.ways.db_sql_path.path)
         self._load(folders)
+
+    def _get_collectable_missing_thumbnails(self) -> Dict[str, int]:
+        pass
+
+    def get_settings(self) -> DbSettings:
+        pass
+
+    def update_prop_values(
+        self, video_id: int, name: str, values: Collection, action: int = 0
+    ):
+        pass
+
+    def get_prop_names(self) -> Iterable[str]:
+        pass
+
+    def get_videos(
+        self,
+        *,
+        include: Sequence[str] = None,
+        with_moves: bool = False,
+        where: dict = None,
+    ) -> List[dict]:
+        pass
+
+    def get_unique_moves(self) -> List[Tuple[int, int]]:
+        pass
 
     def _load(self, folders=None):
         if folders:
@@ -152,48 +177,6 @@ class OldPysaurusCollection(OldDatabase):
 
     def reopen(self):
         super().reopen()
-
-    def delete_property_value(self, name: str, values: list) -> None:
-        super().delete_property_value(name, values)
-
-    def move_property_value(self, old_name: str, values: list, new_name: str) -> None:
-        super().move_property_value(old_name, values, new_name)
-
-    def edit_property_value(
-        self, name: str, old_values: list, new_value: object
-    ) -> bool:
-        return super().edit_property_value(name, old_values, new_value)
-
-    def edit_property_for_videos(
-        self,
-        video_indices: List[int],
-        name: str,
-        values_to_add: list,
-        values_to_remove: list,
-    ) -> None:
-        super().edit_property_for_videos(
-            video_indices, name, values_to_add, values_to_remove
-        )
-
-    def count_property_values(self, video_indices: List[int], name: str) -> List[List]:
-        return super().count_property_values(video_indices, name)
-
-    def fill_property_with_terms(self, prop_name: str, only_empty=False) -> None:
-        super().fill_property_with_terms(prop_name, only_empty)
-
-    def prop_to_lowercase(self, prop_name) -> None:
-        super().prop_to_lowercase(prop_name)
-
-    def prop_to_uppercase(self, prop_name) -> None:
-        super().prop_to_uppercase(prop_name)
-
-    def _edit_prop_value(self, prop_name: str, function: Callable[[Any], Any]) -> None:
-        super()._edit_prop_value(prop_name, function)
-
-    def move_concatenated_prop_val(
-        self, path: list, from_property: str, to_property: str
-    ) -> int:
-        return super().move_concatenated_prop_val(path, from_property, to_property)
 
     def set_date(self, date: Date):
         # super().set_date(date)
@@ -435,12 +418,6 @@ class OldPysaurusCollection(OldDatabase):
 
     def delete_video_entry(self, video_id: int):
         super().delete_video_entry(video_id)
-
-    def move_video_entry(self, from_id, to_id) -> None:
-        super().move_video_entry(from_id, to_id)
-
-    def confirm_unique_moves(self) -> int:
-        return super().confirm_unique_moves()
 
     def open_video(self, video_id: int) -> None:
         super().open_video(video_id)

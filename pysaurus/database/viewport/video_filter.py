@@ -321,7 +321,7 @@ class LayerSearch(Layer):
             self._log("search", search_def)
             self.output = {
                 video_id
-                for video_id in self.database.search(
+                for video_id in self.database.jsondb_provider_search(
                     search_def.text, search_def.cond, self.input.videos
                 )
             }
@@ -346,7 +346,9 @@ class LayerSort(Layer):
 
     def run(self):
         sorting = VideoSorting(self.params["sorting"])
-        self.output = self.database.sort_video_indices(self.input, sorting)
+        self.output = self.database.jsondb_provider_sort_video_indices(
+            self.input, sorting
+        )
 
     def delete(self, video_id: int):
         # See commentary in pysaurus.database.viewport.video_filter.LayerSource.delete
