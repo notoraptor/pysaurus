@@ -86,12 +86,6 @@ class AbstractDatabase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def _find_video_paths_for_update(
-        self, file_paths: Dict[AbsolutePath, VideoRuntimeInfo]
-    ) -> List[str]:
-        raise NotImplementedError()
-
-    @abstractmethod
     def add_video_errors(self, video_id: int, *errors: Iterable[str]) -> None:
         raise NotImplementedError()
 
@@ -179,11 +173,6 @@ class AbstractDatabase(ABC):
 
     @abstractmethod
     def validate_prop_values(self, name, values):
-        raise NotImplementedError()
-
-    @classmethod
-    @abstractmethod
-    def _video_must_be_updated(cls, video):
         raise NotImplementedError()
 
     @abstractmethod
@@ -326,6 +315,25 @@ class AbstractDatabase(ABC):
         for m in m_dict.values():
             m.video_id = self.get_video_id(m.identifier)
         return list(m_dict.values())
+
+    def _find_video_paths_for_update(
+        self, file_paths: Dict[AbsolutePath, VideoRuntimeInfo]
+    ) -> List[str]:
+        all_file_names = []
+        for file_name, file_info in file_paths.items():
+            if not self.get_videos(
+                include=(),
+                where={
+                    "filename": file_name,
+                    "mtime": file_info.mtime,
+                    "file_size": file_info.size,
+                    "driver_id": file_info.driver_id,
+                },
+            ):
+                all_file_names.append(file_name.standard_path)
+
+        all_file_names.sort()
+        return all_file_names
 
     def set_video_similarity(
         self, video_id: int, value: Optional[int], notify=True

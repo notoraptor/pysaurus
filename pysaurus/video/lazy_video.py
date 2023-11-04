@@ -216,6 +216,9 @@ class LazyVideo(WithSchema):
 
     readable = property(lambda self: not self.unreadable)
 
+    mtime = property(lambda self: self.runtime.mtime)
+    driver_id = property(lambda self: self.runtime.driver_id)
+
     @property
     def found(self) -> bool:
         return self.runtime.is_file

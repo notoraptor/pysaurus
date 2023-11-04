@@ -423,24 +423,6 @@ class JsonDatabase(AbstractDatabase):
             if not self.jsondb_has_thumbnail(video["filename"])
         }
 
-    def _find_video_paths_for_update(
-        self, file_paths: Dict[AbsolutePath, VideoRuntimeInfo]
-    ) -> List[str]:
-        all_file_names = []
-        for file_name, file_info in file_paths.items():
-            video: Video = self._videos.get(file_name, None)
-            if (
-                video is None
-                or file_info.mtime != video.runtime.mtime
-                or file_info.size != video.file_size
-                or file_info.driver_id != video.runtime.driver_id
-                or (video.readable and not SpecialProperties.all_in(video))
-                or self._video_must_be_updated(video)
-            ):
-                all_file_names.append(file_name.standard_path)
-        all_file_names.sort()
-        return all_file_names
-
     def _notify_properties_modified(self, properties):
         self.save()
         super()._notify_properties_modified(properties)
@@ -466,11 +448,6 @@ class JsonDatabase(AbstractDatabase):
     def _notify_missing_thumbnails(self) -> None:
         super()._notify_missing_thumbnails()
         self.save()
-
-    @classmethod
-    def _video_must_be_updated(cls, video: Video):
-        # A video readable with existing audio stream must have valid audio bits
-        return video.readable and video.audio_codec and not video.audio_bits
 
     def _jsondb_get_videos_from_identifiers(self, where: dict):
         q_video_id = where.pop("video_id", [])
