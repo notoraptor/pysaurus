@@ -408,15 +408,6 @@ class JsonDatabase(AbstractDatabase):
             values = [prop_type.validate(value) for value in values]
         return values
 
-    def _get_collectable_missing_thumbnails(self) -> Dict[str, int]:
-        return {
-            video["filename"].path: video["video_id"]
-            for video in self.select_videos_fields(
-                ["filename", "video_id"], "readable", "found"
-            )
-            if not self.jsondb_has_thumbnail(video["filename"])
-        }
-
     def _notify_properties_modified(self, properties):
         self.save()
         super()._notify_properties_modified(properties)
@@ -612,8 +603,10 @@ class JsonDatabase(AbstractDatabase):
             self._id_to_video[video_id] for video_id in video_indices
         )
 
-    def insert_new_thumbnails(self, filename_to_thumb_name: Dict[str, str]) -> None:
+    def _insert_new_thumbnails(self, filename_to_thumb_name: Dict[str, str]) -> None:
         self._thumb_mgr.save_existing_thumbnails(filename_to_thumb_name)
+        for filename in filename_to_thumb_name:
+            self.jsondb_register_modified(self._videos[AbsolutePath.ensure(filename)])
 
     def jsondb_get_thumbnail_blob(self, filename: AbsolutePath):
         return self._thumb_mgr.get_blob(filename)

@@ -65,6 +65,10 @@ class AbstractDatabase(ABC):
     # videos
 
     @abstractmethod
+    def set_date(self, date: Date):
+        raise NotImplementedError()
+
+    @abstractmethod
     def set_folders(self, folders) -> None:
         raise NotImplementedError()
 
@@ -73,7 +77,7 @@ class AbstractDatabase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def set_date(self, date: Date):
+    def get_settings(self) -> DbSettings:
         raise NotImplementedError()
 
     @abstractmethod
@@ -85,16 +89,17 @@ class AbstractDatabase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def insert_new_thumbnails(self, filename_to_thumb_name: Dict[str, str]) -> None:
+    def _insert_new_thumbnails(self, filename_to_thumb_name: Dict[str, str]) -> None:
         raise NotImplementedError()
 
-    @abstractmethod
     def _get_collectable_missing_thumbnails(self) -> Dict[str, int]:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def get_settings(self) -> DbSettings:
-        raise NotImplementedError()
+        return {
+            video["filename"].path: video["video_id"]
+            for video in self.get_videos(
+                include=["filename", "video_id"],
+                where={"readable": True, "found": True, "without_thumbnails": True},
+            )
+        }
 
     @abstractmethod
     def write_videos_field(self, indices: Iterable[int], field: str, values: Iterable):
@@ -249,7 +254,7 @@ class AbstractDatabase(ABC):
 
             # Save thumbnails into thumb manager
             with Profiler(say("save thumbnails to db"), self.notifier):
-                self.insert_new_thumbnails(expected_thumbs)
+                self._insert_new_thumbnails(expected_thumbs)
 
             logger.info(f"Thumbnails generated, deleting temp dir {tmp_dir}")
             # Delete thumbnail files (done at context exit)
