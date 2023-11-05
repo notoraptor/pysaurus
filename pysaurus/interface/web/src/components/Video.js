@@ -604,7 +604,7 @@ export class Video extends React.Component {
 	}
 
 	reallyDismissSimilarity() {
-		python_call("set_similarity", this.props.data.video_id, -1)
+		python_call("set_similarities", [this.props.data.video_id], [-1])
 			.then(() =>
 				this.props.onInfo(
 					tr("Current similarity cancelled: {path}", {
@@ -617,7 +617,7 @@ export class Video extends React.Component {
 	}
 
 	reallyResetSimilarity() {
-		python_call("set_similarity", this.props.data.video_id, null)
+		python_call("set_similarities", [this.props.data.video_id], [null])
 			.then(() =>
 				this.props.onInfo(
 					tr("Current similarity reset: {path}", {

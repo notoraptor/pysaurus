@@ -124,14 +124,12 @@ class DbSimilarVideos:
                 include=["similarity_id"], where={"video_id": video_indices}
             )
         ]
-        db.write_videos_field(
-            video_indices, "similarity_id", (None for _ in video_indices)
-        )
+        db.set_similarities(video_indices, (None for _ in video_indices))
         try:
             self.find_similar_videos(db, miniatures)
         except Exception:
             # Restore previous similarities.
-            db.write_videos_field(video_indices, "similarity_id", values=previous_sim)
+            db.set_similarities(video_indices, previous_sim)
             raise
 
     def find_similar_videos(self, db: Database, miniatures: List[Miniature] = None):
@@ -263,20 +261,22 @@ class DbSimilarVideos:
                     )
                 )
 
-                db.write_videos_field(
+                db.set_similarities(
                     (video_indices[i] for i in new_miniature_indices),
-                    "similarity_id",
                     (-1 for _ in new_miniature_indices),
                 )
-                for step, (new_id, new_group) in enumerate(
-                    zip(new_sim_indices, new_sim_groups)
-                ):
-                    for i in new_group:
-                        db.set_video_similarity(
-                            video_indices[i],
-                            new_id,
-                            notify=(step == len(new_sim_indices) - 1),
-                        )
+                db.set_similarities(
+                    [
+                        video_indices[i]
+                        for new_group in new_sim_groups
+                        for i in new_group
+                    ],
+                    [
+                        new_id
+                        for (new_id, new_group) in zip(new_sim_indices, new_sim_groups)
+                        for _ in new_group
+                    ],
+                )
 
     @classmethod
     def _generate_edges(cls, nb_videos):

@@ -123,7 +123,7 @@ class FeatureAPI:
             "set_group": FromView(self, View.set_group),
             "set_groups": FromView(self, View.set_groups),
             "set_search": FromView(self, View.set_search),
-            "set_similarity": FromDb(self, Db.set_video_similarity),
+            "set_similarities": FromDb(self, Db.set_similarities),
             "set_sorting": FromView(self, View.set_sort),
             "set_sources": FromView(self, View.set_sources),
             "set_video_folders": FromDb(self, Db.set_folders),

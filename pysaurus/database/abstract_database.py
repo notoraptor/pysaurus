@@ -32,10 +32,7 @@ from pysaurus.database.db_way_def import DbWays
 from pysaurus.database.json_database_utils import DatabaseSaved, DatabaseToSaveContext
 from pysaurus.database.viewport.abstract_video_provider import AbstractVideoProvider
 from pysaurus.miniature.miniature import Miniature
-from pysaurus.properties.properties import (
-    PropTypeValidator,
-    PropValueType,
-)
+from pysaurus.properties.properties import PropTypeValidator, PropValueType
 from pysaurus.video import VideoRuntimeInfo
 from saurus.language import say
 from saurus.sql.sql_old.video_entry import VideoEntry
@@ -353,12 +350,9 @@ class AbstractDatabase(ABC):
             )
         }
 
-    def set_video_similarity(
-        self, video_id: int, value: Optional[int], notify=True
-    ) -> None:
-        self.write_videos_field([video_id], "similarity_id", [value])
-        if notify:
-            self._notify_fields_modified(["similarity_id"])
+    def set_similarities(self, indices: Iterable[int], values: Iterable[Optional[int]]):
+        self.write_videos_field(indices, "similarity_id", values)
+        self._notify_fields_modified(["similarity_id"])
 
     def change_video_file_title(self, video_id: int, new_title: str) -> None:
         if functions.has_discarded_characters(new_title):
@@ -454,7 +448,7 @@ class AbstractDatabase(ABC):
             self.update_prop_values(
                 to_id, prop_name, self.get_prop_values(from_id, prop_name), self.MERGE
             )
-        self.write_videos_field([to_id], "similarity_id", [from_data["similarity_id"]])
+        self.set_similarities([to_id], [from_data["similarity_id"]])
         self.write_videos_field(
             [to_id], "date_entry_modified", [from_data["date_entry_modified"].time]
         )

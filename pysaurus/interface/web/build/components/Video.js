@@ -427,12 +427,12 @@ System.register(["../dialogs/Dialog.js", "../forms/FormVideoEditProperties.js", 
           }), true)).catch(backend_error);
         }
         reallyDismissSimilarity() {
-          python_call("set_similarity", this.props.data.video_id, -1).then(() => this.props.onInfo(tr("Current similarity cancelled: {path}", {
+          python_call("set_similarities", [this.props.data.video_id], [-1]).then(() => this.props.onInfo(tr("Current similarity cancelled: {path}", {
             path: this.props.data.filename
           }), true)).catch(backend_error);
         }
         reallyResetSimilarity() {
-          python_call("set_similarity", this.props.data.video_id, null).then(() => this.props.onInfo(tr("Current similarity reset: {path}", {
+          python_call("set_similarities", [this.props.data.video_id], [null]).then(() => this.props.onInfo(tr("Current similarity reset: {path}", {
             path: this.props.data.filename
           }), true)).catch(backend_error);
         }
