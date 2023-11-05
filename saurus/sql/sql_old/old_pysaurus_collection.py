@@ -41,9 +41,6 @@ class OldPysaurusCollection(AbstractDatabase):
     ):
         pass
 
-    def get_prop_names(self) -> Iterable[str]:
-        pass
-
     def get_videos(
         self,
         *,
@@ -190,10 +187,10 @@ class OldPysaurusCollection(AbstractDatabase):
     def get_predictor(self, prop_name):
         return super().get_predictor(prop_name)
 
-    def select_prop_types(
+    def get_prop_types(
         self, *, name=None, with_type=None, multiple=None, with_enum=None, default=None
     ) -> List[dict]:
-        return super().select_prop_types()
+        return super().get_prop_types()
 
     def create_prop_type(
         self,
@@ -215,9 +212,6 @@ class OldPysaurusCollection(AbstractDatabase):
 
     def get_prop_values(self, video_id: int, name: str) -> List[PropValueType]:
         return super().get_prop_values(video_id, name)
-
-    def validate_prop_values(self, name, values: list) -> List[PropValueType]:
-        return super().validate_prop_values(name, values)
 
     def _update_videos_not_found(self, existing_paths: Container[AbsolutePath]):
         # super()._update_videos_not_found(existing_paths)

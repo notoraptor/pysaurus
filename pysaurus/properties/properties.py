@@ -1,3 +1,4 @@
+import typing
 from typing import Union
 
 from pysaurus.application import exceptions
@@ -92,3 +93,37 @@ class PropType(WithSchema):
     @classmethod
     def from_dict(cls, dct: dict, **kwargs):
         return cls(**cls.SCHEMA.to_long_keys(dct))
+
+
+class PropTypeValidator:
+    __slots__ = ("name", "type", "enumeration", "multiple")
+
+    def __init__(self, prop_desc: dict):
+        self.name = prop_desc["name"]
+        self.type = prop_desc[PROP_UNIT_TYPE_MAP[prop_desc["type"]]]
+        self.enumeration = prop_desc["enumeration"]
+        self.multiple = prop_desc["multiple"]
+
+    def validate(self, value: PropValueType) -> PropValueType:
+        if self.multiple:
+            if not isinstance(value, (list, tuple, set)):
+                raise exceptions.InvalidMultiplePropertyValue(self, value)
+            if not isinstance(value, set):
+                value = set(value)
+            for element in value:
+                if not isinstance(element, self.type):
+                    raise exceptions.InvalidPropertyValue(self, element)
+            if self.enumeration:
+                enumeration = set(self.enumeration)
+                for element in value:
+                    if element not in enumeration:
+                        raise exceptions.InvalidPropertyValue(self, element)
+            return sorted(value)
+
+        if self.type is float and isinstance(value, int):
+            value = float(value)
+        if not isinstance(value, self.type):
+            raise exceptions.InvalidPropertyValue(self, value)
+        if self.enumeration and value not in set(self.enumeration):
+            raise exceptions.InvalidPropertyValue(self, value)
+        return value

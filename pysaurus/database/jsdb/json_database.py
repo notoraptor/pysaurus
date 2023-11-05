@@ -255,6 +255,74 @@ class JsonDatabase(AbstractDatabase):
         pt = self._prop_types[name]
         return (not value) if pt.multiple else (value == [pt.default])
 
+    def jsondb_get_thumbnail_blob(self, filename: AbsolutePath):
+        return self._thumb_mgr.get_blob(filename)
+
+    def jsondb_provider_search(
+        self, text: str, cond: str = "and", videos: Sequence[int] = None
+    ) -> Iterable[int]:
+        if text:
+            self._jsondb_flush_changes()
+            if videos is None:
+                filenames: Dict[AbsolutePath, Video] = self._videos
+            else:
+                filenames: Dict[AbsolutePath, Video] = {
+                    self._id_to_video[video_id].filename: self._id_to_video[video_id]
+                    for video_id in videos
+                }
+            terms = functions.string_to_pieces(text)
+            if cond == "exact":
+                with Profiler(f"query exact: {text}", self.notifier):
+                    selection = (
+                        filename
+                        for filename in self._indexer.query_and(filenames, terms)
+                        if self._videos[filename].has_exact_text(text)
+                    )
+            elif cond == "and":
+                selection = self._indexer.query_and(filenames, terms)
+            elif cond == "or":
+                selection = self._indexer.query_or(filenames, terms)
+            else:
+                assert cond == "id"
+                (term,) = terms
+                video_id = int(term)
+                selection = (
+                    [self._id_to_video[video_id].filename]
+                    if video_id in self._id_to_video
+                    else []
+                )
+            return (filenames[filename].video_id for filename in selection)
+        return ()
+
+    def jsondb_provider_sort_video_indices(
+        self, indices: Iterable[int], sorting: VideoSorting
+    ):
+        return sorted(
+            indices,
+            key=lambda video_id: self._id_to_video[video_id].to_comparable(sorting),
+        )
+
+    def _jsondb_get_videos_from_identifiers(self, where: dict):
+        q_video_id = where.pop("video_id", [])
+        q_filename = where.pop("filename", [])
+
+        if isinstance(q_video_id, int):
+            q_video_id = [q_video_id]
+        if isinstance(q_filename, AbsolutePath):
+            q_filename = [q_filename]
+
+        nb_expected = len(q_video_id) + len(q_filename)
+        found = [
+            self._id_to_video[video_id]
+            for video_id in q_video_id
+            if video_id in self._id_to_video
+        ] + [
+            self._videos[filename]
+            for filename in q_filename
+            if filename in self._videos
+        ]
+        return found, nb_expected
+
     @Profiler.profile_method()
     def _save(self):
         """Save database on disk."""
@@ -296,10 +364,7 @@ class JsonDatabase(AbstractDatabase):
     def get_predictor(self, prop_name):
         return self._predictors.get(prop_name, None)
 
-    def get_prop_names(self) -> Iterable[str]:
-        return self._prop_types.keys()
-
-    def select_prop_types(
+    def get_prop_types(
         self, *, name=None, with_type=None, multiple=None, with_enum=None, default=None
     ) -> List[dict]:
         if name is with_type is multiple is with_enum is default is None:
@@ -348,8 +413,8 @@ class JsonDatabase(AbstractDatabase):
             self.save()
 
     def rename_prop_type(self, old_name, new_name) -> None:
-        if self.select_prop_types(name=old_name):
-            if self.select_prop_types(name=new_name):
+        if self.get_prop_types(name=old_name):
+            if self.get_prop_types(name=new_name):
                 raise exceptions.PropertyAlreadyExists(new_name)
             prop_type = self._prop_types.pop(old_name)
             prop_type.name = new_name
@@ -360,7 +425,7 @@ class JsonDatabase(AbstractDatabase):
             self.save()
 
     def convert_prop_multiplicity(self, name: str, multiple: bool) -> None:
-        if self.select_prop_types(name=name):
+        if self.get_prop_types(name=name):
             prop_type = self._prop_types[name]
             if prop_type.multiple is multiple:
                 raise exceptions.PropertyAlreadyMultiple(name, multiple)
@@ -400,22 +465,6 @@ class JsonDatabase(AbstractDatabase):
                 modified = video.set_property(name, pt.validate(value))
         return modified
 
-    def validate_prop_values(self, name, values: list) -> List[PropValueType]:
-        prop_type = self._prop_types[name]
-        if prop_type.multiple:
-            values = prop_type.validate(values)
-        else:
-            values = [prop_type.validate(value) for value in values]
-        return values
-
-    def _notify_properties_modified(self, properties):
-        self.save()
-        super()._notify_properties_modified(properties)
-
-    def _notify_fields_modified(self, fields: Sequence[str]):
-        self.save()
-        super()._notify_fields_modified(fields)
-
     def _notify_filename_modified(self, new_video: Video, old_video: Video):
         self._notify_fields_modified(
             (
@@ -429,31 +478,6 @@ class JsonDatabase(AbstractDatabase):
             )
         )
         self._jsondb_register_replaced(new_video, old_video)
-
-    def _notify_missing_thumbnails(self) -> None:
-        super()._notify_missing_thumbnails()
-        self.save()
-
-    def _jsondb_get_videos_from_identifiers(self, where: dict):
-        q_video_id = where.pop("video_id", [])
-        q_filename = where.pop("filename", [])
-
-        if isinstance(q_video_id, int):
-            q_video_id = [q_video_id]
-        if isinstance(q_filename, AbsolutePath):
-            q_filename = [q_filename]
-
-        nb_expected = len(q_video_id) + len(q_filename)
-        found = [
-            self._id_to_video[video_id]
-            for video_id in q_video_id
-            if video_id in self._id_to_video
-        ] + [
-            self._videos[filename]
-            for filename in q_filename
-            if filename in self._videos
-        ]
-        return found, nb_expected
 
     def get_videos(
         self,
@@ -607,50 +631,3 @@ class JsonDatabase(AbstractDatabase):
         self._thumb_mgr.save_existing_thumbnails(filename_to_thumb_name)
         for filename in filename_to_thumb_name:
             self.jsondb_register_modified(self._videos[AbsolutePath.ensure(filename)])
-
-    def jsondb_get_thumbnail_blob(self, filename: AbsolutePath):
-        return self._thumb_mgr.get_blob(filename)
-
-    def jsondb_provider_search(
-        self, text: str, cond: str = "and", videos: Sequence[int] = None
-    ) -> Iterable[int]:
-        if text:
-            self._jsondb_flush_changes()
-            if videos is None:
-                filenames: Dict[AbsolutePath, Video] = self._videos
-            else:
-                filenames: Dict[AbsolutePath, Video] = {
-                    self._id_to_video[video_id].filename: self._id_to_video[video_id]
-                    for video_id in videos
-                }
-            terms = functions.string_to_pieces(text)
-            if cond == "exact":
-                with Profiler(f"query exact: {text}", self.notifier):
-                    selection = (
-                        filename
-                        for filename in self._indexer.query_and(filenames, terms)
-                        if self._videos[filename].has_exact_text(text)
-                    )
-            elif cond == "and":
-                selection = self._indexer.query_and(filenames, terms)
-            elif cond == "or":
-                selection = self._indexer.query_or(filenames, terms)
-            else:
-                assert cond == "id"
-                (term,) = terms
-                video_id = int(term)
-                selection = (
-                    [self._id_to_video[video_id].filename]
-                    if video_id in self._id_to_video
-                    else []
-                )
-            return (filenames[filename].video_id for filename in selection)
-        return ()
-
-    def jsondb_provider_sort_video_indices(
-        self, indices: Iterable[int], sorting: VideoSorting
-    ):
-        return sorted(
-            indices,
-            key=lambda video_id: self._id_to_video[video_id].to_comparable(sorting),
-        )

@@ -32,6 +32,10 @@ from pysaurus.database.db_way_def import DbWays
 from pysaurus.database.json_database_utils import DatabaseSaved, DatabaseToSaveContext
 from pysaurus.database.viewport.abstract_video_provider import AbstractVideoProvider
 from pysaurus.miniature.miniature import Miniature
+from pysaurus.properties.properties import (
+    PropTypeValidator,
+    PropValueType,
+)
 from pysaurus.video import VideoRuntimeInfo
 from saurus.language import say
 from saurus.sql.sql_old.video_entry import VideoEntry
@@ -99,11 +103,7 @@ class AbstractDatabase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_prop_names(self) -> Iterable[str]:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def select_prop_types(
+    def get_prop_types(
         self, *, name=None, with_type=None, multiple=None, with_enum=None, default=None
     ):
         raise NotImplementedError()
@@ -122,10 +122,6 @@ class AbstractDatabase(ABC):
 
     @abstractmethod
     def convert_prop_multiplicity(self, name, multiple):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def validate_prop_values(self, name, values):
         raise NotImplementedError()
 
     @abstractmethod
@@ -184,6 +180,18 @@ class AbstractDatabase(ABC):
     def _insert_new_thumbnails(self, filename_to_thumb_name: Dict[str, str]) -> None:
         raise NotImplementedError()
 
+    def get_prop_names(self) -> Iterable[str]:
+        return (pt["name"] for pt in self.get_prop_types())
+
+    def validate_prop_values(self, name, values: list) -> List[PropValueType]:
+        (prop_dict,) = self.get_prop_types(name=name)
+        prop_type = PropTypeValidator(prop_dict)
+        if prop_type.multiple:
+            values = prop_type.validate(values)
+        else:
+            values = [prop_type.validate(value) for value in values]
+        return values
+
     def count_videos(self, *flags, **forced_flags) -> int:
         return sum(1 for _ in self.select_videos_fields([], *flags, **forced_flags))
 
@@ -206,12 +214,15 @@ class AbstractDatabase(ABC):
     def _notify_missing_thumbnails(self) -> None:
         remaining_thumb_videos = list(self._get_collectable_missing_thumbnails())
         self.notifier.notify(notifications.MissingThumbnails(remaining_thumb_videos))
+        self.save()
 
     def _notify_fields_modified(self, fields: Sequence[str]):
         self.provider.manage_attributes_modified(list(fields), is_property=False)
+        self.save()
 
     def _notify_properties_modified(self, properties):
         self.provider.manage_attributes_modified(list(properties), is_property=True)
+        self.save()
 
     @Profiler.profile_method()
     def update(self) -> None:
@@ -539,7 +550,7 @@ class AbstractDatabase(ABC):
         return sorted(list(item) for item in count.items())
 
     def fill_property_with_terms(self, prop_name: str, only_empty=False) -> None:
-        assert self.select_prop_types(name=prop_name, with_type=str, multiple=True)
+        assert self.get_prop_types(name=prop_name, with_type=str, multiple=True)
         modified = []
         for video_id in self.get_all_video_indices():
             values = self.get_prop_values(video_id, prop_name)
@@ -553,7 +564,7 @@ class AbstractDatabase(ABC):
             self._notify_properties_modified([prop_name])
 
     def _edit_prop_value(self, prop_name: str, function: Callable[[Any], Any]) -> None:
-        assert self.select_prop_types(name=prop_name, with_type=str)
+        assert self.get_prop_types(name=prop_name, with_type=str)
         modified = []
         for video_id in self.get_all_video_indices():
             values = self.get_prop_values(video_id, prop_name)
@@ -573,8 +584,8 @@ class AbstractDatabase(ABC):
     def move_concatenated_prop_val(
         self, path: list, from_property: str, to_property: str
     ) -> int:
-        assert self.select_prop_types(name=from_property, multiple=True)
-        assert self.select_prop_types(name=to_property, with_type=str)
+        assert self.get_prop_types(name=from_property, multiple=True)
+        assert self.get_prop_types(name=to_property, with_type=str)
         self.validate_prop_values(from_property, path)
         (concat_path,) = self.validate_prop_values(
             to_property, [" ".join(str(value) for value in path)]
@@ -598,5 +609,5 @@ class AbstractDatabase(ABC):
         pass
 
     def default_prop_unit(self, name):
-        (pt,) = self.select_prop_types(name=name)
+        (pt,) = self.get_prop_types(name=name)
         return None if pt["multiple"] else pt["defaultValue"]

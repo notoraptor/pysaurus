@@ -175,7 +175,7 @@ class LazyVideo(WithSchema):
         return {
             name: (
                 value
-                if self.database.select_prop_types(name=name, multiple=True)
+                if self.database.get_prop_types(name=name, multiple=True)
                 else value[0]
             )
             for name, value in self._get("properties").items()
@@ -303,7 +303,7 @@ class LazyVideo(WithSchema):
     def terms(self) -> List[str]:
         term_sources = [self.filename.path, str(self.meta_title)]
         for name, val in self.properties.items():
-            if self.database.select_prop_types(name=name, with_type=str):
+            if self.database.get_prop_types(name=name, with_type=str):
                 term_sources.extend(val)
         all_str = " ".join(term_sources)
         t_all_str = string_to_pieces(all_str)
@@ -318,7 +318,7 @@ class LazyVideo(WithSchema):
             or any(
                 text in [v.lower() for v in val]
                 for name, val in self._get("properties").items()
-                if self.database.select_prop_types(name=name, with_type=str)
+                if self.database.get_prop_types(name=name, with_type=str)
             )
         )
 

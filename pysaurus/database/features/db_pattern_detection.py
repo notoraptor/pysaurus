@@ -91,7 +91,7 @@ class DbPatternDetection:
         ]
         output_prop_name = "<!" + prop_name[2:]
         with database.to_save():
-            if not database.select_prop_types(name=output_prop_name):
+            if not database.get_prop_types(name=output_prop_name):
                 database.create_prop_type(output_prop_name, int, [0, 1], False)
             notifier.task(cls.predict_pattern, len(video_indices), "videos")
             with Profiler(say("Predict")):
@@ -110,7 +110,7 @@ class DbPatternDetection:
         return (
             name.startswith("<?")
             and name.endswith(">")
-            and db.select_prop_types(name=name, multiple=False, with_enum=[-1, 0, 1])
+            and db.get_prop_types(name=name, multiple=False, with_enum=[-1, 0, 1])
         )
 
     @staticmethod  # Unused

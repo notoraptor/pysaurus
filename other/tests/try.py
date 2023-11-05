@@ -100,7 +100,7 @@ def _display_all_video_attributes():
 
 
 def _get_string_properties(database):
-    return [pt["name"] for pt in database.select_prop_types() if pt["type"] == "str"]
+    return [pt["name"] for pt in database.get_prop_types() if pt["type"] == "str"]
 
 
 def main():

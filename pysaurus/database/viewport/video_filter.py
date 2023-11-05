@@ -149,7 +149,7 @@ class _AbstractLayerGrouping(Layer):
     def _get_prop_values(self, video_id: int, name: str) -> List:
         values = self.database.get_prop_values(video_id, name)
         assert isinstance(values, list)
-        if not values and self.database.select_prop_types(name=name, multiple=False):
+        if not values and self.database.get_prop_types(name=name, multiple=False):
             values = [self.database.default_prop_unit(name)]
         return values
 
@@ -237,7 +237,7 @@ class LayerClassifier(_AbstractLayerGrouping):
         if (
             data.field is None
             or not data.is_property
-            or not self.database.select_prop_types(name=data.field, multiple=True)
+            or not self.database.get_prop_types(name=data.field, multiple=True)
             or not self.params["path"]
         ):
             self.output = data
