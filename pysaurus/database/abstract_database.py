@@ -69,7 +69,7 @@ class AbstractDatabase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def set_folders(self, folders) -> None:
+    def get_settings(self) -> DbSettings:
         raise NotImplementedError()
 
     @abstractmethod
@@ -77,50 +77,19 @@ class AbstractDatabase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_settings(self) -> DbSettings:
+    def set_folders(self, folders) -> None:
         raise NotImplementedError()
 
     @abstractmethod
-    def delete_video_entry(self, video_id: int) -> None:
+    def get_predictor(self, prop_name):
         raise NotImplementedError()
 
     @abstractmethod
-    def add_video_errors(self, video_id: int, *errors: Iterable[str]) -> None:
+    def set_predictor(self, prop_name, theta):
         raise NotImplementedError()
 
     @abstractmethod
-    def _insert_new_thumbnails(self, filename_to_thumb_name: Dict[str, str]) -> None:
-        raise NotImplementedError()
-
-    def _get_collectable_missing_thumbnails(self) -> Dict[str, int]:
-        return {
-            video["filename"].path: video["video_id"]
-            for video in self.get_videos(
-                include=["filename", "video_id"],
-                where={"readable": True, "found": True, "without_thumbnails": True},
-            )
-        }
-
-    @abstractmethod
-    def write_videos_field(self, indices: Iterable[int], field: str, values: Iterable):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def write_new_videos(
-        self,
-        video_entries: List[VideoEntry],
-        runtime_info: Dict[AbsolutePath, VideoRuntimeInfo],
-    ) -> None:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def change_video_entry_filename(
-        self, video_id: int, path: AbsolutePath
-    ) -> AbsolutePath:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def open_video(self, video_id):
+    def get_prop_values(self, video_id, name):
         raise NotImplementedError()
 
     @abstractmethod
@@ -130,29 +99,13 @@ class AbstractDatabase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_prop_values(self, video_id, name):
-        raise NotImplementedError()
-
-    @abstractmethod
     def get_prop_names(self) -> Iterable[str]:
         raise NotImplementedError()
 
     @abstractmethod
-    def get_videos(
-        self,
-        *,
-        include: Sequence[str] = None,
-        with_moves: bool = False,
-        where: dict = None,
-    ) -> List[dict]:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def set_predictor(self, prop_name, theta):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def get_predictor(self, prop_name):
+    def select_prop_types(
+        self, *, name=None, with_type=None, multiple=None, with_enum=None, default=None
+    ):
         raise NotImplementedError()
 
     @abstractmethod
@@ -176,7 +129,47 @@ class AbstractDatabase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
+    def get_videos(
+        self,
+        *,
+        include: Sequence[str] = None,
+        with_moves: bool = False,
+        where: dict = None,
+    ) -> List[dict]:
+        raise NotImplementedError()
+
+    @abstractmethod
     def get_video_terms(self, video_id):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def add_video_errors(self, video_id: int, *errors: Iterable[str]) -> None:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def change_video_entry_filename(
+        self, video_id: int, path: AbsolutePath
+    ) -> AbsolutePath:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def delete_video_entry(self, video_id: int) -> None:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def write_videos_field(self, indices: Iterable[int], field: str, values: Iterable):
+        raise NotImplementedError()
+
+    @abstractmethod
+    def write_new_videos(
+        self,
+        video_entries: List[VideoEntry],
+        runtime_info: Dict[AbsolutePath, VideoRuntimeInfo],
+    ) -> None:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def open_video(self, video_id):
         raise NotImplementedError()
 
     @abstractmethod
@@ -188,9 +181,7 @@ class AbstractDatabase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def select_prop_types(
-        self, *, name=None, with_type=None, multiple=None, with_enum=None, default=None
-    ):
+    def _insert_new_thumbnails(self, filename_to_thumb_name: Dict[str, str]) -> None:
         raise NotImplementedError()
 
     def count_videos(self, *flags, **forced_flags) -> int:
@@ -341,6 +332,15 @@ class AbstractDatabase(ABC):
 
         all_file_names.sort()
         return all_file_names
+
+    def _get_collectable_missing_thumbnails(self) -> Dict[str, int]:
+        return {
+            video["filename"].path: video["video_id"]
+            for video in self.get_videos(
+                include=["filename", "video_id"],
+                where={"readable": True, "found": True, "without_thumbnails": True},
+            )
+        }
 
     def set_video_similarity(
         self, video_id: int, value: Optional[int], notify=True
