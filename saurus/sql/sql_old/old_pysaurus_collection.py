@@ -4,13 +4,12 @@ from multiprocessing import Pool
 from typing import Collection, Container, Dict, Iterable, List, Sequence, Tuple, Union
 
 from pysaurus.core import notifications
-from pysaurus.core.components import AbsolutePath, Date
+from pysaurus.core.components import AbsolutePath
 from pysaurus.core.job_notifications import notify_job_start
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.abstract_database import AbstractDatabase
-from pysaurus.database.db_settings import DbSettings
 from pysaurus.properties.properties import DefType, PropValueType
 from pysaurus.updates.video_inliner import (
     flatten_video,
@@ -32,9 +31,6 @@ class OldPysaurusCollection(AbstractDatabase):
         super().__init__(path, None, notifier)
         self.db = PysaurusConnection(self.ways.db_sql_path.path)
         self._load(folders)
-
-    def get_settings(self) -> DbSettings:
-        pass
 
     def update_prop_values(
         self, video_id: int, name: str, values: Collection, action: int = 0
@@ -167,19 +163,8 @@ class OldPysaurusCollection(AbstractDatabase):
         self._notify_missing_thumbnails()
         self.provider.refresh()
 
-    def set_date(self, date: Date):
-        # super().set_date(date)
-        self.db.modify("UPDATE collection SET date_updated = ?", [date.time])
-
     def set_folders(self, folders) -> None:
         super().set_folders(folders)
-
-    def get_folders(self) -> Iterable[AbsolutePath]:
-        # return super().get_folders()
-        return [
-            AbsolutePath(row["source"])
-            for row in self.db.query("SELECT source FROM collection_source")
-        ]
 
     def set_predictor(self, prop_name: str, theta: List[float]):
         super().set_predictor(prop_name, theta)

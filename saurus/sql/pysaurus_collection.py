@@ -58,13 +58,23 @@ class PysaurusCollection(AbstractDatabase):
                     logger.info(f"Un-discarded {len(allowed)} video(s).")
 
     def set_date(self, date: Date):
-        pass
+        self.db.modify("UPDATE collection SET date_updated = ?", [date.time])
 
     def get_settings(self) -> DbSettings:
-        pass
+        row = self.db.query_one(
+            "SELECT miniature_pixel_distance_radius, miniature_group_min_size "
+            "FROM collection"
+        )
+        return DbSettings.from_keys(
+            miniature_pixel_distance_radius=row["miniature_pixel_distance_radius"],
+            miniature_group_min_size=row["miniature_group_min_size"],
+        )
 
     def get_folders(self) -> Iterable[AbsolutePath]:
-        pass
+        return [
+            AbsolutePath(row["source"])
+            for row in self.db.query("SELECT source FROM collection_source")
+        ]
 
     def set_folders(self, folders) -> None:
         pass
@@ -105,7 +115,7 @@ class PysaurusCollection(AbstractDatabase):
         *,
         include: Sequence[str] = None,
         with_moves: bool = False,
-        where: dict = None
+        where: dict = None,
     ) -> List[dict]:
         pass
 
