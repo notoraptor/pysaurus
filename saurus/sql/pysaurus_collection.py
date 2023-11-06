@@ -1,15 +1,62 @@
+import logging
 from typing import Collection, Dict, Iterable, List, Sequence, Tuple
 
 from pysaurus.core.components import AbsolutePath, Date
+from pysaurus.core.notifying import DEFAULT_NOTIFIER
+from pysaurus.core.path_tree import PathTree
 from pysaurus.database.abstract_database import AbstractDatabase
 from pysaurus.database.db_settings import DbSettings
 from pysaurus.video.lazy_video_runtime_info import (
     LazyVideoRuntimeInfo as VideoRuntimeInfo,
 )
+from saurus.sql.pysaurus_connection import PysaurusConnection
+from saurus.sql.saurus_provider import SaurusProvider
 from saurus.sql.sql_old.video_entry import VideoEntry
+
+logger = logging.getLogger(__name__)
 
 
 class PysaurusCollection(AbstractDatabase):
+    __slots__ = ("db",)
+
+    def __init__(self, path, folders=None, notifier=DEFAULT_NOTIFIER):
+        super().__init__(path, SaurusProvider(self), notifier)
+        self.db = PysaurusConnection(self.ways.db_sql_path.path)
+        self._load(folders)
+
+    def _load(self, folders=None):
+        if folders:
+            new_folders = [AbsolutePath.ensure(path) for path in folders]
+            old_folders = set(self.get_folders())
+            folders_to_add = [
+                (path.path,) for path in new_folders if path not in old_folders
+            ]
+            if folders_to_add:
+                self.db.modify(
+                    "INSERT INTO collection_source (source) VALUES (?)",
+                    folders_to_add,
+                    many=True,
+                )
+                logger.info(f"Added {len(folders_to_add)} new source(s).")
+                # Update discarded videos.
+                # Newly added folders can only un-discard previously discarded videos.
+                source_tree = PathTree(list(old_folders) + new_folders)
+                rows = self.db.query_all(
+                    "SELECT video_id, filename FROM video WHERE discarded = 1"
+                )
+                allowed = [
+                    row
+                    for row in rows
+                    if source_tree.in_folders(AbsolutePath(row["filename"]))
+                ]
+                if allowed:
+                    self.db.modify(
+                        "UPDATE video SET discarded = 0 WHERE video_id = ?",
+                        [[row["video_id"]] for row in allowed],
+                        many=True,
+                    )
+                    logger.info(f"Un-discarded {len(allowed)} video(s).")
+
     def set_date(self, date: Date):
         pass
 
