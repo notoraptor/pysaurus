@@ -1,4 +1,3 @@
-import typing
 from typing import Union
 
 from pysaurus.application import exceptions
@@ -100,7 +99,7 @@ class PropTypeValidator:
 
     def __init__(self, prop_desc: dict):
         self.name = prop_desc["name"]
-        self.type = prop_desc[PROP_UNIT_TYPE_MAP[prop_desc["type"]]]
+        self.type = PROP_UNIT_TYPE_MAP[prop_desc["type"]]
         self.enumeration = prop_desc["enumeration"]
         self.multiple = prop_desc["multiple"]
 
