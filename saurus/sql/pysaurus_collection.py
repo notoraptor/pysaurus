@@ -22,40 +22,11 @@ class PysaurusCollection(AbstractDatabase):
     def __init__(self, path, folders=None, notifier=DEFAULT_NOTIFIER):
         super().__init__(path, SaurusProvider(self), notifier)
         self.db = PysaurusConnection(self.ways.db_sql_path.path)
-        self._load(folders)
-
-    def _load(self, folders=None):
         if folders:
-            new_folders = [AbsolutePath.ensure(path) for path in folders]
-            old_folders = set(self.get_folders())
-            folders_to_add = [
-                (path.path,) for path in new_folders if path not in old_folders
-            ]
-            if folders_to_add:
-                self.db.modify(
-                    "INSERT INTO collection_source (source) VALUES (?)",
-                    folders_to_add,
-                    many=True,
-                )
-                logger.info(f"Added {len(folders_to_add)} new source(s).")
-                # Update discarded videos.
-                # Newly added folders can only un-discard previously discarded videos.
-                source_tree = PathTree(list(old_folders) + new_folders)
-                rows = self.db.query_all(
-                    "SELECT video_id, filename FROM video WHERE discarded = 1"
-                )
-                allowed = [
-                    row
-                    for row in rows
-                    if source_tree.in_folders(AbsolutePath(row["filename"]))
-                ]
-                if allowed:
-                    self.db.modify(
-                        "UPDATE video SET discarded = 0 WHERE video_id = ?",
-                        [[row["video_id"]] for row in allowed],
-                        many=True,
-                    )
-                    logger.info(f"Un-discarded {len(allowed)} video(s).")
+            self.set_folders(
+                set(self.get_folders())
+                | {AbsolutePath.ensure(folder) for folder in folders}
+            )
 
     def set_date(self, date: Date):
         self.db.modify("UPDATE collection SET date_updated = ?", [date.time])
@@ -77,7 +48,27 @@ class PysaurusCollection(AbstractDatabase):
         ]
 
     def set_folders(self, folders) -> None:
-        pass
+        folders = sorted(AbsolutePath.ensure(folder) for folder in folders)
+        if folders == sorted(self.get_folders()):
+            return
+        folders_tree = PathTree(folders)
+        videos = self.db.query_all("SELECT video_id, filename FROM video")
+        self.db.modify(
+            "UPDATE video SET discarded = ? WHERE video_id = ?",
+            [
+                (
+                    not folders_tree.in_folders(AbsolutePath(video["filename"])),
+                    video["video_id"],
+                )
+                for video in videos
+            ],
+            many=True,
+        )
+        self.db.modify(
+            "INSERT OR IGNORE INTO collection_source (source) VALUES (?)",
+            [(path.path,) for path in folders],
+            many=True,
+        )
 
     def get_predictor(self, prop_name):
         pass

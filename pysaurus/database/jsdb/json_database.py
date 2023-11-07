@@ -346,7 +346,7 @@ class JsonDatabase(AbstractDatabase):
 
     def set_folders(self, folders) -> None:
         folders = sorted(AbsolutePath.ensure(folder) for folder in folders)
-        if folders == sorted(self._folders):
+        if folders == sorted(self.get_folders()):
             return
         folders_tree = PathTree(folders)
         for video in self._videos.values():
