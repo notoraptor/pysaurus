@@ -10,7 +10,7 @@ from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.abstract_database import AbstractDatabase
-from pysaurus.properties.properties import DefType, PropValueType
+from pysaurus.properties.properties import DefType
 from pysaurus.updates.video_inliner import (
     flatten_video,
     get_flatten_fields,
@@ -194,9 +194,6 @@ class OldPysaurusCollection(AbstractDatabase):
 
     def convert_prop_multiplicity(self, name: str, multiple: bool) -> None:
         super().convert_prop_multiplicity(name, multiple)
-
-    def get_prop_values(self, video_id: int, name: str) -> List[PropValueType]:
-        return super().get_prop_values(video_id, name)
 
     def _update_videos_not_found(self, existing_paths: Container[AbsolutePath]):
         # super()._update_videos_not_found(existing_paths)

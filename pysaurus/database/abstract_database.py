@@ -90,7 +90,7 @@ class AbstractDatabase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_prop_values(self, video_id, name):
+    def get_prop_values(self, video_id: int, name: str) -> List[PropValueType]:
         raise NotImplementedError()
 
     @abstractmethod

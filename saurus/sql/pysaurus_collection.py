@@ -6,6 +6,7 @@ from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.path_tree import PathTree
 from pysaurus.database.abstract_database import AbstractDatabase
 from pysaurus.database.db_settings import DbSettings
+from pysaurus.properties.properties import PropValueType
 from pysaurus.video.lazy_video_runtime_info import (
     LazyVideoRuntimeInfo as VideoRuntimeInfo,
 )
@@ -78,8 +79,18 @@ class PysaurusCollection(AbstractDatabase):
         logger.error("set_predictor not yet implemented.")
         raise NotImplementedError()
 
-    def get_prop_values(self, video_id, name):
-        pass
+    def get_prop_values(self, video_id: int, name: str) -> List[PropValueType]:
+        return [
+            row["val"]
+            for row in self.db.query(
+                "SELECT pv.property_value AS val "
+                "FROM video_property_value AS pv "
+                "JOIN property AS p "
+                "ON p.property_id = pv.property_id "
+                "WHERE p.name = ? AND pv.video_id = ?",
+                [name, video_id],
+            )
+        ]
 
     def update_prop_values(
         self, video_id: int, name: str, values: Collection, action: int = 0
