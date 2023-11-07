@@ -104,6 +104,6 @@ CREATE TABLE IF NOT EXISTS video_thumbnail (
 );
 -- Currently unused. Thumb table is in a separate database.
 
-CREATE VIRTUAL TABLE video_text USING fts5(video_id, content);
+CREATE VIRTUAL TABLE IF NOT EXISTS video_text USING fts5(video_id, content);
 -- Virtual table can use INSERT, UPDATE, DELETE.
 -- SELECT video_id FROM video_text WHERE content MATCH 'the_text';

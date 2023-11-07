@@ -1,12 +1,13 @@
 import os
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Dict, List, Optional
 
 from pysaurus.application.application import Config
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.custom_json_parser import parse_json
 from pysaurus.core.modules import FileSystem
 from saurus.language import say
+from saurus.sql.pysaurus_collection import PysaurusCollection
 
 
 class PysaurusProgram:
@@ -25,7 +26,7 @@ class PysaurusProgram:
         self.home_dir = AbsolutePath(str(Path.home()))
         self.app_dir = AbsolutePath.join(self.home_dir, f".{self.app_name}").mkdir()
         self.dbs_dir = AbsolutePath.join(self.app_dir, "databases").mkdir()
-        self.databases: Dict[AbsolutePath, Any] = {}
+        self.databases: Dict[AbsolutePath, Optional[PysaurusCollection]] = {}
         # Load database names.
         for entry in FileSystem.scandir(self.dbs_dir.path):  # type: os.DirEntry
             if entry.is_dir():
@@ -43,3 +44,10 @@ class PysaurusProgram:
 
     def get_database_paths(self) -> List[AbsolutePath]:
         return sorted(self.databases.keys())
+
+    def open_database(self, name: str) -> PysaurusCollection:
+        path = AbsolutePath.join(self.dbs_dir, name)
+        assert path in self.databases
+        if self.databases[path] is None:
+            self.databases[path] = PysaurusCollection(path)
+        return self.databases[path]

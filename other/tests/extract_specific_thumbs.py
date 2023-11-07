@@ -1,6 +1,7 @@
 import os
 
-from other.tests.utils_testing import DB_INFO, LocalImageProvider
+from other.tests.local_image_provider import LocalImageProvider
+from other.tests.utils_testing import DB_INFO
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.modules import ImageUtils
 

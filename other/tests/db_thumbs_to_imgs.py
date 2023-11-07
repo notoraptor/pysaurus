@@ -2,7 +2,7 @@ import os
 
 from tqdm import tqdm
 
-from other.tests.utils_testing import LocalImageProvider
+from other.tests.local_image_provider import LocalImageProvider
 from pysaurus.core.components import AbsolutePath
 
 

@@ -205,8 +205,9 @@ def export_db_to_sql(db_path: AbsolutePath, notifier):
                 for row in thm.thumb_db.query(
                     "SELECT filename, thumbnail FROM video_to_thumbnail"
                 )
+                if row["filename"] in video_filename_to_id
             ]
-        with Profiler(f"[{db_name}]write thumbnails", notifier):
+        with Profiler(f"[{db_name}]write {len(thumbs)} thumbnails", notifier):
             new_db.modify(
                 "INSERT INTO video_thumbnail (video_id, thumbnail) VALUES(?, ?)",
                 thumbs,
