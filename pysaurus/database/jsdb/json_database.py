@@ -357,11 +357,11 @@ class JsonDatabase(AbstractDatabase):
     def get_folders(self) -> Iterable[AbsolutePath]:
         return iter(self._folders)
 
-    def set_predictor(self, prop_name: str, theta: List[float]):
+    def set_predictor(self, prop_name: str, theta: List[float]) -> None:
         self._predictors[prop_name] = theta
         self.save()
 
-    def get_predictor(self, prop_name):
+    def get_predictor(self, prop_name: str) -> List[float]:
         return self._predictors.get(prop_name, None)
 
     def get_prop_types(

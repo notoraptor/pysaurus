@@ -70,11 +70,13 @@ class PysaurusCollection(AbstractDatabase):
             many=True,
         )
 
-    def get_predictor(self, prop_name):
-        pass
+    def get_predictor(self, prop_name: str) -> List[float]:
+        logger.error("get_predictor not yet implemented.")
+        raise NotImplementedError()
 
-    def set_predictor(self, prop_name, theta):
-        pass
+    def set_predictor(self, prop_name: str, theta: List[float]) -> None:
+        logger.error("set_predictor not yet implemented.")
+        raise NotImplementedError()
 
     def get_prop_values(self, video_id, name):
         pass
