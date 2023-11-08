@@ -32,7 +32,7 @@ from pysaurus.database.db_way_def import DbWays
 from pysaurus.database.json_database_utils import DatabaseSaved, DatabaseToSaveContext
 from pysaurus.database.viewport.abstract_video_provider import AbstractVideoProvider
 from pysaurus.miniature.miniature import Miniature
-from pysaurus.properties.properties import PropTypeValidator, PropValueType
+from pysaurus.properties.properties import DefType, PropTypeValidator, PropValueType
 from pysaurus.video import VideoRuntimeInfo
 from saurus.language import say
 from saurus.sql.sql_old.video_entry import VideoEntry
@@ -42,10 +42,6 @@ logger = logging.getLogger(__name__)
 
 class AbstractDatabase(ABC):
     __slots__ = ("ways", "notifier", "in_save_context", "provider")
-    # Actions for update_prop_values()
-    REMOVE = DELETE = -1
-    REPLACE = SET = EDIT = 0
-    ADD = APPEND = MERGE = 1
 
     def __init__(
         self,
@@ -91,12 +87,12 @@ class AbstractDatabase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_prop_values(self, video_id: int, name: str) -> List[PropValueType]:
+    def get_prop_values(self, video_id: int, name: str) -> Collection[DefType]:
         raise NotImplementedError()
 
     @abstractmethod
     def update_prop_values(
-        self, video_id: int, name: str, values: Collection, action: int = 0
+        self, video_id: int, name: str, values: Collection, *, merge=False
     ):
         raise NotImplementedError()
 
@@ -447,7 +443,7 @@ class AbstractDatabase(ABC):
         assert self.has_video(video_id=to_id, found=True)
         for prop_name in self.get_prop_names():
             self.update_prop_values(
-                to_id, prop_name, self.get_prop_values(from_id, prop_name), self.MERGE
+                to_id, prop_name, self.get_prop_values(from_id, prop_name), merge=True
             )
         self.set_similarities([to_id], [from_data["similarity_id"]])
         self.write_videos_field(
@@ -493,7 +489,7 @@ class AbstractDatabase(ABC):
     def move_property_value(self, old_name: str, values: list, new_name: str) -> None:
         modified = self.delete_property_value(old_name, values)
         for video_id in modified:
-            self.update_prop_values(video_id, new_name, values, self.MERGE)
+            self.update_prop_values(video_id, new_name, values, merge=True)
         if modified:
             self._notify_properties_modified([old_name, new_name])
 
@@ -593,7 +589,7 @@ class AbstractDatabase(ABC):
             if len(old_values) == len(new_values) + len(path_set):
                 self.update_prop_values(video_id, from_property, new_values)
                 self.update_prop_values(
-                    video_id, to_property, [concat_path], self.MERGE
+                    video_id, to_property, [concat_path], merge=True
                 )
                 modified.append(video_id)
         if modified:

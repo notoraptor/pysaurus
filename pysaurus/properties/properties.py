@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Collection, Union
 
 from pysaurus.application import exceptions
 from pysaurus.core.enumeration import Enumeration
@@ -6,7 +6,7 @@ from pysaurus.core.json_type import Type
 from pysaurus.core.schematizable import Schema, WithSchema, schema_prop
 
 DefType = Union[bool, int, float, str, list, tuple]
-PropValueType = Union[bool, int, float, str, list]
+PropValueType = Union[bool, int, float, str, Collection]
 
 PROP_UNIT_TYPES = {bool, int, float, str}
 PROP_UNIT_TYPE_MAP = {t.__name__: t for t in PROP_UNIT_TYPES}
@@ -43,7 +43,9 @@ class PropType(WithSchema):
         lambda self: self.definition[0] if self.is_enum() else self.definition
     )
     type = property(lambda self: type(self.default))
-    enumeration = property(lambda self: self.definition if self.is_enum() else None)
+    enumeration = property(
+        lambda self: sorted(self.definition) if self.is_enum() else None
+    )
 
     def __call__(self, value=None) -> PropValueType:
         return self.new() if value is None else self.validate(value)
@@ -95,13 +97,15 @@ class PropType(WithSchema):
 
 
 class PropTypeValidator:
-    __slots__ = ("name", "type", "enumeration", "multiple")
+    __slots__ = ("name", "type", "enumeration", "multiple", "default", "property_id")
 
     def __init__(self, prop_desc: dict):
         self.name = prop_desc["name"]
         self.type = PROP_UNIT_TYPE_MAP[prop_desc["type"]]
         self.enumeration = prop_desc["enumeration"]
         self.multiple = prop_desc["multiple"]
+        self.default = prop_desc["defaultValue"]
+        self.property_id = prop_desc.get("property_id")
 
     def validate(self, value: PropValueType) -> PropValueType:
         if self.multiple:
@@ -126,3 +130,24 @@ class PropTypeValidator:
         if self.enumeration and value not in set(self.enumeration):
             raise exceptions.InvalidPropertyValue(self, value)
         return value
+
+    def instantiate(self, values: Collection[DefType]) -> Collection[DefType]:
+        if not values:
+            return []
+        if self.multiple:
+            return self.validate(values)
+        else:  # list must contain only 1 value.
+            (value,) = values
+            return [self.validate(value)]
+
+    def from_strings(self, values: Collection[PropValueType]) -> Collection[DefType]:
+        if not values:
+            return []
+        if not self.multiple and len(values) != 1:
+            raise exceptions.InvalidUniquePropertyValue(self, values)
+        if self.type is str:
+            return values
+        elif self.type is bool:
+            return [bool(int(value)) for value in values]
+        else:
+            return [self.type(value) for value in values]

@@ -1,7 +1,7 @@
 import logging
 import tempfile
 from multiprocessing import Pool
-from typing import Collection, Container, Dict, Iterable, List, Sequence, Tuple, Union
+from typing import Container, Dict, Iterable, List, Sequence, Tuple, Union
 
 from pysaurus.core import notifications
 from pysaurus.core.components import AbsolutePath
@@ -31,11 +31,6 @@ class OldPysaurusCollection(AbstractDatabase):
         super().__init__(path, None, notifier)
         self.db = PysaurusConnection(self.ways.db_sql_path.path)
         self._load(folders)
-
-    def update_prop_values(
-        self, video_id: int, name: str, values: Collection, action: int = 0
-    ):
-        pass
 
     def get_videos(
         self,
@@ -171,11 +166,6 @@ class OldPysaurusCollection(AbstractDatabase):
 
     def get_predictor(self, prop_name):
         return super().get_predictor(prop_name)
-
-    def get_prop_types(
-        self, *, name=None, with_type=None, multiple=None, with_enum=None, default=None
-    ) -> List[dict]:
-        return super().get_prop_types()
 
     def create_prop_type(
         self,

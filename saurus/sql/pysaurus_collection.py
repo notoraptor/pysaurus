@@ -6,7 +6,7 @@ from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.path_tree import PathTree
 from pysaurus.database.abstract_database import AbstractDatabase
 from pysaurus.database.db_settings import DbSettings
-from pysaurus.properties.properties import PropValueType
+from pysaurus.properties.properties import DefType, PropTypeValidator
 from pysaurus.video.lazy_video_runtime_info import (
     LazyVideoRuntimeInfo as VideoRuntimeInfo,
 )
@@ -79,58 +79,103 @@ class PysaurusCollection(AbstractDatabase):
         logger.error("set_predictor not yet implemented.")
         raise NotImplementedError()
 
-    def get_prop_values(self, video_id: int, name: str) -> List[PropValueType]:
-        # TODO Convert values to prop type
-        return [
-            row["val"]
-            for row in self.db.query(
-                "SELECT pv.property_value AS val "
-                "FROM video_property_value AS pv "
-                "JOIN property AS p "
-                "ON p.property_id = pv.property_id "
-                "WHERE p.name = ? AND pv.video_id = ?",
-                [name, video_id],
-            )
-        ]
+    def get_prop_values(self, video_id: int, name: str) -> Collection[DefType]:
+        (prop_desc,) = self.get_prop_types(name=name)
+        pt = PropTypeValidator(prop_desc)
+        return pt.from_strings(
+            [
+                row["val"]
+                for row in self.db.query(
+                    "SELECT pv.property_value AS val "
+                    "FROM video_property_value AS pv "
+                    "JOIN property AS p "
+                    "ON p.property_id = pv.property_id "
+                    "WHERE p.name = ? AND pv.video_id = ?",
+                    [name, video_id],
+                )
+            ]
+        )
 
     def update_prop_values(
-        self, video_id: int, name: str, values: Collection, action: int = 0
+        self, video_id: int, name: str, values: Collection, *, merge=False
     ):
-        property_id = self.db.query_one(
-            "SELECT property_id FROM property WHERE name = ?", [name]
-        )["property_id"]
-        if action == self.REMOVE:
-            self.db.modify(
-                "DELETE FROM video_property_value "
-                "WHERE video_id = ? AND property_id = ? AND property_value = ?",
-                [(video_id, property_id, value) for value in values],
-                many=True,
-            )
-        elif action == self.REPLACE:
+        (prop_desc,) = self.get_prop_types(name=name)
+        pt = PropTypeValidator(prop_desc)
+        values = pt.instantiate(values)
+        property_id = pt.property_id
+
+        if values:
+            if pt.multiple and merge:
+                self.db.modify(
+                    "INSERT OR IGNORE INTO video_property_value "
+                    "(video_id, property_id, property_value) VALUES (?, ?, ?)",
+                    [(video_id, property_id, value) for value in values],
+                    many=True,
+                )
+            else:  # replace anyway
+                self.db.modify(
+                    "DELETE FROM video_property_value "
+                    "WHERE video_id = ? AND property_id = ?",
+                    [video_id, property_id],
+                )
+                self.db.modify(
+                    "INSERT INTO video_property_value "
+                    "(video_id, property_id, property_value) VALUES (?, ?, ?)",
+                    [(video_id, property_id, value) for value in values],
+                    many=True,
+                )
+        elif not merge:  # replace with empty => remove
             self.db.modify(
                 "DELETE FROM video_property_value "
                 "WHERE video_id = ? AND property_id = ?",
                 [video_id, property_id],
             )
-            self.db.modify(
-                "INSERT INTO video_property_value "
-                "(video_id, property_id, property_value) VALUES (?, ?, ?)",
-                [(video_id, property_id, value) for value in values],
-                many=True,
-            )
-        else:
-            assert action == self.APPEND
-            self.db.modify(
-                "INSERT OR IGNORE INTO video_property_value "
-                "(video_id, property_id, property_value) VALUES (?, ?, ?)",
-                [(video_id, property_id, value) for value in values],
-                many=True,
-            )
 
     def get_prop_types(
         self, *, name=None, with_type=None, multiple=None, with_enum=None, default=None
-    ):
-        pass
+    ) -> List[dict]:
+        where = []
+        parameters = []
+        if name is not None:
+            where.append("name = ?")
+            parameters.append(name)
+        if with_type is not None:
+            where.append("type = ?")
+            parameters.append(with_type.__name__)
+        if multiple is not None:
+            where.append("multiple = ?")
+            parameters.append(int(bool(multiple)))
+        where_clause = " AND ".join(where)
+        clause = "SELECT property_id, name, type, multiple FROM property"
+        if where_clause:
+            clause += f" WHERE {where_clause}"
+
+        ret = []
+        for row in self.db.query_all(clause, parameters):
+            enumeration = [
+                res["enum_value"]
+                for res in self.db.query(
+                    "SELECT enum_value FROM property_enumeration "
+                    "WHERE property_id = ? ORDER BY rank ASC",
+                    [row["property_id"]],
+                )
+            ]
+            if (
+                with_enum is None
+                or (len(enumeration) > 1 and set(enumeration) == set(with_enum))
+            ) and (default is None or enumeration[0] == default):
+                ret.append(
+                    {
+                        "property_id": row["property_id"],
+                        "name": row["name"],
+                        "type": row["type"],
+                        "multiple": row["multiple"],
+                        "defaultValue": enumeration[0],
+                        "enumeration": enumeration if len(enumeration) > 1 else None,
+                    }
+                )
+
+        return ret
 
     def create_prop_type(self, name, prop_type, definition, multiple):
         pass

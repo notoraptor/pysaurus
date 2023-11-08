@@ -31,7 +31,6 @@ from pysaurus.properties.properties import (
     PROP_UNIT_TYPES,
     PROP_UNIT_TYPE_MAP,
     PropType,
-    PropValueType,
 )
 from pysaurus.video import Video, VideoRuntimeInfo
 from pysaurus.video.abstract_video_indexer import AbstractVideoIndexer
@@ -377,7 +376,7 @@ class JsonDatabase(AbstractDatabase):
                     (name is None or pt.name == name)
                     and (with_type is None or pt.type is with_type)
                     and (multiple is None or pt.multiple is multiple)
-                    and (with_enum is None or pt.is_enum(with_enum))
+                    and (with_enum is None or pt.enumeration == sorted(set(with_enum)))
                     and (default is None or pt.default == default)
                 )
             )
@@ -441,28 +440,27 @@ class JsonDatabase(AbstractDatabase):
             prop_type.multiple = multiple
             self.save()
 
-    def get_prop_values(self, video_id: int, name: str) -> List[PropValueType]:
+    def get_prop_values(self, video_id: int, name: str) -> Collection[DefType]:
         return self._id_to_video[video_id].get_property(name)
 
     def update_prop_values(
-        self, video_id: int, name: str, values: Collection, action: int = 0
+        self, video_id: int, name: str, values: Collection, *, merge=False
     ) -> bool:
-        assert action in (-1, 0, 1)
         pt = self._prop_types[name]
         video = self._id_to_video[video_id]
         modified = False
-        if action == -1 or (action == 0 and not values):
-            modified = video.remove_property(name)
-        elif values:
+        if values:
             if pt.multiple:
-                if action == 0:
+                if not merge:  # replace
                     modified = video.set_property(name, pt.validate(values))
-                else:
+                else:  # merge
                     new_values = pt.validate(video.get_property(name) + list(values))
                     modified = video.set_property(name, new_values)
-            else:
+            else:  # merge == replace
                 (value,) = values
                 modified = video.set_property(name, pt.validate(value))
+        elif not merge:  # replace with empty -> remove
+            modified = video.remove_property(name)
         return modified
 
     def _notify_filename_modified(self, new_video: Video, old_video: Video):

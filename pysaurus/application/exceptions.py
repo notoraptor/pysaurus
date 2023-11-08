@@ -77,6 +77,10 @@ class InvalidMultiplePropertyValue(PysaurusError):
     pass
 
 
+class InvalidUniquePropertyValue(PysaurusError):
+    pass
+
+
 class InvalidPropertyValue(PysaurusError):
     pass
 
