@@ -13,6 +13,7 @@ from typing import (
     Optional,
     Sequence,
     Tuple,
+    Union,
 )
 
 import ujson as json
@@ -103,7 +104,13 @@ class AbstractDatabase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def create_prop_type(self, name, prop_type, definition, multiple):
+    def create_prop_type(
+        self,
+        name: str,
+        prop_type: Union[str, type],
+        definition: DefType,
+        multiple: bool,
+    ) -> None:
         raise NotImplementedError()
 
     @abstractmethod

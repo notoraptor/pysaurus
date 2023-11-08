@@ -26,12 +26,7 @@ from pysaurus.database.json_database_utils import DatabaseLoaded, patch_database
 from pysaurus.database.special_properties import SpecialProperties
 from pysaurus.database.thubmnail_database.thumbnail_manager import ThumbnailManager
 from pysaurus.database.viewport.video_filter import VideoFilter
-from pysaurus.properties.properties import (
-    DefType,
-    PROP_UNIT_TYPES,
-    PROP_UNIT_TYPE_MAP,
-    PropType,
-)
+from pysaurus.properties.properties import DefType, PropType, PropTypeValidator
 from pysaurus.video import Video, VideoRuntimeInfo
 from pysaurus.video.abstract_video_indexer import AbstractVideoIndexer
 from pysaurus.video.video_features import VideoFeatures
@@ -389,15 +384,9 @@ class JsonDatabase(AbstractDatabase):
         definition: DefType,
         multiple: bool,
     ) -> None:
-        if isinstance(prop_type, str):
-            prop_type = PROP_UNIT_TYPE_MAP[prop_type]
-        assert prop_type in PROP_UNIT_TYPES
-        if prop_type is float:
-            if isinstance(definition, (list, tuple)):
-                definition = [float(element) for element in definition]
-            else:
-                definition = float(definition)
-        prop = PropType(name, definition, multiple)
+        prop = PropType.from_keys(
+            **PropTypeValidator.define(name, prop_type, definition)
+        )
         assert prop.type is prop_type
         if prop.name in self._prop_types:
             raise exceptions.PropertyAlreadyExists(prop.name)

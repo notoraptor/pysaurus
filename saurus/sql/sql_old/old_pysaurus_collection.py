@@ -1,7 +1,7 @@
 import logging
 import tempfile
 from multiprocessing import Pool
-from typing import Container, Dict, Iterable, List, Sequence, Tuple, Union
+from typing import Container, Dict, Iterable, List, Sequence, Tuple
 
 from pysaurus.core import notifications
 from pysaurus.core.components import AbsolutePath
@@ -10,7 +10,6 @@ from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.abstract_database import AbstractDatabase
-from pysaurus.properties.properties import DefType
 from pysaurus.updates.video_inliner import (
     flatten_video,
     get_flatten_fields,
@@ -166,15 +165,6 @@ class OldPysaurusCollection(AbstractDatabase):
 
     def get_predictor(self, prop_name):
         return super().get_predictor(prop_name)
-
-    def create_prop_type(
-        self,
-        name: str,
-        prop_type: Union[str, type],
-        definition: DefType,
-        multiple: bool,
-    ) -> None:
-        super().create_prop_type(name, prop_type, definition, multiple)
 
     def remove_prop_type(self, name) -> None:
         super().remove_prop_type(name)

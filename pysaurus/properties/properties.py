@@ -6,7 +6,7 @@ from pysaurus.core.json_type import Type
 from pysaurus.core.schematizable import Schema, WithSchema, schema_prop
 
 DefType = Union[bool, int, float, str, list, tuple]
-PropValueType = Union[bool, int, float, str, Collection]
+PropValueType = Union[bool, int, float, str, list]
 
 PROP_UNIT_TYPES = {bool, int, float, str}
 PROP_UNIT_TYPE_MAP = {t.__name__: t for t in PROP_UNIT_TYPES}
@@ -21,19 +21,6 @@ class PropType(WithSchema):
             Type("multiple", "m", False),
         )
     )
-
-    def __init__(self, name: str, definition: DefType, multiple: bool = False):
-        name = name.strip()
-        if not name:
-            raise exceptions.MissingPropertyName()
-        if not isinstance(definition, (bool, int, float, str, list, tuple)):
-            raise exceptions.InvalidPropertyDefinition(definition)
-        if isinstance(definition, str):
-            definition = definition.strip()
-        elif isinstance(definition, (list, tuple)):
-            enum_type = Enumeration(definition)
-            definition = [definition[0]] + sorted(enum_type.values - {definition[0]})
-        super().__init__({"n": name, "d": definition, "m": multiple})
 
     name = schema_prop("name")
     definition = schema_prop("definition")
@@ -151,3 +138,49 @@ class PropTypeValidator:
             return [bool(int(value)) for value in values]
         else:
             return [self.type(value) for value in values]
+
+    @classmethod
+    def define(
+        cls,
+        name: str,
+        prop_type: Union[str, type],
+        definition: DefType,
+        multiple: bool,
+        *,
+        describe=False
+    ) -> dict:
+        name = name.strip()
+        if not name:
+            raise exceptions.MissingPropertyName()
+
+        if isinstance(prop_type, str):
+            prop_type = PROP_UNIT_TYPE_MAP[prop_type]
+        assert prop_type in PROP_UNIT_TYPES
+        if prop_type is float:
+            if isinstance(definition, (list, tuple)):
+                definition = [float(element) for element in definition]
+            else:
+                definition = float(definition)
+        elif prop_type is str:
+            if isinstance(definition, (list, tuple)):
+                definition = [element.strip() for element in definition]
+            else:
+                definition = definition.strip()
+
+        if not isinstance(definition, (bool, int, float, str, list, tuple)):
+            raise exceptions.InvalidPropertyDefinition(definition)
+        if isinstance(definition, (list, tuple)):
+            enum_type = Enumeration(definition)
+            definition = [definition[0]] + sorted(enum_type.values - {definition[0]})
+
+        if describe:
+            enumeration = definition if isinstance(definition, list) else None
+            return {
+                "name": name,
+                "type": prop_type.__name__,
+                "multiple": multiple,
+                "defaultValue": enumeration[0] if enumeration else definition,
+                "enumeration": enumeration,
+            }
+        else:
+            return {"name": name, "definition": definition, "multiple": multiple}

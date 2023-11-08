@@ -1,6 +1,7 @@
 import logging
-from typing import Collection, Dict, Iterable, List, Sequence, Tuple
+from typing import Collection, Dict, Iterable, List, Sequence, Tuple, Union
 
+from pysaurus.application import exceptions
 from pysaurus.core.components import AbsolutePath, Date
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.path_tree import PathTree
@@ -177,8 +178,29 @@ class PysaurusCollection(AbstractDatabase):
 
         return ret
 
-    def create_prop_type(self, name, prop_type, definition, multiple):
-        pass
+    def create_prop_type(
+        self,
+        name: str,
+        prop_type: Union[str, type],
+        definition: DefType,
+        multiple: bool,
+    ) -> None:
+        prop_desc = PropTypeValidator.define(
+            name, prop_type, definition, multiple, describe=True
+        )
+        if self.get_prop_types(name=prop_desc["name"]):
+            raise exceptions.PropertyAlreadyExists(prop_desc["name"])
+        property_id = self.db.modify(
+            "INSERT INTO property (name, type, multiple) VALUES (?, ?, ?)",
+            [prop_desc["name"], prop_desc["type"], int(prop_desc["multiple"])],
+        )
+        definition = prop_desc["enumeration"] or [prop_desc["defaultValue"]]
+        self.db.modify(
+            "INSERT INTO property_enumeration (property_id, enum_value, rank) "
+            "VALUES (?, ?, ?)",
+            [(property_id, value, rank) for rank, value in enumerate(definition)],
+            many=True,
+        )
 
     def remove_prop_type(self, name):
         pass
