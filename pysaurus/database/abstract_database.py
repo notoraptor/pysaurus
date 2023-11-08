@@ -42,6 +42,7 @@ logger = logging.getLogger(__name__)
 
 class AbstractDatabase(ABC):
     __slots__ = ("ways", "notifier", "in_save_context", "provider")
+    # Actions for update_prop_values()
     REMOVE = DELETE = -1
     REPLACE = SET = EDIT = 0
     ADD = APPEND = MERGE = 1

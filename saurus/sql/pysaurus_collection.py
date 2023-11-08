@@ -80,6 +80,7 @@ class PysaurusCollection(AbstractDatabase):
         raise NotImplementedError()
 
     def get_prop_values(self, video_id: int, name: str) -> List[PropValueType]:
+        # TODO Convert values to prop type
         return [
             row["val"]
             for row in self.db.query(
@@ -95,7 +96,36 @@ class PysaurusCollection(AbstractDatabase):
     def update_prop_values(
         self, video_id: int, name: str, values: Collection, action: int = 0
     ):
-        pass
+        property_id = self.db.query_one(
+            "SELECT property_id FROM property WHERE name = ?", [name]
+        )["property_id"]
+        if action == self.REMOVE:
+            self.db.modify(
+                "DELETE FROM video_property_value "
+                "WHERE video_id = ? AND property_id = ? AND property_value = ?",
+                [(video_id, property_id, value) for value in values],
+                many=True,
+            )
+        elif action == self.REPLACE:
+            self.db.modify(
+                "DELETE FROM video_property_value "
+                "WHERE video_id = ? AND property_id = ?",
+                [video_id, property_id],
+            )
+            self.db.modify(
+                "INSERT INTO video_property_value "
+                "(video_id, property_id, property_value) VALUES (?, ?, ?)",
+                [(video_id, property_id, value) for value in values],
+                many=True,
+            )
+        else:
+            assert action == self.APPEND
+            self.db.modify(
+                "INSERT OR IGNORE INTO video_property_value "
+                "(video_id, property_id, property_value) VALUES (?, ?, ?)",
+                [(video_id, property_id, value) for value in values],
+                many=True,
+            )
 
     def get_prop_types(
         self, *, name=None, with_type=None, multiple=None, with_enum=None, default=None
