@@ -127,7 +127,7 @@ class AbstractDatabase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def convert_prop_multiplicity(self, name, multiple):
+    def convert_prop_multiplicity(self, name: str, multiple: bool) -> None:
         raise NotImplementedError()
 
     @abstractmethod

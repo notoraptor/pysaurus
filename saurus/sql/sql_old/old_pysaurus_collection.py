@@ -157,24 +157,6 @@ class OldPysaurusCollection(AbstractDatabase):
         self._notify_missing_thumbnails()
         self.provider.refresh()
 
-    def set_folders(self, folders) -> None:
-        super().set_folders(folders)
-
-    def set_predictor(self, prop_name: str, theta: List[float]):
-        super().set_predictor(prop_name, theta)
-
-    def get_predictor(self, prop_name):
-        return super().get_predictor(prop_name)
-
-    def remove_prop_type(self, name) -> None:
-        super().remove_prop_type(name)
-
-    def rename_prop_type(self, old_name, new_name) -> None:
-        super().rename_prop_type(old_name, new_name)
-
-    def convert_prop_multiplicity(self, name: str, multiple: bool) -> None:
-        super().convert_prop_multiplicity(name, multiple)
-
     def _update_videos_not_found(self, existing_paths: Container[AbsolutePath]):
         # super()._update_videos_not_found(existing_paths)
         rows = self.db.query_all(

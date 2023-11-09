@@ -206,14 +206,38 @@ class PysaurusCollection(AbstractDatabase):
             many=True,
         )
 
-    def remove_prop_type(self, name):
-        pass
+    def remove_prop_type(self, name: str):
+        self.db.modify("DELETE FROM property WHERE name = ?", [name])
 
     def rename_prop_type(self, old_name, new_name):
-        pass
+        if self.get_prop_types(name=old_name):
+            if self.get_prop_types(name=new_name):
+                raise exceptions.PropertyAlreadyExists(new_name)
+            self.db.modify(
+                "UPDATE property SET name = ? WHERE name = ?", [new_name, old_name]
+            )
 
-    def convert_prop_multiplicity(self, name, multiple):
-        pass
+    def convert_prop_multiplicity(self, name: str, multiple: bool) -> None:
+        props = self.get_prop_types(name=name)
+        if props:
+            (prop_desc,) = props
+            if bool(prop_desc["multiple"]) is bool(multiple):
+                raise exceptions.PropertyAlreadyMultiple(name, multiple)
+            if not multiple:
+                res = self.db.query_one(
+                    "SELECT COUNT(p.property_value) AS nb, v.filename AS filename "
+                    "FROM video_property_value AS p "
+                    "JOIN video AS v ON p.video_id = v.video_id "
+                    "WHERE p.property_id = ? "
+                    "GROUP BY p.video_id ORDER BY nb DESC LIMIT 1",
+                    [prop_desc["property_id"]],
+                )
+                if res["nb"] > 1:
+                    raise exceptions.PropertyToUniqueError(name, res["filename"])
+            self.db.modify(
+                "UPDATE property SET multiple = ? WHERE name = ?",
+                [int(bool(multiple)), name],
+            )
 
     def get_videos(
         self,
