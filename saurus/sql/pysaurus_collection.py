@@ -277,7 +277,16 @@ class PysaurusCollection(AbstractDatabase):
         pass
 
     def open_video(self, video_id):
-        pass
+        AbsolutePath(
+            self.db.query_one(
+                "SELECT filename FROM video WHERE video_id = ?", [video_id]
+            )["filename"]
+        ).open()
+        self.db.modify(
+            "UPDATE video SET date_entry_opened = ? WHERE video_id = ?",
+            [Date.now().time, video_id],
+        )
+        self._notify_fields_modified(["date_entry_opened"])
 
     def get_unique_moves(self) -> List[Tuple[int, int]]:
         pass

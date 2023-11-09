@@ -346,9 +346,6 @@ class OldPysaurusCollection(AbstractDatabase):
     def delete_video_entry(self, video_id: int):
         super().delete_video_entry(video_id)
 
-    def open_video(self, video_id: int) -> None:
-        super().open_video(video_id)
-
     def get_common_fields(self, video_indices: Iterable[int]) -> dict:
         return super().get_common_fields(video_indices)
 
