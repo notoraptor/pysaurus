@@ -206,9 +206,6 @@ class OldPysaurusCollection(AbstractDatabase):
             not video["unreadable"] and video["audio_codec"] and not video["audio_bits"]
         )
 
-    def get_video_terms(self, video_id: int) -> List[str]:
-        return super().get_video_terms(video_id)
-
     def write_videos_field(self, indices: Iterable[int], field: str, values: Iterable):
         super().write_videos_field(indices, field, values)
 

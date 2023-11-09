@@ -141,7 +141,7 @@ class AbstractDatabase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_video_terms(self, video_id):
+    def get_video_terms(self, video_id: int) -> List[str]:
         raise NotImplementedError()
 
     @abstractmethod

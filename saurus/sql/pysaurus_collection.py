@@ -3,6 +3,7 @@ from typing import Collection, Dict, Iterable, List, Sequence, Tuple, Union
 
 from pysaurus.application import exceptions
 from pysaurus.core.components import AbsolutePath, Date
+from pysaurus.core.functions import string_to_pieces
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.path_tree import PathTree
 from pysaurus.database.abstract_database import AbstractDatabase
@@ -248,8 +249,24 @@ class PysaurusCollection(AbstractDatabase):
     ) -> List[dict]:
         pass
 
-    def get_video_terms(self, video_id):
-        pass
+    def get_video_terms(self, video_id: int) -> List[str]:
+        video = self.db.query_one(
+            "SELECT filename, meta_title FROM video WHERE video_id = ?", [video_id]
+        )
+        prop_vals = [
+            row[0]
+            for row in self.db.query(
+                "SELECT v.property_value FROM video_property_value AS v "
+                "JOIN property AS p ON v.property_id = p.property_id "
+                "WHERE v.video_id = ? AND p.type = ?",
+                [video_id, "str"],
+            )
+        ]
+        term_sources = [video[0], video[1]] + prop_vals
+        all_str = " ".join(term_sources)
+        t_all_str = string_to_pieces(all_str)
+        t_all_str_low = string_to_pieces(all_str.lower())
+        return t_all_str if t_all_str == t_all_str_low else (t_all_str + t_all_str_low)
 
     def add_video_errors(self, video_id: int, *errors: Iterable[str]) -> None:
         self.db.modify(
