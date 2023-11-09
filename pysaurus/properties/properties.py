@@ -5,7 +5,8 @@ from pysaurus.core.enumeration import Enumeration
 from pysaurus.core.json_type import Type
 from pysaurus.core.schematizable import Schema, WithSchema, schema_prop
 
-DefType = Union[bool, int, float, str, list, tuple]
+PropUnitType = Union[bool, int, float, str]
+PropRawType = Union[bool, int, float, str, Collection]
 PropValueType = Union[bool, int, float, str, list]
 
 PROP_UNIT_TYPES = {bool, int, float, str}
@@ -78,10 +79,6 @@ class PropType(WithSchema):
             "multiple": self.multiple,
         }
 
-    @classmethod
-    def from_dict(cls, dct: dict, **kwargs):
-        return cls(**cls.SCHEMA.to_long_keys(dct))
-
 
 class PropTypeValidator:
     __slots__ = ("name", "type", "enumeration", "multiple", "default", "property_id")
@@ -94,7 +91,7 @@ class PropTypeValidator:
         self.default = prop_desc["defaultValue"]
         self.property_id = prop_desc.get("property_id")
 
-    def validate(self, value: PropValueType) -> PropValueType:
+    def validate(self, value: PropRawType) -> PropValueType:
         if self.multiple:
             if not isinstance(value, (list, tuple, set)):
                 raise exceptions.InvalidMultiplePropertyValue(self, value)
@@ -118,7 +115,7 @@ class PropTypeValidator:
             raise exceptions.InvalidPropertyValue(self, value)
         return value
 
-    def instantiate(self, values: Collection[DefType]) -> Collection[DefType]:
+    def instantiate(self, values: Collection[PropUnitType]) -> Collection[PropUnitType]:
         if not values:
             return []
         if self.multiple:
@@ -127,7 +124,9 @@ class PropTypeValidator:
             (value,) = values
             return [self.validate(value)]
 
-    def from_strings(self, values: Collection[PropValueType]) -> Collection[DefType]:
+    def from_strings(
+        self, values: Collection[PropUnitType]
+    ) -> Collection[PropUnitType]:
         if not values:
             return []
         if not self.multiple and len(values) != 1:
@@ -144,7 +143,7 @@ class PropTypeValidator:
         cls,
         name: str,
         prop_type: Union[str, type],
-        definition: DefType,
+        definition: PropRawType,
         multiple: bool,
         *,
         describe=False

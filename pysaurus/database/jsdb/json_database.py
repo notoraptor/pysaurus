@@ -26,7 +26,12 @@ from pysaurus.database.json_database_utils import DatabaseLoaded, patch_database
 from pysaurus.database.special_properties import SpecialProperties
 from pysaurus.database.thubmnail_database.thumbnail_manager import ThumbnailManager
 from pysaurus.database.viewport.video_filter import VideoFilter
-from pysaurus.properties.properties import DefType, PropType, PropTypeValidator
+from pysaurus.properties.properties import (
+    PropRawType,
+    PropType,
+    PropTypeValidator,
+    PropUnitType,
+)
 from pysaurus.video import Video, VideoRuntimeInfo
 from pysaurus.video.abstract_video_indexer import AbstractVideoIndexer
 from pysaurus.video.video_features import VideoFeatures
@@ -381,11 +386,11 @@ class JsonDatabase(AbstractDatabase):
         self,
         name: str,
         prop_type: Union[str, type],
-        definition: DefType,
+        definition: PropRawType,
         multiple: bool,
     ) -> None:
         prop = PropType.from_keys(
-            **PropTypeValidator.define(name, prop_type, definition)
+            **PropTypeValidator.define(name, prop_type, definition, multiple)
         )
         assert prop.type is prop_type
         if prop.name in self._prop_types:
@@ -429,7 +434,7 @@ class JsonDatabase(AbstractDatabase):
             prop_type.multiple = multiple
             self.save()
 
-    def get_prop_values(self, video_id: int, name: str) -> Collection[DefType]:
+    def get_prop_values(self, video_id: int, name: str) -> Collection[PropUnitType]:
         return self._id_to_video[video_id].get_property(name)
 
     def update_prop_values(

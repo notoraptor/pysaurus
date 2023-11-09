@@ -33,7 +33,12 @@ from pysaurus.database.db_way_def import DbWays
 from pysaurus.database.json_database_utils import DatabaseSaved, DatabaseToSaveContext
 from pysaurus.database.viewport.abstract_video_provider import AbstractVideoProvider
 from pysaurus.miniature.miniature import Miniature
-from pysaurus.properties.properties import DefType, PropTypeValidator, PropValueType
+from pysaurus.properties.properties import (
+    PropRawType,
+    PropTypeValidator,
+    PropUnitType,
+    PropValueType,
+)
 from pysaurus.video import VideoRuntimeInfo
 from saurus.language import say
 from saurus.sql.sql_old.video_entry import VideoEntry
@@ -88,7 +93,7 @@ class AbstractDatabase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_prop_values(self, video_id: int, name: str) -> Collection[DefType]:
+    def get_prop_values(self, video_id: int, name: str) -> Collection[PropUnitType]:
         raise NotImplementedError()
 
     @abstractmethod
@@ -108,7 +113,7 @@ class AbstractDatabase(ABC):
         self,
         name: str,
         prop_type: Union[str, type],
-        definition: DefType,
+        definition: PropRawType,
         multiple: bool,
     ) -> None:
         raise NotImplementedError()

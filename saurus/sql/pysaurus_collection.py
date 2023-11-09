@@ -7,7 +7,7 @@ from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.path_tree import PathTree
 from pysaurus.database.abstract_database import AbstractDatabase
 from pysaurus.database.db_settings import DbSettings
-from pysaurus.properties.properties import DefType, PropTypeValidator
+from pysaurus.properties.properties import PropRawType, PropTypeValidator, PropUnitType
 from pysaurus.video.lazy_video_runtime_info import (
     LazyVideoRuntimeInfo as VideoRuntimeInfo,
 )
@@ -80,7 +80,7 @@ class PysaurusCollection(AbstractDatabase):
         logger.error("set_predictor not yet implemented.")
         raise NotImplementedError()
 
-    def get_prop_values(self, video_id: int, name: str) -> Collection[DefType]:
+    def get_prop_values(self, video_id: int, name: str) -> Collection[PropUnitType]:
         (prop_desc,) = self.get_prop_types(name=name)
         pt = PropTypeValidator(prop_desc)
         return pt.from_strings(
@@ -182,7 +182,7 @@ class PysaurusCollection(AbstractDatabase):
         self,
         name: str,
         prop_type: Union[str, type],
-        definition: DefType,
+        definition: PropRawType,
         multiple: bool,
     ) -> None:
         prop_desc = PropTypeValidator.define(
@@ -194,11 +194,15 @@ class PysaurusCollection(AbstractDatabase):
             "INSERT INTO property (name, type, multiple) VALUES (?, ?, ?)",
             [prop_desc["name"], prop_desc["type"], int(prop_desc["multiple"])],
         )
-        definition = prop_desc["enumeration"] or [prop_desc["defaultValue"]]
         self.db.modify(
             "INSERT INTO property_enumeration (property_id, enum_value, rank) "
             "VALUES (?, ?, ?)",
-            [(property_id, value, rank) for rank, value in enumerate(definition)],
+            [
+                (property_id, value, rank)
+                for rank, value in enumerate(
+                    prop_desc["enumeration"] or [prop_desc["defaultValue"]]
+                )
+            ],
             many=True,
         )
 
