@@ -312,4 +312,23 @@ class PysaurusCollection(AbstractDatabase):
         pass
 
     def _insert_new_thumbnails(self, filename_to_thumb_name: Dict[str, str]) -> None:
-        pass
+        filename_to_video_id = {
+            row[0]: row[1]
+            for row in self.db.query(
+                f"SELECT filename, video_id FROM video "
+                f"WHERE filename IN ({','.join(['?'] * len(filename_to_thumb_name))})",
+                list(filename_to_thumb_name.keys())
+            )
+        }
+        assert len(filename_to_video_id) == len(filename_to_thumb_name)
+        self.db.modify(
+            "INSERT OR REPLACE INTO video_thumbnail (video_id, thumbnail) VALUES (?, ?)",
+            (
+                (
+                    filename_to_video_id[filename],
+                    AbsolutePath(thumb_path).read_binary_file(),
+                )
+                for filename, thumb_path in filename_to_thumb_name.items()
+            ),
+            many=True,
+        )

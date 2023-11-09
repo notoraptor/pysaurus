@@ -345,6 +345,3 @@ class OldPysaurusCollection(AbstractDatabase):
 
     def get_common_fields(self, video_indices: Iterable[int]) -> dict:
         return super().get_common_fields(video_indices)
-
-    def _insert_new_thumbnails(self, filename_to_thumb_name: Dict[str, str]):
-        super()._insert_new_thumbnails(filename_to_thumb_name)
