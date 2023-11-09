@@ -212,9 +212,6 @@ class OldPysaurusCollection(AbstractDatabase):
     def write_videos_field(self, indices: Iterable[int], field: str, values: Iterable):
         super().write_videos_field(indices, field, values)
 
-    def add_video_errors(self, video_id: int, *errors: Iterable[str]):
-        super().add_video_errors(video_id, *errors)
-
     def write_new_videos(
         self,
         dictionaries: List[dict],

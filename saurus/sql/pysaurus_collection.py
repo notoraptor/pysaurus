@@ -252,7 +252,11 @@ class PysaurusCollection(AbstractDatabase):
         pass
 
     def add_video_errors(self, video_id: int, *errors: Iterable[str]) -> None:
-        pass
+        self.db.modify(
+            "INSERT OR IGNORE INTO video_error (video_id, error) VALUES (?, ?)",
+            [(video_id, error) for error in errors],
+            many=True,
+        )
 
     def change_video_entry_filename(
         self, video_id: int, path: AbsolutePath
