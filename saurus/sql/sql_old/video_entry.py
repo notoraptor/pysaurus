@@ -1,5 +1,7 @@
 from dataclasses import asdict, dataclass, field
-from typing import Dict, Sequence
+from typing import Dict, List, Sequence, Tuple
+
+from pysaurus.video import VideoRuntimeInfo
 
 
 @dataclass
@@ -51,3 +53,25 @@ class VideoEntry:
         del output["driver_id"]
         del output["is_file"]
         return output
+
+    def to_table(
+        self, for_update=False, runtime_info: VideoRuntimeInfo = None
+    ) -> Tuple[List[str], List]:
+        output = asdict(self)
+        del output["errors"]
+        del output["audio_languages"]
+        del output["subtitle_languages"]
+        del output["properties"]
+        del output["video_id"]
+        if for_update:
+            del output["date_entry_opened"]
+            del output["similarity_id"]
+        else:
+            assert self.video_id is None
+        if runtime_info:
+            output["mtime"] = runtime_info.mtime
+            output["driver_id"] = runtime_info.driver_id
+            output["is_file"] = runtime_info.is_file
+        fields = list(output.keys())
+        values = [output[key] for key in fields]
+        return fields, values
