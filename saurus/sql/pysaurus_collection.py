@@ -1,4 +1,5 @@
 import logging
+import operator
 from typing import Collection, Dict, Iterable, List, Sequence, Tuple, Union
 
 from pysaurus.application import exceptions
@@ -12,6 +13,7 @@ from pysaurus.properties.properties import PropRawType, PropTypeValidator, PropU
 from pysaurus.video.lazy_video_runtime_info import (
     LazyVideoRuntimeInfo as VideoRuntimeInfo,
 )
+from pysaurus.video.video_features import VideoFeatures
 from saurus.sql.pysaurus_connection import PysaurusConnection
 from saurus.sql.saurus_provider import SaurusProvider
 from saurus.sql.sql_old.video_entry import VideoEntry
@@ -306,10 +308,29 @@ class PysaurusCollection(AbstractDatabase):
         self._notify_fields_modified(["date_entry_opened"])
 
     def get_unique_moves(self) -> List[Tuple[int, int]]:
-        pass
+        output = []
+        for row in self.db.query(
+            """
+SELECT group_concat(video_id || '-' || is_file)
+FROM video 
+WHERE unreadable = 0 
+GROUP BY file_size, duration, COALESCE(NULLIF(duration_time_base, 0), 1)
+HAVING COUNT(video_id) == 2 AND SUM(is_file) == 1;
+            """
+        ):
+            d1, d2 = row[0].split(",")
+            v1, f1 = d1.split("-")
+            v2, f2 = d2.split("-")
+            v1 = int(v1)
+            v2 = int(v2)
+            output.append((v1, v2) if f1 == "0" else (v2, v1))
+        return output
 
-    def get_common_fields(self, video_indices):
-        pass
+    def get_common_fields(self, video_indices: Iterable[int]) -> dict:
+        return VideoFeatures.get_common_fields(
+            self.get_videos(where={"video_id": video_indices}),
+            getfield=operator.getitem,
+        )
 
     def _insert_new_thumbnails(self, filename_to_thumb_name: Dict[str, str]) -> None:
         filename_to_video_id = {
@@ -317,7 +338,7 @@ class PysaurusCollection(AbstractDatabase):
             for row in self.db.query(
                 f"SELECT filename, video_id FROM video "
                 f"WHERE filename IN ({','.join(['?'] * len(filename_to_thumb_name))})",
-                list(filename_to_thumb_name.keys())
+                list(filename_to_thumb_name.keys()),
             )
         }
         assert len(filename_to_video_id) == len(filename_to_thumb_name)

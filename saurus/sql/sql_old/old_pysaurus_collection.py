@@ -1,7 +1,7 @@
 import logging
 import tempfile
 from multiprocessing import Pool
-from typing import Container, Dict, Iterable, List, Sequence, Tuple
+from typing import Container, Dict, Iterable, List, Sequence
 
 from pysaurus.core import notifications
 from pysaurus.core.components import AbsolutePath
@@ -38,9 +38,6 @@ class OldPysaurusCollection(AbstractDatabase):
         with_moves: bool = False,
         where: dict = None,
     ) -> List[dict]:
-        pass
-
-    def get_unique_moves(self) -> List[Tuple[int, int]]:
         pass
 
     def _load(self, folders=None):
@@ -342,6 +339,3 @@ class OldPysaurusCollection(AbstractDatabase):
 
     def delete_video_entry(self, video_id: int):
         super().delete_video_entry(video_id)
-
-    def get_common_fields(self, video_indices: Iterable[int]) -> dict:
-        return super().get_common_fields(video_indices)

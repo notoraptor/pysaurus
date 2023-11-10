@@ -179,7 +179,7 @@ class AbstractDatabase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_common_fields(self, video_indices):
+    def get_common_fields(self, video_indices: Iterable[int]) -> dict:
         raise NotImplementedError()
 
     @abstractmethod
