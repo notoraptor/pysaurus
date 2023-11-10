@@ -280,10 +280,33 @@ class PysaurusCollection(AbstractDatabase):
     def change_video_entry_filename(
         self, video_id: int, path: AbsolutePath
     ) -> AbsolutePath:
-        pass
+        path = AbsolutePath.ensure(path)
+        assert path.isfile()
+        (video,) = self.get_videos(
+            include=["filename"], where={"video_id": video_id, "unreadable": False}
+        )
+        old_filename = AbsolutePath.ensure(video["filename"])
+        assert old_filename != path
+        self.db.modify(
+            "UPDATE video SET filename = ? WHERE video_id = ?", [path.path, video_id]
+        )
+        self._notify_fields_modified(
+            (
+                "title",
+                "title_numeric",
+                "file_title",
+                "file_title_numeric",
+                "filename_numeric",
+                "disk",
+                "filename",
+            )
+        )
+        return old_filename
 
     def delete_video_entry(self, video_id: int) -> None:
-        pass
+        self.db.modify("DELETE FROM video WHERE video_id = ?", [video_id])
+        self.provider.delete(video_id)
+        self._notify_fields_modified(["move_id", "quality"])
 
     def write_videos_field(self, indices: Iterable[int], field: str, values: Iterable):
         pass

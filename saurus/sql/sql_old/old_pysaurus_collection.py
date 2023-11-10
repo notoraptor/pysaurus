@@ -331,11 +331,3 @@ class OldPysaurusCollection(AbstractDatabase):
                     }
                 )
             )
-
-    def change_video_entry_filename(
-        self, video_id: int, path: AbsolutePath
-    ) -> AbsolutePath:
-        return super().change_video_entry_filename(video_id, path)
-
-    def delete_video_entry(self, video_id: int):
-        super().delete_video_entry(video_id)
