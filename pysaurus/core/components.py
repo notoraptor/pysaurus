@@ -291,6 +291,9 @@ class Date:
     def __hash__(self):
         return hash(self.time)
 
+    def __float__(self):
+        return self.time
+
     def __eq__(self, other):
         return self.time == other.time
 
