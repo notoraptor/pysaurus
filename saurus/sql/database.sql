@@ -83,26 +83,18 @@ CREATE TABLE IF NOT EXISTS property_enumeration (
 	-- if one value, not enum, and value is default value.
 	-- else, enum, and first value (rank == 0) is default value.
 	property_id INTEGER REFERENCES property(property_id) ON DELETE CASCADE,
-	v_bool INTEGER,
-	v_int INTEGER,
-	v_float DOUBLE,
-	v_str TEXT,
+	enum_value TEXT NOT NULL,
 	rank INTEGER NOT NULL,
 	CHECK (rank >= 0),
-	CHECK ((v_bool IS NULL) + (v_int IS NULL) + (v_float IS NULL) + (v_str IS NULL) = 3),
-	UNIQUE (property_id, v_bool, v_int, v_float, v_str),
+	UNIQUE (property_id, enum_value),
 	UNIQUE (property_id, rank)
 );
 
 CREATE TABLE IF NOT EXISTS video_property_value (
 	video_id INTEGER REFERENCES video(video_id) ON DELETE CASCADE,
 	property_id INTEGER REFERENCES property(property_id) ON DELETE CASCADE,
-	v_bool INTEGER,
-	v_int INTEGER,
-	v_float DOUBLE,
-	v_str TEXT,
-	CHECK ((v_bool IS NULL) + (v_int IS NULL) + (v_float IS NULL) + (v_str IS NULL) = 3),
-	UNIQUE (video_id, property_id, v_bool, v_int, v_float, v_str)
+	property_value TEXT,
+	UNIQUE (video_id, property_id, property_value)
 );
 
 CREATE TABLE IF NOT EXISTS video_thumbnail (
