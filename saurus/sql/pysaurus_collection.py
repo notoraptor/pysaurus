@@ -5,7 +5,7 @@ from typing import Collection, Dict, Iterable, List, Sequence, Tuple, Union
 
 from pysaurus.application import exceptions
 from pysaurus.core.components import AbsolutePath, Date
-from pysaurus.core.functions import identity, string_to_pieces
+from pysaurus.core.functions import string_to_pieces
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.path_tree import PathTree
 from pysaurus.database.abstract_database import AbstractDatabase
@@ -25,13 +25,6 @@ logger = logging.getLogger(__name__)
 FORMATTED_VIDEO_TABLE_FIELDS = ", ".join(
     f"v.{field} AS {field}" for field in VIDEO_TABLE_FIELDS
 )
-
-
-def parse_bool(value: str) -> bool:
-    return bool(int(value))
-
-
-PROPERTY_PARSER = {"str": identity, "bool": parse_bool, "int": int, "float": float}
 
 
 class PysaurusCollection(AbstractDatabase):
@@ -303,6 +296,7 @@ class PysaurusCollection(AbstractDatabase):
         errors = defaultdict(list)
         languages = {"a": defaultdict(list), "s": defaultdict(list)}
         properties = defaultdict(dict)
+        json_properties = {}
         with_errors = include is None or "errors" in include
         with_audio_languages = include is None or "audio_languages" in include
         with_subtitle_languages = include is None or "subtitle_languages" in include
@@ -310,7 +304,7 @@ class PysaurusCollection(AbstractDatabase):
         if with_errors:
             for row in self.db.query(
                 f"SELECT video_id, error FROM video_error "
-                f"WHERE video_id IN ({placeholders}) ORDER BY video_id ASC, error ASC",
+                f"WHERE video_id IN ({placeholders})",
                 video_indices,
             ):
                 errors[row[0]].append(row[1])
@@ -323,22 +317,31 @@ class PysaurusCollection(AbstractDatabase):
             ):
                 languages[row[0]][row[1]].append(row[2])
         if with_properties:
+            prop_types: Dict[int, PropTypeValidator] = {
+                desc["property_id"]: PropTypeValidator(desc)
+                for desc in self.get_prop_types()
+            }
             for row in self.db.query(
-                f"SELECT v.video_id, p.name, p.type, v.property_value "
-                f"FROM video_property_value AS v JOIN property AS p "
-                f"ON v.property_id = p.property_id "
-                f"WHERE V.video_id IN ({placeholders})",
+                f"SELECT video_id, property_id, property_value "
+                f"FROM video_property_value WHERE video_id IN ({placeholders})",
                 video_indices,
             ):
-                properties[row[0]].setdefault(row[1], []).append(
-                    PROPERTY_PARSER[row[2]](row[3])
-                )
+                properties[row[0]].setdefault(row[1], []).append(row[2])
+            json_properties = {
+                video_id: {
+                    prop_types[property_id]
+                    .name: prop_types[property_id]
+                    .plain_from_strings(values)
+                    for property_id, values in raw_properties.items()
+                }
+                for video_id, raw_properties in properties.items()
+            }
 
         for video in videos:
             video.errors = errors.get(video.video_id, [])
             video.audio_languages = languages["a"].get(video.video_id, [])
             video.subtitle_languages = languages["s"].get(video.video_id, [])
-            video.json_properties = properties.get(video.video_id, {})
+            video.json_properties = json_properties.get(video.video_id, {})
 
         if include is None:
             # Return all, use with_moves.
