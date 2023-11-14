@@ -78,10 +78,6 @@ class PotentialMoveAttribute:
                 for video in found:
                     self.move_groups[video["video_id"]] = key.string
 
-    def get_unique_moves(self) -> Iterable[Tuple[int, int]]:
+    def get_moves(self) -> Iterable[Tuple[int, List[dict]]]:
         self._update()
-        return (
-            (video_id, moves[0]["video_id"])
-            for video_id, moves in self.potential_moves.items()
-            if len(moves) == 1
-        )
+        return self.potential_moves.items()

@@ -1,7 +1,7 @@
 import logging
 import tempfile
 from multiprocessing import Pool
-from typing import Container, Dict, Iterable, List, Sequence
+from typing import Container, Dict, Iterable, List
 
 from pysaurus.core import notifications
 from pysaurus.core.components import AbsolutePath
@@ -30,15 +30,6 @@ class OldPysaurusCollection(AbstractDatabase):
         super().__init__(path, None, notifier)
         self.db = PysaurusConnection(self.ways.db_sql_path.path)
         self._load(folders)
-
-    def get_videos(
-        self,
-        *,
-        include: Sequence[str] = None,
-        with_moves: bool = False,
-        where: dict = None,
-    ) -> List[dict]:
-        pass
 
     def _load(self, folders=None):
         if folders:

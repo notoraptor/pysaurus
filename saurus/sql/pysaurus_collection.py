@@ -1,5 +1,6 @@
 import logging
 import operator
+from collections import defaultdict
 from typing import Collection, Dict, Iterable, List, Sequence, Tuple, Union
 
 from pysaurus.application import exceptions
@@ -14,11 +15,16 @@ from pysaurus.video.lazy_video_runtime_info import (
     LazyVideoRuntimeInfo as VideoRuntimeInfo,
 )
 from pysaurus.video.video_features import VideoFeatures
+from pysaurus.video.video_parser import SQLVideoWrapper, VideoParser
 from saurus.sql.pysaurus_connection import PysaurusConnection
 from saurus.sql.saurus_provider import SaurusProvider
-from saurus.sql.sql_old.video_entry import VideoEntry
+from saurus.sql.sql_old.video_entry import VIDEO_TABLE_FIELDS, VideoEntry
 
 logger = logging.getLogger(__name__)
+
+FORMATTED_VIDEO_TABLE_FIELDS = ", ".join(
+    f"v.{field} AS {field}" for field in VIDEO_TABLE_FIELDS
+)
 
 
 class PysaurusCollection(AbstractDatabase):
@@ -242,6 +248,8 @@ class PysaurusCollection(AbstractDatabase):
                 [int(bool(multiple)), name],
             )
 
+    x = SQLVideoWrapper
+
     def get_videos(
         self,
         *,
@@ -249,7 +257,99 @@ class PysaurusCollection(AbstractDatabase):
         with_moves: bool = False,
         where: dict = None,
     ) -> List[dict]:
-        pass
+        parser = VideoParser()
+        args = dict(parser(key, value) for key, value in (where or {}).items())
+        selection = [
+            (key, args.pop(key)) for key in ("video_id", "filename") if key in args
+        ]
+        parameters = []
+        queries_where = []
+        if selection:
+            qs = []
+            for key, values in selection:
+                qs.append(
+                    (
+                        f"v.{key} = ?"
+                        if len(values) == 1
+                        else f"v.{key} IN ({', '.join(['?'] * len(values))})"
+                    )
+                )
+                parameters.extend(values)
+            queries_where.append(f"({' OR '.join(qs)})")
+        args_keys = list(args.keys())
+        queries_where.extend(f"v.{key} = ?" for key in args_keys)
+        parameters.extend(args[key] for key in args_keys)
+
+        query = (
+            f"SELECT {FORMATTED_VIDEO_TABLE_FIELDS}, t.thumbnail AS thumbnail, "
+            f"IIF(LENGTH(t.thumbnail), 1, 0) AS with_thumbnails "
+            f"FROM video AS v LEFT JOIN video_thumbnail AS t "
+            f"ON v.video_id = t.video_id"
+        )
+        if queries_where:
+            query += f" WHERE {' AND '.join(queries_where)}"
+        videos = [SQLVideoWrapper(row) for row in self.db.query(query, parameters)]
+
+        video_indices = [video.data["video_id"] for video in videos]
+        placeholders = ", ".join(["?"] * len(video_indices))
+
+        errors = defaultdict(list)
+        languages = {"a": defaultdict(list), "s": defaultdict(list)}
+        properties = defaultdict(dict)
+        json_properties = {}
+        with_errors = include is None or "errors" in include
+        with_audio_languages = include is None or "audio_languages" in include
+        with_subtitle_languages = include is None or "subtitle_languages" in include
+        with_properties = include is None or "json_properties" in include
+        if with_errors:
+            for row in self.db.query(
+                f"SELECT video_id, error FROM video_error "
+                f"WHERE video_id IN ({placeholders})",
+                video_indices,
+            ):
+                errors[row[0]].append(row[1])
+        if with_audio_languages or with_subtitle_languages:
+            for row in self.db.query(
+                f"SELECT stream, video_id, lang_code FROM video_language "
+                f"WHERE video_id IN ({placeholders}) "
+                f"ORDER BY stream ASC, video_id ASC, rank ASC",
+                video_indices,
+            ):
+                languages[row[0]][row[1]].append(row[2])
+        if with_properties:
+            prop_types: Dict[int, PropTypeValidator] = {
+                desc["property_id"]: PropTypeValidator(desc)
+                for desc in self.get_prop_types()
+            }
+            for row in self.db.query(
+                f"SELECT video_id, property_id, property_value "
+                f"FROM video_property_value WHERE video_id IN ({placeholders})",
+                video_indices,
+            ):
+                properties[row[0]].setdefault(row[1], []).append(row[2])
+            json_properties = {
+                video_id: {
+                    prop_types[property_id]
+                    .name: prop_types[property_id]
+                    .plain_from_strings(values)
+                    for property_id, values in raw_properties.items()
+                }
+                for video_id, raw_properties in properties.items()
+            }
+
+        for video in videos:
+            video.errors = errors.get(video.video_id, [])
+            video.audio_languages = languages["a"].get(video.video_id, [])
+            video.subtitle_languages = languages["s"].get(video.video_id, [])
+            video.json_properties = json_properties.get(video.video_id, {})
+
+        if include is None:
+            # Return all, use with_moves.
+            return [VideoFeatures.json(video, with_moves) for video in videos]
+        else:
+            # Use include, ignore with_moves
+            fields = include or ("video_id",)
+            return [{key: getattr(video, key) for key in fields} for video in videos]
 
     def get_video_terms(self, video_id: int) -> List[str]:
         video = self.db.query_one(
@@ -330,24 +430,35 @@ class PysaurusCollection(AbstractDatabase):
         )
         self._notify_fields_modified(["date_entry_opened"])
 
-    def get_unique_moves(self) -> List[Tuple[int, int]]:
-        output = []
+    def get_moves(self) -> Iterable[Tuple[int, List[dict]]]:
         for row in self.db.query(
             """
-SELECT group_concat(video_id || '-' || is_file)
+SELECT group_concat(video_id || '-' || is_file || '-' || hex(filename))
 FROM video 
 WHERE unreadable = 0 
 GROUP BY file_size, duration, COALESCE(NULLIF(duration_time_base, 0), 1)
-HAVING COUNT(video_id) == 2 AND SUM(is_file) == 1;
-            """
+HAVING COUNT(video_id) > 1 AND SUM(is_file) < COUNT(video_id);
+                """
         ):
-            d1, d2 = row[0].split(",")
-            v1, f1 = d1.split("-")
-            v2, f2 = d2.split("-")
-            v1 = int(v1)
-            v2 = int(v2)
-            output.append((v1, v2) if f1 == "0" else (v2, v1))
-        return output
+            not_found = []
+            found = []
+            for piece in row[0].split(","):
+                str_video_id, str_is_file, str_hex_filename = piece.split("-")
+                video_id = int(str_video_id)
+                if int(str_is_file):
+                    found.append(
+                        {
+                            "video_id": video_id,
+                            "filename": AbsolutePath(
+                                bytes.fromhex(str_hex_filename).decode("utf-8")
+                            ).standard_path,
+                        }
+                    )
+                else:
+                    not_found.append(video_id)
+            assert not_found and found
+            for id_not_found in not_found:
+                yield id_not_found, found
 
     def get_common_fields(self, video_indices: Iterable[int]) -> dict:
         return VideoFeatures.get_common_fields(

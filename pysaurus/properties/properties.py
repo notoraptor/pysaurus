@@ -124,9 +124,7 @@ class PropTypeValidator:
             (value,) = values
             return [self.validate(value)]
 
-    def from_strings(
-        self, values: Collection[PropUnitType]
-    ) -> Collection[PropUnitType]:
+    def from_strings(self, values: Collection[str]) -> Collection[PropUnitType]:
         if not values:
             return []
         if not self.multiple and len(values) != 1:
@@ -137,6 +135,10 @@ class PropTypeValidator:
             return [bool(int(value)) for value in values]
         else:
             return [self.type(value) for value in values]
+
+    def plain_from_strings(self, values: Collection[str]) -> PropValueType:
+        values = self.from_strings(values)
+        return values[0] if len(values) == 1 else values
 
     @classmethod
     def define(

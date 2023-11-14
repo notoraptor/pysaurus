@@ -175,7 +175,7 @@ class AbstractDatabase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_unique_moves(self) -> List[Tuple[int, int]]:
+    def get_moves(self) -> Iterable[Tuple[int, List[dict]]]:
         raise NotImplementedError()
 
     @abstractmethod
@@ -484,6 +484,13 @@ class AbstractDatabase(ABC):
                 for video_id, dst_id in unique_moves:
                     self.move_video_entry(video_id, dst_id)
         return len(unique_moves)
+
+    def get_unique_moves(self) -> List[Tuple[int, int]]:
+        return [
+            (video_id, moves[0]["video_id"])
+            for video_id, moves in self.get_moves()
+            if len(moves) == 1
+        ]
 
     def delete_property_value(self, name: str, values: list) -> List[int]:
         modified = []

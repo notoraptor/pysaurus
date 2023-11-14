@@ -1,18 +1,43 @@
-from typing import Any, Tuple
+import base64
+from typing import Any, List, Tuple
 
 from pysaurus.core.classes import StringedTuple
 from pysaurus.core.components import AbsolutePath, Date, Duration, FileSize
+from saurus.sql.sql_old.video_entry import VIDEO_TABLE_FIELDS
+
+VIDEO_TABLE_FIELD_SET = set(VIDEO_TABLE_FIELDS)
+
+
+def assert_video_table_field(value: str) -> str:
+    assert value in VIDEO_TABLE_FIELD_SET
+    return value
 
 
 class VideoParser:
     __slots__ = ()
 
     def __call__(self, field, value) -> Tuple[str, Any]:
-        return getattr(self, field)(value) if hasattr(self, field) else (field, value)
+        return (
+            getattr(self, field)(value)
+            if hasattr(self, field)
+            else (assert_video_table_field(field), value)
+        )
 
     @classmethod
-    def filename(cls, value) -> Tuple[str, AbsolutePath]:
-        return "filename", AbsolutePath.ensure(value).path
+    def video_id(cls, value) -> Tuple[str, List[int]]:
+        return "video_id", (
+            value
+            if isinstance(value, list)
+            else list(value)
+            if isinstance(value, (tuple, set))
+            else [value]
+        )
+
+    @classmethod
+    def filename(cls, value) -> Tuple[str, List[AbsolutePath]]:
+        if not isinstance(value, (list, tuple, set)):
+            value = [value]
+        return "filename", [AbsolutePath.ensure(el).path for el in value]
 
     @classmethod
     def date_entry_modified(cls, value) -> Tuple[str, float]:
@@ -46,6 +71,7 @@ class SQLVideoWrapper:
         "subtitle_languages",
         "errors",
         "json_properties",
+        "moves",
     )
 
     def __init__(
@@ -55,16 +81,15 @@ class SQLVideoWrapper:
         subtitle_languages=[],
         errors=[],
         json_properties={},
+        moves=[],
     ):
-        """
-        Data must contains key "with_thumbnails"
-        Data may contains key "moves", list of dicts {video_id => int, filename => str}
-        """
+        # Data must contains key "with_thumbnails"
         self.data = data
         self.audio_languages = audio_languages
         self.subtitle_languages = subtitle_languages
         self.errors = errors
         self.json_properties = json_properties
+        self.moves = moves  # list of dicts {video_id => int, filename => str}
 
     @property
     def filename(self) -> AbsolutePath:
@@ -256,7 +281,7 @@ class SQLVideoWrapper:
 
     @property
     def meta_title_numeric(self):
-        return self.meta_title.value
+        return self.meta_title
 
     @property
     def raw_microseconds(self):
@@ -264,8 +289,12 @@ class SQLVideoWrapper:
 
     @property
     def thumbnail_base64(self):
-        data: bytes = self.data.get("thumbnail")
-        return ("data:image/jpeg;base64," + data.decode()) if data else None
+        data: bytes = self.data["thumbnail"]
+        return (
+            ("data:image/jpeg;base64," + base64.b64encode(data).decode())
+            if data
+            else None
+        )
 
     @property
     def thumbnail_blob(self):
@@ -290,7 +319,3 @@ class SQLVideoWrapper:
     @property
     def move_id(self):
         return f"{self.size}, {self.length}"
-
-    @property
-    def moves(self):
-        return self.data.get("moves")

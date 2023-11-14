@@ -75,3 +75,40 @@ class VideoEntry:
         fields = list(output.keys())
         values = [output[key] for key in fields]
         return fields, values
+
+
+VIDEO_TABLE_FIELDS = [
+    "audio_bit_rate",
+    "audio_bits",
+    "audio_codec",
+    "audio_codec_description",
+    # "audio_languages",
+    "bit_depth",
+    "channels",
+    "container_format",
+    "date_entry_modified",
+    "date_entry_opened",
+    "device_name",
+    "discarded",
+    "driver_id",
+    "duration",
+    "duration_time_base",
+    # "errors",
+    "file_size",
+    "filename",
+    "frame_rate_den",
+    "frame_rate_num",
+    "height",
+    "is_file",
+    "meta_title",
+    "mtime",
+    # "properties",
+    "sample_rate",
+    "similarity_id",
+    # "subtitle_languages",
+    "unreadable",
+    "video_codec",
+    "video_codec_description",
+    "video_id",
+    "width",
+]

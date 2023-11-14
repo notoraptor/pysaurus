@@ -606,8 +606,8 @@ class JsonDatabase(AbstractDatabase):
         self.provider.delete(video_id)
         self._notify_fields_modified(["move_id", "quality"])
 
-    def get_unique_moves(self) -> List[Tuple[int, int]]:
-        return list(self.moves_attribute.get_unique_moves())
+    def get_moves(self) -> Iterable[Tuple[int, List[dict]]]:
+        return self.moves_attribute.get_moves()
 
     def open_video(self, video_id: int) -> None:
         self._id_to_video[video_id].open()
