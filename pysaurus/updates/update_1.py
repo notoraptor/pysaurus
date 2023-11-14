@@ -107,12 +107,12 @@ def export_db_to_sql(db_path: AbsolutePath, notifier):
             for i, pt in enumerate(prop_types)
         ]
         prop_enums = [
-            (i, e, r)
+            (f"v_{pt.type.__name__}", i, pt.type(e), r)
             for i, pt in enumerate(prop_types)
             for r, e in enumerate(pt.enumeration or [pt.default])
         ]
         video_property_values = [
-            (video_id, pt_name_to_pid[name], property_value)
+            (f"v_{pt_name_to_type[name].__name__}", video_id, pt_name_to_pid[name], property_value)
             for video_id, video in enumerate(videos)
             for name, values in sorted(
                 video._get("properties").items(), key=lambda c: c[0]
@@ -174,13 +174,13 @@ def export_db_to_sql(db_path: AbsolutePath, notifier):
             many=True,
         )
         new_db.modify(
-            "INSERT INTO property_enumeration (property_id, enum_value, rank) "
+            "INSERT INTO property_enumeration (property_id, ?, rank) "
             "VALUES (?, ?, ?)",
             prop_enums,
             many=True,
         )
         new_db.modify(
-            "INSERT INTO video_property_value (video_id, property_id, property_value) "
+            "INSERT INTO video_property_value (video_id, property_id, ?) "
             "VALUES (?, ?, ?)",
             video_property_values,
             many=True,
