@@ -341,7 +341,7 @@ class PysaurusCollection(AbstractDatabase):
             video.errors = errors.get(video.video_id, [])
             video.audio_languages = languages["a"].get(video.video_id, [])
             video.subtitle_languages = languages["s"].get(video.video_id, [])
-            video.json_properties = json_properties.get(video.video_id, {})
+            video.properties = json_properties.get(video.video_id, {})
 
         if include is None:
             # Return all, use with_moves.

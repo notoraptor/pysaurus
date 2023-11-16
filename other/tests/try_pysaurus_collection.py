@@ -11,9 +11,10 @@ def main():
     collection = program.open_database(DB_NAME)
     print(collection.get_prop_values(2, "note"))
     with Profiler("get videos", Notifier()):
-        res = collection.get_videos(with_moves=True)
-        print(len(res))
-        pprint.pprint(res[0])
+        res = collection.get_videos(include=None, with_moves=True)
+        example = res[0]
+        print(len(res), len(example))
+        pprint.pprint(example)
 
 
 if __name__ == "__main__":

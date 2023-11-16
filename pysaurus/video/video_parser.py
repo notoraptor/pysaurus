@@ -104,7 +104,7 @@ class SQLVideoWrapper:
         "audio_languages",
         "subtitle_languages",
         "errors",
-        "json_properties",
+        "properties",
         "moves",
     )
 
@@ -122,7 +122,7 @@ class SQLVideoWrapper:
         self.audio_languages = audio_languages
         self.subtitle_languages = subtitle_languages
         self.errors = errors
-        self.json_properties = json_properties
+        self.properties = json_properties
         self.moves = moves  # list of dicts {video_id => int, filename => str}
 
     @property
@@ -326,7 +326,8 @@ class SQLVideoWrapper:
         return self.duration * 1000000 / self.duration_time_base
 
     @property
-    def thumbnail_base64(self):
+    def thumbnail_path(self):
+        # Return thumbnail as HTML, base64 encoded image data
         data: bytes = self.data[F.thumbnail]
         return (
             ("data:image/jpeg;base64," + base64.b64encode(data).decode())
@@ -376,43 +377,43 @@ class SQLVideoWrapper:
             "date": str(self.date),
             "date_entry_modified": str(self.date_entry_modified),
             "date_entry_opened": str(self.date_entry_opened),
-            "day": self.day,
-            "year": self.year,
-            "device_name": self.data[F.device_name],
-            "disk": self.disk,
-            "duration": abs(self.data[F.duration]),
-            "duration_time_base": self.data[F.duration_time_base] or 1,
+            # "day": self.day,
+            # "year": self.year,
+            # "device_name": self.data[F.device_name],
+            # "disk": self.disk,
+            # "duration": abs(self.data[F.duration]),
+            # "duration_time_base": self.data[F.duration_time_base] or 1,
             "errors": self.errors,
             "extension": filename.extension,
             "file_size": self.data[F.file_size],
             "file_title": file_title,
-            "file_title_numeric": file_title,
+            # "file_title_numeric": file_title,
             "filename": standard_path,
-            "filename_numeric": standard_path,
+            # "filename_numeric": standard_path,
             "found": self.data[F.is_file],
             "frame_rate": (
                 self.data[F.frame_rate_num] / (self.data[F.frame_rate_den] or 1)
             ),
             # "frame_rate": self.frame_rate,
-            "frame_rate_den": self.data[F.frame_rate_den] or 1,
-            "frame_rate_num": self.data[F.frame_rate_num],
+            # "frame_rate_den": self.data[F.frame_rate_den] or 1,
+            # "frame_rate_num": self.data[F.frame_rate_num],
             "height": self.data[F.height],
             "length": str(self.length),
-            "meta_title": self.data[F.meta_title],
-            "meta_title_numeric": self.data[F.meta_title],
-            "move_id": self.move_id if with_moves else None,
+            # "meta_title": self.data[F.meta_title],
+            # "meta_title_numeric": self.data[F.meta_title],
+            # "move_id": self.move_id if with_moves else None,
             "moves": self.moves if with_moves else None,
-            "not_found": not self.data[F.is_file],
-            "properties": self.json_properties,
+            # "not_found": not self.data[F.is_file],
+            "properties": self.properties,
             "readable": not self.data[F.unreadable],
             "sample_rate": self.data[F.sample_rate],
             "similarity_id": self.data[F.similarity_id],
             "size": str(self.size),
-            "size_length": str(self.size_length),
+            # "size_length": str(self.size_length),
             "subtitle_languages": self.subtitle_languages,
-            "thumbnail_path": self.thumbnail_base64,
+            "thumbnail_path": self.thumbnail_path,
             "title": title,
-            "title_numeric": title,
+            # "title_numeric": title,
             "video_codec": self.data[F.video_codec],
             "video_codec_description": self.data[F.video_codec_description],
             "video_id": self.data[F.video_id],
