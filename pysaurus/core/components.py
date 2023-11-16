@@ -1,4 +1,5 @@
 import logging
+import math
 import os
 import pathlib
 import shutil
@@ -310,74 +311,65 @@ class Date:
     def day(self):
         return datetime.fromtimestamp(self.time).strftime("%Y-%m-%d")
 
+    @property
+    def year(self) -> int:
+        return int(datetime.fromtimestamp(self.time).strftime("%Y"))
+
     @staticmethod
     def now():
         return Date(datetime.now().timestamp())
 
 
 class Duration:
-    __slots__ = (
-        "days",
-        "hours",
-        "minutes",
-        "seconds",
-        "microseconds",
-        "total_microseconds",
-    )
+    __slots__ = ("d", "h", "m", "s", "u", "t")
+    S = 1_000_000
+    M = 60_000_000
+    H = 3600_000_000
+    D = 86_400_000_000
 
     def __init__(self, microseconds: Union[int, float]):
-        assert 0 <= microseconds, microseconds
-
-        if isinstance(microseconds, float):
-            microseconds = round(microseconds)
-
-        solid_seconds = microseconds // 1000000
-        solid_minutes = solid_seconds // 60
-        solid_hours = solid_minutes // 60
-
-        self.days = solid_hours // 24
-        self.hours = solid_hours % 24
-        self.minutes = solid_minutes % 60
-        self.seconds = solid_seconds % 60
-        self.microseconds = microseconds % 1000000
-
+        microseconds = round(microseconds)
+        self.d = microseconds // 86_400_000_000
+        self.h = (microseconds % 86_400_000_000) // 3600_000_000
+        self.m = (microseconds % 3600_000_000) // 60_000_000
+        self.s = (microseconds % 60_000_000) // 1_000_000
+        self.u = microseconds % 1_000_000
         # Comparable duration is video duration round to microseconds.
-        self.total_microseconds = microseconds
+        self.t = microseconds
 
     def __hash__(self):
-        return hash(self.total_microseconds)
+        return hash(self.t)
 
     def __eq__(self, other):
-        return self.total_microseconds == other.total_microseconds
+        return self.t == other.t
 
     def __ne__(self, other):
-        return self.total_microseconds != other.total_microseconds
+        return self.t != other.t
 
     def __lt__(self, other):
-        return self.total_microseconds < other.total_microseconds
+        return self.t < other.t
 
     def __gt__(self, other):
-        return self.total_microseconds > other.total_microseconds
+        return self.t > other.t
 
     def __le__(self, other):
-        return self.total_microseconds <= other.total_microseconds
+        return self.t <= other.t
 
     def __ge__(self, other):
-        return self.total_microseconds >= other.total_microseconds
+        return self.t >= other.t
 
     def __str__(self):
-        view = []
-        if self.days:
-            view.append("%02dd" % self.days)
-        if self.hours:
-            view.append("%02dh" % self.hours)
-        if self.minutes:
-            view.append("%02dm" % self.minutes)
-        if self.seconds:
-            view.append("%02ds" % self.seconds)
-        if self.microseconds:
-            view.append("%06dµs" % self.microseconds)
-        return " ".join(view) if view else "00s"
+        return (
+            (
+                (" %02dd" % self.d if self.d else "")
+                + (" %02dh" % self.h if self.h else "")
+                + (" %02dm" % self.m if self.m else "")
+                + (" %02ds" % self.s if self.s else "")
+                + (" %06dµs" % self.u if self.u else "")
+            )[1:]
+            if self.t
+            else "00s"
+        )
 
     def to_json(self):
         return str(self)
@@ -395,12 +387,12 @@ class ShortDuration(Duration):
     __slots__ = ()
 
     def __str__(self):
-        seconds = int((self.seconds * 1000000 + self.microseconds) / 1000000)
+        seconds = int((self.s * 1000000 + self.u) / 1000000)
         view = []
-        if self.days:
-            view.append("%02dd" % self.days)
-        view.append("%02d" % self.hours)
-        view.append("%02d" % self.minutes)
+        if self.d:
+            view.append("%02dd" % self.d)
+        view.append("%02d" % self.h)
+        view.append("%02d" % self.m)
         view.append("%02d" % seconds)
         return ":".join(view)
 
@@ -411,37 +403,15 @@ class FileSize:
     MEGA_BYTES = KILO_BYTES * KILO_BYTES
     GIGA_BYTES = KILO_BYTES * MEGA_BYTES
     TERA_BYTES = KILO_BYTES * GIGA_BYTES
-    SIZE_UNIT_TO_STRING = {
-        BYTES: "b",
-        KILO_BYTES: "Kb",
-        MEGA_BYTES: "Mb",
-        GIGA_BYTES: "Gb",
-        TERA_BYTES: "Tb",
-    }
+    BASES = [BYTES, KILO_BYTES, MEGA_BYTES, GIGA_BYTES, TERA_BYTES]
+    NAMES = ["b", "Kb", "Mb", "Gb", "Tb"]
 
-    __slots__ = ("__size", "__unit")
+    __slots__ = ("value", "__base")
 
     def __init__(self, size):
         # type: (int) -> None
-        self.__size = size
-        self.__unit = self.BYTES
-        for unit in (
-            self.TERA_BYTES,
-            self.GIGA_BYTES,
-            self.MEGA_BYTES,
-            self.KILO_BYTES,
-        ):
-            if size // unit:
-                self.__unit = unit
-                break
-
-    @property
-    def value(self):
-        return self.__size
-
-    @property
-    def nb_units(self):
-        return self.__size / self.__unit
+        self.value = size
+        self.__base = (size and min(4, int(math.log(size, 1024)))) or 0
 
     def __hash__(self):
         return hash(self.value)
@@ -453,7 +423,7 @@ class FileSize:
         return isinstance(other, FileSize) and self.value < other.value
 
     def __str__(self):
-        return f"{round(self.nb_units, 2)} {self.SIZE_UNIT_TO_STRING[self.__unit]}"
+        return f"{round(self.value / self.BASES[self.__base], 2)} {self.NAMES[self.__base]}"
 
     def to_json(self):
         return str(self)

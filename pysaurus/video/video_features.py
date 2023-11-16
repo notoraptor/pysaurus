@@ -23,6 +23,7 @@ class VideoFeatures:
             "date_entry_modified": str(video.date_entry_modified),
             "date_entry_opened": str(video.date_entry_opened),
             "day": video.day,
+            "year": video.year,
             "device_name": str(video.device_name),
             "disk": video.disk,
             "duration": video.duration,

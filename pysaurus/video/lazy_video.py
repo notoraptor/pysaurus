@@ -208,6 +208,7 @@ class LazyVideo(WithSchema):
     file_title_numeric = property(lambda self: SemanticText(self.filename.file_title))
     size = property(lambda self: FileSize(self.file_size))
     day = property(lambda self: self.date.day)
+    year = property(lambda self: self.date.year)
     # runtime attributes
     disk = property(
         lambda self: self.filename.get_drive_name() or self.runtime.driver_id

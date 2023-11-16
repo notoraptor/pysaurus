@@ -121,6 +121,7 @@ export const FIELD_MAP = new FieldMap([
 	new FieldInfo("video_codec_description", tr("video codec description"), GroupPermission.ALL, FieldType.str),
 	new FieldInfo("video_id", tr("video ID"), GroupPermission.FORBIDDEN, FieldType.int),
 	new FieldInfo("width", tr("width"), GroupPermission.ALL, FieldType.int),
+	new FieldInfo("year", tr("year"), GroupPermission.ALL, FieldType.int),
 ]);
 
 export const PAGE_SIZES = [1, 10, 20, 50, 100];

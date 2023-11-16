@@ -197,7 +197,7 @@ class FeatureAPI:
                     video_id: moves for video_id, moves in self.database.get_moves()
                 }
                 for video in videos:
-                    video["moves"] = all_moves.get(video["video_id"])
+                    video["moves"] = all_moves.get(video["video_id"], [])
             if grouped_by_similarity:
                 group_def["common"] = self.database.get_common_fields(view_indices)
 
