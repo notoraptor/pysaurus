@@ -16,10 +16,10 @@ from pysaurus.video.lazy_video_runtime_info import (
     LazyVideoRuntimeInfo as VideoRuntimeInfo,
 )
 from pysaurus.video.video_features import VideoFeatures
-from pysaurus.video.video_parser import SQLVideoWrapper, VideoParser
 from saurus.sql.pysaurus_connection import PysaurusConnection
 from saurus.sql.saurus_provider import SaurusProvider
 from saurus.sql.video_entry import VIDEO_TABLE_FIELDS, VideoEntry
+from saurus.sql.video_parser import SQLVideoWrapper, VideoParser
 
 logger = logging.getLogger(__name__)
 
