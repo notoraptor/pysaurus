@@ -4,6 +4,7 @@ from collections import defaultdict
 from typing import Collection, Dict, Iterable, List, Sequence, Tuple, Union
 
 from pysaurus.application import exceptions
+from pysaurus.core import notifications
 from pysaurus.core.components import AbsolutePath, Date
 from pysaurus.core.functions import string_to_pieces
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
@@ -427,7 +428,142 @@ class PysaurusCollection(AbstractDatabase):
         video_entries: List[VideoEntry],
         runtime_info: Dict[AbsolutePath, VideoRuntimeInfo],
     ) -> None:
-        pass
+        entry_with_new_meta_titles: List[VideoEntry] = []
+        entry_map: Dict[str, VideoEntry] = {
+            entry.filename: entry for entry in video_entries
+        }
+        assert len(entry_map) == len(video_entries)
+        filenames = list(entry_map.keys())
+        for row in self.db.query(
+            f"SELECT video_id, filename, meta_title FROM video "
+            f"WHERE filename IN ({','.join(['?'] * len(filenames))})",
+            filenames,
+        ):
+            entry = entry_map[row[1]]
+            entry.video_id = row[0]
+            if entry.meta_title != row[2]:
+                entry_with_new_meta_titles.append(entry)
+        old_entries = [entry for entry in video_entries if entry.video_id is not None]
+        new_entries = [entry for entry in video_entries if entry.video_id is None]
+        self._update_video_entries(old_entries, runtime_info)
+        self._add_pure_new_entries(new_entries, runtime_info)
+        self._update_video_texts(entry_with_new_meta_titles + new_entries)
+        unreadable = {entry.filename: entry.errors for entry in video_entries if entry.unreadable}
+        if unreadable:
+            self.notifier.notify(notifications.VideoInfoErrors(unreadable))
+
+    def _update_video_entries(
+        self,
+        entries: List[VideoEntry],
+        runtime_info: Dict[AbsolutePath, VideoRuntimeInfo],
+    ):
+        dicts = [
+            entry.to_table(True, runtime_info[AbsolutePath(entry.filename)])
+            for entry in entries
+        ]
+        fields = list(dicts[0].keys())
+        self.db.modify_many(
+            f"UPDATE video "
+            f"SET {','.join(f'{field} = :{field}' for field in fields)} "
+            f"WHERE video_id = :video_id",
+            dicts,
+        )
+
+        to_add_errors = []
+        to_add_languages = []
+        for entry in entries:
+            to_add_errors.extend((entry.video_id, error) for error in entry.errors)
+            to_add_languages.extend(
+                (entry.video_id, "a", code, rank)
+                for rank, code in enumerate(entry.audio_languages)
+            )
+            to_add_languages.extend(
+                (entry.video_id, "s", code, rank)
+                for rank, code in enumerate(entry.subtitle_languages)
+            )
+
+        indice_parameters = [[entry.video_id] for entry in entries]
+        self.db.modify_many(
+            "DELETE FROM video_error WHERE video_id = ?", indice_parameters
+        )
+        self.db.modify_many(
+            "DELETE FROM video_language WHERE video_id = ?", indice_parameters
+        )
+        self.db.modify_many(
+            "INSERT INTO video_error (video_id, error) VALUES (?, ?)", to_add_errors
+        )
+        self.db.modify_many(
+            "INSERT INTO video_language (video_id, stream, lang_code, rank) "
+            "VALUES (?, ?, ?, ?)",
+            to_add_languages,
+        )
+
+    def _add_pure_new_entries(
+        self,
+        entries: List[VideoEntry],
+        runtime_info: Dict[AbsolutePath, VideoRuntimeInfo],
+    ):
+        dicts = [
+            entry.to_table(False, runtime_info[AbsolutePath(entry.filename)])
+            for entry in entries
+        ]
+        fields = list(dicts[0].keys())
+        self.db.modify_many(
+            f"INSERT INTO video ({','.join(fields)}) "
+            f"VALUES ({','.join(f':{field}' for field in fields)})",
+            dicts,
+        )
+        entry_map = {entry.filename: entry for entry in entries}
+        assert len(entry_map) == len(entries)
+        nb_indices = 0
+        for row in self.db.query(
+            f"SELECT filename, video_id FROM video "
+            f"WHERE filename IN ({','.join(['?'] * len(entries))})",
+            [entry.filename for entry in entries],
+        ):
+            entry_map[row[0]].video_id = row[1]
+            nb_indices += 1
+        assert nb_indices == len(entries)
+        errors = [
+            (entry.video_id, error) for entry in entries for error in entry.errors
+        ]
+        audio_languages = [
+            (entry.video_id, "a", code, rank)
+            for entry in entries
+            for rank, code in enumerate(entry.audio_languages)
+        ]
+        subtitle_languages = [
+            (entry.video_id, "s", code, rank)
+            for entry in entries
+            for rank, code in enumerate(entry.subtitle_languages)
+        ]
+        self.db.modify_many(
+            "INSERT INTO video_error (video_id, error) VALUES (?, ?)", errors
+        )
+        self.db.modify_many(
+            "INSERT INTO video_language (video_id, stream, lang_code, rank) "
+            "VALUES (?, ?, ?, ?)",
+            audio_languages + subtitle_languages,
+        )
+
+    def _update_video_texts(self, entries: List[VideoEntry]):
+        entry_map = {entry.video_id: entry for entry in entries}
+        assert len(entry_map) == len(entries)
+        texts = []
+        for row in self.db.query(
+            f"SELECT v.video_id, group_concat(v.property_value, ';') "
+            f"FROM video_property_value AS v JOIN property AS p "
+            f"ON v.property_id = p.property_id "
+            f"WHERE p.type = 'str' GROUP BY v.video_id "
+            f"HAVING v.video_id IN ({','.join(['?'] * len(entries))})",
+            [entry.video_id for entry in entries],
+        ):
+            entry = entry_map[row[0]]
+            text = f"{entry.filename};{entry.meta_title};{row[1]}"
+            texts.append((entry.video_id, text))
+        self.db.modify_many(
+            "INSERT INTO video_text (video_id, content) VALUES (?, ?)", texts
+        )
 
     def open_video(self, video_id):
         AbsolutePath(
