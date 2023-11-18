@@ -1,7 +1,7 @@
 import logging
 import tempfile
 from multiprocessing import Pool
-from typing import Container, Dict, Iterable, List
+from typing import Container, Dict, List
 
 from pysaurus.core import notifications
 from pysaurus.core.components import AbsolutePath
@@ -193,9 +193,6 @@ class OldPysaurusCollection(AbstractDatabase):
         return (
             not video["unreadable"] and video["audio_codec"] and not video["audio_bits"]
         )
-
-    def write_videos_field(self, indices: Iterable[int], field: str, values: Iterable):
-        super().write_videos_field(indices, field, values)
 
     def write_new_videos(
         self,

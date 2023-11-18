@@ -27,6 +27,14 @@ FORMATTED_VIDEO_TABLE_FIELDS = ", ".join(
 )
 
 
+WRITABLE_FIELDS = {
+    "found": "is_file",
+    "date_entry_modified": "date_entry_modified",
+    "date_entry_opened": "date_entry_opened",
+    "similarity_id": "similarity_id",
+}
+
+
 class PysaurusCollection(AbstractDatabase):
     __slots__ = ("db",)
 
@@ -409,7 +417,10 @@ class PysaurusCollection(AbstractDatabase):
         self._notify_fields_modified(["move_id", "quality"])
 
     def write_videos_field(self, indices: Iterable[int], field: str, values: Iterable):
-        pass
+        self.db.modify_many(
+            f"UPDATE video SET {WRITABLE_FIELDS[field]} = ? WHERE video_id = ?",
+            zip(values, indices),
+        )
 
     def write_new_videos(
         self,

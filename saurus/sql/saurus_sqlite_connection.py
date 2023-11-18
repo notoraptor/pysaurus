@@ -51,7 +51,7 @@ class SaurusSQLiteConnection:
         last_id = self.cursor.lastrowid
         return last_id if last_id is None else DbID(last_id)
 
-    def modify_many(self, query, parameters=()):
+    def modify_many(self, query, parameters=()) -> DbID:
         return self.modify(query, parameters, many=True)
 
     def query(self, query, parameters=(), debug=False):
