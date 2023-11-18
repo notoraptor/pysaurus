@@ -3,9 +3,6 @@ from typing import Any, List, Tuple
 
 from pysaurus.core.classes import StringedTuple
 from pysaurus.core.components import AbsolutePath, Date, Duration, FileSize
-from saurus.sql.video_entry import VIDEO_TABLE_FIELDS
-
-VIDEO_TABLE_FIELD_SET = set(VIDEO_TABLE_FIELDS)
 
 
 class F:
@@ -42,19 +39,19 @@ class F:
     with_thumbnails = 30
 
 
-def assert_video_table_field(value: str) -> str:
-    assert value in VIDEO_TABLE_FIELD_SET
-    return value
-
-
 class VideoParser:
     __slots__ = ()
+
+    @classmethod
+    def assert_video_table_field(cls, value: str) -> str:
+        assert getattr(F, value) < 29
+        return value
 
     def __call__(self, field, value) -> Tuple[str, Any]:
         return (
             getattr(self, field)(value)
             if hasattr(self, field)
-            else (assert_video_table_field(field), value)
+            else (self.assert_video_table_field(field), value)
         )
 
     @classmethod

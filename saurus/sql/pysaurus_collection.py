@@ -18,22 +18,14 @@ from pysaurus.video.lazy_video_runtime_info import (
 from pysaurus.video.video_features import VideoFeatures
 from saurus.sql.pysaurus_connection import PysaurusConnection
 from saurus.sql.saurus_provider import SaurusProvider
-from saurus.sql.video_entry import VIDEO_TABLE_FIELDS, VideoEntry
+from saurus.sql.sql_useful_constants import (
+    FORMATTED_VIDEO_TABLE_FIELDS,
+    WRITABLE_FIELDS,
+)
+from saurus.sql.video_entry import VideoEntry
 from saurus.sql.video_parser import SQLVideoWrapper, VideoParser
 
 logger = logging.getLogger(__name__)
-
-FORMATTED_VIDEO_TABLE_FIELDS = ", ".join(
-    f"v.{field} AS {field}" for field in VIDEO_TABLE_FIELDS
-)
-
-
-WRITABLE_FIELDS = {
-    "found": "is_file",
-    "date_entry_modified": "date_entry_modified",
-    "date_entry_opened": "date_entry_opened",
-    "similarity_id": "similarity_id",
-}
 
 
 class PysaurusCollection(AbstractDatabase):
@@ -448,7 +440,9 @@ class PysaurusCollection(AbstractDatabase):
         self._update_video_entries(old_entries, runtime_info)
         self._add_pure_new_entries(new_entries, runtime_info)
         self._update_video_texts(entry_with_new_meta_titles + new_entries)
-        unreadable = {entry.filename: entry.errors for entry in video_entries if entry.unreadable}
+        unreadable = {
+            entry.filename: entry.errors for entry in video_entries if entry.unreadable
+        }
         if unreadable:
             self.notifier.notify(notifications.VideoInfoErrors(unreadable))
 
