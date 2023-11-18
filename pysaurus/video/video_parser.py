@@ -3,7 +3,7 @@ from typing import Any, List, Tuple
 
 from pysaurus.core.classes import StringedTuple
 from pysaurus.core.components import AbsolutePath, Date, Duration, FileSize
-from saurus.sql.sql_old.video_entry import VIDEO_TABLE_FIELDS
+from saurus.sql.video_entry import VIDEO_TABLE_FIELDS
 
 VIDEO_TABLE_FIELD_SET = set(VIDEO_TABLE_FIELDS)
 

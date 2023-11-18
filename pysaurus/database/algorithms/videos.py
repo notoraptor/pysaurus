@@ -12,7 +12,7 @@ from pysaurus.database import jobs_python
 from pysaurus.video import VIDEO_SCHEMA, VideoRuntimeInfo
 from pysaurus.video_raptor.video_raptor_pyav import VideoRaptor as PythonVideoRaptor
 from saurus.language import say
-from saurus.sql.sql_old.video_entry import VideoEntry
+from saurus.sql.video_entry import VideoEntry
 
 logger = logging.getLogger(__name__)
 

@@ -37,7 +37,7 @@ from pysaurus.video.abstract_video_indexer import AbstractVideoIndexer
 from pysaurus.video.video_features import VideoFeatures
 from pysaurus.video.video_indexer import VideoIndexer
 from pysaurus.video.video_sorting import VideoSorting
-from saurus.sql.sql_old.video_entry import VideoEntry
+from saurus.sql.video_entry import VideoEntry
 
 logger = logging.getLogger(__name__)
 

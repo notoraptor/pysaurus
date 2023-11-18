@@ -41,7 +41,7 @@ from pysaurus.properties.properties import (
 )
 from pysaurus.video import VideoRuntimeInfo
 from saurus.language import say
-from saurus.sql.sql_old.video_entry import VideoEntry
+from saurus.sql.video_entry import VideoEntry
 
 logger = logging.getLogger(__name__)
 
