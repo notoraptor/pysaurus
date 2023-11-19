@@ -10,7 +10,7 @@ from pysaurus.database.viewport.abstract_video_provider import AbstractVideoProv
 from pysaurus.database.viewport.source_def import SourceDef
 from pysaurus.database.viewport.view_tools import Group, GroupArray, GroupDef, SearchDef
 from pysaurus.video.video_sorting import VideoSorting
-from pysaurus.video.video_utils import VIDEO_FLAGS
+from pysaurus.video_provider.provider_utils import parse_sorting, parse_sources
 
 logger = logging.getLogger(__name__)
 EMPTY_SET = set()
@@ -74,20 +74,8 @@ class LayerSource(Layer):
         self.video_indices_found: List[int] = []
 
     def set_params(self, *, sources: Sequence[Sequence[str]]):
-        if sources is None:
-            super().set_params(**self.default_params())
-            self.source_def = SourceDef(self.params["sources"])
-        else:
-            valid_paths = set()
-            for path in sources:
-                path = tuple(path)
-                if path not in valid_paths:
-                    assert len(set(path)) == len(path)
-                    assert all(flag in VIDEO_FLAGS for flag in path)
-                    valid_paths.add(path)
-            if valid_paths:
-                super().set_params(sources=[list(src) for src in sorted(valid_paths)])
-                self.source_def = SourceDef(self.params["sources"])
+        super().set_params(sources=parse_sources(sources))
+        self.source_def = SourceDef(self.params["sources"])
 
     @classmethod
     def default_params(cls) -> Dict:
@@ -337,9 +325,7 @@ class LayerSort(Layer):
     output: List[int]
 
     def set_params(self, *, sorting: List[str]):
-        super().set_params(
-            sorting=list(sorting) if sorting else self.default_params()["sorting"]
-        )
+        super().set_params(sorting=parse_sorting(sorting))
 
     def default_params(self) -> Dict:
         return {"sorting": ["-date"]}

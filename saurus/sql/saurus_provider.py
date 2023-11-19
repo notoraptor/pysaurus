@@ -2,32 +2,7 @@ from typing import Any, List, Sequence
 
 from pysaurus.database.viewport.abstract_video_provider import AbstractVideoProvider
 from pysaurus.database.viewport.view_tools import GroupDef, LookupArray, SearchDef
-from pysaurus.video.video_utils import VIDEO_FLAGS
-
-
-def parse_sources(paths: Sequence[Sequence[str]]) -> List[List[str]]:
-    if not paths:
-        sources = [["readable"]]
-    else:
-        valid_paths = set()
-        for path in paths:
-            path = tuple(path)
-            if path not in valid_paths:
-                assert len(set(path)) == len(path)
-                assert all(flag in VIDEO_FLAGS for flag in path)
-                valid_paths.add(path)
-        sources = [list(path) for path in sorted(valid_paths)]
-    return sources
-
-
-def parse_grouping(
-    field, is_property=None, sorting=None, reverse=None, allow_singletons=None
-) -> GroupDef:
-    return GroupDef(field, is_property, sorting, reverse, allow_singletons)
-
-
-def parse_sorting(sorting: Sequence[str]) -> List[str]:
-    return list(sorting) or ["-date"]
+from pysaurus.video_provider.provider_utils import parse_sorting, parse_sources
 
 
 class GroupCount:
@@ -77,9 +52,7 @@ class SaurusProvider(AbstractVideoProvider):
     def set_groups(
         self, field, is_property=None, sorting=None, reverse=None, allow_singletons=None
     ) -> None:
-        grouping = parse_grouping(
-            field, is_property, sorting, reverse, allow_singletons
-        )
+        grouping = GroupDef(field, is_property, sorting, reverse, allow_singletons)
         if self.grouping != grouping:
             self.grouping = grouping
             self._to_update = True
