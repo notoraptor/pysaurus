@@ -9,8 +9,8 @@ from pysaurus.core.profiling import Profiler
 from pysaurus.database.viewport.abstract_video_provider import AbstractVideoProvider
 from pysaurus.database.viewport.source_def import SourceDef
 from pysaurus.database.viewport.view_tools import Group, GroupArray, GroupDef, SearchDef
-from pysaurus.video import Video
 from pysaurus.video.video_sorting import VideoSorting
+from pysaurus.video.video_utils import VIDEO_FLAGS
 
 logger = logging.getLogger(__name__)
 EMPTY_SET = set()
@@ -83,7 +83,7 @@ class LayerSource(Layer):
                 path = tuple(path)
                 if path not in valid_paths:
                     assert len(set(path)) == len(path)
-                    assert all(flag in Video.FLAGS for flag in path)
+                    assert all(flag in VIDEO_FLAGS for flag in path)
                     valid_paths.add(path)
             if valid_paths:
                 super().set_params(sources=[list(src) for src in sorted(valid_paths)])

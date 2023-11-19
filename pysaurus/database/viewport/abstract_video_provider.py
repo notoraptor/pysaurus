@@ -24,9 +24,9 @@ class AbstractVideoProvider(metaclass=ABCMeta):
     }
 
     def __init__(self, database):
-        from pysaurus.database.database import Database
+        from pysaurus.database.abstract_database import AbstractDatabase
 
-        self._database: Database = database
+        self._database: AbstractDatabase = database
 
     @abstractmethod
     def set_sources(self, paths) -> None:

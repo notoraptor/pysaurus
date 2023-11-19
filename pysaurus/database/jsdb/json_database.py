@@ -37,6 +37,7 @@ from pysaurus.video.abstract_video_indexer import AbstractVideoIndexer
 from pysaurus.video.video_features import VideoFeatures
 from pysaurus.video.video_indexer import VideoIndexer
 from pysaurus.video.video_sorting import VideoSorting
+from pysaurus.video.video_utils import VIDEO_FLAGS
 from saurus.sql.video_entry import VideoEntry
 
 logger = logging.getLogger(__name__)
@@ -480,8 +481,8 @@ class JsonDatabase(AbstractDatabase):
     ) -> List[dict]:
         where = where or {}
         # where["discarded"] = where.get("discarded", False)
-        q_flags = {key: value for key, value in where.items() if key in Video.FLAGS}
-        q_other = {key: value for key, value in where.items() if key not in Video.FLAGS}
+        q_flags = {key: value for key, value in where.items() if key in VIDEO_FLAGS}
+        q_other = {key: value for key, value in where.items() if key not in VIDEO_FLAGS}
 
         i_videos, nb_expected = self._jsondb_get_videos_from_identifiers(q_other)
         if not nb_expected:

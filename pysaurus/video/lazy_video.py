@@ -24,15 +24,6 @@ class LazyVideo(WithSchema):
         "thumbnail_base64",
         "thumbnail_blob",
     )
-    FLAGS = {
-        "readable",
-        "unreadable",
-        "found",
-        "not_found",
-        "with_thumbnails",
-        "without_thumbnails",
-        "discarded",
-    }
 
     def __init__(self, database, short_dict: dict, discarded=False):
         from pysaurus.database.jsdb.json_database import JsonDatabase

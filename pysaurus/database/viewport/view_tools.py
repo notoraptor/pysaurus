@@ -120,7 +120,7 @@ class SearchDef(ToDict):
 
     def __init__(self, text: Optional[str] = None, cond: Optional[str] = None):
         self.text = text.strip() if text else None
-        self.cond = self._Cond(cond.strip() if cond else "and")
+        self.cond = self._Cond((cond and cond.strip()) or "and")
 
     def __bool__(self):
         return bool(self.text)
