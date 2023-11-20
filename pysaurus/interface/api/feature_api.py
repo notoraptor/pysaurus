@@ -13,7 +13,7 @@ from pysaurus.core.functions import (
 )
 from pysaurus.core.notifying import Notification
 from pysaurus.core.profiling import Profiler
-from pysaurus.database.database import Database as Db
+from pysaurus.database.abstract_database import AbstractDatabase as Db
 from pysaurus.database.viewport.abstract_video_provider import (
     AbstractVideoProvider as View,
 )

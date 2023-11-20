@@ -58,18 +58,17 @@ class DigitAccumulator:
                 return self._flush_buffer_to_number()
             else:
                 return None
-        else:
-            if self._buffer:
-                if self._buffer[-1].cls == wc.cls:
-                    self._buffer.append(wc)
-                    return None
-                else:
-                    previous_number = self._flush_buffer_to_number()
-                    self._buffer.append(wc)
-                    return previous_number
-            else:
+        elif self._buffer:
+            if self._buffer[-1].cls == wc.cls:
                 self._buffer.append(wc)
                 return None
+            else:
+                previous_number = self._flush_buffer_to_number()
+                self._buffer.append(wc)
+                return previous_number
+        else:
+            self._buffer.append(wc)
+            return None
 
     def _flush_buffer_to_number(self) -> int:
         number = sum(wc.rank * 10**i for i, wc in enumerate(reversed(self._buffer)))
@@ -77,7 +76,7 @@ class DigitAccumulator:
         return number
 
 
-def separate_characters_and_numbers(text: str) -> Iterable[Union[CharClass, int]]:
+def separate_characters_and_numbers(text: str) -> Iterable[Union[str, int]]:
     accumulator = DigitAccumulator()
     for character in text:
         wrapper = CharClass(character)
@@ -85,10 +84,32 @@ def separate_characters_and_numbers(text: str) -> Iterable[Union[CharClass, int]
         if number is not None:
             yield number
         if wrapper.is_alpha():
-            yield wrapper
+            yield character
     number = accumulator.append(None)
     if number is not None:
         yield number
+
+
+def split_numbers_and_texts(text: str):
+    output = []
+    accumulator = DigitAccumulator()
+    seq = ""
+    for character in text:
+        wrapper = CharClass(character)
+        number = accumulator.append(wrapper)
+        if number is not None:
+            output.append(number)
+        if wrapper.is_alpha():
+            seq += character
+        elif seq:
+            output.append(seq)
+            seq = ""
+    number = accumulator.append(None)
+    if number is not None:
+        output.append(number)
+    elif seq:
+        output.append(seq)
+    return output
 
 
 class SemanticText:

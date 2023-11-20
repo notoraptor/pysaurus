@@ -63,7 +63,7 @@ class GroupDef(ToDict):
         reverse: Optional[bool] = False,
         allow_singletons: Optional[bool] = True,
     ):
-        self.field = field.strip() if field else None
+        self.field = (field and field.strip()) or None
         self.is_property = bool(is_property)
         self.sorting = sorting.strip() if sorting else self.FIELD
         self.reverse = bool(reverse)

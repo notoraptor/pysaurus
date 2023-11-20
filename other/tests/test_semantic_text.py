@@ -1,4 +1,8 @@
-from pysaurus.core.semantic_text import SemanticText, separate_characters_and_numbers
+from pysaurus.core.semantic_text import (
+    SemanticText,
+    separate_characters_and_numbers,
+    split_numbers_and_texts,
+)
 
 
 def test_simple_semantic():
@@ -105,4 +109,80 @@ def test_consume():
         "e",
         "m",
         10,
+    ]
+
+
+def test_split():
+    assert split_numbers_and_texts(
+        "My age is 020.444 and⁸⁵³34³³₅ab₅₄₅10₄ my name is Eminem10"
+    ) == [
+        "My age is ",
+        20,
+        ".",
+        444,
+        " and",
+        853,
+        34,
+        33,
+        5,
+        "ab",
+        545,
+        10,
+        4,
+        " my name is Eminem",
+        10,
+    ]
+
+    assert split_numbers_and_texts("020.444 and⁸⁵³34³³₅ab₅₄₅10₄ my name is Eminem") == [
+        20,
+        ".",
+        444,
+        " and",
+        853,
+        34,
+        33,
+        5,
+        "ab",
+        545,
+        10,
+        4,
+        " my name is Eminem",
+    ]
+
+    assert split_numbers_and_texts(
+        "020.444 and⁸⁵³34³³₅ab₅₄₅10₄ my name is Eminem10"
+    ) == [
+        20,
+        ".",
+        444,
+        " and",
+        853,
+        34,
+        33,
+        5,
+        "ab",
+        545,
+        10,
+        4,
+        " my name is Eminem",
+        10,
+    ]
+
+    assert split_numbers_and_texts(
+        "My age is 020.444 and⁸⁵³34³³₅ab₅₄₅10₄ my name is Eminem"
+    ) == [
+        "My age is ",
+        20,
+        ".",
+        444,
+        " and",
+        853,
+        34,
+        33,
+        5,
+        "ab",
+        545,
+        10,
+        4,
+        " my name is Eminem",
     ]
