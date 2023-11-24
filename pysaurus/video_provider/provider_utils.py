@@ -19,4 +19,4 @@ def parse_sources(paths: Sequence[Sequence[str]]) -> List[List[str]]:
 
 
 def parse_sorting(sorting: Sequence[str]) -> List[str]:
-    return list(sorting) or ["-date"]
+    return list(sorting) if sorting else ["-date"]
