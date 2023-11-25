@@ -1,8 +1,9 @@
-from typing import Any, List, Sequence
+from typing import Any, List, Optional, Sequence
 
 from pysaurus.database.viewport.abstract_video_provider import AbstractVideoProvider
 from pysaurus.database.viewport.view_tools import GroupDef, LookupArray, SearchDef
 from pysaurus.video_provider.provider_utils import parse_sorting, parse_sources
+from saurus.sql.grouping_utils import get_sql_grouping
 from saurus.sql.video_parser import VideoParser
 
 
@@ -36,9 +37,9 @@ class SaurusProvider(AbstractVideoProvider):
         super().__init__(database)
 
         self.sources: List[List[str]] = []
-        self.grouping: GroupDef = GroupDef()
-        self.classifier: List[str] = []
-        self.group: int = 0
+        self.grouping: GroupDef = GroupDef()  #
+        self.classifier: List[str] = [] #
+        self.group: int = 0  #
         self.search: SearchDef = SearchDef()
         self.sorting: List[str] = []
 
@@ -56,36 +57,58 @@ class SaurusProvider(AbstractVideoProvider):
         where_parsers = [
             dict(parser(flag, True) for flag in source) for source in self.sources
         ]
+        group: Optional[GroupCount] = None
         if self.grouping:
             order_direction = "DESC" if self.grouping.reverse else "ASC"
-            if self.grouping.sorting == self.grouping.FIELD:
-                order_field = "v.property_value"
-            elif self.grouping.sorting == self.grouping.LENGTH:
-                order_field = "LENGTH(CAST v.property_value AS TEXT)"
-            else:
-                assert self.grouping.sorting == self.grouping.COUNT
-                order_field = "COUNT(v.video_id)"
             without_singletons = ""
             if not self.grouping.allow_singletons:
                 without_singletons = "HAVING COUNT(v.video_id) > 1 "
             if self.grouping.is_property:
-                sql_db.query(
+                if self.grouping.sorting == self.grouping.FIELD:
+                    order_field = "v.property_value"
+                elif self.grouping.sorting == self.grouping.LENGTH:
+                    order_field = "LENGTH(CAST v.property_value AS TEXT)"
+                else:
+                    assert self.grouping.sorting == self.grouping.COUNT
+                    order_field = "COUNT(v.video_id)"
+                grouping_where_query = ["p.name = ?"]
+                grouping_where_params = [self.grouping.field]
+                if self.classifier:
+                    grouping_where_query.append(
+                        f"v.property_value IN ({','.join(['?'] * len(self.classifier))})"
+                    )
+                    grouping_where_params.extend(self.classifier)
+                grouping_rows = sql_db.query(
                     f"SELECT v.property_value, COUNT(v.video_id) "
                     f"FROM video_property_value AS v JOIN property AS p "
                     f"ON v.property_id = p.property_id "
-                    f"WHERE p.name = ? "
+                    f"WHERE {' AND '.join(grouping_where_query)} "
                     f"GROUP BY v.property_value {without_singletons}"
                     f"ORDER BY {order_field} {order_direction}",
-                    [self.grouping.field],
+                    grouping_where_params,
                 )
             else:
-                field = ""
-                sql_db.query(
+                field = get_sql_grouping(
+                    self.grouping.field, self.grouping.sorting, sql_db
+                )
+                if self.grouping.sorting == self.grouping.FIELD:
+                    order_field = field
+                elif self.grouping.sorting == self.grouping.LENGTH:
+                    order_field = f"LENGTH(CAST {field} AS TEXT)"
+                else:
+                    assert self.grouping.sorting == self.grouping.COUNT
+                    order_field = "COUNT(v.video_id)"
+                grouping_rows = sql_db.query(
                     f"SELECT {field}, COUNT(v.video_id) "
                     f"FROM video AS v "
                     f"GROUP BY {field} {without_singletons}"
                     f"ORDER BY {order_field} {order_direction}"
                 )
+            self._groups.clear()
+            self._groups.extend(GroupCount(row[0], row[1]) for row in grouping_rows)
+            self.group = min(max(0, self.group), len(self._groups) - 1)
+            group = self._groups[self.group]
+        pass
 
     def set_sources(self, paths: Sequence[Sequence[str]]) -> None:
         sources = parse_sources(paths)

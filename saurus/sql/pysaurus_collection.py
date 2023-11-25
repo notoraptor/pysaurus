@@ -338,11 +338,18 @@ class PysaurusCollection(AbstractDatabase):
                 for video_id, raw_properties in properties.items()
             }
 
-        for video in videos:
-            video.errors = errors.get(video.video_id, [])
-            video.audio_languages = languages["a"].get(video.video_id, [])
-            video.subtitle_languages = languages["s"].get(video.video_id, [])
-            video.properties = json_properties.get(video.video_id, {})
+        if with_errors:
+            for video in videos:
+                video.errors = errors.get(video.video_id, [])
+        if with_audio_languages:
+            for video in videos:
+                video.audio_languages = languages["a"].get(video.video_id, [])
+        if with_subtitle_languages:
+            for video in videos:
+                video.subtitle_languages = languages["s"].get(video.video_id, [])
+        if with_properties:
+            for video in videos:
+                video.properties = json_properties.get(video.video_id, {})
 
         if include is None:
             # Return all, use with_moves.

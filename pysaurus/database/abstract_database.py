@@ -199,7 +199,7 @@ class AbstractDatabase(ABC):
         return values
 
     def count_videos(self, *flags, **forced_flags) -> int:
-        return sum(1 for _ in self.select_videos_fields([], *flags, **forced_flags))
+        return len(self.select_videos_fields([], *flags, **forced_flags))
 
     def get_video_filename(self, video_id: int) -> AbsolutePath:
         (row,) = self.get_videos(include=["filename"], where={"video_id": video_id})
@@ -443,7 +443,7 @@ class AbstractDatabase(ABC):
 
     def select_videos_fields(
         self, fields: Sequence[str], *flags, **forced_flags
-    ) -> Iterable[Dict[str, Any]]:
+    ) -> List[Dict[str, Any]]:
         forced_flags.update({flag: True for flag in flags})
         return self.get_videos(include=fields, where=forced_flags)
 

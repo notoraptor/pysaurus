@@ -5,6 +5,7 @@ from datetime import timedelta
 from pysaurus.core.components import Duration
 from pysaurus.core.informer import Informer
 from pysaurus.core.notifications import Notification
+from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 
 
 class ProfilingStart(Notification):
@@ -104,6 +105,13 @@ class Profiler:
             return wrapper
 
         return decorator_profile
+
+
+class ConsoleProfiler(Profiler):
+    __slots__ = ()
+
+    def __init__(self, title, stderr=False):
+        super().__init__(title, notifier=((stderr and DEFAULT_NOTIFIER) or Notifier()))
 
 
 class InlineProfiler(Profiler):

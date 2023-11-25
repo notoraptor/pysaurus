@@ -1,4 +1,5 @@
 import itertools
+import re
 from typing import Iterable, Optional, Union
 
 
@@ -11,6 +12,20 @@ class CharClass:
     CLS_SUP = SUP_DIGITS[0]
     CLS_SUB = SUB_DIGITS[0]
     CLS_ALPHA = "A"
+
+    ORD_0 = ord("0")
+
+    @classmethod
+    def parse_sup_digits(cls, text: str) -> int:
+        return sum(
+            cls.SUP_DIGITS.find(c) * 10**i for i, c in enumerate(reversed(text))
+        )
+
+    @classmethod
+    def parse_sub_digits(cls, text: str) -> int:
+        return sum(
+            cls.SUB_DIGITS.find(c) * 10**i for i, c in enumerate(reversed(text))
+        )
 
     def __init__(self, char: str):
         if char in self.DIGITS:
@@ -154,3 +169,34 @@ class SemanticText:
 
     def __lt__(self, other):
         return self._is_lesser_than(other)
+
+
+RE_DIGITS = re.compile(r"([0-9]+)")
+RE_SUP_DIGITS = re.compile(f"([{CharClass.SUP_DIGITS}]+)")
+RE_SUB_DIGITS = re.compile(f"([{CharClass.SUB_DIGITS}]+)")
+RE_EMPTY = re.compile(r" {2,}")
+
+
+def get_longest_number_in_string(text: str) -> int:
+    return max(
+        (
+            len(m)
+            for r in (RE_DIGITS, RE_SUP_DIGITS, RE_SUB_DIGITS)
+            for m in r.findall(text)
+        ),
+        default=0,
+    )
+
+
+def pad_numbers_in_string(text: str, pad: int) -> str:
+    text = RE_DIGITS.sub(lambda s: f" {s.group(1).rjust(pad, '0')} ", text)
+    text = RE_SUP_DIGITS.sub(
+        lambda s: f" {str(CharClass.parse_sup_digits(s.group(1))).rjust(pad, '0')} ",
+        text,
+    )
+    text = RE_SUB_DIGITS.sub(
+        lambda s: f" {str(CharClass.parse_sub_digits(s.group(1))).rjust(pad, '0')} ",
+        text,
+    )
+    text = RE_EMPTY.sub(" ", text)
+    return text
