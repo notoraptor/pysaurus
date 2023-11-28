@@ -44,5 +44,14 @@ def main():
     print(pad_numbers_in_string(text, p))
 
 
+def main2():
+    program = PysaurusProgram()
+    collection = program.open_database(DB_NAME)
+    provider = collection.provider
+    provider.set_groups("actress", True, allow_singletons=True)
+    indices = provider.get_view_indices()
+    print(len(indices))
+
+
 if __name__ == "__main__":
-    main()
+    main2()

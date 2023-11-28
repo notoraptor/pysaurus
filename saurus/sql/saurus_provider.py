@@ -1,9 +1,11 @@
-from typing import Any, List, Optional, Sequence
+from typing import Any, List, Sequence
 
+from pysaurus.core import functions
 from pysaurus.database.viewport.abstract_video_provider import AbstractVideoProvider
 from pysaurus.database.viewport.view_tools import GroupDef, LookupArray, SearchDef
+from pysaurus.video.video_sorting import VideoSorting
 from pysaurus.video_provider.provider_utils import parse_sorting, parse_sources
-from saurus.sql.grouping_utils import get_sql_grouping
+from saurus.sql.grouping_utils import SqlFieldFactory
 from saurus.sql.video_parser import VideoParser
 
 
@@ -36,16 +38,18 @@ class SaurusProvider(AbstractVideoProvider):
     def __init__(self, database):
         super().__init__(database)
 
-        self.sources: List[List[str]] = []
+        self.sources: List[List[str]] = []  #
         self.grouping: GroupDef = GroupDef()  #
-        self.classifier: List[str] = [] #
+        self.classifier: List[str] = []  #
         self.group: int = 0  #
-        self.search: SearchDef = SearchDef()
-        self.sorting: List[str] = []
+        self.search: SearchDef = SearchDef()  #
+        self.sorting: List[str] = []  #
 
         self._groups = LookupArray[GroupCount](GroupCount, (), GroupCount.keyof)
         self._view_indices: List[int] = []
         self._to_update = True
+
+        self.reset_parameters(*self.LAYERS)
 
     def _update(self):
         from saurus.sql.pysaurus_collection import PysaurusCollection
@@ -53,11 +57,28 @@ class SaurusProvider(AbstractVideoProvider):
         collection: PysaurusCollection = self._database
         sql_db = collection.db
 
+        if self.search and self.search.cond == "id":
+            self._view_indices = [
+                row[0]
+                for row in sql_db.query(
+                    "SELECT video_id FROM video WHERE video_id = ?",
+                    [int(self.search.text)],
+                )
+            ]
+            return
+
+        field_factory = SqlFieldFactory(sql_db)
         parser = VideoParser()
         where_parsers = [
             dict(parser(flag, True) for flag in source) for source in self.sources
         ]
-        group: Optional[GroupCount] = None
+        where_group = None
+        where_search = None
+        params_search = None
+        sql_sorting = [
+            field_factory.get_sorting(field, reverse)
+            for field, reverse in VideoSorting(self.sorting)
+        ]
         if self.grouping:
             order_direction = "DESC" if self.grouping.reverse else "ASC"
             without_singletons = ""
@@ -86,29 +107,78 @@ class SaurusProvider(AbstractVideoProvider):
                     f"GROUP BY v.property_value {without_singletons}"
                     f"ORDER BY {order_field} {order_direction}",
                     grouping_where_params,
+                    debug=True,
                 )
+                nb_fields = 1
             else:
-                field = get_sql_grouping(
-                    self.grouping.field, self.grouping.sorting, sql_db
-                )
+                field = field_factory.get_field(self.grouping.field)
                 if self.grouping.sorting == self.grouping.FIELD:
-                    order_field = field
+                    order_field = field_factory.get_sorting(
+                        self.grouping.field, self.grouping.reverse
+                    )
                 elif self.grouping.sorting == self.grouping.LENGTH:
-                    order_field = f"LENGTH(CAST {field} AS TEXT)"
+                    order_field = (
+                        field_factory.get_length(self.grouping.field)
+                        + " "
+                        + order_direction
+                    )
                 else:
                     assert self.grouping.sorting == self.grouping.COUNT
-                    order_field = "COUNT(v.video_id)"
+                    order_field = f"COUNT(v.video_id) {order_direction}"
                 grouping_rows = sql_db.query(
                     f"SELECT {field}, COUNT(v.video_id) "
                     f"FROM video AS v "
                     f"GROUP BY {field} {without_singletons}"
-                    f"ORDER BY {order_field} {order_direction}"
+                    f"ORDER BY {order_field}",
+                    debug=True,
                 )
+                nb_fields = field_factory.count_columns(self.grouping.field)
             self._groups.clear()
-            self._groups.extend(GroupCount(row[0], row[1]) for row in grouping_rows)
+            self._groups.extend(
+                GroupCount(tuple(row[:-1]), row[-1]) for row in grouping_rows
+            )
+            print("GROUPS:", len(self._groups))
             self.group = min(max(0, self.group), len(self._groups) - 1)
             group = self._groups[self.group]
-        pass
+            where_group = field_factory.get_conditions(self.grouping.field, group.value)
+        if self.search:
+            tokens = functions.string_to_pieces(self.search.text)
+            for i in range(len(tokens)):
+                if tokens[i] in ("and", "or"):
+                    tokens[i] = f'"{tokens[i]}"'
+            if self.search.cond == "and":
+                search_placeholders = f"'{' '.join(['?'] * len(tokens))}'"
+            elif self.search.cond == "or":
+                search_placeholders = f"'{' OR '.join(['?'] * len(tokens))}'"
+            else:
+                assert self.search.cond == "exact"
+                search_placeholders = f"'{' + '.join(['?'] * len(tokens))}'"
+            where_search = f"t.content MATCH {search_placeholders}"
+            params_search = tokens
+
+        where = ["discarded = 0"]
+        params = []
+        query = f"SELECT v.video_id FROM video AS v"
+        if where_search:
+            query += f" JOIN video_text AS t ON v.video_id = t.video_id"
+        if where_parsers:
+            sqs = []
+            for dct in where_parsers:
+                keys = list(dct.keys())
+                sqs.append(" AND ".join(f"{key} = ?" for key in keys))
+                params.extend(dct[key] for key in keys)
+            where.append(f"({' OR '.join(f'({sq})' for sq in sqs)})")
+        if where_group:
+            keys = list(where_group.keys())
+            where.append(" AND ".join(f"{key} = ?" for key in keys))
+            params.extend(where_group[key] for key in keys)
+        if where_search:
+            where.append(where_search)
+            params.extend(params_search)
+        if where:
+            query += f" WHERE {' AND '.join(where)}"
+        query += f" ORDER BY {', '.join(sql_sorting)}"
+        self._view_indices = [row[0] for row in sql_db.query(query, params, debug=True)]
 
     def set_sources(self, paths: Sequence[Sequence[str]]) -> None:
         sources = parse_sources(paths)

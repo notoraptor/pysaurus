@@ -56,7 +56,8 @@ class SaurusSQLiteConnection:
 
     def query(self, query, parameters=(), debug=False):
         if debug:
-            print("QUERY:", query)
+            print("QUERY :", query)
+            print("PARAMS:", parameters)
         self.cursor.execute(query, parameters)
         yield from self.cursor
 
