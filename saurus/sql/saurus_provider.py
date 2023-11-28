@@ -81,17 +81,14 @@ class SaurusProvider(AbstractVideoProvider):
         ]
         if self.grouping:
             order_direction = "DESC" if self.grouping.reverse else "ASC"
-            without_singletons = ""
-            if not self.grouping.allow_singletons:
-                without_singletons = "HAVING COUNT(v.video_id) > 1 "
             if self.grouping.is_property:
                 if self.grouping.sorting == self.grouping.FIELD:
-                    order_field = "v.property_value"
+                    order_field = "value"
                 elif self.grouping.sorting == self.grouping.LENGTH:
-                    order_field = "LENGTH(CAST v.property_value AS TEXT)"
+                    order_field = "LENGTH(value || '')"
                 else:
                     assert self.grouping.sorting == self.grouping.COUNT
-                    order_field = "COUNT(v.video_id)"
+                    order_field = 'size'
                 grouping_where_query = ["p.name = ?"]
                 grouping_where_params = [self.grouping.field]
                 if self.classifier:
@@ -99,18 +96,35 @@ class SaurusProvider(AbstractVideoProvider):
                         f"v.property_value IN ({','.join(['?'] * len(self.classifier))})"
                     )
                     grouping_where_params.extend(self.classifier)
-                grouping_rows = sql_db.query(
-                    f"SELECT v.property_value, COUNT(v.video_id) "
-                    f"FROM video_property_value AS v JOIN property AS p "
-                    f"ON v.property_id = p.property_id "
-                    f"WHERE {' AND '.join(grouping_where_query)} "
-                    f"GROUP BY v.property_value {without_singletons}"
-                    f"ORDER BY {order_field} {order_direction}",
-                    grouping_where_params,
+                super_query = f"""
+SELECT 
+IIF(x.have_property = 0, NULL, xv.property_value) AS value, 
+COUNT(DISTINCT x.video_id) AS size
+FROM
+(SELECT v.video_id AS video_id, SUM(IIF(p.name = :name, 1, 0)) AS have_property
+FROM video AS v
+LEFT JOIN video_property_value AS pv ON v.video_id = pv.video_id
+LEFT JOIN property AS p ON pv.property_id = p.property_id
+WHERE v.unreadable = 0 AND v.discarded = 0
+GROUP BY v.video_id)
+AS x
+LEFT JOIN video_property_value AS xv ON x.video_id = xv.video_id
+LEFT JOIN property AS xp ON xv.property_id = xp.property_id
+WHERE (x.have_property > 0 AND xp.name = :name) OR (x.have_property = 0)
+GROUP BY value {"" if self.grouping.allow_singletons else "HAVING size > 1"}
+ORDER BY {order_field} {order_direction}
+                """
+                super_params = dict(name=self.grouping.field)
+                # todo classifiers
+                grouping_rows = sql_db.query(super_query,
+                    super_params,
                     debug=True,
                 )
                 nb_fields = 1
             else:
+                without_singletons = ""
+                if not self.grouping.allow_singletons:
+                    without_singletons = "HAVING COUNT(v.video_id) > 1 "
                 field = field_factory.get_field(self.grouping.field)
                 if self.grouping.sorting == self.grouping.FIELD:
                     order_field = field_factory.get_sorting(
