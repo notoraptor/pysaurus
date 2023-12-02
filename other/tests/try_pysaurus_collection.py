@@ -48,8 +48,11 @@ def main2():
     program = PysaurusProgram()
     collection = program.open_database(DB_NAME)
     provider = collection.provider
-    provider.set_groups("actress", True, allow_singletons=True)
-    indices = provider.get_view_indices()
+    provider.set_groups("category", True, allow_singletons=True)
+    provider.set_classifier_path(["0", "01"])
+    provider.set_group(6)
+    with Profiler("run provider"):
+        indices = provider.get_view_indices()
     print(len(indices))
 
 

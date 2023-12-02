@@ -1,4 +1,4 @@
-from typing import Any, List, Sequence
+from typing import Any, List, Sequence, Tuple
 
 from pysaurus.core import functions
 from pysaurus.database.viewport.abstract_video_provider import AbstractVideoProvider
@@ -9,12 +9,24 @@ from saurus.sql.grouping_utils import SqlFieldFactory
 from saurus.sql.video_parser import VideoParser
 
 
+def dict_to_sql_where(dictionary: dict) -> Tuple[str, Tuple]:
+    keys = list(dictionary.keys())
+    where = " AND ".join(f"{key} = ?" for key in keys)
+    parameters = tuple(dictionary[key] for key in keys)
+    return where, parameters
+
+
 class GroupCount:
     __slots__ = ("value", "count")
 
     def __init__(self, value, count):
         self.value = value
         self.count = count
+
+    def __str__(self):
+        return str((self.value, self.count))
+
+    __repr__ = __str__
 
     @classmethod
     def keyof(cls, group_count):
@@ -69,10 +81,11 @@ class SaurusProvider(AbstractVideoProvider):
 
         field_factory = SqlFieldFactory(sql_db)
         parser = VideoParser()
-        where_parsers = [
+        where_sources = [
             dict(parser(flag, True) for flag in source) for source in self.sources
         ]
-        where_group = None
+        where_group_query = None
+        where_group_params = None
         where_search = None
         params_search = None
         sql_sorting = [
@@ -80,6 +93,7 @@ class SaurusProvider(AbstractVideoProvider):
             for field, reverse in VideoSorting(self.sorting)
         ]
         if self.grouping:
+            allow_singletons = self.grouping.allow_singletons
             order_direction = "DESC" if self.grouping.reverse else "ASC"
             if self.grouping.is_property:
                 if self.grouping.sorting == self.grouping.FIELD:
@@ -88,39 +102,72 @@ class SaurusProvider(AbstractVideoProvider):
                     order_field = "LENGTH(value || '')"
                 else:
                     assert self.grouping.sorting == self.grouping.COUNT
-                    order_field = 'size'
-                grouping_where_query = ["p.name = ?"]
-                grouping_where_params = [self.grouping.field]
+                    order_field = "size"
+
                 if self.classifier:
-                    grouping_where_query.append(
-                        f"v.property_value IN ({','.join(['?'] * len(self.classifier))})"
+                    placeholders = ["?"] * len(self.classifier)
+                    query = f"""
+                    SELECT v.video_id
+                    FROM video_property_value AS v
+                    JOIN property AS p
+                    ON v.property_id = p.property_id
+                    WHERE
+                    p.name = ?
+                    AND v.property_value IN ({','.join(placeholders)})
+                    GROUP BY v.video_id
+                    HAVING COUNT(v.property_value) = ?
+                    """
+                    params = (
+                        [self.grouping.field] + self.classifier + [len(self.classifier)]
                     )
-                    grouping_where_params.extend(self.classifier)
-                super_query = f"""
-SELECT 
-IIF(x.have_property = 0, NULL, xv.property_value) AS value, 
-COUNT(DISTINCT x.video_id) AS size
-FROM
-(SELECT v.video_id AS video_id, SUM(IIF(p.name = :name, 1, 0)) AS have_property
-FROM video AS v
-LEFT JOIN video_property_value AS pv ON v.video_id = pv.video_id
-LEFT JOIN property AS p ON pv.property_id = p.property_id
-WHERE v.unreadable = 0 AND v.discarded = 0
-GROUP BY v.video_id)
-AS x
-LEFT JOIN video_property_value AS xv ON x.video_id = xv.video_id
-LEFT JOIN property AS xp ON xv.property_id = xp.property_id
-WHERE (x.have_property > 0 AND xp.name = :name) OR (x.have_property = 0)
-GROUP BY value {"" if self.grouping.allow_singletons else "HAVING size > 1"}
-ORDER BY {order_field} {order_direction}
-                """
-                super_params = dict(name=self.grouping.field)
-                # todo classifiers
-                grouping_rows = sql_db.query(super_query,
-                    super_params,
-                    debug=True,
-                )
-                nb_fields = 1
+                    nb_classified_videos = len(sql_db.query_all(query, params))
+                    super_query = f"""
+                    SELECT xv.property_value AS value, COUNT(x.video_id) AS size
+                    FROM
+                    (SELECT v.video_id AS video_id
+                    FROM video_property_value AS v
+                    JOIN property AS p
+                    ON v.property_id = p.property_id
+                    WHERE
+                    p.name = ?
+                    AND v.property_value IN ({','.join(placeholders)})
+                    GROUP BY v.video_id
+                    HAVING COUNT(v.property_value) = ?)                    
+                    AS x
+                    JOIN video_property_value AS xv ON x.video_id = xv.video_id
+                    JOIN property AS xp ON xv.property_id = xp.property_id
+                    WHERE xp.name = ? AND value NOT IN ({','.join(placeholders)})
+                    GROUP BY value  {"" if allow_singletons else "HAVING size > 1"}
+                    ORDER BY {order_field} {order_direction}
+                    """
+                    super_params = params + [self.grouping.field] + self.classifier
+                    grouping_rows = [(None, nb_classified_videos)] + sql_db.query_all(
+                        super_query, super_params
+                    )
+                else:
+                    super_query = f"""
+                    SELECT 
+                    IIF(x.have_property = 0, NULL, xv.property_value) AS value, 
+                    COUNT(DISTINCT x.video_id) AS size
+                    FROM
+                    (SELECT 
+                    v.video_id AS video_id, 
+                    SUM(IIF(p.name = :name, 1, 0)) AS have_property
+                    FROM video AS v
+                    LEFT JOIN video_property_value AS pv ON v.video_id = pv.video_id
+                    LEFT JOIN property AS p ON pv.property_id = p.property_id
+                    WHERE v.unreadable = 0 AND v.discarded = 0
+                    GROUP BY v.video_id)
+                    AS x
+                    LEFT JOIN video_property_value AS xv ON x.video_id = xv.video_id
+                    LEFT JOIN property AS xp ON xv.property_id = xp.property_id
+                    WHERE 
+                    (x.have_property > 0 AND xp.name = :name) OR (x.have_property = 0)
+                    GROUP BY value {"" if allow_singletons else "HAVING size > 1"}
+                    ORDER BY {order_field} {order_direction}
+                    """
+                    super_params = dict(name=self.grouping.field)
+                    grouping_rows = sql_db.query(super_query, super_params, debug=True)
             else:
                 without_singletons = ""
                 if not self.grouping.allow_singletons:
@@ -146,15 +193,61 @@ ORDER BY {order_field} {order_direction}
                     f"ORDER BY {order_field}",
                     debug=True,
                 )
-                nb_fields = field_factory.count_columns(self.grouping.field)
+
             self._groups.clear()
             self._groups.extend(
                 GroupCount(tuple(row[:-1]), row[-1]) for row in grouping_rows
             )
-            print("GROUPS:", len(self._groups))
             self.group = min(max(0, self.group), len(self._groups) - 1)
             group = self._groups[self.group]
-            where_group = field_factory.get_conditions(self.grouping.field, group.value)
+            if self.grouping.is_property:
+                # todo
+                field_value, = group.value
+                if self.classifier:
+                    expected = list(self.classifier)
+                    if field_value is not None:
+                        expected.append(field_value)
+                    placeholders = ['?'] * len(expected)
+                    query = f"""
+                    SELECT v.video_id
+                    FROM video_property_value AS v
+                    JOIN property AS p
+                    ON v.property_id = p.property_id
+                    WHERE
+                    p.name = ?
+                    AND v.property_value IN ({','.join(placeholders)})
+                    GROUP BY v.video_id
+                    HAVING COUNT(v.property_value) = ?
+                    """
+                    params = [self.grouping.field] + expected + [len(expected)]
+                elif field_value is None:
+                    query = f"""
+                    SELECT 
+                    v.video_id AS video_id, 
+                    SUM(IIF(p.name = ?, 1, 0)) AS have_property
+                    FROM video AS v
+                    LEFT JOIN video_property_value AS pv ON v.video_id = pv.video_id
+                    LEFT JOIN property AS p ON pv.property_id = p.property_id
+                    WHERE v.unreadable = 0 AND v.discarded = 0
+                    GROUP BY v.video_id HAVING have_property = 0
+                    """
+                    params = [self.grouping.field]
+                else:
+                    query = """
+                    SELECT v.video_id FROM video_property_value AS v 
+                    JOIN property AS p ON v.property_id = p.property_id 
+                    WHERE p.name = ? AND v.property_value = ?
+                    """
+                    params = [self.grouping.field, field_value]
+                where_group_query = f"v.video_id IN ({query})"
+                where_group_params = params
+            else:
+                where_group_dict = field_factory.get_conditions(
+                    self.grouping.field, group.value
+                )
+                where_group_query, where_group_params = dict_to_sql_where(
+                    where_group_dict
+                )
         if self.search:
             tokens = functions.string_to_pieces(self.search.text)
             for i in range(len(tokens)):
@@ -175,17 +268,16 @@ ORDER BY {order_field} {order_direction}
         query = f"SELECT v.video_id FROM video AS v"
         if where_search:
             query += f" JOIN video_text AS t ON v.video_id = t.video_id"
-        if where_parsers:
+        if where_sources:
             sqs = []
-            for dct in where_parsers:
-                keys = list(dct.keys())
-                sqs.append(" AND ".join(f"{key} = ?" for key in keys))
-                params.extend(dct[key] for key in keys)
+            for dct in where_sources:
+                lw, lp = dict_to_sql_where(dct)
+                sqs.append(lw)
+                params.extend(lp)
             where.append(f"({' OR '.join(f'({sq})' for sq in sqs)})")
-        if where_group:
-            keys = list(where_group.keys())
-            where.append(" AND ".join(f"{key} = ?" for key in keys))
-            params.extend(where_group[key] for key in keys)
+        if where_group_query:
+            where.append(where_group_query)
+            params.extend(where_group_params)
         if where_search:
             where.append(where_search)
             params.extend(params_search)
