@@ -1,4 +1,4 @@
-from typing import Any, List, Sequence, Tuple
+from typing import Any, Iterable, List, Sequence, Tuple
 
 from pysaurus.core import functions
 from pysaurus.database.viewport.abstract_video_provider import AbstractVideoProvider
@@ -9,11 +9,22 @@ from saurus.sql.grouping_utils import SqlFieldFactory
 from saurus.sql.video_parser import VideoParser
 
 
-def dict_to_sql_where(dictionary: dict) -> Tuple[str, Tuple]:
+def convert_dict_to_sql(dictionary: dict) -> Tuple[str, Tuple]:
     keys = list(dictionary.keys())
-    where = " AND ".join(f"{key} = ?" for key in keys)
+    where = " AND ".join(f"v.{key} = ?" for key in keys)
     parameters = tuple(dictionary[key] for key in keys)
     return where, parameters
+
+
+def convert_dict_series_to_sql(dicts: Iterable[dict]) -> Tuple[str, List]:
+    query_pieces = []
+    params = []
+    for dct in dicts:
+        sub_query, sub_params = convert_dict_to_sql(dct)
+        query_pieces.append(sub_query)
+        params.extend(sub_params)
+    query = " OR ".join(f"({sq})" for sq in query_pieces)
+    return f"({query})", params
 
 
 class GroupCount:
@@ -81,9 +92,9 @@ class SaurusProvider(AbstractVideoProvider):
 
         field_factory = SqlFieldFactory(sql_db)
         parser = VideoParser()
-        where_sources = [
+        source_query, source_params = convert_dict_series_to_sql(
             dict(parser(flag, True) for flag in source) for source in self.sources
-        ]
+        )
         where_group_query = None
         where_group_params = None
         where_search = None
@@ -93,7 +104,9 @@ class SaurusProvider(AbstractVideoProvider):
             for field, reverse in VideoSorting(self.sorting)
         ]
         if self.grouping:
-            allow_singletons = self.grouping.allow_singletons
+            without_singletons = ""
+            if not self.grouping.allow_singletons:
+                without_singletons = "HAVING size > 1"
             order_direction = "DESC" if self.grouping.reverse else "ASC"
             if self.grouping.is_property:
                 if self.grouping.sorting == self.grouping.FIELD:
@@ -137,7 +150,7 @@ class SaurusProvider(AbstractVideoProvider):
                     JOIN video_property_value AS xv ON x.video_id = xv.video_id
                     JOIN property AS xp ON xv.property_id = xp.property_id
                     WHERE xp.name = ? AND value NOT IN ({','.join(placeholders)})
-                    GROUP BY value  {"" if allow_singletons else "HAVING size > 1"}
+                    GROUP BY value {without_singletons}
                     ORDER BY {order_field} {order_direction}
                     """
                     super_params = params + [self.grouping.field] + self.classifier
@@ -163,15 +176,12 @@ class SaurusProvider(AbstractVideoProvider):
                     LEFT JOIN property AS xp ON xv.property_id = xp.property_id
                     WHERE 
                     (x.have_property > 0 AND xp.name = :name) OR (x.have_property = 0)
-                    GROUP BY value {"" if allow_singletons else "HAVING size > 1"}
+                    GROUP BY value {without_singletons}
                     ORDER BY {order_field} {order_direction}
                     """
                     super_params = dict(name=self.grouping.field)
                     grouping_rows = sql_db.query(super_query, super_params, debug=True)
             else:
-                without_singletons = ""
-                if not self.grouping.allow_singletons:
-                    without_singletons = "HAVING COUNT(v.video_id) > 1 "
                 field = field_factory.get_field(self.grouping.field)
                 if self.grouping.sorting == self.grouping.FIELD:
                     order_field = field_factory.get_sorting(
@@ -187,9 +197,9 @@ class SaurusProvider(AbstractVideoProvider):
                     assert self.grouping.sorting == self.grouping.COUNT
                     order_field = f"COUNT(v.video_id) {order_direction}"
                 grouping_rows = sql_db.query(
-                    f"SELECT {field}, COUNT(v.video_id) "
+                    f"SELECT {field}, COUNT(v.video_id) AS size "
                     f"FROM video AS v "
-                    f"GROUP BY {field} {without_singletons}"
+                    f"GROUP BY {field} {without_singletons} "
                     f"ORDER BY {order_field}",
                     debug=True,
                 )
@@ -202,12 +212,12 @@ class SaurusProvider(AbstractVideoProvider):
             group = self._groups[self.group]
             if self.grouping.is_property:
                 # todo
-                field_value, = group.value
+                (field_value,) = group.value
                 if self.classifier:
                     expected = list(self.classifier)
                     if field_value is not None:
                         expected.append(field_value)
-                    placeholders = ['?'] * len(expected)
+                    placeholders = ["?"] * len(expected)
                     query = f"""
                     SELECT v.video_id
                     FROM video_property_value AS v
@@ -242,48 +252,35 @@ class SaurusProvider(AbstractVideoProvider):
                 where_group_query = f"v.video_id IN ({query})"
                 where_group_params = params
             else:
-                where_group_dict = field_factory.get_conditions(
-                    self.grouping.field, group.value
-                )
-                where_group_query, where_group_params = dict_to_sql_where(
-                    where_group_dict
+                where_group_query, where_group_params = convert_dict_to_sql(
+                    field_factory.get_conditions(self.grouping.field, group.value)
                 )
         if self.search:
-            tokens = functions.string_to_pieces(self.search.text)
-            for i in range(len(tokens)):
-                if tokens[i] in ("and", "or"):
-                    tokens[i] = f'"{tokens[i]}"'
+            params_search = functions.string_to_pieces(self.search.text)
+            for i in range(len(params_search)):
+                if params_search[i] in ("and", "or"):
+                    params_search[i] = f'"{params_search[i]}"'
             if self.search.cond == "and":
-                search_placeholders = f"'{' '.join(['?'] * len(tokens))}'"
+                search_placeholders = f"'{' '.join(['?'] * len(params_search))}'"
             elif self.search.cond == "or":
-                search_placeholders = f"'{' OR '.join(['?'] * len(tokens))}'"
+                search_placeholders = f"'{' OR '.join(['?'] * len(params_search))}'"
             else:
                 assert self.search.cond == "exact"
-                search_placeholders = f"'{' + '.join(['?'] * len(tokens))}'"
+                search_placeholders = f"'{' + '.join(['?'] * len(params_search))}'"
             where_search = f"t.content MATCH {search_placeholders}"
-            params_search = tokens
 
-        where = ["discarded = 0"]
-        params = []
         query = f"SELECT v.video_id FROM video AS v"
         if where_search:
             query += f" JOIN video_text AS t ON v.video_id = t.video_id"
-        if where_sources:
-            sqs = []
-            for dct in where_sources:
-                lw, lp = dict_to_sql_where(dct)
-                sqs.append(lw)
-                params.extend(lp)
-            where.append(f"({' OR '.join(f'({sq})' for sq in sqs)})")
+        where = ["v.discarded = 0", source_query]
+        params = list(source_params)
         if where_group_query:
             where.append(where_group_query)
             params.extend(where_group_params)
         if where_search:
             where.append(where_search)
             params.extend(params_search)
-        if where:
-            query += f" WHERE {' AND '.join(where)}"
-        query += f" ORDER BY {', '.join(sql_sorting)}"
+        query += f" WHERE {' AND '.join(where)} ORDER BY {', '.join(sql_sorting)}"
         self._view_indices = [row[0] for row in sql_db.query(query, params, debug=True)]
 
     def set_sources(self, paths: Sequence[Sequence[str]]) -> None:
