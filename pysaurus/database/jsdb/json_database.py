@@ -393,7 +393,7 @@ class JsonDatabase(AbstractDatabase):
         prop = PropType.from_keys(
             **PropTypeValidator.define(name, prop_type, definition, multiple)
         )
-        assert prop.type is prop_type
+        assert prop.type.__name__ == prop_type, (prop.type.__name__, prop_type)
         if prop.name in self._prop_types:
             raise exceptions.PropertyAlreadyExists(prop.name)
         self._prop_types[prop.name] = prop

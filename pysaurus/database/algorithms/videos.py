@@ -69,6 +69,9 @@ class Videos:
             for arr in results
             for d in arr
         ]
+        for entry in new:
+            if entry.errors:
+                entry.unreadable = True
         assert len(filenames) == len(new)
 
         return new

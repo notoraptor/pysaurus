@@ -110,6 +110,15 @@ class AbstractVideoProvider(metaclass=ABCMeta):
     def delete(self, video_id: int):
         pass
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.reset()
+
+    def reset(self):
+        self.reset_parameters(*self.LAYERS)
+
     def refresh(self):
         self._force_update(self.LAYER_SOURCE)
 

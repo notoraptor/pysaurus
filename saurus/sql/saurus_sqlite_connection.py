@@ -18,7 +18,7 @@ class DbID(int):
 
 
 class SaurusSQLiteConnection:
-    __slots__ = ("connection", "cursor")
+    __slots__ = ("connection", "cursor", "debug")
 
     def __init__(self, script_path: str, db_path: str):
         """
@@ -30,6 +30,7 @@ class SaurusSQLiteConnection:
         # sqlite3.ProgrammingError:
         # SQLite objects created in a thread can only be used in that same thread.
         # The object was created in thread id <> and this is thread id <>.
+        self.debug = False
         self.connection = sqlite3.connect(db_path, check_same_thread=False)
         self.connection.row_factory = sqlite3.Row
         self.cursor = self.connection.cursor()
@@ -54,8 +55,8 @@ class SaurusSQLiteConnection:
     def modify_many(self, query, parameters=()) -> DbID:
         return self.modify(query, parameters, many=True)
 
-    def query(self, query, parameters=(), debug=False):
-        if debug:
+    def query(self, query, parameters=()):
+        if self.debug:
             print(f"[query] {query}")
             print(f"[params] {parameters}")
         self.cursor.execute(query, parameters)

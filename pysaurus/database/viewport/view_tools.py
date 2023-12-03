@@ -50,6 +50,7 @@ class GroupDef(ToDict):
         "_fn_reverse",
     )
     __print_none__ = True
+    __props__ = ("field", "is_property", "sorting", "reverse", "allow_singletons")
 
     FIELD = "field"
     COUNT = "count"

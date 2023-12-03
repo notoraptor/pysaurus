@@ -9,9 +9,13 @@ from saurus.sql.grouping_utils import SqlFieldFactory
 from saurus.sql.video_parser import VideoParser
 
 
+def get_jointure(field: str) -> str:
+    return "" if "(" in field or "v." in field else "v."
+
+
 def convert_dict_to_sql(dictionary: dict) -> Tuple[str, Tuple]:
     keys = list(dictionary.keys())
-    where = " AND ".join(f"v.{key} = ?" for key in keys)
+    where = " AND ".join(f"{get_jointure(key)}{key} = ?" for key in keys)
     parameters = tuple(dictionary[key] for key in keys)
     return where, parameters
 
@@ -43,6 +47,16 @@ class GroupCount:
     def keyof(cls, group_count):
         # type: (GroupCount) -> Any
         return group_count.value
+
+
+class ProviderVideoParser(VideoParser):
+    @classmethod
+    def without_thumbnails(cls, value) -> Tuple[str, int]:
+        return "IIF(LENGTH(vt.thumbnail), 1, 0)", int(not value)
+
+    @classmethod
+    def with_thumbnails(cls, value) -> Tuple[str, int]:
+        return "IIF(LENGTH(vt.thumbnail), 1, 0)", int(value)
 
 
 class SaurusProvider(AbstractVideoProvider):
@@ -91,7 +105,7 @@ class SaurusProvider(AbstractVideoProvider):
             return
 
         field_factory = SqlFieldFactory(sql_db)
-        parser = VideoParser()
+        parser = ProviderVideoParser()
         source_query, source_params = convert_dict_series_to_sql(
             dict(parser(flag, True) for flag in source) for source in self.sources
         )
@@ -125,13 +139,17 @@ class SaurusProvider(AbstractVideoProvider):
                     JOIN property AS p
                     ON v.property_id = p.property_id
                     WHERE
+                    {source_query} AND
                     p.name = ?
                     AND v.property_value IN ({','.join(placeholders)})
                     GROUP BY v.video_id
                     HAVING COUNT(v.property_value) = ?
                     """
                     params = (
-                        [self.grouping.field] + self.classifier + [len(self.classifier)]
+                        source_params
+                        + [self.grouping.field]
+                        + self.classifier
+                        + [len(self.classifier)]
                     )
                     nb_classified_videos = len(sql_db.query_all(query, params))
                     super_query = f"""
@@ -142,6 +160,7 @@ class SaurusProvider(AbstractVideoProvider):
                     JOIN property AS p
                     ON v.property_id = p.property_id
                     WHERE
+                    {source_query} AND
                     p.name = ?
                     AND v.property_value IN ({','.join(placeholders)})
                     GROUP BY v.video_id
@@ -179,8 +198,10 @@ class SaurusProvider(AbstractVideoProvider):
                     GROUP BY value {without_singletons}
                     ORDER BY {order_field} {order_direction}
                     """
-                    super_params = [self.grouping.field] + source_params + [self.grouping.field]
-                    grouping_rows = sql_db.query(super_query, super_params, debug=True)
+                    super_params = (
+                        [self.grouping.field] + source_params + [self.grouping.field]
+                    )
+                    grouping_rows = sql_db.query(super_query, super_params)
             else:
                 field = field_factory.get_field(self.grouping.field)
                 if self.grouping.sorting == self.grouping.FIELD:
@@ -199,9 +220,10 @@ class SaurusProvider(AbstractVideoProvider):
                 grouping_rows = sql_db.query(
                     f"SELECT {field}, COUNT(v.video_id) AS size "
                     f"FROM video AS v "
+                    f"WHERE {source_query}"
                     f"GROUP BY {field} {without_singletons} "
                     f"ORDER BY {order_field}",
-                    debug=True,
+                    source_params,
                 )
 
             self._groups.clear()
@@ -267,6 +289,7 @@ class SaurusProvider(AbstractVideoProvider):
             where_search = f"t.content MATCH {search_placeholders}"
 
         query = f"SELECT v.video_id FROM video AS v"
+        query += " LEFT JOIN video_thumbnail AS vt ON v.video_id = vt.video_id"
         if where_search:
             query += f" JOIN video_text AS t ON v.video_id = t.video_id"
         where = ["v.discarded = 0", source_query]
@@ -278,7 +301,7 @@ class SaurusProvider(AbstractVideoProvider):
             where.append(where_search)
             params.extend(params_search)
         query += f" WHERE {' AND '.join(where)} ORDER BY {', '.join(sql_sorting)}"
-        self._view_indices = [row[0] for row in sql_db.query(query, params, debug=True)]
+        self._view_indices = [row[0] for row in sql_db.query(query, params)]
 
     def set_sources(self, paths: Sequence[Sequence[str]]) -> None:
         sources = parse_sources(paths)
