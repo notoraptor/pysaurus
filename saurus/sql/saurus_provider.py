@@ -165,21 +165,21 @@ class SaurusProvider(AbstractVideoProvider):
                     FROM
                     (SELECT 
                     v.video_id AS video_id, 
-                    SUM(IIF(p.name = :name, 1, 0)) AS have_property
+                    SUM(IIF(p.name = ?, 1, 0)) AS have_property
                     FROM video AS v
                     LEFT JOIN video_property_value AS pv ON v.video_id = pv.video_id
                     LEFT JOIN property AS p ON pv.property_id = p.property_id
-                    WHERE v.unreadable = 0 AND v.discarded = 0
+                    WHERE v.discarded = 0 AND {source_query}
                     GROUP BY v.video_id)
                     AS x
                     LEFT JOIN video_property_value AS xv ON x.video_id = xv.video_id
                     LEFT JOIN property AS xp ON xv.property_id = xp.property_id
                     WHERE 
-                    (x.have_property > 0 AND xp.name = :name) OR (x.have_property = 0)
+                    (x.have_property > 0 AND xp.name = ?) OR (x.have_property = 0)
                     GROUP BY value {without_singletons}
                     ORDER BY {order_field} {order_direction}
                     """
-                    super_params = dict(name=self.grouping.field)
+                    super_params = [self.grouping.field] + source_params + [self.grouping.field]
                     grouping_rows = sql_db.query(super_query, super_params, debug=True)
             else:
                 field = field_factory.get_field(self.grouping.field)
@@ -211,7 +211,6 @@ class SaurusProvider(AbstractVideoProvider):
             self.group = min(max(0, self.group), len(self._groups) - 1)
             group = self._groups[self.group]
             if self.grouping.is_property:
-                # todo
                 (field_value,) = group.value
                 if self.classifier:
                     expected = list(self.classifier)
@@ -233,13 +232,11 @@ class SaurusProvider(AbstractVideoProvider):
                 elif field_value is None:
                     query = f"""
                     SELECT 
-                    v.video_id AS video_id, 
-                    SUM(IIF(p.name = ?, 1, 0)) AS have_property
+                    v.video_id AS video_id
                     FROM video AS v
                     LEFT JOIN video_property_value AS pv ON v.video_id = pv.video_id
                     LEFT JOIN property AS p ON pv.property_id = p.property_id
-                    WHERE v.unreadable = 0 AND v.discarded = 0
-                    GROUP BY v.video_id HAVING have_property = 0
+                    GROUP BY v.video_id HAVING SUM(IIF(p.name = ?, 1, 0)) = 0
                     """
                     params = [self.grouping.field]
                 else:

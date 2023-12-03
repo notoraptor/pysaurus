@@ -1,4 +1,3 @@
-import pprint
 import sqlite3
 
 
@@ -57,8 +56,8 @@ class SaurusSQLiteConnection:
 
     def query(self, query, parameters=(), debug=False):
         if debug:
-            pprint.pprint(f"[query] {query}")
-            pprint.pprint(f"[params] {parameters}")
+            print(f"[query] {query}")
+            print(f"[params] {parameters}")
         self.cursor.execute(query, parameters)
         yield from self.cursor
 
