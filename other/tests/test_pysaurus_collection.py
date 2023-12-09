@@ -30,10 +30,10 @@ def test_provider_sources():
         assert len(provider.get_view_indices()) == 90
 
         provider.set_sources([["not_found"]])
-        assert len(provider.get_view_indices()) == 0
+        assert len(provider.get_view_indices()) == 3
 
         provider.set_sources([["found"]])
-        assert len(provider.get_view_indices()) == 93
+        assert len(provider.get_view_indices()) == 90
 
         provider.set_sources([["unreadable"]])
         assert len(provider.get_view_indices()) == 3
@@ -74,10 +74,8 @@ def test_provider_grouping_by_attribute():
         assert len(group_def["groups"]) == 3
         for i, (value, count) in enumerate(((0, 61), (125375, 8), (128000, 9))):
             group = group_def["groups"][i]
-            given_value = group["value"][0]
-            given_count = group["count"]
-            assert given_value == value
-            assert given_count == count
+            assert group["value"] == value
+            assert group["count"] == count
 
         provider.set_groups("audio_bit_rate", allow_singletons=True)
         assert len(provider.get_view_indices()) == 61
@@ -85,10 +83,8 @@ def test_provider_grouping_by_attribute():
         assert len(group_def["groups"]) == 15
         for i, (value, count) in enumerate(expected_groups):
             group = group_def["groups"][i]
-            given_value = group["value"][0]
-            given_count = group["count"]
-            assert given_value == value
-            assert given_count == count
+            assert group["value"] == value
+            assert group["count"] == count
 
         provider.set_groups("audio_bit_rate", reverse=True, allow_singletons=True)
         assert len(provider.get_view_indices()) == 1
@@ -96,7 +92,136 @@ def test_provider_grouping_by_attribute():
         assert len(group_def["groups"]) == 15
         for i, (value, count) in enumerate(reversed(expected_groups)):
             group = group_def["groups"][i]
-            given_value = group["value"][0]
-            given_count = group["count"]
-            assert given_value == value
-            assert given_count == count
+            assert group["value"] == value
+            assert group["count"] == count
+
+        provider.set_groups("audio_bit_rate", sorting="count", reverse=True)
+        assert len(provider.get_view_indices()) == 61
+        group_def = provider.get_group_def()
+        for i, (value, count) in enumerate(((0, 61), (128000, 9), (125375, 8))):
+            group = group_def["groups"][i]
+            assert group["value"] == value
+            assert group["count"] == count
+            provider.set_group(i)
+            assert len(provider.get_view_indices()) == count
+
+
+def test_provider_grouping_by_property():
+    expected_without_singletons = [
+        ("9", 2),
+        ("a", 3),
+        ("e", 3),
+        ("sunshine", 2),
+        ("unknown audio codec", 61),
+        ("vertical", 7),
+    ]
+    with get_provider() as provider:
+        provider.set_groups("category", True)
+        assert len(provider.get_view_indices()) == 2
+        group_def = provider.get_group_def()
+        assert len(group_def["groups"]) == 6
+        for i, (value, count) in enumerate(expected_without_singletons):
+            group = group_def["groups"][i]
+            assert group["value"] == value
+            assert group["count"] == count
+
+        provider.set_groups("category", True, allow_singletons=True)
+        assert len(provider.get_view_indices()) == 1
+        group_def = provider.get_group_def()
+        assert len(group_def["groups"]) == 110
+        ids_no_single = {86: 0, 97: 1, 103: 2, 106: 3, 107: 4, 108: 5}
+        nb_found_no_single = 0
+        for i, group in enumerate(group_def["groups"]):
+            if i in ids_no_single:
+                value, count = expected_without_singletons[ids_no_single[i]]
+                assert group["value"] == value
+                assert group["count"] == count
+                nb_found_no_single += 1
+            else:
+                assert group["count"] == 1
+        assert nb_found_no_single == len(expected_without_singletons)
+
+        provider.set_groups("category", True, sorting="length")
+        assert len(provider.get_view_indices()) == 2
+        group_def = provider.get_group_def()
+        assert len(group_def["groups"]) == 6
+        for i, (value, count) in enumerate(
+            sorted(expected_without_singletons, key=lambda c: (len(c[0]), c[0]))
+        ):
+            group = group_def["groups"][i]
+            assert group["value"] == value
+            assert group["count"] == count
+
+        provider.set_groups("category", True, sorting="length", reverse=True)
+        assert len(provider.get_view_indices()) == 61
+        group_def = provider.get_group_def()
+        assert len(group_def["groups"]) == 6
+        for i, (value, count) in enumerate(
+            sorted(
+                expected_without_singletons,
+                key=lambda c: (len(c[0]), c[0]),
+                reverse=True,
+            )
+        ):
+            group = group_def["groups"][i]
+            assert group["value"] == value
+            assert group["count"] == count
+
+        provider.set_groups("category", True, sorting="count")
+        assert len(provider.get_view_indices()) == 2
+        group_def = provider.get_group_def()
+        assert len(group_def["groups"]) == 6
+        for i, (value, count) in enumerate(
+            sorted(expected_without_singletons, key=lambda c: (c[1], c[0]))
+        ):
+            group = group_def["groups"][i]
+            assert group["value"] == value
+            assert group["count"] == count
+
+        provider.set_groups("category", True, sorting="count", reverse=True)
+        assert len(provider.get_view_indices()) == 61
+        group_def = provider.get_group_def()
+        assert len(group_def["groups"]) == 6
+        for i, (value, count) in enumerate(
+            sorted(
+                expected_without_singletons, key=lambda c: (c[1], c[0]), reverse=True
+            )
+        ):
+            group = group_def["groups"][i]
+            assert group["value"] == value
+            assert group["count"] == count
+
+
+def test_provider_classifier():
+    with get_provider() as provider:
+        # provider._database.db.debug = True
+        provider.set_groups(
+            "category", True, sorting="count", reverse=True, allow_singletons=True
+        )
+        provider.set_classifier_path(["vertical"])
+        assert len(provider.get_view_indices()) == 7
+        group_def = provider.get_group_def()
+        assert len(group_def["groups"]) == 24
+        group_0 = group_def["groups"][0]
+        group_1 = group_def["groups"][1]
+        group_2 = group_def["groups"][2]
+        assert group_0["value"] is None
+        assert group_0["count"] == 7
+        assert group_1["value"] == "unknown audio codec"
+        assert group_1["count"] == 7
+        assert group_2["value"] == "e"
+        assert group_2["count"] == 3
+
+        provider.set_group(14)
+        assert len(provider.get_view_indices()) == 1
+        group_14 = group_def["groups"][14]
+        assert group_14["value"] == "68233"
+        assert group_14["count"] == 1
+
+        provider.set_classifier_path(["vertical", "e"])
+        provider.set_group(0)
+        assert len(provider.get_view_indices()) == 3
+        group_def = provider.get_group_def()
+        assert len(group_def["groups"]) == 10
+        assert group_def["groups"][0]["value"] is None
+        assert group_def["groups"][0]["count"] == 3

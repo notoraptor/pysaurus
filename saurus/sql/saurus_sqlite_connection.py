@@ -67,6 +67,9 @@ class SaurusSQLiteConnection:
         return self.cursor.fetchone()
 
     def query_all(self, query, parameters=()):
+        if self.debug:
+            print(f"[query] {query}")
+            print(f"[params] {parameters}")
         self.cursor.execute(query, parameters)
         return self.cursor.fetchall()
 

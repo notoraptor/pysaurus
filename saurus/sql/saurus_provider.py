@@ -34,7 +34,7 @@ def convert_dict_series_to_sql(dicts: Iterable[dict]) -> Tuple[str, List]:
 class GroupCount:
     __slots__ = ("value", "count")
 
-    def __init__(self, value, count):
+    def __init__(self, value: tuple, count):
         self.value = value
         self.count = count
 
@@ -42,6 +42,9 @@ class GroupCount:
         return str((self.value, self.count))
 
     __repr__ = __str__
+
+    def get_value(self):
+        return self.value[0] if len(self.value) == 1 else self.value
 
     @classmethod
     def keyof(cls, group_count):
@@ -135,15 +138,17 @@ class SaurusProvider(AbstractVideoProvider):
                     placeholders = ["?"] * len(self.classifier)
                     query = f"""
                     SELECT v.video_id
-                    FROM video_property_value AS v
+                    FROM video AS v
+                    JOIN video_property_value AS vv
+                    ON v.video_id = vv.video_id
                     JOIN property AS p
-                    ON v.property_id = p.property_id
+                    ON vv.property_id = p.property_id
                     WHERE
                     {source_query} AND
                     p.name = ?
-                    AND v.property_value IN ({','.join(placeholders)})
-                    GROUP BY v.video_id
-                    HAVING COUNT(v.property_value) = ?
+                    AND vv.property_value IN ({','.join(placeholders)})
+                    GROUP BY vv.video_id
+                    HAVING COUNT(vv.property_value) = ?
                     """
                     params = (
                         source_params
@@ -156,15 +161,17 @@ class SaurusProvider(AbstractVideoProvider):
                     SELECT xv.property_value AS value, COUNT(x.video_id) AS size
                     FROM
                     (SELECT v.video_id AS video_id
-                    FROM video_property_value AS v
+                    FROM video AS v
+                    JOIN video_property_value AS vv
+                    ON v.video_id = vv.video_id
                     JOIN property AS p
-                    ON v.property_id = p.property_id
+                    ON vv.property_id = p.property_id
                     WHERE
                     {source_query} AND
                     p.name = ?
-                    AND v.property_value IN ({','.join(placeholders)})
-                    GROUP BY v.video_id
-                    HAVING COUNT(v.property_value) = ?)                    
+                    AND vv.property_value IN ({','.join(placeholders)})
+                    GROUP BY vv.video_id
+                    HAVING COUNT(vv.property_value) = ?)                    
                     AS x
                     JOIN video_property_value AS xv ON x.video_id = xv.video_id
                     JOIN property AS xp ON xv.property_id = xp.property_id
@@ -387,7 +394,9 @@ class SaurusProvider(AbstractVideoProvider):
         self._to_update = True
 
     def _get_classifier_stats(self):
-        return [{"value": group.value, "count": group.count} for group in self._groups]
+        return [
+            {"value": group.get_value(), "count": group.count} for group in self._groups
+        ]
 
     def count_source_videos(self):
         return len(
