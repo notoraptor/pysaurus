@@ -225,3 +225,69 @@ def test_provider_classifier():
         assert len(group_def["groups"]) == 10
         assert group_def["groups"][0]["value"] is None
         assert group_def["groups"][0]["count"] == 3
+
+
+def test_search():
+    with get_provider() as provider:
+        # provider._database.db.debug = True
+        provider.set_search("unknown", "and")
+        assert len(provider.get_view_indices()) == 61
+        provider.set_search("unknown", "or")
+        assert len(provider.get_view_indices()) == 61
+        provider.set_search("unknown", "exact")
+        assert len(provider.get_view_indices()) == 61
+
+        provider.set_search("unknown vertical", "and")
+        assert len(provider.get_view_indices()) == 7
+        provider.set_search("unknown vertical", "or")
+        assert len(provider.get_view_indices()) == 61
+        provider.set_search("unknown vertical", "exact")
+        assert len(provider.get_view_indices()) == 0
+
+        provider.set_search("palm beach", "and")
+        assert len(provider.get_view_indices()) == 2
+        provider.set_search("palm beach", "or")
+        assert len(provider.get_view_indices()) == 3
+        provider.set_search("palm beach", "exact")
+        assert len(provider.get_view_indices()) == 1
+
+        provider.set_search("then natural", "and")
+        assert len(provider.get_view_indices()) == 3
+        provider.set_search("then natural", "or")
+        assert len(provider.get_view_indices()) == 4
+        provider.set_search("then natural", "exact")
+        assert len(provider.get_view_indices()) == 2
+
+        provider.set_search("then.natural", "and")
+        assert len(provider.get_view_indices()) == 3
+        provider.set_search("then.natural", "or")
+        assert len(provider.get_view_indices()) == 4
+        provider.set_search("then.natural", "exact")
+        assert len(provider.get_view_indices()) == 2
+
+        provider.set_groups(
+            "category", True, allow_singletons=1, reverse=True, sorting="count"
+        )
+        provider.set_search("then.natural", "and")
+        assert len(provider.get_view_indices()) == 2
+        provider.set_search("then.natural", "or")
+        assert len(provider.get_view_indices()) == 3
+        provider.set_search("then.natural", "exact")
+        assert len(provider.get_view_indices()) == 1
+
+
+def test_sorting():
+    with get_provider() as provider:
+        provider.set_sort(["-file_title"])
+        indices = provider.get_view_indices()
+        assert len(indices) == 90
+
+        provider.set_sort(["file_title"])
+        assert indices == list(reversed(provider.get_view_indices()))
+
+        provider.set_groups("category", True, sorting="count", reverse=True)
+        indices = provider.get_view_indices()
+        assert len(indices) == 61
+
+        provider.set_sort(["-file_title"])
+        assert indices == list(reversed(provider.get_view_indices()))

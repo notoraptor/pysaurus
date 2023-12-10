@@ -144,8 +144,7 @@ class SaurusProvider(AbstractVideoProvider):
                     JOIN property AS p
                     ON vv.property_id = p.property_id
                     WHERE
-                    {source_query} AND
-                    p.name = ?
+                    v.discarded = 0 AND {source_query} AND p.name = ?
                     AND vv.property_value IN ({','.join(placeholders)})
                     GROUP BY vv.video_id
                     HAVING COUNT(vv.property_value) = ?
@@ -167,8 +166,7 @@ class SaurusProvider(AbstractVideoProvider):
                     JOIN property AS p
                     ON vv.property_id = p.property_id
                     WHERE
-                    {source_query} AND
-                    p.name = ?
+                    v.discarded = 0 AND {source_query} AND p.name = ?
                     AND vv.property_value IN ({','.join(placeholders)})
                     GROUP BY vv.video_id
                     HAVING COUNT(vv.property_value) = ?)                    
@@ -227,7 +225,7 @@ class SaurusProvider(AbstractVideoProvider):
                 grouping_rows = sql_db.query(
                     f"SELECT {field}, COUNT(v.video_id) AS size "
                     f"FROM video AS v "
-                    f"WHERE {source_query}"
+                    f"WHERE v.discarded = 0 AND {source_query}"
                     f"GROUP BY {field} {without_singletons} "
                     f"ORDER BY {order_field}",
                     source_params,
@@ -287,13 +285,14 @@ class SaurusProvider(AbstractVideoProvider):
                 if params_search[i] in ("and", "or"):
                     params_search[i] = f'"{params_search[i]}"'
             if self.search.cond == "and":
-                search_placeholders = f"'{' '.join(['?'] * len(params_search))}'"
+                search_placeholders = " ".join(params_search)
             elif self.search.cond == "or":
-                search_placeholders = f"'{' OR '.join(['?'] * len(params_search))}'"
+                search_placeholders = " OR ".join(params_search)
             else:
                 assert self.search.cond == "exact"
-                search_placeholders = f"'{' + '.join(['?'] * len(params_search))}'"
-            where_search = f"t.content MATCH {search_placeholders}"
+                search_placeholders = " + ".join(params_search)
+            where_search = f"t.content MATCH ?"
+            params_search = [search_placeholders]
 
         query = f"SELECT v.video_id FROM video AS v"
         query += " LEFT JOIN video_thumbnail AS vt ON v.video_id = vt.video_id"
