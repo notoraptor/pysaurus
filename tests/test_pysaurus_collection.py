@@ -285,7 +285,15 @@ def test_sorting():
         provider.set_sort(["file_title"])
         assert indices == list(reversed(provider.get_view_indices()))
 
+        provider.set_sort(["date", "-file_title"])
+        indices = provider.get_view_indices()
+        assert len(indices) == 90
+
+        provider.set_sort(["-date", "+file_title"])
+        assert indices == list(reversed(provider.get_view_indices()))
+
         provider.set_groups("category", True, sorting="count", reverse=True)
+        provider.set_sort(["file_title"])
         indices = provider.get_view_indices()
         assert len(indices) == 61
 
