@@ -1,10 +1,10 @@
 from collections import namedtuple
 from typing import Iterable, Sequence, Union
 
+from other.tests.utils_testing import get_database
 from pysaurus.core import condlang
 from pysaurus.database.database import Database
 from pysaurus.video import Video
-from .utils_testing import get_database
 
 
 def _get_video_fields(

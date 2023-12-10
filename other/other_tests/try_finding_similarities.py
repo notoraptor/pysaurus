@@ -8,12 +8,12 @@ import imagehash
 from PIL import Image
 from tqdm import tqdm
 
+from other.tests.utils_testing import DB_NAME
 from pysaurus.core.functions import coord_to_flat, flat_to_coord
 from pysaurus.core.modules import ImageUtils
 from pysaurus.database.db_way_def import DbWays
 from pysaurus.database.thubmnail_database.thumbnail_manager import ThumbnailManager
 from saurus.sql.pysaurus_program import PysaurusProgram
-from .utils_testing import DB_NAME
 
 
 def blob_to_image(binary_data) -> Image:
@@ -167,7 +167,7 @@ class NearPixelHash:
         )
 
 
-OUTPUT_PATH = "ignored/hash.json"
+OUTPUT_PATH = "../ignored/hash.json"
 
 
 def main_0():

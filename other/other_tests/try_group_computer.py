@@ -6,7 +6,7 @@ from typing import List, Tuple
 
 from tqdm import tqdm
 
-from other.tests.try_finding_similarities import DB_NAME, W, blob_to_image
+from other.other_tests.try_finding_similarities import DB_NAME, W, blob_to_image
 from pysaurus.core.classes import AbstractMatrix
 from pysaurus.core.components import AbsolutePath, Date
 from pysaurus.core.modules import ImageUtils
