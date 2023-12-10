@@ -28,6 +28,43 @@ from saurus.sql.video_parser import SQLVideoWrapper, VideoParser
 logger = logging.getLogger(__name__)
 
 
+COMMON_FIELDS = (
+    "audio_bit_rate",
+    "audio_bits",
+    "audio_codec",
+    "audio_codec_description",
+    "audio_languages",
+    "bit_depth",
+    "channels",
+    "container_format",
+    "date",
+    "date_entry_modified",
+    "date_entry_opened",
+    "errors",
+    "file_size",
+    "filename",
+    "frame_rate",
+    "height",
+    "length",
+    "sample_rate",
+    "similarity_id",
+    "subtitle_languages",
+    "video_codec",
+    "video_codec_description",
+    "width",
+    "extension",
+    "size",
+    "bit_rate",
+)
+
+
+PREFIX = {"thumbnail": "", "with_thumbnails": ""}
+
+
+def get_sql_prefix(field: str) -> str:
+    return PREFIX.get(field, "v.")
+
+
 class PysaurusCollection(AbstractDatabase):
     __slots__ = ("db",)
 
@@ -65,7 +102,7 @@ class PysaurusCollection(AbstractDatabase):
             return
         folders_tree = PathTree(folders)
         videos = self.db.query_all("SELECT video_id, filename FROM video")
-        self.db.modify(
+        self.db.modify_many(
             "UPDATE video SET discarded = ? WHERE video_id = ?",
             [
                 (
@@ -74,12 +111,10 @@ class PysaurusCollection(AbstractDatabase):
                 )
                 for video in videos
             ],
-            many=True,
         )
-        self.db.modify(
+        self.db.modify_many(
             "INSERT OR IGNORE INTO collection_source (source) VALUES (?)",
             [(path.path,) for path in folders],
-            many=True,
         )
 
     def get_predictor(self, prop_name: str) -> List[float]:
@@ -117,11 +152,10 @@ class PysaurusCollection(AbstractDatabase):
 
         if values:
             if pt.multiple and merge:
-                self.db.modify(
+                self.db.modify_many(
                     "INSERT OR IGNORE INTO video_property_value "
                     "(video_id, property_id, property_value) VALUES (?, ?, ?)",
                     [(video_id, property_id, value) for value in values],
-                    many=True,
                 )
             else:  # replace anyway
                 self.db.modify(
@@ -129,11 +163,10 @@ class PysaurusCollection(AbstractDatabase):
                     "WHERE video_id = ? AND property_id = ?",
                     [video_id, property_id],
                 )
-                self.db.modify(
+                self.db.modify_many(
                     "INSERT INTO video_property_value "
                     "(video_id, property_id, property_value) VALUES (?, ?, ?)",
                     [(video_id, property_id, value) for value in values],
-                    many=True,
                 )
         elif not merge:  # replace with empty => remove
             self.db.modify(
@@ -181,7 +214,7 @@ class PysaurusCollection(AbstractDatabase):
                         "name": row["name"],
                         "type": row["type"],
                         "multiple": row["multiple"],
-                        "defaultValue": enumeration[0],
+                        "defaultValue": [] if row["multiple"] else enumeration[0],
                         "enumeration": enumeration if len(enumeration) > 1 else None,
                     }
                 )
@@ -204,7 +237,7 @@ class PysaurusCollection(AbstractDatabase):
             "INSERT INTO property (name, type, multiple) VALUES (?, ?, ?)",
             [prop_desc["name"], prop_desc["type"], int(prop_desc["multiple"])],
         )
-        self.db.modify(
+        self.db.modify_many(
             "INSERT INTO property_enumeration (property_id, enum_value, rank) "
             "VALUES (?, ?, ?)",
             [
@@ -213,7 +246,6 @@ class PysaurusCollection(AbstractDatabase):
                     prop_desc["enumeration"] or [prop_desc["defaultValue"]]
                 )
             ],
-            many=True,
         )
 
     def remove_prop_type(self, name: str):
@@ -260,14 +292,14 @@ class PysaurusCollection(AbstractDatabase):
     ) -> List[dict]:
         parser = VideoParser()
         args = dict(parser(key, value) for key, value in (where or {}).items())
-        selection = [
-            (key, args.pop(key)) for key in ("video_id", "filename") if key in args
-        ]
+        selection = {
+            key: args.pop(key) for key in ("video_id", "filename") if key in args
+        }
         parameters = []
         queries_where = []
         if selection:
             qs = []
-            for key, values in selection:
+            for key, values in selection.items():
                 qs.append(
                     (
                         f"v.{key} = ?"
@@ -278,17 +310,37 @@ class PysaurusCollection(AbstractDatabase):
                 parameters.extend(values)
             queries_where.append(f"({' OR '.join(qs)})")
         args_keys = list(args.keys())
-        queries_where.extend(f"v.{key} = ?" for key in args_keys)
+        queries_where.extend(f"{get_sql_prefix(key)}{key} = ?" for key in args_keys)
         parameters.extend(args[key] for key in args_keys)
 
-        query = (
+        query_with = ""
+        query_base = (
             f"SELECT {FORMATTED_VIDEO_TABLE_FIELDS}, t.thumbnail AS thumbnail, "
             f"IIF(LENGTH(t.thumbnail), 1, 0) AS with_thumbnails "
             f"FROM video AS v LEFT JOIN video_thumbnail AS t "
             f"ON v.video_id = t.video_id"
         )
+        query_with_join = ""
+        query_where = ""
+        query_with_order = ""
+
+        idx_order = selection.get("video_id", ())
+        if len(idx_order) > 1:
+            query_with = (
+                f"WITH vid_order(video_id, rank) AS "
+                f"(VALUES {','.join(f'({v},{r})' for r, v in enumerate(idx_order))})"
+            )
+            query_with_join = "LEFT JOIN vid_order AS vo ON v.video_id = vo.video_id"
+            query_with_order = "ORDER BY vo.rank"
         if queries_where:
-            query += f" WHERE {' AND '.join(queries_where)}"
+            query_where = f"WHERE {' AND '.join(queries_where)}"
+        query = f"""
+        {query_with}
+        {query_base}
+        {query_with_join}
+        {query_where}
+        {query_with_order}
+        """
         videos = [SQLVideoWrapper(row) for row in self.db.query(query, parameters)]
 
         video_indices = [video.data["video_id"] for video in videos]
@@ -379,10 +431,9 @@ class PysaurusCollection(AbstractDatabase):
         return t_all_str if t_all_str == t_all_str_low else (t_all_str + t_all_str_low)
 
     def add_video_errors(self, video_id: int, *errors: Iterable[str]) -> None:
-        self.db.modify(
+        self.db.modify_many(
             "INSERT OR IGNORE INTO video_error (video_id, error) VALUES (?, ?)",
             [(video_id, error) for error in errors],
-            many=True,
         )
 
     def change_video_entry_filename(
@@ -458,6 +509,8 @@ class PysaurusCollection(AbstractDatabase):
         entries: List[VideoEntry],
         runtime_info: Dict[AbsolutePath, VideoRuntimeInfo],
     ):
+        if not entries:
+            return
         dicts = [
             entry.to_table(True, runtime_info[AbsolutePath(entry.filename)])
             for entry in entries
@@ -504,6 +557,8 @@ class PysaurusCollection(AbstractDatabase):
         entries: List[VideoEntry],
         runtime_info: Dict[AbsolutePath, VideoRuntimeInfo],
     ):
+        if not entries:
+            return
         dicts = [
             entry.to_table(False, runtime_info[AbsolutePath(entry.filename)])
             for entry in entries
@@ -563,7 +618,8 @@ class PysaurusCollection(AbstractDatabase):
             text = f"{entry.filename};{entry.meta_title};{row[1]}"
             texts.append((entry.video_id, text))
         self.db.modify_many(
-            "INSERT INTO video_text (video_id, content) VALUES (?, ?)", texts
+            "INSERT OR REPLACE INTO video_text " "(video_id, content) VALUES (?, ?)",
+            texts,
         )
 
     def open_video(self, video_id):
@@ -583,7 +639,7 @@ class PysaurusCollection(AbstractDatabase):
             """
 SELECT group_concat(video_id || '-' || is_file || '-' || hex(filename))
 FROM video 
-WHERE unreadable = 0 
+WHERE unreadable = 0 AND discarded = 0
 GROUP BY file_size, duration, COALESCE(NULLIF(duration_time_base, 0), 1)
 HAVING COUNT(video_id) > 1 AND SUM(is_file) < COUNT(video_id);
                 """
@@ -604,14 +660,15 @@ HAVING COUNT(video_id) > 1 AND SUM(is_file) < COUNT(video_id);
                     )
                 else:
                     not_found.append(video_id)
-            assert not_found and found
+            assert not_found and found, (not_found, found)
             for id_not_found in not_found:
                 yield id_not_found, found
 
     def get_common_fields(self, video_indices: Iterable[int]) -> dict:
         return VideoFeatures.get_common_fields(
-            self.get_videos(where={"video_id": video_indices}),
+            self.get_videos(include=COMMON_FIELDS, where={"video_id": video_indices}),
             getfield=operator.getitem,
+            fields=COMMON_FIELDS,
         )
 
     def _insert_new_thumbnails(self, filename_to_thumb_name: Dict[str, str]) -> None:
@@ -624,7 +681,7 @@ HAVING COUNT(video_id) > 1 AND SUM(is_file) < COUNT(video_id);
             )
         }
         assert len(filename_to_video_id) == len(filename_to_thumb_name)
-        self.db.modify(
+        self.db.modify_many(
             "INSERT OR REPLACE INTO video_thumbnail (video_id, thumbnail) VALUES (?, ?)",
             (
                 (
@@ -633,5 +690,4 @@ HAVING COUNT(video_id) > 1 AND SUM(is_file) < COUNT(video_id);
                 )
                 for filename, thumb_path in filename_to_thumb_name.items()
             ),
-            many=True,
         )

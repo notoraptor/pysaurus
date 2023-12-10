@@ -2,24 +2,18 @@ import logging
 import multiprocessing
 from typing import Iterable
 
-from pysaurus.application import exceptions
 from pysaurus.core.components import AbsolutePath, PathType
 from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.profiling import Profiler
-from pysaurus.database.jsdb.json_database import JsonDatabase
+
+# from pysaurus.database.jsdb.json_database import JsonDatabase as BaseDatabase
 from pysaurus.database.special_properties import SpecialProperties
-from pysaurus.video_raptor.video_raptor_pyav import VideoRaptor as PythonVideoRaptor
+from saurus.sql.pysaurus_collection import PysaurusCollection as BaseDatabase
 
 logger = logging.getLogger(__name__)
 
-try:
-    from pysaurus.video_raptor.video_raptor_native import VideoRaptor
-except exceptions.CysaurusUnavailable:
-    VideoRaptor = PythonVideoRaptor
-    logger.warning("Using fallback backend for videos info and thumbnails.")
 
-
-class Database(JsonDatabase):
+class Database(BaseDatabase):
     __slots__ = ("_initial_pid",)
 
     def __init__(self, path, folders=None, notifier=DEFAULT_NOTIFIER):

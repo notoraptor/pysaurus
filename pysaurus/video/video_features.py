@@ -64,7 +64,7 @@ class VideoFeatures:
         }
 
     @staticmethod
-    def get_common_fields(videos: Iterable, getfield=getattr):
+    def get_common_fields(videos: Iterable, getfield=getattr, fields=VIDEO_FIELDS):
         videos = list(videos)
         if len(videos) < 2:
             return {}
@@ -74,5 +74,5 @@ class VideoFeatures:
                 getfield(first_video, key) == getfield(other_video, key)
                 for other_video in other_videos
             )
-            for key in VIDEO_FIELDS
+            for key in fields
         }

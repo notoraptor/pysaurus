@@ -12,6 +12,9 @@ class PysaurusConnection(SaurusSQLiteConnection):
         super().__init__(
             os.path.join(os.path.dirname(__file__), "database.sql"), db_path
         )
+        self.register_pysaurus_functions()
+
+    def register_pysaurus_functions(self):
         for name, function in inspect.getmembers(
             sql_functions,
             lambda value: callable(value) and value.__name__.startswith("pysaurus_"),

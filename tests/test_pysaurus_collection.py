@@ -4,13 +4,19 @@ and testing method names starting with "test_". but this class must
 not have a __init__ method:
 https://docs.pytest.org/en/7.1.x/explanation/goodpractices.html#test-discovery
 """
+import sqlite3
+
 from saurus.sql.pysaurus_program import PysaurusProgram
 
 
 def get_collection():
     name = "example_db_in_pysaurus"
     program = PysaurusProgram()
-    return program.open_database(name)
+    collection = program.open_database(name)
+    memory_connection = sqlite3.connect(":memory:")
+    collection.db.connection.backup(memory_connection)
+    collection.db.connection = memory_connection
+    return collection
 
 
 def get_provider():
@@ -299,3 +305,74 @@ def test_sorting():
 
         provider.set_sort(["-file_title"])
         assert indices == list(reversed(provider.get_view_indices()))
+
+
+def test_update():
+    collection = get_collection()
+    # collection.db.debug = True
+    collection.refresh()
+
+
+def test_prop_types_default_value():
+    collection = get_collection()
+    properties = collection.get_prop_types()
+    assert len(properties) == 6
+    assert properties == [
+        {
+            "defaultValue": "0.0",
+            "enumeration": None,
+            "multiple": 0,
+            "name": "appreciation",
+            "property_id": 0,
+            "type": "float",
+        },
+        {
+            "defaultValue": [],
+            "enumeration": None,
+            "multiple": 1,
+            "name": "category",
+            "property_id": 1,
+            "type": "str",
+        },
+        {
+            "defaultValue": "0",
+            "enumeration": None,
+            "multiple": 0,
+            "name": "has sky",
+            "property_id": 2,
+            "type": "bool",
+        },
+        {
+            "defaultValue": "0",
+            "enumeration": ["0", "1"],
+            "multiple": 0,
+            "name": "is nature",
+            "property_id": 3,
+            "type": "int",
+        },
+        {
+            "defaultValue": "0",
+            "enumeration": None,
+            "multiple": 0,
+            "name": "number of animals",
+            "property_id": 4,
+            "type": "int",
+        },
+        {
+            "defaultValue": "example video",
+            "enumeration": None,
+            "multiple": 0,
+            "name": "title",
+            "property_id": 5,
+            "type": "str",
+        },
+    ]
+
+
+def test_get_videos():
+    collection = get_collection()
+    indices = list(reversed(range(20)))
+    videos = collection.get_videos(include=(), where={"video_id": indices})
+    assert len(videos) == len(indices)
+    for video, video_id in zip(videos, indices):
+        assert video["video_id"] == video_id

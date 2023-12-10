@@ -46,6 +46,14 @@ class GroupCount:
     def get_value(self):
         return self.value[0] if len(self.value) == 1 else self.value
 
+    def get_printable_value(self):
+        value = self.get_value()
+        return (
+            value
+            if value is None or isinstance(value, (str, bool, int, float))
+            else str(value)
+        )
+
     @classmethod
     def keyof(cls, group_count):
         # type: (GroupCount) -> Any
@@ -222,10 +230,16 @@ class SaurusProvider(AbstractVideoProvider):
                 else:
                     assert self.grouping.sorting == self.grouping.COUNT
                     order_field = f"COUNT(v.video_id) {order_direction}"
+
+                where_similarity_id = ""
+                if self.grouping.field == "similarity_id":
+                    where_similarity_id = (
+                        " AND v.similarity_id IS NOT NULL AND v.similarity_id != -1"
+                    )
                 grouping_rows = sql_db.query(
                     f"SELECT {field}, COUNT(v.video_id) AS size "
                     f"FROM video AS v "
-                    f"WHERE v.discarded = 0 AND {source_query}"
+                    f"WHERE v.discarded = 0 AND {source_query} {where_similarity_id} "
                     f"GROUP BY {field} {without_singletons} "
                     f"ORDER BY {order_field}",
                     source_params,
@@ -235,6 +249,9 @@ class SaurusProvider(AbstractVideoProvider):
             self._groups.extend(
                 GroupCount(tuple(row[:-1]), row[-1]) for row in grouping_rows
             )
+            if not self._groups:
+                self._view_indices = []
+                return
             self.group = min(max(0, self.group), len(self._groups) - 1)
             group = self._groups[self.group]
             if self.grouping.is_property:
@@ -394,7 +411,8 @@ class SaurusProvider(AbstractVideoProvider):
 
     def _get_classifier_stats(self):
         return [
-            {"value": group.get_value(), "count": group.count} for group in self._groups
+            {"value": group.get_printable_value(), "count": group.count}
+            for group in self._groups
         ]
 
     def count_source_videos(self):

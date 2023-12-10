@@ -1,4 +1,4 @@
-from typing import Collection, Union
+from typing import Collection, Sequence, Union
 
 from pysaurus.application import exceptions
 from pysaurus.core.enumeration import Enumeration
@@ -124,7 +124,7 @@ class PropTypeValidator:
             (value,) = values
             return [self.validate(value)]
 
-    def from_strings(self, values: Collection[str]) -> Collection[PropUnitType]:
+    def from_strings(self, values: Collection[str]) -> Sequence[PropUnitType]:
         if not values:
             return []
         if not self.multiple and len(values) != 1:
@@ -136,9 +136,9 @@ class PropTypeValidator:
         else:
             return [self.type(value) for value in values]
 
-    def plain_from_strings(self, values: Collection[str]) -> PropValueType:
+    def plain_from_strings(self, values: Sequence[str]) -> PropValueType:
         values = self.from_strings(values)
-        return values[0] if len(values) == 1 else values
+        return values if self.multiple else values[0]
 
     @classmethod
     def define(

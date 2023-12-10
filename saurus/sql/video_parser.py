@@ -44,7 +44,7 @@ class VideoParser:
 
     @classmethod
     def assert_video_table_field(cls, value: str) -> str:
-        assert getattr(F, value) < 29
+        assert getattr(F, value)
         return value
 
     def __call__(self, field, value) -> Tuple[str, Any]:
@@ -334,7 +334,7 @@ class SQLVideoWrapper:
 
     @property
     def thumbnail_blob(self):
-        return self.data.get("thumbnail")
+        return self.data["thumbnail"]
 
     @property
     def size_length(self):
