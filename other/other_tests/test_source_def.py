@@ -1,5 +1,5 @@
-from other.tests.utils_testing import get_database
 from pysaurus.database.viewport.source_def import SourceDef
+from tests.utils_testing import get_database
 
 
 def test_source_def():

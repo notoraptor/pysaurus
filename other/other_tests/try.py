@@ -1,11 +1,11 @@
 import logging
 from typing import List
 
-from other.tests.utils_testing import get_database
 from pysaurus.core import functions
 from pysaurus.core.informer import Informer
 from pysaurus.core.profiling import Profiler
 from pysaurus.video import Video
+from tests.utils_testing import get_database
 
 SAME_ORDER_FIELD = {
     "length": "raw_seconds",

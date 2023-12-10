@@ -3,8 +3,8 @@ from typing import Any, Dict, List, Sequence, Set
 
 from tqdm import tqdm
 
-from imgsimsearch.abstract_image_provider import AbstractImageProvider
-from imgsimsearch.graph import Graph
+from other.imgsimsearch.abstract_image_provider import AbstractImageProvider
+from other.imgsimsearch.graph import Graph
 from pysaurus.core.profiling import InlineProfiler
 from pysaurus.database.video_similarities.alignment_raptor.alignment import (
     miniature_to_c_sequence,

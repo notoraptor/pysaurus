@@ -2,8 +2,8 @@ from typing import Any, Dict, List, Sequence, Set
 
 from tqdm import tqdm
 
-from imgsimsearch.abstract_image_provider import AbstractImageProvider
-from imgsimsearch.native_fine_comparator import SIM_LIMIT
+from other.imgsimsearch.abstract_image_provider import AbstractImageProvider
+from other.imgsimsearch.native_fine_comparator import SIM_LIMIT
 from pysaurus.core.modules import ImageUtils
 from pysaurus.database.video_similarities.backend_numpy import SimilarityComparator
 from pysaurus.miniature.graph import Graph

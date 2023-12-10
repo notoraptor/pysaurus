@@ -2,12 +2,12 @@ from typing import Any, Iterable, Tuple
 
 from PIL.Image import Image
 
-from imgsimsearch import AbstractImageProvider
-from other.tests.utils_testing import DB_NAME
+from other.imgsimsearch import AbstractImageProvider
 from pysaurus.core.modules import ImageUtils
 from pysaurus.database.db_way_def import DbWays
 from pysaurus.database.thubmnail_database.thumbnail_manager import ThumbnailManager
 from saurus.sql.pysaurus_program import PysaurusProgram
+from tests.utils_testing import DB_NAME
 
 
 class LocalImageProvider(AbstractImageProvider):

@@ -1,4 +1,3 @@
-from other.tests.utils_testing import DB_NAME
 from pysaurus.core.profiling import ConsoleProfiler as Profiler
 from pysaurus.core.semantic_text import (
     CharClass,
@@ -6,6 +5,7 @@ from pysaurus.core.semantic_text import (
     pad_numbers_in_string,
 )
 from saurus.sql.pysaurus_program import PysaurusProgram
+from tests.utils_testing import DB_NAME
 
 
 def main():

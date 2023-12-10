@@ -29,8 +29,8 @@ ProfilingEnded(Check expected similarities, 000133µs)
 ProfilingEnded(main, 04m 48s 981723µs)
 """
 
-from imgsimsearch.approximate_comparator import ApproximateComparator
-from imgsimsearch.native_fine_comparator import compare_images_native
+from other.imgsimsearch.approximate_comparator import ApproximateComparator
+from other.imgsimsearch.native_fine_comparator import compare_images_native
 from other.other_tests.local_image_provider import LocalImageProvider
 from other.other_tests.similarity_checker import Checker
 from pysaurus.core.profiling import Profiler

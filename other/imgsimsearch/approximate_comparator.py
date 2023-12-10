@@ -3,7 +3,7 @@ import numpy as np
 from PIL import ImageFilter
 from tqdm import tqdm, trange
 
-from imgsimsearch.abstract_image_provider import AbstractImageProvider
+from other.imgsimsearch.abstract_image_provider import AbstractImageProvider
 
 
 class ApproximateComparator:
