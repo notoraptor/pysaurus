@@ -20,8 +20,9 @@ def _scan_folder_for_videos(folder: str, files: Dict[AbsolutePath, VideoRuntimeI
             # So, we should better use os.stat().
             # Reference (2023/04/29, python 3.8):
             # https://docs.python.org/3/library/os.html#os.DirEntry.stat
-            stat = os.stat(entry.path)
-            files[AbsolutePath(entry.path)] = VideoRuntimeInfo.from_keys(
+            entry_path = AbsolutePath(entry.path)
+            stat = os.stat(entry_path.path)
+            files[entry_path] = VideoRuntimeInfo.from_keys(
                 size=stat.st_size,
                 mtime=stat.st_mtime,
                 driver_id=stat.st_dev,
