@@ -107,3 +107,92 @@ CREATE TABLE IF NOT EXISTS video_thumbnail (
 CREATE VIRTUAL TABLE IF NOT EXISTS video_text USING fts5(video_id, content);
 -- Virtual table can use INSERT, UPDATE, DELETE.
 -- SELECT video_id FROM video_text WHERE content MATCH 'the_text';
+
+CREATE TRIGGER IF NOT EXISTS add_filename_meta_title INSERT ON video
+BEGIN
+    INSERT INTO video_text(video_id, content)
+    VALUES (new.video_id, new.filename || ';' || new.meta_title);
+END;
+
+CREATE TRIGGER IF NOT EXISTS update_filename UPDATE OF filename, meta_title ON video
+BEGIN
+    UPDATE video_text
+    SET content = (
+        SELECT
+        v.filename || ';' || v.meta_title || ';' || COALESCE(group_concat(vp.property_value, ';'), '')
+        FROM video AS v
+        LEFT JOIN video_property_value AS vp ON v.video_id = vp.video_id
+        LEFT JOIN property AS p ON vp.property_id = p.property_id
+        WHERE p.type IS NULL OR p.type = 'str'
+        GROUP BY v.video_id HAVING v.video_id = NEW.video_id
+    ) WHERE video_id = NEW.video_id;
+END;
+
+CREATE TRIGGER IF NOT EXISTS delete_entries DELETE ON video
+BEGIN
+    DELETE FROM video_text WHERE video_id = old.video_id;
+END;
+
+CREATE TRIGGER IF NOT EXISTS delete_text_on_delete_props DELETE ON property WHEN OLD.type = 'str'
+BEGIN
+    DELETE FROM video_text WHERE video_id IN (
+        SELECT vp.video_id
+        FROM video_property_value AS vp
+        WHERE vp.property_id = OLD.property_id
+    );
+    INSERT INTO video_text (video_id, content)
+    SELECT
+    v.video_id,
+    v.filename || ';' || v.meta_title || ';' || COALESCE(group_concat(vp.property_value, ';'), '')
+    FROM video AS v
+    LEFT JOIN video_property_value AS vp ON v.video_id = vp.video_id
+    LEFT JOIN property AS p ON vp.property_id = p.property_id
+    WHERE p.type IS NULL OR p.type = 'str'
+    GROUP BY v.video_id HAVING v.video_id IN (
+        SELECT x.video_id
+        FROM video_property_value AS x
+        WHERE x.property_id = OLD.property_id
+    );
+END;
+
+CREATE TRIGGER IF NOT EXISTS insert_on_new_prop_val INSERT ON video_property_value
+BEGIN
+    -- DELETE FROM video_text WHERE video_id = NEW.video_id;
+    INSERT INTO video_text (video_id, content)
+    SELECT
+    v.video_id,
+    v.filename || ';' || v.meta_title || ';' || COALESCE(group_concat(vp.property_value, ';'), '')
+    FROM video AS v
+    LEFT JOIN video_property_value AS vp ON v.video_id = vp.video_id
+    LEFT JOIN property AS p ON vp.property_id = p.property_id
+    WHERE p.type IS NULL OR p.type = 'str'
+    GROUP BY v.video_id HAVING v.video_id = NEW.video_id;
+END;
+
+CREATE TRIGGER IF NOT EXISTS update_on_prop_val UPDATE ON video_property_value
+BEGIN
+    UPDATE video_text
+    SET content = (
+        SELECT
+        v.filename || ';' || v.meta_title || ';' || COALESCE(group_concat(vp.property_value, ';'), '')
+        FROM video AS v
+        LEFT JOIN video_property_value AS vp ON v.video_id = vp.video_id
+        LEFT JOIN property AS p ON vp.property_id = p.property_id
+        WHERE p.type IS NULL OR p.type = 'str'
+        GROUP BY v.video_id HAVING v.video_id = NEW.video_id
+    ) WHERE video_id = NEW.video_id;
+END;
+
+CREATE TRIGGER IF NOT EXISTS reload_on_deleted_prop_val DELETE ON video_property_value
+BEGIN
+    UPDATE video_text
+    SET content = (
+        SELECT
+        v.filename || ';' || v.meta_title || ';' || COALESCE(group_concat(vp.property_value, ';'), '')
+        FROM video AS v
+        LEFT JOIN video_property_value AS vp ON v.video_id = vp.video_id
+        LEFT JOIN property AS p ON vp.property_id = p.property_id
+        WHERE p.type IS NULL OR p.type = 'str'
+        GROUP BY v.video_id HAVING v.video_id = OLD.video_id
+    ) WHERE video_id = OLD.video_id;
+END;
