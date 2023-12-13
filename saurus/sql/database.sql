@@ -161,12 +161,16 @@ BEGIN
     UPDATE video_text
     SET content = (
         SELECT
-        v.filename || ';' || v.meta_title || ';' || COALESCE(group_concat(vp.property_value, ';'), '')
-        FROM video AS v
-        LEFT JOIN video_property_value AS vp ON v.video_id = vp.video_id
-        LEFT JOIN property AS p ON vp.property_id = p.property_id
-        WHERE p.type IS NULL OR p.type = 'str'
-        GROUP BY v.video_id HAVING v.video_id = NEW.video_id
+        filename || ';' || meta_title || ';' || COALESCE(
+            (SELECT GROUP_CONCAT(vp.property_value, ';')
+             FROM video_property_value AS vp
+             JOIN property AS p ON vp.property_id = p.property_id
+             WHERE vp.video_id = NEW.video_id AND p.type = 'str'
+             GROUP BY vp.video_id),
+            ''
+        )
+        FROM video
+        WHERE video_id = NEW.video_id
     ) WHERE video_id = NEW.video_id;
 END;
 

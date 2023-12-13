@@ -185,11 +185,14 @@ def export_db_to_sql(db_path: AbsolutePath, notifier):
             video_property_values,
             many=True,
         )
-        new_db.modify(
-            "INSERT INTO video_text (video_id, content) VALUES(?, ?)",
-            video_texts,
-            many=True,
-        )
+        if video_texts:
+            print(f"[{db_name}] Ignored video texts", file=sys.stderr)
+        else:
+            new_db.modify(
+                "INSERT INTO video_text (video_id, content) VALUES(?, ?)",
+                video_texts,
+                many=True,
+            )
 
     # Move thumbnails into new SQL database
     with Profiler(f"[{db_name}] Move thumbnails", notifier):
