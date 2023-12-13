@@ -114,6 +114,7 @@ BEGIN
     VALUES (new.video_id, new.filename || ';' || new.meta_title);
 END;
 
+-- todo
 CREATE TRIGGER IF NOT EXISTS update_filename UPDATE OF filename, meta_title ON video
 BEGIN
     UPDATE video_text
@@ -130,7 +131,7 @@ END;
 
 CREATE TRIGGER IF NOT EXISTS delete_entries DELETE ON video
 BEGIN
-    DELETE FROM video_text WHERE video_id = old.video_id;
+    DELETE FROM video_text WHERE video_id = OLD.video_id;
 END;
 
 CREATE TRIGGER IF NOT EXISTS delete_text_on_delete_props DELETE ON property WHEN OLD.type = 'str'
@@ -157,16 +158,16 @@ END;
 
 CREATE TRIGGER IF NOT EXISTS insert_on_new_prop_val INSERT ON video_property_value
 BEGIN
-    -- DELETE FROM video_text WHERE video_id = NEW.video_id;
-    INSERT INTO video_text (video_id, content)
-    SELECT
-    v.video_id,
-    v.filename || ';' || v.meta_title || ';' || COALESCE(group_concat(vp.property_value, ';'), '')
-    FROM video AS v
-    LEFT JOIN video_property_value AS vp ON v.video_id = vp.video_id
-    LEFT JOIN property AS p ON vp.property_id = p.property_id
-    WHERE p.type IS NULL OR p.type = 'str'
-    GROUP BY v.video_id HAVING v.video_id = NEW.video_id;
+    UPDATE video_text
+    SET content = (
+        SELECT
+        v.filename || ';' || v.meta_title || ';' || COALESCE(group_concat(vp.property_value, ';'), '')
+        FROM video AS v
+        LEFT JOIN video_property_value AS vp ON v.video_id = vp.video_id
+        LEFT JOIN property AS p ON vp.property_id = p.property_id
+        WHERE p.type IS NULL OR p.type = 'str'
+        GROUP BY v.video_id HAVING v.video_id = NEW.video_id
+    ) WHERE video_id = NEW.video_id;
 END;
 
 CREATE TRIGGER IF NOT EXISTS update_on_prop_val UPDATE ON video_property_value
