@@ -33,6 +33,6 @@ class JsonBackup:
             assert prev_path.isfile()
         # Store JSON data to target file
         with open(self.path.path, "w") as output_file:
-            json.dump(data, output_file)
+            json.dump(data, output_file, indent=1)
         # Data saved. Previous file may exist. Target file contains data.
         assert self.path.isfile()
