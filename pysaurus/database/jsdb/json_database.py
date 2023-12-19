@@ -84,8 +84,6 @@ class JsonDatabase(AbstractDatabase):
         )
         self._removed: Set[Video] = set()
         self._modified: Set[Video] = set()
-        # Initialize
-        self.__jsondb_load(folders)
         # Initialize thumbnail manager.
         thumb_sql_path: AbsolutePath = self.ways.db_thumb_sql_path
         to_build = not thumb_sql_path.exists()
@@ -97,6 +95,8 @@ class JsonDatabase(AbstractDatabase):
                         ["filename", "thumbnail_path"], "readable"
                     )
                 )
+        # Initialize
+        self.__jsondb_load(folders)
 
     @Profiler.profile_method()
     def __jsondb_load(self, folders: Optional[Iterable[PathType]] = None):

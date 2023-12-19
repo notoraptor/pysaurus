@@ -38,16 +38,16 @@ def search_to_sql(search: SearchDef) -> Tuple[str, List[str]]:
             piece = f'"{piece}"'
         terms.append(piece)
     if search.cond == "exact":
-        query = "SELECT DISTINCT video_id FROM video_text WHERE content MATCH ?"
+        query = "SELECT video_id FROM video_text WHERE video_text MATCH ?"
         where = [" + ".join(terms)]
     else:
         terms = [f"{piece}*" for piece in terms]
         if search.cond == "and":
-            query = "SELECT video_id FROM video_text WHERE content MATCH ? GROUP BY video_id HAVING COUNT(video_id) = ?"
-            where = [" OR ".join(terms), len(terms)]
+            query = "SELECT video_id FROM video_text WHERE video_text MATCH ?"
+            where = [" ".join(terms)]
         else:
             assert search.cond == "or"
-            query = "SELECT DISTINCT video_id FROM video_text WHERE content MATCH ?"
+            query = "SELECT video_id FROM video_text WHERE video_text MATCH ?"
             where = [" OR ".join(terms)]
     return query, where
 

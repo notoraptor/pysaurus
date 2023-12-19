@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 
 from pysaurus.video.lazy_video import LazyVideo as Video
 
@@ -115,4 +115,13 @@ def get_video_text(video: Video, prop_names: List[str]):
     return (
         f"{video._get('filename')};{video._get('meta_title')};"
         f"{';'.join(v for name in prop_names for v in properties.get(name, ()))}"
+    )
+
+
+def get_video_text_triple(video: Video, prop_names: List[str]) -> Tuple[str, str, str]:
+    properties = video._get("properties")
+    return (
+        video._get("filename"),
+        video._get("meta_title"),
+        f"{';'.join(v for name in prop_names for v in properties.get(name, ()))}",
     )

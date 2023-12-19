@@ -13,7 +13,7 @@ from pysaurus.properties.properties import PropType
 from pysaurus.updates.video_inliner import (
     get_all_fields,
     get_all_getters,
-    get_video_text,
+    get_video_text_triple,
 )
 from pysaurus.video import Video
 from saurus.sql.pysaurus_connection import PysaurusConnection
@@ -24,7 +24,7 @@ def main(notifier):
     application = PysaurusProgram()
     for db_path in sorted(application.get_database_paths()):
         db_name = db_path.title
-        if db_name != "example_db_in_pysaurus":
+        if db_name not in ("example_db_in_pysaurus", "Divertissement"):
             continue
         with Profiler(f"[{db_name}] export", notifier):
             export_db_to_sql(db_path, notifier)
@@ -122,7 +122,7 @@ def export_db_to_sql(db_path: AbsolutePath, notifier):
             for property_value in format_prop_val(values, pt_name_to_type[name])
         ]
         video_texts = [
-            (video_id, get_video_text(video, string_props))
+            (video_id, *get_video_text_triple(video, string_props))
             for video_id, video in enumerate(videos)
         ]
 
@@ -187,14 +187,12 @@ def export_db_to_sql(db_path: AbsolutePath, notifier):
             video_property_values,
             many=True,
         )
-        if video_texts:
-            print(f"[{db_name}] Ignored video texts", file=sys.stderr)
-        else:
-            new_db.modify(
-                "INSERT INTO video_text (video_id, content) VALUES(?, ?)",
-                video_texts,
-                many=True,
-            )
+        new_db.modify(
+            "INSERT INTO video_text "
+            "(video_id, filename, meta_title, properties) VALUES(?, ?, ?, ?)",
+            video_texts,
+            many=True,
+        )
 
     # Move thumbnails into new SQL database
     with Profiler(f"[{db_name}] Move thumbnails", notifier):

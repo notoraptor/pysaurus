@@ -103,64 +103,42 @@ CREATE TABLE IF NOT EXISTS video_thumbnail (
     thumbnail BLOB NOT NULL,
     UNIQUE (video_id)
 );
--- Currently unused. Thumb table is in a separate database.
 
-CREATE VIRTUAL TABLE IF NOT EXISTS video_text USING fts5(video_id, kind, content);
+CREATE VIEW IF NOT EXISTS video_property_text (video_id, property_text) AS
+SELECT v.video_id, GROUP_CONCAT(v.property_value, ';')
+FROM video_property_value AS v
+JOIN property AS p ON v.property_id = p.property_id
+WHERE p.type = 'str'
+GROUP BY v.video_id;
+
+CREATE VIRTUAL TABLE IF NOT EXISTS video_text
+USING fts5(video_id UNINDEXED, filename, meta_title, properties);
 -- Virtual table can use INSERT, UPDATE, DELETE.
 -- SELECT video_id FROM video_text WHERE content MATCH 'the_text';
 
----------------------------
+----------------------------------------------------------------------------------------
 -- Triggers for video_text.
----------------------------
+-- Only for video table.
+-- Updates related to property and video_property_value tables must be done manually.
+----------------------------------------------------------------------------------------
 
 CREATE TRIGGER IF NOT EXISTS on_video_insert INSERT ON video
 BEGIN
-    INSERT INTO video_text(video_id, kind, content) VALUES
-    (NEW.video_id, -1, NEW.filename),
-    (NEW.video_id, -2, NEW.meta_title);
+    INSERT INTO video_text(video_id, filename, meta_title) VALUES
+    (NEW.video_id, NEW.filename, NEW.meta_title);
 END;
 
 CREATE TRIGGER IF NOT EXISTS on_video_update_filename UPDATE OF filename ON video
 BEGIN
-    UPDATE video_text SET content = NEW.filename WHERE video_id = OLD.video_id AND kind = -1;
+    UPDATE video_text SET filename = NEW.filename WHERE video_id = OLD.video_id;
 END;
 
 CREATE TRIGGER IF NOT EXISTS on_video_update_meta_title UPDATE OF meta_title ON video
 BEGIN
-    UPDATE video_text SET content = NEW.meta_title WHERE video_id = OLD.video_id AND kind = -2;
+    UPDATE video_text SET meta_title = NEW.meta_title WHERE video_id = OLD.video_id;
 END;
 
 CREATE TRIGGER IF NOT EXISTS on_video_delete DELETE ON video
 BEGIN
     DELETE FROM video_text WHERE video_id = OLD.video_id;
-END;
-
-CREATE TRIGGER IF NOT EXISTS on_property_delete DELETE ON property WHEN OLD.type = 'str'
-BEGIN
-    DELETE FROM video_text WHERE kind = OLD.property_id;
-END;
-
-CREATE TRIGGER IF NOT EXISTS on_video_property_value_insert
-INSERT ON video_property_value
-WHEN (SELECT property_id FROM property WHERE property_id = NEW.property_id AND type = 'str')
-BEGIN
-    INSERT INTO video_text (video_id, kind, content)
-    VALUES (NEW.video_id, NEW.property_id, NEW.property_value);
-END;
-
-CREATE TRIGGER IF NOT EXISTS on_video_property_value_update UPDATE ON video_property_value
-BEGIN
-    UPDATE video_text
-    SET video_id = NEW.video_id, kind = NEW.property_id, content = NEW.property_value
-    WHERE video_id = OLD.video_id
-    AND kind = OLD.property_id
-    AND content = OLD.property_value;
-END;
-
-CREATE TRIGGER IF NOT EXISTS on_video_property_value_delete DELETE ON video_property_value
-BEGIN
-    DELETE FROM video_text
-    WHERE video_id = OLD.video_id
-    AND kind = OLD.property_id
-    AND content = OLD.property_value;
 END;

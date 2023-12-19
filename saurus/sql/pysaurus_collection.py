@@ -149,6 +149,7 @@ class PysaurusCollection(AbstractDatabase):
         pt = PropTypeValidator(prop_desc)
         values = pt.instantiate(values)
         property_id = pt.property_id
+        modified = False
 
         if values:
             if pt.multiple and merge:
@@ -157,7 +158,7 @@ class PysaurusCollection(AbstractDatabase):
                     "(video_id, property_id, property_value) VALUES (?, ?, ?)",
                     [(video_id, property_id, value) for value in values],
                 )
-                # todo video text
+                modified = True
             else:  # replace anyway
                 self.db.modify(
                     "DELETE FROM video_property_value "
@@ -169,14 +170,22 @@ class PysaurusCollection(AbstractDatabase):
                     "(video_id, property_id, property_value) VALUES (?, ?, ?)",
                     [(video_id, property_id, value) for value in values],
                 )
-                # todo video text
+                modified = True
         elif not merge:  # replace with empty => remove
             self.db.modify(
                 "DELETE FROM video_property_value "
                 "WHERE video_id = ? AND property_id = ?",
                 [video_id, property_id],
             )
-            # todo video text
+            modified = True
+
+        if modified and pt.type is str:
+            self.db.modify(
+                "UPDATE video_text SET properties = "
+                "(SELECT property_text FROM video_property_text WHERE video_id = ?) "
+                "WHERE video_id = ?",
+                [video_id, video_id],
+            )
 
     def get_prop_types(
         self, *, name=None, with_type=None, multiple=None, with_enum=None, default=None
@@ -252,8 +261,37 @@ class PysaurusCollection(AbstractDatabase):
         )
 
     def remove_prop_type(self, name: str):
+        video_indices = []
+        pt = self.db.query_one(
+            "SELECT property_id, type FROM property WHERE name = ?", [name]
+        )
+        if pt["type"] == "str":
+            video_indices = [
+                row[0]
+                for row in self.db.query(
+                    "SELECT DISTINCT video_id FROM video_property_value "
+                    "WHERE property_id = ?",
+                    [pt["property_id"]],
+                )
+            ]
+
         self.db.modify("DELETE FROM property WHERE name = ?", [name])
-        # todo video text (if deleted property type is str)
+
+        if video_indices:
+            updates = self.db.query_all(
+                f"SELECT property_text, video_id FROM video_property_text "
+                f"WHERE video_id IN ({','.join(['?'] * len(video_indices))})",
+                video_indices,
+            )
+            updated_indices = [row[1] for row in updates]
+            self.db.modify(
+                f"UPDATE video_text SET properties = '' "
+                f"WHERE video_id NOT IN ({','.join(['?'] * len(updated_indices))})",
+                updated_indices,
+            )
+            self.db.modify_many(
+                "UPDATE video_text SET properties = ? WHERE video_id = ?", updates
+            )
 
     def rename_prop_type(self, old_name, new_name):
         if self.get_prop_types(name=old_name):

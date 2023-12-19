@@ -233,9 +233,33 @@ def test_provider_classifier():
         assert group_def["groups"][0]["count"] == 3
 
 
+def test_edit_properties():
+    collection = get_collection()
+    provider = collection.provider
+    with provider:
+        provider.set_search("palm beach", "and")
+        assert provider.get_view_indices() == [84, 21]
+        old_values = collection.get_prop_values(84, "category")
+        assert len(old_values) == 1
+        new_values = list(old_values) + ["beach palm"]
+
+        provider.set_search("palm beach", "exact")
+        assert provider.get_view_indices() == [21]
+
+        collection.update_prop_values(84, "category", new_values)
+        assert collection.get_prop_values(84, "category") == new_values
+        provider.refresh()
+        assert provider.get_view_indices() == [84, 21]
+
+        collection.update_prop_values(84, "category", old_values)
+        assert collection.get_prop_values(84, "category") == old_values
+        provider.refresh()
+        assert provider.get_view_indices() == [21]
+
+
 def test_search():
     with get_provider() as provider:
-        provider._database.db.debug = True
+        # provider._database.db.debug = True
         provider.set_search("unknown", "and")
         assert len(provider.get_view_indices()) == 61
         provider.set_search("unknown", "or")
