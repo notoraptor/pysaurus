@@ -22,8 +22,9 @@ class PysaurusProgram:
     )
     app_name = "Pysaurus"
 
-    def __init__(self):
-        self.home_dir = AbsolutePath(str(Path.home()))
+    def __init__(self, home_dir=None):
+        home_dir = home_dir or str(Path.home())
+        self.home_dir = AbsolutePath(home_dir)
         self.app_dir = AbsolutePath.join(self.home_dir, f".{self.app_name}").mkdir()
         self.dbs_dir = AbsolutePath.join(self.app_dir, "databases").mkdir()
         self.databases: Dict[AbsolutePath, Optional[PysaurusCollection]] = {}
