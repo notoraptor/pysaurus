@@ -24,6 +24,8 @@ def main(notifier):
     application = PysaurusProgram()
     for db_path in sorted(application.get_database_paths()):
         db_name = db_path.title
+        if db_name != "example_db_in_pysaurus":
+            continue
         with Profiler(f"[{db_name}] export", notifier):
             export_db_to_sql(db_path, notifier)
 

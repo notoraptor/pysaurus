@@ -157,6 +157,7 @@ class PysaurusCollection(AbstractDatabase):
                     "(video_id, property_id, property_value) VALUES (?, ?, ?)",
                     [(video_id, property_id, value) for value in values],
                 )
+                # todo video text
             else:  # replace anyway
                 self.db.modify(
                     "DELETE FROM video_property_value "
@@ -168,12 +169,14 @@ class PysaurusCollection(AbstractDatabase):
                     "(video_id, property_id, property_value) VALUES (?, ?, ?)",
                     [(video_id, property_id, value) for value in values],
                 )
+                # todo video text
         elif not merge:  # replace with empty => remove
             self.db.modify(
                 "DELETE FROM video_property_value "
                 "WHERE video_id = ? AND property_id = ?",
                 [video_id, property_id],
             )
+            # todo video text
 
     def get_prop_types(
         self, *, name=None, with_type=None, multiple=None, with_enum=None, default=None
@@ -250,6 +253,7 @@ class PysaurusCollection(AbstractDatabase):
 
     def remove_prop_type(self, name: str):
         self.db.modify("DELETE FROM property WHERE name = ?", [name])
+        # todo video text (if deleted property type is str)
 
     def rename_prop_type(self, old_name, new_name):
         if self.get_prop_types(name=old_name):

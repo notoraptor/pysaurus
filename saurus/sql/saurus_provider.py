@@ -31,6 +31,27 @@ def convert_dict_series_to_sql(dicts: Iterable[dict]) -> Tuple[str, List]:
     return f"({query})", params
 
 
+def search_to_sql(search: SearchDef) -> Tuple[str, List[str]]:
+    terms = []
+    for piece in functions.string_to_pieces(search.text):
+        if piece in ("and", "or"):
+            piece = f'"{piece}"'
+        terms.append(piece)
+    if search.cond == "exact":
+        query = "SELECT DISTINCT video_id FROM video_text WHERE content MATCH ?"
+        where = [" + ".join(terms)]
+    else:
+        terms = [f"{piece}*" for piece in terms]
+        if search.cond == "and":
+            query = "SELECT video_id FROM video_text WHERE content MATCH ? GROUP BY video_id HAVING COUNT(video_id) = ?"
+            where = [" OR ".join(terms), len(terms)]
+        else:
+            assert search.cond == "or"
+            query = "SELECT DISTINCT video_id FROM video_text WHERE content MATCH ?"
+            where = [" OR ".join(terms)]
+    return query, where
+
+
 class GroupCount:
     __slots__ = ("value", "count")
 
@@ -297,31 +318,17 @@ class SaurusProvider(AbstractVideoProvider):
                     field_factory.get_conditions(self.grouping.field, group.value)
                 )
         if self.search:
-            params_search = functions.string_to_pieces(self.search.text)
-            for i in range(len(params_search)):
-                if params_search[i] in ("and", "or"):
-                    params_search[i] = f'"{params_search[i]}"'
-            if self.search.cond == "and":
-                search_placeholders = " ".join(params_search)
-            elif self.search.cond == "or":
-                search_placeholders = " OR ".join(params_search)
-            else:
-                assert self.search.cond == "exact"
-                search_placeholders = " + ".join(params_search)
-            where_search = f"t.content MATCH ?"
-            params_search = [search_placeholders]
+            where_search, params_search = search_to_sql(self.search)
 
         query = f"SELECT v.video_id FROM video AS v"
         query += " LEFT JOIN video_thumbnail AS vt ON v.video_id = vt.video_id"
-        if where_search:
-            query += f" JOIN video_text AS t ON v.video_id = t.video_id"
         where = ["v.discarded = 0", source_query]
         params = list(source_params)
         if where_group_query:
             where.append(where_group_query)
             params.extend(where_group_params)
         if where_search:
-            where.append(where_search)
+            where.append(f"v.video_id IN ({where_search})")
             params.extend(params_search)
         query += f" WHERE {' AND '.join(where)} ORDER BY {', '.join(sql_sorting)}"
         self._view_indices = [row[0] for row in sql_db.query(query, params)]

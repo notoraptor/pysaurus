@@ -235,7 +235,7 @@ def test_provider_classifier():
 
 def test_search():
     with get_provider() as provider:
-        # provider._database.db.debug = True
+        provider._database.db.debug = True
         provider.set_search("unknown", "and")
         assert len(provider.get_view_indices()) == 61
         provider.set_search("unknown", "or")
