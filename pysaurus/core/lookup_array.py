@@ -34,6 +34,8 @@ class LookupArray(Generic[T]):
     def __str__(self):
         return f"{type(self).__name__}<{self.__type}>{self.__content}"
 
+    __repr__ = __str__
+
     def __len__(self):
         return len(self.__content)
 

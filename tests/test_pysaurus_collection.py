@@ -11,7 +11,7 @@ from saurus.sql.pysaurus_program import PysaurusProgram
 
 
 def get_collection():
-    home_dir = os.path.join(os.path.dirname(__file__), 'home_dir_test')
+    home_dir = os.path.join(os.path.dirname(__file__), "home_dir_test")
     name = "example_db_in_pysaurus"
     program = PysaurusProgram(home_dir=home_dir)
     collection = program.open_database(name)

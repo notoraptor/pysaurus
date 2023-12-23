@@ -114,7 +114,7 @@ GROUP BY v.video_id;
 CREATE VIRTUAL TABLE IF NOT EXISTS video_text
 USING fts5(video_id UNINDEXED, filename, meta_title, properties);
 -- Virtual table can use INSERT, UPDATE, DELETE.
--- SELECT video_id FROM video_text WHERE content MATCH 'the_text';
+-- SELECT video_id FROM video_text WHERE video_text MATCH 'the_text';
 
 ----------------------------------------------------------------------------------------
 -- Triggers for video_text.

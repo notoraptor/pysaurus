@@ -91,6 +91,18 @@ class PropTypeValidator:
         self.default = prop_desc["defaultValue"]
         self.property_id = prop_desc.get("property_id")
 
+    def __str__(self):
+        return (
+            f"{type(self).__name__}"
+            f"({self.name}, "
+            f"{self.type.__name__}, "
+            f"multiple={self.multiple}, "
+            f"default={repr(self.default)}, "
+            f"enumeration={repr(self.enumeration)})"
+        )
+
+    __repr__ = __str__
+
     def validate(self, value: PropRawType) -> PropValueType:
         if self.multiple:
             if not isinstance(value, (list, tuple, set)):
@@ -148,7 +160,7 @@ class PropTypeValidator:
         definition: PropRawType,
         multiple: bool,
         *,
-        describe=False
+        describe=False,
     ) -> dict:
         name = name.strip()
         if not name:

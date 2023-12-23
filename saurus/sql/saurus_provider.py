@@ -78,7 +78,7 @@ class GroupCount:
     @classmethod
     def keyof(cls, group_count):
         # type: (GroupCount) -> Any
-        return group_count.value
+        return group_count.get_value()
 
 
 class ProviderVideoParser(VideoParser):
@@ -411,7 +411,7 @@ class SaurusProvider(AbstractVideoProvider):
         return self._groups.lookup_index(field_value)
 
     def _get_classifier_group_value(self, group_id):
-        return self._groups[group_id]
+        return self._groups[group_id].get_value()
 
     def _force_update(self, *layer_names: str):
         self._to_update = True

@@ -11,7 +11,12 @@ from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.path_tree import PathTree
 from pysaurus.database.abstract_database import AbstractDatabase
 from pysaurus.database.db_settings import DbSettings
-from pysaurus.properties.properties import PropRawType, PropTypeValidator, PropUnitType
+from pysaurus.properties.properties import (
+    PROP_UNIT_TYPE_MAP,
+    PropRawType,
+    PropTypeValidator,
+    PropUnitType,
+)
 from pysaurus.video.lazy_video_runtime_info import (
     LazyVideoRuntimeInfo as VideoRuntimeInfo,
 )
@@ -208,8 +213,9 @@ class PysaurusCollection(AbstractDatabase):
 
         ret = []
         for row in self.db.query_all(clause, parameters):
+            tp = PROP_UNIT_TYPE_MAP[row["type"]]
             enumeration = [
-                res["enum_value"]
+                tp(res["enum_value"])
                 for res in self.db.query(
                     "SELECT enum_value FROM property_enumeration "
                     "WHERE property_id = ? ORDER BY rank ASC",
@@ -649,18 +655,15 @@ class PysaurusCollection(AbstractDatabase):
         assert len(entry_map) == len(entries)
         texts = []
         for row in self.db.query(
-            f"SELECT v.video_id, group_concat(v.property_value, ';') "
-            f"FROM video_property_value AS v JOIN property AS p "
-            f"ON v.property_id = p.property_id "
-            f"WHERE p.type = 'str' GROUP BY v.video_id "
-            f"HAVING v.video_id IN ({','.join(['?'] * len(entries))})",
+            f"SELECT video_id, property_text FROM video_property_text "
+            f"WHERE video_id IN ({','.join(['?'] * len(entries))})",
             [entry.video_id for entry in entries],
         ):
             entry = entry_map[row[0]]
-            text = f"{entry.filename};{entry.meta_title};{row[1]}"
-            texts.append((entry.video_id, text))
+            texts.append((entry.video_id, entry.filename, entry.meta_title, row[1]))
         self.db.modify_many(
-            "INSERT OR REPLACE INTO video_text " "(video_id, content) VALUES (?, ?)",
+            "INSERT OR REPLACE INTO video_text "
+            "(video_id, filename, meta_title, properties) VALUES (?, ?, ?, ?)",
             texts,
         )
 
