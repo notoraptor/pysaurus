@@ -3,6 +3,7 @@ import locale
 from abc import abstractmethod
 from io import StringIO
 from itertools import chain
+from typing import Iterable
 
 
 class StringPrinter:
@@ -180,3 +181,27 @@ class Runnable:
             return wrapper
 
         return decorator
+
+
+class Selector:
+    __slots__ = ("to_exclude", "selection")
+
+    def __init__(self, exclude: bool, selection: set):
+        self.to_exclude = exclude
+        self.selection = selection
+
+    def filter(self, data: Iterable) -> list:
+        if self.to_exclude:
+            return [element for element in data if element not in self.selection]
+        else:
+            return [element for element in data if element in self.selection]
+
+    @classmethod
+    def parse_dict(cls, selector: dict):
+        if selector["all"]:
+            to_exclude = True
+            selection = set(selector["exclude"])
+        else:
+            to_exclude = False
+            selection = set(selector["include"])
+        return cls(to_exclude, selection)
