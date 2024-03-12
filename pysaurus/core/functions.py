@@ -5,7 +5,7 @@ import sys
 import tempfile
 import threading
 import types
-from typing import Iterable, List, Collection
+from typing import Collection, Iterable, List
 
 logger = logging.getLogger(__name__)
 

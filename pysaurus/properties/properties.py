@@ -12,6 +12,9 @@ PropValueType = Union[bool, int, float, str, list]
 PROP_UNIT_TYPES = {bool, int, float, str}
 PROP_UNIT_TYPE_MAP = {t.__name__: t for t in PROP_UNIT_TYPES}
 
+PROP_UNIT_CONVERTER = PROP_UNIT_TYPE_MAP.copy()
+PROP_UNIT_CONVERTER["bool"] = lambda value: bool(int(value))
+
 
 class PropType(WithSchema):
     __slots__ = ()

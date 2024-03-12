@@ -12,7 +12,7 @@ from pysaurus.core.path_tree import PathTree
 from pysaurus.database.abstract_database import AbstractDatabase
 from pysaurus.database.db_settings import DbSettings
 from pysaurus.properties.properties import (
-    PROP_UNIT_TYPE_MAP,
+    PROP_UNIT_CONVERTER,
     PropRawType,
     PropTypeValidator,
     PropUnitType,
@@ -23,12 +23,10 @@ from pysaurus.video.lazy_video_runtime_info import (
 from pysaurus.video.video_features import VideoFeatures
 from saurus.sql.pysaurus_connection import PysaurusConnection
 from saurus.sql.saurus_provider import SaurusProvider
-from saurus.sql.sql_useful_constants import (
-    FORMATTED_VIDEO_TABLE_FIELDS,
-    WRITABLE_FIELDS,
-)
+from saurus.sql.sql_useful_constants import WRITABLE_FIELDS
+from saurus.sql.sql_video_wrapper import FORMATTED_VIDEO_TABLE_FIELDS, SQLVideoWrapper
 from saurus.sql.video_entry import VideoEntry
-from saurus.sql.video_parser import SQLVideoWrapper, VideoParser
+from saurus.sql.video_parser import VideoFieldQueryParser
 
 logger = logging.getLogger(__name__)
 
@@ -213,7 +211,7 @@ class PysaurusCollection(AbstractDatabase):
 
         ret = []
         for row in self.db.query_all(clause, parameters):
-            tp = PROP_UNIT_TYPE_MAP[row["type"]]
+            tp = PROP_UNIT_CONVERTER[row["type"]]
             enumeration = [
                 tp(res["enum_value"])
                 for res in self.db.query(
@@ -338,8 +336,13 @@ class PysaurusCollection(AbstractDatabase):
         with_moves: bool = False,
         where: dict = None,
     ) -> List[dict]:
-        parser = VideoParser()
-        args = dict(parser(key, value) for key, value in (where or {}).items())
+        parser = VideoFieldQueryParser()
+        args = {
+            parsed.field: parsed
+            for parsed in (
+                parser.parse(key, value) for key, value in (where or {}).items()
+            )
+        }
         selection = {
             key: args.pop(key) for key in ("video_id", "filename") if key in args
         }
@@ -347,19 +350,13 @@ class PysaurusCollection(AbstractDatabase):
         queries_where = []
         if selection:
             qs = []
-            for key, values in selection.items():
-                qs.append(
-                    (
-                        f"v.{key} = ?"
-                        if len(values) == 1
-                        else f"v.{key} IN ({', '.join(['?'] * len(values))})"
-                    )
-                )
-                parameters.extend(values)
+            for key, qf in selection.items():
+                qs.append(str(qf))
+                parameters.extend(qf.values)
             queries_where.append(f"({' OR '.join(qs)})")
         args_keys = list(args.keys())
-        queries_where.extend(f"{get_sql_prefix(key)}{key} = ?" for key in args_keys)
-        parameters.extend(args[key] for key in args_keys)
+        queries_where.extend(str(args[key]) for key in args_keys)
+        parameters.extend(value for key in args_keys for value in args[key].values)
 
         query_with = ""
         query_base = (
@@ -372,7 +369,7 @@ class PysaurusCollection(AbstractDatabase):
         query_where = ""
         query_with_order = ""
 
-        idx_order = selection.get("video_id", ())
+        idx_order = selection["video_id"].values if "video_id" in selection else ()
         if len(idx_order) > 1:
             query_with = (
                 f"WITH vid_order(video_id, rank) AS "

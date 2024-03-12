@@ -77,7 +77,6 @@ CREATE TABLE IF NOT EXISTS property (
 	multiple INTEGER NOT NULL DEFAULT 0,
 	CHECK (type IN ("bool", "int", "float", "str")),
 	CHECK (multiple IN (0, 1)),
-	CHECK (property_id NOT IN (-1, -2)), -- reserved for usage in video_text
 	UNIQUE (name)
 );
 CREATE TABLE IF NOT EXISTS property_enumeration (

@@ -6,7 +6,7 @@ from pysaurus.database.viewport.view_tools import GroupDef, LookupArray, SearchD
 from pysaurus.video.video_sorting import VideoSorting
 from pysaurus.video_provider.provider_utils import parse_sorting, parse_sources
 from saurus.sql.grouping_utils import SqlFieldFactory
-from saurus.sql.video_parser import VideoParser
+from saurus.sql.video_parser import FieldQuery, VideoFieldQueryParser
 
 
 def get_jointure(field: str) -> str:
@@ -81,14 +81,12 @@ class GroupCount:
         return group_count.get_value()
 
 
-class ProviderVideoParser(VideoParser):
-    @classmethod
-    def without_thumbnails(cls, value) -> Tuple[str, int]:
-        return "IIF(LENGTH(vt.thumbnail), 1, 0)", int(not value)
+class ProviderVideoParser(VideoFieldQueryParser):
+    def without_thumbnails(self, value) -> FieldQuery:
+        return FieldQuery("IIF(LENGTH(vt.thumbnail), 1, 0)", [int(not value)])
 
-    @classmethod
-    def with_thumbnails(cls, value) -> Tuple[str, int]:
-        return "IIF(LENGTH(vt.thumbnail), 1, 0)", int(value)
+    def with_thumbnails(self, value) -> FieldQuery:
+        return FieldQuery("IIF(LENGTH(vt.thumbnail), 1, 0)", [int(value)])
 
 
 class SaurusProvider(AbstractVideoProvider):
@@ -138,8 +136,8 @@ class SaurusProvider(AbstractVideoProvider):
 
         field_factory = SqlFieldFactory(sql_db)
         parser = ProviderVideoParser()
-        source_query, source_params = convert_dict_series_to_sql(
-            dict(parser(flag, True) for flag in source) for source in self.sources
+        source_query, source_params = FieldQuery.combine_nested_or(
+            [[parser.parse(flag, True) for flag in source] for source in self.sources]
         )
         where_group_query = None
         where_group_params = None

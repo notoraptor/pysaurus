@@ -59,7 +59,13 @@ class SaurusSQLiteConnection:
         if self.debug:
             print(f"[query] {query}")
             print(f"[params] {parameters}")
-        self.cursor.execute(query, parameters)
+        try:
+            self.cursor.execute(query, parameters)
+        except:
+            print("[error]")
+            print(f"[query] {query}")
+            print(f"[params] {parameters}")
+            raise
         yield from self.cursor
 
     def query_one(self, query, parameters=()):

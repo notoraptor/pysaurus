@@ -345,7 +345,7 @@ def test_prop_types_default_value():
     assert len(properties) == 6
     assert properties == [
         {
-            "defaultValue": "0.0",
+            "defaultValue": 0.0,
             "enumeration": None,
             "multiple": 0,
             "name": "appreciation",
@@ -361,7 +361,7 @@ def test_prop_types_default_value():
             "type": "str",
         },
         {
-            "defaultValue": "0",
+            "defaultValue": False,
             "enumeration": None,
             "multiple": 0,
             "name": "has sky",
@@ -369,15 +369,15 @@ def test_prop_types_default_value():
             "type": "bool",
         },
         {
-            "defaultValue": "0",
-            "enumeration": ["0", "1"],
+            "defaultValue": 0,
+            "enumeration": [0, 1],
             "multiple": 0,
             "name": "is nature",
             "property_id": 3,
             "type": "int",
         },
         {
-            "defaultValue": "0",
+            "defaultValue": 0,
             "enumeration": None,
             "multiple": 0,
             "name": "number of animals",
