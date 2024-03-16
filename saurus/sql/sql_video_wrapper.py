@@ -51,8 +51,10 @@ def get_video_table_fields() -> Iterable[str]:
     )
 
 
+VIDEO_TABLE_FIELD_NAMES = get_video_table_fields()
+
 FORMATTED_VIDEO_TABLE_FIELDS = ", ".join(
-    f"v.{field} AS {field}" for field in get_video_table_fields()
+    f"v.{field} AS {field}" for field in VIDEO_TABLE_FIELD_NAMES
 )
 
 

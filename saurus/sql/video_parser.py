@@ -5,15 +5,17 @@ from saurus.sql.sql_video_wrapper import F
 
 
 class FieldQuery:
+    __slots__ = ("table", "field", "values")
+
     def __init__(self, field: str, values: Sequence, prefix=""):
         assert values
         self.field = field
         self.values = values
-        self.prefix = prefix
+        self.table = prefix
 
     def __str__(self):
         return (
-            f"{self.prefix}{'.' if self.prefix else ''}{self.field} "
+            f"{self.table}{'.' if self.table else ''}{self.field} "
             f"{'=' if len(self.values) == 1 else 'IN'} "
             f"{'' if len(self.values) == 1 else '('}"
             f"{','.join(['?'] * len(self.values))}"

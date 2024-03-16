@@ -291,3 +291,11 @@ def generate_temporary_file(basename="pysaurus", suffix=".pkl"):
 
 def make_collection(something) -> Collection:
     return something if isinstance(something, (list, tuple, set)) else [something]
+
+
+def ensure_list_or_tuple(data):
+    if isinstance(data, set):
+        data = list(data)
+    elif not isinstance(data, (list, tuple)):
+        data = [data]
+    return data
