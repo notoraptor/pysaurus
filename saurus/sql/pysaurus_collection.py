@@ -11,16 +11,12 @@ from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.path_tree import PathTree
 from pysaurus.database.abstract_database import AbstractDatabase
 from pysaurus.database.db_settings import DbSettings
-from pysaurus.properties.properties import (
-    PROP_UNIT_CONVERTER,
-    PropRawType,
-    PropTypeValidator,
-    PropUnitType,
-)
+from pysaurus.properties.properties import PropRawType, PropTypeValidator, PropUnitType
 from pysaurus.video.lazy_video_runtime_info import (
     LazyVideoRuntimeInfo as VideoRuntimeInfo,
 )
 from pysaurus.video.video_features import VideoFeatures
+from saurus.sql.prop_type_search import prop_type_search
 from saurus.sql.pysaurus_connection import PysaurusConnection
 from saurus.sql.saurus_provider import SaurusProvider
 from saurus.sql.sql_useful_constants import WRITABLE_FIELDS
@@ -193,49 +189,14 @@ class PysaurusCollection(AbstractDatabase):
     def get_prop_types(
         self, *, name=None, with_type=None, multiple=None, with_enum=None, default=None
     ) -> List[dict]:
-        where = []
-        parameters = []
-        if name is not None:
-            where.append("name = ?")
-            parameters.append(name)
-        if with_type is not None:
-            where.append("type = ?")
-            parameters.append(with_type.__name__)
-        if multiple is not None:
-            where.append("multiple = ?")
-            parameters.append(int(bool(multiple)))
-        where_clause = " AND ".join(where)
-        clause = "SELECT property_id, name, type, multiple FROM property"
-        if where_clause:
-            clause += f" WHERE {where_clause}"
-
-        ret = []
-        for row in self.db.query_all(clause, parameters):
-            tp = PROP_UNIT_CONVERTER[row["type"]]
-            enumeration = [
-                tp(res["enum_value"])
-                for res in self.db.query(
-                    "SELECT enum_value FROM property_enumeration "
-                    "WHERE property_id = ? ORDER BY rank ASC",
-                    [row["property_id"]],
-                )
-            ]
-            if (
-                with_enum is None
-                or (len(enumeration) > 1 and set(enumeration) == set(with_enum))
-            ) and (default is None or enumeration[0] == default):
-                ret.append(
-                    {
-                        "property_id": row["property_id"],
-                        "name": row["name"],
-                        "type": row["type"],
-                        "multiple": row["multiple"],
-                        "defaultValue": [] if row["multiple"] else enumeration[0],
-                        "enumeration": enumeration if len(enumeration) > 1 else None,
-                    }
-                )
-
-        return ret
+        return prop_type_search(
+            self.db,
+            name=name,
+            with_type=with_type,
+            multiple=multiple,
+            with_enum=with_enum,
+            default=default,
+        )
 
     def create_prop_type(
         self,
