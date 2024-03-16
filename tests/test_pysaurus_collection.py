@@ -333,6 +333,23 @@ def test_sorting():
         assert indices == list(reversed(provider.get_view_indices()))
 
 
+def _test_provider_sorting_by_title_and_numeric():
+    with get_provider() as provider:
+        db = provider._database
+
+        provider.set_sort(["file_title"])
+        indices = provider.get_view_indices()
+        ft_indices = db.get_videos(include=["file_title"], where={"video_id": indices})
+
+        provider.set_sort(["file_title_numeric"])
+        indices_about_numeric = provider.get_view_indices()
+        ft_indices_about_numeric = db.get_videos(
+            include=["file_title"], where={"video_id": indices_about_numeric}
+        )
+
+        assert ft_indices == ft_indices_about_numeric
+
+
 def test_update():
     collection = get_collection()
     # collection.db.debug = True

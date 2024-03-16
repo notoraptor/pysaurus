@@ -49,6 +49,19 @@ CREATE TABLE IF NOT EXISTS video (
 	date_entry_modified DOUBLE,
 	date_entry_opened DOUBLE,
 	similarity_id INTEGER,
+	-- virtual columns
+	readable INTEGER GENERATED ALWAYS AS (1 - unreadable) VIRTUAL,
+	found INTEGER GENERATED ALWAYS AS (is_file) VIRTUAL,
+	not_found INTEGER GENERATED ALWAYS AS (1- is_file) VIRTUAL,
+	--
+	duration_time_base_not_null INTEGER GENERATED ALWAYS AS (COALESCE(NULLIF(duration_time_base, 0), 1)) VIRTUAL,
+	length_seconds DOUBLE GENERATED ALWAYS AS ((duration * 1.0 / duration_time_base_not_null)) VIRTUAL,
+	bit_rate DOUBLE GENERATED ALWAYS AS (IIF(duration = 0, 0, file_size * duration_time_base_not_null / duration)) VIRTUAL,
+	date_entry_modified_not_null DOUBLE GENERATED ALWAYS AS (COALESCE(date_entry_modified, mtime)) VIRTUAL,
+	date_entry_opened_not_null DOUBLE GENERATED ALWAYS AS (COALESCE(date_entry_opened, mtime)) VIRTUAL,
+	day TEXT GENERATED ALWAYS AS (strftime('%Y-%m-%d', datetime(mtime, 'unixepoch'))) VIRTUAL,
+	year TEXT GENERATED ALWAYS AS (strftime('%Y', datetime(mtime, 'unixepoch'))) VIRTUAL,
+	frame_rate DOUBLE GENERATED ALWAYS AS (frame_rate_num * 1.0 / COALESCE(NULLIF(frame_rate_den, 0), 1)) VIRTUAL,
 	-- constraints
 	CHECK (is_file IN (0, 1)),
 	CHECK (discarded IN (0, 1)),

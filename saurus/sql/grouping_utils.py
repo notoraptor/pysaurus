@@ -36,6 +36,10 @@ class SqlField:
         direction = "DESC" if reverse else "ASC"
         return ", ".join(f"{column} {direction}" for column in self.definition)
 
+    @classmethod
+    def auto(cls, name, *, table_name="v", title=None):
+        return cls(title or name, [f"{table_name}.{name}"])
+
 
 class SemanticField(SqlField):
     def __init__(self, name: str, field: str, padding: int, sortable=True):
@@ -66,55 +70,48 @@ class SqlFieldFactory:
         self.fields: Dict[str, SqlField] = {
             df.name: df
             for df in (
-                SqlField("audio_bit_rate", ["v.audio_bit_rate"]),
-                SqlField("audio_bits", ["v.audio_bits"]),
-                SqlField("audio_codec", ["v.audio_codec"]),
-                SqlField("audio_codec_description", ["v.audio_codec_description"]),
-                SqlField(
-                    "bit_rate",
-                    [
-                        f"IIF(v.duration = 0, 0, v.file_size * {FORMATTED_DURATION_TIME_BASE} / v.duration)"
-                    ],
+                SqlField.auto("audio_bit_rate"),
+                SqlField.auto("audio_bits"),
+                SqlField.auto("audio_codec"),
+                SqlField.auto("audio_codec_description"),
+                SqlField.auto("bit_depth"),
+                SqlField.auto("bit_rate"),
+                SqlField.auto("container_format"),
+                SqlField.auto("day"),
+                SqlField.auto("frame_rate"),
+                SqlField.auto("filename"),
+                SqlField.auto("file_size"),
+                SqlField.auto("height"),
+                SqlField.auto("sample_rate"),
+                SqlField.auto("similarity_id"),
+                SqlField.auto("video_codec"),
+                SqlField.auto("video_codec_description"),
+                SqlField.auto("width"),
+                SqlField.auto("year"),
+                SqlField.auto(title="date", name="mtime"),
+                SqlField.auto(title="size", name="file_size"),
+                SqlField.auto(
+                    title="date_entry_modified", name="date_entry_modified_not_null"
                 ),
-                SqlField("bit_depth", ["v.bit_depth"]),
-                SqlField("container_format", ["v.container_format"]),
-                SqlField("date", ["v.mtime"]),
-                SqlField(
-                    "date_entry_modified", ["COALESCE(v.date_entry_modified, v.mtime)"]
+                SqlField.auto(
+                    title="date_entry_opened", name="date_entry_opened_not_null"
                 ),
-                SqlField(
-                    "date_entry_opened", ["COALESCE(v.date_entry_opened, v.mtime)"]
-                ),
-                SqlField(
-                    "day", ["strftime('%Y-%m-%d', datetime(v.mtime, 'unixepoch'))"]
-                ),
+                SqlField.auto(title="length", name="length_seconds"),
+                # Special fields
                 SqlField("disk", ["pysaurus_get_disk(v.filename, v.driver_id)"]),
                 SqlField("extension", ["pysaurus_get_extension(v.filename)"]),
-                SqlField("file_size", ["v.file_size"]),
                 SqlField("file_title", ["pysaurus_get_file_title(v.filename)"]),
                 SemanticField(
                     "file_title_numeric",
                     "pysaurus_text_with_numbers(pysaurus_get_file_title(v.filename), {padding})",
                     padding,
                 ),
-                SqlField("filename", ["v.filename"]),
                 SemanticField(
                     "filename_numeric",
                     "pysaurus_text_with_numbers(v.filename, {padding})",
                     padding,
                 ),
-                SqlField(
-                    "frame_rate",
-                    [
-                        "(v.frame_rate_num * 1.0 / COALESCE(NULLIF(v.frame_rate_den, 0), 1))"
-                    ],
-                ),
-                SqlField("height", ["v.height"]),
-                SqlField("length", [SQL_LENGTH]),
                 SqlField("move_id", ["v.file_size", SQL_LENGTH]),
-                SqlField("sample_rate", ["v.sample_rate"]),
-                SqlField("similarity_id", ["v.similarity_id"]),
-                SqlField("size", ["v.file_size"]),
                 SqlField("size_length", ["v.file_size", SQL_LENGTH]),
                 SqlField("title", ["pysaurus_get_title(v.filename, v.meta_title)"]),
                 SemanticField(
@@ -122,10 +119,6 @@ class SqlFieldFactory:
                     "pysaurus_text_with_numbers(pysaurus_get_title(v.filename, v.meta_title), {padding})",
                     padding,
                 ),
-                SqlField("video_codec", ["v.video_codec"]),
-                SqlField("video_codec_description", ["v.video_codec_description"]),
-                SqlField("width", ["v.width"]),
-                SqlField("year", ["strftime('%Y', datetime(v.mtime, 'unixepoch'))"]),
             )
         }
 
