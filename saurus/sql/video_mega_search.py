@@ -67,7 +67,7 @@ def video_mega_search(
 ) -> List[dict]:
     where_builder = SQLWhereBuilder()
     selection_builder = SQLWhereBuilder(use_or=True)
-    video_indices = None
+    vid_query = None
     parser = VideoFieldQueryParser()
     seen = set()
     for key, value in (where or {}).items():
@@ -77,7 +77,7 @@ def video_mega_search(
         if parsed.field in ("video_id", "filename"):
             builder = selection_builder
             if parsed.field == "video_id":
-                video_indices = parsed
+                vid_query = parsed
         else:
             builder = where_builder
         builder.append_field_query(parsed)
@@ -94,10 +94,10 @@ def video_mega_search(
     query_with_join = ""
     query_with_order = ""
 
-    if video_indices and len(video_indices.values) > 1:
+    if vid_query and len(vid_query.values) > 1:
         query_with = (
             f"WITH vid_order(video_id, rank) AS "
-            f"(VALUES {','.join(f'({v},{r})' for r, v in enumerate(video_indices.values))})"
+            f"(VALUES {','.join(f'({v},{r})' for r, v in enumerate(vid_query.values))})"
         )
         query_with_join = "LEFT JOIN vid_order AS vo ON v.video_id = vo.video_id"
         query_with_order = "ORDER BY vo.rank"

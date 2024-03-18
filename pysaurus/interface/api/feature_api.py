@@ -173,7 +173,16 @@ class FeatureAPI:
 
     # cannot make proxy ?
     def backend(self, page_size, page_number, selector=None) -> Dict[str, Any]:
-        """Return backend state."""
+        """Return backend state.
+
+        view: all videos returned by provider
+            count
+        selection: videos selected in view
+            sum of duration
+            sum of size
+        page: videos displayed in selection
+            all video attributes and properties
+        """
         raw_view_indices = self.database.provider.get_view_indices()
         if selector:
             view_indices = apply_selector_to_data(selector, raw_view_indices)
