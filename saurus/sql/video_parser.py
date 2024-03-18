@@ -1,4 +1,4 @@
-from typing import List, Sequence, Tuple
+from typing import Sequence
 
 from pysaurus.core.components import AbsolutePath
 from saurus.sql.sql_video_wrapper import F
@@ -23,32 +23,6 @@ class FieldQuery:
         )
 
     __repr__ = __str__
-
-    @classmethod
-    def _combine(cls, queries, operand):
-        # type: (List[FieldQuery], str) -> Tuple[str, list]
-        query_string = f" {operand} ".join(f"({query})" for query in queries)
-        query_params = [value for query in queries for value in query.values]
-        return query_string, query_params
-
-    @classmethod
-    def combine_and(cls, queries):
-        return cls._combine(queries, "AND")
-
-    @classmethod
-    def combine_or(cls, queries):
-        return cls._combine(queries, "OR")
-
-    @classmethod
-    def combine_nested_or(cls, super_queries: List[List]):
-        query_strings = []
-        query_params = []
-        for queries in super_queries:
-            qs, qp = cls.combine_and(queries)
-            query_strings.append(qs)
-            query_params.extend(qp)
-        query_string = " OR ".join(f"({qs})" for qs in query_strings)
-        return f"({query_string})", query_params
 
 
 class VideoFieldQueryParser:
