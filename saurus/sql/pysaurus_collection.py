@@ -247,12 +247,13 @@ class PysaurusCollection(AbstractDatabase):
                 f"WHERE video_id IN ({','.join(['?'] * len(video_indices))})",
                 video_indices,
             )
-            updated_indices = [row[1] for row in updates]
-            self.db.modify(
-                f"UPDATE video_text SET properties = '' "
-                f"WHERE video_id NOT IN ({','.join(['?'] * len(updated_indices))})",
-                updated_indices,
-            )
+            # Seems irrelevant:
+            # updated_indices = [row[1] for row in updates]
+            # self.db.modify(
+            #     f"UPDATE video_text SET properties = '' "
+            #     f"WHERE video_id NOT IN ({','.join(['?'] * len(updated_indices))})",
+            #     updated_indices,
+            # )
             self.db.modify_many(
                 "UPDATE video_text SET properties = ? WHERE video_id = ?", updates
             )
