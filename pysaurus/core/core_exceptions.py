@@ -14,7 +14,7 @@ class DiskSpaceError(OSError):
     pass
 
 
-class NoShortPathError(WindowsError):
+class NoShortPathError(OSError):
     pass
 
 

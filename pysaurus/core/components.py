@@ -221,7 +221,7 @@ STDERR: {stderr.strip()}"""
         try:
             show_in_file_manager(self.standard_path)
         except Exception as exc:
-            raise WindowsError(f"Error when locating {self.standard_path}") from exc
+            raise OSError(f"Error when locating {self.standard_path}") from exc
         return self.get_directory()
 
     def open_containing_folder(self):
