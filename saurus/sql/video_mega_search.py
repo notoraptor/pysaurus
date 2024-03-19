@@ -13,7 +13,7 @@ from saurus.sql.saurus_provider_utils import (
     convert_dict_to_sql,
     search_to_sql,
 )
-from saurus.sql.sql_utils import SQLWhereBuilder
+from saurus.sql.sql_utils import QueryMaker, SQLWhereBuilder, TableDef
 from saurus.sql.sql_video_wrapper import FORMATTED_VIDEO_TABLE_FIELDS, SQLVideoWrapper
 from saurus.sql.video_parser import VideoFieldQueryParser
 
@@ -85,15 +85,8 @@ def video_mega_search(
         where_builder.append_query_builder(selection_builder)
 
     query_with = ""
-    query_base = (
-        f"SELECT {FORMATTED_VIDEO_TABLE_FIELDS}, t.thumbnail AS thumbnail, "
-        f"IIF(LENGTH(t.thumbnail), 1, 0) AS with_thumbnails "
-        f"FROM video AS v LEFT JOIN video_thumbnail AS t "
-        f"ON v.video_id = t.video_id"
-    )
     query_with_join = ""
     query_with_order = ""
-
     if vid_query and len(vid_query.values) > 1:
         query_with = (
             f"WITH vid_order(video_id, rank) AS "
@@ -101,9 +94,15 @@ def video_mega_search(
         )
         query_with_join = "LEFT JOIN vid_order AS vo ON v.video_id = vo.video_id"
         query_with_order = "ORDER BY vo.rank"
+
     query = f"""
     {query_with}
-    {query_base}
+    SELECT
+        {FORMATTED_VIDEO_TABLE_FIELDS},
+        t.thumbnail AS thumbnail,
+        IIF(LENGTH(t.thumbnail), 1, 0) AS with_thumbnails
+    FROM video AS v LEFT JOIN video_thumbnail AS t
+    ON v.video_id = t.video_id
     {query_with_join}
     {where_builder.get_where_clause()}
     {query_with_order}
@@ -340,11 +339,13 @@ def video_mega_group(
         output_groups.extend(
             GroupCount(tuple(row[:-1]), row[-1]) for row in grouping_rows
         )
+
+        output.group = min(max(0, output.group), len(output_groups) - 1)
+
         if not output_groups:
             return output.done([])
 
-        group = min(max(0, group), len(output_groups) - 1)
-        group = output_groups[group]
+        group = output_groups[output.group]
         if grouping.is_property:
             (field_value,) = group.value
             if classifier:
@@ -388,7 +389,8 @@ def video_mega_group(
                 field_factory.get_conditions(grouping.field, group.value)
             )
 
-    where_builder = SQLWhereBuilder()
+    query_maker = QueryMaker("video", "v")
+    where_builder = query_maker.where
     where_builder.append_query("v.discarded = 0")
     where_builder.append_query(source_query, *source_params)
 
@@ -403,12 +405,15 @@ def video_mega_group(
         field_factory.get_sorting(field, reverse)
         for field, reverse in VideoSorting(sorting)
     ]
-    query = (
-        f"SELECT v.video_id FROM video AS v "
-        f"LEFT JOIN video_thumbnail AS vt ON v.video_id = vt.video_id "
-        f"WHERE {where_builder.get_clause()} "
-        f"ORDER BY {', '.join(sql_sorting)}"
-    )
+
+    video_thumbnail_table = TableDef("video_thumbnail", "vt")
+    query_maker.add_field(query_maker.get_main_table().get_alias_field("video_id"))
+    query_maker.add_left_join(video_thumbnail_table, "video_id")
+    for sorting in sql_sorting:
+        query_maker.order_by_complex(sorting)
     return output.done(
-        [row[0] for row in sql_db.query(query, where_builder.get_parameters())]
+        [
+            row[0]
+            for row in sql_db.query(str(query_maker), where_builder.get_parameters())
+        ]
     )
