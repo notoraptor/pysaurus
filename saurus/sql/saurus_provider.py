@@ -46,7 +46,7 @@ class SaurusProvider(AbstractVideoProvider):
             search=self.search,
             sorting=self.sorting,
         )
-        self.group = output.group
+        self.group = output.group_id
         self._groups = output.result_groups
         self._view_indices = output.result
 

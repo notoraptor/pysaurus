@@ -23,7 +23,7 @@ class VideoSearchContext:
         "sources",
         "grouping",
         "classifier",
-        "group",
+        "group_id",
         "search",
         "sorting",
         "result_groups",
@@ -36,7 +36,7 @@ class VideoSearchContext:
         sources=None,
         grouping=None,
         classifier=None,
-        group=None,
+        group_id=None,
         search=None,
         sorting=None,
         result_groups=None,
@@ -45,7 +45,7 @@ class VideoSearchContext:
         self.sources = sources
         self.grouping = grouping
         self.classifier = classifier
-        self.group = group
+        self.group_id = group_id
         self.search = search
         self.sorting = sorting
         self.result_groups = result_groups
@@ -195,7 +195,7 @@ def video_mega_group(
         sources=sources,
         grouping=grouping,
         classifier=classifier,
-        group=group,
+        group_id=group,
         search=search,
         sorting=sorting,
         result_groups=output_groups,
@@ -340,12 +340,12 @@ def video_mega_group(
             GroupCount(tuple(row[:-1]), row[-1]) for row in grouping_rows
         )
 
-        output.group = min(max(0, output.group), len(output_groups) - 1)
+        output.group_id = min(max(0, output.group_id), len(output_groups) - 1)
 
         if not output_groups:
             return output.done([])
 
-        group = output_groups[output.group]
+        group = output_groups[output.group_id]
         if grouping.is_property:
             (field_value,) = group.value
             if classifier:
