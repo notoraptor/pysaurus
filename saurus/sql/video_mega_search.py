@@ -1,6 +1,9 @@
 from collections import defaultdict
 from typing import Dict, List, Sequence
 
+from pysaurus.core.classes import Selector
+from pysaurus.core.components import Duration, FileSize
+from pysaurus.core.functions import compute_nb_pages
 from pysaurus.database.viewport.view_tools import GroupDef, LookupArray, SearchDef
 from pysaurus.properties.properties import PropTypeValidator
 from pysaurus.video.video_sorting import VideoSorting
@@ -14,7 +17,11 @@ from saurus.sql.saurus_provider_utils import (
     search_to_sql,
 )
 from saurus.sql.sql_utils import QueryMaker, SQLWhereBuilder, TableDef
-from saurus.sql.sql_video_wrapper import FORMATTED_VIDEO_TABLE_FIELDS, SQLVideoWrapper
+from saurus.sql.sql_video_wrapper import (
+    FORMATTED_VIDEO_TABLE_FIELDS,
+    SQLVideoWrapper,
+    VIDEO_TABLE_FIELD_NAMES,
+)
 from saurus.sql.video_parser import VideoFieldQueryParser
 
 
@@ -26,19 +33,32 @@ class VideoSearchContext:
         "group_id",
         "search",
         "sorting",
+        "selector",
+        "page_size",
+        "page_number",
+        "nb_pages",
+        "with_moves",
+        "view_count",
+        "selection_count",
+        "selection_duration",
+        "selection_file_size",
+        "result_page",
         "result_groups",
-        "result",
     )
 
     def __init__(
         self,
         *,
         sources=None,
-        grouping=None,
+        grouping: GroupDef = None,
         classifier=None,
         group_id=None,
-        search=None,
+        search: SearchDef = None,
         sorting=None,
+        selector: Selector = None,
+        page_size: int = None,
+        page_number: int = 0,
+        with_moves=False,
         result_groups=None,
         result=None,
     ):
@@ -48,11 +68,23 @@ class VideoSearchContext:
         self.group_id = group_id
         self.search = search
         self.sorting = sorting
+
+        self.selector = selector
+        self.page_size = page_size
+        self.page_number = page_number
+        self.nb_pages = None
+        self.with_moves = with_moves
+
         self.result_groups = result_groups
-        self.result = result
+
+        self.view_count = 0
+        self.selection_count = 0
+        self.selection_duration = None
+        self.selection_file_size = None
+        self.result_page = result
 
     def done(self, result, *, groups=None):
-        self.result = result
+        self.result_page = result
         if groups is not None:
             self.result_groups = groups
         return self
@@ -107,9 +139,24 @@ def video_mega_search(
     {where_builder.get_where_clause()}
     {query_with_order}
     """
-    videos = [
-        SQLVideoWrapper(row) for row in db.query(query, where_builder.get_parameters())
-    ]
+    return _get_videos(
+        db,
+        query,
+        where_builder.get_parameters(),
+        include=include,
+        with_moves=with_moves,
+    )
+
+
+def _get_videos(
+    db: PysaurusConnection,
+    query: str,
+    parameters: Sequence,
+    *,
+    include: Sequence[str] = None,
+    with_moves: bool = False,
+) -> List[dict]:
+    videos = [SQLVideoWrapper(row) for row in db.query(query, parameters)]
 
     video_indices = [video.data["video_id"] for video in videos]
     placeholders = ", ".join(["?"] * len(video_indices))
@@ -189,6 +236,11 @@ def video_mega_group(
     group=0,
     search: SearchDef = SearchDef(),
     sorting: Sequence[str] = (),
+    selector: Selector = None,
+    page_size: int = None,
+    page_number: int = None,
+    include: Sequence[str] = None,
+    with_moves=False,
 ) -> VideoSearchContext:
     output_groups = LookupArray[GroupCount](GroupCount, (), GroupCount.keyof)
     output = VideoSearchContext(
@@ -198,18 +250,23 @@ def video_mega_group(
         group_id=group,
         search=search,
         sorting=sorting,
+        selector=selector,
+        page_size=page_size,
+        page_number=page_number,
+        with_moves=with_moves,
         result_groups=output_groups,
     )
 
+    query_maker = QueryMaker("video", "v")
+    field_video_id = query_maker.get_main_table().get_alias_field("video_id")
+    query_maker.add_field(field_video_id)
+    video_thumbnail_table = TableDef("video_thumbnail", "vt")
+    query_maker.add_left_join(video_thumbnail_table, "video_id")
+
     if search and search.cond == "id":
-        return output.done(
-            [
-                row[0]
-                for row in sql_db.query(
-                    "SELECT video_id FROM video WHERE video_id = ?", [int(search.text)]
-                )
-            ]
-        )
+        query_maker.where.append_field(field_video_id, int(search.text))
+        _compute_results_and_stats(sql_db, output, query_maker, include=include)
+        return output
 
     field_factory = SqlFieldFactory(sql_db)
     parser = ProviderVideoParser()
@@ -248,6 +305,7 @@ def video_mega_group(
                 ON v.video_id = vv.video_id
                 JOIN property AS p
                 ON vv.property_id = p.property_id
+                LEFT JOIN video_thumbnail AS vt ON v.video_id = vt.video_id
                 WHERE
                 v.discarded = 0 AND {source_query} AND p.name = ?
                 AND vv.property_value IN ({','.join(placeholders)})
@@ -267,6 +325,7 @@ def video_mega_group(
                 ON v.video_id = vv.video_id
                 JOIN property AS p
                 ON vv.property_id = p.property_id
+                LEFT JOIN video_thumbnail AS vt ON v.video_id = vt.video_id
                 WHERE
                 v.discarded = 0 AND {source_query} AND p.name = ?
                 AND vv.property_value IN ({','.join(placeholders)})
@@ -295,6 +354,7 @@ def video_mega_group(
                 FROM video AS v
                 LEFT JOIN video_property_value AS pv ON v.video_id = pv.video_id
                 LEFT JOIN property AS p ON pv.property_id = p.property_id
+                LEFT JOIN video_thumbnail AS vt ON v.video_id = vt.video_id
                 WHERE v.discarded = 0 AND {source_query}
                 GROUP BY v.video_id)
                 AS x
@@ -329,6 +389,7 @@ def video_mega_group(
             grouping_rows = sql_db.query(
                 f"SELECT {field}, COUNT(v.video_id) AS size "
                 f"FROM video AS v "
+                f"LEFT JOIN video_thumbnail AS vt ON v.video_id = vt.video_id "
                 f"WHERE v.discarded = 0 AND {source_query} {where_similarity_id} "
                 f"GROUP BY {field} {without_singletons} "
                 f"ORDER BY {order_field}",
@@ -343,7 +404,10 @@ def video_mega_group(
         output.group_id = min(max(0, output.group_id), len(output_groups) - 1)
 
         if not output_groups:
-            return output.done([])
+            # Make sure to find nothing
+            query_maker.where.append_query("0")
+            _compute_results_and_stats(sql_db, output, query_maker, include=include)
+            return output
 
         group = output_groups[output.group_id]
         if grouping.is_property:
@@ -389,7 +453,6 @@ def video_mega_group(
                 field_factory.get_conditions(grouping.field, group.value)
             )
 
-    query_maker = QueryMaker("video", "v")
     where_builder = query_maker.where
     where_builder.append_query("v.discarded = 0")
     where_builder.append_query(source_query, *source_params)
@@ -406,14 +469,78 @@ def video_mega_group(
         for field, reverse in VideoSorting(sorting)
     ]
 
-    video_thumbnail_table = TableDef("video_thumbnail", "vt")
-    query_maker.add_field(query_maker.get_main_table().get_alias_field("video_id"))
-    query_maker.add_left_join(video_thumbnail_table, "video_id")
     for sorting in sql_sorting:
         query_maker.order_by_complex(sorting)
-    return output.done(
+    _compute_results_and_stats(sql_db, output, query_maker, include=include)
+    return output
+
+
+def _compute_results_and_stats(
+    db: PysaurusConnection,
+    context: VideoSearchContext,
+    query_maker: QueryMaker,
+    include: Sequence[str] = None,
+):
+    query_maker_count = query_maker.copy()
+    query_maker_select = query_maker.copy()
+    query_maker_page = query_maker.copy()
+
+    field_video_id = query_maker.get_main_table().get_alias_field("video_id")
+
+    query_maker_count.set_field(f"COUNT({field_video_id})")
+    (row_count,) = db.query_all(*query_maker_count.to_sql())
+    context.view_count = row_count[0] or 0
+
+    if context.selector is not None:
+        select_query, select_params = context.selector.to_sql(field_video_id)
+        query_maker_select.where.append_query(select_query, *select_params)
+        query_maker_page.where.append_query(select_query, *select_params)
+
+    query_maker_select.set_fields(
+        (
+            f"SUM({query_maker.get_main_table().get_alias_field('file_size')})",
+            f"SUM({query_maker.get_main_table().get_alias_field('length_microseconds')})",
+            f"COUNT({field_video_id})",
+        )
+    )
+    (row_stats,) = db.query_all(*query_maker_select.to_sql())
+    context.selection_file_size = FileSize(row_stats[0] or 0)
+    context.selection_duration = Duration(row_stats[1] or 0)
+    context.selection_count = row_stats[2]
+
+    if (
+        context.selection_count
+        and context.page_size
+        and context.page_number is not None
+    ):
+        nb_pages = compute_nb_pages(context.selection_count, context.page_size)
+        context.nb_pages = nb_pages
+        context.page_number = min(max(0, context.page_number), nb_pages - 1)
+        query_maker_page.offset = context.page_size * context.page_number
+        query_maker_page.limit = context.page_size
+
+    thumb_table = query_maker_page.find_table("video_thumbnail")
+    field_thumbnail = thumb_table.get_alias_field("thumbnail")
+    query_maker_page.set_fields(
         [
-            row[0]
-            for row in sql_db.query(str(query_maker), where_builder.get_parameters())
+            f"{query_maker_page.get_main_table().get_alias_field(field)} AS {field}"
+            for field in VIDEO_TABLE_FIELD_NAMES
+        ]
+        + [
+            f"{field_thumbnail} AS thumbnail",
+            f"IIF(LENGTH({field_thumbnail}), 1, 0) AS with_thumbnails",
         ]
     )
+
+    context.result_page = _get_videos(
+        db, *query_maker_page.to_sql(), include=include, with_moves=context.with_moves
+    )
+
+    # print()
+    # print(query_maker_count)
+    # print(query_maker_select)
+    # print(query_maker_page)
+    # print("COUNT", context.view_count)
+    # print("FILE SIZE", context.selection_file_size)
+    # print("MICROSECONDS", context.selection_duration)
+    # print("PAGE", len(context.result_page))

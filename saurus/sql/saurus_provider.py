@@ -45,10 +45,11 @@ class SaurusProvider(AbstractVideoProvider):
             group=self.group,
             search=self.search,
             sorting=self.sorting,
+            include=["video_id"],
         )
         self.group = output.group_id
         self._groups = output.result_groups
-        self._view_indices = output.result
+        self._view_indices = [video["video_id"] for video in output.result_page]
 
     def set_sources(self, paths: Sequence[Sequence[str]]) -> None:
         sources = parse_sources(paths)

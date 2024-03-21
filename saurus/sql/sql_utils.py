@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import Iterable, List, Optional, Union
+from typing import Iterable, List, Optional, Tuple, Union
 
 from saurus.sql.video_parser import FieldQuery
 
@@ -137,6 +137,9 @@ class QueryMaker:
     def __str__(self):
         return self.generate()
 
+    def to_sql(self) -> Tuple[str, list]:
+        return str(self), self.where.get_parameters()
+
     def add_field(self, field: str):
         self._fields.append(field)
 
@@ -156,6 +159,14 @@ class QueryMaker:
 
     def get_main_table(self):
         return self._main_table
+
+    def find_table(self, name) -> TableDef:
+        if self._main_table and self._main_table.name == name:
+            return self._main_table
+        for jointure in self._jointures:
+            if jointure.join_table.name == name:
+                return jointure.join_table
+        raise ValueError(f"Query maker: no table found: {name}")
 
     def add_join(
         self,

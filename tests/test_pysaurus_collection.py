@@ -113,6 +113,11 @@ def test_provider_grouping_by_attribute():
             provider.set_group(i)
             assert len(provider.get_view_indices()) == count
 
+        provider.set_sources([["readable", "without_thumbnails"]])
+        provider.set_groups("audio_bit_rate", True, sorting="count", reverse=True)
+        provider.set_group(0)
+        assert len(provider.get_view_indices()) == 0
+
 
 def test_provider_grouping_by_property():
     expected_without_singletons = [
@@ -234,6 +239,10 @@ def test_provider_classifier():
         assert group_def["groups"][0]["value"] is None
         assert group_def["groups"][0]["count"] == 3
 
+        provider.set_classifier_path(["vertical", "e", "does not exist"])
+        provider.set_group(0)
+        assert len(provider.get_view_indices()) == 0
+
 
 def test_edit_properties():
     collection = get_collection()
@@ -261,6 +270,9 @@ def test_edit_properties():
 
 def test_search():
     with get_provider() as provider:
+        provider.set_search("1", "id")
+        assert len(provider.get_view_indices()) == 1
+
         # provider._database.db.debug = True
         provider.set_search("unknown", "and")
         assert len(provider.get_view_indices()) == 61

@@ -196,6 +196,15 @@ class Selector:
         else:
             return [element for element in data if element in self.selection]
 
+    def to_sql(self, field: str):
+        selection = list(self.selection)
+        placeholders = ",".join(["?"] * len(selection))
+        if self.to_exclude:
+            query = f"{field} NOT IN ({placeholders})"
+        else:
+            query = f"{field} IN ({placeholders})"
+        return query, selection
+
     @classmethod
     def parse_dict(cls, selector: dict):
         if selector["all"]:
