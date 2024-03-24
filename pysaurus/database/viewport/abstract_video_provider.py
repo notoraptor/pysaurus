@@ -4,6 +4,8 @@ from typing import List, Optional, Sequence
 
 from pysaurus.application import exceptions
 from pysaurus.core import functions
+from pysaurus.core.classes import Selector
+from pysaurus.video.video_search_context import VideoSearchContext
 
 
 class AbstractVideoProvider(metaclass=ABCMeta):
@@ -104,6 +106,12 @@ class AbstractVideoProvider(metaclass=ABCMeta):
 
     @abstractmethod
     def get_view_indices(self) -> Sequence[int]:
+        pass
+
+    @abstractmethod
+    def get_current_state(
+        self, page_size: int, page_number: int, selector: Selector = None
+    ) -> VideoSearchContext:
         pass
 
     @abstractmethod

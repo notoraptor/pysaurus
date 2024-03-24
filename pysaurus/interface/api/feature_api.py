@@ -5,12 +5,7 @@ from typing import Any, Callable, Dict, Generator, Optional, Union
 from pysaurus.application.application import Application
 from pysaurus.application.language.default_language import language_to_dict
 from pysaurus.core.classes import StringPrinter
-from pysaurus.core.components import Duration, FileSize
-from pysaurus.core.functions import (
-    apply_selector_to_data,
-    compute_nb_pages,
-    extract_object,
-)
+from pysaurus.core.functions import extract_object
 from pysaurus.core.notifying import Notification
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.abstract_database import AbstractDatabase as Db
@@ -183,51 +178,14 @@ class FeatureAPI:
         page: videos displayed in selection
             all video attributes and properties
         """
-        raw_view_indices = self.database.provider.get_view_indices()
-        if selector:
-            view_indices = apply_selector_to_data(selector, raw_view_indices)
-        else:
-            view_indices = raw_view_indices
-        nb_videos = len(view_indices)
-        nb_pages = compute_nb_pages(nb_videos, page_size)
-        videos = []
+        context = self.database.provider.get_current_state(
+            page_size, page_number, selector
+        )
         group_def = self.database.provider.get_group_def()
-        grouped_by_similarity = group_def and group_def["field"] == "similarity_id"
-        grouped_by_moves = group_def and group_def["field"] == "move_id"
-        if nb_videos:
-            page_number = min(max(0, page_number), nb_pages - 1)
-            start = page_size * page_number
-            end = min(start + page_size, nb_videos)
-            videos = self.database.describe_videos(
-                view_indices[start:end], with_moves=grouped_by_moves
-            )
-            if grouped_by_moves:
-                all_moves = {
-                    video_id: moves for video_id, moves in self.database.get_moves()
-                }
-                for video in videos:
-                    video["moves"] = all_moves.get(video["video_id"], [])
-            if grouped_by_similarity:
-                group_def["common"] = self.database.get_common_fields(view_indices)
-
-        with Profiler("Backend:size"):
-            size = FileSize(
-                sum(
-                    row["file_size"]
-                    for row in self.database.get_videos(
-                        include=["file_size"], where={"video_id": view_indices}
-                    )
-                )
-            )
-
-        with Profiler("Backend:duration"):
-            duration = Duration(
-                sum(
-                    row["raw_microseconds"]
-                    for row in self.database.get_videos(
-                        include=["raw_microseconds"], where={"video_id": view_indices}
-                    )
-                )
+        videos = context.result_page
+        if len(videos) and group_def and group_def["field"] == "similarity_id":
+            group_def["common"] = self.database.get_common_fields(
+                [video["video_id"] for video in videos]
             )
 
         return {
@@ -236,20 +194,20 @@ class FeatureAPI:
                 "folders": sorted(str(path) for path in self.database.get_folders()),
             },
             "prop_types": self.database.get_prop_types(),
-            "videos": videos,
-            "pageSize": page_size,
-            "pageNumber": page_number,
-            "nbPages": nb_pages,
-            "nbVideos": nb_videos,
-            "nbViewVideos": len(raw_view_indices),
+            "videos": context.result_page,
+            "pageSize": context.page_size,
+            "pageNumber": context.page_number,
+            "nbPages": context.nb_pages,
+            "nbVideos": context.selection_count,
+            "nbViewVideos": context.view_count,
             "nbSourceVideos": self.database.provider.count_source_videos(),
-            "validSize": str(size),
-            "validLength": str(duration),
-            "sources": self.database.provider.get_sources(),
+            "validSize": str(context.selection_file_size),
+            "validLength": str(context.selection_duration),
+            "sources": context.sources,
             "groupDef": group_def,
-            "path": self.database.provider.get_classifier_path(),
+            "path": context.classifier,
             "searchDef": self.database.provider.get_search_def(),
-            "sorting": self.database.provider.get_sort(),
+            "sorting": context.sorting,
         }
 
     # cannot make proxy ?

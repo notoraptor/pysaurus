@@ -5,10 +5,14 @@ from typing import Any, Dict, List, Sequence, Set
 
 from pysaurus.application import exceptions
 from pysaurus.core import functions
+from pysaurus.core.classes import Selector
+from pysaurus.core.components import Duration, FileSize
+from pysaurus.core.functions import compute_nb_pages
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.viewport.abstract_video_provider import AbstractVideoProvider
 from pysaurus.database.viewport.source_def import SourceDef
 from pysaurus.database.viewport.view_tools import Group, GroupArray, GroupDef, SearchDef
+from pysaurus.video.video_search_context import VideoSearchContext
 from pysaurus.video.video_sorting import VideoSorting
 from pysaurus.video_provider.provider_utils import parse_sorting, parse_sources
 
@@ -381,6 +385,63 @@ class VideoFilter(AbstractVideoProvider):
                 layer.set_input(data)
                 data = layer.get_output()
             return data
+
+    def get_current_state(
+        self, page_size: int, page_number: int, selector: Selector = None
+    ) -> VideoSearchContext:
+        database = self._database
+        raw_view_indices = self.get_view_indices()
+        if selector:
+            view_indices = selector.filter(raw_view_indices)
+        else:
+            view_indices = raw_view_indices
+
+        nb_videos = len(view_indices)
+        nb_pages = compute_nb_pages(nb_videos, page_size)
+        videos = []
+        group_def = database.provider.get_group_def()
+        grouped_by_moves = group_def and group_def["field"] == "move_id"
+        if nb_videos:
+            page_number = min(max(0, page_number), nb_pages - 1)
+            start = page_size * page_number
+            end = min(start + page_size, nb_videos)
+            videos = database.describe_videos(
+                view_indices[start:end], with_moves=grouped_by_moves
+            )
+
+        output = VideoSearchContext(
+            sources=self.get_sources(),
+            grouping=self.get_grouping(),
+            classifier=self.get_classifier_path(),
+            group_id=self.get_group(),
+            search=self.get_search(),
+            sorting=self.get_sort(),
+            selector=selector,
+            page_size=page_size,
+            page_number=page_number,
+            with_moves=grouped_by_moves,
+            result=videos,
+        )
+        output.nb_pages = nb_pages
+        output.view_count = len(raw_view_indices)
+        output.selection_count = nb_videos
+        output.selection_duration = Duration(
+            sum(
+                row["raw_microseconds"]
+                for row in database.get_videos(
+                    include=["raw_microseconds"], where={"video_id": view_indices}
+                )
+            )
+        )
+        output.selection_file_size = FileSize(
+            sum(
+                row["file_size"]
+                for row in database.get_videos(
+                    include=["file_size"], where={"video_id": view_indices}
+                )
+            )
+        )
+        return output
 
     def delete(self, video_id: int):
         for layer in self.pipeline:

@@ -1,7 +1,9 @@
 from typing import List, Sequence
 
+from pysaurus.core.classes import Selector
 from pysaurus.database.viewport.abstract_video_provider import AbstractVideoProvider
 from pysaurus.database.viewport.view_tools import GroupDef, LookupArray, SearchDef
+from pysaurus.video.video_search_context import VideoSearchContext
 from pysaurus.video_provider.provider_utils import parse_sorting, parse_sources
 from saurus.sql.saurus_provider_utils import GroupCount
 from saurus.sql.video_mega_search import video_mega_group
@@ -50,6 +52,29 @@ class SaurusProvider(AbstractVideoProvider):
         self.group = output.group_id
         self._groups = output.result_groups
         self._view_indices = [video["video_id"] for video in output.result_page]
+
+    def get_current_state(
+        self, page_size: int, page_number: int, selector: Selector = None
+    ) -> VideoSearchContext:
+        group_def = self._database.provider.get_group_def()
+        grouped_by_moves = group_def and group_def["field"] == "move_id"
+        output = video_mega_group(
+            self._database.db,
+            sources=self.sources,
+            grouping=self.grouping,
+            classifier=self.classifier,
+            group=self.group,
+            search=self.search,
+            sorting=self.sorting,
+            selector=selector,
+            page_size=page_size,
+            page_number=page_number,
+            with_moves=grouped_by_moves,
+        )
+        self.group = output.group_id
+        self._groups = output.result_groups
+        self._view_indices = [video["video_id"] for video in output.result_page]
+        return output
 
     def set_sources(self, paths: Sequence[Sequence[str]]) -> None:
         sources = parse_sources(paths)

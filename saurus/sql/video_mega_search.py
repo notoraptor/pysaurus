@@ -1,11 +1,12 @@
 from collections import defaultdict
-from typing import Dict, List, Sequence
+from typing import Dict, Iterable, List, Sequence, Tuple
 
 from pysaurus.core.classes import Selector
-from pysaurus.core.components import Duration, FileSize
+from pysaurus.core.components import AbsolutePath, Duration, FileSize
 from pysaurus.core.functions import compute_nb_pages
 from pysaurus.database.viewport.view_tools import GroupDef, LookupArray, SearchDef
 from pysaurus.properties.properties import PropTypeValidator
+from pysaurus.video.video_search_context import VideoSearchContext
 from pysaurus.video.video_sorting import VideoSorting
 from saurus.sql.grouping_utils import SqlFieldFactory
 from saurus.sql.prop_type_search import prop_type_search
@@ -23,71 +24,6 @@ from saurus.sql.sql_video_wrapper import (
     VIDEO_TABLE_FIELD_NAMES,
 )
 from saurus.sql.video_parser import VideoFieldQueryParser
-
-
-class VideoSearchContext:
-    __slots__ = (
-        "sources",
-        "grouping",
-        "classifier",
-        "group_id",
-        "search",
-        "sorting",
-        "selector",
-        "page_size",
-        "page_number",
-        "nb_pages",
-        "with_moves",
-        "view_count",
-        "selection_count",
-        "selection_duration",
-        "selection_file_size",
-        "result_page",
-        "result_groups",
-    )
-
-    def __init__(
-        self,
-        *,
-        sources=None,
-        grouping: GroupDef = None,
-        classifier=None,
-        group_id=None,
-        search: SearchDef = None,
-        sorting=None,
-        selector: Selector = None,
-        page_size: int = None,
-        page_number: int = 0,
-        with_moves=False,
-        result_groups=None,
-        result=None,
-    ):
-        self.sources = sources
-        self.grouping = grouping
-        self.classifier = classifier
-        self.group_id = group_id
-        self.search = search
-        self.sorting = sorting
-
-        self.selector = selector
-        self.page_size = page_size
-        self.page_number = page_number
-        self.nb_pages = None
-        self.with_moves = with_moves
-
-        self.result_groups = result_groups
-
-        self.view_count = 0
-        self.selection_count = 0
-        self.selection_duration = None
-        self.selection_file_size = None
-        self.result_page = result
-
-    def done(self, result, *, groups=None):
-        self.result_page = result
-        if groups is not None:
-            self.result_groups = groups
-        return self
 
 
 def video_mega_search(
@@ -217,6 +153,12 @@ def _get_videos(
     if with_properties:
         for video in videos:
             video.properties = json_properties.get(video.video_id, {})
+    if with_moves:
+        moves = {
+            video_id: video_moves for video_id, video_moves in _get_video_moves(db)
+        }
+        for video in videos:
+            video.moves = moves.get(video.video_id, [])
 
     if include is None:
         # Return all, use with_moves.
@@ -225,6 +167,37 @@ def _get_videos(
         # Use include, ignore with_moves
         fields = include or ("video_id",)
         return [{key: getattr(video, key) for key in fields} for video in videos]
+
+
+def _get_video_moves(db: PysaurusConnection) -> Iterable[Tuple[int, List[dict]]]:
+    for row in db.query(
+        """
+SELECT group_concat(video_id || '-' || is_file || '-' || hex(filename))
+FROM video
+WHERE unreadable = 0 AND discarded = 0
+GROUP BY file_size, duration, COALESCE(NULLIF(duration_time_base, 0), 1)
+HAVING COUNT(video_id) > 1 AND SUM(is_file) < COUNT(video_id);
+"""
+    ):
+        not_found = []
+        found = []
+        for piece in row[0].split(","):
+            str_video_id, str_is_file, str_hex_filename = piece.split("-")
+            video_id = int(str_video_id)
+            if int(str_is_file):
+                found.append(
+                    {
+                        "video_id": video_id,
+                        "filename": AbsolutePath(
+                            bytes.fromhex(str_hex_filename).decode("utf-8")
+                        ).standard_path,
+                    }
+                )
+            else:
+                not_found.append(video_id)
+        assert not_found and found, (not_found, found)
+        for id_not_found in not_found:
+            yield id_not_found, found
 
 
 def video_mega_group(
