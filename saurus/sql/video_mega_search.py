@@ -486,11 +486,21 @@ def _compute_results_and_stats(
         and context.page_size
         and context.page_number is not None
     ):
+        query_maker_view = query_maker_select.copy()
+        query_maker_view.set_field(field_video_id)
+        view_indices = [row[0] for row in db.query(*query_maker_view.to_sql())]
+
         nb_pages = compute_nb_pages(context.selection_count, context.page_size)
         context.nb_pages = nb_pages
         context.page_number = min(max(0, context.page_number), nb_pages - 1)
-        query_maker_page.offset = context.page_size * context.page_number
-        query_maker_page.limit = context.page_size
+        start = context.page_size * context.page_number
+        end = min(start + context.page_size, context.selection_count)
+        page_view = view_indices[start:end]
+
+        query_maker_page.where.clear()
+        query_maker_page.where.append_query(
+            f"{field_video_id} IN ({','.join(['?'] * len(page_view))})", *page_view
+        )
 
     thumb_table = query_maker_page.find_table("video_thumbnail")
     field_thumbnail = thumb_table.get_alias_field("thumbnail")

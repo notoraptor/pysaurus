@@ -15,6 +15,10 @@ class SQLWhereBuilder:
     def __len__(self):
         return len(self._where)
 
+    def clear(self):
+        self._where.clear()
+        self._parameters.clear()
+
     def append_field(self, name, value):
         self._where.append(f"{name} = ?")
         self._parameters.append(value)

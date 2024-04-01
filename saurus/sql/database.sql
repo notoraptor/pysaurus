@@ -69,34 +69,6 @@ CREATE TABLE IF NOT EXISTS video (
 	CHECK (unreadable IN (0, 1)),
 	UNIQUE (filename)
 );
-CREATE INDEX IF NOT EXISTS idx_video_filename ON video (filename);
-CREATE INDEX IF NOT EXISTS idx_video_file_size ON video (file_size);
-CREATE INDEX IF NOT EXISTS idx_video_unreadable ON video (unreadable);
-CREATE INDEX IF NOT EXISTS idx_video_audio_bit_rate ON video (audio_bit_rate);
-CREATE INDEX IF NOT EXISTS idx_video_audio_bits ON video (audio_bits);
-CREATE INDEX IF NOT EXISTS idx_video_audio_codec ON video (audio_codec);
-CREATE INDEX IF NOT EXISTS idx_video_audio_codec_description ON video (audio_codec_description);
-CREATE INDEX IF NOT EXISTS idx_video_bit_depth ON video (bit_depth);
-CREATE INDEX IF NOT EXISTS idx_video_channels ON video (channels);
-CREATE INDEX IF NOT EXISTS idx_video_container_format ON video (container_format);
-CREATE INDEX IF NOT EXISTS idx_video_device_name ON video (device_name);
-CREATE INDEX IF NOT EXISTS idx_video_duration ON video (duration);
-CREATE INDEX IF NOT EXISTS idx_video_duration_time_base ON video (duration_time_base);
-CREATE INDEX IF NOT EXISTS idx_video_frame_rate_den ON video (frame_rate_den);
-CREATE INDEX IF NOT EXISTS idx_video_frame_rate_num ON video (frame_rate_num);
-CREATE INDEX IF NOT EXISTS idx_video_height ON video (height);
-CREATE INDEX IF NOT EXISTS idx_video_meta_title ON video (meta_title);
-CREATE INDEX IF NOT EXISTS idx_video_sample_rate ON video (sample_rate);
-CREATE INDEX IF NOT EXISTS idx_video_video_codec ON video (video_codec);
-CREATE INDEX IF NOT EXISTS idx_video_video_codec_description ON video (video_codec_description);
-CREATE INDEX IF NOT EXISTS idx_video_width ON video (width);
-CREATE INDEX IF NOT EXISTS idx_video_driver_id ON video (driver_id);
-CREATE INDEX IF NOT EXISTS idx_video_is_file ON video (is_file);
-CREATE INDEX IF NOT EXISTS idx_video_discarded ON video (discarded);
-CREATE INDEX IF NOT EXISTS idx_video_date_entry_modified ON video (date_entry_modified);
-CREATE INDEX IF NOT EXISTS idx_video_date_entry_opened ON video (date_entry_opened);
-CREATE INDEX IF NOT EXISTS idx_video_similarity_id ON video (similarity_id);
-CREATE INDEX IF NOT EXISTS idx_video_mtime ON video (mtime);
 
 CREATE TABLE IF NOT EXISTS video_error (
 	video_id INTEGER REFERENCES video(video_id) ON DELETE CASCADE,
