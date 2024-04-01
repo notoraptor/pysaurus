@@ -12,7 +12,7 @@ from saurus.sql.pysaurus_collection import PysaurusCollection
 logger = logging.getLogger(__name__)
 
 
-USE_SQL = False
+USE_SQL = True
 BaseDatabase = PysaurusCollection if USE_SQL else JsonDatabase
 
 
