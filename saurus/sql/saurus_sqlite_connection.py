@@ -1,4 +1,6 @@
 import sqlite3
+import sys
+import threading
 
 
 class DbID(int):
@@ -18,13 +20,18 @@ class DbID(int):
 
 
 class SaurusSQLiteConnection:
-    __slots__ = ("connection", "cursor", "debug")
+    __slots__ = ("connection", "cursor", "debug", "lock")
 
     def __init__(self, script_path: str, db_path: str):
         """
         Open (or create) and populate tables (if necessary)
         in database at given path.
         """
+        # SQLite does not like sharing cursors across threads.
+        # But we may use many threads, e.g. if opening a video from local server.
+        # So, we use a lock to execute SELECT queries.
+        # todo use lock for modification queries too (insert, update, etc.).
+        self.lock = threading.Lock()
         # NB: We must set check_same_thread to False, otherwise
         # we may get following error:
         # sqlite3.ProgrammingError:
@@ -60,13 +67,16 @@ class SaurusSQLiteConnection:
             print(f"[query] {query}")
             print(f"[params] {parameters}")
         try:
+            self.lock.acquire(True)
             self.cursor.execute(query, parameters)
-        except:
-            print("[error]")
-            print(f"[query] {query}")
-            print(f"[params] {parameters}")
-            raise
-        yield from self.cursor
+            yield from self.cursor
+        except Exception as exc:
+            print("[error]", type(exc), exc, file=sys.stderr)
+            print(f"[query] {query}", file=sys.stderr)
+            print(f"[params] {repr(parameters)}", file=sys.stderr)
+            raise exc
+        finally:
+            self.lock.release()
 
     def query_one(self, query, parameters=()):
         self.cursor.execute(query, parameters)
