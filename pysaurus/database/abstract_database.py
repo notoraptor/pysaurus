@@ -379,7 +379,7 @@ class AbstractDatabase(ABC):
         self.provider.refresh()
 
     def get_all_video_indices(self) -> Iterable[int]:
-        return (item["video_id"] for item in self.select_videos_fields([]))
+        return (item["video_id"] for item in self.select_videos_fields(["video_id"]))
 
     def to_save(self):
         """Return a save context.
