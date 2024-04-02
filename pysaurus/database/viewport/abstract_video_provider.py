@@ -182,6 +182,9 @@ class AbstractVideoProvider(metaclass=ABCMeta):
             reverse=True,
             allow_singletons=True,
         )
+        self.reset_parameters(
+            self.LAYER_CLASSIFIER, self.LAYER_GROUP, self.LAYER_SEARCH
+        )
         self.get_view_indices()
         group_id = self._convert_field_value_to_group_id(field_value)
         self.set_classifier_path([])
