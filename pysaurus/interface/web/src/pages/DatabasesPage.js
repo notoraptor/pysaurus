@@ -9,7 +9,7 @@ export class DatabasesPage extends React.Component {
 		this.state = {
 			name: "",
 			paths: [],
-			update: true,
+			update: false,
 		};
 		this.onChangeName = this.onChangeName.bind(this);
 		this.createDatabase = this.createDatabase.bind(this);

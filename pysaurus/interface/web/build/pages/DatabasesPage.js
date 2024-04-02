@@ -18,7 +18,7 @@ System.register(["../components/PathsInput.js", "../language.js"], function (_ex
           this.state = {
             name: "",
             paths: [],
-            update: true
+            update: false
           };
           this.onChangeName = this.onChangeName.bind(this);
           this.createDatabase = this.createDatabase.bind(this);
