@@ -151,6 +151,13 @@ class PropTypeValidator:
         else:
             return [self.type(value) for value in values]
 
+    def from_string(self, value: str) -> PropUnitType:
+        return (
+            value
+            if self.type is str
+            else (bool(int(value)) if self.type is bool else self.type(value))
+        )
+
     def plain_from_strings(self, values: Sequence[str]) -> PropValueType:
         values = self.from_strings(values)
         return values if self.multiple else values[0]

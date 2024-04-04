@@ -140,6 +140,65 @@ class PysaurusCollection(AbstractDatabase):
             ]
         )
 
+    def get_all_prop_values(self, name: str) -> Dict[int, Collection[PropUnitType]]:
+        (prop_desc,) = self.get_prop_types(name=name)
+        pt = PropTypeValidator(prop_desc)
+        output = {}
+        for row in self.db.query(
+            "SELECT pv.video_id, pv.property_value "
+            "FROM video_property_value AS pv "
+            "JOIN property AS p "
+            "ON pv.property_id = p.property_id "
+            "WHERE p.name = ?",
+            [name],
+        ):
+            output.setdefault(row[0], []).append(pt.from_string(row[1]))
+        return output
+
+    def set_video_prop_values(
+        self, name: str, updates: Dict[int, Collection[PropUnitType]]
+    ):
+        (prop_desc,) = self.get_prop_types(name=name)
+        pt = PropTypeValidator(prop_desc)
+        video_indices = list(updates.keys())
+        placeholders_string = ",".join(["?"] * len(video_indices))
+        for video_id in video_indices:
+            updates[video_id] = pt.instantiate(updates[video_id])
+
+        property_id = pt.property_id
+        self.db.modify(
+            f"DELETE FROM video_property_value "
+            f"WHERE property_id = ? "
+            f"AND video_id IN ({placeholders_string})",
+            [property_id] + video_indices,
+        )
+        self.db.modify_many(
+            "INSERT INTO video_property_value "
+            "(video_id, property_id, property_value) VALUES (?, ?, ?)",
+            (
+                (video_id, property_id, value)
+                for video_id, values in updates.items()
+                for value in values
+            ),
+        )
+        if pt.type is str:
+            new_texts = self.db.query_all(
+                f"SELECT v.video_id, v.filename, v.meta_title, t.property_text "
+                f"FROM video AS v JOIN video_property_text AS t "
+                f"ON v.video_id = t.video_id "
+                f"WHERE v.video_id IN ({placeholders_string})",
+                video_indices,
+            )
+            self.db.modify(
+                f"DELETE FROM video_text WHERE video_id IN ({placeholders_string})",
+                video_indices,
+            )
+            self.db.modify_many(
+                "INSERT INTO video_text "
+                "(video_id, filename, meta_title, properties) VALUES (?,?,?,?)",
+                new_texts,
+            )
+
     def update_prop_values(
         self, video_id: int, name: str, values: Collection, *, merge=False
     ):
@@ -319,6 +378,22 @@ class PysaurusCollection(AbstractDatabase):
         t_all_str = string_to_pieces(all_str)
         t_all_str_low = string_to_pieces(all_str.lower())
         return t_all_str if t_all_str == t_all_str_low else (t_all_str + t_all_str_low)
+
+    def get_all_video_terms(self) -> Dict[int, List[str]]:
+        output = {}
+        for row in self.db.query(
+            f"""
+            SELECT v.video_id, v.filename || ' ' || v.meta_title || ' ' || COALESCE(pv.property_text, '')
+            FROM video AS v
+            LEFT JOIN video_property_text AS pv ON v.video_id = pv.video_id
+"""
+        ):
+            t_all_str = string_to_pieces(row[1])
+            t_all_str_low = string_to_pieces(row[1].lower())
+            output[row[0]] = (
+                t_all_str if t_all_str == t_all_str_low else (t_all_str + t_all_str_low)
+            )
+        return output
 
     def add_video_errors(self, video_id: int, *errors: Iterable[str]) -> None:
         self.db.modify_many(

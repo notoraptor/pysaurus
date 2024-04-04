@@ -186,9 +186,6 @@ class AbstractDatabase(ABC):
     def _insert_new_thumbnails(self, filename_to_thumb_name: Dict[str, str]) -> None:
         raise NotImplementedError()
 
-    def get_prop_names(self) -> Iterable[str]:
-        return (pt["name"] for pt in self.get_prop_types())
-
     def validate_prop_values(self, name, values: list) -> List[PropValueType]:
         (prop_dict,) = self.get_prop_types(name=name)
         prop_type = PropTypeValidator(prop_dict)
@@ -199,7 +196,7 @@ class AbstractDatabase(ABC):
         return values
 
     def count_videos(self, *flags, **forced_flags) -> int:
-        return len(self.select_videos_fields([], *flags, **forced_flags))
+        return len(self.select_videos_fields(["video_id"], *flags, **forced_flags))
 
     def get_video_filename(self, video_id: int) -> AbsolutePath:
         (row,) = self.get_videos(include=["filename"], where={"video_id": video_id})
@@ -453,7 +450,8 @@ class AbstractDatabase(ABC):
             where={"video_id": from_id, "found": False},
         )
         assert self.has_video(video_id=to_id, found=True)
-        for prop_name in self.get_prop_names():
+        for pt in self.get_prop_types():
+            prop_name = pt["name"]
             self.update_prop_values(
                 to_id, prop_name, self.get_prop_values(from_id, prop_name), merge=True
             )
@@ -561,17 +559,34 @@ class AbstractDatabase(ABC):
 
     def fill_property_with_terms(self, prop_name: str, only_empty=False) -> None:
         assert self.get_prop_types(name=prop_name, with_type=str, multiple=True)
-        modified = []
-        for video_id in self.get_all_video_indices():
-            values = self.get_prop_values(video_id, prop_name)
-            if only_empty and values:
-                continue
-            self.update_prop_values(
-                video_id, prop_name, values + self.get_video_terms(video_id)
-            )
-            modified.append(video_id)
+        old = self.get_all_prop_values(prop_name)
+        terms = self.get_all_video_terms()
+        modified = {
+            video_id: old.get(video_id, []) + video_terms
+            for video_id, video_terms in terms.items()
+            if not only_empty or not old.get(video_id)
+        }
         if modified:
+            self.set_video_prop_values(prop_name, modified)
             self._notify_properties_modified([prop_name])
+
+    def get_all_prop_values(self, name: str) -> Dict[int, Collection[PropUnitType]]:
+        return {
+            video_id: self.get_prop_values(video_id, name)
+            for video_id in self.get_all_video_indices()
+        }
+
+    def set_video_prop_values(
+        self, name: str, updates: Dict[int, Collection[PropUnitType]]
+    ):
+        for video_id, prop_values in updates.items():
+            self.update_prop_values(video_id, name, prop_values)
+
+    def get_all_video_terms(self) -> Dict[int, List[str]]:
+        return {
+            video_id: self.get_video_terms(video_id)
+            for video_id in self.get_all_video_indices()
+        }
 
     def _edit_prop_value(self, prop_name: str, function: Callable[[Any], Any]) -> None:
         assert self.get_prop_types(name=prop_name, with_type=str)
