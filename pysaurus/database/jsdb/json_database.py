@@ -480,7 +480,7 @@ class JsonDatabase(AbstractDatabase):
         where: dict = None,
     ) -> List[dict]:
         where = where or {}
-        # where["discarded"] = where.get("discarded", False)
+        where["discarded"] = where.get("discarded", False)
         q_flags = {key: value for key, value in where.items() if key in VIDEO_FLAGS}
         q_other = {key: value for key, value in where.items() if key not in VIDEO_FLAGS}
 
@@ -613,12 +613,6 @@ class JsonDatabase(AbstractDatabase):
     def open_video(self, video_id: int) -> None:
         self._id_to_video[video_id].open()
         self._notify_fields_modified(["date_entry_opened"])
-
-    @Profiler.profile_method()
-    def get_common_fields(self, video_indices: Iterable[int]) -> dict:
-        return VideoFeatures.get_common_fields(
-            self._id_to_video[video_id] for video_id in video_indices
-        )
 
     def _insert_new_thumbnails(self, filename_to_thumb_name: Dict[str, str]) -> None:
         self._thumb_mgr.save_existing_thumbnails(filename_to_thumb_name)

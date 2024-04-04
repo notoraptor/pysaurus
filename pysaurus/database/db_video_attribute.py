@@ -28,9 +28,9 @@ class PotentialMoveAttribute:
     __slots__ = ("potential_moves", "move_groups", "force_update", "database")
 
     def __init__(self, database):
-        from pysaurus.database.database import Database
+        from pysaurus.database.abstract_database import AbstractDatabase
 
-        self.database: Database = database
+        self.database: AbstractDatabase = database
         self.potential_moves: Dict[int, List[dict]] = {}
         self.move_groups: Dict[int, str] = {}
         self.force_update = True

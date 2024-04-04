@@ -2,7 +2,7 @@ from collections import namedtuple
 from typing import Iterable, Sequence, Union
 
 from pysaurus.core import condlang
-from pysaurus.database.database import Database
+from pysaurus.database.abstract_database import AbstractDatabase
 from pysaurus.video import Video
 from tests.utils_testing import get_database
 
@@ -33,7 +33,7 @@ class GetProperty(condlang.Apply):
 
 
 def db_select_videos(
-    self: Database,
+    self: AbstractDatabase,
     *,
     attributes: Sequence[str] = None,
     properties: Sequence[str] = None,

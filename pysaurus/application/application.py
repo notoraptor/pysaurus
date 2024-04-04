@@ -21,6 +21,7 @@ from pysaurus.core.modules import FileSystem
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.profiling import Profiler
 from pysaurus.core.schematizable import Schema, WithSchema
+from pysaurus.database.abstract_database import AbstractDatabase
 from pysaurus.database.database import Database
 from saurus.language import say
 
@@ -61,7 +62,7 @@ class Application:
         self.lang_dir = AbsolutePath.join(self.app_dir, "languages").mkdir()
         self.config_path = AbsolutePath.join(self.app_dir, "config.json")
         self.config = Config()
-        self.databases = {}  # type: Dict[AbsolutePath, Optional[Database]]
+        self.databases = {}  # type: Dict[AbsolutePath, Optional[AbstractDatabase]]
         self.languages = {}  # type: Dict[AbsolutePath, Optional[DefaultLanguage]]
         self.notifier = notifier
         # Load database names.
@@ -125,7 +126,7 @@ class Application:
         return sorted(path.title for path in self.databases.keys())
 
     @Profiler.profile_method()
-    def open_database_from_name(self, name: str, update=False) -> Database:
+    def open_database_from_name(self, name: str, update=False) -> AbstractDatabase:
         path = AbsolutePath.join(self.dbs_dir, name)
         assert path in self.databases
         if not self.databases[path]:

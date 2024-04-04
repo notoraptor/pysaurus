@@ -1,5 +1,6 @@
 import inspect
 import logging
+import operator
 from typing import Any, Callable, Dict, Generator, Optional, Union
 
 from pysaurus.application.application import Application
@@ -12,6 +13,8 @@ from pysaurus.database.abstract_database import AbstractDatabase as Db
 from pysaurus.database.viewport.abstract_video_provider import (
     AbstractVideoProvider as View,
 )
+from pysaurus.video.video_features import VideoFeatures
+from pysaurus.video.video_utils import COMMON_FIELDS
 
 logger = logging.getLogger(__name__)
 
@@ -168,24 +171,15 @@ class FeatureAPI:
 
     # cannot make proxy ?
     def backend(self, page_size, page_number, selector=None) -> Dict[str, Any]:
-        """Return backend state.
-
-        view: all videos returned by provider
-            count
-        selection: videos selected in view
-            sum of duration
-            sum of size
-        page: videos displayed in selection
-            all video attributes and properties
-        """
+        """Return backend state."""
         context = self.database.provider.get_current_state(
             page_size, page_number, selector
         )
         group_def = self.database.provider.get_group_def()
         videos = context.result_page
         if len(videos) and group_def and group_def["field"] == "similarity_id":
-            group_def["common"] = self.database.get_common_fields(
-                [video["video_id"] for video in videos]
+            group_def["common"] = VideoFeatures.get_common_fields(
+                videos, getfield=operator.getitem, fields=COMMON_FIELDS
             )
 
         return {

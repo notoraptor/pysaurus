@@ -24,9 +24,9 @@ class Layer:
     __slots__ = ("database", "input", "params", "output", "to_update")
 
     def __init__(self, database):
-        from pysaurus.database.database import Database
+        from pysaurus.database.abstract_database import AbstractDatabase
 
-        self.database: Database = database
+        self.database: AbstractDatabase = database
         self.input = None
         self.params = self.default_params()
         self.output = None
@@ -405,8 +405,8 @@ class VideoFilter(AbstractVideoProvider):
             page_number = min(max(0, page_number), nb_pages - 1)
             start = page_size * page_number
             end = min(start + page_size, nb_videos)
-            videos = database.describe_videos(
-                view_indices[start:end], with_moves=grouped_by_moves
+            videos = database.get_videos(
+                with_moves=grouped_by_moves, where={"video_id": view_indices[start:end]}
             )
 
         output = VideoSearchContext(

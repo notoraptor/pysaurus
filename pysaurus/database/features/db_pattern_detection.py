@@ -5,7 +5,7 @@ from pysaurus.core.informer import Informer
 from pysaurus.core.modules import ImageUtils
 from pysaurus.core.notifications import Message
 from pysaurus.core.profiling import Profiler
-from pysaurus.database.database import Database
+from pysaurus.database.abstract_database import AbstractDatabase
 from pysaurus.database.features.machine_learning import (
     optimize_pattern_predictor,
     predict,
@@ -27,11 +27,11 @@ class NoPredictor(PysaurusError):
 
 class DbPatternDetection:
     @staticmethod
-    def create_prediction_property(database: Database, prop_name: str):
+    def create_prediction_property(database: AbstractDatabase, prop_name: str):
         database.create_prop_type(f"<?{prop_name}>", int, [-1, 0, 1], False)
 
     @classmethod
-    def compute_pattern_detector(cls, database: Database, prop_name: str):
+    def compute_pattern_detector(cls, database: AbstractDatabase, prop_name: str):
         assert cls._is_prediction_property(database, prop_name)
         notifier = Informer.default()
         video_id_to_miniature = {m.video_id: m for m in database.ensure_miniatures()}
@@ -75,7 +75,7 @@ class DbPatternDetection:
         database.set_predictor(prop_name, theta)
 
     @classmethod
-    def predict_pattern(cls, database: Database, prop_name: str):
+    def predict_pattern(cls, database: AbstractDatabase, prop_name: str):
         """Apply pattern detector."""
         notifier = Informer.default()
         theta = database.get_predictor(prop_name)
@@ -106,7 +106,7 @@ class DbPatternDetection:
         return output_prop_name
 
     @staticmethod
-    def _is_prediction_property(db: Database, name: str) -> bool:
+    def _is_prediction_property(db: AbstractDatabase, name: str) -> bool:
         return (
             name.startswith("<?")
             and name.endswith(">")

@@ -12,7 +12,7 @@ from pysaurus.core.functions import compute_nb_couples, get_end_index, get_start
 from pysaurus.core.informer import Informer
 from pysaurus.core.job_notifications import notify_job_progress
 from pysaurus.core.profiling import Profiler
-from pysaurus.database.database import Database
+from pysaurus.database.abstract_database import AbstractDatabase
 from pysaurus.miniature.graph import Graph
 from pysaurus.miniature.miniature import Miniature
 from saurus.language import say
@@ -115,7 +115,7 @@ class DbSimilarVideos:
         else:
             return self.find_similar_videos(db)
 
-    def find_similar_videos_ignore_cache(self, db: Database):
+    def find_similar_videos_ignore_cache(self, db: AbstractDatabase):
         miniatures = db.ensure_miniatures()  # type: List[Miniature]
         video_indices = [m.video_id for m in miniatures]
         previous_sim = [
@@ -132,7 +132,9 @@ class DbSimilarVideos:
             db.set_similarities(video_indices, previous_sim)
             raise
 
-    def find_similar_videos(self, db: Database, miniatures: List[Miniature] = None):
+    def find_similar_videos(
+        self, db: AbstractDatabase, miniatures: List[Miniature] = None
+    ):
         notifier = Informer.default()
         with Profiler(say("Find similar videos.")), db.to_save():
             if miniatures is None:
@@ -390,7 +392,7 @@ class DbSimilarVideos:
                 self.positions = None
 
     def _find_similar_miniatures(self, miniatures, edges, db):
-        # type: (List[Miniature], Array[c_bool], Database) -> List[Set[int]]
+        # type: (List[Miniature], Array[c_bool], AbstractDatabase) -> List[Set[int]]
         notifier = Informer.default()
         backend_sim.classify_similarities_directed(
             miniatures, edges, SIM_LIMIT, notifier

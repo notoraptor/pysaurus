@@ -1,5 +1,4 @@
 import logging
-import operator
 from typing import Collection, Dict, Iterable, List, Sequence, Tuple, Union
 
 from pysaurus.application import exceptions
@@ -14,7 +13,6 @@ from pysaurus.properties.properties import PropRawType, PropTypeValidator, PropU
 from pysaurus.video.lazy_video_runtime_info import (
     LazyVideoRuntimeInfo as VideoRuntimeInfo,
 )
-from pysaurus.video.video_features import VideoFeatures
 from saurus.sql.prop_type_search import prop_type_search
 from saurus.sql.pysaurus_connection import PysaurusConnection
 from saurus.sql.saurus_provider import SaurusProvider
@@ -24,37 +22,6 @@ from saurus.sql.video_entry import VideoEntry
 from saurus.sql.video_mega_search import video_mega_search
 
 logger = logging.getLogger(__name__)
-
-
-COMMON_FIELDS = (
-    "audio_bit_rate",
-    "audio_bits",
-    "audio_codec",
-    "audio_codec_description",
-    "audio_languages",
-    "bit_depth",
-    "channels",
-    "container_format",
-    "date",
-    "date_entry_modified",
-    "date_entry_opened",
-    "errors",
-    "file_size",
-    "filename",
-    "frame_rate",
-    "height",
-    "length",
-    "sample_rate",
-    "similarity_id",
-    "subtitle_languages",
-    "video_codec",
-    "video_codec_description",
-    "width",
-    "extension",
-    "size",
-    "bit_rate",
-)
-
 
 PREFIX = {"thumbnail": "", "with_thumbnails": ""}
 
@@ -356,6 +323,8 @@ class PysaurusCollection(AbstractDatabase):
         with_moves: bool = False,
         where: dict = None,
     ) -> List[dict]:
+        where = where or {}
+        where["discarded"] = where.get("discarded", False)
         return video_mega_search(
             self.db, include=include, with_moves=with_moves, where=where
         )
@@ -625,13 +594,6 @@ HAVING COUNT(video_id) > 1 AND SUM(is_file) < COUNT(video_id);
             assert not_found and found, (not_found, found)
             for id_not_found in not_found:
                 yield id_not_found, found
-
-    def get_common_fields(self, video_indices: Iterable[int]) -> dict:
-        return VideoFeatures.get_common_fields(
-            self.get_videos(include=COMMON_FIELDS, where={"video_id": video_indices}),
-            getfield=operator.getitem,
-            fields=COMMON_FIELDS,
-        )
 
     def _insert_new_thumbnails(self, filename_to_thumb_name: Dict[str, str]) -> None:
         filename_to_video_id = {

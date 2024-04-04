@@ -179,10 +179,6 @@ class AbstractDatabase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_common_fields(self, video_indices: Iterable[int]) -> dict:
-        raise NotImplementedError()
-
-    @abstractmethod
     def _insert_new_thumbnails(self, filename_to_thumb_name: Dict[str, str]) -> None:
         raise NotImplementedError()
 
@@ -285,16 +281,16 @@ class AbstractDatabase(ABC):
             )
             if video["filename"] not in valid_miniatures
         ]
-        tasks = [
-            (video["filename"], video["thumbnail_blob"])
-            for video in self.get_videos(
-                include=("filename", "thumbnail_blob"),
-                where={"filename": missing_filenames},
-            )
-        ]
 
         added_miniatures = []
-        if tasks:
+        if missing_filenames:
+            tasks = [
+                (video["filename"], video["thumbnail_blob"])
+                for video in self.get_videos(
+                    include=("filename", "thumbnail_blob"),
+                    where={"filename": missing_filenames},
+                )
+            ]
             with Profiler(say("Generating miniatures."), self.notifier):
                 added_miniatures = Miniatures.get_miniatures(tasks)
 
@@ -317,8 +313,19 @@ class AbstractDatabase(ABC):
 
         self.notifier.notify(notifications.NbMiniatures(len(m_dict)))
 
+        filename_to_video_id = {
+            AbsolutePath.ensure(row["filename"]): row["video_id"]
+            for row in self.get_videos(
+                include=["video_id", "filename"],
+                where={
+                    "filename": [
+                        AbsolutePath.ensure(m.identifier) for m in m_dict.values()
+                    ]
+                },
+            )
+        }
         for m in m_dict.values():
-            m.video_id = self.get_video_id(m.identifier)
+            m.video_id = filename_to_video_id[AbsolutePath.ensure(m.identifier)]
         return list(m_dict.values())
 
     def _update_videos_not_found(self, existing_paths: Container[AbsolutePath]):
@@ -420,16 +427,6 @@ class AbstractDatabase(ABC):
         ]
         self._notify_properties_modified(modified)
         return modified
-
-    @Profiler.profile_method()
-    def describe_videos(self, video_indices: Sequence[int], with_moves=False):
-        return self.get_videos(with_moves=with_moves, where={"video_id": video_indices})
-
-    def get_video_id(self, filename) -> int:
-        (ret,) = self.get_videos(
-            include=["video_id"], where={"filename": AbsolutePath.ensure(filename)}
-        )
-        return ret["video_id"]
 
     def has_video(self, **fields) -> bool:
         return bool(self.get_videos(include=(), where=fields))
