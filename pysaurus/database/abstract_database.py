@@ -574,10 +574,10 @@ class AbstractDatabase(ABC):
         }
 
     def set_video_prop_values(
-        self, name: str, updates: Dict[int, Collection[PropUnitType]]
+        self, name: str, updates: Dict[int, Collection[PropUnitType]], merge=False
     ):
         for video_id, prop_values in updates.items():
-            self.update_prop_values(video_id, name, prop_values)
+            self.update_prop_values(video_id, name, prop_values, merge=merge)
 
     def get_all_video_terms(self) -> Dict[int, List[str]]:
         return {
@@ -612,20 +612,23 @@ class AbstractDatabase(ABC):
         (concat_path,) = self.validate_prop_values(
             to_property, [" ".join(str(value) for value in path)]
         )
-        modified = []
         path_set = set(path)
-        for video_id in self.get_all_video_indices():
-            old_values = self.get_prop_values(video_id, from_property)
+        from_old = self.get_all_prop_values(from_property)
+        from_new = {}
+        for video_id, old_values in from_old.items():
             new_values = [v for v in old_values if v not in path_set]
             if len(old_values) == len(new_values) + len(path_set):
-                self.update_prop_values(video_id, from_property, new_values)
-                self.update_prop_values(
-                    video_id, to_property, [concat_path], merge=True
-                )
-                modified.append(video_id)
-        if modified:
+                from_new[video_id] = new_values
+        if from_new:
+            to_extended = [concat_path]
+            self.set_video_prop_values(from_property, from_new)
+            self.set_video_prop_values(
+                to_property,
+                {video_id: to_extended for video_id in from_new},
+                merge=True,
+            )
             self._notify_properties_modified([from_property, to_property])
-        return len(modified)
+        return len(from_new)
 
     def reopen(self):
         pass

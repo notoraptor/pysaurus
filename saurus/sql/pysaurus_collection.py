@@ -123,7 +123,7 @@ class PysaurusCollection(AbstractDatabase):
         return output
 
     def set_video_prop_values(
-        self, name: str, updates: Dict[int, Collection[PropUnitType]]
+        self, name: str, updates: Dict[int, Collection[PropUnitType]], merge=False
     ):
         (prop_desc,) = self.get_prop_types(name=name)
         pt = PropTypeValidator(prop_desc)
@@ -133,14 +133,15 @@ class PysaurusCollection(AbstractDatabase):
             updates[video_id] = pt.instantiate(updates[video_id])
 
         property_id = pt.property_id
-        self.db.modify(
-            f"DELETE FROM video_property_value "
-            f"WHERE property_id = ? "
-            f"AND video_id IN ({placeholders_string})",
-            [property_id] + video_indices,
-        )
+        if not merge or not pt.multiple:
+            self.db.modify(
+                f"DELETE FROM video_property_value "
+                f"WHERE property_id = ? "
+                f"AND video_id IN ({placeholders_string})",
+                [property_id] + video_indices,
+            )
         self.db.modify_many(
-            "INSERT INTO video_property_value "
+            "INSERT OR IGNORE INTO video_property_value "
             "(video_id, property_id, property_value) VALUES (?, ?, ?)",
             (
                 (video_id, property_id, value)
