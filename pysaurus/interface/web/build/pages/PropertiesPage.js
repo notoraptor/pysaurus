@@ -147,13 +147,13 @@ System.register(["../components/Cell.js", "../components/SetInput.js", "../dialo
           }, def.multiple ? /*#__PURE__*/React.createElement("span", null, tr("one or many"), "\xA0") : "", /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("code", null, def.type), " ", def.multiple ? tr("values") : tr("value")), def.enumeration ? /*#__PURE__*/React.createElement("span", null, "\xA0", tr("in"), " ", "{", def.enumeration.join(", "), "}") : ""), /*#__PURE__*/React.createElement("td", {
             className: "default"
           }, function () {
+            let values = def.defaultValues;
+            if (def.type === "str") values = values.map(el => `"${el}"`);else values = values.map(el => el.toString());
+            let output = values.join(", ");
             if (def.multiple) {
-              return `{${def.defaultValue.join(", ")}}`;
-            } else if (def.type === "str") {
-              return `"${def.defaultValue}"`;
-            } else {
-              return def.defaultValue.toString();
+              output = `{${output}}`;
             }
+            return output;
           }()), /*#__PURE__*/React.createElement("td", {
             className: "options"
           }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("button", {

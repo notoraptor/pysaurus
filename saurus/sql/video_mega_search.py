@@ -104,7 +104,7 @@ def _get_videos(
     with_errors = include is None or "errors" in include
     with_audio_languages = include is None or "audio_languages" in include
     with_subtitle_languages = include is None or "subtitle_languages" in include
-    with_properties = include is None or "json_properties" in include
+    with_properties = include is None or "properties" in include
     if with_errors:
         for row in db.query(
             f"SELECT video_id, error FROM video_error "
@@ -135,7 +135,7 @@ def _get_videos(
             video_id: {
                 prop_types[property_id]
                 .name: prop_types[property_id]
-                .plain_from_strings(values)
+                .from_strings(values)
                 for property_id, values in raw_properties.items()
             }
             for video_id, raw_properties in properties.items()

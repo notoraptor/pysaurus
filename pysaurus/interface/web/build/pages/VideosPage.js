@@ -972,7 +972,7 @@ not found video entry will be deleted.
           return definitions.filter(def => def.type === "str");
         }
         getPredictionProperties(definitions) {
-          return definitions.filter(def => def.name.indexOf("<?") === 0 && def.name.indexOf(">") === def.name.length - 1 && def.type === "int" && def.defaultValue === -1 && !def.multiple && arrayEquals(def.enumeration, [-1, 0, 1]));
+          return definitions.filter(def => def.name.indexOf("<?") === 0 && def.name.indexOf(">") === def.name.length - 1 && def.type === "int" && def.defaultValues[0] === -1 && !def.multiple && arrayEquals(def.enumeration, [-1, 0, 1]));
         }
 
         /**

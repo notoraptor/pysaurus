@@ -295,22 +295,18 @@ System.register(["../dialogs/Dialog.js", "../forms/FormVideoEditProperties.js", 
             onClick: this.editProperties
           }, "PROPERTIES"), propDefs.map(def => {
             const name = def.name;
-            const value = props.hasOwnProperty(name) ? props[name] : def.defaultValue;
-            let noValue;
-            if (def.multiple) noValue = !value.length;else noValue = def.type === "str" && !value;
-            let printableValues = def.multiple ? value : [value];
+            const printableValues = props.hasOwnProperty(name) ? props[name] : def.defaultValues;
+            const noValue = !printableValues.length || printableValues.length === 1 && printableValues[0] === "";
             return noValue ? "" : /*#__PURE__*/React.createElement("div", {
               key: name,
               className: `property ${props.hasOwnProperty(name) ? "defined" : ""}`
             }, /*#__PURE__*/React.createElement(Collapsable, {
               title: name
-            }, !noValue ? printableValues.map((element, elementIndex) => /*#__PURE__*/React.createElement("span", {
+            }, printableValues.map((element, elementIndex) => /*#__PURE__*/React.createElement("span", {
               className: "value clickable",
               key: elementIndex,
               onClick: () => this.props.onSelectPropertyValue(name, element)
-            }, element.toString())) : /*#__PURE__*/React.createElement("span", {
-              className: "no-value"
-            }, tr("no value"))));
+            }, element.toString()))));
           }));
         }
         openVideo() {

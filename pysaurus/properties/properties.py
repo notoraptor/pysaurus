@@ -78,7 +78,7 @@ class PropType(WithSchema):
             "name": self.name,
             "type": self.type.__name__,
             "enumeration": self.enumeration,
-            "defaultValue": self.new(),
+            "defaultValues": [] if self.multiple else [self.default],
             "multiple": self.multiple,
         }
 
@@ -91,7 +91,7 @@ class PropTypeValidator:
         self.type = PROP_UNIT_TYPE_MAP[prop_desc["type"]]
         self.enumeration = prop_desc["enumeration"]
         self.multiple = prop_desc["multiple"]
-        self.default = prop_desc["defaultValue"]
+        self.default = prop_desc["defaultValues"]
         self.property_id = prop_desc.get("property_id")
 
     def __str__(self):
@@ -202,7 +202,7 @@ class PropTypeValidator:
                 "name": name,
                 "type": prop_type.__name__,
                 "multiple": multiple,
-                "defaultValue": enumeration[0] if enumeration else definition,
+                "default": enumeration[0] if enumeration else definition,
                 "enumeration": enumeration,
             }
         else:

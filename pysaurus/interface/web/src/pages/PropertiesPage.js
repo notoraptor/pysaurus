@@ -194,13 +194,14 @@ export class PropertiesPage extends React.Component {
 							</td>
 							<td className="default">
 								{(function () {
+									let values = def.defaultValues;
+									if (def.type === "str") values = values.map((el) => `"${el}"`);
+									else values = values.map((el) => el.toString());
+									let output = values.join(", ");
 									if (def.multiple) {
-										return `{${def.defaultValue.join(", ")}}`;
-									} else if (def.type === "str") {
-										return `"${def.defaultValue}"`;
-									} else {
-										return def.defaultValue.toString();
+										output = `{${output}}`;
 									}
+									return output;
 								})()}
 							</td>
 							<td className="options">

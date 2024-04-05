@@ -29,7 +29,7 @@ class Val:
             "filename_length",
             "frame_rate_den",
             "frame_rate_num",
-            "json_properties",
+            "properties",
             "meta_title",
             "meta_title_numeric",
             "moves",

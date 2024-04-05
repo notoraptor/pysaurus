@@ -238,14 +238,14 @@ class PysaurusCollection(AbstractDatabase):
         definition: PropRawType,
         multiple: bool,
     ) -> None:
-        prop_desc = PropTypeValidator.define(
+        prop_def = PropTypeValidator.define(
             name, prop_type, definition, multiple, describe=True
         )
-        if self.get_prop_types(name=prop_desc["name"]):
-            raise exceptions.PropertyAlreadyExists(prop_desc["name"])
+        if self.get_prop_types(name=prop_def["name"]):
+            raise exceptions.PropertyAlreadyExists(prop_def["name"])
         property_id = self.db.modify(
             "INSERT INTO property (name, type, multiple) VALUES (?, ?, ?)",
-            [prop_desc["name"], prop_desc["type"], int(prop_desc["multiple"])],
+            [prop_def["name"], prop_def["type"], int(prop_def["multiple"])],
         )
         self.db.modify_many(
             "INSERT INTO property_enumeration (property_id, enum_value, rank) "
@@ -253,7 +253,7 @@ class PysaurusCollection(AbstractDatabase):
             [
                 (property_id, value, rank)
                 for rank, value in enumerate(
-                    prop_desc["enumeration"] or [prop_desc["defaultValue"]]
+                    prop_def["enumeration"] or [prop_def["default"]]
                 )
             ],
         )

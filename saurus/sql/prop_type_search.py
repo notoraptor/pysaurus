@@ -46,7 +46,7 @@ def prop_type_search(
                     "name": row["name"],
                     "type": row["type"],
                     "multiple": row["multiple"],
-                    "defaultValue": [] if row["multiple"] else enumeration[0],
+                    "defaultValues": [] if row["multiple"] else [enumeration[0]],
                     "enumeration": enumeration if len(enumeration) > 1 else None,
                 }
             )

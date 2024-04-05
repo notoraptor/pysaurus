@@ -378,7 +378,7 @@ def test_prop_types_default_value():
     assert len(properties) == 6
     assert properties == [
         {
-            "defaultValue": 0.0,
+            "defaultValues": [0.0],
             "enumeration": None,
             "multiple": 0,
             "name": "appreciation",
@@ -386,7 +386,7 @@ def test_prop_types_default_value():
             "type": "float",
         },
         {
-            "defaultValue": [],
+            "defaultValues": [],
             "enumeration": None,
             "multiple": 1,
             "name": "category",
@@ -394,7 +394,7 @@ def test_prop_types_default_value():
             "type": "str",
         },
         {
-            "defaultValue": False,
+            "defaultValues": [False],
             "enumeration": None,
             "multiple": 0,
             "name": "has sky",
@@ -402,7 +402,7 @@ def test_prop_types_default_value():
             "type": "bool",
         },
         {
-            "defaultValue": 0,
+            "defaultValues": [0],
             "enumeration": [0, 1],
             "multiple": 0,
             "name": "is nature",
@@ -410,7 +410,7 @@ def test_prop_types_default_value():
             "type": "int",
         },
         {
-            "defaultValue": 0,
+            "defaultValues": [0],
             "enumeration": None,
             "multiple": 0,
             "name": "number of animals",
@@ -418,7 +418,7 @@ def test_prop_types_default_value():
             "type": "int",
         },
         {
-            "defaultValue": "example video",
+            "defaultValues": ["example video"],
             "enumeration": None,
             "multiple": 0,
             "name": "title",

@@ -161,17 +161,6 @@ class LazyVideo(WithSchema):
     def properties(self, properties: Dict[str, List[Any]]):
         self._set("properties", properties)
 
-    @property
-    def json_properties(self):
-        return {
-            name: (
-                value
-                if self.database.get_prop_types(name=name, multiple=True)
-                else value[0]
-            )
-            for name, value in self._get("properties").items()
-        }
-
     sample_rate = property(lambda self: self._get("sample_rate"))
 
     @property

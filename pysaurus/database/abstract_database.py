@@ -639,4 +639,4 @@ class AbstractDatabase(ABC):
 
     def default_prop_unit(self, name):
         (pt,) = self.get_prop_types(name=name)
-        return None if pt["multiple"] else pt["defaultValue"]
+        return None if pt["multiple"] else pt["defaultValues"][0]

@@ -1244,7 +1244,7 @@ not found video entry will be deleted.
 				def.name.indexOf("<?") === 0 &&
 				def.name.indexOf(">") === def.name.length - 1 &&
 				def.type === "int" &&
-				def.defaultValue === -1 &&
+				def.defaultValues[0] === -1 &&
 				!def.multiple &&
 				arrayEquals(def.enumeration, [-1, 0, 1])
 		);

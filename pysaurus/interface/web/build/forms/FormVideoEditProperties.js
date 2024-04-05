@@ -25,7 +25,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../langua
           const properties = this.props.data.properties;
           for (let def of this.props.definitions) {
             const name = def.name;
-            this.state[name] = properties.hasOwnProperty(name) ? properties[name] : def.defaultValue;
+            this.state[name] = properties.hasOwnProperty(name) ? properties[name] : def.defaultValues;
           }
           this.onClose = this.onClose.bind(this);
           this.onChange = this.onChange.bind(this);
@@ -69,7 +69,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../langua
               });
             } else if (def.enumeration) {
               input = /*#__PURE__*/React.createElement("select", {
-                value: this.state[name],
+                value: this.state[name][0],
                 onChange: event => this.onChange(event, def)
               }, def.enumeration.map((value, valueIndex) => /*#__PURE__*/React.createElement("option", {
                 key: valueIndex,
@@ -77,7 +77,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../langua
               }, value)));
             } else if (def.type === "bool") {
               input = /*#__PURE__*/React.createElement("select", {
-                value: this.state[name],
+                value: this.state[name][0],
                 onChange: event => this.onChange(event, def)
               }, /*#__PURE__*/React.createElement("option", {
                 value: "false"
@@ -88,7 +88,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../langua
               input = /*#__PURE__*/React.createElement("input", {
                 type: def.type === "int" ? "number" : "text",
                 onChange: event => this.onChange(event, def),
-                value: this.state[name]
+                value: this.state[name][0]
               });
             }
             return /*#__PURE__*/React.createElement("tr", {
@@ -106,7 +106,7 @@ System.register(["../components/SetInput.js", "../dialogs/Dialog.js", "../langua
         onChange(event, def) {
           try {
             this.setState({
-              [def.name]: UTILITIES.parsePropValString(def.type, def.enumeration, event.target.value)
+              [def.name]: [UTILITIES.parsePropValString(def.type, def.enumeration, event.target.value)]
             });
           } catch (exception) {
             window.alert(exception.toString());

@@ -46,7 +46,7 @@ class VideoFeatures:
             # "move_id": video.move_id if with_moves else None,
             "moves": video.moves if with_moves else None,
             # "not_found": video.not_found,
-            "properties": video.json_properties,
+            "properties": video.properties,
             "readable": video.readable,
             "sample_rate": video.sample_rate,
             "similarity_id": video.similarity_id,
