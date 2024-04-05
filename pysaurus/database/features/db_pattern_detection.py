@@ -43,8 +43,9 @@ class DbPatternDetection:
             if video["video_id"] in video_id_to_miniature
         ]
         classifier: Dict[int, List[int]] = {}
+        prop_vals = database.get_all_prop_values(prop_name, video_indices)
         for video_id in video_indices:
-            (prop_val,) = database.get_prop_values(video_id, prop_name) or [-1]
+            (prop_val,) = prop_vals.get(video_id, [-1])
             classifier.setdefault(prop_val, []).append(video_id)
         if 0 not in classifier:
             raise NoVideoForClass0(prop_name)

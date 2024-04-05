@@ -107,7 +107,9 @@ class PysaurusCollection(AbstractDatabase):
             ]
         )
 
-    def get_all_prop_values(self, name: str) -> Dict[int, Collection[PropUnitType]]:
+    def get_all_prop_values(
+        self, name: str, indices: List[int] = ()
+    ) -> Dict[int, Collection[PropUnitType]]:
         (prop_desc,) = self.get_prop_types(name=name)
         pt = PropTypeValidator(prop_desc)
         output = {}
@@ -116,8 +118,13 @@ class PysaurusCollection(AbstractDatabase):
             "FROM video_property_value AS pv "
             "JOIN property AS p "
             "ON pv.property_id = p.property_id "
-            "WHERE p.name = ?",
-            [name],
+            "WHERE p.name = ?"
+            + (
+                f" AND pv.video_id IN ({','.join(['?'] * len(indices))})"
+                if indices
+                else ""
+            ),
+            [name] + indices,
         ):
             output.setdefault(row[0], []).append(pt.from_string(row[1]))
         return output
@@ -616,3 +623,15 @@ HAVING COUNT(video_id) > 1 AND SUM(is_file) < COUNT(video_id);
                 for filename, thumb_path in filename_to_thumb_name.items()
             ),
         )
+
+    def delete_property_value(self, name: str, values: list) -> None:
+        if not values:
+            return
+        (prop_desc,) = self.get_prop_types(name=name)
+        self.db.modify(
+            f"DELETE FROM video_property_value "
+            f"WHERE property_id = ? "
+            f"AND property_value IN ({','.join(['?'] * len(values))})",
+            [prop_desc["property_id"]] + values,
+        )
+        self._notify_properties_modified([name])

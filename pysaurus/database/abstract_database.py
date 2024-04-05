@@ -382,9 +382,6 @@ class AbstractDatabase(ABC):
         self._notify_missing_thumbnails()
         self.provider.refresh()
 
-    def get_all_video_indices(self) -> Iterable[int]:
-        return (item["video_id"] for item in self.select_videos_fields(["video_id"]))
-
     def to_save(self):
         """Return a save context.
 
@@ -487,18 +484,17 @@ class AbstractDatabase(ABC):
             if len(moves) == 1
         ]
 
-    def delete_property_value(self, name: str, values: list) -> List[int]:
-        modified = []
+    def delete_property_value(self, name: str, values: list) -> None:
         values = set(self.validate_prop_values(name, values))
-        for video_id in self.get_all_video_indices():
-            previous_values = set(self.get_prop_values(video_id, name))
+        modified = {}
+        for video_id, previous_values in self.get_all_prop_values(name).items():
+            previous_values = set(previous_values)
             new_values = previous_values - values
             if len(previous_values) > len(new_values):
-                self.update_prop_values(video_id, name, new_values)
-                modified.append(video_id)
+                modified[video_id] = new_values
         if modified:
+            self.set_video_prop_values(name, modified)
             self._notify_properties_modified([name])
-        return modified
 
     def move_property_value(self, old_name: str, values: list, new_name: str) -> None:
         modified = self.delete_property_value(old_name, values)
@@ -510,17 +506,17 @@ class AbstractDatabase(ABC):
     def edit_property_value(
         self, name: str, old_values: list, new_value: object
     ) -> bool:
-        modified = []
+        modified = {}
         old_values = set(self.validate_prop_values(name, old_values))
         (new_value,) = self.validate_prop_values(name, [new_value])
-        for video_id in self.get_all_video_indices():
-            previous_values = set(self.get_prop_values(video_id, name))
+        for video_id, previous_values in self.get_all_prop_values(name).items():
+            previous_values = set(previous_values)
             next_values = previous_values - old_values
             if len(previous_values) > len(next_values):
                 next_values.add(new_value)
-                self.update_prop_values(video_id, name, next_values)
-                modified.append(video_id)
+                modified[video_id] = next_values
         if modified:
+            self.set_video_prop_values(name, modified)
             self._notify_properties_modified([name])
         return bool(modified)
 
@@ -541,17 +537,23 @@ class AbstractDatabase(ABC):
         )
         values_to_add = set(self.validate_prop_values(name, values_to_add))
         values_to_remove = set(self.validate_prop_values(name, values_to_remove))
-        for video_id in video_indices:
-            values = (
-                set(self.get_prop_values(video_id, name)) - values_to_remove
-            ) | values_to_add
-            self.update_prop_values(video_id, name, values)
+        old_props = self.get_all_prop_values(name, indices=video_indices)
+        self.set_video_prop_values(
+            name,
+            {
+                video_id: (
+                    (set(old_props.get(video_id, ())) - values_to_remove)
+                    | values_to_add
+                )
+                for video_id in video_indices
+            },
+        )
         self._notify_properties_modified([name])
 
     def count_property_values(self, video_indices: List[int], name: str) -> List[List]:
         count = Counter()
-        for video_id in video_indices:
-            count.update(self.get_prop_values(video_id, name))
+        for values in self.get_all_prop_values(name, indices=video_indices).values():
+            count.update(values)
         return sorted(list(item) for item in count.items())
 
     def fill_property_with_terms(self, prop_name: str, only_empty=False) -> None:
@@ -567,11 +569,11 @@ class AbstractDatabase(ABC):
             self.set_video_prop_values(prop_name, modified)
             self._notify_properties_modified([prop_name])
 
-    def get_all_prop_values(self, name: str) -> Dict[int, Collection[PropUnitType]]:
-        return {
-            video_id: self.get_prop_values(video_id, name)
-            for video_id in self.get_all_video_indices()
-        }
+    @abstractmethod
+    def get_all_prop_values(
+        self, name: str, indices: List[int] = ()
+    ) -> Dict[int, Collection[PropUnitType]]:
+        raise NotImplementedError()
 
     def set_video_prop_values(
         self, name: str, updates: Dict[int, Collection[PropUnitType]], merge=False
@@ -582,19 +584,21 @@ class AbstractDatabase(ABC):
     def get_all_video_terms(self) -> Dict[int, List[str]]:
         return {
             video_id: self.get_video_terms(video_id)
-            for video_id in self.get_all_video_indices()
+            for video_id in self._get_all_video_indices()
         }
+
+    def _get_all_video_indices(self) -> Iterable[int]:
+        return (item["video_id"] for item in self.select_videos_fields(["video_id"]))
 
     def _edit_prop_value(self, prop_name: str, function: Callable[[Any], Any]) -> None:
         assert self.get_prop_types(name=prop_name, with_type=str)
-        modified = []
-        for video_id in self.get_all_video_indices():
-            values = self.get_prop_values(video_id, prop_name)
+        modified = {}
+        for video_id, values in self.get_all_prop_values(prop_name).items():
             new_values = [function(value) for value in values]
             if values and new_values != values:
-                self.update_prop_values(video_id, prop_name, new_values)
-                modified.append(video_id)
+                modified[video_id] = new_values
         if modified:
+            self.set_video_prop_values(prop_name, modified)
             self._notify_properties_modified([prop_name])
 
     def prop_to_lowercase(self, prop_name) -> None:

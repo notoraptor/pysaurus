@@ -618,3 +618,11 @@ class JsonDatabase(AbstractDatabase):
         self._thumb_mgr.save_existing_thumbnails(filename_to_thumb_name)
         for filename in filename_to_thumb_name:
             self.jsondb_register_modified(self._videos[AbsolutePath.ensure(filename)])
+
+    def get_all_prop_values(
+        self, name: str, indices: List[int] = ()
+    ) -> Dict[int, Collection[PropUnitType]]:
+        return {
+            video_id: self.get_prop_values(video_id, name)
+            for video_id in (indices or self._get_all_video_indices())
+        }

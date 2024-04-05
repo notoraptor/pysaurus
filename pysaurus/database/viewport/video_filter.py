@@ -24,9 +24,9 @@ class Layer:
     __slots__ = ("database", "input", "params", "output", "to_update")
 
     def __init__(self, database):
-        from pysaurus.database.abstract_database import AbstractDatabase
+        from pysaurus.database.jsdb.json_database import JsonDatabase
 
-        self.database: AbstractDatabase = database
+        self.database: JsonDatabase = database
         self.input = None
         self.params = self.default_params()
         self.output = None
