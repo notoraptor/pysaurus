@@ -59,7 +59,7 @@ export class Video extends React.Component {
 		const meta_title = title === file_title ? null : title;
 		const hasThumbnail = data.with_thumbnails;
 		const htmlID = `video-${data.video_id}`;
-		const alreadyOpened = APP_STATE.videoHistory.has(data.filename);
+		const alreadyOpened = data.date != data.date_entry_opened;
 		const common = (this.props.groupDef && this.props.groupDef.common) || {};
 		const groupedBySimilarityID = this.props.groupDef && this.props.groupDef.field === "similarity_id";
 		const errors = data.errors.slice();
