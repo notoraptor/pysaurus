@@ -97,10 +97,16 @@ class DbPatternDetection:
             notifier.task(cls.predict_pattern, len(video_indices), "videos")
             with Profiler(say("Predict")):
                 for i, video_id in enumerate(video_indices):
-                    database.update_prop_values(
-                        video_id,
+                    database.set_video_prop_values(
                         output_prop_name,
-                        [int(predict(video_id_to_miniature[video_id], theta) >= 0.5)],
+                        {
+                            video_id: [
+                                int(
+                                    predict(video_id_to_miniature[video_id], theta)
+                                    >= 0.5
+                                )
+                            ]
+                        },
                     )
                     notifier.progress(cls.predict_pattern, i + 1, len(video_indices))
 

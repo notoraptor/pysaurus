@@ -22,7 +22,6 @@ from pysaurus.application import exceptions
 from pysaurus.core import functions, notifications
 from pysaurus.core.components import AbsolutePath, Date, PathType
 from pysaurus.core.file_utils import create_xspf_playlist
-from pysaurus.core.functions import make_collection
 from pysaurus.core.modules import ImageUtils
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.profiling import Profiler
@@ -90,16 +89,6 @@ class AbstractDatabase(ABC):
 
     @abstractmethod
     def set_predictor(self, prop_name: str, theta: List[float]) -> None:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def get_prop_values(self, video_id: int, name: str) -> Collection[PropUnitType]:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def update_prop_values(
-        self, video_id: int, name: str, values: Collection, *, merge=False
-    ):
         raise NotImplementedError()
 
     @abstractmethod
@@ -180,6 +169,24 @@ class AbstractDatabase(ABC):
 
     @abstractmethod
     def _insert_new_thumbnails(self, filename_to_thumb_name: Dict[str, str]) -> None:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def set_video_properties(
+        self, video_id: int, properties: dict, merge=False
+    ) -> None:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_all_prop_values(
+        self, name: str, indices: List[int] = ()
+    ) -> Dict[int, Collection[PropUnitType]]:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def set_video_prop_values(
+        self, name: str, updates: Dict[int, Collection[PropUnitType]], merge=False
+    ):
         raise NotImplementedError()
 
     def validate_prop_values(self, name, values: list) -> List[PropValueType]:
@@ -416,15 +423,6 @@ class AbstractDatabase(ABC):
         """
         pass
 
-    def set_video_properties(self, video_id: int, properties: dict) -> List[str]:
-        modified = [
-            name
-            for name, values in properties.items()
-            if self.update_prop_values(video_id, name, make_collection(values))
-        ]
-        self._notify_properties_modified(modified)
-        return modified
-
     def has_video(self, **fields) -> bool:
         return bool(self.get_videos(include=(), where=fields))
 
@@ -440,15 +438,16 @@ class AbstractDatabase(ABC):
 
     def move_video_entry(self, from_id, to_id) -> None:
         (from_data,) = self.get_videos(
-            include=("similarity_id", "date_entry_modified", "date_entry_opened"),
+            include=(
+                "similarity_id",
+                "date_entry_modified",
+                "date_entry_opened",
+                "properties",
+            ),
             where={"video_id": from_id, "found": False},
         )
         assert self.has_video(video_id=to_id, found=True)
-        for pt in self.get_prop_types():
-            prop_name = pt["name"]
-            self.update_prop_values(
-                to_id, prop_name, self.get_prop_values(from_id, prop_name), merge=True
-            )
+        self.set_video_properties(to_id, from_data["properties"], merge=True)
         self.set_similarities([to_id], [from_data["similarity_id"]])
         self.write_videos_field(
             [to_id], "date_entry_modified", [from_data["date_entry_modified"].time]
@@ -484,7 +483,7 @@ class AbstractDatabase(ABC):
             if len(moves) == 1
         ]
 
-    def delete_property_value(self, name: str, values: list) -> None:
+    def delete_property_value(self, name: str, values: list) -> List[int]:
         values = set(self.validate_prop_values(name, values))
         modified = {}
         for video_id, previous_values in self.get_all_prop_values(name).items():
@@ -495,12 +494,14 @@ class AbstractDatabase(ABC):
         if modified:
             self.set_video_prop_values(name, modified)
             self._notify_properties_modified([name])
+        return list(modified.keys())
 
     def move_property_value(self, old_name: str, values: list, new_name: str) -> None:
         modified = self.delete_property_value(old_name, values)
-        for video_id in modified:
-            self.update_prop_values(video_id, new_name, values, merge=True)
         if modified:
+            self.set_video_prop_values(
+                new_name, {video_id: values for video_id in modified}, merge=True
+            )
             self._notify_properties_modified([old_name, new_name])
 
     def edit_property_value(
@@ -568,18 +569,6 @@ class AbstractDatabase(ABC):
         if modified:
             self.set_video_prop_values(prop_name, modified)
             self._notify_properties_modified([prop_name])
-
-    @abstractmethod
-    def get_all_prop_values(
-        self, name: str, indices: List[int] = ()
-    ) -> Dict[int, Collection[PropUnitType]]:
-        raise NotImplementedError()
-
-    def set_video_prop_values(
-        self, name: str, updates: Dict[int, Collection[PropUnitType]], merge=False
-    ):
-        for video_id, prop_values in updates.items():
-            self.update_prop_values(video_id, name, prop_values, merge=merge)
 
     def get_all_video_terms(self) -> Dict[int, List[str]]:
         return {

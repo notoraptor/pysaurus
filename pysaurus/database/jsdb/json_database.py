@@ -15,6 +15,7 @@ from pysaurus.application import exceptions
 from pysaurus.core import functions, notifications
 from pysaurus.core.components import AbsolutePath, Date, PathType
 from pysaurus.core.constants import JPEG_EXTENSION
+from pysaurus.core.functions import make_collection
 from pysaurus.core.json_backup import JsonBackup
 from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.path_tree import PathTree
@@ -480,7 +481,7 @@ class JsonDatabase(AbstractDatabase):
         where: dict = None,
     ) -> List[dict]:
         where = where or {}
-        where["discarded"] = where.get("discarded", False)
+        # where["discarded"] = where.get("discarded", False)
         q_flags = {key: value for key, value in where.items() if key in VIDEO_FLAGS}
         q_other = {key: value for key, value in where.items() if key not in VIDEO_FLAGS}
 
@@ -626,3 +627,21 @@ class JsonDatabase(AbstractDatabase):
             video_id: self.get_prop_values(video_id, name)
             for video_id in (indices or self._get_all_video_indices())
         }
+
+    def set_video_prop_values(
+        self, name: str, updates: Dict[int, Collection[PropUnitType]], merge=False
+    ):
+        for video_id, prop_values in updates.items():
+            self.update_prop_values(video_id, name, prop_values, merge=merge)
+
+    def set_video_properties(
+        self, video_id: int, properties: dict, merge=False
+    ) -> None:
+        modified = [
+            name
+            for name, values in properties.items()
+            if self.update_prop_values(
+                video_id, name, make_collection(values), merge=merge
+            )
+        ]
+        self._notify_properties_modified(modified)

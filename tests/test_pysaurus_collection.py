@@ -254,20 +254,20 @@ def test_edit_properties():
     with provider:
         provider.set_search("palm beach", "and")
         assert provider.get_view_indices() == [84, 21]
-        old_values = collection.get_prop_values(84, "category")
+        old_values = collection.get_all_prop_values("category", [84])[84]
         assert len(old_values) == 1
         new_values = list(old_values) + ["beach palm"]
 
         provider.set_search("palm beach", "exact")
         assert provider.get_view_indices() == [21]
 
-        collection.update_prop_values(84, "category", new_values)
-        assert collection.get_prop_values(84, "category") == new_values
+        collection.set_video_prop_values("category", {84: new_values})
+        assert collection.get_all_prop_values("category", [84])[84] == new_values
         provider.refresh()
         assert provider.get_view_indices() == [84, 21]
 
-        collection.update_prop_values(84, "category", old_values)
-        assert collection.get_prop_values(84, "category") == old_values
+        collection.set_video_prop_values("category", {84: old_values})
+        assert collection.get_all_prop_values("category", [84])[84] == old_values
         provider.refresh()
         assert provider.get_view_indices() == [21]
 

@@ -90,23 +90,6 @@ class PysaurusCollection(AbstractDatabase):
         logger.error("set_predictor not yet implemented.")
         raise NotImplementedError()
 
-    def get_prop_values(self, video_id: int, name: str) -> Collection[PropUnitType]:
-        (prop_desc,) = self.get_prop_types(name=name)
-        pt = PropTypeValidator(prop_desc)
-        return pt.from_strings(
-            [
-                row["val"]
-                for row in self.db.query(
-                    "SELECT pv.property_value AS val "
-                    "FROM video_property_value AS pv "
-                    "JOIN property AS p "
-                    "ON p.property_id = pv.property_id "
-                    "WHERE p.name = ? AND pv.video_id = ?",
-                    [name, video_id],
-                )
-            ]
-        )
-
     def get_all_prop_values(
         self, name: str, indices: List[int] = ()
     ) -> Dict[int, Collection[PropUnitType]]:
@@ -174,49 +157,57 @@ class PysaurusCollection(AbstractDatabase):
                 new_texts,
             )
 
-    def update_prop_values(
-        self, video_id: int, name: str, values: Collection, *, merge=False
-    ):
-        (prop_desc,) = self.get_prop_types(name=name)
-        pt = PropTypeValidator(prop_desc)
-        values = pt.instantiate(values)
-        property_id = pt.property_id
-        modified = False
-
-        if values:
-            if pt.multiple and merge:
-                self.db.modify_many(
-                    "INSERT OR IGNORE INTO video_property_value "
-                    "(video_id, property_id, property_value) VALUES (?, ?, ?)",
-                    [(video_id, property_id, value) for value in values],
-                )
-                modified = True
-            else:  # replace anyway
-                self.db.modify(
-                    "DELETE FROM video_property_value "
-                    "WHERE video_id = ? AND property_id = ?",
-                    [video_id, property_id],
-                )
-                self.db.modify_many(
-                    "INSERT INTO video_property_value "
-                    "(video_id, property_id, property_value) VALUES (?, ?, ?)",
-                    [(video_id, property_id, value) for value in values],
-                )
-                modified = True
-        elif not merge:  # replace with empty => remove
+    def set_video_properties(
+        self, video_id: int, properties: dict, merge=False
+    ) -> None:
+        if not properties:
+            return
+        props: Dict[str, PropTypeValidator] = {
+            prop_desc["name"]: PropTypeValidator(prop_desc)
+            for prop_desc in self.get_prop_types()
+        }
+        validated_properties = {
+            name: props[name].as_sql(props[name].instantiate(values))
+            for name, values in properties.items()
+        }
+        string_properties = [name for name in properties if props[name].type is str]
+        unique_prop_indices = [
+            props[name].property_id for name in properties if not props[name].multiple
+        ]
+        if not merge:
             self.db.modify(
-                "DELETE FROM video_property_value "
-                "WHERE video_id = ? AND property_id = ?",
-                [video_id, property_id],
+                f"DELETE FROM video_property_value WHERE video_id = ? "
+                f"AND property_id IN ({','.join(['?'] * len(properties))})",
+                [video_id] + [props[name].property_id for name in properties],
             )
-            modified = True
-
-        if modified and pt.type is str:
+        elif unique_prop_indices:
             self.db.modify(
-                "UPDATE video_text SET properties = "
-                "(SELECT property_text FROM video_property_text WHERE video_id = ?) "
-                "WHERE video_id = ?",
-                [video_id, video_id],
+                f"DELETE FROM video_property_value HWERE video_id = ? "
+                f"AND property_id IN ({','.join(['?'] * len(unique_prop_indices))})",
+                [video_id] + unique_prop_indices,
+            )
+        self.db.modify_many(
+            "INSERT OR IGNORE INTO video_property_value "
+            "(video_id, property_id, property_value) VALUES (?, ?, ?)",
+            (
+                (video_id, props[name].property_id, value)
+                for name, values in validated_properties.items()
+                for value in values
+            ),
+        )
+        if string_properties:
+            (new_texts,) = self.db.query_all(
+                f"SELECT v.video_id, v.filename, v.meta_title, t.property_text "
+                f"FROM video AS v JOIN video_property_text AS t "
+                f"ON v.video_id = t.video_id "
+                f"WHERE v.video_id = ?",
+                [video_id],
+            )
+            self.db.modify(f"DELETE FROM video_text WHERE video_id = ?", [video_id])
+            self.db.modify(
+                "INSERT INTO video_text "
+                "(video_id, filename, meta_title, properties) VALUES (?,?,?,?)",
+                new_texts,
             )
 
     def get_prop_types(
@@ -331,8 +322,8 @@ class PysaurusCollection(AbstractDatabase):
         with_moves: bool = False,
         where: dict = None,
     ) -> List[dict]:
-        where = where or {}
-        where["discarded"] = where.get("discarded", False)
+        # where = where or {}
+        # where["discarded"] = where.get("discarded", False)
         return video_mega_search(
             self.db, include=include, with_moves=with_moves, where=where
         )
@@ -624,10 +615,19 @@ HAVING COUNT(video_id) > 1 AND SUM(is_file) < COUNT(video_id);
             ),
         )
 
-    def delete_property_value(self, name: str, values: list) -> None:
+    def delete_property_value(self, name: str, values: list) -> List[int]:
         if not values:
-            return
+            return []
         (prop_desc,) = self.get_prop_types(name=name)
+        modified = [
+            row["video_id"]
+            for row in self.db.query(
+                f"SELECT video_id FROM video_property_value "
+                f"WHERE property_id = ? "
+                f"AND property_value IN ({','.join(['?'] * len(values))})",
+                [prop_desc["property_id"]] + values,
+            )
+        ]
         self.db.modify(
             f"DELETE FROM video_property_value "
             f"WHERE property_id = ? "
@@ -635,3 +635,4 @@ HAVING COUNT(video_id) > 1 AND SUM(is_file) < COUNT(video_id);
             [prop_desc["property_id"]] + values,
         )
         self._notify_properties_modified([name])
+        return modified

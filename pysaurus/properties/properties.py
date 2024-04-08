@@ -1,9 +1,10 @@
-from typing import Collection, Sequence, Union
+from typing import Collection, Sequence, Union, List
 
 from pysaurus.application import exceptions
 from pysaurus.core.enumeration import Enumeration
 from pysaurus.core.json_type import Type
 from pysaurus.core.schematizable import Schema, WithSchema, schema_prop
+from pysaurus.core import functions
 
 PropUnitType = Union[bool, int, float, str]
 PropRawType = Union[bool, int, float, str, Collection]
@@ -84,7 +85,15 @@ class PropType(WithSchema):
 
 
 class PropTypeValidator:
-    __slots__ = ("name", "type", "enumeration", "multiple", "default", "property_id")
+    __slots__ = (
+        "name",
+        "type",
+        "enumeration",
+        "multiple",
+        "default",
+        "property_id",
+        "as_sql",
+    )
 
     def __init__(self, prop_desc: dict):
         self.name = prop_desc["name"]
@@ -93,6 +102,24 @@ class PropTypeValidator:
         self.multiple = prop_desc["multiple"]
         self.default = prop_desc["defaultValues"]
         self.property_id = prop_desc.get("property_id")
+
+        if self.type is str:
+            sqler = self._str_to_sql
+        elif self.type is bool:
+            sqler = self._bool_to_sql
+        else:
+            sqler = self._value_to_sql
+
+        self.as_sql = sqler
+
+    def _bool_to_sql(self, values: list) -> List[str]:
+        return [str(int(value)) for value in values]
+
+    def _str_to_sql(self, values: list) -> List[str]:
+        return values
+
+    def _value_to_sql(self, values: list) -> List[str]:
+        return [str(value) for value in values]
 
     def __str__(self):
         return (
