@@ -8,7 +8,7 @@ ffprobe -v quiet -print_format json -show_format -show_streams "<video-file>" > 
 
 - Using SQL instead of JSON could it make code faster and easier to maintain ?
   - No. It may speed up code to select sources, but I don't think it will help 
-    when searching videos by terms.
+    when searching videos by terms. NB: SQL has FTS tables for text search.
 - Qt player based on VLC is no longer available in interface. Moved into `other`
   - Qt player may freeze unexpectedly when requiring next video
   - We read some duration as a negative too big number, 
@@ -23,15 +23,8 @@ ffprobe -v quiet -print_format json -show_format -show_streams "<video-file>" > 
   - Partially solved: to built terms, we split both 
     default text and lowercase version of default text
   - E.g. for "FiLM", we will extract terms from both "FiLM" and "film"
-- When opening grouping dialog and clicking to group button without anything else,
-  grouping will not occurre (attribute is not selected by default)
-- Remember entry edition and add an option to sort by date edited.
-- Add an option "save to playlist" to save current view into a playlist.
-- Keep history of opened videos. Maybe use a dynamic video property "date_opened".
 - Error when deleting a database:
   - FileNotFoundError: [Errno 2] No such file or directory: '<database>.log'
-
-# TODO:
 
 ## Bugs:
 
@@ -79,51 +72,3 @@ ffprobe -v quiet -print_format json -show_format -show_streams "<video-file>" > 
   provider is not currently updated.
 - Moving files is very slow, especially for a large batch of moves.
   - Maybe open moving progression in a dedicated panel (homepage with progress bars) ?
-
-Filter by
-- source
-  - all(flag is True for flag in flags_1) or all(flag is True for flag in flags_n)
-- group by field
-  - counter(video[field] for video in database)
-  - sort counter by count, field, or field string length
-- classify by path in group field
-  - selection = (video for video in database if path in video[field])
-  - counter(video[field] for video in selection)
-- search
-- sort
-- select
-
-Database
-- name: str
-- version: int
-- date: float?
-- folders: list of str
-- settings: dict
-  - key: setting name
-  - val: setting value: either:
-    - single value
-    - multiple values
-- prop type (many)
-  - name: str
-  - definition: either:
-    - str|bool|int|float
-    - list of (str|bool|int|float)
-  - multiple: bool
-- video (many)
-  - filename: str
-  - meta_title: str
-  - attribute (many): either:
-    - single value (e.g. width)
-    - multiple values (e.g. errors)
-  - prop val: dict:
-    - key: prop type -> name
-    - value: set of values (stored as a list?)
-  - thumbnail
-  - miniature
-  - terms: list of str, split from:
-    - filename (immutable)
-    - meta_title (immutable)
-    - each string prop val
-- term: dict
-  - key: term (str)
-  - value: videos: list of (video identifier: filename or ID)
