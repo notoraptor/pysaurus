@@ -6,7 +6,7 @@ import subprocess
 import threading
 import time
 from abc import abstractmethod
-from typing import Callable, Dict, Optional, Sequence
+from typing import Callable, Dict, Generator, Optional, Sequence
 
 from pysaurus.application import exceptions
 from pysaurus.core import tk_utils
@@ -15,7 +15,6 @@ from pysaurus.core.components import AbsolutePath
 from pysaurus.core.file_copier import FileCopier
 from pysaurus.core.functions import launch_thread
 from pysaurus.core.informer import Informer, MAIN_QUEUE
-from pysaurus.core.job_notifications import ConsoleJobProgress, JobStep, JobToDo
 from pysaurus.core.modules import System
 from pysaurus.core.notifications import (
     Cancelled,
@@ -25,66 +24,21 @@ from pysaurus.core.notifications import (
     Notification,
 )
 from pysaurus.core.path_tree import PathTree
-from pysaurus.core.profiling import Profiler, ProfilingEnd, ProfilingStart
+from pysaurus.core.profiling import Profiler
 from pysaurus.database.db_video_server import ServerLauncher
 from pysaurus.database.features.db_pattern_detection import DbPatternDetection
 from pysaurus.database.features.db_similar_videos import DbSimilarVideos
-from pysaurus.interface.api.feature_api import (
-    FeatureAPI,
-    ProxyFeature,
-    YieldNotification,
+from pysaurus.interface.api.api_utils.console_notification_printer import (
+    ConsoleNotificationPrinter,
 )
+from pysaurus.interface.api.api_utils.proxy_feature import FromTk
+from pysaurus.interface.api.api_utils.vlc_path import VLC_PATH
+from pysaurus.interface.api.feature_api import FeatureAPI
 from saurus.language import say
 
 logger = logging.getLogger(__name__)
 
 process = Runnable("_launch")
-
-if System.is_windows():
-    VLC_PATH = r"C:\Program Files\VideoLAN\VLC\vlc.exe"
-else:
-    VLC_PATH = "vlc"
-
-
-class FromTk(ProxyFeature):
-    __slots__ = ()
-
-    def __init__(self, method, returns=False):
-        super().__init__(getter=lambda: tk_utils, method=method, returns=returns)
-
-
-class ConsoleNotificationPrinter:
-    __slots__ = ("_prev_profiling_start", "progress")
-
-    def __init__(self):
-        self._prev_profiling_start: Optional[ProfilingStart] = None
-        self.progress: Optional[ConsoleJobProgress] = None
-
-    def print(self, notification):
-        prev_profiling_start = self._prev_profiling_start
-        self._prev_profiling_start = None
-        if isinstance(notification, ProfilingStart):
-            if prev_profiling_start:
-                print("!", prev_profiling_start)
-            self._prev_profiling_start = notification
-        elif isinstance(notification, ProfilingEnd):
-            if prev_profiling_start:
-                assert prev_profiling_start.name == notification.name
-                print(f"Profiled({notification.name}, {notification.time})")
-            else:
-                print(notification)
-        else:
-            if prev_profiling_start:
-                print("?", prev_profiling_start)
-
-            if isinstance(notification, JobToDo):
-                progress = self.progress
-                assert not progress or progress.done
-                self.progress = ConsoleJobProgress(notification)
-            elif isinstance(notification, JobStep):
-                self.progress.update(notification)
-            else:
-                print(notification)
 
 
 class GuiAPI(FeatureAPI):
@@ -120,8 +74,9 @@ class GuiAPI(FeatureAPI):
         # TODO Check runtime VLC for other operating systems ?
         self._constants.update(
             {
-                "PYTHON_HAS_RUNTIME_VLC": System.is_windows()
-                and os.path.isfile(VLC_PATH),
+                "PYTHON_HAS_RUNTIME_VLC": (
+                    System.is_windows() and os.path.isfile(VLC_PATH)
+                ),
                 "PYTHON_SERVER_HOSTNAME": self.server.server_thread.hostname,
                 "PYTHON_SERVER_PORT": self.server.server_thread.port,
             }
@@ -226,7 +181,9 @@ class GuiAPI(FeatureAPI):
         list(self.notifier.consume(MAIN_QUEUE))
 
     @classmethod
-    def __consume_shared_queue(cls, shared_queue) -> YieldNotification:
+    def __consume_shared_queue(
+        cls, shared_queue
+    ) -> Generator[Notification, None, None]:
         while True:
             try:
                 yield shared_queue.get_nowait()

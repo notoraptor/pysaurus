@@ -1,79 +1,24 @@
 import inspect
-import logging
 import operator
-from typing import Any, Callable, Dict, Generator, Optional, Union
+from typing import Any, Dict, Optional, Union
 
 from pysaurus.application.application import Application
 from pysaurus.application.language.default_language import language_to_dict
 from pysaurus.core.classes import StringPrinter
 from pysaurus.core.functions import extract_object
-from pysaurus.core.notifying import Notification
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.abstract_database import AbstractDatabase as Db
 from pysaurus.database.viewport.abstract_video_provider import (
     AbstractVideoProvider as View,
 )
+from pysaurus.interface.api.api_utils.proxy_feature import (
+    FromApp,
+    FromDb,
+    FromView,
+    ProxyFeature,
+)
 from pysaurus.video.video_features import VideoFeatures
 from pysaurus.video.video_utils import COMMON_FIELDS
-
-logger = logging.getLogger(__name__)
-
-YieldNotification = Generator[Notification, None, None]
-
-
-class ProxyFeature:
-    __slots__ = ("proxy",)
-
-    def __init__(self, getter: Callable[[], Any], method: Callable, returns=False):
-        self.proxy = (getter, method, returns)
-
-    def __call__(self, *args):
-        getter, method, returns = self.proxy
-        ret = getattr(getter(), method.__name__)(*args)
-        return ret if returns else None
-
-    def __str__(self):
-        _, method, returns = self.proxy
-        return self.signature(method, returns)
-
-    @classmethod
-    def signature(cls, method, returns) -> str:
-        try:
-            ms = inspect.signature(method)
-            ret_ann = ms.return_annotation
-            ret_accounted = ""
-            if ret_ann is ms.empty:
-                ret_ann = "undefined"
-                if returns:
-                    ret_accounted = " (returned)"
-            elif not returns and ret_ann is not None:
-                ret_accounted = " (ignored)"
-            return f"{method.__qualname__} -> {ret_ann}" + ret_accounted
-        except Exception as exc:
-            raise Exception(method) from exc
-
-
-class FromDb(ProxyFeature):
-    __slots__ = ()
-
-    def __init__(self, api, method, returns=False):
-        super().__init__(getter=lambda: api.database, method=method, returns=returns)
-
-
-class FromView(ProxyFeature):
-    __slots__ = ()
-
-    def __init__(self, api, method, returns=False):
-        super().__init__(
-            getter=lambda: api.database.provider, method=method, returns=returns
-        )
-
-
-class FromApp(ProxyFeature):
-    __slots__ = ()
-
-    def __init__(self, api, method, returns=False):
-        super().__init__(getter=lambda: api.application, method=method, returns=returns)
 
 
 class FeatureAPI:
