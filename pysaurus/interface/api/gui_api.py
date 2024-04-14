@@ -9,6 +9,7 @@ from abc import abstractmethod
 from typing import Callable, Dict, Optional, Sequence
 
 from pysaurus.application import exceptions
+from pysaurus.core import tk_utils
 from pysaurus.core.classes import Runnable
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.file_copier import FileCopier
@@ -28,7 +29,6 @@ from pysaurus.core.profiling import Profiler, ProfilingEnd, ProfilingStart
 from pysaurus.database.db_video_server import ServerLauncher
 from pysaurus.database.features.db_pattern_detection import DbPatternDetection
 from pysaurus.database.features.db_similar_videos import DbSimilarVideos
-from pysaurus.interface.api import tk_utils
 from pysaurus.interface.api.feature_api import (
     FeatureAPI,
     ProxyFeature,
