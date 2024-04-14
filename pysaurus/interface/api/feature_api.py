@@ -5,7 +5,6 @@ from typing import Any, Dict, Optional, Union
 from pysaurus.application.application import Application
 from pysaurus.application.language.default_language import language_to_dict
 from pysaurus.core.classes import StringPrinter
-from pysaurus.core.functions import extract_object
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.abstract_database import AbstractDatabase as Db
 from pysaurus.database.viewport.abstract_video_provider import (
@@ -87,20 +86,10 @@ class FeatureAPI:
             return str(printer)
 
     def __run_feature__(self, name: str, *args) -> Optional:
+        assert "a" <= name[0] <= "z"
         with Profiler(f"ApiCall:{name}", self.notifier):
-            assert "a" <= name[0] <= "z"
             if name in self._proxies:
-                run_def = self._proxies[name]
-                if isinstance(run_def, ProxyFeature):
-                    return run_def(*args)
-                else:
-                    # Keep old resolution code, if any.
-                    path, return_value = self._proxies[name], False
-                    if path.endswith("!"):
-                        path = path[:-1]
-                        return_value = True
-                    ret = extract_object(self, path)(*args)
-                    return ret if return_value else None
+                return self._proxies[name](*args)
             else:
                 method = getattr(self, name)
                 assert inspect.ismethod(method), name
