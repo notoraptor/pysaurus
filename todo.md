@@ -72,3 +72,39 @@ ffprobe -v quiet -print_format json -show_format -show_streams "<video-file>" > 
   provider is not currently updated.
 - Moving files is very slow, especially for a large batch of moves.
   - Maybe open moving progression in a dedicated panel (homepage with progress bars) ?
+
+
+Interface graphique
+- rectangle
+  - types:
+    - div: peut tout contenir
+    - image: accepte une source (src)
+  - width
+  - height
+  - onclick
+  - onhover
+- span: contient du texte
+  - onclick
+- text: accepte une mise en forme
+- bouton:
+  - text
+  - onclick
+- radiogroup
+- radiobutton
+- checkbox
+- text input
+  - minchars
+  - maxchars
+  - value
+  - onchange
+- integer input
+  - min
+  - max
+  - value
+  - onchange
+- float input
+  - value
+  - onchange
+- select: accepte des options d'un type basique
+  - value
+  - onchange

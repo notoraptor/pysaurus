@@ -33,7 +33,7 @@ except exceptions.CysaurusUnavailable:
     has_cpp = False
     logger.warning("Using fallback backend for video similarities search.")
 
-FRAC_SIM_LIMIT = Fraction(89, 100)
+FRAC_SIM_LIMIT = Fraction(88, 100)
 FRAC_DST_LIMIT = Fraction(1) - FRAC_SIM_LIMIT
 SIM_LIMIT = float(FRAC_SIM_LIMIT)
 DST_LIMIT = float(FRAC_DST_LIMIT)
