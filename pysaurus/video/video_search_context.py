@@ -59,3 +59,19 @@ class VideoSearchContext:
         self.selection_duration = None
         self.selection_file_size = None
         self.result_page = result
+
+    def json(self) -> dict:
+        return {
+            "videos": self.result_page,
+            "pageSize": self.page_size,
+            "pageNumber": self.page_number,
+            "nbPages": self.nb_pages,
+            "nbVideos": self.selection_count,
+            "nbViewVideos": self.view_count,
+            "validSize": str(self.selection_file_size),
+            "validLength": str(self.selection_duration),
+            "sources": self.sources,
+            "path": self.classifier,
+            "searchDef": self.search.to_dict() if self.search else None,
+            "sorting": self.sorting,
+        }

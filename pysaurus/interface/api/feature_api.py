@@ -133,20 +133,9 @@ class FeatureAPI:
                 "folders": sorted(str(path) for path in self.database.get_folders()),
             },
             "prop_types": self.database.get_prop_types(),
-            "videos": context.result_page,
-            "pageSize": context.page_size,
-            "pageNumber": context.page_number,
-            "nbPages": context.nb_pages,
-            "nbVideos": context.selection_count,
-            "nbViewVideos": context.view_count,
             "nbSourceVideos": self.database.provider.count_source_videos(),
-            "validSize": str(context.selection_file_size),
-            "validLength": str(context.selection_duration),
-            "sources": context.sources,
             "groupDef": group_def,
-            "path": context.classifier,
-            "searchDef": self.database.provider.get_search_def(),
-            "sorting": context.sorting,
+            **context.json(),
         }
 
     # cannot make proxy ?
