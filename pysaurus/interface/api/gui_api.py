@@ -6,7 +6,7 @@ import subprocess
 import threading
 import time
 from abc import abstractmethod
-from typing import Callable, Dict, Generator, Optional, Sequence
+from typing import Callable, Dict, Optional, Sequence
 
 from pysaurus.application import exceptions
 from pysaurus.core import tk_utils
@@ -14,7 +14,7 @@ from pysaurus.core.classes import Runnable
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.file_copier import FileCopier
 from pysaurus.core.functions import launch_thread
-from pysaurus.core.informer import Informer, MAIN_QUEUE
+from pysaurus.core.informer import Informer
 from pysaurus.core.modules import System
 from pysaurus.core.notifications import (
     Cancelled,
@@ -157,7 +157,8 @@ class GuiAPI(FeatureAPI):
         kwargs = kwargs or {}
         assert self.notification_thread
         assert not self.launched_thread
-        self._consume_notifications()
+        # consume previous unhandled notifications
+        list(self.notifier.consume_main_queue())
 
         if finish:
 
@@ -176,20 +177,6 @@ class GuiAPI(FeatureAPI):
         self.notifier.notify(DatabaseReady())
         self.launched_thread = None
         logger.debug(log_message)
-
-    def _consume_notifications(self) -> None:
-        list(self.notifier.consume(MAIN_QUEUE))
-
-    @classmethod
-    def __consume_shared_queue(
-        cls, shared_queue
-    ) -> Generator[Notification, None, None]:
-        while True:
-            try:
-                yield shared_queue.get_nowait()
-            except queue.Empty:
-                break
-        assert not shared_queue.qsize()
 
     def _monitor_notifications(self) -> None:
         logger.debug("Monitoring notifications ...")

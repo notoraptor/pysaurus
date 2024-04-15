@@ -40,6 +40,9 @@ class Informer:
     def next_or_crash(self, queue_id=0):
         return self.__queues[queue_id].get_nowait()
 
+    def consume_main_queue(self):
+        yield self.consume(MAIN_QUEUE)
+
     def consume(self, queue_id):
         while True:
             try:
