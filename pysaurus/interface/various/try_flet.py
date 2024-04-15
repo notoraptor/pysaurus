@@ -1,7 +1,4 @@
 import flet as ft
-import vlc
-
-print(vlc)
 
 
 def main(page: ft.Page):
@@ -31,10 +28,5 @@ def main(page: ft.Page):
 
 
 if __name__ == "__main__":
-    # loop = asyncio.get_event_loop()
-    # if loop.is_running():
-    #     print("Can't run Flet because there's already a running event loop 😢")
-    # else:
-    #     loop.run_until_complete(ft.app(main))
     ret = ft.app(main)
     print("RESULT", ret)
