@@ -4,8 +4,10 @@ from tqdm import tqdm
 
 from other.imgsimsearch.abstract_image_provider import AbstractImageProvider
 from other.imgsimsearch.native_fine_comparator import SIM_LIMIT
+from other.legacy.pysaurus.database.video_similarities.backend_numpy import (
+    SimilarityComparator,
+)
 from pysaurus.core.modules import ImageUtils
-from pysaurus.database.video_similarities.backend_numpy import SimilarityComparator
 from pysaurus.miniature.graph import Graph
 from pysaurus.miniature.miniature import NumpyMiniature
 

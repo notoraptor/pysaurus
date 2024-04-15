@@ -1,10 +1,6 @@
 from ctypes import c_bool
 
-from pysaurus.core.notifying import DEFAULT_NOTIFIER
-from pysaurus.database.video_similarities.alignment_raptor.alignment import (
-    classify_similarities_directed as f_cpp,
-)
-from pysaurus.database.video_similarities.backend_numpy import (
+from other.legacy.pysaurus.database.video_similarities.backend_numpy import (
     classify_similarities_directed as f_np,
     shift_bottom,
     shift_bottom_left,
@@ -15,6 +11,10 @@ from pysaurus.database.video_similarities.backend_numpy import (
     shift_top,
     shift_top_left,
     shift_top_right,
+)
+from pysaurus.core.notifying import DEFAULT_NOTIFIER
+from pysaurus.database.video_similarities.alignment_raptor.alignment import (
+    classify_similarities_directed as f_cpp,
 )
 from pysaurus.database.video_similarities.backend_python import (
     classify_similarities_directed as f_py,

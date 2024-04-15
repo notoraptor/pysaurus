@@ -158,7 +158,7 @@ class Application:
     def delete_database_from_name(self, name: str):
         path = AbsolutePath.join(self.dbs_dir, name)
         if path in self.databases:
-            database = self.databases.pop(path)
+            self.databases.pop(path)
             path.delete()
             return True
 

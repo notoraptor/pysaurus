@@ -3,7 +3,6 @@ from typing import Any, Dict, List, Optional
 
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.functions import ensure_list_or_tuple
-from saurus.sql.sql_video_wrapper import VIDEO_TABLE_FIELD_NAMES
 from saurus.sql.video_parser import FieldQuery
 
 
@@ -249,27 +248,3 @@ class DatabaseTableField(DatabaseField):
 
     def _code_definition(self) -> List[str]:
         return [self.table_field.code_field()]
-
-
-class SQLFactory:
-    def __init__(self):
-        video_table = Table("video", "v")
-        video_table_special_fields = [
-            VideoID(video_table),
-            Filename(video_table),
-            DateEntryModified(video_table),
-            DateEntryOpened(video_table),
-            Readable(video_table),
-            Found(video_table),
-            NotFound(video_table),
-        ]
-        special_fields = {
-            special_field.public_name: special_field
-            for special_field in video_table_special_fields
-        }
-        basic_fields = {
-            field_name: TableField(video_table, field_name)
-            for field_name in VIDEO_TABLE_FIELD_NAMES
-            if field_name not in special_fields
-        }
-        video_table_fields = {**special_fields, **basic_fields}

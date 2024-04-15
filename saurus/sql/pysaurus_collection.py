@@ -197,13 +197,13 @@ class PysaurusCollection(AbstractDatabase):
         )
         if string_properties:
             (new_texts,) = self.db.query_all(
-                f"SELECT v.video_id, v.filename, v.meta_title, t.property_text "
-                f"FROM video AS v JOIN video_property_text AS t "
-                f"ON v.video_id = t.video_id "
-                f"WHERE v.video_id = ?",
+                "SELECT v.video_id, v.filename, v.meta_title, t.property_text "
+                "FROM video AS v JOIN video_property_text AS t "
+                "ON v.video_id = t.video_id "
+                "WHERE v.video_id = ?",
                 [video_id],
             )
-            self.db.modify(f"DELETE FROM video_text WHERE video_id = ?", [video_id])
+            self.db.modify("DELETE FROM video_text WHERE video_id = ?", [video_id])
             self.db.modify(
                 "INSERT INTO video_text "
                 "(video_id, filename, meta_title, properties) VALUES (?,?,?,?)",
@@ -350,7 +350,7 @@ class PysaurusCollection(AbstractDatabase):
     def get_all_video_terms(self) -> Dict[int, List[str]]:
         output = {}
         for row in self.db.query(
-            f"""
+            """
             SELECT v.video_id, v.filename || ' ' || v.meta_title || ' ' || COALESCE(pv.property_text, '')
             FROM video AS v
             LEFT JOIN video_property_text AS pv ON v.video_id = pv.video_id
@@ -568,7 +568,7 @@ class PysaurusCollection(AbstractDatabase):
         for row in self.db.query(
             """
 SELECT group_concat(video_id || '-' || is_file || '-' || hex(filename))
-FROM video 
+FROM video
 WHERE unreadable = 0 AND discarded = 0
 GROUP BY file_size, duration, COALESCE(NULLIF(duration_time_base, 0), 1)
 HAVING COUNT(video_id) > 1 AND SUM(is_file) < COUNT(video_id);

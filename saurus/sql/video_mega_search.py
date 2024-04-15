@@ -403,7 +403,7 @@ def video_mega_group(
                 """
                 params = [grouping.field] + expected + [len(expected)]
             elif field_value is None:
-                query = f"""
+                query = """
                 SELECT
                 v.video_id AS video_id
                 FROM video AS v

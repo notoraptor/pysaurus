@@ -1,10 +1,9 @@
-from typing import Collection, Sequence, Union, List
+from typing import Collection, List, Sequence, Union
 
 from pysaurus.application import exceptions
 from pysaurus.core.enumeration import Enumeration
 from pysaurus.core.json_type import Type
 from pysaurus.core.schematizable import Schema, WithSchema, schema_prop
-from pysaurus.core import functions
 
 PropUnitType = Union[bool, int, float, str]
 PropRawType = Union[bool, int, float, str, Collection]

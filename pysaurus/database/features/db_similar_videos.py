@@ -28,7 +28,6 @@ try:
     has_cpp = True
 except exceptions.CysaurusUnavailable:
     from pysaurus.database.video_similarities import backend_python as backend_sim
-    import sys
 
     has_cpp = False
     logger.warning("Using fallback backend for video similarities search.")
