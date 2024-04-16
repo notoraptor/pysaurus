@@ -1,32 +1,73 @@
+from typing import List
+
 import flet as ft
 
+from pysaurus.core.notifications import Notification
+from pysaurus.interface.api.gui_api import GuiAPI
 
-def main(page: ft.Page):
-    page.title = "Flet counter example"
-    page.vertical_alignment = ft.MainAxisAlignment.CENTER
 
-    txt_number = ft.TextField(value="0", text_align=ft.TextAlign.RIGHT, width=100)
+class Api(GuiAPI):
+    def _notify(self, notification: Notification) -> None:
+        pass
 
-    def minus_click(e):
-        txt_number.value = str(int(txt_number.value) - 1)
-        page.update()
 
-    def plus_click(e):
-        txt_number.value = str(int(txt_number.value) + 1)
-        page.update()
-
-    page.add(
-        ft.Row(
+class Homepage(ft.Column):
+    def __init__(self, db_names: List[str]):
+        super().__init__(
             [
-                ft.IconButton(ft.icons.REMOVE, on_click=minus_click),
-                txt_number,
-                ft.IconButton(ft.icons.ADD, on_click=plus_click),
+                ft.Row(
+                    [ft.Text("Welcome to Pysaurus")],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                ),
+                ft.Row(
+                    [
+                        ft.Column(
+                            [
+                                ft.Text("Create a database"),
+                                ft.Row([ft.Text("New database name:"), ft.TextField()]),
+                                ft.Row(
+                                    [ft.Text("Database files and folders:"), ft.Text()]
+                                ),
+                                ft.Row(
+                                    [
+                                        ft.TextButton("Add a file ..."),
+                                        ft.TextButton("Add a folder ..."),
+                                    ]
+                                ),
+                                ft.Column(),
+                                ft.TextButton("Create database"),
+                            ],
+                        ),
+                        ft.Column(
+                            [
+                                ft.Text(f"Open a database ({len(db_names)} available)"),
+                                *[ft.TextButton(name) for name in db_names],
+                            ],
+                        ),
+                    ],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                    vertical_alignment=ft.CrossAxisAlignment.START,
+                ),
             ],
             alignment=ft.MainAxisAlignment.CENTER,
         )
-    )
+
+
+def main(page: ft.Page):
+    api = Api()
+    db_names = api.__run_feature__("get_database_names")
+
+    page.title = "Pysaurus"
+    # page.vertical_alignment = ft.MainAxisAlignment.CENTER
+    # page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
+    page.scroll = ft.ScrollMode.AUTO
+    page.add(Homepage(db_names))
 
 
 if __name__ == "__main__":
-    ret = ft.app(main)
-    print("RESULT", ret)
+    import asyncio
+
+    # import logging
+    # logging.basicConfig(level=logging.DEBUG)
+    async_main = ft.app_async(main)
+    asyncio.run(async_main)
