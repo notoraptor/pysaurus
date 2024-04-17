@@ -13,6 +13,11 @@ class Api(GuiAPI):
         pass
 
 
+class Title(ft.Text):
+    def __init__(self, text: str):
+        super().__init__(text, size=24, weight=ft.FontWeight.BOLD)
+
+
 class Homepage(ft.Column):
     def __init__(self, page: ft.Page, db_names: List[str]):
         self.new_paths: Set[AbsolutePath] = set()
@@ -35,7 +40,7 @@ class Homepage(ft.Column):
                     [
                         ft.Column(
                             [
-                                ft.Text("Create a database"),
+                                ft.TextButton(content=Title("Create a database")),
                                 ft.Container(
                                     ft.Row(
                                         [
@@ -88,7 +93,8 @@ class Homepage(ft.Column):
                         ),
                         ft.Column(
                             [
-                                ft.Text(f"Open a database ({len(db_names)} available)"),
+                                ft.TextButton(content=Title(f"Open a database")),
+                                ft.Text(f"({len(db_names)} available)"),
                                 ft.Row(
                                     [ft.Checkbox("Update on load")],
                                     alignment=ft.MainAxisAlignment.CENTER,
@@ -114,17 +120,6 @@ class Homepage(ft.Column):
                 ),
                 bgcolor=ft.colors.BLUE,
                 expand=1,
-            ),
-            ft.Row(
-                [
-                    ft.Row(
-                        [ft.TextButton("Create database")],
-                        alignment=ft.MainAxisAlignment.CENTER,
-                        expand=1,
-                    ),
-                    ft.Container(bgcolor=ft.colors.PURPLE, expand=1),
-                ],
-                expand=0,
             ),
         ]
         super().__init__(controls)
