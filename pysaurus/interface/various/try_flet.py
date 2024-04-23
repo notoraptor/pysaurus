@@ -13,7 +13,12 @@ class Api(GuiAPI):
         pass
 
 
-class Title(ft.Text):
+class Title1(ft.Text):
+    def __init__(self, text: str):
+        super().__init__(text, size=26, weight=ft.FontWeight.BOLD)
+
+
+class Title2(ft.Text):
     def __init__(self, text: str):
         super().__init__(text, size=24, weight=ft.FontWeight.BOLD)
 
@@ -29,75 +34,89 @@ class Homepage(ft.Column):
         controls = [
             ft.Container(
                 ft.Row(
-                    [ft.Text("Welcome to Pysaurus")],
+                    [Title1("Welcome to Pysaurus")],
                     alignment=ft.MainAxisAlignment.CENTER,
                 ),
                 bgcolor=ft.colors.GREEN,
                 expand=0,
             ),
             ft.Container(
-                ft.Row(
+                ft.Column(
                     [
-                        ft.Column(
+                        ft.Row(
                             [
-                                ft.TextButton(content=Title("Create a database")),
-                                ft.Container(
-                                    ft.Row(
-                                        [
-                                            ft.Text("New database name:", expand=1),
-                                            ft.TextField(expand=1),
-                                        ]
-                                    ),
-                                    bgcolor=ft.colors.YELLOW,
+                                ft.Column(
+                                    [
+                                        ft.TextButton(
+                                            content=Title2("Create a database")
+                                        )
+                                    ],
+                                    expand=1,
+                                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                                 ),
+                                ft.Column(
+                                    [ft.TextButton(content=Title2(f"Open a database"))],
+                                    expand=1,
+                                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                                ),
+                            ]
+                        ),
+                        ft.Row(
+                            [
+                                ft.TextField(label="Database name ...", expand=1),
+                                ft.Column(
+                                    [ft.Text(f"({len(db_names)} available)")],
+                                    expand=1,
+                                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                                ),
+                            ]
+                        ),
+                        ft.Row(
+                            [
                                 ft.Row(
                                     [
                                         ft.Text(
                                             "Database files and folders:", expand=1
                                         ),
-                                        ft.Row(
-                                            [
-                                                ft.ElevatedButton(
-                                                    "Add files ...",
-                                                    icon=ft.icons.VIDEO_FILE,
-                                                    on_click=lambda _: files_picker.pick_files(
-                                                        dialog_title="Add files ...",
-                                                        allow_multiple=True,
-                                                        allowed_extensions=sorted(
-                                                            VIDEO_SUPPORTED_EXTENSIONS
-                                                        ),
-                                                    ),
+                                        ft.ElevatedButton(
+                                            "Add files ...",
+                                            icon=ft.icons.VIDEO_FILE,
+                                            on_click=lambda _: files_picker.pick_files(
+                                                dialog_title="Add files ...",
+                                                allow_multiple=True,
+                                                allowed_extensions=sorted(
+                                                    VIDEO_SUPPORTED_EXTENSIONS
                                                 ),
-                                                ft.ElevatedButton(
-                                                    "Add folder ...",
-                                                    icon=ft.icons.FOLDER_OPEN,
-                                                    on_click=lambda _: folder_picker.get_directory_path(
-                                                        dialog_title="Add folder ..."
-                                                    ),
-                                                ),
-                                            ],
-                                            expand=1,
+                                            ),
                                         ),
-                                    ]
+                                        ft.ElevatedButton(
+                                            "Add folder ...",
+                                            icon=ft.icons.FOLDER_OPEN,
+                                            on_click=lambda _: folder_picker.get_directory_path(
+                                                dialog_title="Add folder ..."
+                                            ),
+                                        ),
+                                    ],
+                                    expand=1,
                                 ),
+                                ft.Container(
+                                    ft.Row(
+                                        [ft.Checkbox("Update on load")],
+                                        alignment=ft.MainAxisAlignment.CENTER,
+                                    ),
+                                    bgcolor=ft.colors.AMBER,
+                                    expand=1,
+                                ),
+                            ]
+                        ),
+                        ft.Row(
+                            [
                                 ft.Container(
                                     self.view_selected_paths,
                                     bgcolor=ft.colors.PINK,
                                     expand=1,
                                     border_radius=10,
                                     border=ft.border.all(1, ft.colors.GREY),
-                                ),
-                            ],
-                            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                            expand=1,
-                        ),
-                        ft.Column(
-                            [
-                                ft.TextButton(content=Title(f"Open a database")),
-                                ft.Text(f"({len(db_names)} available)"),
-                                ft.Row(
-                                    [ft.Checkbox("Update on load")],
-                                    alignment=ft.MainAxisAlignment.CENTER,
                                 ),
                                 ft.Container(
                                     ft.RadioGroup(
@@ -113,12 +132,12 @@ class Homepage(ft.Column):
                                     border=ft.border.all(1, ft.colors.GREY),
                                 ),
                             ],
-                            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                             expand=1,
                         ),
-                    ]
+                    ],
+                    expand=1,
                 ),
-                bgcolor=ft.colors.BLUE,
+                bgcolor=ft.colors.CYAN,
                 expand=1,
             ),
         ]
