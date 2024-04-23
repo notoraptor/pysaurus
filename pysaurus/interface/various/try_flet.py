@@ -27,10 +27,10 @@ class Homepage(ft.Column):
     def __init__(self, page: ft.Page, db_names: List[str]):
         self.new_paths: Set[AbsolutePath] = set()
         self.view_selected_paths = ft.ListView(expand=1)
-        files_picker = ft.FilePicker(on_result=self.pick_file)
-        folder_picker = ft.FilePicker(on_result=self.pick_folder)
-        page.overlay.append(files_picker)
-        page.overlay.append(folder_picker)
+        self.files_picker = ft.FilePicker(on_result=self.pick_file)
+        self.folder_picker = ft.FilePicker(on_result=self.pick_folder)
+        page.overlay.append(self.files_picker)
+        page.overlay.append(self.folder_picker)
         controls = [
             ft.Container(
                 ft.Row(
@@ -81,20 +81,12 @@ class Homepage(ft.Column):
                                         ft.ElevatedButton(
                                             "Add files ...",
                                             icon=ft.icons.VIDEO_FILE,
-                                            on_click=lambda _: files_picker.pick_files(
-                                                dialog_title="Add files ...",
-                                                allow_multiple=True,
-                                                allowed_extensions=sorted(
-                                                    VIDEO_SUPPORTED_EXTENSIONS
-                                                ),
-                                            ),
+                                            on_click=self.on_add_files,
                                         ),
                                         ft.ElevatedButton(
                                             "Add folder ...",
                                             icon=ft.icons.FOLDER_OPEN,
-                                            on_click=lambda _: folder_picker.get_directory_path(
-                                                dialog_title="Add folder ..."
-                                            ),
+                                            on_click=self.on_add_folder,
                                         ),
                                     ],
                                     expand=1,
@@ -142,6 +134,16 @@ class Homepage(ft.Column):
             ),
         ]
         super().__init__(controls)
+
+    def on_add_files(self, e):
+        self.files_picker.pick_files(
+            dialog_title="Add files ...",
+            allow_multiple=True,
+            allowed_extensions=sorted(VIDEO_SUPPORTED_EXTENSIONS),
+        )
+
+    def on_add_folder(self, e):
+        self.folder_picker.get_directory_path(dialog_title="Add folder ...")
 
     def pick_file(self, e: ft.FilePickerResultEvent):
         if e.files:
