@@ -75,7 +75,7 @@ class FeatureAPI:
 
     def __str__(self):
         features = [(name, str(self._proxies[name])) for name in self._proxies] + [
-            (name, ProxyFeature.signature(getattr(self, name), True))
+            (name, ProxyFeature.info_signature(getattr(self, name), True))
             for name in dir(self)
             if "a" <= name[0] <= "z" and inspect.ismethod(getattr(self, name))
         ]

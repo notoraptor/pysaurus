@@ -17,10 +17,14 @@ class ProxyFeature:
 
     def __str__(self):
         _, method, returns = self.proxy
-        return self.signature(method, returns)
+        return self.info_signature(method, returns)
+
+    def get_signature(self) -> inspect.Signature:
+        _, method, returns = self.proxy
+        return inspect.signature(method)
 
     @classmethod
-    def signature(cls, method, returns) -> str:
+    def info_signature(cls, method, returns) -> str:
         try:
             ms = inspect.signature(method)
             ret_ann = ms.return_annotation

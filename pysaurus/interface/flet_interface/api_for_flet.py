@@ -1,7 +1,7 @@
 from pysaurus.core.notifications import Notification
-from pysaurus.interface.api.gui_api import GuiAPI
+from pysaurus.interface.flet_interface.flet_api_wrapper import FletApiWrapper
 
 
-class ApiForFlet(GuiAPI):
+class ApiForFlet(FletApiWrapper):
     def _notify(self, notification: Notification) -> None:
         pass
