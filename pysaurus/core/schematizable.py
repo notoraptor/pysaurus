@@ -71,9 +71,11 @@ class Schema:
     @staticmethod
     def short_dict_to_linear(d: dict, linear_type: list) -> list:
         return [
-            (Schema.short_dict_to_linear(d[short], desc) if desc else d[short])
-            if short in d
-            else None
+            (
+                (Schema.short_dict_to_linear(d[short], desc) if desc else d[short])
+                if short in d
+                else None
+            )
             for short, desc in linear_type
         ]
 

@@ -14,6 +14,7 @@ A:
       calls to refresh function. On each refresh, 2nd queue is entirely consumed,
       to get all latest accumulated notifications.
 """
+
 import multiprocessing
 
 from pysaurus.core.notifications import Notification

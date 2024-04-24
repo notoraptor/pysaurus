@@ -4,6 +4,7 @@ and testing method names starting with "test_". but this class must
 not have a __init__ method:
 https://docs.pytest.org/en/7.1.x/explanation/goodpractices.html#test-discovery
 """
+
 import os
 import sqlite3
 

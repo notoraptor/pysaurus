@@ -58,6 +58,7 @@ GuiAPI (57)
     JsonDatabase.set_video_properties -> typing.List[str] (ignored)
     GuiAPI.update_database -> None
 """
+
 from pysaurus.interface.api.gui_api import GuiAPI
 
 if __name__ == "__main__":

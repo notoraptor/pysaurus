@@ -221,14 +221,14 @@ class LazyVideo(WithSchema):
         lambda self: Duration(round(self.duration * 1000000 / self.duration_time_base))
     )
     title = property(
-        lambda self: self.meta_title
-        if self.meta_title
-        else Text(self.filename.file_title)
+        lambda self: (
+            self.meta_title if self.meta_title else Text(self.filename.file_title)
+        )
     )
     title_numeric = property(
-        lambda self: self.meta_title_numeric
-        if self.meta_title
-        else self.file_title_numeric
+        lambda self: (
+            self.meta_title_numeric if self.meta_title else self.file_title_numeric
+        )
     )
     filename_numeric = property(lambda self: SemanticText(self.filename.standard_path))
     meta_title_numeric = property(lambda self: SemanticText(self.meta_title.value))

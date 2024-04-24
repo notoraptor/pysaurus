@@ -1,4 +1,5 @@
 """To SQL."""
+
 import sys
 
 from pysaurus.core.components import AbsolutePath, FileSize
