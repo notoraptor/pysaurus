@@ -207,6 +207,7 @@ class GuiAPI(FeatureAPI):
 
     @process()
     def open_database(self, name: str, update: bool) -> None:
+        raise exceptions.PysaurusError("fatal")
         self.database = self.application.open_database_from_name(name, update)
 
     @process()

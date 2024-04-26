@@ -2,13 +2,16 @@ from typing import List, Optional, Set
 
 import flet as ft
 
+from pysaurus.application import exceptions
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.constants import VIDEO_SUPPORTED_EXTENSIONS
+from pysaurus.interface.flet_interface.flet_api_interface import FletApiInterface
 from pysaurus.interface.flet_interface.flet_utils import Title1, Title2
 
 
 class Homepage(ft.Column):
     def __init__(self, page: ft.Page, db_names: List[str]):
+        super().__init__()
         self.new_name: str = ""
         self.new_paths: Set[AbsolutePath] = set()
         self.database_to_load: Optional[str] = None
@@ -17,9 +20,20 @@ class Homepage(ft.Column):
         self.new_paths_view = ft.ListView(expand=1)
         self.files_picker = ft.FilePicker(on_result=self.on_result_pick_files)
         self.folder_picker = ft.FilePicker(on_result=self.on_result_pick_folder)
+        self.button_create_database = ft.ElevatedButton(
+            content=Title2("Create a database"),
+            on_click=self.on_create_database,
+            disabled=True,
+        )
+        self.button_open_database = ft.ElevatedButton(
+            content=Title2(f"Open a database"),
+            on_click=self.on_open_database,
+            disabled=True,
+        )
+        # self.page = page
         page.overlay.append(self.files_picker)
         page.overlay.append(self.folder_picker)
-        controls = [
+        self.controls = [
             ft.Row(
                 [Title1("Welcome to Pysaurus")], alignment=ft.MainAxisAlignment.CENTER
             ),
@@ -29,22 +43,12 @@ class Homepage(ft.Column):
                     ft.Row(
                         [
                             ft.Column(
-                                [
-                                    ft.ElevatedButton(
-                                        content=Title2("Create a database"),
-                                        on_click=self.on_create_database,
-                                    )
-                                ],
+                                [self.button_create_database],
                                 expand=1,
                                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                             ),
                             ft.Column(
-                                [
-                                    ft.ElevatedButton(
-                                        content=Title2(f"Open a database"),
-                                        on_click=self.on_open_database,
-                                    )
-                                ],
+                                [self.button_open_database],
                                 expand=1,
                                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                             ),
@@ -130,7 +134,6 @@ class Homepage(ft.Column):
                 expand=1,
             ),
         ]
-        super().__init__(controls)
 
     def on_result_pick_files(self, e: ft.FilePickerResultEvent):
         if e.files:
@@ -177,16 +180,26 @@ class Homepage(ft.Column):
 
     def on_database_change(self, e):
         self.database_to_load = e.control.value
+        self.button_open_database.disabled = not self.database_to_load
+        self.button_open_database.update()
 
     def on_change_update(self, e):
         self.update_on_load = e.control.value
 
     def on_change_new_name(self, e):
         self.new_name = e.control.value
+        self.button_create_database.disabled = not self.new_name.strip()
+        self.button_create_database.update()
 
     def on_create_database(self, e):
         pass
-        pass
 
     def on_open_database(self, e):
-        pass
+        if self.database_to_load:
+            self.database_to_load = self.database_to_load.strip()
+        if not self.database_to_load:
+            raise exceptions.InvalidDatabaseName()
+        print("Opening", self.database_to_load, "with loading ?", self.update_on_load)
+        interface = self.page.data
+        assert isinstance(interface, FletApiInterface), interface
+        interface.open_database(self.database_to_load, self.update_on_load)
