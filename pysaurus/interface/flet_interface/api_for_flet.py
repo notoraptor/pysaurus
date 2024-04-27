@@ -7,16 +7,6 @@ from pysaurus.core.notifications import Notification
 from pysaurus.interface.api.gui_api import GuiAPI
 
 
-def do_nothing():
-    pass
-
-
-def dummy_thread():
-    th = threading.Thread(target=do_nothing)
-    th.start()
-    return th
-
-
 class ApiForFlet(GuiAPI):
 
     def __init__(self, page: ft.Page):

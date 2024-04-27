@@ -49,6 +49,8 @@ class GuiAPI(FeatureAPI):
         "threads_stop_flag",
         "copy_work",
         "monitor_notifications",
+        "notifications_are_monitored",
+        "something_launched",
         "server",
         "_closed",
     )
@@ -67,6 +69,8 @@ class GuiAPI(FeatureAPI):
         self.threads_stop_flag = False
         self.copy_work: Optional[FileCopier] = None
         self.monitor_notifications = monitor_notifications
+        self.notifications_are_monitored = False
+        self.something_launched = False
         self.server = ServerLauncher(lambda: self.database)
         self._closed = False
 
@@ -92,7 +96,7 @@ class GuiAPI(FeatureAPI):
     def __run_feature__(self, name: str, *args) -> Optional:
         # Launch notification thread on first API call from frontend.
         # This let time for frontend to be loaded before receiving notifications.
-        if self.monitor_notifications and self.notification_thread is None:
+        if self.monitor_notifications and not self.notifications_are_monitored:
             logger.debug("Starting notification thread")
             self.notification_thread = self._run_thread(self._monitor_notifications)
         return super().__run_feature__(name, *args)
@@ -129,6 +133,7 @@ class GuiAPI(FeatureAPI):
             self.notification_thread.join()
         if self.launched_thread:
             self.launched_thread.join()
+            self.something_launched = False
         # Close manager.
         self.notifier = None
         # Close server.
@@ -155,8 +160,8 @@ class GuiAPI(FeatureAPI):
         logger.debug(f"Running {fn.__name__}")
         args = args or ()
         kwargs = kwargs or {}
-        assert self.notification_thread
-        assert not self.launched_thread
+        assert self.notifications_are_monitored
+        assert not self.something_launched
         # consume previous unhandled notifications
         list(self.notifier.consume_main_queue())
 
@@ -164,22 +169,27 @@ class GuiAPI(FeatureAPI):
 
             @functools.wraps(fn)
             def run(*a, **k):
-                fn(*a, **k)
-                self._finish_loading(f"Finished running: {fn.__name__}")
+                try:
+                    fn(*a, **k)
+                finally:
+                    self._finish_loading(f"Finished running: {fn.__name__}")
 
         else:
             run = fn
 
         # Then launch function.
+        self.something_launched = True
         self.launched_thread = self._run_thread(run, *args, **kwargs)
 
     def _finish_loading(self, log_message) -> None:
         self.notifier.notify(DatabaseReady())
         self.launched_thread = None
+        self.something_launched = False
         logger.debug(log_message)
 
     def _monitor_notifications(self) -> None:
         logger.debug("Monitoring notifications ...")
+        self.notifications_are_monitored = True
         # We are in a thread, with notifications handled sequentially,
         # thus no need to be process-safe.
         notification_printer = ConsoleNotificationPrinter()
@@ -195,6 +205,7 @@ class GuiAPI(FeatureAPI):
             except queue.Empty:
                 time.sleep(1 / 100)
         self.notification_thread = None
+        self.notifications_are_monitored = False
         logger.debug("End monitoring.")
 
     @abstractmethod
@@ -260,6 +271,7 @@ class GuiAPI(FeatureAPI):
             )
         finally:
             self.launched_thread = None
+            self.something_launched = False
 
     @process()
     def compute_predictor(self, prop_name) -> None:
