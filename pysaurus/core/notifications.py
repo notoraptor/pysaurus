@@ -82,17 +82,13 @@ class End(Message):
     __slots__ = ()
 
 
-class Terminated(End):
-    pass
-
-
-class Done(Terminated):
+class Done(End):
     __slots__ = ()
 
 
-class Cancelled(Terminated):
+class Cancelled(End):
     __slots__ = ()
 
 
-class DatabaseReady(Terminated):
+class DatabaseReady(End):
     __slots__ = ()

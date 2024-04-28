@@ -1,5 +1,4 @@
 import asyncio
-import logging
 import sys
 import traceback
 from typing import Optional
@@ -71,5 +70,5 @@ def main():
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.NOTSET)
+    # logging.basicConfig(level=logging.NOTSET)
     main()

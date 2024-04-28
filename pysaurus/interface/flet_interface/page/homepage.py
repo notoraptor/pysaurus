@@ -7,6 +7,7 @@ from pysaurus.core.components import AbsolutePath
 from pysaurus.core.constants import VIDEO_SUPPORTED_EXTENSIONS
 from pysaurus.interface.flet_interface.flet_api_interface import FletApiInterface
 from pysaurus.interface.flet_interface.flet_utils import Title1, Title2
+from pysaurus.interface.flet_interface.page.taskpage import TaskPage
 
 
 class Homepage(ft.Column):
@@ -202,4 +203,15 @@ class Homepage(ft.Column):
         print("Opening", self.database_to_load, "with loading ?", self.update_on_load)
         interface = self.page.data
         assert isinstance(interface, FletApiInterface), interface
-        interface.open_database(self.database_to_load, self.update_on_load)
+        # interface.open_database(self.database_to_load, self.update_on_load)
+        self.page.controls.clear()
+        self.page.add(
+            ft.Container(
+                TaskPage(
+                    self.page,
+                    interface.open_database,
+                    (self.database_to_load, self.update_on_load),
+                ),
+                expand=True,
+            )
+        )

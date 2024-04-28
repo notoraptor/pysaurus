@@ -23,4 +23,4 @@ class ApiForFlet(GuiAPI):
         return None
 
     def _notify(self, notification: Notification) -> None:
-        print("Received", notification)
+        self.page.pubsub.send_all(notification)
