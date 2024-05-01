@@ -180,7 +180,13 @@ class NotificationRenderer:
                 for name in notification.names:
                     printer.write(name)
                 printer.write("```")
-                self.controls.append(ft.Markdown(str(printer)))
+                self.controls.append(
+                    ft.Markdown(
+                        str(printer),
+                        extension_set=ft.MarkdownExtensionSet.GITHUB_FLAVORED,
+                        code_style=ft.TextStyle(font_family="Roboto Mono"),
+                    )
+                )
         else:
             self.controls.append(ft.Text("No missing thumbnails!"))
 
@@ -192,10 +198,18 @@ class NotificationRenderer:
             )
             printer.write()
             for name in sorted(notification.video_errors.keys()):
-                printer.write(f"`{name}`")
+                printer.write("```")
+                printer.write(f"{name}")
                 for error in notification.video_errors[name]:
-                    printer.write(f"- `{error}`")
-            self.controls.append(ft.Markdown(str(printer)))
+                    printer.write(f"    {error}")
+                printer.write("```")
+            self.controls.append(
+                ft.Markdown(
+                    str(printer),
+                    extension_set=ft.MarkdownExtensionSet.GITHUB_FLAVORED,
+                    code_style=ft.TextStyle(font_family="Roboto Mono"),
+                )
+            )
 
     def on_video_thumbnail_errors(self, i: int, notification: VideoThumbnailErrors):
         return self.on_video_info_errors(i, notification)

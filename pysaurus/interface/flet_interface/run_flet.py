@@ -1,4 +1,5 @@
 import asyncio
+import os
 import sys
 import traceback
 from typing import Optional
@@ -11,6 +12,12 @@ from pysaurus.core.functions import string_to_pieces
 from pysaurus.interface.flet_interface.api_for_flet import ApiForFlet
 from pysaurus.interface.flet_interface.flet_api_interface import FletApiInterface
 from pysaurus.interface.flet_interface.page.homepage import Homepage
+
+_CURRENT_FOLDER = os.path.dirname(os.path.abspath(__file__))
+_MONOSPACE_FONT = os.path.join(
+    _CURRENT_FOLDER, "fonts", "Roboto_Mono", "RobotoMono-VariableFont_wght.ttf"
+)
+assert os.path.isfile(_MONOSPACE_FONT)
 
 
 class App:
@@ -26,6 +33,7 @@ class App:
         self.interface = FletApiInterface(ApiForFlet(page))
         db_names = self.interface.get_database_names()
 
+        page.fonts = {"Roboto Mono": _MONOSPACE_FONT}
         page.data = self.interface
         page.title = "Pysaurus"
         page.add(ft.Container(Homepage(page, db_names), expand=True))
