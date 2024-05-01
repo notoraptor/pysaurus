@@ -5,8 +5,7 @@ import flet as ft
 from pysaurus.application import exceptions
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.constants import VIDEO_SUPPORTED_EXTENSIONS
-from pysaurus.interface.flet_interface.flet_api_interface import FletApiInterface
-from pysaurus.interface.flet_interface.flet_utils import Title1, Title2, set_page
+from pysaurus.interface.flet_interface.flet_utils import FletUtils, Title1, Title2
 from pysaurus.interface.flet_interface.page.taskpage import TaskPage
 
 
@@ -201,9 +200,8 @@ class Homepage(ft.Column):
         if not self.database_to_load:
             raise exceptions.InvalidDatabaseName()
         print("Opening", self.database_to_load, "with loading ?", self.update_on_load)
-        interface = self.page.data
-        assert isinstance(interface, FletApiInterface), interface
-        set_page(
+        interface = FletUtils.get_app_interface(self)
+        FletUtils.set_page(
             self.page,
             TaskPage(
                 interface.open_database,

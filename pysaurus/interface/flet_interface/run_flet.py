@@ -9,8 +9,8 @@ import flet as ft
 from pysaurus.application import exceptions
 from pysaurus.core.enumeration import EnumerationError
 from pysaurus.core.functions import string_to_pieces
-from pysaurus.interface.flet_interface.api_for_flet import ApiForFlet
 from pysaurus.interface.flet_interface.flet_api_interface import FletApiInterface
+from pysaurus.interface.flet_interface.flet_gui_api import FletGuiAPI
 from pysaurus.interface.flet_interface.page.homepage import Homepage
 
 _CURRENT_FOLDER = os.path.dirname(os.path.abspath(__file__))
@@ -30,7 +30,7 @@ class App:
 
     def run(self, page: ft.Page):
         self.page = page
-        self.interface = FletApiInterface(ApiForFlet(page))
+        self.interface = FletApiInterface(FletGuiAPI(page))
         db_names = self.interface.get_database_names()
 
         page.fonts = {"Roboto Mono": _MONOSPACE_FONT}

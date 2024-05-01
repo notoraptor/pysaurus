@@ -8,7 +8,7 @@ import flet as ft
 
 from pysaurus.core.notifications import Notification
 from pysaurus.core.overridden import Overridden
-from pysaurus.interface.flet_interface.flet_utils import Title1, set_page
+from pysaurus.interface.flet_interface.flet_utils import FletUtils, Title1
 from pysaurus.interface.flet_interface.page.taskpage_utils import (
     NotificationCollector,
     NotificationRenderer,
@@ -96,7 +96,7 @@ class TaskPage(ft.Column):
         self.messages.update()
 
     def default_submit(self):
-        set_page(self.page, VideosPage())
+        FletUtils.set_page(self.page, VideosPage())
 
     def submit(self, e):
         if self.submit_callback:

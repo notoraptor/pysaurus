@@ -1,7 +1,6 @@
 import flet as ft
 
-from pysaurus.interface.flet_interface.flet_api_interface import FletApiInterface
-from pysaurus.interface.flet_interface.flet_utils import Title2
+from pysaurus.interface.flet_interface.flet_utils import FletUtils, Title2
 
 PAGE_SIZES = [1, 10, 20, 50, 100]
 
@@ -28,8 +27,7 @@ class VideosPage(ft.Column):
         self.page.run_task(self.load_videos)
 
     async def load_videos(self):
-        interface = self.page.data
-        assert isinstance(interface, FletApiInterface), interface
+        interface = FletUtils.get_app_interface(self)
         state = interface.backend(VIDEO_DEFAULT_PAGE_SIZE, VIDEO_DEFAULT_PAGE_NUMBER)
         self.controls = [ft.Text(f"{len(state['videos'])} video(s)")]
         self.update()
