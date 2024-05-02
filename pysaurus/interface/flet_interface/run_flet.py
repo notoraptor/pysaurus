@@ -9,6 +9,9 @@ import flet as ft
 from pysaurus.application import exceptions
 from pysaurus.core.enumeration import EnumerationError
 from pysaurus.core.functions import string_to_pieces
+from pysaurus.interface.flet_interface.extended_flet_api_interface import (
+    ExtendedFletApiInterface,
+)
 from pysaurus.interface.flet_interface.flet_api_interface import FletApiInterface
 from pysaurus.interface.flet_interface.flet_gui_api import FletGuiAPI
 from pysaurus.interface.flet_interface.page.homepage import Homepage
@@ -30,12 +33,13 @@ class App:
 
     def run(self, page: ft.Page):
         self.page = page
-        self.interface = FletApiInterface(FletGuiAPI(page))
+        self.interface = ExtendedFletApiInterface(FletGuiAPI(page))
         db_names = self.interface.get_database_names()
 
         page.fonts = {"Roboto Mono": _MONOSPACE_FONT}
         page.data = self.interface
         page.title = "Pysaurus"
+        page.on_keyboard_event = self.interface.on_keyboard
         page.add(ft.Container(Homepage(page, db_names), expand=True))
 
     def __enter__(self):

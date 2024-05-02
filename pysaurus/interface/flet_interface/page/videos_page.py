@@ -1,12 +1,14 @@
 import flet as ft
 
 from pysaurus.interface.flet_interface.flet_utils import FletUtils, Title2
-
-PAGE_SIZES = [1, 10, 20, 50, 100]
-
-VIDEO_DEFAULT_PAGE_SIZE = PAGE_SIZES[-1]
-
-VIDEO_DEFAULT_PAGE_NUMBER = 0
+from pysaurus.interface.flet_interface.page.videos_page_utils import (
+    Action,
+    Actions,
+    StateWrapper,
+    VIDEO_DEFAULT_PAGE_NUMBER,
+    VIDEO_DEFAULT_PAGE_SIZE,
+)
+from saurus.language import say as tr
 
 
 class VideosPage(ft.Column):
@@ -22,12 +24,219 @@ class VideosPage(ft.Column):
             alignment=ft.MainAxisAlignment.CENTER,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
         )
+        self.actions = Actions(
+            [
+                Action(
+                    "select",
+                    "Ctrl+T",
+                    tr("Select videos ..."),
+                    self.selectVideos,
+                    self._dialog_is_inactive,
+                ),
+                Action(
+                    "group",
+                    "Ctrl+G",
+                    tr("Group ..."),
+                    self.groupVideos,
+                    self._dialog_is_inactive,
+                ),
+                Action(
+                    "search",
+                    "Ctrl+F",
+                    tr("Search ..."),
+                    self.searchVideos,
+                    self._dialog_is_inactive,
+                ),
+                Action(
+                    "sort",
+                    "Ctrl+S",
+                    tr("Sort ..."),
+                    self.sortVideos,
+                    self._dialog_is_inactive,
+                ),
+                Action(
+                    "unselect",
+                    "Ctrl+Shift+T",
+                    tr("Reset selection"),
+                    self.unselectVideos,
+                    self._dialog_is_inactive,
+                ),
+                Action(
+                    "ungroup",
+                    "Ctrl+Shift+G",
+                    tr("Reset group"),
+                    self.resetGroup,
+                    self._dialog_is_inactive,
+                ),
+                Action(
+                    "unsearch",
+                    "Ctrl+Shift+F",
+                    tr("Reset search"),
+                    self.resetSearch,
+                    self._dialog_is_inactive,
+                ),
+                Action(
+                    "unsort",
+                    "Ctrl+Shift+S",
+                    tr("Reset sorting"),
+                    self.resetSort,
+                    self._dialog_is_inactive,
+                ),
+                Action(
+                    "reload",
+                    "Ctrl+R",
+                    tr("Reload database ..."),
+                    self.reloadDatabase,
+                    self._dialog_is_inactive,
+                ),
+                Action(
+                    "manageProperties",
+                    "Ctrl+P",
+                    tr("Manage properties ..."),
+                    self.manageProperties,
+                    self._dialog_is_inactive,
+                ),
+                Action(
+                    "openRandomVideo",
+                    "Ctrl+O",
+                    tr("Open random video"),
+                    self.openRandomVideo,
+                    self.canOpenRandomVideo,
+                ),
+                Action(
+                    "previousPage",
+                    "Ctrl+Arrow Left",
+                    tr("Go to previous page"),
+                    self.previousPage,
+                    self._dialog_is_inactive,
+                ),
+                Action(
+                    "nextPage",
+                    "Ctrl+Arrow Right",
+                    tr("Go to next page"),
+                    self.nextPage,
+                    self._dialog_is_inactive,
+                ),
+                Action(
+                    "playlist",
+                    "Ctrl+L",
+                    tr("play list"),
+                    self.playlist,
+                    self._dialog_is_inactive,
+                ),
+            ]
+        )
 
     def did_mount(self):
+        # Will load view and install global shortcuts
         self.page.run_task(self.load_videos)
+
+    def will_unmount(self):
+        # Uninstall global shortcuts
+        interface = FletUtils.get_app_interface(self)
+        interface.keyboard_callback = None
 
     async def load_videos(self):
         interface = FletUtils.get_app_interface(self)
-        state = interface.backend(VIDEO_DEFAULT_PAGE_SIZE, VIDEO_DEFAULT_PAGE_NUMBER)
-        self.controls = [ft.Text(f"{len(state['videos'])} video(s)")]
+        state = StateWrapper(
+            interface.backend(VIDEO_DEFAULT_PAGE_SIZE, VIDEO_DEFAULT_PAGE_NUMBER)
+        )
+        nb_folders = len(state.database.folders)
+
+        menubar = ft.MenuBar(
+            expand=0,
+            style=ft.MenuStyle(
+                alignment=ft.alignment.top_left,
+                # bgcolor=ft.colors.GREY
+            ),
+            controls=[
+                ft.SubmenuButton(
+                    content=ft.Text("Database ..."),
+                    controls=[
+                        ft.MenuItemButton(ft.Text("Reload database ...")),
+                        ft.MenuItemButton(
+                            ft.Text(f'Rename database "{state.database.name}" ...')
+                        ),
+                        ft.MenuItemButton(
+                            ft.Text(f"Edit {nb_folders} database folders ...")
+                        ),
+                        ft.MenuItemButton(ft.Text("Close database ...")),
+                        ft.MenuItemButton(ft.Text("Delete database ...")),
+                    ],
+                ),
+                ft.SubmenuButton(
+                    content=ft.Text("Videos ..."),
+                    controls=[
+                        ft.MenuItemButton(ft.Text("Filter videos ...")),
+                        *(
+                            [ft.MenuItemButton(ft.Text("Reset filters ..."))]
+                            if state.is_filtered()
+                            else []
+                        ),
+                        # ...
+                        ft.MenuItemButton(ft.Text("Play list")),
+                    ],
+                ),
+                ft.SubmenuButton(content=ft.Text("Properties ...")),
+                ft.SubmenuButton(content=ft.Text("Navigation ...")),
+                ft.SubmenuButton(content=ft.Text("Options ...")),
+            ],
+        )
+
+        self.controls = [
+            menubar,
+            ft.Container(ft.Text(f"{len(state.videos)} video(s)"), expand=1),
+        ]
+
+        # Install global shortcuts
+        interface.keyboard_callback = self.actions.on_keyboard_event
+
         self.update()
+
+    def selectVideos(self):
+        print("from shortcut: select videos")
+
+    def groupVideos(self):
+        print("from shortcut: group videos")
+
+    def searchVideos(self):
+        print("from shortcut: search videos")
+
+    def sortVideos(self):
+        print("from shortcut: sort videos")
+
+    def unselectVideos(self):
+        print("from shortcut: unselect videos")
+
+    def resetGroup(self):
+        print("from shortcut: reset group")
+
+    def resetSearch(self):
+        print("from shortcut: reset search")
+
+    def resetSort(self):
+        print("from shortcut: reset sort")
+
+    def reloadDatabase(self):
+        print("from shortcut: reload database")
+
+    def manageProperties(self):
+        print("from shortcut: manage properties")
+
+    def openRandomVideo(self):
+        print("from shortcut: open random video")
+
+    def previousPage(self):
+        print("from shortcut: previous page")
+
+    def nextPage(self):
+        print("from shortcut: next page")
+
+    def playlist(self):
+        print("from shortcut: playlist")
+
+    def canOpenRandomVideo(self) -> bool:
+        return True
+
+    def _dialog_is_inactive(self) -> bool:
+        return self.page.dialog is None

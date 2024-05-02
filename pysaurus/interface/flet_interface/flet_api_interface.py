@@ -1,8 +1,11 @@
 from typing import *
+
 from pysaurus.interface.api.gui_api import GuiAPI
 
 
 class FletApiInterface:
+    __slots__ = ("api",)
+
     def __init__(self, api: GuiAPI):
         self.api = api
 

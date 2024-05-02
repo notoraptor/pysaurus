@@ -16,10 +16,13 @@ def main():
     base_api = GuiAPI()
     with StringPrinter() as printer:
         printer.write("from typing import *")
+        printer.write()
         printer.write("from pysaurus.interface.api.gui_api import GuiAPI")
         printer.write()
         printer.write()
         printer.write("class FletApiInterface:")
+        printer.write('    __slots__ = ("api",)')
+        printer.write()
         printer.write("    def __init__(self, api: GuiAPI):")
         printer.write("        self.api = api")
         printer.write()

@@ -19,6 +19,8 @@ from pysaurus.interface.api.api_utils.proxy_feature import (
 from pysaurus.video.video_features import VideoFeatures
 from pysaurus.video.video_utils import COMMON_FIELDS
 
+PYTHON_DEFAULT_SOURCES = [["readable"]]
+
 
 class FeatureAPI:
     __slots__ = ("notifier", "application", "database", "_proxies", "_constants")
@@ -28,7 +30,7 @@ class FeatureAPI:
         self.application = Application(self.notifier)
         self.database: Optional[Db] = None
         self._constants = {
-            "PYTHON_DEFAULT_SOURCES": [["readable"]],
+            "PYTHON_DEFAULT_SOURCES": PYTHON_DEFAULT_SOURCES,
             "PYTHON_APP_NAME": self.application.app_name,
             "PYTHON_FEATURE_COMPARISON": True,
             "PYTHON_LANG": language_to_dict(self.application.lang),

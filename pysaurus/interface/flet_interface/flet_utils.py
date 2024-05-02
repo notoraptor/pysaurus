@@ -1,6 +1,8 @@
 import flet as ft
 
-from pysaurus.interface.flet_interface.flet_api_interface import FletApiInterface
+from pysaurus.interface.flet_interface.extended_flet_api_interface import (
+    ExtendedFletApiInterface,
+)
 
 
 class Title1(ft.Text):
@@ -20,10 +22,10 @@ class FletUtils:
         page.add(ft.Container(content, expand=True))
 
     @staticmethod
-    def get_app_interface(control: ft.Control) -> FletApiInterface:
+    def get_app_interface(control: ft.Control) -> ExtendedFletApiInterface:
         if isinstance(control, ft.Page):
             interface = control.data
         else:
             interface = control.page.data
-        assert isinstance(interface, FletApiInterface)
+        assert isinstance(interface, ExtendedFletApiInterface)
         return interface
