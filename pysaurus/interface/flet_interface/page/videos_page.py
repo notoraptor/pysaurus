@@ -116,7 +116,7 @@ class VideosPage(ft.Column):
             Action(
                 "playlist",
                 "Ctrl+L",
-                "play list",
+                "Play list",
                 self.playlist,
                 self._dialog_is_inactive,
             ),
@@ -143,181 +143,220 @@ class VideosPage(ft.Column):
         string_properties = [desc for desc in prop_types if desc.type is str]
         string_set_properties = [desc for desc in string_properties if desc.multiple]
 
+        menu = [
+            ft.SubmenuButton(
+                ft.Text("Database ..."),
+                [
+                    FletActionMenu(self.actions["reload"]),
+                    ft.MenuItemButton(
+                        ft.Text(f'Rename database "{state.database.name}" ...'),
+                        on_click=self.on_rename_database,
+                    ),
+                    ft.MenuItemButton(
+                        ft.Text(f"Edit {nb_folders} database folders ..."),
+                        on_click=self.on_edit_database_folders,
+                    ),
+                    ft.MenuItemButton(
+                        ft.Text("Close database ..."), on_click=self.on_close_database
+                    ),
+                    ft.MenuItemButton(
+                        ft.Text("Delete database ..."), on_click=self.on_delete_database
+                    ),
+                ],
+            ),
+            ft.SubmenuButton(
+                ft.Text("Videos ..."),
+                [
+                    ft.SubmenuButton(
+                        ft.Text("Filter videos ..."),
+                        [
+                            FletActionMenu(self.actions["select"]),
+                            FletActionMenu(self.actions["group"]),
+                            FletActionMenu(self.actions["search"]),
+                            FletActionMenu(self.actions["sort"]),
+                        ],
+                    ),
+                    *(
+                        [
+                            ft.SubmenuButton(
+                                ft.Text("Reset filters ..."),
+                                [
+                                    *(
+                                        [FletActionMenu(self.actions["unselect"])]
+                                        if state.source_is_set()
+                                        else []
+                                    ),
+                                    *(
+                                        [FletActionMenu(self.actions["ungroup"])]
+                                        if state.group_is_set()
+                                        else []
+                                    ),
+                                    *(
+                                        [FletActionMenu(self.actions["unsearch"])]
+                                        if state.search_is_set()
+                                        else []
+                                    ),
+                                    *(
+                                        [FletActionMenu(self.actions["unsort"])]
+                                        if state.sort_is_set()
+                                        else []
+                                    ),
+                                ],
+                            )
+                        ]
+                        if state.is_filtered()
+                        else []
+                    ),
+                    *(
+                        [FletActionMenu(self.actions["openRandomVideo"])]
+                        if self.canOpenRandomVideo()
+                        else []
+                    ),
+                    ft.MenuItemButton(
+                        ft.Text("Search similar videos"),
+                        on_click=self.on_find_similar_videos,
+                    ),
+                    ft.MenuItemButton(
+                        ft.Text("Search similar videos (ignore cache) ..."),
+                        on_click=self.on_find_similar_videos_ignore_cache,
+                    ),
+                    *(
+                        [
+                            ft.MenuItemButton(
+                                ft.Text("Confirm all unique moves ..."),
+                                on_click=self.on_confirm_all_unique_moves,
+                            )
+                        ]
+                        if state.is_grouped_by_moves()
+                        else []
+                    ),
+                    FletActionMenu(self.actions["playlist"]),
+                ],
+            ),
+            ft.SubmenuButton(
+                ft.Text("Properties ..."),
+                [
+                    FletActionMenu(self.actions["manageProperties"]),
+                    *(
+                        [
+                            ft.MenuItemButton(
+                                ft.Text("Put keywords into a property ..."),
+                                on_click=self.on_fill_with_keywords,
+                            )
+                        ]
+                        if string_set_properties
+                        else []
+                    ),
+                    *(
+                        [
+                            ft.SubmenuButton(
+                                ft.Text("Group videos by property ..."),
+                                [
+                                    ft.MenuItemButton(
+                                        ft.Text(desc.name),
+                                        data=desc.name,
+                                        on_click=self.on_group_by_property,
+                                    )
+                                    for desc in prop_types
+                                ],
+                            )
+                        ]
+                        if len(prop_types) > 5
+                        else [
+                            ft.MenuItemButton(
+                                ft.Text(f"Group videos by property: {desc.name}"),
+                                data=desc.name,
+                                on_click=self.on_group_by_property,
+                            )
+                            for desc in prop_types
+                        ]
+                    ),
+                    *(
+                        [
+                            ft.SubmenuButton(
+                                ft.Text("Convert values to lowercase for ..."),
+                                [
+                                    ft.MenuItemButton(
+                                        ft.Text(desc.name),
+                                        data=desc.name,
+                                        on_click=self.on_prop_to_lowercase,
+                                    )
+                                    for desc in string_properties
+                                ],
+                            )
+                        ]
+                        if string_properties
+                        else []
+                    ),
+                    *(
+                        [
+                            ft.SubmenuButton(
+                                ft.Text("Convert values to uppercase for ..."),
+                                [
+                                    ft.MenuItemButton(
+                                        ft.Text(desc.name),
+                                        data=desc.name,
+                                        on_click=self.on_prop_to_uppercase,
+                                    )
+                                    for desc in string_properties
+                                ],
+                            )
+                        ]
+                        if string_properties
+                        else []
+                    ),
+                ],
+            ),
+            ft.SubmenuButton(
+                ft.Text("Navigation ..."),
+                [
+                    ft.SubmenuButton(
+                        ft.Text("Videos ...."),
+                        [
+                            FletActionMenu(self.actions["previousPage"]),
+                            FletActionMenu(self.actions["nextPage"]),
+                        ],
+                    ),
+                    *(
+                        [
+                            ft.SubmenuButton(
+                                ft.Text("Group ..."),
+                                [
+                                    ft.MenuItemButton(
+                                        ft.Text("Go to previous group"),
+                                        on_click=self.on_previous_group,
+                                    ),
+                                    ft.MenuItemButton(
+                                        ft.Text("Go to next group"),
+                                        on_click=self.on_next_group,
+                                    ),
+                                ],
+                            )
+                        ]
+                        if state.group_is_set()
+                        else []
+                    ),
+                ],
+            ),
+            ft.SubmenuButton(
+                ft.Text("Options ..."),
+                [
+                    ft.SubmenuButton(
+                        ft.Text("Page size ..."),
+                        [
+                            ft.MenuItemButton(ft.Text(f"{count} video(s) per page"))
+                            for count in PAGE_SIZES
+                        ],
+                    ),
+                    ft.MenuItemButton(
+                        ft.Text("confirm deletion for entries not found"),
+                        on_click=self.on_confirm_deletion_for_entries_not_found,
+                    ),
+                ],
+            ),
+        ]
         menubar = ft.MenuBar(
-            expand=0,
-            style=ft.MenuStyle(alignment=ft.alignment.top_left),
-            controls=[
-                ft.SubmenuButton(
-                    content=ft.Text("Database ..."),
-                    controls=[
-                        ft.MenuItemButton(ft.Text("Reload database ...")),
-                        ft.MenuItemButton(
-                            ft.Text(f'Rename database "{state.database.name}" ...')
-                        ),
-                        ft.MenuItemButton(
-                            ft.Text(f"Edit {nb_folders} database folders ...")
-                        ),
-                        ft.MenuItemButton(ft.Text("Close database ...")),
-                        ft.MenuItemButton(ft.Text("Delete database ...")),
-                    ],
-                ),
-                ft.SubmenuButton(
-                    content=ft.Text("Videos ..."),
-                    controls=[
-                        ft.SubmenuButton(
-                            ft.Text("Filter videos ..."),
-                            controls=[
-                                FletActionMenu(self.actions["select"]),
-                                FletActionMenu(self.actions["group"]),
-                                FletActionMenu(self.actions["search"]),
-                                FletActionMenu(self.actions["sort"]),
-                            ],
-                        ),
-                        *(
-                            [
-                                ft.SubmenuButton(
-                                    ft.Text("Reset filters ..."),
-                                    controls=[
-                                        *(
-                                            [FletActionMenu(self.actions["unselect"])]
-                                            if state.source_is_set()
-                                            else []
-                                        ),
-                                        *(
-                                            [FletActionMenu(self.actions["ungroup"])]
-                                            if state.group_is_set()
-                                            else []
-                                        ),
-                                        *(
-                                            [FletActionMenu(self.actions["unsort"])]
-                                            if state.sort_is_set()
-                                            else []
-                                        ),
-                                    ],
-                                )
-                            ]
-                            if state.is_filtered()
-                            else []
-                        ),
-                        *(
-                            [FletActionMenu(self.actions["openRandomVideo"])]
-                            if self.canOpenRandomVideo()
-                            else []
-                        ),
-                        ft.MenuItemButton(ft.Text("Search similar videos")),
-                        ft.MenuItemButton(
-                            ft.Text("Search similar videos (ignore cache) ...")
-                        ),
-                        *(
-                            [ft.MenuItemButton(ft.Text("Confirm all unique moves ..."))]
-                            if state.is_grouped_by_moves()
-                            else []
-                        ),
-                        ft.MenuItemButton(ft.Text("Play list")),
-                    ],
-                ),
-                ft.SubmenuButton(
-                    content=ft.Text("Properties ..."),
-                    controls=[
-                        FletActionMenu(self.actions["manageProperties"]),
-                        *(
-                            [
-                                ft.MenuItemButton(
-                                    ft.Text("Put keywords into a property ...")
-                                )
-                            ]
-                            if string_set_properties
-                            else []
-                        ),
-                        *(
-                            [
-                                ft.SubmenuButton(
-                                    ft.Text("Group videos by property ..."),
-                                    [
-                                        ft.MenuItemButton(ft.Text(desc.name))
-                                        for desc in prop_types
-                                    ],
-                                )
-                            ]
-                            if len(prop_types) > 5
-                            else [
-                                ft.MenuItemButton(
-                                    ft.Text(f"Group videos by property: {desc.name}")
-                                )
-                                for desc in prop_types
-                            ]
-                        ),
-                        *(
-                            [
-                                ft.SubmenuButton(
-                                    ft.Text("Convert values to lowercase for ..."),
-                                    [
-                                        ft.MenuItemButton(ft.Text(desc.name))
-                                        for desc in string_properties
-                                    ],
-                                )
-                            ]
-                            if string_properties
-                            else []
-                        ),
-                        *(
-                            [
-                                ft.SubmenuButton(
-                                    ft.Text("Convert values to uppercase for ..."),
-                                    [
-                                        ft.MenuItemButton(ft.Text(desc.name))
-                                        for desc in string_properties
-                                    ],
-                                )
-                            ]
-                            if string_properties
-                            else []
-                        ),
-                    ],
-                ),
-                ft.SubmenuButton(
-                    ft.Text("Navigation ..."),
-                    [
-                        ft.SubmenuButton(
-                            ft.Text("Videos ...."),
-                            [
-                                FletActionMenu(self.actions["previousPage"]),
-                                FletActionMenu(self.actions["nextPage"]),
-                            ],
-                        ),
-                        *(
-                            [
-                                ft.SubmenuButton(
-                                    ft.Text("Group ..."),
-                                    [
-                                        ft.MenuItemButton(
-                                            ft.Text("Go to previous group")
-                                        ),
-                                        ft.MenuItemButton(ft.Text("Go to next group")),
-                                    ],
-                                )
-                            ]
-                            if state.group_is_set()
-                            else []
-                        ),
-                    ],
-                ),
-                ft.SubmenuButton(
-                    ft.Text("Options ..."),
-                    [
-                        ft.SubmenuButton(
-                            ft.Text("Page size ..."),
-                            [
-                                ft.MenuItemButton(ft.Text(f"{count} video(s) per page"))
-                                for count in PAGE_SIZES
-                            ],
-                        ),
-                        ft.MenuItemButton(
-                            ft.Text("confirm deletion for entries not found")
-                        ),
-                    ],
-                ),
-            ],
+            menu, expand=0, style=ft.MenuStyle(alignment=ft.alignment.top_left)
         )
 
         # Install global shortcuts
@@ -370,6 +409,48 @@ class VideosPage(ft.Column):
 
     def playlist(self):
         print("from shortcut: playlist")
+
+    def on_rename_database(self, e: ft.ControlEvent):
+        print("on_rename_database")
+
+    def on_edit_database_folders(self, e: ft.ControlEvent):
+        print("on_edit_database_folders")
+
+    def on_close_database(self, e: ft.ControlEvent):
+        print("on_close_database")
+
+    def on_delete_database(self, e: ft.ControlEvent):
+        print("on_delete_database")
+
+    def on_find_similar_videos(self, e: ft.ControlEvent):
+        print("on_find_similar_videos")
+
+    def on_find_similar_videos_ignore_cache(self, e: ft.ControlEvent):
+        print("on_find_similar_videos_ignore_cache")
+
+    def on_confirm_all_unique_moves(self, e: ft.ControlEvent):
+        print("on_confirm_all_unique_moves")
+
+    def on_group_by_property(self, e: ft.ControlEvent):
+        print("on_group_by_property")
+
+    def on_prop_to_lowercase(self, e: ft.ControlEvent):
+        print("on_prop_to_lowercase")
+
+    def on_prop_to_uppercase(self, e: ft.ControlEvent):
+        print("on_prop_to_uppercase")
+
+    def on_previous_group(self, e: ft.ControlEvent):
+        print("on_previous_group")
+
+    def on_next_group(self, e: ft.ControlEvent):
+        print("on_next_group")
+
+    def on_confirm_deletion_for_entries_not_found(self, e: ft.ControlEvent):
+        print("on_confirm_deletion_for_entries_not_found")
+
+    def on_fill_with_keywords(self, e: ft.ControlEvent):
+        print("on_fill_with_keywords")
 
     def canOpenRandomVideo(self) -> bool:
         return True
