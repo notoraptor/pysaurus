@@ -341,12 +341,21 @@ class VideosPage(ft.Column):
             ft.SubmenuButton(
                 ft.Text("Options ..."),
                 [
-                    ft.SubmenuButton(
-                        ft.Text("Page size ..."),
-                        [
-                            ft.MenuItemButton(ft.Text(f"{count} video(s) per page"))
-                            for count in PAGE_SIZES
-                        ],
+                    ft.RadioGroup(
+                        ft.SubmenuButton(
+                            ft.Text("Page size ..."),
+                            [
+                                ft.MenuItemButton(
+                                    ft.Radio(
+                                        value=count, label=f"{count} video(s) per page"
+                                    ),
+                                    style=ft.ButtonStyle(color=ft.colors.BLACK),
+                                )
+                                for count in PAGE_SIZES
+                            ],
+                        ),
+                        value=PAGE_SIZES[-1],
+                        on_change=self.on_set_page_size,
                     ),
                     ft.MenuItemButton(
                         ft.Text("confirm deletion for entries not found"),
@@ -445,6 +454,9 @@ class VideosPage(ft.Column):
 
     def on_next_group(self, e: ft.ControlEvent):
         print("on_next_group")
+
+    def on_set_page_size(self, e: ft.ControlEvent):
+        print("on_set_page_size")
 
     def on_confirm_deletion_for_entries_not_found(self, e: ft.ControlEvent):
         print("on_confirm_deletion_for_entries_not_found")
