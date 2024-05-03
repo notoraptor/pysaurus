@@ -1,4 +1,4 @@
-from typing import Collection, List, Sequence, Union
+from typing import Collection, List, Optional, Sequence, Union
 
 from pysaurus.application import exceptions
 from pysaurus.core.enumeration import Enumeration
@@ -83,25 +83,42 @@ class PropType(WithSchema):
         }
 
 
-class PropTypeValidator:
-    __slots__ = (
-        "name",
-        "type",
-        "enumeration",
-        "multiple",
-        "default",
-        "property_id",
-        "as_sql",
-    )
+class PropTypeDesc:
+    __slots__ = ("_desc",)
 
     def __init__(self, prop_desc: dict):
-        self.name = prop_desc["name"]
-        self.type = PROP_UNIT_TYPE_MAP[prop_desc["type"]]
-        self.enumeration = prop_desc["enumeration"]
-        self.multiple = prop_desc["multiple"]
-        self.default = prop_desc["defaultValues"]
-        self.property_id = prop_desc.get("property_id")
+        self._desc = prop_desc
 
+    @property
+    def name(self) -> str:
+        return self._desc["name"]
+
+    @property
+    def type(self):
+        return PROP_UNIT_TYPE_MAP[self._desc["type"]]
+
+    @property
+    def enumeration(self) -> Optional[List[PropUnitType]]:
+        return self._desc["enumeration"]
+
+    @property
+    def multiple(self) -> bool:
+        return self._desc["multiple"]
+
+    @property
+    def default(self) -> List[PropUnitType]:
+        return self._desc["defaultValues"]
+
+    @property
+    def property_id(self) -> Optional[int]:
+        return self._desc.get("property_id")
+
+
+class PropTypeValidator(PropTypeDesc):
+    __slots__ = ("as_sql",)
+
+    def __init__(self, prop_desc: dict):
+        super().__init__(prop_desc)
         if self.type is str:
             sqler = self._str_to_sql
         elif self.type is bool:

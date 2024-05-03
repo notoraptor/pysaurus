@@ -3,6 +3,7 @@ from typing import Callable, List, Optional, Sequence, Union
 import flet as ft
 
 from pysaurus.interface.api.feature_api import PYTHON_DEFAULT_SOURCES
+from pysaurus.properties.properties import PropTypeDesc
 
 PAGE_SIZES = [1, 10, 20, 50, 100]
 VIDEO_DEFAULT_PAGE_SIZE = PAGE_SIZES[-1]
@@ -35,8 +36,8 @@ class StateWrapper:
         return DatabaseStateWrapper(self.state["database"])
 
     @property
-    def prop_types(self) -> List[dict]:
-        return self.state["prop_types"]
+    def prop_types(self) -> List[PropTypeDesc]:
+        return [PropTypeDesc(desc) for desc in self.state["prop_types"]]
 
     @property
     def nb_source_videos(self) -> int:
@@ -104,7 +105,7 @@ class StateWrapper:
         return bool(self.search_def)
 
     def sort_is_set(self) -> bool:
-        return self.sorting == ["-date"]
+        return self.sorting != ["-date"]
 
     def is_filtered(self) -> bool:
         return (
@@ -114,11 +115,17 @@ class StateWrapper:
             or self.sort_is_set()
         )
 
+    def is_grouped_by_moves(self) -> bool:
+        return self.group_def and self.group_def["field"] == "move_id"
+
     def can_open_random_video(self) -> bool:
         return not self.all_not_found() and self.nb_source_videos
 
     def all_not_found(self) -> bool:
         return all("not_found" in source for source in self.sources)
+
+    def get_multiple_string_prop_types(self) -> List[PropTypeDesc]:
+        return [desc for desc in self.prop_types if desc.multiple and desc.type is str]
 
 
 class Shortcut:
@@ -164,18 +171,25 @@ class Action:
         if self.filter is None or self.filter():
             self.callback()
 
+    def on_click(self, e):
+        return self.execute()
+
 
 class Actions:
-    __slots__ = ("actions", "shortcut_to_action")
+    __slots__ = ("actions", "shortcut_to_action", "name_to_action")
 
     def __init__(self, actions: Sequence[Action]):
         assert len({action.name for action in actions}) == len(actions)
         assert len({action.shortcut for action in actions}) == len(actions)
         assert len({action.title for action in actions}) == len(actions)
         self.actions = actions
+        self.name_to_action = {action.name: action for action in actions}
         self.shortcut_to_action = {
             action.shortcut.tuple(): action for action in actions
         }
+
+    def __getitem__(self, name: str) -> Action:
+        return self.name_to_action[name]
 
     def on_keyboard_event(self, e: ft.KeyboardEvent):
         shortcut_tuple = (e.ctrl, e.alt, e.shift, e.key.lower())
