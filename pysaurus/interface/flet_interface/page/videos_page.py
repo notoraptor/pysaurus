@@ -25,108 +25,103 @@ class VideosPage(ft.Column):
             alignment=ft.MainAxisAlignment.CENTER,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
         )
-        self.actions = Actions(
-            [
-                Action(
-                    "select",
-                    "Ctrl+T",
-                    "Select videos ...",
-                    self.selectVideos,
-                    self._dialog_is_inactive,
-                ),
-                Action(
-                    "group",
-                    "Ctrl+G",
-                    "Group ...",
-                    self.groupVideos,
-                    self._dialog_is_inactive,
-                ),
-                Action(
-                    "search",
-                    "Ctrl+F",
-                    "Search ...",
-                    self.searchVideos,
-                    self._dialog_is_inactive,
-                ),
-                Action(
-                    "sort",
-                    "Ctrl+S",
-                    "Sort ...",
-                    self.sortVideos,
-                    self._dialog_is_inactive,
-                ),
-                Action(
-                    "unselect",
-                    "Ctrl+Shift+T",
-                    "Reset selection",
-                    self.unselectVideos,
-                    self._dialog_is_inactive,
-                ),
-                Action(
-                    "ungroup",
-                    "Ctrl+Shift+G",
-                    "Reset group",
-                    self.resetGroup,
-                    self._dialog_is_inactive,
-                ),
-                Action(
-                    "unsearch",
-                    "Ctrl+Shift+F",
-                    "Reset search",
-                    self.resetSearch,
-                    self._dialog_is_inactive,
-                ),
-                Action(
-                    "unsort",
-                    "Ctrl+Shift+S",
-                    "Reset sorting",
-                    self.resetSort,
-                    self._dialog_is_inactive,
-                ),
-                Action(
-                    "reload",
-                    "Ctrl+R",
-                    "Reload database ...",
-                    self.reloadDatabase,
-                    self._dialog_is_inactive,
-                ),
-                Action(
-                    "manageProperties",
-                    "Ctrl+P",
-                    "Manage properties ...",
-                    self.manageProperties,
-                    self._dialog_is_inactive,
-                ),
-                Action(
-                    "openRandomVideo",
-                    "Ctrl+O",
-                    "Open random video",
-                    self.openRandomVideo,
-                    self.canOpenRandomVideo,
-                ),
-                Action(
-                    "previousPage",
-                    "Ctrl+Arrow Left",
-                    "Go to previous page",
-                    self.previousPage,
-                    self._dialog_is_inactive,
-                ),
-                Action(
-                    "nextPage",
-                    "Ctrl+Arrow Right",
-                    "Go to next page",
-                    self.nextPage,
-                    self._dialog_is_inactive,
-                ),
-                Action(
-                    "playlist",
-                    "Ctrl+L",
-                    "play list",
-                    self.playlist,
-                    self._dialog_is_inactive,
-                ),
-            ]
-        )
+        actions = [
+            Action(
+                "select",
+                "Ctrl+T",
+                "Select videos ...",
+                self.selectVideos,
+                self._dialog_is_inactive,
+            ),
+            Action(
+                "group",
+                "Ctrl+G",
+                "Group ...",
+                self.groupVideos,
+                self._dialog_is_inactive,
+            ),
+            Action(
+                "search",
+                "Ctrl+F",
+                "Search ...",
+                self.searchVideos,
+                self._dialog_is_inactive,
+            ),
+            Action(
+                "sort", "Ctrl+S", "Sort ...", self.sortVideos, self._dialog_is_inactive
+            ),
+            Action(
+                "unselect",
+                "Ctrl+Shift+T",
+                "Reset selection",
+                self.unselectVideos,
+                self._dialog_is_inactive,
+            ),
+            Action(
+                "ungroup",
+                "Ctrl+Shift+G",
+                "Reset group",
+                self.resetGroup,
+                self._dialog_is_inactive,
+            ),
+            Action(
+                "unsearch",
+                "Ctrl+Shift+F",
+                "Reset search",
+                self.resetSearch,
+                self._dialog_is_inactive,
+            ),
+            Action(
+                "unsort",
+                "Ctrl+Shift+S",
+                "Reset sorting",
+                self.resetSort,
+                self._dialog_is_inactive,
+            ),
+            Action(
+                "reload",
+                "Ctrl+R",
+                "Reload database ...",
+                self.reloadDatabase,
+                self._dialog_is_inactive,
+            ),
+            Action(
+                "manageProperties",
+                "Ctrl+P",
+                "Manage properties ...",
+                self.manageProperties,
+                self._dialog_is_inactive,
+            ),
+            Action(
+                "openRandomVideo",
+                "Ctrl+O",
+                "Open random video",
+                self.openRandomVideo,
+                self.canOpenRandomVideo,
+            ),
+            Action(
+                "previousPage",
+                "Ctrl+Arrow Left",
+                "Go to previous page",
+                self.previousPage,
+                self._dialog_is_inactive,
+            ),
+            Action(
+                "nextPage",
+                "Ctrl+Arrow Right",
+                "Go to next page",
+                self.nextPage,
+                self._dialog_is_inactive,
+            ),
+            Action(
+                "playlist",
+                "Ctrl+L",
+                "play list",
+                self.playlist,
+                self._dialog_is_inactive,
+            ),
+        ]
+        self.actions = Actions(actions)
 
     def did_mount(self):
         # Will load view and install global shortcuts
