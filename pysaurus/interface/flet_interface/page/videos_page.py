@@ -1,6 +1,7 @@
 import flet as ft
 
-from pysaurus.interface.flet_interface.flet_utils import FletUtils, Title2
+from pysaurus.interface.flet_interface.flet_custom_widgets import FletActionMenu, Title2
+from pysaurus.interface.flet_interface.flet_utils import FletUtils
 from pysaurus.interface.flet_interface.page.videos_page_utils import (
     Action,
     Actions,
@@ -9,11 +10,6 @@ from pysaurus.interface.flet_interface.page.videos_page_utils import (
     VIDEO_DEFAULT_PAGE_NUMBER,
     VIDEO_DEFAULT_PAGE_SIZE,
 )
-
-
-class FletActionMenu(ft.MenuItemButton):
-    def __init__(self, action: Action):
-        super().__init__(content=ft.Text(action.title), on_click=action.on_click)
 
 
 class VideosPage(ft.Column):

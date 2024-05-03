@@ -5,7 +5,8 @@ import flet as ft
 from pysaurus.application import exceptions
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.constants import VIDEO_SUPPORTED_EXTENSIONS
-from pysaurus.interface.flet_interface.flet_utils import FletUtils, Title1, Title2
+from pysaurus.interface.flet_interface.flet_custom_widgets import Title1, Title2
+from pysaurus.interface.flet_interface.flet_utils import FletUtils
 from pysaurus.interface.flet_interface.page.taskpage import TaskPage
 
 

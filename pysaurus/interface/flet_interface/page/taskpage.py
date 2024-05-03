@@ -8,7 +8,8 @@ import flet as ft
 
 from pysaurus.core.notifications import Notification
 from pysaurus.core.overridden import Overridden
-from pysaurus.interface.flet_interface.flet_utils import FletUtils, Title1
+from pysaurus.interface.flet_interface.flet_custom_widgets import Title1
+from pysaurus.interface.flet_interface.flet_utils import FletUtils
 from pysaurus.interface.flet_interface.page.taskpage_utils import (
     NotificationCollector,
     NotificationRenderer,
