@@ -2,12 +2,8 @@ from typing import Callable, List, Optional, Sequence, Union
 
 import flet as ft
 
-from pysaurus.interface.api.feature_api import PYTHON_DEFAULT_SOURCES
+from pysaurus.core.constants import PYTHON_DEFAULT_SOURCES
 from pysaurus.properties.properties import PropTypeDesc
-
-PAGE_SIZES = [1, 10, 20, 50, 100]
-VIDEO_DEFAULT_PAGE_SIZE = PAGE_SIZES[-1]
-VIDEO_DEFAULT_PAGE_NUMBER = 0
 
 
 class DatabaseStateWrapper:

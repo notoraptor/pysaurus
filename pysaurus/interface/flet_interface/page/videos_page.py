@@ -1,15 +1,28 @@
+from typing import Sequence
+
 import flet as ft
 
+from pysaurus.core.constants import (
+    PAGE_SIZES,
+    VIDEO_DEFAULT_PAGE_NUMBER,
+    VIDEO_DEFAULT_PAGE_SIZE,
+)
 from pysaurus.interface.flet_interface.flet_custom_widgets import FletActionMenu, Title2
 from pysaurus.interface.flet_interface.flet_utils import FletUtils
 from pysaurus.interface.flet_interface.page.videos_page_utils import (
     Action,
     Actions,
-    PAGE_SIZES,
     StateWrapper,
-    VIDEO_DEFAULT_PAGE_NUMBER,
-    VIDEO_DEFAULT_PAGE_SIZE,
 )
+
+
+class EventCallback:
+    def __init__(self, function: callable, *arguments: Sequence):
+        self.function = function
+        self.arguments = arguments
+
+    def __call__(self, e: ft.ControlEvent):
+        self.function(*self.arguments)
 
 
 class VideosPage(ft.Column):
@@ -138,6 +151,7 @@ class VideosPage(ft.Column):
             interface.backend(VIDEO_DEFAULT_PAGE_SIZE, VIDEO_DEFAULT_PAGE_NUMBER)
         )
         nb_folders = len(state.database.folders)
+        search = state.search_def
 
         prop_types = state.prop_types
         string_properties = [desc for desc in prop_types if desc.type is str]
@@ -369,18 +383,134 @@ class VideosPage(ft.Column):
         )
         pagination = ft.Row(
             [
-                ft.ElevatedButton("<<", disabled=state.page_number == 0),
-                ft.ElevatedButton("<", disabled=state.page_number == 0),
-                ft.Text(f"Page {state.page_number + 1} / {state.nb_pages}"),
                 ft.ElevatedButton(
-                    ">", disabled=state.page_number == state.nb_pages - 1
+                    "<<",
+                    on_click=EventCallback(self.firstPage),
+                    disabled=state.page_number == 0,
                 ),
                 ft.ElevatedButton(
-                    ">>", disabled=state.page_number == state.nb_pages - 1
+                    "<",
+                    on_click=EventCallback(self.previousPage),
+                    disabled=state.page_number == 0,
+                ),
+                ft.Text(f"Page {state.page_number + 1} / {state.nb_pages}"),
+                ft.ElevatedButton(
+                    ">",
+                    on_click=EventCallback(self.nextPage),
+                    disabled=state.page_number == state.nb_pages - 1,
+                ),
+                ft.ElevatedButton(
+                    ">>",
+                    on_click=EventCallback(self.lastPage),
+                    disabled=state.page_number == state.nb_pages - 1,
                 ),
             ]
         )
-        filter_view = None
+        filter_view = ft.Column(
+            [
+                # sources
+                ft.Row(
+                    [
+                        ft.Column(
+                            [
+                                ft.Text(
+                                    " ".join(flag.replace("_", " ") for flag in source)
+                                )
+                                for source in state.sources
+                            ]
+                        ),
+                        ft.Column(
+                            [
+                                ft.IconButton(ft.icons.SETTINGS),
+                                *(
+                                    [ft.IconButton(ft.icons.CANCEL)]
+                                    if state.source_is_set()
+                                    else []
+                                ),
+                            ]
+                        ),
+                    ]
+                ),
+                # groups
+                ft.Row(
+                    [
+                        ft.Column(
+                            [
+                                (
+                                    ft.Text("Grouped")
+                                    if state.group_is_set()
+                                    else ft.Text(
+                                        "Ungrouped", italic=True, color=ft.colors.GREY
+                                    )
+                                )
+                            ]
+                        ),
+                        ft.Column(
+                            [
+                                ft.IconButton(ft.icons.SETTINGS),
+                                *(
+                                    [ft.IconButton(ft.icons.CANCEL)]
+                                    if state.group_is_set()
+                                    else []
+                                ),
+                            ]
+                        ),
+                    ]
+                ),
+                # search
+                ft.Row(
+                    [
+                        ft.Column(
+                            [
+                                ft.Text(f"Searched {search['cond']}"),
+                                ft.Text(search["text"], weight=ft.FontWeight.BOLD),
+                            ]
+                            if state.group_is_set()
+                            else [
+                                ft.Text("No search", italic=True, color=ft.colors.GREY)
+                            ]
+                        ),
+                        ft.Column(
+                            [
+                                ft.IconButton(ft.icons.SETTINGS),
+                                *(
+                                    [ft.IconButton(ft.icons.CANCEL)]
+                                    if state.search_is_set()
+                                    else []
+                                ),
+                            ]
+                        ),
+                    ]
+                ),
+                # sort
+                ft.Row(
+                    [
+                        ft.Column(
+                            [ft.Text("Sorted by")]
+                            + [
+                                ft.Text(
+                                    criterion[1:]
+                                    + " "
+                                    + ("▼" if criterion[0] == "-" else "▲")
+                                )
+                                for criterion in state.sorting
+                            ]
+                        ),
+                        ft.Column(
+                            [
+                                ft.IconButton(ft.icons.SETTINGS),
+                                *(
+                                    [ft.IconButton(ft.icons.CANCEL)]
+                                    if state.sort_is_set()
+                                    else []
+                                ),
+                            ]
+                        ),
+                    ]
+                ),
+                # selection
+            ]
+        )
         classifier_view = None
         group_view = None
         video_view = None
@@ -393,10 +523,16 @@ class VideosPage(ft.Column):
             ft.Container(
                 ft.Row(
                     [menubar, pagination], alignment=ft.MainAxisAlignment.SPACE_BETWEEN
-                ),
-                bgcolor=ft.colors.BLUE,
+                )
             ),
-            ft.Container(ft.Text(f"{len(state.videos)} video(s)"), expand=1),
+            ft.Row(
+                [
+                    # left panel, filters and groups
+                    filter_view,
+                    # right panel, videos
+                    ft.Container(ft.Text(f"{len(state.videos)} video(s)"), expand=1),
+                ]
+            ),
         ]
         self.update()
 
@@ -438,6 +574,12 @@ class VideosPage(ft.Column):
 
     def nextPage(self):
         print("from shortcut: next page")
+
+    def firstPage(self):
+        print("first page")
+
+    def lastPage(self):
+        print("last page")
 
     def playlist(self):
         print("from shortcut: playlist")

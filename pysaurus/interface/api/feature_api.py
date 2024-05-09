@@ -5,6 +5,7 @@ from typing import Any, Dict, Optional, Union
 from pysaurus.application.application import Application
 from pysaurus.application.language.default_language import language_to_dict
 from pysaurus.core.classes import StringPrinter
+from pysaurus.core.constants import PYTHON_DEFAULT_SOURCES
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.abstract_database import AbstractDatabase as Db
 from pysaurus.database.viewport.abstract_video_provider import (
@@ -18,8 +19,6 @@ from pysaurus.interface.api.api_utils.proxy_feature import (
 )
 from pysaurus.video.video_features import VideoFeatures
 from pysaurus.video.video_utils import COMMON_FIELDS
-
-PYTHON_DEFAULT_SOURCES = [["readable"]]
 
 
 class FeatureAPI:
