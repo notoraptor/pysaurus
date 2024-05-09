@@ -367,12 +367,35 @@ class VideosPage(ft.Column):
         menubar = ft.MenuBar(
             menu, expand=0, style=ft.MenuStyle(alignment=ft.alignment.top_left)
         )
+        pagination = ft.Row(
+            [
+                ft.ElevatedButton("<<", disabled=state.page_number == 0),
+                ft.ElevatedButton("<", disabled=state.page_number == 0),
+                ft.Text(f"Page {state.page_number + 1} / {state.nb_pages}"),
+                ft.ElevatedButton(
+                    ">", disabled=state.page_number == state.nb_pages - 1
+                ),
+                ft.ElevatedButton(
+                    ">>", disabled=state.page_number == state.nb_pages - 1
+                ),
+            ]
+        )
+        filter_view = None
+        classifier_view = None
+        group_view = None
+        video_view = None
+        status_bar = None
 
         # Install global shortcuts
         interface.keyboard_callback = self.actions.on_keyboard_event
 
         self.controls = [
-            menubar,
+            ft.Container(
+                ft.Row(
+                    [menubar, pagination], alignment=ft.MainAxisAlignment.SPACE_BETWEEN
+                ),
+                bgcolor=ft.colors.BLUE,
+            ),
             ft.Container(ft.Text(f"{len(state.videos)} video(s)"), expand=1),
         ]
         self.update()
