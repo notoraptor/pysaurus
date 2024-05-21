@@ -24,7 +24,7 @@ class VideoView(ft.Row):
         prop_panel = []
         for prop_type in prop_types:
             if prop_type.name in video.properties:
-                prop_val = video.properties[prop_type.name]
+                values = video.properties[prop_type.name]
                 prop_panel.append(
                     ft.Column(
                         [
@@ -32,10 +32,19 @@ class VideoView(ft.Row):
                                 [ft.Text(prop_type.name, weight=ft.FontWeight.BOLD)],
                                 alignment=ft.MainAxisAlignment.CENTER,
                             ),
-                            ft.Row(
-                                [ft.Text(val, bgcolor=ft.colors.GREY) for val in prop_val],
-                                alignment=ft.MainAxisAlignment.CENTER,
-                                wrap=True
+                            ft.Container(
+                                ft.Text(
+                                    spans=[
+                                        ft.TextSpan(
+                                            val,
+                                            ft.TextStyle(bgcolor=ft.colors.GREY),
+                                        )
+                                        for val in values
+                                    ],
+                                    text_align=ft.TextAlign.CENTER
+                                ),
+                                bgcolor=ft.colors.GREEN,
+                                alignment=ft.alignment.center
                             ),
                         ]
                     )
