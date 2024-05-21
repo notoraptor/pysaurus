@@ -8,7 +8,6 @@ from pysaurus.interface.api.gui_api import GuiAPI
 
 
 class FletGuiAPI(GuiAPI):
-
     def __init__(self, page: ft.Page):
         self.page = page
         super().__init__()

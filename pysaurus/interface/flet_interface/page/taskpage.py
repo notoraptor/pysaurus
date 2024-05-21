@@ -21,7 +21,7 @@ class TaskPage(ft.Column):
     def __init__(
         self,
         function: callable,
-        arguments: Sequence,
+        arguments: Sequence = (),
         title=None,
         title_running="Working ...",
         title_done="Done!",

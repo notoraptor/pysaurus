@@ -14,6 +14,7 @@ from pysaurus.interface.flet_interface.extended_flet_api_interface import (
 )
 from pysaurus.interface.flet_interface.flet_api_interface import FletApiInterface
 from pysaurus.interface.flet_interface.flet_gui_api import FletGuiAPI
+from pysaurus.interface.flet_interface.flet_utils import FletUtils
 from pysaurus.interface.flet_interface.page.homepage import Homepage
 
 _CURRENT_FOLDER = os.path.dirname(os.path.abspath(__file__))
@@ -40,7 +41,7 @@ class App:
         page.data = self.interface
         page.title = "Pysaurus"
         page.on_keyboard_event = self.interface.on_keyboard
-        page.add(ft.Container(Homepage(page, db_names), expand=True))
+        FletUtils.set_page(page, ft.Container(Homepage(db_names)))
 
     def __enter__(self):
         return self

@@ -7,6 +7,7 @@ from pysaurus.core.constants import (
     VIDEO_DEFAULT_PAGE_NUMBER,
     VIDEO_DEFAULT_PAGE_SIZE,
 )
+from pysaurus.interface.flet_interface.flet_custom_component.video_view import VideoView
 from pysaurus.interface.flet_interface.flet_custom_widgets import FletActionMenu, Title2
 from pysaurus.interface.flet_interface.flet_utils import FletUtils
 from pysaurus.interface.flet_interface.page.videos_page_utils import (
@@ -138,14 +139,14 @@ class VideosPage(ft.Column):
 
     def did_mount(self):
         # Will load view and install global shortcuts
-        self.page.run_task(self.load_videos)
+        self.page.run_task(self._load_videos)
 
     def will_unmount(self):
         # Uninstall global shortcuts
         interface = FletUtils.get_app_interface(self)
         interface.keyboard_callback = None
 
-    async def load_videos(self):
+    async def _load_videos(self):
         interface = FletUtils.get_app_interface(self)
         state = StateWrapper(
             interface.backend(VIDEO_DEFAULT_PAGE_SIZE, VIDEO_DEFAULT_PAGE_NUMBER)
@@ -417,7 +418,9 @@ class VideosPage(ft.Column):
                                     " ".join(flag.replace("_", " ") for flag in source)
                                 )
                                 for source in state.sources
-                            ]
+                            ],
+                            expand=1,
+                            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                         ),
                         ft.Column(
                             [
@@ -443,7 +446,9 @@ class VideosPage(ft.Column):
                                         "Ungrouped", italic=True, color=ft.colors.GREY
                                     )
                                 )
-                            ]
+                            ],
+                            expand=1,
+                            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                         ),
                         ft.Column(
                             [
@@ -468,7 +473,9 @@ class VideosPage(ft.Column):
                             if state.group_is_set()
                             else [
                                 ft.Text("No search", italic=True, color=ft.colors.GREY)
-                            ]
+                            ],
+                            expand=1,
+                            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                         ),
                         ft.Column(
                             [
@@ -494,7 +501,9 @@ class VideosPage(ft.Column):
                                     + ("▼" if criterion[0] == "-" else "▲")
                                 )
                                 for criterion in state.sorting
-                            ]
+                            ],
+                            expand=1,
+                            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                         ),
                         ft.Column(
                             [
@@ -513,8 +522,17 @@ class VideosPage(ft.Column):
         )
         classifier_view = None
         group_view = None
-        video_view = None
-        status_bar = None
+        video_view = [VideoView(v, prop_types, i) for i, v in enumerate(state.videos)]
+        status_bar = ft.Row(
+            [
+                ft.Text("Ready."),
+                ft.Text(
+                    f"{state.nb_videos} video{'s' if state.nb_videos > 1 else ''} | "
+                    f"{state.valid_size} | {state.valid_length}"
+                ),
+            ],
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+        )
 
         # Install global shortcuts
         interface.keyboard_callback = self.actions.on_keyboard_event
@@ -528,12 +546,23 @@ class VideosPage(ft.Column):
             ft.Row(
                 [
                     # left panel, filters and groups
-                    filter_view,
+                    ft.Container(filter_view, expand=1, bgcolor=ft.colors.RED),
                     # right panel, videos
-                    ft.Container(ft.Text(f"{len(state.videos)} video(s)"), expand=1),
-                ]
+                    ft.Container(
+                        ft.Column(video_view, scroll=ft.ScrollMode.AUTO, spacing=0),
+                        expand=4,
+                        border_radius=10,
+                        border=ft.border.all(1, ft.colors.GREY),
+                    ),
+                ],
+                expand=1,
+            ),
+            ft.Container(
+                status_bar,
+                border=ft.border.only(top=ft.border.BorderSide(1, ft.colors.GREY)),
             ),
         ]
+        self.alignment = ft.MainAxisAlignment.START
         self.update()
 
     def selectVideos(self):

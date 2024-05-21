@@ -17,11 +17,15 @@ class CharClass:
 
     @classmethod
     def parse_sup_digits(cls, text: str) -> int:
-        return sum(cls.SUP_DIGITS.find(c) * 10**i for i, c in enumerate(reversed(text)))
+        return sum(
+            cls.SUP_DIGITS.find(c) * 10**i for i, c in enumerate(reversed(text))
+        )
 
     @classmethod
     def parse_sub_digits(cls, text: str) -> int:
-        return sum(cls.SUB_DIGITS.find(c) * 10**i for i, c in enumerate(reversed(text)))
+        return sum(
+            cls.SUB_DIGITS.find(c) * 10**i for i, c in enumerate(reversed(text))
+        )
 
     def __init__(self, char: str):
         if char in self.DIGITS:

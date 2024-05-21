@@ -72,9 +72,9 @@ class VideoRaptor(AbstractVideoRaptor):
                 )
                 d["container_format"] = container.format.long_name
                 d["video_codec"] = video_stream.codec_context.codec.name
-                d["video_codec_description"] = (
-                    video_stream.codec_context.codec.long_name
-                )
+                d[
+                    "video_codec_description"
+                ] = video_stream.codec_context.codec.long_name
                 d["audio_languages"] = [
                     audio_stream.language
                     for audio_stream in audio_streams

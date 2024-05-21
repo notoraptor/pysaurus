@@ -11,8 +11,9 @@ from pysaurus.interface.flet_interface.page.taskpage import TaskPage
 
 
 class Homepage(ft.Column):
-    def __init__(self, page: ft.Page, db_names: List[str]):
+    def __init__(self, db_names: List[str]):
         super().__init__()
+        self.db_names = db_names
         self.new_name: str = ""
         self.new_paths: Set[AbsolutePath] = set()
         self.database_to_load: Optional[str] = None
@@ -31,9 +32,10 @@ class Homepage(ft.Column):
             on_click=self.on_open_database,
             disabled=True,
         )
-        # self.page = page
-        page.overlay.append(self.files_picker)
-        page.overlay.append(self.folder_picker)
+
+    def build(self):
+        self.page.overlay.append(self.files_picker)
+        self.page.overlay.append(self.folder_picker)
         self.controls = [
             ft.Row(
                 [Title1("Welcome to Pysaurus")], alignment=ft.MainAxisAlignment.CENTER
@@ -65,7 +67,7 @@ class Homepage(ft.Column):
                                 expand=1,
                             ),
                             ft.Column(
-                                [ft.Text(f"({len(db_names)} available)")],
+                                [ft.Text(f"({len(self.db_names)} available)")],
                                 expand=1,
                                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                             ),
@@ -119,7 +121,7 @@ class Homepage(ft.Column):
                                             ft.Radio(
                                                 value=name, label=name, toggleable=True
                                             )
-                                            for name in db_names
+                                            for name in self.db_names
                                         ]
                                     ),
                                     on_change=self.on_database_change,
