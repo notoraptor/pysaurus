@@ -43,7 +43,7 @@ class App:
         page.data = self.interface
         page.title = "Pysaurus"
         page.on_keyboard_event = self.interface.on_keyboard
-        FletUtils.set_page(page, ft.Container(Homepage(db_names)))
+        FletUtils.set_page(page, Homepage(db_names))
 
     def __enter__(self):
         return self
