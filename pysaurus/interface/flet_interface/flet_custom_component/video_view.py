@@ -5,17 +5,15 @@ import flet as ft
 from pysaurus.interface.flet_interface.page.videos_page_utils import VideoStateWrapper
 from pysaurus.properties.properties import PropTypeDesc
 
-PREFIX = "data:image/jpeg;base64,"
-
 
 class VideoView(ft.Row):
     def __init__(
         self, video: VideoStateWrapper, prop_types: List[PropTypeDesc], index=None
     ):
         super().__init__(vertical_alignment=ft.CrossAxisAlignment.START)
-        thumbnail = video.thumbnail_path
+        thumbnail = video.thumbnail_base64
         if thumbnail:
-            image = ft.Image(src_base64=thumbnail[len(PREFIX) :])
+            image = ft.Image(src_base64=thumbnail)
         else:
             image = ft.Text(
                 "NO THUMBNAIL", weight=ft.FontWeight.BOLD, color=ft.colors.GREY

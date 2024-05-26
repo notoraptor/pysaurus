@@ -144,6 +144,10 @@ class VideoStateWrapper:
         return self.data["thumbnail_path"]
 
     @property
+    def thumbnail_base64(self) -> Optional[str]:
+        return self.data["thumbnail_base64"]
+
+    @property
     def title(self) -> str:
         return self.data["title"]
 

@@ -246,6 +246,11 @@ class LazyVideo(WithSchema):
     filename_length = property(lambda self: len(self.filename))
 
     @property
+    def thumbnail_path(self):
+        thumbnail = self.thumbnail_base64
+        return f"data:image/jpeg;base64,{thumbnail}" if thumbnail else None
+
+    @property
     def expected_raw_size(self):
         return FileSize(
             (

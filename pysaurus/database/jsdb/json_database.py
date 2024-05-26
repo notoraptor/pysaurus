@@ -235,7 +235,8 @@ class JsonDatabase(AbstractDatabase):
 
     def jsondb_get_thumbnail_base64(self, filename: AbsolutePath) -> str:
         data = self._thumb_mgr.get_base64(filename)
-        return ("data:image/jpeg;base64," + data.decode()) if data else None
+        # return ("data:image/jpeg;base64," + data.decode()) if data else None
+        return data.decode() if data else None
 
     def jsondb_has_thumbnail(self, filename: AbsolutePath) -> bool:
         return self._thumb_mgr.has(filename)

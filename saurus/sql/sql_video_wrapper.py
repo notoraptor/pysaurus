@@ -286,14 +286,15 @@ class SQLVideoWrapper:
         return self.duration * 1000000 / self.duration_time_base
 
     @property
-    def thumbnail_path(self):
+    def thumbnail_base64(self):
         # Return thumbnail as HTML, base64 encoded image data
         data: bytes = self.data[F.thumbnail]
-        return (
-            ("data:image/jpeg;base64," + base64.b64encode(data).decode())
-            if data
-            else None
-        )
+        return base64.b64encode(data).decode() if data else None
+
+    @property
+    def thumbnail_path(self):
+        thumbnail = self.thumbnail_base64
+        return f"data:image/jpeg;base64,{thumbnail}" if thumbnail else None
 
     @property
     def thumbnail_blob(self):
@@ -372,6 +373,7 @@ class SQLVideoWrapper:
             # "size_length": str(self.size_length),
             "subtitle_languages": self.subtitle_languages,
             "thumbnail_path": self.thumbnail_path,
+            "thumbnail_base64": self.thumbnail_base64,
             "title": title,
             # "title_numeric": title,
             "video_codec": self.data[F.video_codec],
