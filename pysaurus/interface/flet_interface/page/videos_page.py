@@ -2,6 +2,7 @@ from typing import Sequence
 
 import flet as ft
 
+from pysaurus.core.classes import Selector
 from pysaurus.core.constants import (
     PAGE_SIZES,
     VIDEO_DEFAULT_PAGE_NUMBER,
@@ -138,6 +139,7 @@ class VideosPage(ft.Container):
             ),
         ]
         self.actions = Actions(actions)
+        self.selector = Selector(exclude=False, selection=set())
 
     def did_mount(self):
         # Will load view and install global shortcuts
@@ -524,7 +526,18 @@ class VideosPage(ft.Container):
         )
         classifier_view = None
         group_view = None
-        video_view = [VideoView(v, prop_types, i) for i, v in enumerate(state.videos)]
+        video_view = [
+            VideoView(
+                v,
+                prop_types,
+                i,
+                common_fields=state.common_fields(),
+                grouped_by_similarity=state.is_grouped_by_similarity(),
+                is_selected=self.selector.contains(v.video_id),
+                on_select=self.video_select,
+            )
+            for i, v in enumerate(state.videos)
+        ]
         status_bar = ft.Row(
             [
                 ft.Text("Ready."),
@@ -550,11 +563,11 @@ class VideosPage(ft.Container):
                 ft.Row(
                     [
                         # left panel, filters and groups
-                        ft.Container(filter_view, expand=1, bgcolor=ft.colors.RED),
+                        ft.Container(filter_view, expand=15, bgcolor=ft.colors.RED),
                         # right panel, videos
                         ft.Container(
                             ft.Column(video_view, scroll=ft.ScrollMode.AUTO, spacing=0),
-                            expand=4,
+                            expand=85,
                             border_radius=10,
                             border=ft.border.all(1, ft.colors.GREY),
                         ),
@@ -668,3 +681,10 @@ class VideosPage(ft.Container):
 
     def _dialog_is_inactive(self) -> bool:
         return self.page.dialog is None
+
+    def video_select(self, video_id: int, is_selected: bool):
+        if is_selected:
+            self.selector.include(video_id)
+        else:
+            self.selector.exclude(video_id)
+        print(self.selector)

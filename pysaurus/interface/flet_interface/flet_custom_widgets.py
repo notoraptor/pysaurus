@@ -2,6 +2,8 @@ import flet as ft
 
 from pysaurus.interface.flet_interface.page.videos_page_utils import Action
 
+CUSTOM_FONT_MONOSPACE = "Roboto Mono"
+
 
 class Title1(ft.Text):
     def __init__(self, text: str):

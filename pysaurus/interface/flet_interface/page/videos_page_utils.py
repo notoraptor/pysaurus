@@ -1,4 +1,4 @@
-from typing import Callable, List, Optional, Sequence, Union
+from typing import Callable, Dict, List, Optional, Sequence, Union
 
 import flet as ft
 
@@ -264,6 +264,12 @@ class StateWrapper:
 
     def is_grouped_by_moves(self) -> bool:
         return self.group_def and self.group_def["field"] == "move_id"
+
+    def is_grouped_by_similarity(self) -> bool:
+        return self.group_def and self.group_def["field"] == "similarity_id"
+
+    def common_fields(self) -> Dict[str, bool]:
+        return (self.is_grouped_by_similarity() and self.group_def["common"]) or {}
 
     def can_open_random_video(self) -> bool:
         return not self.all_not_found() and self.nb_source_videos

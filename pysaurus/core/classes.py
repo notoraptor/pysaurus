@@ -184,22 +184,62 @@ class Runnable:
 
 
 class Selector:
-    __slots__ = ("to_exclude", "selection")
+    __slots__ = ("_to_exclude", "_selection")
 
     def __init__(self, exclude: bool, selection: set):
-        self.to_exclude = exclude
-        self.selection = selection
+        self._to_exclude = exclude
+        self._selection = selection
+
+    def __str__(self):
+        return f"{{{'exclude' if self._to_exclude else 'include'}={self._selection}}}"
+
+    __repr__ = __str__
+
+    @property
+    def to_include(self) -> bool:
+        return not self._to_exclude
+
+    def include(self, value):
+        if self._to_exclude:
+            if value in self._selection:
+                self._selection.remove(value)
+        else:
+            self._selection.add(value)
+
+    def exclude(self, value):
+        if self._to_exclude:
+            self._selection.add(value)
+        else:
+            if value in self._selection:
+                self._selection.remove(value)
+
+    def clear(self):
+        self._selection.clear()
+
+    def select_all(self):
+        self._selection.clear()
+        self._to_exclude = True
+
+    def deselect_all(self):
+        self._selection.clear()
+        self._to_exclude = False
+
+    def contains(self, value) -> bool:
+        if self._to_exclude:
+            return value not in self._selection
+        else:
+            return value in self._selection
 
     def filter(self, data: Iterable) -> list:
-        if self.to_exclude:
-            return [element for element in data if element not in self.selection]
+        if self._to_exclude:
+            return [element for element in data if element not in self._selection]
         else:
-            return [element for element in data if element in self.selection]
+            return [element for element in data if element in self._selection]
 
     def to_sql(self, field: str):
-        selection = list(self.selection)
+        selection = list(self._selection)
         placeholders = ",".join(["?"] * len(selection))
-        if self.to_exclude:
+        if self._to_exclude:
             query = f"{field} NOT IN ({placeholders})"
         else:
             query = f"{field} IN ({placeholders})"

@@ -5,7 +5,7 @@ import sys
 import tempfile
 import threading
 import types
-from typing import Collection, Iterable, List
+from typing import Collection, Iterable, List, Sequence
 
 logger = logging.getLogger(__name__)
 
@@ -299,3 +299,24 @@ def ensure_list_or_tuple(data):
     elif not isinstance(data, (list, tuple)):
         data = [data]
     return data
+
+
+def expand_if(expression) -> Sequence:
+    """
+    Return expression as a sequence, intended to be used with splat operator.
+    If expression is evaluated to False, then an empty list is returned.
+
+    Examples:
+        my_list = [a, b, *expand_if_not_false(d if c else None)]
+        # Will produce same list as above:
+        my_list = [a, b, *expand_if_not_false(c and d)]
+
+    :param expression: object to expand
+    :return: a sequence (list or tuple)
+    """
+    if not expression:
+        return []
+    elif isinstance(expression, (list, tuple)):
+        return expression
+    else:
+        return [expression]
