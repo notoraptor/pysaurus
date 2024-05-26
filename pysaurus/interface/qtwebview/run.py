@@ -166,6 +166,7 @@ def main():
     height = (2 * screen_rect.height()) // 3
     x = screen_center.x() - width // 2
     y = screen_center.y() - height // 2
+    logger.debug(f"Screen size: {screen_rect.width()} {screen_rect.height()}")
     logger.debug(f"Window: pos ({x}; {y}), size {width} x {height}")
     logger.debug(
         f"Window: DPI {dpix} x {dpiy}, "

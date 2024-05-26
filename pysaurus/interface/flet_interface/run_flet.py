@@ -33,6 +33,8 @@ class App:
         self.exit_code = 0
 
     def run(self, page: ft.Page):
+        page.window_center()
+
         self.page = page
         self.interface = ExtendedFletApiInterface(FletGuiAPI(page))
         db_names = self.interface.get_database_names()
@@ -75,7 +77,7 @@ def main():
     loop = asyncio.get_event_loop()
     with App() as app:
         loop.set_exception_handler(app.exception_handler)
-        coroutine = ft.app_async(app.run)
+        coroutine = ft.app_async(app.run, view=ft.AppView.FLET_APP_HIDDEN)
         loop.run_until_complete(coroutine)
         exit_code = app.exit_code
         # ft.app(app.run)
@@ -83,5 +85,7 @@ def main():
 
 
 if __name__ == "__main__":
-    # logging.basicConfig(level=logging.NOTSET)
+    import logging
+
+    logging.basicConfig(level=logging.NOTSET)
     main()

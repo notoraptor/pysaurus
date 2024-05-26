@@ -24,21 +24,26 @@ class VideoView(ft.Row):
         prop_panel = []
         for prop_type in prop_types:
             if prop_type.name in video.properties:
-                prop_val = video.properties[prop_type.name]
-                prop_panel.append(
-                    ft.Column(
-                        [
+                values = video.properties[prop_type.name]
+                prop_panel.extend(
+                    [
+                        ft.Row(
+                            [ft.Text(prop_type.name, weight=ft.FontWeight.BOLD)],
+                            alignment=ft.MainAxisAlignment.CENTER,
+                        ),
+                        ft.Container(
                             ft.Row(
-                                [ft.Text(prop_type.name, weight=ft.FontWeight.BOLD)],
+                                [
+                                    ft.Text(val, bgcolor=ft.colors.GREY)
+                                    for val in values
+                                ],
                                 alignment=ft.MainAxisAlignment.CENTER,
+                                wrap=True,
                             ),
-                            ft.Row(
-                                [ft.Text(val, bgcolor=ft.colors.GREY) for val in prop_val],
-                                alignment=ft.MainAxisAlignment.CENTER,
-                                wrap=True
-                            ),
-                        ]
-                    )
+                            bgcolor=ft.colors.GREEN,
+                            alignment=ft.alignment.center,
+                        ),
+                    ]
                 )
 
         self.controls = [

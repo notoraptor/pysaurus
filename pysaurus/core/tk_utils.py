@@ -1,4 +1,5 @@
 from tkinter import Tk, filedialog
+from typing import Tuple
 
 
 class TkContext:
@@ -9,6 +10,19 @@ class TkContext:
         self.root.withdraw()
         if topmost:
             self.root.attributes("-topmost", True)
+
+    def get_display_size(self) -> Tuple[int, int]:
+        """
+        (2024/05/22)
+        https://stackoverflow.com/a/66248631
+        """
+        self.root.update_idletasks()
+        self.root.attributes("-fullscreen", True)
+        self.root.state("iconic")
+        # width, height = self.root.maxsize()
+        width = self.root.winfo_screenwidth()
+        height = self.root.winfo_screenheight()
+        return width, height
 
     def close(self):
         self.root.destroy()
@@ -55,6 +69,12 @@ def clipboard_set(text: str) -> None:
         ctx.root.clipboard_clear()
         ctx.root.clipboard_append(text)
         ctx.root.update()
+
+
+def get_screen_size() -> Tuple[int, int]:
+    """Return (width, height) of screen."""
+    with TkContext() as ctx:
+        return ctx.get_display_size()
 
 
 # Unused
