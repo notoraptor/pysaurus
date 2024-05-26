@@ -26,19 +26,21 @@ class EventCallback:
         self.function(*self.arguments)
 
 
-class VideosPage(ft.Column):
-    def __init__(self):
+class LoadingView(ft.Column):
+    def __init__(self, title: str):
         super().__init__(
             [
                 ft.Row([ft.ProgressRing()], alignment=ft.MainAxisAlignment.CENTER),
-                ft.Row(
-                    [Title2("Loading videos ...")],
-                    alignment=ft.MainAxisAlignment.CENTER,
-                ),
+                ft.Row([Title2(title)], alignment=ft.MainAxisAlignment.CENTER),
             ],
             alignment=ft.MainAxisAlignment.CENTER,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
         )
+
+
+class VideosPage(ft.Container):
+    def __init__(self):
+        super().__init__(LoadingView("Loading videos ..."))
         actions = [
             Action(
                 "select",
@@ -537,32 +539,35 @@ class VideosPage(ft.Column):
         # Install global shortcuts
         interface.keyboard_callback = self.actions.on_keyboard_event
 
-        self.controls = [
-            ft.Container(
+        self.content = ft.Column(
+            [
+                ft.Container(
+                    ft.Row(
+                        [menubar, pagination],
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    )
+                ),
                 ft.Row(
-                    [menubar, pagination], alignment=ft.MainAxisAlignment.SPACE_BETWEEN
-                )
-            ),
-            ft.Row(
-                [
-                    # left panel, filters and groups
-                    ft.Container(filter_view, expand=1, bgcolor=ft.colors.RED),
-                    # right panel, videos
-                    ft.Container(
-                        ft.Column(video_view, scroll=ft.ScrollMode.AUTO, spacing=0),
-                        expand=4,
-                        border_radius=10,
-                        border=ft.border.all(1, ft.colors.GREY),
-                    ),
-                ],
-                expand=1,
-            ),
-            ft.Container(
-                status_bar,
-                border=ft.border.only(top=ft.border.BorderSide(1, ft.colors.GREY)),
-            ),
-        ]
-        self.alignment = ft.MainAxisAlignment.START
+                    [
+                        # left panel, filters and groups
+                        ft.Container(filter_view, expand=1, bgcolor=ft.colors.RED),
+                        # right panel, videos
+                        ft.Container(
+                            ft.Column(video_view, scroll=ft.ScrollMode.AUTO, spacing=0),
+                            expand=4,
+                            border_radius=10,
+                            border=ft.border.all(1, ft.colors.GREY),
+                        ),
+                    ],
+                    expand=1,
+                ),
+                ft.Container(
+                    status_bar,
+                    border=ft.border.only(top=ft.border.BorderSide(1, ft.colors.GREY)),
+                ),
+            ],
+            alignment=ft.MainAxisAlignment.START,
+        )
         self.update()
 
     def selectVideos(self):

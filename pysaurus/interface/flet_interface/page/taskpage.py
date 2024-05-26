@@ -1,7 +1,7 @@
 """
 NB: Code is currently wrong, notably around progress bars.
 """
-
+import threading
 from typing import Sequence
 
 import flet as ft
@@ -44,6 +44,7 @@ class TaskPage(ft.Column):
         self.notification_renderer = NotificationRenderer(self.notification_collector)
         self._collect_notification = Overridden(self.notification_collector)
         self._render_notification = Overridden(self.notification_renderer)
+        self._notification_lock = threading.Lock()
 
         if title is not None:
             self.controls.append(
@@ -70,9 +71,10 @@ class TaskPage(ft.Column):
         print("task page will unmount")
 
     def on_notification(self, notification):
-        assert isinstance(notification, Notification), notification
-        self._collect_notification(notification)
-        self._render_notifications()
+        with self._notification_lock:
+            assert isinstance(notification, Notification), notification
+            self._collect_notification(notification)
+            self._render_notifications()
 
     def _render_notifications(self):
         self.notification_renderer.clear()
