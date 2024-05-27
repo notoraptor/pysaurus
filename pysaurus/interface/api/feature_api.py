@@ -4,7 +4,7 @@ from typing import Any, Dict, Optional, Union
 
 from pysaurus.application.application import Application
 from pysaurus.application.language.default_language import language_to_dict
-from pysaurus.core.classes import StringPrinter
+from pysaurus.core.classes import Selector, StringPrinter
 from pysaurus.core.constants import PYTHON_DEFAULT_SOURCES
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.abstract_database import AbstractDatabase as Db
@@ -107,6 +107,8 @@ class FeatureAPI:
     # cannot make proxy ?
     def backend(self, page_size, page_number, selector=None) -> Dict[str, Any]:
         """Return backend state."""
+        if selector is not None and isinstance(selector, dict):
+            selector = Selector.parse_dict(selector)
         context = self.database.provider.get_current_state(
             page_size, page_number, selector
         )

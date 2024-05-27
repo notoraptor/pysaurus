@@ -230,6 +230,11 @@ class Selector:
         else:
             return value in self._selection
 
+    def size_from(self, total: int) -> int:
+        return (
+            total - len(self._selection) if self._to_exclude else len(self._selection)
+        )
+
     def filter(self, data: Iterable) -> list:
         if self._to_exclude:
             return [element for element in data if element not in self._selection]

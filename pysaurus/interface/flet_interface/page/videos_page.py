@@ -1,4 +1,4 @@
-from typing import Sequence
+from typing import List, Optional, Sequence
 
 import flet as ft
 
@@ -8,8 +8,11 @@ from pysaurus.core.constants import (
     VIDEO_DEFAULT_PAGE_NUMBER,
     VIDEO_DEFAULT_PAGE_SIZE,
 )
+from pysaurus.interface.flet_interface.flet_custom_component.loading_view import (
+    LoadingView,
+)
 from pysaurus.interface.flet_interface.flet_custom_component.video_view import VideoView
-from pysaurus.interface.flet_interface.flet_custom_widgets import FletActionMenu, Title2
+from pysaurus.interface.flet_interface.flet_custom_widgets import FletActionMenu
 from pysaurus.interface.flet_interface.flet_utils import FletUtils
 from pysaurus.interface.flet_interface.page.videos_page_utils import (
     Action,
@@ -25,18 +28,6 @@ class EventCallback:
 
     def __call__(self, e: ft.ControlEvent):
         self.function(*self.arguments)
-
-
-class LoadingView(ft.Column):
-    def __init__(self, title: str):
-        super().__init__(
-            [
-                ft.Row([ft.ProgressRing()], alignment=ft.MainAxisAlignment.CENTER),
-                ft.Row([Title2(title)], alignment=ft.MainAxisAlignment.CENTER),
-            ],
-            alignment=ft.MainAxisAlignment.CENTER,
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-        )
 
 
 class VideosPage(ft.Container):
@@ -140,6 +131,14 @@ class VideosPage(ft.Container):
         ]
         self.actions = Actions(actions)
         self.selector = Selector(exclude=False, selection=set())
+        self.display_only_selected_videos = False
+
+        # data
+        self.state: Optional[StateWrapper] = None
+        # widgets
+        self.selection_filter: Optional[ft.Row] = None
+        self.videos_view: List[VideoView] = []
+        self.videos_view_panel: Optional[ft.Column] = None
 
     def did_mount(self):
         # Will load view and install global shortcuts
@@ -155,6 +154,7 @@ class VideosPage(ft.Container):
         state = StateWrapper(
             interface.backend(VIDEO_DEFAULT_PAGE_SIZE, VIDEO_DEFAULT_PAGE_NUMBER)
         )
+        self.state = state
         nb_folders = len(state.database.folders)
         search = state.search_def
 
@@ -383,9 +383,6 @@ class VideosPage(ft.Container):
                 ],
             ),
         ]
-        menubar = ft.MenuBar(
-            menu, expand=0, style=ft.MenuStyle(alignment=ft.alignment.top_left)
-        )
         pagination = ft.Row(
             [
                 ft.ElevatedButton(
@@ -411,6 +408,10 @@ class VideosPage(ft.Container):
                 ),
             ]
         )
+
+        self.selection_filter = ft.Row()
+        self._render_selection_filter()
+
         filter_view = ft.Column(
             [
                 # sources
@@ -522,11 +523,12 @@ class VideosPage(ft.Container):
                     ]
                 ),
                 # selection
+                self.selection_filter,
             ]
         )
         classifier_view = None
         group_view = None
-        video_view = [
+        self.videos_view = [
             VideoView(
                 v,
                 prop_types,
@@ -534,10 +536,13 @@ class VideosPage(ft.Container):
                 common_fields=state.common_fields(),
                 grouped_by_similarity=state.is_grouped_by_similarity(),
                 is_selected=self.selector.contains(v.video_id),
-                on_select=self.video_select,
+                on_select=self._callback_on_select_video,
             )
             for i, v in enumerate(state.videos)
         ]
+        self.videos_view_panel = ft.Column(
+            self.videos_view, scroll=ft.ScrollMode.AUTO, spacing=0
+        )
         status_bar = ft.Row(
             [
                 ft.Text("Ready."),
@@ -556,7 +561,14 @@ class VideosPage(ft.Container):
             [
                 ft.Container(
                     ft.Row(
-                        [menubar, pagination],
+                        [
+                            ft.MenuBar(
+                                menu,
+                                expand=0,
+                                style=ft.MenuStyle(alignment=ft.alignment.top_left),
+                            ),
+                            pagination,
+                        ],
                         alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                     )
                 ),
@@ -566,7 +578,7 @@ class VideosPage(ft.Container):
                         ft.Container(filter_view, expand=15, bgcolor=ft.colors.RED),
                         # right panel, videos
                         ft.Container(
-                            ft.Column(video_view, scroll=ft.ScrollMode.AUTO, spacing=0),
+                            self.videos_view_panel,
                             expand=85,
                             border_radius=10,
                             border=ft.border.all(1, ft.colors.GREY),
@@ -682,9 +694,140 @@ class VideosPage(ft.Container):
     def _dialog_is_inactive(self) -> bool:
         return self.page.dialog is None
 
-    def video_select(self, video_id: int, is_selected: bool):
+    def _callback_on_select_video(self, video_id: int, is_selected: bool):
+        previous_state = self.selector.contains(video_id)
         if is_selected:
             self.selector.include(video_id)
         else:
             self.selector.exclude(video_id)
         print(self.selector)
+        if previous_state != self.selector.contains(video_id):
+            if self.display_only_selected_videos:
+                if not self.selector.size_from(self.state.nb_view_videos):
+                    self.selector.deselect_all()
+                    self.display_only_selected_videos = False
+                self._update_state()
+                self._render_videos_view_panel()
+            self._render_selection_filter()
+            self.update()
+
+    def _update_state(self):
+        interface = FletUtils.get_app_interface(self)
+        new_state = StateWrapper(
+            interface.backend(
+                self.state.page_size,
+                self.state.page_number,
+                self.selector if self.display_only_selected_videos else None,
+            )
+        )
+        self.state = new_state
+
+    def _render_selection_filter(self):
+        state = self.state
+        selection_size = self.selector.size_from(state.nb_view_videos)
+        selected_all = state.nb_view_videos == selection_size
+        self.selection_filter.controls = [
+            ft.Column(
+                [
+                    *(
+                        [
+                            ft.Text("Selected"),
+                            ft.Text(
+                                f"All {selection_size} video(s)"
+                                if selected_all
+                                else f"{selection_size} / {state.nb_view_videos} video(s)"
+                            ),
+                        ]
+                        if selection_size
+                        else [
+                            ft.Text(
+                                "No video selected", italic=True, color=ft.colors.GREY
+                            )
+                        ]
+                    )
+                ],
+                expand=1,
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            ),
+            ft.Column(
+                [
+                    ft.IconButton(
+                        ft.icons.CANCEL,
+                        tooltip="Deselect all",
+                        on_click=self.on_deselect_all,
+                    )
+                    if selection_size
+                    else ft.IconButton(
+                        ft.icons.DONE_ALL_ROUNDED,
+                        tooltip="Select all",
+                        on_click=self.on_select_all,
+                    ),
+                    *(
+                        [
+                            ft.IconButton(
+                                ft.icons.CHECKLIST_OUTLINED,
+                                tooltip="Display all videos",
+                                on_click=self.on_switch_display_only_selected_videos,
+                            )
+                            if self.display_only_selected_videos
+                            else ft.IconButton(
+                                ft.icons.CHECK_OUTLINED,
+                                tooltip="Display only selected videos",
+                                on_click=self.on_switch_display_only_selected_videos,
+                            )
+                        ]
+                        if selection_size
+                        else []
+                    ),
+                ]
+            ),
+        ]
+
+    def _render_videos_view_panel(self):
+        state = self.state
+        prop_types = state.prop_types
+        self.videos_view = [
+            VideoView(
+                v,
+                prop_types,
+                i,
+                common_fields=state.common_fields(),
+                grouped_by_similarity=state.is_grouped_by_similarity(),
+                is_selected=self.selector.contains(v.video_id),
+                on_select=self._callback_on_select_video,
+            )
+            for i, v in enumerate(state.videos)
+        ]
+        self.videos_view_panel.controls = self.videos_view
+
+    def _render_videos_view_selection(self):
+        for video_view in self.videos_view:
+            video_view.set_select(self.selector.contains(video_view.video.video_id))
+
+    def on_deselect_all(self, e):
+        self.selector.deselect_all()
+        if self.display_only_selected_videos:
+            self.display_only_selected_videos = False
+            self._update_state()
+            self._render_videos_view_panel()
+        else:
+            self._render_videos_view_selection()
+        self._render_selection_filter()
+        self.update()
+
+    def on_select_all(self, e):
+        self.selector.select_all()
+        if self.display_only_selected_videos:
+            self._update_state()
+            self._render_videos_view_panel()
+        else:
+            self._render_videos_view_selection()
+        self._render_selection_filter()
+        self.update()
+
+    def on_switch_display_only_selected_videos(self, e):
+        self.display_only_selected_videos = not self.display_only_selected_videos
+        self._update_state()
+        self._render_videos_view_panel()
+        self._render_selection_filter()
+        self.update()

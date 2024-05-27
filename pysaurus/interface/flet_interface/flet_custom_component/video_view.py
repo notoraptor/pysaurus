@@ -78,6 +78,13 @@ class VideoView(ft.Container):
         )
         errors = sorted(video.errors)
 
+        self.checkbox = ft.Checkbox(
+            video.title,
+            label_style=ft.TextStyle(weight=ft.FontWeight.BOLD),
+            value=bool(is_selected),
+            on_change=self.on_select,
+        )
+
         self.bgcolor = _BACKGROUND_COLORS_[video.found][index % 2]
         self.content = ft.Row(
             [
@@ -109,12 +116,7 @@ class VideoView(ft.Container):
                 ft.Container(
                     ft.Column(
                         [
-                            ft.Checkbox(
-                                video.title,
-                                label_style=ft.TextStyle(weight=ft.FontWeight.BOLD),
-                                value=bool(is_selected),
-                                on_change=self.on_select,
-                            ),
+                            self.checkbox,
                             *expand_if(meta_title and ft.Text(meta_title, italic=True)),
                             ft.Text(video.filename, font_family="Roboto Mono"),
                             ft.Row(
@@ -253,3 +255,6 @@ class VideoView(ft.Container):
     def on_select(self, e):
         if self.callback_on_select:
             self.callback_on_select(self.video.video_id, e.control.value)
+
+    def set_select(self, is_selected: bool):
+        self.checkbox.value = bool(is_selected)
