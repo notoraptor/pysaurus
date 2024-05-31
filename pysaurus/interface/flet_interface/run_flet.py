@@ -30,7 +30,7 @@ class App:
     def __init__(self):
         self.interface: Optional[FletApiInterface] = None
         self.page: Optional[ft.Page] = None
-        self.exit_code = 0
+        self.exit_code = 1
 
     def run(self, page: ft.Page):
         page.window_center()
@@ -44,13 +44,14 @@ class App:
         page.title = "Pysaurus"
         page.on_keyboard_event = self.interface.on_keyboard
         FletUtils.set_page(page, Homepage(db_names))
+        self.exit_code = 0
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        assert self.interface
-        self.interface.close_app()
+        if self.interface:
+            self.interface.close_app()
 
     def exception_handler(self, loop, ctx):
         exception = ctx["exception"]
