@@ -1,12 +1,6 @@
 import logging
 import sys
 
-from PyQt6.QtCore import QMetaObject, QObject, QUrl, Q_ARG, Qt, pyqtSignal, pyqtSlot
-from PyQt6.QtWebChannel import QWebChannel
-from PyQt6.QtWebEngineCore import QWebEnginePage
-from PyQt6.QtWebEngineWidgets import QWebEngineView
-from PyQt6.QtWidgets import QApplication
-
 from pysaurus import package_dir
 from pysaurus.application import exceptions
 from pysaurus.core.components import AbsolutePath
@@ -15,7 +9,16 @@ from pysaurus.core.modules import System
 from pysaurus.interface.api.gui_api import GuiAPI
 from pysaurus.interface.common.qt_saurus_utils import PysaurusQtExceptHook
 
+# This line is placed before PyQt imports to prevent code formatting process
+# from putting them before Pysaurus imports
 logger = logging.getLogger(__name__)
+
+from PyQt6.QtCore import QMetaObject, QObject, QUrl, Q_ARG, Qt, pyqtSignal, pyqtSlot
+from PyQt6.QtWebChannel import QWebChannel
+from PyQt6.QtWebEngineCore import QWebEnginePage
+from PyQt6.QtWebEngineWidgets import QWebEngineView
+from PyQt6.QtWidgets import QApplication
+
 
 LevelType = QWebEnginePage.JavaScriptConsoleMessageLevel
 LOG_LEVEL = {
