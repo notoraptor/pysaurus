@@ -4,7 +4,7 @@ from tkinter import ttk
 
 from other.supertk.constants import LOREM_IPSUM
 from other.supertk.event import my_event
-from other.supertk.scrollable_frame import Example
+from other.supertk.scrollable_frame import ScrollableFrame
 from other.supertk.supertk import (
     BorderRelief,
     Sticky,
@@ -199,9 +199,9 @@ def check_scrollbar_with_frame():
         content.grid(row=0, column=0, sticky=Sticky.FULL)
         root.columnconfigure(0, weight=1)
         root.rowconfigure(0, weight=1)
-        eg = Example(content)
+        eg = ScrollableFrame(content, name="parent__")
         eg.grid(row=0, column=0, sticky=Sticky.FULL)
-        sbeg = Example(eg.frame)
+        sbeg = ScrollableFrame(eg.frame, name="children")
         sbeg.configure(width=300, height=300)
         sbeg.grid()
         content.columnconfigure(0, weight=1)
