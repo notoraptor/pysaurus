@@ -53,3 +53,9 @@ def open_image(path: str) -> ImageTk.PhotoImage:
     """
     image = Image.open(path)
     return ImageTk.PhotoImage(image)
+
+
+class SystemName:
+    WINDOWS = "win32"
+    LINUX = "linux"
+    MAC = "darwin"

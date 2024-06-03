@@ -6,7 +6,6 @@ class Window:
 
     def __init__(self):
         self._root = tkinter.Tk()
-        self._root.geometry("1280x720")
         self._center_window()
 
     def _center_window(self):

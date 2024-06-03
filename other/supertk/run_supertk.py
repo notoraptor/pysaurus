@@ -1,10 +1,10 @@
 import pprint
-import sys
 import tkinter
 from tkinter import ttk
 
 from other.supertk.constants import LOREM_IPSUM
 from other.supertk.event import my_event
+from other.supertk.scrollable_frame import Example
 from other.supertk.supertk import (
     BorderRelief,
     Sticky,
@@ -15,12 +15,6 @@ from other.supertk.supertk import (
     padding,
 )
 from other.supertk.window import Window
-
-
-class SystemName:
-    WINDOWS = "win32"
-    LINUX = "linux"
-    MAC = "darwin"
 
 
 class MyApp:
@@ -198,79 +192,6 @@ def check_scrollbar_with_listbox():
         list_box.configure(yscrollcommand=scrollbar.set)
 
 
-class Example(ttk.Frame):
-    """
-    2024/06/02
-    https://stackoverflow.com/a/3092341
-
-    React to mousewheel events:
-    https://stackoverflow.com/a/17457843
-    https://stackoverflow.com/a/37858368
-    """
-
-    _MW_SEQUENCES = (
-        ["<Button-4>", "<Button-5>"]
-        if sys.platform == SystemName.LINUX
-        else ["<MouseWheel>"]
-    )
-
-    def __init__(self, parent):
-        super().__init__(parent)
-        self._mousewheel_func_ids = []
-        self.canvas = tkinter.Canvas(self, borderwidth=0)
-        self.frame = ttk.Frame(self.canvas)
-        self.vsb = ttk.Scrollbar(
-            self, orient=tkinter.VERTICAL, command=self.canvas.yview
-        )
-        self.canvas.configure(yscrollcommand=self.vsb.set)
-
-        self.canvas.grid(row=0, column=0, sticky=Sticky.FULL)
-        self.vsb.grid(row=0, column=1, sticky=Sticky.VERTICAL)
-        self.canvas.create_window(
-            (0, 0),
-            window=self.frame,
-            anchor=(Sticky.TOP + Sticky.LEFT),
-            tags="self.frame",
-        )
-
-        self.rowconfigure(0, weight=1)
-        self.columnconfigure(0, weight=1)
-
-        self.frame.bind("<Configure>", self._on_frame_configure)
-
-        self.canvas.bind("<Enter>", self._bound_to_mousewheel)
-        self.canvas.bind("<Leave>", self._unbound_to_mousewheel)
-
-        self.populate()
-
-    def populate(self):
-        """Put in some fake data"""
-        size = 200
-        for i in range(size):
-            ttk.Label(self.frame, text=f"Element {i + 1} on {size}").grid()
-
-    def _on_frame_configure(self, event):
-        """Reset the scroll region to encompass the inner frame"""
-        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
-
-    def _bound_to_mousewheel(self, event):
-        print("Bound")
-        self._mousewheel_func_ids = [
-            self.canvas.bind(sequence, self._on_mousewheel)
-            for sequence in self._MW_SEQUENCES
-        ]
-
-    def _unbound_to_mousewheel(self, event):
-        print("Unbound")
-        for sequence in self._MW_SEQUENCES:
-            for func_id in self._mousewheel_func_ids:
-                self.canvas.unbind(sequence, func_id)
-
-    def _on_mousewheel(self, event: tkinter.Event):
-        print("wheel")
-        self.canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
-
-
 def check_scrollbar_with_frame():
     with Window() as window:
         root = window.root
@@ -278,7 +199,11 @@ def check_scrollbar_with_frame():
         content.grid(row=0, column=0, sticky=Sticky.FULL)
         root.columnconfigure(0, weight=1)
         root.rowconfigure(0, weight=1)
-        Example(content).grid(row=0, column=0, sticky=Sticky.FULL)
+        eg = Example(content)
+        eg.grid(row=0, column=0, sticky=Sticky.FULL)
+        sbeg = Example(eg.frame)
+        sbeg.configure(width=300, height=300)
+        sbeg.grid()
         content.columnconfigure(0, weight=1)
         content.rowconfigure(0, weight=1)
 
