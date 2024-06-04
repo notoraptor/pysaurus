@@ -2,11 +2,13 @@ import tkinter
 
 
 class Window:
-    __slots__ = ("_root",)
+    __slots__ = ("_root", "_windowing_system")
 
     def __init__(self):
         self._root = tkinter.Tk()
+        self._windowing_system = self._root.tk.call('tk', 'windowingsystem')
         self._center_window()
+        self._root.option_add('*tearOff', False)
 
     def _center_window(self):
         """
@@ -34,3 +36,7 @@ class Window:
     @property
     def root(self) -> tkinter.Tk:
         return self._root
+
+    @property
+    def windowying_system(self) -> str:
+        return self._windowing_system

@@ -208,6 +208,35 @@ def check_scrollbar_with_frame():
         content.rowconfigure(0, weight=1)
 
 
+def check_menu():
+    with Window() as window:
+        root = window.root
+        menubar = tkinter.Menu(root)
+        root.configure(menu=menubar)
+
+        menu_file = tkinter.Menu(menubar)
+        menu_file.add_command(label="New ...")
+        menu_file.add_command(label="Open ...")
+        menu_file.add_command(label="Close!")
+
+        menu_recent = tkinter.Menu(menu_file)
+        menu_file.add_cascade(menu=menu_recent, label="Recent ...")
+        for i in range(10):
+            menu_recent.add_command(label=f"File {i + 1}", command=lambda : print("Selected recent", i + 1))
+        menu_file.add_separator()
+        menu_file.add_command(label="after separator")
+
+        check = tkinter.StringVar()
+        menu_file.add_checkbutton(label='Check', variable=check, onvalue=1, offvalue=0)
+        radio = tkinter.StringVar()
+        menu_file.add_radiobutton(label='One', variable=radio, value=1)
+        menu_file.add_radiobutton(label='Two', variable=radio, value=2)
+
+        menu_edit = tkinter.Menu(menubar)
+        menubar.add_cascade(menu=menu_file, label="File")
+        menubar.add_cascade(menu=menu_edit, label='Edit')
+
+
 if __name__ == "__main__":
     print("Tkinter version:", TK_VERSION)
     print("Tcl/Tk version:", TCL_VERSION)
@@ -216,4 +245,5 @@ if __name__ == "__main__":
     # check_label()
     # check_combobox()
     # check_grid()
-    check_scrollbar_with_frame()
+    # check_scrollbar_with_frame()
+    check_menu()

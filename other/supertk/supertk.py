@@ -1,9 +1,18 @@
+"""
+Tutorials:
+https://tkdocs.com/tutorial/grid.html
+https://realpython.com/python-gui-tkinter/
+
+How to remove a widget from interface (grid_forget(widget) + widget.destroy()):
+https://stackoverflow.com/questions/12364981/how-to-delete-tkinter-widgets-from-a-window
+"""
 import tkinter
 
 from PIL import Image, ImageTk
 
 TK_VERSION = tkinter.TkVersion
 TCL_VERSION = tkinter.Tcl().eval("info patchlevel")
+
 TCL_THREADED = tkinter.Tcl().eval("set tcl_platform(threaded)")
 assert TCL_THREADED == "1"
 
@@ -59,3 +68,14 @@ class SystemName:
     WINDOWS = "win32"
     LINUX = "linux"
     MAC = "darwin"
+
+
+class TkSystemName:
+    """
+    2024/06/03
+    https://wiki.tcl-lang.org/page/tk+windowingsystem
+    """
+    X11 = "x11"
+    WIN32 = "win32"
+    AQUA = "aqua"  # Mac OS X Aqua
+    CLASSIC = "classic"  # Mac OS Classic
