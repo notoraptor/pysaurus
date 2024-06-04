@@ -1,5 +1,5 @@
-from PyQt6 import QtCore, QtGui
-from PyQt6.QtWidgets import QLabel
+from PySide6 import QtCore, QtGui
+from PySide6.QtWidgets import QLabel
 
 
 class QtsElidedLabel(QLabel):

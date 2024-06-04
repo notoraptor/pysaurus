@@ -1,5 +1,5 @@
-from PyQt6 import QtCore, QtGui
-from PyQt6.QtWidgets import QMainWindow
+from PySide6 import QtCore, QtGui
+from PySide6.QtWidgets import QMainWindow
 
 from pysaurus.core.notifications import Notification
 from pysaurus.core.notifying import Notifier
@@ -7,7 +7,7 @@ from pysaurus.interface.api.gui_api import GuiAPI
 
 
 class Interface(QtCore.QObject):
-    notified = QtCore.pyqtSignal(Notification)
+    notified = QtCore.Signal(Notification)
 
 
 class QtsAPI(GuiAPI):

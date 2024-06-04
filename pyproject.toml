@@ -6,7 +6,7 @@ authors = ["notoraptor"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = "~3.12"
 moviepy = "^1.0.3"
 Pillow = "^10.3.0"
 ujson = "^5.9.0"
@@ -15,10 +15,8 @@ cefpython3 = {version = "^66.1", markers = "sys_platform == 'win32'"}
 av = "^12.0.0"
 show-in-file-manager = "^1.1.5"
 werkzeug = "^3.0.2"
-pyqt6 = "^6.6.1"
-pyqt6-webengine = "^6.6.0"
-pyqt6-sip = "^13.6.0"
 flet = "^0.22.0"
+pyside6 = "^6.7.1"
 
 [tool.poetry.dev-dependencies]
 black = "^22.12.0"

@@ -13,11 +13,11 @@ from pysaurus.interface.common.qt_saurus_utils import PysaurusQtExceptHook
 # from putting them before Pysaurus imports
 logger = logging.getLogger(__name__)
 
-from PyQt6.QtCore import QMetaObject, QObject, QUrl, Q_ARG, Qt, pyqtSignal, pyqtSlot
-from PyQt6.QtWebChannel import QWebChannel
-from PyQt6.QtWebEngineCore import QWebEnginePage
-from PyQt6.QtWebEngineWidgets import QWebEngineView
-from PyQt6.QtWidgets import QApplication
+from PySide6.QtCore import QMetaObject, QObject, QUrl, Q_ARG, Qt, Signal, Slot
+from PySide6.QtWebChannel import QWebChannel
+from PySide6.QtWebEngineCore import QWebEnginePage
+from PySide6.QtWebEngineWidgets import QWebEngineView
+from PySide6.QtWidgets import QApplication
 
 
 LevelType = QWebEnginePage.JavaScriptConsoleMessageLevel
@@ -70,9 +70,9 @@ class Interface(QObject):
         self.api = self.__api_cls__(self)
 
     # Slot set in Javascript code
-    notified = pyqtSignal("QVariantMap")
+    notified = Signal("QVariantMap")
 
-    @pyqtSlot("QVariantList", result="QVariantMap")
+    @Slot("QVariantList", result="QVariantMap")
     def call(self, call_args):
         try:
             name, args = call_args
@@ -85,7 +85,7 @@ class Interface(QObject):
             }
         return result
 
-    @pyqtSlot(Exception)
+    @Slot(Exception)
     def throw(self, exception):
         """Special slot used to raise an exception in main thread.
 

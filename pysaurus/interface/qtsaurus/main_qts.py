@@ -1,7 +1,13 @@
 import logging
 import sys
 
-from PyQt6.QtWidgets import QApplication, QPushButton, QScrollArea, QVBoxLayout, QWidget
+from PySide6.QtWidgets import (
+    QApplication,
+    QPushButton,
+    QScrollArea,
+    QVBoxLayout,
+    QWidget,
+)
 
 from pysaurus.core.notifications import Notification
 from pysaurus.interface.common.qt_saurus_utils import PysaurusQtExceptHook

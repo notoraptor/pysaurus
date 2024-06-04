@@ -1,6 +1,6 @@
 from typing import Sequence, Type, Union
 
-from PyQt6.QtWidgets import QGridLayout, QLineEdit, QPushButton, QWidget
+from PySide6.QtWidgets import QGridLayout, QLineEdit, QPushButton, QWidget
 
 from pysaurus.interface.common.qt_utils import Callback, TYPE_VALIDATORS
 from pysaurus.interface.qtsaurus.qts_alerter import QtsAlerter
