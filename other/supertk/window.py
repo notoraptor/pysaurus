@@ -1,4 +1,5 @@
 import tkinter
+from tkinter import font as tk_font
 
 
 class Window:
@@ -8,6 +9,8 @@ class Window:
         self._root = tkinter.Tk()
         self._windowing_system = self._root.tk.call('tk', 'windowingsystem')
         self._center_window()
+        self._set_fonts()
+        # (2024/06/03) https://tkdocs.com/tutorial/menus.html
         self._root.option_add('*tearOff', False)
 
     def _center_window(self):
@@ -26,6 +29,12 @@ class Window:
         y = (screen_height - win_height) // 2
         print(screen_width, screen_height)
         self._root.geometry(f"{win_width}x{win_height}+{x}+{y}")
+
+    @classmethod
+    def _set_fonts(cls):
+        f = tk_font.nametofont("TkDefaultFont")
+        size = f.actual()["size"]
+        f.configure(size=max(size, 12))
 
     def __enter__(self):
         return self
