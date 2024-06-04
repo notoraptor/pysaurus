@@ -7,11 +7,11 @@ from other.supertk.supertk import Sticky, SystemName
 _SCROLLFRAME_IN = "<<ScrollFrameIn>>"
 _SCROLLFRAME_OUT = "<<ScrollFrameOut>>"
 
-_MW_SEQUENCES = (
-    ["<Button-4>", "<Button-5>"]
-    if sys.platform == SystemName.LINUX
-    else ["<MouseWheel>"]
-)
+# For Windows
+_MOUSEWHEEL = "<MouseWheel>"
+# For Linux
+_BUTTON_4 = "<Button-4>"
+_BUTTON_5 = "<Button-5>"
 
 
 class ScrollableFrame(ttk.Frame):
@@ -29,7 +29,7 @@ class ScrollableFrame(ttk.Frame):
         self._name = name or str(id(self))
         self._in_frame = False
         self._bound = False
-        self._mousewheel_func_ids = []
+        self._mw_func_indices = {}
 
         self._canvas = tkinter.Canvas(self, borderwidth=0)
         self.frame = ttk.Frame(self._canvas)
@@ -91,23 +91,31 @@ class ScrollableFrame(ttk.Frame):
         if self._bound:
             return
         # self.__debug("bound")
-        self._mousewheel_func_ids = [
-            self.winfo_toplevel().bind(sequence, self._on_mousewheel, add="+")
-            for sequence in _MW_SEQUENCES
-        ]
+        root = self.winfo_toplevel()
+        self._mw_func_indices = {
+            _MOUSEWHEEL: root.bind(_MOUSEWHEEL, self._on_mousewheel, "+"),
+            _BUTTON_4: root.bind(_BUTTON_4, self._on_button_4, "+"),
+            _BUTTON_5: root.bind(_BUTTON_5, self._on_button_5, "+"),
+        }
         self._bound = True
 
     def _unbound_to_mousewheel(self):
         if not self._bound:
             return
         # self.__debug("unbound")
-        for sequence in _MW_SEQUENCES:
-            for func_id in self._mousewheel_func_ids:
-                self.winfo_toplevel().unbind(sequence, func_id)
+        root = self.winfo_toplevel()
+        for sequence, func_id in self._mw_func_indices.items():
+            root.unbind(sequence, func_id)
         self._bound = False
 
     def _on_mousewheel(self, event: tkinter.Event):
         self._canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+    def _on_button_4(self, event: tkinter.Event):
+        self._canvas.yview_scroll(-1, "units")
+
+    def _on_button_5(self, event: tkinter.Event):
+        self._canvas.yview_scroll(1, "units")
 
     def _on_scroll_frame_in(self, event: tkinter.Event):
         if event.widget is not self and self._in_frame:

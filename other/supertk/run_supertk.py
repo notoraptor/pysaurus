@@ -245,5 +245,5 @@ if __name__ == "__main__":
     # check_label()
     # check_combobox()
     # check_grid()
-    # check_scrollbar_with_frame()
-    check_menu()
+    check_scrollbar_with_frame()
+    # check_menu()
