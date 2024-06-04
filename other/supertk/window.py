@@ -7,11 +7,11 @@ class Window:
 
     def __init__(self):
         self._root = tkinter.Tk()
-        self._windowing_system = self._root.tk.call('tk', 'windowingsystem')
+        self._windowing_system = self._root.tk.call("tk", "windowingsystem")
         self._center_window()
         self._set_fonts()
         # (2024/06/03) https://tkdocs.com/tutorial/menus.html
-        self._root.option_add('*tearOff', False)
+        self._root.option_add("*tearOff", False)
 
     def _center_window(self):
         """

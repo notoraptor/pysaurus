@@ -75,6 +75,7 @@ class TkSystemName:
     2024/06/03
     https://wiki.tcl-lang.org/page/tk+windowingsystem
     """
+
     X11 = "x11"
     WIN32 = "win32"
     AQUA = "aqua"  # Mac OS X Aqua
