@@ -239,6 +239,40 @@ def check_menu():
         menubar.add_cascade(menu=menu_edit, label="Edit")
 
 
+def check_customtkinter():
+    import customtkinter
+
+    customtkinter.set_appearance_mode("System")  # Modes: system (default), light, dark
+    customtkinter.set_default_color_theme(
+        "blue"
+    )  # Themes: blue (default), dark-blue, green
+
+    app = customtkinter.CTk()  # create CTk window like you do with the Tk window
+    app.geometry("400x240")
+
+    scf = customtkinter.CTkScrollableFrame(app)
+    scf.grid(row=0, column=0, sticky=Sticky.FULL)
+    app.columnconfigure(0, weight=1)
+    app.rowconfigure(0, weight=1)
+
+    def button_function():
+        print("button pressed")
+
+    # Use CTkButton instead of tkinter Button
+    button = customtkinter.CTkButton(scf, text="Button", command=button_function)
+    button.grid(row=0, column=0)
+    scf.columnconfigure(0, weight=1)
+    # app.rowconfigure(0, weight=1)
+
+    label = customtkinter.CTkTextbox(scf, wrap='word', fg_color='transparent')
+    label._textbox.tag_configure("tag_name", justify='center')
+    label.insert("0.0", "Hello mister, how are you? I am happy to meet you again today ! "
+        "I hope I will meet you again in the future ! See you soon !", "tag_name")
+    label.configure(state='disabled')
+    label.grid(row=1, column=0, sticky=Sticky.HORIZONTAL)
+    app.mainloop()
+
+
 if __name__ == "__main__":
     print("Tkinter version:", TK_VERSION)
     print("Tcl/Tk version:", TCL_VERSION)
@@ -247,5 +281,6 @@ if __name__ == "__main__":
     # check_label()
     # check_combobox()
     # check_grid()
-    check_scrollbar_with_frame()
+    # check_scrollbar_with_frame()
     # check_menu()
+    check_customtkinter()
