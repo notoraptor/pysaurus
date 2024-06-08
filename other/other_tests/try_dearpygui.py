@@ -1,3 +1,8 @@
+"""
+HELP:
+Widget to fill parent window width:
+https://github.com/hoffstadt/DearPyGui/discussions/1517
+"""
 import dearpygui.dearpygui as dpg
 import dearpygui.demo as demo
 
