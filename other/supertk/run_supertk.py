@@ -264,11 +264,15 @@ def check_customtkinter():
     scf.columnconfigure(0, weight=1)
     # app.rowconfigure(0, weight=1)
 
-    label = customtkinter.CTkTextbox(scf, wrap='word', fg_color='transparent')
-    label._textbox.tag_configure("tag_name", justify='center')
-    label.insert("0.0", "Hello mister, how are you? I am happy to meet you again today ! "
-        "I hope I will meet you again in the future ! See you soon !", "tag_name")
-    label.configure(state='disabled')
+    label = customtkinter.CTkTextbox(scf, wrap="word", fg_color="transparent")
+    label._textbox.tag_configure("tag_name", justify="center")
+    label.insert(
+        "0.0",
+        "Hello mister, how are you? I am happy to meet you again today ! "
+        "I hope I will meet you again in the future ! See you soon !",
+        "tag_name",
+    )
+    label.configure(state="disabled")
     label.grid(row=1, column=0, sticky=Sticky.HORIZONTAL)
     app.mainloop()
 
