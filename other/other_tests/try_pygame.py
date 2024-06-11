@@ -1,43 +1,25 @@
-import os
-
 import pygame
 import pygame.freetype
 from pygame import locals as L
 
-from pysaurus import package_dir
+from resource.fonts import PATH_SOURCE_HAN_SANS_TTC
 
 
 def main():
+    text = (
+        "Hello World! My PyGame Application! "
+        "αβαβαβαβαβ 【"
+        "DETROIT】この選択がどう繋がっていくのか！？【#2】"
+    )
+
     pygame.init()
     screen = pygame.display.set_mode((1280, 720))
-    pygame.display.set_caption("My PyGame Application! αβαβαβαβαβ 【DETROIT】この選択がどう繋がっていくのか！？【#2】")
+    pygame.display.set_caption(text)
     clock = pygame.time.Clock()
 
-    font_path_1 = os.path.abspath(
-        os.path.join(
-            package_dir(),
-            "..",
-            "resource",
-            "fonts",
-            "source-sans",
-            "TTF",
-            "SourceSans3-Light.ttf",
-        )
-    )
-    font_path_2 = os.path.abspath(
-        os.path.join(
-            package_dir(),
-            "..",
-            "resource",
-            "fonts",
-            "SourceHanSans-VF.ttf",
-        )
-    )
-    font_path = font_path_2
-    assert os.path.isfile(font_path)
-    font = pygame.freetype.Font(font_path, 24)
-    font.strong = True
-    text, text_pos = font.render("Hello World! αβαβαβαβαβ 選択がどう繋がっていくのか", "black")
+    font_path = PATH_SOURCE_HAN_SANS_TTC
+    font = pygame.freetype.Font(font_path, 24, font_index=5)
+    text, text_pos = font.render(text, "black")
     print(text.get_width(), text.get_height(), text_pos)
 
     running = True

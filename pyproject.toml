@@ -19,6 +19,7 @@ flet = "^0.22.0"
 pyside6 = "^6.7.1"
 customtkinter = "^5.2.2"
 pygame = "^2.5.2"
+fonttools = "^4.53.0"
 
 [tool.poetry.dev-dependencies]
 black = "^22.12.0"
