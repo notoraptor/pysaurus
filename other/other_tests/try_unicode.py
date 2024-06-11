@@ -73,7 +73,10 @@ class FontUtils:
         self._font = TTFont(path, fontNumber=font_index)
 
     def supported(self):
-        unicode_table = None
+        """
+        2024/06/11
+        https://stackoverflow.com/a/43857892
+        """
         for cmap in self._font["cmap"].tables:
             if cmap.isUnicode():
                 unicode_table = cmap
