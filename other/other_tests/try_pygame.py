@@ -2,12 +2,7 @@ import pygame
 import pygame.freetype
 from pygame import locals as L
 
-from resource.fonts import (
-    PATH_NOTO_FANGSONG_ROTATED,
-    PATH_NOTO_FANGSONG_VERTICAL,
-    PATH_SOURCE_HAN_SANS_JP,
-    PATH_SOURCE_HAN_SANS_TTC,
-)
+from resource.fonts import PATH_NOTO_REGULAR
 
 
 def main():
@@ -38,10 +33,7 @@ def main():
     pygame.display.set_caption(title)
     clock = pygame.time.Clock()
 
-    font_path_1 = PATH_SOURCE_HAN_SANS_JP
-    font_path_2 = PATH_SOURCE_HAN_SANS_TTC
-    font_path_3 = PATH_NOTO_FANGSONG_ROTATED
-    font_path_4 = PATH_NOTO_FANGSONG_VERTICAL
+    font_path_3 = PATH_NOTO_REGULAR
     font = pygame.freetype.Font(font_path_3, 24)
     # font.strong = True
     # font.strength = 1/16

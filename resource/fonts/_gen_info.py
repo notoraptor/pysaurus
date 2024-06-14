@@ -1,0 +1,172 @@
+import json
+import os.path
+from collections import Counter
+from typing import Dict, List, Set, Union
+
+from fontTools.ttLib.ttCollection import TTCollection
+
+from pysaurus.core.unicode_utils import Unicode
+from resource.fonts import FOLDER_FONT, FONT_BABEL_STONE, get_fonts
+from resource.fonts.font_utils import FontUtils
+
+LEAST_FONT = FONT_BABEL_STONE.name
+
+
+def save_noto_fonts(fonts: Dict[str, str]):
+    output_path = os.path.join(FOLDER_FONT, "font-to-path.json")
+    with open(output_path, "w") as file:
+        json.dump(fonts, file, indent=1)
+    print(f"Saved paths for {len(fonts)} Noto fonts at:", output_path)
+
+
+def check_unicode_coverage(font_table: Dict[str, str]):
+    blocks: Dict[str, List[str]] = {}
+    for c in Unicode.characters():
+        blocks.setdefault(Unicode.block(c), []).append(c)
+    nb_chars = sum(len(chars) for chars in blocks.values())
+
+    fonts = []
+    for path in font_table.values():
+        if path.lower().endswith(".ttc"):
+            with TTCollection(path, lazy=True) as coll:
+                nb_fonts = len(coll)
+            print(f"Found TTC file {os.path.basename(path)} with {nb_fonts} fonts")
+            fonts.extend(FontUtils(path, font_index=i) for i in range(nb_fonts))
+        else:
+            fonts.append(FontUtils(path))
+
+    nb_supported = 0
+    nb_many_supported = 0
+    block_cov: Dict[str, Set[str]] = {}
+    unsupported_blocks = []
+    nb_blocks_many_supported = 0
+    for block, chars in blocks.items():
+        block_support_count = Counter()
+        for c in chars:
+            local_supported = [font.name for font in fonts if font.supports(c)]
+            block_support_count.update(local_supported)
+            nb_supported += bool(local_supported)
+            nb_many_supported += len(local_supported) > 1
+        if block_support_count.total():
+            block_support = block_support_count.most_common()
+            max_count = block_support[0][1]
+            most_support: List[str] = [t[0] for t in block_support if t[1] == max_count]
+            block_cov[block] = set(most_support)
+            if len(most_support) > 1:
+                nb_blocks_many_supported += 1
+                print(f"{block} ({len(chars)})")
+                for name in most_support:
+                    print(
+                        f"\t{name} => {max_count} : {_percent(max_count, len(chars))} %"
+                    )
+        else:
+            unsupported_blocks.append(block)
+    if unsupported_blocks:
+        print()
+        print("** Unsupported blocks **:")
+        for block in unsupported_blocks:
+            print(f"\t(x) {block} => {len(blocks[block])}")
+
+    print()
+    print(f"Unicode v{Unicode.VERSION}, {nb_chars} characters, {len(blocks)} blocks.")
+    print("Fonts:", len(fonts))
+    print("Coverage:")
+    print(f"Chars: {nb_supported} / {nb_chars}, multiple: {nb_many_supported}")
+    print(
+        f"Blocks: {len(block_cov)} / {len(blocks)}, multiple: {nb_blocks_many_supported}"
+    )
+    print()
+
+    for block, block_fonts in block_cov.items():
+        if len(block_fonts) > 1 and LEAST_FONT in block_fonts:
+            block_fonts.remove(LEAST_FONT)
+            print(f"[{block}] <removed> {LEAST_FONT}")
+
+    mandatory_fonts: Set[str] = set()
+    cov = block_cov
+    while True:
+        new_mandatory, cov = _clean_fonts(cov, mandatory_fonts)
+        if new_mandatory != mandatory_fonts:
+            mandatory_fonts = new_mandatory
+        else:
+            break
+
+    unique_cov = {b: next(iter(cs)) for b, cs in cov.items() if len(cs) == 1}
+    multiple_cov = {b: cs for b, cs in cov.items() if len(cs) > 1}
+
+    print()
+    print(
+        "Mandatory fonts:",
+        len(mandatory_fonts),
+        f"with {LEAST_FONT}" if LEAST_FONT in mandatory_fonts else "",
+    )
+    print("Blocks with multiple support:", len(multiple_cov))
+
+    cov_count = Counter()
+    for fonts in multiple_cov.values():
+        cov_count.update(fonts)
+
+    resolution = {}
+    for block, fonts in multiple_cov.items():
+        counts = sorted(
+            ((font, cov_count[font]) for font in fonts), key=lambda c: (-c[1], c[0])
+        )
+        selected_font = counts[0][0]
+        print(f"[{block}] selected: {selected_font}")
+        resolution[block] = selected_font
+
+    final_mapping = {**unique_cov, **resolution}
+    assert len(final_mapping) == len(blocks) - len(unsupported_blocks)
+
+    unsupported_blocks = set(unsupported_blocks)
+    output = {
+        block: final_mapping[block]
+        for block in blocks
+        if block not in unsupported_blocks
+    }
+    with open(os.path.join(FOLDER_FONT, "block-to-font.json"), "w") as file:
+        json.dump(output, file, indent=1)
+
+
+def _clean_fonts(coverage: Dict[str, Union[List, Set]], old_mandatory: Set[str]):
+    new_mandatory = set()
+    new_coverage = {}
+    for block, fonts in coverage.items():
+        if len(fonts) == 1:
+            (font,) = fonts
+            new_mandatory.add(font)
+        else:
+            new_coverage[block] = fonts
+
+    mandatory = old_mandatory | new_mandatory
+    out_cov = {}
+
+    print()
+    for block, fonts in new_coverage.items():
+        fonts = set(fonts)
+        common = fonts & mandatory
+        if not common:
+            print(f"[{block}] <unchanged> {len(fonts)}")
+            out_cov[block] = fonts
+        elif len(common) == len(fonts):
+            print(f"[{block}] <mandatory> {len(fonts)}")
+            out_cov[block] = fonts
+        else:
+            print(f"[{block}] {len(fonts)} => {len(common)}")
+            out_cov[block] = common
+
+    return new_mandatory, {**coverage, **out_cov}
+
+
+def _percent(a, b):
+    return round(a * 100 / b, 2)
+
+
+def main():
+    fonts = get_fonts()
+    save_noto_fonts(fonts)
+    check_unicode_coverage(fonts)
+
+
+if __name__ == "__main__":
+    main()

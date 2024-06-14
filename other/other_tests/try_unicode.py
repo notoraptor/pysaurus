@@ -69,109 +69,15 @@ multiple support: 34437
 44812
 """
 import json
-import os.path
 from collections import Counter
 from typing import Dict, List
 
 import unicodedataplus
-from fontTools.ttLib import TTFont
 from fontTools.ttLib.ttCollection import TTCollection
 
 from pysaurus.core.unicode_utils import Unicode
-from resource.fonts import (
-    FOLDER_FONT,
-    NOTO_FONTS,
-    PATH_SOURCE_HAN_SANS_JP,
-    PATH_SOURCE_SANS_REGULAR,
-    get_fonts,
-    get_noto_fonts,
-    get_noto_sans_fonts,
-)
-
-priority = {
-    "Basic Latin": ["Noto Sans Regular"],
-    "Latin-1 Supplement": ["Noto Sans Regular"],
-    "Syriac": ["Noto Sans Syriac Regular"],
-    "General Punctuation": ["Noto Sans Regular"],
-    "Enclosed Alphanumerics": ["Noto Sans Symbols Regular"],
-    "Box Drawing": ["Noto Sans JP"],
-    "Block Elements": ["Noto Sans JP"],
-    "Geometric Shapes": ["Noto Sans Symbols 2 Regular"],
-    "CJK Radicals Supplement": ["Noto Sans JP"],
-    "Kangxi Radicals": ["Noto Sans JP"],
-    "Ideographic Description Characters": ["Noto Sans JP"],
-    "CJK Symbols and Punctuation": ["Noto Sans JP"],
-    "Hiragana": ["Noto Sans JP"],
-    "Katakana": ["Noto Sans JP"],
-    "Bopomofo": ["Noto Sans JP"],
-    "Kanbun": ["Noto Sans JP"],
-    "CJK Strokes": ["Noto Sans JP"],
-    "Katakana Phonetic Extensions": ["Noto Sans JP"],
-    "Enclosed CJK Letters and Months": ["Noto Sans JP"],
-    "CJK Compatibility": ["Noto Sans JP"],
-    "Yijing Hexagram Symbols": ["Noto Sans Symbols 2 Regular"],
-    "Common Indic Number Forms": ["Noto Sans Devanagari Regular"],
-    "Vertical Forms": ["Noto Sans JP"],
-    "CJK Compatibility Forms": ["Noto Sans JP"],
-    "Small Form Variants": ["Noto Sans JP"],
-    "Coptic Epact Numbers": ["Noto Sans Symbols 2 Regular"],
-    "Mayan Numerals": ["Noto Sans Symbols 2 Regular"],
-    "Tai Xuan Jing Symbols": ["Noto Sans Symbols 2 Regular"],
-    "Counting Rod Numerals": ["Noto Sans Symbols 2 Regular"],
-}
-
-
-class FontUtils:
-    def __init__(self, path: str, font_index=-1, allow_vid=NotImplemented):
-        self._path = path
-        self._font = TTFont(path, fontNumber=font_index, allowVID=allow_vid)
-
-        # (2024/06/11) https://stackoverflow.com/a/72228817
-        # fontFamilyName = self._font['name'].getDebugName(1)
-        self.name: str = self._font["name"].getDebugName(4)
-        self._unicode_map: dict = self._font.getBestCmap()
-        # self._unicode_map = self._get_first_unicode_cmap()
-        if self._unicode_map is None:
-            raise ValueError(f"Cannot find best unicode table in TTF font: {self.name}")
-
-    def _get_first_unicode_cmap(self):
-        for cmap in self._font["cmap"].tables:
-            if cmap.isUnicode():
-                unicode_table = cmap
-                break
-        else:
-            raise ValueError(f"Cannot find unicode table in TTF font: {self.name}")
-        print(
-            self.name,
-            len(unicode_table.cmap),
-            unicode_table.platformID,
-            unicode_table.platEncID,
-        )
-        return unicode_table.cmap
-
-    def _get_supported(self, unicode_table):
-        """
-        2024/06/11
-        https://stackoverflow.com/a/43857892
-        """
-        return [
-            (c, unicode_table.cmap[ord(c)])
-            for c in Unicode.characters()
-            if ord(c) in unicode_table.cmap
-        ]
-
-    @property
-    def font(self):
-        return self._font
-
-    def supported(self):
-        return [
-            (chr(char_int), char_name)
-            for char_int, char_name in self._unicode_map.items()
-        ]
-
-    def supports(self, character):
-        return self._unicode_map.get(ord(character), None)
+from resource.fonts import PATH_SOURCE_HAN_SANS_JP, PATH_SOURCE_SANS_REGULAR, get_fonts
+from resource.fonts.font_utils import FontUtils
 
 
 def main(path, font_index=-1):
@@ -181,14 +87,6 @@ def main(path, font_index=-1):
 
 def _percent(a, b):
     return round(a * 100 / b, 2)
-
-
-def save_noto_fonts():
-    output_path = os.path.join(FOLDER_FONT, "noto.json")
-    output = get_noto_sans_fonts()
-    with open(output_path, "w") as file:
-        json.dump(output, file, indent=1)
-    print(f"Saved paths for {len(NOTO_FONTS)} Noto fonts at:", output_path)
 
 
 def check_unicode_coverage(font_table: Dict[str, str]):
@@ -262,7 +160,6 @@ def check_unicode_coverage(font_table: Dict[str, str]):
 
 
 if __name__ == "__main__":
-    _r = get_noto_fonts
     _paths = (PATH_SOURCE_SANS_REGULAR, PATH_SOURCE_HAN_SANS_JP)
     check_unicode_coverage(get_fonts())
     main(PATH_SOURCE_SANS_REGULAR)

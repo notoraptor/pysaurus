@@ -1,6 +1,7 @@
 import sys
 
 from unicodedata import category, unidata_version
+import unicodedataplus
 
 
 class Unicode:
@@ -24,3 +25,7 @@ class Unicode:
             if cat == "Cn":  # non-character or reserved
                 continue
             yield c
+
+    @classmethod
+    def block(cls, c: str) -> str:
+        return unicodedataplus.block(c)
