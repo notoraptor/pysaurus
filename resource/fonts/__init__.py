@@ -13,7 +13,7 @@ from fontTools.ttLib import TTFont
 
 
 def _file_path(base, *path_pieces) -> str:
-    path = os.path.join(base, *path_pieces)
+    path = os.path.abspath(os.path.join(base, *path_pieces))
     assert os.path.isfile(path)
     return path
 

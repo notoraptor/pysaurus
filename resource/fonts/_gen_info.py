@@ -5,6 +5,7 @@ from typing import Dict, List, Set, Union
 
 from fontTools.ttLib.ttCollection import TTCollection
 
+from pysaurus.core.modules import System
 from pysaurus.core.unicode_utils import Unicode
 from resource.fonts import FOLDER_FONT, FONT_BABEL_STONE, get_fonts
 from resource.fonts.font_utils import FontUtils
@@ -12,10 +13,22 @@ from resource.fonts.font_utils import FontUtils
 LEAST_FONT = FONT_BABEL_STONE.name
 
 
-def save_noto_fonts(fonts: Dict[str, str]):
+def save_fonts(fonts: Dict[str, str]):
+    if System.is_windows():
+        assert not FOLDER_FONT.endswith("\\")
+    else:
+        assert not FOLDER_FONT.endswith("/")
+    base_path = FOLDER_FONT + os.sep
+    fonts_with_relative_paths = {}
+    for name, path in fonts.items():
+        assert path.startswith(base_path)
+        relative_path = path[len(base_path) :]
+        if System.is_windows():
+            relative_path = relative_path.replace("\\", "/")
+        fonts_with_relative_paths[name] = relative_path
     output_path = os.path.join(FOLDER_FONT, "font-to-path.json")
     with open(output_path, "w") as file:
-        json.dump(fonts, file, indent=1)
+        json.dump(fonts_with_relative_paths, file, indent=1)
     print(f"Saved paths for {len(fonts)} Noto fonts at:", output_path)
 
 
@@ -164,7 +177,6 @@ def _percent(a, b):
 
 def main():
     fonts = get_fonts()
-    save_noto_fonts(fonts)
     check_unicode_coverage(fonts)
 
 
