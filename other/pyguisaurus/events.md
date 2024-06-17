@@ -83,3 +83,25 @@ APP_DIDENTERBACKGROUND    Application entered background
 APP_WILLENTERFOREGROUND   Application is entering foreground
 APP_DIDENTERFOREGROUND    Application entered foreground
 ```
+
+# Pieces of code
+
+Basic pygame loop:
+```python
+import pygame
+
+pygame.init()
+screen = pygame.display.set_mode((1280, 720))
+clock = pygame.time.Clock()
+
+running = True
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            print("Quit pygame.")
+            running = False
+    screen.fill("white")
+    pygame.display.flip()
+    clock.tick(60)
+pygame.quit()
+```
