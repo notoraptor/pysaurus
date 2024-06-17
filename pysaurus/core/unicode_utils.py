@@ -1,7 +1,8 @@
 import sys
+from typing import Dict, Sequence
 
-from unicodedata import category, unidata_version
 import unicodedataplus
+from unicodedata import category, unidata_version
 
 
 class Unicode:
@@ -29,3 +30,12 @@ class Unicode:
     @classmethod
     def block(cls, c: str) -> str:
         return unicodedataplus.block(c)
+
+    @classmethod
+    def blocks(cls, wrapper=set) -> Dict[str, Sequence[str]]:
+        blocks = {}
+        for c in cls.characters():
+            blocks.setdefault(cls.block(c), []).append(c)
+        if wrapper is not None:
+            blocks = {block: wrapper(chars) for block, chars in blocks.items()}
+        return blocks

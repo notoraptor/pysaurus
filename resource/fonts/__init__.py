@@ -6,8 +6,9 @@ https://github.com/notofonts/noto-cjk
 https://github.com/googlefonts/noto-emoji
 https://www.babelstone.co.uk/Fonts/Han.html
 """
+import json
 import os
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from fontTools.ttLib import TTFont
 
@@ -83,3 +84,28 @@ def get_fonts() -> Dict[str, str]:
     fonts = {**noto_fonts, **FONT_BABEL_STONE.to_dict()}
     assert len(fonts) == len(noto_fonts) + 1
     return fonts
+
+
+class FontProvider:
+    __slots__ = ("_font_name_to_path", "_block_support")
+
+    def __init__(self):
+        self._font_name_to_path: Dict[str, str] = get_fonts()
+        with open(os.path.join(FOLDER_FONT, "block-support.json")) as file:
+            self._block_support: Dict[str, Dict] = json.load(file)
+
+    def get_font_info(self, block: str) -> Tuple[str, str]:
+        if block in self._block_support:
+            name = self._block_support[block]["font"]
+            path = self._font_name_to_path[name]
+        else:
+            name = FONT_NOTO_REGULAR.name
+            path = FONT_NOTO_REGULAR.path
+        return name, path
+
+    def lorem_ipsum(self) -> str:
+        text = " ".join(
+            support["coverage"][0] for support in self._block_support.values()
+        )
+        # print(len(text), text)
+        return text

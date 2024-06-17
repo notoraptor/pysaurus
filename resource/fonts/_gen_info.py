@@ -33,9 +33,7 @@ def save_fonts(fonts: Dict[str, str]):
 
 
 def check_unicode_coverage(font_table: Dict[str, str]):
-    blocks: Dict[str, List[str]] = {}
-    for c in Unicode.characters():
-        blocks.setdefault(Unicode.block(c), []).append(c)
+    blocks = Unicode.blocks()
     nb_chars = sum(len(chars) for chars in blocks.values())
 
     fonts = []
@@ -47,6 +45,7 @@ def check_unicode_coverage(font_table: Dict[str, str]):
             fonts.extend(FontUtils(path, font_index=i) for i in range(nb_fonts))
         else:
             fonts.append(FontUtils(path))
+    font_objects = fonts
 
     nb_supported = 0
     nb_many_supported = 0
@@ -132,13 +131,18 @@ def check_unicode_coverage(font_table: Dict[str, str]):
     assert len(final_mapping) == len(blocks) - len(unsupported_blocks)
 
     unsupported_blocks = set(unsupported_blocks)
-    output = {
-        block: final_mapping[block]
-        for block in blocks
-        if block not in unsupported_blocks
-    }
-    with open(os.path.join(FOLDER_FONT, "block-to-font.json"), "w") as file:
-        json.dump(output, file, indent=1)
+    font_map = {fu.name: fu for fu in font_objects}
+
+    support = {}
+    for block_name, block_content in blocks.items():
+        if block_name not in unsupported_blocks:
+            font_name = final_mapping[block_name]
+            font = font_map[font_name]
+            font_cov = sorted(c for c in block_content if font.supports(c))
+            support[block_name] = {"font": font_name, "coverage": "".join(font_cov)}
+
+    with open(os.path.join(FOLDER_FONT, "block-support.json"), "w") as file:
+        json.dump(support, file, indent=1)
 
 
 def _clean_fonts(coverage: Dict[str, Union[List, Set]], old_mandatory: Set[str]):
