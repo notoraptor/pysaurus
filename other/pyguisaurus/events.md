@@ -1,6 +1,9 @@
 # Handled
 ```
 QUIT              none
+MOUSEBUTTONDOWN   pos, button, touch
+MOUSEBUTTONUP     pos, button, touch
+MOUSEWHEEL         which, flipped, x, y, touch, precise_x, precise_y
 ```
 
 # Deprecated
@@ -18,8 +21,6 @@ VIDEOEXPOSE       none
 KEYDOWN           key, mod, unicode, scancode
 KEYUP             key, mod, unicode, scancode
 MOUSEMOTION       pos, rel, buttons, touch
-MOUSEBUTTONUP     pos, button, touch
-MOUSEBUTTONDOWN   pos, button, touch
 JOYAXISMOTION     joy (deprecated), instance_id, axis, value
 JOYBALLMOTION     joy (deprecated), instance_id, ball, rel
 JOYHATMOTION      joy (deprecated), instance_id, hat, value
@@ -33,7 +34,6 @@ AUDIODEVICEREMOVED which, iscapture (SDL backend >= 2.0.4)
 FINGERMOTION       touch_id, finger_id, x, y, dx, dy
 FINGERDOWN         touch_id, finger_id, x, y, dx, dy
 FINGERUP           touch_id, finger_id, x, y, dx, dy
-MOUSEWHEEL         which, flipped, x, y, touch, precise_x, precise_y
 MULTIGESTURE       touch_id, x, y, pinched, rotated, num_fingers
 TEXTEDITING        text, start, length
 TEXTINPUT          text

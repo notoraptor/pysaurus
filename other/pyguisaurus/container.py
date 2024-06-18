@@ -30,3 +30,8 @@ class Container(Widget):
                 (owner,) = owners
                 return owner
         return None
+
+    def has_changed(self) -> bool:
+        return super().has_changed() or any(
+            ctrl.has_changed() for ctrl in self._controls()
+        )

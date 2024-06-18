@@ -6,6 +6,7 @@ from typing import List, Optional
 import pygame
 from pygame.event import Event
 
+from other.pyguisaurus.enumerations import MouseButton
 from other.pyguisaurus.widget import Widget
 
 
@@ -44,16 +45,6 @@ class Window:
             }
         )
 
-    def __on_event(self, event: Event):
-        callback = self._event_callbacks.get(event.type)
-        if callback is None:
-            logging.debug(
-                f"Unhandled pygame event: {pygame.event.event_name(event.type)}"
-            )
-            return False
-        callback(event)
-        return True
-
     def run(self):
         screen = pygame.display.set_mode(
             (self.width, self.height), flags=pygame.RESIZABLE
@@ -75,29 +66,55 @@ class Window:
             clock.tick(60)
         pygame.quit()
 
+    def __on_event(self, event: Event):
+        callback = self._event_callbacks.get(event.type)
+        if callback is None:
+            logging.debug(
+                f"Unhandled pygame event: {pygame.event.event_name(event.type)}"
+            )
+            return False
+        callback(event)
+        return True
+
     @on_event(pygame.QUIT)
     def _on_quit(self, event: Event):
         print("Quit pygame.")
         self._running = False
 
-    def _get_mouse_owner(self, event: Event) -> Optional[Widget]:
-        owners = [ctrl.get_mouse_owner(*event.pos) for ctrl in self.controls]
-        owners = [ctrl for ctrl in owners if ctrl]
-        if owners:
-            owner, = owners
-            return owner
-        return None
-
     @on_event(pygame.MOUSEBUTTONDOWN)
     def _on_mouse_button_down(self, event: Event):
-        owner = self._get_mouse_owner(event)
+        owner = self._get_mouse_owner(*event.pos)
         if owner:
             self._down = (owner, event.button)
 
     @on_event(pygame.MOUSEBUTTONUP)
     def _on_mouse_button_up(self, event: Event):
-        owner = self._get_mouse_owner(event)
+        owner = self._get_mouse_owner(*event.pos)
         if owner and self._down == (owner, event.button):
-            print(owner, "clicked with button", event.button)
+            # print(owner, "click", MouseButton(event.button))
+            owner.handle_click(MouseButton(event.button))
         self._down = ()
 
+    @on_event(pygame.MOUSEWHEEL)
+    def _on_mouse_wheel(self, event: Event):
+        owner = self._get_mouse_wheel_owner(*pygame.mouse.get_pos())
+        if owner:
+            shift = pygame.key.get_mods() & pygame.KMOD_SHIFT
+            # print(owner, event.x, event.y, shift)
+            owner.handle_mouse_wheel(event.x, event.y, shift)
+
+    def _get_mouse_owner(self, x: int, y: int) -> Optional[Widget]:
+        owners = [ctrl.get_mouse_owner(x, y) for ctrl in self.controls]
+        owners = [ctrl for ctrl in owners if ctrl]
+        if owners:
+            (owner,) = owners
+            return owner
+        return None
+
+    def _get_mouse_wheel_owner(self, x: int, y: int) -> Optional[Widget]:
+        owners = [ctrl.get_mouse_wheel_owner(x, y) for ctrl in self.controls]
+        owners = [ctrl for ctrl in owners if ctrl]
+        if owners:
+            (owner,) = owners
+            return owner
+        return None

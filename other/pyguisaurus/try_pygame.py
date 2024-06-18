@@ -16,7 +16,9 @@ def main():
     pygame.init()
     text = "小松 未可子 | 🌀 hello world | " + Text.lorem_ipsum()
     window = Window(title=title)
-    window.controls.append(ScrollView(Text(text, wrap=True)))
+    window.controls.append(
+        ScrollView(Text(text, wrap=True), expand_children_horizontal=True)
+    )
     window.run()
 
 
