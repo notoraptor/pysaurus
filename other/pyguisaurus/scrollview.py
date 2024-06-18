@@ -1,21 +1,23 @@
 import pygame
 
+from other.pyguisaurus.container import Container
 from other.pyguisaurus.widget import Widget
 
 
-class ScrollView(Widget):
-    __attributes__ = {"control", "scroll_thickness"}
+class ScrollView(Container):
+    __attributes__ = {"scroll_thickness"}
+    __size__ = 1
     __slots__ = ()
     _SCROLL_COLOR = pygame.Color(216, 216, 216)
 
     def __init__(self, control: Widget, scroll_thickness=18, **kwargs):
-        super().__init__(**kwargs)
-        self._set_attribute("control", control)
+        super().__init__([control], **kwargs)
         self._set_attribute("scroll_thickness", scroll_thickness)
 
     @property
     def control(self) -> Widget:
-        return self._get_attribute("control")
+        control, = self._controls()
+        return control
 
     @property
     def scroll_thickness(self) -> int:

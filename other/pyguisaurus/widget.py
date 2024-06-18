@@ -5,7 +5,7 @@ import pygame
 
 
 class Widget:
-    __attributes__ = ()
+    __attributes__ = {"top", "left"}
 
     __slots__ = ("_key", "_old", "_new", "_surface", "_old_update")
 
@@ -15,9 +15,51 @@ class Widget:
         self._new = {}
         self._old_update = ()
         self._surface: Optional[pygame.Surface] = None
+        self._set_attribute("top", 0)
+        self._set_attribute("left", 0)
+
+    @property
+    def top(self) -> int:
+        return self._get_attribute("top")
+
+    @property
+    def left(self) -> int:
+        return self._get_attribute("left")
+
+    @property
+    def bottom(self) -> int:
+        if not self._surface:
+            raise RuntimeError("Widget not yet drawn")
+        return self.top + self._surface.get_height() - 1
+
+    @property
+    def right(self) -> int:
+        if not self._surface:
+            raise RuntimeError("Widget not yet drawn")
+        return self.left + self._surface.get_width() - 1
+
+    @property
+    def x(self) -> int:
+        return self._get_attribute("left")
+
+    @property
+    def y(self) -> int:
+        return self._get_attribute("top")
+
+    def get_mouse_owner(self, x: int, y: int):
+        if (
+            self._surface
+            and self.left <= x <= self.right
+            and self.top <= y <= self.bottom
+        ):
+            return self
+        return None
+
+    def __repr__(self):
+        return f"[{type(self).__name__}][{self._key}]"
 
     def _debug(self, *args, **kwargs):
-        print(f"[{type(self).__name__}][{self._key}]", *args, **kwargs)
+        print(self, *args, **kwargs)
 
     @classmethod
     def _has_attribute(cls, name: str) -> bool:

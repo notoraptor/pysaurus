@@ -1,7 +1,7 @@
 import inspect
 import logging
 import pprint
-from typing import List
+from typing import List, Optional
 
 import pygame
 from pygame.event import Event
@@ -26,6 +26,8 @@ class Window:
         self.controls: List[Widget] = []
         self._running = True
         self._event_callbacks = {}
+        self._down = ()
+
         self.__collect_event_callbacks()
 
     def __collect_event_callbacks(self):
@@ -63,16 +65,11 @@ class Window:
             for event in pygame.event.get():
                 self.__on_event(event)
             screen_width, screen_height = screen.get_width(), screen.get_height()
-            max_width, max_height = 0, 0
             screen.fill("white")
             for control in self.controls:
                 surface = control.render(self, screen_width, screen_height)
-                max_width = max(max_width, surface.get_width())
-                max_height = max(max_height, surface.get_height())
-                screen.blit(surface, (0, 0))
+                screen.blit(surface, (control.x, control.y))
             for surface in self.surfaces:
-                max_width = max(max_width, surface.get_width())
-                max_height = max(max_height, surface.get_height())
                 screen.blit(surface, (0, 0))
             pygame.display.flip()
             clock.tick(60)
@@ -82,3 +79,25 @@ class Window:
     def _on_quit(self, event: Event):
         print("Quit pygame.")
         self._running = False
+
+    def _get_mouse_owner(self, event: Event) -> Optional[Widget]:
+        owners = [ctrl.get_mouse_owner(*event.pos) for ctrl in self.controls]
+        owners = [ctrl for ctrl in owners if ctrl]
+        if owners:
+            owner, = owners
+            return owner
+        return None
+
+    @on_event(pygame.MOUSEBUTTONDOWN)
+    def _on_mouse_button_down(self, event: Event):
+        owner = self._get_mouse_owner(event)
+        if owner:
+            self._down = (owner, event.button)
+
+    @on_event(pygame.MOUSEBUTTONUP)
+    def _on_mouse_button_up(self, event: Event):
+        owner = self._get_mouse_owner(event)
+        if owner and self._down == (owner, event.button):
+            print(owner, "clicked with button", event.button)
+        self._down = ()
+
