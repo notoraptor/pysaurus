@@ -14,10 +14,10 @@ def main():
     )
 
     pygame.init()
-    text = "小松 未可子 | 🌀 hello world | " + Text.lorem_ipsum()
+    text = "小松 未可子 | 🌀 hello world | " + Text.lorem_ipsum()[:100]
     window = Window(title=title)
     window.controls.append(
-        ScrollView(Text(text, wrap=True), expand_children_horizontal=True)
+        ScrollView(Text(text, size=256, wrap=True), expand_children_horizontal=False)
     )
     window.run()
 
