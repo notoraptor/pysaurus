@@ -24,11 +24,10 @@ class Container(Widget):
 
     def get_mouse_owner(self, x: int, y: int):
         if super().get_mouse_owner(x, y):
-            owners = [ctrl.get_mouse_owner(x, y) for ctrl in self._controls()]
-            owners = [ctrl for ctrl in owners if ctrl is not None]
-            if owners:
-                (owner,) = owners
-                return owner
+            for ctrl in reversed(self._controls()):
+                owner = ctrl.get_mouse_owner(x, y)
+                if owner is not None:
+                    return owner
         return None
 
     def has_changed(self) -> bool:

@@ -4,6 +4,7 @@ from typing import Any, Optional
 import pygame
 
 from other.pyguisaurus.enumerations import MouseButton
+from other.pyguisaurus.events import MotionEvent
 
 
 class Widget:
@@ -82,6 +83,12 @@ class Widget:
     def _debug(self, *args, **kwargs):
         print(self, *args, **kwargs)
 
+    def _prev_scope_width(self) -> int:
+        return self._old_update[1]
+
+    def _prev_scope_height(self) -> int:
+        return self._old_update[2]
+
     @classmethod
     def _has_attribute(cls, name: str) -> bool:
         for typ in cls.__mro__:
@@ -130,4 +137,19 @@ class Widget:
         pass
 
     def handle_click(self, button: MouseButton):
+        pass
+
+    def handle_mouse_enter(self, event: MotionEvent):
+        pass
+
+    def handle_mouse_exit(self, event: MotionEvent):
+        pass
+
+    def handle_mouse_over(self, event: MotionEvent):
+        pass
+
+    def handle_mouse_down(self, button: MouseButton, x: int, y: int):
+        pass
+
+    def handle_mouse_up(self, button: MouseButton, x: int, y: int):
         pass

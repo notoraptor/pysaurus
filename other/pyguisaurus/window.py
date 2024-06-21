@@ -7,6 +7,7 @@ import pygame
 from pygame.event import Event
 
 from other.pyguisaurus.enumerations import MouseButton
+from other.pyguisaurus.events import MotionEvent
 from other.pyguisaurus.widget import Widget
 
 
@@ -28,6 +29,7 @@ class Window:
         self._running = True
         self._event_callbacks = {}
         self._down = ()
+        self._motion: Optional[Widget] = None
 
         self.__collect_event_callbacks()
 
@@ -81,18 +83,37 @@ class Window:
         print("Quit pygame.")
         self._running = False
 
+    @on_event(pygame.MOUSEMOTION)
+    def _on_mouse_motion(self, event: Event):
+        # print(event.pos, event.rel, event.buttons)
+        owner = self._get_mouse_owner(*event.pos)
+        if owner:
+            m_event = MotionEvent(event)
+            if not self._motion:
+                owner.handle_mouse_enter(m_event)
+            elif self._motion is owner:
+                owner.handle_mouse_over(m_event)
+            else:
+                self._motion.handle_mouse_exit(m_event)
+                owner.handle_mouse_enter(m_event)
+            self._motion = owner
+
     @on_event(pygame.MOUSEBUTTONDOWN)
     def _on_mouse_button_down(self, event: Event):
         owner = self._get_mouse_owner(*event.pos)
         if owner:
             self._down = (owner, event.button)
+            owner.handle_mouse_down(MouseButton(event.button), *event.pos)
 
     @on_event(pygame.MOUSEBUTTONUP)
     def _on_mouse_button_up(self, event: Event):
         owner = self._get_mouse_owner(*event.pos)
-        if owner and self._down == (owner, event.button):
-            # print(owner, "click", MouseButton(event.button))
-            owner.handle_click(MouseButton(event.button))
+        if owner:
+            button = MouseButton(event.button)
+            owner.handle_mouse_up(button, *event.pos)
+            if self._down == (owner, event.button):
+                # print(owner, "click", button)
+                owner.handle_click(button)
         self._down = ()
 
     @on_event(pygame.MOUSEWHEEL)
