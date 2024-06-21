@@ -17,7 +17,7 @@ class ScrollView(Container):
         "expand_children_vertical",
     }
     __size__ = 1
-    __slots__ = ("_content_x", "_content_y")
+    __slots__ = ("_ctrl",)
     _SCROLL_COLOR = pygame.Color(216, 216, 216)
     _SCROLL_STEP = _DEFAULT_SCROLL_STEP
 
@@ -37,13 +37,27 @@ class ScrollView(Container):
         self._set_attribute("vertical_scroll", vertical_scroll)
         self._set_attribute("expand_children_horizontal", expand_children_horizontal)
         self._set_attribute("expand_children_vertical", expand_children_vertical)
-        self._content_x = 0
-        self._content_y = 0
+        self._ctrl = control
 
     @property
     def control(self) -> Widget:
-        (control,) = self._controls()
-        return control
+        return self._ctrl
+
+    @property
+    def _content_x(self) -> int:
+        return self._ctrl.x
+
+    @_content_x.setter
+    def _content_x(self, x: int):
+        self._ctrl.x = x
+
+    @property
+    def _content_y(self) -> int:
+        return self._ctrl.y
+
+    @_content_y.setter
+    def _content_y(self, y: int):
+        self._ctrl.y = y
 
     @property
     def scroll_thickness(self) -> int:

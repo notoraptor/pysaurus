@@ -252,7 +252,7 @@ class VideoView(ft.Container):
             vertical_alignment=ft.CrossAxisAlignment.START,
         )
 
-    def on_select(self, e):
+    def on_select(self, e: ft.ControlEvent):
         if self.callback_on_select:
             self.callback_on_select(self.video.video_id, e.control.value)
 

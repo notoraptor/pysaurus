@@ -2,11 +2,12 @@ from abc import abstractmethod
 from typing import Any, Optional
 
 import pygame
+
 from other.pyguisaurus.enumerations import MouseButton
 
 
 class Widget:
-    __attributes__ = {"top", "left"}
+    __attributes__ = ()
 
     __slots__ = (
         "_key",
@@ -16,6 +17,8 @@ class Widget:
         "_old_update",
         "_transient_state",
         "_rc",
+        "x",
+        "y",
     )
 
     def __init__(self, key=None):
@@ -25,9 +28,9 @@ class Widget:
         self._old_update = ()
         self._transient_state = {}
         self._surface: Optional[pygame.Surface] = None
-        self._set_attribute("top", 0)
-        self._set_attribute("left", 0)
         self._rc = 0
+        self.x = 0
+        self.y = 0
 
     def _assert_rendered(self):
         if not self._surface:
@@ -35,11 +38,11 @@ class Widget:
 
     @property
     def top(self) -> int:
-        return self._get_attribute("top")
+        return self.y
 
     @property
     def left(self) -> int:
-        return self._get_attribute("left")
+        return self.x
 
     @property
     def bottom(self) -> int:
@@ -50,14 +53,6 @@ class Widget:
     def right(self) -> int:
         self._assert_rendered()
         return self.left + self._surface.get_width() - 1
-
-    @property
-    def x(self) -> int:
-        return self._get_attribute("left")
-
-    @property
-    def y(self) -> int:
-        return self._get_attribute("top")
 
     @property
     def rendered_width(self) -> int:

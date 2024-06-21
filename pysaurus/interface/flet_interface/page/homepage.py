@@ -181,15 +181,15 @@ class Homepage(ft.Column):
     def on_add_folder(self, e):
         self.folder_picker.get_directory_path(dialog_title="Add folder ...")
 
-    def on_database_change(self, e):
+    def on_database_change(self, e: ft.ControlEvent):
         self.database_to_load = e.control.value
         self.button_open_database.disabled = not self.database_to_load
         self.button_open_database.update()
 
-    def on_change_update(self, e):
+    def on_change_update(self, e: ft.ControlEvent):
         self.update_on_load = e.control.value
 
-    def on_change_new_name(self, e):
+    def on_change_new_name(self, e: ft.ControlEvent):
         self.new_name = e.control.value
         self.button_create_database.disabled = not self.new_name.strip()
         self.button_create_database.update()
