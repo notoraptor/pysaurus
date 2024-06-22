@@ -6,9 +6,6 @@ from other.pyguisaurus.container import Container
 from other.pyguisaurus.enumerations import MouseButton
 from other.pyguisaurus.widget import Widget
 
-_DEFAULT_SCROLL_STEP = 120
-_DEFAULT_SCROLL_COLOR = pygame.Color(216, 216, 216)
-
 
 class ScrollView(Container):
     __attributes__ = {
@@ -20,8 +17,7 @@ class ScrollView(Container):
     }
     __size__ = 3
     __slots__ = ("_ctrl", "_hscrollbar", "_vscrollbar")
-    _SCROLL_COLOR = _DEFAULT_SCROLL_COLOR
-    _SCROLL_STEP = _DEFAULT_SCROLL_STEP
+    _SCROLL_STEP = 120
 
     def __init__(
         self,
@@ -205,7 +201,6 @@ class ScrollView(Container):
         step_count=None,
         *,
         scroll_allowed=True,
-        step_size=_DEFAULT_SCROLL_STEP,
     ) -> Tuple[int, bool]:
 
         if content_length <= view_length:
@@ -216,7 +211,7 @@ class ScrollView(Container):
             content_pos = view_length - content_length
 
         if step_count is not None:
-            step = step_size * step_count
+            step = cls._SCROLL_STEP * step_count
             if step > 0:
                 # scroll left
                 content_pos = min(content_pos + step, 0)
@@ -231,6 +226,7 @@ class ScrollView(Container):
 class _HScrollBar(Widget):
     __attributes__ = {"content_length", "content_pos", "thickness", "both"}
     __slots__ = ("on_jump",)
+    _SCROLL_COLOR = pygame.Color(216, 216, 216)
 
     def __init__(self, thickness=18, on_jump=None, **kwargs):
         super().__init__(**kwargs)
@@ -293,7 +289,7 @@ class _HScrollBar(Widget):
             scrollbar_length=(max(0, view_width - thickness) if self.both else None),
         )
         h_scroll = pygame.Surface((h_scroll_width, thickness))
-        h_scroll.fill(_DEFAULT_SCROLL_COLOR)
+        h_scroll.fill(self._SCROLL_COLOR)
         pos = (h_scroll_x, view_height - thickness)
         return h_scroll, pos
 
@@ -351,6 +347,6 @@ class _VScrollBar(_HScrollBar):
             scrollbar_length=(max(0, view_height - thickness) if self.both else None),
         )
         v_scroll = pygame.Surface((thickness, v_scroll_height))
-        v_scroll.fill(_DEFAULT_SCROLL_COLOR)
+        v_scroll.fill(self._SCROLL_COLOR)
         pos = (view_width - thickness, v_scroll_y)
         return v_scroll, pos

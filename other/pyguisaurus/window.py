@@ -8,6 +8,7 @@ from pygame.event import Event
 
 from other.pyguisaurus.enumerations import MouseButton
 from other.pyguisaurus.events import MotionEvent
+from other.pyguisaurus.utils import get_top_mouse_owner, get_top_mouse_wheel_owner
 from other.pyguisaurus.widget import Widget
 
 
@@ -86,7 +87,7 @@ class Window:
     @on_event(pygame.MOUSEMOTION)
     def _on_mouse_motion(self, event: Event):
         # print(event.pos, event.rel, event.buttons)
-        owner = self._get_mouse_owner(*event.pos)
+        owner = get_top_mouse_owner(*event.pos, self.controls)
         if owner:
             m_event = MotionEvent(event)
             if not self._motion:
@@ -100,14 +101,14 @@ class Window:
 
     @on_event(pygame.MOUSEBUTTONDOWN)
     def _on_mouse_button_down(self, event: Event):
-        owner = self._get_mouse_owner(*event.pos)
+        owner = get_top_mouse_owner(*event.pos, self.controls)
         if owner:
             self._down = (owner, event.button)
             owner.handle_mouse_down(MouseButton(event.button), *event.pos)
 
     @on_event(pygame.MOUSEBUTTONUP)
     def _on_mouse_button_up(self, event: Event):
-        owner = self._get_mouse_owner(*event.pos)
+        owner = get_top_mouse_owner(*event.pos, self.controls)
         if owner:
             button = MouseButton(event.button)
             owner.handle_mouse_up(button, *event.pos)
@@ -118,24 +119,8 @@ class Window:
 
     @on_event(pygame.MOUSEWHEEL)
     def _on_mouse_wheel(self, event: Event):
-        owner = self._get_mouse_wheel_owner(*pygame.mouse.get_pos())
+        owner = get_top_mouse_wheel_owner(*pygame.mouse.get_pos(), self.controls)
         if owner:
             shift = pygame.key.get_mods() & pygame.KMOD_SHIFT
             # print(owner, event.x, event.y, shift)
             owner.handle_mouse_wheel(event.x, event.y, shift)
-
-    def _get_mouse_owner(self, x: int, y: int) -> Optional[Widget]:
-        owners = [ctrl.get_mouse_owner(x, y) for ctrl in self.controls]
-        owners = [ctrl for ctrl in owners if ctrl]
-        if owners:
-            (owner,) = owners
-            return owner
-        return None
-
-    def _get_mouse_wheel_owner(self, x: int, y: int) -> Optional[Widget]:
-        owners = [ctrl.get_mouse_wheel_owner(x, y) for ctrl in self.controls]
-        owners = [ctrl for ctrl in owners if ctrl]
-        if owners:
-            (owner,) = owners
-            return owner
-        return None

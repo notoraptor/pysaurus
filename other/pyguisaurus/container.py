@@ -1,5 +1,6 @@
 from typing import Sequence
 
+from other.pyguisaurus.utils import get_top_mouse_owner
 from other.pyguisaurus.widget import Widget
 
 
@@ -24,10 +25,7 @@ class Container(Widget):
 
     def get_mouse_owner(self, x: int, y: int):
         if super().get_mouse_owner(x, y):
-            for ctrl in reversed(self._controls()):
-                owner = ctrl.get_mouse_owner(x, y)
-                if owner is not None:
-                    return owner
+            return get_top_mouse_owner(x, y, self._controls())
         return None
 
     def has_changed(self) -> bool:
