@@ -1,8 +1,9 @@
-from enum import Enum
+from enum import Enum, unique
 
 import pygame
 
 
+@unique
 class MouseButton(Enum):
     BUTTON_LEFT = pygame.BUTTON_LEFT
     BUTTON_MIDDLE = pygame.BUTTON_MIDDLE

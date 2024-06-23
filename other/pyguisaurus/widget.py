@@ -142,14 +142,20 @@ class Widget:
     def handle_mouse_enter(self, event: MotionEvent):
         pass
 
-    def handle_mouse_exit(self, event: MotionEvent):
-        pass
-
     def handle_mouse_over(self, event: MotionEvent):
         pass
 
     def handle_mouse_down(self, button: MouseButton, x: int, y: int):
         pass
 
+    def handle_mouse_down_move(self, event: MotionEvent):
+        pass
+
+    def handle_mouse_down_canceled(self, button: MouseButton, x: int, y: int):
+        pass
+
     def handle_mouse_up(self, button: MouseButton, x: int, y: int):
+        pass
+
+    def handle_mouse_exit(self, event: MotionEvent):
         pass

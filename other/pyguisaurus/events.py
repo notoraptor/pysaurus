@@ -1,4 +1,8 @@
+from typing import List
+
 from pygame.event import Event
+
+from other.pyguisaurus.enumerations import MouseButton
 
 
 class MotionEvent:
@@ -34,3 +38,14 @@ class MotionEvent:
     @property
     def button_right(self) -> int:
         return self._e.buttons[2]
+
+    @property
+    def buttons(self) -> List[MouseButton]:
+        buttons = []
+        if self.button_left:
+            buttons.append(MouseButton.BUTTON_LEFT)
+        if self.button_right:
+            buttons.append(MouseButton.BUTTON_RIGHT)
+        if self.button_middle:
+            buttons.append(MouseButton.BUTTON_MIDDLE)
+        return buttons

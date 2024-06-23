@@ -1,7 +1,7 @@
 import inspect
 import logging
 import pprint
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 import pygame
 from pygame.event import Event
@@ -29,7 +29,9 @@ class Window:
         self.controls: List[Widget] = []
         self._running = True
         self._event_callbacks = {}
-        self._down = ()
+        self._down: Dict[MouseButton, Optional[Widget]] = {
+            button: None for button in MouseButton
+        }
         self._motion: Optional[Widget] = None
 
         self.__collect_event_callbacks()
@@ -84,12 +86,41 @@ class Window:
         print("Quit pygame.")
         self._running = False
 
-    @on_event(pygame.MOUSEMOTION)
-    def _on_mouse_motion(self, event: Event):
-        # print(event.pos, event.rel, event.buttons)
+    @on_event(pygame.MOUSEWHEEL)
+    def _on_mouse_wheel(self, event: Event):
+        owner = get_top_mouse_wheel_owner(*pygame.mouse.get_pos(), self.controls)
+        if owner:
+            shift = pygame.key.get_mods() & pygame.KMOD_SHIFT
+            # print(owner, event.x, event.y, shift)
+            owner.handle_mouse_wheel(event.x, event.y, shift)
+
+    @on_event(pygame.MOUSEBUTTONDOWN)
+    def _on_mouse_button_down(self, event: Event):
         owner = get_top_mouse_owner(*event.pos, self.controls)
         if owner:
-            m_event = MotionEvent(event)
+            button = MouseButton(event.button)
+            self._down[button] = owner
+            owner.handle_mouse_down(button, *event.pos)
+
+    @on_event(pygame.MOUSEBUTTONUP)
+    def _on_mouse_button_up(self, event: Event):
+        button = MouseButton(event.button)
+        owner = get_top_mouse_owner(*event.pos, self.controls)
+        if owner:
+            owner.handle_mouse_up(button, *event.pos)
+            if self._down[button] == owner:
+                owner.handle_click(button)
+            elif self._down[button]:
+                self._down[button].handle_mouse_down_canceled(button, *event.pos)
+        elif self._down[button]:
+            self._down[button].handle_mouse_down_canceled(button, *event.pos)
+        self._down[button] = None
+
+    @on_event(pygame.MOUSEMOTION)
+    def _on_mouse_motion(self, event: Event):
+        m_event = MotionEvent(event)
+        owner = get_top_mouse_owner(*event.pos, self.controls)
+        if owner:
             if not self._motion:
                 owner.handle_mouse_enter(m_event)
             elif self._motion is owner:
@@ -98,29 +129,8 @@ class Window:
                 self._motion.handle_mouse_exit(m_event)
                 owner.handle_mouse_enter(m_event)
             self._motion = owner
-
-    @on_event(pygame.MOUSEBUTTONDOWN)
-    def _on_mouse_button_down(self, event: Event):
-        owner = get_top_mouse_owner(*event.pos, self.controls)
-        if owner:
-            self._down = (owner, event.button)
-            owner.handle_mouse_down(MouseButton(event.button), *event.pos)
-
-    @on_event(pygame.MOUSEBUTTONUP)
-    def _on_mouse_button_up(self, event: Event):
-        owner = get_top_mouse_owner(*event.pos, self.controls)
-        if owner:
-            button = MouseButton(event.button)
-            owner.handle_mouse_up(button, *event.pos)
-            if self._down == (owner, event.button):
-                # print(owner, "click", button)
-                owner.handle_click(button)
-        self._down = ()
-
-    @on_event(pygame.MOUSEWHEEL)
-    def _on_mouse_wheel(self, event: Event):
-        owner = get_top_mouse_wheel_owner(*pygame.mouse.get_pos(), self.controls)
-        if owner:
-            shift = pygame.key.get_mods() & pygame.KMOD_SHIFT
-            # print(owner, event.x, event.y, shift)
-            owner.handle_mouse_wheel(event.x, event.y, shift)
+        elif self._motion:
+            self._motion.handle_mouse_exit(m_event)
+        for button in m_event.buttons:
+            if self._down[button]:
+                self._down[button].handle_mouse_down_move(m_event)

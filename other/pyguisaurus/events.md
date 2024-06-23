@@ -4,6 +4,7 @@ QUIT              none
 MOUSEBUTTONDOWN   pos, button, touch
 MOUSEBUTTONUP     pos, button, touch
 MOUSEWHEEL         which, flipped, x, y, touch, precise_x, precise_y
+MOUSEMOTION       pos, rel, buttons, touch
 ```
 
 # Deprecated
@@ -20,7 +21,6 @@ VIDEOEXPOSE       none
 ```
 KEYDOWN           key, mod, unicode, scancode
 KEYUP             key, mod, unicode, scancode
-MOUSEMOTION       pos, rel, buttons, touch
 JOYAXISMOTION     joy (deprecated), instance_id, axis, value
 JOYBALLMOTION     joy (deprecated), instance_id, ball, rel
 JOYHATMOTION      joy (deprecated), instance_id, hat, value
@@ -104,4 +104,22 @@ while running:
     pygame.display.flip()
     clock.tick(60)
 pygame.quit()
+```
+
+# Mouse event management
+```
+down( dépend d'un button)
+	enter (down move)
+	move (down move)
+	up
+		this widget (up, click)
+		other widget (down canceled)
+	exit (down move)
+
+DOWN	OWNER
+None	None
+None	owner	owner->up
+down	None								down->down_canceled
+owner	owner	owner->up	owner->click
+down	owner	owner->up					down->down_canceled
 ```

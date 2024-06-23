@@ -1,0 +1,121 @@
+from typing import Tuple
+
+import pygame
+
+from other.pyguisaurus.enumerations import MouseButton
+from other.pyguisaurus.events import MotionEvent
+from other.pyguisaurus.widget import Widget
+
+
+class _HScrollBar(Widget):
+    __attributes__ = {"content_length", "content_pos", "thickness", "both"}
+    __slots__ = ("on_jump", "_grabbed")
+    _SCROLL_COLOR = pygame.Color(216, 216, 216)
+
+    def __init__(self, thickness=18, on_jump=None, **kwargs):
+        super().__init__(**kwargs)
+        self._set_attribute("thickness", thickness)
+        self.on_jump = on_jump
+        self._grabbed = ()
+
+    def configure(self, content_length: int, content_pos: int, both: bool):
+        self._set_attribute("content_length", content_length)
+        self._set_attribute("content_pos", content_pos)
+        self._set_attribute("both", both)
+
+    @property
+    def content_length(self) -> int:
+        return self._get_attribute("content_length")
+
+    @property
+    def content_pos(self) -> int:
+        return self._get_attribute("content_pos")
+
+    @property
+    def thickness(self) -> int:
+        return self._get_attribute("thickness")
+
+    @property
+    def both(self) -> bool:
+        return self._get_attribute("both")
+
+    def _bar_length(self) -> int:
+        w = self._prev_scope_width()
+        if self.both:
+            w = max(0, w - self.thickness)
+        return w
+
+    def get_mouse_owner(self, x: int, y: int):
+        if (
+            self._surface
+            and 0 <= x < self._bar_length()
+            and self.y <= y < self.y + self.thickness
+        ):
+            return self
+        return None
+
+    def handle_mouse_down(self, button: MouseButton, x: int, y: int):
+        if self.on_jump and button == MouseButton.BUTTON_LEFT:
+            grip_length = self._surface.get_width()
+            w = self._bar_length()
+            if x < self.x or x >= self.x + grip_length:
+                x = min(x, w - grip_length)
+                self._jump(x, w, grip_length)
+            else:
+                self._grabbed = (x - self.x,)
+
+    def handle_mouse_up(self, button: MouseButton, x: int, y: int):
+        if button == MouseButton.BUTTON_LEFT:
+            self._grabbed = ()
+
+    def handle_mouse_down_canceled(self, button: MouseButton, x: int, y: int):
+        return self.handle_mouse_up(button, x, y)
+
+    def handle_mouse_down_move(self, event: MotionEvent):
+        if self.on_jump and self._grabbed and event.button_left:
+            grab_x = event.x
+            x = grab_x - self._grabbed[0]
+            w = self._bar_length()
+            grip_length = self._surface.get_width()
+            x = min(max(x, 0), w - grip_length)
+            if x != self.x:
+                self._jump(x, w, grip_length)
+
+    def _jump(self, x: int, w: int, grip_length: int):
+        if x == w - grip_length:
+            self.on_jump(self.content_length)
+        else:
+            content_pos = (x * self.content_length) / w
+            self.on_jump(round(content_pos))
+
+    def _compute(
+        self, view_width: int, view_height: int
+    ) -> Tuple[pygame.Surface, Tuple[int, int]]:
+        thickness = self.thickness
+        h_scroll_x, h_scroll_width = self._compute_scroll_metrics(
+            view_width,
+            self.content_length,
+            self.content_pos,
+            scrollbar_length=(max(0, view_width - thickness) if self.both else None),
+        )
+        h_scroll = pygame.Surface((h_scroll_width, thickness))
+        h_scroll.fill(self._SCROLL_COLOR)
+        pos = (h_scroll_x, view_height - thickness)
+        return h_scroll, pos
+
+    @classmethod
+    def _compute_scroll_metrics(
+        cls, view_length, content_length, content_pos, *, scrollbar_length=None
+    ) -> Tuple[int, int]:
+        if scrollbar_length is None:
+            scrollbar_length = view_length
+        scroll_pos = (scrollbar_length * abs(content_pos)) / content_length
+        scroll_length = (scrollbar_length * view_length) / content_length
+        return round(scroll_pos), round(scroll_length)
+
+    def draw(
+        self, window, view_width: int = None, view_height: int = None
+    ) -> pygame.Surface:
+        assert view_width and view_height
+        scroll, (self.x, self.y) = self._compute(view_width, view_height)
+        return scroll
