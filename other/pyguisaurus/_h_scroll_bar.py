@@ -2,8 +2,7 @@ from typing import Tuple
 
 import pygame
 
-from other.pyguisaurus.enumerations import MouseButton
-from other.pyguisaurus.events import MotionEvent
+from other.pyguisaurus.events import MotionEvent, MouseButton
 from other.pyguisaurus.widget import Widget
 
 

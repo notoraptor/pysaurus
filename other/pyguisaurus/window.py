@@ -6,8 +6,7 @@ from typing import Dict, List, Optional
 import pygame
 from pygame.event import Event
 
-from other.pyguisaurus.enumerations import MouseButton
-from other.pyguisaurus.events import MotionEvent
+from other.pyguisaurus.events import MotionEvent, MouseButton
 from other.pyguisaurus.utils import get_top_mouse_owner, get_top_mouse_wheel_owner
 from other.pyguisaurus.widget import Widget
 

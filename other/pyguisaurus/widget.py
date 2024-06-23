@@ -3,8 +3,7 @@ from typing import Any, Optional
 
 import pygame
 
-from other.pyguisaurus.enumerations import MouseButton
-from other.pyguisaurus.events import MotionEvent
+from other.pyguisaurus.events import MotionEvent, MouseButton
 
 
 class Widget:

@@ -95,3 +95,6 @@ class PygameFontFactory:
             x += horizontal_advance_x
 
         return background
+
+
+FONT_FACTORY = PygameFontFactory()
