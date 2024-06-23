@@ -2,6 +2,7 @@ import pygame
 import pygame.freetype
 
 from other.pyguisaurus.containers.scrollview import ScrollView
+from other.pyguisaurus.utils.pygame_font_factory import FONT_FACTORY
 from other.pyguisaurus.widgets.text import Text
 from other.pyguisaurus.window import Window
 
@@ -14,7 +15,7 @@ def main():
     )
 
     pygame.init()
-    text = "小松 未可子 | 🌀 hello world | " + Text.lorem_ipsum()[:10]
+    text = "小松 未可子 | 🌀 hello world | " + FONT_FACTORY.lorem_ipsum()[:10]
     window = Window(title=title)
     window.controls.append(
         ScrollView(Text(text, size=768, wrap=True), expand_children_horizontal=False)

@@ -34,7 +34,7 @@ class Widget:
 
     def _assert_rendered(self):
         if not self._surface:
-            raise RuntimeError("Widget not yet drawn")
+            raise RuntimeError(f"{self} not yet drawn")
 
     @property
     def top(self) -> int:

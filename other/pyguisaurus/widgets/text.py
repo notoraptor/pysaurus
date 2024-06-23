@@ -14,10 +14,6 @@ class Text(Widget):
         self._set_attribute("size", size)
         self._set_attribute("wrap", wrap)
 
-    @classmethod
-    def lorem_ipsum(cls) -> str:
-        return FONT_FACTORY.lorem_ipsum()
-
     @property
     def text(self) -> str:
         return self._get_attribute("text")
