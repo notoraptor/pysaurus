@@ -129,6 +129,10 @@ class LazyVideo(WithSchema):
             self._set("date_entry_opened", self.runtime.mtime)
         return Date(self._get("date_entry_opened"))
 
+    @property
+    def already_opened(self) -> bool:
+        return self.date != self.date_entry_opened
+
     @date_entry_opened.setter
     def date_entry_opened(self, data):
         self._set("date_entry_opened", data)

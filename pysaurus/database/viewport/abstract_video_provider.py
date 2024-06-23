@@ -147,10 +147,13 @@ class AbstractVideoProvider(metaclass=ABCMeta):
     def get_random_found_video_id(self) -> int:
         video_indices = []
         for path in self.get_sources():
+            where = {flag: True for flag in path}
+            where["found"] = True
+            where["already_opened"] = False
             video_indices.extend(
                 video["video_id"]
-                for video in self._database.select_videos_fields(
-                    ["video_id"], *path, found=True
+                for video in self._database.get_videos(
+                    include=["video_id"], where=where
                 )
             )
         if not video_indices:
