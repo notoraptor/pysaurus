@@ -1,7 +1,7 @@
 from typing import Sequence
 
-from other.pyguisaurus.utils import get_top_mouse_owner
-from other.pyguisaurus.widget import Widget
+from other.pyguisaurus.utils.utils import get_top_mouse_owner
+from other.pyguisaurus.widgets.widget import Widget
 
 
 class Container(Widget):

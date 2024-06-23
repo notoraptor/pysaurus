@@ -1,8 +1,8 @@
 import pygame
 import pygame.freetype
 
-from other.pyguisaurus.scrollview import ScrollView
-from other.pyguisaurus.text import Text
+from other.pyguisaurus.containers.scrollview import ScrollView
+from other.pyguisaurus.widgets.text import Text
 from other.pyguisaurus.window import Window
 
 

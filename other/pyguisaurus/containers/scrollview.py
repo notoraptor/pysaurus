@@ -2,10 +2,10 @@ from typing import Tuple
 
 import pygame
 
-from other.pyguisaurus._h_scroll_bar import _HScrollBar
-from other.pyguisaurus._v_scroll_bar import _VScrollBar
-from other.pyguisaurus.container import Container
-from other.pyguisaurus.widget import Widget
+from other.pyguisaurus.containers.container import Container
+from other.pyguisaurus.widgets._h_scroll_bar import _HScrollBar
+from other.pyguisaurus.widgets._v_scroll_bar import _VScrollBar
+from other.pyguisaurus.widgets.widget import Widget
 
 
 class ScrollView(Container):

@@ -1,7 +1,7 @@
 import pygame
 
-from other.pyguisaurus.pygame_font_factory import FONT_FACTORY
-from other.pyguisaurus.widget import Widget
+from other.pyguisaurus.utils.pygame_font_factory import FONT_FACTORY
+from other.pyguisaurus.widgets.widget import Widget
 
 
 class Text(Widget):

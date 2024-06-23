@@ -1,6 +1,6 @@
 from typing import Optional, Sequence
 
-from other.pyguisaurus.widget import Widget
+from other.pyguisaurus.widgets.widget import Widget
 
 
 def get_top_mouse_owner(x: int, y: int, controls: Sequence[Widget]) -> Optional[Widget]:

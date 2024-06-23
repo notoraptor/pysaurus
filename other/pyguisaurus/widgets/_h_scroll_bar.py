@@ -2,8 +2,8 @@ from typing import Tuple
 
 import pygame
 
-from other.pyguisaurus.events import MotionEvent, MouseButton
-from other.pyguisaurus.widget import Widget
+from other.pyguisaurus.utils.events import MotionEvent, MouseButton
+from other.pyguisaurus.widgets.widget import Widget
 
 
 class _HScrollBar(Widget):
