@@ -44,13 +44,25 @@ class ScrollView(Container):
         self._set_attribute("expand_children_horizontal", expand_children_horizontal)
         self._set_attribute("expand_children_vertical", expand_children_vertical)
 
-    def on_jump_x(self, content_x: int):
-        self._content_x = -content_x
-        self._transient_state["redraw"] = True
+    @property
+    def scroll_thickness(self) -> int:
+        return self._get_attribute("scroll_thickness")
 
-    def on_jump_y(self, content_y: int):
-        self._content_y = -content_y
-        self._transient_state["redraw"] = True
+    @property
+    def horizontal_scroll(self) -> bool:
+        return self._get_attribute("horizontal_scroll")
+
+    @property
+    def vertical_scroll(self) -> bool:
+        return self._get_attribute("vertical_scroll")
+
+    @property
+    def expand_children_horizontal(self) -> bool:
+        return self._get_attribute("expand_children_horizontal")
+
+    @property
+    def expand_children_vertical(self) -> bool:
+        return self._get_attribute("expand_children_vertical")
 
     @property
     def control(self) -> Widget:
@@ -72,25 +84,13 @@ class ScrollView(Container):
     def _content_y(self, y: int):
         self._ctrl.y = y
 
-    @property
-    def scroll_thickness(self) -> int:
-        return self._get_attribute("scroll_thickness")
+    def on_jump_x(self, content_x: int):
+        self._content_x = -content_x
+        self._transient_state["redraw"] = True
 
-    @property
-    def horizontal_scroll(self) -> bool:
-        return self._get_attribute("horizontal_scroll")
-
-    @property
-    def vertical_scroll(self) -> bool:
-        return self._get_attribute("vertical_scroll")
-
-    @property
-    def expand_children_horizontal(self) -> bool:
-        return self._get_attribute("expand_children_horizontal")
-
-    @property
-    def expand_children_vertical(self) -> bool:
-        return self._get_attribute("expand_children_vertical")
+    def on_jump_y(self, content_y: int):
+        self._content_y = -content_y
+        self._transient_state["redraw"] = True
 
     def get_mouse_wheel_owner(self, x: int, y: int):
         if Widget.get_mouse_owner(self, x, y):
@@ -115,30 +115,40 @@ class ScrollView(Container):
         else:
             vertical = y
 
-        if self._can_scroll_horizontal(horizontal):
+        if self._can_scroll(
+            horizontal,
+            self.horizontal_scroll,
+            self.rendered_width,
+            self._ctrl.rendered_width,
+            self._content_x,
+        ):
             self._transient_state["h"] = horizontal
-        if self._can_scroll_vertical(vertical):
+        if self._can_scroll(
+            vertical,
+            self.vertical_scroll,
+            self.rendered_height,
+            self._ctrl.rendered_height,
+            self._content_y,
+        ):
             self._transient_state["v"] = vertical
 
-    def _can_scroll_horizontal(self, direction) -> bool:
-        if not self.horizontal_scroll or not direction:
-            return False
-        if direction > 0:
-            # scroll left
-            return self._content_x < 0
-        else:
-            # scroll right
-            return self._content_x > self.rendered_width - self.control.rendered_width
-
-    def _can_scroll_vertical(self, direction) -> bool:
-        if not self.vertical_scroll or not direction:
+    @classmethod
+    def _can_scroll(
+        cls,
+        direction: int,
+        scroll_allowed: bool,
+        view_length: int,
+        content_length: int,
+        content_pos: int,
+    ) -> bool:
+        if not scroll_allowed or not direction:
             return False
         if direction > 0:
             # scroll top
-            return self._content_y < 0
+            return content_pos < 0
         else:
             # scroll bottom
-            return self._content_y > self.rendered_height - self.control.rendered_height
+            return content_pos > view_length - content_length
 
     def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
         c_w_hint = width if self.expand_children_horizontal else None
@@ -164,7 +174,7 @@ class ScrollView(Container):
             content_w,
             self._content_x,
             self._transient_state.get("h"),
-            scroll_allowed=self.horizontal_scroll,
+            self.horizontal_scroll,
         )
 
         self._content_y, has_v_scroll = self._update_content_pos(
@@ -172,7 +182,7 @@ class ScrollView(Container):
             content_h,
             self._content_y,
             self._transient_state.get("v"),
-            scroll_allowed=self.vertical_scroll,
+            self.vertical_scroll,
         )
 
         view = pygame.Surface((width, height), flags=pygame.SRCALPHA)
@@ -195,13 +205,7 @@ class ScrollView(Container):
 
     @classmethod
     def _update_content_pos(
-        cls,
-        view_length,
-        content_length,
-        content_pos,
-        step_count=None,
-        *,
-        scroll_allowed=True,
+        cls, view_length, content_length, content_pos, step_count, scroll_allowed
     ) -> Tuple[int, bool]:
 
         if content_length <= view_length:
