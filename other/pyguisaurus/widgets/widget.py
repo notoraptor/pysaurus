@@ -1,9 +1,10 @@
 from abc import abstractmethod
-from typing import Any, Optional
+from typing import Any, Optional, Tuple
 
 import pygame
 
 from other.pyguisaurus.utils.events import MotionEvent, MouseButton
+from other.pyguisaurus.utils.mouse_ownership import MouseOwnership
 
 
 class Widget:
@@ -17,11 +18,12 @@ class Widget:
         "_old_update",
         "_transient_state",
         "_rc",
+        "_parent",
         "x",
         "y",
     )
 
-    def __init__(self, key=None):
+    def __init__(self, parent=None, key=None):
         self._key = key or id(self)
         self._old = {}
         self._new = {}
@@ -31,6 +33,30 @@ class Widget:
         self._rc = 0
         self.x = 0
         self.y = 0
+
+        self._parent: Optional[Widget] = None
+        if parent:
+            self.with_parent(parent)
+
+    def with_parent(self, parent):
+        self._parent = parent
+        return self
+
+    @property
+    def parent(self):
+        return self._parent
+
+    @property
+    def global_x(self) -> int:
+        if self._parent:
+            return self._parent.global_x + self.x
+        return self.x
+
+    @property
+    def global_y(self) -> int:
+        if self._parent:
+            return self._parent.global_y + self.y
+        return self.y
 
     def _assert_rendered(self):
         if not self._surface:
@@ -64,16 +90,19 @@ class Widget:
         self._assert_rendered()
         return self._surface.get_height()
 
-    def get_mouse_owner(self, x: int, y: int):
+    def get_local_coordinates(self, global_x: int, global_y: int) -> Tuple[int, int]:
+        return global_x - self.x, global_y - self.y
+
+    def get_mouse_owner(self, x: int, y: int) -> Optional[MouseOwnership]:
         if (
             self._surface
             and self.left <= x <= self.right
             and self.top <= y <= self.bottom
         ):
-            return self
+            return MouseOwnership(self, x, y)
         return None
 
-    def get_mouse_wheel_owner(self, x: int, y: int):
+    def get_mouse_wheel_owner(self, x: int, y: int) -> Optional[MouseOwnership]:
         return self.get_mouse_owner(x, y)
 
     def __repr__(self):
@@ -150,11 +179,11 @@ class Widget:
     def handle_mouse_down_move(self, event: MotionEvent):
         pass
 
-    def handle_mouse_down_canceled(self, button: MouseButton, x: int, y: int):
+    def handle_mouse_down_canceled(self, button: MouseButton):
         pass
 
     def handle_mouse_up(self, button: MouseButton, x: int, y: int):
         pass
 
-    def handle_mouse_exit(self, event: MotionEvent):
+    def handle_mouse_exit(self):
         pass

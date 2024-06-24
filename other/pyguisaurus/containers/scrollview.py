@@ -1,8 +1,9 @@
-from typing import Tuple
+from typing import Optional, Tuple
 
 import pygame
 
 from other.pyguisaurus.containers.container import Container
+from other.pyguisaurus.utils.mouse_ownership import MouseOwnership
 from other.pyguisaurus.widgets._h_scroll_bar import _HScrollBar
 from other.pyguisaurus.widgets._v_scroll_bar import _VScrollBar
 from other.pyguisaurus.widgets.widget import Widget
@@ -92,13 +93,14 @@ class ScrollView(Container):
         self._content_y = -content_y
         self._transient_state["redraw"] = True
 
-    def get_mouse_wheel_owner(self, x: int, y: int):
+    def get_mouse_wheel_owner(self, x: int, y: int) -> Optional[MouseOwnership]:
         if Widget.get_mouse_owner(self, x, y):
-            child = self.get_mouse_owner(x, y)
-            if isinstance(child, ScrollView):
+            local_x, local_y = self.get_local_coordinates(x, y)
+            child = self.get_mouse_owner(local_x, local_y)
+            if child and isinstance(child.widget, ScrollView):
                 return child
             else:
-                return self
+                return MouseOwnership(self, x, y)
         return None
 
     def handle_mouse_wheel(self, x: int, y: int, shift: bool):

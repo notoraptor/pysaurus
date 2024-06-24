@@ -1,6 +1,7 @@
-from typing import Sequence
+from typing import Optional, Sequence
 
-from other.pyguisaurus.utils.utils import get_top_mouse_owner
+from other.pyguisaurus.utils.mouse_ownership import MouseOwnership
+from other.pyguisaurus.utils.utils import get_top_mouse_owner, get_top_mouse_wheel_owner
 from other.pyguisaurus.widgets.widget import Widget
 
 
@@ -18,14 +19,21 @@ class Container(Widget):
             raise RuntimeError(
                 f"[{type(self).__name__}] expects exactly {self.__size__} children"
             )
-        self._set_attribute("_controls", controls)
+        self._set_attribute("_controls", [ctrl.with_parent(self) for ctrl in controls])
 
     def _controls(self) -> Sequence[Widget]:
         return self._get_attribute("_controls")
 
-    def get_mouse_owner(self, x: int, y: int):
+    def get_mouse_owner(self, x: int, y: int) -> Optional[MouseOwnership]:
         if super().get_mouse_owner(x, y):
-            return get_top_mouse_owner(x, y, self._controls())
+            local_x, local_y = self.get_local_coordinates(x, y)
+            return get_top_mouse_owner(local_x, local_y, self._controls())
+        return None
+
+    def get_mouse_wheel_owner(self, x: int, y: int) -> Optional[MouseOwnership]:
+        if super().get_mouse_wheel_owner(x, y):
+            local_x, local_y = self.get_local_coordinates(x, y)
+            return get_top_mouse_wheel_owner(local_x, local_y, self._controls())
         return None
 
     def has_changed(self) -> bool:

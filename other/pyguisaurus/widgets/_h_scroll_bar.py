@@ -1,8 +1,9 @@
-from typing import Tuple
+from typing import Optional, Tuple
 
 import pygame
 
 from other.pyguisaurus.utils.events import MotionEvent, MouseButton
+from other.pyguisaurus.utils.mouse_ownership import MouseOwnership
 from other.pyguisaurus.widgets.widget import Widget
 
 
@@ -44,13 +45,13 @@ class _HScrollBar(Widget):
             w = max(0, w - self.thickness)
         return w
 
-    def get_mouse_owner(self, x: int, y: int):
+    def get_mouse_owner(self, x: int, y: int) -> Optional[MouseOwnership]:
         if (
             self._surface
             and 0 <= x < self._bar_length()
             and self.y <= y < self.y + self.thickness
         ):
-            return self
+            return MouseOwnership(self, x, y)
         return None
 
     def handle_mouse_down(self, button: MouseButton, x: int, y: int):
@@ -64,11 +65,11 @@ class _HScrollBar(Widget):
                 self._grabbed = (x - self.x,)
 
     def handle_mouse_up(self, button: MouseButton, x: int, y: int):
+        return self.handle_mouse_down_canceled(button)
+
+    def handle_mouse_down_canceled(self, button: MouseButton):
         if button == MouseButton.BUTTON_LEFT:
             self._grabbed = ()
-
-    def handle_mouse_down_canceled(self, button: MouseButton, x: int, y: int):
-        return self.handle_mouse_up(button, x, y)
 
     def handle_mouse_down_move(self, event: MotionEvent):
         if self.on_jump and self._grabbed and event.button_left:

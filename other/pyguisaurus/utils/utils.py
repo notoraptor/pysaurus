@@ -1,9 +1,12 @@
 from typing import Optional, Sequence
 
+from other.pyguisaurus.utils.mouse_ownership import MouseOwnership
 from other.pyguisaurus.widgets.widget import Widget
 
 
-def get_top_mouse_owner(x: int, y: int, controls: Sequence[Widget]) -> Optional[Widget]:
+def get_top_mouse_owner(
+    x: int, y: int, controls: Sequence[Widget]
+) -> Optional[MouseOwnership]:
     for ctrl in reversed(controls):
         owner = ctrl.get_mouse_owner(x, y)
         if owner is not None:
@@ -13,7 +16,7 @@ def get_top_mouse_owner(x: int, y: int, controls: Sequence[Widget]) -> Optional[
 
 def get_top_mouse_wheel_owner(
     x: int, y: int, controls: Sequence[Widget]
-) -> Optional[Widget]:
+) -> Optional[MouseOwnership]:
     for ctrl in reversed(controls):
         owner = ctrl.get_mouse_wheel_owner(x, y)
         if owner is not None:

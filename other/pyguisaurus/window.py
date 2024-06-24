@@ -91,28 +91,28 @@ class Window:
         if owner:
             shift = pygame.key.get_mods() & pygame.KMOD_SHIFT
             # print(owner, event.x, event.y, shift)
-            owner.handle_mouse_wheel(event.x, event.y, shift)
+            owner.widget.handle_mouse_wheel(event.x, event.y, shift)
 
     @on_event(pygame.MOUSEBUTTONDOWN)
     def _on_mouse_button_down(self, event: Event):
         owner = get_top_mouse_owner(*event.pos, self.controls)
         if owner:
             button = MouseButton(event.button)
-            self._down[button] = owner
-            owner.handle_mouse_down(button, *event.pos)
+            self._down[button] = owner.widget
+            owner.widget.handle_mouse_down(button, owner.rel_x, owner.rel_y)
 
     @on_event(pygame.MOUSEBUTTONUP)
     def _on_mouse_button_up(self, event: Event):
         button = MouseButton(event.button)
         owner = get_top_mouse_owner(*event.pos, self.controls)
         if owner:
-            owner.handle_mouse_up(button, *event.pos)
+            owner.widget.handle_mouse_up(button, owner.rel_x, owner.rel_y)
             if self._down[button] == owner:
-                owner.handle_click(button)
+                owner.widget.handle_click(button)
             elif self._down[button]:
-                self._down[button].handle_mouse_down_canceled(button, *event.pos)
+                self._down[button].handle_mouse_down_canceled(button)
         elif self._down[button]:
-            self._down[button].handle_mouse_down_canceled(button, *event.pos)
+            self._down[button].handle_mouse_down_canceled(button)
         self._down[button] = None
 
     @on_event(pygame.MOUSEMOTION)
@@ -120,16 +120,23 @@ class Window:
         m_event = MotionEvent(event)
         owner = get_top_mouse_owner(*event.pos, self.controls)
         if owner:
+            m_event = MotionEvent(event, owner.rel_x, owner.rel_y)
             if not self._motion:
-                owner.handle_mouse_enter(m_event)
-            elif self._motion is owner:
-                owner.handle_mouse_over(m_event)
+                owner.widget.handle_mouse_enter(m_event)
+            elif self._motion is owner.widget:
+                owner.widget.handle_mouse_over(m_event)
             else:
-                self._motion.handle_mouse_exit(m_event)
-                owner.handle_mouse_enter(m_event)
-            self._motion = owner
+                self._motion.handle_mouse_exit()
+                owner.widget.handle_mouse_enter(m_event)
+            self._motion = owner.widget
         elif self._motion:
-            self._motion.handle_mouse_exit(m_event)
+            self._motion.handle_mouse_exit()
+            self._motion = None
         for button in m_event.buttons:
             if self._down[button]:
-                self._down[button].handle_mouse_down_move(m_event)
+                down = self._down[button]
+                parent_x = 0 if down.parent is None else down.parent.global_x
+                parent_y = 0 if down.parent is None else down.parent.global_y
+                self._down[button].handle_mouse_down_move(
+                    MotionEvent(event, event.pos[0] - parent_x, event.pos[1] - parent_y)
+                )

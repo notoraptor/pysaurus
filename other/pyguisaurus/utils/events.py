@@ -17,18 +17,12 @@ class MouseButton(Enum):
 
 
 class MotionEvent:
-    __slots__ = ("_e",)
+    __slots__ = ("_e", "x", "y")
 
-    def __init__(self, event: Event):
+    def __init__(self, event: Event, x=None, y=None):
         self._e = event
-
-    @property
-    def x(self) -> int:
-        return self._e.pos[0]
-
-    @property
-    def y(self) -> int:
-        return self._e.pos[1]
+        self.x = event.pos[0] if x is None else x
+        self.y = event.pos[1] if y is None else y
 
     @property
     def dx(self) -> int:
