@@ -7,21 +7,63 @@ from other.pyguisaurus.utils.mouse_ownership import MouseOwnership
 from other.pyguisaurus.widgets.widget import Widget
 
 
+class _ScrollBackground(Widget):
+    __attributes__ = {"thickness", "both", "hover"}
+    __slots__ = ("_h",)
+    _COLOR_HOVER = pygame.Color(0, 0, 0, 32)
+    _COLOR_NORMAL = pygame.Color(0, 0, 0, 0)
+
+    def __init__(self, horizontal=True, **kwargs):
+        super().__init__(**kwargs)
+        self._h = horizontal
+
+    def configure(self, thickness: int, both: bool, hover: bool):
+        self._set_attribute("thickness", thickness)
+        self._set_attribute("both", both)
+        self._set_attribute("hover", hover)
+
+    def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
+        assert width and height
+
+        thickness = self._get_attribute("thickness")
+        both = self._get_attribute("both")
+        hover = self._get_attribute("hover")
+
+        if self._h:
+            b_width = max(0, width - thickness) if both else width
+            b_height = thickness
+            self.x, self.y = 0, height - thickness
+        else:
+            b_width = thickness
+            b_height = max(0, height - thickness) if both else height
+            self.x, self.y = width - thickness, 0
+
+        surface = pygame.Surface((b_width, b_height), flags=pygame.SRCALPHA)
+        surface.fill(self._COLOR_HOVER if hover else self._COLOR_NORMAL)
+        return surface
+
+
 class _HScrollBar(Widget):
-    __attributes__ = {"content_length", "content_pos", "thickness", "both"}
-    __slots__ = ("on_jump", "_grabbed")
-    _SCROLL_COLOR = pygame.Color(216, 216, 216)
+    __attributes__ = {"content_length", "content_pos", "thickness", "both", "color"}
+    __slots__ = ("on_jump", "_grabbed", "_hover", "background")
+    __is_horizontal__ = True
+    _SCROLL_COLOR_HOVER = pygame.Color(216, 216, 216, 255)
+    _SCROLL_COLOR = pygame.Color(216, 216, 216, 128)
 
     def __init__(self, thickness=18, on_jump=None, **kwargs):
         super().__init__(**kwargs)
         self._set_attribute("thickness", thickness)
         self.on_jump = on_jump
+        self._hover = False
         self._grabbed = ()
+        self._set_color()
+        self.background = _ScrollBackground(self.__is_horizontal__)
 
     def configure(self, content_length: int, content_pos: int, both: bool):
         self._set_attribute("content_length", content_length)
         self._set_attribute("content_pos", content_pos)
         self._set_attribute("both", both)
+        self.background.configure(self.thickness, both, self._hover or self._grabbed)
 
     @property
     def content_length(self) -> int:
@@ -38,6 +80,18 @@ class _HScrollBar(Widget):
     @property
     def both(self) -> bool:
         return self._get_attribute("both")
+
+    @property
+    def color(self) -> pygame.Color:
+        return self._get_attribute("color")
+
+    def _set_color(self):
+        self._set_attribute(
+            "color",
+            self._SCROLL_COLOR_HOVER
+            if self._hover or self._grabbed
+            else self._SCROLL_COLOR,
+        )
 
     def _bar_length(self) -> int:
         w = self._prev_scope_width()
@@ -63,6 +117,7 @@ class _HScrollBar(Widget):
                 self._jump(x, w, grip_length)
             else:
                 self._grabbed = (x - self.x,)
+                self._set_color()
 
     def handle_mouse_up(self, button: MouseButton, x: int, y: int):
         return self.handle_mouse_down_canceled(button)
@@ -70,6 +125,7 @@ class _HScrollBar(Widget):
     def handle_mouse_down_canceled(self, button: MouseButton):
         if button == MouseButton.BUTTON_LEFT:
             self._grabbed = ()
+            self._set_color()
 
     def handle_mouse_down_move(self, event: MotionEvent):
         if self.on_jump and self._grabbed and event.button_left:
@@ -80,6 +136,14 @@ class _HScrollBar(Widget):
             x = min(max(x, 0), w - grip_length)
             if x != self.x:
                 self._jump(x, w, grip_length)
+
+    def handle_mouse_enter(self, event: MotionEvent):
+        self._hover = True
+        self._set_color()
+
+    def handle_mouse_exit(self):
+        self._hover = False
+        self._set_color()
 
     def _jump(self, x: int, w: int, grip_length: int):
         if x == w - grip_length:
@@ -98,8 +162,8 @@ class _HScrollBar(Widget):
             self.content_pos,
             scrollbar_length=(max(0, view_width - thickness) if self.both else None),
         )
-        h_scroll = pygame.Surface((h_scroll_width, thickness))
-        h_scroll.fill(self._SCROLL_COLOR)
+        h_scroll = pygame.Surface((h_scroll_width, thickness), flags=pygame.SRCALPHA)
+        h_scroll.fill(self.color)
         pos = (h_scroll_x, view_height - thickness)
         return h_scroll, pos
 

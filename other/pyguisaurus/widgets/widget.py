@@ -71,6 +71,10 @@ class Widget:
         return self.x
 
     @property
+    def pos(self) -> Tuple[int, int]:
+        return self.x, self.y
+
+    @property
     def bottom(self) -> int:
         self._assert_rendered()
         return self.top + self._surface.get_height() - 1

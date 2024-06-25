@@ -56,19 +56,33 @@ class Window:
         pygame.display.set_caption(self.title)
         clock = pygame.time.Clock()
 
+        self._render(screen)
+        pygame.event.post(
+            Event(
+                pygame.MOUSEMOTION,
+                pos=pygame.mouse.get_pos(),
+                rel=(0, 0),
+                buttons=(0, 0, 0),
+                touch=False,
+            )
+        )
+
         while self._running:
             for event in pygame.event.get():
                 self.__on_event(event)
-            screen_width, screen_height = screen.get_width(), screen.get_height()
-            screen.fill("white")
-            for control in self.controls:
-                surface = control.render(self, screen_width, screen_height)
-                screen.blit(surface, (control.x, control.y))
-            for surface in self.surfaces:
-                screen.blit(surface, (0, 0))
-            pygame.display.flip()
+            self._render(screen)
             clock.tick(60)
         pygame.quit()
+
+    def _render(self, screen: pygame.Surface):
+        screen_width, screen_height = screen.get_width(), screen.get_height()
+        screen.fill("white")
+        for control in self.controls:
+            surface = control.render(self, screen_width, screen_height)
+            screen.blit(surface, (control.x, control.y))
+        for surface in self.surfaces:
+            screen.blit(surface, (0, 0))
+        pygame.display.flip()
 
     def __on_event(self, event: Event):
         callback = self._event_callbacks.get(event.type)

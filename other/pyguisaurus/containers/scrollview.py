@@ -193,10 +193,14 @@ class ScrollView(Container):
         both = has_h_scroll and has_v_scroll
         if has_h_scroll:
             self._hscrollbar.configure(content_w, self._content_x, both)
+            bg = self._hscrollbar.background.render(window, width, height)
+            view.blit(bg, self._hscrollbar.background.pos)
             h_scroll = self._hscrollbar.render(window, width, height)
             view.blit(h_scroll, (self._hscrollbar.x, self._hscrollbar.y))
         if has_v_scroll:
             self._vscrollbar.configure(content_h, self._content_y, both)
+            bg = self._vscrollbar.background.render(window, width, height)
+            view.blit(bg, self._vscrollbar.background.pos)
             v_scroll = self._vscrollbar.render(window, width, height)
             view.blit(v_scroll, (self._vscrollbar.x, self._vscrollbar.y))
 

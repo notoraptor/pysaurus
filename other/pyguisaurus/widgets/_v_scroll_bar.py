@@ -9,6 +9,7 @@ from other.pyguisaurus.widgets._h_scroll_bar import _HScrollBar
 
 class _VScrollBar(_HScrollBar):
     __slots__ = ()
+    __is_horizontal__ = False
 
     def _bar_length(self) -> int:
         h = self._prev_scope_height()
@@ -62,7 +63,7 @@ class _VScrollBar(_HScrollBar):
             self.content_pos,
             scrollbar_length=(max(0, view_height - thickness) if self.both else None),
         )
-        v_scroll = pygame.Surface((thickness, v_scroll_height))
-        v_scroll.fill(self._SCROLL_COLOR)
+        v_scroll = pygame.Surface((thickness, v_scroll_height), flags=pygame.SRCALPHA)
+        v_scroll.fill(self.color)
         pos = (view_width - thickness, v_scroll_y)
         return v_scroll, pos
