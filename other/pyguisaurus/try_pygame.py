@@ -1,9 +1,11 @@
 import pygame
 import pygame.freetype
 
+import other.pyguisaurus as pg
 from other.pyguisaurus.containers.scrollview import ScrollView
 from other.pyguisaurus.containers.zone import Zone
 from other.pyguisaurus.utils.pygame_font_factory import FONT_FACTORY
+from other.pyguisaurus.widgets.area import Area
 from other.pyguisaurus.widgets.text import Text
 from other.pyguisaurus.window import Window
 
@@ -29,6 +31,8 @@ def main():
             y=100,
         )
     )
+    window.controls.clear()
+    window.controls.append(Area(500, 300, pg.colors.cyan, x=100, y=200))
     window.run()
 
 
