@@ -3,9 +3,9 @@ from typing import Optional, Tuple
 import pygame
 
 from other.pyguisaurus.containers.container import Container
+from other.pyguisaurus.containers.scrollwidget._h_scroll_bar import _HScrollBar
+from other.pyguisaurus.containers.scrollwidget._v_scroll_bar import _VScrollBar
 from other.pyguisaurus.utils.mouse_ownership import MouseOwnership
-from other.pyguisaurus.widgets._h_scroll_bar import _HScrollBar
-from other.pyguisaurus.widgets._v_scroll_bar import _VScrollBar
 from other.pyguisaurus.widgets.widget import Widget
 
 

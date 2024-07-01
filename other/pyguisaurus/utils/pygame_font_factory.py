@@ -65,7 +65,7 @@ class PygameFontFactory:
             font.render_to(background, (x, y), c, size=size)
         return background
 
-    def render_wrap_chars(self, text: str, width: int, height: int) -> pygame.Surface:
+    def _render_wrap_chars(self, text: str, width: int, height: int) -> pygame.Surface:
         color = pygame.Color(255, 255, 0, 128)
 
         background = pygame.Surface((width, height), flags=pygame.SRCALPHA)

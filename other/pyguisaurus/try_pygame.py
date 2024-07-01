@@ -3,7 +3,7 @@ import pygame.freetype
 
 import other.pyguisaurus as pg
 from other.pyguisaurus.containers.column import Column
-from other.pyguisaurus.containers.scrollview import ScrollView
+from other.pyguisaurus.containers.scrollwidget.scrollview import ScrollView
 from other.pyguisaurus.containers.zone import Zone
 from other.pyguisaurus.utils.pygame_font_factory import FONT_FACTORY
 from other.pyguisaurus.widgets.area import Area

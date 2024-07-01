@@ -2,9 +2,9 @@ from typing import Optional, Tuple
 
 import pygame
 
+from other.pyguisaurus.containers.scrollwidget._h_scroll_bar import _HScrollBar
 from other.pyguisaurus.utils.events import MotionEvent, MouseButton
 from other.pyguisaurus.utils.mouse_ownership import MouseOwnership
-from other.pyguisaurus.widgets._h_scroll_bar import _HScrollBar
 
 
 class _VScrollBar(_HScrollBar):
