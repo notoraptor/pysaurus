@@ -1,4 +1,4 @@
-from typing import Optional, Sequence, Tuple
+from typing import List, Optional, Sequence
 
 from other.pyguisaurus.utils.mouse_ownership import MouseOwnership
 from other.pyguisaurus.utils.utils import get_top_mouse_owner, get_top_mouse_wheel_owner
@@ -19,11 +19,9 @@ class Container(Widget):
             raise RuntimeError(
                 f"[{type(self).__name__}] expects exactly {self.__size__} children"
             )
-        self._set_attribute(
-            "_controls", tuple(ctrl.with_parent(self) for ctrl in controls)
-        )
+        self._set_attribute("_controls", [ctrl.with_parent(self) for ctrl in controls])
 
-    def _controls(self) -> Tuple[Widget, ...]:
+    def _controls(self) -> List[Widget]:
         return self._get_attribute("_controls")
 
     def get_mouse_owner(self, x: int, y: int) -> Optional[MouseOwnership]:
@@ -42,3 +40,15 @@ class Container(Widget):
         return super().has_changed() or any(
             ctrl.has_changed() for ctrl in self._controls()
         )
+
+
+class ControlsContainer(Container):
+    __slots__ = ()
+
+    @property
+    def controls(self) -> List[Widget]:
+        return self._controls()
+
+    @controls.setter
+    def controls(self, controls: Sequence[Widget]):
+        self._set_controls(controls)

@@ -1,31 +1,10 @@
-from typing import Iterable, Sequence, Tuple
-
 import pygame
 
-from other.pyguisaurus.containers.container import Container
-from other.pyguisaurus.widgets.widget import Widget
+from other.pyguisaurus.containers.container import ControlsContainer
 
 
-class Column(Container):
+class Column(ControlsContainer):
     __slots__ = ()
-
-    @property
-    def controls(self) -> Tuple[Widget, ...]:
-        return self._controls()
-
-    @controls.setter
-    def controls(self, controls: Sequence[Widget]):
-        self._set_controls(controls)
-
-    def extend(self, controls: Iterable[Widget]):
-        controls = self.controls + tuple(controls)
-        self._set_controls(controls)
-
-    def add(self, *controls: Widget):
-        return self.extend(controls)
-
-    def clear(self):
-        self._set_controls(())
 
     def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
         total_height = 0
