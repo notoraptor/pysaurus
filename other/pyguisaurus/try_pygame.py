@@ -2,6 +2,7 @@ import pygame
 import pygame.freetype
 
 import other.pyguisaurus as pg
+from other.pyguisaurus.containers.column import Column
 from other.pyguisaurus.containers.scrollview import ScrollView
 from other.pyguisaurus.containers.zone import Zone
 from other.pyguisaurus.utils.pygame_font_factory import FONT_FACTORY
@@ -32,7 +33,30 @@ def main():
         )
     )
     window.controls.clear()
-    window.controls.append(Area(500, 300, pg.colors.cyan, x=100, y=200))
+    window.controls.append(
+        Area(500, 300, [pg.colors.blue, pg.colors.red], x=100, y=200)
+    )
+    window.controls.clear()
+    window.controls.append(
+        ScrollView(
+            Column(
+                [
+                    Text("Hello!"),
+                    Text("How are you?"),
+                    Text("I'm fine, thanks, and you?"),
+                    Text("I'm fine, too, thanks !"),
+                    Text("Item 1"),
+                    Text("Item 2"),
+                    Text("Item 3"),
+                    Text("Item 4"),
+                    Text("Item 5"),
+                    Text("Item 6"),
+                    Text("Item 7"),
+                    # Text(FONT_FACTORY.lorem_ipsum()),
+                ]
+            )
+        )
+    )
     window.run()
 
 

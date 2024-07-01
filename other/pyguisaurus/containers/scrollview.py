@@ -87,11 +87,11 @@ class ScrollView(Container):
 
     def on_jump_x(self, content_x: int):
         self._content_x = -content_x
-        self._transient_state["redraw"] = True
+        self.update()
 
     def on_jump_y(self, content_y: int):
         self._content_y = -content_y
-        self._transient_state["redraw"] = True
+        self.update()
 
     def get_mouse_wheel_owner(self, x: int, y: int) -> Optional[MouseOwnership]:
         if Widget.get_mouse_owner(self, x, y):

@@ -5,9 +5,10 @@ import pygame
 
 from other.pyguisaurus.utils.events import MotionEvent, MouseButton
 from other.pyguisaurus.utils.mouse_ownership import MouseOwnership
+from other.pyguisaurus.utils.pygame_utils import PygameUtils
 
 
-class Widget:
+class Widget(PygameUtils):
     __attributes__ = ()
 
     __slots__ = (
@@ -143,6 +144,9 @@ class Widget:
         self._assert_attribute(name)
         return self._new.get(name)
 
+    def update(self):
+        self._transient_state["redraw"] = True
+
     def has_changed(self) -> bool:
         return self._old != self._new or self._transient_state
 
@@ -191,7 +195,3 @@ class Widget:
 
     def handle_mouse_exit(self):
         pass
-
-    @classmethod
-    def _new_surface(cls, width: int, height: int) -> pygame.Surface:
-        return pygame.Surface((width, height), flags=pygame.SRCALPHA)

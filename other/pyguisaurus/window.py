@@ -35,6 +35,9 @@ class Window:
 
         self.__collect_event_callbacks()
 
+    def __repr__(self):
+        return f"[{type(self).__name__}][{id(self)}]"
+
     def __collect_event_callbacks(self):
         for name, method in inspect.getmembers(self, inspect.ismethod):
             if hasattr(method, "event_type"):
@@ -154,3 +157,9 @@ class Window:
                 self._down[button].handle_mouse_down_move(
                     MotionEvent(event, event.pos[0] - parent_x, event.pos[1] - parent_y)
                 )
+
+    @on_event(pygame.WINDOWLEAVE)
+    def _on_window_leave(self, event: Event):
+        if self._motion:
+            self._motion.handle_mouse_exit()
+            self._motion = None
