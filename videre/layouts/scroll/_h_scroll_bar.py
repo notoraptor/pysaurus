@@ -2,7 +2,7 @@ from typing import Optional, Tuple
 
 import pygame
 
-from videre.containers.scrollwidget._scroll_background import _ScrollBackground
+from videre.layouts.scroll._scroll_background import _ScrollBackground
 from videre.utils.events import MotionEvent, MouseButton
 from videre.utils.mouse_ownership import MouseOwnership
 from videre.widgets.widget import Widget

@@ -5,7 +5,7 @@ from videre.utils.utils import get_top_mouse_owner, get_top_mouse_wheel_owner
 from videre.widgets.widget import Widget
 
 
-class Container(Widget):
+class AbstractLayout(Widget):
     __attributes__ = {"_controls"}
     __size__ = None
     __slots__ = ()
@@ -42,7 +42,7 @@ class Container(Widget):
         )
 
 
-class ControlsContainer(Container):
+class AbstractControlsLayout(AbstractLayout):
     __slots__ = ()
 
     @property

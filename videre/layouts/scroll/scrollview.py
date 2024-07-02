@@ -2,14 +2,14 @@ from typing import Optional, Tuple
 
 import pygame
 
-from videre.containers.container import Container
-from videre.containers.scrollwidget._h_scroll_bar import _HScrollBar
-from videre.containers.scrollwidget._v_scroll_bar import _VScrollBar
+from videre.layouts.abstractlayout import AbstractLayout
+from videre.layouts.scroll._h_scroll_bar import _HScrollBar
+from videre.layouts.scroll._v_scroll_bar import _VScrollBar
 from videre.utils.mouse_ownership import MouseOwnership
 from videre.widgets.widget import Widget
 
 
-class ScrollView(Container):
+class ScrollView(AbstractLayout):
     __attributes__ = {
         "scroll_thickness",
         "horizontal_scroll",

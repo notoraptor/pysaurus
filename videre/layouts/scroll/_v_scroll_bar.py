@@ -2,7 +2,7 @@ from typing import Optional, Tuple
 
 import pygame
 
-from videre.containers.scrollwidget._h_scroll_bar import _HScrollBar
+from videre.layouts.scroll._h_scroll_bar import _HScrollBar
 from videre.utils.events import MotionEvent, MouseButton
 from videre.utils.mouse_ownership import MouseOwnership
 

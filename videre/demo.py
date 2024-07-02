@@ -1,9 +1,9 @@
 import pygame
 import pygame.freetype
 
-from videre.containers.column import Column
-from videre.containers.scrollwidget.scrollview import ScrollView
-from videre.containers.zone import Zone
+from videre.layouts.column import Column
+from videre.layouts.scroll.scrollview import ScrollView
+from videre.layouts.zone import Zone
 from videre.utils.pygame_font_factory import FONT_FACTORY
 from videre.widgets.area import Area
 from videre.widgets.button import Button

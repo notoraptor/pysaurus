@@ -3,7 +3,6 @@ from typing import Callable
 import pygame
 import pygame.gfxdraw
 
-import videre
 from videre.utils.pygame_utils import PygameUtils
 
 

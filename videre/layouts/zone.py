@@ -1,10 +1,10 @@
 import pygame
 
-from videre.containers.container import Container
+from videre.layouts.abstractlayout import AbstractLayout
 from videre.widgets.widget import Widget
 
 
-class Zone(Container):
+class Zone(AbstractLayout):
     __attributes__ = {"width", "height"}
     __size__ = 1
     __slots__ = ()

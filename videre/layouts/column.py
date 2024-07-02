@@ -1,9 +1,9 @@
 import pygame
 
-from videre.containers.container import ControlsContainer
+from videre.layouts.abstractlayout import AbstractControlsLayout
 
 
-class Column(ControlsContainer):
+class Column(AbstractControlsLayout):
     __slots__ = ()
 
     def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
