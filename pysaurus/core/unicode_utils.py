@@ -28,6 +28,23 @@ class Unicode:
             yield c
 
     @classmethod
+    def printable(cls, c: str) -> bool:
+        """
+        2024/06/09
+        https://stackoverflow.com/a/68992289
+        """
+        cat = category(c)
+        if cat == "Cc":  # control characters
+            return False
+        if cat == "Co":  # private use
+            return False
+        if cat == "Cs":  # surrogates
+            return False
+        if cat == "Cn":  # non-character or reserved
+            return False
+        return True
+
+    @classmethod
     def block(cls, c: str) -> str:
         return unicodedataplus.block(c)
 

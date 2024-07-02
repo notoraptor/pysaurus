@@ -9,7 +9,7 @@ from other.pyguisaurus.utils.pygame_utils import PygameUtils
 
 
 class Widget(PygameUtils):
-    __attributes__ = ()
+    __attributes__ = ("weight",)
 
     __slots__ = (
         "_key",
@@ -24,10 +24,10 @@ class Widget(PygameUtils):
         "y",
     )
 
-    def __init__(self, parent=None, key=None):
+    def __init__(self, weight=0, parent=None, key=None):
         self._key = key or id(self)
         self._old = {}
-        self._new = {}
+        self._new = {"weight": weight}
         self._old_update = ()
         self._transient_state = {}
         self._surface: Optional[pygame.Surface] = None
@@ -42,6 +42,10 @@ class Widget(PygameUtils):
     def with_parent(self, parent):
         self._parent = parent
         return self
+
+    @property
+    def weight(self) -> int:
+        return self._get_attribute("weight")
 
     @property
     def parent(self):

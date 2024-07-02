@@ -2,7 +2,6 @@ import pprint
 import tkinter
 from tkinter import ttk
 
-from other.supertk.constants import LOREM_IPSUM
 from other.supertk.event import my_event
 from other.supertk.scrollable_frame import ScrollableFrame
 from other.supertk.supertk import (
@@ -15,6 +14,7 @@ from other.supertk.supertk import (
     padding,
 )
 from other.supertk.window import Window
+from pysaurus.core.constants import LOREM_IPSUM
 
 
 class MyApp:
