@@ -1,6 +1,6 @@
 import pygame
 
-from other.pyguisaurus.containers.container import ControlsContainer
+from videre.containers.container import ControlsContainer
 
 
 class Column(ControlsContainer):

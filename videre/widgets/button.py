@@ -3,10 +3,9 @@ from typing import Callable, Optional
 import pygame
 import pygame.gfxdraw
 
-import other.pyguisaurus.colors as Colors
-from other.pyguisaurus.colors import Gradient
-from other.pyguisaurus.utils.pygame_font_factory import FONT_FACTORY
-from other.pyguisaurus.widgets.widget import Widget
+from videre.colors import Gradient, Colors
+from videre.utils.pygame_font_factory import FONT_FACTORY
+from videre.widgets.widget import Widget
 
 _OnClick = Callable[[Widget], None]
 

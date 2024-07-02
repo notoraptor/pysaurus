@@ -1,7 +1,7 @@
 import pygame
 
-from other.pyguisaurus.containers.container import Container
-from other.pyguisaurus.widgets.widget import Widget
+from videre.containers.container import Container
+from videre.widgets.widget import Widget
 
 
 class Zone(Container):

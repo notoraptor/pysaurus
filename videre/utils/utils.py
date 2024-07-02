@@ -1,7 +1,7 @@
 from typing import Optional, Sequence
 
-from other.pyguisaurus.utils.mouse_ownership import MouseOwnership
-from other.pyguisaurus.widgets.widget import Widget
+from videre.utils.mouse_ownership import MouseOwnership
+from videre.widgets.widget import Widget
 
 
 def get_top_mouse_owner(

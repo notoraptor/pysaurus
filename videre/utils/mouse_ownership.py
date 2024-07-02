@@ -8,7 +8,7 @@ class MouseOwnership:
     __slots__ = ("widget", "rel_x", "rel_y")
 
     def __init__(self, widget, rel_x: int, rel_y: int):
-        from other.pyguisaurus.widgets.widget import Widget
+        from videre.widgets.widget import Widget
 
         self.widget: Widget = widget
         self.rel_x = rel_x

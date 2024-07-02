@@ -3,8 +3,8 @@ from typing import Sequence, Union
 import pygame
 import pygame.gfxdraw
 
-from other.pyguisaurus.colors import Gradient
-from other.pyguisaurus.widgets.widget import Widget
+from videre.colors import Gradient
+from videre.widgets.widget import Widget
 
 
 class Area(Widget):

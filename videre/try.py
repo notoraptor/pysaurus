@@ -1,16 +1,16 @@
 import pygame
 import pygame.freetype
 
-import other.pyguisaurus as pg
-from other.pyguisaurus.containers.column import Column
-from other.pyguisaurus.containers.scrollwidget.scrollview import ScrollView
-from other.pyguisaurus.containers.zone import Zone
-from other.pyguisaurus.utils.pygame_font_factory import FONT_FACTORY
-from other.pyguisaurus.widgets.area import Area
-from other.pyguisaurus.widgets.button import Button
-from other.pyguisaurus.widgets.text import Text
-from other.pyguisaurus.window import Window
+from videre.containers.column import Column
+from videre.containers.scrollwidget.scrollview import ScrollView
+from videre.containers.zone import Zone
+from videre.utils.pygame_font_factory import FONT_FACTORY
+from videre.widgets.area import Area
+from videre.widgets.button import Button
+from videre.widgets.text import Text
+from videre.window import Window
 from pysaurus.core.constants import LOREM_IPSUM
+from videre.colors import Colors
 
 
 def main():
@@ -35,9 +35,7 @@ def main():
     )
     if 0 / 1:
         window.controls.clear()
-        window.controls.append(
-            Area(500, 300, [pg.colors.blue, pg.colors.red], x=100, y=200)
-        )
+        window.controls.append(Area(500, 300, [Colors.blue, Colors.red], x=100, y=200))
         window.controls.clear()
         window.controls.append(
             ScrollView(

@@ -6,9 +6,9 @@ from typing import Dict, List, Optional
 import pygame
 from pygame.event import Event
 
-from other.pyguisaurus.utils.events import MotionEvent, MouseButton
-from other.pyguisaurus.utils.utils import get_top_mouse_owner, get_top_mouse_wheel_owner
-from other.pyguisaurus.widgets.widget import Widget
+from videre.utils.events import MotionEvent, MouseButton
+from videre.utils.utils import get_top_mouse_owner, get_top_mouse_wheel_owner
+from videre.widgets.widget import Widget
 
 
 def on_event(event_type: int):

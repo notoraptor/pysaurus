@@ -2,12 +2,10 @@ from typing import Optional, Tuple
 
 import pygame
 
-from other.pyguisaurus.containers.scrollwidget._scroll_background import (
-    _ScrollBackground,
-)
-from other.pyguisaurus.utils.events import MotionEvent, MouseButton
-from other.pyguisaurus.utils.mouse_ownership import MouseOwnership
-from other.pyguisaurus.widgets.widget import Widget
+from videre.containers.scrollwidget._scroll_background import _ScrollBackground
+from videre.utils.events import MotionEvent, MouseButton
+from videre.utils.mouse_ownership import MouseOwnership
+from videre.widgets.widget import Widget
 
 
 class _HScrollBar(Widget):

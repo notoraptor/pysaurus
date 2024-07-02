@@ -1,6 +1,6 @@
 import pygame
 
-from other.pyguisaurus.widgets.widget import Widget
+from videre.widgets.widget import Widget
 
 
 class _ScrollBackground(Widget):
