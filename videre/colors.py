@@ -148,11 +148,8 @@ class Colors:
     whitesmoke = pygame.Color(245, 245, 245)
     yellow = pygame.Color(255, 255, 0)
     yellowgreen = pygame.Color(154, 205, 50)
-
+    # Non-HTML, supplementary colors
     transparent = pygame.Color(0, 0, 0, 0)
-
-
-Color = pygame.Color
 
 
 class Gradient(PygameUtils):
