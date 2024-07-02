@@ -1,3 +1,4 @@
+import os.path
 import pprint
 import tkinter
 from tkinter import ttk
@@ -15,6 +16,7 @@ from other.supertk.supertk import (
 )
 from other.supertk.window import Window
 from pysaurus.core.constants import LOREM_IPSUM
+from pysaurus import package_dir
 
 
 class MyApp:
@@ -105,7 +107,7 @@ def check_label():
         # https://www.geeksforgeeks.org/loading-images-in-tkinter-using-pil/
         # NB: We may need to keep a reference (i.e. not inline open_image())
         # so that label has time to display it.
-        image = open_image("image.jpg")
+        image = open_image(os.path.join(package_dir(), "..", "tests", "image.jpg"))
         ttk.Label(window.root, image=image).grid()
         ttk.Label(window.root, text=LOREM_IPSUM, wraplength=1000).grid()
 
@@ -282,9 +284,9 @@ if __name__ == "__main__":
     print("Tcl/Tk version:", TCL_VERSION)
     print("Tcl/Tk threaded:", TCL_THREADED)
     # check_widget_help()
-    # check_label()
+    check_label()
     # check_combobox()
     # check_grid()
     # check_scrollbar_with_frame()
     # check_menu()
-    check_customtkinter()
+    # check_customtkinter()
