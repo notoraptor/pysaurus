@@ -3,7 +3,7 @@ from typing import Callable, Optional
 import pygame
 import pygame.gfxdraw
 
-from videre.colors import Gradient, Colors
+from videre.colors import Colors, Gradient
 from videre.utils.pygame_font_factory import FONT_FACTORY
 from videre.widgets.widget import Widget
 
@@ -109,6 +109,6 @@ class Button(Widget):
     def _get_text_surface(
         self, width: Optional[int] = None, height: Optional[int] = None
     ) -> pygame.Surface:
-        return FONT_FACTORY.render_wrap_chars_0(
+        return FONT_FACTORY.render_text(
             self.text, width, size=18, height_delta=0, color=Colors.pink, compact=True
         )

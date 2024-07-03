@@ -12,6 +12,8 @@ from typing import Dict, List, Tuple
 
 from fontTools.ttLib import TTFont
 
+from resource.fonts.font_utils import FontUtils
+
 
 def _file_path(base, *path_pieces) -> str:
     path = os.path.abspath(os.path.join(base, *path_pieces))
@@ -87,12 +89,37 @@ def get_fonts() -> Dict[str, str]:
 
 
 class FontProvider:
+    """
+    _block_support:
+    {<unicode block name>: {
+        "font": <font name>,
+        "coverage": <unicode block characters covered by this font>
+    }}
+    """
+
     __slots__ = ("_font_name_to_path", "_block_support")
 
-    def __init__(self):
+    def __init__(self, overrides=()):
         self._font_name_to_path: Dict[str, str] = get_fonts()
         with open(os.path.join(FOLDER_FONT, "block-support.json")) as file:
             self._block_support: Dict[str, Dict] = json.load(file)
+        for font_path in overrides:
+            self.override(font_path)
+
+    def override(self, font_path: str):
+        fu = FontUtils(font_path)
+        overload = {}
+        for block, block_cov in fu.coverage().items():
+            if block in self._block_support:
+                curr_cov = block_cov["coverage"]
+                prev_cov = self._block_support[block]["coverage"]
+                prev_name = self._block_support[block]["font"]
+                if fu.name != prev_name and len(curr_cov) >= len(prev_cov):
+                    overload[block] = block_cov
+        if overload:
+            if fu.name not in self._font_name_to_path:
+                self._font_name_to_path[fu.name] = font_path
+            self._block_support.update(overload)
 
     def get_font_info(self, block: str) -> Tuple[str, str]:
         if block in self._block_support:

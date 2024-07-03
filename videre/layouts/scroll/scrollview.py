@@ -1,3 +1,4 @@
+import logging
 from typing import Optional, Tuple
 
 import pygame
@@ -204,8 +205,8 @@ class ScrollView(AbstractLayout):
             v_scroll = self._vscrollbar.render(window, width, height)
             view.blit(v_scroll, (self._vscrollbar.x, self._vscrollbar.y))
 
-        print(
-            (width, height), (self._content_x, self._content_y), (content_w, content_h)
+        logging.debug(
+            f"{(width, height)} {(self._content_x, self._content_y)} {(content_w, content_h)}"
         )
         return view
 

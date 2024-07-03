@@ -1,28 +1,47 @@
+import logging
+from typing import Callable, Union
+
 import pygame
 import pygame.freetype
 
 from pysaurus.core.unicode_utils import Unicode
-from resource.fonts import FontProvider
+from resource.fonts import FONT_NOTO_REGULAR, FontProvider
 
 
 class PygameFontFactory:
-    def __init__(self, size=24, origin=True):
-        self._prov = FontProvider()
+    def __init__(self, size=14, origin=True, *, overrides=(), use_default_font=False):
+        self._prov = FontProvider(overrides=overrides)
         self.name_to_font = {}
         self.size = size
         self.origin = origin
 
-    def lorem_ipsum(self) -> str:
-        return self._prov.lorem_ipsum()
+        self.get_font: Callable[[str], pygame.freetype.Font] = None
+        self._default_font = None
+        self.set_font_policy(use_default_font=use_default_font)
 
-    def get_font(self, c: str) -> pygame.freetype.Font:
+    @property
+    def provider(self) -> FontProvider:
+        return self._prov
+
+    def set_font_policy(self, *, use_default_font: Union[None, False, str] = False):
+        if use_default_font is not False:
+            self._default_font = pygame.freetype.Font(use_default_font, size=self.size)
+            self._default_font.origin = self.origin
+            self.get_font = self._get_default_font
+        else:
+            self.get_font = self._get_font
+
+    def _get_default_font(self, c: str) -> pygame.freetype.Font:
+        return self._default_font
+
+    def _get_font(self, c: str) -> pygame.freetype.Font:
         block = Unicode.block(c)
         name, path = self._prov.get_font_info(block)
         if name not in self.name_to_font:
             font = pygame.freetype.Font(path, size=self.size)
             font.origin = self.origin
             self.name_to_font[name] = font
-            print(f"[pygame][font](block={block}) {name}")
+            logging.debug(f"[pygame][font](block={block}) {name}")
         return self.name_to_font[name]
 
     def _get_tasks_wrap_chars(
@@ -58,10 +77,10 @@ class PygameFontFactory:
             else:
                 # Still in first line
                 tasks.append([c, font, x, 0])
-                ((_, _, _, _, horizontal_advance_x, _),) = font.get_metrics(
-                    c, size=size
-                )
-                x += horizontal_advance_x
+                # ((_, _, _, _, h_advance_x, _),) = font.get_metrics(c, size=size)
+                (metric,) = font.get_metrics(c, size=size)
+                h_advance_x = metric[4] if metric else bounds.width
+                x += h_advance_x
                 max_y_first_line = max(max_y_first_line, bounds.y)
                 max_dy_first_line = max(max_dy_first_line, bounds.height - bounds.y)
                 cursor += 1
@@ -73,13 +92,9 @@ class PygameFontFactory:
             task[-1] = max_y_first_line
         y = max_y_first_line
         height = y + max_dy_first_line
-        print(
-            "first line height, default",
-            line_spacing,
-            "vs",
-            max_y_first_line,
-            "for",
-            text[: len(tasks)],
+        logging.debug(
+            f"first line height, default {line_spacing} vs {max_y_first_line} "
+            f"for {text[: len(tasks)]}"
         )
 
         while cursor < nb_chars:
@@ -107,7 +122,7 @@ class PygameFontFactory:
 
         return x, height, tasks
 
-    def render_wrap_chars_0(
+    def render_text(
         self,
         text: str,
         width: int = None,
@@ -131,36 +146,5 @@ class PygameFontFactory:
             font.render_to(background, (x, y), c, size=size)
         return background
 
-    def _render_wrap_chars(self, text: str, width: int, height: int) -> pygame.Surface:
-        color = pygame.Color(255, 255, 0, 128)
 
-        background = pygame.Surface((width, height), flags=pygame.SRCALPHA)
-        background.fill(color)
-
-        first_font = self.get_font(text[0])
-        line_spacing = first_font.get_sized_height() + 2
-        x, y = 0, line_spacing
-        for c in text:
-            font = self.get_font(c)
-            bounds = font.get_rect(c)
-            ((_, _, _, _, horizontal_advance_x, _),) = font.get_metrics(c)
-            if x + bounds.width + bounds.x >= width:
-                x, y = 0, y + line_spacing
-
-            # to check that x (as origin) is out of box
-            # x + bounds.width + bounds.x >= width
-            # to check that y (as origin) is out of box
-            # y + bounds.height - bounds.y >= height
-
-            top_left_y = y - bounds.y
-            if top_left_y > height:
-                print("out-of-box")
-                break
-
-            font.render_to(background, (x, y), None)
-            x += horizontal_advance_x
-
-        return background
-
-
-FONT_FACTORY = PygameFontFactory()
+FONT_FACTORY = PygameFontFactory(overrides=[FONT_NOTO_REGULAR.path])

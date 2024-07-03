@@ -1,6 +1,5 @@
-import pygame
-import pygame.freetype
-
+from pysaurus.core.constants import LOREM_IPSUM
+from videre.colors import Colors
 from videre.layouts.column import Column
 from videre.layouts.scroll.scrollview import ScrollView
 from videre.layouts.zone import Zone
@@ -9,21 +8,11 @@ from videre.widgets.area import Area
 from videre.widgets.button import Button
 from videre.widgets.text import Text
 from videre.window import Window
-from pysaurus.core.constants import LOREM_IPSUM
-from videre.colors import Colors
 
 
-def main():
-    title = (
-        "Hello World!! "
-        "αβαβαβαβαβ 【DETROIT】この選択がどう繋がっていくのか！？【#2】 "
-        "모든 인간은 태어날 때부터 자유로우며"
-    )
-
-    pygame.init()
-    text = "小松 未可子 | 🌀 hello world | " + FONT_FACTORY.lorem_ipsum()
+def demo(window: Window):
+    text = "小松 未可子 | 🌀 hello world | " + FONT_FACTORY.provider.lorem_ipsum()
     text = "\t\n" + LOREM_IPSUM
-    window = Window(title=title)
     window.controls.append(
         Zone(
             ScrollView(Text(text, size=32, wrap=True), expand_children_horizontal=True),
@@ -58,6 +47,23 @@ def main():
                 )
             )
         )
+
+
+def demo_scroll_view(window: Window):
+    text = "hello world lorem ipsum"
+    text = "小松 未可子 | 🌀 hello world lorem ipsum | " + FONT_FACTORY.provider.lorem_ipsum()
+    window.controls = [ScrollView(Text(text))]
+
+
+def main():
+    title = (
+        "Hello World!! "
+        "αβαβαβαβαβ 【DETROIT】この選択がどう繋がっていくのか！？【#2】 "
+        "모든 인간은 태어날 때부터 자유로우며"
+    )
+
+    window = Window(title=title)
+    demo_scroll_view(window)
     window.run()
 
 

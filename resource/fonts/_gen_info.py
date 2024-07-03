@@ -7,7 +7,7 @@ from fontTools.ttLib.ttCollection import TTCollection
 
 from pysaurus.core.modules import System
 from pysaurus.core.unicode_utils import Unicode
-from resource.fonts import FOLDER_FONT, FONT_BABEL_STONE, get_fonts
+from resource.fonts import FOLDER_FONT, FONT_BABEL_STONE, FONT_NOTO_REGULAR, get_fonts
 from resource.fonts.font_utils import FontUtils
 
 LEAST_FONT = FONT_BABEL_STONE.name
@@ -177,6 +177,18 @@ def _clean_fonts(coverage: Dict[str, Union[List, Set]], old_mandatory: Set[str])
 
 def _percent(a, b):
     return round(a * 100 / b, 2)
+
+
+def check_font():
+    fu = FontUtils(FONT_NOTO_REGULAR.path)
+    support = fu.coverage()
+    blocks = Unicode.blocks()
+    print("Font:", fu.name)
+    for block, cov in support.items():
+        a = len(cov["coverage"])
+        b = len(blocks[block])
+        assert a <= b, (block, a, b)
+        print(block, a, "/", b, _percent(a, b), "%")
 
 
 def main():

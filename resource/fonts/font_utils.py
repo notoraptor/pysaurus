@@ -1,5 +1,7 @@
 from fontTools.ttLib import TTFont
 
+from pysaurus.core.unicode_utils import Unicode
+
 
 class FontUtils:
     def __init__(self, path: str, font_index=-1, allow_vid=NotImplemented):
@@ -19,3 +21,14 @@ class FontUtils:
 
     def supports(self, character):
         return self._unicode_map.get(ord(character), None)
+
+    def coverage(self) -> dict:
+        blocks = {}
+        for char_int in self._unicode_map.keys():
+            c = chr(char_int)
+            if Unicode.printable(c):
+                blocks.setdefault(Unicode.block(c), []).append(c)
+        return {
+            block: {"font": self.name, "coverage": "".join(covered)}
+            for block, covered in blocks.items()
+        }

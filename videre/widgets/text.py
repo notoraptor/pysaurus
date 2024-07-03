@@ -27,6 +27,6 @@ class Text(Widget):
         return self._get_attribute("wrap")
 
     def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
-        return FONT_FACTORY.render_wrap_chars_0(
+        return FONT_FACTORY.render_text(
             self.text, width if self.wrap else None, self.size
         )
