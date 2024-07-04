@@ -44,19 +44,18 @@ class PygameFontFactory:
             logging.debug(f"[pygame][font](block={block}) {name}")
         return self.name_to_font[name]
 
-    def _get_tasks_wrap_chars(
+    def _get_render_tasks(
         self, text: str, width: int, size: int = 0, height_delta=2, compact=False
     ):
         width = float("inf") if width is None else width
-
-        first_font = self.get_font(text[0])
-        line_spacing = first_font.get_sized_height(size) + height_delta
+        line_spacing = self.get_font(text[0]).get_sized_height(size) + height_delta
         x = 0
 
         tasks = []
         max_y_first_line = 0
         max_dy_first_line = 0
 
+        # Get tasks for first line
         nb_chars = len(text)
         cursor = 0
         while cursor < nb_chars:
@@ -85,28 +84,31 @@ class PygameFontFactory:
                 max_dy_first_line = max(max_dy_first_line, bounds.height - bounds.y)
                 cursor += 1
 
+        # Set first line height
         if not compact:
             max_y_first_line = line_spacing
-
+        # Set y for first line characters
         for task in tasks:
             task[-1] = max_y_first_line
+        # Set y for next characters
         y = max_y_first_line
+        # Initialize render height
         height = y + max_dy_first_line
         logging.debug(
             f"first line height, default {line_spacing} vs {max_y_first_line} "
             f"for {text[: len(tasks)]}"
         )
 
+        # Get tasks for next characters
         while cursor < nb_chars:
             c = text[cursor]
+            cursor += 1
             if c == "\n":
                 # Line ends
                 x, y = 0, y + line_spacing
-                cursor += 1
                 continue
             if not Unicode.printable(c):
                 # Skip
-                cursor += 1
                 continue
 
             font = self.get_font(c)
@@ -115,10 +117,11 @@ class PygameFontFactory:
                 x, y = 0, y + line_spacing
 
             tasks.append([c, font, x, y])
-            ((_, _, _, _, horizontal_advance_x, _),) = font.get_metrics(c, size=size)
-            x += horizontal_advance_x
+            # ((_, _, _, _, h_advance_x, _),) = font.get_metrics(c, size=size)
+            (metric,) = font.get_metrics(c, size=size)
+            h_advance_x = metric[4] if metric else bounds.width
+            x += h_advance_x
             height = max(height, y + bounds.height - bounds.y)
-            cursor += 1
 
         return x, height, tasks
 
@@ -129,10 +132,10 @@ class PygameFontFactory:
         size: int = 0,
         height_delta=2,
         compact=False,
-        color=None,
+        color: pygame.Color = None,
     ) -> pygame.Surface:
         size = size or self.size
-        new_width, height, tasks = self._get_tasks_wrap_chars(
+        new_width, height, tasks = self._get_render_tasks(
             text, width, size, height_delta=height_delta, compact=compact
         )
         if width is None:

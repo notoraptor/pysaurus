@@ -51,8 +51,11 @@ def demo(window: Window):
 
 def demo_scroll_view(window: Window):
     text = "hello world lorem ipsum"
-    text = "小松 未可子 | 🌀 hello world lorem ipsum | " + FONT_FACTORY.provider.lorem_ipsum()
-    window.controls = [ScrollView(Text(text))]
+    text = "小松 未可子 | 🌀 hello world lorem ipsum | " + FONT_FACTORY.provider.lorem_ipsum(
+        8
+    )
+    # text = LOREM_IPSUM
+    window.controls = [ScrollView(Text(text, size=24), expand_children_horizontal=True)]
 
 
 def main():

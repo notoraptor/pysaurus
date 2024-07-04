@@ -130,9 +130,10 @@ class FontProvider:
             path = FONT_NOTO_REGULAR.path
         return name, path
 
-    def lorem_ipsum(self) -> str:
+    def lorem_ipsum(self, block_length=1) -> str:
         text = " ".join(
-            support["coverage"][0] for support in self._block_support.values()
+            support["coverage"][:block_length]
+            for support in self._block_support.values()
         )
         # print(len(text), text)
         return text
