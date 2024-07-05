@@ -16,6 +16,13 @@ class MouseButton(Enum):
     BUTTON_X2 = pygame.BUTTON_X2
 
 
+class TextWrap(Enum):
+    NONE = 0
+    CHAR = 1
+    WORD = 2
+    WORD_THEN_CHAR = 3
+
+
 class MotionEvent:
     __slots__ = ("_e", "x", "y")
 

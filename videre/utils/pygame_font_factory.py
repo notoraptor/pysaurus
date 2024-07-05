@@ -57,9 +57,9 @@ class PygameFontFactory:
         max_dy_first_line = 0
 
         # Get tasks for first line
-        nb_chars = len(text)
+        nb_pieces = len(text)
         cursor = 0
-        while cursor < nb_chars:
+        while cursor < nb_pieces:
             c = text[cursor]
             if c == "\n":
                 # First line ends
@@ -106,7 +106,7 @@ class PygameFontFactory:
         )
 
         # Get tasks for next characters
-        while cursor < nb_chars:
+        while cursor < nb_pieces:
             c = text[cursor]
             cursor += 1
             if c == "\n":
@@ -157,6 +157,97 @@ class PygameFontFactory:
             background.fill(color)
         for c, font, x, y in tasks:
             font.render_to(background, (x, y), c, size=size)
+        return background
+
+    def render_text_wrap_words(
+        self,
+        text: str,
+        width: int = None,
+        size: int = 0,
+        height_delta=2,
+        compact=False,
+        color: pygame.Color = None,
+    ) -> pygame.Surface:
+        if width is None:
+            return self.render_text(text, width, size, height_delta, compact, color)
+
+        words = []
+        for i, line in enumerate(text.split("\n")):
+            if i > 0:
+                words.append("\n")
+            words.extend(word for word in line.split(" ") if word)
+
+        size = size or self.size
+        first_font = self.get_font(text[0])
+        space_bounds = first_font.get_rect(" ", size=size)
+        line_spacing = first_font.get_sized_height(size) + height_delta
+        x = 0
+        new_width = 0
+
+        tasks = []
+        max_y_first_line = 0
+        max_dy_first_line = 0
+
+        nb_pieces = len(words)
+        cursor = 0
+        # Get tasks for first line
+        while cursor < nb_pieces:
+            word = words[cursor]
+            word_w, word_h, word_tasks = self._get_render_tasks(
+                word, None, size, height_delta, compact
+            )
+            if word_h and not word_w:
+                break
+            if x + word_w > width and (word_w <= width or x > 0):
+                break
+            else:
+                for task in word_tasks:
+                    task[-2] += x
+                tasks.extend(word_tasks)
+                new_width = x + word_w
+                x += word_w + space_bounds.width
+                word_y = word_tasks[0][-1] if word_tasks else word_h
+                max_y_first_line = max(max_y_first_line, word_y)
+                max_dy_first_line = max(max_dy_first_line, word_h - word_y)
+                cursor += 1
+
+        # Get first line height
+        if compact and max_y_first_line:
+            max_y_first_line += height_delta
+        else:
+            max_y_first_line = line_spacing
+        for task in tasks:
+            task[-1] = max_y_first_line
+        y = max_y_first_line
+        height = y + max_dy_first_line
+
+        while cursor < nb_pieces:
+            word = words[cursor]
+            cursor += 1
+            word_w, word_h, word_tasks = self._get_render_tasks(
+                word, None, size, height_delta
+            )
+            if word_h and not word_w:
+                x, y = 0, y + line_spacing
+                continue
+            word_y = word_tasks[0][-1] if word_tasks else word_h
+            if x + word_w > width and (word_w <= width or x > 0):
+                x, y = 0, y + line_spacing
+            for task in word_tasks:
+                task[-2] += x
+                task[-1] = y
+            tasks.extend(word_tasks)
+            new_width = max(new_width, x + word_w)
+            x += word_w + space_bounds.width
+            height = max(height, y + word_h - word_y)
+
+        width = min(width, new_width)
+        background = pygame.Surface((width, height), flags=pygame.SRCALPHA)
+        if color is not None:
+            background.fill(color)
+        for c, font, cx, cy in tasks:
+            font.render_to(background, (cx, cy), c, size=size)
+        print(width, height)
         return background
 
 
