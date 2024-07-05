@@ -71,7 +71,9 @@ class PygameFontFactory:
 
             font = self.get_font(c)
             bounds = font.get_rect(c, size=size)
-            if x + bounds.width + bounds.x > width:
+            if x + bounds.width + bounds.x > width and (
+                bounds.x + bounds.width <= width or x > 0
+            ):
                 # First line ends
                 break
             else:
@@ -87,7 +89,7 @@ class PygameFontFactory:
                 cursor += 1
 
         # Set first line height
-        if compact:
+        if compact and max_y_first_line:
             max_y_first_line += height_delta
         else:
             max_y_first_line = line_spacing
@@ -117,7 +119,9 @@ class PygameFontFactory:
 
             font = self.get_font(c)
             bounds = font.get_rect(c, size=size)
-            if x + bounds.width + bounds.x > width:
+            if x + bounds.width + bounds.x > width and (
+                bounds.x + bounds.width <= width or x > 0
+            ):
                 x, y = 0, y + line_spacing
 
             tasks.append([c, font, x, y])
@@ -146,7 +150,8 @@ class PygameFontFactory:
         if width is None:
             width = new_width
         else:
-            assert new_width <= width, (new_width, width)
+            # assert new_width <= width, (new_width, width)
+            width = min(width, new_width)
         background = pygame.Surface((width, height), flags=pygame.SRCALPHA)
         if color is not None:
             background.fill(color)
