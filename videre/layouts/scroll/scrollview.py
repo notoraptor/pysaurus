@@ -15,8 +15,8 @@ class ScrollView(AbstractLayout):
         "scroll_thickness",
         "horizontal_scroll",
         "vertical_scroll",
-        "expand_children_horizontal",
-        "expand_children_vertical",
+        "wrap_horizontal",
+        "wrap_vertical",
     }
     __size__ = 3
     __slots__ = ("_ctrl", "_hscrollbar", "_vscrollbar")
@@ -28,8 +28,8 @@ class ScrollView(AbstractLayout):
         scroll_thickness=18,
         horizontal_scroll=True,
         vertical_scroll=True,
-        expand_children_horizontal=False,
-        expand_children_vertical=False,
+        wrap_horizontal=False,
+        wrap_vertical=False,
         **kwargs,
     ):
         self._ctrl = control
@@ -43,8 +43,8 @@ class ScrollView(AbstractLayout):
         self._set_attribute("scroll_thickness", scroll_thickness)
         self._set_attribute("horizontal_scroll", horizontal_scroll)
         self._set_attribute("vertical_scroll", vertical_scroll)
-        self._set_attribute("expand_children_horizontal", expand_children_horizontal)
-        self._set_attribute("expand_children_vertical", expand_children_vertical)
+        self._set_attribute("wrap_horizontal", wrap_horizontal)
+        self._set_attribute("wrap_vertical", wrap_vertical)
 
     @property
     def scroll_thickness(self) -> int:
@@ -59,12 +59,12 @@ class ScrollView(AbstractLayout):
         return self._get_attribute("vertical_scroll")
 
     @property
-    def expand_children_horizontal(self) -> bool:
-        return self._get_attribute("expand_children_horizontal")
+    def wrap_horizontal(self) -> bool:
+        return self._get_attribute("wrap_horizontal")
 
     @property
-    def expand_children_vertical(self) -> bool:
-        return self._get_attribute("expand_children_vertical")
+    def wrap_vertical(self) -> bool:
+        return self._get_attribute("wrap_vertical")
 
     @property
     def control(self) -> Widget:
@@ -154,8 +154,8 @@ class ScrollView(AbstractLayout):
             return content_pos > view_length - content_length
 
     def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
-        c_w_hint = width if self.expand_children_horizontal else None
-        c_h_hint = height if self.expand_children_vertical else None
+        c_w_hint = width if self.wrap_horizontal else None
+        c_h_hint = height if self.wrap_vertical else None
         content = self.control.render(window, c_w_hint, c_h_hint)
         content_w, content_h = content.get_width(), content.get_height()
 

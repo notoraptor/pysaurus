@@ -28,5 +28,5 @@ class Text(Widget):
 
     def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
         return FONT_FACTORY.render_text(
-            self.text, width if self.wrap else None, self.size
+            self.text, width if self.wrap else None, self.size, compact=True
         )

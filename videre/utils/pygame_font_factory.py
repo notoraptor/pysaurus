@@ -50,6 +50,7 @@ class PygameFontFactory:
         width = float("inf") if width is None else width
         line_spacing = self.get_font(text[0]).get_sized_height(size) + height_delta
         x = 0
+        new_width = 0
 
         tasks = []
         max_y_first_line = 0
@@ -70,12 +71,13 @@ class PygameFontFactory:
 
             font = self.get_font(c)
             bounds = font.get_rect(c, size=size)
-            if x + bounds.width + bounds.x >= width:
+            if x + bounds.width + bounds.x > width:
                 # First line ends
                 break
             else:
                 # Still in first line
                 tasks.append([c, font, x, 0])
+                new_width = x + bounds.width + bounds.x
                 # ((_, _, _, _, h_advance_x, _),) = font.get_metrics(c, size=size)
                 (metric,) = font.get_metrics(c, size=size)
                 h_advance_x = metric[4] if metric else bounds.width
@@ -85,7 +87,9 @@ class PygameFontFactory:
                 cursor += 1
 
         # Set first line height
-        if not compact:
+        if compact:
+            max_y_first_line += height_delta
+        else:
             max_y_first_line = line_spacing
         # Set y for first line characters
         for task in tasks:
@@ -113,17 +117,18 @@ class PygameFontFactory:
 
             font = self.get_font(c)
             bounds = font.get_rect(c, size=size)
-            if x + bounds.width + bounds.x >= width:
+            if x + bounds.width + bounds.x > width:
                 x, y = 0, y + line_spacing
 
             tasks.append([c, font, x, y])
+            new_width = max(new_width, x + bounds.width + bounds.x)
             # ((_, _, _, _, h_advance_x, _),) = font.get_metrics(c, size=size)
             (metric,) = font.get_metrics(c, size=size)
             h_advance_x = metric[4] if metric else bounds.width
             x += h_advance_x
             height = max(height, y + bounds.height - bounds.y)
 
-        return x, height, tasks
+        return new_width, height, tasks
 
     def render_text(
         self,
@@ -141,7 +146,7 @@ class PygameFontFactory:
         if width is None:
             width = new_width
         else:
-            assert new_width <= width
+            assert new_width <= width, (new_width, width)
         background = pygame.Surface((width, height), flags=pygame.SRCALPHA)
         if color is not None:
             background.fill(color)
