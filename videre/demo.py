@@ -1,3 +1,4 @@
+import videre
 from pysaurus.core.constants import LOREM_IPSUM
 from videre.colors import Colors
 from videre.layouts.column import Column
@@ -15,7 +16,7 @@ def demo(window: Window):
     text = "\t\n" + LOREM_IPSUM
     window.controls.append(
         Zone(
-            ScrollView(Text(text, size=32, wrap=True), expand_children_horizontal=True),
+            ScrollView(Text(text, size=32, wrap=True), wrap_horizontal=True),
             width=800,
             height=400,
             # x=100,
@@ -52,10 +53,20 @@ def demo(window: Window):
 def demo_scroll_view(window: Window):
     text = "hello world lorem ipsum"
     text = "小松 未可子 | 🌀 hello world lorem ipsum | " + FONT_FACTORY.provider.lorem_ipsum(
-        8
+        8, "\n"
     )
-    # text = LOREM_IPSUM
-    window.controls = [ScrollView(Text(text, size=24), expand_children_horizontal=True)]
+    text = LOREM_IPSUM
+    window.controls = [
+        ScrollView(
+            Text(
+                f"\t\v\t\b {text}",
+                size=24,
+                wrap=videre.TextWrap.WORD,
+                align=videre.TextAlign.LEFT,
+            ),
+            wrap_horizontal=True,
+        )
+    ]
 
 
 def main():
