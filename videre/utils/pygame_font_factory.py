@@ -7,7 +7,7 @@ import pygame.freetype
 
 from pysaurus.core.unicode_utils import Unicode
 from resource.fonts import FONT_NOTO_REGULAR, FontProvider
-from videre.utils.events import TextAlign
+from videre import TextAlign
 
 
 class WordTask(namedtuple("WordTask", ("w", "h", "tasks"))):
@@ -46,7 +46,7 @@ class TaskLines:
                 size = wt_n.tasks[0][-2] + wt_n.w
                 remaining = width - size
                 if remaining:
-                    remaining //= 2
+                    remaining /= 2
                     for wt in line:
                         for task in wt.tasks:
                             task[-2] += remaining
