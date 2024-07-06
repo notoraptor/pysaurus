@@ -1,19 +1,22 @@
 import pygame
 
-from videre.utils.events import TextWrap
+from videre.utils.events import TextAlign, TextWrap
 from videre.utils.pygame_font_factory import FONT_FACTORY
 from videre.widgets.widget import Widget
 
 
 class Text(Widget):
-    __attributes__ = {"text", "size", "wrap"}
+    __attributes__ = {"text", "size", "wrap", "align"}
     __slots__ = ()
 
-    def __init__(self, text="", size=0, wrap=TextWrap.NONE, **kwargs):
+    def __init__(
+        self, text="", size=0, wrap=TextWrap.NONE, align=TextAlign.LEFT, **kwargs
+    ):
         super().__init__(**kwargs)
         self._set_attribute("text", text)
         self._set_attribute("size", size)
         self._set_attribute("wrap", wrap)
+        self._set_attribute("align", align)
 
     @property
     def text(self) -> str:
@@ -27,6 +30,10 @@ class Text(Widget):
     def wrap(self) -> TextWrap:
         return self._get_attribute("wrap")
 
+    @property
+    def align(self) -> TextAlign:
+        return self._get_attribute("align")
+
     def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
         wrap = self.wrap
         if wrap == TextWrap.NONE:
@@ -35,5 +42,5 @@ class Text(Widget):
             return FONT_FACTORY.render_text(self.text, width, self.size, compact=True)
         else:
             return FONT_FACTORY.render_text_wrap_words(
-                self.text, width, self.size, compact=True
+                self.text, width, self.size, align=self.align, compact=True
             )

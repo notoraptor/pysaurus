@@ -23,6 +23,13 @@ class TextWrap(Enum):
     WORD_THEN_CHAR = 3
 
 
+class TextAlign(Enum):
+    LEFT = 0
+    CENTER = 1
+    RIGHT = 2
+    JUSTIFY = 3
+
+
 class MotionEvent:
     __slots__ = ("_e", "x", "y")
 

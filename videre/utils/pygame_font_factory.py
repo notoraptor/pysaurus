@@ -1,11 +1,92 @@
 import logging
-from typing import Callable, Union
+from collections import namedtuple
+from typing import Callable, Iterable, List, Optional, Tuple, Union
 
 import pygame
 import pygame.freetype
 
 from pysaurus.core.unicode_utils import Unicode
 from resource.fonts import FONT_NOTO_REGULAR, FontProvider
+from videre.utils.events import TextAlign
+
+
+class WordTask(namedtuple("WordTask", ("w", "h", "tasks"))):
+    __slots__ = ()
+    w: int
+    h: int
+    tasks: List[Tuple[str, pygame.freetype.Font, int, int]]
+
+
+class TaskLines:
+    __slots__ = ("_lines",)
+
+    def __init__(self):
+        self._lines: List[List[WordTask]] = [[]]
+
+    def new_line(self):
+        self._lines.append([])
+
+    def append(self, w, h, tasks):
+        self._lines[-1].append(WordTask(w, h, tasks))
+
+    def get_line(self, index=0) -> Iterable[WordTask]:
+        return iter(self._lines[index])
+
+    def __iter__(self):
+        return (task for line in self._lines for tg in line for task in tg.tasks)
+
+    def align_center(self, width: int):
+        for line in self._lines:
+            if line:
+                assert line[0].tasks[0][-2] == 0
+                wt_n = line[-1]
+                size = wt_n.tasks[0][-2] + wt_n.w
+                remaining = width - size
+                if remaining:
+                    remaining //= 2
+                    for wt in line:
+                        for task in wt.tasks:
+                            task[-2] += remaining
+
+    def align_right(self, width: int):
+        for line in self._lines:
+            if line:
+                assert line[0].tasks[0][-2] == 0
+                wt_n = line[-1]
+                size = wt_n.tasks[0][-2] + wt_n.w
+                remaining = width - size
+                if remaining:
+                    for wt in line:
+                        for task in wt.tasks:
+                            task[-2] += remaining
+
+    def justify(self, width: int):
+        paragraphs = []
+        p = []
+        for line in self._lines:
+            if line:
+                p.append(line)
+            elif p:
+                paragraphs.append(p)
+                p = []
+        if p:
+            paragraphs.append(p)
+
+        for paragraph in paragraphs:
+            for i in range(len(paragraph) - 1):
+                line = paragraph[i]
+                if len(line) > 1:
+                    assert line[0].tasks[0][-2] == 0
+                    remaining = width - sum(wt.w for wt in line)
+                    if remaining:
+                        interval = remaining / (len(line) - 1)
+                        x = line[0].w + interval
+                        for j in range(1, len(line)):
+                            wt = line[j]
+                            x0 = wt.tasks[0][-2]
+                            for task in wt.tasks:
+                                task[-2] = task[-2] - x0 + x
+                            x += wt.w + interval
 
 
 class PygameFontFactory:
@@ -15,7 +96,7 @@ class PygameFontFactory:
         self.size = size
         self.origin = origin
 
-        self.get_font: Callable[[str], pygame.freetype.Font] = None
+        self.get_font: Callable[[str], pygame.freetype.Font] = self._get_font
         self._default_font = None
         self.set_font_policy(use_default_font=use_default_font)
 
@@ -45,7 +126,12 @@ class PygameFontFactory:
         return self.name_to_font[name]
 
     def _get_render_tasks(
-        self, text: str, width: int, size: int = 0, height_delta=2, compact=False
+        self,
+        text: str,
+        width: Optional[int],
+        size: int = 0,
+        height_delta=2,
+        compact=False,
     ):
         width = float("inf") if width is None else width
         line_spacing = self.get_font(text[0]).get_sized_height(size) + height_delta
@@ -139,6 +225,7 @@ class PygameFontFactory:
         text: str,
         width: int = None,
         size: int = 0,
+        *,
         height_delta=2,
         compact=False,
         color: pygame.Color = None,
@@ -167,9 +254,17 @@ class PygameFontFactory:
         height_delta=2,
         compact=False,
         color: pygame.Color = None,
+        align=TextAlign.LEFT,
     ) -> pygame.Surface:
         if width is None:
-            return self.render_text(text, width, size, height_delta, compact, color)
+            return self.render_text(
+                text,
+                width,
+                size,
+                height_delta=height_delta,
+                compact=compact,
+                color=color,
+            )
 
         words = []
         for i, line in enumerate(text.split("\n")):
@@ -184,7 +279,7 @@ class PygameFontFactory:
         x = 0
         new_width = 0
 
-        tasks = []
+        tl = TaskLines()
         max_y_first_line = 0
         max_dy_first_line = 0
 
@@ -203,7 +298,7 @@ class PygameFontFactory:
             else:
                 for task in word_tasks:
                     task[-2] += x
-                tasks.extend(word_tasks)
+                tl.append(word_w, word_h, word_tasks)
                 new_width = x + word_w
                 x += word_w + space_bounds.width
                 word_y = word_tasks[0][-1] if word_tasks else word_h
@@ -216,8 +311,9 @@ class PygameFontFactory:
             max_y_first_line += height_delta
         else:
             max_y_first_line = line_spacing
-        for task in tasks:
-            task[-1] = max_y_first_line
+        for word_task in tl.get_line():
+            for task in word_task.tasks:
+                task[-1] = max_y_first_line
         y = max_y_first_line
         height = y + max_dy_first_line
 
@@ -229,25 +325,35 @@ class PygameFontFactory:
             )
             if word_h and not word_w:
                 x, y = 0, y + line_spacing
+                height = max(height, y)
+                tl.new_line()
                 continue
             word_y = word_tasks[0][-1] if word_tasks else word_h
             if x + word_w > width and (word_w <= width or x > 0):
                 x, y = 0, y + line_spacing
+                tl.new_line()
             for task in word_tasks:
                 task[-2] += x
                 task[-1] = y
-            tasks.extend(word_tasks)
+            tl.append(word_w, word_h, word_tasks)
             new_width = max(new_width, x + word_w)
             x += word_w + space_bounds.width
             height = max(height, y + word_h - word_y)
 
-        width = min(width, new_width)
-        background = pygame.Surface((width, height), flags=pygame.SRCALPHA)
+        background = pygame.Surface((new_width, height), flags=pygame.SRCALPHA)
         if color is not None:
             background.fill(color)
-        for c, font, cx, cy in tasks:
+
+        if align != TextAlign.LEFT:
+            if align == TextAlign.CENTER:
+                tl.align_center(new_width)
+            elif align == TextAlign.RIGHT:
+                tl.align_right(new_width)
+            elif align == TextAlign.JUSTIFY:
+                tl.justify(new_width)
+
+        for c, font, cx, cy in tl:
             font.render_to(background, (cx, cy), c, size=size)
-        print(width, height)
         return background
 
 
