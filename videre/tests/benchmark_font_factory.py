@@ -20,12 +20,29 @@ def benchmark(batch=200):
     text = LOREM_IPSUM
     print("Text length:", len(text), file=sys.stderr)
 
-    ff_render_text = functools.partial(ff.render_text, width=None, compact=True)
+    ff_render_text = functools.partial(ff._get_render_tasks, width=None, compact=True)
     with PerfCounter() as pc:
         for _ in trange(batch):
             ff_render_text(text)
-    print("Time:", Duration(pc.nanoseconds / 1000))
-    print("Unit:", Duration(pc.nanoseconds / 1000 / batch))
+    print(
+        "Time:",
+        Duration(pc.nanoseconds / 1000),
+        "Unit:",
+        Duration(pc.nanoseconds / 1000 / batch),
+        file=sys.stderr,
+    )
+
+    ff_render_text = functools.partial(ff._get_render_tasks_2, width=None, compact=True)
+    with PerfCounter() as pc:
+        for _ in trange(batch):
+            ff_render_text(text)
+    print(
+        "Time:",
+        Duration(pc.nanoseconds / 1000),
+        "Unit:",
+        Duration(pc.nanoseconds / 1000 / batch),
+        file=sys.stderr,
+    )
 
 
 def benchmark_gradient(batch=200):

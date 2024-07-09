@@ -41,6 +41,35 @@ class WordTask(namedtuple("WordTask", ("w", "h", "tasks"))):
     tasks: List[Tuple[str, pygame.freetype.Font, int, int]]
 
 
+class CharTask(namedtuple("CharTask", ("c", "font", "x", "bounds"))):
+    __slots__ = ()
+    c: str
+    font: PFFont
+    x: int
+    bounds: pygame.Rect
+
+    @property
+    def limit(self):
+        return self.x + self.bounds.x + self.bounds.width
+
+    @property
+    def dy(self):
+        return self.bounds.height - self.bounds.y
+
+
+class TaskLine:
+    __slots__ = ("y", "tasks", "n")
+    y: int
+    tasks: List[CharTask]
+    n: bool
+
+    def __init__(self, newline=False):
+        self.y, self.tasks, self.n = 0, [], newline
+
+    def __bool__(self):
+        return bool(self.tasks or self.n)
+
+
 class TaskLines:
     __slots__ = ("_lines",)
 
@@ -152,6 +181,61 @@ class PygameFontFactory:
             self.name_to_font[name] = font
             logging.debug(f"[pygame][font](block={block}) {name}")
         return font
+
+    def _get_render_tasks_2(
+        self,
+        text: str,
+        width: Optional[int],
+        size: int = 0,
+        height_delta=2,
+        compact=False,
+    ):
+        width = float("inf") if width is None else width
+        line_spacing = (
+            self.get_font(text[0] if text else " ").get_sized_height(size)
+            + height_delta
+        )
+
+        x = 0
+        task_lines: List[TaskLine] = []
+        task_line = TaskLine()
+        for c in text:
+            if c == "\n":
+                task_lines.append(task_line)
+                task_line = TaskLine(newline=True)
+                x = 0
+                continue
+            if not Unicode.printable(c):
+                continue
+            font = self.get_font(c)
+            bounds = font.get_rect(c, size=size)
+            if x and x + bounds.x + bounds.width > width:
+                task_lines.append(task_line)
+                task_line = TaskLine()
+                x = 0
+            task_line.tasks.append(CharTask(c, font, x, bounds))
+            (metric,) = font.get_metrics(c, size=size)
+            x += metric[4] if metric else bounds.width
+
+        task_lines.append(task_line)
+        task_lines = [line for line in task_lines if line]
+
+        new_width, height = 0, 0
+        if task_lines:
+            first_line = task_lines[0]
+            if compact and first_line.tasks:
+                first_line.y = max(c.bounds.y for c in first_line.tasks) + height_delta
+            else:
+                first_line.y = line_spacing
+            for i in range(1, len(task_lines)):
+                task_lines[i].y = task_lines[i - 1].y + line_spacing
+            height = task_lines[-1].y + max(
+                (c.bounds.height - c.bounds.y for c in task_lines[-1].tasks), default=0
+            )
+            new_width = max(
+                (line.tasks[-1].limit for line in task_lines if line.tasks), default=0
+            )
+        return new_width, height, task_lines
 
     def _get_render_tasks(
         self,
