@@ -28,7 +28,7 @@ class Unicode:
             yield c
 
     @classmethod
-    def printable(cls, c: str) -> bool:
+    def _printable(cls, c: str) -> bool:
         """
         2024/06/09
         https://stackoverflow.com/a/68992289
@@ -43,6 +43,13 @@ class Unicode:
         if cat == "Cn":  # non-character or reserved
             return False
         return True
+
+    _UNPRINTABLE = {"Cc", "Co", "Cs", "Cn"}
+
+    @classmethod
+    def printable(cls, c: str) -> bool:
+        # return category(c) not in cls._UNPRINTABLE
+        return category(c) not in ("Cc", "Co", "Cs", "Cn")
 
     @classmethod
     def block(cls, c: str) -> str:
