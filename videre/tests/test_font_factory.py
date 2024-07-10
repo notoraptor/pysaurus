@@ -6,10 +6,13 @@ from resource.fonts import FONT_NOTO_REGULAR
 from videre.utils.pygame_font_factory import PygameFontFactory
 
 
-@pytest.mark.parametrize("function_name", ("render_text", "render_text_wrap_words"))
-def test_render_text(function_name):
+@pytest.mark.parametrize(
+    "factory_cls,function_name",
+    ((PygameFontFactory, "render_text"), (PygameFontFactory, "render_text_wrap_words")),
+)
+def test_render_text(factory_cls, function_name):
     height_delta = 2
-    ff = PygameFontFactory(size=24, overrides=[FONT_NOTO_REGULAR.path])
+    ff = factory_cls(size=24, overrides=[FONT_NOTO_REGULAR.path])
     line_height = ff.get_font(" ").get_sized_height(ff.size) + height_delta
     assert line_height == 35
 
