@@ -9,7 +9,7 @@ from videre.utils.pygame_utils import PygameUtils
 
 
 class Widget(PygameUtils):
-    __attributes__ = ("weight",)
+    __wprops__ = ("weight",)
 
     __slots__ = (
         "_key",
@@ -45,7 +45,7 @@ class Widget(PygameUtils):
 
     @property
     def weight(self) -> int:
-        return self._get_attribute("weight")
+        return self._get_wprop("weight")
 
     @property
     def parent(self):
@@ -127,25 +127,23 @@ class Widget(PygameUtils):
         return self._old_update[2]
 
     @classmethod
-    def _has_attribute(cls, name: str) -> bool:
+    def _has_wprop(cls, name: str) -> bool:
         for typ in cls.__mro__:
-            attrs = getattr(typ, "__attributes__", ())
-            if name in attrs:
+            wprops = getattr(typ, "__wprops__", ())
+            if name in wprops:
                 return True
         return False
 
     @classmethod
-    def _assert_attribute(cls, name):
-        assert cls._has_attribute(
-            name
-        ), f"{cls.__name__}: unknown widget attribute: {name}"
+    def _assert_wprop(cls, name):
+        assert cls._has_wprop(name), f"{cls.__name__}: unknown widget property: {name}"
 
-    def _set_attribute(self, name: str, value: Any):
-        self._assert_attribute(name)
+    def _set_wprop(self, name: str, value: Any):
+        self._assert_wprop(name)
         self._new[name] = value
 
-    def _get_attribute(self, name: str) -> Any:
-        self._assert_attribute(name)
+    def _get_wprop(self, name: str) -> Any:
+        self._assert_wprop(name)
         return self._new.get(name)
 
     def update(self):

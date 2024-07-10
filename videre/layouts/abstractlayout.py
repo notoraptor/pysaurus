@@ -6,7 +6,7 @@ from videre.widgets.widget import Widget
 
 
 class AbstractLayout(Widget):
-    __attributes__ = {"_controls"}
+    __wprops__ = {"_controls"}
     __size__ = None
     __slots__ = ()
 
@@ -19,10 +19,10 @@ class AbstractLayout(Widget):
             raise RuntimeError(
                 f"[{type(self).__name__}] expects exactly {self.__size__} children"
             )
-        self._set_attribute("_controls", [ctrl.with_parent(self) for ctrl in controls])
+        self._set_wprop("_controls", [ctrl.with_parent(self) for ctrl in controls])
 
     def _controls(self) -> List[Widget]:
-        return self._get_attribute("_controls")
+        return self._get_wprop("_controls")
 
     def get_mouse_owner(self, x: int, y: int) -> Optional[MouseOwnership]:
         if super().get_mouse_owner(x, y):

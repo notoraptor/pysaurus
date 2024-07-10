@@ -11,7 +11,7 @@ from videre.widgets.widget import Widget
 
 
 class ScrollView(AbstractLayout):
-    __attributes__ = {
+    __wprops__ = {
         "scroll_thickness",
         "horizontal_scroll",
         "vertical_scroll",
@@ -40,31 +40,31 @@ class ScrollView(AbstractLayout):
             thickness=scroll_thickness, on_jump=self.on_jump_y
         )
         super().__init__([control, self._hscrollbar, self._vscrollbar], **kwargs)
-        self._set_attribute("scroll_thickness", scroll_thickness)
-        self._set_attribute("horizontal_scroll", horizontal_scroll)
-        self._set_attribute("vertical_scroll", vertical_scroll)
-        self._set_attribute("wrap_horizontal", wrap_horizontal)
-        self._set_attribute("wrap_vertical", wrap_vertical)
+        self._set_wprop("scroll_thickness", scroll_thickness)
+        self._set_wprop("horizontal_scroll", horizontal_scroll)
+        self._set_wprop("vertical_scroll", vertical_scroll)
+        self._set_wprop("wrap_horizontal", wrap_horizontal)
+        self._set_wprop("wrap_vertical", wrap_vertical)
 
     @property
     def scroll_thickness(self) -> int:
-        return self._get_attribute("scroll_thickness")
+        return self._get_wprop("scroll_thickness")
 
     @property
     def horizontal_scroll(self) -> bool:
-        return self._get_attribute("horizontal_scroll")
+        return self._get_wprop("horizontal_scroll")
 
     @property
     def vertical_scroll(self) -> bool:
-        return self._get_attribute("vertical_scroll")
+        return self._get_wprop("vertical_scroll")
 
     @property
     def wrap_horizontal(self) -> bool:
-        return self._get_attribute("wrap_horizontal")
+        return self._get_wprop("wrap_horizontal")
 
     @property
     def wrap_vertical(self) -> bool:
-        return self._get_attribute("wrap_vertical")
+        return self._get_wprop("wrap_vertical")
 
     @property
     def control(self) -> Widget:

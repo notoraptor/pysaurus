@@ -8,7 +8,7 @@ from videre.widgets.widget import Widget
 
 
 class Area(Widget):
-    __attributes__ = {"width", "height", "coloring"}
+    __wprops__ = {"width", "height", "coloring"}
     __slots__ = ()
 
     def __init__(
@@ -26,23 +26,23 @@ class Area(Widget):
             coloring = Gradient(*coloring)
 
         super().__init__(**kwargs)
-        self._set_attribute("width", width)
-        self._set_attribute("height", height)
-        self._set_attribute("coloring", coloring)
+        self._set_wprop("width", width)
+        self._set_wprop("height", height)
+        self._set_wprop("coloring", coloring)
         self.x = x
         self.y = y
 
     @property
     def width(self) -> int:
-        return self._get_attribute("width")
+        return self._get_wprop("width")
 
     @property
     def height(self) -> int:
-        return self._get_attribute("height")
+        return self._get_wprop("height")
 
     @property
     def coloring(self) -> Gradient:
-        return self._get_attribute("coloring")
+        return self._get_wprop("coloring")
 
     def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
         return self.coloring.generate(self.width, self.height)

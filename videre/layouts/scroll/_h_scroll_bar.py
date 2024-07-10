@@ -9,7 +9,7 @@ from videre.widgets.widget import Widget
 
 
 class _HScrollBar(Widget):
-    __attributes__ = {"content_length", "content_pos", "thickness", "both", "color"}
+    __wprops__ = {"content_length", "content_pos", "thickness", "both", "color"}
     __slots__ = ("on_jump", "_grabbed", "_hover", "background")
     __is_horizontal__ = True
     _SCROLL_COLOR_HOVER = pygame.Color(216, 216, 216, 255)
@@ -17,7 +17,7 @@ class _HScrollBar(Widget):
 
     def __init__(self, thickness=18, on_jump=None, **kwargs):
         super().__init__(**kwargs)
-        self._set_attribute("thickness", thickness)
+        self._set_wprop("thickness", thickness)
         self.on_jump = on_jump
         self._hover = False
         self._grabbed = ()
@@ -28,33 +28,33 @@ class _HScrollBar(Widget):
         return super().has_changed() and self.content_length is not None
 
     def configure(self, content_length: int, content_pos: int, both: bool):
-        self._set_attribute("content_length", content_length)
-        self._set_attribute("content_pos", content_pos)
-        self._set_attribute("both", both)
+        self._set_wprop("content_length", content_length)
+        self._set_wprop("content_pos", content_pos)
+        self._set_wprop("both", both)
         self.background.configure(self.thickness, both, self._hover or self._grabbed)
 
     @property
     def content_length(self) -> int:
-        return self._get_attribute("content_length")
+        return self._get_wprop("content_length")
 
     @property
     def content_pos(self) -> int:
-        return self._get_attribute("content_pos")
+        return self._get_wprop("content_pos")
 
     @property
     def thickness(self) -> int:
-        return self._get_attribute("thickness")
+        return self._get_wprop("thickness")
 
     @property
     def both(self) -> bool:
-        return self._get_attribute("both")
+        return self._get_wprop("both")
 
     @property
     def color(self) -> pygame.Color:
-        return self._get_attribute("color")
+        return self._get_wprop("color")
 
     def _set_color(self):
-        self._set_attribute(
+        self._set_wprop(
             "color",
             self._SCROLL_COLOR_HOVER
             if self._hover or self._grabbed

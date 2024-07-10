@@ -11,7 +11,7 @@ _OnClick = Callable[[Widget], None]
 
 
 class Button(Widget):
-    __attributes__ = {"text", "on_click"}
+    __wprops__ = {"text", "on_click"}
     __slots__ = ()
     _PADDING_X = 6
     _PADDING_Y = 4
@@ -23,19 +23,19 @@ class Button(Widget):
 
     @property
     def text(self) -> str:
-        return self._get_attribute("text")
+        return self._get_wprop("text")
 
     @text.setter
     def text(self, text: str):
-        self._set_attribute("text", text.strip())
+        self._set_wprop("text", text.strip())
 
     @property
     def on_click(self) -> _OnClick:
-        return self._get_attribute("on_click")
+        return self._get_wprop("on_click")
 
     @on_click.setter
     def on_click(self, callback: _OnClick):
-        self._set_attribute("on_click", callback)
+        self._set_wprop("on_click", callback)
 
     def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
         if width is None and height is None:
