@@ -142,6 +142,11 @@ class Widget(PygameUtils):
         self._assert_wprop(name)
         self._new[name] = value
 
+    def _set_wprops(self, **kwargs):
+        for name in kwargs:
+            self._assert_wprop(name)
+        self._new.update(kwargs)
+
     def _get_wprop(self, name: str) -> Any:
         self._assert_wprop(name)
         return self._new.get(name)

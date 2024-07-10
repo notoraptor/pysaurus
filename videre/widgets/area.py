@@ -26,9 +26,7 @@ class Area(Widget):
             coloring = Gradient(*coloring)
 
         super().__init__(**kwargs)
-        self._set_wprop("width", width)
-        self._set_wprop("height", height)
-        self._set_wprop("coloring", coloring)
+        self._set_wprops(width=width, height=height, coloring=coloring)
         self.x = x
         self.y = y
 

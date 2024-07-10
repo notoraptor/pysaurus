@@ -28,9 +28,9 @@ class _HScrollBar(Widget):
         return super().has_changed() and self.content_length is not None
 
     def configure(self, content_length: int, content_pos: int, both: bool):
-        self._set_wprop("content_length", content_length)
-        self._set_wprop("content_pos", content_pos)
-        self._set_wprop("both", both)
+        self._set_wprops(
+            content_length=content_length, content_pos=content_pos, both=both
+        )
         self.background.configure(self.thickness, both, self._hover or self._grabbed)
 
     @property

@@ -40,11 +40,13 @@ class ScrollView(AbstractLayout):
             thickness=scroll_thickness, on_jump=self.on_jump_y
         )
         super().__init__([control, self._hscrollbar, self._vscrollbar], **kwargs)
-        self._set_wprop("scroll_thickness", scroll_thickness)
-        self._set_wprop("horizontal_scroll", horizontal_scroll)
-        self._set_wprop("vertical_scroll", vertical_scroll)
-        self._set_wprop("wrap_horizontal", wrap_horizontal)
-        self._set_wprop("wrap_vertical", wrap_vertical)
+        self._set_wprops(
+            scroll_thickness=scroll_thickness,
+            horizontal_scroll=horizontal_scroll,
+            vertical_scroll=vertical_scroll,
+            wrap_horizontal=wrap_horizontal,
+            wrap_vertical=wrap_vertical,
+        )
 
     @property
     def scroll_thickness(self) -> int:

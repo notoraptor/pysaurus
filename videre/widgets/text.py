@@ -13,10 +13,7 @@ class Text(Widget):
         self, text="", size=0, wrap=TextWrap.NONE, align=TextAlign.LEFT, **kwargs
     ):
         super().__init__(**kwargs)
-        self._set_wprop("text", text)
-        self._set_wprop("size", size)
-        self._set_wprop("wrap", wrap)
-        self._set_wprop("align", align)
+        self._set_wprops(text=text, size=size, wrap=wrap, align=align)
 
     @property
     def text(self) -> str:

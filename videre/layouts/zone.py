@@ -11,8 +11,7 @@ class Zone(AbstractLayout):
 
     def __init__(self, control: Widget, width: int, height: int, x=0, y=0, **kwargs):
         super().__init__([control], **kwargs)
-        self._set_wprop("width", width)
-        self._set_wprop("height", height)
+        self._set_wprops(width=width, height=height)
         self.x = x
         self.y = y
 

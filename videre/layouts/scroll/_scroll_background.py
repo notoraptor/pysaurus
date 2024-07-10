@@ -14,9 +14,7 @@ class _ScrollBackground(Widget):
         self._h = horizontal
 
     def configure(self, thickness: int, both: bool, hover: bool):
-        self._set_wprop("thickness", thickness)
-        self._set_wprop("both", both)
-        self._set_wprop("hover", hover)
+        self._set_wprops(thickness=thickness, both=both, hover=hover)
 
     def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
         assert width and height
