@@ -18,7 +18,7 @@ class CharsLine:
     def __init__(self):
         self.y, self.tasks = 0, []
 
-    def limit(self):
+    def limit(self) -> int:
         _, _, x, bounds = self.tasks[-1]
         return x + bounds.x + bounds.width
 
@@ -31,9 +31,6 @@ class WordTask:
     ):
         self.w, self.x, self.tasks = w, x, tasks
 
-    def limit(self):
-        return self.x + self.w
-
 
 class WordsLine:
     __slots__ = ("y", "words")
@@ -43,8 +40,16 @@ class WordsLine:
     def __init__(self):
         self.y, self.words = 0, []
 
+    def limit(self) -> int:
+        word = self.words[-1]
+        return word.x + word.w
 
-def align_center(lines: List[WordsLine], width: int):
+
+def align_words(lines: List[WordsLine], width: int, align=TextAlign.LEFT):
+    if align == TextAlign.LEFT:
+        return
+    if align == TextAlign.JUSTIFY:
+        return justify_words(lines, width)
     for line in lines:
         if line.words:
             assert line.words[0].x == 0
@@ -52,24 +57,13 @@ def align_center(lines: List[WordsLine], width: int):
             size = wt_n.x + wt_n.w
             remaining = width - size
             if remaining:
-                remaining /= 2
+                if align == TextAlign.CENTER:
+                    remaining /= 2
                 for wt in line.words:
                     wt.x += remaining
 
 
-def align_right(lines: List[WordsLine], width: int):
-    for line in lines:
-        if line.words:
-            assert line.words[0].x == 0
-            wt_n = line.words[-1]
-            size = wt_n.x + wt_n.w
-            remaining = width - size
-            if remaining:
-                for wt in line.words:
-                    wt.x += remaining
-
-
-def justify(lines: List[WordsLine], width: int):
+def justify_words(lines: List[WordsLine], width: int):
     paragraphs = []
     p = []
     for line in lines:
@@ -284,21 +278,11 @@ class PygameFontFactory:
                 default=0,
             )
             new_width = max(
-                (
-                    lines[i].words[-1].limit()
-                    for i in range(start, len(lines))
-                    if lines[i].words
-                ),
+                (lines[i].limit() for i in range(start, len(lines)) if lines[i].words),
                 default=0,
             )
 
-        if align != TextAlign.LEFT:
-            if align == TextAlign.CENTER:
-                align_center(lines, new_width)
-            elif align == TextAlign.RIGHT:
-                align_right(lines, new_width)
-            elif align == TextAlign.JUSTIFY:
-                justify(lines, new_width)
+        align_words(lines, new_width, align)
 
         background = pygame.Surface((new_width, height), flags=pygame.SRCALPHA)
         if color is not None:
