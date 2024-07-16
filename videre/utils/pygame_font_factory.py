@@ -9,11 +9,14 @@ from pysaurus.core.unicode_utils import Unicode
 from resource.fonts import FONT_NOTO_REGULAR, FontProvider
 from videre import TextAlign
 
+# c, font, x, bounds
+CharTaskType = Tuple[str, PFFont, int, pygame.Rect]
+
 
 class CharsLine:
     __slots__ = ("y", "tasks")
     y: int
-    tasks: List[Tuple[str, PFFont, int, pygame.Rect]]
+    tasks: List[CharTaskType]
 
     def __init__(self):
         self.y, self.tasks = 0, []
@@ -26,10 +29,11 @@ class CharsLine:
 class WordTask:
     __slots__ = ("w", "x", "tasks")
 
-    def __init__(
-        self, w: int, x: int, tasks: List[Tuple[str, PFFont, int, pygame.Rect]]
-    ):
+    def __init__(self, w: int, x: int, tasks: List[CharTaskType]):
         self.w, self.x, self.tasks = w, x, tasks
+
+    def __repr__(self):
+        return f"{self.x}:" + repr("".join(t[0] for t in self.tasks))
 
 
 class WordsLine:
@@ -37,25 +41,51 @@ class WordsLine:
     y: int
     words: List[WordTask]
 
-    def __init__(self):
-        self.y, self.words = 0, []
+    def __init__(self, y=0):
+        self.y, self.words = y, []
+
+    def __repr__(self):
+        return f"({self.y}, {self.words})"
 
     def limit(self) -> int:
         word = self.words[-1]
         return word.x + word.w
 
+    @classmethod
+    def from_chars_line(cls, chars_line: CharsLine):
+        words = []
+        word = []
+        for task in chars_line.tasks:
+            if task[0] == " ":
+                if word:
+                    words.append(word)
+                    word = []
+            else:
+                word.append(task)
+        if word:
+            words.append(word)
+        words_line = cls(chars_line.y)
+        if words:
+            x0 = words[0][0][-2]
+            for word in words:
+                w_x = word[0][-2]
+                x = w_x - x0
+                tasks = [(c, font, cx - w_x, bounds) for c, font, cx, bounds in word]
+                _, _, last_x, last_bounds = tasks[-1]
+                w = last_x + last_bounds.x + last_bounds.width
+                words_line.words.append(WordTask(w, x, tasks))
+        return words_line
+
 
 def align_words(lines: List[WordsLine], width: int, align=TextAlign.LEFT):
-    if align == TextAlign.LEFT:
+    if align == TextAlign.NONE or align == TextAlign.LEFT:
         return
     if align == TextAlign.JUSTIFY:
         return justify_words(lines, width)
     for line in lines:
         if line.words:
-            assert line.words[0].x == 0
-            wt_n = line.words[-1]
-            size = wt_n.x + wt_n.w
-            remaining = width - size
+            assert line.words[0].x == 0, line
+            remaining = width - line.limit()
             if remaining:
                 if align == TextAlign.CENTER:
                     remaining /= 2
@@ -192,6 +222,7 @@ class PygameFontFactory:
         height_delta=2,
         compact=False,
         color: pygame.Color = None,
+        align=TextAlign.LEFT,
     ) -> pygame.Surface:
         size = size or self.size
         new_width, height, lines = self._get_render_tasks(
@@ -200,10 +231,21 @@ class PygameFontFactory:
         background = pygame.Surface((new_width, height), flags=pygame.SRCALPHA)
         if color is not None:
             background.fill(color)
-        for line in lines:
-            y = line.y
-            for c, font, x, _ in line.tasks:
-                font.render_to(background, (x, y), c, size=size)
+
+        if align == TextAlign.NONE:
+            for line in lines:
+                y = line.y
+                for c, font, x, _ in line.tasks:
+                    font.render_to(background, (x, y), c, size=size)
+        else:
+            word_lines = [WordsLine.from_chars_line(line) for line in lines]
+            align_words(word_lines, new_width, align)
+            for line in word_lines:
+                y = line.y
+                for word in line.words:
+                    x = word.x
+                    for c, font, cx, _ in word.tasks:
+                        font.render_to(background, (x + cx, y), c, size=size)
         return background
 
     def render_text_wrap_words(
@@ -282,12 +324,11 @@ class PygameFontFactory:
                 default=0,
             )
 
-        align_words(lines, new_width, align)
-
         background = pygame.Surface((new_width, height), flags=pygame.SRCALPHA)
         if color is not None:
             background.fill(color)
 
+        align_words(lines, new_width, align)
         for line in lines:
             y = line.y
             for word in line.words:

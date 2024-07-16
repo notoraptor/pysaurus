@@ -20,14 +20,15 @@ class TextWrap(Enum):
     NONE = 0
     CHAR = 1
     WORD = 2
-    WORD_THEN_CHAR = 3
+    WORD_THEN_CHAR = 3  # todo
 
 
 class TextAlign(Enum):
-    LEFT = 0
-    CENTER = 1
-    RIGHT = 2
-    JUSTIFY = 3
+    NONE = 0
+    LEFT = 1
+    CENTER = 2
+    RIGHT = 3
+    JUSTIFY = 4
 
 
 class MotionEvent:

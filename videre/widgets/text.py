@@ -10,7 +10,7 @@ class Text(Widget):
     __slots__ = ()
 
     def __init__(
-        self, text="", size=0, wrap=TextWrap.NONE, align=TextAlign.LEFT, **kwargs
+        self, text="", size=0, wrap=TextWrap.NONE, align=TextAlign.NONE, **kwargs
     ):
         super().__init__(**kwargs)
         self._set_wprops(text=text, size=size, wrap=wrap, align=align)
@@ -36,8 +36,10 @@ class Text(Widget):
         if wrap == TextWrap.NONE:
             return FONT_FACTORY.render_text(self.text, None, self.size, compact=True)
         elif wrap == TextWrap.CHAR:
-            return FONT_FACTORY.render_text(self.text, width, self.size, compact=True)
+            return FONT_FACTORY.render_text(
+                self.text, width, self.size, compact=True, align=self.align
+            )
         else:
             return FONT_FACTORY.render_text_wrap_words(
-                self.text, width, self.size, align=self.align, compact=True
+                self.text, width, self.size, compact=True, align=self.align
             )

@@ -61,7 +61,7 @@ def demo_scroll_view(window: Window):
             Text(
                 f"\t\v\t\b {text}",
                 size=24,
-                wrap=videre.TextWrap.WORD,
+                wrap=videre.TextWrap.CHAR,
                 align=videre.TextAlign.LEFT,
             ),
             wrap_horizontal=True,
