@@ -3,6 +3,7 @@ from typing import Callable, Optional
 import pygame
 import pygame.gfxdraw
 
+from videre import MouseButton
 from videre.colors import Colors, Gradient
 from videre.utils.pygame_font_factory import FONT_FACTORY
 from videre.widgets.widget import Widget
@@ -36,6 +37,11 @@ class Button(Widget):
     @on_click.setter
     def on_click(self, callback: _OnClick):
         self._set_wprop("on_click", callback)
+
+    def handle_click(self, button: MouseButton):
+        on_click = self.on_click
+        if on_click:
+            on_click(self)
 
     def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
         if width is None and height is None:

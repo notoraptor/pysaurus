@@ -14,9 +14,10 @@ class Column(AbstractControlsLayout):
             if height is not None and total_height >= height:
                 break
             surface = ctrl.render(window, width, None)
-            local_width = ctrl.right + 1
-            local_height = ctrl.bottom + 1
-            surfaces.append((surface, ctrl.x, total_height + ctrl.y))
+            local_width = surface.get_width()
+            local_height = surface.get_height()
+            surfaces.append((surface, 0, total_height))
+            ctrl.x, ctrl.y = 0, total_height
             total_height += local_height
             max_width = max(max_width, local_width)
         if width is None:

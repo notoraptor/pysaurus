@@ -124,7 +124,7 @@ class Window:
         owner = get_top_mouse_owner(*event.pos, self.controls)
         if owner:
             owner.widget.handle_mouse_up(button, owner.rel_x, owner.rel_y)
-            if self._down[button] == owner:
+            if self._down[button] == owner.widget:
                 owner.widget.handle_click(button)
             elif self._down[button]:
                 self._down[button].handle_mouse_down_canceled(button)

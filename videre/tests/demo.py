@@ -1,5 +1,6 @@
 import videre
 from pysaurus.core.constants import LOREM_IPSUM
+from videre import TextAlign, TextWrap, WidgetSet
 from videre.colors import Colors
 from videre.layouts.column import Column
 from videre.layouts.scroll.scrollview import ScrollView
@@ -50,6 +51,24 @@ def demo(window: Window):
         )
 
 
+def demo_button(window: Window):
+    text = Text(LOREM_IPSUM, wrap=videre.TextWrap.WORD)
+    window.controls = [
+        Column(
+            [
+                Button("wrap chars", on_click=WidgetSet(text, wrap=TextWrap.CHAR)),
+                Button("wrap words", on_click=WidgetSet(text, wrap=TextWrap.WORD)),
+                Button("align none", on_click=WidgetSet(text, align=TextAlign.NONE)),
+                Button("left", on_click=WidgetSet(text, align=TextAlign.LEFT)),
+                Button("center", on_click=WidgetSet(text, align=TextAlign.CENTER)),
+                Button("right", on_click=WidgetSet(text, align=TextAlign.RIGHT)),
+                Button("justify", on_click=WidgetSet(text, align=TextAlign.JUSTIFY)),
+                Zone(ScrollView(text, wrap_horizontal=True), 800, 300),
+            ]
+        )
+    ]
+
+
 def demo_scroll_view(window: Window):
     text = "hello world lorem ipsum"
     text = "小松 未可子 | 🌀 hello world lorem ipsum | " + FONT_FACTORY.provider.lorem_ipsum(
@@ -77,7 +96,7 @@ def main():
     )
 
     window = Window(title=title)
-    demo_scroll_view(window)
+    demo_button(window)
     window.run()
 
 

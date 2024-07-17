@@ -27,9 +27,17 @@ class Text(Widget):
     def wrap(self) -> TextWrap:
         return self._get_wprop("wrap")
 
+    @wrap.setter
+    def wrap(self, wrap: TextWrap):
+        self._set_wprop("wrap", wrap)
+
     @property
     def align(self) -> TextAlign:
         return self._get_wprop("align")
+
+    @align.setter
+    def align(self, align: TextAlign):
+        self._set_wprop("align", align)
 
     def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
         wrap = self.wrap
