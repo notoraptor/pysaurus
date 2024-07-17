@@ -3,8 +3,9 @@
 QUIT              none
 MOUSEBUTTONDOWN   pos, button, touch
 MOUSEBUTTONUP     pos, button, touch
-MOUSEWHEEL         which, flipped, x, y, touch, precise_x, precise_y
+MOUSEWHEEL        which, flipped, x, y, touch, precise_x, precise_y
 MOUSEMOTION       pos, rel, buttons, touch
+WINDOWLEAVE       Mouse left the window
 ```
 
 # Deprecated
@@ -66,7 +67,6 @@ WINDOWMINIMIZED        Window was minimized
 WINDOWMAXIMIZED        Window was maximized
 WINDOWRESTORED         Window was restored
 WINDOWENTER            Mouse entered the window
-WINDOWLEAVE            Mouse left the window
 WINDOWFOCUSGAINED      Window gained focus
 WINDOWFOCUSLOST        Window lost focus
 WINDOWCLOSE            Window was closed
