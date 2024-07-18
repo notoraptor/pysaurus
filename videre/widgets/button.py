@@ -45,7 +45,7 @@ class Button(Widget):
 
     def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
         if width is None and height is None:
-            text_surface = self._get_text_surface(width, height)
+            text_surface = self._get_text_surface(width)
             bg_width = text_surface.get_width() + 2 * (self._PADDING_X + 1)
             bg_height = text_surface.get_height() + 2 * (self._PADDING_Y + 1)
             bg = Gradient(Colors.white).generate(bg_width, bg_height)
@@ -53,11 +53,9 @@ class Button(Widget):
             text_y = (bg.get_height() - text_surface.get_height()) // 2
             bg.blit(text_surface, (text_x, text_y))
         elif width is None:
-            text_surface = self._get_text_surface(width, height)
+            text_surface = self._get_text_surface(width)
             bg_width = text_surface.get_width() + 2 * (self._PADDING_X + 1)
-            bg_height = min(
-                height, text_surface.get_height() + 2 * (self._PADDING_Y + 1)
-            )
+            bg_height = height
             bg = Gradient(Colors.white).generate(bg_width, bg_height)
             text_x = (bg.get_width() - text_surface.get_width()) // 2
             text_y = (bg.get_height() - text_surface.get_height()) // 2
@@ -76,16 +74,28 @@ class Button(Widget):
             )
         elif height is None:
             text_width = max(0, width - 2 * (self._PADDING_X + 1))
-            text_surface = self._get_text_surface(text_width, height)
+            text_surface = self._get_text_surface(text_width)
             bg_width = width
             bg_height = text_surface.get_height() + 2 * (self._PADDING_Y + 1)
             bg = Gradient(Colors.white).generate(bg_width, bg_height)
             text_x = (bg.get_width() - text_surface.get_width()) // 2
             text_y = (bg.get_height() - text_surface.get_height()) // 2
-            bg.blit(text_surface, (text_x, text_y))
+            bg.blit(
+                text_surface,
+                (text_x, text_y),
+                area=pygame.Rect(
+                    0,
+                    0,
+                    min(
+                        text_surface.get_width(),
+                        max(0, bg_width - 2 * (self._PADDING_X + 1)),
+                    ),
+                    text_surface.get_height(),
+                ),
+            )
         else:
             text_width = max(0, width - 2 * (self._PADDING_X + 1))
-            text_surface = self._get_text_surface(text_width, height)
+            text_surface = self._get_text_surface(text_width)
             bg_width = width
             bg_height = height
             bg = Gradient(Colors.white).generate(bg_width, bg_height)
@@ -97,7 +107,10 @@ class Button(Widget):
                 area=pygame.Rect(
                     0,
                     0,
-                    min(text_surface.get_width(), bg_width - 2 * (self._PADDING_X + 1)),
+                    min(
+                        text_surface.get_width(),
+                        max(0, bg_width - 2 * (self._PADDING_X + 1)),
+                    ),
                     min(
                         text_surface.get_height(),
                         max(0, bg_height - 2 * (self._PADDING_Y + 1)),
@@ -112,9 +125,7 @@ class Button(Widget):
         # Done
         return bg
 
-    def _get_text_surface(
-        self, width: Optional[int] = None, height: Optional[int] = None
-    ) -> pygame.Surface:
+    def _get_text_surface(self, width: Optional[int] = None) -> pygame.Surface:
         return FONT_FACTORY.render_text(
             self.text, width, size=18, height_delta=0, color=Colors.pink, compact=True
         )
