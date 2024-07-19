@@ -69,13 +69,14 @@ class Layer:
 
 
 class LayerSource(Layer):
-    __slots__ = ("source_def", "video_indices_found")
+    __slots__ = ("source_def", "video_indices_found", "videos_not_yet_opened")
     output: Set[int]
 
     def __init__(self, database):
         super().__init__(database)
         self.source_def = SourceDef(self.params["sources"])
         self.video_indices_found: List[int] = []
+        self.videos_not_yet_opened: List[int] = []
 
     def set_params(self, *, sources: Sequence[Sequence[str]]):
         super().set_params(sources=parse_sources(sources))
@@ -88,6 +89,7 @@ class LayerSource(Layer):
     def run(self):
         video_indices: Set[int] = set()
         video_indices_found: List[int] = []
+        videos_not_yet_opened: List[int] = []
         for path in self.params["sources"]:
             source = [
                 video["video_id"]
@@ -102,8 +104,19 @@ class LayerSource(Layer):
                         video_id=video_id, found=True, readable=True
                     )
                 )
+                videos_not_yet_opened.extend(
+                    video_id
+                    for video_id in source
+                    if self.input.has_video(
+                        video_id=video_id,
+                        found=True,
+                        readable=True,
+                        already_opened=False,
+                    )
+                )
         self.output = video_indices
         self.video_indices_found = video_indices_found
+        self.videos_not_yet_opened = videos_not_yet_opened
 
     def delete(self, video_id: int):
         self.output.remove(video_id)
@@ -113,10 +126,18 @@ class LayerSource(Layer):
         # TODO What if deletion becomes massive/frequent?
         # TODO What if videos list is very long ?
         functions.remove_from_list(self.video_indices_found, video_id)
+        functions.remove_from_list(self.videos_not_yet_opened, video_id)
 
     def get_random_video_id(self) -> int:
         if not self.video_indices_found:
             raise exceptions.NoVideos()
+        if self.videos_not_yet_opened:
+            video_id = random.choice(self.videos_not_yet_opened)
+            functions.remove_from_list(self.videos_not_yet_opened, video_id)
+            self._log(
+                f"random video not yet opened among {len(self.videos_not_yet_opened)}"
+            )
+            return video_id
         return random.choice(self.video_indices_found)
 
 
