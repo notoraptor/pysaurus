@@ -154,7 +154,13 @@ class PygameFontFactory:
             font = pygame.freetype.Font(path, size=self.size)
             font.origin = self.origin
             self.name_to_font[name] = font
-            logging.debug(f"[pygame][font](block={block}) {name}")
+            logging.debug(
+                f"[pygame][font](block={block}) {name}, "
+                f"height {font.get_sized_height(self.size)}, "
+                f"glyph height {font.get_sized_glyph_height(self.size)}, "
+                f"ascender {font.get_sized_ascender(self.size)}, "
+                f"descender {font.get_sized_descender(self.size)}"
+            )
         return font
 
     def _get_render_tasks(
@@ -166,16 +172,23 @@ class PygameFontFactory:
         compact=False,
         line_spacing=0,
     ) -> Tuple[int, int, List[CharsLine]]:
-        width = float("inf") if width is None else width
-        line_spacing = line_spacing or (
-            self.get_font(text[0] if text else " ").get_sized_height(size)
-            + height_delta
-        )
+        lines: List[CharsLine] = []
 
         task_line = CharsLine()
-        lines: List[CharsLine] = [task_line]
+        nb_chars = len(text)
+        cursor = 0
+        while cursor < nb_chars:
+            c = text[cursor]
+            if c == "\n" or Unicode.printable(c):
+                lines.append(task_line)
+                break
+            else:
+                cursor += 1
+
         x = 0
-        for c in text:
+        width = float("inf") if width is None else width
+        for i in range(cursor, nb_chars):
+            c = text[i]
             if c == "\n":
                 task_line = CharsLine()
                 lines.append(task_line)
@@ -194,23 +207,29 @@ class PygameFontFactory:
             x += metric[4] if metric else bounds.width
 
         new_width, height = 0, 0
-        start = 0 if lines[0].tasks else 1
-        if len(lines) - start:
-            first_line = lines[start]
+        if lines:
+            for line in lines:
+                if line.tasks:
+                    first_char = line.tasks[0][0]
+                    break
+            else:
+                first_char = " "
+            first_font = self.get_font(first_char)
+            ascender = abs(first_font.get_sized_ascender(size)) + 1
+            descender = abs(first_font.get_sized_descender(size))
+            line_spacing = line_spacing or (
+                first_font.get_sized_height(size) + height_delta
+            )
+            first_line = lines[0]
             first_line.y = (
-                max(c[3].y for c in first_line.tasks) + height_delta
+                ascender + height_delta
                 if compact and first_line.tasks
                 else line_spacing
             )
-            for i in range(start + 1, len(lines)):
+            for i in range(1, len(lines)):
                 lines[i].y = lines[i - 1].y + line_spacing
-            height = lines[-1].y + max(
-                (c[3].height - c[3].y for c in lines[-1].tasks), default=0
-            )
-            new_width = max(
-                (lines[i].limit() for i in range(start, len(lines)) if lines[i].tasks),
-                default=0,
-            )
+            height = lines[-1].y + descender
+            new_width = max((line.limit() for line in lines if line.tasks), default=0)
         return new_width, height, lines
 
     def render_text(
@@ -266,6 +285,7 @@ class PygameFontFactory:
                 height_delta=height_delta,
                 compact=compact,
                 color=color,
+                align=align,
             )
 
         first_line, *next_lines = text.split("\n")
@@ -275,15 +295,37 @@ class PygameFontFactory:
             words.extend(word for word in line.split(" ") if word)
 
         size = size or self.size
-        first_font = self.get_font(text[0] if text else " ")
-        space_w = first_font.get_rect(" ", size=size).width
+        for c in text:
+            if Unicode.printable(c):
+                first_char = c
+                break
+        else:
+            first_char = " "
+        first_font = self.get_font(first_char)
         line_spacing = first_font.get_sized_height(size) + height_delta
+        space_w = first_font.get_rect(" ", size=size).width
+        ascender = abs(first_font.get_sized_ascender(size)) + 1
+        descender = abs(first_font.get_sized_descender(size))
 
+        lines: List[WordsLine] = []
         task_line = WordsLine()
-        lines: List[WordsLine] = [task_line]
-        x = 0
 
-        for word in words:
+        cursor = 0
+        nb_words = len(words)
+        while cursor < nb_words:
+            word = words[cursor]
+            word_w, word_h, _ = self._get_render_tasks(
+                word, None, size, height_delta, False, line_spacing
+            )
+            if word_h or word_w:
+                lines.append(task_line)
+                break
+            else:
+                cursor += 1
+
+        x = 0
+        for i in range(cursor, nb_words):
+            word = words[i]
             word_w, word_h, word_lines = self._get_render_tasks(
                 word, None, size, height_delta, False, line_spacing
             )
@@ -305,24 +347,17 @@ class PygameFontFactory:
 
         # Compute width, height and ys
         new_width, height = 0, 0
-        start = 0 if lines[0].words else 1
-        if len(lines) - start:
-            first_line = lines[start]
+        if lines:
+            first_line = lines[0]
             first_line.y = (
-                max(c[3].y for w in first_line.words for c in w.tasks) + height_delta
+                ascender + height_delta
                 if compact and first_line.words
                 else line_spacing
             )
-            for i in range(start + 1, len(lines)):
+            for i in range(1, len(lines)):
                 lines[i].y = lines[i - 1].y + line_spacing
-            height = lines[-1].y + max(
-                (c[3].height - c[3].y for w in lines[-1].words for c in w.tasks),
-                default=0,
-            )
-            new_width = max(
-                (lines[i].limit() for i in range(start, len(lines)) if lines[i].words),
-                default=0,
-            )
+            height = lines[-1].y + descender
+            new_width = max((line.limit() for line in lines if line.words), default=0)
 
         background = pygame.Surface((new_width, height), flags=pygame.SRCALPHA)
         if color is not None:

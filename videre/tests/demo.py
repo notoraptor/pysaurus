@@ -72,7 +72,7 @@ def demo_scroll_view(window: Window):
 
 
 def demo_button(window: Window):
-    text = Text(LOREM_IPSUM, size=24, wrap=videre.TextWrap.WORD)
+    text = Text(f"\n{LOREM_IPSUM}", size=24, wrap=videre.TextWrap.WORD)
     window.controls = [
         Column(
             [

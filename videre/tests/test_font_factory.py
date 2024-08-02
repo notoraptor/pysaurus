@@ -13,8 +13,14 @@ from videre.utils.pygame_font_factory import PygameFontFactory
 def test_render_text(factory_cls, function_name):
     height_delta = 2
     ff = factory_cls(size=24, overrides=[FONT_NOTO_REGULAR.path])
-    line_height = ff.get_font(" ").get_sized_height(ff.size) + height_delta
+    font = ff.get_font(" ")
+    line_height = font.get_sized_height(ff.size) + height_delta
+    ascender = abs(font.get_sized_ascender(ff.size)) + 1
+    descender = abs(font.get_sized_descender(ff.size))
+    compact_y = ascender + height_delta
     assert line_height == 35
+    assert ascender == 27
+    assert descender == 8
 
     function = getattr(ff, function_name)
     ff_render_text = functools.partial(
@@ -31,48 +37,48 @@ def test_render_text(factory_cls, function_name):
 
     s = ff_render_text("\n")
     assert s.get_width() == 0
-    assert s.get_height() == line_height
+    assert s.get_height() == 2 * line_height + descender
 
     s = ff_render_text("\n\n\n")
     assert s.get_width() == 0
-    assert s.get_height() == line_height * 3
+    assert s.get_height() == 4 * line_height + descender
 
     s = function("a", height_delta=height_delta, compact=False)
     assert s.get_width() == 12
-    assert s.get_height() == line_height
+    assert s.get_height() == line_height + descender
 
     s = function("a\na", height_delta=height_delta, compact=False)
     assert s.get_width() == 12
-    assert s.get_height() == line_height * 2
+    assert s.get_height() == 2 * line_height + descender
 
     s = function("a\na\na", height_delta=height_delta, compact=False)
     assert s.get_width() == 12
-    assert s.get_height() == line_height * 3
+    assert s.get_height() == 3 * line_height + descender
 
     s = function("a\n\na", height_delta=height_delta, compact=False)
     assert s.get_width() == 12
-    assert s.get_height() == line_height * 3
+    assert s.get_height() == 3 * line_height + descender
 
     s = function("a\n\na\n\n", height_delta=height_delta, compact=False)
     assert s.get_width() == 12
-    assert s.get_height() == line_height * 5
+    assert s.get_height() == 5 * line_height + descender
 
     s = ff_render_text("a")
     assert s.get_width() == 12
-    assert s.get_height() == 15
+    assert s.get_height() == compact_y + descender
 
     s = ff_render_text("a\na")
     assert s.get_width() == 12
-    assert s.get_height() == 15 + line_height
+    assert s.get_height() == compact_y + line_height + descender
 
     s = ff_render_text("a\na\na")
     assert s.get_width() == 12
-    assert s.get_height() == 15 + line_height * 2
+    assert s.get_height() == compact_y + 2 * line_height + descender
 
     s = ff_render_text("a\n\na")
     assert s.get_width() == 12
-    assert s.get_height() == 15 + line_height * 2
+    assert s.get_height() == compact_y + 2 * line_height + descender
 
     s = ff_render_text("a\na\na\n\n")
     assert s.get_width() == 12
-    assert s.get_height() == 15 + line_height * 4
+    assert s.get_height() == compact_y + 4 * line_height + descender
