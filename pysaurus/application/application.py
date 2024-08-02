@@ -67,7 +67,7 @@ class Application:
         self.notifier = notifier
         # Load database names.
         for entry in FileSystem.scandir(self.dbs_dir.path):  # type: os.DirEntry
-            if entry.is_dir():
+            if entry.is_dir() and not entry.name.startswith("."):
                 self.databases[AbsolutePath(entry.path)] = None
         # Load language names.
         for entry in FileSystem.scandir(self.lang_dir.path):  # type: os.DirEntry

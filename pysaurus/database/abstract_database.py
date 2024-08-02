@@ -463,6 +463,10 @@ class AbstractDatabase(ABC):
         logger.info(f"Database closed: {self.get_name()}")
 
     def rename(self, new_name: str) -> None:
+        if new_name.startswith("."):
+            raise exceptions.PysaurusError(
+                f"Database name must not start with dot: {new_name}"
+            )
         self.ways = self.ways.renamed(new_name)
 
     def get_name(self) -> str:
