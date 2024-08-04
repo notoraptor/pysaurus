@@ -87,41 +87,28 @@ class Button(Widget):
             text_surface = self._get_text_surface(text_width)
             bg_w = text_surface.get_width() + 2 * (self._PAD_X + 1)
             bg_h = text_surface.get_height() + 2 * (self._PAD_Y + 1)
-            text_crop = None
         elif width is None:
             text_width = width
             text_surface = self._get_text_surface(text_width)
             bg_w = text_surface.get_width() + 2 * (self._PAD_X + 1)
             bg_h = height
-            text_crop = pygame.Rect(
-                0,
-                0,
-                text_surface.get_width(),
-                min(text_surface.get_height(), max(0, bg_h - 2 * (self._PAD_Y + 1))),
-            )
         elif height is None:
             text_width = max(0, width - 2 * (self._PAD_X + 1))
             text_surface = self._get_text_surface(text_width)
             bg_w = width
             bg_h = text_surface.get_height() + 2 * (self._PAD_Y + 1)
-            text_crop = pygame.Rect(
-                0,
-                0,
-                min(text_surface.get_width(), max(0, bg_w - 2 * (self._PAD_X + 1))),
-                text_surface.get_height(),
-            )
         else:
             text_width = max(0, width - 2 * (self._PAD_X + 1))
             text_surface = self._get_text_surface(text_width)
             bg_w = width
             bg_h = height
-            text_crop = pygame.Rect(
-                0,
-                0,
-                min(text_surface.get_width(), max(0, bg_w - 2 * (self._PAD_X + 1))),
-                min(text_surface.get_height(), max(0, bg_h - 2 * (self._PAD_Y + 1))),
-            )
 
+        text_crop = pygame.Rect(
+            0,
+            0,
+            min(text_surface.get_width(), max(0, bg_w - 2 * (self._PAD_X + 1))),
+            min(text_surface.get_height(), max(0, bg_h - 2 * (self._PAD_Y + 1))),
+        )
         bg = Gradient(self.color).generate(bg_w, bg_h)
         text_x = (bg.get_width() - text_surface.get_width()) // 2
         text_y = (bg.get_height() - text_surface.get_height()) // 2
