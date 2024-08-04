@@ -2,11 +2,11 @@ import videre
 from pysaurus.core.constants import LOREM_IPSUM
 from videre import TextAlign, TextWrap, WidgetSet
 from videre.colors import Colors
+from videre.core.pygame_font_factory import FONT_FACTORY
 from videre.layouts.column import Column
 from videre.layouts.row import Row
 from videre.layouts.scroll.scrollview import ScrollView
 from videre.layouts.zone import Zone
-from videre.utils.pygame_font_factory import FONT_FACTORY
 from videre.widgets.area import Area
 from videre.widgets.button import Button
 from videre.widgets.text import Text

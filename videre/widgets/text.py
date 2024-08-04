@@ -1,7 +1,7 @@
 import pygame
 
-from videre.utils.events import TextAlign, TextWrap
-from videre.utils.pygame_font_factory import FONT_FACTORY
+from videre.core.events import TextAlign, TextWrap
+from videre.core.pygame_font_factory import FONT_FACTORY
 from videre.widgets.widget import Widget
 
 

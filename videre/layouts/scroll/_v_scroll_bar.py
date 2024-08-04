@@ -2,9 +2,9 @@ from typing import Optional, Tuple
 
 import pygame
 
+from videre.core.events import MotionEvent, MouseButton
+from videre.core.mouse_ownership import MouseOwnership
 from videre.layouts.scroll._h_scroll_bar import _HScrollBar
-from videre.utils.events import MotionEvent, MouseButton
-from videre.utils.mouse_ownership import MouseOwnership
 
 
 class _VScrollBar(_HScrollBar):

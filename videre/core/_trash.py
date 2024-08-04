@@ -8,7 +8,7 @@ from pygame.freetype import Font as PFFont
 
 from pysaurus.core.unicode_utils import Unicode
 from videre import TextAlign
-from videre.utils.pygame_font_factory import PygameFontFactory
+from videre.core.pygame_font_factory import PygameFontFactory
 
 
 class CharInfo:

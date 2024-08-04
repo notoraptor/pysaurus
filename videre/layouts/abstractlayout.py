@@ -1,7 +1,7 @@
 from typing import List, Optional, Sequence
 
-from videre.utils.mouse_ownership import MouseOwnership
-from videre.utils.utils import get_top_mouse_owner, get_top_mouse_wheel_owner
+from videre.core.mouse_ownership import MouseOwnership
+from videre.core.utils import get_top_mouse_owner, get_top_mouse_wheel_owner
 from videre.widgets.widget import Widget
 
 

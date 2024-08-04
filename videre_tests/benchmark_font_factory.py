@@ -8,7 +8,7 @@ from pysaurus.core.constants import LOREM_IPSUM
 from pysaurus.core.profiling import PerfCounter
 from resource.fonts import FONT_NOTO_REGULAR
 from videre import Colors, Gradient
-from videre.utils.pygame_font_factory import PygameFontFactory
+from videre.core.pygame_font_factory import PygameFontFactory
 
 
 def benchmark(batch=200):

@@ -5,7 +5,7 @@ import pygame.gfxdraw
 
 from videre import MotionEvent, MouseButton
 from videre.colors import Colors, Gradient
-from videre.utils.pygame_font_factory import FONT_FACTORY
+from videre.core.pygame_font_factory import FONT_FACTORY
 from videre.widgets.widget import Widget
 
 _OnClick = Callable[[Widget], None]

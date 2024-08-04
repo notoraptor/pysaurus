@@ -3,9 +3,9 @@ from typing import Any, Optional, Tuple
 
 import pygame
 
-from videre.utils.events import MotionEvent, MouseButton
-from videre.utils.mouse_ownership import MouseOwnership
-from videre.utils.pygame_utils import PygameUtils
+from videre.core.events import MotionEvent, MouseButton
+from videre.core.mouse_ownership import MouseOwnership
+from videre.core.pygame_utils import PygameUtils
 
 
 class Widget(PygameUtils):

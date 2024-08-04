@@ -3,7 +3,7 @@ from typing import Callable
 import pygame
 import pygame.gfxdraw
 
-from videre.utils.pygame_utils import PygameUtils
+from videre.core.pygame_utils import PygameUtils
 
 
 class Colors:

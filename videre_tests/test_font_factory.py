@@ -3,7 +3,7 @@ import functools
 import pytest
 
 from resource.fonts import FONT_NOTO_REGULAR
-from videre.utils.pygame_font_factory import PygameFontFactory
+from videre.core.pygame_font_factory import PygameFontFactory
 
 
 @pytest.mark.parametrize(

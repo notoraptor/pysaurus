@@ -6,8 +6,8 @@ from typing import Dict, List, Optional
 import pygame
 from pygame.event import Event
 
-from videre.utils.events import MotionEvent, MouseButton
-from videre.utils.utils import get_top_mouse_owner, get_top_mouse_wheel_owner
+from videre.core.events import MotionEvent, MouseButton
+from videre.core.utils import get_top_mouse_owner, get_top_mouse_wheel_owner
 from videre.widgets.widget import Widget
 
 

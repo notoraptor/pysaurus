@@ -3,10 +3,10 @@ from typing import Optional, Tuple
 
 import pygame
 
+from videre.core.mouse_ownership import MouseOwnership
 from videre.layouts.abstractlayout import AbstractLayout
 from videre.layouts.scroll._h_scroll_bar import _HScrollBar
 from videre.layouts.scroll._v_scroll_bar import _VScrollBar
-from videre.utils.mouse_ownership import MouseOwnership
 from videre.widgets.widget import Widget
 
 

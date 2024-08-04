@@ -1,6 +1,6 @@
 from typing import Optional, Sequence
 
-from videre.utils.mouse_ownership import MouseOwnership
+from videre.core.mouse_ownership import MouseOwnership
 from videre.widgets.widget import Widget
 
 
