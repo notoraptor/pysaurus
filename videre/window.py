@@ -60,15 +60,16 @@ class Window:
         clock = pygame.time.Clock()
 
         self._render(screen)
-        pygame.event.post(
-            Event(
-                pygame.MOUSEMOTION,
-                pos=pygame.mouse.get_pos(),
-                rel=(0, 0),
-                buttons=(0, 0, 0),
-                touch=False,
+        if pygame.mouse.get_focused():
+            pygame.event.post(
+                Event(
+                    pygame.MOUSEMOTION,
+                    pos=pygame.mouse.get_pos(),
+                    rel=(0, 0),
+                    buttons=(0, 0, 0),
+                    touch=False,
+                )
             )
-        )
 
         while self._running:
             for event in pygame.event.get():
