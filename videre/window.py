@@ -7,7 +7,7 @@ import pygame
 from pygame.event import Event
 
 from videre.core.events import MotionEvent, MouseButton
-from videre.core.utils import get_top_mouse_owner, get_top_mouse_wheel_owner
+from videre.layouts.abstractlayout import AbstractControlsLayout
 from videre.widgets.widget import Widget
 
 
@@ -19,12 +19,30 @@ def on_event(event_type: int):
     return decorator
 
 
+class WindowLayout(AbstractControlsLayout):
+    __slots__ = ()
+
+    def __init__(self, screen: pygame.Surface):
+        super().__init__()
+        self._surface = screen
+
+    def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
+        screen = self._surface
+
+        screen_width, screen_height = screen.get_width(), screen.get_height()
+        screen.fill("white")
+        for control in self.controls:
+            surface = control.render(self, screen_width, screen_height)
+            screen.blit(surface, (control.x, control.y))
+
+        return screen
+
+
 class Window:
     def __init__(self, title="Window", width=1280, height=720):
         self.title = title
         self.width = width
         self.height = height
-        self.surfaces = []
         self.controls: List[Widget] = []
         self._running = True
         self._event_callbacks = {}
@@ -32,6 +50,7 @@ class Window:
             button: None for button in MouseButton
         }
         self._motion: Optional[Widget] = None
+        self._layout: Optional[WindowLayout] = None
 
         self.__collect_event_callbacks()
 
@@ -59,7 +78,8 @@ class Window:
         pygame.display.set_caption(self.title)
         clock = pygame.time.Clock()
 
-        self._render(screen)
+        self._layout = WindowLayout(screen)
+        self._render()
         if pygame.mouse.get_focused():
             pygame.event.post(
                 Event(
@@ -74,18 +94,13 @@ class Window:
         while self._running:
             for event in pygame.event.get():
                 self.__on_event(event)
-            self._render(screen)
+            self._render()
             clock.tick(60)
         pygame.quit()
 
-    def _render(self, screen: pygame.Surface):
-        screen_width, screen_height = screen.get_width(), screen.get_height()
-        screen.fill("white")
-        for control in self.controls:
-            surface = control.render(self, screen_width, screen_height)
-            screen.blit(surface, (control.x, control.y))
-        for surface in self.surfaces:
-            screen.blit(surface, (0, 0))
+    def _render(self):
+        self._layout.controls = self.controls
+        self._layout.render(self)
         pygame.display.flip()
 
     def __on_event(self, event: Event):
@@ -105,7 +120,7 @@ class Window:
 
     @on_event(pygame.MOUSEWHEEL)
     def _on_mouse_wheel(self, event: Event):
-        owner = get_top_mouse_wheel_owner(*pygame.mouse.get_pos(), self.controls)
+        owner = self._layout.get_mouse_wheel_owner(*pygame.mouse.get_pos())
         if owner:
             shift = pygame.key.get_mods() & pygame.KMOD_SHIFT
             # print(owner, event.x, event.y, shift)
@@ -113,7 +128,7 @@ class Window:
 
     @on_event(pygame.MOUSEBUTTONDOWN)
     def _on_mouse_button_down(self, event: Event):
-        owner = get_top_mouse_owner(*event.pos, self.controls)
+        owner = self._layout.get_mouse_owner(*event.pos)
         if owner:
             button = MouseButton(event.button)
             self._down[button] = owner.widget
@@ -122,7 +137,7 @@ class Window:
     @on_event(pygame.MOUSEBUTTONUP)
     def _on_mouse_button_up(self, event: Event):
         button = MouseButton(event.button)
-        owner = get_top_mouse_owner(*event.pos, self.controls)
+        owner = self._layout.get_mouse_owner(*event.pos)
         if owner:
             owner.widget.handle_mouse_up(button, owner.rel_x, owner.rel_y)
             if self._down[button] == owner.widget:
@@ -136,7 +151,7 @@ class Window:
     @on_event(pygame.MOUSEMOTION)
     def _on_mouse_motion(self, event: Event):
         m_event = MotionEvent(event)
-        owner = get_top_mouse_owner(*event.pos, self.controls)
+        owner = self._layout.get_mouse_owner(*event.pos)
         if owner:
             m_event = MotionEvent(event, owner.rel_x, owner.rel_y)
             if not self._motion:

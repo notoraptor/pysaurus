@@ -1,7 +1,6 @@
 from typing import List, Optional, Sequence
 
 from videre.core.mouse_ownership import MouseOwnership
-from videre.core.utils import get_top_mouse_owner, get_top_mouse_wheel_owner
 from videre.widgets.widget import Widget
 
 
@@ -52,3 +51,23 @@ class AbstractControlsLayout(AbstractLayout):
     @controls.setter
     def controls(self, controls: Sequence[Widget]):
         self._set_controls(controls)
+
+
+def get_top_mouse_owner(
+    x: int, y: int, controls: Sequence[Widget]
+) -> Optional[MouseOwnership]:
+    for ctrl in reversed(controls):
+        owner = ctrl.get_mouse_owner(x, y)
+        if owner is not None:
+            return owner
+    return None
+
+
+def get_top_mouse_wheel_owner(
+    x: int, y: int, controls: Sequence[Widget]
+) -> Optional[MouseOwnership]:
+    for ctrl in reversed(controls):
+        owner = ctrl.get_mouse_wheel_owner(x, y)
+        if owner is not None:
+            return owner
+    return None
