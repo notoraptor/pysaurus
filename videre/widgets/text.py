@@ -1,7 +1,6 @@
 import pygame
 
 from videre.core.events import TextAlign, TextWrap
-from videre.core.pygame_font_factory import FONT_FACTORY
 from videre.widgets.widget import Widget
 
 
@@ -42,12 +41,12 @@ class Text(Widget):
     def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
         wrap = self.wrap
         if wrap == TextWrap.NONE:
-            return FONT_FACTORY.render_text(self.text, None, self.size, compact=True)
+            return window.fonts.render_text(self.text, None, self.size, compact=True)
         elif wrap == TextWrap.CHAR:
-            return FONT_FACTORY.render_text(
+            return window.fonts.render_text(
                 self.text, width, self.size, compact=True, align=self.align
             )
         else:
-            return FONT_FACTORY.render_text_wrap_words(
+            return window.fonts.render_text_wrap_words(
                 self.text, width, self.size, compact=True, align=self.align
             )

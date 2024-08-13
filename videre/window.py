@@ -6,7 +6,9 @@ from typing import Dict, List, Optional
 import pygame
 from pygame.event import Event
 
+from resource.fonts import FONT_NOTO_REGULAR
 from videre.core.events import MotionEvent, MouseButton
+from videre.core.pygame_font_factory import PygameFontFactory
 from videre.layouts.abstractlayout import AbstractControlsLayout
 from videre.widgets.widget import Widget
 
@@ -32,7 +34,7 @@ class WindowLayout(AbstractControlsLayout):
         screen_width, screen_height = screen.get_width(), screen.get_height()
         screen.fill("white")
         for control in self.controls:
-            surface = control.render(self, screen_width, screen_height)
+            surface = control.render(window, screen_width, screen_height)
             screen.blit(surface, (control.x, control.y))
 
         return screen
@@ -51,6 +53,8 @@ class Window:
         }
         self._motion: Optional[Widget] = None
         self._layout: Optional[WindowLayout] = None
+
+        self.fonts = PygameFontFactory(overrides=[FONT_NOTO_REGULAR.path])
 
         self.__collect_event_callbacks()
 

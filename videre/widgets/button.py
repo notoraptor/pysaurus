@@ -5,7 +5,6 @@ import pygame.gfxdraw
 
 from videre import MotionEvent, MouseButton
 from videre.colors import Colors, Gradient
-from videre.core.pygame_font_factory import FONT_FACTORY
 from videre.widgets.widget import Widget
 
 _OnClick = Callable[[Widget], None]
@@ -84,22 +83,22 @@ class Button(Widget):
     def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
         if width is None and height is None:
             text_width = width
-            text_surface = self._get_text_surface(text_width)
+            text_surface = self._get_text_surface(window, text_width)
             bg_w = text_surface.get_width() + 2 * (self._PAD_X + 1)
             bg_h = text_surface.get_height() + 2 * (self._PAD_Y + 1)
         elif width is None:
             text_width = width
-            text_surface = self._get_text_surface(text_width)
+            text_surface = self._get_text_surface(window, text_width)
             bg_w = text_surface.get_width() + 2 * (self._PAD_X + 1)
             bg_h = height
         elif height is None:
             text_width = max(0, width - 2 * (self._PAD_X + 1))
-            text_surface = self._get_text_surface(text_width)
+            text_surface = self._get_text_surface(window, text_width)
             bg_w = width
             bg_h = text_surface.get_height() + 2 * (self._PAD_Y + 1)
         else:
             text_width = max(0, width - 2 * (self._PAD_X + 1))
-            text_surface = self._get_text_surface(text_width)
+            text_surface = self._get_text_surface(window, text_width)
             bg_w = width
             bg_h = height
 
@@ -120,5 +119,5 @@ class Button(Widget):
         # Done
         return bg
 
-    def _get_text_surface(self, width: Optional[int] = None) -> pygame.Surface:
-        return FONT_FACTORY.render_text(self.text, width, height_delta=0, compact=True)
+    def _get_text_surface(self, window, width: Optional[int] = None) -> pygame.Surface:
+        return window.fonts.render_text(self.text, width, height_delta=0, compact=True)

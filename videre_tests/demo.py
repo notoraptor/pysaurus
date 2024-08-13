@@ -2,7 +2,6 @@ import videre
 from pysaurus.core.constants import LOREM_IPSUM
 from videre import TextAlign, TextWrap, WidgetSet
 from videre.colors import Colors
-from videre.core.pygame_font_factory import FONT_FACTORY
 from videre.layouts.column import Column
 from videre.layouts.row import Row
 from videre.layouts.scroll.scrollview import ScrollView
@@ -14,7 +13,7 @@ from videre.window import Window
 
 
 def demo(window: Window):
-    text = "小松 未可子 | 🌀 hello world | " + FONT_FACTORY.provider.lorem_ipsum()
+    text = "小松 未可子 | 🌀 hello world | " + window.fonts.provider.lorem_ipsum()
     text = "\t\n" + LOREM_IPSUM
     window.controls.append(
         Zone(
@@ -54,7 +53,7 @@ def demo(window: Window):
 
 def demo_scroll_view(window: Window):
     text = "hello world lorem ipsum"
-    text = "小松 未可子 | 🌀 hello world lorem ipsum | " + FONT_FACTORY.provider.lorem_ipsum(
+    text = "小松 未可子 | 🌀 hello world lorem ipsum | " + window.fonts.provider.lorem_ipsum(
         8, "\n"
     )
     text = LOREM_IPSUM

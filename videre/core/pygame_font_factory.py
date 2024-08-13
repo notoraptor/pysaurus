@@ -6,7 +6,7 @@ import pygame.freetype
 from pygame.freetype import Font as PFFont
 
 from pysaurus.core.unicode_utils import Unicode
-from resource.fonts import FONT_NOTO_REGULAR, FontProvider
+from resource.fonts import FontProvider
 from videre import TextAlign
 
 # c, font, x, bounds
@@ -371,6 +371,3 @@ class PygameFontFactory:
                 for c, font, cx, _ in word.tasks:
                     font.render_to(background, (x + cx, y), c, size=size)
         return background
-
-
-FONT_FACTORY = PygameFontFactory(overrides=[FONT_NOTO_REGULAR.path])
