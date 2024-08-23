@@ -120,4 +120,4 @@ class Button(Widget):
         return bg
 
     def _get_text_surface(self, window, width: Optional[int] = None) -> pygame.Surface:
-        return window.fonts.render_text(self.text, width, height_delta=0, compact=True)
+        return window.fonts.render_text(self.text, width, height_delta=0)

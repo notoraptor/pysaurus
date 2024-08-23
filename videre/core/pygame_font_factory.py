@@ -232,12 +232,11 @@ class PygameFontFactory:
             new_width = max((line.limit() for line in lines if line.tasks), default=0)
         return new_width, height, lines
 
-    def render_text(
+    def _render_unwrapped_text(
         self,
         text: str,
         width: int = None,
         size: int = 0,
-        *,
         height_delta=2,
         compact=False,
         color: pygame.Color = None,
@@ -267,18 +266,20 @@ class PygameFontFactory:
                         font.render_to(background, (x + cx, y), c, size=size)
         return background
 
-    def render_text_wrap_words(
+    def render_text(
         self,
         text: str,
         width: int = None,
         size: int = 0,
+        *,
         height_delta=2,
-        compact=False,
+        compact=True,
         color: pygame.Color = None,
         align=TextAlign.LEFT,
+        wrap_words=False,
     ) -> pygame.Surface:
-        if width is None:
-            return self.render_text(
+        if width is None or not wrap_words:
+            return self._render_unwrapped_text(
                 text,
                 width,
                 size,

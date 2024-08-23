@@ -41,12 +41,12 @@ class Text(Widget):
     def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
         wrap = self.wrap
         if wrap == TextWrap.NONE:
-            return window.fonts.render_text(self.text, None, self.size, compact=True)
+            return window.fonts.render_text(self.text, None, self.size)
         elif wrap == TextWrap.CHAR:
             return window.fonts.render_text(
-                self.text, width, self.size, compact=True, align=self.align
+                self.text, width, self.size, align=self.align
             )
         else:
-            return window.fonts.render_text_wrap_words(
-                self.text, width, self.size, compact=True, align=self.align
+            return window.fonts.render_text(
+                self.text, width, self.size, align=self.align, wrap_words=True
             )

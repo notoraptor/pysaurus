@@ -7,10 +7,13 @@ from videre.core.pygame_font_factory import PygameFontFactory
 
 
 @pytest.mark.parametrize(
-    "factory_cls,function_name",
-    ((PygameFontFactory, "render_text"), (PygameFontFactory, "render_text_wrap_words")),
+    "factory_cls,function_name,wrap_words",
+    (
+        (PygameFontFactory, "render_text", False),
+        (PygameFontFactory, "render_text", True),
+    ),
 )
-def test_render_text(factory_cls, function_name):
+def test_render_text(factory_cls, function_name, wrap_words):
     height_delta = 2
     ff = factory_cls(size=24, overrides=[FONT_NOTO_REGULAR.path])
     font = ff.get_font(" ")
@@ -22,7 +25,8 @@ def test_render_text(factory_cls, function_name):
     assert ascender == 27
     assert descender == 8
 
-    function = getattr(ff, function_name)
+    base_function = getattr(ff, function_name)
+    function = functools.partial(base_function, wrap_words=wrap_words)
     ff_render_text = functools.partial(
         function, compact=True, height_delta=height_delta
     )
