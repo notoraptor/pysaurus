@@ -155,5 +155,5 @@ class WithSchema:
         )
 
 
-def schema_prop(name):
+def schema_prop(name) -> property:
     return property(lambda self: self._get(name), lambda self, v: self._set(name, v))
