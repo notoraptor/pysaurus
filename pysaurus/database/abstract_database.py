@@ -345,8 +345,9 @@ class AbstractDatabase(ABC):
     def _find_video_paths_for_update(
         self, file_paths: Dict[AbsolutePath, VideoRuntimeInfo]
     ) -> List[str]:
-        all_file_names = []
-        for file_name, file_info in file_paths.items():
+        return sorted(
+            file_name.standard_path
+            for file_name, file_info in file_paths.items()
             if not self.get_videos(
                 include=(),
                 where={
@@ -355,11 +356,8 @@ class AbstractDatabase(ABC):
                     "file_size": file_info.size,
                     "driver_id": file_info.driver_id,
                 },
-            ):
-                all_file_names.append(file_name.standard_path)
-
-        all_file_names.sort()
-        return all_file_names
+            )
+        )
 
     def _get_collectable_missing_thumbnails(self) -> Dict[str, int]:
         return {
