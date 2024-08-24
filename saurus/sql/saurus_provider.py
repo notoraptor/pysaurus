@@ -1,10 +1,10 @@
 from typing import List, Sequence
 
 from pysaurus.core.classes import Selector
-from pysaurus.database.viewport.abstract_video_provider import AbstractVideoProvider
-from pysaurus.database.viewport.view_tools import GroupDef, LookupArray, SearchDef
 from pysaurus.video.video_search_context import VideoSearchContext
+from pysaurus.video_provider.abstract_video_provider import AbstractVideoProvider
 from pysaurus.video_provider.provider_utils import parse_sorting, parse_sources
+from pysaurus.video_provider.view_tools import GroupDef, LookupArray, SearchDef
 from saurus.sql.saurus_provider_utils import GroupCount
 from saurus.sql.video_mega_search import video_mega_group
 

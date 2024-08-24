@@ -1,5 +1,5 @@
 from pysaurus.database.jsdb.jsdbvideo.lazy_video import LazyVideo as Video
-from pysaurus.database.viewport.source_def import SourceDef, SourceFlag
+from pysaurus.video_provider.source_def import SourceDef, SourceFlag
 from tests.utils_testing import get_database
 
 

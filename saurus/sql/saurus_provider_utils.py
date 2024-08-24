@@ -1,7 +1,7 @@
 from typing import Any, Iterable, List, Tuple
 
 from pysaurus.core import functions
-from pysaurus.database.viewport.view_tools import SearchDef
+from pysaurus.video_provider.view_tools import SearchDef
 from saurus.sql.video_parser import FieldQuery, VideoFieldQueryParser
 
 

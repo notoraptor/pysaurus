@@ -4,6 +4,9 @@ from ctypes import pointer
 import numpy as np
 from PIL import Image
 
+from other.legacy.pysaurus.database.video_similarities.backend_numba import (
+    compare_faster as compare_numba,
+)
 from other.legacy.pysaurus.database.video_similarities.backend_numba_numpy import (
     compare_faster as compare_numba_numpy,
 )
@@ -11,19 +14,14 @@ from other.legacy.pysaurus.database.video_similarities.backend_numpy import (
     compare_faster,
 )
 from pysaurus.core.profiling import Profiler
-from pysaurus.database.video_similarities.alignment_raptor.alignment import (
+from pysaurus.miniature.miniature import Miniature, NumpyMiniature
+from pysaurus.video_similarities import (
+    compare_faster as compare_python,
     miniature_to_c_sequence,
 )
-from pysaurus.database.video_similarities.alignment_raptor.symbols import (
+from pysaurus.video_similarities.alignment_raptor.symbols import (
     fn_compareSimilarSequences,
 )
-from pysaurus.database.video_similarities.backend_numba import (
-    compare_faster as compare_numba,
-)
-from pysaurus.database.video_similarities.backend_python import (
-    compare_faster as compare_python,
-)
-from pysaurus.miniature.miniature import Miniature, NumpyMiniature
 
 
 def miniature_to_numba(m: Miniature):

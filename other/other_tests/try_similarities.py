@@ -13,13 +13,11 @@ from other.legacy.pysaurus.database.video_similarities.backend_numpy import (
     shift_top_right,
 )
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
-from pysaurus.database.video_similarities.alignment_raptor.alignment import (
+from pysaurus.miniature.miniature import Miniature
+from pysaurus.video_similarities import (
     classify_similarities_directed as f_cpp,
-)
-from pysaurus.database.video_similarities.backend_python import (
     classify_similarities_directed as f_py,
 )
-from pysaurus.miniature.miniature import Miniature
 
 
 def main():

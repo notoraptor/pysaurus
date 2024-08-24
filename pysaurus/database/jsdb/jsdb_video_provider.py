@@ -9,12 +9,12 @@ from pysaurus.core.classes import Selector
 from pysaurus.core.components import Duration, FileSize
 from pysaurus.core.functions import compute_nb_pages
 from pysaurus.core.profiling import Profiler
-from pysaurus.database.viewport.abstract_video_provider import AbstractVideoProvider
-from pysaurus.database.viewport.source_def import SourceDef
-from pysaurus.database.viewport.view_tools import Group, GroupArray, GroupDef, SearchDef
 from pysaurus.video.video_search_context import VideoSearchContext
 from pysaurus.video.video_sorting import VideoSorting
+from pysaurus.video_provider.abstract_video_provider import AbstractVideoProvider
 from pysaurus.video_provider.provider_utils import parse_sorting, parse_sources
+from pysaurus.video_provider.source_def import SourceDef
+from pysaurus.video_provider.view_tools import Group, GroupArray, GroupDef, SearchDef
 
 logger = logging.getLogger(__name__)
 EMPTY_SET = set()
@@ -363,7 +363,7 @@ class LayerSort(Layer):
         )
 
     def delete(self, video_id: int):
-        # See commentary in pysaurus.database.viewport.video_filter.LayerSource.delete
+        # See commentary in LayerSource.delete
         functions.remove_from_list(self.output, video_id)
 
 

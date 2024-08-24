@@ -1,5 +1,5 @@
 from pysaurus.core.classes import Selector
-from pysaurus.database.viewport.view_tools import GroupDef, SearchDef
+from pysaurus.video_provider.view_tools import GroupDef, SearchDef
 
 
 class VideoSearchContext:

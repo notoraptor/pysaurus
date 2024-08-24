@@ -30,7 +30,6 @@ from pysaurus.database.algorithms.videos import Videos
 from pysaurus.database.db_settings import DbSettings
 from pysaurus.database.db_way_def import DbWays
 from pysaurus.database.json_database_utils import DatabaseSaved, DatabaseToSaveContext
-from pysaurus.database.viewport.abstract_video_provider import AbstractVideoProvider
 from pysaurus.miniature.miniature import Miniature
 from pysaurus.properties.properties import (
     PropRawType,
@@ -39,6 +38,7 @@ from pysaurus.properties.properties import (
     PropValueType,
 )
 from pysaurus.video import VideoRuntimeInfo
+from pysaurus.video_provider.abstract_video_provider import AbstractVideoProvider
 from saurus.language import say
 from saurus.sql.video_entry import VideoEntry
 

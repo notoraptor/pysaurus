@@ -4,10 +4,10 @@ from typing import Dict, Iterable, List, Sequence, Tuple
 from pysaurus.core.classes import Selector
 from pysaurus.core.components import AbsolutePath, Duration, FileSize
 from pysaurus.core.functions import compute_nb_pages
-from pysaurus.database.viewport.view_tools import GroupDef, LookupArray, SearchDef
 from pysaurus.properties.properties import PropTypeValidator
 from pysaurus.video.video_search_context import VideoSearchContext
 from pysaurus.video.video_sorting import VideoSorting
+from pysaurus.video_provider.view_tools import GroupDef, LookupArray, SearchDef
 from saurus.sql.grouping_utils import SqlFieldFactory
 from saurus.sql.prop_type_search import prop_type_search
 from saurus.sql.pysaurus_connection import PysaurusConnection

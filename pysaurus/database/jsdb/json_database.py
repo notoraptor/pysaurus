@@ -22,7 +22,7 @@ from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.abstract_database import AbstractDatabase
 from pysaurus.database.db_settings import DbSettings
-from pysaurus.database.db_video_attribute import PotentialMoveAttribute
+from pysaurus.database.jsdb.db_video_attribute import PotentialMoveAttribute
 from pysaurus.database.jsdb.jsdb_video_provider import JsonDatabaseVideoProvider
 from pysaurus.database.jsdb.jsdbvideo.abstract_video_indexer import AbstractVideoIndexer
 from pysaurus.database.jsdb.jsdbvideo.json_video_features import (
@@ -30,7 +30,7 @@ from pysaurus.database.jsdb.jsdbvideo.json_video_features import (
 )
 from pysaurus.database.jsdb.jsdbvideo.lazy_video import LazyVideo as Video
 from pysaurus.database.jsdb.jsdbvideo.video_indexer import VideoIndexer
-from pysaurus.database.jsdb.thubmnail_database import ThumbnailManager
+from pysaurus.database.jsdb.thubmnail_database.thumbnail_manager import ThumbnailManager
 from pysaurus.database.json_database_utils import DatabaseLoaded, patch_database_json
 from pysaurus.properties.properties import (
     PropRawType,

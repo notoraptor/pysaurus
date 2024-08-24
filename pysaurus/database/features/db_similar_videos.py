@@ -21,13 +21,11 @@ from saurus.language import say
 logger = logging.getLogger(__name__)
 
 try:
-    from pysaurus.database.video_similarities.alignment_raptor import (
-        alignment as backend_sim,
-    )
+    from pysaurus.video_similarities.alignment_raptor import alignment as backend_sim
 
     has_cpp = True
 except exceptions.CysaurusUnavailable:
-    from pysaurus.database.video_similarities import backend_python as backend_sim
+    from pysaurus.video_similarities import backend_python as backend_sim
 
     has_cpp = False
     logger.warning("Using fallback backend for video similarities search.")

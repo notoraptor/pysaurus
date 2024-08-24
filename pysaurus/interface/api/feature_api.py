@@ -8,9 +8,6 @@ from pysaurus.core.classes import Selector, StringPrinter
 from pysaurus.core.constants import PYTHON_DEFAULT_SOURCES
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.abstract_database import AbstractDatabase as Db
-from pysaurus.database.viewport.abstract_video_provider import (
-    AbstractVideoProvider as View,
-)
 from pysaurus.interface.api.api_utils.proxy_feature import (
     FromApp,
     FromDb,
@@ -19,6 +16,9 @@ from pysaurus.interface.api.api_utils.proxy_feature import (
 )
 from pysaurus.video.video_constants import COMMON_FIELDS
 from pysaurus.video.video_features import VideoFeatures
+from pysaurus.video_provider.abstract_video_provider import (
+    AbstractVideoProvider as View,
+)
 
 
 class FeatureAPI:

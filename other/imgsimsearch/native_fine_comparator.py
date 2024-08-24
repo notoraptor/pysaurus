@@ -6,13 +6,13 @@ from tqdm import tqdm
 from other.imgsimsearch.abstract_image_provider import AbstractImageProvider
 from other.imgsimsearch.graph import Graph
 from pysaurus.core.profiling import InlineProfiler
-from pysaurus.database.video_similarities.alignment_raptor.alignment import (
+from pysaurus.miniature.miniature import Miniature
+from pysaurus.video_similarities.alignment_raptor.alignment import (
     miniature_to_c_sequence,
 )
-from pysaurus.database.video_similarities.alignment_raptor.symbols import (
+from pysaurus.video_similarities.alignment_raptor.symbols import (
     fn_compareSimilarSequences,
 )
-from pysaurus.miniature.miniature import Miniature
 
 SIM_LIMIT = 89 / 100
 SIMPLE_MAX_PIXEL_DISTANCE = 255 * 3
