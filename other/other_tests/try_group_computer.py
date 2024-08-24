@@ -13,7 +13,7 @@ from pysaurus.core.modules import ImageUtils
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.db_settings import DbSettings
 from pysaurus.database.db_way_def import DbWays
-from pysaurus.database.thubmnail_database.thumbnail_manager import ThumbnailManager
+from pysaurus.database.jsdb.thubmnail_database import ThumbnailManager
 from pysaurus.miniature.group_computer import GroupComputer
 from pysaurus.miniature.pixel_group import PixelGroup
 from saurus.sql.pysaurus_program import PysaurusProgram

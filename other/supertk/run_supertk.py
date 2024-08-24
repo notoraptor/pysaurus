@@ -15,8 +15,8 @@ from other.supertk.supertk import (
     padding,
 )
 from other.supertk.window import Window
-from pysaurus.core.constants import LOREM_IPSUM
 from pysaurus import package_dir
+from pysaurus.core.constants import LOREM_IPSUM
 
 
 class MyApp:

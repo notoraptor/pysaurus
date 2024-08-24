@@ -3,7 +3,7 @@ from abc import ABCMeta, abstractmethod
 from typing import Iterable, Sequence
 
 from pysaurus.core.components import AbsolutePath
-from pysaurus.video import Video
+from pysaurus.database.jsdb.jsdbvideo.lazy_video import LazyVideo as Video
 
 logger = logging.getLogger(__name__)
 

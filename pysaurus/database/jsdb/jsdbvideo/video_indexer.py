@@ -5,10 +5,10 @@ from pysaurus.core.components import AbsolutePath
 from pysaurus.core.informer import Informer
 from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.profiling import Profiler
-from pysaurus.video import Video
-from pysaurus.video.abstract_video_indexer import AbstractVideoIndexer
-from pysaurus.video.tag import Tag
-from pysaurus.video.video_utils import video_to_tags
+from pysaurus.database.jsdb.jsdbvideo.abstract_video_indexer import AbstractVideoIndexer
+from pysaurus.database.jsdb.jsdbvideo.lazy_video import LazyVideo as Video
+from pysaurus.database.jsdb.jsdbvideo.tag import Tag
+from pysaurus.database.jsdb.jsdbvideo.video_utils import video_to_tags
 
 EMPTY_SET = set()
 

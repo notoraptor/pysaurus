@@ -23,22 +23,24 @@ from pysaurus.core.profiling import Profiler
 from pysaurus.database.abstract_database import AbstractDatabase
 from pysaurus.database.db_settings import DbSettings
 from pysaurus.database.db_video_attribute import PotentialMoveAttribute
+from pysaurus.database.jsdb.jsdb_video_provider import JsonDatabaseVideoProvider
+from pysaurus.database.jsdb.jsdbvideo.abstract_video_indexer import AbstractVideoIndexer
+from pysaurus.database.jsdb.jsdbvideo.json_video_features import (
+    JsonVideoFeatures as VideoFeatures,
+)
+from pysaurus.database.jsdb.jsdbvideo.lazy_video import LazyVideo as Video
+from pysaurus.database.jsdb.jsdbvideo.video_indexer import VideoIndexer
+from pysaurus.database.jsdb.thubmnail_database import ThumbnailManager
 from pysaurus.database.json_database_utils import DatabaseLoaded, patch_database_json
-from pysaurus.database.special_properties import SpecialProperties
-from pysaurus.database.thubmnail_database.thumbnail_manager import ThumbnailManager
-from pysaurus.database.viewport.video_filter import VideoFilter
 from pysaurus.properties.properties import (
     PropRawType,
     PropType,
     PropTypeValidator,
     PropUnitType,
 )
-from pysaurus.video import Video, VideoRuntimeInfo
-from pysaurus.video.abstract_video_indexer import AbstractVideoIndexer
-from pysaurus.video.video_features import VideoFeatures
-from pysaurus.video.video_indexer import VideoIndexer
+from pysaurus.video import VideoRuntimeInfo
+from pysaurus.video.video_constants import VIDEO_FLAGS
 from pysaurus.video.video_sorting import VideoSorting
-from pysaurus.video.video_utils import VIDEO_FLAGS
 from saurus.sql.video_entry import VideoEntry
 
 logger = logging.getLogger(__name__)
@@ -68,7 +70,9 @@ class JsonDatabase(AbstractDatabase):
         notifier: Notifier = DEFAULT_NOTIFIER,
         indexer: AbstractVideoIndexer = None,
     ):
-        super().__init__(db_folder, notifier=notifier, provider=VideoFilter(self))
+        super().__init__(
+            db_folder, notifier=notifier, provider=JsonDatabaseVideoProvider(self)
+        )
         # Database content
         self._version = 2
         self.settings = DbSettings()
@@ -203,10 +207,6 @@ class JsonDatabase(AbstractDatabase):
         if video in self._modified:
             self._modified.remove(video)
         self._removed.add(video)
-
-    def _jsondb_register_replaced(self, new_video: Video, old_video: Video):
-        self._jsondb_register_removed(old_video)
-        self.jsondb_register_modified(new_video)
 
     def _jsondb_flush_changes(self):
         # Prepare updating moves_attribute if having removed or added videos.
@@ -437,9 +437,6 @@ class JsonDatabase(AbstractDatabase):
             prop_type.multiple = multiple
             self.save()
 
-    def get_prop_values(self, video_id: int, name: str) -> Collection[PropUnitType]:
-        return self._id_to_video[video_id].get_property(name)
-
     def update_prop_values(
         self, video_id: int, name: str, values: Collection, *, merge=False
     ) -> bool:
@@ -472,7 +469,9 @@ class JsonDatabase(AbstractDatabase):
                 "filename",
             )
         )
-        self._jsondb_register_replaced(new_video, old_video)
+        # JSON database: register replaced
+        self._jsondb_register_removed(old_video)
+        self.jsondb_register_modified(new_video)
 
     def get_videos(
         self,
@@ -558,8 +557,6 @@ class JsonDatabase(AbstractDatabase):
                     video_state.video_id = old_video.video_id
                     video_state.thumb_name = old_video.thumb_name
                     video_state.date_entry_opened = old_video.date_entry_opened.time
-                # Set special properties
-                SpecialProperties.set(video_state)
             # Video modified, so automatically added to __modified.
             video_state.runtime = runtime_info[file_path]
             videos.append(video_state)
@@ -625,7 +622,7 @@ class JsonDatabase(AbstractDatabase):
         self, name: str, indices: List[int] = ()
     ) -> Dict[int, Collection[PropUnitType]]:
         return {
-            video_id: self.get_prop_values(video_id, name)
+            video_id: self._id_to_video[video_id].get_property(name)
             for video_id in (indices or self._get_all_video_indices())
         }
 

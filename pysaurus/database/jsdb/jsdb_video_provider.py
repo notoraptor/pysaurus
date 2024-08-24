@@ -160,7 +160,8 @@ class _AbstractLayerGrouping(Layer):
         return self.video_id_to_values[video_id]
 
     def _get_prop_values(self, video_id: int, name: str) -> List:
-        values = self.database.get_prop_values(video_id, name)
+        results = self.database.get_all_prop_values(name, [video_id])
+        values = results[video_id]
         assert isinstance(values, list)
         if not values and self.database.get_prop_types(name=name, multiple=False):
             values = [self.database.default_prop_unit(name)]
@@ -366,7 +367,7 @@ class LayerSort(Layer):
         functions.remove_from_list(self.output, video_id)
 
 
-class VideoFilter(AbstractVideoProvider):
+class JsonDatabaseVideoProvider(AbstractVideoProvider):
     __slots__ = ("pipeline", "layers")
 
     _LAYER_NAMES_ = {

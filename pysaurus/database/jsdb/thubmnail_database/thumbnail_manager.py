@@ -3,7 +3,9 @@ from io import BytesIO
 from typing import Dict, Iterable, List, Optional, Set
 
 from pysaurus.core.components import AbsolutePath
-from pysaurus.database.thubmnail_database.thumbnail_database import ThumbnailDatabase
+from pysaurus.database.jsdb.thubmnail_database.thumbnail_database import (
+    ThumbnailDatabase,
+)
 from pysaurus.video_raptor.video_raptor_pyav import VideoRaptor
 
 

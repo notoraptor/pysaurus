@@ -17,8 +17,8 @@ from pysaurus.interface.api.api_utils.proxy_feature import (
     FromView,
     ProxyFeature,
 )
+from pysaurus.video.video_constants import COMMON_FIELDS
 from pysaurus.video.video_features import VideoFeatures
-from pysaurus.video.video_utils import COMMON_FIELDS
 
 
 class FeatureAPI:

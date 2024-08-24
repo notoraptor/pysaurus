@@ -9,14 +9,14 @@ from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.db_settings import DbSettings
 from pysaurus.database.db_way_def import DbWays
-from pysaurus.database.thubmnail_database.thumbnail_manager import ThumbnailManager
+from pysaurus.database.jsdb.jsdbvideo.lazy_video import LazyVideo as Video
+from pysaurus.database.jsdb.thubmnail_database import ThumbnailManager
 from pysaurus.properties.properties import PropType
 from pysaurus.updates.video_inliner import (
     get_all_fields,
     get_all_getters,
     get_video_text_triple,
 )
-from pysaurus.video import Video
 from saurus.sql.pysaurus_connection import PysaurusConnection
 from saurus.sql.pysaurus_program import PysaurusProgram
 

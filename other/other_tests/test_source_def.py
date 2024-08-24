@@ -1,9 +1,45 @@
-from pysaurus.database.viewport.source_def import SourceDef
+from pysaurus.database.jsdb.jsdbvideo.lazy_video import LazyVideo as Video
+from pysaurus.database.viewport.source_def import SourceDef, SourceFlag
 from tests.utils_testing import get_database
 
 
+class ExtendedSourceFlag(SourceFlag):
+    __slots__ = ()
+
+    def contains_flag(self, flag):
+        return self.flag == flag or any(
+            child.contains_flag(flag) for child in self.children.values()
+        )
+
+    def contains_video(self, video: Video):
+        return getattr(video, self.flag) and (
+            not self.children
+            or any(child.contains_video(video) for child in self.children.values())
+        )
+
+    def has_path_without(self, flag):
+        return self.flag != flag and (
+            not self.children
+            or any(child.has_path_without(flag) for child in self.children.values())
+        )
+
+
+class ExtendedSourceDef(SourceDef):
+    __slots__ = ()
+    __SOURCE_FLAG_CLASS__ = ExtendedSourceFlag
+
+    def contains_flag(self, flag: str) -> bool:
+        return any(child.contains_flag(flag) for child in self.children.values())
+
+    def contains_video(self, video: Video) -> bool:
+        return any(child.contains_video(video) for child in self.children.values())
+
+    def has_source_without(self, flag):
+        return any(child.has_path_without(flag) for child in self.children.values())
+
+
 def test_source_def():
-    sd = SourceDef(
+    sd = ExtendedSourceDef(
         [
             ("readable", "found", "with_thumbnails"),
             ("readable", "not_found", "with_thumbnails"),

@@ -1,6 +1,6 @@
 from typing import List, Sequence
 
-from pysaurus.video.video_utils import VIDEO_FLAGS
+from pysaurus.video.video_constants import VIDEO_FLAGS
 
 
 def parse_sources(paths: Sequence[Sequence[str]]) -> List[List[str]]:

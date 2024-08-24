@@ -4,9 +4,7 @@ from typing import Iterable
 
 from pysaurus.core.components import AbsolutePath, PathType
 from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
-from pysaurus.core.profiling import Profiler
 from pysaurus.database.jsdb.json_database import JsonDatabase
-from pysaurus.database.special_properties import SpecialProperties
 from saurus.sql.pysaurus_collection import PysaurusCollection
 
 logger = logging.getLogger(__name__)
@@ -29,12 +27,6 @@ class Database(BaseDatabase):
 
         # Load database
         super().__init__(path, folders, notifier)
-
-        # Set special properties
-        with Profiler(
-            "install special properties", notifier=self.notifier
-        ), self.to_save():
-            SpecialProperties.install(self)
 
     def __getattribute__(self, item):
         # TODO This method is for debugging, should be removed in production.

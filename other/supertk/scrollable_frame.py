@@ -1,8 +1,7 @@
-import sys
 import tkinter
 from tkinter import ttk
 
-from other.supertk.supertk import Sticky, SystemName
+from other.supertk.supertk import Sticky
 
 _SCROLLFRAME_IN = "<<ScrollFrameIn>>"
 _SCROLLFRAME_OUT = "<<ScrollFrameOut>>"

@@ -3,7 +3,7 @@ from typing import Iterable, Sequence, Union
 
 from pysaurus.core import condlang
 from pysaurus.database.abstract_database import AbstractDatabase
-from pysaurus.video import Video
+from pysaurus.database.jsdb.jsdbvideo.lazy_video import LazyVideo as Video
 from tests.utils_testing import get_database
 
 
@@ -24,7 +24,9 @@ class GetProperty(condlang.Apply):
 
     def run(self, name: str, namespace: Video, **kwargs):
         database = namespace.database
-        values = database.get_prop_values(namespace.video_id, name)
+        video_id = namespace.video_id
+        results = database.get_all_prop_values(name, [video_id])
+        values = results[video_id]
         if database.get_prop_types(name=name, multiple=True):
             return values
         else:

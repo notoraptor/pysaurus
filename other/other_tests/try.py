@@ -4,7 +4,7 @@ from typing import List
 from pysaurus.core import functions
 from pysaurus.core.informer import Informer
 from pysaurus.core.profiling import Profiler
-from pysaurus.video import Video
+from pysaurus.database.jsdb.jsdbvideo.lazy_video import LazyVideo as Video
 from tests.utils_testing import get_database
 
 SAME_ORDER_FIELD = {

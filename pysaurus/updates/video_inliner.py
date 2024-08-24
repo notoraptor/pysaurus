@@ -1,6 +1,6 @@
 from typing import List, Tuple
 
-from pysaurus.video.lazy_video import LazyVideo as Video
+from pysaurus.database.jsdb.jsdbvideo.lazy_video import LazyVideo as Video
 
 
 def get_zero(i, video, key):
