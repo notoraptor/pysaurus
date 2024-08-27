@@ -29,9 +29,16 @@ class Utils:
 
 
 class Function(ABC):
+    __slots__ = ("nb_inputs", "name", "__uid")
+
     def __init__(self, nb_inputs: int, name=None):
         self.nb_inputs = nb_inputs
         self.name: str = (name or type(self).__name__).lower()
+        self.__uid = Utils.generate_uid(self.name)
+
+    @property
+    def unique_id(self) -> int:
+        return self.__uid
 
     def __repr__(self):
         output = self.name
@@ -40,9 +47,6 @@ class Function(ABC):
                 f"({', '.join(Utils.get_arg_name(i) for i in range(self.nb_inputs))})"
             )
         return output
-
-    def uid(self):
-        return Utils.generate_uid(self.name)
 
     def __call__(self, *args):
         return self.run(*args)
@@ -61,15 +65,7 @@ class GenericFunction(Function):
         return self.function(*args)
 
 
-class Const(Function):
-    def __init__(self):
-        super().__init__(1)
-
-    def run(self, const):
-        return const
-
-
-class StaticConstant(Function):
+class Constant(Function):
     def __init__(self, const, name):
         super().__init__(0, name)
         self.const = const
@@ -86,25 +82,25 @@ class Feed(Function):
         raise ValueError("Please, feed me.")
 
 
-CONST_PI = StaticConstant(math.pi, "pi")
-CONST_E = StaticConstant(math.e, "e")
-CONST_TAU = StaticConstant(math.tau, "tau")
-CONST_INF = StaticConstant(math.inf, "inf")
-CONST_NAN = StaticConstant(math.nan, "nan")
-CONST_0 = StaticConstant(0, "_0")
-CONST_1 = StaticConstant(1, "_1")
-CONST_2 = StaticConstant(2, "_2")
-CONST_3 = StaticConstant(3, "_3")
-CONST_4 = StaticConstant(4, "_4")
-CONST_5 = StaticConstant(5, "_5")
-CONST_6 = StaticConstant(6, "_6")
-CONST_7 = StaticConstant(7, "_7")
-CONST_8 = StaticConstant(8, "_8")
-CONST_9 = StaticConstant(9, "_9")
-CONST_10 = StaticConstant(10, "_10")
-CONST_100 = StaticConstant(100, "_100")
-CONST_1000 = StaticConstant(1000, "_1000")
-CONST_1000000000 = StaticConstant(1_000_000_000, "_1000000000")
+CONST_PI = Constant(math.pi, "pi")
+CONST_E = Constant(math.e, "e")
+CONST_TAU = Constant(math.tau, "tau")
+CONST_INF = Constant(math.inf, "inf")
+CONST_NAN = Constant(math.nan, "nan")
+CONST_0 = Constant(0, "_0")
+CONST_1 = Constant(1, "_1")
+CONST_2 = Constant(2, "_2")
+CONST_3 = Constant(3, "_3")
+CONST_4 = Constant(4, "_4")
+CONST_5 = Constant(5, "_5")
+CONST_6 = Constant(6, "_6")
+CONST_7 = Constant(7, "_7")
+CONST_8 = Constant(8, "_8")
+CONST_9 = Constant(9, "_9")
+CONST_10 = Constant(10, "_10")
+CONST_100 = Constant(100, "_100")
+CONST_1000 = Constant(1000, "_1000")
+CONST_1000000000 = Constant(1_000_000_000, "_1000000000")
 
 
 def boolean_and(a, b):
@@ -119,7 +115,7 @@ def if_else(x, y, z):
     return y if x else z
 
 
-CODONS = [
+CODONS: List[Function] = [
     # -- basic operators
     # math binary operators
     GenericFunction(operator.add, 2),
@@ -195,20 +191,26 @@ CODONS = [
     GenericFunction(if_else, 3, "if"),
 ]
 
+assert len({codon.name for codon in CODONS}) == len(CODONS)
+assert len({codon.unique_id for codon in CODONS}) == len(CODONS)
+
 
 class AbstractCodonGenerator(ABC):
+    __slots__ = ()
+
     @abstractmethod
     def generate(self) -> int:
         raise NotImplementedError()
 
 
 class CodonGenerator(AbstractCodonGenerator):
+    __slots__ = ("codon",)
+
     def __init__(self, codon: Function):
         self.codon = codon
-        self.uid = codon.uid()
 
     def generate(self) -> int:
-        return self.uid
+        return self.codon.unique_id
 
 
 class RandomIntegerGenerator(AbstractCodonGenerator):
@@ -227,7 +229,7 @@ class Feeder:
         pass
 
 
-class RunNode(ABC):
+class AbstractRunNode(ABC):
     @abstractmethod
     def execute(self, feeder: Feeder):
         raise NotImplementedError()
@@ -244,7 +246,7 @@ class RunNode(ABC):
         printer.write(f"{indentation}{self}")
 
 
-class FunctionNode(RunNode):
+class FunctionNode(AbstractRunNode):
     def __init__(self, function: Function, inputs=()):
         self.function: Function = function
         self.inputs: List[FunctionNode] = list(inputs)
@@ -261,12 +263,12 @@ class FunctionNode(RunNode):
         return self.function.run(*(child.execute(feeder) for child in self.inputs))
 
 
-class ValueNode(RunNode):
-    def __init__(self, constant):
+class ValueNode(AbstractRunNode):
+    def __init__(self, constant: Constant):
         self.const = constant
 
     def __str__(self):
-        return str(self.const)
+        return f"{self.const.name}={self.const.const}"
 
     def update(self, constant):
         self.const = constant
@@ -275,7 +277,7 @@ class ValueNode(RunNode):
         return self.const
 
 
-class FeedNode(RunNode):
+class FeedNode(AbstractRunNode):
     def __str__(self):
         return "?"
 
@@ -284,15 +286,13 @@ class FeedNode(RunNode):
 
 
 class ParsingResult:
-    def __init__(self, node: RunNode, position: int):
+    def __init__(self, node: AbstractRunNode, position: int):
         self.node = node
         self.next_unparsed_position = position
 
 
 class SequenceGenerator:
-    NAME_TO_CODON = {codon.name: codon for codon in CODONS}
-    assert len(NAME_TO_CODON) == len(CODONS)
-    UID_TO_CODON = {codon.uid(): codon for codon in CODONS}
+    UID_TO_CODON = {codon.unique_id: codon for codon in CODONS}
     assert len(UID_TO_CODON) == len(CODONS)
     GENERATORS: List[AbstractCodonGenerator] = [
         CodonGenerator(codon) for codon in CODONS
@@ -316,7 +316,7 @@ class SequenceGenerator:
             else:
                 print(f"({i + 1}) NUM {uid}")
 
-    def parse_sequence(self, sequence: List[int]) -> RunNode:
+    def parse_sequence(self, sequence: List[int]) -> AbstractRunNode:
         result = self.parse_node(sequence, 0)
         if result.next_unparsed_position != len(sequence):
             raise ValueError(
@@ -338,8 +338,8 @@ class SequenceGenerator:
                 pos = child_result.next_unparsed_position
             node = FunctionNode(codon, inputs)
             ret = ParsingResult(node, pos)
-        elif isinstance(codon, StaticConstant):
-            node = ValueNode(codon.run())
+        elif isinstance(codon, Constant):
+            node = ValueNode(codon)
             ret = ParsingResult(node, position + 1)
         elif isinstance(codon, Feed):
             node = FeedNode()
@@ -367,7 +367,7 @@ def main():
             print("Sequence:")
             sequence_generator.interpret(seq)
             print()
-            print("Node:")
+            print(f"Sequence ({len(seq)}):")
             print(node.debug())
             print(f"[step {iteration}] success")
             break
