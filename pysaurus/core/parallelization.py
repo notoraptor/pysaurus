@@ -38,9 +38,9 @@ def _dispatch_tasks(tasks, job_count, extra_args=None):
     if job_count > task_count:
         job_lengths = [1] * task_count
     else:
-        job_lengths = [task_count // job_count] * job_count
-        for i in range(task_count % job_count):
-            job_lengths[i] += 1
+        q = task_count // job_count
+        r = task_count % job_count
+        job_lengths = ([q + 1] * r) + ([q] * (job_count - r))
     assert sum(job_lengths) == task_count
     cursor = 0
     jobs = []
