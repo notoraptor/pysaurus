@@ -33,15 +33,13 @@ class Function(ABC):
         self.nb_inputs = nb_inputs
         self.name: str = (name or type(self).__name__).lower()
 
-    def __str__(self):
+    def __repr__(self):
         output = self.name
         if self.nb_inputs:
             output += (
                 f"({', '.join(Utils.get_arg_name(i) for i in range(self.nb_inputs))})"
             )
         return output
-
-    __repr__ = __str__
 
     def uid(self):
         return Utils.generate_uid(self.name)
@@ -215,6 +213,12 @@ class CodonGenerator(AbstractCodonGenerator):
 
 class RandomIntegerGenerator(AbstractCodonGenerator):
     def generate(self) -> int:
+        """
+        Return value in interval [a, b], a and b included.
+        Current bounds:
+        a: 0
+        b: 1 000 000 000
+        """
         return random.randint(0, 1_000_000_000)
 
 
@@ -241,9 +245,9 @@ class RunNode(ABC):
 
 
 class FunctionNode(RunNode):
-    def __init__(self, function: Function):
+    def __init__(self, function: Function, inputs=()):
         self.function: Function = function
-        self.inputs: List[FunctionNode] = []
+        self.inputs: List[FunctionNode] = list(inputs)
 
     def __str__(self):
         return str(self.function)
@@ -282,7 +286,7 @@ class FeedNode(RunNode):
 class ParsingResult:
     def __init__(self, node: RunNode, position: int):
         self.node = node
-        self.next_unoarsed_position = position
+        self.next_unparsed_position = position
 
 
 class SequenceGenerator:
@@ -314,10 +318,10 @@ class SequenceGenerator:
 
     def parse_sequence(self, sequence: List[int]) -> RunNode:
         result = self.parse_node(sequence, 0)
-        if result.next_unoarsed_position != len(sequence):
+        if result.next_unparsed_position != len(sequence):
             raise ValueError(
                 f"Sequence parsing requires position "
-                f"{result.next_unoarsed_position + 1} / {len(sequence)}"
+                f"{result.next_unparsed_position + 1} / {len(sequence)}"
             )
         return result.node
 
@@ -331,9 +335,8 @@ class SequenceGenerator:
             for _ in range(codon.nb_inputs):
                 child_result = self.parse_node(sequence, pos)
                 inputs.append(child_result.node)
-                pos = child_result.next_unoarsed_position
-            node = FunctionNode(codon)
-            node.inputs = inputs
+                pos = child_result.next_unparsed_position
+            node = FunctionNode(codon, inputs)
             ret = ParsingResult(node, pos)
         elif isinstance(codon, StaticConstant):
             node = ValueNode(codon.run())
