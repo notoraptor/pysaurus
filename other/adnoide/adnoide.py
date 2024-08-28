@@ -2,9 +2,10 @@ import math
 import operator
 import random
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Sequence
 
 from pysaurus.core.classes import StringPrinter
+from pysaurus.core.functions import are_hashable_by
 
 
 class Utils:
@@ -28,7 +29,7 @@ class Utils:
         return sum(cls.UID_ENCODER[d] * 100**i for i, d in enumerate(reversed(name)))
 
 
-class Function(ABC):
+class AbstractFunction(ABC):
     __slots__ = ("nb_inputs", "name", "__uid")
 
     def __init__(self, nb_inputs: int, name=None):
@@ -56,7 +57,9 @@ class Function(ABC):
         raise NotImplementedError()
 
 
-class GenericFunction(Function):
+class Function(AbstractFunction):
+    __slots__ = ("function",)
+
     def __init__(self, function: callable, nb_inputs: int, name=None):
         super().__init__(nb_inputs, name or function.__name__)
         self.function = function
@@ -65,7 +68,9 @@ class GenericFunction(Function):
         return self.function(*args)
 
 
-class Constant(Function):
+class Constant(AbstractFunction):
+    __slots__ = ("const",)
+
     def __init__(self, const, name):
         super().__init__(0, name)
         self.const = const
@@ -74,33 +79,14 @@ class Constant(Function):
         return self.const
 
 
-class Feed(Function):
+class Feed(AbstractFunction):
+    __slots__ = ()
+
     def __init__(self):
         super().__init__(0)
 
     def run(self, *args):
         raise ValueError("Please, feed me.")
-
-
-CONST_PI = Constant(math.pi, "pi")
-CONST_E = Constant(math.e, "e")
-CONST_TAU = Constant(math.tau, "tau")
-CONST_INF = Constant(math.inf, "inf")
-CONST_NAN = Constant(math.nan, "nan")
-CONST_0 = Constant(0, "_0")
-CONST_1 = Constant(1, "_1")
-CONST_2 = Constant(2, "_2")
-CONST_3 = Constant(3, "_3")
-CONST_4 = Constant(4, "_4")
-CONST_5 = Constant(5, "_5")
-CONST_6 = Constant(6, "_6")
-CONST_7 = Constant(7, "_7")
-CONST_8 = Constant(8, "_8")
-CONST_9 = Constant(9, "_9")
-CONST_10 = Constant(10, "_10")
-CONST_100 = Constant(100, "_100")
-CONST_1000 = Constant(1000, "_1000")
-CONST_1000000000 = Constant(1_000_000_000, "_1000000000")
 
 
 def boolean_and(a, b):
@@ -115,174 +101,178 @@ def if_else(x, y, z):
     return y if x else z
 
 
-CODONS: List[Function] = [
+FUNC_FEED = Feed()
+FUNCTIONS: List[AbstractFunction] = [
     # -- basic operators
     # math binary operators
-    GenericFunction(operator.add, 2),
-    GenericFunction(operator.sub, 2),
-    GenericFunction(operator.mul, 2),
-    GenericFunction(operator.truediv, 2, "div"),
-    GenericFunction(operator.floordiv, 2, "euc"),
-    GenericFunction(operator.mod, 2),
-    GenericFunction(operator.pow, 2),
+    Function(operator.add, 2),
+    Function(operator.sub, 2),
+    Function(operator.mul, 2),
+    Function(operator.truediv, 2, "div"),
+    Function(operator.floordiv, 2, "euc"),
+    Function(operator.mod, 2),
+    Function(operator.pow, 2),
     # boolean binary operators
-    GenericFunction(operator.eq, 2),
-    GenericFunction(operator.ne, 2),
-    GenericFunction(operator.lt, 2),
-    GenericFunction(operator.le, 2),
-    GenericFunction(operator.gt, 2),
-    GenericFunction(operator.ge, 2),
+    Function(operator.eq, 2),
+    Function(operator.ne, 2),
+    Function(operator.lt, 2),
+    Function(operator.le, 2),
+    Function(operator.gt, 2),
+    Function(operator.ge, 2),
     # boolean unary operator
-    GenericFunction(operator.not_, 1),
+    Function(operator.not_, 1),
     # bitwise binary operators
-    GenericFunction(operator.and_, 2),
-    GenericFunction(operator.or_, 2),
-    GenericFunction(operator.xor, 2),
-    GenericFunction(operator.lshift, 2, "lsh"),
-    GenericFunction(operator.rshift, 2, "rsh"),
+    Function(operator.and_, 2),
+    Function(operator.or_, 2),
+    Function(operator.xor, 2),
+    Function(operator.lshift, 2, "lsh"),
+    Function(operator.rshift, 2, "rsh"),
     # bitwise unary operator
-    GenericFunction(operator.inv, 1),
+    Function(operator.inv, 1),
     # unary operators
-    GenericFunction(operator.abs, 1),
-    GenericFunction(operator.neg, 1),
-    GenericFunction(operator.pos, 1),  # identity
+    Function(operator.abs, 1),
+    Function(operator.neg, 1),
+    Function(operator.pos, 1),  # identity
     # -- constants
-    CONST_PI,
-    CONST_E,
-    CONST_TAU,
-    CONST_INF,
-    CONST_NAN,
-    CONST_0,
-    CONST_1,
-    CONST_2,
-    CONST_3,
-    CONST_4,
-    CONST_5,
-    CONST_6,
-    CONST_7,
-    CONST_8,
-    CONST_9,
-    CONST_10,
-    CONST_100,
-    CONST_1000,
-    CONST_1000000000,
+    Constant(math.pi, "pi"),
+    Constant(math.e, "e"),
+    Constant(math.tau, "tau"),
+    Constant(math.inf, "inf"),
+    Constant(math.nan, "nan"),
+    Constant(0, "_0"),
+    Constant(1, "_1"),
+    Constant(2, "_2"),
+    Constant(3, "_3"),
+    Constant(4, "_4"),
+    Constant(5, "_5"),
+    Constant(6, "_6"),
+    Constant(7, "_7"),
+    Constant(8, "_8"),
+    Constant(9, "_9"),
+    Constant(10, "_10"),
+    Constant(100, "_100"),
+    Constant(1000, "_1000"),
+    Constant(1_000_000_000, "_1000000000"),
     # -- complex operators
-    GenericFunction(math.isfinite, 1, "isnb"),
-    GenericFunction(math.isinf, 1),
-    GenericFunction(math.isnan, 1),
-    GenericFunction(math.sqrt, 1),
-    GenericFunction(math.exp, 1),
-    GenericFunction(math.log, 2),
-    GenericFunction(math.log2, 1),
-    GenericFunction(math.log10, 1),
-    GenericFunction(math.sin, 1),
-    GenericFunction(math.cos, 1),
-    GenericFunction(math.tan, 1),
-    GenericFunction(math.asin, 1),
-    GenericFunction(math.acos, 1),
-    GenericFunction(math.atan, 1),
-    GenericFunction(math.degrees, 1, "deg"),
-    GenericFunction(math.radians, 1, "rad"),
+    Function(math.isfinite, 1, "noinf"),
+    Function(math.isinf, 1),
+    Function(math.isnan, 1),
+    Function(math.sqrt, 1),
+    Function(math.exp, 1),
+    Function(math.log, 2),
+    Function(math.log2, 1),
+    Function(math.log10, 1),
+    Function(math.sin, 1),
+    Function(math.cos, 1),
+    Function(math.tan, 1),
+    Function(math.asin, 1),
+    Function(math.acos, 1),
+    Function(math.atan, 1),
+    Function(math.degrees, 1, "deg"),
+    Function(math.radians, 1, "rad"),
     # -- Special operators
-    Feed(),
+    FUNC_FEED,
     # -- Implementations of boolean operators
-    GenericFunction(boolean_and, 2, "and"),
-    GenericFunction(boolean_or, 2, "or"),
-    GenericFunction(if_else, 3, "if"),
+    Function(boolean_and, 2, "and"),
+    Function(boolean_or, 2, "or"),
+    Function(if_else, 3, "if"),
 ]
-
-assert len({codon.name for codon in CODONS}) == len(CODONS)
-assert len({codon.unique_id for codon in CODONS}) == len(CODONS)
-
-
-class AbstractCodonGenerator(ABC):
-    __slots__ = ()
-
-    @abstractmethod
-    def generate(self) -> int:
-        raise NotImplementedError()
-
-
-class CodonGenerator(AbstractCodonGenerator):
-    __slots__ = ("codon",)
-
-    def __init__(self, codon: Function):
-        self.codon = codon
-
-    def generate(self) -> int:
-        return self.codon.unique_id
-
-
-class RandomIntegerGenerator(AbstractCodonGenerator):
-    def generate(self) -> int:
-        """
-        Return value in interval [a, b], a and b included.
-        Current bounds:
-        a: 0
-        b: 1 000 000 000
-        """
-        return random.randint(0, 1_000_000_000)
+assert are_hashable_by(FUNCTIONS, "name")
+assert are_hashable_by(FUNCTIONS, "unique_id")
 
 
 class Feeder:
+    __slots__ = ("_food", "_cursor")
+
+    def __init__(self, food: Sequence):
+        self._food = food
+        self._cursor = 0
+
     def give(self):
-        pass
+        meal = self._food[self._cursor]
+        self._cursor += 1
+        return meal
 
 
 class AbstractRunNode(ABC):
+    __slots__ = ("inputs",)
+
+    def __init__(self, inputs=()):
+        self.inputs: List[AbstractRunNode] = list(inputs)
+
+    def describe(self):
+        with StringPrinter() as printer:
+            self._describe_in(printer)
+            return str(printer)
+
+    def _describe_in(self, printer: StringPrinter, indentation=""):
+        printer.write(f"{indentation}{self}")
+        for child in self.inputs:
+            child._describe_in(printer, indentation + "  ")
+
     @abstractmethod
     def execute(self, feeder: Feeder):
         raise NotImplementedError()
 
-    def __repr__(self):
-        return self.__str__()
-
-    def debug(self):
-        with StringPrinter() as printer:
-            self._debug(printer, "")
-            return str(printer)
-
-    def _debug(self, printer: StringPrinter, indentation: str):
-        printer.write(f"{indentation}{self}")
-
 
 class FunctionNode(AbstractRunNode):
+    __slots__ = ("function",)
+
     def __init__(self, function: Function, inputs=()):
-        self.function: Function = function
-        self.inputs: List[FunctionNode] = list(inputs)
+        super().__init__(inputs)
+        self.function: AbstractFunction = function
 
     def __str__(self):
         return str(self.function)
-
-    def _debug(self, printer: StringPrinter, indentation: str):
-        super()._debug(printer, indentation)
-        for inp in self.inputs:
-            inp._debug(printer, indentation + " ")
 
     def execute(self, feeder: Feeder):
         return self.function.run(*(child.execute(feeder) for child in self.inputs))
 
 
-class ValueNode(AbstractRunNode):
+class ConstantNode(AbstractRunNode):
+    __slots__ = ("const",)
+
     def __init__(self, constant: Constant):
+        super().__init__()
         self.const = constant
 
     def __str__(self):
         return f"{self.const.name}={self.const.const}"
 
-    def update(self, constant):
-        self.const = constant
-
     def execute(self, feeder: Feeder):
-        return self.const
+        return self.const.const
 
 
 class FeedNode(AbstractRunNode):
+    __slots__ = ()
+
     def __str__(self):
         return "?"
 
     def execute(self, feeder: Feeder):
         return feeder.give()
+
+
+class ProteinError(Exception):
+    pass
+
+
+class ConstantProteinError(ProteinError):
+    pass
+
+
+class Protein:
+    def __init__(self, node: AbstractRunNode, nb_inputs: int):
+        self.node = node
+        self.nb_inputs = nb_inputs
+
+    def __repr__(self):
+        return self.node.describe()
+
+    def __call__(self, *args):
+        if len(args) != self.nb_inputs:
+            raise ProteinError(f"Expected {self.nb_inputs} args, given {len(args)}")
+        return self.node.execute(Feeder(args))
 
 
 class ParsingResult:
@@ -292,83 +282,85 @@ class ParsingResult:
 
 
 class SequenceGenerator:
-    UID_TO_CODON = {codon.unique_id: codon for codon in CODONS}
-    assert len(UID_TO_CODON) == len(CODONS)
-    GENERATORS: List[AbstractCodonGenerator] = [
-        CodonGenerator(codon) for codon in CODONS
-    ]  # + [RandomIntegerGenerator()]
+    NAME_TO_FUNCTION = {function.name: function for function in FUNCTIONS}
+    CODON_TO_FUNCTION = {function.unique_id: function for function in FUNCTIONS}
+    CODONS: List[int] = sorted(CODON_TO_FUNCTION)
 
     # MIN_LENGTH = 1
     MIN_LENGTH = 2
     # MAX_LENGTH = 1000
-    MAX_LENGTH = 10
+    MAX_LENGTH = 20
 
-    def generate(self) -> List[int]:
+    def __init__(self, seed: int = None):
+        if seed is not None:
+            random.seed(seed)
+
+    def new_adn(self) -> List[int]:
         return [
-            random.choice(self.GENERATORS).generate()
+            random.choice(self.CODONS)
             for _ in range(random.randint(self.MIN_LENGTH, self.MAX_LENGTH))
         ]
 
     def interpret(self, sequence: List[int]):
-        for i, uid in enumerate(sequence):
-            if uid in self.UID_TO_CODON:
-                print(f"({i + 1}) COD {uid} => {self.UID_TO_CODON[uid]}")
+        for i, codon in enumerate(sequence):
+            if codon in self.CODON_TO_FUNCTION:
+                print(f"({i + 1}) COD {codon} => {self.CODON_TO_FUNCTION[codon]}")
             else:
-                print(f"({i + 1}) NUM {uid}")
+                print(f"({i + 1}) NUM {codon}")
 
-    def parse_sequence(self, sequence: List[int]) -> AbstractRunNode:
-        result = self.parse_node(sequence, 0)
+    def translate_adn(self, sequence: List[int]) -> Protein:
+        result = self._parse_codon(sequence, 0)
         if result.next_unparsed_position != len(sequence):
             raise ValueError(
                 f"Sequence parsing requires position "
                 f"{result.next_unparsed_position + 1} / {len(sequence)}"
             )
-        return result.node
 
-    def parse_node(self, sequence: List[int], position: int) -> ParsingResult:
-        uid = sequence[position]
-        codon = self.UID_TO_CODON[uid]
-        # print(position + 1, codon)
-        if isinstance(codon, GenericFunction):
+        codon_feed = FUNC_FEED.unique_id
+        return Protein(
+            node=result.node,
+            nb_inputs=sum((1 for codon in sequence if codon == codon_feed), start=0),
+        )
+
+    def _parse_codon(self, sequence: List[int], position: int) -> ParsingResult:
+        codon = sequence[position]
+        function = self.CODON_TO_FUNCTION[codon]
+        # print (position + 1, function)
+        if isinstance(function, Function):
             inputs = []
             pos = position + 1
-            for _ in range(codon.nb_inputs):
-                child_result = self.parse_node(sequence, pos)
+            for _ in range(function.nb_inputs):
+                child_result = self._parse_codon(sequence, pos)
                 inputs.append(child_result.node)
                 pos = child_result.next_unparsed_position
-            node = FunctionNode(codon, inputs)
+            node = FunctionNode(function, inputs)
             ret = ParsingResult(node, pos)
-        elif isinstance(codon, Constant):
-            node = ValueNode(codon)
+        elif isinstance(function, Constant):
+            node = ConstantNode(function)
             ret = ParsingResult(node, position + 1)
-        elif isinstance(codon, Feed):
+        elif isinstance(function, Feed):
             node = FeedNode()
             ret = ParsingResult(node, position + 1)
         else:
-            raise NotImplementedError(f"Unknown codon: {uid} => {codon}")
+            raise NotImplementedError(f"Unknown function: {codon} => {function}")
         return ret
 
 
-def main_():
-    seq_gen = SequenceGenerator()
-    seq1 = seq_gen.generate()
-    seq_gen.interpret(seq1)
-    seq_gen.parse_sequence(seq1)
-
-
 def main():
-    sequence_generator = SequenceGenerator()
+    sequence_generator = SequenceGenerator(12345)
     iteration = 0
     while True:
         iteration += 1
-        seq = sequence_generator.generate()
+        seq = sequence_generator.new_adn()
         try:
-            node = sequence_generator.parse_sequence(seq)
+            protein = sequence_generator.translate_adn(seq)
             print("Sequence:")
             sequence_generator.interpret(seq)
             print()
-            print(f"Sequence ({len(seq)}):")
-            print(node.debug())
+            print(f"Protein({protein.nb_inputs} args):")
+            print(protein)
+            if protein.nb_inputs == 0:
+                raise ConstantProteinError(protein())
             print(f"[step {iteration}] success")
             break
         except Exception as exc:

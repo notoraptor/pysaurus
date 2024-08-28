@@ -320,3 +320,7 @@ def expand_if(expression) -> Sequence:
         return expression
     else:
         return [expression]
+
+
+def are_hashable_by(elements: Sequence, attribute: str) -> bool:
+    return len({getattr(el, attribute) for el in elements}) == len(elements)
