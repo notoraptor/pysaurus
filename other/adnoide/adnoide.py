@@ -2,6 +2,7 @@ import math
 import operator
 import random
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from typing import List, Sequence
 
 from pysaurus.core.classes import StringPrinter
@@ -27,6 +28,14 @@ class Utils:
     @classmethod
     def generate_uid(cls, name: str) -> int:
         return sum(cls.UID_ENCODER[d] * 100**i for i, d in enumerate(reversed(name)))
+
+
+@dataclass(slots=True)
+class Integer:
+    v: int = 0
+
+    def __int__(self):
+        return self.v
 
 
 class AbstractFunction(ABC):
@@ -84,6 +93,9 @@ class Feed(AbstractFunction):
 
     def __init__(self):
         super().__init__(0)
+
+    def __repr__(self):
+        return "?"
 
     def run(self, *args):
         raise ValueError("Please, feed me.")
@@ -194,11 +206,15 @@ class Feeder:
         return meal
 
 
-class AbstractRunNode(ABC):
-    __slots__ = ("inputs",)
+class FunctionNode:
+    __slots__ = ("function", "inputs")
 
-    def __init__(self, inputs=()):
-        self.inputs: List[AbstractRunNode] = list(inputs)
+    def __init__(self, function: AbstractFunction, inputs=()):
+        self.function = function
+        self.inputs: List[FunctionNode] = list(inputs)
+
+    def __repr__(self):
+        return f"{self.function} [{self.function.unique_id}]"
 
     def describe(self):
         with StringPrinter() as printer:
@@ -210,50 +226,38 @@ class AbstractRunNode(ABC):
         for child in self.inputs:
             child._describe_in(printer, indentation + "  ")
 
-    @abstractmethod
-    def execute(self, feeder: Feeder):
-        raise NotImplementedError()
-
-
-class FunctionNode(AbstractRunNode):
-    __slots__ = ("function",)
-
-    def __init__(self, function: Function, inputs=()):
-        super().__init__(inputs)
-        self.function: AbstractFunction = function
-
-    def __str__(self):
-        return str(self.function)
-
     def execute(self, feeder: Feeder):
         return self.function.run(*(child.execute(feeder) for child in self.inputs))
 
 
-class ConstantNode(AbstractRunNode):
-    __slots__ = ("const",)
+class ConstantNode(FunctionNode):
+    __slots__ = ()
+    function: Constant
 
     def __init__(self, constant: Constant):
-        super().__init__()
-        self.const = constant
-
-    def __str__(self):
-        return f"{self.const.name}={self.const.const}"
-
-    def execute(self, feeder: Feeder):
-        return self.const.const
+        super().__init__(constant)
 
 
-class FeedNode(AbstractRunNode):
+class FeedNode(FunctionNode):
     __slots__ = ()
+    function: Feed
 
-    def __str__(self):
-        return "?"
+    def __init__(self):
+        super().__init__(FUNC_FEED)
 
     def execute(self, feeder: Feeder):
         return feeder.give()
 
 
-class ProteinError(Exception):
+class DNAError(Exception):
+    pass
+
+
+class DNATranslationError(DNAError):
+    pass
+
+
+class ProteinError(DNAError):
     pass
 
 
@@ -262,9 +266,18 @@ class ConstantProteinError(ProteinError):
 
 
 class Protein:
-    def __init__(self, node: AbstractRunNode, nb_inputs: int):
+    __slots__ = ("node", "nb_inputs")
+
+    def __init__(self, node: FunctionNode, nb_inputs: int):
         self.node = node
         self.nb_inputs = nb_inputs
+
+    def _count_feeds(self, node: FunctionNode):
+        return (
+            1
+            if isinstance(node, FeedNode)
+            else sum((self._count_feeds(c) for c in node.inputs))
+        )
 
     def __repr__(self):
         return self.node.describe()
@@ -275,10 +288,10 @@ class Protein:
         return self.node.execute(Feeder(args))
 
 
+@dataclass(slots=True)
 class ParsingResult:
-    def __init__(self, node: AbstractRunNode, position: int):
-        self.node = node
-        self.next_unparsed_position = position
+    node: FunctionNode
+    next_unparsed_position: int
 
 
 class SequenceGenerator:
@@ -291,46 +304,38 @@ class SequenceGenerator:
     # MAX_LENGTH = 1000
     MAX_LENGTH = 20
 
+    __slots__ = ()
+
     def __init__(self, seed: int = None):
         if seed is not None:
             random.seed(seed)
 
-    def new_adn(self) -> List[int]:
+    def generate_dna(self) -> List[int]:
         return [
             random.choice(self.CODONS)
             for _ in range(random.randint(self.MIN_LENGTH, self.MAX_LENGTH))
         ]
 
-    def interpret(self, sequence: List[int]):
-        for i, codon in enumerate(sequence):
-            if codon in self.CODON_TO_FUNCTION:
-                print(f"({i + 1}) COD {codon} => {self.CODON_TO_FUNCTION[codon]}")
-            else:
-                print(f"({i + 1}) NUM {codon}")
-
-    def translate_adn(self, sequence: List[int]) -> Protein:
-        result = self._parse_codon(sequence, 0)
+    def translate_dna(self, sequence: List[int]) -> Protein:
+        nb_feeds = Integer()
+        result = self._parse_codon(sequence, 0, nb_feeds)
         if result.next_unparsed_position != len(sequence):
-            raise ValueError(
-                f"Sequence parsing requires position "
+            raise DNATranslationError(
+                f"Unparsed position "
                 f"{result.next_unparsed_position + 1} / {len(sequence)}"
             )
+        return Protein(node=result.node, nb_inputs=int(nb_feeds))
 
-        codon_feed = FUNC_FEED.unique_id
-        return Protein(
-            node=result.node,
-            nb_inputs=sum((1 for codon in sequence if codon == codon_feed), start=0),
-        )
-
-    def _parse_codon(self, sequence: List[int], position: int) -> ParsingResult:
+    def _parse_codon(
+        self, sequence: List[int], position: int, nb_feeds: Integer
+    ) -> ParsingResult:
         codon = sequence[position]
         function = self.CODON_TO_FUNCTION[codon]
-        # print (position + 1, function)
         if isinstance(function, Function):
             inputs = []
             pos = position + 1
             for _ in range(function.nb_inputs):
-                child_result = self._parse_codon(sequence, pos)
+                child_result = self._parse_codon(sequence, pos, nb_feeds)
                 inputs.append(child_result.node)
                 pos = child_result.next_unparsed_position
             node = FunctionNode(function, inputs)
@@ -339,6 +344,7 @@ class SequenceGenerator:
             node = ConstantNode(function)
             ret = ParsingResult(node, position + 1)
         elif isinstance(function, Feed):
+            nb_feeds.v += 1
             node = FeedNode()
             ret = ParsingResult(node, position + 1)
         else:
@@ -347,16 +353,13 @@ class SequenceGenerator:
 
 
 def main():
-    sequence_generator = SequenceGenerator(12345)
+    seq_gen = SequenceGenerator(12345)
     iteration = 0
     while True:
         iteration += 1
-        seq = sequence_generator.new_adn()
+        seq = seq_gen.generate_dna()
         try:
-            protein = sequence_generator.translate_adn(seq)
-            print("Sequence:")
-            sequence_generator.interpret(seq)
-            print()
+            protein = seq_gen.translate_dna(seq)
             print(f"Protein({protein.nb_inputs} args):")
             print(protein)
             if protein.nb_inputs == 0:
