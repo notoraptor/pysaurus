@@ -31,12 +31,9 @@ def _monitor_notifications(notifier: Informer) -> None:
 
 
 def main():
-    notifier = Informer.default()
-    assert threading.current_thread() is threading.main_thread()
-    t = threading.Thread(target=_monitor_notifications, args=[notifier])
-    t.start()
-    with Profiler("Test"):
-        x = 1 + 2
+    with Informer.default():
+        with Profiler("Test"):
+            x = 1 + 2
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 from typing import Optional
 
 from pysaurus.core.job_notifications import ConsoleJobProgress, JobStep, JobToDo
-from pysaurus.core.profiling import ProfilingEnd, ProfilingStart
+from pysaurus.core.notifications import ProfilingEnd, ProfilingStart
 
 
 class ConsoleNotificationPrinter:
