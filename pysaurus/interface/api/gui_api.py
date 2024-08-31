@@ -1,10 +1,8 @@
 import functools
 import logging
 import os
-import queue
 import subprocess
 import threading
-import time
 from abc import abstractmethod
 from typing import Callable, Dict, Optional, Sequence
 
@@ -14,7 +12,7 @@ from pysaurus.core.classes import Runnable
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.file_copier import FileCopier
 from pysaurus.core.functions import launch_thread
-from pysaurus.core.informer import Informer
+from pysaurus.core.informer import INFORMER_CALLBACK, Informer
 from pysaurus.core.modules import System
 from pysaurus.core.notifications import (
     Cancelled,
@@ -28,9 +26,6 @@ from pysaurus.core.profiling import Profiler
 from pysaurus.database.db_video_server import ServerLauncher
 from pysaurus.database.features.db_pattern_detection import DbPatternDetection
 from pysaurus.database.features.db_similar_videos import DbSimilarVideos
-from pysaurus.interface.api.api_utils.console_notification_printer import (
-    ConsoleNotificationPrinter,
-)
 from pysaurus.interface.api.api_utils.proxy_feature import FromTk
 from pysaurus.interface.api.api_utils.vlc_path import VLC_PATH
 from pysaurus.interface.api.feature_api import FeatureAPI
@@ -43,19 +38,14 @@ process = Runnable("_launch")
 
 class GuiAPI(FeatureAPI):
     __slots__ = (
-        "multiprocessing_manager",
-        "notification_thread",
         "launched_thread",
-        "threads_stop_flag",
         "copy_work",
-        "monitor_notifications",
-        "notifications_are_monitored",
         "something_launched",
         "server",
         "_closed",
     )
 
-    def __init__(self, monitor_notifications=True):
+    def __init__(self):
         """
         *** Reminder ***
         When using multiprocessing, make sure to not share anything,
@@ -63,16 +53,15 @@ class GuiAPI(FeatureAPI):
         database may contain data that can't be pickled.
         E.g. Do not share database provider.
         """
-        super().__init__(notifier=Informer.default())
-        self.notification_thread: Optional[threading.Thread] = None
+        informer = Informer.default()
+        super().__init__(notifier=informer)
         self.launched_thread: Optional[threading.Thread] = None
-        self.threads_stop_flag = False
         self.copy_work: Optional[FileCopier] = None
-        self.monitor_notifications = monitor_notifications
-        self.notifications_are_monitored = False
         self.something_launched = False
         self.server = ServerLauncher(lambda: self.database)
         self._closed = False
+
+        INFORMER_CALLBACK.set_manager(self._notification_callback)
 
         self.server.start()
         # TODO Check runtime VLC for other operating systems ?
@@ -92,14 +81,6 @@ class GuiAPI(FeatureAPI):
                 "select_file": FromTk(tk_utils.select_file_to_open, True),
             }
         )
-
-    def __run_feature__(self, name: str, *args) -> Optional:
-        # Launch notification thread on first API call from frontend.
-        # This let time for frontend to be loaded before receiving notifications.
-        if self.monitor_notifications and not self.notifications_are_monitored:
-            logger.debug("Starting notification thread")
-            self.notification_thread = self._run_thread(self._monitor_notifications)
-        return super().__run_feature__(name, *args)
 
     def open_from_server(self, video_id) -> str:
         hostname = self.server.server_thread.hostname
@@ -128,9 +109,6 @@ class GuiAPI(FeatureAPI):
     def close_app(self) -> None:
         logger.debug("Closing app ...")
         # Close threads.
-        self.threads_stop_flag = True
-        if self.notification_thread:
-            self.notification_thread.join()
         if self.launched_thread:
             self.launched_thread.join()
             self.something_launched = False
@@ -146,7 +124,6 @@ class GuiAPI(FeatureAPI):
         if self._closed:
             print("[gui api] already closed.")
             return
-        self.threads_stop_flag = True
         self.application.__close__()
         self._closed = True
         print("[gui api] closed.")
@@ -160,7 +137,6 @@ class GuiAPI(FeatureAPI):
         logger.debug(f"Running {fn.__name__}")
         args = args or ()
         kwargs = kwargs or {}
-        assert self.notifications_are_monitored
         assert not self.something_launched
         # consume previous unhandled notifications
         list(self.notifier.consume_main_queue())
@@ -187,26 +163,10 @@ class GuiAPI(FeatureAPI):
         self.something_launched = False
         logger.debug(log_message)
 
-    def _monitor_notifications(self) -> None:
-        logger.debug("Monitoring notifications ...")
-        self.notifications_are_monitored = True
-        # We are in a thread, with notifications handled sequentially,
-        # thus no need to be process-safe.
-        notification_printer = ConsoleNotificationPrinter()
-        while True:
-            if self.threads_stop_flag:
-                break
-            try:
-                notification = self.notifier.next_or_crash()
-                if self.database:
-                    Informer.log(str(self.database.ways.db_log_path), notification)
-                notification_printer.print(notification)
-                self._notify(notification)
-            except queue.Empty:
-                time.sleep(1 / 100)
-        self.notification_thread = None
-        self.notifications_are_monitored = False
-        logger.debug("End monitoring.")
+    def _notification_callback(self, notification: Notification):
+        if self.database:
+            Informer.log(str(self.database.ways.db_log_path), notification)
+        self._notify(notification)
 
     @abstractmethod
     def _notify(self, notification: Notification) -> None:

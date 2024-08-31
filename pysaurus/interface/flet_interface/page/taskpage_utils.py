@@ -15,10 +15,11 @@ from pysaurus.core.notifications import (
     MissingThumbnails,
     NbMiniatures,
     Notification,
+    ProfilingEnd,
+    ProfilingStart,
     VideoInfoErrors,
     VideoThumbnailErrors,
 )
-from pysaurus.core.profiling import ProfilingEnd, ProfilingStart
 from pysaurus.database.json_database_utils import DatabaseLoaded, DatabaseSaved
 
 
