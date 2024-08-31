@@ -1,3 +1,4 @@
+import inspect
 import math
 import operator
 import random
@@ -38,17 +39,87 @@ class Integer:
         return self.v
 
 
-class AbstractFunction(ABC):
-    __slots__ = ("nb_inputs", "name", "__uid")
+class FoodType:
+    def __init__(self, basic_types: Sequence, strict=True, name=None):
+        assert basic_types
+        assert all(inspect.isclass(typ) for typ in basic_types)
+        self.basic_types = tuple(basic_types)
+        self.strict = bool(strict)
+        self.name = name
 
-    def __init__(self, nb_inputs: int, name=None):
+    def __repr__(self):
+        name = self.name or f"Type{self.basic_types}"
+        return f"{name}" + ("" if self.strict else "...")
+
+    def check(self, value) -> bool:
+        if self.strict:
+            return type(value) in self.basic_types
+        else:
+            return isinstance(value, self.basic_types)
+
+    def expect(self, value):
+        if not self.check(value):
+            raise TypeError(f"Expected {self}, got {type(value)}: {value}")
+
+    def check_type(self, food_type):
+        # type: (FoodType) -> bool
+        if self.strict:
+            return all(typ in self.basic_types for typ in food_type.basic_types)
+        else:
+            return any(
+                issubclass(typ, self.basic_types) for typ in food_type.basic_types
+            )
+
+    def expect_type(self, food_type):
+        # type: (FoodType) -> None
+        if not self.check_type(food_type):
+            raise TypeError(f"Expected type {self}, got type {food_type}")
+
+
+Anything = FoodType([object], strict=False, name="Anything")
+Numeric = FoodType((bool, int, float), name="Numeric")
+Number = FoodType((int, float), name="Number")
+Int = FoodType([int], name="Int")
+Float = FoodType([float], name="Float")
+Bool = FoodType([bool], name="Bool")
+
+
+TYPE_TO_FOOD_TYPE = {bool: Bool, int: Int, float: Float, object: Anything}
+
+
+class AbstractFunction(ABC):
+    __slots__ = ("nb_inputs", "name", "__uid", "_input_types", "_output_type")
+
+    def __init__(
+        self,
+        nb_inputs: int,
+        name=None,
+        input_types: Sequence[FoodType] = (),
+        output_type: FoodType = Numeric,
+    ):
         self.nb_inputs = nb_inputs
         self.name: str = (name or type(self).__name__).lower()
         self.__uid = Utils.generate_uid(self.name)
 
+        if not input_types:
+            input_types = [Numeric] * nb_inputs
+        assert len(input_types) == nb_inputs
+        output_type = output_type or Numeric
+
+        self._input_types: List[FoodType] = input_types
+        self._output_type: FoodType = output_type
+
     @property
     def unique_id(self) -> int:
         return self.__uid
+
+    @property
+    def input_types(self) -> List[FoodType]:
+        return self._input_types
+
+    @property
+    def output_type(self) -> FoodType:
+        return self._output_type
 
     def __repr__(self):
         output = self.name
@@ -69,8 +140,20 @@ class AbstractFunction(ABC):
 class Function(AbstractFunction):
     __slots__ = ("function",)
 
-    def __init__(self, function: callable, nb_inputs: int, name=None):
-        super().__init__(nb_inputs, name or function.__name__)
+    def __init__(
+        self,
+        function: callable,
+        nb_inputs: int,
+        name=None,
+        input_types=(),
+        output_type=None,
+    ):
+        super().__init__(
+            nb_inputs,
+            name or function.__name__,
+            input_types=input_types,
+            output_type=output_type,
+        )
         self.function = function
 
     def run(self, *args):
@@ -81,7 +164,7 @@ class Constant(AbstractFunction):
     __slots__ = ("const",)
 
     def __init__(self, const, name):
-        super().__init__(0, name)
+        super().__init__(0, name, output_type=TYPE_TO_FOOD_TYPE[type(const)])
         self.const = const
 
     def run(self, *args):
@@ -92,7 +175,7 @@ class Feed(AbstractFunction):
     __slots__ = ()
 
     def __init__(self):
-        super().__init__(0)
+        super().__init__(0, output_type=Anything)
 
     def __repr__(self):
         return "?"
@@ -132,15 +215,15 @@ FUNCTIONS: List[AbstractFunction] = [
     Function(operator.gt, 2),
     Function(operator.ge, 2),
     # boolean unary operator
-    Function(operator.not_, 1),
+    Function(operator.not_, 1, input_types=[Anything], output_type=Bool),
     # bitwise binary operators
-    Function(operator.and_, 2),
-    Function(operator.or_, 2),
-    Function(operator.xor, 2),
-    Function(operator.lshift, 2, "lsh"),
-    Function(operator.rshift, 2, "rsh"),
+    Function(operator.and_, 2, input_types=[Int, Int], output_type=Int),
+    Function(operator.or_, 2, input_types=[Int, Int], output_type=Int),
+    Function(operator.xor, 2, input_types=[Int, Int], output_type=Int),
+    Function(operator.lshift, 2, "lsh", input_types=[Int, Int], output_type=Int),
+    Function(operator.rshift, 2, "rsh", input_types=[Int, Int], output_type=Int),
     # bitwise unary operator
-    Function(operator.inv, 1),
+    Function(operator.inv, 1, input_types=[Int], output_type=Int),
     # unary operators
     Function(operator.abs, 1),
     Function(operator.neg, 1),
@@ -166,9 +249,9 @@ FUNCTIONS: List[AbstractFunction] = [
     Constant(1000, "_1000"),
     Constant(1_000_000_000, "_1000000000"),
     # -- complex operators
-    Function(math.isfinite, 1, "noinf"),
-    Function(math.isinf, 1),
-    Function(math.isnan, 1),
+    Function(math.isfinite, 1, "noinf", output_type=Bool),
+    Function(math.isinf, 1, output_type=Bool),
+    Function(math.isnan, 1, output_type=Bool),
     Function(math.sqrt, 1),
     Function(math.exp, 1),
     Function(math.log, 2),
@@ -185,9 +268,9 @@ FUNCTIONS: List[AbstractFunction] = [
     # -- Special operators
     FUNC_FEED,
     # -- Implementations of boolean operators
-    Function(boolean_and, 2, "and"),
-    Function(boolean_or, 2, "or"),
-    Function(if_else, 3, "if"),
+    Function(boolean_and, 2, "and", [Anything, Anything], Anything),
+    Function(boolean_or, 2, "or", [Anything, Anything], Anything),
+    Function(if_else, 3, "if", [Anything, Anything, Anything], Anything),
 ]
 assert are_hashable_by(FUNCTIONS, "name")
 assert are_hashable_by(FUNCTIONS, "unique_id")
@@ -225,6 +308,13 @@ class FunctionNode:
         printer.write(f"{indentation}{self}")
         for child in self.inputs:
             child._describe_in(printer, indentation + "  ")
+
+    def expect_type(self):
+        for i, expected_type in enumerate(self.function.input_types):
+            node = self.inputs[i]
+            node.expect_type()
+            if node.function != FUNC_FEED:
+                expected_type.expect_type(node.function.output_type)
 
     def execute(self, feeder: Feeder):
         return self.function.run(*(child.execute(feeder) for child in self.inputs))
@@ -362,6 +452,7 @@ def main():
             protein = seq_gen.translate_dna(seq)
             print(f"Protein({protein.nb_inputs} args):")
             print(protein)
+            protein.node.expect_type()
             if protein.nb_inputs == 0:
                 raise ConstantProteinError(protein())
             print(f"[step {iteration}] success")
@@ -371,5 +462,11 @@ def main():
             continue
 
 
+def debug():
+    for function in FUNCTIONS:
+        print(function, function.input_types, function.output_type)
+
+
 if __name__ == "__main__":
     main()
+    # debug()
