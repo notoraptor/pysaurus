@@ -5,7 +5,6 @@ from pysaurus import package_dir
 from pysaurus.application import exceptions
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.enumeration import EnumerationError
-from pysaurus.core.informer import Informer
 from pysaurus.core.modules import System
 from pysaurus.interface.api.gui_api import GuiAPI
 from pysaurus.interface.common.qt_saurus_utils import PysaurusQtExceptHook
@@ -49,6 +48,7 @@ class Api(GuiAPI):
             except Exception as exception:
                 # Use Qt interface to call Qt slot `Interface.throw`
                 # in main thread with raised exception as argument.
+                self.threads_stop_flag = True
                 QMetaObject.invokeMethod(
                     self.interface,
                     "throw",
@@ -195,11 +195,6 @@ def main():
     sys.exit(ret)
 
 
-def main_with_context():
-    with Informer.default():
-        main()
-
-
 if __name__ == "__main__":
     logging.basicConfig(level=logging.NOTSET)
-    main_with_context()
+    main()

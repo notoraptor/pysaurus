@@ -92,27 +92,3 @@ class Cancelled(End):
 
 class DatabaseReady(End):
     __slots__ = ()
-
-
-class ProfilingStart(Notification):
-    __slots__ = ("name",)
-
-    def __init__(self, title):
-        # type: (str) -> None
-        self.name = title
-
-    def __str__(self):
-        return f"ProfilingStart({self.name})"
-
-    __repr__ = __str__
-
-
-class ProfilingEnd(Notification):
-    __slots__ = "name", "time"
-
-    def __init__(self, name, duration):
-        self.name = name
-        self.time = str(duration)
-
-    def __str__(self):
-        return f"ProfilingEnded({self.name}, {self.time})"

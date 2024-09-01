@@ -9,4 +9,4 @@ class PysaurusQtExceptHook(ExceptHookForQt):
         self.api = api
 
     def cleanup(self):
-        pass
+        self.api.threads_stop_flag = True

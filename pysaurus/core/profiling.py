@@ -4,8 +4,32 @@ from datetime import timedelta
 
 from pysaurus.core.components import Duration
 from pysaurus.core.informer import Informer
-from pysaurus.core.notifications import Notification, ProfilingEnd, ProfilingStart
+from pysaurus.core.notifications import Notification
 from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
+
+
+class ProfilingStart(Notification):
+    __slots__ = ("name",)
+
+    def __init__(self, title):
+        # type: (str) -> None
+        self.name = title
+
+    def __str__(self):
+        return f"ProfilingStart({self.name})"
+
+    __repr__ = __str__
+
+
+class ProfilingEnd(Notification):
+    __slots__ = "name", "time"
+
+    def __init__(self, name, duration):
+        self.name = name
+        self.time = str(duration)
+
+    def __str__(self):
+        return f"ProfilingEnded({self.name}, {self.time})"
 
 
 class _Profile(Duration):
