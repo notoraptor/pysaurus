@@ -1,9 +1,7 @@
 import logging
-import os
 
 import av
 
-from pysaurus.core.constants import JPEG_EXTENSION
 from pysaurus.core.job_notifications import notify_job_progress
 from pysaurus.core.parallelization import Job
 from pysaurus.video_raptor.abstract_video_raptor import AbstractVideoRaptor
@@ -141,18 +139,3 @@ class VideoRaptor(AbstractVideoRaptor):
             arr.append(self._get_info(file_name))
             notify_job_progress(notifier, self.collect_video_info, job.id, i + 1, count)
         return arr
-
-    def collect_video_thumbnails(self, job: Job) -> list:
-        db_folder, thumb_folder, notifier = job.args
-        thumb_folder = str(thumb_folder)
-        count = len(job.batch)
-        arr_errors = []
-        for i, (file_name, thumb_name) in enumerate(job.batch):
-            thumb_path = os.path.join(thumb_folder, f"{thumb_name}.{JPEG_EXTENSION}")
-            d_err = self.get_thumbnail(file_name, thumb_path)
-            if d_err:
-                arr_errors.append(d_err)
-            notify_job_progress(
-                notifier, self.collect_video_thumbnails, job.id, i + 1, count
-            )
-        return arr_errors
