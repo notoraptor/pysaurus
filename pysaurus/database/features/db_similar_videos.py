@@ -10,6 +10,7 @@ from pysaurus.core import notifications
 from pysaurus.core.fraction import Fraction
 from pysaurus.core.functions import compute_nb_couples, get_end_index, get_start_index
 from pysaurus.core.informer import Informer
+from pysaurus.core.job_notifications import notify_job_progress
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.abstract_database import AbstractDatabase
 from pysaurus.miniature.graph import Graph
@@ -73,7 +74,7 @@ class _GrayClassifier:
                 yield i, j
             if (i + 1) % 1000 == 0:
                 notifier.progress(self.compare_miniature_grays, i + 1, n)
-        notifier.progress(self.compare_miniature_grays, n, n)
+        notify_job_progress(notifier, self.compare_miniature_grays, None, n, n)
 
     @classmethod
     def classify(cls, miniatures: List[Miniature], miniature_indices: List[int] = None):
@@ -390,7 +391,9 @@ class DbSimilarVideos:
     def _find_similar_miniatures(self, miniatures, edges, db):
         # type: (List[Miniature], Array[c_bool], AbstractDatabase) -> List[Set[int]]
         notifier = Informer.default()
-        backend_sim.classify_similarities_directed(miniatures, edges, SIM_LIMIT)
+        backend_sim.classify_similarities_directed(
+            miniatures, edges, SIM_LIMIT, notifier
+        )
         graph = Graph()
         nb_miniatures = len(miniatures)
         with Profiler(say("Link videos ...")):

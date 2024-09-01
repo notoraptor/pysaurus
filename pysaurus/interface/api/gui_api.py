@@ -53,7 +53,8 @@ class GuiAPI(FeatureAPI):
         database may contain data that can't be pickled.
         E.g. Do not share database provider.
         """
-        super().__init__()
+        informer = Informer.default()
+        super().__init__(notifier=informer)
         self.launched_thread: Optional[threading.Thread] = None
         self.copy_work: Optional[FileCopier] = None
         self.something_launched = False
@@ -206,8 +207,10 @@ class GuiAPI(FeatureAPI):
             dst = AbsolutePath.file_path(
                 directory, filename.file_title, filename.extension
             )
-            self.copy_work = FileCopier(filename, dst, notify_end=False)
-            with Profiler(say("Move")):
+            self.copy_work = FileCopier(
+                filename, dst, notifier=self.notifier, notify_end=False
+            )
+            with Profiler(say("Move"), notifier=self.notifier):
                 done = self.copy_work.move()
             self.copy_work = None
             if done:

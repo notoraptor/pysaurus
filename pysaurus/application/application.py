@@ -18,6 +18,7 @@ from pysaurus.core.custom_json_parser import parse_json
 from pysaurus.core.dict_file_format import dff_dump, dff_load
 from pysaurus.core.json_type import Type
 from pysaurus.core.modules import FileSystem
+from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.profiling import Profiler
 from pysaurus.core.schematizable import Schema, WithSchema
 from pysaurus.database.abstract_database import AbstractDatabase
@@ -50,10 +51,11 @@ class Application:
         "config",
         "databases",
         "languages",
+        "notifier",
     )
     app_name = "Pysaurus"
 
-    def __init__(self):
+    def __init__(self, notifier=DEFAULT_NOTIFIER):
         self.home_dir = AbsolutePath(str(Path.home()))
         self.app_dir = AbsolutePath.join(self.home_dir, f".{self.app_name}").mkdir()
         self.dbs_dir = AbsolutePath.join(self.app_dir, "databases").mkdir()
@@ -62,6 +64,7 @@ class Application:
         self.config = Config()
         self.databases = {}  # type: Dict[AbsolutePath, Optional[AbstractDatabase]]
         self.languages = {}  # type: Dict[AbsolutePath, Optional[DefaultLanguage]]
+        self.notifier = notifier
         # Load database names.
         for entry in FileSystem.scandir(self.dbs_dir.path):  # type: os.DirEntry
             if entry.is_dir() and not entry.name.startswith("."):
@@ -122,19 +125,19 @@ class Application:
     def get_database_names(self) -> List[str]:
         return sorted(path.title for path in self.databases.keys())
 
-    @Profiler.profile()
+    @Profiler.profile_method()
     def open_database_from_name(self, name: str, update=False) -> AbstractDatabase:
         path = AbsolutePath.join(self.dbs_dir, name)
         assert path in self.databases
         if not self.databases[path]:
-            self.databases[path] = Database(path)
+            self.databases[path] = Database(path, notifier=self.notifier)
         else:
             self.databases[path].reopen()
         if update:
             self.databases[path].refresh()
         return self.databases[path]
 
-    @Profiler.profile()
+    @Profiler.profile_method()
     def new_database(self, name, folders: Iterable[AbsolutePath], update=False):
         if functions.has_discarded_characters(name):
             raise exceptions.InvalidDatabaseName(name)
@@ -145,7 +148,9 @@ class Application:
             raise exceptions.DatabaseAlreadyExists(path)
         if path.exists():
             raise exceptions.DatabasePathUnavailable(path)
-        self.databases[path] = Database(path.mkdir(), folders=folders)
+        self.databases[path] = Database(
+            path.mkdir(), folders=folders, notifier=self.notifier
+        )
         if update:
             self.databases[path].refresh()
         return self.databases[path]

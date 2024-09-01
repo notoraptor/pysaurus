@@ -40,7 +40,7 @@ class Videos:
     def get_runtime_info_from_paths(
         cls, folders: Iterable[AbsolutePath]
     ) -> Dict[AbsolutePath, VideoRuntimeInfo]:
-        return jobs_python.collect_video_paths(list(folders))
+        return jobs_python.collect_video_paths(list(folders), Informer.default())
 
     @classmethod
     def get_info_from_filenames(cls, filenames: List[str]) -> List[VideoEntry]:
@@ -50,7 +50,7 @@ class Videos:
         notifier = Informer.default()
         backend_raptor = VideoRaptor()
         with tempfile.TemporaryDirectory() as working_directory:
-            with Profiler(say("Collect videos info")):
+            with Profiler(say("Collect videos info"), notifier=notifier):
                 notifier.task(
                     backend_raptor.collect_video_info, len(filenames), "videos"
                 )
@@ -58,7 +58,7 @@ class Videos:
                     run_split_batch(
                         backend_raptor.collect_video_info,
                         filenames,
-                        extra_args=[working_directory],
+                        extra_args=[working_directory, notifier],
                     )
                 )
 
@@ -83,7 +83,12 @@ class Videos:
         notifier = Informer.default()
         # Generate thumbnail filenames and tasks
         tasks = [
-            (i, filename, AbsolutePath.file_path(working_directory, i, "jpg").path)
+            (
+                notifier,
+                i,
+                filename,
+                AbsolutePath.file_path(working_directory, i, "jpg").path,
+            )
             for i, filename in enumerate(video_paths)
         ]
         # Generate thumbnail files

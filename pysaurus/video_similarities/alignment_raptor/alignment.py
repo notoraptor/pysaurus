@@ -2,6 +2,7 @@ from ctypes import c_int, pointer
 from typing import List
 
 from pysaurus.core.constants import VIDEO_BATCH_SIZE
+from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
 from pysaurus.core.native.clibrary import c_int_p
 from pysaurus.core.profiling import Profiler
 from pysaurus.miniature.miniature import Miniature
@@ -12,7 +13,6 @@ from .symbols import (
     Sequence,
     fn_classifySimilaritiesDirected,
 )
-from ...core.informer import Informer
 
 
 def miniature_to_c_sequence(self, score=0.0, classification=-1):
@@ -27,8 +27,9 @@ def miniature_to_c_sequence(self, score=0.0, classification=-1):
     )
 
 
-def classify_similarities_directed(miniatures: List[Miniature], edges, sim_limit):
-    notifier = Informer.default()
+def classify_similarities_directed(
+    miniatures: List[Miniature], edges, sim_limit, notifier
+):
     nb_sequences = len(miniatures)
     with Profiler(say("Allocate native data"), notifier):
         native_sequences = [
@@ -39,7 +40,9 @@ def classify_similarities_directed(miniatures: List[Miniature], edges, sim_limit
     with Profiler(
         say("Finding similar images using simpler NATIVE comparison."), notifier
     ):
-        notifier.task("compare_miniatures", nb_sequences, "videos (C++ comparison)")
+        notify_job_start(
+            notifier, "compare_miniatures", nb_sequences, "videos (C++ comparison)"
+        )
         cursor = 0
         while cursor < nb_sequences:
             i_from = cursor
@@ -54,8 +57,14 @@ def classify_similarities_directed(miniatures: List[Miniature], edges, sim_limit
                 edges,
                 sim_limit,
             )
-            notifier.progress(
-                "compare_miniatures", min(i_to, nb_sequences), nb_sequences
+            notify_job_progress(
+                notifier,
+                "compare_miniatures",
+                None,
+                min(i_to, nb_sequences),
+                nb_sequences,
             )
             cursor = i_to
-        notifier.progress("compare_miniatures", nb_sequences, nb_sequences)
+        notify_job_progress(
+            notifier, "compare_miniatures", None, nb_sequences, nb_sequences
+        )

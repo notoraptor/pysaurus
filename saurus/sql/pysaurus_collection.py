@@ -5,6 +5,7 @@ from pysaurus.application import exceptions
 from pysaurus.core import notifications
 from pysaurus.core.components import AbsolutePath, Date
 from pysaurus.core.functions import string_to_pieces
+from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.path_tree import PathTree
 from pysaurus.database.abstract_database import AbstractDatabase
 from pysaurus.database.db_settings import DbSettings
@@ -32,8 +33,8 @@ def get_sql_prefix(field: str) -> str:
 class PysaurusCollection(AbstractDatabase):
     __slots__ = ("db",)
 
-    def __init__(self, path, folders=None):
-        super().__init__(path, SaurusProvider(self))
+    def __init__(self, path, folders=None, notifier=DEFAULT_NOTIFIER):
+        super().__init__(path, SaurusProvider(self), notifier)
         self.db = PysaurusConnection(self.ways.db_sql_path.path)
         if folders:
             self.set_folders(

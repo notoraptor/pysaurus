@@ -4,7 +4,8 @@ from typing import List
 import numpy as np
 
 from pysaurus.core import notifications
-from pysaurus.core.informer import Informer
+from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
+from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.profiling import Profiler
 from pysaurus.miniature.miniature import Miniature
 from saurus.language import say
@@ -39,10 +40,10 @@ def optimize_pattern_predictor(
     theta: List[float] = None,
     alpha: float = 32,
     nb_steps: int = 5000,
+    notifier=DEFAULT_NOTIFIER,
 ) -> List[float]:
     """Train"""
     assert len(miniatures) == len(ys) > 1
-    notifier = Informer.default()
     m = len(miniatures)
     xs = np.asarray([_miniature_to_x(m) for m in miniatures], dtype=np.float64)
     ys = np.asarray(ys)
@@ -54,7 +55,7 @@ def optimize_pattern_predictor(
     logger.debug(f"xs {xs.shape} ys {ys.shape} theta {theta.shape}")
     nb_convergence = 0
     nb_expected_convergence = 10
-    notifier.task(optimize_pattern_predictor, nb_steps, "steps")
+    notify_job_start(notifier, optimize_pattern_predictor, nb_steps, "steps")
     with Profiler(say("Train"), notifier):
         with open("train.tsv", "w") as train_log:
             print("\t".join(f"t{i + 1}" for i in range(len(theta))), file=train_log)
@@ -68,8 +69,10 @@ def optimize_pattern_predictor(
                     print("\t".join(str(val) for val in theta), file=train_log)
                 c = _cost(theta, xs, ys)
                 if nb_convergence == nb_expected_convergence:
-                    notifier.progress(
+                    notify_job_progress(
+                        notifier,
                         optimize_pattern_predictor,
+                        None,
                         nb_steps,
                         nb_steps,
                         title=say(
@@ -90,8 +93,10 @@ def optimize_pattern_predictor(
                 nb_convergence = (
                     (nb_convergence + 1) if np.all(previous_theta == theta) else 0
                 )
-                notifier.progress(
+                notify_job_progress(
+                    notifier,
                     optimize_pattern_predictor,
+                    None,
                     step + 1,
                     nb_steps,
                     title=say(

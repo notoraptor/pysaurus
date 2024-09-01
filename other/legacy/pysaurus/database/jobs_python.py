@@ -1,6 +1,6 @@
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.constants import JPEG_EXTENSION
-from pysaurus.core.informer import Informer
+from pysaurus.core.job_notifications import notify_job_progress
 from pysaurus.core.modules import ImageUtils
 
 
@@ -15,7 +15,6 @@ def image_to_jpeg(input_path):
 
 
 def compress_thumbnails_to_jpeg(job):
-    notifier = Informer.default()
-    path, job_id = job
+    path, job_id, notifier = job
     image_to_jpeg(path)
-    notifier.progress(compress_thumbnails_to_jpeg, 1, 1, job_id)
+    notify_job_progress(notifier, compress_thumbnails_to_jpeg, job_id, 1, 1)

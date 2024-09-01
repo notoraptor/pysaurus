@@ -68,7 +68,10 @@ class DbPatternDetection:
             miniatures.append(video_id_to_miniature[video_id])
             classes.append(video_id_to_class[video_id])
         theta = optimize_pattern_predictor(
-            miniatures, classes, theta=database.get_predictor(prop_name)
+            miniatures,
+            classes,
+            theta=database.get_predictor(prop_name),
+            notifier=Informer.default(),
         )
         database.set_predictor(prop_name, theta)
 

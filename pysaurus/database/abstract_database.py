@@ -22,8 +22,8 @@ from pysaurus.application import exceptions
 from pysaurus.core import functions, notifications
 from pysaurus.core.components import AbsolutePath, Date, PathType
 from pysaurus.core.file_utils import create_xspf_playlist
-from pysaurus.core.informer import Informer
 from pysaurus.core.modules import ImageUtils
+from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.algorithms.miniatures import Miniatures
 from pysaurus.database.algorithms.videos import Videos
@@ -48,10 +48,15 @@ logger = logging.getLogger(__name__)
 class AbstractDatabase(ABC):
     __slots__ = ("ways", "notifier", "in_save_context", "provider")
 
-    def __init__(self, db_folder: PathType, provider: AbstractVideoProvider):
+    def __init__(
+        self,
+        db_folder: PathType,
+        provider: AbstractVideoProvider,
+        notifier=DEFAULT_NOTIFIER,
+    ):
         db_folder = AbsolutePath.ensure_directory(db_folder)
         self.ways = DbWays(db_folder)
-        self.notifier = Informer.default()
+        self.notifier = notifier
         self.in_save_context = False
         self.provider = provider
 

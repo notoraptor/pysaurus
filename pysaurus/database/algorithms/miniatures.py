@@ -36,7 +36,11 @@ class Miniatures:
             jobs_python.generate_video_miniatures, len(named_thumbnails), "videos"
         )
         results = list(
-            run_split_batch(jobs_python.generate_video_miniatures, named_thumbnails)
+            run_split_batch(
+                jobs_python.generate_video_miniatures,
+                named_thumbnails,
+                extra_args=[notifier],
+            )
         )
         added_miniatures = []
         for local_array in results:
@@ -57,7 +61,9 @@ class Miniatures:
                 group_min_size=group_min_size,
                 pixel_distance_radius=pixel_distance_radius,
             )
-            for dm in group_computer.batch_compute_groups(m_no_groups):
+            for dm in group_computer.batch_compute_groups(
+                m_no_groups, notifier=Informer.default()
+            ):
                 miniatures[dm.miniature_identifier].set_group_signature(
                     pixel_distance_radius, group_min_size, len(dm.pixel_groups)
                 )

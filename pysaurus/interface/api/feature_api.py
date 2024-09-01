@@ -6,7 +6,6 @@ from pysaurus.application.application import Application
 from pysaurus.application.language.default_language import language_to_dict
 from pysaurus.core.classes import Selector, StringPrinter
 from pysaurus.core.constants import PYTHON_DEFAULT_SOURCES
-from pysaurus.core.informer import Informer
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.abstract_database import AbstractDatabase as Db
 from pysaurus.interface.api.api_utils.proxy_feature import (
@@ -25,9 +24,9 @@ from pysaurus.video_provider.abstract_video_provider import (
 class FeatureAPI:
     __slots__ = ("notifier", "application", "database", "_proxies", "_constants")
 
-    def __init__(self):
-        self.notifier = Informer.default()
-        self.application = Application()
+    def __init__(self, notifier):
+        self.notifier = notifier
+        self.application = Application(self.notifier)
         self.database: Optional[Db] = None
         self._constants = {
             "PYTHON_DEFAULT_SOURCES": PYTHON_DEFAULT_SOURCES,

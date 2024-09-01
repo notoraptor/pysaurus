@@ -1,7 +1,8 @@
 from typing import List
 
 from pysaurus.core.classes import AbstractMatrix
-from pysaurus.core.informer import Informer
+from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
+from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.parallelization import USABLE_CPU_COUNT, parallelize
 from pysaurus.core.profiling import Profiler
 from pysaurus.miniature.decomposed_miniature import DecomposedMiniature
@@ -44,26 +45,36 @@ class GroupComputer:
         return (255 - pixel_distance_radius) * 100 / 255
 
     def batch_compute_groups(
-        self, miniatures: List[Miniature]
+        self, miniatures: List[Miniature], *, notifier=DEFAULT_NOTIFIER
     ) -> List[DecomposedMiniature]:
-        notifier = Informer.default()
-        tasks = [(i, m, len(miniatures)) for i, m in enumerate(miniatures)]
-        with Profiler(say("batch_compute_groups(n={n} miniature(s))", n=len(tasks))):
-            notifier.task(self.collect_miniature_groups, len(miniatures), "miniatures")
+        tasks = [(i, m, len(miniatures), notifier) for i, m in enumerate(miniatures)]
+        with Profiler(
+            say("batch_compute_groups(n={n} miniature(s))", n=len(tasks)), notifier
+        ):
+            notify_job_start(
+                notifier, self.collect_miniature_groups, len(miniatures), "miniatures"
+            )
             raw_output = list(
                 parallelize(self.collect_miniature_groups, tasks, USABLE_CPU_COUNT)
             )
-        notifier.progress(
-            self.collect_miniature_groups, len(miniatures), len(miniatures)
+        notify_job_progress(
+            notifier,
+            self.collect_miniature_groups,
+            None,
+            len(miniatures),
+            len(miniatures),
         )
         return raw_output
 
     def collect_miniature_groups(self, context) -> DecomposedMiniature:
-        index_task, miniature, nb_all_tasks = context
-        notifier = Informer.default()
+        index_task, miniature, nb_all_tasks, notifier = context
         if (index_task + 1) % self.print_step == 0:
-            notifier.progress(
-                self.collect_miniature_groups, index_task + 1, nb_all_tasks
+            notify_job_progress(
+                notifier,
+                self.collect_miniature_groups,
+                None,
+                index_task + 1,
+                nb_all_tasks,
             )
         return DecomposedMiniature(miniature.identifier, self.group_pixels(miniature))
 
