@@ -1,6 +1,7 @@
+import inspect
 import os
 from multiprocessing import Pool
-from typing import List
+from typing import Iterable, List
 
 
 class Job:
@@ -62,3 +63,32 @@ def parallelize(function, jobs, cpu_count=CPU_COUNT, chunksize=1, ordered=True):
     with Pool(cpu_count) as p:
         mapper = p.imap if ordered else p.imap_unordered
         yield from mapper(function, jobs, chunksize=chunksize)
+
+
+class _Unpacker:
+    __slots__ = ("function",)
+
+    def __init__(self, function):
+        self.function = function
+
+    def __call__(self, task):
+        return self.function(*task)
+
+
+def parallelize_smart(
+    function, tasks: Iterable, cpu_count=CPU_COUNT, chunksize=1, ordered=True
+):
+    fn_sgn = inspect.signature(function)
+    nb_params = len(fn_sgn.parameters)
+    # Function must wait for at least 1 parameter
+    assert nb_params
+    if nb_params > 1:
+        # Assume tasks is an iterable of expandable elements
+        run = _Unpacker(function)
+    else:
+        # Assume tasks is an iterable of non-expandable elements
+        run = function
+
+    with Pool(cpu_count) as p:
+        mapper = p.imap if ordered else p.imap_unordered
+        yield from mapper(run, tasks, chunksize=chunksize)
