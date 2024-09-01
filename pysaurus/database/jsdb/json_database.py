@@ -17,7 +17,6 @@ from pysaurus.core.components import AbsolutePath, Date, PathType
 from pysaurus.core.constants import JPEG_EXTENSION
 from pysaurus.core.functions import make_collection
 from pysaurus.core.json_backup import JsonBackup
-from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.abstract_database import AbstractDatabase
@@ -67,12 +66,9 @@ class JsonDatabase(AbstractDatabase):
         self,
         db_folder: PathType,
         folders: Optional[Iterable[PathType]] = None,
-        notifier: Notifier = DEFAULT_NOTIFIER,
         indexer: AbstractVideoIndexer = None,
     ):
-        super().__init__(
-            db_folder, notifier=notifier, provider=JsonDatabaseVideoProvider(self)
-        )
+        super().__init__(db_folder, provider=JsonDatabaseVideoProvider(self))
         # Database content
         self._version = 2
         self.settings = DbSettings()
@@ -84,9 +80,7 @@ class JsonDatabase(AbstractDatabase):
         # Runtime
         self._id_to_video: Dict[int, Video] = {}
         self.moves_attribute = PotentialMoveAttribute(self)
-        self._indexer = indexer or VideoIndexer(
-            self.notifier, self.ways.db_index_pkl_path
-        )
+        self._indexer = indexer or VideoIndexer(self.ways.db_index_pkl_path)
         self._removed: Set[Video] = set()
         self._modified: Set[Video] = set()
         # Initialize thumbnail manager.

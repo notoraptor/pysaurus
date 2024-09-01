@@ -1,6 +1,6 @@
 from typing import List
 
-from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
+from pysaurus.core.informer import Informer
 from pysaurus.core.parallelization import USABLE_CPU_COUNT, parallelize
 from pysaurus.core.profiling import Profiler
 from pysaurus.miniature.miniature import Miniature
@@ -12,24 +12,20 @@ B = V / 2.0
 V_PLUS_B = V + B
 
 
-def classify_similarities_directed(miniatures, edges, limit, notifier):
+def classify_similarities_directed(miniatures, edges, limit):
+    notifier = Informer.default()
     nb_sequences = len(miniatures)
     width = miniatures[0].width
     height = miniatures[0].height
     maximum_distance_score = SIMPLE_MAX_PIXEL_DISTANCE * width * height
-    notify_job_start(
-        notifier,
-        _compare_miniatures_from_python,
-        nb_sequences,
-        "videos (Python comparison)",
+    notifier.task(
+        _compare_miniatures_from_python, nb_sequences, "videos (Python comparison)"
     )
-    with Profiler(say("Python images comparison"), notifier=notifier):
+    with Profiler(say("Python images comparison")):
         raw_output = list(
             parallelize(
                 _compare_miniatures_from_python,
-                _comparison_jobs(
-                    miniatures, edges, limit, maximum_distance_score, notifier
-                ),
+                _comparison_jobs(miniatures, edges, limit, maximum_distance_score),
                 cpu_count=USABLE_CPU_COUNT,
                 chunksize=100,
             )
@@ -40,17 +36,15 @@ def classify_similarities_directed(miniatures, edges, limit, notifier):
             edges[i * nb_sequences + j] = 1
 
 
-def _comparison_jobs(
-    miniatures: List[Miniature], edges, limit: float, mds: int, notifier
-):
+def _comparison_jobs(miniatures: List[Miniature], edges, limit: float, mds: int):
     nb_sequences = len(miniatures)
     for i in range(nb_sequences):
         for j in range(i + 1, nb_sequences):
             if edges[i * nb_sequences + j]:
                 edges[i * nb_sequences + j] = 0
                 yield miniatures[i], miniatures[j], i, j, limit, mds
-        notify_job_progress(
-            notifier, _compare_miniatures_from_python, None, i + 1, nb_sequences
+        Informer.default().progress(
+            _compare_miniatures_from_python, i + 1, nb_sequences
         )
 
 

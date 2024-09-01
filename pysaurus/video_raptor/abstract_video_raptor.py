@@ -10,7 +10,3 @@ class AbstractVideoRaptor:
     @abstractmethod
     def collect_video_info(self, job: Job) -> list:
         pass
-
-    @abstractmethod
-    def collect_video_thumbnails(self, job: Job) -> list:
-        pass

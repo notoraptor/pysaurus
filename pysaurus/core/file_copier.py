@@ -2,9 +2,8 @@ import shutil
 
 from pysaurus.core import core_exceptions, notifications
 from pysaurus.core.components import AbsolutePath, FileSize
-from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
+from pysaurus.core.informer import Informer
 from pysaurus.core.modules import FileSystem
-from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 
 
 class FileCopier:
@@ -25,7 +24,6 @@ class FileCopier:
         dst: AbsolutePath,
         *,
         buffer_size: int = 0,
-        notifier: Notifier = DEFAULT_NOTIFIER,
         notify_end: bool = True,
     ):
         src = AbsolutePath.ensure(src)
@@ -49,7 +47,7 @@ class FileCopier:
         self.dst = dst
         self.total = total
         self.buffer_size = buffer_size
-        self.notifier = notifier
+        self.notifier = Informer.default()
         self.cancel = False
         self.notify_end = notify_end
         self.terminated = False
@@ -77,12 +75,8 @@ class FileCopier:
             self.terminated = True
 
     def copy_file(self):
-        notify_job_start(
-            self.notifier,
-            self.copy_file,
-            self.total,
-            "bytes",
-            expectation=FileSize(self.total),
+        self.notifier.task(
+            self.copy_file, self.total, "bytes", expectation=FileSize(self.total)
         )
         try:
             with open(self.src.path, "rb") as in_file:
@@ -93,13 +87,8 @@ class FileCopier:
                         if not buffer:
                             break
                         size += out_file.write(buffer)
-                        notify_job_progress(
-                            self.notifier,
-                            self.copy_file,
-                            None,
-                            size,
-                            self.total,
-                            title=str(FileSize(size)),
+                        self.notifier.progress(
+                            self.copy_file, size, self.total, title=str(FileSize(size))
                         )
             if self.cancel:
                 self.dst.delete()

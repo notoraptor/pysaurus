@@ -3,7 +3,6 @@ from typing import Dict, Iterable, List, Sequence, Set
 
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.informer import Informer
-from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.jsdb.jsdbvideo.abstract_video_indexer import AbstractVideoIndexer
 from pysaurus.database.jsdb.jsdbvideo.lazy_video import LazyVideo as Video
@@ -22,10 +21,8 @@ class VideoIndexer(AbstractVideoIndexer):
         "index_path",
     )
 
-    def __init__(
-        self, notifier: Notifier = DEFAULT_NOTIFIER, index_path: AbsolutePath = None
-    ):
-        self.notifier = notifier
+    def __init__(self, index_path: AbsolutePath = None):
+        self.notifier = Informer.default()
         self.term_to_filenames: Dict[Tag, Set[str]] = {}
         self.filename_to_terms: Dict[str, List[Tag]] = {}
         self.built = False

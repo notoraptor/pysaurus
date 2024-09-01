@@ -1,10 +1,8 @@
 import logging
-import os
 
 import av
 
-from pysaurus.core.constants import JPEG_EXTENSION
-from pysaurus.core.job_notifications import notify_job_progress
+from pysaurus.core.informer import Informer
 from pysaurus.core.parallelization import Job
 from pysaurus.video_raptor.abstract_video_raptor import AbstractVideoRaptor
 
@@ -126,33 +124,16 @@ class VideoRaptor(AbstractVideoRaptor):
             }
         return None
 
-    def run_thumbnail_task(
-        self, notifier, task_id, filename, thumb_path, thumb_size=300
-    ):
+    def run_thumbnail_task(self, task_id, filename, thumb_path, thumb_size=300):
         err = self.get_thumbnail(filename, thumb_path, thumb_size)
-        notify_job_progress(notifier, self.run_thumbnail_task, task_id, 1, 1)
+        Informer.default().progress(self.run_thumbnail_task, 1, 1, task_id)
         return err
 
     def collect_video_info(self, job: Job) -> list:
-        _, notifier = job.args
+        notifier = Informer.default()
         count = len(job.batch)
         arr = []
         for i, file_name in enumerate(job.batch):
             arr.append(self._get_info(file_name))
-            notify_job_progress(notifier, self.collect_video_info, job.id, i + 1, count)
+            notifier.progress(self.collect_video_info, i + 1, count, job.id)
         return arr
-
-    def collect_video_thumbnails(self, job: Job) -> list:
-        db_folder, thumb_folder, notifier = job.args
-        thumb_folder = str(thumb_folder)
-        count = len(job.batch)
-        arr_errors = []
-        for i, (file_name, thumb_name) in enumerate(job.batch):
-            thumb_path = os.path.join(thumb_folder, f"{thumb_name}.{JPEG_EXTENSION}")
-            d_err = self.get_thumbnail(file_name, thumb_path)
-            if d_err:
-                arr_errors.append(d_err)
-            notify_job_progress(
-                notifier, self.collect_video_thumbnails, job.id, i + 1, count
-            )
-        return arr_errors
