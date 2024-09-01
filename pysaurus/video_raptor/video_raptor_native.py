@@ -3,9 +3,9 @@ import subprocess
 
 from pysaurus.application import exceptions
 from pysaurus.bin.symbols import RUN_VIDEO_RAPTOR_BATCH
+from pysaurus.core.abstract_notifier import AbstractNotifier
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.custom_json_parser import parse_json
-from pysaurus.core.job_notifications import notify_job_progress
 from pysaurus.core.parallelization import Job
 from pysaurus.video_raptor.abstract_video_raptor import AbstractVideoRaptor
 
@@ -15,6 +15,7 @@ class VideoRaptor(AbstractVideoRaptor):
 
     @classmethod
     def _job_video_to_json(cls, job):
+        notifier: AbstractNotifier
         input_file_name, output_file_name, job_count, job_id, notifier = job
 
         nb_read = 0
@@ -47,16 +48,12 @@ class VideoRaptor(AbstractVideoRaptor):
                         end = True
                 else:
                     step = int(line)
-                    notify_job_progress(
-                        notifier, cls.collect_video_info, job_id, step, job_count
-                    )
+                    notifier.progress(cls.collect_video_info, step, job_count, job_id)
         program_errors = process.stderr.read().decode().strip()
         if not end and program_errors:
             raise exceptions.VideoToJsonError(program_errors)
         assert nb_read == job_count
-        notify_job_progress(
-            notifier, cls.collect_video_info, job_id, job_count, job_count
-        )
+        notifier.progress(cls.collect_video_info, job_count, job_count, job_id)
         return nb_loaded
 
     def collect_video_info(self, job: Job) -> list:

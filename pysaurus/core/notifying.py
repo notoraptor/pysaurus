@@ -1,6 +1,7 @@
 import sys
 from typing import Callable, Dict, Optional, TypeVar
 
+from pysaurus.core.abstract_notifier import AbstractNotifier
 from pysaurus.core.components import Date
 from pysaurus.core.notifications import Notification
 
@@ -8,7 +9,7 @@ N = TypeVar("N", bound=Notification)
 ManagerType = Callable[[N], None]
 
 
-class Notifier:
+class Notifier(AbstractNotifier):
     __slots__ = (
         "__managers",
         "__default_manager",

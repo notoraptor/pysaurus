@@ -5,8 +5,8 @@ import threading
 import time
 from typing import Callable
 
+from pysaurus.core.abstract_notifier import AbstractNotifier
 from pysaurus.core.components import Date
-from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
 from pysaurus.core.notifications import Notification
 from pysaurus.interface.api.api_utils.console_notification_printer import (
     ConsoleNotificationPrinter,
@@ -49,7 +49,7 @@ class InformerCallbackFactory:
 INFORMER_CALLBACK = InformerCallbackFactory()
 
 
-class Informer:
+class Informer(AbstractNotifier):
     __slots__ = ("__queues", "_thread_stop_flag")
     __default__ = None
 
@@ -84,12 +84,6 @@ class Informer:
     def notify(self, something):
         for local_queue in self.__queues:
             local_queue.put_nowait(something)
-
-    def task(self, name, total: int, kind="item(s)", expectation=None, title=None):
-        notify_job_start(self, name, total, kind, expectation, title)
-
-    def progress(self, name, step: int, size=1, channel=None, title=None):
-        notify_job_progress(self, name, channel, step, size, title=title)
 
     @classmethod
     def default(cls):

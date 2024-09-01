@@ -2,7 +2,6 @@ import shutil
 
 from pysaurus.core import core_exceptions, notifications
 from pysaurus.core.components import AbsolutePath, FileSize
-from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
 from pysaurus.core.modules import FileSystem
 from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 
@@ -77,12 +76,8 @@ class FileCopier:
             self.terminated = True
 
     def copy_file(self):
-        notify_job_start(
-            self.notifier,
-            self.copy_file,
-            self.total,
-            "bytes",
-            expectation=FileSize(self.total),
+        self.notifier.task(
+            self.copy_file, self.total, "bytes", expectation=FileSize(self.total)
         )
         try:
             with open(self.src.path, "rb") as in_file:
@@ -93,13 +88,8 @@ class FileCopier:
                         if not buffer:
                             break
                         size += out_file.write(buffer)
-                        notify_job_progress(
-                            self.notifier,
-                            self.copy_file,
-                            None,
-                            size,
-                            self.total,
-                            title=str(FileSize(size)),
+                        self.notifier.progress(
+                            self.copy_file, size, self.total, title=str(FileSize(size))
                         )
             if self.cancel:
                 self.dst.delete()

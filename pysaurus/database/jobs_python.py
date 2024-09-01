@@ -1,8 +1,8 @@
 from typing import Collection, Dict, List
 
 from pysaurus.core import notifications
+from pysaurus.core.abstract_notifier import AbstractNotifier
 from pysaurus.core.components import AbsolutePath
-from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
 from pysaurus.core.modules import ImageUtils
 from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.parallelization import Job, parallelize
@@ -14,16 +14,16 @@ from saurus.language import say
 
 
 def collect_videos_from_folders(job: list) -> Dict[AbsolutePath, VideoRuntimeInfo]:
-    notifier: Notifier
+    notifier: AbstractNotifier
     path, job_id, notifier = job
     files = {}  # type: Dict[AbsolutePath, VideoRuntimeInfo]
     scan_path_for_videos(path, files)
-    notify_job_progress(notifier, collect_videos_from_folders, job_id, 1, 1)
+    notifier.progress(collect_videos_from_folders, 1, 1, job_id)
     return files
 
 
 def generate_video_miniatures(job: Job) -> List[Miniature]:
-    notifier: Notifier = job.args[0]
+    notifier: AbstractNotifier = job.args[0]
     nb_videos = len(job.batch)
     miniatures = []
     for i, (file_name, thumb_data) in enumerate(job.batch):
@@ -33,12 +33,8 @@ def generate_video_miniatures(job: Job) -> List[Miniature]:
             )
         )
         if (i + 1) % 500 == 0:
-            notify_job_progress(
-                notifier, generate_video_miniatures, job.id, i + 1, nb_videos
-            )
-    notify_job_progress(
-        notifier, generate_video_miniatures, job.id, nb_videos, nb_videos
-    )
+            notifier.progress(generate_video_miniatures, i + 1, nb_videos, job.id)
+    notifier.progress(generate_video_miniatures, nb_videos, nb_videos, job.id)
     return miniatures
 
 
@@ -48,7 +44,7 @@ def collect_video_paths(
     paths = {}  # type: Dict[AbsolutePath, VideoRuntimeInfo]
     jobs = [[path, i, notifier] for i, path in enumerate(sources)]
     with Profiler(title=say("Collect videos"), notifier=notifier):
-        notify_job_start(notifier, collect_videos_from_folders, len(sources), "folders")
+        notifier.task(collect_videos_from_folders, len(sources), "folders")
         for local_result in parallelize(
             collect_videos_from_folders, jobs, ordered=False
         ):

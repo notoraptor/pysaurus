@@ -95,8 +95,8 @@ def _compute_job_title(title, description, expectation, total, kind):
     return title
 
 
-def notify_job_start(notifier, function, total, kind, expectation=None, title=None):
-    name = _get_job_name(function)
+def notify_job_start(notifier, identiifier, total, kind, expectation=None, title=None):
+    name = _get_job_name(identiifier)
     job_title = _compute_job_title(title, name, expectation, total, kind)
     notifier.notify(JobToDo(name, total, job_title))
     if total:

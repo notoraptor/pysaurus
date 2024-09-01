@@ -1,6 +1,6 @@
 from typing import List
 
-from pysaurus.core.job_notifications import notify_job_progress, notify_job_start
+from pysaurus.core.abstract_notifier import AbstractNotifier
 from pysaurus.core.parallelization import USABLE_CPU_COUNT, parallelize
 from pysaurus.core.profiling import Profiler
 from pysaurus.miniature.miniature import Miniature
@@ -12,16 +12,15 @@ B = V / 2.0
 V_PLUS_B = V + B
 
 
-def classify_similarities_directed(miniatures, edges, limit, notifier):
+def classify_similarities_directed(
+    miniatures, edges, limit, notifier: AbstractNotifier
+):
     nb_sequences = len(miniatures)
     width = miniatures[0].width
     height = miniatures[0].height
     maximum_distance_score = SIMPLE_MAX_PIXEL_DISTANCE * width * height
-    notify_job_start(
-        notifier,
-        _compare_miniatures_from_python,
-        nb_sequences,
-        "videos (Python comparison)",
+    notifier.task(
+        _compare_miniatures_from_python, nb_sequences, "videos (Python comparison)"
     )
     with Profiler(say("Python images comparison"), notifier=notifier):
         raw_output = list(
@@ -41,7 +40,11 @@ def classify_similarities_directed(miniatures, edges, limit, notifier):
 
 
 def _comparison_jobs(
-    miniatures: List[Miniature], edges, limit: float, mds: int, notifier
+    miniatures: List[Miniature],
+    edges,
+    limit: float,
+    mds: int,
+    notifier: AbstractNotifier,
 ):
     nb_sequences = len(miniatures)
     for i in range(nb_sequences):
@@ -49,9 +52,7 @@ def _comparison_jobs(
             if edges[i * nb_sequences + j]:
                 edges[i * nb_sequences + j] = 0
                 yield miniatures[i], miniatures[j], i, j, limit, mds
-        notify_job_progress(
-            notifier, _compare_miniatures_from_python, None, i + 1, nb_sequences
-        )
+        notifier.progress(_compare_miniatures_from_python, i + 1, nb_sequences)
 
 
 def _compare_miniatures_from_python(job):
