@@ -55,8 +55,7 @@ def _comparison_jobs(
         notifier.progress(_compare_miniatures_from_python, i + 1, nb_sequences)
 
 
-def _compare_miniatures_from_python(job):
-    mi, mj, i, j, limit, mds = job
+def _compare_miniatures_from_python(mi, mj, i, j, limit, mds):
     ok = compare_faster(mi, mj, mi.width, mi.height, mds) >= limit
     return (i, j) if ok else None
 

@@ -1,6 +1,5 @@
 from typing import List
 
-from pysaurus.core.abstract_notifier import AbstractNotifier
 from pysaurus.core.classes import AbstractMatrix
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.parallelization import USABLE_CPU_COUNT, parallelize
@@ -47,26 +46,21 @@ class GroupComputer:
     def batch_compute_groups(
         self, miniatures: List[Miniature], *, notifier=DEFAULT_NOTIFIER
     ) -> List[DecomposedMiniature]:
-        tasks = [(i, m, len(miniatures), notifier) for i, m in enumerate(miniatures)]
         with Profiler(
-            say("batch_compute_groups(n={n} miniature(s))", n=len(tasks)), notifier
+            say("batch_compute_groups(n={n} miniature(s))", n=len(miniatures)), notifier
         ):
-            notifier.task(self.collect_miniature_groups, len(miniatures), "miniatures")
             raw_output = list(
-                parallelize(self.collect_miniature_groups, tasks, USABLE_CPU_COUNT)
+                parallelize(
+                    self.collect_miniature_groups,
+                    miniatures,
+                    cpu_count=USABLE_CPU_COUNT,
+                    notifier=notifier,
+                    kind="miniature(s)",
+                )
             )
-        notifier.progress(
-            self.collect_miniature_groups, len(miniatures), len(miniatures)
-        )
         return raw_output
 
-    def collect_miniature_groups(self, context) -> DecomposedMiniature:
-        notifier: AbstractNotifier
-        index_task, miniature, nb_all_tasks, notifier = context
-        if (index_task + 1) % self.print_step == 0:
-            notifier.progress(
-                self.collect_miniature_groups, index_task + 1, nb_all_tasks
-            )
+    def collect_miniature_groups(self, miniature) -> DecomposedMiniature:
         return DecomposedMiniature(miniature.identifier, self.group_pixels(miniature))
 
     def group_pixels(self, miniature: AbstractMatrix) -> List[PixelGroup]:

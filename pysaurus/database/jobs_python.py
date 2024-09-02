@@ -5,7 +5,7 @@ from pysaurus.core.abstract_notifier import AbstractNotifier
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.modules import ImageUtils
 from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
-from pysaurus.core.parallelization import Job, parallelize_smart
+from pysaurus.core.parallelization import Job, parallelize
 from pysaurus.core.profiling import Profiler
 from pysaurus.miniature.miniature import Miniature
 from pysaurus.video import VideoRuntimeInfo
@@ -14,11 +14,10 @@ from saurus.language import say
 
 
 def collect_videos_from_folders(
-    notifier: AbstractNotifier, path: AbsolutePath
+    path: AbsolutePath,
 ) -> Dict[AbsolutePath, VideoRuntimeInfo]:
     files: Dict[AbsolutePath, VideoRuntimeInfo] = {}
     scan_path_for_videos(path, files)
-    notifier.progress(collect_videos_from_folders, 1, 1, str(path))
     return files
 
 
@@ -42,11 +41,13 @@ def collect_video_paths(
     sources: Collection[AbsolutePath], notifier: Notifier = DEFAULT_NOTIFIER
 ) -> Dict[AbsolutePath, VideoRuntimeInfo]:
     paths = {}  # type: Dict[AbsolutePath, VideoRuntimeInfo]
-    tasks = [[notifier, path] for i, path in enumerate(sources)]
     with Profiler(title=say("Collect videos"), notifier=notifier):
-        notifier.task(collect_videos_from_folders, len(sources), "folders")
-        for local_result in parallelize_smart(
-            collect_videos_from_folders, tasks, ordered=False
+        for local_result in parallelize(
+            collect_videos_from_folders,
+            sources,
+            ordered=False,
+            notifier=notifier,
+            kind="folders",
         ):
             paths.update(local_result)
     notifier.notify(notifications.FinishedCollectingVideos(paths))
