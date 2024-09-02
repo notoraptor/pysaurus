@@ -5,7 +5,7 @@ import ujson as json
 from pysaurus.application import exceptions
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.informer import Informer
-from pysaurus.core.parallelization import run_split_batch
+from pysaurus.core.parallelization import parallelize
 from pysaurus.database import jobs_python
 from pysaurus.miniature.group_computer import GroupComputer
 from pysaurus.miniature.miniature import Miniature
@@ -31,21 +31,15 @@ class Miniatures:
     def get_miniatures(
         cls, named_thumbnails: Sequence[Tuple[AbsolutePath, bytes]]
     ) -> List[Miniature]:
-        notifier = Informer.default()
-        notifier.task(
-            jobs_python.generate_video_miniatures, len(named_thumbnails), "videos"
-        )
-        results = list(
-            run_split_batch(
-                jobs_python.generate_video_miniatures,
+        return list(
+            parallelize(
+                jobs_python.generate_video_miniature,
                 named_thumbnails,
-                extra_args=[notifier],
+                notifier=Informer.default(),
+                kind="video miniature(s)",
+                progress_step=100,
             )
         )
-        added_miniatures = []
-        for local_array in results:
-            added_miniatures.extend(local_array)
-        return added_miniatures
 
     @classmethod
     def update_group_signatures(

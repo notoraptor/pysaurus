@@ -88,28 +88,34 @@ class _NotifiedFunction:
 
 
 class _StepNotifiedFunction(_NotifiedFunction):
-    __slots__ = ("_progress_step",)
+    __slots__ = ("_progress_step", "_nb_tasks")
 
-    def __init__(self, function: callable, notifier: AbstractNotifier, progress_step=1):
+    def __init__(
+        self,
+        function: callable,
+        notifier: AbstractNotifier,
+        progress_step=1,
+        nb_tasks=0,
+    ):
         super().__init__(function, notifier)
         self._progress_step = progress_step
-        raise RuntimeError("Should not be called")
+        self._nb_tasks = nb_tasks
 
     def __call__(self, enumerated_task: Tuple[int, Any]):
         task_id, task = enumerated_task
         ret = self.function(task)
-        if (task_id + 1) % self._progress_step == 0:
+        if (task_id + 1) % self._progress_step == 0 or task_id + 1 == self._nb_tasks:
             self.notifier.progress(self.function, task_id + 1, 0)
         return ret
 
 
 def _generate_notified_function(
-    function, notifier, progress_step=1
+    function, notifier, progress_step=1, nb_tasks=0
 ) -> _NotifiedFunction:
     return (
         _NotifiedFunction(function, notifier)
         if progress_step < 2
-        else _StepNotifiedFunction(function, notifier, progress_step)
+        else _StepNotifiedFunction(function, notifier, progress_step, nb_tasks)
     )
 
 
@@ -141,7 +147,9 @@ def parallelize(
         else:
             tasks = list(tasks)
             nb_tasks = len(tasks)
-        wrapped_run = _generate_notified_function(run, notifier, progress_step)
+        wrapped_run = _generate_notified_function(
+            run, notifier, progress_step, nb_tasks
+        )
         wrapped_tasks = enumerate(tasks)
         notifier.task(wrapped_run, nb_tasks, kind or "task(s)")
     else:

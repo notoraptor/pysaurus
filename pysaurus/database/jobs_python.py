@@ -1,11 +1,10 @@
-from typing import Collection, Dict, List
+from typing import Collection, Dict
 
 from pysaurus.core import notifications
-from pysaurus.core.abstract_notifier import AbstractNotifier
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.modules import ImageUtils
 from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
-from pysaurus.core.parallelization import Job, parallelize
+from pysaurus.core.parallelization import parallelize
 from pysaurus.core.profiling import Profiler
 from pysaurus.miniature.miniature import Miniature
 from pysaurus.video import VideoRuntimeInfo
@@ -21,20 +20,10 @@ def collect_videos_from_folders(
     return files
 
 
-def generate_video_miniatures(job: Job) -> List[Miniature]:
-    notifier: AbstractNotifier = job.args[0]
-    nb_videos = len(job.batch)
-    miniatures = []
-    for i, (file_name, thumb_data) in enumerate(job.batch):
-        miniatures.append(
-            Miniature.from_file_data(
-                thumb_data, ImageUtils.THUMBNAIL_SIZE, file_name.path
-            )
-        )
-        if (i + 1) % 500 == 0:
-            notifier.progress(generate_video_miniatures, i + 1, nb_videos, job.id)
-    notifier.progress(generate_video_miniatures, nb_videos, nb_videos, job.id)
-    return miniatures
+def generate_video_miniature(file_name: AbsolutePath, thumb_data: bytes) -> Miniature:
+    return Miniature.from_file_data(
+        thumb_data, ImageUtils.THUMBNAIL_SIZE, file_name.path
+    )
 
 
 def collect_video_paths(
