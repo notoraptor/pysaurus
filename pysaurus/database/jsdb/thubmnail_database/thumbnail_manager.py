@@ -1,6 +1,5 @@
 import base64
-from io import BytesIO
-from typing import Dict, Iterable, List, Optional, Set
+from typing import Dict, Iterable, List, Set
 
 from pysaurus.core.components import AbsolutePath
 from pysaurus.database.jsdb.thubmnail_database.thumbnail_database import (
@@ -75,17 +74,6 @@ class ThumbnailManager:
 
     def get_base64(self, filename: AbsolutePath):
         return self.get_blob(filename, wrapper=base64.b64encode)
-
-    def save(self, video_filename: AbsolutePath) -> Optional[dict]:
-        blob = BytesIO()
-        err = self.raptor.get_thumbnail(video_filename.path, blob)
-        if not err:
-            self.thumb_db.modify(
-                "INSERT OR IGNORE INTO video_to_thumbnail "
-                "(filename, thumbnail) VALUES (?, ?)",
-                [video_filename.path, blob.getvalue()],
-            )
-        return err
 
     def rename(self, old_path: AbsolutePath, new_path: AbsolutePath):
         self.thumb_db.modify(

@@ -99,7 +99,7 @@ class VideoRaptor(AbstractVideoRaptor):
             return {"filename": filename, "errors": [f"{type(exc).__name__}: {exc}"]}
 
     @classmethod
-    def get_thumbnail(cls, filename, thumb_path, thumb_size=300):
+    def _get_thumbnail(cls, filename, thumb_path, thumb_size=300):
         try:
             with open_video(filename) as container:
                 _video_streams = container.streams.video
@@ -127,7 +127,7 @@ class VideoRaptor(AbstractVideoRaptor):
     def run_thumbnail_task(
         self, notifier: AbstractNotifier, task_id, filename, thumb_path, thumb_size=300
     ):
-        err = self.get_thumbnail(filename, thumb_path, thumb_size)
+        err = self._get_thumbnail(filename, thumb_path, thumb_size)
         notifier.progress(self.run_thumbnail_task, 1, 1, task_id)
         return err
 

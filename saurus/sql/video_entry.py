@@ -4,7 +4,7 @@ from typing import Any, Dict, Sequence
 from pysaurus.video import VideoRuntimeInfo
 
 
-@dataclass
+@dataclass(slots=True)
 class VideoEntry:
     # table columns: constant data
     filename: str
