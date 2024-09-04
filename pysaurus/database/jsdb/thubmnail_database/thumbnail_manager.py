@@ -5,7 +5,7 @@ from pysaurus.core.components import AbsolutePath
 from pysaurus.database.jsdb.thubmnail_database.thumbnail_database import (
     ThumbnailDatabase,
 )
-from pysaurus.video_raptor.video_raptor_pyav import VideoRaptor
+from pysaurus.video_raptor.video_raptor_pyav import PythonVideoRaptor
 
 
 class ThumbnailManager:
@@ -13,7 +13,7 @@ class ThumbnailManager:
 
     def __init__(self, db_path: AbsolutePath):
         self.thumb_db = ThumbnailDatabase(db_path.path)
-        self.raptor = VideoRaptor()
+        self.raptor = PythonVideoRaptor()
 
     def build(self, videos: Iterable[dict]):
         thumbnail_path_to_filenames = {}

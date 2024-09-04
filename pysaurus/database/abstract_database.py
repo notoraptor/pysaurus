@@ -236,33 +236,46 @@ class AbstractDatabase(ABC):
         all_files = Videos.get_runtime_info_from_paths(self.get_folders())
         self._update_videos_not_found(all_files)
         files_to_update = self._find_video_paths_for_update(all_files)
-        if files_to_update:
-            new = Videos.get_info_from_filenames(files_to_update)
-            self.set_date(current_date)
-            self.write_new_videos(new, all_files)
-
-    @Profiler.profile_method()
-    def ensure_thumbnails(self) -> None:
-        # Add missing thumbnails in thumbnail manager.
-        missing_thumbs = self._get_collectable_missing_thumbnails()
-
-        expected_thumbs = {}
-        thumb_errors = {}
-        self.notifier.notify(
-            notifications.Message(f"Missing thumbs in SQL: {len(missing_thumbs)}")
-        )
+        needing_thumbs = list(self._get_collectable_missing_thumbnails())
+        new: List[VideoEntry] = []
+        expected_thumbs: Dict[str, str] = {}
+        thumb_errors: Dict[str, List[str]] = {}
         with tempfile.TemporaryDirectory() as tmp_dir:
-            results = Videos.get_thumbnails(list(missing_thumbs), tmp_dir)
-            for filename, result in results.items():
-                if result.errors:
-                    self.add_video_errors(missing_thumbs[filename], *result.errors)
-                    thumb_errors[filename] = result.errors
+            results = Videos.hunt(files_to_update, needing_thumbs, tmp_dir)
+            # Possible cases for each result:
+            # nothing -> error_info XOR error_thumbnail
+            # only info, error_thumbnail ?
+            # only thumbnail
+            # info and thumbnail
+            for result in results:
+                if result.info and result.thumbnail:
+                    new.append(result.info)
+                    expected_thumbs[result.filename] = result.thumbnail
+                elif result.info:
+                    info = result.info
+                    info.errors = sorted(set(info.errors) | set(result.error_thumbnail))
+                    new.append(info)
+                elif result.thumbnail:
+                    expected_thumbs[result.filename] = result.thumbnail
                 else:
-                    expected_thumbs[filename] = result.thumbnail_path
+                    new.append(
+                        VideoEntry(
+                            filename=result.filename,
+                            errors=sorted(
+                                set(result.error_info) | set(result.error_thumbnail)
+                            ),
+                            unreadable=True,
+                        )
+                    )
+                if result.error_thumbnail:
+                    thumb_errors[result.filename] = result.error_thumbnail
 
-            # Save thumbnails into thumb manager
-            with Profiler(say("save thumbnails to db"), self.notifier):
-                self._insert_new_thumbnails(expected_thumbs)
+            self.set_date(current_date)
+            if new:
+                self.write_new_videos(new, all_files)
+            if expected_thumbs:
+                with Profiler(say("save thumbnails to db"), self.notifier):
+                    self._insert_new_thumbnails(expected_thumbs)
 
             logger.info(f"Thumbnails generated, deleting temp dir {tmp_dir}")
             # Delete thumbnail files (done at context exit)
@@ -383,7 +396,6 @@ class AbstractDatabase(ABC):
 
     def refresh(self) -> None:
         self.update()
-        self.ensure_thumbnails()
         self._notify_missing_thumbnails()
         self.provider.refresh()
 

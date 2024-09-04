@@ -1,38 +1,18 @@
-import logging
-import tempfile
-from multiprocessing import Pool
 from typing import Dict, Iterable, List
 
-from pysaurus.application import exceptions
+from pysaurus.core import notifications
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.informer import Informer
-from pysaurus.core.parallelization import run_split_batch
+from pysaurus.core.parallelization import parallelize
 from pysaurus.core.profiling import Profiler
-from pysaurus.database import jobs_python
-from pysaurus.video import VIDEO_SCHEMA, VideoRuntimeInfo
-from pysaurus.video_raptor.video_raptor_pyav import VideoRaptor as PythonVideoRaptor
+from pysaurus.video import VideoRuntimeInfo
+from pysaurus.video.video_file_lister import scan_path_for_videos
+from pysaurus.video_raptor.video_raptor_pyav import (
+    PythonVideoRaptor,
+    VideoTask,
+    VideoTaskResult,
+)
 from saurus.language import say
-from saurus.sql.video_entry import VideoEntry
-
-logger = logging.getLogger(__name__)
-
-try:
-    from pysaurus.video_raptor.video_raptor_native import VideoRaptor
-except exceptions.CysaurusUnavailable:
-    VideoRaptor = PythonVideoRaptor
-    logger.warning("Using fallback backend for videos info and thumbnails.")
-
-
-class ThumbnailResult:
-    __slots__ = ("video_path", "thumbnail_path", "errors")
-    video_path: str
-    thumbnail_path: str
-    errors: List[str]
-
-    def __init__(self, video_path, thumbnail_path=None, errors=None):
-        self.video_path = video_path
-        self.thumbnail_path = thumbnail_path
-        self.errors = errors
 
 
 class Videos:
@@ -40,69 +20,69 @@ class Videos:
     def get_runtime_info_from_paths(
         cls, folders: Iterable[AbsolutePath]
     ) -> Dict[AbsolutePath, VideoRuntimeInfo]:
-        return jobs_python.collect_video_paths(list(folders), Informer.default())
+        sources = list(folders)
+        notifier = Informer.default()
+        paths = {}  # type: Dict[AbsolutePath, VideoRuntimeInfo]
+        with Profiler(title=say("Collect videos"), notifier=notifier):
+            for local_result in parallelize(
+                cls._collect_videos_from_folders,
+                sources,
+                ordered=False,
+                notifier=notifier,
+                kind="folders",
+            ):
+                paths.update(local_result)
+        notifier.notify(notifications.FinishedCollectingVideos(paths))
+        return paths
 
     @classmethod
-    def get_info_from_filenames(cls, filenames: List[str]) -> List[VideoEntry]:
-        if not filenames:
+    def _collect_videos_from_folders(
+        cls, path: AbsolutePath
+    ) -> Dict[AbsolutePath, VideoRuntimeInfo]:
+        files: Dict[AbsolutePath, VideoRuntimeInfo] = {}
+        scan_path_for_videos(path, files)
+        return files
+
+    @classmethod
+    def hunt(
+        cls, filenames: List[str], need_thumbs: List[str], working_directory: str
+    ) -> List[VideoTaskResult]:
+        tasks = []
+        filenames_without_thumbs = set(need_thumbs)
+        for i, filename in enumerate(filenames):
+            tasks.append(
+                VideoTask(
+                    filename,
+                    need_info=True,
+                    thumb_path=AbsolutePath.file_path(working_directory, i, "jpg").path,
+                )
+            )
+            filenames_without_thumbs.discard(filename)
+        nb_filenames = len(filenames)
+        for j, filename_no_thumb in enumerate(filenames_without_thumbs):
+            tasks.append(
+                VideoTask(
+                    filename_no_thumb,
+                    thumb_path=AbsolutePath.file_path(
+                        working_directory, nb_filenames + j, "jpg"
+                    ).path,
+                )
+            )
+
+        if not tasks:
             return []
 
         notifier = Informer.default()
-        backend_raptor = VideoRaptor()
-        with tempfile.TemporaryDirectory() as working_directory:
-            with Profiler(say("Collect videos info"), notifier=notifier):
-                notifier.task(
-                    backend_raptor.collect_video_info, len(filenames), "videos"
-                )
-                results = list(
-                    run_split_batch(
-                        backend_raptor.collect_video_info,
-                        filenames,
-                        extra_args=[working_directory, notifier],
-                    )
-                )
-
-        new = [
-            VideoEntry(
-                **VIDEO_SCHEMA.ensure_long_keys(d, backend_raptor.RETURNS_SHORT_KEYS)
-            )
-            for arr in results
-            for d in arr
-        ]
-        for entry in new:
-            if entry.errors:
-                entry.unreadable = True
-        assert len(filenames) == len(new)
-
-        return new
-
-    @classmethod
-    def get_thumbnails(
-        cls, video_paths: List[str], working_directory: str
-    ) -> Dict[str, ThumbnailResult]:
-        notifier = Informer.default()
-        # Generate thumbnail filenames and tasks
-        tasks = [
-            (
-                notifier,
-                i,
-                filename,
-                AbsolutePath.file_path(working_directory, i, "jpg").path,
-            )
-            for i, filename in enumerate(video_paths)
-        ]
-        # Generate thumbnail files
-        expected_thumbs = {
-            filename: ThumbnailResult(filename, thumb_path)
-            for _, _, filename, thumb_path in tasks
-        }
         raptor = PythonVideoRaptor()
-        with Profiler(say("Generate thumbnail files"), notifier):
-            notifier.task(raptor.run_thumbnail_task, len(tasks), "thumbnails")
-            with Pool() as p:
-                errors = list(p.starmap(raptor.run_thumbnail_task, tasks))
-        for err in errors:
-            if err:
-                expected_thumbs[err["filename"]].errors = list(err["errors"])
-
-        return expected_thumbs
+        with Profiler(say("Collect videos info (II)"), notifier=notifier):
+            results: List[VideoTaskResult] = list(
+                parallelize(
+                    raptor.capture,
+                    tasks,
+                    ordered=False,
+                    notifier=notifier,
+                    kind="video(s)",
+                )
+            )
+        assert len(results) == nb_filenames + len(filenames_without_thumbs)
+        return results

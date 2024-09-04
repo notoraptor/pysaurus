@@ -5,8 +5,8 @@ import ujson as json
 from pysaurus.application import exceptions
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.informer import Informer
+from pysaurus.core.modules import ImageUtils
 from pysaurus.core.parallelization import parallelize
-from pysaurus.database import jobs_python
 from pysaurus.miniature.group_computer import GroupComputer
 from pysaurus.miniature.miniature import Miniature
 
@@ -33,12 +33,18 @@ class Miniatures:
     ) -> List[Miniature]:
         return list(
             parallelize(
-                jobs_python.generate_video_miniature,
+                cls._gen_miniature,
                 named_thumbnails,
                 notifier=Informer.default(),
                 kind="video miniature(s)",
                 progress_step=100,
             )
+        )
+
+    @classmethod
+    def _gen_miniature(cls, file_name: AbsolutePath, thumb_data: bytes) -> Miniature:
+        return Miniature.from_file_data(
+            thumb_data, ImageUtils.THUMBNAIL_SIZE, file_name.path
         )
 
     @classmethod

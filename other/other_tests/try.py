@@ -176,9 +176,9 @@ def main2():
 def main3():
     path = r"N:\donnees\autres\p\Yuahentai - her recipe is for a creampie.mp4"
     import pprint
-    from pysaurus.video_raptor.video_raptor_pyav import VideoRaptor
+    from pysaurus.video_raptor.video_raptor_pyav import PythonVideoRaptor
 
-    vr = VideoRaptor()
+    vr = PythonVideoRaptor()
     info = vr._get_info(path)
     pprint.pprint(info)
 

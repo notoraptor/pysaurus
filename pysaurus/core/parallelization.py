@@ -147,6 +147,8 @@ def parallelize(
         else:
             tasks = list(tasks)
             nb_tasks = len(tasks)
+        if progress_step > 1:
+            assert ordered
         wrapped_run = _generate_notified_function(
             run, notifier, progress_step, nb_tasks
         )
