@@ -1,5 +1,13 @@
 # 2024/07/09
 
+## Small tutorial to find similar images
+
+https://mathspp.com/blog/finding-similar-photos
+
+Looks like what I am currently doing.
+
+## Tried sentence-transformers to find similar thumbnails
+
 Tried: https://stackoverflow.com/a/71567609
 
 Seems too slow for what I want 
