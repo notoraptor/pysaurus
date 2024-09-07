@@ -2,7 +2,7 @@ from typing import Any, Iterable, List, Set, Tuple
 
 from PIL.Image import Image
 
-from other.imgsimsearch import AbstractImageProvider
+from other.imgsimsearch.abstract_image_provider import AbstractImageProvider
 from pysaurus.core.json_backup import JsonBackup
 from pysaurus.core.modules import ImageUtils
 from pysaurus.core.profiling import Profiler

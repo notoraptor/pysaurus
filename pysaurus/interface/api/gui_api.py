@@ -183,8 +183,8 @@ class GuiAPI(FeatureAPI):
         self.database.refresh()
 
     @process()
-    def find_similar_videos(self, ignore_cache=False) -> None:
-        DbSimilarVideos().find(self.database, ignore_cache)
+    def find_similar_videos(self) -> None:
+        DbSimilarVideos().find(self.database)
         self.database.provider.set_groups(
             field="similarity_id",
             is_property=False,

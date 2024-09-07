@@ -22,14 +22,17 @@ class GroupSignature(WithSchema):
 
 
 class NumpyMiniature:
-    __slots__ = "r", "g", "b", "width", "height"
+    __slots__ = "r", "g", "b", "width", "height", "identifier"
 
-    def __init__(self, r: Bytes, g: Bytes, b: Bytes, width: int, height: int):
+    def __init__(
+        self, r: Bytes, g: Bytes, b: Bytes, width: int, height: int, identifier
+    ):
         self.width = width
         self.height = height
         self.r = np.asarray(r, dtype=np.float32).reshape((height, width))
         self.g = np.asarray(g, dtype=np.float32).reshape((height, width))
         self.b = np.asarray(b, dtype=np.float32).reshape((height, width))
+        self.identifier = identifier
 
     @classmethod
     def from_image(cls, thumbnail):
@@ -65,7 +68,14 @@ class Miniature(AbstractMatrix):
     nb_pixels = property(lambda self: len(self.r))
 
     def to_numpy(self) -> NumpyMiniature:
-        return NumpyMiniature(self.r, self.g, self.b, self.width, self.height)
+        return NumpyMiniature(
+            bytearray(self.r),
+            bytearray(self.g),
+            bytearray(self.b),
+            self.width,
+            self.height,
+            self.identifier,
+        )
 
     def has_group_signature(self, pixel_distance_radius: int, group_min_size: int):
         return (

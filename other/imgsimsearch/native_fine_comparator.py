@@ -2,6 +2,7 @@ from ctypes import pointer
 from typing import Any, Dict, List, Sequence, Set
 
 from other.imgsimsearch.abstract_image_provider import AbstractImageProvider
+from other.imgsimsearch.common import SIM_LIMIT, THUMBNAIL_DIMENSION
 from other.imgsimsearch.graph import Graph
 from pysaurus.core.informer import Informer
 from pysaurus.core.profiling import Profiler
@@ -13,9 +14,7 @@ from pysaurus.video_similarities.alignment_raptor.symbols import (
     fn_compareSimilarSequences,
 )
 
-SIM_LIMIT = 88 / 100
 SIMPLE_MAX_PIXEL_DISTANCE = 255 * 3
-THUMBNAIL_DIMENSION = 32
 THUMBNAIL_SIZE = (THUMBNAIL_DIMENSION, THUMBNAIL_DIMENSION)
 
 

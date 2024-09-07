@@ -135,7 +135,6 @@ System.register(["../components/ActionToCross.js", "../components/ActionToMenuIt
           this.updateStatus = this.updateStatus.bind(this);
           this.backend = this.backend.bind(this);
           this.findSimilarVideos = this.findSimilarVideos.bind(this);
-          this.findSimilarVideosIgnoreCache = this.findSimilarVideosIgnoreCache.bind(this);
           this.closeDatabase = this.closeDatabase.bind(this);
           this.moveVideo = this.moveVideo.bind(this);
           this.editDatabaseFolders = this.editDatabaseFolders.bind(this);
@@ -226,13 +225,11 @@ System.register(["../components/ActionToCross.js", "../components/ActionToMenuIt
             action: actions.unsort
           }) : "") : "", this.canOpenRandomVideo() ? /*#__PURE__*/React.createElement(ActionToMenuItem, {
             action: actions.openRandomVideo
-          }) : "", this.canFindSimilarVideos() ? /*#__PURE__*/React.createElement(MenuItem, {
-            action: this.findSimilarVideos
-          }, tr("Search similar videos")) : "", this.canFindSimilarVideos() ? /*#__PURE__*/React.createElement(Menu, {
-            title: tr("Search similar videos (longer) ...")
+          }) : "", this.canFindSimilarVideos() ? /*#__PURE__*/React.createElement(Menu, {
+            title: tr("Search similar videos (may be long) ...")
           }, /*#__PURE__*/React.createElement(MenuItem, {
-            action: this.findSimilarVideosIgnoreCache
-          }, /*#__PURE__*/React.createElement("strong", null, tr("Ignore cache")))) : "", groupedByMoves ? /*#__PURE__*/React.createElement(MenuItem, {
+            action: this.findSimilarVideos
+          }, /*#__PURE__*/React.createElement("strong", null, tr("Find similar videos")))) : "", groupedByMoves ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.confirmAllUniqueMoves
           }, /*#__PURE__*/React.createElement("strong", null, /*#__PURE__*/React.createElement("em", null, tr("Confirm all unique moves")))) : "", /*#__PURE__*/React.createElement(MenuItem, {
             action: this.playlist,
@@ -904,9 +901,6 @@ not found video entry will be deleted.
         }
         findSimilarVideos() {
           this.props.app.dbUpdate("find_similar_videos");
-        }
-        findSimilarVideosIgnoreCache() {
-          this.props.app.dbUpdate("find_similar_videos", true);
         }
         manageProperties() {
           this.props.app.loadPropertiesPage();

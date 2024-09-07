@@ -26,7 +26,6 @@ GuiAPI (57)
     Database.edit_property_value -> <class 'bool'> (ignored)
     Database.fill_property_with_terms -> None
     GuiAPI.find_similar_videos -> None
-    GuiAPI.find_similar_videos_ignore_cache -> None
     FeatureAPI.get_constants -> typing.Dict[str, typing.Any]
     Application.get_database_names -> typing.List[str]
     Application.get_language_names -> typing.List[str]

@@ -90,7 +90,6 @@ export class VideosPage extends React.Component {
 		this.updateStatus = this.updateStatus.bind(this);
 		this.backend = this.backend.bind(this);
 		this.findSimilarVideos = this.findSimilarVideos.bind(this);
-		this.findSimilarVideosIgnoreCache = this.findSimilarVideosIgnoreCache.bind(this);
 		this.closeDatabase = this.closeDatabase.bind(this);
 		this.moveVideo = this.moveVideo.bind(this);
 		this.editDatabaseFolders = this.editDatabaseFolders.bind(this);
@@ -177,14 +176,9 @@ export class VideosPage extends React.Component {
 						)}
 						{this.canOpenRandomVideo() ? <ActionToMenuItem action={actions.openRandomVideo} /> : ""}
 						{this.canFindSimilarVideos() ? (
-							<MenuItem action={this.findSimilarVideos}>{tr("Search similar videos")}</MenuItem>
-						) : (
-							""
-						)}
-						{this.canFindSimilarVideos() ? (
-							<Menu title={tr("Search similar videos (longer) ...")}>
-								<MenuItem action={this.findSimilarVideosIgnoreCache}>
-									<strong>{tr("Ignore cache")}</strong>
+							<Menu title={tr("Search similar videos (may be long) ...")}>
+								<MenuItem action={this.findSimilarVideos}>
+									<strong>{tr("Find similar videos")}</strong>
 								</MenuItem>
 							</Menu>
 						) : (
@@ -1159,10 +1153,6 @@ not found video entry will be deleted.
 
 	findSimilarVideos() {
 		this.props.app.dbUpdate("find_similar_videos");
-	}
-
-	findSimilarVideosIgnoreCache() {
-		this.props.app.dbUpdate("find_similar_videos", true);
 	}
 
 	manageProperties() {

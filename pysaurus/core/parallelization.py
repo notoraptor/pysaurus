@@ -119,6 +119,20 @@ def _generate_notified_function(
     )
 
 
+class IterableWithLength(Iterable):
+    __slots__ = ("_itr", "_len")
+
+    def __init__(self, iterable: Iterable, length: int):
+        self._itr = iterable
+        self._len = length
+
+    def __iter__(self):
+        return self._itr
+
+    def __len__(self):
+        return self._len
+
+
 def parallelize(
     function,
     tasks: Iterable,

@@ -33,6 +33,6 @@ class AbstractNotifier(ABC):
         with PerfCounter() as perf_counter:
             for i, element in enumerate(iterable):
                 yield element
-                if total <= 1_000 or (i + 1) % 100 == 0 or i + 1 == total:
+                if total <= 1_000 or (i + 1) % 200 == 0 or i + 1 == total:
                     self.progress(desc, i + 1, total)
         self.notify(Profiled(desc, Duration(perf_counter.nanoseconds / 1000)))

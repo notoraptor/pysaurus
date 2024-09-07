@@ -183,8 +183,8 @@ class FletApiInterface:
     def delete_database(self):
         return self.api.__run_feature__("delete_database")
 
-    def find_similar_videos(self, ignore_cache=False):
-        return self.api.__run_feature__("find_similar_videos", ignore_cache)
+    def find_similar_videos(self):
+        return self.api.__run_feature__("find_similar_videos")
 
     def get_constants(self):
         return self.api.__run_feature__("get_constants")
