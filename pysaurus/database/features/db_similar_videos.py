@@ -1,9 +1,7 @@
-import logging
-from typing import Any, Iterable, List, Tuple
+from typing import Any, Iterable, List, Set, Tuple
 
 from PIL.Image import Image
 
-from pysaurus.application import exceptions
 from pysaurus.core.fraction import Fraction
 from pysaurus.core.modules import ImageUtils
 from pysaurus.core.profiling import Profiler
@@ -15,21 +13,7 @@ from pysaurus.imgsimsearch.approximate_comparator_annoy import (
 from pysaurus.imgsimsearch.python_fine_comparator import compare_miniatures
 from pysaurus.miniature.miniature import Miniature
 
-# from collections import deque
-logger = logging.getLogger(__name__)
-
-try:
-    from pysaurus.video_similarities.alignment_raptor import alignment as backend_sim
-
-    has_cpp = True
-except exceptions.CysaurusUnavailable:
-    from pysaurus.video_similarities import backend_python as backend_sim
-
-    has_cpp = False
-    logger.warning("Using fallback backend for video similarities search.")
-
-FRAC_SIM_LIMIT = Fraction(88, 100)
-SIM_LIMIT = float(FRAC_SIM_LIMIT)
+SIM_LIMIT = float(Fraction(88, 100))
 
 
 class DbImageProvider(AbstractImageProvider):
@@ -45,6 +29,7 @@ class DbImageProvider(AbstractImageProvider):
                     "thumbnail_blob",
                     "duration",
                     "duration_time_base",
+                    "date",
                 ],
                 where={"readable": True, "with_thumbnails": True},
             )
@@ -64,19 +49,18 @@ class DbImageProvider(AbstractImageProvider):
     def video_id(self, filename) -> int:
         return self.videos[filename]["video_id"]
 
+    def to_sortable_group(self, group: Set[str]) -> Tuple:
+        return (
+            len(group),
+            -max(self.videos[filename]["date"].time for filename in group),
+            sorted(group)[0],
+        )
+
 
 class DbSimilarVideos:
-    __slots__ = ("positions",)
-
-    def __init__(self):
-        # self.positions = deque()
-        self.positions = None
-
-    def find(self, db) -> None:
-        return self.find_similar_videos(db)
-
+    @classmethod
     @Profiler.profile()
-    def find_similar_videos(self, db: AbstractDatabase):
+    def find_similar_videos(cls, db: AbstractDatabase) -> None:
         miniatures: List[Miniature] = db.ensure_miniatures()
         video_indices = [m.video_id for m in miniatures]
         previous_sim = [
@@ -87,7 +71,7 @@ class DbSimilarVideos:
         ]
         db.set_similarities(video_indices, (None for _ in video_indices))
         try:
-            self._find_similar_videos(db, miniatures)
+            cls._find_similar_videos(db, miniatures)
         except Exception:
             # Restore previous similarities.
             db.set_similarities(video_indices, previous_sim)
@@ -100,12 +84,12 @@ class DbSimilarVideos:
         imp = DbImageProvider(db)
         ac = ApproximateComparatorAnnoy(imp)
         combined = ac.get_comparable_images_cos()
-        similarities = compare_miniatures(miniatures, combined)
+        similarities = compare_miniatures(miniatures, combined, SIM_LIMIT)
 
         video_indices = [m.video_id for m in miniatures]
         db.set_similarities(video_indices, (-1 for _ in video_indices))
 
-        similarities.sort(key=lambda group: (-len(group), sorted(group)[0]))
+        similarities.sort(key=imp.to_sortable_group)
         v_indices = []
         v_sim_ids = []
         for similarity_id, group in enumerate(similarities):

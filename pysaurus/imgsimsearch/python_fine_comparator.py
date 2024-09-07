@@ -5,17 +5,19 @@ from other.legacy.pysaurus.database.video_similarities.backend_numpy import (
 )
 from pysaurus.core.graph import Graph
 from pysaurus.core.informer import Informer
-from pysaurus.imgsimsearch.common import SIM_LIMIT, THUMBNAIL_DIMENSION
+from pysaurus.imgsimsearch.common import THUMBNAIL_DIMENSION
 from pysaurus.miniature.miniature import Miniature, NumpyMiniature
 
 
 def compare_miniatures(
-    miniatures_list: List[Miniature], output: Dict[Any, Sequence[Any]]
+    miniatures_list: List[Miniature],
+    comparisons: Dict[Any, Sequence[Any]],
+    sim_limit: float,
 ) -> List[Set[Any]]:
     notifier = Informer.default()
 
-    all_filenames = set(output)
-    for filenames in output.values():
+    all_filenames = set(comparisons)
+    for filenames in comparisons.values():
         all_filenames.update(filenames)
     miniatures = {m.identifier: m for m in miniatures_list}
     for filename in all_filenames:
@@ -30,12 +32,12 @@ def compare_miniatures(
     assert len(numpy_miniatures) == len(miniatures_list)
 
     graph = Graph()
-    nb_todo = sum(len(d) for d in output.values())
-    sim_cmp = SimilarityComparator(SIM_LIMIT, THUMBNAIL_DIMENSION, THUMBNAIL_DIMENSION)
+    nb_todo = sum(len(d) for d in comparisons.values())
+    sim_cmp = SimilarityComparator(sim_limit, THUMBNAIL_DIMENSION, THUMBNAIL_DIMENSION)
 
     iterable = (
         (filename, linked_filename)
-        for filename, linked_filenames in output.items()
+        for filename, linked_filenames in comparisons.items()
         for linked_filename in linked_filenames
     )
     for filename, linked_filename in notifier.tasks(

@@ -184,7 +184,7 @@ class GuiAPI(FeatureAPI):
 
     @process()
     def find_similar_videos(self) -> None:
-        DbSimilarVideos().find(self.database)
+        DbSimilarVideos.find_similar_videos(self.database)
         self.database.provider.set_groups(
             field="similarity_id",
             is_property=False,
