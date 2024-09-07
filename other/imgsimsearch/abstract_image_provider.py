@@ -14,3 +14,7 @@ class AbstractImageProvider(ABC):
     @abstractmethod
     def items(self) -> Iterable[Tuple[Any, Image]]:
         pass
+
+    @abstractmethod
+    def length(self, filename) -> float:
+        pass

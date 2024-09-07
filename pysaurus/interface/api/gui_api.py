@@ -138,8 +138,6 @@ class GuiAPI(FeatureAPI):
         args = args or ()
         kwargs = kwargs or {}
         assert not self.something_launched
-        # consume previous unhandled notifications
-        list(self.notifier.consume_main_queue())
 
         if finish:
 

@@ -1,6 +1,7 @@
 import ujson as json
 
 from pysaurus.core.components import AbsolutePath, PathType
+from pysaurus.core.informer import Informer
 from pysaurus.core.modules import FileSystem
 from pysaurus.core.profiling import Profiler
 
@@ -10,7 +11,7 @@ class JsonBackup:
 
     def __init__(self, path: PathType, notifier):
         self.path = AbsolutePath.ensure(path)
-        self.notifier = notifier
+        self.notifier = notifier or Informer.default()
 
     def load(self, default=dict):
         data = default()

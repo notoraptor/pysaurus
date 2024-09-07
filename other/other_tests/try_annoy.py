@@ -29,14 +29,17 @@ ProfilingEnded(Check expected similarities, 000133µs)
 ProfilingEnded(main, 04m 48s 981723µs)
 """
 
-from other.imgsimsearch.approximate_comparator import ApproximateComparator
+from other.imgsimsearch.approximate_comparator_annoy import (
+    ApproximateComparatorAnnoy as ApproximateComparator,
+)
 from other.imgsimsearch.native_fine_comparator import compare_images_native
-from other.other_tests.local_image_provider import LocalImageProvider
+from other.other_tests.local_image_provider import LocalImageProvider, save_similarities
 from other.other_tests.similarity_checker import Checker
+from pysaurus.core.informer import Informer
 from pysaurus.core.profiling import Profiler
 
 
-def main_new():
+def main_new(combine=False):
     imp = LocalImageProvider()
     chk = Checker(imp.ways)
     ac = ApproximateComparator(imp)
@@ -44,18 +47,21 @@ def main_new():
     output_angular = ac.get_comparable_images_cos()
     chk.check(output_angular, [])
 
-    output_euclidian = ac.get_comparable_images_euc()
-    chk.check(output_euclidian, [])
+    if combine:
+        output_euclidian = ac.get_comparable_images_euc()
+        chk.check(output_euclidian, [])
 
-    all_filenames = sorted(set(output_angular) | set(output_euclidian))
-    combined = {
-        filename: sorted(
-            set(output_angular.get(filename, ()))
-            & set(output_euclidian.get(filename, ()))
-        )
-        for filename in all_filenames
-    }
-    chk.check(combined, [])
+        all_filenames = sorted(set(output_angular) | set(output_euclidian))
+        combined = {
+            filename: sorted(
+                set(output_angular.get(filename, ()))
+                & set(output_euclidian.get(filename, ()))
+            )
+            for filename in all_filenames
+        }
+        chk.check(combined, [])
+    else:
+        combined = output_angular
 
     final_output = {}
     similarities = compare_images_native(imp, combined)
@@ -65,6 +71,28 @@ def main_new():
     chk.check(final_output, similarities)
 
 
+def main_simple():
+    imp = LocalImageProvider()
+    chk = Checker(imp.ways)
+    ac = ApproximateComparator(imp)
+
+    combined = ac.get_comparable_images_cos()
+    chk.check(combined, [])
+
+    final_output = {}
+    similarities = compare_images_native(imp, combined)
+    for group in similarities:
+        for identifier in group:
+            final_output[identifier] = set(group) - {identifier}
+    chk.check(final_output, similarities)
+    save_similarities(imp.ways.db_json_path, similarities)
+
+
+def main():
+    with Informer.default():
+        with Profiler("main"):
+            main_simple()
+
+
 if __name__ == "__main__":
-    with Profiler("main"):
-        main_new()
+    main()

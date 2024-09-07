@@ -116,3 +116,10 @@ class ProfilingEnd(Notification):
 
     def __str__(self):
         return f"ProfilingEnded({self.name}, {self.time})"
+
+
+class Profiled(ProfilingEnd):
+    __slots__ = ()
+
+    def __str__(self):
+        return f"Profiled({self.name}, {self.time})"

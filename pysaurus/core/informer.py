@@ -1,8 +1,6 @@
 import multiprocessing
-import queue
 import sys
 import threading
-import time
 from typing import Callable
 
 from pysaurus.core.abstract_notifier import AbstractNotifier
@@ -50,46 +48,24 @@ INFORMER_CALLBACK = InformerCallbackFactory()
 
 
 class Informer(AbstractNotifier):
-    __slots__ = ("__queues", "_thread_stop_flag")
+    __slots__ = ("__queue", "_thread_stop_flag")
     __default__ = None
 
-    def __init__(self, nb_queues: int = 1):
-        assert nb_queues > 0
-        self.__queues = [ManagerFactory.default().Queue() for _ in range(nb_queues)]
+    def __init__(self):
+        self.__queue = ManagerFactory.default().Queue()
         self._thread_stop_flag = False
-
-    def next(self, queue_id=0):
-        try:
-            return self.__queues[queue_id].get_nowait()
-        except queue.Empty:
-            return None
-
-    def next_or_crash(self, queue_id=0):
-        return self.__queues[queue_id].get_nowait()
-
-    def consume_main_queue(self):
-        yield self.consume(MAIN_QUEUE)
-
-    def consume(self, queue_id):
-        while True:
-            try:
-                yield self.__queues[queue_id].get_nowait()
-            except queue.Empty:
-                break
-        assert not self.__queues[queue_id].qsize()
 
     def __call__(self, something):
         return self.notify(something)
 
     def notify(self, something):
-        for local_queue in self.__queues:
-            local_queue.put_nowait(something)
+        self.__queue.put_nowait(something)
 
     @classmethod
     def default(cls):
         if cls.__default__ is None:
             print("INIT INFORMER", file=sys.stderr)
-            cls.__default__ = cls(2)
+            cls.__default__ = cls()
         return cls.__default__
 
     @staticmethod
@@ -104,22 +80,11 @@ class Informer(AbstractNotifier):
         print("Monitoring notifications ...")
         notification_printer = ConsoleNotificationPrinter()
         while True:
-            if self._thread_stop_flag:
+            notification = self.__queue.get()
+            if notification is None:
                 break
-            try:
-                notification = self.next_or_crash()
-                notification_printer.print(notification)
-                INFORMER_CALLBACK.manage(notification)
-            except queue.Empty:
-                time.sleep(1 / 100)
-        print("Monitoring stopped, clearing queue.")
-        while True:
-            try:
-                notification = self.next_or_crash()
-                notification_printer.print(notification)
-                INFORMER_CALLBACK.manage(notification)
-            except queue.Empty:
-                break
+            notification_printer.print(notification)
+            INFORMER_CALLBACK.manage(notification)
         print("End monitoring.")
 
     def __enter__(self):
@@ -128,8 +93,4 @@ class Informer(AbstractNotifier):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self._thread_stop_flag = True
-
-
-MAIN_QUEUE = 0
-PROVIDER_QUEUE = 1
+        self.__queue.put(None)

@@ -29,24 +29,6 @@ class _InlineProfile(Notification):
         return f"Profiled({self.title}, {self.time})"
 
 
-class PerfCounter:
-    __slots__ = ("nanoseconds_start", "nanoseconds_end")
-
-    def __init__(self):
-        self.nanoseconds_start = self.nanoseconds_end = 0
-
-    def __enter__(self):
-        self.nanoseconds_start = time.perf_counter_ns()
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.nanoseconds_end = time.perf_counter_ns()
-
-    @property
-    def nanoseconds(self) -> int:
-        return self.nanoseconds_end - self.nanoseconds_start
-
-
 class Profiler:
     __slots__ = "__title", "__time_start", "__time_end", "__notifier", "__inline"
 
@@ -111,5 +93,5 @@ class ConsoleProfiler(Profiler):
 class InlineProfiler(Profiler):
     __slots__ = ()
 
-    def __init__(self, title, notifier=None):
-        super().__init__(title, notifier, True)
+    def __init__(self, title, notifier=DEFAULT_NOTIFIER):
+        super().__init__(title, notifier)

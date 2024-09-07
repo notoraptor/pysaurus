@@ -1,15 +1,20 @@
 import itertools
 import logging
 from ctypes import Array, c_bool
-from typing import List, Set
+from typing import Any, Iterable, List, Set, Tuple
 
 import numpy as np
+from PIL.Image import Image
 
+from other.imgsimsearch import AbstractImageProvider
+from other.imgsimsearch.approximate_comparator_annoy import ApproximateComparatorAnnoy
+from other.imgsimsearch.native_fine_comparator import compare_miniatures_native
 from pysaurus.application import exceptions
 from pysaurus.core import notifications
 from pysaurus.core.fraction import Fraction
 from pysaurus.core.functions import compute_nb_couples, get_end_index, get_start_index
 from pysaurus.core.informer import Informer
+from pysaurus.core.modules import ImageUtils
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.abstract_database import AbstractDatabase
 from pysaurus.miniature.graph import Graph
@@ -98,6 +103,39 @@ class _GrayClassifier:
         )
 
 
+class DbImageProvider(AbstractImageProvider):
+    __slots__ = ("videos",)
+
+    def __init__(self, db: AbstractDatabase):
+        self.videos = {
+            video["filename"].path: video
+            for video in db.get_videos(
+                include=[
+                    "video_id",
+                    "filename",
+                    "thumbnail_blob",
+                    "duration",
+                    "duration_time_base",
+                ],
+                where={"readable": True, "with_thumbnails": True},
+            )
+        }
+
+    def count(self) -> int:
+        return len(self.videos)
+
+    def items(self) -> Iterable[Tuple[Any, Image]]:
+        for filename, video in self.videos.items():
+            yield filename, ImageUtils.from_blob(video["thumbnail_blob"])
+
+    def length(self, filename) -> float:
+        video = self.videos[filename]
+        return video["duration"] / video["duration_time_base"]
+
+    def video_id(self, filename) -> int:
+        return self.videos[filename]["video_id"]
+
+
 class DbSimilarVideos:
     __slots__ = ("positions",)
 
@@ -122,17 +160,17 @@ class DbSimilarVideos:
         ]
         db.set_similarities(video_indices, (None for _ in video_indices))
         try:
-            self.find_similar_videos(db, miniatures)
+            self._find_similar_videos_ignore_cache(db, miniatures)
         except Exception:
             # Restore previous similarities.
             db.set_similarities(video_indices, previous_sim)
             raise
 
-    def find_similar_videos(
+    def _find_similar_videos_ignore_cache(
         self, db: AbstractDatabase, miniatures: List[Miniature] = None
     ):
         notifier = Informer.default()
-        with Profiler(say("Find similar videos.")), db.to_save():
+        with Profiler(say("Find similar videos (ignore cache)")), db.to_save():
             if miniatures is None:
                 miniatures = db.ensure_miniatures()  # type: List[Miniature]
             video_indices = [m.video_id for m in miniatures]
@@ -275,6 +313,41 @@ class DbSimilarVideos:
                         for _ in new_group
                     ],
                 )
+
+    @Profiler.profile()
+    def find_similar_videos(self, db: AbstractDatabase):
+        miniatures: List[Miniature] = db.ensure_miniatures()
+        video_indices = [m.video_id for m in miniatures]
+        previous_sim = [
+            row["similarity_id"]
+            for row in db.get_videos(
+                include=["similarity_id"], where={"video_id": video_indices}
+            )
+        ]
+        db.set_similarities(video_indices, (None for _ in video_indices))
+        try:
+            self._find_similar_videos(db, miniatures)
+        except Exception:
+            # Restore previous similarities.
+            db.set_similarities(video_indices, previous_sim)
+            raise
+
+    @classmethod
+    def _find_similar_videos(
+        cls, db: AbstractDatabase, miniatures: List[Miniature] = None
+    ):
+        imp = DbImageProvider(db)
+        ac = ApproximateComparatorAnnoy(imp)
+        combined = ac.get_comparable_images_cos()
+        similarities = compare_miniatures_native(miniatures, combined)
+        similarities.sort(key=lambda group: (-len(group), sorted(group)[0]))
+        v_indices = []
+        v_sim_ids = []
+        for similarity_id, group in enumerate(similarities):
+            for filename in group:
+                v_indices.append(imp.video_id(filename))
+                v_sim_ids.append(similarity_id)
+        db.set_similarities(v_indices, v_sim_ids)
 
     @classmethod
     def _generate_edges(cls, nb_videos):

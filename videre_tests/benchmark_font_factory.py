@@ -5,7 +5,7 @@ from tqdm import trange
 
 from pysaurus.core.components import Duration
 from pysaurus.core.constants import LOREM_IPSUM
-from pysaurus.core.profiling import PerfCounter
+from pysaurus.core.perf_counter import PerfCounter
 from resource.fonts import FONT_NOTO_REGULAR
 from videre import Colors, Gradient
 from videre.core.pygame_font_factory import PygameFontFactory

@@ -21,6 +21,7 @@ customtkinter = "^5.2.2"
 pygame = "^2.5.2"
 fonttools = "^4.53.0"
 unicodedataplus = "^15.1.0"
+annoy = "^1.17.3"
 
 [tool.poetry.dev-dependencies]
 black = "^22.12.0"

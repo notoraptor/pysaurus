@@ -1,9 +1,23 @@
+from enum import Enum
+
 from other.imgsimsearch.abstract_image_provider import AbstractImageProvider
-from other.imgsimsearch.approximate_comparator import ApproximateComparator
 from other.imgsimsearch.native_fine_comparator import compare_images_native
 
 
-def search_similar_images(imp: AbstractImageProvider):
+class Approximation(Enum):
+    ANNOY = "annoy"
+    NMSLIB = "nmslib"
+
+
+def search_similar_images(
+    imp: AbstractImageProvider, approximation: Approximation = Approximation.ANNOY
+):
+    if approximation == Approximation.ANNOY:
+        from other.imgsimsearch.approximate_comparator_annoy import (
+            ApproximateComparatorAnnoy as ApproximateComparator,
+        )
+    else:
+        from other.imgsimsearch.approximate_comparator import ApproximateComparator
     ac = ApproximateComparator(imp)
 
     approx_cos = ac.get_comparable_images_cos()
