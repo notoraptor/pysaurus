@@ -4,9 +4,9 @@ from typing import Any, Dict
 from PIL import ImageFilter
 from annoy import AnnoyIndex
 
-from other.imgsimsearch.abstract_image_provider import AbstractImageProvider
 from pysaurus.core.informer import Informer
 from pysaurus.core.profiling import Profiler
+from pysaurus.imgsimsearch.abstract_image_provider import AbstractImageProvider
 
 
 class ApproximateComparatorAnnoy:

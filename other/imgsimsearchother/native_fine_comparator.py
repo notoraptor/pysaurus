@@ -1,11 +1,11 @@
 from ctypes import pointer
 from typing import Any, Dict, List, Sequence, Set
 
-from other.imgsimsearch.abstract_image_provider import AbstractImageProvider
-from other.imgsimsearch.common import SIM_LIMIT, THUMBNAIL_DIMENSION
-from other.imgsimsearch.graph import Graph
+from pysaurus.core.graph import Graph
 from pysaurus.core.informer import Informer
 from pysaurus.core.profiling import Profiler
+from pysaurus.imgsimsearch.abstract_image_provider import AbstractImageProvider
+from pysaurus.imgsimsearch.common import SIM_LIMIT, THUMBNAIL_DIMENSION
 from pysaurus.miniature.miniature import Miniature
 from pysaurus.video_similarities.alignment_raptor.alignment import (
     miniature_to_c_sequence,

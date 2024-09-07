@@ -3,18 +3,16 @@ from typing import Any, Iterable, List, Tuple
 
 from PIL.Image import Image
 
-from other.imgsimsearch.abstract_image_provider import AbstractImageProvider
-from other.imgsimsearch.approximate_comparator_annoy import ApproximateComparatorAnnoy
-
-# from other.imgsimsearch.native_fine_comparator import compare_miniatures_native
-from other.imgsimsearch.python_fine_comparator import (
-    compare_miniatures as compare_miniatures_native,
-)
 from pysaurus.application import exceptions
 from pysaurus.core.fraction import Fraction
 from pysaurus.core.modules import ImageUtils
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.abstract_database import AbstractDatabase
+from pysaurus.imgsimsearch.abstract_image_provider import AbstractImageProvider
+from pysaurus.imgsimsearch.approximate_comparator_annoy import (
+    ApproximateComparatorAnnoy,
+)
+from pysaurus.imgsimsearch.python_fine_comparator import compare_miniatures
 from pysaurus.miniature.miniature import Miniature
 
 # from collections import deque
@@ -102,7 +100,7 @@ class DbSimilarVideos:
         imp = DbImageProvider(db)
         ac = ApproximateComparatorAnnoy(imp)
         combined = ac.get_comparable_images_cos()
-        similarities = compare_miniatures_native(miniatures, combined)
+        similarities = compare_miniatures(miniatures, combined)
 
         video_indices = [m.video_id for m in miniatures]
         db.set_similarities(video_indices, (-1 for _ in video_indices))

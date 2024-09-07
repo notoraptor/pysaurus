@@ -29,14 +29,14 @@ ProfilingEnded(Check expected similarities, 000133µs)
 ProfilingEnded(main, 04m 48s 981723µs)
 """
 
-from other.imgsimsearch.approximate_comparator_annoy import (
-    ApproximateComparatorAnnoy as ApproximateComparator,
-)
-from other.imgsimsearch.native_fine_comparator import compare_images_native
+from other.imgsimsearchother.native_fine_comparator import compare_images_native
 from other.other_tests.local_image_provider import LocalImageProvider, save_similarities
 from other.other_tests.similarity_checker import Checker
 from pysaurus.core.informer import Informer
 from pysaurus.core.profiling import Profiler
+from pysaurus.imgsimsearch.approximate_comparator_annoy import (
+    ApproximateComparatorAnnoy as ApproximateComparator,
+)
 
 
 def main_new(combine=False):
@@ -85,7 +85,7 @@ def main_simple():
         for identifier in group:
             final_output[identifier] = set(group) - {identifier}
     chk.check(final_output, similarities)
-    save_similarities(imp.ways.db_json_path, similarities)
+    save_similarities(imp.ways.db_json_path, similarities, "<annoy:sim:2>")
 
 
 def main():

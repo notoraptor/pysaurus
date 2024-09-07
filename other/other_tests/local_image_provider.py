@@ -2,13 +2,13 @@ from typing import Any, Iterable, List, Set, Tuple
 
 from PIL.Image import Image
 
-from other.imgsimsearch.abstract_image_provider import AbstractImageProvider
 from pysaurus.core.json_backup import JsonBackup
 from pysaurus.core.modules import ImageUtils
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.db_way_def import DbWays
 from pysaurus.database.jsdb.jsdbvideo.lazy_video import LazyVideo as Video
 from pysaurus.database.jsdb.thubmnail_database.thumbnail_manager import ThumbnailManager
+from pysaurus.imgsimsearch.abstract_image_provider import AbstractImageProvider
 from saurus.sql.pysaurus_program import PysaurusProgram
 from tests.utils_testing import DB_NAME
 
@@ -24,7 +24,9 @@ def get_db_data(db_json_path) -> List[Video]:
 
 
 @Profiler.profile()
-def save_similarities(db_json_path, similarities: List[Set[str]]):
+def save_similarities(
+    db_json_path, similarities: List[Set[str]], prop_name="<annoy:sim>"
+):
     json_backup = JsonBackup(db_json_path, notifier=None)
     json_dict = json_backup.load()
     prop_map = {
@@ -37,7 +39,6 @@ def save_similarities(db_json_path, similarities: List[Set[str]]):
         for filename in similarity:
             assert filename in filename_to_video, f"Unknown video: {filename}"
     # Create property
-    prop_name = "<annoy:sim>"
     prop = {"n": prop_name, "d": -1, "m": False}
     # Save property
     prop_map[prop["n"]] = prop
