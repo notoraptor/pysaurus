@@ -24,7 +24,6 @@ from pysaurus.core.notifications import (
 from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.db_video_server import ServerLauncher
-from pysaurus.database.features.db_pattern_detection import DbPatternDetection
 from pysaurus.database.features.db_similar_videos import DbSimilarVideos
 from pysaurus.interface.api.api_utils.proxy_feature import FromTk
 from pysaurus.interface.api.api_utils.vlc_path import VLC_PATH
@@ -89,9 +88,6 @@ class GuiAPI(FeatureAPI):
         logger.debug(f"Running {VLC_PATH} {url}")
         self._run_thread(subprocess.run, [VLC_PATH, url])
         return url
-
-    def create_prediction_property(self, prop_name) -> None:
-        DbPatternDetection.create_prediction_property(self.database, prop_name)
 
     def cancel_copy(self) -> None:
         if self.copy_work is not None and not self.copy_work.terminated:
@@ -229,18 +225,3 @@ class GuiAPI(FeatureAPI):
         finally:
             self.launched_thread = None
             self.something_launched = False
-
-    @process()
-    def compute_predictor(self, prop_name) -> None:
-        DbPatternDetection.compute_pattern_detector(self.database, prop_name)
-
-    @process()
-    def apply_predictor(self, prop_name) -> None:
-        output_prop_name = DbPatternDetection.predict_pattern(self.database, prop_name)
-        self.database.provider.set_groups(
-            field=output_prop_name,
-            is_property=True,
-            sorting="field",
-            reverse=False,
-            allow_singletons=True,
-        )

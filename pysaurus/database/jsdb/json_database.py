@@ -54,7 +54,6 @@ class JsonDatabase(AbstractDatabase):
         "_folders",
         "_videos",
         "_prop_types",
-        "_predictors",
         "_id_to_video",
         "moves_attribute",
         "_indexer",
@@ -80,7 +79,6 @@ class JsonDatabase(AbstractDatabase):
         self._folders: Set[AbsolutePath] = set()
         self._videos: Dict[AbsolutePath, Video] = {}
         self._prop_types: Dict[str, PropType] = {}
-        self._predictors: Dict[str, List[float]] = {}
         # Runtime
         self._id_to_video: Dict[int, Video] = {}
         self.moves_attribute = PotentialMoveAttribute(self)
@@ -143,13 +141,6 @@ class JsonDatabase(AbstractDatabase):
             prop_type = PropType.from_dict(prop_dict)
             assert prop_type.name not in self._prop_types
             self._prop_types[prop_type.name] = prop_type
-
-        # Parsing predictors
-        self._predictors = {
-            name: predictor
-            for name, predictor in json_dict.get("predictors", {}).items()
-            if name in self._prop_types
-        }
 
         # Parsing videos.
         with Profiler("parsing videos", self.notifier):
@@ -335,7 +326,6 @@ class JsonDatabase(AbstractDatabase):
                 "date": self._date.time,
                 "folders": [folder.path for folder in self._folders],
                 "prop_types": [prop.to_dict() for prop in self._prop_types.values()],
-                "predictors": self._predictors,
                 "videos": [video.to_dict() for video in self._videos.values()],
             }
         )
@@ -358,13 +348,6 @@ class JsonDatabase(AbstractDatabase):
 
     def get_folders(self) -> Iterable[AbsolutePath]:
         return iter(self._folders)
-
-    def set_predictor(self, prop_name: str, theta: List[float]) -> None:
-        self._predictors[prop_name] = theta
-        self.save()
-
-    def get_predictor(self, prop_name: str) -> List[float]:
-        return self._predictors.get(prop_name, None)
 
     def get_prop_types(
         self, *, name=None, with_type=None, multiple=None, with_enum=None, default=None

@@ -1,7 +1,6 @@
 """
 GuiAPI (57)
     AbstractVideoProvider.apply_on_view -> typing.Optional
-    GuiAPI.apply_predictor -> None
     FeatureAPI.backend -> typing.Dict[str, typing.Any]
     GuiAPI.cancel_copy -> None
     AbstractVideoProvider.classifier_back -> None
@@ -12,12 +11,10 @@ GuiAPI (57)
     clipboard_set -> None
     GuiAPI.close_app -> None
     GuiAPI.close_database -> None
-    GuiAPI.compute_predictor -> None
     Database.confirm_unique_moves -> <class 'int'>
     JsonDatabase.convert_prop_to_multiple -> None
     JsonDatabase.convert_prop_to_unique -> None
     GuiAPI.create_database -> None
-    GuiAPI.create_prediction_property -> None
     JsonDatabase.create_prop_type -> None
     GuiAPI.delete_database -> None
     Database.delete_property_value -> None

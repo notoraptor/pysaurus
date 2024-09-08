@@ -82,14 +82,6 @@ class PysaurusCollection(AbstractDatabase):
             [(path.path,) for path in folders],
         )
 
-    def get_predictor(self, prop_name: str) -> List[float]:
-        logger.error("get_predictor not yet implemented.")
-        raise NotImplementedError()
-
-    def set_predictor(self, prop_name: str, theta: List[float]) -> None:
-        logger.error("set_predictor not yet implemented.")
-        raise NotImplementedError()
-
     def get_all_prop_values(
         self, name: str, indices: List[int] = ()
     ) -> Dict[int, Collection[PropUnitType]]:

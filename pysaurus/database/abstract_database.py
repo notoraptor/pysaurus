@@ -84,14 +84,6 @@ class AbstractDatabase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_predictor(self, prop_name: str) -> List[float]:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def set_predictor(self, prop_name: str, theta: List[float]) -> None:
-        raise NotImplementedError()
-
-    @abstractmethod
     def get_prop_types(
         self, *, name=None, with_type=None, multiple=None, with_enum=None, default=None
     ):

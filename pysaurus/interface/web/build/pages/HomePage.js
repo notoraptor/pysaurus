@@ -251,9 +251,7 @@ System.register(["../language.js", "../utils/backend.js", "../utils/constants.js
         find_similar_videos_ignore_cache: "Find similarities (ignore cache)",
         create_database: "Create database",
         open_database: "Open database",
-        move_video_file: "Move video file",
-        compute_predictor: "Compute predictor",
-        apply_predictor: "Predict"
+        move_video_file: "Move video file"
       };
       _export("HomePage", HomePage = class HomePage extends React.Component {
         constructor(props) {

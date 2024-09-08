@@ -12,8 +12,6 @@ action_copy_path
 	Copy path
 action_copy_video_id
 	Copy video ID
-action_create_prediction_property
-	1) Create a prediction property ...
 action_delete_database
 	Delete database ...
 action_deselect_all
@@ -58,8 +56,6 @@ action_open_random_video
 	Open random video
 action_page_size
 	{count} video(s) per page
-action_populate_prediction_property_manually
-	2) Populate a prediction property manually ...
 action_put_keywords_into_property
 	Put keywords into a property ...
 action_reload_database
@@ -172,17 +168,17 @@ form_confirm_convert_to_unique_property
 	Are you sure you want to convert to unique property "{name}"?
 form_content_confirm_delete_database
 	## Are you sure you want to delete this database?
-	
+
 	### Database entries and thumbnails will be deleted.
-	
+
 	### Video files won't be touched.
 form_content_confirm_unique_moves
 	# Are you sure you want to confirm all unique moves?
-	
+
 	## Each not found video which has one unique other found video with same size and duration will be moved to the later. Properties and variable attributes will be copied from not found to found video, and not found video entry will be deleted.
 form_content_delete_prop_val
 	### Are you sure you want to delete property value
-	
+
 	### "{name}" / {value} ?
 form_content_delete_property
 	Are you sure you want to delete property "{name}"?
@@ -190,40 +186,20 @@ form_content_edit_prop_val
 	Edit property "{name}" / {value}
 form_content_move_prop_val
 	Move property "{name}" / {value} to another property of type "{type}".
-form_content_new_prediction_property
-	# Property name:
-	
-	## Final name will be `<?{property name}>`
-form_content_populate_predictor_manually
-	Set:
-	
-	- **1** for video thumbnails that match what you expect
-	- **0** for video thumbnails that don't match what you expect
-	- **-1** (default) for videos to ignore
-	
-	Prediction computation will only use videos tagged with **1** and **0**,
-	so you don't need to tag all of them.
-	
-	There is however some good practices:
-	
-	- Tag enough videos with **0** and **1** (e.g. 20 videos)
-	- Try to tag same amount of videos for **0** and for **1** (e.g. 10 videos each)
-	
-	Once done, move you can compute prediction.
 form_content_reset_similarity
 	## Are you sure you want to reset similarity for this video?
-	
+
 	### Video will then be re-compared at next similarity search
 form_content_search_videos
 	Type text to search and choose how to search.
-	
+
 	You can also type text and then press enter
 	to automatically select "AND" as search method.
 form_content_sort_videos
 	Click on "+" to add a new sorting criterion.
-	
+
 	Click on "-" to remove a sorting criterion.
-	
+
 	Click on "sort" to validate, or close dialog to cancel.
 form_convert_to_multiple_property_yes
 	convert to multiple
@@ -261,10 +237,6 @@ form_title_edit_property_for_videos
 	Edit property "{name}" for {count} video(s)
 form_title_move_file
 	Move file to {path}
-form_title_new_prediction_property
-	New prediction property
-form_title_populate_predictor_manually
-	Populate prediction property manually
 form_title_rename_database
 	Rename database "{name}"
 form_title_rename_property
@@ -311,16 +283,8 @@ gui_properties_enumeration_values_multiple
 	Enumeration values (first is default)
 gui_properties_title
 	Properties Management
-job_step_predictor_opt
-	# {step}, © {cost}, θ [{min_theta}; {max_theta}]
-job_step_predictor_opt_converged
-	Converged, © {cost}, θ [{min_theta}; {max_theta}]
-menu_apply_prediction
-	4) Apply prediction from property ...
 menu_close_database
 	Close database ...
-menu_compute_prediction
-	3) Compute prediction for property ...
 menu_concatenate_path
 	Concatenate path into ...
 menu_database
@@ -341,8 +305,6 @@ menu_options
 	Options
 menu_page_size
 	Page size ...
-menu_predictors
-	Predictors ...
 menu_properties
 	Properties ...
 menu_reset_filters
@@ -355,10 +317,6 @@ message_count_readable_sorted
 	{count} readable sorted
 message_count_unreadable_not_sorted
 	{count} unreadable not sorted
-message_predictor_opt_converged
-	Converged in {count} last steps.
-message_predictor_training_set
-	Training set: false {count0}, true {count1}
 message_similarity_count_final
 	Found {count} total similarities after merging.
 message_similarity_count_found
@@ -425,8 +383,6 @@ profile_merge_old_and_new_similarities
 	Merge new similarities with old ones.
 profile_move
 	Move
-profile_predict
-	Predict
 profile_reset_thumbnail_errors
 	Reset thumbnail errors
 profile_train

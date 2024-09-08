@@ -322,8 +322,6 @@ const ACTIONS = {
 	create_database: "Create database",
 	open_database: "Open database",
 	move_video_file: "Move video file",
-	compute_predictor: "Compute predictor",
-	apply_predictor: "Predict",
 };
 
 export class HomePage extends React.Component {

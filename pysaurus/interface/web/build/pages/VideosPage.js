@@ -1,7 +1,7 @@
-System.register(["../components/ActionToCross.js", "../components/ActionToMenuItem.js", "../components/ActionToSettingIcon.js", "../components/Cell.js", "../components/Collapsable.js", "../components/Cross.js", "../components/GroupView.js", "../components/Menu.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/MenuItemRadio.js", "../components/MenuPack.js", "../components/Pagination.js", "../components/Video.js", "../dialogs/Dialog.js", "../dialogs/FancyBox.js", "../forms/FormDatabaseEditFolders.js", "../forms/FormNewPredictionProperty.js", "../forms/FormPropertyEditSelectedValues.js", "../forms/FormSelectedVideosEditProperty.js", "../forms/FormVideosGrouping.js", "../forms/FormVideosKeywordsToProperty.js", "../forms/FormVideosSearch.js", "../forms/FormVideosSort.js", "../forms/FormVideosSource.js", "../forms/GenericFormRename.js", "../language.js", "../utils/Action.js", "../utils/Actions.js", "../utils/backend.js", "../utils/constants.js", "../utils/FancyboxManager.js", "../utils/functions.js", "../utils/globals.js", "../utils/Selector.js", "./HomePage.js"], function (_export, _context) {
+System.register(["../components/ActionToCross.js", "../components/ActionToMenuItem.js", "../components/ActionToSettingIcon.js", "../components/Cell.js", "../components/Collapsable.js", "../components/Cross.js", "../components/GroupView.js", "../components/Menu.js", "../components/MenuItem.js", "../components/MenuItemCheck.js", "../components/MenuItemRadio.js", "../components/MenuPack.js", "../components/Pagination.js", "../components/Video.js", "../dialogs/Dialog.js", "../dialogs/FancyBox.js", "../forms/FormDatabaseEditFolders.js", "../forms/FormPropertyEditSelectedValues.js", "../forms/FormSelectedVideosEditProperty.js", "../forms/FormVideosGrouping.js", "../forms/FormVideosKeywordsToProperty.js", "../forms/FormVideosSearch.js", "../forms/FormVideosSort.js", "../forms/FormVideosSource.js", "../forms/GenericFormRename.js", "../language.js", "../utils/Action.js", "../utils/Actions.js", "../utils/backend.js", "../utils/constants.js", "../utils/FancyboxManager.js", "../utils/functions.js", "../utils/globals.js", "../utils/Selector.js", "./HomePage.js"], function (_export, _context) {
   "use strict";
 
-  var ActionToCross, ActionToMenuItem, ActionToSettingIcon, Cell, Collapsable, Cross, GroupView, Menu, MenuItem, MenuItemCheck, MenuItemRadio, MenuPack, Pagination, Video, Dialog, FancyBox, FormDatabaseEditFolders, FormNewPredictionProperty, FormPropertyEditSelectedValues, FormSelectedVideosEditProperty, FormVideosGrouping, FormVideosKeywordsToProperty, FormVideosSearch, FormVideosSort, FormVideosSource, GenericFormRename, tr, Action, Actions, backend_error, python_call, python_multiple_call, FIELD_MAP, PAGE_SIZES, SearchTypeTitle, SOURCE_TREE, Fancybox, arrayEquals, compareSources, APP_STATE, Selector, HomePage, VideosPage;
+  var ActionToCross, ActionToMenuItem, ActionToSettingIcon, Cell, Collapsable, Cross, GroupView, Menu, MenuItem, MenuItemCheck, MenuItemRadio, MenuPack, Pagination, Video, Dialog, FancyBox, FormDatabaseEditFolders, FormPropertyEditSelectedValues, FormSelectedVideosEditProperty, FormVideosGrouping, FormVideosKeywordsToProperty, FormVideosSearch, FormVideosSort, FormVideosSource, GenericFormRename, tr, Action, Actions, backend_error, python_call, python_multiple_call, FIELD_MAP, PAGE_SIZES, SearchTypeTitle, SOURCE_TREE, Fancybox, arrayEquals, compareSources, APP_STATE, Selector, HomePage, VideosPage;
   _export("VideosPage", void 0);
   return {
     setters: [function (_componentsActionToCrossJs) {
@@ -38,8 +38,6 @@ System.register(["../components/ActionToCross.js", "../components/ActionToMenuIt
       FancyBox = _dialogsFancyBoxJs.FancyBox;
     }, function (_formsFormDatabaseEditFoldersJs) {
       FormDatabaseEditFolders = _formsFormDatabaseEditFoldersJs.FormDatabaseEditFolders;
-    }, function (_formsFormNewPredictionPropertyJs) {
-      FormNewPredictionProperty = _formsFormNewPredictionPropertyJs.FormNewPredictionProperty;
     }, function (_formsFormPropertyEditSelectedValuesJs) {
       FormPropertyEditSelectedValues = _formsFormPropertyEditSelectedValuesJs.FormPropertyEditSelectedValues;
     }, function (_formsFormSelectedVideosEditPropertyJs) {
@@ -145,10 +143,6 @@ System.register(["../components/ActionToCross.js", "../components/ActionToMenuIt
           this.allNotFound = this.allNotFound.bind(this);
           this.canOpenRandomVideo = this.canOpenRandomVideo.bind(this);
           this.canFindSimilarVideos = this.canFindSimilarVideos.bind(this);
-          this.createPredictionProperty = this.createPredictionProperty.bind(this);
-          this.populatePredictionProperty = this.populatePredictionProperty.bind(this);
-          this.computePredictionProperty = this.computePredictionProperty.bind(this);
-          this.applyPrediction = this.applyPrediction.bind(this);
           this.sourceIsSet = this.sourceIsSet.bind(this);
           this.groupIsSet = this.groupIsSet.bind(this);
           this.searchIsSet = this.searchIsSet.bind(this);
@@ -171,7 +165,6 @@ System.register(["../components/ActionToCross.js", "../components/ActionToMenuIt
           const groupedByMoves = groupDef && groupDef.field === "move_id";
           const stringSetProperties = this.getStringSetProperties(this.state.prop_types);
           const stringProperties = this.getStringProperties(this.state.prop_types);
-          const predictionProperties = this.getPredictionProperties(this.state.prop_types);
           const actions = this.getActions().actions;
           const aFilterIsSet = this.sourceIsSet() || this.groupIsSet() || this.searchIsSet() || this.sortIsSet();
           const status = this.getStatus();
@@ -260,22 +253,6 @@ System.register(["../components/ActionToCross.js", "../components/ActionToMenuIt
           }, stringProperties.map((def, defIndex) => /*#__PURE__*/React.createElement(MenuItem, {
             key: defIndex,
             action: () => this.propToUppercase(def)
-          }, def.name))) : ""), /*#__PURE__*/React.createElement(MenuPack, {
-            title: tr("Predictors ...")
-          }, /*#__PURE__*/React.createElement(MenuItem, {
-            action: this.createPredictionProperty
-          }, tr("1) Create a prediction property ...")), /*#__PURE__*/React.createElement(MenuItem, {
-            action: this.populatePredictionProperty
-          }, tr("2) Populate a prediction property manually ...")), predictionProperties.length ? /*#__PURE__*/React.createElement(Menu, {
-            title: tr("3) Compute prediction for property ...")
-          }, predictionProperties.map((def, i) => /*#__PURE__*/React.createElement(MenuItem, {
-            key: i,
-            action: () => this.computePredictionProperty(def.name)
-          }, def.name))) : "", predictionProperties.length ? /*#__PURE__*/React.createElement(Menu, {
-            title: tr("4) Apply prediction from property ...")
-          }, predictionProperties.map((def, i) => /*#__PURE__*/React.createElement(MenuItem, {
-            key: i,
-            action: () => this.applyPrediction(def.name)
           }, def.name))) : ""), /*#__PURE__*/React.createElement(MenuPack, {
             title: tr("Navigation ...")
           }, /*#__PURE__*/React.createElement(Menu, {
@@ -496,40 +473,6 @@ System.register(["../components/ActionToCross.js", "../components/ActionToMenuIt
             nextPage: new Action("Ctrl+ArrowRight", tr("Go to next page"), this.nextPage, Fancybox.isInactive),
             playlist: new Action("Ctrl+L", tr("play list"), this.playlist, Fancybox.isInactive)
           });
-        }
-        createPredictionProperty() {
-          Fancybox.load( /*#__PURE__*/React.createElement(FormNewPredictionProperty, {
-            onClose: name => {
-              this.backend(["create_prediction_property", name]);
-            }
-          }));
-        }
-        populatePredictionProperty() {
-          Fancybox.load( /*#__PURE__*/React.createElement(FancyBox, {
-            title: tr("Populate prediction property manually")
-          }, tr(`
-Set:
-
-- **1** for video thumbnails that match what you expect
-- **0** for video thumbnails that don't match what you expect
-- **-1** (default) for videos to ignore
-
-Prediction computation will only use videos tagged with **1** and **0**,
-so you don't need to tag all of them.
-
-There is however some good practices:
-
-- Tag enough videos with **0** and **1** (e.g. 20 videos)
-- Try to tag same amount of videos for **0** and for **1** (e.g. 10 videos each)
-
-Once done, move you can compute prediction.
-`, null, "markdown")));
-        }
-        computePredictionProperty(propName) {
-          this.props.app.dbUpdate("compute_predictor", propName);
-        }
-        applyPrediction(propName) {
-          this.props.app.dbUpdate("apply_predictor", propName);
         }
         sourceIsSet() {
           return !compareSources(window.PYTHON_DEFAULT_SOURCES, this.state.sources);
@@ -964,9 +907,6 @@ not found video entry will be deleted.
         }
         getStringProperties(definitions) {
           return definitions.filter(def => def.type === "str");
-        }
-        getPredictionProperties(definitions) {
-          return definitions.filter(def => def.name.indexOf("<?") === 0 && def.name.indexOf(">") === def.name.length - 1 && def.type === "int" && def.defaultValues[0] === -1 && !def.multiple && arrayEquals(def.enumeration, [-1, 0, 1]));
         }
 
         /**

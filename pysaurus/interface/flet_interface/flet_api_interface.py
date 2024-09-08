@@ -153,9 +153,6 @@ class FletApiInterface:
 
     # Methods
 
-    def apply_predictor(self, prop_name):
-        return self.api.__run_feature__("apply_predictor", prop_name)
-
     def backend(self, page_size, page_number, selector=None):
         return self.api.__run_feature__("backend", page_size, page_number, selector)
 
@@ -171,14 +168,8 @@ class FletApiInterface:
     def close_database(self):
         return self.api.__run_feature__("close_database")
 
-    def compute_predictor(self, prop_name):
-        return self.api.__run_feature__("compute_predictor", prop_name)
-
     def create_database(self, name: str, folders: Sequence[str], update: bool):
         return self.api.__run_feature__("create_database", name, folders, update)
-
-    def create_prediction_property(self, prop_name):
-        return self.api.__run_feature__("create_prediction_property", prop_name)
 
     def delete_database(self):
         return self.api.__run_feature__("delete_database")
