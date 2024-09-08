@@ -1,4 +1,4 @@
-# 2024/07/09
+# 2024/09/07
 
 ## Small tutorial to find similar images
 
@@ -84,3 +84,11 @@ def main():
 if __name__ == '__main__':
     Informer.contextualize(main)
 ````
+
+## Annoy may not produce same result when running many times
+
+When trying to find similar images, twos runs may produce
+slightly different results (+- 2 similarities).
+
+Reported here:
+https://github.com/spotify/annoy/issues/188
