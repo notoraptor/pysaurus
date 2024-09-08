@@ -34,8 +34,6 @@ GuiAPI (57)
     AbstractVideoProvider.choose_random_video -> <class 'str'>
     JsonDatabase.open_video -> None
     AbstractVideoProvider.playlist -> <class 'str'>
-    Database.prop_to_lowercase -> None
-    Database.prop_to_uppercase -> None
     JsonDatabase.remove_prop_type -> None
     Database.rename -> None
     JsonDatabase.rename_prop_type -> None

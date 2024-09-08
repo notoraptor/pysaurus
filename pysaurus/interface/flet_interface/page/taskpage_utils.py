@@ -20,7 +20,7 @@ from pysaurus.core.notifications import (
     VideoInfoErrors,
     VideoThumbnailErrors,
 )
-from pysaurus.database.json_database_utils import DatabaseLoaded, DatabaseSaved
+from pysaurus.database.db_utils import DatabaseLoaded, DatabaseSaved
 
 
 class ProgressionMonitoring:

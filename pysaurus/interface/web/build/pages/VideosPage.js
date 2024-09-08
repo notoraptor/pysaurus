@@ -979,10 +979,10 @@ not found video entry will be deleted.
           });
         }
         propToLowercase(def) {
-          this.backend(["prop_to_lowercase", def.name]);
+          this.backend(["apply_on_prop_value", def.name, "lowercase"]);
         }
         propToUppercase(def) {
-          this.backend(["prop_to_uppercase", def.name]);
+          this.backend(["apply_on_prop_value", def.name, "uppercase"]);
         }
         focusPropertyValue(propertyName, propertyValue) {
           this.backend(["classifier_focus_prop_val", propertyName, propertyValue], {

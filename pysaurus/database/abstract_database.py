@@ -4,7 +4,6 @@ from abc import ABC, abstractmethod
 from collections import Counter
 from typing import (
     Any,
-    Callable,
     Collection,
     Container,
     Dict,
@@ -21,15 +20,15 @@ import ujson as json
 from pysaurus.application import exceptions
 from pysaurus.core import functions, notifications
 from pysaurus.core.components import AbsolutePath, Date, PathType
-from pysaurus.core.file_utils import create_xspf_playlist
 from pysaurus.core.modules import ImageUtils
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.algorithms.miniatures import Miniatures
 from pysaurus.database.algorithms.videos import Videos
 from pysaurus.database.db_settings import DbSettings
+from pysaurus.database.db_utils import DatabaseSaved, DatabaseToSaveContext
 from pysaurus.database.db_way_def import DbWays
-from pysaurus.database.json_database_utils import DatabaseSaved, DatabaseToSaveContext
+from pysaurus.database.property_value_modifier import PropertyValueModifier
 from pysaurus.miniature.miniature import Miniature
 from pysaurus.properties.properties import (
     PropRawType,
@@ -126,10 +125,6 @@ class AbstractDatabase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def add_video_errors(self, video_id: int, *errors: Iterable[str]) -> None:
-        raise NotImplementedError()
-
-    @abstractmethod
     def change_video_entry_filename(
         self, video_id: int, path: AbsolutePath
     ) -> AbsolutePath:
@@ -140,7 +135,7 @@ class AbstractDatabase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def write_videos_field(self, indices: Iterable[int], field: str, values: Iterable):
+    def _write_videos_field(self, indices: Iterable[int], field: str, values: Iterable):
         raise NotImplementedError()
 
     @abstractmethod
@@ -164,21 +159,23 @@ class AbstractDatabase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def set_video_properties(
-        self, video_id: int, properties: dict, merge=False
-    ) -> None:
-        raise NotImplementedError()
-
-    @abstractmethod
     def get_all_prop_values(
         self, name: str, indices: List[int] = ()
     ) -> Dict[int, Collection[PropUnitType]]:
         raise NotImplementedError()
 
     @abstractmethod
+    def set_video_properties(
+        self, video_id: int, properties: dict, merge=False
+    ) -> None:
+        """Set many properties for a single video."""
+        raise NotImplementedError()
+
+    @abstractmethod
     def set_video_prop_values(
         self, name: str, updates: Dict[int, Collection[PropUnitType]], merge=False
     ):
+        """Set one property for many videos."""
         raise NotImplementedError()
 
     def validate_prop_values(self, name, values: list) -> List[PropValueType]:
@@ -205,9 +202,6 @@ class AbstractDatabase(ABC):
         video_filename.delete()
         self.delete_video_entry(video_id)
         return video_filename
-
-    def to_xspf_playlist(self, video_indices: Iterable[int]) -> AbsolutePath:
-        return create_xspf_playlist(map(self.get_video_filename, video_indices))
 
     def _notify_missing_thumbnails(self) -> None:
         remaining_thumb_videos = list(self._get_collectable_missing_thumbnails())
@@ -345,7 +339,7 @@ class AbstractDatabase(ABC):
         rows = self.get_videos(include=["video_id", "filename"])
         indices = [row["video_id"] for row in rows]
         founds = [row["filename"] in existing_paths for row in rows]
-        self.write_videos_field(indices, "found", founds)
+        self._write_videos_field(indices, "found", founds)
 
     def _find_video_paths_for_update(
         self, file_paths: Dict[AbsolutePath, VideoRuntimeInfo]
@@ -374,7 +368,7 @@ class AbstractDatabase(ABC):
         }
 
     def set_similarities(self, indices: Iterable[int], values: Iterable[Optional[int]]):
-        self.write_videos_field(indices, "similarity_id", values)
+        self._write_videos_field(indices, "similarity_id", values)
         self._notify_fields_modified(["similarity_id"])
 
     def change_video_file_title(self, video_id: int, new_title: str) -> None:
@@ -451,10 +445,10 @@ class AbstractDatabase(ABC):
         assert self.has_video(video_id=to_id, found=True)
         self.set_video_properties(to_id, from_data["properties"], merge=True)
         self.set_similarities([to_id], [from_data["similarity_id"]])
-        self.write_videos_field(
+        self._write_videos_field(
             [to_id], "date_entry_modified", [from_data["date_entry_modified"].time]
         )
-        self.write_videos_field(
+        self._write_videos_field(
             [to_id], "date_entry_opened", [from_data["date_entry_opened"].time]
         )
 
@@ -585,7 +579,9 @@ class AbstractDatabase(ABC):
     def _get_all_video_indices(self) -> Iterable[int]:
         return (item["video_id"] for item in self.select_videos_fields(["video_id"]))
 
-    def _edit_prop_value(self, prop_name: str, function: Callable[[Any], Any]) -> None:
+    def apply_on_prop_value(self, prop_name: str, mod_name: str) -> None:
+        assert "a" <= mod_name[0] <= "z"
+        function = getattr(PropertyValueModifier(), mod_name)
         assert self.get_prop_types(name=prop_name, with_type=str)
         modified = {}
         for video_id, values in self.get_all_prop_values(prop_name).items():
@@ -595,12 +591,6 @@ class AbstractDatabase(ABC):
         if modified:
             self.set_video_prop_values(prop_name, modified)
             self._notify_properties_modified([prop_name])
-
-    def prop_to_lowercase(self, prop_name) -> None:
-        return self._edit_prop_value(prop_name, lambda value: value.strip().lower())
-
-    def prop_to_uppercase(self, prop_name) -> None:
-        return self._edit_prop_value(prop_name, lambda value: value.strip().upper())
 
     def move_concatenated_prop_val(
         self, path: list, from_property: str, to_property: str

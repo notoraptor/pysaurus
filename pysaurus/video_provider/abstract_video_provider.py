@@ -205,9 +205,6 @@ class AbstractVideoProvider(metaclass=ABCMeta):
         self.set_classifier_path(path)
         return path
 
-    def playlist(self) -> str:
-        return str(self._database.to_xspf_playlist(self.get_view_indices()).open())
-
     def apply_on_view(self, selector, db_fn_name, *db_fn_args) -> Optional:
         callable_methods = {
             "count_property_values": self._database.count_property_values,

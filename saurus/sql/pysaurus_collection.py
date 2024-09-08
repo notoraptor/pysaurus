@@ -355,12 +355,6 @@ class PysaurusCollection(AbstractDatabase):
             )
         return output
 
-    def add_video_errors(self, video_id: int, *errors: Iterable[str]) -> None:
-        self.db.modify_many(
-            "INSERT OR IGNORE INTO video_error (video_id, error) VALUES (?, ?)",
-            [(video_id, error) for error in errors],
-        )
-
     def change_video_entry_filename(
         self, video_id: int, path: AbsolutePath
     ) -> AbsolutePath:
@@ -392,7 +386,7 @@ class PysaurusCollection(AbstractDatabase):
         self.provider.delete(video_id)
         self._notify_fields_modified(["move_id", "quality"])
 
-    def write_videos_field(self, indices: Iterable[int], field: str, values: Iterable):
+    def _write_videos_field(self, indices: Iterable[int], field: str, values: Iterable):
         self.db.modify_many(
             f"UPDATE video SET {WRITABLE_FIELDS[field]} = ? WHERE video_id = ?",
             zip(values, indices),

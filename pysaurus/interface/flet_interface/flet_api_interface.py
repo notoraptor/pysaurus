@@ -91,11 +91,8 @@ class FletApiInterface:
     def playlist(self):
         return self.api.__run_feature__("playlist")
 
-    def prop_to_lowercase(self, prop_name):
-        return self.api.__run_feature__("prop_to_lowercase", prop_name)
-
-    def prop_to_uppercase(self, prop_name):
-        return self.api.__run_feature__("prop_to_uppercase", prop_name)
+    def apply_on_prop_value(self, prop_name, edition):
+        return self.api.__run_feature__("apply_on_prop_value", prop_name, edition)
 
     def remove_prop_type(self, name):
         return self.api.__run_feature__("remove_prop_type", name)

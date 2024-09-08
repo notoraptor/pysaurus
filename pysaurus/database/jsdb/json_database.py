@@ -22,6 +22,7 @@ from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.abstract_database import AbstractDatabase
 from pysaurus.database.db_settings import DbSettings
+from pysaurus.database.db_utils import DatabaseLoaded
 from pysaurus.database.jsdb.db_video_attribute import PotentialMoveAttribute
 from pysaurus.database.jsdb.jsdb_video_provider import JsonDatabaseVideoProvider
 from pysaurus.database.jsdb.jsdbvideo.abstract_video_indexer import AbstractVideoIndexer
@@ -30,8 +31,8 @@ from pysaurus.database.jsdb.jsdbvideo.json_video_features import (
 )
 from pysaurus.database.jsdb.jsdbvideo.lazy_video import LazyVideo as Video
 from pysaurus.database.jsdb.jsdbvideo.video_indexer import VideoIndexer
+from pysaurus.database.jsdb.json_database_utils import patch_database_json
 from pysaurus.database.jsdb.thubmnail_database.thumbnail_manager import ThumbnailManager
-from pysaurus.database.json_database_utils import DatabaseLoaded, patch_database_json
 from pysaurus.properties.properties import (
     PropRawType,
     PropType,
@@ -503,12 +504,9 @@ class JsonDatabase(AbstractDatabase):
     def get_video_terms(self, video_id: int) -> List[str]:
         return self._id_to_video[video_id].terms()
 
-    def write_videos_field(self, indices: Iterable[int], field: str, values: Iterable):
+    def _write_videos_field(self, indices: Iterable[int], field: str, values: Iterable):
         for video_id, value in zip(indices, values):
             setattr(self._id_to_video[video_id], field, value)
-
-    def add_video_errors(self, video_id: int, *errors: Iterable[str]) -> None:
-        self._id_to_video[video_id].add_errors(errors)
 
     def write_new_videos(
         self,

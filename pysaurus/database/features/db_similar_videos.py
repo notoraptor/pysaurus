@@ -69,13 +69,14 @@ class DbSimilarVideos:
                 include=["similarity_id"], where={"video_id": video_indices}
             )
         ]
-        db.set_similarities(video_indices, (None for _ in video_indices))
-        try:
-            cls._find_similar_videos(db, miniatures)
-        except Exception:
-            # Restore previous similarities.
-            db.set_similarities(video_indices, previous_sim)
-            raise
+        with db.to_save():
+            db.set_similarities(video_indices, (None for _ in video_indices))
+            try:
+                cls._find_similar_videos(db, miniatures)
+            except Exception:
+                # Restore previous similarities.
+                db.set_similarities(video_indices, previous_sim)
+                raise
 
     @classmethod
     def _find_similar_videos(

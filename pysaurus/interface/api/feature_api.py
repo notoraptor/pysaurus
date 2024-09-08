@@ -6,6 +6,7 @@ from pysaurus.application.application import Application
 from pysaurus.application.language.default_language import language_to_dict
 from pysaurus.core.classes import Selector, StringPrinter
 from pysaurus.core.constants import PYTHON_DEFAULT_SOURCES
+from pysaurus.core.file_utils import create_xspf_playlist
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.abstract_database import AbstractDatabase as Db
 from pysaurus.interface.api.api_utils.proxy_feature import (
@@ -38,6 +39,7 @@ class FeatureAPI:
         # We must return value for proxy ending with "!"
         self._proxies: Dict[str, Union[str, ProxyFeature]] = {
             "apply_on_view": FromView(self, View.apply_on_view, True),
+            "apply_on_prop_value": FromDb(self, Db.apply_on_prop_value),
             "classifier_back": FromView(self, View.classifier_back),
             "classifier_focus_prop_val": FromView(self, View.classifier_focus_prop_val),
             "classifier_reverse": FromView(self, View.classifier_reverse, True),
@@ -56,9 +58,6 @@ class FeatureAPI:
             "open_containing_folder": FromDb(self, Db.open_containing_folder, True),
             "open_random_video": FromView(self, View.choose_random_video, True),
             "open_video": FromDb(self, Db.open_video),
-            "playlist": FromView(self, View.playlist, True),
-            "prop_to_lowercase": FromDb(self, Db.prop_to_lowercase),
-            "prop_to_uppercase": FromDb(self, Db.prop_to_uppercase),
             "remove_prop_type": FromDb(self, Db.remove_prop_type),
             "rename_database": FromDb(self, Db.rename),
             "rename_prop_type": FromDb(self, Db.rename_prop_type),
@@ -137,3 +136,12 @@ class FeatureAPI:
         self.database.provider.set_classifier_path([])
         self.database.provider.set_group(0)
         self.database.move_concatenated_prop_val(path, from_property, to_property)
+
+    def playlist(self) -> str:
+        db = self.database
+        pv = db.provider
+        return str(
+            create_xspf_playlist(
+                map(db.get_video_filename, pv.get_view_indices())
+            ).open()
+        )
