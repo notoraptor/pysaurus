@@ -95,8 +95,8 @@ class JsonDatabase(AbstractDatabase):
         if to_build:
             with Profiler("Build thumbnail SQL database", self.notifier):
                 self._thumb_mgr.build(
-                    self.select_videos_fields(
-                        ["filename", "thumbnail_path"], "readable"
+                    self.get_videos(
+                        include=["filename", "thumbnail_path"], where={"readable": True}
                     )
                 )
         # Initialize
@@ -501,8 +501,11 @@ class JsonDatabase(AbstractDatabase):
             fields = include or ("video_id",)
             return [{key: getattr(video, key) for key in fields} for video in videos]
 
-    def get_video_terms(self, video_id: int) -> List[str]:
-        return self._id_to_video[video_id].terms()
+    def get_all_video_terms(self) -> Dict[int, List[str]]:
+        return {
+            video_id: self._id_to_video[video_id].terms()
+            for video_id in self._get_all_video_indices()
+        }
 
     def _write_videos_field(self, indices: Iterable[int], field: str, values: Iterable):
         for video_id, value in zip(indices, values):
@@ -607,7 +610,7 @@ class JsonDatabase(AbstractDatabase):
             for video_id in (indices or self._get_all_video_indices())
         }
 
-    def set_video_prop_values(
+    def set_property_for_videos(
         self, name: str, updates: Dict[int, Collection[PropUnitType]], merge=False
     ):
         for video_id, prop_values in updates.items():

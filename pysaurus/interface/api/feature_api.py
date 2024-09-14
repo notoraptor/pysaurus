@@ -55,7 +55,6 @@ class FeatureAPI:
             "get_database_names": FromApp(self, Application.get_database_names, True),
             "get_language_names": FromApp(self, Application.get_language_names, True),
             "move_property_value": FromDb(self, Db.move_property_value),
-            "open_containing_folder": FromDb(self, Db.open_containing_folder, True),
             "open_random_video": FromView(self, View.choose_random_video, True),
             "open_video": FromDb(self, Db.open_video),
             "remove_prop_type": FromDb(self, Db.remove_prop_type),
@@ -145,3 +144,6 @@ class FeatureAPI:
                 map(db.get_video_filename, pv.get_view_indices())
             ).open()
         )
+
+    def open_containing_folder(self, video_id: int) -> str:
+        return str(self.database.get_video_filename(video_id).locate_file())

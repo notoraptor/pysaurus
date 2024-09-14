@@ -3,7 +3,6 @@ import tempfile
 from abc import ABC, abstractmethod
 from collections import Counter
 from typing import (
-    Any,
     Collection,
     Container,
     Dict,
@@ -121,7 +120,7 @@ class AbstractDatabase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_video_terms(self, video_id: int) -> List[str]:
+    def get_all_video_terms(self) -> Dict[int, List[str]]:
         raise NotImplementedError()
 
     @abstractmethod
@@ -152,6 +151,15 @@ class AbstractDatabase(ABC):
 
     @abstractmethod
     def get_moves(self) -> Iterable[Tuple[int, List[dict]]]:
+        """
+        Return an iterable of potential moves.
+        Each potential move is represented by a couple:
+        - The video ID of the (not found) vido which may have been moved.
+        - A list of dictionaries, each describing
+          a potential destination (found) video. Required fields:
+          - "video_id" : video ID of destination video.
+          - "filename": standard path of destination video.
+        """
         raise NotImplementedError()
 
     @abstractmethod
@@ -162,6 +170,15 @@ class AbstractDatabase(ABC):
     def get_all_prop_values(
         self, name: str, indices: List[int] = ()
     ) -> Dict[int, Collection[PropUnitType]]:
+        """
+        Return all values for given property
+        :param name: name of property
+        :param indices: indices of video to get property values.
+            Default is all videos.
+        :return: a dictionary mapping a video ID to collection
+            of property values associated to this video for this
+            property in the database.
+        """
         raise NotImplementedError()
 
     @abstractmethod
@@ -172,7 +189,7 @@ class AbstractDatabase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def set_video_prop_values(
+    def set_property_for_videos(
         self, name: str, updates: Dict[int, Collection[PropUnitType]], merge=False
     ):
         """Set one property for many videos."""
@@ -188,25 +205,18 @@ class AbstractDatabase(ABC):
         return values
 
     def count_videos(self, *flags, **forced_flags) -> int:
-        return len(self.select_videos_fields(["video_id"], *flags, **forced_flags))
+        forced_flags.update({flag: True for flag in flags})
+        return len(self.get_videos(include=["video_id"], where=forced_flags))
 
     def get_video_filename(self, video_id: int) -> AbsolutePath:
         (row,) = self.get_videos(include=["filename"], where={"video_id": video_id})
         return AbsolutePath.ensure(row["filename"])
-
-    def open_containing_folder(self, video_id: int) -> str:
-        return str(self.get_video_filename(video_id).locate_file())
 
     def delete_video(self, video_id: int) -> AbsolutePath:
         video_filename = self.get_video_filename(video_id)
         video_filename.delete()
         self.delete_video_entry(video_id)
         return video_filename
-
-    def _notify_missing_thumbnails(self) -> None:
-        remaining_thumb_videos = list(self._get_collectable_missing_thumbnails())
-        self.notifier.notify(notifications.MissingThumbnails(remaining_thumb_videos))
-        self.save()
 
     def _notify_fields_modified(self, fields: Sequence[str]):
         self.provider.manage_attributes_modified(list(fields), is_property=False)
@@ -218,56 +228,92 @@ class AbstractDatabase(ABC):
 
     @Profiler.profile_method()
     def update(self) -> None:
-        current_date = Date.now()
-        all_files = Videos.get_runtime_info_from_paths(self.get_folders())
-        self._update_videos_not_found(all_files)
-        files_to_update = self._find_video_paths_for_update(all_files)
-        needing_thumbs = list(self._get_collectable_missing_thumbnails())
-        new: List[VideoEntry] = []
-        expected_thumbs: Dict[str, str] = {}
-        thumb_errors: Dict[str, List[str]] = {}
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            results = Videos.hunt(files_to_update, needing_thumbs, tmp_dir)
-            # Possible cases for each result:
-            # nothing -> error_info XOR error_thumbnail
-            # only info, error_thumbnail ?
-            # only thumbnail
-            # info and thumbnail
-            for result in results:
-                if result.info and result.thumbnail:
-                    new.append(result.info)
-                    expected_thumbs[result.filename] = result.thumbnail
-                elif result.info:
-                    info = result.info
-                    info.errors = sorted(set(info.errors) | set(result.error_thumbnail))
-                    new.append(info)
-                elif result.thumbnail:
-                    expected_thumbs[result.filename] = result.thumbnail
-                else:
-                    new.append(
-                        VideoEntry(
-                            filename=result.filename,
-                            errors=sorted(
-                                set(result.error_info) | set(result.error_thumbnail)
-                            ),
-                            unreadable=True,
+        with self.to_save():
+            current_date = Date.now()
+            all_files = Videos.get_runtime_info_from_paths(self.get_folders())
+            self._update_videos_not_found(all_files)
+            files_to_update = self._find_video_paths_for_update(all_files)
+            needing_thumbs = list(self._get_collectable_missing_thumbnails())
+            new: List[VideoEntry] = []
+            expected_thumbs: Dict[str, str] = {}
+            thumb_errors: Dict[str, List[str]] = {}
+            with tempfile.TemporaryDirectory() as tmp_dir:
+                results = Videos.hunt(files_to_update, needing_thumbs, tmp_dir)
+                # Possible cases for each result:
+                # nothing -> error_info XOR error_thumbnail
+                # only info, error_thumbnail ?
+                # only thumbnail
+                # info and thumbnail
+                for result in results:
+                    if result.info and result.thumbnail:
+                        new.append(result.info)
+                        expected_thumbs[result.filename] = result.thumbnail
+                    elif result.info:
+                        info = result.info
+                        info.errors = sorted(
+                            set(info.errors) | set(result.error_thumbnail)
                         )
-                    )
-                if result.error_thumbnail:
-                    thumb_errors[result.filename] = result.error_thumbnail
+                        new.append(info)
+                    elif result.thumbnail:
+                        expected_thumbs[result.filename] = result.thumbnail
+                    else:
+                        new.append(
+                            VideoEntry(
+                                filename=result.filename,
+                                errors=sorted(
+                                    set(result.error_info) | set(result.error_thumbnail)
+                                ),
+                                unreadable=True,
+                            )
+                        )
+                    if result.error_thumbnail:
+                        thumb_errors[result.filename] = result.error_thumbnail
 
-            self.set_date(current_date)
-            if new:
-                self.write_new_videos(new, all_files)
-            if expected_thumbs:
-                with Profiler(say("save thumbnails to db"), self.notifier):
-                    self._insert_new_thumbnails(expected_thumbs)
+                self.set_date(current_date)
+                if new:
+                    self.write_new_videos(new, all_files)
+                if expected_thumbs:
+                    with Profiler(say("save thumbnails to db"), self.notifier):
+                        self._insert_new_thumbnails(expected_thumbs)
 
-            logger.info(f"Thumbnails generated, deleting temp dir {tmp_dir}")
-            # Delete thumbnail files (done at context exit)
+                logger.info(f"Thumbnails generated, deleting temp dir {tmp_dir}")
+                # Delete thumbnail files (done at context exit)
 
-        if thumb_errors:
-            self.notifier.notify(notifications.VideoThumbnailErrors(thumb_errors))
+            if thumb_errors:
+                self.notifier.notify(notifications.VideoThumbnailErrors(thumb_errors))
+
+    def _update_videos_not_found(self, existing_paths: Container[AbsolutePath]):
+        """Use given container of existing paths to mark not found videos."""
+        rows = self.get_videos(include=["video_id", "filename"])
+        indices = [row["video_id"] for row in rows]
+        founds = [row["filename"] in existing_paths for row in rows]
+        self._write_videos_field(indices, "found", founds)
+
+    def _find_video_paths_for_update(
+        self, file_paths: Dict[AbsolutePath, VideoRuntimeInfo]
+    ) -> List[str]:
+        return sorted(
+            file_name.standard_path
+            for file_name, file_info in file_paths.items()
+            if not self.get_videos(
+                include=(),
+                where={
+                    "filename": file_name,
+                    "mtime": file_info.mtime,
+                    "file_size": file_info.size,
+                    "driver_id": file_info.driver_id,
+                },
+            )
+        )
+
+    def _get_collectable_missing_thumbnails(self) -> Dict[str, int]:
+        return {
+            video["filename"].path: video["video_id"]
+            for video in self.get_videos(
+                include=["filename", "video_id"],
+                where={"readable": True, "found": True, "without_thumbnails": True},
+            )
+        }
 
     @Profiler.profile_method()
     def ensure_miniatures(self) -> List[Miniature]:
@@ -282,8 +328,8 @@ class AbstractDatabase(ABC):
 
         missing_filenames = [
             video["filename"]
-            for video in self.select_videos_fields(
-                ["filename"], "readable", "with_thumbnails"
+            for video in self.get_videos(
+                include=["filename"], where={"readable": True, "with_thumbnails": True}
             )
             if video["filename"] not in valid_miniatures
         ]
@@ -334,39 +380,6 @@ class AbstractDatabase(ABC):
             m.video_id = filename_to_video_id[AbsolutePath.ensure(m.identifier)]
         return list(m_dict.values())
 
-    def _update_videos_not_found(self, existing_paths: Container[AbsolutePath]):
-        """Use given container of existing paths to mark not found videos."""
-        rows = self.get_videos(include=["video_id", "filename"])
-        indices = [row["video_id"] for row in rows]
-        founds = [row["filename"] in existing_paths for row in rows]
-        self._write_videos_field(indices, "found", founds)
-
-    def _find_video_paths_for_update(
-        self, file_paths: Dict[AbsolutePath, VideoRuntimeInfo]
-    ) -> List[str]:
-        return sorted(
-            file_name.standard_path
-            for file_name, file_info in file_paths.items()
-            if not self.get_videos(
-                include=(),
-                where={
-                    "filename": file_name,
-                    "mtime": file_info.mtime,
-                    "file_size": file_info.size,
-                    "driver_id": file_info.driver_id,
-                },
-            )
-        )
-
-    def _get_collectable_missing_thumbnails(self) -> Dict[str, int]:
-        return {
-            video["filename"].path: video["video_id"]
-            for video in self.get_videos(
-                include=["filename", "video_id"],
-                where={"readable": True, "found": True, "without_thumbnails": True},
-            )
-        }
-
     def set_similarities(self, indices: Iterable[int], values: Iterable[Optional[int]]):
         self._write_videos_field(indices, "similarity_id", values)
         self._notify_fields_modified(["similarity_id"])
@@ -382,7 +395,6 @@ class AbstractDatabase(ABC):
 
     def refresh(self) -> None:
         self.update()
-        self._notify_missing_thumbnails()
         self.provider.refresh()
 
     def to_save(self):
@@ -421,16 +433,6 @@ class AbstractDatabase(ABC):
 
     def has_video(self, **fields) -> bool:
         return bool(self.get_videos(include=(), where=fields))
-
-    def read_video_field(self, video_id: int, field: str) -> Any:
-        (ret,) = self.get_videos(include=[field], where={"video_id": video_id})
-        return ret[field]
-
-    def select_videos_fields(
-        self, fields: Sequence[str], *flags, **forced_flags
-    ) -> List[Dict[str, Any]]:
-        forced_flags.update({flag: True for flag in flags})
-        return self.get_videos(include=fields, where=forced_flags)
 
     def move_video_entry(self, from_id, to_id) -> None:
         (from_data,) = self.get_videos(
@@ -492,14 +494,14 @@ class AbstractDatabase(ABC):
             if len(previous_values) > len(new_values):
                 modified[video_id] = new_values
         if modified:
-            self.set_video_prop_values(name, modified)
+            self.set_property_for_videos(name, modified)
             self._notify_properties_modified([name])
         return list(modified.keys())
 
     def move_property_value(self, old_name: str, values: list, new_name: str) -> None:
         modified = self.delete_property_value(old_name, values)
         if modified:
-            self.set_video_prop_values(
+            self.set_property_for_videos(
                 new_name, {video_id: values for video_id in modified}, merge=True
             )
             self._notify_properties_modified([old_name, new_name])
@@ -517,11 +519,11 @@ class AbstractDatabase(ABC):
                 next_values.add(new_value)
                 modified[video_id] = next_values
         if modified:
-            self.set_video_prop_values(name, modified)
+            self.set_property_for_videos(name, modified)
             self._notify_properties_modified([name])
         return bool(modified)
 
-    def edit_property_for_videos(
+    def update_property_for_videos(
         self,
         video_indices: List[int],
         name: str,
@@ -539,7 +541,7 @@ class AbstractDatabase(ABC):
         values_to_add = set(self.validate_prop_values(name, values_to_add))
         values_to_remove = set(self.validate_prop_values(name, values_to_remove))
         old_props = self.get_all_prop_values(name, indices=video_indices)
-        self.set_video_prop_values(
+        self.set_property_for_videos(
             name,
             {
                 video_id: (
@@ -567,17 +569,11 @@ class AbstractDatabase(ABC):
             if not only_empty or not old.get(video_id)
         }
         if modified:
-            self.set_video_prop_values(prop_name, modified)
+            self.set_property_for_videos(prop_name, modified)
             self._notify_properties_modified([prop_name])
 
-    def get_all_video_terms(self) -> Dict[int, List[str]]:
-        return {
-            video_id: self.get_video_terms(video_id)
-            for video_id in self._get_all_video_indices()
-        }
-
     def _get_all_video_indices(self) -> Iterable[int]:
-        return (item["video_id"] for item in self.select_videos_fields(["video_id"]))
+        return (item["video_id"] for item in self.get_videos(include=["video_id"]))
 
     def apply_on_prop_value(self, prop_name: str, mod_name: str) -> None:
         assert "a" <= mod_name[0] <= "z"
@@ -589,7 +585,7 @@ class AbstractDatabase(ABC):
             if values and new_values != values:
                 modified[video_id] = new_values
         if modified:
-            self.set_video_prop_values(prop_name, modified)
+            self.set_property_for_videos(prop_name, modified)
             self._notify_properties_modified([prop_name])
 
     def move_concatenated_prop_val(
@@ -610,8 +606,8 @@ class AbstractDatabase(ABC):
                 from_new[video_id] = new_values
         if from_new:
             to_extended = [concat_path]
-            self.set_video_prop_values(from_property, from_new)
-            self.set_video_prop_values(
+            self.set_property_for_videos(from_property, from_new)
+            self.set_property_for_videos(
                 to_property,
                 {video_id: to_extended for video_id in from_new},
                 merge=True,

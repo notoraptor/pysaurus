@@ -262,12 +262,12 @@ def test_edit_properties():
         provider.set_search("palm beach", "exact")
         assert provider.get_view_indices() == [21]
 
-        collection.set_video_prop_values("category", {84: new_values})
+        collection.set_property_for_videos("category", {84: new_values})
         assert collection.get_all_prop_values("category", [84])[84] == new_values
         provider.refresh()
         assert provider.get_view_indices() == [84, 21]
 
-        collection.set_video_prop_values("category", {84: old_values})
+        collection.set_property_for_videos("category", {84: old_values})
         assert collection.get_all_prop_values("category", [84])[84] == old_values
         provider.refresh()
         assert provider.get_view_indices() == [21]

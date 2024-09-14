@@ -208,7 +208,7 @@ class AbstractVideoProvider(metaclass=ABCMeta):
     def apply_on_view(self, selector, db_fn_name, *db_fn_args) -> Optional:
         callable_methods = {
             "count_property_values": self._database.count_property_values,
-            "edit_property_for_videos": self._database.edit_property_for_videos,
+            "edit_property_for_videos": self._database.update_property_for_videos,
         }
         return callable_methods[db_fn_name](
             functions.apply_selector_to_data(selector, self.get_view_indices()),

@@ -49,8 +49,8 @@ class PotentialMoveAttribute:
         self.potential_moves.clear()
         self.move_groups.clear()
         groups: Dict[_MoveKey, Tuple[List[dict], List[dict]]] = {}
-        videos = self.database.select_videos_fields(
-            (
+        videos = self.database.get_videos(
+            include=(
                 "duration",
                 "duration_time_base",
                 "file_size",
@@ -60,7 +60,7 @@ class PotentialMoveAttribute:
                 "size",
                 "video_id",
             ),
-            "readable",
+            where={"readable": True},
         )
         for video in videos:
             groups.setdefault(_MoveKey(video), ([], []))[video["found"]].append(video)

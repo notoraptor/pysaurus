@@ -104,7 +104,7 @@ class PysaurusCollection(AbstractDatabase):
             output.setdefault(row[0], []).append(pt.from_string(row[1]))
         return output
 
-    def set_video_prop_values(
+    def set_property_for_videos(
         self, name: str, updates: Dict[int, Collection[PropUnitType]], merge=False
     ):
         (prop_desc,) = self.get_prop_types(name=name)
@@ -320,7 +320,8 @@ class PysaurusCollection(AbstractDatabase):
             self.db, include=include, with_moves=with_moves, where=where
         )
 
-    def get_video_terms(self, video_id: int) -> List[str]:
+    def _get_video_terms(self, video_id: int) -> List[str]:
+        # **NB**: Keep this method for reference.
         video = self.db.query_one(
             "SELECT filename, meta_title FROM video WHERE video_id = ?", [video_id]
         )

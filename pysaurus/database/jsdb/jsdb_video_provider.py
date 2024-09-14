@@ -93,7 +93,9 @@ class LayerSource(Layer):
         for path in self.params["sources"]:
             source = [
                 video["video_id"]
-                for video in self.input.select_videos_fields(["video_id"], *path)
+                for video in self.input.get_videos(
+                    include=["video_id"], where={flag: True for flag in path}
+                )
             ]
             video_indices.update(source)
             if "unreadable" not in path and "not_found" not in path:
@@ -155,7 +157,10 @@ class _AbstractLayerGrouping(Layer):
             if group_def.is_property:
                 values = self._get_prop_values(video_id, group_def.field) or [None]
             else:
-                values = [self.database.read_video_field(video_id, group_def.field)]
+                (ret,) = self.database.get_videos(
+                    include=[group_def.field], where={"video_id": video_id}
+                )
+                values = [ret[group_def.field]]
             self.video_id_to_values[video_id] = values
         return self.video_id_to_values[video_id]
 
