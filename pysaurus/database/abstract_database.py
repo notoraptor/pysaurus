@@ -127,6 +127,10 @@ class AbstractDatabase(ABC):
     def change_video_entry_filename(
         self, video_id: int, path: AbsolutePath
     ) -> AbsolutePath:
+        """Map video to new path in database.
+
+        Return the previous path related to video.
+        """
         raise NotImplementedError()
 
     @abstractmethod
@@ -143,10 +147,6 @@ class AbstractDatabase(ABC):
         video_entries: List[VideoEntry],
         runtime_info: Dict[AbsolutePath, VideoRuntimeInfo],
     ) -> None:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def open_video(self, video_id):
         raise NotImplementedError()
 
     @abstractmethod
@@ -169,13 +169,13 @@ class AbstractDatabase(ABC):
     @abstractmethod
     def get_all_prop_values(
         self, name: str, indices: List[int] = ()
-    ) -> Dict[int, Collection[PropUnitType]]:
+    ) -> Dict[int, List[PropUnitType]]:
         """
         Return all values for given property
         :param name: name of property
         :param indices: indices of video to get property values.
             Default is all videos.
-        :return: a dictionary mapping a video ID to collection
+        :return: a dictionary mapping a video ID to the list
             of property values associated to this video for this
             property in the database.
         """
@@ -203,6 +203,11 @@ class AbstractDatabase(ABC):
         else:
             values = [prop_type.validate(value) for value in values]
         return values
+
+    def open_video(self, video_id: int):
+        (video,) = self.get_videos(include=["filename"], where={"video_id": video_id})
+        AbsolutePath.ensure(video["filename"]).open()
+        self._write_videos_field([video_id], "date_entry_opened", [Date.now().time])
 
     def count_videos(self, *flags, **forced_flags) -> int:
         forced_flags.update({flag: True for flag in flags})

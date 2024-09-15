@@ -84,7 +84,7 @@ class PysaurusCollection(AbstractDatabase):
 
     def get_all_prop_values(
         self, name: str, indices: List[int] = ()
-    ) -> Dict[int, Collection[PropUnitType]]:
+    ) -> Dict[int, List[PropUnitType]]:
         (prop_desc,) = self.get_prop_types(name=name)
         pt = PropTypeValidator(prop_desc)
         output = {}
@@ -366,9 +366,11 @@ class PysaurusCollection(AbstractDatabase):
         )
         old_filename = AbsolutePath.ensure(video["filename"])
         assert old_filename != path
+
         self.db.modify(
             "UPDATE video SET filename = ? WHERE video_id = ?", [path.path, video_id]
         )
+
         self._notify_fields_modified(
             (
                 "title",
@@ -380,6 +382,7 @@ class PysaurusCollection(AbstractDatabase):
                 "filename",
             )
         )
+
         return old_filename
 
     def delete_video_entry(self, video_id: int) -> None:
@@ -538,18 +541,6 @@ class PysaurusCollection(AbstractDatabase):
             "(video_id, filename, meta_title, properties) VALUES (?, ?, ?, ?)",
             texts,
         )
-
-    def open_video(self, video_id):
-        AbsolutePath(
-            self.db.query_one(
-                "SELECT filename FROM video WHERE video_id = ?", [video_id]
-            )["filename"]
-        ).open()
-        self.db.modify(
-            "UPDATE video SET date_entry_opened = ? WHERE video_id = ?",
-            [Date.now().time, video_id],
-        )
-        self._notify_fields_modified(["date_entry_opened"])
 
     def get_moves(self) -> Iterable[Tuple[int, List[dict]]]:
         for row in self.db.query(

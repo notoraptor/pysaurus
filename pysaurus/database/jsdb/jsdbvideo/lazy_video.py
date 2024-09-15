@@ -349,9 +349,5 @@ class LazyVideo(WithSchema):
             self._save_date_entry_modified()
         return modified
 
-    def open(self):
-        self.filename.open()
-        self._set("date_entry_opened", Date.now().time)
-
     def _save_date_entry_modified(self):
         self._set("date_entry_modified", Date.now().time)

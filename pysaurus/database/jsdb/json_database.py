@@ -560,10 +560,6 @@ class JsonDatabase(AbstractDatabase):
     def change_video_entry_filename(
         self, video_id: int, path: AbsolutePath
     ) -> AbsolutePath:
-        """Map video to new path in database.
-
-        Return the previous path related to video.
-        """
         path = AbsolutePath.ensure(path)
         assert path.isfile()
         video = self._id_to_video[video_id]
@@ -574,9 +570,9 @@ class JsonDatabase(AbstractDatabase):
         new_video = video.with_new_filename(path)
         self._videos[new_video.filename] = new_video
         self._id_to_video[video_id] = new_video
-        self._notify_filename_modified(new_video, video)
-
         self._thumb_mgr.rename(video.filename, new_video.filename)
+
+        self._notify_filename_modified(new_video, video)
 
         return video.filename
 
@@ -593,10 +589,6 @@ class JsonDatabase(AbstractDatabase):
     def get_moves(self) -> Iterable[Tuple[int, List[dict]]]:
         return self.moves_attribute.get_moves()
 
-    def open_video(self, video_id: int) -> None:
-        self._id_to_video[video_id].open()
-        self._notify_fields_modified(["date_entry_opened"])
-
     def _insert_new_thumbnails(self, filename_to_thumb_name: Dict[str, str]) -> None:
         self._thumb_mgr.save_existing_thumbnails(filename_to_thumb_name)
         for filename in filename_to_thumb_name:
@@ -604,7 +596,7 @@ class JsonDatabase(AbstractDatabase):
 
     def get_all_prop_values(
         self, name: str, indices: List[int] = ()
-    ) -> Dict[int, Collection[PropUnitType]]:
+    ) -> Dict[int, List[PropUnitType]]:
         return {
             video_id: self._id_to_video[video_id].get_property(name)
             for video_id in (indices or self._get_all_video_indices())
