@@ -195,41 +195,9 @@ class AbstractDatabase(ABC):
         """Set one property for many videos."""
         raise NotImplementedError()
 
-    def validate_prop_values(self, name, values: list) -> List[PropValueType]:
-        (prop_dict,) = self.get_prop_types(name=name)
-        prop_type = PropTypeValidator(prop_dict)
-        if prop_type.multiple:
-            values = prop_type.validate(values)
-        else:
-            values = [prop_type.validate(value) for value in values]
-        return values
-
-    def open_video(self, video_id: int):
-        (video,) = self.get_videos(include=["filename"], where={"video_id": video_id})
-        AbsolutePath.ensure(video["filename"]).open()
-        self._write_videos_field([video_id], "date_entry_opened", [Date.now().time])
-
-    def count_videos(self, *flags, **forced_flags) -> int:
-        forced_flags.update({flag: True for flag in flags})
-        return len(self.get_videos(include=["video_id"], where=forced_flags))
-
-    def get_video_filename(self, video_id: int) -> AbsolutePath:
-        (row,) = self.get_videos(include=["filename"], where={"video_id": video_id})
-        return AbsolutePath.ensure(row["filename"])
-
-    def delete_video(self, video_id: int) -> AbsolutePath:
-        video_filename = self.get_video_filename(video_id)
-        video_filename.delete()
-        self.delete_video_entry(video_id)
-        return video_filename
-
-    def _notify_fields_modified(self, fields: Sequence[str]):
-        self.provider.manage_attributes_modified(list(fields), is_property=False)
-        self.save()
-
-    def _notify_properties_modified(self, properties):
-        self.provider.manage_attributes_modified(list(properties), is_property=True)
-        self.save()
+    def refresh(self) -> None:
+        self.update()
+        self.provider.refresh()
 
     @Profiler.profile_method()
     def update(self) -> None:
@@ -385,59 +353,24 @@ class AbstractDatabase(ABC):
             m.video_id = filename_to_video_id[AbsolutePath.ensure(m.identifier)]
         return list(m_dict.values())
 
-    def set_similarities(self, indices: Iterable[int], values: Iterable[Optional[int]]):
-        self._write_videos_field(indices, "similarity_id", values)
-        self._notify_fields_modified(["similarity_id"])
+    def count_videos(self, *flags, **forced_flags) -> int:
+        forced_flags.update({flag: True for flag in flags})
+        return len(self.get_videos(include=["video_id"], where=forced_flags))
 
-    def change_video_file_title(self, video_id: int, new_title: str) -> None:
-        if functions.has_discarded_characters(new_title):
-            raise exceptions.InvalidFileName(new_title)
-        old_filename: AbsolutePath = self.get_video_filename(video_id)
-        if old_filename.file_title != new_title:
-            self.change_video_entry_filename(
-                video_id, old_filename.new_title(new_title)
-            )
+    def confirm_unique_moves(self) -> int:
+        unique_moves = self.get_unique_moves()
+        if unique_moves:
+            with self.to_save():
+                for video_id, dst_id in unique_moves:
+                    self.move_video_entry(video_id, dst_id)
+        return len(unique_moves)
 
-    def refresh(self) -> None:
-        self.update()
-        self.provider.refresh()
-
-    def to_save(self):
-        """Return a save context.
-
-        Save context forbids any save while in context,
-        and make a save as long as we exit the context.
-
-        This is useful if a piece of code may generate many save calls
-        while we just want one final save at the end.
-        """
-        return DatabaseToSaveContext(self)
-
-    def save(self):
-        """Save database.
-
-        Do not save if we're in a save context returned by to_save().
-        Otherwise, save using private method _save().
-        """
-        # Do not save if in save context
-        if self.in_save_context:
-            logger.info("Saving deactivated in context.")
-            return
-        # We can save. Save database.
-        self._save()
-        # Notify database is saved.
-        self.notifier.notify(DatabaseSaved(self))
-
-    def _save(self):
-        """Actually saves database.
-
-        Do nothing by default, as database may have automatic save.
-        If your database must be manually saved, consider overriding this method.
-        """
-        pass
-
-    def has_video(self, **fields) -> bool:
-        return bool(self.get_videos(include=(), where=fields))
+    def get_unique_moves(self) -> List[Tuple[int, int]]:
+        return [
+            (video_id, moves[0]["video_id"])
+            for video_id, moves in self.get_moves()
+            if len(moves) == 1
+        ]
 
     def move_video_entry(self, from_id, to_id) -> None:
         (from_data,) = self.get_videos(
@@ -461,34 +394,44 @@ class AbstractDatabase(ABC):
 
         self.delete_video_entry(from_id)
 
-    def __close__(self):
-        """Close database."""
-        logger.info(f"Database closed: {self.get_name()}")
+    def set_similarities(self, indices: Iterable[int], values: Iterable[Optional[int]]):
+        self._write_videos_field(indices, "similarity_id", values)
+        self._notify_fields_modified(["similarity_id"])
 
-    def rename(self, new_name: str) -> None:
-        if new_name.startswith("."):
-            raise exceptions.PysaurusError(
-                f"Database name must not start with dot: {new_name}"
+    def has_video(self, **fields) -> bool:
+        return bool(self.get_videos(include=(), where=fields))
+
+    def open_video(self, video_id: int):
+        (video,) = self.get_videos(include=["filename"], where={"video_id": video_id})
+        AbsolutePath.ensure(video["filename"]).open()
+        self._write_videos_field([video_id], "date_entry_opened", [Date.now().time])
+
+    def delete_video(self, video_id: int) -> AbsolutePath:
+        video_filename = self.get_video_filename(video_id)
+        video_filename.delete()
+        self.delete_video_entry(video_id)
+        return video_filename
+
+    def change_video_file_title(self, video_id: int, new_title: str) -> None:
+        if functions.has_discarded_characters(new_title):
+            raise exceptions.InvalidFileName(new_title)
+        old_filename: AbsolutePath = self.get_video_filename(video_id)
+        if old_filename.file_title != new_title:
+            self.change_video_entry_filename(
+                video_id, old_filename.new_title(new_title)
             )
-        self.ways = self.ways.renamed(new_name)
 
-    def get_name(self) -> str:
-        return self.ways.db_folder.title
+    def get_video_filename(self, video_id: int) -> AbsolutePath:
+        (row,) = self.get_videos(include=["filename"], where={"video_id": video_id})
+        return AbsolutePath.ensure(row["filename"])
 
-    def confirm_unique_moves(self) -> int:
-        unique_moves = self.get_unique_moves()
-        if unique_moves:
-            with self.to_save():
-                for video_id, dst_id in unique_moves:
-                    self.move_video_entry(video_id, dst_id)
-        return len(unique_moves)
-
-    def get_unique_moves(self) -> List[Tuple[int, int]]:
-        return [
-            (video_id, moves[0]["video_id"])
-            for video_id, moves in self.get_moves()
-            if len(moves) == 1
-        ]
+    def move_property_value(self, old_name: str, values: list, new_name: str) -> None:
+        modified = self.delete_property_value(old_name, values)
+        if modified:
+            self.set_property_for_videos(
+                new_name, {video_id: values for video_id in modified}, merge=True
+            )
+            self._notify_properties_modified([old_name, new_name])
 
     def delete_property_value(self, name: str, values: list) -> List[int]:
         values = set(self.validate_prop_values(name, values))
@@ -502,14 +445,6 @@ class AbstractDatabase(ABC):
             self.set_property_for_videos(name, modified)
             self._notify_properties_modified([name])
         return list(modified.keys())
-
-    def move_property_value(self, old_name: str, values: list, new_name: str) -> None:
-        modified = self.delete_property_value(old_name, values)
-        if modified:
-            self.set_property_for_videos(
-                new_name, {video_id: values for video_id in modified}, merge=True
-            )
-            self._notify_properties_modified([old_name, new_name])
 
     def edit_property_value(
         self, name: str, old_values: list, new_value: object
@@ -577,9 +512,6 @@ class AbstractDatabase(ABC):
             self.set_property_for_videos(prop_name, modified)
             self._notify_properties_modified([prop_name])
 
-    def _get_all_video_indices(self) -> Iterable[int]:
-        return (item["video_id"] for item in self.get_videos(include=["video_id"]))
-
     def apply_on_prop_value(self, prop_name: str, mod_name: str) -> None:
         assert "a" <= mod_name[0] <= "z"
         function = getattr(PropertyValueModifier(), mod_name)
@@ -620,9 +552,74 @@ class AbstractDatabase(ABC):
             self._notify_properties_modified([from_property, to_property])
         return len(from_new)
 
-    def reopen(self):
-        pass
+    def _notify_properties_modified(self, properties):
+        self.provider.manage_attributes_modified(list(properties), is_property=True)
+        self.save()
+
+    def _notify_fields_modified(self, fields: Sequence[str]):
+        self.provider.manage_attributes_modified(list(fields), is_property=False)
+        self.save()
+
+    def validate_prop_values(self, name, values: list) -> List[PropValueType]:
+        (prop_dict,) = self.get_prop_types(name=name)
+        prop_type = PropTypeValidator(prop_dict)
+        if prop_type.multiple:
+            values = prop_type.validate(values)
+        else:
+            values = [prop_type.validate(value) for value in values]
+        return values
 
     def default_prop_unit(self, name):
         (pt,) = self.get_prop_types(name=name)
         return None if pt["multiple"] else pt["defaultValues"][0]
+
+    def to_save(self):
+        """Return a save context.
+
+        Save context forbids any save while in context,
+        and make a save as long as we exit the context.
+
+        This is useful if a piece of code may generate many save calls
+        while we just want one final save at the end.
+        """
+        return DatabaseToSaveContext(self)
+
+    def save(self):
+        """Save database.
+
+        Do not save if we're in a save context returned by `to_save`.
+        Otherwise, save using private method _save().
+        """
+        # Do not save if in save context
+        if self.in_save_context:
+            logger.info("Saving deactivated in context.")
+            return
+        # We can save. Save database.
+        self._save()
+        # Notify database is saved.
+        self.notifier.notify(DatabaseSaved(self))
+
+    def _save(self):
+        """Actually saves database.
+
+        Do nothing by default, as database may have automatic save.
+        If your database must be manually saved, consider overriding this method.
+        """
+        pass
+
+    def __close__(self):
+        """Close database."""
+        logger.info(f"Database closed: {self.get_name()}")
+
+    def reopen(self):
+        pass
+
+    def get_name(self) -> str:
+        return self.ways.db_folder.title
+
+    def rename(self, new_name: str) -> None:
+        if new_name.startswith("."):
+            raise exceptions.PysaurusError(
+                f"Database name must not start with dot: {new_name}"
+            )
+        self.ways = self.ways.renamed(new_name)
