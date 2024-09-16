@@ -189,7 +189,7 @@ class AbstractDatabase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def set_property_for_videos(
+    def _set_property_for_videos(
         self, name: str, updates: Dict[int, Collection[PropUnitType]], merge=False
     ):
         """Set one property for many videos."""
@@ -405,7 +405,7 @@ class AbstractDatabase(ABC):
                     to_properties.setdefault(prop_name, {})[to_id] = from_prop_values
             # Update properties
             for prop_name, updates in to_properties.items():
-                self.set_property_for_videos(prop_name, updates, merge=True)
+                self._set_property_for_videos(prop_name, updates, merge=True)
             # Update attributes
             self._write_videos_field(
                 to_indices,
@@ -468,7 +468,6 @@ class AbstractDatabase(ABC):
             self.set_property_for_videos(
                 new_name, {video_id: values for video_id in modified}, merge=True
             )
-            self._notify_properties_modified([old_name, new_name])
 
     def delete_property_value(self, name: str, values: list) -> List[int]:
         values = set(self.validate_prop_values(name, values))
@@ -480,7 +479,6 @@ class AbstractDatabase(ABC):
                 modified[video_id] = new_values
         if modified:
             self.set_property_for_videos(name, modified)
-            self._notify_properties_modified([name])
         return list(modified.keys())
 
     def edit_property_value(
@@ -497,7 +495,6 @@ class AbstractDatabase(ABC):
                 modified[video_id] = next_values
         if modified:
             self.set_property_for_videos(name, modified)
-            self._notify_properties_modified([name])
         return bool(modified)
 
     def update_property_for_videos(
@@ -528,7 +525,6 @@ class AbstractDatabase(ABC):
                 for video_id in video_indices
             },
         )
-        self._notify_properties_modified([name])
 
     def count_property_values(self, video_indices: List[int], name: str) -> List[List]:
         count = Counter()
@@ -547,7 +543,6 @@ class AbstractDatabase(ABC):
         }
         if modified:
             self.set_property_for_videos(prop_name, modified)
-            self._notify_properties_modified([prop_name])
 
     def apply_on_prop_value(self, prop_name: str, mod_name: str) -> None:
         assert "a" <= mod_name[0] <= "z"
@@ -560,7 +555,6 @@ class AbstractDatabase(ABC):
                 modified[video_id] = new_values
         if modified:
             self.set_property_for_videos(prop_name, modified)
-            self._notify_properties_modified([prop_name])
 
     def move_concatenated_prop_val(
         self, path: list, from_property: str, to_property: str
@@ -580,14 +574,21 @@ class AbstractDatabase(ABC):
                 from_new[video_id] = new_values
         if from_new:
             to_extended = [concat_path]
-            self.set_property_for_videos(from_property, from_new)
-            self.set_property_for_videos(
+            self._set_property_for_videos(from_property, from_new)
+            self._set_property_for_videos(
                 to_property,
                 {video_id: to_extended for video_id in from_new},
                 merge=True,
             )
             self._notify_properties_modified([from_property, to_property])
         return len(from_new)
+
+    def set_property_for_videos(
+        self, name: str, updates: Dict[int, Collection[PropUnitType]], merge=False
+    ):
+        """Set property for many videos and notify about property modified."""
+        self._set_property_for_videos(name, updates, merge)
+        self._notify_properties_modified([name])
 
     def _notify_properties_modified(self, properties):
         self.provider.manage_attributes_modified(list(properties), is_property=True)

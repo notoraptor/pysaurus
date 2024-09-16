@@ -104,7 +104,7 @@ class PysaurusCollection(AbstractDatabase):
             output.setdefault(row[0], []).append(pt.from_string(row[1]))
         return output
 
-    def set_property_for_videos(
+    def _set_property_for_videos(
         self, name: str, updates: Dict[int, Collection[PropUnitType]], merge=False
     ):
         (prop_desc,) = self.get_prop_types(name=name)
