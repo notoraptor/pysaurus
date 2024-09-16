@@ -1,86 +1,20 @@
-from typing import Collection, List, Optional, Sequence, Union
+from typing import Collection, List, Optional, Union
 
 from pysaurus.application import exceptions
 from pysaurus.core.enumeration import Enumeration
-from pysaurus.core.json_type import Type
-from pysaurus.core.schematizable import Schema, WithSchema, schema_prop
 
 PropUnitType = Union[bool, int, float, str]
-PropRawType = Union[bool, int, float, str, Collection]
-PropValueType = Union[bool, int, float, str, list]
+PropRawType = Union[PropUnitType, Collection]
+PropValueType = Union[PropUnitType, list]
+
+
+def _str_to_bool(value: str) -> bool:
+    return bool(int(value))
+
 
 PROP_UNIT_TYPES = {bool, int, float, str}
 PROP_UNIT_TYPE_MAP = {t.__name__: t for t in PROP_UNIT_TYPES}
-
-PROP_UNIT_CONVERTER = PROP_UNIT_TYPE_MAP.copy()
-PROP_UNIT_CONVERTER["bool"] = lambda value: bool(int(value))
-
-
-class PropType(WithSchema):
-    __slots__ = ()
-    SCHEMA = Schema(
-        (
-            Type("name", (str, "n")),
-            Type("definition", (object, "d")),
-            Type("multiple", "m", False),
-        )
-    )
-
-    name = schema_prop("name")
-    definition = schema_prop("definition")
-    multiple = schema_prop("multiple")
-
-    default = property(
-        lambda self: self.definition[0] if self.is_enum() else self.definition
-    )
-    type = property(lambda self: type(self.default))
-    enumeration = property(
-        lambda self: sorted(self.definition) if self.is_enum() else None
-    )
-
-    def __call__(self, value=None) -> PropValueType:
-        return self.new() if value is None else self.validate(value)
-
-    def is_enum(self, with_values=None):
-        return isinstance(self.definition, list) and (
-            with_values is None or set(self.definition) == set(with_values)
-        )
-
-    def new(self) -> PropValueType:
-        return [] if self.multiple else self.default
-
-    def validate(self, value) -> PropValueType:
-        if self.multiple:
-            if not isinstance(value, (list, tuple, set)):
-                raise exceptions.InvalidMultiplePropertyValue(self, value)
-            if not isinstance(value, set):
-                value = set(value)
-            for element in value:
-                if not isinstance(element, self.type):
-                    raise exceptions.InvalidPropertyValue(self, element)
-            if self.is_enum():
-                enumeration = set(self.definition)
-                for element in value:
-                    if element not in enumeration:
-                        raise exceptions.InvalidPropertyValue(self, element)
-            return sorted(value)
-
-        if self.type is float and isinstance(value, int):
-            value = float(value)
-        if not isinstance(value, self.type):
-            raise exceptions.InvalidPropertyValue(self, value)
-        if self.is_enum() and value not in set(self.definition):
-            raise exceptions.InvalidPropertyValue(self, value)
-        return value
-
-    def describe(self) -> dict:
-        return {
-            "name": self.name,
-            "type": self.type.__name__,
-            "enumeration": self.enumeration,
-            "defaultValues": [] if self.multiple else [self.default],
-            "multiple": self.multiple,
-        }
+PROP_UNIT_CONVERTER = {**PROP_UNIT_TYPE_MAP, "bool": _str_to_bool}
 
 
 class PropTypeDesc:
@@ -115,23 +49,24 @@ class PropTypeDesc:
 
 
 class PropTypeValidator(PropTypeDesc):
-    __slots__ = ("as_sql",)
+    __slots__ = ("to_str", "_enum_set")
 
     def __init__(self, prop_desc: dict):
         super().__init__(prop_desc)
         if self.type is str:
-            sqler = self._str_to_sql
+            to_str = self._str_to_sql
         elif self.type is bool:
-            sqler = self._bool_to_sql
+            to_str = self._bool_to_sql
         else:
-            sqler = self._value_to_sql
+            to_str = self._value_to_sql
 
-        self.as_sql = sqler
+        self.to_str = to_str
+        self._enum_set = set(self.enumeration or ())
 
-    def _bool_to_sql(self, values: list) -> List[str]:
+    def _bool_to_sql(self, values: List[bool]) -> List[str]:
         return [str(int(value)) for value in values]
 
-    def _str_to_sql(self, values: list) -> List[str]:
+    def _str_to_sql(self, values: List[str]) -> List[str]:
         return values
 
     def _value_to_sql(self, values: list) -> List[str]:
@@ -158,10 +93,9 @@ class PropTypeValidator(PropTypeDesc):
             for element in value:
                 if not isinstance(element, self.type):
                     raise exceptions.InvalidPropertyValue(self, element)
-            if self.enumeration:
-                enumeration = set(self.enumeration)
+            if self._enum_set:
                 for element in value:
-                    if element not in enumeration:
+                    if element not in self._enum_set:
                         raise exceptions.InvalidPropertyValue(self, element)
             return sorted(value)
 
@@ -169,11 +103,11 @@ class PropTypeValidator(PropTypeDesc):
             value = float(value)
         if not isinstance(value, self.type):
             raise exceptions.InvalidPropertyValue(self, value)
-        if self.enumeration and value not in set(self.enumeration):
+        if self._enum_set and value not in self._enum_set:
             raise exceptions.InvalidPropertyValue(self, value)
         return value
 
-    def instantiate(self, values: Collection[PropUnitType]) -> Collection[PropUnitType]:
+    def instantiate(self, values: Collection[PropUnitType]) -> List[PropUnitType]:
         if not values:
             return []
         if self.multiple:
@@ -182,7 +116,7 @@ class PropTypeValidator(PropTypeDesc):
             (value,) = values
             return [self.validate(value)]
 
-    def from_strings(self, values: Collection[str]) -> Sequence[PropUnitType]:
+    def from_strings(self, values: Collection[str]) -> Collection[PropUnitType]:
         if not values:
             return []
         if not self.multiple and len(values) != 1:
@@ -200,10 +134,6 @@ class PropTypeValidator(PropTypeDesc):
             if self.type is str
             else (bool(int(value)) if self.type is bool else self.type(value))
         )
-
-    def plain_from_strings(self, values: Sequence[str]) -> PropValueType:
-        values = self.from_strings(values)
-        return values if self.multiple else values[0]
 
     @classmethod
     def define(

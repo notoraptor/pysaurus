@@ -24,6 +24,7 @@ from pysaurus.database.abstract_database import AbstractDatabase
 from pysaurus.database.db_settings import DbSettings
 from pysaurus.database.db_utils import DatabaseLoaded
 from pysaurus.database.jsdb.db_video_attribute import PotentialMoveAttribute
+from pysaurus.database.jsdb.jsdb_prop_type import PropType
 from pysaurus.database.jsdb.jsdb_video_provider import JsonDatabaseVideoProvider
 from pysaurus.database.jsdb.jsdbvideo.abstract_video_indexer import AbstractVideoIndexer
 from pysaurus.database.jsdb.jsdbvideo.json_video_features import (
@@ -33,12 +34,7 @@ from pysaurus.database.jsdb.jsdbvideo.lazy_video import LazyVideo as Video
 from pysaurus.database.jsdb.jsdbvideo.video_indexer import VideoIndexer
 from pysaurus.database.jsdb.json_database_utils import patch_database_json
 from pysaurus.database.jsdb.thubmnail_database.thumbnail_manager import ThumbnailManager
-from pysaurus.properties.properties import (
-    PropRawType,
-    PropType,
-    PropTypeValidator,
-    PropUnitType,
-)
+from pysaurus.properties.properties import PropRawType, PropTypeValidator, PropUnitType
 from pysaurus.video import VideoRuntimeInfo
 from pysaurus.video.video_constants import VIDEO_FLAGS
 from pysaurus.video.video_sorting import VideoSorting

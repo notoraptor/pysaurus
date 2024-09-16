@@ -1,3 +1,6 @@
+from typing import Iterable
+
+
 class EnumerationError(Exception):
     pass
 
@@ -13,7 +16,7 @@ class EnumerationValueError(EnumerationError):
 class Enumeration:
     __slots__ = "values", "type"
 
-    def __init__(self, enum_values):
+    def __init__(self, enum_values: Iterable):
         self.values = set(enum_values)
         if len(self.values) < 2:
             raise EnumerationError(self.values)

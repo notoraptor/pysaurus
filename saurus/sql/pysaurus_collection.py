@@ -159,7 +159,7 @@ class PysaurusCollection(AbstractDatabase):
             for prop_desc in self.get_prop_types()
         }
         validated_properties = {
-            name: props[name].as_sql(props[name].instantiate(values))
+            name: props[name].to_str(props[name].instantiate(values))
             for name, values in properties.items()
         }
         string_properties = [name for name in properties if props[name].type is str]
