@@ -357,12 +357,12 @@ class AbstractDatabase(ABC):
         forced_flags.update({flag: True for flag in flags})
         return len(self.get_videos(include=["video_id"], where=forced_flags))
 
+    def move_video_entry(self, from_id: int, to_id: int) -> None:
+        self._move_video_entries([(from_id, to_id)])
+
     def confirm_unique_moves(self) -> int:
         unique_moves = self.get_unique_moves()
-        if unique_moves:
-            with self.to_save():
-                for video_id, dst_id in unique_moves:
-                    self.move_video_entry(video_id, dst_id)
+        self._move_video_entries(unique_moves)
         return len(unique_moves)
 
     def get_unique_moves(self) -> List[Tuple[int, int]]:
@@ -372,27 +372,64 @@ class AbstractDatabase(ABC):
             if len(moves) == 1
         ]
 
-    def move_video_entry(self, from_id, to_id) -> None:
-        (from_data,) = self.get_videos(
-            include=(
+    def _move_video_entries(self, moves: List[Tuple[int, int]]):
+        if not moves:
+            return
+        with self.to_save():
+            from_indices = [move[0] for move in moves]
+            to_indices = [move[1] for move in moves]
+            from_map = {
+                row["video_id"]: row
+                for row in self.get_videos(
+                    include=(
+                        "video_id",
+                        "similarity_id",
+                        "date_entry_modified",
+                        "date_entry_opened",
+                        "properties",
+                    ),
+                    where={"video_id": from_indices, "found": False},
+                )
+            }
+            assert all(from_id in from_map for from_id in from_indices)
+            assert set(to_indices) == set(
+                row["video_id"]
+                for row in self.get_videos(
+                    include=["video_id"], where={"video_id": to_indices, "found": True}
+                )
+            )
+            to_properties: Dict[str, Dict[int, list]] = {}
+            for from_id, to_id in moves:
+                from_props: Dict[str, list] = from_map[from_id]["properties"]
+                for prop_name, from_prop_values in from_props.items():
+                    to_properties.setdefault(prop_name, {})[to_id] = from_prop_values
+            # Update properties
+            for prop_name, updates in to_properties.items():
+                self.set_property_for_videos(prop_name, updates, merge=True)
+            # Update attributes
+            self._write_videos_field(
+                to_indices,
                 "similarity_id",
+                [from_map[from_id]["similarity_id"] for from_id in from_indices],
+            )
+            self._write_videos_field(
+                to_indices,
                 "date_entry_modified",
+                [
+                    from_map[from_id]["date_entry_modified"].time
+                    for from_id in from_indices
+                ],
+            )
+            self._write_videos_field(
+                to_indices,
                 "date_entry_opened",
-                "properties",
-            ),
-            where={"video_id": from_id, "found": False},
-        )
-        assert self.has_video(video_id=to_id, found=True)
-        self.set_video_properties(to_id, from_data["properties"], merge=True)
-        self.set_similarities([to_id], [from_data["similarity_id"]])
-        self._write_videos_field(
-            [to_id], "date_entry_modified", [from_data["date_entry_modified"].time]
-        )
-        self._write_videos_field(
-            [to_id], "date_entry_opened", [from_data["date_entry_opened"].time]
-        )
-
-        self.delete_video_entry(from_id)
+                [
+                    from_map[from_id]["date_entry_opened"].time
+                    for from_id in from_indices
+                ],
+            )
+            for from_id in from_indices:
+                self.delete_video_entry(from_id)
 
     def set_similarities(self, indices: Iterable[int], values: Iterable[Optional[int]]):
         self._write_videos_field(indices, "similarity_id", values)
