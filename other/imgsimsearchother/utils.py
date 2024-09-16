@@ -8,10 +8,10 @@ from other.legacy.pysaurus.database.video_similarities.backend_numpy import (
     SimilarityComparator,
 )
 from pysaurus.core.graph import Graph
+from pysaurus.core.miniature import NumpyMiniature
 from pysaurus.core.modules import ImageUtils
 from pysaurus.imgsimsearch.abstract_image_provider import AbstractImageProvider
 from pysaurus.imgsimsearch.common import SIM_LIMIT
-from pysaurus.miniature.miniature import NumpyMiniature
 
 
 class Approximation(Enum):

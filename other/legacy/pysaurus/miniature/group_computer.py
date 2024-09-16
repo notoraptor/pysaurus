@@ -5,10 +5,10 @@ from other.legacy.pysaurus.miniature.pixel_comparator import DistancePixelCompar
 from other.legacy.pysaurus.miniature.pixel_group import PixelGroup
 from pysaurus.core.classes import AbstractMatrix
 from pysaurus.core.graph import Graph
+from pysaurus.core.miniature import Miniature
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.parallelization import USABLE_CPU_COUNT, parallelize
 from pysaurus.core.profiling import Profiler
-from pysaurus.miniature.miniature import Miniature
 from saurus.language import say
 
 

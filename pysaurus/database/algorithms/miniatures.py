@@ -5,9 +5,9 @@ import ujson as json
 from pysaurus.application import exceptions
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.informer import Informer
+from pysaurus.core.miniature import Miniature
 from pysaurus.core.modules import ImageUtils
 from pysaurus.core.parallelization import parallelize
-from pysaurus.miniature.miniature import Miniature
 
 
 class Miniatures:

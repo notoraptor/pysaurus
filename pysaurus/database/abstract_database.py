@@ -19,6 +19,7 @@ import ujson as json
 from pysaurus.application import exceptions
 from pysaurus.core import functions, notifications
 from pysaurus.core.components import AbsolutePath, Date, PathType
+from pysaurus.core.miniature import Miniature
 from pysaurus.core.modules import ImageUtils
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.profiling import Profiler
@@ -28,7 +29,6 @@ from pysaurus.database.db_settings import DbSettings
 from pysaurus.database.db_utils import DatabaseSaved, DatabaseToSaveContext
 from pysaurus.database.db_way_def import DbWays
 from pysaurus.database.property_value_modifier import PropertyValueModifier
-from pysaurus.miniature.miniature import Miniature
 from pysaurus.properties.properties import (
     PropRawType,
     PropTypeValidator,

@@ -4,9 +4,9 @@ from typing import List
 import numpy as np
 
 from pysaurus.core.abstract_notifier import AbstractNotifier
+from pysaurus.core.miniature import Miniature, NumpyMiniature
 from pysaurus.core.parallelization import USABLE_CPU_COUNT, parallelize
 from pysaurus.core.profiling import Profiler
-from pysaurus.miniature.miniature import Miniature, NumpyMiniature
 from saurus.language import say
 
 SIMPLE_MAX_PIXEL_DISTANCE = 255 * 3

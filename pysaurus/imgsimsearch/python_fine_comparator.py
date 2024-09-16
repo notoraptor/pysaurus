@@ -5,8 +5,8 @@ from other.legacy.pysaurus.database.video_similarities.backend_numpy import (
 )
 from pysaurus.core.graph import Graph
 from pysaurus.core.informer import Informer
+from pysaurus.core.miniature import Miniature, NumpyMiniature
 from pysaurus.imgsimsearch.common import THUMBNAIL_DIMENSION
-from pysaurus.miniature.miniature import Miniature, NumpyMiniature
 
 
 def compare_miniatures(

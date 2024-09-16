@@ -21,8 +21,8 @@ from other.legacy.pysaurus.video_similarities import (
 from other.legacy.pysaurus.video_similarities.alignment_raptor.symbols import (
     fn_compareSimilarSequences,
 )
+from pysaurus.core.miniature import Miniature
 from pysaurus.core.profiling import Profiler
-from pysaurus.miniature.miniature import Miniature
 
 
 def miniature_to_numba(m: Miniature):

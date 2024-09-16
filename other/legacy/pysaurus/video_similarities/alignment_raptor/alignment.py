@@ -3,9 +3,9 @@ from typing import List
 
 from pysaurus.core.abstract_notifier import AbstractNotifier
 from pysaurus.core.constants import VIDEO_BATCH_SIZE
+from pysaurus.core.miniature import Miniature
 from pysaurus.core.native.clibrary import c_int_p
 from pysaurus.core.profiling import Profiler
-from pysaurus.miniature.miniature import Miniature
 from saurus.language import say
 from .symbols import (
     PtrPtrSequence,

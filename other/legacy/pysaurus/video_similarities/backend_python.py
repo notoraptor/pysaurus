@@ -1,9 +1,9 @@
 from typing import List
 
 from pysaurus.core.abstract_notifier import AbstractNotifier
+from pysaurus.core.miniature import Miniature
 from pysaurus.core.parallelization import USABLE_CPU_COUNT, parallelize
 from pysaurus.core.profiling import Profiler
-from pysaurus.miniature.miniature import Miniature
 from saurus.language import say
 
 SIMPLE_MAX_PIXEL_DISTANCE = 255 * 3

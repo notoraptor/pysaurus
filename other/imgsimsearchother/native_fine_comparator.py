@@ -9,10 +9,10 @@ from other.legacy.pysaurus.video_similarities.alignment_raptor.symbols import (
 )
 from pysaurus.core.graph import Graph
 from pysaurus.core.informer import Informer
+from pysaurus.core.miniature import Miniature
 from pysaurus.core.profiling import Profiler
 from pysaurus.imgsimsearch.abstract_image_provider import AbstractImageProvider
 from pysaurus.imgsimsearch.common import SIM_LIMIT, THUMBNAIL_DIMENSION
-from pysaurus.miniature.miniature import Miniature
 
 SIMPLE_MAX_PIXEL_DISTANCE = 255 * 3
 THUMBNAIL_SIZE = (THUMBNAIL_DIMENSION, THUMBNAIL_DIMENSION)

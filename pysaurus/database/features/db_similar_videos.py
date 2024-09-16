@@ -3,6 +3,7 @@ from typing import Any, Iterable, List, Set, Tuple
 from PIL.Image import Image
 
 from pysaurus.core.fraction import Fraction
+from pysaurus.core.miniature import Miniature
 from pysaurus.core.modules import ImageUtils
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.abstract_database import AbstractDatabase
@@ -11,7 +12,6 @@ from pysaurus.imgsimsearch.approximate_comparator_annoy import (
     ApproximateComparatorAnnoy,
 )
 from pysaurus.imgsimsearch.python_fine_comparator import compare_miniatures
-from pysaurus.miniature.miniature import Miniature
 
 SIM_LIMIT = float(Fraction(88, 100))
 
