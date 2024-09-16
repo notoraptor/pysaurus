@@ -45,8 +45,8 @@ class FletApiInterface:
             "create_prop_type", name, prop_type, definition, multiple
         )
 
-    def delete_property_value(self, name: str, values: list):
-        return self.api.__run_feature__("delete_property_value", name, values)
+    def delete_property_values(self, name: str, values: list):
+        return self.api.__run_feature__("delete_property_values", name, values)
 
     def delete_video(self, video_id: int):
         return self.api.__run_feature__("delete_video", video_id)
@@ -74,9 +74,9 @@ class FletApiInterface:
     def get_language_names(self):
         return self.api.__run_feature__("get_language_names")
 
-    def move_property_value(self, old_name: str, values: list, new_name: str):
+    def move_property_values(self, old_name: str, values: list, new_name: str):
         return self.api.__run_feature__(
-            "move_property_value", old_name, values, new_name
+            "move_property_values", old_name, values, new_name
         )
 
     def open_containing_folder(self, video_id: int):

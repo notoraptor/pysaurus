@@ -926,7 +926,7 @@ not found video entry will be deleted.
             onClose: operation => {
               switch (operation.form) {
                 case "delete":
-                  this.backend(["delete_property_value", name, values], {
+                  this.backend(["delete_property_values", name, values], {
                     groupSelection: new Set(),
                     status: tr('Property value deleted: "{name}" : "{values}"', {
                       name: name,
@@ -945,7 +945,7 @@ not found video entry will be deleted.
                   });
                   break;
                 case "move":
-                  this.backend(["move_property_value", name, values, operation.move], {
+                  this.backend(["move_property_values", name, values, operation.move], {
                     groupSelection: new Set(),
                     status: tr('Property value moved: "{values}" from "{name}" to "{destination}"', {
                       values: values.join('", "'),

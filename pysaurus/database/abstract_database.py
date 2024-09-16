@@ -462,14 +462,14 @@ class AbstractDatabase(ABC):
         (row,) = self.get_videos(include=["filename"], where={"video_id": video_id})
         return AbsolutePath.ensure(row["filename"])
 
-    def move_property_value(self, old_name: str, values: list, new_name: str) -> None:
-        modified = self.delete_property_value(old_name, values)
+    def move_property_values(self, old_name: str, values: list, new_name: str) -> None:
+        modified = self.delete_property_values(old_name, values)
         if modified:
             self.set_property_for_videos(
                 new_name, {video_id: values for video_id in modified}, merge=True
             )
 
-    def delete_property_value(self, name: str, values: list) -> List[int]:
+    def delete_property_values(self, name: str, values: list) -> List[int]:
         values = set(self.validate_prop_values(name, values))
         modified = {}
         for video_id, previous_values in self.get_all_prop_values(name).items():

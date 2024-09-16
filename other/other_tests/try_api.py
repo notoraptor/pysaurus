@@ -17,7 +17,7 @@ GuiAPI (57)
     GuiAPI.create_database -> None
     JsonDatabase.create_prop_type -> None
     GuiAPI.delete_database -> None
-    Database.delete_property_value -> None
+    Database.delete_property_values -> None
     Database.delete_video -> <class 'pysaurus.core.components.AbsolutePath'> (ignored)
     JsonDatabase.describe_prop_types -> typing.List[dict]
     Database.replace_property_values -> <class 'bool'> (ignored)
@@ -26,7 +26,7 @@ GuiAPI (57)
     FeatureAPI.get_constants -> typing.Dict[str, typing.Any]
     Application.get_database_names -> typing.List[str]
     Application.get_language_names -> typing.List[str]
-    Database.move_property_value -> None
+    Database.move_property_values -> None
     GuiAPI.move_video_file -> None
     Database.open_containing_folder -> <class 'str'>
     GuiAPI.open_database -> None

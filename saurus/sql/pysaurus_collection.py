@@ -593,7 +593,7 @@ HAVING COUNT(video_id) > 1 AND SUM(is_file) < COUNT(video_id);
             ),
         )
 
-    def delete_property_value(self, name: str, values: list) -> List[int]:
+    def delete_property_values(self, name: str, values: list) -> List[int]:
         if not values:
             return []
         (prop_desc,) = self.get_prop_types(name=name)
