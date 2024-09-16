@@ -6,19 +6,9 @@ import numpy as np
 
 from pysaurus.core.classes import AbstractMatrix
 from pysaurus.core.fraction import Fraction
-from pysaurus.core.json_type import Type
 from pysaurus.core.modules import ImageUtils
-from pysaurus.core.schematizable import Schema, WithSchema, schema_prop
 
 Bytes = Union[bytes, bytearray]
-
-
-class GroupSignature(WithSchema):
-    __slots__ = ()
-    SCHEMA = Schema((Type("r", int), Type("m", int), Type("n", int)))
-    r = schema_prop("r")  # pixel_distance_radius
-    m = schema_prop("m")  # group_min_size
-    n = schema_prop("n")  # nb_groups
 
 
 class NumpyMiniature:
@@ -35,7 +25,7 @@ class NumpyMiniature:
         self.identifier = identifier
 
     @classmethod
-    def from_image(cls, thumbnail):
+    def from_image(cls, thumbnail, identifier=None):
         width, height = thumbnail.size
         size = width * height
         red = bytearray(size)
@@ -45,23 +35,20 @@ class NumpyMiniature:
             red[i] = r
             green[i] = g
             blue[i] = b
-        return cls(red, green, blue, width, height)
+        return cls(red, green, blue, width, height, identifier)
 
 
 class Miniature(AbstractMatrix):
-    __slots__ = ("identifier", "r", "g", "b", "i", "group_signature", "video_id")
+    __slots__ = ("identifier", "r", "g", "b", "i", "video_id")
 
-    def __init__(
-        self, red, green, blue, width, height, identifier=None, group_signature=None
-    ):
-        # type: (Bytes, Bytes, Bytes, int, int, Any, GroupSignature) -> None
+    def __init__(self, red, green, blue, width, height, identifier=None):
+        # type: (Bytes, Bytes, Bytes, int, int, Any) -> None
         super().__init__(width, height)
         self.r = red
         self.g = green
         self.b = blue
         self.i = None
         self.identifier = identifier
-        self.group_signature = group_signature
         self.video_id = None
 
     size = property(lambda self: self.width * self.height)
@@ -75,20 +62,6 @@ class Miniature(AbstractMatrix):
             self.width,
             self.height,
             self.identifier,
-        )
-
-    def has_group_signature(self, pixel_distance_radius: int, group_min_size: int):
-        return (
-            self.group_signature
-            and self.group_signature.r == pixel_distance_radius
-            and self.group_signature.m == group_min_size
-        )
-
-    def set_group_signature(
-        self, pixel_distance_radius, group_min_size: int, nb_groups: int
-    ):
-        self.group_signature = GroupSignature.from_keys(
-            r=pixel_distance_radius, m=group_min_size, n=nb_groups
         )
 
     def data(self):
@@ -106,12 +79,10 @@ class Miniature(AbstractMatrix):
             "w": self.width,
             "h": self.height,
             "i": self.identifier,
-            "s": self.group_signature.to_dict() if self.group_signature else None,
         }
 
     @staticmethod
     def from_dict(dct: dict):
-        gs = dct.get("s", None)
         return Miniature(
             red=base64.b64decode(dct["r"]),
             green=base64.b64decode(dct["g"]),
@@ -119,7 +90,6 @@ class Miniature(AbstractMatrix):
             width=dct["w"],
             height=dct["h"],
             identifier=dct["i"],
-            group_signature=(GroupSignature.from_dict(gs) if gs else None),
         )
 
     @staticmethod

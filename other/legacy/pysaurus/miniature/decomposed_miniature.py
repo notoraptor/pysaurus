@@ -1,6 +1,6 @@
 from typing import Any, List
 
-from pysaurus.miniature.pixel_group import PixelGroup
+from other.legacy.pysaurus.miniature.pixel_group import PixelGroup
 
 
 class DecomposedMiniature:

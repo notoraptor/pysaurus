@@ -6,6 +6,8 @@ from typing import List, Tuple
 
 from tqdm import tqdm
 
+from other.legacy.pysaurus.miniature.group_computer import GroupComputer
+from other.legacy.pysaurus.miniature.pixel_group import PixelGroup
 from other.other_tests.try_finding_similarities import DB_NAME, W, blob_to_image
 from pysaurus.core.classes import AbstractMatrix
 from pysaurus.core.components import AbsolutePath, Date
@@ -14,8 +16,6 @@ from pysaurus.core.profiling import Profiler
 from pysaurus.database.db_settings import DbSettings
 from pysaurus.database.db_way_def import DbWays
 from pysaurus.database.jsdb.thubmnail_database import ThumbnailManager
-from pysaurus.miniature.group_computer import GroupComputer
-from pysaurus.miniature.pixel_group import PixelGroup
 from saurus.sql.pysaurus_program import PysaurusProgram
 
 

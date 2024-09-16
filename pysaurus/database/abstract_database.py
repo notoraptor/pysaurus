@@ -325,13 +325,6 @@ class AbstractDatabase(ABC):
             for m in source
         }
 
-        settings = self.get_settings()
-        Miniatures.update_group_signatures(
-            m_dict,
-            settings.miniature_pixel_distance_radius,
-            settings.miniature_group_min_size,
-        )
-
         if len(valid_miniatures) != len(prev_miniatures) or len(added_miniatures):
             with open(miniatures_path.path, "w") as output_file:
                 json.dump([m.to_dict() for m in m_dict.values()], output_file)

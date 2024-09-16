@@ -7,7 +7,6 @@ from pysaurus.core.components import AbsolutePath
 from pysaurus.core.informer import Informer
 from pysaurus.core.modules import ImageUtils
 from pysaurus.core.parallelization import parallelize
-from pysaurus.miniature.group_computer import GroupComputer
 from pysaurus.miniature.miniature import Miniature
 
 
@@ -46,24 +45,3 @@ class Miniatures:
         return Miniature.from_file_data(
             thumb_data, ImageUtils.THUMBNAIL_SIZE, file_name.path
         )
-
-    @classmethod
-    def update_group_signatures(
-        cls, miniatures: Dict[str, Miniature], pixel_distance_radius, group_min_size
-    ):
-        m_no_groups = [
-            m
-            for m in miniatures.values()
-            if not m.has_group_signature(pixel_distance_radius, group_min_size)
-        ]
-        if m_no_groups:
-            group_computer = GroupComputer(
-                group_min_size=group_min_size,
-                pixel_distance_radius=pixel_distance_radius,
-            )
-            for dm in group_computer.batch_compute_groups(
-                m_no_groups, notifier=Informer.default()
-            ):
-                miniatures[dm.miniature_identifier].set_group_signature(
-                    pixel_distance_radius, group_min_size, len(dm.pixel_groups)
-                )
