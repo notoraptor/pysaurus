@@ -24,19 +24,6 @@ class NumpyMiniature:
         self.b = np.asarray(b, dtype=np.float32).reshape((height, width))
         self.identifier = identifier
 
-    @classmethod
-    def from_image(cls, thumbnail, identifier=None):
-        width, height = thumbnail.size
-        size = width * height
-        red = bytearray(size)
-        green = bytearray(size)
-        blue = bytearray(size)
-        for i, (r, g, b) in enumerate(thumbnail.getdata()):
-            red[i] = r
-            green[i] = g
-            blue[i] = b
-        return cls(red, green, blue, width, height, identifier)
-
 
 class Miniature(AbstractMatrix):
     __slots__ = ("identifier", "r", "g", "b", "i", "video_id")

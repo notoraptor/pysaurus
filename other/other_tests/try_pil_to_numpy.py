@@ -4,6 +4,7 @@ from ctypes import pointer
 import numpy as np
 from PIL import Image
 
+from other.imgsimsearchother.utils import numpy_miniature_from_image
 from other.legacy.pysaurus.database.video_similarities.backend_numba import (
     compare_faster as compare_numba,
 )
@@ -13,15 +14,15 @@ from other.legacy.pysaurus.database.video_similarities.backend_numba_numpy impor
 from other.legacy.pysaurus.database.video_similarities.backend_numpy import (
     compare_faster,
 )
-from pysaurus.core.profiling import Profiler
-from pysaurus.miniature.miniature import Miniature, NumpyMiniature
-from pysaurus.video_similarities import (
+from other.legacy.pysaurus.video_similarities import (
     compare_faster as compare_python,
     miniature_to_c_sequence,
 )
-from pysaurus.video_similarities.alignment_raptor.symbols import (
+from other.legacy.pysaurus.video_similarities.alignment_raptor.symbols import (
     fn_compareSimilarSequences,
 )
+from pysaurus.core.profiling import Profiler
+from pysaurus.miniature.miniature import Miniature
 
 
 def miniature_to_numba(m: Miniature):
@@ -62,8 +63,8 @@ def main():
     # print(n_g, file=sys.stderr)
     # print(n_b, file=sys.stderr)
 
-    n1 = NumpyMiniature.from_image(image)
-    n2 = NumpyMiniature.from_image(image2)
+    n1 = numpy_miniature_from_image(image)
+    n2 = numpy_miniature_from_image(image2)
     m1 = Miniature.from_image(image)
     m2 = Miniature.from_image(image2)
     t1 = np.asarray([n1.r.flatten(), n1.g.flatten(), n1.b.flatten()])

@@ -1,18 +1,18 @@
 from ctypes import pointer
 from typing import Any, Dict, List, Sequence, Set
 
+from other.legacy.pysaurus.video_similarities.alignment_raptor import (
+    miniature_to_c_sequence,
+)
+from other.legacy.pysaurus.video_similarities.alignment_raptor.symbols import (
+    fn_compareSimilarSequences,
+)
 from pysaurus.core.graph import Graph
 from pysaurus.core.informer import Informer
 from pysaurus.core.profiling import Profiler
 from pysaurus.imgsimsearch.abstract_image_provider import AbstractImageProvider
 from pysaurus.imgsimsearch.common import SIM_LIMIT, THUMBNAIL_DIMENSION
 from pysaurus.miniature.miniature import Miniature
-from pysaurus.video_similarities.alignment_raptor.alignment import (
-    miniature_to_c_sequence,
-)
-from pysaurus.video_similarities.alignment_raptor.symbols import (
-    fn_compareSimilarSequences,
-)
 
 SIMPLE_MAX_PIXEL_DISTANCE = 255 * 3
 THUMBNAIL_SIZE = (THUMBNAIL_DIMENSION, THUMBNAIL_DIMENSION)

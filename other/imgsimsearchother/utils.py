@@ -19,6 +19,19 @@ class Approximation(Enum):
     NMSLIB = "nmslib"
 
 
+def numpy_miniature_from_image(thumbnail, identifier=None) -> NumpyMiniature:
+    width, height = thumbnail.size
+    size = width * height
+    red = bytearray(size)
+    green = bytearray(size)
+    blue = bytearray(size)
+    for i, (r, g, b) in enumerate(thumbnail.getdata()):
+        red[i] = r
+        green[i] = g
+        blue[i] = b
+    return NumpyMiniature(red, green, blue, width, height, identifier)
+
+
 def search_similar_images(
     imp: AbstractImageProvider, approximation: Approximation = Approximation.ANNOY
 ):
@@ -51,7 +64,7 @@ def compare_images_python(
     numpy_miniatures = {}
     with tqdm(total=nb_images, desc="Generate numpy miniatures") as pbar:
         for identifier, image in imp.items():
-            numpy_miniatures[identifier] = NumpyMiniature.from_image(
+            numpy_miniatures[identifier] = numpy_miniature_from_image(
                 image.resize(ImageUtils.THUMBNAIL_SIZE)
             )
             pbar.update(1)

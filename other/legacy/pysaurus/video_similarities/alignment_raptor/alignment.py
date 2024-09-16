@@ -1,6 +1,7 @@
 from ctypes import c_int, pointer
 from typing import List
 
+from pysaurus.core.abstract_notifier import AbstractNotifier
 from pysaurus.core.constants import VIDEO_BATCH_SIZE
 from pysaurus.core.native.clibrary import c_int_p
 from pysaurus.core.profiling import Profiler
@@ -12,7 +13,6 @@ from .symbols import (
     Sequence,
     fn_classifySimilaritiesDirected,
 )
-from ...core.abstract_notifier import AbstractNotifier
 
 
 def miniature_to_c_sequence(self, score=0.0, classification=-1):

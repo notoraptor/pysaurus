@@ -12,12 +12,12 @@ from other.legacy.pysaurus.database.video_similarities.backend_numpy import (
     shift_top_left,
     shift_top_right,
 )
-from pysaurus.core.notifying import DEFAULT_NOTIFIER
-from pysaurus.miniature.miniature import Miniature
-from pysaurus.video_similarities import (
+from other.legacy.pysaurus.video_similarities import (
     classify_similarities_directed as f_cpp,
     classify_similarities_directed as f_py,
 )
+from pysaurus.core.notifying import DEFAULT_NOTIFIER
+from pysaurus.miniature.miniature import Miniature
 
 
 def main():
