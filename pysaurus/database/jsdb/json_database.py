@@ -584,7 +584,7 @@ class JsonDatabase(AbstractDatabase):
         self._jsondb_register_removed(video)
         self._thumb_mgr.delete(video.filename)
         self.provider.delete(video_id)
-        self._notify_fields_modified(["move_id", "quality"])
+        self._notify_fields_modified(["move_id"])
 
     def get_moves(self) -> Iterable[Tuple[int, List[dict]]]:
         return self.moves_attribute.get_moves()

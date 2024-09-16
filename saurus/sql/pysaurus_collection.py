@@ -388,7 +388,7 @@ class PysaurusCollection(AbstractDatabase):
     def delete_video_entry(self, video_id: int) -> None:
         self.db.modify("DELETE FROM video WHERE video_id = ?", [video_id])
         self.provider.delete(video_id)
-        self._notify_fields_modified(["move_id", "quality"])
+        self._notify_fields_modified(["move_id"])
 
     def _write_videos_field(self, indices: Iterable[int], field: str, values: Iterable):
         self.db.modify_many(

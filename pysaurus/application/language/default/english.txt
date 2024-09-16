@@ -126,8 +126,6 @@ attr_move_id
 	moved files (potentially)
 attr_properties
 	properties
-attr_quality
-	quality
 attr_sample_rate
 	sample rate
 attr_similarity_id
