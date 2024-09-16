@@ -76,5 +76,11 @@ class Fraction:
             self.sign * self.num * other.den, self.den * other.sign * other.num
         )
 
-    def __pow__(self, power):
+    def __pow__(self, power: int):
+        if power == 0:
+            return Fraction(1)
+        if power == 1:
+            return self
+        if power < 0:
+            return Fraction(self.den**-power, self.sign * self.num**-power)
         return Fraction(self.sign * self.num**power, self.den**power)
