@@ -20,7 +20,7 @@ GuiAPI (57)
     Database.delete_property_value -> None
     Database.delete_video -> <class 'pysaurus.core.components.AbsolutePath'> (ignored)
     JsonDatabase.describe_prop_types -> typing.List[dict]
-    Database.edit_property_value -> <class 'bool'> (ignored)
+    Database.replace_property_values -> <class 'bool'> (ignored)
     Database.fill_property_with_terms -> None
     GuiAPI.find_similar_videos -> None
     FeatureAPI.get_constants -> typing.Dict[str, typing.Any]

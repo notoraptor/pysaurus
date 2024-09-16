@@ -58,9 +58,9 @@ class FletApiInterface:
             "describe_prop_types", name, with_type, multiple, with_enum, default
         )
 
-    def edit_property_value(self, name: str, old_values: list, new_value: object):
+    def replace_property_values(self, name: str, old_values: list, new_value: object):
         return self.api.__run_feature__(
-            "edit_property_value", name, old_values, new_value
+            "replace_property_values", name, old_values, new_value
         )
 
     def fill_property_with_terms(self, prop_name: str, only_empty=False):

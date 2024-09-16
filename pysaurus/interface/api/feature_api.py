@@ -50,7 +50,7 @@ class FeatureAPI:
             "delete_property_value": FromDb(self, Db.delete_property_value),
             "delete_video": FromDb(self, Db.delete_video),
             "describe_prop_types": FromDb(self, Db.get_prop_types, True),
-            "edit_property_value": FromDb(self, Db.edit_property_value),
+            "replace_property_values": FromDb(self, Db.replace_property_values),
             "fill_property_with_terms": FromDb(self, Db.fill_property_with_terms),
             "get_database_names": FromApp(self, Application.get_database_names, True),
             "get_language_names": FromApp(self, Application.get_language_names, True),

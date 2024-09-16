@@ -481,7 +481,7 @@ class AbstractDatabase(ABC):
             self.set_property_for_videos(name, modified)
         return list(modified.keys())
 
-    def edit_property_value(
+    def replace_property_values(
         self, name: str, old_values: list, new_value: object
     ) -> bool:
         modified = {}

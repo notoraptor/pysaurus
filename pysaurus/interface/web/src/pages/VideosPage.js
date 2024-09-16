@@ -1173,7 +1173,7 @@ not found video entry will be deleted.
 							});
 							break;
 						case "edit":
-							this.backend(["edit_property_value", name, values, operation.value], {
+							this.backend(["replace_property_values", name, values, operation.value], {
 								groupSelection: new Set(),
 								status: tr('Property value edited: "{name}" : "{values}" -> "{destination}"', {
 									name: name,
