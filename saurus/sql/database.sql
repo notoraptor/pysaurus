@@ -5,8 +5,6 @@ CREATE TABLE IF NOT EXISTS collection (
 	name TEXT NOT NULL,
 	version INTEGER NOT NULL DEFAULT -1,
 	date_updated DOUBLE,
-	miniature_pixel_distance_radius INTEGER NOT NULL DEFAULT 6,
-	miniature_group_min_size INTEGER NOT NULL DEFAULT 0,
 	-- Try to prevent having more than 1 row.
 	UNIQUE (collection_id),
 	CHECK (collection_id = 0)

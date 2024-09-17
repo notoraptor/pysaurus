@@ -21,7 +21,6 @@ from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
 from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.abstract_database import AbstractDatabase
-from pysaurus.database.db_settings import DbSettings
 from pysaurus.database.db_utils import DatabaseLoaded
 from pysaurus.database.jsdb.db_video_attribute import PotentialMoveAttribute
 from pysaurus.database.jsdb.jsdb_prop_type import PropType
@@ -46,7 +45,6 @@ logger = logging.getLogger(__name__)
 class JsonDatabase(AbstractDatabase):
     __slots__ = (
         "_version",
-        "settings",
         "_date",
         "_folders",
         "_videos",
@@ -71,7 +69,6 @@ class JsonDatabase(AbstractDatabase):
         )
         # Database content
         self._version = 2
-        self.settings = DbSettings()
         self._date = Date.now()
         self._folders: Set[AbsolutePath] = set()
         self._videos: Dict[AbsolutePath, Video] = {}
@@ -116,9 +113,6 @@ class JsonDatabase(AbstractDatabase):
             with Profiler("patch", self.notifier):
                 patch_database_json(json_dict, version)
             to_save = True
-
-        # Parsing settings.
-        self.settings = DbSettings(json_dict.get("settings", {}))
 
         # Parsing date.
         if "date" in json_dict:
@@ -319,16 +313,12 @@ class JsonDatabase(AbstractDatabase):
         JsonBackup(self.ways.db_json_path, self.notifier).save(
             {
                 "version": self._version,
-                "settings": self.settings.to_dict(),
                 "date": self._date.time,
                 "folders": [folder.path for folder in self._folders],
                 "prop_types": [prop.to_dict() for prop in self._prop_types.values()],
                 "videos": [video.to_dict() for video in self._videos.values()],
             }
         )
-
-    def get_settings(self) -> DbSettings:
-        return self.settings
 
     def set_date(self, date: Date):
         self._date = date

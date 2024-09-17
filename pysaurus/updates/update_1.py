@@ -7,7 +7,6 @@ from pysaurus.core.json_backup import JsonBackup
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.path_tree import PathTree
 from pysaurus.core.profiling import Profiler
-from pysaurus.database.db_settings import DbSettings
 from pysaurus.database.db_way_def import DbWays
 from pysaurus.database.jsdb.jsdb_prop_type import PropType
 from pysaurus.database.jsdb.jsdbvideo.lazy_video import LazyVideo as Video
@@ -61,7 +60,6 @@ def export_db_to_sql(db_path: AbsolutePath, notifier):
     # Format data for SQL tables
     with Profiler(f"[{db_name}] Get and format data", notifier):
         version = json_dict.get("version", -1)
-        settings = DbSettings(json_dict.get("settings", {}))
         date = json_dict.get("date")
         sources = [AbsolutePath(path) for path in json_dict.get("folders", ())]
         source_tree = PathTree(sources)
@@ -134,18 +132,9 @@ def export_db_to_sql(db_path: AbsolutePath, notifier):
             "collection_id, "
             "name, "
             "version, "
-            "date_updated, "
-            "miniature_pixel_distance_radius, "
-            "miniature_group_min_size) "
-            "VALUES(?,?,?,?,?,?)",
-            [
-                0,
-                db_name,
-                version,
-                date,
-                settings.miniature_pixel_distance_radius,
-                settings.miniature_group_min_size,
-            ],
+            "date_updated) "
+            "VALUES(?,?,?,?)",
+            [0, db_name, version, date],
         )
         new_db.modify(
             "INSERT INTO collection_source (source) VALUES(?)",

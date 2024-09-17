@@ -25,7 +25,6 @@ from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.profiling import Profiler
 from pysaurus.database.algorithms.miniatures import Miniatures
 from pysaurus.database.algorithms.videos import Videos
-from pysaurus.database.db_settings import DbSettings
 from pysaurus.database.db_utils import DatabaseSaved, DatabaseToSaveContext
 from pysaurus.database.db_way_def import DbWays
 from pysaurus.database.property_value_modifier import PropertyValueModifier
@@ -67,10 +66,6 @@ class AbstractDatabase(ABC):
 
     @abstractmethod
     def set_date(self, date: Date):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def get_settings(self) -> DbSettings:
         raise NotImplementedError()
 
     @abstractmethod

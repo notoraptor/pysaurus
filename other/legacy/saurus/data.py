@@ -21,8 +21,6 @@ class Property:
 class Collection:
     name: str
     date_updated: float
-    miniature_pixel_dst_radius: int = 6
-    miniature_group_min_size: int = 0
     sources: Sequence[str] = field(default_factory=list)
     properties: Dict[str, Property] = field(default_factory=dict)
     videos: Dict[str, VideoEntry] = field(default_factory=dict)

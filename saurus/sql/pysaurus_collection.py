@@ -8,7 +8,6 @@ from pysaurus.core.functions import string_to_pieces
 from pysaurus.core.notifying import DEFAULT_NOTIFIER
 from pysaurus.core.path_tree import PathTree
 from pysaurus.database.abstract_database import AbstractDatabase
-from pysaurus.database.db_settings import DbSettings
 from pysaurus.properties.properties import PropRawType, PropTypeValidator, PropUnitType
 from pysaurus.video.lazy_video_runtime_info import (
     LazyVideoRuntimeInfo as VideoRuntimeInfo,
@@ -44,16 +43,6 @@ class PysaurusCollection(AbstractDatabase):
 
     def set_date(self, date: Date):
         self.db.modify("UPDATE collection SET date_updated = ?", [date.time])
-
-    def get_settings(self) -> DbSettings:
-        row = self.db.query_one(
-            "SELECT miniature_pixel_distance_radius, miniature_group_min_size "
-            "FROM collection"
-        )
-        return DbSettings.from_keys(
-            miniature_pixel_distance_radius=row["miniature_pixel_distance_radius"],
-            miniature_group_min_size=row["miniature_group_min_size"],
-        )
 
     def get_folders(self) -> Iterable[AbsolutePath]:
         return [
