@@ -132,6 +132,10 @@ class AbstractDatabase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
+    def delete_video_entry(self, video_id: int) -> None:
+        raise NotImplementedError()
+
+    @abstractmethod
     def change_video_entry_filename(
         self, video_id: int, path: AbsolutePath
     ) -> AbsolutePath:
@@ -139,10 +143,6 @@ class AbstractDatabase(ABC):
 
         Return the previous path related to video.
         """
-        raise NotImplementedError()
-
-    @abstractmethod
-    def delete_video_entry(self, video_id: int) -> None:
         raise NotImplementedError()
 
     @abstractmethod
