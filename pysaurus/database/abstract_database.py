@@ -119,6 +119,19 @@ class AbstractDatabase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
+    def get_moves(self) -> Iterable[Tuple[int, List[dict]]]:
+        """
+        Return an iterable of potential moves.
+        Each potential move is represented by a couple:
+        - The video ID of the (not found) vido which may have been moved.
+        - A list of dictionaries, each describing
+          a potential destination (found) video. Required fields:
+          - "video_id" : video ID of destination video.
+          - "filename": standard path of destination video.
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
     def change_video_entry_filename(
         self, video_id: int, path: AbsolutePath
     ) -> AbsolutePath:
@@ -142,19 +155,6 @@ class AbstractDatabase(ABC):
         video_entries: List[VideoEntry],
         runtime_info: Dict[AbsolutePath, VideoRuntimeInfo],
     ) -> None:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def get_moves(self) -> Iterable[Tuple[int, List[dict]]]:
-        """
-        Return an iterable of potential moves.
-        Each potential move is represented by a couple:
-        - The video ID of the (not found) vido which may have been moved.
-        - A list of dictionaries, each describing
-          a potential destination (found) video. Required fields:
-          - "video_id" : video ID of destination video.
-          - "filename": standard path of destination video.
-        """
         raise NotImplementedError()
 
     @abstractmethod
