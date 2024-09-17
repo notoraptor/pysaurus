@@ -7,7 +7,6 @@ from pysaurus.core.compare import to_comparable
 from pysaurus.core.components import AbsolutePath, Date, Duration, FileSize
 from pysaurus.core.constants import UNDEFINED
 from pysaurus.core.functions import class_get_public_attributes, string_to_pieces
-from pysaurus.core.modules import FNV64
 from pysaurus.core.schematizable import WithSchema
 from pysaurus.core.semantic_text import SemanticText
 from pysaurus.video.video_schema import VIDEO_SCHEMA
@@ -101,17 +100,6 @@ class LazyVideo(WithSchema):
     @runtime.setter
     def runtime(self, data):
         self._set("runtime", data.to_dict())
-
-    @property
-    def thumb_name(self):
-        # Set if necessary, then get
-        if not self._get("thumb_name"):
-            self._set("thumb_name", FNV64.hash(self.filename.standard_path))
-        return self._get("thumb_name")
-
-    @thumb_name.setter
-    def thumb_name(self, data):
-        self._set("thumb_name", data)
 
     @property
     def date_entry_modified(self):

@@ -333,10 +333,11 @@ class PysaurusCollection(AbstractDatabase):
         output = {}
         for row in self.db.query(
             """
-            SELECT v.video_id, v.filename || ' ' || v.meta_title || ' ' || COALESCE(pv.property_text, '')
+            SELECT v.video_id, 
+            v.filename || ' ' || v.meta_title || ' ' || COALESCE(pv.property_text, '')
             FROM video AS v
             LEFT JOIN video_property_text AS pv ON v.video_id = pv.video_id
-"""
+            """
         ):
             t_all_str = string_to_pieces(row[1])
             t_all_str_low = string_to_pieces(row[1].lower())

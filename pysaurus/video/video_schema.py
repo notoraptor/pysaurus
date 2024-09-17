@@ -10,7 +10,6 @@ VIDEO_SCHEMA = Schema(
         Type("errors", "e", list()),
         Type("video_id", ("j", int), None),
         SchemaType("runtime", ("R", LazyVideoRuntimeInfo), {}),
-        Type("thumb_name", "i", ""),
         Type("date_entry_modified", ("m", float), None),
         Type("date_entry_opened", ("o", float), None),
         Type("unreadable", "U", False),

@@ -14,7 +14,6 @@ from typing import (
 from pysaurus.application import exceptions
 from pysaurus.core import functions, notifications
 from pysaurus.core.components import AbsolutePath, Date, PathType
-from pysaurus.core.constants import JPEG_EXTENSION
 from pysaurus.core.functions import make_collection
 from pysaurus.core.json_backup import JsonBackup
 from pysaurus.core.notifying import DEFAULT_NOTIFIER, Notifier
@@ -209,11 +208,6 @@ class JsonDatabase(AbstractDatabase):
             self._indexer.save()
         self._removed.clear()
         self._modified.clear()
-
-    def _jsondb_old_get_thumbnail_path(self, video: Video):
-        return AbsolutePath.file_path(
-            self.ways.db_thumb_folder, video.thumb_name, JPEG_EXTENSION
-        )
 
     def jsondb_get_thumbnail_base64(self, filename: AbsolutePath) -> str:
         data = self._thumb_mgr.get_base64(filename)
@@ -525,7 +519,6 @@ class JsonDatabase(AbstractDatabase):
                     video_state.properties = old_video.properties
                     video_state.similarity_id = old_video.similarity_id
                     video_state.video_id = old_video.video_id
-                    video_state.thumb_name = old_video.thumb_name
                     video_state.date_entry_opened = old_video.date_entry_opened.time
             # Video modified, so automatically added to __modified.
             video_state.runtime = runtime_info[file_path]
@@ -565,8 +558,6 @@ class JsonDatabase(AbstractDatabase):
     def delete_video_entry(self, video_id: int) -> None:
         video = self._id_to_video.pop(video_id)
         self._videos.pop(video.filename, None)
-        if video.readable:
-            self._jsondb_old_get_thumbnail_path(video).delete()
         self._jsondb_register_removed(video)
         self._thumb_mgr.delete(video.filename)
         self.provider.delete(video_id)

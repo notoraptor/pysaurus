@@ -37,7 +37,6 @@ class Val:
             "quality_compression",
             "raw_microseconds",
             "subtitle_languages",
-            "thumb_name",
             "video_id",
         ]
         + list(SAME_ORDER_FIELD),
