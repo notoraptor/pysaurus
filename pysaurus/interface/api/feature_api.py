@@ -134,7 +134,9 @@ class FeatureAPI:
         from_property = self.database.provider.get_grouping().field
         self.database.provider.set_classifier_path([])
         self.database.provider.set_group(0)
-        self.database.move_concatenated_prop_val(path, from_property, to_property)
+        self.database.move_property_values(
+            path, from_property, to_property, concatenate=True
+        )
 
     def playlist(self) -> str:
         db = self.database

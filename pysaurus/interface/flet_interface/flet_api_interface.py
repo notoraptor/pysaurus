@@ -74,9 +74,9 @@ class FletApiInterface:
     def get_language_names(self):
         return self.api.__run_feature__("get_language_names")
 
-    def move_property_values(self, old_name: str, values: list, new_name: str):
+    def move_property_values(self, values: list, old_name: str, new_name: str):
         return self.api.__run_feature__(
-            "move_property_values", old_name, values, new_name
+            "move_property_values", values, old_name, new_name
         )
 
     def open_containing_folder(self, video_id: int):

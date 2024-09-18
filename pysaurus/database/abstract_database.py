@@ -487,38 +487,33 @@ class AbstractDatabase(ABC):
             },
         )
 
-    def move_property_values(self, old_name: str, values: list, new_name: str) -> None:
-        modified = self.delete_property_values(old_name, values)
-        if modified:
-            self.set_property_for_videos(
-                new_name, {video_id: values for video_id in modified}, merge=True
-            )
-
-    def move_concatenated_prop_val(
-        self, path: list, from_property: str, to_property: str
+    def move_property_values(
+        self, values: list, from_name: str, to_name: str, *, concatenate=False
     ) -> int:
-        assert self.get_prop_types(name=from_property, multiple=True)
-        assert self.get_prop_types(name=to_property, with_type=str)
-        self.validate_prop_values(from_property, path)
-        (concat_path,) = self.validate_prop_values(
-            to_property, [" ".join(str(value) for value in path)]
-        )
-        path_set = set(path)
-        from_old = self.get_all_prop_values(from_property)
+        assert self.get_prop_types(name=from_name, multiple=True)
+        assert self.get_prop_types(name=to_name, with_type=str)
+        self.validate_prop_values(from_name, values)
+        if concatenate:
+            (concat_path,) = self.validate_prop_values(
+                to_name, [" ".join(str(value) for value in values)]
+            )
+            to_extended = [concat_path]
+        else:
+            to_extended = values
+        path_set = set(values)
         from_new = {}
-        for video_id, old_values in from_old.items():
+        for video_id, old_values in self.get_all_prop_values(from_name).items():
             new_values = [v for v in old_values if v not in path_set]
-            if len(old_values) == len(new_values) + len(path_set):
+            if len(old_values) > len(new_values) and (
+                not concatenate or len(old_values) == len(new_values) + len(path_set)
+            ):
                 from_new[video_id] = new_values
         if from_new:
-            to_extended = [concat_path]
-            self._set_property_for_videos(from_property, from_new)
+            self._set_property_for_videos(from_name, from_new)
             self._set_property_for_videos(
-                to_property,
-                {video_id: to_extended for video_id in from_new},
-                merge=True,
+                to_name, {video_id: to_extended for video_id in from_new}, merge=True
             )
-            self._notify_properties_modified([from_property, to_property])
+            self._notify_properties_modified([from_name, to_name])
         return len(from_new)
 
     def delete_property_values(self, name: str, values: list) -> List[int]:
@@ -554,12 +549,12 @@ class AbstractDatabase(ABC):
         old = self.get_all_prop_values(prop_name)
         terms = self.get_all_video_terms()
         modified = {
-            video_id: old.get(video_id, []) + video_terms
+            video_id: video_terms
             for video_id, video_terms in terms.items()
             if not only_empty or not old.get(video_id)
         }
         if modified:
-            self.set_property_for_videos(prop_name, modified)
+            self.set_property_for_videos(prop_name, modified, merge=True)
 
     def apply_on_prop_value(self, prop_name: str, mod_name: str) -> None:
         assert "a" <= mod_name[0] <= "z"

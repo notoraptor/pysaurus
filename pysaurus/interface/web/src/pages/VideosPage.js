@@ -1183,7 +1183,7 @@ not found video entry will be deleted.
 							});
 							break;
 						case "move":
-							this.backend(["move_property_values", name, values, operation.move], {
+							this.backend(["move_property_values", values, name, operation.move], {
 								groupSelection: new Set(),
 								status: tr('Property value moved: "{values}" from "{name}" to "{destination}"', {
 									values: values.join('", "'),
