@@ -592,10 +592,6 @@ class AbstractDatabase(ABC):
             values = [prop_type.validate(value) for value in values]
         return values
 
-    def default_prop_unit(self, name):
-        (pt,) = self.get_prop_types(name=name)
-        return None if pt["multiple"] else pt["defaultValues"][0]
-
     def to_save(self):
         """Return a save context.
 

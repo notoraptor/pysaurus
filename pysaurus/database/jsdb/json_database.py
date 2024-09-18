@@ -599,3 +599,7 @@ class JsonDatabase(AbstractDatabase):
             )
         ]
         self._notify_properties_modified(modified)
+
+    def default_prop_unit(self, name):
+        (pt,) = self.get_prop_types(name=name)
+        return None if pt["multiple"] else pt["defaultValues"][0]
