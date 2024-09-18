@@ -57,13 +57,6 @@ class AbstractDatabase(ABC):
         self.in_save_context = False
         self.provider = provider
 
-    # abstract methods
-    # database management
-    # others
-    # prop types
-    # prop values
-    # videos
-
     @abstractmethod
     def set_date(self, date: Date):
         raise NotImplementedError()
