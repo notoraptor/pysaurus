@@ -450,40 +450,13 @@ class AbstractDatabase(ABC):
         (row,) = self.get_videos(include=["filename"], where={"video_id": video_id})
         return AbsolutePath.ensure(row["filename"])
 
-    def move_property_values(self, old_name: str, values: list, new_name: str) -> None:
-        modified = self.delete_property_values(old_name, values)
-        if modified:
-            self.set_property_for_videos(
-                new_name, {video_id: values for video_id in modified}, merge=True
-            )
-
-    def delete_property_values(self, name: str, values: list) -> List[int]:
-        values = set(self.validate_prop_values(name, values))
-        modified = {}
-        for video_id, previous_values in self.get_all_prop_values(name).items():
-            previous_values = set(previous_values)
-            new_values = previous_values - values
-            if len(previous_values) > len(new_values):
-                modified[video_id] = new_values
-        if modified:
-            self.set_property_for_videos(name, modified)
-        return list(modified.keys())
-
-    def replace_property_values(
-        self, name: str, old_values: list, new_value: object
-    ) -> bool:
-        modified = {}
-        old_values = set(self.validate_prop_values(name, old_values))
-        (new_value,) = self.validate_prop_values(name, [new_value])
-        for video_id, previous_values in self.get_all_prop_values(name).items():
-            previous_values = set(previous_values)
-            next_values = previous_values - old_values
-            if len(previous_values) > len(next_values):
-                next_values.add(new_value)
-                modified[video_id] = next_values
-        if modified:
-            self.set_property_for_videos(name, modified)
-        return bool(modified)
+    def count_property_for_videos(
+        self, video_indices: List[int], name: str
+    ) -> List[List]:
+        count = Counter()
+        for values in self.get_all_prop_values(name, indices=video_indices).values():
+            count.update(values)
+        return sorted(list(item) for item in count.items())
 
     def update_property_for_videos(
         self,
@@ -514,35 +487,12 @@ class AbstractDatabase(ABC):
             },
         )
 
-    def count_property_values(self, video_indices: List[int], name: str) -> List[List]:
-        count = Counter()
-        for values in self.get_all_prop_values(name, indices=video_indices).values():
-            count.update(values)
-        return sorted(list(item) for item in count.items())
-
-    def fill_property_with_terms(self, prop_name: str, only_empty=False) -> None:
-        assert self.get_prop_types(name=prop_name, with_type=str, multiple=True)
-        old = self.get_all_prop_values(prop_name)
-        terms = self.get_all_video_terms()
-        modified = {
-            video_id: old.get(video_id, []) + video_terms
-            for video_id, video_terms in terms.items()
-            if not only_empty or not old.get(video_id)
-        }
+    def move_property_values(self, old_name: str, values: list, new_name: str) -> None:
+        modified = self.delete_property_values(old_name, values)
         if modified:
-            self.set_property_for_videos(prop_name, modified)
-
-    def apply_on_prop_value(self, prop_name: str, mod_name: str) -> None:
-        assert "a" <= mod_name[0] <= "z"
-        function = getattr(PropertyValueModifier(), mod_name)
-        assert self.get_prop_types(name=prop_name, with_type=str)
-        modified = {}
-        for video_id, values in self.get_all_prop_values(prop_name).items():
-            new_values = [function(value) for value in values]
-            if values and new_values != values:
-                modified[video_id] = new_values
-        if modified:
-            self.set_property_for_videos(prop_name, modified)
+            self.set_property_for_videos(
+                new_name, {video_id: values for video_id in modified}, merge=True
+            )
 
     def move_concatenated_prop_val(
         self, path: list, from_property: str, to_property: str
@@ -570,6 +520,58 @@ class AbstractDatabase(ABC):
             )
             self._notify_properties_modified([from_property, to_property])
         return len(from_new)
+
+    def delete_property_values(self, name: str, values: list) -> List[int]:
+        values = set(self.validate_prop_values(name, values))
+        modified = {}
+        for video_id, previous_values in self.get_all_prop_values(name).items():
+            previous_values = set(previous_values)
+            new_values = previous_values - values
+            if len(previous_values) > len(new_values):
+                modified[video_id] = new_values
+        if modified:
+            self.set_property_for_videos(name, modified)
+        return list(modified.keys())
+
+    def replace_property_values(
+        self, name: str, old_values: list, new_value: object
+    ) -> bool:
+        modified = {}
+        old_values = set(self.validate_prop_values(name, old_values))
+        (new_value,) = self.validate_prop_values(name, [new_value])
+        for video_id, previous_values in self.get_all_prop_values(name).items():
+            previous_values = set(previous_values)
+            next_values = previous_values - old_values
+            if len(previous_values) > len(next_values):
+                next_values.add(new_value)
+                modified[video_id] = next_values
+        if modified:
+            self.set_property_for_videos(name, modified)
+        return bool(modified)
+
+    def fill_property_with_terms(self, prop_name: str, only_empty=False) -> None:
+        assert self.get_prop_types(name=prop_name, with_type=str, multiple=True)
+        old = self.get_all_prop_values(prop_name)
+        terms = self.get_all_video_terms()
+        modified = {
+            video_id: old.get(video_id, []) + video_terms
+            for video_id, video_terms in terms.items()
+            if not only_empty or not old.get(video_id)
+        }
+        if modified:
+            self.set_property_for_videos(prop_name, modified)
+
+    def apply_on_prop_value(self, prop_name: str, mod_name: str) -> None:
+        assert "a" <= mod_name[0] <= "z"
+        function = getattr(PropertyValueModifier(), mod_name)
+        assert self.get_prop_types(name=prop_name, with_type=str)
+        modified = {}
+        for video_id, values in self.get_all_prop_values(prop_name).items():
+            new_values = [function(value) for value in values]
+            if values and new_values != values:
+                modified[video_id] = new_values
+        if modified:
+            self.set_property_for_videos(prop_name, modified)
 
     def set_property_for_videos(
         self, name: str, updates: Dict[int, Collection[PropUnitType]], merge=False
