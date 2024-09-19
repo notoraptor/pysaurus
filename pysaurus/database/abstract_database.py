@@ -35,9 +35,9 @@ from pysaurus.properties.properties import (
     PropValueType,
 )
 from pysaurus.video import VideoRuntimeInfo
+from pysaurus.video.video_entry import VideoEntry
 from pysaurus.video_provider.abstract_video_provider import AbstractVideoProvider
 from saurus.language import say
-from saurus.sql.video_entry import VideoEntry
 
 logger = logging.getLogger(__name__)
 

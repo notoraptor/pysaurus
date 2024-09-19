@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Dict, Sequence
 
-from saurus.sql.video_entry import VideoEntry
+from pysaurus.video.video_entry import VideoEntry
 
 
 @dataclass

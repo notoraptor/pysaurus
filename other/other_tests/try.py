@@ -172,15 +172,5 @@ def main2():
         print("\tbit_rate", video.bit_rate, "/ s")
 
 
-def main3():
-    path = r"N:\donnees\autres\p\Yuahentai - her recipe is for a creampie.mp4"
-    import pprint
-    from pysaurus.video_raptor.video_raptor_pyav import PythonVideoRaptor
-
-    vr = PythonVideoRaptor()
-    info = vr._get_info(path)
-    pprint.pprint(info)
-
-
 if __name__ == "__main__":
     main2()

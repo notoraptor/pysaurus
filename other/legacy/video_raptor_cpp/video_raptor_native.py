@@ -1,13 +1,13 @@
 import os
 import subprocess
 
+from other.legacy.video_raptor_cpp.abstract_video_raptor import AbstractVideoRaptor
 from other.legacy.video_raptor_cpp.bin.symbols import RUN_VIDEO_RAPTOR_BATCH
 from pysaurus.application import exceptions
 from pysaurus.core.abstract_notifier import AbstractNotifier
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.custom_json_parser import parse_json
 from pysaurus.core.parallelization import Job
-from pysaurus.video_raptor.abstract_video_raptor import AbstractVideoRaptor
 
 
 class VideoRaptor(AbstractVideoRaptor):

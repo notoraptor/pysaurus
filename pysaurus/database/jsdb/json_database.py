@@ -35,8 +35,8 @@ from pysaurus.database.jsdb.thubmnail_database.thumbnail_manager import Thumbnai
 from pysaurus.properties.properties import PropRawType, PropTypeValidator, PropUnitType
 from pysaurus.video import VideoRuntimeInfo
 from pysaurus.video.video_constants import VIDEO_FLAGS
+from pysaurus.video.video_entry import VideoEntry
 from pysaurus.video.video_sorting import VideoSorting
-from saurus.sql.video_entry import VideoEntry
 
 logger = logging.getLogger(__name__)
 
