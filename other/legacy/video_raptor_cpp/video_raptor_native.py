@@ -1,8 +1,8 @@
 import os
 import subprocess
 
+from other.legacy.video_raptor_cpp.bin.symbols import RUN_VIDEO_RAPTOR_BATCH
 from pysaurus.application import exceptions
-from pysaurus.bin.symbols import RUN_VIDEO_RAPTOR_BATCH
 from pysaurus.core.abstract_notifier import AbstractNotifier
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.custom_json_parser import parse_json

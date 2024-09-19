@@ -1,6 +1,6 @@
 from ctypes import POINTER, Structure, c_double, c_int
 
-from pysaurus.bin.symbols import ALIGNMENT_RAPTOR
+from other.legacy.video_raptor_cpp.bin.symbols import ALIGNMENT_RAPTOR
 from pysaurus.core.native.clibrary import CLibrary, c_bool_p, c_double_p, c_int_p
 
 
