@@ -4,8 +4,8 @@ import flet as ft
 
 from pysaurus.core.functions import expand_if
 from pysaurus.interface.flet_interface.flet_custom_widgets import CUSTOM_FONT_MONOSPACE
-from pysaurus.interface.flet_interface.page.videos_page_utils import VideoStateWrapper
 from pysaurus.properties.properties import PropTypeDesc
+from pysaurus.video.javascript_video import JavascriptVideo
 
 _BACKGROUND_COLORS_ = [
     # not found, then even index, odd index
@@ -18,7 +18,7 @@ _BACKGROUND_COLORS_ = [
 class VideoView(ft.Container):
     def __init__(
         self,
-        video: VideoStateWrapper,
+        video: JavascriptVideo,
         prop_types: List[PropTypeDesc],
         index=None,
         common_fields: Dict[str, bool] = None,

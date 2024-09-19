@@ -1,5 +1,5 @@
 import base64
-from typing import Iterable
+from typing import Iterable, Optional
 
 from pysaurus.core.classes import StringedTuple
 from pysaurus.core.components import AbsolutePath, Date, Duration, FileSize
@@ -71,19 +71,19 @@ class SQLVideoWrapper:
     def __init__(
         self,
         data: dict,
-        audio_languages=[],
-        subtitle_languages=[],
-        errors=[],
-        json_properties={},
-        moves=[],
+        audio_languages=(),
+        subtitle_languages=(),
+        errors=(),
+        json_properties: Optional[dict] = None,
+        moves=(),
     ):
         # Data must contains key "with_thumbnails"
         self.data = data
-        self.audio_languages = audio_languages
-        self.subtitle_languages = subtitle_languages
-        self.errors = errors
-        self.properties = json_properties
-        self.moves = moves  # list of dicts {video_id => int, filename => str}
+        self.audio_languages = audio_languages or []
+        self.subtitle_languages = subtitle_languages or []
+        self.errors = errors or []
+        self.properties = json_properties or {}
+        self.moves = moves or []  # list of dicts {video_id => int, filename => str}
 
     @property
     def filename(self) -> AbsolutePath:

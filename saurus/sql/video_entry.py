@@ -7,7 +7,7 @@ from pysaurus.video import VideoRuntimeInfo
 @dataclass(slots=True)
 class VideoEntry:
     # table columns: constant data
-    filename: str
+    filename: str  # vs AbsolutePath
     video_id: int = None
     file_size: int = 0
     unreadable: bool = False
@@ -19,9 +19,9 @@ class VideoEntry:
     channels: int = 0
     container_format: str = ""
     device_name: str = ""
-    duration: float = 0.0
-    duration_time_base: int = 0
-    frame_rate_den: int = 0
+    duration: float = 0.0  # apply abs()
+    duration_time_base: int = 0  # or 1
+    frame_rate_den: int = 0  # or 1
     frame_rate_num: int = 0
     height: int = 0
     meta_title: str = ""
@@ -39,10 +39,12 @@ class VideoEntry:
     audio_languages: Sequence[str] = field(default_factory=list)
     subtitle_languages: Sequence[str] = field(default_factory=list)
     # collection data
-    date_entry_modified: float = None
-    date_entry_opened: float = None
+    date_entry_modified: float = None  # as Date(this or mtime if None)
+    date_entry_opened: float = None  # as Date(this or mtime if None)
     similarity_id: int = None
-    properties: Dict[str, Sequence[str]] = field(default_factory=dict)
+
+    # Missing: `properties`: Dict[str, List[PropUnitType]]
+    # Missing: `moves`: list of dicts {video_id => int, filename => str}
 
     def to_formatted_dict(self):
         output = asdict(self)
@@ -58,7 +60,6 @@ class VideoEntry:
         del output["errors"]
         del output["audio_languages"]
         del output["subtitle_languages"]
-        del output["properties"]
         del output["date_entry_opened"]
         del output["similarity_id"]
         if not for_update:
