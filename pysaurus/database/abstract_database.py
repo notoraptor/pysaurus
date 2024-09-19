@@ -194,7 +194,7 @@ class AbstractDatabase(ABC):
             all_files = Videos.get_runtime_info_from_paths(self.get_folders())
             self._update_videos_not_found(all_files)
             files_to_update = self._find_video_paths_for_update(all_files)
-            needing_thumbs = list(self._get_collectable_missing_thumbnails())
+            needing_thumbs = self._get_collectable_missing_thumbnails()
             new: List[VideoEntry] = []
             expected_thumbs: Dict[str, str] = {}
             thumb_errors: Dict[str, List[str]] = {}
@@ -208,7 +208,7 @@ class AbstractDatabase(ABC):
                 for result in results:
                     if result.info and result.thumbnail:
                         new.append(result.info)
-                        expected_thumbs[result.filename] = result.thumbnail
+                        expected_thumbs[result.filename.path] = result.thumbnail
                     elif result.info:
                         info = result.info
                         info.errors = sorted(
@@ -216,11 +216,11 @@ class AbstractDatabase(ABC):
                         )
                         new.append(info)
                     elif result.thumbnail:
-                        expected_thumbs[result.filename] = result.thumbnail
+                        expected_thumbs[result.filename.path] = result.thumbnail
                     else:
                         new.append(
                             VideoEntry(
-                                filename=result.filename,
+                                filename=result.filename.path,
                                 errors=sorted(
                                     set(result.error_info) | set(result.error_thumbnail)
                                 ),
@@ -228,7 +228,7 @@ class AbstractDatabase(ABC):
                             )
                         )
                     if result.error_thumbnail:
-                        thumb_errors[result.filename] = result.error_thumbnail
+                        thumb_errors[result.filename.path] = result.error_thumbnail
 
                 self.set_date(current_date)
                 if new:
@@ -240,8 +240,12 @@ class AbstractDatabase(ABC):
                 logger.info(f"Thumbnails generated, deleting temp dir {tmp_dir}")
                 # Delete thumbnail files (done at context exit)
 
-            if thumb_errors:
-                self.notifier.notify(notifications.VideoThumbnailErrors(thumb_errors))
+        if thumb_errors:
+            self.notifier.notify(notifications.VideoThumbnailErrors(thumb_errors))
+        else:
+            missing_thumbs = list(self._get_collectable_missing_thumbnails())
+            if missing_thumbs:
+                self.notifier.notify(notifications.MissingThumbnails(missing_thumbs))
 
     def _update_videos_not_found(self, existing_paths: Container[AbsolutePath]):
         """Use given container of existing paths to mark not found videos."""
@@ -252,9 +256,9 @@ class AbstractDatabase(ABC):
 
     def _find_video_paths_for_update(
         self, file_paths: Dict[AbsolutePath, VideoRuntimeInfo]
-    ) -> List[str]:
+    ) -> List[AbsolutePath]:
         return sorted(
-            file_name.standard_path
+            file_name
             for file_name, file_info in file_paths.items()
             if not self.get_videos(
                 include=(),
@@ -267,14 +271,14 @@ class AbstractDatabase(ABC):
             )
         )
 
-    def _get_collectable_missing_thumbnails(self) -> Dict[str, int]:
-        return {
-            video["filename"].path: video["video_id"]
+    def _get_collectable_missing_thumbnails(self) -> List[AbsolutePath]:
+        return sorted(
+            video["filename"]
             for video in self.get_videos(
-                include=["filename", "video_id"],
+                include=["filename"],
                 where={"readable": True, "found": True, "without_thumbnails": True},
             )
-        }
+        )
 
     @Profiler.profile_method()
     def ensure_miniatures(self) -> List[Miniature]:

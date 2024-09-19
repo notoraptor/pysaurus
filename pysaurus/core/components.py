@@ -17,8 +17,7 @@ class AbsolutePath:
     WINDOWS_PATH_PREFIX = "\\\\?\\"
     __slots__ = ("__path", "__len_prefix")
 
-    def __init__(self, path):
-        # type: (str) -> None
+    def __init__(self, path: str):
         path = os.path.abspath(path)
         len_prefix = 0
         if path.startswith(self.WINDOWS_PATH_PREFIX):

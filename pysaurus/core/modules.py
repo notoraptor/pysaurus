@@ -274,6 +274,12 @@ class ImageUtils:
 
 
 class FNV64:
+    """
+    https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
+    """
+
+    __slots__ = ("_count",)
+
     FNV_64_PRIME = 0x00000100000001B3
     FNV_64_OFFSET_BASIS = 0xCBF29CE484222325
 
@@ -282,15 +288,21 @@ class FNV64:
         h = FNV64.FNV_64_OFFSET_BASIS
         for byte in data:
             h *= FNV64.FNV_64_PRIME
-            h &= 0xFFFFFFFFFFFFFFFF
+            h &= 0xFFFFFFFFFFFFFFFF  # this keeps only 64 latest bits
             h ^= byte
         return h
 
     @staticmethod
-    def hash(string):
-        # type: (str) -> str
+    def hash(string: str) -> str:
         h = FNV64._bytes_to_uint64(string.encode())
         return hex(h)[2:]
+
+    def __init__(self):
+        self._count = 0
+
+    def __call__(self, string: str) -> str:
+        self._count += 1
+        return f"{self.hash(string)}.{self._count}"
 
 
 class _FileSystemPath:

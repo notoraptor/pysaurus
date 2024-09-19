@@ -32,7 +32,7 @@ class NbMiniatures(Notification):
 class MissingThumbnails(Notification):
     __slots__ = ("names",)
 
-    def __init__(self, file_names: List[str]):
+    def __init__(self, file_names: List):
         super().__init__()
         self.names = sorted(str(file_name) for file_name in file_names)
 

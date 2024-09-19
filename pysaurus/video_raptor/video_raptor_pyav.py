@@ -4,6 +4,7 @@ from typing import List, Optional
 
 import av
 
+from pysaurus.core.components import AbsolutePath
 from pysaurus.video.video_entry import VideoEntry
 
 logger = logging.getLogger(__name__)
@@ -23,7 +24,10 @@ class VideoTask:
     __slots__ = ("filename", "need_info", "thumb_path")
 
     def __init__(
-        self, filename: str, need_info: bool = False, thumb_path: Optional[str] = None
+        self,
+        filename: AbsolutePath,
+        need_info: bool = False,
+        thumb_path: Optional[str] = None,
     ):
         assert need_info or thumb_path
         self.filename = filename
@@ -33,14 +37,14 @@ class VideoTask:
 
 @dataclass(slots=True)
 class VideoTaskResult:
-    filename: str
+    filename: AbsolutePath
     info: Optional[VideoEntry] = None
     thumbnail: Optional[str] = None
     error_info: List[str] = dataclass_field(default_factory=list)
     error_thumbnail: List[str] = dataclass_field(default_factory=list)
 
 
-def open_video(filename):
+def open_video(filename: str):
     try:
         return av.open(filename)
     except UnicodeDecodeError:
@@ -56,13 +60,13 @@ class PythonVideoRaptor:
         filename = task.filename
         ret = VideoTaskResult(filename=filename)
         try:
-            container = open_video(filename)
+            container = open_video(filename.path)
         except Exception as exc:
             ret.error_info = cls._exc_to_err(exc)
         else:
             if task.need_info:
                 try:
-                    ret.info = cls._get_info_from_container(container, filename)
+                    ret.info = cls._get_info_from_container(container, filename.path)
                 except Exception as exc:
                     ret.error_info = cls._exc_to_err(exc)
             if task.thumb_path and not ret.error_info:

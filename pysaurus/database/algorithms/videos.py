@@ -3,6 +3,7 @@ from typing import Dict, Iterable, List
 from pysaurus.core import notifications
 from pysaurus.core.components import AbsolutePath
 from pysaurus.core.informer import Informer
+from pysaurus.core.modules import FNV64
 from pysaurus.core.parallelization import parallelize
 from pysaurus.core.profiling import Profiler
 from pysaurus.video import VideoRuntimeInfo
@@ -45,26 +46,31 @@ class Videos:
 
     @classmethod
     def hunt(
-        cls, filenames: List[str], need_thumbs: List[str], working_directory: str
+        cls,
+        filenames: List[AbsolutePath],
+        need_thumbs: List[AbsolutePath],
+        working_directory: str,
     ) -> List[VideoTaskResult]:
+        hasher = FNV64()
         tasks = []
         filenames_without_thumbs = set(need_thumbs)
-        for i, filename in enumerate(filenames):
+        for filename in filenames:
             tasks.append(
                 VideoTask(
                     filename,
                     need_info=True,
-                    thumb_path=AbsolutePath.file_path(working_directory, i, "jpg").path,
+                    thumb_path=AbsolutePath.file_path(
+                        working_directory, hasher(filename.path), "jpg"
+                    ).path,
                 )
             )
             filenames_without_thumbs.discard(filename)
-        nb_filenames = len(filenames)
-        for j, filename_no_thumb in enumerate(filenames_without_thumbs):
+        for filename_no_thumb in filenames_without_thumbs:
             tasks.append(
                 VideoTask(
                     filename_no_thumb,
                     thumb_path=AbsolutePath.file_path(
-                        working_directory, nb_filenames + j, "jpg"
+                        working_directory, hasher(filename_no_thumb.path), "jpg"
                     ).path,
                 )
             )
@@ -74,7 +80,7 @@ class Videos:
 
         notifier = Informer.default()
         raptor = PythonVideoRaptor()
-        with Profiler(say("Collect videos info (II)"), notifier=notifier):
+        with Profiler(say("Collect videos info"), notifier=notifier):
             results: List[VideoTaskResult] = list(
                 parallelize(
                     raptor.capture,
@@ -84,5 +90,5 @@ class Videos:
                     kind="video(s)",
                 )
             )
-        assert len(results) == nb_filenames + len(filenames_without_thumbs)
+        assert len(results) == len(filenames) + len(filenames_without_thumbs)
         return results
