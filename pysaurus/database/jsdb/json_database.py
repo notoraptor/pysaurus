@@ -159,7 +159,7 @@ class JsonDatabase(AbstractDatabase):
 
     @Profiler.profile_method()
     def _jsondb_ensure_identifiers(self):
-        id_to_video = {}  # type: Dict[int, Video]
+        id_to_video: Dict[int, Video] = {}
         without_identifiers = []
         for video_state in self._videos.values():
             if (
@@ -516,7 +516,6 @@ class JsonDatabase(AbstractDatabase):
                     video_state.similarity_id = old_video.similarity_id
                     video_state.video_id = old_video.video_id
                     video_state.date_entry_opened = old_video.date_entry_opened.time
-            # Video modified, so automatically added to __modified.
             video_state.runtime = runtime_info[file_path]
             videos.append(video_state)
         self._videos.update({video.filename: video for video in videos})

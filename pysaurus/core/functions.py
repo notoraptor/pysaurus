@@ -91,13 +91,11 @@ def coord_to_flat(x, y, width):
     return y * width + x
 
 
-def _pgcd(a, b):
-    # type: (int, int) -> int
+def _pgcd(a: int, b: int) -> int:
     return a if not b else _pgcd(b, a % b)
 
 
-def pgcd(a, b):
-    # type: (int, int) -> int
+def pgcd(a: int, b: int) -> int:
     """'Plus grand commun diviseur' (Greatest Common Divider)"""
     if a < 0:
         a = -a

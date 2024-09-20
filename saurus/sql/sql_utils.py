@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import Iterable, List, Optional, Tuple, Union
+from typing import Iterable, List, Optional, Self, Tuple, Union
 
 from saurus.sql.video_parser import FieldQuery
 
@@ -30,8 +30,7 @@ class SQLWhereBuilder:
     def append_field_query(self, field_query: FieldQuery):
         self.append_query(str(field_query), *field_query.values)
 
-    def append_query_builder(self, builder):
-        # type: (SQLWhereBuilder) -> None
+    def append_query_builder(self, builder: Self) -> None:
         self.append_query(builder.get_clause(), *builder.get_parameters())
 
     def get_clause(self) -> str:

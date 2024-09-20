@@ -97,8 +97,7 @@ class DatabaseReady(End):
 class ProfilingStart(Notification):
     __slots__ = ("name",)
 
-    def __init__(self, title):
-        # type: (str) -> None
+    def __init__(self, title: str):
         self.name = title
 
     def __str__(self):

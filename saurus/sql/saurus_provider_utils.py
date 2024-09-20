@@ -1,4 +1,4 @@
-from typing import Any, Iterable, List, Tuple
+from typing import Any, Iterable, List, Self, Tuple
 
 from pysaurus.core import functions
 from pysaurus.video_provider.view_tools import SearchDef
@@ -72,8 +72,7 @@ class GroupCount:
         )
 
     @classmethod
-    def keyof(cls, group_count):
-        # type: (GroupCount) -> Any
+    def keyof(cls, group_count: Self) -> Any:
         return group_count.get_value()
 
 

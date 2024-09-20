@@ -23,7 +23,7 @@ class Videos:
     ) -> Dict[AbsolutePath, VideoRuntimeInfo]:
         sources = list(folders)
         notifier = Informer.default()
-        paths = {}  # type: Dict[AbsolutePath, VideoRuntimeInfo]
+        paths: Dict[AbsolutePath, VideoRuntimeInfo] = {}
         with Profiler(title=say("Collect videos"), notifier=notifier):
             for local_result in parallelize(
                 cls._collect_videos_from_folders,

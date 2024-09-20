@@ -24,8 +24,7 @@ def run_split_batch(function, tasks, *, job_count=CPU_COUNT, extra_args=None):
     return parallelize(function, jobs, cpu_count=job_count)
 
 
-def _dispatch_tasks(tasks, job_count, extra_args=None):
-    # type: (list, int, list) -> List[Job]
+def _dispatch_tasks(tasks: list, job_count: int, extra_args: list = None) -> List[Job]:
     """Split <tasks> into <job_count> jobs and associate each one
     with a unique job ID starting from <next_job_id>, so that
     each job could assign a unique ID to each of his task by

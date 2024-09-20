@@ -4,8 +4,7 @@ from pysaurus.core.functions import pgcd
 class Fraction:
     __slots__ = "sign", "num", "den"
 
-    def __init__(self, a, b=1):
-        # type: (int, int) -> None
+    def __init__(self, a: int, b: int = 1):
         if b == 0:
             raise ZeroDivisionError()
         if a == 0:

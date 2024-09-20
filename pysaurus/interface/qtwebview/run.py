@@ -34,7 +34,7 @@ class Api(GuiAPI):
 
     def __init__(self, interface):
         super().__init__()
-        self.interface = interface  # type: Interface
+        self.interface: Interface = interface
 
     def _run_thread(self, function, *args, **kwargs):
         """Override to make sure exceptions are sent to main thread.

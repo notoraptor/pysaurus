@@ -5,7 +5,7 @@ class Graph:
     __slots__ = ("edges",)
 
     def __init__(self):
-        self.edges = {}  # type: Dict[Any, List[Any]]
+        self.edges: Dict[Any, List[Any]] = {}
 
     def connect(self, a, b):
         self.edges.setdefault(a, []).append(b)

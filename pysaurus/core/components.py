@@ -5,7 +5,7 @@ import pathlib
 import shutil
 import subprocess
 from datetime import datetime
-from typing import Union
+from typing import Self, Union
 
 from pysaurus.core import core_exceptions
 from pysaurus.core.modules import FileSystem, System
@@ -153,8 +153,7 @@ class AbsolutePath:
         if not dst.isfile():
             raise FileNotFoundError(dst)
 
-    def new_title(self, title):
-        # type: (str) -> AbsolutePath
+    def new_title(self, title: str) -> Self:
         new_path = AbsolutePath.file_path(self.get_directory(), title, self.extension)
         if new_path.exists():
             raise FileExistsError(new_path)
@@ -240,9 +239,8 @@ STDERR: {stderr.strip()}"""
         with open(self.__path, "rb") as file:
             return file.read()
 
-    @staticmethod
-    def ensure(path):
-        # type: (Union[str, AbsolutePath]) -> AbsolutePath
+    @classmethod
+    def ensure(cls, path: Union[str, Self]) -> Self:
         return path if isinstance(path, AbsolutePath) else AbsolutePath(str(path))
 
     @staticmethod
@@ -407,8 +405,7 @@ class FileSize:
 
     __slots__ = ("value", "__base")
 
-    def __init__(self, size):
-        # type: (int) -> None
+    def __init__(self, size: int):
         self.value = size
         self.__base = (size and min(4, int(math.log(size, 1024)))) or 0
 

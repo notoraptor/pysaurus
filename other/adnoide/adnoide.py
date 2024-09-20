@@ -4,7 +4,7 @@ import operator
 import random
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import List, Sequence
+from typing import List, Self, Sequence
 
 from pysaurus.core.classes import StringPrinter
 from pysaurus.core.functions import are_hashable_by
@@ -61,8 +61,7 @@ class FoodType:
         if not self.check(value):
             raise TypeError(f"Expected {self}, got {type(value)}: {value}")
 
-    def check_type(self, food_type):
-        # type: (FoodType) -> bool
+    def check_type(self, food_type: Self) -> bool:
         if self.strict:
             return all(typ in self.basic_types for typ in food_type.basic_types)
         else:
@@ -70,8 +69,7 @@ class FoodType:
                 issubclass(typ, self.basic_types) for typ in food_type.basic_types
             )
 
-    def expect_type(self, food_type):
-        # type: (FoodType) -> None
+    def expect_type(self, food_type: Self) -> None:
         if not self.check_type(food_type):
             raise TypeError(f"Expected type {self}, got type {food_type}")
 

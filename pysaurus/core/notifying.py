@@ -27,8 +27,8 @@ class Notifier(AbstractNotifier):
         print(notification)
 
     def __init__(self):
-        self.__managers = {}  # type: Dict[type, ManagerType]
-        self.__default_manager = None  # type: Optional[Callable[[Notification], None]]
+        self.__managers: Dict[type, ManagerType] = {}
+        self.__default_manager: Optional[Callable[[Notification], None]] = None
         self.__default_manager_policy = Notifier.DM_CALL_SOONER
         self.__log_path = None
         self.__log_written = False
@@ -51,8 +51,7 @@ class Notifier(AbstractNotifier):
                 line = f"{notification}\n"
                 file.write(line)
 
-    def set_default_manager(self, function):
-        # type: (ManagerType) -> None
+    def set_default_manager(self, function: ManagerType) -> None:
         self.__default_manager = function
 
     def never_call_default_manager(self):
@@ -67,15 +66,13 @@ class Notifier(AbstractNotifier):
     def call_default_manager_later(self):
         self.__default_manager_policy = Notifier.DM_CALL_LATER
 
-    def set_manager(self, notification_class, function):
-        # type: (type, ManagerType) -> None
+    def set_manager(self, notification_class: type, function: ManagerType) -> None:
         self.__managers[notification_class] = function
 
     def get_manager(self, notification):
         return self.__managers.get(type(notification), None)
 
-    def remove_manager(self, notification_class):
-        # type: (type) -> None
+    def remove_manager(self, notification_class: type) -> None:
         self.__managers.pop(notification_class, None)
 
     def clear_managers(self):
@@ -84,8 +81,7 @@ class Notifier(AbstractNotifier):
     def get_default_manager(self):
         return self.__default_manager or self.manage
 
-    def notify(self, notification):
-        # type: (Notification) -> None
+    def notify(self, notification: Notification) -> None:
         self.log(notification)
         default_manager = self.get_default_manager()
         notification_class = type(notification)

@@ -62,8 +62,8 @@ class Application:
         self.lang_dir = AbsolutePath.join(self.app_dir, "languages").mkdir()
         self.config_path = AbsolutePath.join(self.app_dir, "config.json")
         self.config = Config()
-        self.databases = {}  # type: Dict[AbsolutePath, Optional[AbstractDatabase]]
-        self.languages = {}  # type: Dict[AbsolutePath, Optional[DefaultLanguage]]
+        self.databases: Dict[AbsolutePath, Optional[AbstractDatabase]] = {}
+        self.languages: Dict[AbsolutePath, Optional[DefaultLanguage]] = {}
         self.notifier = notifier
         # Load database names.
         for entry in FileSystem.scandir(self.dbs_dir.path):  # type: os.DirEntry
