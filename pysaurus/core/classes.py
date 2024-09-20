@@ -183,6 +183,24 @@ class Runnable:
         return decorator
 
 
+class DecoratingMethod:
+    __slots__ = ("_method_name",)
+
+    def __init__(self, method_name: str):
+        self._method_name = method_name
+
+    def __call__(self, function):
+        method_name = self._method_name
+
+        @functools.wraps(function)
+        def wrapper(self, *args, **kwargs):
+            ret = function(self, *args, **kwargs)
+            getattr(self, method_name)()
+            return ret
+
+        return wrapper
+
+
 class Selector:
     __slots__ = ("_to_exclude", "_selection")
 

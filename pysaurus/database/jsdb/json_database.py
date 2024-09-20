@@ -314,18 +314,14 @@ class JsonDatabase(AbstractDatabase):
             }
         )
 
-    def set_date(self, date: Date):
+    def _set_date(self, date: Date):
         self._date = date
 
-    def set_folders(self, folders) -> None:
-        folders = sorted(AbsolutePath.ensure(folder) for folder in folders)
-        if folders == sorted(self.get_folders()):
-            return
+    def _set_folders(self, folders: List[AbsolutePath]) -> None:
         folders_tree = PathTree(folders)
         for video in self._videos.values():
             video.discarded = not folders_tree.in_folders(video.filename)
         self._folders = set(folders)
-        self.save()
 
     def get_folders(self) -> Iterable[AbsolutePath]:
         return iter(self._folders)
@@ -598,7 +594,7 @@ class JsonDatabase(AbstractDatabase):
                 video_id, name, make_collection(values), merge=merge
             )
         ]
-        self._notify_properties_modified(modified)
+        self._notify_fields_modified(modified, is_property=True)
 
     def default_prop_unit(self, name):
         (pt,) = self.get_prop_types(name=name)

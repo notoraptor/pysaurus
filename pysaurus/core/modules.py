@@ -181,7 +181,7 @@ class ImageUtils:
     def thumbnail_to_base64(thumb_path: str):
         if not FileSystem.path.isfile(thumb_path):
             return None
-        image = ImageUtils.open_rgb_image(thumb_path)
+        image: Image.Image = ImageUtils.open_rgb_image(thumb_path)
         buffered = BytesIO()
         image.save(buffered, format=THUMBNAIL_EXTENSION)
         image_string = base64.b64encode(buffered.getvalue())

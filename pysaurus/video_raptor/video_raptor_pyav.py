@@ -3,6 +3,7 @@ from dataclasses import dataclass, field as dataclass_field
 from typing import List, Optional
 
 import av
+from PIL import Image
 
 from pysaurus.core.components import AbsolutePath
 from pysaurus.video.video_entry import VideoEntry
@@ -150,7 +151,7 @@ class PythonVideoRaptor:
         video_stream.codec_context.skip_frame = "NONKEY"
         container.seek(offset=container.duration // 2)
         for frame in container.decode(video_stream):
-            image = frame.to_image()
+            image: Image.Image = frame.to_image()
             image.thumbnail((thumb_size, thumb_size))
             image.save(thumb_path, format="JPEG")
             break

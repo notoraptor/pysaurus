@@ -41,7 +41,7 @@ class PysaurusCollection(AbstractDatabase):
                 | {AbsolutePath.ensure(folder) for folder in folders}
             )
 
-    def set_date(self, date: Date):
+    def _set_date(self, date: Date):
         self.db.modify("UPDATE collection SET date_updated = ?", [date.time])
 
     def get_folders(self) -> Iterable[AbsolutePath]:
@@ -50,10 +50,7 @@ class PysaurusCollection(AbstractDatabase):
             for row in self.db.query("SELECT source FROM collection_source")
         ]
 
-    def set_folders(self, folders) -> None:
-        folders = sorted(AbsolutePath.ensure(folder) for folder in folders)
-        if folders == sorted(self.get_folders()):
-            return
+    def _set_folders(self, folders: List[AbsolutePath]) -> None:
         folders_tree = PathTree(folders)
         videos = self.db.query_all("SELECT video_id, filename FROM video")
         self.db.modify_many(
@@ -602,5 +599,5 @@ HAVING COUNT(video_id) > 1 AND SUM(is_file) < COUNT(video_id);
             f"AND property_value IN ({','.join(['?'] * len(values))})",
             [prop_desc["property_id"]] + values,
         )
-        self._notify_properties_modified([name])
+        self._notify_fields_modified([name], is_property=True)
         return modified

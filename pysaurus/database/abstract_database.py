@@ -58,7 +58,7 @@ class AbstractDatabase(ABC):
         self.provider = provider
 
     @abstractmethod
-    def set_date(self, date: Date):
+    def _set_date(self, date: Date):
         raise NotImplementedError()
 
     @abstractmethod
@@ -66,7 +66,7 @@ class AbstractDatabase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def set_folders(self, folders) -> None:
+    def _set_folders(self, folders: List[AbsolutePath]) -> None:
         raise NotImplementedError()
 
     @abstractmethod
@@ -183,6 +183,12 @@ class AbstractDatabase(ABC):
         """Set one property for many videos."""
         raise NotImplementedError()
 
+    def set_folders(self, folders) -> None:
+        folders = sorted(AbsolutePath.ensure(folder) for folder in folders)
+        if folders != sorted(self.get_folders()):
+            self._set_folders(folders)
+            self.save()
+
     def refresh(self) -> None:
         self.update()
         self.provider.refresh()
@@ -230,7 +236,7 @@ class AbstractDatabase(ABC):
                     if result.error_thumbnail:
                         thumb_errors[result.filename.path] = result.error_thumbnail
 
-                self.set_date(current_date)
+                self._set_date(current_date)
                 if new:
                     self.write_new_videos(new, all_files)
                 if expected_thumbs:
@@ -510,7 +516,7 @@ class AbstractDatabase(ABC):
             self._set_property_for_videos(
                 to_name, {video_id: to_extended for video_id in from_new}, merge=True
             )
-            self._notify_properties_modified([from_name, to_name])
+            self._notify_fields_modified([from_name, to_name], is_property=True)
         return len(from_new)
 
     def delete_property_values(self, name: str, values: list) -> List[int]:
@@ -570,14 +576,10 @@ class AbstractDatabase(ABC):
     ):
         """Set property for many videos and notify about property modified."""
         self._set_property_for_videos(name, updates, merge)
-        self._notify_properties_modified([name])
+        self._notify_fields_modified([name], is_property=True)
 
-    def _notify_properties_modified(self, properties):
-        self.provider.manage_attributes_modified(list(properties), is_property=True)
-        self.save()
-
-    def _notify_fields_modified(self, fields: Sequence[str]):
-        self.provider.manage_attributes_modified(list(fields), is_property=False)
+    def _notify_fields_modified(self, fields: Sequence[str], *, is_property=False):
+        self.provider.manage_attributes_modified(list(fields), is_property=is_property)
         self.save()
 
     def validate_prop_values(self, name, values: list) -> List[PropValueType]:
