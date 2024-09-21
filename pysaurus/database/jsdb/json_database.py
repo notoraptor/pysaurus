@@ -209,6 +209,9 @@ class JsonDatabase(AbstractDatabase):
         self._removed.clear()
         self._modified.clear()
 
+    def jsondb_get_blob(self, filename: AbsolutePath) -> bytes:
+        return self._thumb_mgr.get_blob(filename)
+
     def jsondb_get_thumbnail_base64(self, filename: AbsolutePath) -> str:
         data = self._thumb_mgr.get_base64(filename)
         # return ("data:image/jpeg;base64," + data.decode()) if data else None

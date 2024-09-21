@@ -9,11 +9,12 @@ from pysaurus.core.constants import UNDEFINED
 from pysaurus.core.functions import class_get_public_attributes, string_to_pieces
 from pysaurus.core.schematizable import WithSchema
 from pysaurus.core.semantic_text import SemanticText
+from pysaurus.video.video_pattern import VideoPattern
 from pysaurus.video.video_schema import VIDEO_SCHEMA
 from pysaurus.video.video_sorting import VideoSorting
 
 
-class LazyVideo(WithSchema):
+class LazyVideo(WithSchema, VideoPattern):
     __slots__ = ("__discarded", "database")
     SCHEMA = VIDEO_SCHEMA
     __protected__ = (
@@ -238,9 +239,8 @@ class LazyVideo(WithSchema):
     filename_length = property(lambda self: len(self.filename))
 
     @property
-    def thumbnail_path(self):
-        thumbnail = self.thumbnail_base64
-        return f"data:image/jpeg;base64,{thumbnail}" if thumbnail else None
+    def thumbnail(self) -> bytes:
+        return self.database.jsondb_get_blob(self.filename)
 
     @property
     def expected_raw_size(self):
@@ -255,14 +255,6 @@ class LazyVideo(WithSchema):
                 + self.sample_rate * (self.audio_bits or 32) / 8
             )
             * self.raw_seconds
-        )
-
-    @property
-    def bit_rate(self):
-        return FileSize(
-            self.file_size * self.duration_time_base / self.duration
-            if self.duration
-            else 0
         )
 
     @property

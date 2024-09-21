@@ -14,8 +14,10 @@ VIDEO_SCHEMA = Schema(
         Type("date_entry_opened", ("o", float), None),
         Type("unreadable", "U", False),
         Type("audio_bit_rate", "r", 0),
+        Type("audio_bits", "B", 0),
         Type("audio_codec", "a", ""),
         Type("audio_codec_description", "A", ""),
+        Type("audio_languages", "l", []),
         Type("bit_depth", "D", 0),
         Type("channels", "C", 0),
         Type("container_format", "c", ""),
@@ -29,11 +31,9 @@ VIDEO_SCHEMA = Schema(
         Type("properties", "p", {}),
         Type("sample_rate", "u", 0),
         Type("similarity_id", ("S", int), None),
+        Type("subtitle_languages", "L", []),
         Type("video_codec", "v", ""),
         Type("video_codec_description", "V", ""),
         Type("width", "w", 0),
-        Type("audio_languages", "l", []),
-        Type("subtitle_languages", "L", []),
-        Type("audio_bits", "B", 0),
     ]
 )
