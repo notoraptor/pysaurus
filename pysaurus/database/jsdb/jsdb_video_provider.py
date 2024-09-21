@@ -92,7 +92,7 @@ class LayerSource(Layer):
         videos_not_yet_opened: List[int] = []
         for path in self.params["sources"]:
             source = [
-                video["video_id"]
+                video.video_id
                 for video in self.input.get_videos(
                     include=["video_id"], where={flag: True for flag in path}
                 )
@@ -160,7 +160,7 @@ class _AbstractLayerGrouping(Layer):
                 (ret,) = self.database.get_videos(
                     include=[group_def.field], where={"video_id": video_id}
                 )
-                values = [ret[group_def.field]]
+                values = [getattr(ret, group_def.field)]
             self.video_id_to_values[video_id] = values
         return self.video_id_to_values[video_id]
 
@@ -454,7 +454,7 @@ class JsonDatabaseVideoProvider(AbstractVideoProvider):
         output.selection_count = nb_videos
         output.selection_duration = Duration(
             sum(
-                row["raw_microseconds"]
+                row.raw_microseconds
                 for row in database.get_videos(
                     include=["raw_microseconds"], where={"video_id": view_indices}
                 )
@@ -462,7 +462,7 @@ class JsonDatabaseVideoProvider(AbstractVideoProvider):
         )
         output.selection_file_size = FileSize(
             sum(
-                row["file_size"]
+                row.file_size
                 for row in database.get_videos(
                     include=["file_size"], where={"video_id": view_indices}
                 )

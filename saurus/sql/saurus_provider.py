@@ -168,7 +168,7 @@ class SaurusProvider(AbstractVideoProvider):
     def count_source_videos(self):
         return len(
             {
-                video["video_id"]
+                video.video_id
                 for source in self.sources
                 for video in self._database.get_videos(
                     include=(), where={flag: True for flag in source}

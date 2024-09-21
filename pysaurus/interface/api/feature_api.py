@@ -1,5 +1,4 @@
 import inspect
-import operator
 from typing import Any, Dict, Optional, Union
 
 from pysaurus.application.application import Application
@@ -114,7 +113,7 @@ class FeatureAPI:
         videos = context.result_page
         if len(videos) and group_def and group_def["field"] == "similarity_id":
             group_def["common"] = VideoFeatures.get_common_fields(
-                videos, getfield=operator.getitem, fields=COMMON_FIELDS
+                videos, fields=COMMON_FIELDS
             )
 
         return {

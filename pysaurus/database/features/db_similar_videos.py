@@ -21,7 +21,7 @@ class DbImageProvider(AbstractImageProvider):
 
     def __init__(self, db: AbstractDatabase):
         self.videos = {
-            video["filename"].path: video
+            video.filename.path: video
             for video in db.get_videos(
                 include=[
                     "video_id",
@@ -40,19 +40,19 @@ class DbImageProvider(AbstractImageProvider):
 
     def items(self) -> Iterable[Tuple[Any, Image]]:
         for filename, video in self.videos.items():
-            yield filename, ImageUtils.from_blob(video["thumbnail_blob"])
+            yield filename, ImageUtils.from_blob(video.thumbnail)
 
     def length(self, filename) -> float:
         video = self.videos[filename]
-        return video["duration"] / video["duration_time_base"]
+        return video.duration / video.duration_time_base
 
     def video_id(self, filename) -> int:
-        return self.videos[filename]["video_id"]
+        return self.videos[filename].video_id
 
     def to_sortable_group(self, group: Set[str]) -> Tuple:
         return (
             len(group),
-            -max(self.videos[filename]["date"].time for filename in group),
+            -max(self.videos[filename].date.time for filename in group),
             sorted(group)[0],
         )
 
@@ -64,7 +64,7 @@ class DbSimilarVideos:
         miniatures: List[Miniature] = db.ensure_miniatures()
         video_indices = [m.video_id for m in miniatures]
         previous_sim = [
-            row["similarity_id"]
+            row.similarity_id
             for row in db.get_videos(
                 include=["similarity_id"], where={"video_id": video_indices}
             )

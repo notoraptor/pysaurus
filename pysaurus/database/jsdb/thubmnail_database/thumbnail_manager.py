@@ -5,6 +5,7 @@ from pysaurus.core.components import AbsolutePath
 from pysaurus.database.jsdb.thubmnail_database.thumbnail_database import (
     ThumbnailDatabase,
 )
+from pysaurus.video.video_pattern import VideoPattern
 from pysaurus.video_raptor.video_raptor_pyav import PythonVideoRaptor
 
 
@@ -15,11 +16,11 @@ class ThumbnailManager:
         self.thumb_db = ThumbnailDatabase(db_path.path)
         self.raptor = PythonVideoRaptor()
 
-    def build(self, videos: Iterable[dict]):
+    def build(self, videos: Iterable[VideoPattern]):
         thumbnail_path_to_filenames = {}
         for video in videos:
-            thumbnail_path_to_filenames.setdefault(video["thumbnail_path"], []).append(
-                video["filename"]
+            thumbnail_path_to_filenames.setdefault(video.thumbnail_path, []).append(
+                video.filename
             )
         filename_and_thumbnail_path = [
             (filenames[0], thumb)
@@ -57,7 +58,8 @@ class ThumbnailManager:
         return {
             row["filename"]
             for row in self.thumb_db.query(
-                f"SELECT filename FROM video_to_thumbnail WHERE filename in ({','.join(['?'] * len(filenames))})",
+                f"SELECT filename FROM video_to_thumbnail "
+                f"WHERE filename in ({','.join(['?'] * len(filenames))})",
                 filenames,
             )
         }

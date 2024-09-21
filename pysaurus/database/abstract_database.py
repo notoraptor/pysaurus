@@ -36,6 +36,7 @@ from pysaurus.properties.properties import (
 )
 from pysaurus.video import VideoRuntimeInfo
 from pysaurus.video.video_entry import VideoEntry
+from pysaurus.video.video_pattern import VideoPattern
 from pysaurus.video_provider.abstract_video_provider import AbstractVideoProvider
 from saurus.language import say
 
@@ -104,7 +105,7 @@ class AbstractDatabase(ABC):
         include: Sequence[str] = None,
         with_moves: bool = False,
         where: dict = None,
-    ) -> List[dict]:
+    ) -> List[VideoPattern]:
         raise NotImplementedError()
 
     @abstractmethod
@@ -262,8 +263,8 @@ class AbstractDatabase(ABC):
     def _update_videos_not_found(self, existing_paths: Container[AbsolutePath]):
         """Use given container of existing paths to mark not found videos."""
         rows = self.get_videos(include=["video_id", "filename"])
-        indices = [row["video_id"] for row in rows]
-        founds = [row["filename"] in existing_paths for row in rows]
+        indices = [row.video_id for row in rows]
+        founds = [row.filename in existing_paths for row in rows]
         self._write_videos_field(indices, "found", founds)
 
     def _find_video_paths_for_update(
@@ -285,7 +286,7 @@ class AbstractDatabase(ABC):
 
     def _get_collectable_missing_thumbnails(self) -> List[AbsolutePath]:
         return sorted(
-            video["filename"]
+            video.filename
             for video in self.get_videos(
                 include=["filename"],
                 where={"readable": True, "found": True, "without_thumbnails": True},
@@ -304,17 +305,17 @@ class AbstractDatabase(ABC):
         }
 
         missing_filenames = [
-            video["filename"]
+            video.filename
             for video in self.get_videos(
                 include=["filename"], where={"readable": True, "with_thumbnails": True}
             )
-            if video["filename"] not in valid_miniatures
+            if video.filename not in valid_miniatures
         ]
 
         added_miniatures = []
         if missing_filenames:
             tasks = [
-                (video["filename"], video["thumbnail_blob"])
+                (video.filename, video.thumbnail)
                 for video in self.get_videos(
                     include=("filename", "thumbnail_blob"),
                     where={"filename": missing_filenames},
@@ -336,7 +337,7 @@ class AbstractDatabase(ABC):
         self.notifier.notify(notifications.NbMiniatures(len(m_dict)))
 
         filename_to_video_id = {
-            AbsolutePath.ensure(row["filename"]): row["video_id"]
+            row.filename: row.video_id
             for row in self.get_videos(
                 include=["video_id", "filename"],
                 where={
@@ -376,7 +377,7 @@ class AbstractDatabase(ABC):
             from_indices = [move[0] for move in moves]
             to_indices = [move[1] for move in moves]
             from_map = {
-                row["video_id"]: row
+                row.video_id: row
                 for row in self.get_videos(
                     include=(
                         "video_id",
@@ -390,14 +391,14 @@ class AbstractDatabase(ABC):
             }
             assert all(from_id in from_map for from_id in from_indices)
             assert set(to_indices) == set(
-                row["video_id"]
+                row.video_id
                 for row in self.get_videos(
                     include=["video_id"], where={"video_id": to_indices, "found": True}
                 )
             )
             to_properties: Dict[str, Dict[int, list]] = {}
             for from_id, to_id in moves:
-                from_props: Dict[str, list] = from_map[from_id]["properties"]
+                from_props: Dict[str, list] = from_map[from_id].properties
                 for prop_name, from_prop_values in from_props.items():
                     to_properties.setdefault(prop_name, {})[to_id] = from_prop_values
             # Update properties
@@ -407,23 +408,20 @@ class AbstractDatabase(ABC):
             self._write_videos_field(
                 to_indices,
                 "similarity_id",
-                [from_map[from_id]["similarity_id"] for from_id in from_indices],
+                [from_map[from_id].similarity_id for from_id in from_indices],
             )
             self._write_videos_field(
                 to_indices,
                 "date_entry_modified",
                 [
-                    from_map[from_id]["date_entry_modified"].time
+                    from_map[from_id].date_entry_modified.time
                     for from_id in from_indices
                 ],
             )
             self._write_videos_field(
                 to_indices,
                 "date_entry_opened",
-                [
-                    from_map[from_id]["date_entry_opened"].time
-                    for from_id in from_indices
-                ],
+                [from_map[from_id].date_entry_opened.time for from_id in from_indices],
             )
             for from_id in from_indices:
                 self.delete_video_entry(from_id)
@@ -437,7 +435,7 @@ class AbstractDatabase(ABC):
 
     def open_video(self, video_id: int):
         (video,) = self.get_videos(include=["filename"], where={"video_id": video_id})
-        AbsolutePath.ensure(video["filename"]).open()
+        video.filename.open()
         self._write_videos_field([video_id], "date_entry_opened", [Date.now().time])
 
     def delete_video(self, video_id: int) -> AbsolutePath:
@@ -457,7 +455,7 @@ class AbstractDatabase(ABC):
 
     def get_video_filename(self, video_id: int) -> AbsolutePath:
         (row,) = self.get_videos(include=["filename"], where={"video_id": video_id})
-        return AbsolutePath.ensure(row["filename"])
+        return row.filename
 
     def move_property_values(
         self, values: list, from_name: str, to_name: str, *, concatenate=False

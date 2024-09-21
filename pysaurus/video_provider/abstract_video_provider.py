@@ -151,7 +151,7 @@ class AbstractVideoProvider(metaclass=ABCMeta):
             where["found"] = True
             where["already_opened"] = False
             video_indices.extend(
-                video["video_id"]
+                video.video_id
                 for video in self._database.get_videos(
                     include=["video_id"], where=where
                 )

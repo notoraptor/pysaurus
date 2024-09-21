@@ -5,6 +5,7 @@ from pysaurus.core.classes import Selector
 from pysaurus.core.components import AbsolutePath, Duration, FileSize
 from pysaurus.core.functions import compute_nb_pages
 from pysaurus.properties.properties import PropTypeValidator
+from pysaurus.video.video_pattern import VideoPattern
 from pysaurus.video.video_search_context import VideoSearchContext
 from pysaurus.video.video_sorting import VideoSorting
 from pysaurus.video_provider.view_tools import GroupDef, LookupArray, SearchDef
@@ -32,7 +33,7 @@ def video_mega_search(
     include: Sequence[str] = None,
     with_moves: bool = False,
     where: dict = None,
-) -> List[dict]:
+) -> List[VideoPattern]:
     where_builder = SQLWhereBuilder()
     selection_builder = SQLWhereBuilder(use_or=True)
     vid_query = None
@@ -91,7 +92,7 @@ def _get_videos(
     *,
     include: Sequence[str] = None,
     with_moves: bool = False,
-) -> List[dict]:
+) -> List[VideoPattern]:
     videos = [SQLVideoWrapper(row) for row in db.query(query, parameters)]
 
     video_indices = [video.data["video_id"] for video in videos]
@@ -160,13 +161,7 @@ def _get_videos(
         for video in videos:
             video.moves = moves.get(video.video_id, [])
 
-    if include is None:
-        # Return all, use with_moves.
-        return [video.json(with_moves) for video in videos]
-    else:
-        # Use include, ignore with_moves
-        fields = include or ("video_id",)
-        return [{key: getattr(video, key) for key in fields} for video in videos]
+    return videos
 
 
 def _get_video_moves(db: PysaurusConnection) -> Iterable[Tuple[int, List[dict]]]:

@@ -263,22 +263,6 @@ class SQLVideoWrapper(VideoPattern):
         return self.filename.get_drive_name() or self.driver_id
 
     @property
-    def date(self) -> Date:
-        return Date(self.mtime)
-
-    @property
-    def readable(self):
-        return not self.unreadable
-
-    @property
-    def not_found(self):
-        return not self.found
-
-    @property
-    def without_thumbnails(self):
-        return not self.with_thumbnails
-
-    @property
     def frame_rate(self):
         return self.frame_rate_num / self.frame_rate_den
 
@@ -299,10 +283,6 @@ class SQLVideoWrapper(VideoPattern):
         return self.meta_title
 
     @property
-    def raw_microseconds(self):
-        return self.duration * 1000000 / self.duration_time_base
-
-    @property
     def thumbnail_blob(self):
         return self.data["thumbnail"]
 
@@ -317,3 +297,23 @@ class SQLVideoWrapper(VideoPattern):
     @property
     def move_id(self):
         return f"{self.size}, {self.length}"
+
+    @errors.setter
+    def errors(self, errors):
+        self._errors = errors
+
+    @audio_languages.setter
+    def audio_languages(self, audio_languages):
+        self._audio_languages = audio_languages
+
+    @subtitle_languages.setter
+    def subtitle_languages(self, subtitle_languages):
+        self._subtitle_languages = subtitle_languages
+
+    @properties.setter
+    def properties(self, properties):
+        self._properties = property
+
+    @moves.setter
+    def moves(self, moves):
+        self._moves = moves

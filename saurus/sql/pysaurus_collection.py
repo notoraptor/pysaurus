@@ -13,6 +13,7 @@ from pysaurus.video.lazy_video_runtime_info import (
     LazyVideoRuntimeInfo as VideoRuntimeInfo,
 )
 from pysaurus.video.video_entry import VideoEntry
+from pysaurus.video.video_pattern import VideoPattern
 from saurus.sql.prop_type_search import prop_type_search
 from saurus.sql.pysaurus_connection import PysaurusConnection
 from saurus.sql.saurus_provider import SaurusProvider
@@ -299,7 +300,7 @@ class PysaurusCollection(AbstractDatabase):
         include: Sequence[str] = None,
         with_moves: bool = False,
         where: dict = None,
-    ) -> List[dict]:
+    ) -> List[VideoPattern]:
         # where = where or {}
         # where["discarded"] = where.get("discarded", False)
         return video_mega_search(

@@ -25,9 +25,6 @@ from pysaurus.database.jsdb.db_video_attribute import PotentialMoveAttribute
 from pysaurus.database.jsdb.jsdb_prop_type import PropType
 from pysaurus.database.jsdb.jsdb_video_provider import JsonDatabaseVideoProvider
 from pysaurus.database.jsdb.jsdbvideo.abstract_video_indexer import AbstractVideoIndexer
-from pysaurus.database.jsdb.jsdbvideo.json_video_features import (
-    JsonVideoFeatures as VideoFeatures,
-)
 from pysaurus.database.jsdb.jsdbvideo.lazy_video import LazyVideo as Video
 from pysaurus.database.jsdb.jsdbvideo.video_indexer import VideoIndexer
 from pysaurus.database.jsdb.json_database_utils import patch_database_json
@@ -36,6 +33,7 @@ from pysaurus.properties.properties import PropRawType, PropTypeValidator, PropU
 from pysaurus.video import VideoRuntimeInfo
 from pysaurus.video.video_constants import VIDEO_FLAGS
 from pysaurus.video.video_entry import VideoEntry
+from pysaurus.video.video_pattern import VideoPattern
 from pysaurus.video.video_sorting import VideoSorting
 
 logger = logging.getLogger(__name__)
@@ -442,7 +440,7 @@ class JsonDatabase(AbstractDatabase):
         include: Sequence[str] = None,
         with_moves: bool = False,
         where: dict = None,
-    ) -> List[dict]:
+    ) -> List[VideoPattern]:
         where = where or {}
         # where["discarded"] = where.get("discarded", False)
         q_flags = {key: value for key, value in where.items() if key in VIDEO_FLAGS}
@@ -472,13 +470,7 @@ class JsonDatabase(AbstractDatabase):
                 if all(getattr(video, key) == value for key, value in q_other.items())
             )
 
-        if include is None:
-            # Return all, use with_moves.
-            return [VideoFeatures.json(video, with_moves) for video in videos]
-        else:
-            # Use include, ignore with_moves
-            fields = include or ("video_id",)
-            return [{key: getattr(video, key) for key in fields} for video in videos]
+        return list(videos)
 
     def get_all_video_terms(self) -> Dict[int, List[str]]:
         return {

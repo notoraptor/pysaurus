@@ -14,6 +14,9 @@ class MoveType(TypedDict):
 class VideoPattern(ABC):
     __slots__ = ()
 
+    def __eq__(self, other):
+        return self.filename == other.filename
+
     @property
     @abstractmethod
     def filename(self) -> AbsolutePath:
@@ -36,7 +39,7 @@ class VideoPattern(ABC):
 
     @property
     @abstractmethod
-    def date(self) -> Date:
+    def mtime(self) -> float:
         raise NotImplementedError()
 
     @property
@@ -87,6 +90,11 @@ class VideoPattern(ABC):
     @property
     @abstractmethod
     def device_name(self) -> str:
+        raise NotImplementedError()
+
+    @property
+    @abstractmethod
+    def driver_id(self) -> int:
         raise NotImplementedError()
 
     @property
@@ -201,6 +209,22 @@ class VideoPattern(ABC):
         return f"data:image/jpeg;base64,{thumbnail}" if thumbnail else None
 
     @property
+    def readable(self) -> bool:
+        return not self.unreadable
+
+    @property
+    def not_found(self) -> bool:
+        return not self.found
+
+    @property
+    def without_thumbnails(self) -> bool:
+        return not self.with_thumbnails
+
+    @property
+    def date(self) -> Date:
+        return Date(self.mtime)
+
+    @property
     def bit_rate(self) -> FileSize:
         return FileSize(
             self.file_size * self.duration_time_base / self.duration
@@ -211,6 +235,10 @@ class VideoPattern(ABC):
     @property
     def length(self) -> Duration:
         return Duration(self.duration * 1000000 / self.duration_time_base)
+
+    @property
+    def raw_microseconds(self):
+        return self.duration * 1000000 / self.duration_time_base
 
     @property
     def size(self) -> FileSize:
@@ -224,13 +252,13 @@ class VideoPattern(ABC):
         return {
             "audio_bit_rate": self.audio_bit_rate,
             "audio_bits": self.audio_bits,
-            "audio_codec": self.audio_codec,
-            "audio_codec_description": self.audio_codec_description,
+            "audio_codec": str(self.audio_codec),
+            "audio_codec_description": str(self.audio_codec_description),
             "audio_languages": self.audio_languages,
             "bit_depth": self.bit_depth,
             "bit_rate": str(self.bit_rate),
             "channels": self.channels,
-            "container_format": self.container_format,
+            "container_format": str(self.container_format),
             "date": str(self.date),
             "date_entry_modified": str(self.date_entry_modified),
             "date_entry_opened": str(self.date_entry_opened),
@@ -240,7 +268,7 @@ class VideoPattern(ABC):
             # "disk": self.disk,
             # "duration": abs(self.data[F.duration]),
             # "duration_time_base": self.data[F.duration_time_base] or 1,
-            "errors": self.errors,
+            "errors": list(self.errors),
             "extension": filename.extension,
             "file_size": self.file_size,
             "file_title": file_title,
@@ -270,8 +298,8 @@ class VideoPattern(ABC):
             "thumbnail_base64": self.thumbnail_base64,
             "title": title,
             # "title_numeric": title,
-            "video_codec": self.video_codec,
-            "video_codec_description": self.video_codec_description,
+            "video_codec": str(self.video_codec),
+            "video_codec_description": str(self.video_codec_description),
             "video_id": self.video_id,
             "width": self.width,
             "with_thumbnails": self.with_thumbnails,

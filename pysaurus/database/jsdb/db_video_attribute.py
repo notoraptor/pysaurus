@@ -1,15 +1,17 @@
 import logging
 from typing import Dict, Iterable, List, Optional, Tuple
 
+from pysaurus.video.video_pattern import VideoPattern
+
 logger = logging.getLogger(__name__)
 
 
 class _MoveKey:
     __slots__ = "key", "string"
 
-    def __init__(self, video: dict):
-        self.key = (video["file_size"], video["duration"], video["duration_time_base"])
-        self.string = f"{video['size']}, {video['length']}"
+    def __init__(self, video: VideoPattern):
+        self.key = (video.file_size, video.duration, video.duration_time_base)
+        self.string = f"{video.size}, {video.length}"
 
     def __hash__(self):
         return hash(self.key)
@@ -48,7 +50,7 @@ class PotentialMoveAttribute:
         logger.debug(f"[{type(self).__name__}] moves updated.")
         self.potential_moves.clear()
         self.move_groups.clear()
-        groups: Dict[_MoveKey, Tuple[List[dict], List[dict]]] = {}
+        groups: Dict[_MoveKey, Tuple[List[VideoPattern], List[VideoPattern]]] = {}
         videos = self.database.get_videos(
             include=(
                 "duration",
@@ -63,20 +65,17 @@ class PotentialMoveAttribute:
             where={"readable": True},
         )
         for video in videos:
-            groups.setdefault(_MoveKey(video), ([], []))[video["found"]].append(video)
+            groups.setdefault(_MoveKey(video), ([], []))[video.found].append(video)
         for key, (not_found, found) in groups.items():
             if not_found and found:
                 for video_not_found in not_found:
-                    self.potential_moves[video_not_found["video_id"]] = [
-                        {
-                            "video_id": video["video_id"],
-                            "filename": str(video["filename"]),
-                        }
+                    self.potential_moves[video_not_found.video_id] = [
+                        {"video_id": video.video_id, "filename": str(video.filename)}
                         for video in found
                     ]
-                    self.move_groups[video_not_found["video_id"]] = key.string
+                    self.move_groups[video_not_found.video_id] = key.string
                 for video in found:
-                    self.move_groups[video["video_id"]] = key.string
+                    self.move_groups[video.video_id] = key.string
 
     def get_moves(self) -> Iterable[Tuple[int, List[dict]]]:
         self._update()

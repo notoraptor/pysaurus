@@ -1,4 +1,7 @@
+from typing import List
+
 from pysaurus.core.classes import Selector
+from pysaurus.video.video_pattern import VideoPattern
 from pysaurus.video_provider.view_tools import GroupDef, SearchDef
 
 
@@ -58,11 +61,12 @@ class VideoSearchContext:
         self.selection_count = 0
         self.selection_duration = None
         self.selection_file_size = None
-        self.result_page = result
+        self.result_page: List[VideoPattern] = result
 
     def json(self) -> dict:
+        with_moves = self.with_moves
         return {
-            "videos": self.result_page,
+            "videos": [video.json(with_moves) for video in self.result_page],
             "pageSize": self.page_size,
             "pageNumber": self.page_number,
             "nbPages": self.nb_pages,

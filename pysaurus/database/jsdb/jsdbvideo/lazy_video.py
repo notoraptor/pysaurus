@@ -44,9 +44,6 @@ class LazyVideo(WithSchema, VideoPattern):
     def __hash__(self):
         return hash(self.filename)
 
-    def __eq__(self, other):
-        return self.filename == other.filename
-
     def __lt__(self, other):
         return self.filename < other.filename
 
@@ -186,9 +183,6 @@ class LazyVideo(WithSchema, VideoPattern):
     disk = property(
         lambda self: self.filename.get_drive_name() or self.runtime.driver_id
     )
-    date = property(lambda self: Date(self.runtime.mtime))
-
-    readable = property(lambda self: not self.unreadable)
 
     mtime = property(lambda self: self.runtime.mtime)
     driver_id = property(lambda self: self.runtime.driver_id)
@@ -203,11 +197,9 @@ class LazyVideo(WithSchema, VideoPattern):
             self.runtime.is_file = is_file
             self.database.jsondb_register_modified(self)
 
-    not_found = property(lambda self: not self.found)
     with_thumbnails = property(
         lambda self: self.database.jsondb_has_thumbnail(self.filename)
     )
-    without_thumbnails = property(lambda self: not self.with_thumbnails)
 
     frame_rate = property(lambda self: self.frame_rate_num / self.frame_rate_den)
     length = property(
@@ -226,9 +218,6 @@ class LazyVideo(WithSchema, VideoPattern):
     filename_numeric = property(lambda self: SemanticText(self.filename.standard_path))
     meta_title_numeric = property(lambda self: SemanticText(self.meta_title.value))
     raw_seconds = property(lambda self: self.duration / self.duration_time_base)
-    raw_microseconds = property(
-        lambda self: self.duration * 1000000 / self.duration_time_base
-    )
     thumbnail_base64 = property(
         lambda self: self.database.jsondb_get_thumbnail_base64(self.filename)
     )
