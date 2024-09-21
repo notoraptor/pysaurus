@@ -532,11 +532,6 @@ class JsonDatabaseVideoProvider(AbstractVideoProvider):
     def get_sort(self):
         return self.get_layer_params(LayerSort, "sorting")
 
-    def reset_parameters(self, *layer_names: str):
-        for layer_name in layer_names:
-            layer_cls = self._LAYER_NAMES_[layer_name]
-            self.layers[layer_cls].set_params(**self.layers[layer_cls].default_params())
-
     def _force_update(self, *layer_names: str):
         for layer_name in layer_names:
             layer_cls = self._LAYER_NAMES_[layer_name]

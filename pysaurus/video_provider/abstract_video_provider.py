@@ -6,10 +6,11 @@ from pysaurus.application import exceptions
 from pysaurus.core import functions
 from pysaurus.core.classes import Selector
 from pysaurus.video.video_search_context import VideoSearchContext
+from pysaurus.video_provider.view_tools import GroupDef, SearchDef
 
 
 class AbstractVideoProvider(metaclass=ABCMeta):
-    __slots__ = ("_database",)
+    __slots__ = ("_database", "_setters")
     LAYER_SOURCE = "source"
     LAYER_GROUPING = "grouping"
     LAYER_CLASSIFIER = "classifier"
@@ -24,24 +25,46 @@ class AbstractVideoProvider(metaclass=ABCMeta):
         LAYER_SEARCH,
         LAYER_SORT,
     }
+    DEFAULT_PARAMS = {
+        LAYER_SOURCE: [["readable"]],
+        LAYER_GROUPING: None,
+        LAYER_CLASSIFIER: [],
+        LAYER_GROUP: 0,
+        LAYER_SEARCH: "",
+        LAYER_SORT: ["-date"],
+    }
 
     def __init__(self, database):
         from pysaurus.database.abstract_database import AbstractDatabase
 
         self._database: AbstractDatabase = database
 
+        self._setters = {
+            self.LAYER_SOURCE: self.set_sources,
+            self.LAYER_GROUPING: self.set_groups,
+            self.LAYER_CLASSIFIER: self.set_classifier_path,
+            self.LAYER_GROUP: self.set_group,
+            self.LAYER_SEARCH: self.set_search,
+            self.LAYER_SORT: self.set_sort,
+        }
+
     @abstractmethod
-    def set_sources(self, paths) -> None:
+    def set_sources(self, paths: Sequence[Sequence[str]]) -> None:
         pass
 
     @abstractmethod
     def set_groups(
-        self, field, is_property=None, sorting=None, reverse=None, allow_singletons=None
+        self,
+        field: Optional[str],
+        is_property=None,
+        sorting=None,
+        reverse=None,
+        allow_singletons=None,
     ) -> None:
         pass
 
     @abstractmethod
-    def set_classifier_path(self, path) -> None:
+    def set_classifier_path(self, path: Sequence[str]) -> None:
         pass
 
     @abstractmethod
@@ -49,11 +72,11 @@ class AbstractVideoProvider(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def set_search(self, text, cond) -> None:
+    def set_search(self, text: str, cond: str = "and") -> None:
         pass
 
     @abstractmethod
-    def set_sort(self, sorting) -> None:
+    def set_sort(self, sorting: Sequence[str]) -> None:
         pass
 
     @abstractmethod
@@ -61,11 +84,11 @@ class AbstractVideoProvider(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def get_grouping(self):
+    def get_grouping(self) -> GroupDef:
         pass
 
     @abstractmethod
-    def get_classifier_path(self):
+    def get_classifier_path(self) -> List[str]:
         pass
 
     @abstractmethod
@@ -73,15 +96,11 @@ class AbstractVideoProvider(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def get_search(self):
+    def get_search(self) -> SearchDef:
         pass
 
     @abstractmethod
-    def get_sort(self):
-        pass
-
-    @abstractmethod
-    def reset_parameters(self, *layer_names: str):
+    def get_sort(self) -> List[str]:
         pass
 
     @abstractmethod
@@ -127,6 +146,10 @@ class AbstractVideoProvider(metaclass=ABCMeta):
     def reset(self):
         self.reset_parameters(*self.LAYERS)
 
+    def reset_parameters(self, *layer_names: str):
+        for layer_name in layer_names:
+            self._setters[layer_name](self.DEFAULT_PARAMS[layer_name])
+
     def refresh(self):
         self._force_update(self.LAYER_SOURCE)
 
@@ -139,10 +162,6 @@ class AbstractVideoProvider(metaclass=ABCMeta):
             if group_def
             else None
         )
-
-    def get_search_def(self):
-        search_def = self.get_search()
-        return search_def.to_dict() if search_def else None
 
     def get_random_found_video_id(self) -> int:
         video_indices = []

@@ -135,21 +135,6 @@ class SaurusProvider(AbstractVideoProvider):
     def get_sort(self) -> List[str]:
         return self.sorting
 
-    def reset_parameters(self, *layer_names: str):
-        for layer_name in layer_names:
-            if layer_name == self.LAYER_SOURCE:
-                self.set_sources(())
-            elif layer_name == self.LAYER_GROUPING:
-                self.set_groups(None)
-            elif layer_name == self.LAYER_CLASSIFIER:
-                self.set_classifier_path(())
-            elif layer_name == self.LAYER_GROUP:
-                self.set_group(0)
-            elif layer_name == self.LAYER_SEARCH:
-                self.set_search("", "")
-            elif layer_name == self.LAYER_SORT:
-                self.set_sort(())
-
     def _convert_field_value_to_group_id(self, field_value):
         return self._groups.lookup_index(field_value)
 

@@ -1,3 +1,6 @@
+from typing import List, Self, Set
+
+
 class _Source(list):
     def __init__(self):
         super().__init__()
@@ -15,46 +18,65 @@ class _Source(list):
         self.__seen.add(flag)
         self.append(flag)
 
-    @property
-    def readable(self):
-        self._append("readable", mutually_exclusive=["unreadable"])
+    MUTUALLY_EXCLUSIVE = {
+        "discarded": ["allowed"],
+        "allowed": ["discarded"],
+        "readable": ["unreadable"],
+        "unreadable": ["readable", "with_thumbnails", "without_thumbnails"],
+        "found": ["not_found"],
+        "not_found": ["found"],
+        "with_thumbnails": ["unreadable", "without_thumbnails"],
+        "without_thumbnails": ["unreadable", "with_thumbnails"],
+    }
+
+    def _get(self, flag: str) -> Self:
+        assert flag in self.MUTUALLY_EXCLUSIVE
+        self._append(flag, mutually_exclusive=self.MUTUALLY_EXCLUSIVE[flag])
         return self
 
     @property
-    def unreadable(self):
-        self._append(
-            "unreadable",
-            mutually_exclusive=["readable", "with_thumbnails", "without_thumbnails"],
-        )
-        return self
+    def discarded(self) -> Self:
+        return self._get("discarded")
 
     @property
-    def found(self):
-        self._append("found", mutually_exclusive=["not_found"])
-        return self
+    def allowed(self) -> Self:
+        return self._get("allowed")
 
     @property
-    def not_found(self):
-        self._append("not_found", mutually_exclusive=["found"])
-        return self
+    def readable(self) -> Self:
+        return self._get("readable")
 
     @property
-    def with_thumbnails(self):
-        self._append(
-            "with_thumbnails", mutually_exclusive=["unreadable", "without_thumbnails"]
-        )
-        return self
+    def unreadable(self) -> Self:
+        return self._get("unreadable")
 
     @property
-    def without_thumbnails(self):
-        self._append(
-            "without_thumbnails", mutually_exclusive=["unreadable", "with_thumbnails"]
-        )
-        return self
+    def found(self) -> Self:
+        return self._get("found")
+
+    @property
+    def not_found(self) -> Self:
+        return self._get("not_found")
+
+    @property
+    def with_thumbnails(self) -> Self:
+        return self._get("with_thumbnails")
+
+    @property
+    def without_thumbnails(self) -> Self:
+        return self._get("without_thumbnails")
 
 
 class _SourceFactory:
     __slots__ = ()
+
+    @property
+    def discarded(self):
+        return _Source().discarded
+
+    @property
+    def allowed(self):
+        return _Source().allowed
 
     @property
     def readable(self):
@@ -79,6 +101,25 @@ class _SourceFactory:
     @property
     def without_thumbnails(self):
         return _Source().without_thumbnails
+
+    def all(self):
+        sources = set()
+        for flag in _Source.MUTUALLY_EXCLUSIVE:
+            self._expand([flag], sources)
+        for i, source in enumerate(sorted(sources)):
+            print(i + 1, source)
+
+    def _expand(self, source: List[str], sources: Set):
+        mu = _Source.MUTUALLY_EXCLUSIVE
+        allowed_flags = set(mu)
+        allowed_flags.difference_update(source)
+        for source_flag in source:
+            allowed_flags.difference_update(mu[source_flag])
+        if allowed_flags:
+            for allowed_flag in allowed_flags:
+                self._expand(source + [allowed_flag], sources)
+        else:
+            sources.add(tuple(sorted(source)))
 
 
 SOURCES = _SourceFactory()
