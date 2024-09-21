@@ -459,43 +459,6 @@ class AbstractDatabase(ABC):
         (row,) = self.get_videos(include=["filename"], where={"video_id": video_id})
         return AbsolutePath.ensure(row["filename"])
 
-    def count_property_for_videos(
-        self, video_indices: List[int], name: str
-    ) -> List[List]:
-        count = Counter()
-        for values in self.get_all_prop_values(name, indices=video_indices).values():
-            count.update(values)
-        return sorted(list(item) for item in count.items())
-
-    def update_property_for_videos(
-        self,
-        video_indices: List[int],
-        name: str,
-        values_to_add: list,
-        values_to_remove: list,
-    ) -> None:
-        print(
-            "Edit",
-            len(video_indices),
-            "video props, add",
-            values_to_add,
-            "remove",
-            values_to_remove,
-        )
-        values_to_add = set(self.validate_prop_values(name, values_to_add))
-        values_to_remove = set(self.validate_prop_values(name, values_to_remove))
-        old_props = self.get_all_prop_values(name, indices=video_indices)
-        self.set_property_for_videos(
-            name,
-            {
-                video_id: (
-                    (set(old_props.get(video_id, ())) - values_to_remove)
-                    | values_to_add
-                )
-                for video_id in video_indices
-            },
-        )
-
     def move_property_values(
         self, values: list, from_name: str, to_name: str, *, concatenate=False
     ) -> int:
@@ -576,6 +539,35 @@ class AbstractDatabase(ABC):
                 modified[video_id] = new_values
         if modified:
             self.set_property_for_videos(prop_name, modified)
+
+    def count_property_for_videos(
+        self, video_indices: List[int], name: str
+    ) -> List[List]:
+        count = Counter()
+        for values in self.get_all_prop_values(name, indices=video_indices).values():
+            count.update(values)
+        return sorted(list(item) for item in count.items())
+
+    def update_property_for_videos(
+        self,
+        video_indices: List[int],
+        name: str,
+        values_to_add: list,
+        values_to_remove: list,
+    ) -> None:
+        values_to_add = set(self.validate_prop_values(name, values_to_add))
+        values_to_remove = set(self.validate_prop_values(name, values_to_remove))
+        old_props = self.get_all_prop_values(name, indices=video_indices)
+        self.set_property_for_videos(
+            name,
+            {
+                video_id: (
+                    (set(old_props.get(video_id, ())) - values_to_remove)
+                    | values_to_add
+                )
+                for video_id in video_indices
+            },
+        )
 
     def set_property_for_videos(
         self, name: str, updates: Dict[int, Collection[PropUnitType]], merge=False
