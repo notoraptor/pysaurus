@@ -205,36 +205,42 @@ class AbstractDatabase(ABC):
             expected_thumbs: Dict[str, str] = {}
             thumb_errors: Dict[str, List[str]] = {}
             with tempfile.TemporaryDirectory() as tmp_dir:
-                results = Videos.hunt(files_to_update, needing_thumbs, tmp_dir)
-                # Possible cases for each result:
-                # nothing -> error_info XOR error_thumbnail
-                # only info, error_thumbnail ?
-                # only thumbnail
-                # info and thumbnail
-                for result in results:
-                    if result.info and result.thumbnail:
-                        new.append(result.info)
-                        expected_thumbs[result.filename.path] = result.thumbnail
-                    elif result.info:
-                        info = result.info
-                        info.errors = sorted(
-                            set(info.errors) | set(result.error_thumbnail)
-                        )
-                        new.append(info)
-                    elif result.thumbnail:
-                        expected_thumbs[result.filename.path] = result.thumbnail
-                    else:
-                        new.append(
-                            VideoEntry(
-                                filename=result.filename.path,
-                                errors=sorted(
-                                    set(result.error_info) | set(result.error_thumbnail)
-                                ),
-                                unreadable=True,
+                for result in Videos.hunt(files_to_update, needing_thumbs, tmp_dir):
+                    task = result.task
+                    filename = task.filename
+                    if task.need_info and task.thumb_path:
+                        if result.info and result.thumbnail:
+                            # info -> new
+                            # thumbnail -> expected_thumbs
+                            new.append(result.info)
+                            expected_thumbs[filename.path] = result.thumbnail
+                        elif result.info:
+                            # info + error_thumbnail -> new
+                            info = result.info
+                            info.errors = sorted(
+                                set(info.errors) | set(result.error_thumbnail)
                             )
-                        )
-                    if result.error_thumbnail:
-                        thumb_errors[result.filename.path] = result.error_thumbnail
+                            new.append(info)
+                        else:
+                            # unreadable + error_info -> new
+                            new.append(result.get_unreadable())
+                    elif task.need_info:
+                        if result.info:
+                            # info -> new
+                            new.append(info)
+                        else:
+                            # unreadable + error_info -> new
+                            new.append(result.get_unreadable())
+                    else:
+                        assert task.thumb_path
+                        if result.thumbnail:
+                            # thumbnail -> expected_thumbs
+                            expected_thumbs[filename.path] = result.thumbnail
+                        else:
+                            # error_info + error_thumbnail -> thumb_errors
+                            thumb_errors[filename.path] = sorted(
+                                set(result.error_info) | set(result.error_thumbnail)
+                            )
 
                 self._set_date(current_date)
                 if new:

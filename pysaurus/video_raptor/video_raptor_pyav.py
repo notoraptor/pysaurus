@@ -38,11 +38,18 @@ class VideoTask:
 
 @dataclass(slots=True)
 class VideoTaskResult:
-    filename: AbsolutePath
+    task: VideoTask
     info: Optional[VideoEntry] = None
     thumbnail: Optional[str] = None
     error_info: List[str] = dataclass_field(default_factory=list)
     error_thumbnail: List[str] = dataclass_field(default_factory=list)
+
+    def get_unreadable(self) -> VideoEntry:
+        return VideoEntry(
+            filename=self.task.filename.path,
+            errors=sorted(self.error_info),
+            unreadable=True,
+        )
 
 
 def open_video(filename: str):
@@ -59,7 +66,7 @@ class PythonVideoRaptor:
     @classmethod
     def capture(cls, task: VideoTask) -> VideoTaskResult:
         filename = task.filename
-        ret = VideoTaskResult(filename=filename)
+        ret = VideoTaskResult(task=task)
         try:
             container = open_video(filename.path)
         except Exception as exc:
