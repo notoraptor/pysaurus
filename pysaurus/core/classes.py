@@ -189,8 +189,8 @@ class DecoratingMethod:
     def __init__(self, method_name: str):
         self._method_name = method_name
 
-    def __call__(self, function):
-        method_name = self._method_name
+    def __call__(self_, function):
+        method_name = self_._method_name
 
         @functools.wraps(function)
         def wrapper(self, *args, **kwargs):

@@ -317,7 +317,7 @@ class AbstractDatabase(ABC):
             tasks = [
                 (video.filename, video.thumbnail)
                 for video in self.get_videos(
-                    include=("filename", "thumbnail_blob"),
+                    include=("filename", "thumbnail"),
                     where={"filename": missing_filenames},
                 )
             ]

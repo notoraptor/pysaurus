@@ -22,7 +22,7 @@ class LazyVideo(WithSchema, VideoPattern):
         "runtime",
         "discarded",
         "thumbnail_base64",
-        "thumbnail_blob",
+        "thumbnail",
     )
 
     def __init__(self, database, short_dict: dict, discarded=False):
@@ -221,15 +221,12 @@ class LazyVideo(WithSchema, VideoPattern):
     thumbnail_base64 = property(
         lambda self: self.database.jsondb_get_thumbnail_base64(self.filename)
     )
-    thumbnail_blob = property(
-        lambda self: self.database.jsondb_get_thumbnail_blob(self.filename)
-    )
     size_length = property(lambda self: StringedTuple((self.size, self.length)))
     filename_length = property(lambda self: len(self.filename))
 
     @property
     def thumbnail(self) -> bytes:
-        return self.database.jsondb_get_blob(self.filename)
+        return self.database.jsondb_get_thumbnail_blob(self.filename)
 
     @property
     def expected_raw_size(self):

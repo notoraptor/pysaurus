@@ -283,10 +283,6 @@ class SQLVideoWrapper(VideoPattern):
         return self.meta_title
 
     @property
-    def thumbnail_blob(self):
-        return self.data["thumbnail"]
-
-    @property
     def size_length(self):
         return StringedTuple((self.size, self.length))
 

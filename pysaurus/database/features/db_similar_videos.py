@@ -26,7 +26,7 @@ class DbImageProvider(AbstractImageProvider):
                 include=[
                     "video_id",
                     "filename",
-                    "thumbnail_blob",
+                    "thumbnail",
                     "duration",
                     "duration_time_base",
                     "date",
