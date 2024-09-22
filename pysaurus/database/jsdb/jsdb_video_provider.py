@@ -500,7 +500,7 @@ class JsonDatabaseVideoProvider(AbstractVideoProvider):
     def set_group(self, group_id):
         self.set_layer_params(LayerGroup, group_id=group_id)
 
-    def set_search(self, text, cond):
+    def set_search(self, text, cond="and"):
         self.set_layer_params(LayerSearch, search=SearchDef(text, cond))
 
     def set_sort(self, sorting):

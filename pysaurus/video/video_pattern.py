@@ -248,7 +248,7 @@ class VideoPattern(ABC):
         filename = self.filename
         standard_path = filename.standard_path
         file_title = filename.file_title
-        title = self.meta_title or file_title
+        title = str(self.meta_title) or file_title
         return {
             "audio_bit_rate": self.audio_bit_rate,
             "audio_bits": self.audio_bits,
