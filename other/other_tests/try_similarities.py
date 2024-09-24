@@ -1,6 +1,6 @@
 from ctypes import c_bool
 
-from other.legacy.pysaurus.database.video_similarities.backend_numpy import (
+from pysaurus.imgsimsearch.backend_numpy import (
     classify_similarities_directed as f_np,
     shift_bottom,
     shift_bottom_left,

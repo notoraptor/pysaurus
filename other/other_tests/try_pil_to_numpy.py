@@ -11,9 +11,7 @@ from other.legacy.pysaurus.database.video_similarities.backend_numba import (
 from other.legacy.pysaurus.database.video_similarities.backend_numba_numpy import (
     compare_faster as compare_numba_numpy,
 )
-from other.legacy.pysaurus.database.video_similarities.backend_numpy import (
-    compare_faster,
-)
+from pysaurus.imgsimsearch.backend_numpy import compare_faster
 from other.legacy.pysaurus.video_similarities import (
     compare_faster as compare_python,
     miniature_to_c_sequence,

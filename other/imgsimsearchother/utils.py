@@ -4,9 +4,7 @@ from typing import Any, Dict, List, Sequence, Set
 from tqdm import tqdm
 
 from other.imgsimsearchother.native_fine_comparator import compare_images_native
-from other.legacy.pysaurus.database.video_similarities.backend_numpy import (
-    SimilarityComparator,
-)
+from pysaurus.imgsimsearch.backend_numpy import SimilarityComparator
 from pysaurus.core.graph import Graph
 from pysaurus.core.miniature import NumpyMiniature
 from pysaurus.core.modules import ImageUtils
