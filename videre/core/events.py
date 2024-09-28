@@ -16,6 +16,7 @@ class MouseButton(Enum):
     BUTTON_X2 = pygame.BUTTON_X2
 
 
+@unique
 class TextWrap(Enum):
     NONE = 0
     CHAR = 1
@@ -23,6 +24,7 @@ class TextWrap(Enum):
     WORD_THEN_CHAR = 3  # todo
 
 
+@unique
 class TextAlign(Enum):
     NONE = 0
     LEFT = 1

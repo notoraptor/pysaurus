@@ -3,7 +3,7 @@ from typing import Sequence, Union
 import pygame
 import pygame.gfxdraw
 
-from videre.colors import Gradient
+from videre import Gradient
 from videre.widgets.widget import Widget
 
 

@@ -33,7 +33,7 @@ def stress_gradient(batch=200):
 
 
 def benchmark(function):
-    print(f"[benchmark/{function.__name__}]")
+    print(f"[benchmark/{function.__name__}]", file=sys.stderr)
     batch = 200
     with PerfCounter() as pc:
         function(batch)

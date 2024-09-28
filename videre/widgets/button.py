@@ -3,8 +3,7 @@ from typing import Callable, Optional
 import pygame
 import pygame.gfxdraw
 
-from videre import MotionEvent, MouseButton
-from videre.colors import Colors, Gradient
+from videre import Colors, Gradient, MotionEvent, MouseButton
 from videre.widgets.widget import Widget
 
 _OnClick = Callable[[Widget], None]
