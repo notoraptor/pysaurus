@@ -9,6 +9,7 @@ from pygame.event import Event
 from resource.fonts import FONT_NOTO_REGULAR
 from videre.core.events import MotionEvent, MouseButton
 from videre.core.pygame_font_factory import PygameFontFactory
+from videre.core.pygame_utils import PygameUtils
 from videre.layouts.abstractlayout import AbstractControlsLayout
 from videre.widgets.widget import Widget
 
@@ -40,11 +41,9 @@ class WindowLayout(AbstractControlsLayout):
         return screen
 
 
-class Window:
+class Window(PygameUtils):
     def __init__(self, title="Window", width=1280, height=720):
-        # Init pygame here.
-        pygame.init()
-
+        super().__init__()
         self.title = title
         self.width = width
         self.height = height

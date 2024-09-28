@@ -11,7 +11,7 @@ from videre import Colors, Gradient
 from videre.core.pygame_font_factory import PygameFontFactory
 
 
-def benchmark(batch=200):
+def stress_render_text(batch=200):
     height_delta = 2
     ff = PygameFontFactory(size=24, overrides=[FONT_NOTO_REGULAR.path])
     line_height = ff.get_font(" ").get_sized_height(ff.size) + height_delta
@@ -21,9 +21,22 @@ def benchmark(batch=200):
     print("Text length:", len(text), file=sys.stderr)
 
     ff_render_text = functools.partial(ff.render_text, width=None, compact=True)
+
+    for _ in trange(batch):
+        ff_render_text(text)
+
+
+def stress_gradient(batch=200):
+    grad = Gradient(Colors.white, Colors.green, Colors.blue, Colors.yellow)
+    for _ in trange(batch):
+        grad.generate(3840, 2160)
+
+
+def benchmark(function):
+    print(f"[benchmark/{function.__name__}]")
+    batch = 200
     with PerfCounter() as pc:
-        for _ in trange(batch):
-            ff_render_text(text)
+        function(batch)
     print(
         "Time:",
         Duration(pc.nanoseconds / 1000),
@@ -33,11 +46,6 @@ def benchmark(batch=200):
     )
 
 
-def benchmark_gradient(batch=200):
-    grad = Gradient(Colors.white, Colors.green, Colors.blue, Colors.yellow)
-    for _ in trange(batch):
-        grad.generate(3840, 2160)
-
-
 if __name__ == "__main__":
-    benchmark()
+    benchmark(stress_render_text)
+    benchmark(stress_gradient)

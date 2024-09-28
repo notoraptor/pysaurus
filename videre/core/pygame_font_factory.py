@@ -8,6 +8,7 @@ from pygame.freetype import Font as PFFont
 from pysaurus.core.unicode_utils import Unicode
 from resource.fonts import FontProvider
 from videre import TextAlign
+from videre.core.pygame_utils import PygameUtils
 
 # c, font, x, bounds
 CharTaskType = Tuple[str, PFFont, int, pygame.Rect]
@@ -120,8 +121,10 @@ def justify_words(lines: List[WordsLine], width: int):
                         x += wt.w + interval
 
 
-class PygameFontFactory:
+class PygameFontFactory(PygameUtils):
     def __init__(self, size=14, origin=True, *, overrides=(), use_default_font=False):
+        super().__init__()
+
         self._prov = FontProvider(overrides=overrides)
         self.name_to_font = {}
         self.size = size
