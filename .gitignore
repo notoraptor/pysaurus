@@ -19,3 +19,4 @@ webrtc_event_logs/
 /.*
 /tests/*.png
 ignored
+__enamlcache__
