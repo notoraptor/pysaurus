@@ -42,6 +42,9 @@ class WindowLayout(AbstractControlsLayout):
 
 class Window:
     def __init__(self, title="Window", width=1280, height=720):
+        # Init pygame here.
+        pygame.init()
+
         self.title = title
         self.width = width
         self.height = height
