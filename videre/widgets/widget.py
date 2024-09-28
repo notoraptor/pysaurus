@@ -25,6 +25,8 @@ class Widget(PygameUtils):
     )
 
     def __init__(self, weight=0, parent=None, key=None):
+        super().__init__()
+
         self._key = key or id(self)
         self._old = {}
         self._new = {"weight": weight}

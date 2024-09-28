@@ -159,6 +159,8 @@ class Gradient(PygameUtils):
     __slots__ = ("_colors", "_vertical", "_base", "_gen")
 
     def __init__(self, *colors: pygame.Color, **kwargs):
+        super().__init__()
+
         self._colors = colors or [Colors.transparent]
         self._vertical = kwargs.pop("vertical", False)
         self._base = None
