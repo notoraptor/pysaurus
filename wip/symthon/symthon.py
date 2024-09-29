@@ -1,6 +1,6 @@
 import operator
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Iterable, List, Tuple, Union
+from typing import Any, Dict, Iterable, List, Self, Tuple, Union
 
 
 class Incrementer:
@@ -30,6 +30,30 @@ class Apply(ABC):
     def run(self, space: Dict[str, Any], prev: Any) -> Any:
         raise NotImplementedError()
 
+    def __getattr__(self, item: str) -> Self:
+        return _ApplyFunction(getattr, self, Constant(item))
+
+    def __call__(self, *args, **kwargs) -> Self:
+        return _ApplyCall(self, *args, **kwargs)
+
+    def __mul__(self, other) -> Self:
+        return _ApplyFunction(operator.mul, self, other)
+
+    def __add__(self, other) -> Self:
+        return _ApplyFunction(operator.add, self, other)
+
+    def __pow__(self, power, modulo=None) -> Self:
+        return _ApplyFunction(operator.pow, self, power)
+
+    def __neg__(self) -> Self:
+        return _ApplyFunction(operator.neg, self)
+
+    def __rmul__(self, other) -> Self:
+        return self.__mul__(other)
+
+    def __radd__(self, other) -> Self:
+        return self.__add__(other)
+
 
 class Constant(Apply):
     def __init__(self, value):
@@ -49,17 +73,34 @@ def _wrap(something) -> Apply:
 
 
 class _ApplyFunction(Apply):
-    def __init__(self, function: callable, *inputs: Apply):
+    def __init__(self, function: callable, *inputs: Apply, **kwargs):
         super().__init__()
         self._function = function
         self._inputs = [_wrap(inp) for inp in inputs]
+        self._kwargs = {key: _wrap(value) for key, value in kwargs.items()}
 
     def __repr__(self):
         return (f"{self._function.__name__}"
                 f"({', '.join(repr(inp) for inp in self._inputs)})")
 
     def run(self, space: Dict[str, Any], prev: Any) -> Any:
-        return self._function(*(inp.run(space, prev) for inp in self._inputs))
+        return self._function(*(inp.run(space, prev) for inp in self._inputs), **{key: value.run(space, prev) for key, value in self._kwargs.items()})
+
+
+class _ApplyCall(Apply):
+    def __init__(self, function: Apply, *inputs: Apply, **kwargs):
+        super().__init__()
+        self._function = function
+        self._inputs = [_wrap(inp) for inp in inputs]
+        self._kwargs = {key: _wrap(value) for key, value in kwargs.items()}
+
+    def __repr__(self):
+        return (f"{self._function}"
+                f"({', '.join(repr(inp) for inp in self._inputs)})")
+
+    def run(self, space: Dict[str, Any], prev: Any) -> Any:
+        function = self._function.run(space, prev)
+        return function(*(inp.run(space, prev) for inp in self._inputs), **{key: value.run(space, prev) for key, value in self._kwargs.items()})
 
 
 class Variable(Apply):
@@ -76,30 +117,6 @@ class Variable(Apply):
 
     def run(self, space: Dict[str, Any], prev: Any) -> Any:
         return space[self._name]
-
-    def __getattr__(self, item: str) -> Apply:
-        return _ApplyFunction(getattr, self, Constant(item))
-
-    def __call__(self, *args, **kwargs) -> Apply:
-        pass
-
-    def __mul__(self, other) -> Apply:
-        return _ApplyFunction(operator.mul, self, other)
-
-    def __add__(self, other) -> Apply:
-        return _ApplyFunction(operator.add, self, other)
-
-    def __pow__(self, power, modulo=None) -> Apply:
-        return _ApplyFunction(operator.pow, self, power)
-
-    def __neg__(self) -> Apply:
-        return _ApplyFunction(operator.neg, self)
-
-    def __rmul__(self, other) -> Apply:
-        return self.__mul__(other)
-
-    def __radd__(self, other) -> Apply:
-        return self.__add__(other)
 
 
 class ApplySet(Apply):
@@ -189,8 +206,8 @@ def main():
     f = Lambda((V.x, V.y), [V.x + V.y])
     print(f(4, 5))
 
-    f = Lambda(V.s, [V.s.strip])
-    print(f("hello"))
+    f = Lambda(V.s, [V.s.strip("h") * 2])
+    print(f("hello    "))
 
 
 if __name__ == '__main__':
