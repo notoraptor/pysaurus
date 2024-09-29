@@ -1,6 +1,8 @@
 import operator
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Iterable, List, Self, Tuple, Union
+from typing import Any, Dict, List, Self, Sequence, Tuple, Union
+
+from pysaurus.core import functions
 
 
 class Incrementer:
@@ -10,100 +12,134 @@ class Incrementer:
         self._count = 0
 
     def next(self) -> int:
-        value = self._count
         self._count += 1
-        return value
+        return self._count
 
 
-_INCR = Incrementer()
+INCREMENTER = Incrementer()
 
 
-class Apply(ABC):
+def _name_of(something):
+    if isinstance(something, Variable):
+        return repr(something)
+    if hasattr(something, "__qualname__"):
+        return something.__qualname__
+    if hasattr(something, "__name__"):
+        return something.__name__
+    return repr(something)
+
+
+def _binary_op_method(function):
+    def method(self, other):
+        return Function(function, self, other)
+
+    return method
+
+
+class Variable(ABC):
+    __slots__ = ("order",)
+
     def __init__(self):
-        self._id = _INCR.next()
+        self.order = INCREMENTER.next()
 
-    @property
-    def order(self) -> int:
-        return self._id
+    def __repr__(self):
+        return type(self).__name__
 
     @abstractmethod
-    def run(self, space: Dict[str, Any], prev: Any) -> Any:
+    def run(self, space: Dict[str, Any]) -> Any:
         raise NotImplementedError()
 
-    def __getattr__(self, item: str) -> Self:
-        return _ApplyFunction(getattr, self, Constant(item))
+    def __getattr__(self, item) -> Self:
+        return Function(getattr, self, item)
 
     def __call__(self, *args, **kwargs) -> Self:
-        return _ApplyCall(self, *args, **kwargs)
-
-    def __mul__(self, other) -> Self:
-        return _ApplyFunction(operator.mul, self, other)
+        return Function(self, *args, **kwargs)
 
     def __add__(self, other) -> Self:
-        return _ApplyFunction(operator.add, self, other)
+        return Function(operator.add, self, other)
+
+    def __sub__(self, other) -> Self:
+        return Function(operator.sub, self, other)
+
+    def __mul__(self, other) -> Self:
+        return Function(operator.mul, self, other)
+
+    def __truediv__(self, other) -> Self:
+        return Function(operator.truediv, self, other)
+
+    def __floordiv__(self, other) -> Self:
+        return Function(operator.floordiv, self, other)
+
+    def __mod__(self, other) -> Self:
+        return Function(operator.mod, self, other)
 
     def __pow__(self, power, modulo=None) -> Self:
-        return _ApplyFunction(operator.pow, self, power)
-
-    def __neg__(self) -> Self:
-        return _ApplyFunction(operator.neg, self)
-
-    def __rmul__(self, other) -> Self:
-        return self.__mul__(other)
+        return Function(operator.pow, self, power)
 
     def __radd__(self, other) -> Self:
         return self.__add__(other)
 
+    def __rsub__(self, other) -> Self:
+        return Function(operator.add, -self, other)
 
-class Constant(Apply):
-    def __init__(self, value):
-        assert not isinstance(value, Apply)
-        super().__init__()
-        self._v = value
+    def __rmul__(self, other) -> Self:
+        return self.__mul__(other)
 
-    def __repr__(self):
-        return repr(self._v)
+    def __rtruediv__(self, other) -> Self:
+        return Function(operator.truediv, other, self)
 
-    def run(self, space: Dict[str, Any], prev: Any) -> Any:
-        return self._v
+    def __rfloordiv__(self, other) -> Self:
+        return Function(operator.floordiv, other, self)
+
+    def __rmod__(self, other) -> Self:
+        return Function(operator.mod, other, self)
+
+    def __rpow__(self, other) -> Self:
+        return Function(operator.pow, other, self)
+
+    def __eq__(self, other) -> Self:
+        return Function(operator.eq, self, other)
+
+    def __ne__(self, other) -> Self:
+        return Function(operator.ne, self, other)
+
+    def __lt__(self, other) -> Self:
+        return Function(operator.lt, self, other)
+
+    def __gt__(self, other) -> Self:
+        return Function(operator.gt, self, other)
+
+    def __le__(self, other) -> Self:
+        return Function(operator.le, self, other)
+
+    def __ge__(self, other) -> Self:
+        return Function(operator.ge, self, other)
+
+    def __and__(self, other) -> Self:
+        return Function(operator.and_, self, other)
+
+    def __rand__(self, other) -> Self:
+        return Function(operator.and_, other, self)
+
+    def __or__(self, other) -> Self:
+        return Function(operator.or_, self, other)
+
+    def __ror__(self, other) -> Self:
+        return Function(operator.or_, other, self)
+
+    def __xor__(self, other) -> Self:
+        return Function(operator.xor, self, other)
+
+    def __rxor__(self, other) -> Self:
+        return Function(operator.xor, other, self)
+
+    def __neg__(self) -> Self:
+        return Function(operator.neg, self)
 
 
-def _wrap(something) -> Apply:
-    return something if isinstance(something, Apply) else Constant(something)
+class Reference(Variable):
+    __slots__ = ("_name",)
 
-
-class _ApplyFunction(Apply):
-    def __init__(self, function: callable, *inputs: Apply, **kwargs):
-        super().__init__()
-        self._function = function
-        self._inputs = [_wrap(inp) for inp in inputs]
-        self._kwargs = {key: _wrap(value) for key, value in kwargs.items()}
-
-    def __repr__(self):
-        return (f"{self._function.__name__}"
-                f"({', '.join(repr(inp) for inp in self._inputs)})")
-
-    def run(self, space: Dict[str, Any], prev: Any) -> Any:
-        return self._function(*(inp.run(space, prev) for inp in self._inputs), **{key: value.run(space, prev) for key, value in self._kwargs.items()})
-
-
-class _ApplyCall(Apply):
-    def __init__(self, function: Apply, *inputs: Apply, **kwargs):
-        super().__init__()
-        self._function = function
-        self._inputs = [_wrap(inp) for inp in inputs]
-        self._kwargs = {key: _wrap(value) for key, value in kwargs.items()}
-
-    def __repr__(self):
-        return (f"{self._function}"
-                f"({', '.join(repr(inp) for inp in self._inputs)})")
-
-    def run(self, space: Dict[str, Any], prev: Any) -> Any:
-        function = self._function.run(space, prev)
-        return function(*(inp.run(space, prev) for inp in self._inputs), **{key: value.run(space, prev) for key, value in self._kwargs.items()})
-
-
-class Variable(Apply):
     def __init__(self, name: str):
         super().__init__()
         self._name = name
@@ -115,100 +151,129 @@ class Variable(Apply):
     def name(self) -> str:
         return self._name
 
-    def run(self, space: Dict[str, Any], prev: Any) -> Any:
+    def run(self, space: Dict[str, Any]) -> Any:
         return space[self._name]
 
 
-class ApplySet(Apply):
-    def __init__(self, variable: Variable, expression: Apply):
+class Value(Variable):
+    __slots__ = ("_value",)
+
+    def __init__(self, value):
         super().__init__()
-        self._variable = variable
-        self._expression = _wrap(expression)
+        self._value = value
 
     def __repr__(self):
-        return f"{self._variable} = {self._expression}"
+        return _name_of(self._value)
 
-    def run(self, space: Dict[str, Any], prev: Any) -> Any:
-        space[self._variable.name] = self._expression.run(space, prev)
+    def run(self, space: Dict[str, Any]) -> Any:
+        return self._value
 
 
-class ApplyReturn(Apply):
-    def __init__(self, expression: Apply):
+class Expression(Variable):
+    __slots__ = ()
+
+
+class Function(Expression):
+    __slots__ = ("_function", "_args", "_kwargs")
+
+    def __init__(self, function, *args, **kwargs):
         super().__init__()
-        self._ret = _wrap(expression)
+        self._function = self._wrap(function)
+        self._args = [self._wrap(arg) for arg in args]
+        self._kwargs = {
+            self._assert_str(key): self._wrap(value) for key, value in kwargs.items()
+        }
 
     def __repr__(self):
-        return f"return {self._ret}"
+        output = (
+            f"{_name_of(self._function)}({', '.join(repr(arg) for arg in self._args)}"
+        )
+        if self._kwargs:
+            output += " " + ", ".join(
+                f"{key}={value}" for key, value in self._kwargs.items()
+            )
+        return output + ")"
 
-    def run(self, space: Dict[str, Any], prev: Any) -> Any:
-        return self._ret.run(space, prev)
+    @staticmethod
+    def _assert_str(value):
+        assert isinstance(value, str)
+        return value
+
+    @staticmethod
+    def _assert_expr(value) -> Expression:
+        assert isinstance(value, Expression)
+        return value
+
+    @staticmethod
+    def _wrap(something) -> Variable:
+        return something if isinstance(something, Variable) else Value(something)
+
+    def run(self, space: Dict[str, Any]) -> Any:
+        return (self._function.run(space))(
+            *(arg.run(space) for arg in self._args),
+            **{key: value.run(space) for key, value in self._kwargs.items()},
+        )
 
 
-class Executor:
-    def set(self, variable: Variable, expression: Apply) -> Apply:
-        return ApplySet(variable, expression)
+class ExprSet(Expression):
+    def __init__(self, reference: Reference, variable: Variable):
+        super().__init__()
+        self._ref = reference
+        self._var = variable
 
-    def return_(self, expression: Apply) -> Apply:
-        return ApplyReturn(expression)
+    def __repr__(self):
+        return f"{self._ref.name} = {self._var}"
 
-
-E = Executor()
-
-
-class VariableFactory:
-    def __getattr__(self, item) -> Variable:
-        return Variable(item)
-
-
-V = VariableFactory()
+    def run(self, space: Dict[str, Any]) -> Any:
+        space[self._ref.name] = self._var.run(space)
 
 
 class Lambda:
-    def __init__(self, arguments: Union[Variable, Tuple[Variable, ...]], body: Iterable[Apply]):
-        if isinstance(arguments, Variable):
+    def __init__(
+        self,
+        arguments: Union[Reference, Tuple[Reference, ...]],
+        body: Sequence[Expression],
+    ):
+        if isinstance(arguments, Reference):
             arguments = (arguments,)
         else:
             assert isinstance(arguments, tuple)
             for argument in arguments:
-                assert isinstance(argument, Variable)
+                assert isinstance(argument, Reference)
         assert len(set(arg.name for arg in arguments)) == len(arguments)
 
-        if isinstance(body, set):
-            body = sorted(body, key=lambda apply: apply.order)
-        else:
-            body = list(body)
+        body = [Function._wrap(expr) for expr in body]
 
-        self._arguments: Tuple[Variable, ...] = arguments
-        self._body: List[Apply] = body
+        self._arguments: Tuple[Reference, ...] = arguments
+        self._body: List[Expression] = body
 
     def __call__(self, *args):
         if len(args) != len(self._arguments):
-            raise RuntimeError(f"Expected {len(self._arguments)} arguments, got {len(args)}")
-        space = {
-            variable.name: args[i]
-            for i, variable in enumerate(self._arguments)
-        }
+            raise RuntimeError(
+                f"Expected {len(self._arguments)} arguments, got {len(args)}"
+            )
+        space = {ref.name: args[i] for i, ref in enumerate(self._arguments)}
         ret = None
-        for apply in self._body:
-            print(apply)
-            ret = apply.run(space, ret)
+        for expr in self._body:
+            ret = expr.run(space)
         return ret
 
 
-def main():
-    function = Lambda(V.x, {
-        E.set(V.y, 2 * V.x),
-        E.set(V.z, V.x ** V.y),
-        E.return_(-V.z),
-    })
-    print(function(2))
-
-    f = Lambda((V.x, V.y), [V.x + V.y])
-    print(f(4, 5))
-
-    f = Lambda(V.s, [V.s.strip("h") * 2])
-    print(f("hello    "))
+class ReferenceFactory:
+    def __getattr__(self, item) -> Reference:
+        return Reference(item)
 
 
-if __name__ == '__main__':
-    main()
+class ExpressionFactory:
+    def set(self, reference: Reference, variable: Variable) -> Expression:
+        return ExprSet(reference, variable)
+
+    def not_(self, variable: Variable) -> Function:
+        return Function(operator.not_, variable)
+
+    def return_(self, variable: Variable) -> Expression:
+        return Function(functions.identity, variable)
+
+
+V = ReferenceFactory()
+E = ExpressionFactory()
