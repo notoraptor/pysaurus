@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import List, Self, Sequence
 
 from pysaurus.core.classes import StringPrinter
-from pysaurus.core.functions import are_hashable_by
+from pysaurus.core.functions import are_hashable_by, boolean_and, boolean_or, if_else
 
 
 class Utils:
@@ -182,18 +182,6 @@ class Feed(AbstractFunction):
 
     def run(self, *args):
         raise ValueError("Please, feed me.")
-
-
-def boolean_and(a, b):
-    return a and b
-
-
-def boolean_or(a, b):
-    return a or b
-
-
-def if_else(x, y, z):
-    return y if x else z
 
 
 FUNC_FEED = Feed()

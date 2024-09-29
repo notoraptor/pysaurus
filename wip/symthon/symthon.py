@@ -133,8 +133,29 @@ class Variable(ABC):
     def __rxor__(self, other) -> Self:
         return Function(operator.xor, other, self)
 
+    def __lshift__(self, other) -> Self:
+        return Function(operator.lshift, self, other)
+
+    def __rlshift__(self, other) -> Self:
+        return Function(operator.lshift, other, self)
+
+    def __rshift__(self, other) -> Self:
+        return Function(operator.rshift, self, other)
+
+    def __rrshift__(self, other) -> Self:
+        return Function(operator.rshift, other, self)
+
+    def __invert__(self) -> Self:
+        return Function(operator.inv, self)
+
     def __neg__(self) -> Self:
         return Function(operator.neg, self)
+
+    def __pos__(self) -> Self:
+        return Function(operator.pos, self)
+
+    def __abs__(self) -> Self:
+        return Function(abs, self)
 
 
 class Reference(Variable):
@@ -267,6 +288,12 @@ class ReferenceFactory:
 class ExpressionFactory:
     def set(self, reference: Reference, variable: Variable) -> Expression:
         return ExprSet(reference, variable)
+
+    def and_(self, a: Variable, b: Variable) -> Function:
+        return Function(functions.boolean_and, a, b)
+
+    def or_(self, a: Variable, b: Variable) -> Function:
+        return Function(functions.boolean_or, a, b)
 
     def not_(self, variable: Variable) -> Function:
         return Function(operator.not_, variable)
