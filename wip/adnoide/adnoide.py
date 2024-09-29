@@ -86,7 +86,7 @@ TYPE_TO_FOOD_TYPE = {bool: Bool, int: Int, float: Float, object: Anything}
 
 
 class AbstractFunction(ABC):
-    __slots__ = ("nb_inputs", "name", "__uid", "_input_types", "_output_type")
+    __slots__ = ("name", "__uid", "_input_types", "_output_type")
 
     def __init__(
         self,
@@ -95,17 +95,19 @@ class AbstractFunction(ABC):
         input_types: Sequence[FoodType] = (),
         output_type: FoodType = Numeric,
     ):
-        self.nb_inputs = nb_inputs
-        self.name: str = (name or type(self).__name__).lower()
-        self.__uid = Utils.generate_uid(self.name)
-
         if not input_types:
             input_types = [Numeric] * nb_inputs
         assert len(input_types) == nb_inputs
         output_type = output_type or Numeric
 
+        self.name: str = (name or type(self).__name__).lower()
+        self.__uid = Utils.generate_uid(self.name)
         self._input_types: List[FoodType] = input_types
         self._output_type: FoodType = output_type
+
+    @property
+    def nb_inputs(self) -> int:
+        return len(self._input_types)
 
     @property
     def unique_id(self) -> int:
@@ -113,7 +115,7 @@ class AbstractFunction(ABC):
 
     @property
     def input_types(self) -> List[FoodType]:
-        return self._input_types
+        return list(self._input_types)
 
     @property
     def output_type(self) -> FoodType:
@@ -159,14 +161,14 @@ class Function(AbstractFunction):
 
 
 class Constant(AbstractFunction):
-    __slots__ = ("const",)
+    __slots__ = ("_const",)
 
     def __init__(self, const, name):
         super().__init__(0, name, output_type=TYPE_TO_FOOD_TYPE[type(const)])
-        self.const = const
+        self._const = const
 
     def run(self, *args):
-        return self.const
+        return self._const
 
 
 class Feed(AbstractFunction):
@@ -345,6 +347,14 @@ class DNATranslationError(DNAError):
     pass
 
 
+class DNATooShortForTranslationError(DNATranslationError):
+    pass
+
+
+class DNATooLongForTranslationError(DNATranslationError):
+    pass
+
+
 class ProteinError(DNAError):
     pass
 
@@ -392,31 +402,31 @@ class SequenceGenerator:
     # MAX_LENGTH = 1000
     MAX_LENGTH = 20
 
-    __slots__ = ()
+    __slots__ = ("rng",)
 
     def __init__(self, seed: int = None):
-        if seed is not None:
-            random.seed(seed)
+        self.rng = random.Random(seed)
 
     def generate_dna(self) -> List[int]:
         return [
-            random.choice(self.CODONS)
-            for _ in range(random.randint(self.MIN_LENGTH, self.MAX_LENGTH))
+            self.rng.choice(self.CODONS)
+            for _ in range(self.rng.randint(self.MIN_LENGTH, self.MAX_LENGTH))
         ]
 
     def translate_dna(self, sequence: List[int]) -> Protein:
         nb_feeds = Integer()
         result = self._parse_codon(sequence, 0, nb_feeds)
         if result.next_unparsed_position != len(sequence):
-            raise DNATranslationError(
-                f"Unparsed position "
-                f"{result.next_unparsed_position + 1} / {len(sequence)}"
+            raise DNATooLongForTranslationError(
+                result.next_unparsed_position + 1, len(sequence)
             )
         return Protein(node=result.node, nb_inputs=int(nb_feeds))
 
     def _parse_codon(
         self, sequence: List[int], position: int, nb_feeds: Integer
     ) -> ParsingResult:
+        if position >= len(sequence):
+            raise DNATooShortForTranslationError(position + 1, len(sequence))
         codon = sequence[position]
         function = self.CODON_TO_FUNCTION[codon]
         if isinstance(function, Function):
