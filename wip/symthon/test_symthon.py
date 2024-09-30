@@ -242,3 +242,23 @@ def test_and_or_not():
     assert or_(0, 5) == 5
     assert or_(0, 0) == 0
     assert or_(0, False) is False
+
+
+def test_getattr_setattr_call():
+    class A:
+        def __init__(self):
+            self.x = 10
+
+        def thing(self):
+            return self.x + 1
+
+    a = A()
+    f = Lambda((), [E.set(V[a].x, V[a].x + 1), V[a].thing()])
+    assert f() == 12
+    assert a.x == 11
+
+    b = A()
+    b.x = a
+    g = Lambda((), [E.set(V[b].x.x, 2.5 * V[a].x)])
+    assert g() is None
+    assert a.x == 27.5

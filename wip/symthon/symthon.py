@@ -50,7 +50,7 @@ class Variable(ABC):
         raise NotImplementedError()
 
     def __getattr__(self, item) -> Self:
-        return Function(getattr, self, item)
+        return Getattr(self, item)
 
     def __call__(self, *args, **kwargs) -> Self:
         return Function(self, *args, **kwargs)
@@ -193,6 +193,20 @@ class Value(Variable):
 class Expression(Variable):
     __slots__ = ()
 
+    @staticmethod
+    def _assert_str(value):
+        assert isinstance(value, str)
+        return value
+
+    @staticmethod
+    def _assert_expr(value) -> Self:
+        assert isinstance(value, Expression)
+        return value
+
+    @staticmethod
+    def _wrap(something) -> Variable:
+        return something if isinstance(something, Variable) else Value(something)
+
 
 class Function(Expression):
     __slots__ = ("_function", "_args", "_kwargs")
@@ -215,20 +229,6 @@ class Function(Expression):
             )
         return output + ")"
 
-    @staticmethod
-    def _assert_str(value):
-        assert isinstance(value, str)
-        return value
-
-    @staticmethod
-    def _assert_expr(value) -> Expression:
-        assert isinstance(value, Expression)
-        return value
-
-    @staticmethod
-    def _wrap(something) -> Variable:
-        return something if isinstance(something, Variable) else Value(something)
-
     def run(self, space: Dict[str, Any]) -> Any:
         return (self._function.run(space))(
             *(arg.run(space) for arg in self._args),
@@ -236,17 +236,53 @@ class Function(Expression):
         )
 
 
-class ExprSet(Expression):
-    def __init__(self, reference: Reference, variable: Variable):
-        super().__init__()
-        self._ref = reference
-        self._var = variable
+class Getattr(Function):
+    __slots__ = ()
 
-    def __repr__(self):
-        return f"{self._ref.name} = {self._var}"
+    def __init__(self, obj, name):
+        super().__init__(getattr, obj, name)
+
+    @property
+    def obj(self) -> Variable:
+        return self._args[0]
+
+    @property
+    def name(self) -> Variable:
+        return self._args[1]
+
+
+class ExprSetattr(Expression):
+    def __init__(self, lvalue: Variable, rvalue: Variable):
+        lvalue = self._wrap(lvalue)
+        rvalue = self._wrap(rvalue)
+        assert isinstance(lvalue, (Getattr, Reference))
+        super().__init__()
+        self._lvalue = lvalue
+        self._rvalue = rvalue
 
     def run(self, space: Dict[str, Any]) -> Any:
-        space[self._ref.name] = self._var.run(space)
+        rvalue = self._rvalue.run(space)
+        if isinstance(self._lvalue, Reference):
+            space[self._lvalue.name] = rvalue
+        else:
+            assert isinstance(self._lvalue, Getattr)
+            attribute_path = []
+            curr = self._lvalue
+            while True:
+                attribute_path.append(curr.name)
+                obj = curr.obj
+                if isinstance(obj, Getattr):
+                    curr = obj
+                else:
+                    origin = obj
+                    break
+            base = origin.run(space)
+            *prev_paths, last_path = [
+                self._assert_str(name.run(space)) for name in reversed(attribute_path)
+            ]
+            for key in prev_paths:
+                base = getattr(base, key)
+            setattr(base, last_path, rvalue)
 
 
 class Lambda:
@@ -281,13 +317,19 @@ class Lambda:
 
 
 class ReferenceFactory:
-    def __getattr__(self, item) -> Reference:
+    def __getattr__(self, item: str) -> Reference:
         return Reference(item)
+
+    def __getitem__(self, item) -> Value:
+        assert not isinstance(item, Variable)
+        return Value(item)
 
 
 class ExpressionFactory:
-    def set(self, reference: Reference, variable: Variable) -> Expression:
-        return ExprSet(reference, variable)
+    def set(
+        self, reference: Union[Reference, Getattr], variable: Variable
+    ) -> Expression:
+        return ExprSetattr(reference, variable)
 
     def and_(self, a: Variable, b: Variable) -> Function:
         return Function(functions.boolean_and, a, b)
