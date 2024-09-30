@@ -1,22 +1,13 @@
 import operator
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Self, Sequence, Tuple, Union
+from typing import Any, Dict, Self, Sequence, Tuple, Union
 
 from pysaurus.core import functions
 
 
-class Incrementer:
-    __slots__ = ("_count",)
-
-    def __init__(self):
-        self._count = 0
-
-    def next(self) -> int:
-        self._count += 1
-        return self._count
-
-
-INCREMENTER = Incrementer()
+def _assert_str(value) -> str:
+    assert isinstance(value, str)
+    return value
 
 
 def _name_of(something):
@@ -29,24 +20,24 @@ def _name_of(something):
     return repr(something)
 
 
-def _binary_op_method(function):
-    def method(self, other):
-        return Function(function, self, other)
+class _Returned:
+    __slots__ = ("value",)
 
-    return method
+    def __init__(self, value):
+        self.value = value
+
+    def __bool__(self):
+        return True
 
 
 class Variable(ABC):
-    __slots__ = ("order",)
-
-    def __init__(self):
-        self.order = INCREMENTER.next()
+    __slots__ = ()
 
     def __repr__(self):
         return type(self).__name__
 
     @abstractmethod
-    def run(self, space: Dict[str, Any]) -> Any:
+    def __run__(self, space: Dict[str, Any]) -> Any:
         raise NotImplementedError()
 
     def __getattr__(self, item) -> Self:
@@ -157,6 +148,10 @@ class Variable(ABC):
     def __abs__(self) -> Self:
         return Function(abs, self)
 
+    @classmethod
+    def _wrap(cls, something) -> Self:
+        return something if isinstance(something, Variable) else Value(something)
+
 
 class Reference(Variable):
     __slots__ = ("_name",)
@@ -172,7 +167,7 @@ class Reference(Variable):
     def name(self) -> str:
         return self._name
 
-    def run(self, space: Dict[str, Any]) -> Any:
+    def __run__(self, space: Dict[str, Any]) -> Any:
         return space[self._name]
 
 
@@ -186,29 +181,15 @@ class Value(Variable):
     def __repr__(self):
         return _name_of(self._value)
 
-    def run(self, space: Dict[str, Any]) -> Any:
+    def __run__(self, space: Dict[str, Any]) -> Any:
         return self._value
 
 
-class Expression(Variable):
+class _Expression(Variable):
     __slots__ = ()
 
-    @staticmethod
-    def _assert_str(value):
-        assert isinstance(value, str)
-        return value
 
-    @staticmethod
-    def _assert_expr(value) -> Self:
-        assert isinstance(value, Expression)
-        return value
-
-    @staticmethod
-    def _wrap(something) -> Variable:
-        return something if isinstance(something, Variable) else Value(something)
-
-
-class Function(Expression):
+class Function(_Expression):
     __slots__ = ("_function", "_args", "_kwargs")
 
     def __init__(self, function, *args, **kwargs):
@@ -216,7 +197,7 @@ class Function(Expression):
         self._function = self._wrap(function)
         self._args = [self._wrap(arg) for arg in args]
         self._kwargs = {
-            self._assert_str(key): self._wrap(value) for key, value in kwargs.items()
+            _assert_str(key): self._wrap(value) for key, value in kwargs.items()
         }
 
     def __repr__(self):
@@ -229,10 +210,10 @@ class Function(Expression):
             )
         return output + ")"
 
-    def run(self, space: Dict[str, Any]) -> Any:
-        return (self._function.run(space))(
-            *(arg.run(space) for arg in self._args),
-            **{key: value.run(space) for key, value in self._kwargs.items()},
+    def __run__(self, space: Dict[str, Any]) -> Any:
+        return (self._function.__run__(space))(
+            *(arg.__run__(space) for arg in self._args),
+            **{key: value.__run__(space) for key, value in self._kwargs.items()},
         )
 
 
@@ -251,7 +232,9 @@ class Getattr(Function):
         return self._args[1]
 
 
-class ExprSetattr(Expression):
+class Assign(_Expression):
+    __slots__ = ["_lvalue", "_rvalue"]
+
     def __init__(self, lvalue: Variable, rvalue: Variable):
         lvalue = self._wrap(lvalue)
         rvalue = self._wrap(rvalue)
@@ -260,8 +243,8 @@ class ExprSetattr(Expression):
         self._lvalue = lvalue
         self._rvalue = rvalue
 
-    def run(self, space: Dict[str, Any]) -> Any:
-        rvalue = self._rvalue.run(space)
+    def __run__(self, space: Dict[str, Any]) -> Any:
+        rvalue = self._rvalue.__run__(space)
         if isinstance(self._lvalue, Reference):
             space[self._lvalue.name] = rvalue
         else:
@@ -276,20 +259,99 @@ class ExprSetattr(Expression):
                 else:
                     origin = obj
                     break
-            base = origin.run(space)
+            base = origin.__run__(space)
             *prev_paths, last_path = [
-                self._assert_str(name.run(space)) for name in reversed(attribute_path)
+                _assert_str(name.__run__(space)) for name in reversed(attribute_path)
             ]
             for key in prev_paths:
                 base = getattr(base, key)
             setattr(base, last_path, rvalue)
 
 
+class Return(_Expression):
+    __slots__ = ("_ret",)
+
+    def __init__(self, ret: Variable):
+        super().__init__()
+        self._ret = self._wrap(ret)
+
+    def __run__(self, space: Dict[str, Any]) -> Any:
+        return _Returned(self._ret.__run__(space))
+
+
+class Block(_Expression):
+    __slots__ = ("_block",)
+
+    def __init__(self, block: Sequence[_Expression]):
+        super().__init__()
+        self._block = [self._wrap(expr) for expr in block]
+
+    def __run__(self, space: Dict[str, Any]) -> Any:
+        ret = None
+        for variable in self._block:
+            ret = variable.__run__(space)
+            if isinstance(ret, _Returned):
+                return ret
+        return ret
+
+
+class If(_Expression):
+    __slots__ = ("_condition", "_block")
+
+    def __init__(self, condition: Variable, block: Sequence[_Expression]):
+        super().__init__()
+        self._condition = self._wrap(condition)
+        self._block = Block(block)
+
+    def __run__(self, space: Dict[str, Any]) -> Union[bool, _Returned]:
+        if self._condition.__run__(space):
+            ret = self._block.__run__(space)
+            return ret if isinstance(ret, _Returned) else True
+        else:
+            return False
+
+    def elif_(self, condition: Variable, block: Sequence[_Expression]):
+        return Elif(self, condition, block)
+
+    def else_(self, *block: _Expression):
+        return Else(self, block)
+
+
+class Elif(If):
+    __slots__ = ("_from_if",)
+
+    def __init__(self, from_if: If, condition: Variable, block: Sequence[_Expression]):
+        super().__init__(condition, block)
+        self._from_if = from_if
+
+    def __run__(self, space: Dict[str, Any]) -> Union[bool, _Returned]:
+        return self._from_if.__run__(space) or super().__run__(space)
+
+
+class Else(_Expression):
+    __slots__ = ["_from_if", "_block"]
+
+    def __init__(self, from_if: If, block: Sequence[_Expression]):
+        super().__init__()
+        self._from_if = from_if
+        self._block = Block(block)
+
+    def __run__(self, space: Dict[str, Any]) -> Union[bool, _Returned]:
+        ret_if = self._from_if.__run__(space)
+        if ret_if:
+            return ret_if
+        else:
+            ret = self._block.__run__(space)
+            return ret if isinstance(ret, _Returned) else True
+
+
 class Lambda:
+    __slots__ = ["_arguments", "_body"]
+
     def __init__(
         self,
         arguments: Union[Reference, Tuple[Reference, ...]],
-        body: Sequence[Expression],
+        body: Sequence[_Expression],
     ):
         if isinstance(arguments, Reference):
             arguments = (arguments,)
@@ -299,10 +361,8 @@ class Lambda:
                 assert isinstance(argument, Reference)
         assert len(set(arg.name for arg in arguments)) == len(arguments)
 
-        body = [Function._wrap(expr) for expr in body]
-
         self._arguments: Tuple[Reference, ...] = arguments
-        self._body: List[Expression] = body
+        self._body = Block(body)
 
     def __call__(self, *args):
         if len(args) != len(self._arguments):
@@ -310,10 +370,8 @@ class Lambda:
                 f"Expected {len(self._arguments)} arguments, got {len(args)}"
             )
         space = {ref.name: args[i] for i, ref in enumerate(self._arguments)}
-        ret = None
-        for expr in self._body:
-            ret = expr.run(space)
-        return ret
+        ret = self._body.__run__(space)
+        return ret.value if isinstance(ret, _Returned) else ret
 
 
 class ReferenceFactory:
@@ -326,22 +384,37 @@ class ReferenceFactory:
 
 
 class ExpressionFactory:
+    @classmethod
     def set(
-        self, reference: Union[Reference, Getattr], variable: Variable
-    ) -> Expression:
-        return ExprSetattr(reference, variable)
+        cls, reference: Union[Reference, Getattr], variable: Variable
+    ) -> _Expression:
+        return Assign(reference, variable)
 
-    def and_(self, a: Variable, b: Variable) -> Function:
+    @classmethod
+    def and_(cls, a: Variable, b: Variable) -> Function:
         return Function(functions.boolean_and, a, b)
 
-    def or_(self, a: Variable, b: Variable) -> Function:
+    @classmethod
+    def or_(cls, a: Variable, b: Variable) -> Function:
         return Function(functions.boolean_or, a, b)
 
-    def not_(self, variable: Variable) -> Function:
+    @classmethod
+    def not_(cls, variable: Variable) -> Function:
         return Function(operator.not_, variable)
 
-    def return_(self, variable: Variable) -> Expression:
-        return Function(functions.identity, variable)
+    @classmethod
+    def if_(cls, condition: Variable, block: Sequence[_Expression]) -> If:
+        return If(condition, block)
+
+    @classmethod
+    def return_(cls, variable: Variable) -> _Expression:
+        return Return(variable)
+
+    @classmethod
+    def range(cls, start, stop=None, step=1) -> Variable:
+        if stop is None:
+            start, stop = 0, start
+        return Value(range)(start, stop, step)
 
 
 V = ReferenceFactory()
