@@ -1,6 +1,6 @@
 import operator
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Self, Sequence, Tuple, Union
+from typing import Any, Dict, Optional, Self, Sequence, Tuple, Union
 
 from pysaurus.core import functions
 
@@ -20,14 +20,26 @@ def _name_of(something):
     return repr(something)
 
 
-class _Returned:
+class _Stopped:
     __slots__ = ("value",)
 
-    def __init__(self, value):
+    def __init__(self, value=None):
         self.value = value
 
     def __bool__(self):
         return True
+
+
+class _Continued(_Stopped):
+    __slots__ = ()
+
+
+class _Broken(_Stopped):
+    __slots__ = ()
+
+
+class _Returned(_Stopped):
+    __slots__ = ()
 
 
 class Variable(ABC):
@@ -280,17 +292,18 @@ class Return(_Expression):
 
 
 class Block(_Expression):
-    __slots__ = ("_block",)
+    __slots__ = ("_block", "_stop_cls")
 
-    def __init__(self, block: Sequence[_Expression]):
+    def __init__(self, block: Sequence[_Expression], stop_only_on_returns=False):
         super().__init__()
         self._block = [self._wrap(expr) for expr in block]
+        self._stop_cls = _Returned if stop_only_on_returns else _Stopped
 
     def __run__(self, space: Dict[str, Any]) -> Any:
         ret = None
         for variable in self._block:
             ret = variable.__run__(space)
-            if isinstance(ret, _Returned):
+            if isinstance(ret, self._stop_cls):
                 return ret
         return ret
 
@@ -303,10 +316,10 @@ class If(_Expression):
         self._condition = self._wrap(condition)
         self._block = Block(block)
 
-    def __run__(self, space: Dict[str, Any]) -> Union[bool, _Returned]:
+    def __run__(self, space: Dict[str, Any]) -> Union[bool, _Stopped]:
         if self._condition.__run__(space):
             ret = self._block.__run__(space)
-            return ret if isinstance(ret, _Returned) else True
+            return ret if isinstance(ret, _Stopped) else True
         else:
             return False
 
@@ -324,7 +337,7 @@ class Elif(If):
         super().__init__(condition, block)
         self._from_if = from_if
 
-    def __run__(self, space: Dict[str, Any]) -> Union[bool, _Returned]:
+    def __run__(self, space: Dict[str, Any]) -> Union[bool, _Stopped]:
         return self._from_if.__run__(space) or super().__run__(space)
 
 
@@ -336,13 +349,87 @@ class Else(_Expression):
         self._from_if = from_if
         self._block = Block(block)
 
-    def __run__(self, space: Dict[str, Any]) -> Union[bool, _Returned]:
+    def __run__(self, space: Dict[str, Any]) -> Union[bool, _Stopped]:
         ret_if = self._from_if.__run__(space)
         if ret_if:
             return ret_if
         else:
             ret = self._block.__run__(space)
-            return ret if isinstance(ret, _Returned) else True
+            return ret if isinstance(ret, _Stopped) else True
+
+
+class For(_Expression):
+    __slots__ = ["_statement", "_iterable", "_block", "_parse_data"]
+
+    def __init__(
+        self,
+        statement: Union[Reference, Tuple[Reference, ...]],
+        iterable: Variable,
+        block: Sequence[_Expression],
+    ):
+        if isinstance(statement, Reference):
+            _parse_data = self._data_to_one_statement
+        else:
+            assert isinstance(statement, tuple)
+            assert all(isinstance(ref, Reference) for ref in statement)
+            _parse_data = self._data_to_many_statements
+        super().__init__()
+        self._statement = statement
+        self._iterable = self._wrap(iterable)
+        self._block = Block(block)
+        self._parse_data = _parse_data
+
+    def _data_to_one_statement(self, data, space: Dict[str, Any]):
+        space[self._statement.name] = data
+
+    def _data_to_many_statements(self, data: tuple, space: Dict[str, Any]):
+        for i, ref in enumerate(self._statement):
+            space[ref.name] = data[i]
+
+    def __run__(self, space: Dict[str, Any]) -> Optional[_Stopped]:
+        for data in self._iterable.__run__(space):
+            self._parse_data(data, space)
+            ret = self._block.__run__(space)
+            if isinstance(ret, _Stopped):
+                if type(ret) is _Continued:
+                    continue
+                else:
+                    return ret
+        return None
+
+    def else_(self, *block: _Expression):
+        return _ForElse(self, block)
+
+
+class _ForElse(_Expression):
+    __slots__ = ("_for", "_block")
+
+    def __init__(self, from_for: For, block: Sequence[_Expression]):
+        super().__init__()
+        self._for = from_for
+        self._block = Block(block)
+
+    def __run__(self, space: Dict[str, Any]) -> Any:
+        ret_for = self._for.__run__(space)
+        if ret_for is None:
+            ret = self._block.__run__(space)
+            return ret if isinstance(ret, _Stopped) else True
+        else:
+            return ret_for if isinstance(ret_for, _Stopped) else False
+
+
+class Continue(_Expression):
+    __slots__ = ()
+
+    def __run__(self, space: Dict[str, Any]) -> Any:
+        return _Continued()
+
+
+class Break(_Expression):
+    __slots__ = ()
+
+    def __run__(self, space: Dict[str, Any]) -> Any:
+        return _Broken()
 
 
 class Lambda:
@@ -362,7 +449,7 @@ class Lambda:
         assert len(set(arg.name for arg in arguments)) == len(arguments)
 
         self._arguments: Tuple[Reference, ...] = arguments
-        self._body = Block(body)
+        self._body = Block(body, stop_only_on_returns=True)
 
     def __call__(self, *args):
         if len(args) != len(self._arguments):
@@ -402,13 +489,11 @@ class ExpressionFactory:
     def not_(cls, variable: Variable) -> Function:
         return Function(operator.not_, variable)
 
-    @classmethod
-    def if_(cls, condition: Variable, block: Sequence[_Expression]) -> If:
-        return If(condition, block)
-
-    @classmethod
-    def return_(cls, variable: Variable) -> _Expression:
-        return Return(variable)
+    if_ = If
+    for_ = For
+    continue_ = Continue
+    break_ = Break
+    return_ = Return
 
     @classmethod
     def range(cls, start, stop=None, step=1) -> Variable:
