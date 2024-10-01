@@ -494,31 +494,42 @@ class With(_Expression):
             return self._block.__run__(space)
 
 
-class Lambda:
+class MetaLambda(type):
+    def __getitem__(self, block):
+        if not isinstance(block, tuple):
+            block = (block,)
+        return self(None, block)
+
+
+class Lambda(metaclass=MetaLambda):
     __slots__ = ("_arguments", "_body")
 
     def __init__(
         self,
-        arguments: Union[Reference, Tuple[Reference, ...]],
+        arguments: Optional[Union[Reference, Tuple[Reference, ...]]],
         body: Sequence[_Expression],
     ):
-        if isinstance(arguments, Reference):
-            arguments = (arguments,)
-        else:
-            assert isinstance(arguments, tuple)
-            for argument in arguments:
-                assert isinstance(argument, Reference)
-        assert len(set(arg.name for arg in arguments)) == len(arguments)
+        if arguments is not None:
+            if isinstance(arguments, Reference):
+                arguments = (arguments,)
+            else:
+                assert isinstance(arguments, tuple)
+                for argument in arguments:
+                    assert isinstance(argument, Reference)
+            assert len(set(arg.name for arg in arguments)) == len(arguments)
 
-        self._arguments: Tuple[Reference, ...] = arguments
+        self._arguments: Optional[Tuple[Reference, ...]] = arguments
         self._body = Block(body, stop_only_on_returns=True)
 
     def __call__(self, *args):
-        if len(args) != len(self._arguments):
-            raise RuntimeError(
-                f"Expected {len(self._arguments)} arguments, got {len(args)}"
-            )
-        space = {ref.name: args[i] for i, ref in enumerate(self._arguments)}
+        if self._arguments is None:
+            space = {}
+        else:
+            if len(args) != len(self._arguments):
+                raise RuntimeError(
+                    f"Expected {len(self._arguments)} arguments, got {len(args)}"
+                )
+            space = {ref.name: args[i] for i, ref in enumerate(self._arguments)}
         ret = self._body.__run__(space)
         return ret.value if isinstance(ret, _Returned) else ret
 
@@ -570,6 +581,10 @@ class ExpressionFactory:
         if stop is None:
             start, stop = 0, start
         return Value(range)(start, stop, step)
+
+    @classmethod
+    def print(cls, *args, **kwargs) -> Variable:
+        return Value(print)(*args, **kwargs)
 
 
 V = ReferenceFactory()

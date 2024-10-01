@@ -573,3 +573,10 @@ def test_with():
 
     assert python_g(python_ret) == -1
     assert python_ret.value == ret.value == 1200
+
+
+def test_procedure():
+    f = Lambda[E.print("Hello World!"), E.return_(1000)]
+    assert f() == 1000
+    assert f(None) == 1000
+    assert f(1, 2, 3, 100, 1000, -1) == 1000
