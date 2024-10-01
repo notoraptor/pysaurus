@@ -325,6 +325,33 @@ def test_for():
     assert g(0) == -1
 
 
+def test_while():
+    f = Lambda(
+        V.x,
+        [
+            E.set(V.a, 1),
+            E.set(V.i, 0),
+            E.while_(V.i < V.x, [E.set(V.a, V.a + V.i), E.set(V.i, V.i + 1)]),
+            V.a,
+        ],
+    )
+    assert f(10) == sum(range(10)) + 1
+
+    g = Lambda(
+        V.x,
+        [
+            E.set(V.a, 1),
+            E.set(V.i, 0),
+            E.while_(V.i < V.x, [E.set(V.a, V.a + V.i), E.set(V.i, V.i + 1)]).else_(
+                E.set(V.a, -1)
+            ),
+            E.return_(V.a),
+        ],
+    )
+    assert g(10) == -1
+    assert g(0) == -1
+
+
 @pytest.mark.parametrize(
     "expected,given",
     [(0, -1), (1, -1), (2, -1), (3, -1), (4, -1), (5, 7), (6, 7), (7, 7), (100_000, 7)],
@@ -359,6 +386,43 @@ def test_for_break(expected, given):
 
 @pytest.mark.parametrize(
     "expected,given",
+    [(0, -1), (1, -1), (2, -1), (3, -1), (4, -1), (5, 7), (6, 7), (7, 7), (100_000, 7)],
+)
+def test_while_break(expected, given):
+    h = Lambda(
+        V.x,
+        [
+            E.set(V.a, 1),
+            E.set(V.i, 0),
+            E.while_(
+                V.i < V.x,
+                [
+                    E.if_((V.i + 1) * 1 < 5, [E.set(V.a, V.a + V.i)]).else_(E.break_()),
+                    E.set(V.i, V.i + 1),
+                ],
+            ).else_(E.set(V.a, -1)),
+            E.return_(V.a),
+        ],
+    )
+
+    def python_h(x):
+        a = 1
+        i = 0
+        while i < x:
+            if (i + 1) * 1 < 5:
+                a = a + i
+            else:
+                break
+            i += 1
+        else:
+            a = -1
+        return a
+
+    assert h(expected) == python_h(expected) == given
+
+
+@pytest.mark.parametrize(
+    "expected,given",
     [
         (0, -10),
         (1, -10),
@@ -373,7 +437,7 @@ def test_for_break(expected, given):
         (10000, 80),
     ],
 )
-def test_for_else_continue(expected, given):
+def test_for_continue(expected, given):
     f = Lambda(
         V.x,
         [
@@ -401,6 +465,72 @@ def test_for_else_continue(expected, given):
                 break
                 a = -1000
             a = a + n
+        return a * 10
+
+    assert f(expected) == python_f(expected) == given
+
+
+@pytest.mark.parametrize(
+    "expected,given",
+    [
+        (0, -10),
+        (1, -10),
+        (2, 0),
+        (3, 0),
+        (4, 30),
+        (5, 30),
+        (6, 80),
+        (7, 80),
+        (8, 80),
+        (9, 80),
+        (10000, 80),
+    ],
+)
+def test_while_continue(expected, given):
+    f = Lambda(
+        V.x,
+        [
+            E.set(V.a, -1),
+            E.set(V.i, 0),
+            E.set(V.n, 0),
+            E.while_(
+                V.i < V.x,
+                [
+                    E.if_(
+                        V.i % 2 == 0,
+                        [
+                            E.set(V.i, V.i + 1),
+                            E.set(V.n, V.n + 1),
+                            E.continue_(),
+                            E.set(V.a, 100),
+                        ],
+                    ),
+                    E.if_(V.n > 5, [E.break_(), E.set(V.a, -1000)]),
+                    E.set(V.a, V.a + V.n),
+                    E.set(V.i, V.i + 1),
+                    E.set(V.n, V.n + 1),
+                ],
+            ),
+            V.a * 10,
+        ],
+    )
+
+    def python_f(x):
+        a = -1
+        i = 0
+        n = 0
+        while i < x:
+            if i % 2 == 0:
+                i = i + 1
+                n = n + 1
+                continue
+                a = 1000
+            if n > 5:
+                break
+                a = -1000
+            a = a + n
+            i = i + 1
+            n = n + 1
         return a * 10
 
     assert f(expected) == python_f(expected) == given

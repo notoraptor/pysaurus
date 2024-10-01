@@ -245,7 +245,7 @@ class Getattr(Function):
 
 
 class Assign(_Expression):
-    __slots__ = ["_lvalue", "_rvalue"]
+    __slots__ = ("_lvalue", "_rvalue")
 
     def __init__(self, lvalue: Variable, rvalue: Variable):
         lvalue = self._wrap(lvalue)
@@ -342,7 +342,7 @@ class Elif(If):
 
 
 class Else(_Expression):
-    __slots__ = ["_from_if", "_block"]
+    __slots__ = ("_from_if", "_block")
 
     def __init__(self, from_if: If, block: Sequence[_Expression]):
         super().__init__()
@@ -358,8 +358,16 @@ class Else(_Expression):
             return ret if isinstance(ret, _Stopped) else True
 
 
-class For(_Expression):
-    __slots__ = ["_statement", "_iterable", "_block", "_parse_data"]
+class _Loop(_Expression):
+    __slots__ = ()
+
+    @abstractmethod
+    def __run__(self, space: Dict[str, Any]) -> Optional[_Stopped]:
+        raise NotImplementedError()
+
+
+class For(_Loop):
+    __slots__ = ("_statement", "_iterable", "_block", "_parse_data")
 
     def __init__(
         self,
@@ -404,7 +412,7 @@ class For(_Expression):
 class _ForElse(_Expression):
     __slots__ = ("_for", "_block")
 
-    def __init__(self, from_for: For, block: Sequence[_Expression]):
+    def __init__(self, from_for: _Loop, block: Sequence[_Expression]):
         super().__init__()
         self._for = from_for
         self._block = Block(block)
@@ -412,10 +420,8 @@ class _ForElse(_Expression):
     def __run__(self, space: Dict[str, Any]) -> Any:
         ret_for = self._for.__run__(space)
         if ret_for is None:
-            ret = self._block.__run__(space)
-            return ret if isinstance(ret, _Stopped) else True
-        else:
-            return ret_for if isinstance(ret_for, _Stopped) else False
+            ret_for = self._block.__run__(space)
+        return ret_for if isinstance(ret_for, _Stopped) else False
 
 
 class Continue(_Expression):
@@ -432,8 +438,34 @@ class Break(_Expression):
         return _Broken()
 
 
+class While(_Loop):
+    __slots__ = ("_condition", "_block")
+
+    def __init__(self, condition: Variable, block: Sequence[_Expression]):
+        super().__init__()
+        self._condition = self._wrap(condition)
+        self._block = Block(block)
+
+    def __run__(self, space: Dict[str, Any]) -> Optional[_Stopped]:
+        while True:
+            condition = self._condition.__run__(space)
+            if condition:
+                ret = self._block.__run__(space)
+                if isinstance(ret, _Stopped):
+                    if type(ret) is _Continued:
+                        continue
+                    else:
+                        return ret
+            else:
+                break
+        return None
+
+    def else_(self, *block: _Expression) -> _ForElse:
+        return _ForElse(self, block)
+
+
 class With(_Expression):
-    __slots__ = ["_expr", "_as", "_block"]
+    __slots__ = ("_expr", "_as", "_block")
 
     def __init__(
         self,
@@ -463,7 +495,7 @@ class With(_Expression):
 
 
 class Lambda:
-    __slots__ = ["_arguments", "_body"]
+    __slots__ = ("_arguments", "_body")
 
     def __init__(
         self,
@@ -521,6 +553,7 @@ class ExpressionFactory:
 
     if_ = If
     for_ = For
+    while_ = While
     continue_ = Continue
     break_ = Break
     return_ = Return
