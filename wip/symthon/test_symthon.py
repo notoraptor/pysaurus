@@ -404,3 +404,42 @@ def test_for_else_continue(expected, given):
         return a * 10
 
     assert f(expected) == python_f(expected) == given
+
+
+def test_with():
+    class A:
+        def __init__(self):
+            self.value = 1
+
+        def __enter__(self):
+            self.value *= 10
+            return self
+
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            self.value += 100
+
+    f = Lambda((), [E.with_(V[A](), V.x, [V.x])])
+
+    def python_f():
+        with A() as x:
+            return x
+
+    ret = f()
+    assert isinstance(ret, A)
+    assert ret.value == 110
+
+    python_ret = python_f()
+    assert isinstance(python_ret, A)
+    assert ret.value == python_ret.value == 110
+
+    g = Lambda(V.a, [E.with_(V.a, [-1])])
+
+    def python_g(a):
+        with a:
+            return -1
+
+    assert g(ret) == -1
+    assert ret.value == 1200
+
+    assert python_g(python_ret) == -1
+    assert python_ret.value == ret.value == 1200

@@ -432,6 +432,36 @@ class Break(_Expression):
         return _Broken()
 
 
+class With(_Expression):
+    __slots__ = ["_expr", "_as", "_block"]
+
+    def __init__(
+        self,
+        expr: _Expression,
+        as_or_block: Union[Reference, Sequence[_Expression]],
+        block: Optional[Sequence[_Expression]] = None,
+    ):
+        if block is None:
+            as_ = None
+            block = as_or_block
+        else:
+            as_ = as_or_block
+
+        if as_ is not None:
+            assert isinstance(as_, Reference)
+
+        super().__init__()
+        self._expr = self._wrap(expr)
+        self._as = as_
+        self._block = Block(block)
+
+    def __run__(self, space: Dict[str, Any]) -> Any:
+        with self._expr.__run__(space) as context:
+            if self._as is not None:
+                space[self._as.name] = context
+            return self._block.__run__(space)
+
+
 class Lambda:
     __slots__ = ["_arguments", "_body"]
 
@@ -494,6 +524,7 @@ class ExpressionFactory:
     continue_ = Continue
     break_ = Break
     return_ = Return
+    with_ = With
 
     @classmethod
     def range(cls, start, stop=None, step=1) -> Variable:
