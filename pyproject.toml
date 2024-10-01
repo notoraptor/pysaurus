@@ -22,7 +22,6 @@ pygame = "^2.5.2"
 fonttools = "^4.53.0"
 unicodedataplus = "^15.1.0"
 annoy = "^1.17.3"
-enaml = {extras = ["qt6-pyside"], version = "^0.17.0"}
 
 [tool.poetry.dev-dependencies]
 black = "^22.12.0"
