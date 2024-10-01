@@ -247,7 +247,7 @@ class Getattr(Function):
 class Assign(_Expression):
     __slots__ = ("_lvalue", "_rvalue")
 
-    def __init__(self, lvalue: Variable, rvalue: Variable):
+    def __init__(self, lvalue: Union[Reference, Getattr], rvalue: Variable):
         lvalue = self._wrap(lvalue)
         rvalue = self._wrap(rvalue)
         assert isinstance(lvalue, (Getattr, Reference))
