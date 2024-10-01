@@ -7,6 +7,7 @@ from videre.layouts.scroll.scrollview import ScrollView
 from videre.widgets.button import Button
 from videre.widgets.text import Text
 from videre.window import Window
+from wip.symthon.symthon import E, V, Lambda
 
 
 def demo_button(window: Window):
@@ -17,24 +18,40 @@ def demo_button(window: Window):
                 Row(
                     [
                         Button(
-                            "wrap chars", on_click=WidgetSet(text, wrap=TextWrap.CHAR)
+                            "wrap chars",
+                            on_click=Lambda(V.w, [E.setattr(text, wrap=TextWrap.CHAR)]),
                         ),
                         Button(
-                            "wrap words", on_click=WidgetSet(text, wrap=TextWrap.WORD)
+                            "wrap words",
+                            on_click=Lambda(V.w, [E.setattr(text, wrap=TextWrap.WORD)]),
                         ),
                     ]
                 ),
                 Row(
                     [
-                        Button("left", on_click=WidgetSet(text, align=TextAlign.LEFT)),
                         Button(
-                            "center", on_click=WidgetSet(text, align=TextAlign.CENTER)
+                            "left",
+                            on_click=Lambda(
+                                V.w, [E.set(V[text].align, TextAlign.LEFT)]
+                            ),
                         ),
                         Button(
-                            "right", on_click=WidgetSet(text, align=TextAlign.RIGHT)
+                            "center",
+                            on_click=Lambda(
+                                V.w, [E.set(V[text].align, TextAlign.CENTER)]
+                            ),
                         ),
                         Button(
-                            "justify", on_click=WidgetSet(text, align=TextAlign.JUSTIFY)
+                            "right",
+                            on_click=Lambda(
+                                V.w, [E.set(V[text].align, TextAlign.RIGHT)]
+                            ),
+                        ),
+                        Button(
+                            "justify",
+                            on_click=Lambda(
+                                V.w, [E.set(V[text].align, TextAlign.JUSTIFY)]
+                            ),
                         ),
                     ]
                 ),

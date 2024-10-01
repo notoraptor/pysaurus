@@ -540,6 +540,12 @@ class ExpressionFactory:
         return Assign(reference, variable)
 
     @classmethod
+    def setattr(cls, element, **kwargs) -> Block:
+        return Block(
+            [Assign(Getattr(element, key), value) for key, value in kwargs.items()]
+        )
+
+    @classmethod
     def and_(cls, a: Variable, b: Variable) -> Function:
         return Function(functions.boolean_and, a, b)
 
