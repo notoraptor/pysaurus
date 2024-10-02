@@ -1,10 +1,11 @@
 from abc import abstractmethod
-from typing import Any, Optional, Tuple
+from typing import Any, Optional, Self, Tuple
 
 import pygame
 
 from videre.core.events import MotionEvent, MouseButton
 from videre.core.mouse_ownership import MouseOwnership
+from videre.core.position_mapping import Position, PositionMapping
 from videre.core.pygame_utils import PygameUtils
 
 
@@ -20,8 +21,7 @@ class Widget(PygameUtils):
         "_transient_state",
         "_rc",
         "_parent",
-        "x",
-        "y",
+        "_children_pos",
     )
 
     def __init__(self, weight=0, parent=None, key=None):
@@ -34,20 +34,41 @@ class Widget(PygameUtils):
         self._transient_state = {}
         self._surface: Optional[pygame.Surface] = None
         self._rc = 0
-        # Widget coordinates relative to its parent.
-        # If parent is None, relative to window.
-        self.x = 0
-        self.y = 0
 
+        self._children_pos = PositionMapping()
         self._parent: Optional[Widget] = None
         if parent:
             self.with_parent(parent)
 
     def with_parent(self, parent):
-        self._parent = parent
-        if parent is None:
-            self.x = self.y = 0
+        if self._parent != parent:
+            if self._parent is not None:
+                self._parent.remove_child(self)
+            self._parent = parent
         return self
+
+    def get_child_position(self, child: "Widget") -> Position:
+        return self._children_pos.get(child)
+
+    def _set_child_position(self, child: "Widget", x: int, y: int):
+        self._children_pos.set(child, x, y)
+
+    def _set_child_x(self, child: "Widget", x: int):
+        self._children_pos.update_x(child, x)
+
+    def _set_child_y(self, child: "Widget", y: int):
+        self._children_pos.update_y(child, y)
+
+    def remove_child(self, child: Self):
+        self._children_pos.remove(child)
+
+    @property
+    def x(self) -> int:
+        return self._parent.get_child_position(self).x if self._parent else 0
+
+    @property
+    def y(self) -> int:
+        return self._parent.get_child_position(self).y if self._parent else 0
 
     @property
     def weight(self) -> int:
@@ -109,6 +130,11 @@ class Widget(PygameUtils):
         return global_x - self.x, global_y - self.y
 
     def get_mouse_owner(
+        self, x_in_parent: int, y_in_parent: int
+    ) -> Optional[MouseOwnership]:
+        return self._get_mouse_owner(x_in_parent, y_in_parent)
+
+    def _get_mouse_owner(
         self, x_in_parent: int, y_in_parent: int
     ) -> Optional[MouseOwnership]:
         if (

@@ -77,6 +77,6 @@ class Column(AbstractControlsLayout):
             if render:
                 ctrl, surface = render
                 column.blit(surface, (0, y))
-                ctrl.x, ctrl.y = 0, y
+                self._set_child_position(ctrl, 0, y)
                 y += surface.get_height()
         return column

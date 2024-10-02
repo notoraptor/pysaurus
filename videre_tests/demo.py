@@ -51,7 +51,7 @@ def demo_button(window: Window):
                     "align none", on_click=Lambda[E.setattr(text, align=TextAlign.NONE)]
                 ),
                 # Zone(ScrollView(text, wrap_horizontal=True), 800, 300),
-                ScrollView(text, wrap_horizontal=True, weight=1),
+                ScrollView(text, wrap_horizontal=False, weight=1),
             ]
         )
     ]

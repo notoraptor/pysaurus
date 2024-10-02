@@ -77,6 +77,6 @@ class Row(AbstractControlsLayout):
             if render:
                 ctrl, surface = render
                 column.blit(surface, (x, 0))
-                ctrl.x, ctrl.y = x, 0
+                self._set_child_position(ctrl, x, 0)
                 x += surface.get_width()
         return column

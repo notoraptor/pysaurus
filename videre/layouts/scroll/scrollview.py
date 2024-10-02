@@ -95,7 +95,6 @@ class ScrollView(AbstractLayout):
     @control.setter
     def control(self, control: Widget):
         self._ctrl = control
-        self._ctrl.x = self._ctrl.y = 0
         self._set_controls([control, self._hscrollbar, self._vscrollbar])
 
     @property
@@ -104,7 +103,7 @@ class ScrollView(AbstractLayout):
 
     @_content_x.setter
     def _content_x(self, x: int):
-        self._ctrl.x = x
+        self._set_child_x(self._ctrl, x)
 
     @property
     def _content_y(self) -> int:
@@ -112,7 +111,7 @@ class ScrollView(AbstractLayout):
 
     @_content_y.setter
     def _content_y(self, y: int):
-        self._ctrl.y = y
+        self._set_child_y(self._ctrl, y)
 
     def on_jump_x(self, content_x: int):
         self._content_x = -content_x
@@ -125,7 +124,7 @@ class ScrollView(AbstractLayout):
     def get_mouse_wheel_owner(
         self, x_in_parent: int, y_in_parent: int
     ) -> Optional[MouseOwnership]:
-        if Widget.get_mouse_owner(self, x_in_parent, y_in_parent):
+        if Widget._get_mouse_owner(self, x_in_parent, y_in_parent):
             local_x, local_y = self.get_local_coordinates(x_in_parent, y_in_parent)
             child = self.get_mouse_owner(local_x, local_y)
             if child and isinstance(child.widget, ScrollView):
@@ -236,7 +235,8 @@ class ScrollView(AbstractLayout):
             view.blit(v_scroll, (self._vscrollbar.x, self._vscrollbar.y))
 
         logging.debug(
-            f"{(width, height)} {(self._content_x, self._content_y)} {(content_w, content_h)}"
+            f"{(width, height)} {(self._content_x, self._content_y)} "
+            f"{(content_w, content_h)}"
         )
         return view
 

@@ -22,7 +22,7 @@ class _HScrollBar(Widget):
         self._hover = False
         self._grabbed = ()
         self._set_color()
-        self.background = _ScrollBackground(self.__is_horizontal__)
+        self.background = _ScrollBackground(self.__is_horizontal__).with_parent(self)
 
     def has_changed(self) -> bool:
         return super().has_changed() and self.content_length is not None
@@ -151,5 +151,6 @@ class _HScrollBar(Widget):
         self, window, view_width: int = None, view_height: int = None
     ) -> pygame.Surface:
         assert view_width and view_height
-        scroll, (self.x, self.y) = self._compute(view_width, view_height)
+        scroll, pos = self._compute(view_width, view_height)
+        self._parent._set_child_position(self, *pos)
         return scroll

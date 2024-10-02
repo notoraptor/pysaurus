@@ -26,11 +26,13 @@ class _ScrollBackground(Widget):
         if self._h:
             b_width = max(0, width - thickness) if both else width
             b_height = thickness
-            self.x, self.y = 0, height - thickness
+            x, y = 0, height - thickness
         else:
             b_width = thickness
             b_height = max(0, height - thickness) if both else height
-            self.x, self.y = width - thickness, 0
+            x, y = width - thickness, 0
+
+        self._parent._set_child_position(self, x, y)
 
         surface = pygame.Surface((b_width, b_height), flags=pygame.SRCALPHA)
         surface.fill(self._COLOR_HOVER if hover else self._COLOR_NORMAL)
