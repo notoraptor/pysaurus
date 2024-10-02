@@ -129,7 +129,6 @@ class Window(PygameUtils):
         owner = self._layout.get_mouse_wheel_owner(*pygame.mouse.get_pos())
         if owner:
             shift = pygame.key.get_mods() & pygame.KMOD_SHIFT
-            # print(owner, event.x, event.y, shift)
             owner.widget.handle_mouse_wheel(event.x, event.y, shift)
 
     @on_event(pygame.MOUSEBUTTONDOWN)

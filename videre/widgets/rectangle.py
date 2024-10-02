@@ -7,7 +7,7 @@ from videre import Gradient
 from videre.widgets.widget import Widget
 
 
-class Area(Widget):
+class Rectangle(Widget):
     __wprops__ = {"width", "height", "coloring"}
     __slots__ = ()
 
@@ -34,13 +34,29 @@ class Area(Widget):
     def width(self) -> int:
         return self._get_wprop("width")
 
+    @width.setter
+    def width(self, width: int):
+        self._set_wprop("width", width)
+
     @property
     def height(self) -> int:
         return self._get_wprop("height")
 
+    @height.setter
+    def height(self, height: int):
+        self._set_wprop("height", height)
+
     @property
     def coloring(self) -> Gradient:
         return self._get_wprop("coloring")
+
+    @coloring.setter
+    def coloring(self, coloring: Union[Gradient, pygame.Color, Sequence[pygame.Color]]):
+        if isinstance(coloring, pygame.Color):
+            coloring = [coloring]
+        if not isinstance(coloring, Gradient):
+            coloring = Gradient(*coloring)
+        self._set_wprop("coloring", coloring)
 
     def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
         return self.coloring.generate(self.width, self.height)
