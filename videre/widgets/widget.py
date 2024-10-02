@@ -34,6 +34,8 @@ class Widget(PygameUtils):
         self._transient_state = {}
         self._surface: Optional[pygame.Surface] = None
         self._rc = 0
+        # Widget coordinates relative to its parent.
+        # If parent is None, relative to window.
         self.x = 0
         self.y = 0
 
@@ -43,6 +45,8 @@ class Widget(PygameUtils):
 
     def with_parent(self, parent):
         self._parent = parent
+        if parent is None:
+            self.x = self.y = 0
         return self
 
     @property
@@ -104,17 +108,21 @@ class Widget(PygameUtils):
     def get_local_coordinates(self, global_x: int, global_y: int) -> Tuple[int, int]:
         return global_x - self.x, global_y - self.y
 
-    def get_mouse_owner(self, x: int, y: int) -> Optional[MouseOwnership]:
+    def get_mouse_owner(
+        self, x_in_parent: int, y_in_parent: int
+    ) -> Optional[MouseOwnership]:
         if (
             self._surface
-            and self.left <= x <= self.right
-            and self.top <= y <= self.bottom
+            and self.left <= x_in_parent <= self.right
+            and self.top <= y_in_parent <= self.bottom
         ):
-            return MouseOwnership(self, x, y)
+            return MouseOwnership(self, x_in_parent, y_in_parent)
         return None
 
-    def get_mouse_wheel_owner(self, x: int, y: int) -> Optional[MouseOwnership]:
-        return self.get_mouse_owner(x, y)
+    def get_mouse_wheel_owner(
+        self, x_in_parent: int, y_in_parent: int
+    ) -> Optional[MouseOwnership]:
+        return self.get_mouse_owner(x_in_parent, y_in_parent)
 
     def __repr__(self):
         return f"[{type(self).__name__}][{self._key}]"

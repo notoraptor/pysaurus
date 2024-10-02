@@ -17,13 +17,15 @@ class _VScrollBar(_HScrollBar):
             h = max(0, h - self.thickness)
         return h
 
-    def get_mouse_owner(self, x: int, y: int) -> Optional[MouseOwnership]:
+    def get_mouse_owner(
+        self, x_in_parent: int, y_in_parent: int
+    ) -> Optional[MouseOwnership]:
         if (
             self._surface
-            and self.x <= x < self.x + self.thickness
-            and 0 <= y < self._bar_length()
+            and self.x <= x_in_parent < self.x + self.thickness
+            and 0 <= y_in_parent < self._bar_length()
         ):
-            return MouseOwnership(self, x, y)
+            return MouseOwnership(self, x_in_parent, y_in_parent)
         return None
 
     def handle_mouse_down(self, button: MouseButton, x: int, y: int):

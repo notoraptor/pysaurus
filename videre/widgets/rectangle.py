@@ -16,8 +16,6 @@ class Rectangle(Widget):
         width: int,
         height: int,
         coloring: Union[Gradient, pygame.Color, Sequence[pygame.Color]],
-        x=0,
-        y=0,
         **kwargs
     ):
         if isinstance(coloring, pygame.Color):
@@ -27,8 +25,6 @@ class Rectangle(Widget):
 
         super().__init__(**kwargs)
         self._set_wprops(width=width, height=height, coloring=coloring)
-        self.x = x
-        self.y = y
 
     @property
     def width(self) -> int:

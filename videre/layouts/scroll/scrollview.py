@@ -122,14 +122,16 @@ class ScrollView(AbstractLayout):
         self._content_y = -content_y
         self.update()
 
-    def get_mouse_wheel_owner(self, x: int, y: int) -> Optional[MouseOwnership]:
-        if Widget.get_mouse_owner(self, x, y):
-            local_x, local_y = self.get_local_coordinates(x, y)
+    def get_mouse_wheel_owner(
+        self, x_in_parent: int, y_in_parent: int
+    ) -> Optional[MouseOwnership]:
+        if Widget.get_mouse_owner(self, x_in_parent, y_in_parent):
+            local_x, local_y = self.get_local_coordinates(x_in_parent, y_in_parent)
             child = self.get_mouse_owner(local_x, local_y)
             if child and isinstance(child.widget, ScrollView):
                 return child
             else:
-                return MouseOwnership(self, x, y)
+                return MouseOwnership(self, x_in_parent, y_in_parent)
         return None
 
     def handle_mouse_wheel(self, x: int, y: int, shift: bool):

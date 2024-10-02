@@ -25,15 +25,19 @@ class AbstractLayout(Widget):
     def _controls(self) -> List[Widget]:
         return self._get_wprop("_controls")
 
-    def get_mouse_owner(self, x: int, y: int) -> Optional[MouseOwnership]:
-        if super().get_mouse_owner(x, y):
-            local_x, local_y = self.get_local_coordinates(x, y)
+    def get_mouse_owner(
+        self, x_in_parent: int, y_in_parent: int
+    ) -> Optional[MouseOwnership]:
+        if super().get_mouse_owner(x_in_parent, y_in_parent):
+            local_x, local_y = self.get_local_coordinates(x_in_parent, y_in_parent)
             return get_top_mouse_owner(local_x, local_y, self._controls())
         return None
 
-    def get_mouse_wheel_owner(self, x: int, y: int) -> Optional[MouseOwnership]:
-        if super().get_mouse_wheel_owner(x, y):
-            local_x, local_y = self.get_local_coordinates(x, y)
+    def get_mouse_wheel_owner(
+        self, x_in_parent: int, y_in_parent: int
+    ) -> Optional[MouseOwnership]:
+        if super().get_mouse_wheel_owner(x_in_parent, y_in_parent):
+            local_x, local_y = self.get_local_coordinates(x_in_parent, y_in_parent)
             return get_top_mouse_wheel_owner(local_x, local_y, self._controls())
         return None
 

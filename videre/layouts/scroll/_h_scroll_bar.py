@@ -67,13 +67,15 @@ class _HScrollBar(Widget):
             w = max(0, w - self.thickness)
         return w
 
-    def get_mouse_owner(self, x: int, y: int) -> Optional[MouseOwnership]:
+    def get_mouse_owner(
+        self, x_in_parent: int, y_in_parent: int
+    ) -> Optional[MouseOwnership]:
         if (
             self._surface
-            and 0 <= x < self._bar_length()
-            and self.y <= y < self.y + self.thickness
+            and 0 <= x_in_parent < self._bar_length()
+            and self.y <= y_in_parent < self.y + self.thickness
         ):
-            return MouseOwnership(self, x, y)
+            return MouseOwnership(self, x_in_parent, y_in_parent)
         return None
 
     def handle_mouse_down(self, button: MouseButton, x: int, y: int):
