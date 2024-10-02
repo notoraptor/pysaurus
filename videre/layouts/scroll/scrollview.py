@@ -52,25 +52,51 @@ class ScrollView(AbstractLayout):
     def scroll_thickness(self) -> int:
         return self._get_wprop("scroll_thickness")
 
+    @scroll_thickness.setter
+    def scroll_thickness(self, value: int):
+        self._set_wprop("scroll_thickness", value)
+
     @property
     def horizontal_scroll(self) -> bool:
         return self._get_wprop("horizontal_scroll")
+
+    @horizontal_scroll.setter
+    def horizontal_scroll(self, value):
+        self._set_wprop("horizontal_scroll", bool(value))
 
     @property
     def vertical_scroll(self) -> bool:
         return self._get_wprop("vertical_scroll")
 
+    @vertical_scroll.setter
+    def vertical_scroll(self, value):
+        self._set_wprop("vertical_scroll", bool(value))
+
     @property
     def wrap_horizontal(self) -> bool:
         return self._get_wprop("wrap_horizontal")
+
+    @wrap_horizontal.setter
+    def wrap_horizontal(self, value):
+        self._set_wprop("wrap_horizontal", bool(value))
 
     @property
     def wrap_vertical(self) -> bool:
         return self._get_wprop("wrap_vertical")
 
+    @wrap_vertical.setter
+    def wrap_vertical(self, value):
+        self._set_wprop("wrap_vertical", bool(value))
+
     @property
     def control(self) -> Widget:
         return self._ctrl
+
+    @control.setter
+    def control(self, control: Widget):
+        self._ctrl = control
+        self._ctrl.x = self._ctrl.y = 0
+        self._set_controls([control, self._hscrollbar, self._vscrollbar])
 
     @property
     def _content_x(self) -> int:
