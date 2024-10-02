@@ -18,6 +18,8 @@ class AbstractLayout(Widget):
             raise RuntimeError(
                 f"[{type(self).__name__}] expects exactly {self.__size__} children"
             )
+        for old_control in self._controls() or ():
+            old_control.with_parent(None)
         self._set_wprop("_controls", [ctrl.with_parent(self) for ctrl in controls])
 
     def _controls(self) -> List[Widget]:
