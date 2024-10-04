@@ -14,6 +14,8 @@ class AbstractLayout(Widget):
         self._set_controls(controls)
 
     def _set_controls(self, controls: Sequence[Widget]):
+        if self._get_wprop("_controls") == controls:
+            return
         if self.__size__ is not None and len(controls) != self.__size__:
             raise RuntimeError(
                 f"[{type(self).__name__}] expects exactly {self.__size__} children"
