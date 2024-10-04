@@ -438,6 +438,9 @@ class AbstractDatabase(ABC):
         video.filename.open()
         self._write_videos_field([video_id], "date_entry_opened", [Date.now().time])
 
+    def mark_as_read(self, video_id: int):
+        self._write_videos_field([video_id], "date_entry_opened", [Date.now().time])
+
     def delete_video(self, video_id: int) -> AbsolutePath:
         video_filename = self.get_video_filename(video_id)
         video_filename.delete()

@@ -32,7 +32,4 @@ _symbols_ = [
     # ft.TextStyle,
 ]
 
-_done_ = [
-    ft.Column,
-    ft.Row,
-]
+_done_ = [ft.Column, ft.Row]

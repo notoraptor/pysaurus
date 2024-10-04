@@ -23,6 +23,7 @@ function cc(value) {
 export class Video extends React.Component {
 	constructor(props) {
 		super(props);
+		this.markAsRead = this.markAsRead.bind(this);
 		this.openVideo = this.openVideo.bind(this);
 		this.openVideoSurely = this.openVideoSurely.bind(this);
 		this.confirmDeletion = this.confirmDeletion.bind(this);
@@ -79,6 +80,9 @@ export class Video extends React.Component {
 						<div className="name">
 							<div className="options horizontal">
 								<MenuPack title={`${Characters.SETTINGS}`}>
+								    {data.found ? (
+								        <MenuItem action={this.markAsRead}>{tr("Mark as read")}</MenuItem>
+								    ) : ("")}
 									{data.found ? (
 										<MenuItem action={this.openVideo}>{tr("Open file")}</MenuItem>
 									) : (
@@ -444,6 +448,27 @@ export class Video extends React.Component {
 				})}
 			</div>
 		);
+	}
+
+	markAsRead() {
+	    python_call("mark_as_read", this.props.data.video_id)
+			.then(() => {
+				APP_STATE.videoHistory.add(this.props.data.filename);
+				this.props.onInfo(
+					tr("Marked as read: {path}", {
+						path: this.props.data.filename,
+					}),
+					true
+				);
+			})
+			.catch((error) => {
+				backend_error(error);
+				this.props.onInfo(
+					tr("Unable to mark as read: {path}", {
+						path: this.props.data.filename,
+					})
+				);
+			});
 	}
 
 	openVideo() {

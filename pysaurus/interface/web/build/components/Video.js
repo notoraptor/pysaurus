@@ -43,6 +43,7 @@ System.register(["../dialogs/Dialog.js", "../forms/FormVideoEditProperties.js", 
       _export("Video", Video = class Video extends React.Component {
         constructor(props) {
           super(props);
+          this.markAsRead = this.markAsRead.bind(this);
           this.openVideo = this.openVideo.bind(this);
           this.openVideoSurely = this.openVideoSurely.bind(this);
           this.confirmDeletion = this.confirmDeletion.bind(this);
@@ -102,6 +103,8 @@ System.register(["../dialogs/Dialog.js", "../forms/FormVideoEditProperties.js", 
           }, /*#__PURE__*/React.createElement(MenuPack, {
             title: `${Characters.SETTINGS}`
           }, data.found ? /*#__PURE__*/React.createElement(MenuItem, {
+            action: this.markAsRead
+          }, tr("Mark as read")) : "", data.found ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.openVideo
           }, tr("Open file")) : /*#__PURE__*/React.createElement("div", {
             className: "text-center"
@@ -308,6 +311,19 @@ System.register(["../dialogs/Dialog.js", "../forms/FormVideoEditProperties.js", 
               onClick: () => this.props.onSelectPropertyValue(name, element)
             }, element.toString()))));
           }));
+        }
+        markAsRead() {
+          python_call("mark_as_read", this.props.data.video_id).then(() => {
+            APP_STATE.videoHistory.add(this.props.data.filename);
+            this.props.onInfo(tr("Marked as read: {path}", {
+              path: this.props.data.filename
+            }), true);
+          }).catch(error => {
+            backend_error(error);
+            this.props.onInfo(tr("Unable to mark as read: {path}", {
+              path: this.props.data.filename
+            }));
+          });
         }
         openVideo() {
           python_call("open_video", this.props.data.video_id).then(() => {
