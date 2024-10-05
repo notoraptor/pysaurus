@@ -31,8 +31,9 @@ _to_do_ = [
     ft.Radio,
     ft.RadioGroup,
     ft.SubmenuButton,
-    ft.Text,
     ft.TextField,
 ]
-
+_doing_ = [
+    ft.Text,
+]
 _done_ = [ft.Column, ft.Row]

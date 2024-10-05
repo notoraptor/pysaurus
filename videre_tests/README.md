@@ -1,14 +1,16 @@
 * Layouts
-  * ScrollView (complete?)
+  * ScrollView (complete)
     * horizontal_scroll: bool
     * vertical_scroll: bool
     * wrap_horizontal: bool
     * wrap_vertical: bool
     * scroll_thickness: int
-  * Column (complete)
+  * Column
     * expand_horizontal: bool
-  * Row (complete)
+    * TODO: horizontal alignment
+  * Row
     * expand_vertical: bool
+    * TODO: vertical alignment
   * View (complete)
     * control: Widget
     * width: int
@@ -19,4 +21,7 @@
     * height: int
     * coloring: Gradient
   * Button
+    * text: str
+    * on_click: Callable[[Button], None]
   * Text
+    * text: str
