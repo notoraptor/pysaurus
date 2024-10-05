@@ -80,13 +80,13 @@ class Variable(ABC):
         return Function(operator.pow, self, power)
 
     def __radd__(self, other) -> Self:
-        return self.__add__(other)
+        return Function(operator.add, other, self)
 
     def __rsub__(self, other) -> Self:
         return Function(operator.add, -self, other)
 
     def __rmul__(self, other) -> Self:
-        return self.__mul__(other)
+        return Function(operator.mul, other, self)
 
     def __rtruediv__(self, other) -> Self:
         return Function(operator.truediv, other, self)

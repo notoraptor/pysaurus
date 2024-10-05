@@ -71,13 +71,13 @@ def clipboard_set(text: str) -> None:
         ctx.root.update()
 
 
+def clipboard_get() -> str:
+    with TkContext() as ctx:
+        return ctx.root.clipboard_get()
+
+
+# unused
 def get_screen_size() -> Tuple[int, int]:
     """Return (width, height) of screen."""
     with TkContext() as ctx:
         return ctx.get_display_size()
-
-
-# Unused
-def __clipboard_get():
-    with TkContext() as ctx:
-        return ctx.root.clipboard_get()

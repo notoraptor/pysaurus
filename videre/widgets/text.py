@@ -18,6 +18,10 @@ class Text(Widget):
     def text(self) -> str:
         return self._get_wprop("text")
 
+    @text.setter
+    def text(self, text: str):
+        self._set_wprop("text", text)
+
     @property
     def size(self) -> int:
         return self._get_wprop("size")
