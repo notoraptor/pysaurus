@@ -3,10 +3,7 @@ import pygame
 
 SCRAP_UNICODE = "text/plain;charset=utf-8"
 
-_TEXT_TYPES = [
-    SCRAP_UNICODE,
-    pygame.SCRAP_TEXT,
-]
+_TEXT_TYPES = [SCRAP_UNICODE, pygame.SCRAP_TEXT]
 
 
 def bytes_to_text(data: bytes) -> str:
@@ -29,7 +26,6 @@ def bytes_to_text(data: bytes) -> str:
 
 
 class Clipboard:
-
     @classmethod
     def get_text_type(cls) -> str:
         for ct in pygame.scrap.get_types():

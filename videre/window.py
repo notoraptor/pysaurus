@@ -32,7 +32,9 @@ class WindowLayout(AbstractControlsLayout):
         self._surface = screen
 
     def render(self, window, width: int = None, height: int = None) -> pygame.Surface:
-        return super().render(window, self._surface.get_width(), self._surface.get_height())
+        return super().render(
+            window, self._surface.get_width(), self._surface.get_height()
+        )
 
     def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
         screen = self._surface

@@ -13,17 +13,27 @@ def main():
 
     text = Text("...")
     window.controls = [
-        Column([
-            Row([
-                Button("to clipboard", on_click=Lambda[V[Clipboard].set("Hello, world!")]),
-                Button("from clipboard", on_click=Lambda[E.setattr(text, text=V[Clipboard].get())]),
-            ]),
-            ScrollView(text, wrap_horizontal=True)
-        ]),
+        Column(
+            [
+                Row(
+                    [
+                        Button(
+                            "to clipboard",
+                            on_click=Lambda[V[Clipboard].set("Hello, world!")],
+                        ),
+                        Button(
+                            "from clipboard",
+                            on_click=Lambda[E.setattr(text, text=V[Clipboard].get())],
+                        ),
+                    ]
+                ),
+                ScrollView(text, wrap_horizontal=True, weight=1),
+            ]
+        )
     ]
 
     window.run()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
