@@ -1,18 +1,18 @@
 import json
 import os.path
 from collections import Counter
-from typing import Dict, List, Set, Union
-
-from fontTools.ttLib.ttCollection import TTCollection
+from typing import Dict, List, Set, Tuple, Union
 
 from pysaurus.core.modules import System
 from pysaurus.core.unicode_utils import Unicode
-from resource.fonts import FOLDER_FONT, FONT_BABEL_STONE, FONT_NOTO_REGULAR, get_fonts
+from resource.fonts import FOLDER_FONT, FONT_BABEL_STONE, FONT_NOTO_REGULAR
+from resource.fonts._gen_char_cov import _load_fonts
 from resource.fonts.font_utils import FontUtils
 
 LEAST_FONT = FONT_BABEL_STONE.name
 
 
+# unused
 def save_fonts(fonts: Dict[str, str]):
     if System.is_windows():
         assert not FOLDER_FONT.endswith("\\")
@@ -32,20 +32,22 @@ def save_fonts(fonts: Dict[str, str]):
     print(f"Saved paths for {len(fonts)} Noto fonts at:", output_path)
 
 
-def check_unicode_coverage(font_table: Dict[str, str]):
+def check_font():
+    fu = FontUtils(FONT_NOTO_REGULAR.path)
+    support = fu.coverage()
+    blocks = Unicode.blocks()
+    print("Font:", fu.name)
+    for block, cov in support.items():
+        a = len(cov["coverage"])
+        b = len(blocks[block])
+        assert a <= b, (block, a, b)
+        print(block, a, "/", b, _percent(a, b), "%")
+
+
+def check_unicode_coverage():
     blocks = Unicode.blocks()
     nb_chars = sum(len(chars) for chars in blocks.values())
-
-    fonts = []
-    for path in font_table.values():
-        if path.lower().endswith(".ttc"):
-            with TTCollection(path, lazy=True) as coll:
-                nb_fonts = len(coll)
-            print(f"Found TTC file {os.path.basename(path)} with {nb_fonts} fonts")
-            fonts.extend(FontUtils(path, font_index=i) for i in range(nb_fonts))
-        else:
-            fonts.append(FontUtils(path))
-    font_objects = fonts
+    font_objects = _load_fonts()
 
     nb_supported = 0
     nb_many_supported = 0
@@ -55,12 +57,12 @@ def check_unicode_coverage(font_table: Dict[str, str]):
     for block, chars in blocks.items():
         block_support_count = Counter()
         for c in chars:
-            local_supported = [font.name for font in fonts if font.supports(c)]
+            local_supported = [font.name for font in font_objects if font.supports(c)]
             block_support_count.update(local_supported)
             nb_supported += bool(local_supported)
             nb_many_supported += len(local_supported) > 1
         if block_support_count.total():
-            block_support = block_support_count.most_common()
+            block_support: List[Tuple[str, int]] = block_support_count.most_common()
             max_count = block_support[0][1]
             most_support: List[str] = [t[0] for t in block_support if t[1] == max_count]
             block_cov[block] = set(most_support)
@@ -81,7 +83,7 @@ def check_unicode_coverage(font_table: Dict[str, str]):
 
     print()
     print(f"Unicode v{Unicode.VERSION}, {nb_chars} characters, {len(blocks)} blocks.")
-    print("Fonts:", len(fonts))
+    print("Fonts:", len(font_objects))
     print("Coverage:")
     print(f"Chars: {nb_supported} / {nb_chars}, multiple: {nb_many_supported}")
     print(
@@ -179,21 +181,8 @@ def _percent(a, b):
     return round(a * 100 / b, 2)
 
 
-def check_font():
-    fu = FontUtils(FONT_NOTO_REGULAR.path)
-    support = fu.coverage()
-    blocks = Unicode.blocks()
-    print("Font:", fu.name)
-    for block, cov in support.items():
-        a = len(cov["coverage"])
-        b = len(blocks[block])
-        assert a <= b, (block, a, b)
-        print(block, a, "/", b, _percent(a, b), "%")
-
-
 def main():
-    fonts = get_fonts()
-    check_unicode_coverage(fonts)
+    check_unicode_coverage()
 
 
 if __name__ == "__main__":

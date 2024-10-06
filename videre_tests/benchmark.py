@@ -6,14 +6,13 @@ from tqdm import trange
 from pysaurus.core.components import Duration
 from pysaurus.core.constants import LOREM_IPSUM
 from pysaurus.core.perf_counter import PerfCounter
-from resource.fonts import FONT_NOTO_REGULAR
 from videre import Colors, Gradient
 from videre.core.pygame_font_factory import PygameFontFactory
 
 
 def stress_render_text(batch=200):
     height_delta = 2
-    ff = PygameFontFactory(size=24, overrides=[FONT_NOTO_REGULAR.path])
+    ff = PygameFontFactory(size=24)
     line_height = ff.get_font(" ").get_sized_height(ff.size) + height_delta
     assert line_height == 35
 

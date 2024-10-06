@@ -122,10 +122,10 @@ def justify_words(lines: List[WordsLine], width: int):
 
 
 class PygameFontFactory(PygameUtils):
-    def __init__(self, size=14, origin=True, *, overrides=(), use_default_font=False):
+    def __init__(self, size=14, origin=True, *, use_default_font=False):
         super().__init__()
 
-        self._prov = FontProvider(overrides=overrides)
+        self._prov = FontProvider()
         self.name_to_font = {}
         self.size = size
         self.origin = origin
@@ -150,15 +150,14 @@ class PygameFontFactory(PygameUtils):
         return self._default_font
 
     def _get_font(self, c: str) -> pygame.freetype.Font:
-        block = Unicode.block(c)
-        name, path = self._prov.get_font_info(block)
+        name, path = self._prov.get_font_info(c)
         font = self.name_to_font.get(name)
         if not font:
             font = pygame.freetype.Font(path, size=self.size)
             font.origin = self.origin
             self.name_to_font[name] = font
             logging.debug(
-                f"[pygame][font](block={block}) {name}, "
+                f"[pygame][font](block={Unicode.block(c)}, c={c}) {name}, "
                 f"height {font.get_sized_height(self.size)}, "
                 f"glyph height {font.get_sized_glyph_height(self.size)}, "
                 f"ascender {font.get_sized_ascender(self.size)}, "

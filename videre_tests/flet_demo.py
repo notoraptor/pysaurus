@@ -33,7 +33,5 @@ _to_do_ = [
     ft.SubmenuButton,
     ft.TextField,
 ]
-_doing_ = [
-    ft.Text,
-]
+_doing_ = [ft.Text]
 _done_ = [ft.Column, ft.Row]

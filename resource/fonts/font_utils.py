@@ -22,13 +22,16 @@ class FontUtils:
     def supports(self, character):
         return self._unicode_map.get(ord(character), None)
 
-    def coverage(self) -> dict:
+    def coverage(self, *, join=True) -> dict:
         blocks = {}
         for char_int in self._unicode_map.keys():
             c = chr(char_int)
             if Unicode.printable(c):
                 blocks.setdefault(Unicode.block(c), []).append(c)
         return {
-            block: {"font": self.name, "coverage": "".join(covered)}
+            block: {
+                "font": self.name,
+                "coverage": "".join(covered) if join else covered,
+            }
             for block, covered in blocks.items()
         }

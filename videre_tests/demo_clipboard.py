@@ -9,9 +9,9 @@ from wip.symthon.symthon import E, Lambda, V
 
 
 def main():
-    window = Window()
-
-    text = Text("...")
+    sentence = "☐ ☑ ✅ ✓ ✔ 🗸 🗹"
+    window = Window(title=sentence)
+    text = Text(sentence)
     window.controls = [
         Column(
             [

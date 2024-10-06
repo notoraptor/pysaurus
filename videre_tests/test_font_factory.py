@@ -2,7 +2,6 @@ import functools
 
 import pytest
 
-from resource.fonts import FONT_NOTO_REGULAR
 from videre.core.pygame_font_factory import PygameFontFactory
 
 
@@ -15,7 +14,7 @@ from videre.core.pygame_font_factory import PygameFontFactory
 )
 def test_render_text(factory_cls, function_name, wrap_words):
     height_delta = 2
-    ff = factory_cls(size=24, overrides=[FONT_NOTO_REGULAR.path])
+    ff = factory_cls(size=24)
     font = ff.get_font(" ")
     line_height = font.get_sized_height(ff.size) + height_delta
     ascender = abs(font.get_sized_ascender(ff.size)) + 1

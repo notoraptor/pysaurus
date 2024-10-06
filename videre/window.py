@@ -6,7 +6,6 @@ from typing import Dict, List, Optional
 import pygame
 from pygame.event import Event
 
-from resource.fonts import FONT_NOTO_REGULAR
 from videre.colors import Colors
 from videre.core.events import MotionEvent, MouseButton
 from videre.core.pygame_font_factory import PygameFontFactory
@@ -63,7 +62,7 @@ class Window(PygameUtils):
         self._motion: Optional[Widget] = None
         self._layout: Optional[WindowLayout] = None
 
-        self.fonts = PygameFontFactory(overrides=[FONT_NOTO_REGULAR.path])
+        self.fonts = PygameFontFactory()
 
         self.__collect_event_callbacks()
 

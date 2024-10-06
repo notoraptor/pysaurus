@@ -90,50 +90,28 @@ def get_fonts() -> Dict[str, str]:
 
 class FontProvider:
     """
-    _block_support:
-    {<unicode block name>: {
-        "font": <font name>,
-        "coverage": <unicode block characters covered by this font>
-    }}
+    _font_name_to_path: dictionary mapping font name to font file path
+    _fonts: list of font names referenced by index in `_characters`
+    _characters: dictionary mapping a character to index of font in `_fonts` list.
+
+    To get the font file path for a given character `c`:
+        _font_name_to_path[_fonts[_characters[c]]]
     """
 
-    __slots__ = ("_font_name_to_path", "_block_support")
+    __slots__ = ("_font_name_to_path", "_fonts", "_characters")
 
-    def __init__(self, overrides=()):
+    def __init__(self):
         self._font_name_to_path: Dict[str, str] = get_fonts()
-        with open(os.path.join(FOLDER_FONT, "block-support.json")) as file:
-            self._block_support: Dict[str, Dict] = json.load(file)
-        for font_path in overrides:
-            self.override(font_path)
+        with open(os.path.join(FOLDER_FONT, "char-support.json")) as file:
+            char_support = json.load(file)
+            self._fonts: List[str] = char_support["fonts"]
+            self._characters: Dict[str, int] = char_support["characters"]
 
-    def override(self, font_path: str):
-        fu = FontUtils(font_path)
-        overload = {}
-        for block, block_cov in fu.coverage().items():
-            if block in self._block_support:
-                curr_cov = block_cov["coverage"]
-                prev_cov = self._block_support[block]["coverage"]
-                prev_name = self._block_support[block]["font"]
-                if fu.name != prev_name and len(curr_cov) >= len(prev_cov):
-                    overload[block] = block_cov
-        if overload:
-            if fu.name not in self._font_name_to_path:
-                self._font_name_to_path[fu.name] = font_path
-            self._block_support.update(overload)
-
-    def get_font_info(self, block: str) -> Tuple[str, str]:
-        if block in self._block_support:
-            name = self._block_support[block]["font"]
+    def get_font_info(self, character: str) -> Tuple[str, str]:
+        if character in self._characters:
+            name = self._fonts[self._characters[character]]
             path = self._font_name_to_path[name]
         else:
             name = FONT_NOTO_REGULAR.name
             path = FONT_NOTO_REGULAR.path
         return name, path
-
-    def lorem_ipsum(self, block_length=1, sep=" ") -> str:
-        text = sep.join(
-            support["coverage"][:block_length]
-            for support in self._block_support.values()
-        )
-        # print(len(text), text)
-        return text
