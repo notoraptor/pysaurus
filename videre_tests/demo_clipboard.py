@@ -40,7 +40,7 @@ def main():
                             on_click=Lambda[E.setattr(text, text=V[Clipboard].get())],
                         ),
                         check,
-                        Text("Hello, world!")
+                        Text("Hello, world!"),
                     ]
                 ),
                 ScrollView(text, wrap_horizontal=True, weight=1),
