@@ -210,13 +210,8 @@ class PygameFontFactory(PygameUtils):
 
         new_width, height = 0, 0
         if lines:
-            for line in lines:
-                if line.tasks:
-                    first_char = line.tasks[0][0]
-                    break
-            else:
-                first_char = " "
-            first_font = self.get_font(first_char)
+            # Use font for space character to get default spacings
+            first_font = self.get_font(" ")
             ascender = abs(first_font.get_sized_ascender(size)) + 1
             descender = abs(first_font.get_sized_descender(size))
             line_spacing = line_spacing or (
@@ -298,13 +293,8 @@ class PygameFontFactory(PygameUtils):
             words.extend(word for word in line.split(" ") if word)
 
         size = size or self.size
-        for c in text:
-            if Unicode.printable(c):
-                first_char = c
-                break
-        else:
-            first_char = " "
-        first_font = self.get_font(first_char)
+        # Use font for space character to get default spacings
+        first_font = self.get_font(" ")
         line_spacing = first_font.get_sized_height(size) + height_delta
         space_w = first_font.get_rect(" ", size=size).width
         ascender = abs(first_font.get_sized_ascender(size)) + 1
