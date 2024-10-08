@@ -12,6 +12,20 @@ def main():
     sentence = "☐ ☑ ✅ ✓ ✔ 🗸 🗹"
     window = Window(title=sentence)
     text = Text(sentence)
+
+    check = Button(
+        "☐",
+        on_click=Lambda(
+            V.b,
+            [
+                E.if_(V.b.text == "☐", [E.setattr(V.b, text="☑")]).else_(
+                    E.setattr(V.b, text="☐")
+                )
+            ],
+        ),
+    )
+    # check._padx = check._pady = max(check._padx, check._pady)
+
     window.controls = [
         Column(
             [
@@ -25,6 +39,8 @@ def main():
                             "from clipboard",
                             on_click=Lambda[E.setattr(text, text=V[Clipboard].get())],
                         ),
+                        check,
+                        Text("Hello, world!")
                     ]
                 ),
                 ScrollView(text, wrap_horizontal=True, weight=1),
