@@ -11,9 +11,10 @@ _OnClick = Callable[[Widget], None]
 
 class Button(Widget):
     __wprops__ = {"text", "on_click", "color"}
-    __slots__ = ("_hover", "_down", "_padx", "_pady")
+    __slots__ = ("_hover", "_down", "_padx", "_pady", "_border_size")
     _PAD_X = 6
     _PAD_Y = 4
+    _BORDER_SIZE = 1
     _COLOR_DEFAULT = Colors.white
     _COLOR_HOVER = Colors.lightgray
     _COLOR_DOWN = Colors.gray
@@ -26,6 +27,7 @@ class Button(Widget):
         self._down = False
         self._padx = self._PAD_X
         self._pady = self._PAD_Y
+        self._border_size = self._BORDER_SIZE
         self._set_color()
 
     @property
@@ -82,23 +84,25 @@ class Button(Widget):
         self._set_color()
 
     def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
+        _xdec = self._padx + self._border_size
+        _ydec = self._pady + self._border_size
         if width is None and height is None:
             text_width = width
             text_surface = self._get_text_surface(window, text_width)
-            bg_w = text_surface.get_width() + 2 * (self._padx + 1)
-            bg_h = text_surface.get_height() + 2 * (self._pady + 1)
+            bg_w = text_surface.get_width() + 2 * _xdec
+            bg_h = text_surface.get_height() + 2 * _ydec
         elif width is None:
             text_width = width
             text_surface = self._get_text_surface(window, text_width)
-            bg_w = text_surface.get_width() + 2 * (self._padx + 1)
+            bg_w = text_surface.get_width() + 2 * _xdec
             bg_h = height
         elif height is None:
-            text_width = max(0, width - 2 * (self._padx + 1))
+            text_width = max(0, width - 2 * _xdec)
             text_surface = self._get_text_surface(window, text_width)
             bg_w = width
-            bg_h = text_surface.get_height() + 2 * (self._pady + 1)
+            bg_h = text_surface.get_height() + 2 * (_ydec)
         else:
-            text_width = max(0, width - 2 * (self._padx + 1))
+            text_width = max(0, width - 2 * _xdec)
             text_surface = self._get_text_surface(window, text_width)
             bg_w = width
             bg_h = height
@@ -106,17 +110,20 @@ class Button(Widget):
         text_crop = pygame.Rect(
             0,
             0,
-            min(text_surface.get_width(), max(0, bg_w - 2 * (self._padx + 1))),
-            min(text_surface.get_height(), max(0, bg_h - 2 * (self._pady + 1))),
+            min(text_surface.get_width(), max(0, bg_w - 2 * _xdec)),
+            min(text_surface.get_height(), max(0, bg_h - 2 * _ydec)),
         )
         bg = Gradient(self.color).generate(bg_w, bg_h)
         text_x = (bg.get_width() - text_surface.get_width()) // 2
         text_y = (bg.get_height() - text_surface.get_height()) // 2
         bg.blit(text_surface, (text_x, text_y), area=text_crop)
         # Draw borders
-        pygame.gfxdraw.rectangle(
-            bg, pygame.Rect(0, 0, bg.get_width(), bg.get_height()), Colors.black
-        )
+        for i in range(self._border_size):
+            pygame.gfxdraw.rectangle(
+                bg,
+                pygame.Rect(i, i, bg.get_width() - 2 * i, bg.get_height() - 2 * i),
+                Colors.black,
+            )
         # Done
         return bg
 
