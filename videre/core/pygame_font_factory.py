@@ -263,6 +263,11 @@ class PygameFontFactory(PygameUtils):
                         font.render_to(background, (x + cx, y), c, size=size)
         return background
 
+    def render_char(self, c: str, size: int = 0) -> pygame.Surface:
+        font = self.get_font(c)
+        surface, box = font.render(c, size=size or self.size)
+        return surface
+
     def render_text(
         self,
         text: str,

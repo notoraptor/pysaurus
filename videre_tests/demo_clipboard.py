@@ -3,6 +3,7 @@ from videre.layouts.column import Column
 from videre.layouts.row import Row
 from videre.layouts.scroll.scrollview import ScrollView
 from videre.widgets.button import Button
+from videre.widgets.checkbox import Checkbox
 from videre.widgets.text import Text
 from videre.window import Window
 from wip.symthon.symthon import E, Lambda, V
@@ -40,6 +41,7 @@ def main():
                             on_click=Lambda[E.setattr(text, text=V[Clipboard].get())],
                         ),
                         check,
+                        Checkbox(),
                         Text("Hello, world!"),
                     ]
                 ),
