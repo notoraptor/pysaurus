@@ -1,14 +1,16 @@
+from abc import abstractmethod
 from typing import Optional
 
 import pygame
+import pygame.gfxdraw
 
 from videre import Colors, Gradient, MotionEvent, MouseButton
 from videre.widgets.widget import Widget
 
 
 class AbstractButton(Widget):
-    __wprops__ = {"_text", "_color"}
-    __slots__ = ("_hover", "_down", "_padx", "_pady", "_border_size", "_text_size")
+    __wprops__ = {"_color"}
+    __slots__ = ("_hover", "_down", "_padx", "_pady", "_border_size")
     _PAD_X = 6
     _PAD_Y = 4
     _BORDER_SIZE = 1
@@ -16,22 +18,14 @@ class AbstractButton(Widget):
     _COLOR_HOVER = Colors.lightgray
     _COLOR_DOWN = Colors.gray
 
-    def __init__(self, text: str, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self._hover = False
         self._down = False
         self._padx = self._PAD_X
         self._pady = self._PAD_Y
         self._border_size = self._BORDER_SIZE
-        self._text_size = 0
-        self._set_text(text)
         self._set_color()
-
-    def _set_text(self, text: str):
-        self._set_wprop("_text", text.strip())
-
-    def _get_text(self) -> str:
-        return self._get_wprop("_text")
 
     @property
     def _color(self) -> pygame.Color:
@@ -109,7 +103,6 @@ class AbstractButton(Widget):
         # Done
         return bg
 
+    @abstractmethod
     def _get_text_surface(self, window, width: Optional[int] = None) -> pygame.Surface:
-        return window.fonts.render_text(
-            self._get_text(), width, size=self._text_size, height_delta=0
-        )
+        raise NotImplementedError()
