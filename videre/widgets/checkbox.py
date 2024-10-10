@@ -14,7 +14,7 @@ https://en.wikipedia.org/wiki/Check_mark
 🗹 	U+1F5F9 	BALLOT BOX WITH BOLD CHECK
 🮱 	U+1FBB1 	INVERSE CHECK MARK
 """
-from typing import Optional
+from typing import Callable, Optional
 
 import pygame
 
@@ -23,7 +23,7 @@ from videre.widgets.abstract_button import AbstractButton
 
 
 class Checkbox(AbstractButton):
-    __wprops__ = {"checked"}
+    __wprops__ = {"checked", "on_change"}
     __slots__ = ()
     _PAD_X = 0
     _PAD_Y = 0
@@ -31,9 +31,15 @@ class Checkbox(AbstractButton):
     _TEXT_0 = "☐"
     _TEXT_1 = "☑"
 
-    def __init__(self, checked=False, **kwargs):
+    def __init__(
+        self,
+        checked=False,
+        on_change: Optional[Callable[["Checkbox"], None]] = None,
+        **kwargs
+    ):
         super().__init__(**kwargs)
         self.checked = checked
+        self.on_change = on_change
 
     @property
     def checked(self) -> bool:
@@ -43,8 +49,19 @@ class Checkbox(AbstractButton):
     def checked(self, checked: bool):
         self._set_wprop("checked", bool(checked))
 
+    @property
+    def on_change(self) -> Optional[Callable[["Checkbox"], None]]:
+        return self._get_wprop("on_change")
+
+    @on_change.setter
+    def on_change(self, callback: Optional[Callable[["Checkbox"], None]]):
+        self._set_wprop("on_change", callback)
+
     def handle_click(self, button: MouseButton):
         self.checked = not self.checked
+        on_change = self.on_change
+        if on_change:
+            on_change(self)
 
     def _compute_checked_text(self) -> str:
         return self._TEXT_1 if self.checked else self._TEXT_0

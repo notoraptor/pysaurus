@@ -494,6 +494,23 @@ class With(_Expression):
             return self._block.__run__(space)
 
 
+class Condition(_Expression):
+    __slots__ = ["_condition", "_if_true", "_if_false"]
+
+    def __init__(self, condition: Variable, if_true: Variable, if_false: Variable):
+        super().__init__()
+        self._condition = self._wrap(condition)
+        self._if_true = self._wrap(if_true)
+        self._if_false = self._wrap(if_false)
+
+    def __run__(self, space: Dict[str, Any]) -> Any:
+        return (
+            self._if_true.__run__(space)
+            if self._condition.__run__(space)
+            else self._if_false.__run__(space)
+        )
+
+
 class MetaLambda(type):
     def __getitem__(self, block):
         if not isinstance(block, tuple):
@@ -575,6 +592,7 @@ class ExpressionFactory:
     break_ = Break
     return_ = Return
     with_ = With
+    cond = Condition
 
     @classmethod
     def range(cls, start, stop=None, step=1) -> Variable:

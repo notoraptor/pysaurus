@@ -4,16 +4,15 @@ import pygame
 
 from videre import MouseButton
 from videre.widgets.abstract_button import AbstractButton
-from videre.widgets.widget import Widget
-
-_OnClick = Callable[[Widget], None]
 
 
 class Button(AbstractButton):
     __wprops__ = {"text", "on_click"}
     __slots__ = ("_text_size",)
 
-    def __init__(self, text: str, on_click: _OnClick = None, **kwargs):
+    def __init__(
+        self, text: str, on_click: Optional[Callable[["Button"], None]] = None, **kwargs
+    ):
         super().__init__(**kwargs)
         self._text_size = 0
         self.text = text
@@ -28,11 +27,11 @@ class Button(AbstractButton):
         self._set_wprop("text", text.strip())
 
     @property
-    def on_click(self) -> _OnClick:
+    def on_click(self) -> Optional[Callable[["Button"], None]]:
         return self._get_wprop("on_click")
 
     @on_click.setter
-    def on_click(self, callback: _OnClick):
+    def on_click(self, callback: Optional[Callable[["Button"], None]]):
         self._set_wprop("on_click", callback)
 
     def handle_click(self, button: MouseButton):

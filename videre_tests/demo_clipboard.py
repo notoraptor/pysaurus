@@ -25,7 +25,21 @@ def main():
             ],
         ),
     )
-    # check._padx = check._pady = max(check._padx, check._pady)
+
+    label = Text("Hello world!")
+    checkbox = Checkbox(
+        on_change=Lambda(
+            V.checkbox,
+            [
+                E.setattr(
+                    label,
+                    text=E.cond(
+                        V.checkbox.checked, "Box is checked!", "Box is not checked!"
+                    ),
+                )
+            ],
+        )
+    )
 
     window.controls = [
         Column(
@@ -41,8 +55,8 @@ def main():
                             on_click=Lambda[E.setattr(text, text=V[Clipboard].get())],
                         ),
                         check,
-                        Checkbox(),
-                        Text("Hello, world!"),
+                        checkbox,
+                        label,
                     ]
                 ),
                 ScrollView(text, wrap_horizontal=True, weight=1),
