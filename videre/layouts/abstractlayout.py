@@ -1,4 +1,4 @@
-from typing import List, Optional, Sequence
+from typing import Callable, List, Optional, Sequence
 
 from videre.core.mouse_ownership import MouseOwnership
 from videre.widgets.widget import Widget
@@ -42,6 +42,12 @@ class AbstractLayout(Widget):
             local_x, local_y = self.get_local_coordinates(x_in_parent, y_in_parent)
             return get_top_mouse_wheel_owner(local_x, local_y, self._controls())
         return None
+
+    def collect_matchs(self, callback: Callable[[Widget], bool]) -> List[Widget]:
+        matchs = super().collect_matchs(callback)
+        for control in self._controls():
+            matchs.extend(control.collect_matchs(callback))
+        return matchs
 
     def has_changed(self) -> bool:
         return super().has_changed() or any(

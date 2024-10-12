@@ -17,10 +17,7 @@ _irrelevant_ = [
 
 _to_do_ = [
     ft.AlertDialog,
-    ft.Checkbox,
     ft.Container,
-    ft.ElevatedButton,
-    ft.FilePicker,
     ft.IconButton,
     ft.Image,
     ft.Markdown,
@@ -28,10 +25,16 @@ _to_do_ = [
     ft.MenuItemButton,
     ft.ProgressBar,
     ft.ProgressRing,
-    ft.Radio,
-    ft.RadioGroup,
     ft.SubmenuButton,
     ft.TextField,
 ]
 _doing_ = [ft.Text]
-_done_ = [ft.Column, ft.Row]
+_done_ = [
+    ft.Checkbox,  #todo label
+    ft.Column,
+    ft.ElevatedButton,
+    ft.FilePicker,
+    ft.Radio,  # todo label
+    ft.RadioGroup,
+    ft.Row,
+]

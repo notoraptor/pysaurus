@@ -16,20 +16,13 @@ https://en.wikipedia.org/wiki/Check_mark
 """
 from typing import Callable, Optional
 
-import pygame
-
 from videre import MouseButton
-from videre.widgets.abstract_button import AbstractButton
+from videre.widgets.abstract_check_button import AbstractCheckButton
 
 
-class Checkbox(AbstractButton):
-    __wprops__ = {"checked", "on_change"}
+class Checkbox(AbstractCheckButton):
+    __wprops__ = {"on_change"}
     __slots__ = ()
-    _PAD_X = 0
-    _PAD_Y = 0
-    _BORDER_SIZE = 0
-    _TEXT_0 = "☐"
-    _TEXT_1 = "☑"
 
     def __init__(
         self,
@@ -43,11 +36,11 @@ class Checkbox(AbstractButton):
 
     @property
     def checked(self) -> bool:
-        return self._get_wprop("checked")
+        return self._get_checked()
 
     @checked.setter
-    def checked(self, checked: bool):
-        self._set_wprop("checked", bool(checked))
+    def checked(self, value: bool):
+        self._set_checked(value)
 
     @property
     def on_change(self) -> Optional[Callable[["Checkbox"], None]]:
@@ -58,15 +51,7 @@ class Checkbox(AbstractButton):
         self._set_wprop("on_change", callback)
 
     def handle_click(self, button: MouseButton):
-        self.checked = not self.checked
+        super().handle_click(button)
         on_change = self.on_change
         if on_change:
             on_change(self)
-
-    def _compute_checked_text(self) -> str:
-        return self._TEXT_1 if self.checked else self._TEXT_0
-
-    def _get_text_surface(self, window, width: Optional[int] = None) -> pygame.Surface:
-        return window.fonts.render_char(
-            self._compute_checked_text(), size=window.fonts.size * 2
-        )

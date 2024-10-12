@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Any, Optional, Self, Tuple
+from typing import Any, Callable, List, Optional, Self, Tuple
 
 import pygame
 
@@ -144,6 +144,9 @@ class Widget(PygameUtils):
         ):
             return MouseOwnership(self, x_in_parent, y_in_parent)
         return None
+
+    def collect_matchs(self, callback: Callable[["Widget"], bool]) -> List["Widget"]:
+        return [self] if callback(self) else []
 
     def get_mouse_wheel_owner(
         self, x_in_parent: int, y_in_parent: int

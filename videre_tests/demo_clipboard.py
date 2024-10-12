@@ -1,16 +1,18 @@
 from videre.clipboard import Clipboard
 from videre.layouts.column import Column
+from videre.layouts.radiogroup import RadioGroup
 from videre.layouts.row import Row
 from videre.layouts.scroll.scrollview import ScrollView
 from videre.widgets.button import Button
 from videre.widgets.checkbox import Checkbox
+from videre.widgets.radio import Radio
 from videre.widgets.text import Text
 from videre.window import Window
 from wip.symthon.symthon import E, Lambda, V
 
 
 def main():
-    sentence = "☐ ☑ ✅ ✓ ✔ 🗸 🗹"
+    sentence = "☐ ☑ ✅ ✓ ✔ 🗸 🗹 ◉ ○"
     window = Window(title=sentence)
     text = Text(sentence)
 
@@ -55,8 +57,15 @@ def main():
                             on_click=Lambda[E.setattr(text, text=V[Clipboard].get())],
                         ),
                         check,
+                        Radio("something"),
                         checkbox,
                         label,
+                        RadioGroup(
+                            Row([Radio("a"), Radio("b"), Radio("c"), Radio("d")]),
+                            can_deselect=False,
+                            value="b",
+                            on_change=Lambda(V.rg, [E.print(V.rg.value)]),
+                        ),
                     ]
                 ),
                 ScrollView(text, wrap_horizontal=True, weight=1),

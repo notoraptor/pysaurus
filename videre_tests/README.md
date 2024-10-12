@@ -23,5 +23,8 @@
   * Button
     * text: str
     * on_click: Callable[[Button], None]
+  * Checkbox
+    * checked: bool = False
+    * on_change: Callable[[Checkbox], None]
   * Text
     * text: str
