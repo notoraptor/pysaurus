@@ -5,6 +5,7 @@ from videre.layouts.row import Row
 from videre.layouts.scroll.scrollview import ScrollView
 from videre.widgets.button import Button
 from videre.widgets.checkbox import Checkbox
+from videre.widgets.label import Label
 from videre.widgets.radio import Radio
 from videre.widgets.text import Text
 from videre.window import Window
@@ -61,11 +62,20 @@ def main():
                         checkbox,
                         label,
                         RadioGroup(
-                            Row([Radio("a"), Radio("b"), Radio("c"), Radio("d")]),
+                            Row(
+                                [
+                                    Radio("a", key="radio_a"),
+                                    Radio("b"),
+                                    Radio("c"),
+                                    Radio("d"),
+                                ]
+                            ),
                             can_deselect=False,
                             value="b",
                             on_change=Lambda(V.rg, [E.print(V.rg.value)]),
                         ),
+                        Label(for_button="radio_a", text="Click to select radio A"),
+                        Label(for_button=checkbox, text="check!"),
                     ]
                 ),
                 ScrollView(text, wrap_horizontal=True, weight=1),

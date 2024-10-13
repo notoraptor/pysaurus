@@ -30,11 +30,11 @@ _to_do_ = [
 ]
 _doing_ = [ft.Text]
 _done_ = [
-    ft.Checkbox,  #todo label
+    ft.Checkbox,
     ft.Column,
     ft.ElevatedButton,
     ft.FilePicker,
-    ft.Radio,  # todo label
+    ft.Radio,
     ft.RadioGroup,
     ft.Row,
 ]

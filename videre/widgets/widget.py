@@ -63,6 +63,10 @@ class Widget(PygameUtils):
         self._children_pos.remove(child)
 
     @property
+    def key(self) -> str:
+        return self._key
+
+    @property
     def x(self) -> int:
         return self._parent.get_child_position(self).x if self._parent else 0
 
@@ -125,6 +129,15 @@ class Widget(PygameUtils):
     def rendered_height(self) -> int:
         self._assert_rendered()
         return self._surface.get_height()
+
+    def get_root(self) -> "Widget":
+        root = self
+        while True:
+            parent = root.parent
+            if parent is None:
+                return root
+            else:
+                root = parent
 
     def get_local_coordinates(self, global_x: int, global_y: int) -> Tuple[int, int]:
         return global_x - self.x, global_y - self.y
