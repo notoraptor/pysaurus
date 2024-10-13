@@ -7,7 +7,9 @@ import pygame
 from pygame.event import Event
 
 from videre.colors import Colors
-from videre.core.events import MotionEvent, MouseButton
+from videre.core.clipboard import Clipboard
+from videre.core.constants import MouseButton
+from videre.core.events import MotionEvent
 from videre.core.pygame_font_factory import PygameFontFactory
 from videre.core.pygame_utils import PygameUtils
 from videre.layouts.abstractlayout import AbstractControlsLayout
@@ -47,12 +49,12 @@ class WindowLayout(AbstractControlsLayout):
         return screen
 
 
-class Window(PygameUtils):
+class Window(PygameUtils, Clipboard):
     def __init__(self, title="Window", width=1280, height=720):
         super().__init__()
-        self.title = title
-        self.width = width
-        self.height = height
+        self._title = title
+        self._width = width
+        self._height = height
         self.controls: List[Widget] = []
         self._running = True
         self._event_callbacks = {}
@@ -85,13 +87,14 @@ class Window(PygameUtils):
 
     def run(self):
         screen = pygame.display.set_mode(
-            (self.width, self.height), flags=pygame.RESIZABLE
+            (self._width, self._height), flags=pygame.RESIZABLE
         )
 
-        # NB: As set_mode has been called, we can now init pygame.scrap.
+        # NB: As set_mode has been called, we can now initialize pygame.scrap.
+        # This needs to be done before calling Clipboard methods.
         pygame.scrap.init()
 
-        pygame.display.set_caption(self.title)
+        pygame.display.set_caption(self._title)
         clock = pygame.time.Clock()
 
         self._layout = WindowLayout(screen)

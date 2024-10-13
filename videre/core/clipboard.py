@@ -27,7 +27,7 @@ def bytes_to_text(data: bytes) -> str:
 
 class Clipboard:
     @classmethod
-    def get_text_type(cls) -> str:
+    def _get_text_type(cls) -> str:
         for ct in pygame.scrap.get_types():
             if ct == "text/plain;charset=utf-8":
                 return ct
@@ -35,7 +35,7 @@ class Clipboard:
             return pygame.SCRAP_TEXT
 
     @classmethod
-    def get(cls) -> str:
+    def get_clipboard(cls) -> str:
         for text_type in _TEXT_TYPES:
             data = pygame.scrap.get(text_type)
             if data:
@@ -45,5 +45,5 @@ class Clipboard:
         return ""
 
     @classmethod
-    def set(cls, text: str):
-        pygame.scrap.put(cls.get_text_type(), text.encode())
+    def set_clipboard(cls, text: str):
+        pygame.scrap.put(cls._get_text_type(), text.encode())

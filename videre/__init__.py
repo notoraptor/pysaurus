@@ -1,3 +1,3 @@
 from .colors import Colors
-from .core.events import *
+from .core.constants import *
 from .gradient import Gradient

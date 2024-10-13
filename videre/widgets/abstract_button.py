@@ -4,7 +4,9 @@ from typing import Optional
 import pygame
 import pygame.gfxdraw
 
-from videre import Colors, Gradient, MotionEvent, MouseButton
+from videre import Colors, Gradient
+from videre.core.constants import MouseButton
+from videre.core.events import MotionEvent
 from videre.widgets.widget import Widget
 
 

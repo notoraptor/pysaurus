@@ -3,7 +3,7 @@ from typing import List, Optional, Tuple
 
 import pygame
 
-from videre.core.events import Alignment
+from videre.core.constants import Alignment
 from videre.layouts.abstractlayout import AbstractControlsLayout
 from videre.widgets.widget import Widget
 

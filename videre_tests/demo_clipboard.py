@@ -1,5 +1,4 @@
 import videre
-from videre.clipboard import Clipboard
 from videre.layouts.column import Column
 from videre.layouts.radiogroup import RadioGroup
 from videre.layouts.row import Row
@@ -52,11 +51,13 @@ def main():
                     [
                         Button(
                             "to clipboard",
-                            on_click=Lambda[V[Clipboard].set("Hello, world!")],
+                            on_click=Lambda[V[window].set_clipboard("Hello, world!")],
                         ),
                         Button(
                             "from clipboard",
-                            on_click=Lambda[E.setattr(text, text=V[Clipboard].get())],
+                            on_click=Lambda[
+                                E.setattr(text, text=V[window].get_clipboard())
+                            ],
                         ),
                         check,
                         Radio("something"),

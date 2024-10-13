@@ -1,6 +1,6 @@
 import pygame
 
-from videre.core.events import TextAlign, TextWrap
+from videre.core.constants import TextAlign, TextWrap
 from videre.widgets.widget import Widget
 
 

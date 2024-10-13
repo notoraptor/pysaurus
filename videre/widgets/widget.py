@@ -3,7 +3,8 @@ from typing import Any, Callable, List, Optional, Self, Tuple
 
 import pygame
 
-from videre.core.events import MotionEvent, MouseButton
+from videre.core.constants import MouseButton
+from videre.core.events import MotionEvent
 from videre.core.mouse_ownership import MouseOwnership
 from videre.core.position_mapping import Position, PositionMapping
 from videre.core.pygame_utils import PygameUtils

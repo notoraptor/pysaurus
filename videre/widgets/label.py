@@ -1,6 +1,7 @@
 from typing import Union
 
-from videre import MotionEvent, MouseButton
+from videre.core.constants import MouseButton
+from videre.core.events import MotionEvent
 from videre.widgets.abstract_button import AbstractButton
 from videre.widgets.text import Text
 from videre.widgets.widget import Widget
