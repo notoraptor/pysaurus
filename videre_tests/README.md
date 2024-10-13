@@ -15,16 +15,25 @@
     * control: Widget
     * width: int
     * height: int
+  * RadioGroup
+    * content: Widget
+    * value: Optional[Any]
+    * on_change: Callback[[RadioGroup], None]
+    * can_deselect: bool = False
 * Widgets
   * Rectangle (complete)
     * width: int
     * height: int
     * coloring: Gradient
-  * Button
+  * Button: AbstractButton
     * text: str
     * on_click: Callable[[Button], None]
-  * Checkbox
+  * Checkbox: AbstractButton
     * checked: bool = False
     * on_change: Callable[[Checkbox], None]
+  * Radio: AbstractButton
+    * value: Any
   * Text
     * text: str
+  * Label:
+    * for_button: AbstractButton | str  # key
