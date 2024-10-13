@@ -1,3 +1,4 @@
+import videre
 from videre.clipboard import Clipboard
 from videre.layouts.column import Column
 from videre.layouts.radiogroup import RadioGroup
@@ -76,7 +77,8 @@ def main():
                         ),
                         Label(for_button="radio_a", text="Click to select radio A"),
                         Label(for_button=checkbox, text="check!"),
-                    ]
+                    ],
+                    vertical_alignment=videre.Alignment.CENTER,
                 ),
                 ScrollView(text, wrap_horizontal=True, weight=1),
             ]

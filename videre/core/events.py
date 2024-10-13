@@ -33,6 +33,13 @@ class TextAlign(Enum):
     JUSTIFY = 4
 
 
+@unique
+class Alignment(Enum):
+    START = 0
+    CENTER = 1
+    END = 2
+
+
 class MotionEvent:
     __slots__ = ("_e", "x", "y")
 

@@ -3,17 +3,33 @@ from typing import List, Optional, Tuple
 
 import pygame
 
+from videre.core.events import Alignment
 from videre.layouts.abstractlayout import AbstractControlsLayout
 from videre.widgets.widget import Widget
 
 
 class Row(AbstractControlsLayout):
-    __wprops__ = {"expand_vertical"}
+    __wprops__ = {"vertical_alignment", "expand_vertical"}
     __slots__ = ()
 
-    def __init__(self, controls: Sequence[Widget], expand_vertical=True, **kwargs):
+    def __init__(
+        self,
+        controls: Sequence[Widget],
+        vertical_alignment=Alignment.START,
+        expand_vertical=True,
+        **kwargs
+    ):
         super().__init__(controls, **kwargs)
+        self._set_wprop("vertical_alignment", vertical_alignment)
         self._set_wprop("expand_vertical", expand_vertical)
+
+    @property
+    def vertocil_alignment(self) -> Alignment:
+        return self._get_wprop("vertical_alignment")
+
+    @vertocil_alignment.setter
+    def vertocil_alignment(self, vertical_alignment: Alignment):
+        self._set_wprop("vertical_alignment", vertical_alignment)
 
     @property
     def expand_vertical(self) -> bool:
@@ -32,7 +48,7 @@ class Row(AbstractControlsLayout):
 
         weights = [ctrl.weight for ctrl in controls]
         total_weight = sum(weights)
-        if height is None or total_weight == 0:
+        if width is None or total_weight == 0:
             for i, ctrl in enumerate(controls):
                 if width is not None and total_width >= width:
                     break
@@ -71,12 +87,23 @@ class Row(AbstractControlsLayout):
             height = max_height
         else:
             height = min(height, max_height)
-        column = self._new_surface(width, height)
+        row = self._new_surface(width, height)
         x = 0
         for render in rendered:
             if render:
                 ctrl, surface = render
-                column.blit(surface, (x, 0))
-                self._set_child_position(ctrl, x, 0)
+                y = _align_y(height, surface.get_height(), self.vertocil_alignment)
+                row.blit(surface, (x, y))
+                self._set_child_position(ctrl, x, y)
                 x += surface.get_width()
-        return column
+        return row
+
+
+def _align_y(available_height: int, control_height: int, alignment: Alignment) -> int:
+    if alignment == Alignment.START:
+        return 0
+    elif alignment == Alignment.CENTER:
+        return max(0, (available_height - control_height) // 2)
+    else:
+        # alignment == Alignment.END
+        return max(0, available_height - control_height)
