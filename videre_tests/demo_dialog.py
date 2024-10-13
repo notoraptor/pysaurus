@@ -2,7 +2,7 @@ from videre.dialog import Dialog
 from videre.layouts.column import Column
 from videre.widgets.button import Button
 from videre.widgets.text import Text
-from videre.window import Window
+from videre.windowing.window import Window
 from wip.symthon.symthon import E, Lambda, V
 
 

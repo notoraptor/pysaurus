@@ -1,21 +1,12 @@
 import videre
-from videre.layouts.column import Column
-from videre.layouts.radiogroup import RadioGroup
-from videre.layouts.row import Row
-from videre.layouts.scroll.scrollview import ScrollView
-from videre.widgets.button import Button
-from videre.widgets.checkbox import Checkbox
-from videre.widgets.label import Label
-from videre.widgets.radio import Radio
-from videre.widgets.text import Text
-from videre.window import Window
+from videre import Button, Checkbox, Column, Label, Radio, RadioGroup, Row
 from wip.symthon.symthon import E, Lambda, V
 
 
 def main():
     sentence = "☐ ☑ ✅ ✓ ✔ 🗸 🗹 ◉ ○"
-    window = Window(title=sentence)
-    text = Text(sentence)
+    window = videre.Window(title=sentence)
+    text = videre.Text(sentence)
 
     check = Button(
         "☐",
@@ -29,7 +20,7 @@ def main():
         ),
     )
 
-    label = Text("Hello world!")
+    label = videre.Text("Hello world!")
     checkbox = Checkbox(
         on_change=Lambda(
             V.checkbox,
@@ -81,7 +72,7 @@ def main():
                     ],
                     vertical_alignment=videre.Alignment.CENTER,
                 ),
-                ScrollView(text, wrap_horizontal=True, weight=1),
+                videre.ScrollView(text, wrap_horizontal=True, weight=1),
             ]
         )
     ]

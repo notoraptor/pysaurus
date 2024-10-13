@@ -6,7 +6,7 @@ from videre.layouts.row import Row
 from videre.layouts.scroll.scrollview import ScrollView
 from videre.widgets.button import Button
 from videre.widgets.text import Text
-from videre.window import Window
+from videre.windowing.window import Window
 from wip.symthon.symthon import E, Lambda, V
 
 
