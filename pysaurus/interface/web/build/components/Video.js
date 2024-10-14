@@ -137,7 +137,7 @@ System.register(["../dialogs/Dialog.js", "../forms/FormVideoEditProperties.js", 
           }, tr("Dismiss similarity")) : "", data.similarity_id !== null ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.resetSimilarity
           }, tr("Reset similarity")) : "", data.found ? /*#__PURE__*/React.createElement(MenuItem, {
-            className: "red-flag",
+            className: "red-brown",
             action: this.deleteVideoEntry
           }, tr("Delete video entry")) : "", /*#__PURE__*/React.createElement(MenuItem, {
             className: "red-flag",

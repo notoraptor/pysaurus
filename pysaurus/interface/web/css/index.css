@@ -76,6 +76,12 @@ table.second-td-text-right td:first-child + td {
 .red-flag {
 	color: red;
 	font-weight: bolder;
+	margin-top: 0.5rem;
+}
+
+.red-brown {
+	color: brown;
+	font-weight: bolder;
 }
 
 .flex-grow-1 {

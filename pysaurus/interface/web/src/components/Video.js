@@ -157,7 +157,7 @@ export class Video extends React.Component {
 										""
 									)}
 									{data.found ? (
-									    <MenuItem className="red-flag" action={this.deleteVideoEntry}>
+									    <MenuItem className="red-brown" action={this.deleteVideoEntry}>
                                             {tr("Delete video entry")}
                                         </MenuItem>
 									) : ""}
