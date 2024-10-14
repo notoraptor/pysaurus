@@ -28,6 +28,7 @@ export class Video extends React.Component {
 		this.openVideoSurely = this.openVideoSurely.bind(this);
 		this.confirmDeletion = this.confirmDeletion.bind(this);
 		this.deleteVideo = this.deleteVideo.bind(this);
+		this.deleteVideoEntry = this.deleteVideoEntry.bind(this);
 		this.openContainingFolder = this.openContainingFolder.bind(this);
 		this.copyToClipboard = this.copyToClipboard.bind(this);
 		this.copyMetaTitle = this.copyMetaTitle.bind(this);
@@ -38,6 +39,7 @@ export class Video extends React.Component {
 		this.editProperties = this.editProperties.bind(this);
 		this.onSelect = this.onSelect.bind(this);
 		this.reallyDeleteVideo = this.reallyDeleteVideo.bind(this);
+		this.reallyDeleteVideoEntry = this.reallyDeleteVideoEntry.bind(this);
 		this.confirmMove = this.confirmMove.bind(this);
 		this.moveVideo = this.moveVideo.bind(this);
 		this.dismissSimilarity = this.dismissSimilarity.bind(this);
@@ -154,6 +156,11 @@ export class Video extends React.Component {
 									) : (
 										""
 									)}
+									{data.found ? (
+									    <MenuItem className="red-flag" action={this.deleteVideoEntry}>
+                                            {tr("Delete video entry")}
+                                        </MenuItem>
+									) : ""}
 									<MenuItem className="red-flag" action={this.deleteVideo}>
 										{data.found ? tr("Delete video") : tr("Delete entry")}
 									</MenuItem>
@@ -348,6 +355,11 @@ export class Video extends React.Component {
 									) : (
 										""
 									)}
+									{data.found ? (
+									    <MenuItem className="red-flag" action={this.deleteVideoEntry}>
+                                            {tr("Delete video entry")}
+                                        </MenuItem>
+									) : ""}
 									<MenuItem className="red-flag" action={this.deleteVideo}>
 										{data.found ? tr("Delete video") : tr("Delete entry")}
 									</MenuItem>
@@ -552,6 +564,28 @@ export class Video extends React.Component {
 		);
 	}
 
+	deleteVideoEntry() {
+		const filename = this.props.data.filename;
+		const thumbnail_path = this.props.data.thumbnail_path;
+		Fancybox.load(
+			<Dialog title={tr("Confirm entry deletion")} yes={tr("DELETE ENTRY")} action={this.reallyDeleteVideoEntry}>
+				<div className="form-delete-video text-center">
+					{tr("## Are you sure you want to !!definitely!! delete **entry** for this video in database?", null, "markdown")}
+					<div className="details overflow-auto px-2 py-1">
+						<code id="filename">{filename}</code>
+					</div>
+					<p>
+						{this.props.data.with_thumbnails ? (
+							<img id="thumbnail" alt="No thumbnail available" src={thumbnail_path} />
+						) : (
+							<div className="no-thumbnail">{tr("no thumbnail")}</div>
+						)}
+					</p>
+				</div>
+			</Dialog>
+		);
+	}
+
 	dismissSimilarity() {
 		const filename = this.props.data.filename;
 		const thumbnail_path = this.props.data.thumbnail_path;
@@ -614,6 +648,19 @@ export class Video extends React.Component {
 			.then(() =>
 				this.props.onInfo(
 					tr("Video deleted! {path}", {
+						path: this.props.data.filename,
+					}),
+					true
+				)
+			)
+			.catch(backend_error);
+	}
+
+	reallyDeleteVideoEntry() {
+		python_call("delete_video_entry", this.props.data.video_id)
+			.then(() =>
+				this.props.onInfo(
+					tr("Video entry deleted! {path}", {
 						path: this.props.data.filename,
 					}),
 					true

@@ -48,6 +48,7 @@ System.register(["../dialogs/Dialog.js", "../forms/FormVideoEditProperties.js", 
           this.openVideoSurely = this.openVideoSurely.bind(this);
           this.confirmDeletion = this.confirmDeletion.bind(this);
           this.deleteVideo = this.deleteVideo.bind(this);
+          this.deleteVideoEntry = this.deleteVideoEntry.bind(this);
           this.openContainingFolder = this.openContainingFolder.bind(this);
           this.copyToClipboard = this.copyToClipboard.bind(this);
           this.copyMetaTitle = this.copyMetaTitle.bind(this);
@@ -58,6 +59,7 @@ System.register(["../dialogs/Dialog.js", "../forms/FormVideoEditProperties.js", 
           this.editProperties = this.editProperties.bind(this);
           this.onSelect = this.onSelect.bind(this);
           this.reallyDeleteVideo = this.reallyDeleteVideo.bind(this);
+          this.reallyDeleteVideoEntry = this.reallyDeleteVideoEntry.bind(this);
           this.confirmMove = this.confirmMove.bind(this);
           this.moveVideo = this.moveVideo.bind(this);
           this.dismissSimilarity = this.dismissSimilarity.bind(this);
@@ -134,7 +136,10 @@ System.register(["../dialogs/Dialog.js", "../forms/FormVideoEditProperties.js", 
             action: this.dismissSimilarity
           }, tr("Dismiss similarity")) : "", data.similarity_id !== null ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.resetSimilarity
-          }, tr("Reset similarity")) : "", /*#__PURE__*/React.createElement(MenuItem, {
+          }, tr("Reset similarity")) : "", data.found ? /*#__PURE__*/React.createElement(MenuItem, {
+            className: "red-flag",
+            action: this.deleteVideoEntry
+          }, tr("Delete video entry")) : "", /*#__PURE__*/React.createElement(MenuItem, {
             className: "red-flag",
             action: this.deleteVideo
           }, data.found ? tr("Delete video") : tr("Delete entry"))), /*#__PURE__*/React.createElement("div", {
@@ -252,7 +257,10 @@ System.register(["../dialogs/Dialog.js", "../forms/FormVideoEditProperties.js", 
             action: this.copyFilePath
           }, tr("Copy path")), data.found ? /*#__PURE__*/React.createElement(MenuItem, {
             action: this.renameVideo
-          }, tr("Rename video")) : "", /*#__PURE__*/React.createElement(MenuItem, {
+          }, tr("Rename video")) : "", data.found ? /*#__PURE__*/React.createElement(MenuItem, {
+            className: "red-flag",
+            action: this.deleteVideoEntry
+          }, tr("Delete video entry")) : "", /*#__PURE__*/React.createElement(MenuItem, {
             className: "red-flag",
             action: this.deleteVideo
           }, data.found ? tr("Delete video") : tr("Delete entry"))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("strong", {
@@ -384,6 +392,27 @@ System.register(["../dialogs/Dialog.js", "../forms/FormVideoEditProperties.js", 
             className: "no-thumbnail"
           }, tr("no thumbnail"))))));
         }
+        deleteVideoEntry() {
+          const filename = this.props.data.filename;
+          const thumbnail_path = this.props.data.thumbnail_path;
+          Fancybox.load( /*#__PURE__*/React.createElement(Dialog, {
+            title: tr("Confirm entry deletion"),
+            yes: tr("DELETE ENTRY"),
+            action: this.reallyDeleteVideoEntry
+          }, /*#__PURE__*/React.createElement("div", {
+            className: "form-delete-video text-center"
+          }, tr("## Are you sure you want to !!definitely!! delete **entry** for this video in database?", null, "markdown"), /*#__PURE__*/React.createElement("div", {
+            className: "details overflow-auto px-2 py-1"
+          }, /*#__PURE__*/React.createElement("code", {
+            id: "filename"
+          }, filename)), /*#__PURE__*/React.createElement("p", null, this.props.data.with_thumbnails ? /*#__PURE__*/React.createElement("img", {
+            id: "thumbnail",
+            alt: "No thumbnail available",
+            src: thumbnail_path
+          }) : /*#__PURE__*/React.createElement("div", {
+            className: "no-thumbnail"
+          }, tr("no thumbnail"))))));
+        }
         dismissSimilarity() {
           const filename = this.props.data.filename;
           const thumbnail_path = this.props.data.thumbnail_path;
@@ -435,6 +464,11 @@ System.register(["../dialogs/Dialog.js", "../forms/FormVideoEditProperties.js", 
         }
         reallyDeleteVideo() {
           python_call("delete_video", this.props.data.video_id).then(() => this.props.onInfo(tr("Video deleted! {path}", {
+            path: this.props.data.filename
+          }), true)).catch(backend_error);
+        }
+        reallyDeleteVideoEntry() {
+          python_call("delete_video_entry", this.props.data.video_id).then(() => this.props.onInfo(tr("Video entry deleted! {path}", {
             path: this.props.data.filename
           }), true)).catch(backend_error);
         }

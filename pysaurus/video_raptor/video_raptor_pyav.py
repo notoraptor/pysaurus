@@ -6,6 +6,7 @@ import av
 from PIL import Image
 
 from pysaurus.core.components import AbsolutePath
+from pysaurus.core.fraction import Fraction
 from pysaurus.video.video_entry import VideoEntry
 
 logger = logging.getLogger(__name__)
@@ -104,7 +105,12 @@ class PythonVideoRaptor:
             end_reachable = True
             break
 
-        average_rate = video_stream.average_rate
+        average_rate = (
+            video_stream.average_rate
+            or video_stream.guessed_rate
+            or video_stream.base_rate
+            or Fraction(0)
+        )
 
         return VideoEntry(
             **{

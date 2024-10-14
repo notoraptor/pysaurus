@@ -48,6 +48,7 @@ class FeatureAPI:
             "create_prop_type": FromDb(self, Db.create_prop_type),
             "delete_property_values": FromDb(self, Db.delete_property_values),
             "delete_video": FromDb(self, Db.delete_video),
+            "delete_video_entry": FromDb(self, Db.delete_video_entry),
             "describe_prop_types": FromDb(self, Db.get_prop_types, True),
             "replace_property_values": FromDb(self, Db.replace_property_values),
             "fill_property_with_terms": FromDb(self, Db.fill_property_with_terms),

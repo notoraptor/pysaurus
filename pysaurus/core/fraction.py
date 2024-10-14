@@ -83,3 +83,11 @@ class Fraction:
         if power < 0:
             return Fraction(self.den**-power, self.sign * self.num**-power)
         return Fraction(self.sign * self.num**power, self.den**power)
+
+    @property
+    def numerator(self) -> int:
+        return self.num
+
+    @property
+    def denominator(self) -> int:
+        return self.den
