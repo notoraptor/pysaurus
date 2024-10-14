@@ -1,4 +1,5 @@
 import inspect
+import io
 import logging
 import pprint
 from typing import Dict, List, Optional
@@ -22,8 +23,12 @@ class Window(PygameUtils, Clipboard):
         self._title = title
         self._width = width
         self._height = height
-        self.controls: List[Widget] = []
+
+        self._step_mode = False
         self._running = True
+        self._closed = False
+        self._screen: Optional[pygame.Surface] = None
+
         self._event_callbacks = {}
         self._down: Dict[MouseButton, Optional[Widget]] = {
             button: None for button in MouseButton
@@ -31,7 +36,8 @@ class Window(PygameUtils, Clipboard):
         self._motion: Optional[Widget] = None
         self._layout: Optional[WindowLayout] = None
 
-        self.fonts = PygameFontFactory()
+        self.controls: List[Widget] = []
+        self._fonts = PygameFontFactory()
 
         self.__collect_event_callbacks()
 
@@ -44,7 +50,6 @@ class Window(PygameUtils, Clipboard):
                 event_type = method.event_type
                 assert event_type not in self._event_callbacks
                 self._event_callbacks[event_type] = method
-
         pprint.pprint(
             {
                 pygame.event.event_name(t): c.__name__
@@ -52,8 +57,31 @@ class Window(PygameUtils, Clipboard):
             }
         )
 
-    def run(self):
-        screen = pygame.display.set_mode(
+    @property
+    def fonts(self) -> PygameFontFactory:
+        return self._fonts
+
+    def __enter__(self):
+        if self._closed:
+            raise RuntimeError("Window has already run. Cannot run again.")
+        self._step_mode = True
+        self._init_display()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._step_mode = False
+        self._closed = True
+        pygame.quit()
+
+    def screenshot(self) -> io.BytesIO:
+        assert self._step_mode
+        data = io.BytesIO()
+        pygame.image.save(self._screen, data)
+        data.flush()
+        return data
+
+    def _init_display(self):
+        self._screen = pygame.display.set_mode(
             (self._width, self._height), flags=pygame.RESIZABLE
         )
 
@@ -62,10 +90,18 @@ class Window(PygameUtils, Clipboard):
         pygame.scrap.init()
 
         pygame.display.set_caption(self._title)
-        clock = pygame.time.Clock()
 
-        self._layout = WindowLayout(screen)
+        self._layout = WindowLayout(self._screen)
+
+    def run(self):
+        if self._closed:
+            raise RuntimeError("Window has already run. Cannot run again.")
+        if self._step_mode:
+            raise RuntimeError("Window is in step mode. Cannot launch run().")
+
+        self._init_display()
         self._render()
+        # Post an initial mouse motion if mouse is over the window.
         if pygame.mouse.get_focused():
             pygame.event.post(
                 Event(
@@ -77,12 +113,14 @@ class Window(PygameUtils, Clipboard):
                 )
             )
 
+        clock = pygame.time.Clock()
         while self._running:
             for event in pygame.event.get():
                 self.__on_event(event)
             self._render()
             clock.tick(60)
         pygame.quit()
+        self._closed = True
 
     def _render(self):
         self._layout.controls = self.controls

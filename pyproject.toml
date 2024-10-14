@@ -31,6 +31,9 @@ pytest = "^6.2.4"
 pytest-cov = "^2.12.1"
 isort = "^5.9.3"
 
+[tool.poetry.group.dev.dependencies]
+pytest-regressions = "^2.5.0"
+
 [tool.black]
 line-length = 88
 
