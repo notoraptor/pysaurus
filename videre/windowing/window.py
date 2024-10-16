@@ -1,12 +1,12 @@
 import inspect
 import io
 import logging
-import pprint
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Sequence, Tuple
 
 import pygame
 from pygame.event import Event
 
+from pysaurus.core.prettylogging import PrettyLogging
 from videre.core.clipboard import Clipboard
 from videre.core.constants import MouseButton
 from videre.core.events import MotionEvent
@@ -20,7 +20,7 @@ from videre.windowing.windowutils import on_event
 class Window(PygameUtils, Clipboard):
     def __init__(self, title="Window", width=1280, height=720):
         super().__init__()
-        self._title = title
+        self._title = str(title) or "Window"
         self._width = width
         self._height = height
 
@@ -36,7 +36,7 @@ class Window(PygameUtils, Clipboard):
         self._motion: Optional[Widget] = None
         self._layout: Optional[WindowLayout] = None
 
-        self.controls: List[Widget] = []
+        self._controls: List[Widget] = []
         self._fonts = PygameFontFactory()
 
         self.__collect_event_callbacks()
@@ -50,7 +50,7 @@ class Window(PygameUtils, Clipboard):
                 event_type = method.event_type
                 assert event_type not in self._event_callbacks
                 self._event_callbacks[event_type] = method
-        pprint.pprint(
+        PrettyLogging.debug(
             {
                 pygame.event.event_name(t): c.__name__
                 for t, c in self._event_callbacks.items()
@@ -61,6 +61,14 @@ class Window(PygameUtils, Clipboard):
     def fonts(self) -> PygameFontFactory:
         return self._fonts
 
+    @property
+    def controls(self) -> Tuple[Widget, ...]:
+        return tuple(self._controls)
+
+    @controls.setter
+    def controls(self, controls: Sequence[Widget]):
+        self._controls = controls
+
     def __enter__(self):
         if self._closed:
             raise RuntimeError("Window has already run. Cannot run again.")
@@ -68,10 +76,11 @@ class Window(PygameUtils, Clipboard):
         self._init_display()
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self._step_mode = False
-        self._closed = True
-        pygame.quit()
+    def render(self):
+        assert self._step_mode
+        for event in pygame.event.get():
+            self.__on_event(event)
+        self._render()
 
     def screenshot(self) -> io.BytesIO:
         assert self._step_mode
@@ -79,6 +88,16 @@ class Window(PygameUtils, Clipboard):
         pygame.image.save(self._screen, data)
         data.flush()
         return data
+
+    def snapshot(self) -> io.BytesIO:
+        self.render()
+        return self.screenshot()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self._step_mode:
+            self._step_mode = False
+            self._closed = True
+            pygame.quit()
 
     def _init_display(self):
         self._screen = pygame.display.set_mode(

@@ -10,7 +10,7 @@
     * TODO: horizontal alignment
   * Row
     * expand_vertical: bool
-    * TODO: vertical alignment
+    * vertical alignment
   * View (complete)
     * control: Widget
     * width: int

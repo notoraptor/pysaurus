@@ -79,6 +79,7 @@ class Row(AbstractControlsLayout):
                     total_width += surface.get_width()
                     max_height = max(max_height, surface.get_height())
 
+        alignment = self.vertocil_alignment
         if width is None:
             width = total_width
         else:
@@ -86,7 +87,8 @@ class Row(AbstractControlsLayout):
         if height is None:
             height = max_height
         else:
-            height = min(height, max_height)
+            choice = min if alignment == Alignment.START else max
+            height = choice(height, max_height)
         row = self._new_surface(width, height)
         x = 0
         for render in rendered:
