@@ -1,16 +1,17 @@
 import videre
+from videre.windowing.windowfactory import WindowLD
 
 
 def main():
-    window = videre.Window.LD()
+    window = WindowLD()
     window.controls = [
-        videre.Row(
+        videre.Column(
             [
                 videre.Rectangle(50, 100, videre.Colors.red),
                 videre.Rectangle(60, 50, videre.Colors.green),
                 videre.Rectangle(70, 80, videre.Colors.blue),
             ],
-            vertical_alignment=videre.Alignment.END,
+            horizontal_alignment=videre.Alignment.END,
         )
     ]
     window.run()

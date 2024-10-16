@@ -3,17 +3,33 @@ from typing import List, Optional, Tuple
 
 import pygame
 
+from videre.core.constants import Alignment
 from videre.layouts.abstractlayout import AbstractControlsLayout
 from videre.widgets.widget import Widget
 
 
 class Column(AbstractControlsLayout):
-    __wprops__ = {"expand_horizontal"}
+    __wprops__ = {"horizontal_alignment", "expand_horizontal"}
     __slots__ = ()
 
-    def __init__(self, controls: Sequence[Widget], expand_horizontal=True, **kwargs):
+    def __init__(
+        self,
+        controls: Sequence[Widget],
+        horizontal_alignment=Alignment.START,
+        expand_horizontal=True,
+        **kwargs
+    ):
         super().__init__(controls, **kwargs)
         self._set_wprop("expand_horizontal", expand_horizontal)
+        self._set_wprop("horizontal_alignment", horizontal_alignment)
+
+    @property
+    def horizontal_alignment(self) -> Alignment:
+        return self._get_wprop("horizontal_alignment")
+
+    @horizontal_alignment.setter
+    def horizontal_alignment(self, horizontal_alignment: Alignment):
+        self._set_wprop("horizontal_alignment", horizontal_alignment)
 
     @property
     def expand_horizontal(self) -> bool:
@@ -63,10 +79,12 @@ class Column(AbstractControlsLayout):
                     total_height += surface.get_height()
                     max_width = max(max_width, surface.get_width())
 
+        alignment = self.horizontal_alignment
         if width is None:
             width = max_width
         else:
-            width = min(width, max_width)
+            choice = min if alignment == Alignment.START else max
+            width = choice(width, max_width)
         if height is None:
             height = total_height
         else:
@@ -76,7 +94,18 @@ class Column(AbstractControlsLayout):
         for render in rendered:
             if render:
                 ctrl, surface = render
-                column.blit(surface, (0, y))
-                self._set_child_position(ctrl, 0, y)
+                x = _align_x(width, surface.get_width(), alignment)
+                column.blit(surface, (x, y))
+                self._set_child_position(ctrl, x, y)
                 y += surface.get_height()
         return column
+
+
+def _align_x(available_width: int, control_width: int, alignment: Alignment) -> int:
+    if alignment == Alignment.START:
+        return 0
+    elif alignment == Alignment.CENTER:
+        return max(0, (available_width - control_width) // 2)
+    else:
+        # alignment == Alignment.END
+        return max(0, available_width - control_width)

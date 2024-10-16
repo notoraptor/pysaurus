@@ -7,10 +7,10 @@
     * scroll_thickness: int
   * Column
     * expand_horizontal: bool
-    * TODO: horizontal alignment
+    * horizontal_alignment: Alignment
   * Row
     * expand_vertical: bool
-    * vertical alignment
+    * vertical_alignment: Alignment
   * View (complete)
     * control: Widget
     * width: int
@@ -32,7 +32,7 @@
     * checked: bool = False
     * on_change: Callable[[Checkbox], None]
   * Radio: AbstractButton
-    * value: Any
+    * value: Any  # read-only
   * Text
     * text: str
   * Label:

@@ -24,11 +24,11 @@ class Row(AbstractControlsLayout):
         self._set_wprop("expand_vertical", expand_vertical)
 
     @property
-    def vertocil_alignment(self) -> Alignment:
+    def vertical_alignment(self) -> Alignment:
         return self._get_wprop("vertical_alignment")
 
-    @vertocil_alignment.setter
-    def vertocil_alignment(self, vertical_alignment: Alignment):
+    @vertical_alignment.setter
+    def vertical_alignment(self, vertical_alignment: Alignment):
         self._set_wprop("vertical_alignment", vertical_alignment)
 
     @property
@@ -79,7 +79,7 @@ class Row(AbstractControlsLayout):
                     total_width += surface.get_width()
                     max_height = max(max_height, surface.get_height())
 
-        alignment = self.vertocil_alignment
+        alignment = self.vertical_alignment
         if width is None:
             width = total_width
         else:
@@ -94,7 +94,7 @@ class Row(AbstractControlsLayout):
         for render in rendered:
             if render:
                 ctrl, surface = render
-                y = _align_y(height, surface.get_height(), self.vertocil_alignment)
+                y = _align_y(height, surface.get_height(), alignment)
                 row.blit(surface, (x, y))
                 self._set_child_position(ctrl, x, y)
                 x += surface.get_width()
