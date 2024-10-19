@@ -79,6 +79,10 @@ class Widget(PygameUtils):
     def weight(self) -> int:
         return self._get_wprop("weight")
 
+    @weight.setter
+    def weight(self, weight: int):
+        self._set_wprop("weight", weight)
+
     @property
     def parent(self):
         return self._parent
@@ -173,6 +177,12 @@ class Widget(PygameUtils):
     def _debug(self, *args, **kwargs):
         print(self, *args, **kwargs)
 
+    def get_window(self):
+        from videre.windowing.window import Window
+
+        window: Window = self._old_update[0]
+        return window
+
     def _prev_scope_width(self) -> int:
         return self._old_update[1]
 
@@ -208,7 +218,11 @@ class Widget(PygameUtils):
         self._transient_state["redraw"] = True
 
     def has_changed(self) -> bool:
-        return self._old != self._new or self._transient_state
+        return self._old != self._new or bool(self._transient_state)
+
+    def flush_changes(self):
+        self._old = self._new.copy()
+        self._transient_state.clear()
 
     def render(self, window, width: int = None, height: int = None) -> pygame.Surface:
         new_update = (window, width, height)

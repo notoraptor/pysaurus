@@ -4,7 +4,7 @@ from typing import List, Optional, Tuple
 import pygame
 
 from videre.core.constants import Alignment
-from videre.layouts.abstractlayout import AbstractControlsLayout
+from videre.layouts.abstract_controls_layout import AbstractControlsLayout
 from videre.widgets.widget import Widget
 
 
@@ -45,6 +45,7 @@ class Row(AbstractControlsLayout):
         total_width = 0
         controls = self.controls
         rendered: List[Optional[Tuple[Widget, pygame.Surface]]] = [None] * len(controls)
+        sizes: List[Optional[int]] = [None] * len(controls)
 
         weights = [ctrl.weight for ctrl in controls]
         total_weight = sum(weights)
@@ -54,6 +55,7 @@ class Row(AbstractControlsLayout):
                     break
                 surface = ctrl.render(window, None, h_hint)
                 rendered[i] = (ctrl, surface)
+                sizes[i] = surface.get_width()
                 total_width += surface.get_width()
                 max_height = max(max_height, surface.get_height())
         else:
@@ -66,6 +68,7 @@ class Row(AbstractControlsLayout):
                 else:
                     surface = ctrl.render(window, None, h_hint)
                     rendered[i] = (ctrl, surface)
+                    sizes[i] = surface.get_width()
                     total_width += surface.get_width()
                     max_height = max(max_height, surface.get_height())
             remaining_width = width - total_width
@@ -73,10 +76,11 @@ class Row(AbstractControlsLayout):
                 for i, ctrl in to_render:
                     if total_width >= width:
                         break
-                    available_width = remaining_width * weights[i] / total_weight
+                    available_width = (remaining_width * weights[i]) // total_weight
                     surface = ctrl.render(window, available_width, h_hint)
                     rendered[i] = (ctrl, surface)
-                    total_width += surface.get_width()
+                    sizes[i] = available_width
+                    total_width += available_width
                     max_height = max(max_height, surface.get_height())
 
         alignment = self.vertical_alignment
@@ -91,13 +95,15 @@ class Row(AbstractControlsLayout):
             height = choice(height, max_height)
         row = self._new_surface(width, height)
         x = 0
-        for render in rendered:
+        for i, render in enumerate(rendered):
             if render:
                 ctrl, surface = render
                 y = _align_y(height, surface.get_height(), alignment)
                 row.blit(surface, (x, y))
                 self._set_child_position(ctrl, x, y)
-                x += surface.get_width()
+                x += sizes[i]
+            else:
+                controls[i].flush_changes()
         return row
 
 

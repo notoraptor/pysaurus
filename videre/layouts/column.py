@@ -4,7 +4,7 @@ from typing import List, Optional, Tuple
 import pygame
 
 from videre.core.constants import Alignment
-from videre.layouts.abstractlayout import AbstractControlsLayout
+from videre.layouts.abstract_controls_layout import AbstractControlsLayout
 from videre.widgets.widget import Widget
 
 
@@ -45,6 +45,7 @@ class Column(AbstractControlsLayout):
         total_height = 0
         controls = self.controls
         rendered: List[Optional[Tuple[Widget, pygame.Surface]]] = [None] * len(controls)
+        sizes: List[Optional[int]] = [None] * len(controls)
 
         weights = [ctrl.weight for ctrl in controls]
         total_weight = sum(weights)
@@ -54,6 +55,7 @@ class Column(AbstractControlsLayout):
                     break
                 surface = ctrl.render(window, w_hint)
                 rendered[i] = (ctrl, surface)
+                sizes[i] = surface.get_height()
                 total_height += surface.get_height()
                 max_width = max(max_width, surface.get_width())
         else:
@@ -66,6 +68,7 @@ class Column(AbstractControlsLayout):
                 else:
                     surface = ctrl.render(window, w_hint)
                     rendered[i] = (ctrl, surface)
+                    sizes[i] = surface.get_height()
                     total_height += surface.get_height()
                     max_width = max(max_width, surface.get_width())
             remaining_height = height - total_height
@@ -73,10 +76,11 @@ class Column(AbstractControlsLayout):
                 for i, ctrl in to_render:
                     if total_height >= height:
                         break
-                    available_height = remaining_height * weights[i] / total_weight
+                    available_height = (remaining_height * weights[i]) // total_weight
                     surface = ctrl.render(window, w_hint, available_height)
                     rendered[i] = (ctrl, surface)
-                    total_height += surface.get_height()
+                    sizes[i] = available_height
+                    total_height += available_height
                     max_width = max(max_width, surface.get_width())
 
         alignment = self.horizontal_alignment
@@ -91,13 +95,15 @@ class Column(AbstractControlsLayout):
             height = min(height, total_height)
         column = self._new_surface(width, height)
         y = 0
-        for render in rendered:
+        for i, render in enumerate(rendered):
             if render:
                 ctrl, surface = render
                 x = _align_x(width, surface.get_width(), alignment)
                 column.blit(surface, (x, y))
                 self._set_child_position(ctrl, x, y)
-                y += surface.get_height()
+                y += sizes[i]
+            else:
+                controls[i].flush_changes()
         return column
 
 

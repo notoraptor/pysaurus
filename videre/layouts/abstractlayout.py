@@ -54,17 +54,10 @@ class AbstractLayout(Widget):
             ctrl.has_changed() for ctrl in self._controls()
         )
 
-
-class AbstractControlsLayout(AbstractLayout):
-    __slots__ = ()
-
-    @property
-    def controls(self) -> List[Widget]:
-        return self._controls()
-
-    @controls.setter
-    def controls(self, controls: Sequence[Widget]):
-        self._set_controls(controls)
+    def flush_changes(self):
+        super().flush_changes()
+        for ctrl in self._controls():
+            ctrl.flush_changes()
 
 
 def get_top_mouse_owner(

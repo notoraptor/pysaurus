@@ -1,7 +1,7 @@
 import pygame
 
 from videre.colors import Colors
-from videre.layouts.abstractlayout import AbstractControlsLayout
+from videre.layouts.abstract_controls_layout import AbstractControlsLayout
 
 
 class WindowLayout(AbstractControlsLayout):

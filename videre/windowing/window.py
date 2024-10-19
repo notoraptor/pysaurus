@@ -1,7 +1,7 @@
 import inspect
 import io
 import logging
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Dict, List, Optional, Sequence, Text, Tuple
 
 import pygame
 from pygame.event import Event
@@ -12,7 +12,9 @@ from videre.core.constants import MouseButton
 from videre.core.events import MotionEvent
 from videre.core.pygame_font_factory import PygameFontFactory
 from videre.core.pygame_utils import PygameUtils
+from videre.widgets.button import Button
 from videre.widgets.widget import Widget
+from videre.windowing.fancybox import Fancybox
 from videre.windowing.windowlayout import WindowLayout
 from videre.windowing.windowutils import on_event
 
@@ -35,6 +37,7 @@ class Window(PygameUtils, Clipboard):
         }
         self._motion: Optional[Widget] = None
         self._layout: Optional[WindowLayout] = None
+        self._fancybox: Optional[Fancybox] = None
 
         self._controls: List[Widget] = []
         self._fonts = PygameFontFactory()
@@ -44,22 +47,7 @@ class Window(PygameUtils, Clipboard):
     def __repr__(self):
         return f"[{type(self).__name__}][{id(self)}]"
 
-    def __collect_event_callbacks(self):
-        for name, method in inspect.getmembers(self, inspect.ismethod):
-            if hasattr(method, "event_type"):
-                event_type = method.event_type
-                assert event_type not in self._event_callbacks
-                self._event_callbacks[event_type] = method
-        PrettyLogging.debug(
-            {
-                pygame.event.event_name(t): c.__name__
-                for t, c in self._event_callbacks.items()
-            }
-        )
-
-    @property
-    def fonts(self) -> PygameFontFactory:
-        return self._fonts
+    fonts = property(lambda self: self._fonts)
 
     @property
     def controls(self) -> Tuple[Widget, ...]:
@@ -99,19 +87,6 @@ class Window(PygameUtils, Clipboard):
             self._closed = True
             pygame.quit()
 
-    def _init_display(self):
-        self._screen = pygame.display.set_mode(
-            (self._width, self._height), flags=pygame.RESIZABLE
-        )
-
-        # NB: As set_mode has been called, we can now initialize pygame.scrap.
-        # This needs to be done before calling Clipboard methods.
-        pygame.scrap.init()
-
-        pygame.display.set_caption(self._title)
-
-        self._layout = WindowLayout(self._screen)
-
     def run(self):
         if self._closed:
             raise RuntimeError("Window has already run. Cannot run again.")
@@ -141,10 +116,53 @@ class Window(PygameUtils, Clipboard):
         pygame.quit()
         self._closed = True
 
+    def _init_display(self):
+        self._screen = pygame.display.set_mode(
+            (self._width, self._height), flags=pygame.RESIZABLE
+        )
+
+        # NB: As set_mode has been called, we can now initialize pygame.scrap.
+        # This needs to be done before calling Clipboard methods.
+        pygame.scrap.init()
+
+        pygame.display.set_caption(self._title)
+
+        self._layout = WindowLayout(self._screen)
+
     def _render(self):
-        self._layout.controls = self.controls
+        self._layout.controls = self.controls + (
+            (self._fancybox,) if self._fancybox else ()
+        )
         self._layout.render(self)
         pygame.display.flip()
+
+    def set_fancybox(
+        self,
+        content: Widget,
+        title: str | Text = "Fancybox",
+        buttons: Sequence[Button] = (),
+    ):
+        assert not self._fancybox
+        self._fancybox = Fancybox(content, title, buttons)
+
+    def clear_fancybox(self):
+        self._fancybox = None
+
+    def has_fancybox(self) -> bool:
+        return self._fancybox is not None
+
+    def __collect_event_callbacks(self):
+        for name, method in inspect.getmembers(self, inspect.ismethod):
+            if hasattr(method, "event_type"):
+                event_type = method.event_type
+                assert event_type not in self._event_callbacks
+                self._event_callbacks[event_type] = method
+        PrettyLogging.debug(
+            {
+                pygame.event.event_name(t): c.__name__
+                for t, c in self._event_callbacks.items()
+            }
+        )
 
     def __on_event(self, event: Event):
         callback = self._event_callbacks.get(event.type)
