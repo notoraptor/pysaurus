@@ -36,6 +36,7 @@ class Window(PygameUtils, Clipboard):
             button: None for button in MouseButton
         }
         self._motion: Optional[Widget] = None
+        self._manual_events: List[Event] = []
         self._layout: Optional[WindowLayout] = None
         self._fancybox: Optional[Fancybox] = None
 
@@ -94,18 +95,8 @@ class Window(PygameUtils, Clipboard):
             raise RuntimeError("Window is in step mode. Cannot launch run().")
 
         self._init_display()
-        self._render()
-        # Post an initial mouse motion if mouse is over the window.
-        if pygame.mouse.get_focused():
-            pygame.event.post(
-                Event(
-                    pygame.MOUSEMOTION,
-                    pos=pygame.mouse.get_pos(),
-                    rel=(0, 0),
-                    buttons=(0, 0, 0),
-                    touch=False,
-                )
-            )
+        # We must prepare initial events before entering the render loop
+        self._register_initial_events()
 
         clock = pygame.time.Clock()
         while self._running:
@@ -120,14 +111,30 @@ class Window(PygameUtils, Clipboard):
         self._screen = pygame.display.set_mode(
             (self._width, self._height), flags=pygame.RESIZABLE
         )
+        pygame.display.set_caption(self._title)
+        self._layout = WindowLayout(self._screen)
 
         # NB: As set_mode has been called, we can now initialize pygame.scrap.
         # This needs to be done before calling Clipboard methods.
         pygame.scrap.init()
 
-        pygame.display.set_caption(self._title)
+    def _register_initial_events(self):
+        # Post an initial mouse motion if mouse is over the window.
+        if pygame.mouse.get_focused():
+            self._post_manual_event(
+                Event(
+                    pygame.MOUSEMOTION,
+                    pos=pygame.mouse.get_pos(),
+                    rel=(0, 0),
+                    buttons=(0, 0, 0),
+                    touch=False,
+                ),
+                unique=True,
+            )
 
-        self._layout = WindowLayout(self._screen)
+    def _post_manual_event(self, event, unique=False):
+        if not unique or event not in self._manual_events:
+            self._manual_events.append(event)
 
     def _render(self):
         self._layout.controls = self.controls + (
@@ -135,6 +142,12 @@ class Window(PygameUtils, Clipboard):
         )
         self._layout.render(self)
         pygame.display.flip()
+
+        # Post manual events.
+        if self._manual_events:
+            for event in self._manual_events:
+                pygame.event.post(event)
+            self._manual_events.clear()
 
     def set_fancybox(
         self,
@@ -144,9 +157,11 @@ class Window(PygameUtils, Clipboard):
     ):
         assert not self._fancybox
         self._fancybox = Fancybox(content, title, buttons)
+        self._register_initial_events()
 
     def clear_fancybox(self):
         self._fancybox = None
+        self._register_initial_events()
 
     def has_fancybox(self) -> bool:
         return self._fancybox is not None

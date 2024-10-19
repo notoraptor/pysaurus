@@ -9,6 +9,7 @@ from videre.layouts.column import Column
 from videre.layouts.row import Row
 from videre.layouts.view import View
 from videre.widgets.button import Button
+from videre.widgets.square_button import SquareButton
 from videre.widgets.text import Text
 from videre.widgets.widget import Widget
 
@@ -22,7 +23,7 @@ class Fancybox(AbstractLayout):
         title: str | Text = "Fancybox",
         buttons: Sequence[Button] = (),
     ):
-        button_close = Button("X", on_click=self._on_close)
+        button_close = SquareButton("✕", on_click=self._on_close)
 
         if not isinstance(title, Text):
             title = Text(title)

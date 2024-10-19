@@ -16,6 +16,7 @@ class AbstractButton(Widget):
     _PAD_X = 6
     _PAD_Y = 4
     _BORDER_SIZE = 1
+    _SQUARE = False
     _COLOR_DEFAULT = Colors.white
     _COLOR_HOVER = Colors.lightgray
     _COLOR_DOWN = Colors.gray
@@ -84,6 +85,9 @@ class AbstractButton(Widget):
             text_surface = self._get_text_surface(window, text_width)
             bg_w = width
             bg_h = height
+
+        if self._SQUARE:
+            bg_w = bg_h = max(bg_w, bg_h)
 
         text_crop = pygame.Rect(
             0,
