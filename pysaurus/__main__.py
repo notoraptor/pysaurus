@@ -1,7 +1,8 @@
 if __name__ == "__main__":
     import sys
-    from pysaurus.core.modules import System
+
     from pysaurus.core.functions import fatal
+    from pysaurus.core.modules import System
 
     CEF = "cef"
     QT = "qt"

@@ -471,14 +471,18 @@ class VideosPage(ft.Container):
                 ft.Row(
                     [
                         ft.Column(
-                            [
-                                ft.Text(f"Searched {search['cond']}"),
-                                ft.Text(search["text"], weight=ft.FontWeight.BOLD),
-                            ]
-                            if state.group_is_set()
-                            else [
-                                ft.Text("No search", italic=True, color=ft.colors.GREY)
-                            ],
+                            (
+                                [
+                                    ft.Text(f"Searched {search['cond']}"),
+                                    ft.Text(search["text"], weight=ft.FontWeight.BOLD),
+                                ]
+                                if state.group_is_set()
+                                else [
+                                    ft.Text(
+                                        "No search", italic=True, color=ft.colors.GREY
+                                    )
+                                ]
+                            ),
                             expand=1,
                             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                         ),
@@ -751,29 +755,33 @@ class VideosPage(ft.Container):
             ),
             ft.Column(
                 [
-                    ft.IconButton(
-                        ft.icons.CANCEL,
-                        tooltip="Deselect all",
-                        on_click=self.on_deselect_all,
-                    )
-                    if selection_size
-                    else ft.IconButton(
-                        ft.icons.DONE_ALL_ROUNDED,
-                        tooltip="Select all",
-                        on_click=self.on_select_all,
+                    (
+                        ft.IconButton(
+                            ft.icons.CANCEL,
+                            tooltip="Deselect all",
+                            on_click=self.on_deselect_all,
+                        )
+                        if selection_size
+                        else ft.IconButton(
+                            ft.icons.DONE_ALL_ROUNDED,
+                            tooltip="Select all",
+                            on_click=self.on_select_all,
+                        )
                     ),
                     *(
                         [
-                            ft.IconButton(
-                                ft.icons.CHECKLIST_OUTLINED,
-                                tooltip="Display all videos",
-                                on_click=self.on_switch_display_only_selected_videos,
-                            )
-                            if self.display_only_selected_videos
-                            else ft.IconButton(
-                                ft.icons.CHECK_OUTLINED,
-                                tooltip="Display only selected videos",
-                                on_click=self.on_switch_display_only_selected_videos,
+                            (
+                                ft.IconButton(
+                                    ft.icons.CHECKLIST_OUTLINED,
+                                    tooltip="Display all videos",
+                                    on_click=self.on_switch_display_only_selected_videos,
+                                )
+                                if self.display_only_selected_videos
+                                else ft.IconButton(
+                                    ft.icons.CHECK_OUTLINED,
+                                    tooltip="Display only selected videos",
+                                    on_click=self.on_switch_display_only_selected_videos,
+                                )
                             )
                         ]
                         if selection_size

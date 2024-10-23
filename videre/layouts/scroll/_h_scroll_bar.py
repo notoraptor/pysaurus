@@ -57,9 +57,11 @@ class _HScrollBar(Widget):
     def _set_color(self):
         self._set_wprop(
             "color",
-            self._SCROLL_COLOR_HOVER
-            if self._hover or self._grabbed
-            else self._SCROLL_COLOR,
+            (
+                self._SCROLL_COLOR_HOVER
+                if self._hover or self._grabbed
+                else self._SCROLL_COLOR
+            ),
         )
 
     def _bar_length(self) -> int:

@@ -6,6 +6,7 @@ https://github.com/notofonts/noto-cjk
 https://github.com/googlefonts/noto-emoji
 https://www.babelstone.co.uk/Fonts/Han.html
 """
+
 import json
 import os
 from typing import Dict, List, Tuple

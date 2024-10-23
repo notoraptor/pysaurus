@@ -21,8 +21,8 @@ from saurus.sql.saurus_provider_utils import (
 from saurus.sql.sql_utils import QueryMaker, SQLWhereBuilder, TableDef
 from saurus.sql.sql_video_wrapper import (
     FORMATTED_VIDEO_TABLE_FIELDS,
-    SQLVideoWrapper,
     VIDEO_TABLE_FIELD_NAMES,
+    SQLVideoWrapper,
 )
 from saurus.sql.video_parser import VideoFieldQueryParser
 

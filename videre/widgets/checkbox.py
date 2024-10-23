@@ -14,6 +14,7 @@ https://en.wikipedia.org/wiki/Check_mark
 🗹 	U+1F5F9 	BALLOT BOX WITH BOLD CHECK
 🮱 	U+1FBB1 	INVERSE CHECK MARK
 """
+
 from typing import Callable, Optional
 
 from videre import MouseButton

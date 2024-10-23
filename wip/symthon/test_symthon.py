@@ -4,9 +4,7 @@ from wip.symthon.symthon import E, Lambda, V
 
 
 def test_return():
-    function = Lambda(
-        V.x, [E.set(V.y, 2 * V.x), E.set(V.z, V.x**V.y), E.return_(-V.z)]
-    )
+    function = Lambda(V.x, [E.set(V.y, 2 * V.x), E.set(V.z, V.x**V.y), E.return_(-V.z)])
     assert function(2) == -16
 
 

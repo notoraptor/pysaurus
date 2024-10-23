@@ -1,7 +1,6 @@
 from pysaurus.core.json_type import Type
 from pysaurus.core.schematizable import Schema
 
-
 VIDEO_RUNTIME_INFO_SCHEMA = Schema(
     [
         Type("size", "s", 0),

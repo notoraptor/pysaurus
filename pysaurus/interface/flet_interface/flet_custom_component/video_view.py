@@ -176,9 +176,11 @@ class VideoView(ft.Container):
                                 [
                                     ft.Text("Audio:"),
                                     ft.Text(
-                                        ", ".join(video.audio_languages)
-                                        if video.audio_languages
-                                        else "(none)",
+                                        (
+                                            ", ".join(video.audio_languages)
+                                            if video.audio_languages
+                                            else "(none)"
+                                        ),
                                         font_family=CUSTOM_FONT_MONOSPACE,
                                     ),
                                 ],
@@ -188,9 +190,11 @@ class VideoView(ft.Container):
                                 [
                                     ft.Text("Subtitles:"),
                                     ft.Text(
-                                        ", ".join(video.subtitle_languages)
-                                        if video.subtitle_languages
-                                        else "(none)",
+                                        (
+                                            ", ".join(video.subtitle_languages)
+                                            if video.subtitle_languages
+                                            else "(none)"
+                                        ),
                                         font_family=CUSTOM_FONT_MONOSPACE,
                                     ),
                                 ],

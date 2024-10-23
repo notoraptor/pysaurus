@@ -2,7 +2,6 @@ from pysaurus.core.json_type import Type
 from pysaurus.core.schematizable import Schema, SchemaType
 from pysaurus.video.lazy_video_runtime_info import LazyVideoRuntimeInfo
 
-
 VIDEO_SCHEMA = Schema(
     [
         Type("filename", ("f", str), None),

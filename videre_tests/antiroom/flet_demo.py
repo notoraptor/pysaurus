@@ -1,6 +1,5 @@
 import flet as ft
 
-
 _irrelevant_ = [
     ft.ButtonStyle,
     ft.Control,

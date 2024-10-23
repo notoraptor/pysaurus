@@ -1,9 +1,9 @@
 from typing import Any, Dict, List, Sequence, Set
 
-from pysaurus.imgsimsearch.backend_numpy import SimilarityComparator
 from pysaurus.core.graph import Graph
 from pysaurus.core.informer import Informer
 from pysaurus.core.miniature import Miniature, NumpyMiniature
+from pysaurus.imgsimsearch.backend_numpy import SimilarityComparator
 from pysaurus.imgsimsearch.common import THUMBNAIL_DIMENSION
 
 

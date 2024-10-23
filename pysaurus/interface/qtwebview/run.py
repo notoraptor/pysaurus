@@ -14,12 +14,11 @@ from pysaurus.interface.common.qt_saurus_utils import PysaurusQtExceptHook
 # from putting them before Pysaurus imports
 logger = logging.getLogger(__name__)
 
-from PySide6.QtCore import QMetaObject, QObject, QUrl, Q_ARG, Qt, Signal, Slot
+from PySide6.QtCore import Q_ARG, QMetaObject, QObject, Qt, QUrl, Signal, Slot
 from PySide6.QtWebChannel import QWebChannel
 from PySide6.QtWebEngineCore import QWebEnginePage
 from PySide6.QtWebEngineWidgets import QWebEngineView
 from PySide6.QtWidgets import QApplication
-
 
 LevelType = QWebEnginePage.JavaScriptConsoleMessageLevel
 LOG_LEVEL = {
