@@ -36,3 +36,11 @@ class Alignment(Enum):
     START = 0
     CENTER = 1
     END = 2
+
+
+@unique
+class Side(Enum):
+    TOP = "top"
+    RIGHT = "right"
+    BOTTOM = "bottom"
+    LEFT = "left"

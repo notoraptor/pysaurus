@@ -98,20 +98,10 @@ class Row(AbstractControlsLayout):
         for i, render in enumerate(rendered):
             if render:
                 ctrl, surface = render
-                y = _align_y(height, surface.get_height(), alignment)
+                y = self._align_dim(height, surface.get_height(), alignment)
                 row.blit(surface, (x, y))
                 self._set_child_position(ctrl, x, y)
                 x += sizes[i]
             else:
                 controls[i].flush_changes()
         return row
-
-
-def _align_y(available_height: int, control_height: int, alignment: Alignment) -> int:
-    if alignment == Alignment.START:
-        return 0
-    elif alignment == Alignment.CENTER:
-        return max(0, (available_height - control_height) // 2)
-    else:
-        # alignment == Alignment.END
-        return max(0, available_height - control_height)

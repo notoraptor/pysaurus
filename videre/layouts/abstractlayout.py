@@ -1,5 +1,6 @@
 from typing import Callable, List, Optional, Sequence
 
+from videre import Alignment
 from videre.core.mouse_ownership import MouseOwnership
 from videre.widgets.widget import Widget
 
@@ -58,6 +59,16 @@ class AbstractLayout(Widget):
         super().flush_changes()
         for ctrl in self._controls():
             ctrl.flush_changes()
+
+    @staticmethod
+    def _align_dim(available_size: int, control_size: int, alignment: Alignment) -> int:
+        if alignment == Alignment.START:
+            return 0
+        elif alignment == Alignment.CENTER:
+            return max(0, (available_size - control_size) // 2)
+        else:
+            # alignment == Alignment.END
+            return max(0, available_size - control_size)
 
 
 def get_top_mouse_owner(

@@ -98,20 +98,10 @@ class Column(AbstractControlsLayout):
         for i, render in enumerate(rendered):
             if render:
                 ctrl, surface = render
-                x = _align_x(width, surface.get_width(), alignment)
+                x = self._align_dim(width, surface.get_width(), alignment)
                 column.blit(surface, (x, y))
                 self._set_child_position(ctrl, x, y)
                 y += sizes[i]
             else:
                 controls[i].flush_changes()
         return column
-
-
-def _align_x(available_width: int, control_width: int, alignment: Alignment) -> int:
-    if alignment == Alignment.START:
-        return 0
-    elif alignment == Alignment.CENTER:
-        return max(0, (available_width - control_width) // 2)
-    else:
-        # alignment == Alignment.END
-        return max(0, available_width - control_width)

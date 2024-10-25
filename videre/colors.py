@@ -1,3 +1,5 @@
+from typing import Dict, List, Tuple, Union
+
 import pygame
 
 
@@ -144,3 +146,91 @@ class Colors:
     yellowgreen = pygame.Color(154, 205, 50)
     # Non-HTML, supplementary colors
     transparent = pygame.Color(0, 0, 0, 0)
+
+
+ColorDefinition = Union[
+    pygame.Color, Tuple[int, int, int], Tuple[int, int, int, int], List[int], str, None
+]
+
+
+def parse_color(value: ColorDefinition) -> pygame.Color:
+    """
+    Parse color.
+    Options:
+        parse_color((r, g, b))
+        parse_color((r, g, b, a))
+        parse_color([r, g, b])
+        parse_color([r, g, b, a])
+        parse_color("#<hex>")
+            Examples:
+                #0bffff (alpha value will be 255)
+                #0bff1bee (alpha value will be 0xee)
+        parse_color("<color_name>")
+            For valid color names, see members of class videre.Colors
+        parse_color(pygame.Color)
+            Return given color.
+    :return: a pygame.Color object.
+    """
+    if isinstance(value, pygame.Color):
+        return value
+    elif isinstance(value, (tuple, list)):
+        if len(value) not in (3, 4):
+            raise ValueError(
+                f"Color tuple/list must have 3 or 4 values, got {len(value)}"
+            )
+        return pygame.Color(*value)
+    elif isinstance(value, str):
+        if not value:
+            raise ValueError("Expected a non-empty string color")
+        if value[0] == "#":
+            hex_code = value[1:]
+            if len(hex_code) > 8:
+                raise ValueError(
+                    f"Too long color hex (at most 8 digits expected): {value}"
+                )
+            color_integer = int(hex_code, 16)
+            v1 = color_integer >> (3 * 8)
+            v2 = (color_integer & 0xFFFFFF) >> (2 * 8)
+            v3 = (color_integer & 0xFFFF) >> (1 * 8)
+            v4 = color_integer & 0xFF
+            if v1:
+                r, g, b, a = v1, v2, v3, v4
+            else:
+                r, g, b, a = v2, v3, v4, 255
+            return pygame.Color(r, g, b, a)
+        else:
+            color = getattr(Colors, value, None)
+            if not isinstance(color, pygame.Color):
+                raise ValueError(f"Unknown color name: {value}")
+            return color
+    elif value is None:
+        return Colors.transparent
+    else:
+        raise ValueError(f"Unsupported color definition: {type(value).__name__}")
+
+
+class _ColorToString:
+    __slots__ = ["_color_to_name"]
+
+    def __init__(self):
+        self._color_to_name: Dict[Tuple[int, int, int, int], str] = {}
+        for name in dir(Colors):
+            if "a" <= name[0] <= "z":
+                val = getattr(Colors, name)
+                if isinstance(val, pygame.Color):
+                    self._color_to_name[(val.r, val.g, val.b, val.a)] = name
+
+    def __call__(self, color: pygame.Color) -> str:
+        color_tuple = (color.r, color.g, color.b, color.a)
+        if color_tuple not in self._color_to_name:
+            name = "#"
+            values = color_tuple if color.a != 255 else (color.r, color.g, color.b)
+            for value in values:
+                assert isinstance(value, int)
+                assert 0 <= value < 256
+                name += hex(value)[2:].ljust(2, "0")
+            self._color_to_name[color_tuple] = name
+        return self._color_to_name[color_tuple]
+
+
+stringify_color = _ColorToString()

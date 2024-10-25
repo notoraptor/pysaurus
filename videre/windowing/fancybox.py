@@ -16,6 +16,7 @@ from videre.widgets.widget import Widget
 
 class Fancybox(AbstractLayout):
     __slots__ = ()
+    __size__ = 1
 
     def __init__(
         self,

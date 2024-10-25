@@ -1,4 +1,4 @@
-from videre import Button, Column, Text, Window
+from videre import Button, Column, ScrollView, Text, Window
 
 
 def main():
@@ -6,8 +6,8 @@ def main():
 
     def fancy(*args):
         window.set_fancybox(
-            Column([Text(f"Item {i + 1}") for i in range(100)]),
-            # buttons=[Button("yes"), Button("NO!")],
+            ScrollView(Column([Text(f"Item {i + 1}") for i in range(100)])),
+            buttons=[Button("yes"), Button("NO!")],
         )
 
     window.controls = [Button("Fancy!", on_click=fancy)]
