@@ -12,9 +12,9 @@ class RadioGroup(AbstractLayout):
     __slots__ = ()
 
     def __init__(
-        self, content: Widget, value=None, on_change=None, can_deselect=False, **kwargs
+        self, control: Widget, value=None, on_change=None, can_deselect=False, **kwargs
     ):
-        super().__init__([content], **kwargs)
+        super().__init__([control], **kwargs)
         self.on_change = on_change
         self._set_wprop("can_deselect", bool(can_deselect))
         self._set_new_value(value, react=False)
