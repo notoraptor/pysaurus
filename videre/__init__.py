@@ -15,6 +15,5 @@ from .widgets.checkbox import Checkbox
 from .widgets.label import Label
 from .widgets.radio import Radio
 from .widgets.rectangle import Rectangle
-from .widgets.square_button import SquareButton
 from .widgets.text import Text
 from .windowing.window import Window
