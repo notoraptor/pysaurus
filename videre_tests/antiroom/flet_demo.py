@@ -5,6 +5,7 @@ _irrelevant_ = [
     ft.Control,
     ft.CrossAxisAlignment,
     ft.FontWeight,
+    ft.IconButton,
     ft.ListView,
     ft.MainAxisAlignment,
     ft.MarkdownExtensionSet,
@@ -15,8 +16,6 @@ _irrelevant_ = [
 ]
 
 _to_do_ = [
-    ft.IconButton,
-    ft.Image,
     ft.Markdown,
     ft.MenuBar,
     ft.MenuItemButton,
@@ -25,7 +24,7 @@ _to_do_ = [
     ft.SubmenuButton,
     ft.TextField,
 ]
-_doing_ = [ft.Text, ft.Container, ft.AlertDialog]
+_doing_ = [ft.Image, ft.Text, ft.Container, ft.AlertDialog]
 _done_ = [
     ft.Checkbox,
     ft.Column,

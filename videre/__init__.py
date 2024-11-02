@@ -12,6 +12,7 @@ from .layouts.scroll.scrollview import ScrollView
 from .widgets.button import Button
 from .widgets.checkbox import Checkbox
 from .widgets.label import Label
+from .widgets.picture import Picture
 from .widgets.radio import Radio
 from .widgets.text import Text
 from .windowing.window import Window

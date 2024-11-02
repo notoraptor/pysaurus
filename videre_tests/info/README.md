@@ -37,3 +37,5 @@
     * align: TextAlign
   * Label:
     * for_button: AbstractButton | str  # key, read-only
+  * Picture
+    * src: str | Path | bytes | bytearray | BinaryIO
