@@ -12,9 +12,15 @@ def test_row(alignment, image_testing):
         window.controls = [
             videre.Row(
                 [
-                    videre.Rectangle(50, 100, videre.Colors.red),
-                    videre.Rectangle(60, 50, videre.Colors.green),
-                    videre.Rectangle(70, 80, videre.Colors.blue),
+                    videre.Container(
+                        width=50, height=100, background_color=videre.Colors.red
+                    ),
+                    videre.Container(
+                        width=60, height=50, background_color=videre.Colors.green
+                    ),
+                    videre.Container(
+                        width=70, height=80, background_color=videre.Colors.blue
+                    ),
                 ],
                 vertical_alignment=alignment,
             )

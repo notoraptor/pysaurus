@@ -22,10 +22,6 @@
     * on_change: Callback[[RadioGroup], None]
     * can_deselect: bool = False
 * Widgets
-  * Rectangle (complete)
-    * width: int
-    * height: int
-    * coloring: Gradient
   * Button: AbstractButton
     * text: str
     * on_click: Callable[[Button], None]

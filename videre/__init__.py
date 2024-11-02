@@ -5,7 +5,7 @@ from .core.sides.padding import Padding
 from .dialog import Dialog
 from .gradient import Gradient
 from .layouts.column import Column
-from .layouts.container import Container
+from .layouts.container import Container, Container
 from .layouts.radiogroup import RadioGroup
 from .layouts.row import Row
 from .layouts.scroll.scrollview import ScrollView
@@ -13,6 +13,5 @@ from .widgets.button import Button
 from .widgets.checkbox import Checkbox
 from .widgets.label import Label
 from .widgets.radio import Radio
-from .widgets.rectangle import Rectangle
 from .widgets.text import Text
 from .windowing.window import Window

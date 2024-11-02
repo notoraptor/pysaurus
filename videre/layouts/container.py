@@ -3,10 +3,10 @@ from typing import Optional
 import pygame
 import pygame.gfxdraw
 
-from videre.colors import ColorDefinition, parse_color
 from videre.core.constants import Alignment
 from videre.core.sides.border import Border
 from videre.core.sides.padding import Padding
+from videre.gradient import ColoringDefinition, Gradient
 from videre.layouts.abstractlayout import AbstractLayout
 from videre.widgets.empty_widget import EmptyWidget
 from videre.widgets.widget import Widget
@@ -30,7 +30,7 @@ class Container(AbstractLayout):
         control: Optional[Widget] = None,
         border: Optional[Border] = None,
         padding: Optional[Padding] = None,
-        background_color: ColorDefinition = None,
+        background_color: ColoringDefinition = None,
         vertical_alignment: Alignment = Alignment.START,
         horizontal_alignment: Alignment = Alignment.START,
         width: int = None,
@@ -72,12 +72,12 @@ class Container(AbstractLayout):
         self._set_wprop("padding", padding or Padding())
 
     @property
-    def background_color(self) -> pygame.Color:
+    def background_color(self) -> Gradient:
         return self._get_wprop("background_color")
 
     @background_color.setter
-    def background_color(self, color: ColorDefinition):
-        self._set_wprop("background_color", parse_color(color))
+    def background_color(self, coloring: ColoringDefinition):
+        self._set_wprop("background_color", Gradient.parse(coloring))
 
     @property
     def horizontal_alignment(self) -> Alignment:
@@ -159,8 +159,7 @@ class Container(AbstractLayout):
             inner_height, inner_surface.get_height(), self.vertical_alignment
         )
         inner_box = pygame.Rect(0, 0, inner_width - x, inner_height - y)
-        surface = self._new_surface(outer_width, outer_height)
-        surface.fill(self.background_color)
+        surface = self.background_color.generate(outer_width, outer_height)
         for border_color, border_points in border.describe_borders(
             outer_width, outer_height
         ):

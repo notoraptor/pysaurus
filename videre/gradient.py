@@ -1,9 +1,9 @@
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
 
 import pygame
 import pygame.gfxdraw
 
-from videre.colors import Colors
+from videre.colors import ColorDefinition, Colors, parse_color
 from videre.core.pygame_utils import PygameUtils
 
 
@@ -14,11 +14,11 @@ class Gradient(PygameUtils):
 
     __slots__ = ("_colors", "_vertical", "_base", "_gen")
 
-    def __init__(self, *colors: pygame.Color, **kwargs):
+    def __init__(self, *colors: pygame.Color, vertical=False):
         super().__init__()
 
         self._colors = colors or [Colors.transparent]
-        self._vertical: bool = kwargs.pop("vertical", False)
+        self._vertical: bool = vertical
         self._base: Optional[pygame.Surface] = None
         self._gen: Callable[[int, int], pygame.Surface] = (
             self._plain if len(self._colors) == 1 else self._gradient
@@ -55,3 +55,12 @@ class Gradient(PygameUtils):
 
     def generate(self, width: int, height: int) -> pygame.Surface:
         return self._gen(width, height)
+
+    @classmethod
+    def parse(cls, coloring: Union[ColorDefinition, "Gradient"]) -> "Gradient":
+        if isinstance(coloring, Gradient):
+            return coloring
+        return Gradient(parse_color(coloring))
+
+
+ColoringDefinition = Union[ColorDefinition, Gradient]
