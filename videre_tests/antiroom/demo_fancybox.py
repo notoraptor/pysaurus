@@ -10,7 +10,7 @@ def main():
             buttons=[Button("yes"), Button("NO!")],
         )
 
-    window.controls = [Button("Fancy!", on_click=fancy)]
+    window.controls = [Button("Fancy!", on_click=fancy, square=True)]
     fancy()
     window.run()
 

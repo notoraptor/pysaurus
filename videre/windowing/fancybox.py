@@ -23,6 +23,7 @@ class Fancybox(AbstractLayout):
         content: Widget,
         title: str | Text = "Fancybox",
         buttons: Sequence[Button] = (),
+        expand_buttons=True,
     ):
         button_close = SquareButton("✕", on_click=self._on_close)
 
@@ -32,7 +33,8 @@ class Fancybox(AbstractLayout):
 
         formatted_buttons = []
         for button in buttons:
-            button.weight = 1
+            if expand_buttons:
+                button.weight = 1
             formatted_buttons.append(button)
 
         dialog = Column(

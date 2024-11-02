@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Optional
+from typing import Optional, Tuple
 
 import pygame
 import pygame.gfxdraw
@@ -11,7 +11,7 @@ from videre.widgets.widget import Widget
 
 
 class AbstractButton(Widget):
-    __wprops__ = {"_color"}
+    __wprops__ = {"_color", "_square"}
     __slots__ = ("_hover", "_down", "_padx", "_pady", "_border_size")
     _PAD_X = 6
     _PAD_Y = 4
@@ -29,6 +29,13 @@ class AbstractButton(Widget):
         self._pady = self._PAD_Y
         self._border_size = self._BORDER_SIZE
         self._set_color()
+        self._set_square(False)
+
+    def _set_square(self, square: bool):
+        self._set_wprop("_square", bool(square))
+
+    def _get_square(self) -> bool:
+        return self._get_wprop("_square")
 
     @property
     def _color(self) -> pygame.Color:
@@ -86,8 +93,7 @@ class AbstractButton(Widget):
             bg_w = width
             bg_h = height
 
-        if self._SQUARE:
-            bg_w = bg_h = max(bg_w, bg_h)
+        bg_w, bg_h = self._wrap_square(bg_w, bg_h, width, height)
 
         text_crop = pygame.Rect(
             0,
@@ -108,6 +114,22 @@ class AbstractButton(Widget):
             )
         # Done
         return bg
+
+    def _wrap_square(
+        self, bg_w: int, bg_h: int, width: int | None, height: int | None
+    ) -> Tuple[int, int]:
+        if not self._get_square() or bg_w == bg_h:
+            return bg_w, bg_h
+
+        if width is None and height is None:
+            dim = max(bg_w, bg_h)
+        elif width is None:
+            dim = max(min(bg_w, height), bg_h)
+        elif height is None:
+            dim = max(min(bg_h, width), bg_w)
+        else:
+            dim = max(min(bg_w, height), min(bg_h, width))
+        return dim, dim
 
     @abstractmethod
     def _get_text_surface(self, window, width: Optional[int] = None) -> pygame.Surface:

@@ -154,9 +154,10 @@ class Window(PygameUtils, Clipboard):
         content: Widget,
         title: str | Text = "Fancybox",
         buttons: Sequence[Button] = (),
+        expand_buttons=True,
     ):
         assert not self._fancybox
-        self._fancybox = Fancybox(content, title, buttons)
+        self._fancybox = Fancybox(content, title, buttons, expand_buttons)
         self._register_initial_events()
 
     def clear_fancybox(self):

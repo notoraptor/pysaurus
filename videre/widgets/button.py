@@ -11,12 +11,17 @@ class Button(AbstractButton):
     __slots__ = ("_text_size",)
 
     def __init__(
-        self, text: str, on_click: Optional[Callable[["Button"], None]] = None, **kwargs
+        self,
+        text: str,
+        on_click: Optional[Callable[["Button"], None]] = None,
+        square=False,
+        **kwargs
     ):
         super().__init__(**kwargs)
         self._text_size = 0
         self.text = text
         self.on_click = on_click
+        self.square = square
 
     @property
     def text(self) -> str:
@@ -33,6 +38,14 @@ class Button(AbstractButton):
     @on_click.setter
     def on_click(self, callback: Optional[Callable[["Button"], None]]):
         self._set_wprop("on_click", callback)
+
+    @property
+    def square(self) -> bool:
+        return self._get_square()
+
+    @square.setter
+    def square(self, square: bool):
+        self._set_square(square)
 
     def handle_click(self, button: MouseButton):
         on_click = self.on_click
