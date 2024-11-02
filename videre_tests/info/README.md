@@ -17,9 +17,6 @@
     * background_color: ColorDefinition
     * vertical_alignment: Alignment
     * horizontal_alignment: Alignment
-  * View (1 control)
-    * width: int
-    * height: int
   * RadioGroup (1 control)
     * value: Optional[Any]
     * on_change: Callback[[RadioGroup], None]
