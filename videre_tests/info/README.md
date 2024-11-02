@@ -1,22 +1,26 @@
 * Layouts
-  * ScrollView (complete)
+  * ScrollView (1 control)
+    * scroll_thickness: int
     * horizontal_scroll: bool
     * vertical_scroll: bool
     * wrap_horizontal: bool
     * wrap_vertical: bool
-    * scroll_thickness: int
   * Column
-    * expand_horizontal: bool
     * horizontal_alignment: Alignment
+    * expand_horizontal: bool
   * Row
-    * expand_vertical: bool
     * vertical_alignment: Alignment
-  * View (complete)
-    * control: Widget
+    * expand_vertical: bool
+  * Container (1 control)
+    * border: Border
+    * padding: Padding
+    * background_color: ColorDefinition
+    * vertical_alignment: Alignment
+    * horizontal_alignment: Alignment
+  * View (1 control)
     * width: int
     * height: int
-  * RadioGroup
-    * content: Widget
+  * RadioGroup (1 control)
     * value: Optional[Any]
     * on_change: Callback[[RadioGroup], None]
     * can_deselect: bool = False
@@ -35,5 +39,8 @@
     * value: Any  # read-only
   * Text
     * text: str
+    * size: int
+    * wrap: TextWrap
+    * align: TextAlign
   * Label:
-    * for_button: AbstractButton | str  # key
+    * for_button: AbstractButton | str  # key, read-only
