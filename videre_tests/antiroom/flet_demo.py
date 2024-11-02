@@ -15,8 +15,6 @@ _irrelevant_ = [
 ]
 
 _to_do_ = [
-    ft.AlertDialog,
-    ft.Container,
     ft.IconButton,
     ft.Image,
     ft.Markdown,
@@ -27,7 +25,7 @@ _to_do_ = [
     ft.SubmenuButton,
     ft.TextField,
 ]
-_doing_ = [ft.Text]
+_doing_ = [ft.Text, ft.Container, ft.AlertDialog]
 _done_ = [
     ft.Checkbox,
     ft.Column,

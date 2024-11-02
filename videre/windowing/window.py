@@ -1,18 +1,20 @@
 import inspect
 import io
 import logging
-from typing import Dict, List, Optional, Sequence, Text, Tuple
+from typing import Dict, List, Optional, Sequence, Tuple
 
 import pygame
 from pygame.event import Event
 
 from pysaurus.core.prettylogging import PrettyLogging
 from videre.core.clipboard import Clipboard
-from videre.core.constants import MouseButton
+from videre.core.constants import Alignment, MouseButton
 from videre.core.events import MotionEvent
 from videre.core.pygame_font_factory import PygameFontFactory
 from videre.core.pygame_utils import PygameUtils
+from videre.layouts.container import Container
 from videre.widgets.button import Button
+from videre.widgets.text import Text
 from videre.widgets.widget import Widget
 from videre.windowing.fancybox import Fancybox
 from videre.windowing.windowlayout import WindowLayout
@@ -168,6 +170,18 @@ class Window(PygameUtils, Clipboard):
 
     def has_fancybox(self) -> bool:
         return self._fancybox is not None
+
+    def alert(self, message: str | Text, title: str | Text = "Alert"):
+        if isinstance(message, str):
+            message = Text(message)
+        self.set_fancybox(
+            Container(
+                message,
+                horizontal_alignment=Alignment.CENTER,
+                vertical_alignment=Alignment.CENTER,
+            ),
+            title,
+        )
 
     def __collect_event_callbacks(self):
         for name, method in inspect.getmembers(self, inspect.ismethod):
