@@ -9,7 +9,6 @@ from .layouts.container import Container
 from .layouts.radiogroup import RadioGroup
 from .layouts.row import Row
 from .layouts.scroll.scrollview import ScrollView
-from .layouts.view import View
 from .widgets.button import Button
 from .widgets.checkbox import Checkbox
 from .widgets.label import Label

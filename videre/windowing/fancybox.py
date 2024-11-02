@@ -6,8 +6,8 @@ from videre.colors import Colors
 from videre.core.mouse_ownership import MouseOwnership
 from videre.layouts.abstractlayout import AbstractLayout
 from videre.layouts.column import Column
+from videre.layouts.container import Container
 from videre.layouts.row import Row
-from videre.layouts.view import View
 from videre.widgets.button import Button
 from videre.widgets.text import Text
 from videre.widgets.widget import Widget
@@ -39,7 +39,7 @@ class Fancybox(AbstractLayout):
         dialog = Column(
             [
                 Row([title, button_close]),
-                View(content, weight=1),
+                Container(content, weight=1),
                 *([Row(formatted_buttons)] if formatted_buttons else ()),
             ],
             expand_horizontal=True,

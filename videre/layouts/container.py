@@ -19,6 +19,7 @@ class Container(AbstractLayout):
         "background_color",
         "vertical_alignment",
         "horizontal_alignment",
+        "width", "height"
     }
     __slots__ = {}
     __size__ = 1
@@ -31,6 +32,7 @@ class Container(AbstractLayout):
         background_color: ColorDefinition = None,
         vertical_alignment: Alignment = Alignment.START,
         horizontal_alignment: Alignment = Alignment.START,
+        width: int = None, height: int = None,
         **kwargs
     ):
         super().__init__([control or EmptyWidget()], **kwargs)
@@ -39,6 +41,8 @@ class Container(AbstractLayout):
         self.background_color = background_color
         self.vertical_alignment = vertical_alignment
         self.horizontal_alignment = horizontal_alignment
+        self.width = width
+        self.height = height
 
     @property
     def control(self) -> Widget:
@@ -89,7 +93,25 @@ class Container(AbstractLayout):
     def vertical_alignment(self, alignment: Alignment):
         self._set_wprop("vertical_alignment", alignment)
 
+    @property
+    def width(self) -> int | None:
+        return self._get_wprop("width")
+
+    @width.setter
+    def width(self, width: int | None):
+        self._set_wprop("width", width)
+
+    @property
+    def height(self) -> int | None:
+        return self._get_wprop("height")
+
+    @height.setter
+    def height(self, height: int | None):
+        self._set_wprop("height", height)
+
     def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
+        width = _resolve_size(self.width, width)
+        height = _resolve_size(self.height, height)
         padding = self.padding
         border = self.border
         margin = padding + border.margin()
@@ -149,3 +171,14 @@ class Container(AbstractLayout):
                 pygame.gfxdraw.filled_polygon(surface, border_points, border_color)
         surface.blit(inner_surface, (margin.left + x, margin.top + y), area=inner_box)
         return surface
+
+
+def _resolve_size(view_size: int | None, parent_size: int | None) -> int | None:
+    if view_size is None and parent_size is None:
+        return None
+    elif view_size is None:
+        return parent_size
+    elif parent_size is None:
+        return view_size
+    else:
+        return min(view_size, parent_size)
