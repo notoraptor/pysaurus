@@ -19,7 +19,8 @@ class Container(AbstractLayout):
         "background_color",
         "vertical_alignment",
         "horizontal_alignment",
-        "width", "height"
+        "width",
+        "height",
     }
     __slots__ = {}
     __size__ = 1
@@ -32,7 +33,8 @@ class Container(AbstractLayout):
         background_color: ColorDefinition = None,
         vertical_alignment: Alignment = Alignment.START,
         horizontal_alignment: Alignment = Alignment.START,
-        width: int = None, height: int = None,
+        width: int = None,
+        height: int = None,
         **kwargs
     ):
         super().__init__([control or EmptyWidget()], **kwargs)

@@ -4,6 +4,7 @@ from videre.windowing.windowfactory import WindowLD
 
 def test_fancybox(image_testing):
     with WindowLD() as window:
+
         def fancy(*args):
             window.set_fancybox(
                 ScrollView(Column([Text(f"Item {i + 1}") for i in range(10)])),
