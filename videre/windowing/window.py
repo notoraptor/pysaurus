@@ -18,6 +18,8 @@ from videre.windowing.fancybox import Fancybox
 from videre.windowing.windowlayout import WindowLayout
 from videre.windowing.windowutils import on_event
 
+logger = logging.getLogger(__name__)
+
 
 class Window(PygameUtils, Clipboard):
     def __init__(self, title="Window", width=1280, height=720):
@@ -183,7 +185,7 @@ class Window(PygameUtils, Clipboard):
     def __on_event(self, event: Event):
         callback = self._event_callbacks.get(event.type)
         if callback is None:
-            logging.debug(
+            logger.debug(
                 f"Unhandled pygame event: {pygame.event.event_name(event.type)}"
             )
             return False
@@ -192,7 +194,7 @@ class Window(PygameUtils, Clipboard):
 
     @on_event(pygame.QUIT)
     def _on_quit(self, event: Event):
-        print("Quit pygame.")
+        logger.warning("Quit pygame.")
         self._running = False
 
     @on_event(pygame.MOUSEWHEEL)
@@ -258,4 +260,4 @@ class Window(PygameUtils, Clipboard):
 
     @on_event(pygame.WINDOWRESIZED)
     def _on_window_resized(self, event: Event):
-        print("Window resized:", event)
+        logger.debug(f"Window resized: {event}")

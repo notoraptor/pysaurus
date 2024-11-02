@@ -10,7 +10,6 @@ def bytes_to_text(data: bytes) -> str:
     # Try encodings
     for enc in ["utf-32", "utf-16", "utf-8", "ISO-8859-1"]:
         try:
-            print("ENC", enc)
             return data.decode(enc)
         except UnicodeDecodeError:
             continue
@@ -18,7 +17,6 @@ def bytes_to_text(data: bytes) -> str:
         # Try chardet
         detection = chardet.detect(data)
         encoding = detection["encoding"]
-        print("DETECTION", detection)
         if encoding:
             return data.decode(encoding)
     # By default, return empty string

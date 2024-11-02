@@ -117,11 +117,6 @@ class Container(AbstractLayout):
         padding = self.padding
         border = self.border
         margin = padding + border.margin()
-        print("padding", padding)
-        print("border", border)
-        print("Margins", margin)
-        print("Total margin", margin.total())
-        print("background color", self.background_color)
 
         min_width = border.left.width + border.right.width
         min_height = border.top.width + border.bottom.width

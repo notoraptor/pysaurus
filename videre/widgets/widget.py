@@ -1,13 +1,17 @@
+import logging
 from abc import abstractmethod
 from typing import Any, Callable, List, Optional, Self, Tuple
 
 import pygame
 
+from pysaurus.core.classes import StringPrinter
 from videre.core.constants import MouseButton
 from videre.core.events import MotionEvent
 from videre.core.mouse_ownership import MouseOwnership
 from videre.core.position_mapping import Position, PositionMapping
 from videre.core.pygame_utils import PygameUtils
+
+logger = logging.getLogger(__name__)
 
 
 class Widget(PygameUtils):
@@ -175,7 +179,9 @@ class Widget(PygameUtils):
         return f"[{type(self).__name__}][{self._key}]"
 
     def _debug(self, *args, **kwargs):
-        print(self, *args, **kwargs)
+        with StringPrinter() as printer:
+            printer.write(self, *args, **kwargs)
+            logger.info(str(printer))
 
     def get_window(self):
         from videre.windowing.window import Window
