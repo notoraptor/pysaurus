@@ -52,7 +52,9 @@ class Window(PygameUtils, Clipboard):
     def __repr__(self):
         return f"[{type(self).__name__}][{id(self)}]"
 
-    fonts = property(lambda self: self._fonts)
+    @property
+    def fonts(self) -> PygameFontFactory:
+        return self._fonts
 
     @property
     def controls(self) -> Tuple[Widget, ...]:

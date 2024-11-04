@@ -23,6 +23,7 @@ _to_do_ = [
     ft.ProgressRing,
     ft.SubmenuButton,
     ft.TextField,
+    ft.Dropdown,  # <select>options...</select>
 ]
 _doing_ = [ft.Image, ft.Text, ft.Container, ft.AlertDialog]
 _done_ = [
