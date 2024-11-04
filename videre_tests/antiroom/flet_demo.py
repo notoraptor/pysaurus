@@ -19,13 +19,12 @@ _to_do_ = [
     ft.Markdown,
     ft.MenuBar,
     ft.MenuItemButton,
-    ft.ProgressBar,
     ft.ProgressRing,
     ft.SubmenuButton,
     ft.TextField,
     ft.Dropdown,  # <select>options...</select>
 ]
-_doing_ = [ft.Image, ft.Text, ft.Container, ft.AlertDialog]
+_doing_ = [ft.Image, ft.Text, ft.Container, ft.AlertDialog, ft.ProgressBar]
 _done_ = [
     ft.Checkbox,
     ft.Column,

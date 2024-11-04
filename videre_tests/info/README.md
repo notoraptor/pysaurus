@@ -39,3 +39,5 @@
     * for_button: AbstractButton | str  # key, read-only
   * Picture
     * src: str | Path | bytes | bytearray | BinaryIO
+  * ProgressBar
+    * value: float = 0.0

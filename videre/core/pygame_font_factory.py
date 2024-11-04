@@ -268,6 +268,10 @@ class PygameFontFactory(PygameUtils):
         surface, box = font.render(c, size=size or self.size)
         return surface
 
+    @property
+    def standard_size(self) -> int:
+        return self.get_font(" ").get_sized_height(self.size)
+
     def render_text(
         self,
         text: str,
