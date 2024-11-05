@@ -44,3 +44,6 @@ class Side(Enum):
     RIGHT = "right"
     BOTTOM = "bottom"
     LEFT = "left"
+
+
+WINDOW_FPS = 60

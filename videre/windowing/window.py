@@ -8,7 +8,7 @@ from pygame.event import Event
 
 from pysaurus.core.prettylogging import PrettyLogging
 from videre.core.clipboard import Clipboard
-from videre.core.constants import Alignment, MouseButton
+from videre.core.constants import Alignment, MouseButton, WINDOW_FPS
 from videre.core.events import MotionEvent
 from videre.core.pygame_font_factory import PygameFontFactory
 from videre.core.pygame_utils import PygameUtils
@@ -109,7 +109,7 @@ class Window(PygameUtils, Clipboard):
             for event in pygame.event.get():
                 self.__on_event(event)
             self._render()
-            clock.tick(60)
+            clock.tick(WINDOW_FPS)
         pygame.quit()
         self._closed = True
 

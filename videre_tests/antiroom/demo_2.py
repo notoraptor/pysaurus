@@ -1,20 +1,40 @@
 import logging
 
 import videre
-from videre.widgets.animated_widget import AnimatedWidget
+from videre.layouts.animator import Animator
 from videre.windowing.windowfactory import WindowLD
 
 
 def main():
-    logging.basicConfig(level=logging.INFO)
+    """
+    Comment gérer les animations:
+    - dériver la classe de base et surcharger une méthode spécifique
+    - class + callback pour générer un widget à chaque frame
+    - class + widget + callback
+        le callback met à jour le widget pour chaque frame
+        la classe d'animation régénère le widget pour obtenir la frame
+    """
+    logging.basicConfig(level=logging.WARNING)
     window = WindowLD()
     b1 = videre.Button("")
     b2 = videre.Button("hello")
     b3 = videre.Button("Hello")
     br = videre.Radio(None)
     bc = videre.Checkbox()
-    aw = AnimatedWidget(framerate=1)
-    window.controls = [videre.Column([b1, b2, b3, br, bc, aw])]
+
+    label = videre.Text("Frame 0")
+
+    def on_label_frame(w, f):
+        label.text = f"Frame {f}"
+
+    pb = videre.ProgressBar()
+
+    def on_pb_frame(w, f):
+        pb.value = (f % 31) / 30
+
+    aw = Animator(label, on_frame=on_label_frame)
+    ap = Animator(pb, on_frame=on_pb_frame, fps=30)
+    window.controls = [videre.Column([b1, b2, b3, br, bc, aw, ap])]
     # print("b", b1.rendered_height)
     # print("b:hello", b2.rendered_height)
     # print("b:Hello", b3.rendered_height)
