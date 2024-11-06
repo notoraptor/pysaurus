@@ -10,7 +10,7 @@ from pysaurus.core.prettylogging import PrettyLogging
 from videre.core.clipboard import Clipboard
 from videre.core.constants import Alignment, MouseButton, WINDOW_FPS
 from videre.core.events import MotionEvent
-from videre.core.pygame_font_factory import PygameFontFactory
+from videre.core.fontfactory.pygame_font_factory import PygameFontFactory
 from videre.core.pygame_utils import PygameUtils
 from videre.layouts.container import Container
 from videre.widgets.button import Button

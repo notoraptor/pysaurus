@@ -7,13 +7,13 @@ from pysaurus.core.components import Duration
 from pysaurus.core.constants import LOREM_IPSUM
 from pysaurus.core.perf_counter import PerfCounter
 from videre import Colors, Gradient
-from videre.core.pygame_font_factory import PygameFontFactory
+from videre.core.fontfactory.pygame_font_factory import PygameFontFactory
 
 
 def stress_render_text(batch=200):
     height_delta = 2
     ff = PygameFontFactory(size=24)
-    line_height = ff.get_font(" ").get_sized_height(ff.size) + height_delta
+    line_height = ff.standard_size + height_delta
     assert line_height == 35
 
     text = LOREM_IPSUM

@@ -2,21 +2,15 @@ import functools
 
 import pytest
 
-from videre.core.pygame_font_factory import PygameFontFactory
+from videre.core.fontfactory.pygame_font_factory import PygameFontFactory
 
 
-@pytest.mark.parametrize(
-    "factory_cls,function_name,wrap_words",
-    (
-        (PygameFontFactory, "render_text", False),
-        (PygameFontFactory, "render_text", True),
-    ),
-)
-def test_render_text(factory_cls, function_name, wrap_words):
+@pytest.mark.parametrize("wrap_words", (False, True))
+def test_render_text(wrap_words):
     height_delta = 2
-    ff = factory_cls(size=24)
+    ff = PygameFontFactory(size=24)
     font = ff.get_font(" ")
-    line_height = font.get_sized_height(ff.size) + height_delta
+    line_height = ff.standard_size + height_delta
     ascender = abs(font.get_sized_ascender(ff.size)) + 1
     descender = abs(font.get_sized_descender(ff.size))
     compact_y = ascender + height_delta
@@ -24,7 +18,7 @@ def test_render_text(factory_cls, function_name, wrap_words):
     assert ascender == 27
     assert descender == 8
 
-    base_function = getattr(ff, function_name)
+    base_function = ff.render_text
     function = functools.partial(base_function, wrap_words=wrap_words)
     ff_render_text = functools.partial(
         function, compact=True, height_delta=height_delta

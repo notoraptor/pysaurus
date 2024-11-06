@@ -1,167 +1,57 @@
 import logging
-from typing import Callable, List, Optional, Tuple, Union
+from typing import List, Optional, Tuple
 
 import pygame
 import pygame.freetype
-from pygame.freetype import Font as PFFont
 
 from pysaurus.core.unicode_utils import Unicode
 from resource.fonts import FontProvider
 from videre import TextAlign
+from videre.core.fontfactory.font_factory_utils import (
+    CharsLine,
+    WordTask,
+    WordsLine,
+    align_words,
+)
 from videre.core.pygame_utils import PygameUtils
-
-# c, font, x, bounds
-CharTaskType = Tuple[str, PFFont, int, pygame.Rect]
-
-
-class CharsLine:
-    __slots__ = ("y", "tasks")
-    y: int
-    tasks: List[CharTaskType]
-
-    def __init__(self):
-        self.y, self.tasks = 0, []
-
-    def limit(self) -> int:
-        _, _, x, bounds = self.tasks[-1]
-        return x + bounds.x + bounds.width
-
-
-class WordTask:
-    __slots__ = ("w", "x", "tasks")
-
-    def __init__(self, w: int, x: int, tasks: List[CharTaskType]):
-        self.w, self.x, self.tasks = w, x, tasks
-
-    def __repr__(self):
-        return f"{self.x}:" + repr("".join(t[0] for t in self.tasks))
-
-
-class WordsLine:
-    __slots__ = ("y", "words")
-    y: int
-    words: List[WordTask]
-
-    def __init__(self, y=0):
-        self.y, self.words = y, []
-
-    def __repr__(self):
-        return f"({self.y}, {self.words})"
-
-    def limit(self) -> int:
-        word = self.words[-1]
-        return word.x + word.w
-
-    @classmethod
-    def from_chars_line(cls, chars_line: CharsLine):
-        words = []
-        word = []
-        for task in chars_line.tasks:
-            if task[0] == " ":
-                if word:
-                    words.append(word)
-                    word = []
-            else:
-                word.append(task)
-        if word:
-            words.append(word)
-        words_line = cls(chars_line.y)
-        if words:
-            x0 = words[0][0][-2]
-            for word in words:
-                w_x = word[0][-2]
-                x = w_x - x0
-                tasks = [(c, font, cx - w_x, bounds) for c, font, cx, bounds in word]
-                _, _, last_x, last_bounds = tasks[-1]
-                w = last_x + last_bounds.x + last_bounds.width
-                words_line.words.append(WordTask(w, x, tasks))
-        return words_line
-
-
-def align_words(lines: List[WordsLine], width: int, align=TextAlign.LEFT):
-    if align == TextAlign.NONE or align == TextAlign.LEFT:
-        return
-    if align == TextAlign.JUSTIFY:
-        return justify_words(lines, width)
-    for line in lines:
-        if line.words:
-            assert line.words[0].x == 0, line
-            remaining = width - line.limit()
-            if remaining:
-                if align == TextAlign.CENTER:
-                    remaining /= 2
-                for wt in line.words:
-                    wt.x += remaining
-
-
-def justify_words(lines: List[WordsLine], width: int):
-    paragraphs = []
-    p = []
-    for line in lines:
-        if line.words:
-            p.append(line)
-        elif p:
-            paragraphs.append(p)
-            p = []
-    if p:
-        paragraphs.append(p)
-
-    for paragraph in paragraphs:
-        for i in range(len(paragraph) - 1):
-            line = paragraph[i]
-            if len(line.words) > 1:
-                assert line.words[0].x == 0
-                remaining = width - sum(wt.w for wt in line.words)
-                if remaining:
-                    interval = remaining / (len(line.words) - 1)
-                    x = line.words[0].w + interval
-                    for j in range(1, len(line.words)):
-                        wt = line.words[j]
-                        wt.x = x
-                        x += wt.w + interval
 
 
 class PygameFontFactory(PygameUtils):
-    def __init__(self, size=14, origin=True, *, use_default_font=False):
+    __slots__ = ("_prov", "_name_to_font", "_size", "_origin")
+
+    def __init__(self, size=14, origin=True):
         super().__init__()
 
         self._prov = FontProvider()
-        self.name_to_font = {}
-        self.size = size
-        self.origin = origin
-
-        self.get_font: Callable[[str], pygame.freetype.Font] = self._get_font
-        self._default_font = None
-        self.set_font_policy(use_default_font=use_default_font)
+        self._name_to_font = {}
+        self._size = size
+        self._origin = origin
 
     @property
-    def provider(self) -> FontProvider:
-        return self._prov
+    def size(self) -> int:
+        return self._size
 
-    def set_font_policy(self, *, use_default_font: Union[None, False, str] = False):
-        if use_default_font is not False:
-            self._default_font = pygame.freetype.Font(use_default_font, size=self.size)
-            self._default_font.origin = self.origin
-            self.get_font = self._get_default_font
-        else:
-            self.get_font = self._get_font
+    @property
+    def standard_size(self) -> int:
+        return self.get_font(" ").get_sized_height(self._size)
 
-    def _get_default_font(self, c: str) -> pygame.freetype.Font:
-        return self._default_font
+    @property
+    def standard_symbol_size(self):
+        return self._size * 1.625
 
-    def _get_font(self, c: str) -> pygame.freetype.Font:
+    def get_font(self, c: str) -> pygame.freetype.Font:
         name, path = self._prov.get_font_info(c)
-        font = self.name_to_font.get(name)
+        font = self._name_to_font.get(name)
         if not font:
-            font = pygame.freetype.Font(path, size=self.size)
-            font.origin = self.origin
-            self.name_to_font[name] = font
+            font = pygame.freetype.Font(path, size=self._size)
+            font.origin = self._origin
+            self._name_to_font[name] = font
             logging.debug(
                 f"[pygame][font](block={Unicode.block(c)}, c={c}) {name}, "
-                f"height {font.get_sized_height(self.size)}, "
-                f"glyph height {font.get_sized_glyph_height(self.size)}, "
-                f"ascender {font.get_sized_ascender(self.size)}, "
-                f"descender {font.get_sized_descender(self.size)}"
+                f"height {font.get_sized_height(self._size)}, "
+                f"glyph height {font.get_sized_glyph_height(self._size)}, "
+                f"ascender {font.get_sized_ascender(self._size)}, "
+                f"descender {font.get_sized_descender(self._size)}"
             )
         return font
 
@@ -239,7 +129,7 @@ class PygameFontFactory(PygameUtils):
         color: pygame.Color = None,
         align=TextAlign.LEFT,
     ) -> pygame.Surface:
-        size = size or self.size
+        size = size or self._size
         new_width, height, lines = self._get_render_tasks(
             text, width, size, height_delta=height_delta, compact=compact
         )
@@ -265,12 +155,8 @@ class PygameFontFactory(PygameUtils):
 
     def render_char(self, c: str, size: int = 0) -> pygame.Surface:
         font = self.get_font(c)
-        surface, box = font.render(c, size=size or self.size)
+        surface, box = font.render(c, size=size or self._size)
         return surface
-
-    @property
-    def standard_size(self) -> int:
-        return self.get_font(" ").get_sized_height(self.size)
 
     def render_text(
         self,
@@ -301,7 +187,7 @@ class PygameFontFactory(PygameUtils):
             words.append("\n")
             words.extend(word for word in line.split(" ") if word)
 
-        size = size or self.size
+        size = size or self._size
         # Use font for space character to get default spacings
         first_font = self.get_font(" ")
         line_spacing = first_font.get_sized_height(size) + height_delta
