@@ -19,7 +19,7 @@ class TextWrap(Enum):
     NONE = 0
     CHAR = 1
     WORD = 2
-    WORD_THEN_CHAR = 3  # todo
+    # WORD_THEN_CHAR = 3  # todo
 
 
 @unique

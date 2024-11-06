@@ -24,11 +24,18 @@ logger = logging.getLogger(__name__)
 
 
 class Window(PygameUtils, Clipboard):
-    def __init__(self, title="Window", width=1280, height=720):
+    def __init__(
+        self,
+        title="Window",
+        width=1280,
+        height=720,
+        background: pygame.Color | None = None,
+    ):
         super().__init__()
         self._title = str(title) or "Window"
         self._width = width
         self._height = height
+        self._bgc = background
 
         self._step_mode = False
         self._running = True
@@ -118,7 +125,7 @@ class Window(PygameUtils, Clipboard):
             (self._width, self._height), flags=pygame.RESIZABLE
         )
         pygame.display.set_caption(self._title)
-        self._layout = WindowLayout(self._screen)
+        self._layout = WindowLayout(self._screen, background=self._bgc)
 
         # NB: As set_mode has been called, we can now initialize pygame.scrap.
         # This needs to be done before calling Clipboard methods.
