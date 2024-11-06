@@ -2,18 +2,11 @@ import logging
 
 import videre
 from videre.layouts.animator import Animator
+from videre.widgets.progressing import Progressing
 from videre.windowing.windowfactory import WindowLD
 
 
 def main():
-    """
-    Comment gérer les animations:
-    - dériver la classe de base et surcharger une méthode spécifique
-    - class + callback pour générer un widget à chaque frame
-    - class + widget + callback
-        le callback met à jour le widget pour chaque frame
-        la classe d'animation régénère le widget pour obtenir la frame
-    """
     logging.basicConfig(level=logging.WARNING)
     window = WindowLD()
     b1 = videre.Button("")
@@ -34,7 +27,7 @@ def main():
 
     aw = Animator(label, on_frame=on_label_frame)
     ap = Animator(pb, on_frame=on_pb_frame, fps=30)
-    window.controls = [videre.Column([b1, b2, b3, br, bc, aw, ap])]
+    window.controls = [videre.Column([b1, b2, b3, br, bc, aw, ap, Progressing()])]
     # print("b", b1.rendered_height)
     # print("b:hello", b2.rendered_height)
     # print("b:Hello", b3.rendered_height)

@@ -19,8 +19,10 @@
     * horizontal_alignment: Alignment
   * RadioGroup (1 control)
     * value: Optional[Any]
-    * on_change: Callback[[RadioGroup], None]
+    * on_change: Callable[[RadioGroup], None]
     * can_deselect: bool = False
+  * Animator (1 control)
+    * on_frame: Callable[[Widget, int], None]
 * Widgets
   * Button: AbstractButton
     * text: str
@@ -41,3 +43,4 @@
     * src: str | Path | bytes | bytearray | BinaryIO
   * ProgressBar
     * value: float = 0.0
+  * Progressing
