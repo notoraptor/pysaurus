@@ -23,20 +23,19 @@ _to_do_ = [
     ft.TextField,
     ft.Dropdown,  # <select>options...</select>
 ]
-_doing_ = [
+_doing_ = []
+_done_ = [
     ft.AlertDialog,
+    ft.Checkbox,
+    ft.Column,
     ft.Container,
+    ft.ElevatedButton,
+    ft.FilePicker,
     ft.Image,
     ft.ProgressBar,
     ft.ProgressRing,
-    ft.Text,
-]
-_done_ = [
-    ft.Checkbox,
-    ft.Column,
-    ft.ElevatedButton,
-    ft.FilePicker,
     ft.Radio,
     ft.RadioGroup,
     ft.Row,
+    ft.Text,
 ]
