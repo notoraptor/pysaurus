@@ -32,11 +32,11 @@ class PygameFontFactory(PygameUtils):
         return self._size
 
     @property
-    def standard_size(self) -> int:
+    def font_height(self) -> int:
         return self.get_font(" ").get_sized_height(self._size)
 
     @property
-    def standard_symbol_size(self):
+    def symbol_size(self):
         return self._size * 1.625
 
     def get_font(self, c: str) -> pygame.freetype.Font:

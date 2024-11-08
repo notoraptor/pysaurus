@@ -10,7 +10,7 @@ def test_render_text(wrap_words):
     height_delta = 2
     ff = PygameFontFactory(size=24)
     font = ff.get_font(" ")
-    line_height = ff.standard_size + height_delta
+    line_height = ff.font_height + height_delta
     ascender = abs(font.get_sized_ascender(ff.size)) + 1
     descender = abs(font.get_sized_descender(ff.size))
     compact_y = ascender + height_delta

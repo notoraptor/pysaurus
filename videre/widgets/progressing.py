@@ -23,7 +23,7 @@ class Progressing(AbstractAnimation):
 
     def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
         bg_w = 102 if width is None else max(width, 2)
-        bg_h = window.fonts.standard_size
+        bg_h = window.fonts.font_height
         inner_w = (bg_w - 2) // 2
         inner_h = bg_h - 2
 

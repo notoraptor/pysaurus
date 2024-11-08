@@ -19,5 +19,5 @@ def test_rendered_button_sizes(image_testing):
         print("b:Hello", b3.rendered_height)
         print("radio", br.rendered_height)
         print("checkbox", bc.rendered_height)
-        print("standard", window.fonts.standard_size)
+        print("standard", window.fonts.font_height)
         image_testing(window.screenshot())

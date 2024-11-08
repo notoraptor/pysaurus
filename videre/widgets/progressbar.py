@@ -23,7 +23,7 @@ class ProgressBar(Widget):
 
     def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
         bg_w = 102 if width is None else max(width, 2)
-        bg_h = window.fonts.standard_size
+        bg_h = window.fonts.font_height
         inner_w = int((bg_w - 2) * self.value)
         inner_h = bg_h - 2
         bg = self._new_surface(bg_w, bg_h)

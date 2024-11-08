@@ -13,7 +13,7 @@ from videre.core.fontfactory.pygame_font_factory import PygameFontFactory
 def stress_render_text(batch=200):
     height_delta = 2
     ff = PygameFontFactory(size=24)
-    line_height = ff.standard_size + height_delta
+    line_height = ff.font_height + height_delta
     assert line_height == 35
 
     text = LOREM_IPSUM
