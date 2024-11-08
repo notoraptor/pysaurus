@@ -567,7 +567,7 @@ class JsonDatabase(AbstractDatabase):
         }
 
     def _get_all_video_indices(self) -> Iterable[int]:
-        return (item["video_id"] for item in self.get_videos(include=["video_id"]))
+        return (item.video_id for item in self.get_videos(include=["video_id"]))
 
     def _set_property_for_videos(
         self, name: str, updates: Dict[int, Collection[PropUnitType]], merge=False
