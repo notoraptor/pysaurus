@@ -10,12 +10,16 @@ CharTaskType = Tuple[str, PFFont, int, pygame.Rect]
 
 
 class CharsLine:
-    __slots__ = ("y", "tasks")
+    __slots__ = ("y", "tasks", "newline")
     y: int
     tasks: List[CharTaskType]
+    newline: bool
 
-    def __init__(self):
-        self.y, self.tasks = 0, []
+    def __init__(self, newline=False):
+        self.y, self.tasks, self.newline = 0, [], newline
+
+    def __bool__(self):
+        return bool(self.tasks or self.newline)
 
     def limit(self) -> int:
         _, _, x, bounds = self.tasks[-1]
@@ -33,12 +37,16 @@ class WordTask:
 
 
 class WordsLine:
-    __slots__ = ("y", "words")
+    __slots__ = ("y", "words", "newline")
     y: int
     words: List[WordTask]
+    newline: bool
 
-    def __init__(self, y=0):
-        self.y, self.words = y, []
+    def __init__(self, y=0, newline=False):
+        self.y, self.words, self.newline = y, [], newline
+
+    def __bool__(self):
+        return bool(self.words or self.newline)
 
     def __repr__(self):
         return f"({self.y}, {self.words})"

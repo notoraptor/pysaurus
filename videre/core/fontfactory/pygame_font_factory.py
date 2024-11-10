@@ -64,39 +64,28 @@ class PygameFontFactory(PygameUtils):
         compact=False,
         line_spacing=0,
     ) -> Tuple[int, int, List[CharsLine]]:
-        lines: List[CharsLine] = []
-
-        task_line = CharsLine()
-        nb_chars = len(text)
-        cursor = 0
-        while cursor < nb_chars:
-            c = text[cursor]
-            if c == "\n" or Unicode.printable(c):
-                lines.append(task_line)
-                break
-            else:
-                cursor += 1
-
-        x = 0
         width = float("inf") if width is None else width
-        for i in range(cursor, nb_chars):
-            c = text[i]
+        lines: List[CharsLine] = []
+        task_line = CharsLine()
+        x = 0
+        for i, c in enumerate(text):
             if c == "\n":
-                task_line = CharsLine()
                 lines.append(task_line)
+                task_line = CharsLine(newline=True)
                 x = 0
-                continue
-            if not Unicode.printable(c):
-                continue
-            font = self.get_font(c)
-            bounds = font.get_rect(c, size=size)
-            if x and x + bounds.x + bounds.width > width:
-                task_line = CharsLine()
-                lines.append(task_line)
-                x = 0
-            task_line.tasks.append((c, font, x, bounds))
-            (metric,) = font.get_metrics(c, size=size)
-            x += metric[4] if metric else bounds.width
+            elif Unicode.printable(c):
+                font = self.get_font(c)
+                bounds = font.get_rect(c, size=size)
+                if x and x + bounds.x + bounds.width > width:
+                    lines.append(task_line)
+                    task_line = CharsLine()
+                    x = 0
+                task_line.tasks.append((c, font, x, bounds))
+                (metric,) = font.get_metrics(c, size=size)
+                x += metric[4] if metric else bounds.width
+
+        if task_line:
+            lines.append(task_line)
 
         new_width, height = 0, 0
         if lines:
@@ -119,7 +108,7 @@ class PygameFontFactory(PygameUtils):
             new_width = max((line.limit() for line in lines if line.tasks), default=0)
         return new_width, height, lines
 
-    def _render_unwrapped_text(
+    def _render_text_wrap_chars(
         self,
         text: str,
         width: int = None,
@@ -144,13 +133,7 @@ class PygameFontFactory(PygameUtils):
                     font.render_to(background, (x, y), c, size=size)
         else:
             word_lines = [WordsLine.from_chars_line(line) for line in lines]
-            align_words(word_lines, new_width, align)
-            for line in word_lines:
-                y = line.y
-                for word in line.words:
-                    x = word.x
-                    for c, font, cx, _ in word.tasks:
-                        font.render_to(background, (x + cx, y), c, size=size)
+            _render_word_lines(background, word_lines, new_width, size, align)
         return background
 
     def render_char(self, c: str, size: int = 0) -> pygame.Surface:
@@ -171,7 +154,7 @@ class PygameFontFactory(PygameUtils):
         wrap_words=False,
     ) -> pygame.Surface:
         if width is None or not wrap_words:
-            return self._render_unwrapped_text(
+            return self._render_text_wrap_chars(
                 text,
                 width,
                 size,
@@ -197,41 +180,29 @@ class PygameFontFactory(PygameUtils):
 
         lines: List[WordsLine] = []
         task_line = WordsLine()
-
-        cursor = 0
-        nb_words = len(words)
-        while cursor < nb_words:
-            word = words[cursor]
-            word_w, word_h, _ = self._get_render_tasks(
-                word, None, size, height_delta, False, line_spacing
-            )
-            if word_h or word_w:
-                lines.append(task_line)
-                break
-            else:
-                cursor += 1
-
         x = 0
-        for i in range(cursor, nb_words):
-            word = words[i]
+        for i, word in enumerate(words):
             word_w, word_h, word_lines = self._get_render_tasks(
                 word, None, size, height_delta, False, line_spacing
             )
             if not word_w:
                 if word_h:
                     # new line
-                    task_line = WordsLine()
                     lines.append(task_line)
+                    task_line = WordsLine(newline=True)
                     x = 0
                 # new line or empty word, continue anyway
                 continue
             if x and x + word_w > width:
-                task_line = WordsLine()
                 lines.append(task_line)
+                task_line = WordsLine()
                 x = 0
             (word_line,) = word_lines
             task_line.words.append(WordTask(word_w, x, word_line.tasks))
             x += word_w + space_w
+
+        if task_line:
+            lines.append(task_line)
 
         # Compute width, height and ys
         new_width, height = 0, 0
@@ -251,11 +222,17 @@ class PygameFontFactory(PygameUtils):
         if color is not None:
             background.fill(color)
 
-        align_words(lines, new_width, align)
-        for line in lines:
-            y = line.y
-            for word in line.words:
-                x = word.x
-                for c, font, cx, _ in word.tasks:
-                    font.render_to(background, (x + cx, y), c, size=size)
+        _render_word_lines(background, lines, new_width, size, align)
         return background
+
+
+def _render_word_lines(
+    out: pygame.Surface, lines: List[WordsLine], width: int, size: int, align: TextAlign
+):
+    align_words(lines, width, align)
+    for line in lines:
+        y = line.y
+        for word in line.words:
+            x = word.x
+            for c, font, cx, _ in word.tasks:
+                font.render_to(out, (x + cx, y), c, size=size)
