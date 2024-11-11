@@ -21,7 +21,6 @@ class PygameFontFactory(PygameUtils):
 
     def __init__(self, size=14, origin=True):
         super().__init__()
-
         self._prov = FontProvider()
         self._name_to_font = {}
         self._size = size
@@ -108,6 +107,11 @@ class PygameFontFactory(PygameUtils):
             new_width = max((line.limit() for line in lines if line.tasks), default=0)
         return new_width, height, lines
 
+    def render_char(self, c: str, size: int = 0) -> pygame.Surface:
+        font = self.get_font(c)
+        surface, box = font.render(c, size=size or self._size)
+        return surface
+
     def _render_text_wrap_chars(
         self,
         text: str,
@@ -135,11 +139,6 @@ class PygameFontFactory(PygameUtils):
             word_lines = [WordsLine.from_chars_line(line) for line in lines]
             _render_word_lines(background, word_lines, new_width, size, align)
         return background
-
-    def render_char(self, c: str, size: int = 0) -> pygame.Surface:
-        font = self.get_font(c)
-        surface, box = font.render(c, size=size or self._size)
-        return surface
 
     def render_text(
         self,
