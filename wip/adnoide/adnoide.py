@@ -4,39 +4,37 @@ import operator
 import random
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import List, Self, Sequence
+from typing import List, Self, Sequence, Tuple
 
 from pysaurus.core.classes import StringPrinter
-from pysaurus.core.functions import are_hashable_by, boolean_and, boolean_or, if_else
+from pysaurus.core.functions import boolean_and, boolean_or, if_else, \
+    map_attribute
+from wip.adnoide.dna_errors import (
+    DNATooLongForTranslationError,
+    DNATooShortForTranslationError,
+    ProteinError,
+)
 
 
 class Utils:
     ARG_NAMES = list("xyzabcdefghijklmnopqrstuvw")
     assert len(ARG_NAMES) == 26
 
-    @classmethod
-    def get_arg_name(cls, i: int) -> str:
-        return cls.ARG_NAMES[i] if i < len(cls.ARG_NAMES) else f"x{i + 1}"
-
     UID_ENCODER = {
-        **{c: i + 1 for i, c in enumerate("abcdefghijklmnopqrstuvwxyz")},
+        **{c: ord(c) - ord("a") + 1 for c in ARG_NAMES},
         "_": 89,
-        **{i: 90 + i for i in range(10)},
         **{str(i): 90 + i for i in range(10)},
     }
-    assert len(UID_ENCODER) == 47
+    assert len(UID_ENCODER) == 37
 
     @classmethod
-    def generate_uid(cls, name: str) -> int:
+    def unum(cls, name: str) -> int:
+        # Generate Unique NUMber (unique ID) from a given name.
         return sum(cls.UID_ENCODER[d] * 100**i for i, d in enumerate(reversed(name)))
 
-
-@dataclass(slots=True)
-class Integer:
-    v: int = 0
-
-    def __int__(self):
-        return self.v
+    @classmethod
+    def argname(cls, i: int) -> str:
+        return cls.ARG_NAMES[i] if i < len(cls.ARG_NAMES) else f"x{i + 1}"
 
 
 class FoodType:
@@ -51,17 +49,13 @@ class FoodType:
         name = self.name or f"Type{self.basic_types}"
         return f"{name}" + ("" if self.strict else "...")
 
-    def check(self, value) -> bool:
+    def is_valid_value(self, value) -> bool:
         if self.strict:
             return type(value) in self.basic_types
         else:
             return isinstance(value, self.basic_types)
 
-    def expect(self, value):
-        if not self.check(value):
-            raise TypeError(f"Expected {self}, got {type(value)}: {value}")
-
-    def check_type(self, food_type: Self) -> bool:
+    def is_valid_type(self, food_type: Self) -> bool:
         if self.strict:
             return all(typ in self.basic_types for typ in food_type.basic_types)
         else:
@@ -69,19 +63,20 @@ class FoodType:
                 issubclass(typ, self.basic_types) for typ in food_type.basic_types
             )
 
+    def expect_value(self, value):
+        if not self.is_valid_value(value):
+            raise TypeError(f"Expected {self}, got {type(value)}: {value}")
+
     def expect_type(self, food_type: Self) -> None:
-        if not self.check_type(food_type):
+        if not self.is_valid_type(food_type):
             raise TypeError(f"Expected type {self}, got type {food_type}")
 
 
 Anything = FoodType([object], strict=False, name="Anything")
 Numeric = FoodType((bool, int, float), name="Numeric")
-Number = FoodType((int, float), name="Number")
 Int = FoodType([int], name="Int")
 Float = FoodType([float], name="Float")
 Bool = FoodType([bool], name="Bool")
-
-
 TYPE_TO_FOOD_TYPE = {bool: Bool, int: Int, float: Float, object: Anything}
 
 
@@ -101,7 +96,7 @@ class AbstractFunction(ABC):
         output_type = output_type or Numeric
 
         self.name: str = (name or type(self).__name__).lower()
-        self.__uid = Utils.generate_uid(self.name)
+        self.__uid = Utils.unum(self.name)
         self._input_types: List[FoodType] = input_types
         self._output_type: FoodType = output_type
 
@@ -114,8 +109,8 @@ class AbstractFunction(ABC):
         return self.__uid
 
     @property
-    def input_types(self) -> List[FoodType]:
-        return list(self._input_types)
+    def input_types(self) -> Tuple[FoodType, ...]:
+        return tuple(self._input_types)
 
     @property
     def output_type(self) -> FoodType:
@@ -124,17 +119,8 @@ class AbstractFunction(ABC):
     def __repr__(self):
         output = self.name
         if self.nb_inputs:
-            output += (
-                f"({', '.join(Utils.get_arg_name(i) for i in range(self.nb_inputs))})"
-            )
+            output += f"({', '.join(Utils.argname(i) for i in range(self.nb_inputs))})"
         return output
-
-    def __call__(self, *args):
-        return self.run(*args)
-
-    @abstractmethod
-    def run(self, *args):
-        raise NotImplementedError()
 
 
 class Function(AbstractFunction):
@@ -156,9 +142,6 @@ class Function(AbstractFunction):
         )
         self.function = function
 
-    def run(self, *args):
-        return self.function(*args)
-
 
 class Constant(AbstractFunction):
     __slots__ = ("_const",)
@@ -167,8 +150,7 @@ class Constant(AbstractFunction):
         super().__init__(0, name, output_type=TYPE_TO_FOOD_TYPE[type(const)])
         self._const = const
 
-    def run(self, *args):
-        return self._const
+    const = property(lambda self: self._const)
 
 
 class Feed(AbstractFunction):
@@ -180,11 +162,127 @@ class Feed(AbstractFunction):
     def __repr__(self):
         return "?"
 
-    def run(self, *args):
-        raise ValueError("Please, feed me.")
+
+FEED = Feed()
 
 
-FUNC_FEED = Feed()
+class Feeder:
+    __slots__ = ("_food", "_cursor")
+
+    def __init__(self, food: Sequence):
+        self._food = food
+        self._cursor = 0
+
+    def give(self):
+        meal = self._food[self._cursor]
+        self._cursor += 1
+        return meal
+
+
+class AbstractFunctionNode(ABC):
+    __slots__ = ("function", "input_nodes")
+
+    def __init__(self, function: AbstractFunction, inputs=()):
+        self.function = function
+        self.input_nodes: List[AbstractFunctionNode] = list(inputs)
+
+    def __repr__(self):
+        return f"{self.function} [{self.function.unique_id}]"
+
+    def describe(self):
+        with StringPrinter() as printer:
+            self._describe_in(printer)
+            return str(printer)
+
+    def _describe_in(self, printer: StringPrinter, indentation=""):
+        printer.write(f"{indentation}{self}")
+        for child in self.input_nodes:
+            child._describe_in(printer, indentation + "  ")
+
+    def expect_type(self):
+        for i, expected_type in enumerate(self.function.input_types):
+            node = self.input_nodes[i]
+            node.expect_type()
+            if node.function != FEED:
+                expected_type.expect_type(node.function.output_type)
+
+    @abstractmethod
+    def execute(self, feeder: Feeder):
+        raise NotImplementedError()
+
+
+class FunctionNode(AbstractFunctionNode):
+    __slots__ = ()
+    function: Function
+
+    def __init__(self, function: Function, inputs=()):
+        super().__init__(function, inputs)
+
+    def execute(self, feeder: Feeder):
+        return self.function.function(
+            *(child.execute(feeder) for child in self.input_nodes)
+        )
+
+
+class ConstantNode(AbstractFunctionNode):
+    __slots__ = ()
+    function: Constant
+
+    def __init__(self, constant: Constant):
+        super().__init__(constant)
+
+    def execute(self, feeder: Feeder):
+        return self.function.const
+
+
+class FeedNode(AbstractFunctionNode):
+    __slots__ = ()
+    function: Feed
+
+    def __init__(self):
+        super().__init__(FEED)
+
+    def execute(self, feeder: Feeder):
+        return feeder.give()
+
+
+class Protein:
+    __slots__ = ("node", "nb_inputs")
+
+    def __init__(self, node: AbstractFunctionNode, nb_inputs: int):
+        self.node = node
+        self.nb_inputs = nb_inputs
+
+    def _count_feeds(self, node: AbstractFunctionNode):
+        return (
+            1
+            if isinstance(node, FeedNode)
+            else sum((self._count_feeds(c) for c in node.input_nodes))
+        )
+
+    def __repr__(self):
+        return self.node.describe()
+
+    def __call__(self, *args):
+        if len(args) != self.nb_inputs:
+            raise ProteinError(f"Expected {self.nb_inputs} args, given {len(args)}")
+        return self.node.execute(Feeder(args))
+
+
+@dataclass(slots=True)
+class ParsingResult:
+    node: AbstractFunctionNode
+    next_unparsed_position: int
+
+
+@dataclass(slots=True)
+class Integer:
+    v: int = 0
+
+    def __int__(self):
+        return self.v
+
+
 FUNCTIONS: List[AbstractFunction] = [
     # -- basic operators
     # math binary operators
@@ -254,151 +352,29 @@ FUNCTIONS: List[AbstractFunction] = [
     Function(math.degrees, 1, "deg"),
     Function(math.radians, 1, "rad"),
     # -- Special operators
-    FUNC_FEED,
+    FEED,
     # -- Implementations of boolean operators
     Function(boolean_and, 2, "and", [Anything, Anything], Anything),
     Function(boolean_or, 2, "or", [Anything, Anything], Anything),
     Function(if_else, 3, "if", [Anything, Anything, Anything], Anything),
 ]
-assert are_hashable_by(FUNCTIONS, "name")
-assert are_hashable_by(FUNCTIONS, "unique_id")
-
-
-class Feeder:
-    __slots__ = ("_food", "_cursor")
-
-    def __init__(self, food: Sequence):
-        self._food = food
-        self._cursor = 0
-
-    def give(self):
-        meal = self._food[self._cursor]
-        self._cursor += 1
-        return meal
-
-
-class FunctionNode:
-    __slots__ = ("function", "inputs")
-
-    def __init__(self, function: AbstractFunction, inputs=()):
-        self.function = function
-        self.inputs: List[FunctionNode] = list(inputs)
-
-    def __repr__(self):
-        return f"{self.function} [{self.function.unique_id}]"
-
-    def describe(self):
-        with StringPrinter() as printer:
-            self._describe_in(printer)
-            return str(printer)
-
-    def _describe_in(self, printer: StringPrinter, indentation=""):
-        printer.write(f"{indentation}{self}")
-        for child in self.inputs:
-            child._describe_in(printer, indentation + "  ")
-
-    def expect_type(self):
-        for i, expected_type in enumerate(self.function.input_types):
-            node = self.inputs[i]
-            node.expect_type()
-            if node.function != FUNC_FEED:
-                expected_type.expect_type(node.function.output_type)
-
-    def execute(self, feeder: Feeder):
-        return self.function.run(*(child.execute(feeder) for child in self.inputs))
-
-
-class ConstantNode(FunctionNode):
-    __slots__ = ()
-    function: Constant
-
-    def __init__(self, constant: Constant):
-        super().__init__(constant)
-
-
-class FeedNode(FunctionNode):
-    __slots__ = ()
-    function: Feed
-
-    def __init__(self):
-        super().__init__(FUNC_FEED)
-
-    def execute(self, feeder: Feeder):
-        return feeder.give()
-
-
-class DNAError(Exception):
-    pass
-
-
-class DNATranslationError(DNAError):
-    pass
-
-
-class DNATooShortForTranslationError(DNATranslationError):
-    pass
-
-
-class DNATooLongForTranslationError(DNATranslationError):
-    pass
-
-
-class ProteinError(DNAError):
-    pass
-
-
-class ConstantProteinError(ProteinError):
-    pass
-
-
-class Protein:
-    __slots__ = ("node", "nb_inputs")
-
-    def __init__(self, node: FunctionNode, nb_inputs: int):
-        self.node = node
-        self.nb_inputs = nb_inputs
-
-    def _count_feeds(self, node: FunctionNode):
-        return (
-            1
-            if isinstance(node, FeedNode)
-            else sum((self._count_feeds(c) for c in node.inputs))
-        )
-
-    def __repr__(self):
-        return self.node.describe()
-
-    def __call__(self, *args):
-        if len(args) != self.nb_inputs:
-            raise ProteinError(f"Expected {self.nb_inputs} args, given {len(args)}")
-        return self.node.execute(Feeder(args))
-
-
-@dataclass(slots=True)
-class ParsingResult:
-    node: FunctionNode
-    next_unparsed_position: int
 
 
 class SequenceGenerator:
-    NAME_TO_FUNCTION = {function.name: function for function in FUNCTIONS}
-    CODON_TO_FUNCTION = {function.unique_id: function for function in FUNCTIONS}
+    CODON_TO_FUNCTION = map_attribute(FUNCTIONS, "unique_id")
     CODONS: List[int] = sorted(CODON_TO_FUNCTION)
 
-    # MIN_LENGTH = 1
-    MIN_LENGTH = 2
-    # MAX_LENGTH = 1000
-    MAX_LENGTH = 20
+    __slots__ = ("rng", "min_length", "max_length")
 
-    __slots__ = ("rng",)
-
-    def __init__(self, seed: int = None):
+    def __init__(self, seed: int = None, min_length=2, max_length=20):
         self.rng = random.Random(seed)
+        self.min_length = min_length
+        self.max_length = max_length
 
     def generate_dna(self) -> List[int]:
         return [
             self.rng.choice(self.CODONS)
-            for _ in range(self.rng.randint(self.MIN_LENGTH, self.MAX_LENGTH))
+            for _ in range(self.rng.randint(self.min_length, self.max_length))
         ]
 
     def translate_dna(self, sequence: List[int]) -> Protein:
@@ -436,33 +412,3 @@ class SequenceGenerator:
         else:
             raise NotImplementedError(f"Unknown function: {codon} => {function}")
         return ret
-
-
-def main():
-    seq_gen = SequenceGenerator(12345)
-    iteration = 0
-    while True:
-        iteration += 1
-        seq = seq_gen.generate_dna()
-        try:
-            protein = seq_gen.translate_dna(seq)
-            print(f"Protein({protein.nb_inputs} args):")
-            print(protein)
-            protein.node.expect_type()
-            if protein.nb_inputs == 0:
-                raise ConstantProteinError(protein())
-            print(f"[step {iteration}] success")
-            break
-        except Exception as exc:
-            print(f"[step {iteration}, seq len {len(seq)}]", type(exc).__name__, exc)
-            continue
-
-
-def debug():
-    for function in FUNCTIONS:
-        print(function, function.input_types, function.output_type)
-
-
-if __name__ == "__main__":
-    main()
-    # debug()

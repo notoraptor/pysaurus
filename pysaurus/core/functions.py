@@ -5,7 +5,7 @@ import sys
 import tempfile
 import threading
 import types
-from typing import Collection, Iterable, List, Sequence
+from typing import Any, Collection, Dict, Iterable, List, Sequence
 
 logger = logging.getLogger(__name__)
 
@@ -322,6 +322,12 @@ def expand_if(expression) -> Sequence:
 
 def are_hashable_by(elements: Sequence, attribute: str) -> bool:
     return len({getattr(el, attribute) for el in elements}) == len(elements)
+
+
+def map_attribute[T](elements: Sequence[T], attribute: str) -> Dict[Any, T]:
+    mapping = {getattr(element, attribute): element for element in elements}
+    assert len(mapping) == len(elements)
+    return mapping
 
 
 def boolean_and(a, b):
