@@ -3,7 +3,7 @@ from typing import Callable, Optional, Union
 import pygame
 import pygame.gfxdraw
 
-from videre.colors import ColorDefinition, Colors, parse_color
+from videre.colors import ColorDef, Colors, parse_color
 from videre.core.pygame_utils import PygameUtils
 
 
@@ -57,10 +57,10 @@ class Gradient(PygameUtils):
         return self._gen(width, height)
 
     @classmethod
-    def parse(cls, coloring: Union[ColorDefinition, "Gradient"]) -> "Gradient":
+    def parse(cls, coloring: Union[ColorDef, "Gradient"]) -> "Gradient":
         if isinstance(coloring, Gradient):
             return coloring
         return Gradient(parse_color(coloring))
 
 
-ColoringDefinition = Union[ColorDefinition, Gradient]
+ColoringDefinition = Union[ColorDef, Gradient]

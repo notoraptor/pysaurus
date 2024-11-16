@@ -1,18 +1,31 @@
+from typing import Optional
+
 import pygame
 
+from videre.colors import ColorDef, parse_color
 from videre.core.constants import TextAlign, TextWrap
 from videre.widgets.widget import Widget
 
 
 class Text(Widget):
-    __wprops__ = {"text", "size", "wrap", "align"}
+    __wprops__ = {"text", "size", "wrap", "align", "color"}
     __slots__ = ()
 
     def __init__(
-        self, text="", size=0, wrap=TextWrap.NONE, align=TextAlign.NONE, **kwargs
+        self,
+        text="",
+        size=0,
+        wrap=TextWrap.NONE,
+        align=TextAlign.NONE,
+        color: ColorDef = None,
+        **kwargs
     ):
         super().__init__(**kwargs)
-        self._set_wprops(text=text, size=size, wrap=wrap, align=align)
+        self._set_wprops(size=size)
+        self.text = text
+        self.wrap = wrap
+        self.align = align
+        self.color = color
 
     @property
     def text(self) -> str:
@@ -42,15 +55,24 @@ class Text(Widget):
     def align(self, align: TextAlign):
         self._set_wprop("align", align)
 
+    @property
+    def color(self) -> Optional[pygame.Color]:
+        return self._get_wprop("color")
+
+    @color.setter
+    def color(self, color: ColorDef):
+        self._set_wprop("color", None if color is None else parse_color(color))
+
     def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
         wrap = self.wrap
+        render_args = dict(text=self.text, size=self.size, color=self.color)
         if wrap == TextWrap.NONE:
-            return window.fonts.render_text(self.text, None, self.size)
+            render_args["width"] = None
         elif wrap == TextWrap.CHAR:
-            return window.fonts.render_text(
-                self.text, width, self.size, align=self.align
-            )
+            render_args["width"] = width
+            render_args["align"] = self.align
         else:
-            return window.fonts.render_text(
-                self.text, width, self.size, align=self.align, wrap_words=True
-            )
+            render_args["width"] = width
+            render_args["align"] = self.align
+            render_args["wrap_words"] = True
+        return window.fonts.render_text(**render_args)

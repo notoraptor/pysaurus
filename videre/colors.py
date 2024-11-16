@@ -148,12 +148,12 @@ class Colors:
     transparent = pygame.Color(0, 0, 0, 0)
 
 
-ColorDefinition = Union[
+ColorDef = Union[
     pygame.Color, Tuple[int, int, int], Tuple[int, int, int, int], List[int], str, None
 ]
 
 
-def parse_color(value: ColorDefinition) -> pygame.Color:
+def parse_color(value: ColorDef) -> pygame.Color:
     """
     Parse color.
     Options:

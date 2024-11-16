@@ -30,6 +30,7 @@ class Window(PygameUtils, Clipboard):
         width=1280,
         height=720,
         background: pygame.Color | None = None,
+        font_size=14,
     ):
         super().__init__()
         self._title = str(title) or "Window"
@@ -52,7 +53,7 @@ class Window(PygameUtils, Clipboard):
         self._fancybox: Optional[Fancybox] = None
 
         self._controls: List[Widget] = []
-        self._fonts = PygameFontFactory()
+        self._fonts = PygameFontFactory(size=font_size)
 
         self.__collect_event_callbacks()
 

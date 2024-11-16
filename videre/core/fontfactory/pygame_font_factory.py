@@ -127,17 +127,15 @@ class PygameFontFactory(PygameUtils):
             text, width, size, height_delta=height_delta, compact=compact
         )
         background = pygame.Surface((new_width, height), flags=pygame.SRCALPHA)
-        if color is not None:
-            background.fill(color)
 
         if align == TextAlign.NONE:
             for line in lines:
                 y = line.y
                 for c, font, x, _ in line.tasks:
-                    font.render_to(background, (x, y), c, size=size)
+                    font.render_to(background, (x, y), c, size=size, fgcolor=color)
         else:
             word_lines = [WordsLine.from_chars_line(line) for line in lines]
-            _render_word_lines(background, word_lines, new_width, size, align)
+            _render_word_lines(background, word_lines, new_width, size, align, color)
         return background
 
     def render_text(
@@ -221,12 +219,17 @@ class PygameFontFactory(PygameUtils):
         if color is not None:
             background.fill(color)
 
-        _render_word_lines(background, lines, new_width, size, align)
+        _render_word_lines(background, lines, new_width, size, align, color)
         return background
 
 
 def _render_word_lines(
-    out: pygame.Surface, lines: List[WordsLine], width: int, size: int, align: TextAlign
+    out: pygame.Surface,
+    lines: List[WordsLine],
+    width: int,
+    size: int,
+    align: TextAlign,
+    color: pygame.Color,
 ):
     align_words(lines, width, align)
     for line in lines:
@@ -234,4 +237,4 @@ def _render_word_lines(
         for word in line.words:
             x = word.x
             for c, font, cx, _ in word.tasks:
-                font.render_to(out, (x + cx, y), c, size=size)
+                font.render_to(out, (x + cx, y), c, size=size, fgcolor=color)

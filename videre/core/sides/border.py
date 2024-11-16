@@ -2,7 +2,7 @@ from typing import List, Tuple, Union
 
 import pygame
 
-from videre.colors import ColorDefinition, parse_color, stringify_color
+from videre.colors import ColorDef, parse_color, stringify_color
 from videre.core.sides.abstract_sides import AbstractSides
 from videre.core.sides.margin import Margin
 
@@ -10,7 +10,7 @@ from videre.core.sides.margin import Margin
 class BorderSide:
     __slots__ = ("width", "color")
 
-    def __init__(self, width: int, color: ColorDefinition = None):
+    def __init__(self, width: int, color: ColorDef = None):
         self.width = width
         self.color = parse_color(color or "black")
 
@@ -30,7 +30,7 @@ class BorderSide:
         )
 
 
-BorderType = Union[BorderSide, Tuple[int, ColorDefinition], int]
+BorderType = Union[BorderSide, Tuple[int, ColorDef], int]
 
 
 class _DimensionsLimit:
@@ -68,7 +68,7 @@ class Border(AbstractSides[BorderType, BorderSide]):
             raise ValueError(f"Unsupported border side value: {side}")
 
     @classmethod
-    def all(cls, width: int, color: ColorDefinition = None):
+    def all(cls, width: int, color: ColorDef = None):
         side = BorderSide(width, color)
         return cls(side, side, side, side)
 

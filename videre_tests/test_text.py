@@ -27,3 +27,18 @@ def test_text_wrap(align, wrap, image_testing):
     with WindowSD(background=videre.Colors.yellow) as window:
         window.controls = [videre.Text(LOREM_IPSUM, wrap=wrap, align=align)]
         image_testing(window.snapshot())
+
+
+def test_text_color(image_testing):
+    with WindowSD(background=videre.Colors.gray) as window:
+        window.controls = [
+            videre.Column(
+                [
+                    videre.Text("hello"),
+                    videre.Text("world", color="red"),
+                    videre.Text("how Are you?", size=30, color="#ffeeaa"),
+                    videre.Text("hello world", color="cyan"),
+                ]
+            )
+        ]
+        image_testing(window.snapshot())

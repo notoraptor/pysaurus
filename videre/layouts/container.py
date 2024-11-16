@@ -114,9 +114,8 @@ class Container(AbstractLayout):
     def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
         width = _resolve_size(self.width, width)
         height = _resolve_size(self.height, height)
-        padding = self.padding
         border = self.border
-        margin = padding + border.margin()
+        margin = self.padding + border.margin()
 
         min_width = border.left.width + border.right.width
         min_height = border.top.width + border.bottom.width
