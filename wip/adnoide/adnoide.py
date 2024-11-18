@@ -7,8 +7,7 @@ from dataclasses import dataclass
 from typing import List, Self, Sequence, Tuple
 
 from pysaurus.core.classes import StringPrinter
-from pysaurus.core.functions import boolean_and, boolean_or, if_else, \
-    map_attribute
+from pysaurus.core.functions import boolean_and, boolean_or, if_else, map_attribute
 from wip.adnoide.dna_errors import (
     DNATooLongForTranslationError,
     DNATooShortForTranslationError,
@@ -44,6 +43,12 @@ class FoodType:
         self.basic_types = tuple(basic_types)
         self.strict = bool(strict)
         self.name = name
+
+    def __hash__(self):
+        return hash((self.basic_types, self.strict))
+
+    def __eq__(self, other: "FoodType"):
+        return self.basic_types == other.basic_types and self.strict == other.strict
 
     def __repr__(self):
         name = self.name or f"Type{self.basic_types}"
@@ -96,8 +101,8 @@ class AbstractFunction(ABC):
         output_type = output_type or Numeric
 
         self.name: str = (name or type(self).__name__).lower()
-        self.__uid = Utils.unum(self.name)
-        self._input_types: List[FoodType] = input_types
+        self.__uid: int = Utils.unum(self.name)
+        self._input_types: Tuple[FoodType, ...] = tuple(input_types)
         self._output_type: FoodType = output_type
 
     @property
@@ -110,11 +115,21 @@ class AbstractFunction(ABC):
 
     @property
     def input_types(self) -> Tuple[FoodType, ...]:
-        return tuple(self._input_types)
+        return self._input_types
 
     @property
     def output_type(self) -> FoodType:
         return self._output_type
+
+    def __hash__(self):
+        return hash((self.__uid, self._input_types, self._output_type))
+
+    def __eq__(self, other: "AbstractFunction"):
+        return (
+            self.__uid == other.unique_id
+            and self._input_types == other.input_types
+            and self._output_type == other.output_type
+        )
 
     def __repr__(self):
         output = self.name
@@ -184,7 +199,13 @@ class AbstractFunctionNode(ABC):
 
     def __init__(self, function: AbstractFunction, inputs=()):
         self.function = function
-        self.input_nodes: List[AbstractFunctionNode] = list(inputs)
+        self.input_nodes: Tuple[AbstractFunctionNode, ...] = tuple(inputs)
+
+    def __hash__(self):
+        return hash((self.function, self.input_nodes))
+
+    def __eq__(self, other: "AbstractFunctionNode"):
+        return self.function == other.function and self.input_nodes == other.input_nodes
 
     def __repr__(self):
         return f"{self.function} [{self.function.unique_id}]"
@@ -249,11 +270,23 @@ class FeedNode(AbstractFunctionNode):
 class Protein:
     __slots__ = ("node", "nb_inputs", "sequence")
 
-    def __init__(self, node: AbstractFunctionNode, nb_inputs: int, sequence: Sequence[int]):
+    def __init__(
+        self, node: AbstractFunctionNode, nb_inputs: int, sequence: Sequence[int]
+    ):
         node.expect_type()
         self.node = node
         self.nb_inputs = nb_inputs
-        self.sequence = sequence
+        self.sequence: Tuple[int, ...] = tuple(sequence)
+
+    def __hash__(self):
+        return hash((self.node, self.nb_inputs, self.sequence))
+
+    def __eq__(self, other: "Protein"):
+        return (
+            self.node == other.node
+            and self.nb_inputs == other.nb_inputs
+            and self.sequence == other.sequence
+        )
 
     def _count_feeds(self, node: AbstractFunctionNode):
         return (
@@ -379,7 +412,7 @@ class SequenceGenerator:
             for _ in range(self.rng.randint(self.min_length, self.max_length))
         ]
 
-    def translate_dna(self, sequence: List[int]) -> Protein:
+    def translate_dna(self, sequence: Sequence[int]) -> Protein:
         nb_feeds = Integer()
         result = self._parse_codon(sequence, 0, nb_feeds)
         if result.next_unparsed_position != len(sequence):
@@ -389,7 +422,7 @@ class SequenceGenerator:
         return Protein(node=result.node, nb_inputs=int(nb_feeds), sequence=sequence)
 
     def _parse_codon(
-        self, sequence: List[int], position: int, nb_feeds: Integer
+        self, sequence: Sequence[int], position: int, nb_feeds: Integer
     ) -> ParsingResult:
         if position >= len(sequence):
             raise DNATooShortForTranslationError(position + 1, len(sequence))
@@ -415,12 +448,20 @@ class SequenceGenerator:
             raise NotImplementedError(f"Unknown function: {codon} => {function}")
         return ret
 
+    def gof(self) -> Protein:
+        """[g]enerate [o]n [f]ly"""
+        seq = []
+        nb_feeds = Integer()
+        node = self._gof(seq, nb_feeds)
+        return Protein(node=node, nb_inputs=int(nb_feeds), sequence=seq)
+
     def _gof(self, seq: List[int], nb_feeds: Integer) -> AbstractFunctionNode:
         if len(seq) > self.max_length:
             raise DNATooLongForTranslationError(f"{len(seq)} / {self.max_length}")
 
         codon = self.rng.choice(self.CODONS)
         function = self.CODON_TO_FUNCTION[codon]
+        seq.append(codon)
         if isinstance(function, Function):
             inputs = []
             for _ in range(function.nb_inputs):
@@ -434,11 +475,4 @@ class SequenceGenerator:
             node = FeedNode()
         else:
             raise NotImplementedError(f"Unknown function: {codon} => {function}")
-        seq.append(codon)
         return node
-
-    def gof(self) -> Protein:
-        seq = []
-        nb_feeds = Integer()
-        node = self._gof(seq, nb_feeds)
-        return Protein(node=node, nb_inputs=int(nb_feeds), sequence=seq)

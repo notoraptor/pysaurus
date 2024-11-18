@@ -7,6 +7,7 @@ from wip.adnoide.dna_errors import ConstantProteinError
 def find(callback: Callable[[Protein], None]):
     seq_gen = SequenceGenerator(12345)
     iteration = 0
+    protein = None
     while True:
         iteration += 1
         # seq = seq_gen.generate_dna()
@@ -20,8 +21,9 @@ def find(callback: Callable[[Protein], None]):
             print(f"[step {iteration}] success")
             break
         except Exception as exc:
-            print(f"[step {iteration}]", type(exc).__name__, exc)
+            print(f"[error/step {iteration}]", type(exc).__name__, exc)
             continue
+    assert seq_gen.translate_dna(protein.sequence) == protein
 
 
 def criterion_no_constant(protein: Protein):
@@ -46,11 +48,14 @@ def f(x):
 
 def find_on_function(function: callable, args: Iterable, expand=False):
     if expand:
+
         def callback(protein: Protein):
             for tpl in args:
                 assert protein.nb_inputs == len(tpl)
                 assert function(*tpl) == protein(*tpl)
+
     else:
+
         def callback(protein: Protein):
             assert protein.nb_inputs == 1
             for arg in args:
