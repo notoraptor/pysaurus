@@ -247,11 +247,13 @@ class FeedNode(AbstractFunctionNode):
 
 
 class Protein:
-    __slots__ = ("node", "nb_inputs")
+    __slots__ = ("node", "nb_inputs", "sequence")
 
-    def __init__(self, node: AbstractFunctionNode, nb_inputs: int):
+    def __init__(self, node: AbstractFunctionNode, nb_inputs: int, sequence: Sequence[int]):
+        node.expect_type()
         self.node = node
         self.nb_inputs = nb_inputs
+        self.sequence = sequence
 
     def _count_feeds(self, node: AbstractFunctionNode):
         return (
@@ -292,7 +294,7 @@ FUNCTIONS: List[AbstractFunction] = [
     Function(operator.truediv, 2, "div"),
     Function(operator.floordiv, 2, "euc"),
     Function(operator.mod, 2),
-    Function(operator.pow, 2),
+    Function(math.pow, 2),
     # boolean binary operators
     Function(operator.eq, 2),
     Function(operator.ne, 2),
@@ -384,7 +386,7 @@ class SequenceGenerator:
             raise DNATooLongForTranslationError(
                 result.next_unparsed_position + 1, len(sequence)
             )
-        return Protein(node=result.node, nb_inputs=int(nb_feeds))
+        return Protein(node=result.node, nb_inputs=int(nb_feeds), sequence=sequence)
 
     def _parse_codon(
         self, sequence: List[int], position: int, nb_feeds: Integer
@@ -412,3 +414,31 @@ class SequenceGenerator:
         else:
             raise NotImplementedError(f"Unknown function: {codon} => {function}")
         return ret
+
+    def _gof(self, seq: List[int], nb_feeds: Integer) -> AbstractFunctionNode:
+        if len(seq) > self.max_length:
+            raise DNATooLongForTranslationError(f"{len(seq)} / {self.max_length}")
+
+        codon = self.rng.choice(self.CODONS)
+        function = self.CODON_TO_FUNCTION[codon]
+        if isinstance(function, Function):
+            inputs = []
+            for _ in range(function.nb_inputs):
+                child_node = self._gof(seq, nb_feeds)
+                inputs.append(child_node)
+            node = FunctionNode(function, inputs)
+        elif isinstance(function, Constant):
+            node = ConstantNode(function)
+        elif isinstance(function, Feed):
+            nb_feeds.v += 1
+            node = FeedNode()
+        else:
+            raise NotImplementedError(f"Unknown function: {codon} => {function}")
+        seq.append(codon)
+        return node
+
+    def gof(self) -> Protein:
+        seq = []
+        nb_feeds = Integer()
+        node = self._gof(seq, nb_feeds)
+        return Protein(node=node, nb_inputs=int(nb_feeds), sequence=seq)

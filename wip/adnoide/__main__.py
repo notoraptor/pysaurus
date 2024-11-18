@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Iterable
 
 from wip.adnoide.adnoide import FUNCTIONS, Protein, SequenceGenerator
 from wip.adnoide.dna_errors import ConstantProteinError
@@ -9,17 +9,18 @@ def find(callback: Callable[[Protein], None]):
     iteration = 0
     while True:
         iteration += 1
-        seq = seq_gen.generate_dna()
+        # seq = seq_gen.generate_dna()
         try:
-            protein = seq_gen.translate_dna(seq)
+            protein = seq_gen.gof()
+            print("[sequence]")
+            print(protein.sequence)
             print(f"Protein({protein.nb_inputs} args):")
             print(protein)
-            protein.node.expect_type()
             callback(protein)
             print(f"[step {iteration}] success")
             break
         except Exception as exc:
-            print(f"[step {iteration}, seq len {len(seq)}]", type(exc).__name__, exc)
+            print(f"[step {iteration}]", type(exc).__name__, exc)
             continue
 
 
@@ -39,7 +40,34 @@ def debug():
         print(function, function.input_types, function.output_type)
 
 
+def f(x):
+    return x**2 + x + 1
+
+
+def find_on_function(function: callable, args: Iterable, expand=False):
+    if expand:
+        def callback(protein: Protein):
+            for tpl in args:
+                assert protein.nb_inputs == len(tpl)
+                assert function(*tpl) == protein(*tpl)
+    else:
+        def callback(protein: Protein):
+            assert protein.nb_inputs == 1
+            for arg in args:
+                assert function(arg) == protein(arg)
+                print(f"f({arg}) = {function(arg)}")
+
+    find(callback)
+
+
+def main():
+    for i in range(6):
+        print(f"f({i}) = {f(i)}")
+    find_on_function(lambda x: x + 2, range(10))
+
+
 if __name__ == "__main__":
-    find(criterion_no_constant)
+    main()
+    # find(criterion_no_constant)
     # find(criterion_1_0)
     # debug()
