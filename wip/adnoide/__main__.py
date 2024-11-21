@@ -1,20 +1,20 @@
 from typing import Callable, Iterable
 
-from wip.adnoide.adnoide import FUNCTIONS, Protein, SequenceGenerator
+from wip.adnoide.adnoide import FUNCTIONS, Life, Protein
 from wip.adnoide.dna_errors import ConstantProteinError
 
 
 def find(callback: Callable[[Protein], None]):
-    seq_gen = SequenceGenerator(12345)
+    seq_gen = Life(12345)
     iteration = 0
     protein = None
     while True:
         iteration += 1
         # seq = seq_gen.generate_dna()
         try:
-            protein = seq_gen.gof()
+            protein = seq_gen.random_protein()
             print("[sequence]")
-            print(protein.sequence)
+            print(protein.gene)
             print(f"Protein({protein.nb_inputs} args):")
             print(protein)
             callback(protein)
@@ -23,7 +23,7 @@ def find(callback: Callable[[Protein], None]):
         except Exception as exc:
             print(f"[error/step {iteration}]", type(exc).__name__, exc)
             continue
-    assert seq_gen.translate_dna(protein.sequence) == protein
+    assert seq_gen.dna_to_protein(protein.gene) == protein
 
 
 def criterion_no_constant(protein: Protein):
