@@ -3,6 +3,8 @@ from typing import List, Sequence
 
 from wip.adnoide.adnoide import (
     AbstractFunctionNode,
+    CODONS,
+    CODON_TO_FUNCTION,
     Constant,
     ConstantNode,
     Feed,
@@ -52,8 +54,8 @@ class ProteinGenerator:
         if len(seq) > self.gen.max_length:
             raise DNATooLongForTranslationError(f"{len(seq)} / {self.gen.max_length}")
 
-        codon = self.gen.rng.choice(self.gen.CODONS)
-        func = self.gen.CODON_TO_FUNCTION[codon]
+        codon = self.gen.rng.choice(CODONS)
+        func = CODON_TO_FUNCTION[codon]
         seq.append(codon)
         if isinstance(func, Function):
             inputs = [self._gof(seq) for _ in range(len(func.input_types))]
@@ -92,7 +94,7 @@ class Ribosome0:
         if position >= len(sequence):
             raise DNATooShortForTranslationError(position + 1, len(sequence))
         codon = sequence[position]
-        function = Life.CODON_TO_FUNCTION[codon]
+        function = CODON_TO_FUNCTION[codon]
         if isinstance(function, Function):
             inputs = []
             pos = position + 1

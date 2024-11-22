@@ -3,7 +3,7 @@ import math
 import operator
 import random
 from abc import ABC, abstractmethod
-from typing import Any, List, Self, Sequence, Tuple, Union
+from typing import Any, Dict, List, Self, Sequence, Tuple, Union
 
 from pysaurus.core.classes import StringPrinter
 from pysaurus.core.functions import boolean_and, boolean_or, if_else, map_attribute
@@ -97,10 +97,6 @@ class AbstractFunction(ABC):
         self.unique_id: int = Utils.unum(self.name)
         self.input_types: Tuple[FoodType, ...] = tuple(input_types)
         self.output_type: FoodType = output_type or Numeric
-
-    @property
-    def nb_inputs(self) -> int:
-        return len(self.input_types)
 
     def __hash__(self):
         return hash((self.unique_id, self.input_types, self.output_type))
@@ -374,38 +370,45 @@ FUNCTIONS: List[AbstractFunction] = [
     Function(boolean_or, [Anything, Anything], Anything, "or"),
     Function(if_else, [Anything, Anything, Anything], Anything, "if"),
 ]
+CODON_TO_FUNCTION: Dict[int, AbstractFunction] = map_attribute(FUNCTIONS, "unique_id")
+CODONS: List[int] = sorted(CODON_TO_FUNCTION)
 
 
 class Life:
-    CODON_TO_FUNCTION = map_attribute(FUNCTIONS, "unique_id")
-    CODONS: List[int] = sorted(CODON_TO_FUNCTION)
-
     __slots__ = ("rng", "min_length", "max_length")
 
     def __init__(self, seed: int = None, min_length=2, max_length=20):
+        assert 0 <= min_length <= max_length
         self.rng = random.Random(seed)
         self.min_length = min_length
         self.max_length = max_length
 
-    @classmethod
-    def aminoacid(cls, codon: int) -> AbstractFunction:
-        return cls.CODON_TO_FUNCTION[codon]
+    def randint(self, a, b) -> int:
+        return self.rng.randint(a, b)
 
     def random_codon(self) -> int:
-        return self.rng.choice(self.CODONS)
+        return self.rng.choice(CODONS)
 
-    def random_dna(self) -> List[int]:
+    def random_dna(self, min_length=None, max_length=None) -> List[int]:
+        if min_length is None:
+            min_length = self.min_length
+        if max_length is None:
+            max_length = self.max_length
         return [
-            self.rng.choice(self.CODONS)
-            for _ in range(self.rng.randint(self.min_length, self.max_length))
+            self.rng.choice(CODONS)
+            for _ in range(self.rng.randint(min_length, max_length))
         ]
-
-    @classmethod
-    def dna_to_protein(cls, sequence: List[int]) -> Protein:
-        return Ribosome(Gene(sequence)).protein
 
     def random_protein(self) -> Protein:
         return Ribosome(RandomGene(self)).protein
+
+    @classmethod
+    def dna_to_protein(cls, sequence: Sequence[int]) -> Protein:
+        return Ribosome(Gene(sequence)).protein
+
+    @classmethod
+    def aminoacid(cls, codon: int) -> AbstractFunction:
+        return CODON_TO_FUNCTION[codon]
 
 
 class AbstractGene(AbstractCursor[int]):
