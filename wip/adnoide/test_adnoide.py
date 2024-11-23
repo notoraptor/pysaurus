@@ -1,4 +1,5 @@
-from .adnoide import Utils
+from .adnoide import Life, Utils
+from .mutation import Deletion, Duplication, Insertion, Substitution
 
 
 def test_argname():
@@ -16,3 +17,17 @@ def test_argname():
 def test_unum():
     assert Utils.unum("abc") == 10203
     assert Utils.unum("abc_z12") == 1020389269192
+
+
+def test_mutations():
+    life = Life(123456)
+    gene = life.random_dna()
+    insertion = Insertion(life, gene)
+    substitution = Substitution(life, gene)
+    deletion = Deletion(life, gene)
+    duplication = Duplication(life, gene)
+    print(gene)
+    print(insertion.random())
+    print(substitution.random())
+    print(deletion.random())
+    print(duplication.random())

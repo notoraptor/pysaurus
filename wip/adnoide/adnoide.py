@@ -7,7 +7,11 @@ from typing import Any, Dict, List, Self, Sequence, Tuple, Union
 
 from pysaurus.core.classes import StringPrinter
 from pysaurus.core.functions import boolean_and, boolean_or, if_else, map_attribute
-from wip.adnoide.dna_errors import DNATooShortForTranslationError, ProteinError
+from wip.adnoide.dna_errors import (
+    DNATooShortForTranslationError,
+    ProteinError,
+    ProteinTypeError,
+)
 
 
 class Utils:
@@ -70,7 +74,7 @@ class FoodType:
 
     def expect_type(self, food_type: Self) -> None:
         if not self.is_valid_type(food_type):
-            raise TypeError(f"Expected type {self}, got type {food_type}")
+            raise ProteinTypeError(f"Expected type {self}, got type {food_type}")
 
 
 Anything = FoodType([object], strict=False, name="Anything")

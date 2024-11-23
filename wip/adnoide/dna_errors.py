@@ -20,3 +20,12 @@ class ProteinError(DNAError):
 
 class ConstantProteinError(ProteinError):
     pass
+
+
+class ProteinTypeError(ProteinError):
+    pass
+
+
+class ProteinArgsError(ProteinError):
+    def __init__(self, expected: int, given: int):
+        super().__init__(f"Protein expected {expected} args, got {given}")
