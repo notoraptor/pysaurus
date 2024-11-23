@@ -36,7 +36,9 @@ class NaturalSelection:
 
     def __init__(self, inputs: Sequence, outputs: Sequence[float]):
         assert len(inputs) == len(outputs)
-        self._inputs = [inp if isinstance(inp, (list, tuple)) else (inp,) for inp in inputs]
+        self._inputs = [
+            inp if isinstance(inp, (list, tuple)) else (inp,) for inp in inputs
+        ]
         self._outputs = outputs
 
     @classmethod
@@ -76,8 +78,8 @@ class NaturalSelection:
 
 
 def main():
-    # seed = 12345
-    seed = None
+    seed = 12345
+    # seed = None
     nb_orig_proteins = 1000
     limit = nb_orig_proteins // 10
     nb_protein_args = 1
@@ -89,11 +91,10 @@ def main():
     lineages = [Lineage(protein) for protein in _proteins]
 
     nature = NaturalSelection(
-        inputs=[(10**i,) for i in range(10)], outputs=[i + 1 for i in range(10)]
+        inputs=[1, 2, 5, 7, 11, 20], outputs=[-1, 100, 33, 10, 67, 35]
     )
     nature = NaturalSelection(
-        inputs=[1, 2, 5, 7, 11, 20],
-        outputs=[-1, 100, 33, 10, 67, 35]
+        inputs=[(10**i,) for i in range(10)], outputs=[i + 1 for i in range(10)]
     )
 
     for id_gen in range(nb_generations):

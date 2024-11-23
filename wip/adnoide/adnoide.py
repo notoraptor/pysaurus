@@ -272,6 +272,14 @@ class Protein:
         self.nb_inputs = nb_inputs
         self.gene: Tuple[int, ...] = tuple(gene)
 
+    @classmethod
+    def _count_feeds(cls, node: AbstractFunctionNode):
+        return (
+            1
+            if isinstance(node, FeedNode)
+            else sum((cls._count_feeds(c) for c in node.input_nodes))
+        )
+
     def __hash__(self):
         return hash((self.node, self.nb_inputs, self.gene))
 
@@ -280,14 +288,6 @@ class Protein:
             self.node == other.node
             and self.nb_inputs == other.nb_inputs
             and self.gene == other.gene
-        )
-
-    @classmethod
-    def _count_feeds(cls, node: AbstractFunctionNode):
-        return (
-            1
-            if isinstance(node, FeedNode)
-            else sum((cls._count_feeds(c) for c in node.input_nodes))
         )
 
     def __repr__(self):
