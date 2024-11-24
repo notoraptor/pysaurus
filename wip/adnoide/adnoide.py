@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Self, Sequence, Tuple, Union
 from pysaurus.core.classes import StringPrinter
 from pysaurus.core.functions import boolean_and, boolean_or, if_else, map_attribute
 from wip.adnoide.dna_errors import (
-    DNATooShortForTranslationError,
+    DNATooLongForTranslationError, DNATooShortForTranslationError,
     ProteinError,
     ProteinTypeError,
 )
@@ -236,9 +236,11 @@ class FunctionNode(AbstractFunctionNode):
     function: Function
 
     def execute(self, feeder: Feeder):
-        return self.function.function(
-            *(child.execute(feeder) for child in self.input_nodes)
-        )
+        args = [child.execute(feeder) for child in self.input_nodes]
+        try:
+            return self.function.function(*args)
+        except MemoryError as exc:
+            raise MemoryError(self.function.function, args) from exc
 
 
 class ConstantNode(AbstractFunctionNode):
@@ -437,17 +439,20 @@ class RandomGene(AbstractGene):
         return codon
 
     def remains(self) -> bool:
-        return len(self._sequence) <= self._gen.max_length
+        return len(self._sequence) < self._gen.max_length
 
 
 class Ribosome:
     __slots__ = ("_nb_feeds", "protein")
+    MAX_GENE_LENGTH = 500
 
     def __init__(self, gene: AbstractGene):
         self._nb_feeds = 0
         self.protein = Protein(self._parse_gene(gene), self._nb_feeds, gene.sequence())
 
     def _parse_gene(self, gene: AbstractGene) -> AbstractFunctionNode:
+        if len(gene.sequence()) >= self.MAX_GENE_LENGTH:
+            raise DNATooLongForTranslationError(self.MAX_GENE_LENGTH)
         if not gene.remains():
             raise DNATooShortForTranslationError(gene)
 

@@ -3,6 +3,7 @@ import os.path
 from collections import Counter
 from typing import Dict, List, Set, Tuple, Union
 
+from pysaurus.core.functions import get_percent
 from pysaurus.core.modules import System
 from pysaurus.core.unicode_utils import Unicode
 from resource.fonts import FOLDER_FONT, FONT_BABEL_STONE, FONT_NOTO_REGULAR
@@ -41,7 +42,7 @@ def check_font():
         a = len(cov["coverage"])
         b = len(blocks[block])
         assert a <= b, (block, a, b)
-        print(block, a, "/", b, _percent(a, b), "%")
+        print(block, a, "/", b, get_percent(a, b), "%")
 
 
 def check_unicode_coverage():
@@ -71,7 +72,7 @@ def check_unicode_coverage():
                 print(f"{block} ({len(chars)})")
                 for name in most_support:
                     print(
-                        f"\t{name} => {max_count} : {_percent(max_count, len(chars))} %"
+                        f"\t{name} => {max_count} : {get_percent(max_count, len(chars))} %"
                     )
         else:
             unsupported_blocks.append(block)
@@ -175,10 +176,6 @@ def _clean_fonts(coverage: Dict[str, Union[List, Set]], old_mandatory: Set[str])
             out_cov[block] = common
 
     return new_mandatory, {**coverage, **out_cov}
-
-
-def _percent(a, b):
-    return round(a * 100 / b, 2)
 
 
 def main():

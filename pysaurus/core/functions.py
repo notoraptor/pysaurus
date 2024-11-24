@@ -340,3 +340,7 @@ def boolean_or(a, b):
 
 def if_else(x, y, z):
     return y if x else z
+
+
+def get_percent(a, b, decimals=2):
+    return round(a * 100 / b, decimals)

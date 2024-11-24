@@ -67,6 +67,29 @@ class CodonList(_AbstractSizeable[List[int]]):
         return self.life.random_dna(self.min, self.max)
 
 
+class MutationEvent:
+    __slots__ = ("type", "parameters", "output")
+
+    def __init__(
+        self, mutation_type: Type["Mutation"], parameters: dict, output: Sequence[int]
+    ):
+        self.type = mutation_type
+        self.parameters = parameters
+        self.output = output
+
+    def __repr__(self):
+        with StringPrinter() as printer:
+            printer.write(self.type.__name__)
+            if self.parameters:
+                printer.write("\tparameters:")
+                for key, value in self.parameters.items():
+                    printer.write(f"\t\t{key}: {value}")
+            if self.output:
+                printer.write("\toutput:")
+                printer.write(f"\t\t{self.output}")
+            return str(printer)
+
+
 class MutationMeta(ABCMeta):
     @classmethod
     def _filter(cls, key: str, value):
@@ -94,30 +117,6 @@ class MutationMeta(ABCMeta):
         return super().__new__(cls, name, bases, namespace)
 
 
-class MutationEvent:
-    __slots__ = ("name", "parameters", "output", "protein")
-
-    def __init__(
-        self, name: str, parameters: dict, output: Sequence[int], protein=None
-    ):
-        self.name = name
-        self.parameters = parameters
-        self.output = output
-        self.protein = protein
-
-    def __repr__(self):
-        with StringPrinter() as printer:
-            printer.write(self.name)
-            if self.parameters:
-                printer.write("\tparameters:")
-                for key, value in self.parameters.items():
-                    printer.write(f"\t\t{key}: {value}")
-            if self.output:
-                printer.write("\toutput:")
-                printer.write(f"\t\t{self.output}")
-            return str(printer)
-
-
 class Mutation(metaclass=MutationMeta):
     __slots__ = ("life", "gene", "props")
 
@@ -133,11 +132,18 @@ class Mutation(metaclass=MutationMeta):
     def random(self) -> MutationEvent:
         parameters = {name: prop.random() for name, prop in self.props.items()}
         output = self.mutate(**parameters)
-        return MutationEvent(type(self).__name__, parameters, output)
+        return MutationEvent(type(self), parameters, output)
 
     @abstractmethod
     def mutate(self, **kwargs) -> List[int]:
         raise NotImplementedError()
+
+
+class Origin(Mutation):
+    __slots__ = ()
+
+    def mutate(self, **kwargs) -> Sequence[int]:
+        return self.gene
 
 
 class Substitution(Mutation):
@@ -191,26 +197,36 @@ class Duplication(Mutation):
         return gene[:to_position] + codons + gene[to_position:]
 
 
-class Lineage:
-    __slots__ = ("_generations", "_origin")
+class Individual:
+    __slots__ = ("parent", "phylogeny", "protein")
 
-    def __init__(self, protein: Protein, origin: "Lineage" = None):
-        self._generations: List[MutationEvent] = [
-            MutationEvent("Origin", {}, protein.gene, protein)
-        ]
-        self._origin = origin
+    def __init__(self, protein: Protein, parent: "Individual" = None):
+        self.parent = parent
+        self.phylogeny: List[MutationEvent] = [MutationEvent(Origin, {}, protein.gene)]
+        self.protein = protein
 
-    def add(self, evt: MutationEvent):
-        self._generations.append(evt)
+    @property
+    def gene(self) -> Sequence[int]:
+        return self.phylogeny[-1].output
 
-    def current_gene(self) -> Sequence[int]:
-        return self._generations[-1].output
+    def add(self, mutation_event: MutationEvent):
+        self.phylogeny.append(mutation_event)
 
-    def current_protein(self) -> Protein:
-        return self._generations[-1].protein
+    def update(self, mutation_event: MutationEvent):
+        self.phylogeny.clear()
+        self.phylogeny.append(mutation_event)
 
     def clone(self) -> Self:
-        return Lineage(self.current_protein(), self)
+        return Individual(self.protein, self)
+
+    def get_evolution(self) -> List[MutationEvent]:
+        events = []
+        if self.parent:
+            events = self.parent.get_evolution()
+            events.extend(self.phylogeny[1:])
+        else:
+            events.extend(self.phylogeny)
+        return events
 
 
 class Mutagenesis:
@@ -226,20 +242,21 @@ class Mutagenesis:
         mutation = mutation_cls(self.life, gene)
         return mutation.random()
 
-    def diverge(self, origin: Lineage) -> Lineage:
-        nb_args = origin.current_protein().nb_inputs
-        lineage = origin.clone()
+    def diverge(self, parent: Individual) -> Individual:
+        nb_args = parent.protein.nb_inputs
+        individual = parent.clone()
         step = 0
         while True:
             step += 1
             try:
-                mutation_event = self.random_mutation(lineage.current_gene())
+                mutation_event = self.random_mutation(individual.gene)
                 protein = self.life.dna_to_protein(mutation_event.output)
                 if protein.nb_inputs != nb_args:
                     raise ProteinArgsError(nb_args, protein.nb_inputs)
-                mutation_event.protein = protein
-                lineage.add(mutation_event)
+                individual.add(mutation_event)
+                # individual.update(mutation_event)
+                individual.protein = protein
                 break
             except DNAError:
                 pass
-        return lineage
+        return individual
