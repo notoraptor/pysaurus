@@ -2,13 +2,15 @@ import inspect
 import math
 import operator
 import random
+import sys
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Self, Sequence, Tuple, Union
 
 from pysaurus.core.classes import StringPrinter
 from pysaurus.core.functions import boolean_and, boolean_or, if_else, map_attribute
 from wip.adnoide.dna_errors import (
-    DNATooLongForTranslationError, DNATooShortForTranslationError,
+    DNATooLongForTranslationError,
+    DNATooShortForTranslationError,
     ProteinError,
     ProteinTypeError,
 )
@@ -381,13 +383,16 @@ CODONS: List[int] = sorted(CODON_TO_FUNCTION)
 
 
 class Life:
-    __slots__ = ("rng", "min_length", "max_length")
+    __slots__ = ("rng", "min_length", "max_length", "seed")
 
     def __init__(self, seed: int = None, min_length=2, max_length=20):
+        if seed is None:
+            seed = random.randrange(sys.maxsize)
         assert 0 <= min_length <= max_length
         self.rng = random.Random(seed)
         self.min_length = min_length
         self.max_length = max_length
+        self.seed = seed
 
     def randint(self, a, b) -> int:
         return self.rng.randint(a, b)
