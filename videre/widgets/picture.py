@@ -46,11 +46,7 @@ class Picture(Widget):
         try:
             return pygame.image.load(src).convert_alpha()
         except Exception as exc:
-            print("Cannot load an image.")
-            import traceback
-
-            traceback.print_tb(exc.__traceback__)
-            print(type(exc), exc, file=sys.stderr)
+            print(f"Cannot load an image: {type(exc).__name__}: {exc}", file=sys.stderr)
             return None
 
     def draw(self, window, width: int = None, height: int = None) -> pygame.Surface:
